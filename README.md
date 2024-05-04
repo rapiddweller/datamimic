@@ -3,7 +3,7 @@
 ## Introduction
 Welcome to the official GitHub repository for **DATAMIMIC Community Edition**! Our platform leverages model and AI-driven technologies to innovate the realm of test data generation, ensuring robust data privacy through sophisticated anonymization and pseudonymization techniques.
 
-[![Watch the video](https://datamimic.io/wp-content/uploads/sites/7/2024/04/datamimic_cover_play.jpg)](https://datamimic.io/wp-content/uploads/sites/7/2024/04/datamimic_intro.mp4)
+[![Watch the video](https://datamimic.io/wp-content/uploads/sites/7/2024/04/datamimic_cover_play.jpg)](https://www.youtube.com/watch?v=sycO7qd1Bhk)
 
 ## What is **DATAMIMIC**?
 **DATAMIMIC** is an advanced platform designed to create scalable and reliable test data using AI and model-driven methodologies, ensuring efficiency and compliance with global data protection standards like GDPR. **Note:** The Community Edition does not include the Rust core, which is part of the Enterprise Edition.
