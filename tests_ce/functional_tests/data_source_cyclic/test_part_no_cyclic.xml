@@ -1,0 +1,6 @@
+<setup multiprocessing="True" defaultSeparator=",">
+    <generate name="people_no_cyclic" count="10" target="" distribution="ordered">
+        <nestedKey name="product_csv" type="list" source="data/products.ent.csv" count="100" distribution="ordered"/>
+        <nestedKey name="people_json" type="list" source="data/people.json" count="100" distribution="ordered"/>
+    </generate>
+</setup>

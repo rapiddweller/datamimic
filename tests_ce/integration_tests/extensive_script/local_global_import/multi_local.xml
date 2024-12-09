@@ -1,0 +1,18 @@
+<setup multiprocessing="True">
+    <memstore id="mem"/>
+    <execute uri="script/lib.scr.py"/>
+
+    <generate name="customGeneratorExample" count="50" target="ConsoleExporter">
+        <variable name="count" type="integer" generator="IncrementGenerator"/>
+        <key name="hexColor" generator="RandomHexColorGenerator()"/>
+        <key name="ipAddress" generator="RandomIPAddressGenerator()"/>
+        <key name="uuid" generator="RandomUUIDGenerator()"/>
+        <key name="macAddress" generator="RandomMACAddressGenerator()"/>
+        <key name="isbn" generator="RandomISBNGenerator()"/>
+        <key name="coordinates" generator="RandomCoordinatesGenerator()"/>
+        <key name="licensePlate" generator="RandomLicensePlateGenerator()"/>
+        <key name="password" generator="RandomPasswordGenerator(length=16)"/>
+        <key name="movieTitle" generator="RandomMovieTitleGenerator()"/>
+        <key name="userAgent" generator="RandomUserAgentGenerator()"/>
+    </generate>
+</setup>

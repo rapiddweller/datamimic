@@ -1,0 +1,10 @@
+<setup multiprocessing="True">
+    <generate name="date_time_test" count="50" target="ConsoleExporter">
+        <key name="count" type="int" generator="IncrementGenerator"/>
+        <variable name="date_variable" generator="DateTimeGenerator"/>
+        <key name="date_time_constant" constant="2020-02-01"/>
+        <key name="date_time_with_in" constant="2021-02-01" inDateFormat="%Y-%m-%d"/>
+        <key name="date_time_with_in_out" constant="2022-02-01" inDateFormat="%Y-%m-%d" outDateFormat="%d.%m.%Y"/>
+        <key name="date_time_with_out" script="date_variable" outDateFormat="%d.%m.%Y"/>
+    </generate>
+</setup>

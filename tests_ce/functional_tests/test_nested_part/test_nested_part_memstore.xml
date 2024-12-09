@@ -1,0 +1,13 @@
+<setup multiprocessing="True">
+    <memstore id="mem"/>
+    <generate name="people_csv" source="data/person.ent.csv" target="mem" separator="," distribution="ordered"/>
+    <generate name="people" target="ConsoleExporter" count="10">
+        <nestedKey name="csv_1" count="1" type="people_csv" source="mem" cyclic="True" distribution="ordered">
+            <nestedKey name="csv_2" count="5" type="people_csv" source="mem" cyclic="True" distribution="ordered">
+                <nestedKey name="csv_3" count="10" type="people_csv" source="mem" cyclic="True" distribution="ordered">
+                    <key name="id" type="string" generator="IncrementGenerator"/>
+                </nestedKey>
+            </nestedKey>
+        </nestedKey>
+    </generate>
+</setup>

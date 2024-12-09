@@ -1,0 +1,9 @@
+<setup defaultSeparator="," multiprocessing="True">
+    <generate name="cyclic_product" source="data/person.ent.csv" count="10" cyclic="True" target="ConsoleExporter">
+        <key name="id" generator="IncrementGenerator"/>
+        <nestedKey name="order" type="list" count="3">
+            <key name="quantity" values="1, 2, 3"/>
+        </nestedKey>
+    </generate>
+
+</setup>

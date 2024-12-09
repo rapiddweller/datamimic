@@ -1,0 +1,6 @@
+title = "Basic Model"
+description = "Demo showcases data generation with built-in generators as well as custom datasets from files."
+icon = "script"
+tags = ["#generate", "#datasets"]
+projectName = "demo-model"
+id = "demo-model"

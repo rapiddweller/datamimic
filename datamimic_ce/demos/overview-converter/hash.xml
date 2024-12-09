@@ -1,0 +1,37 @@
+<setup>
+    <generate name="HashConverter3" count="10">
+        <key name="converter" constant="MD5Hash" />
+        <key name="value" constant="example text to hash" />
+        <key name="value_hashed" script="value" converter="Hash('md5','hex')" />
+    </generate>
+
+    <generate name="HashConverter4" count="10">
+        <key name="converter" constant="MD5HashBase64" />
+        <key name="value" constant="example text to hash" />
+        <key name="value_hashed" script="value" converter="Hash('md5','base64')" />
+    </generate>
+
+    <generate name="HashConverter5" count="10">
+        <key name="converter" constant="SHA1Hash" />
+        <key name="value" constant="example text to hash" />
+        <key name="value_hashed" script="value" converter="Hash('sha1','hex')" />
+    </generate>
+
+    <generate name="HashConverter6" count="10">
+        <key name="converter" constant="SHA1HashBase64" />
+        <key name="value" constant="example text to hash" />
+        <key name="value_hashed" script="value" converter="Hash('sha1','base64')" />
+    </generate>
+
+    <generate name="HashConverter7" count="10">
+        <key name="converter" constant="SHA256Hash" />
+        <key name="value" constant="example text to hash" />
+        <key name="value_hashed" script="value" converter="Hash('sha256','hex')" />
+    </generate>
+
+    <generate name="HashConverter8" count="10">
+        <key name="converter" constant="SHA256HashBase64" />
+        <key name="value" constant="example text to hash" />
+        <key name="value_hashed" script="value" converter="Hash('sha256','base64')" />
+    </generate>
+</setup>

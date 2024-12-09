@@ -1,0 +1,8 @@
+<setup multiprocessing="True">
+    <mongodb id="mongodb"/>
+
+    <generate name="csv_consumer" count="3000000" target="mongodb">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" values="'Harry', 'Hermione', 'Ron'"/>
+    </generate>
+</setup>

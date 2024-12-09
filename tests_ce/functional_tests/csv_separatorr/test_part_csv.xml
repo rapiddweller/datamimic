@@ -1,0 +1,10 @@
+<setup multiprocessing="True">
+    <generate name="people1" target="ConsoleExporter" count="1">
+        <nestedKey name="peopleCsv" type="list" source="data/person.ent.csv" separator=","/>
+        <nestedKey name="shortPeopleCsv" count="2" type="list" source="data/person.ent.csv" separator=","/>
+    </generate>
+    <generate name="people2" target="ConsoleExporter" count="1">
+        <nestedKey name="peopleCsv" type="list" source="data/person_2.ent.csv"/>
+        <nestedKey name="shortPeopleCsv" count="2" type="list" source="data/person_2.ent.csv" separator="|"/>
+    </generate>
+</setup>

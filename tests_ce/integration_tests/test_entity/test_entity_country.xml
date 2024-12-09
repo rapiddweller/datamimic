@@ -1,0 +1,26 @@
+<setup multiprocessing="0">
+    <generate name="country" count="10" target="ConsoleExporter">
+        <variable name="country" entity="Country"/>
+        <key name="iso_code" script="country.iso_code"/>
+        <key name="iso_code1" script="country.iso_code"/>
+        <key name="name" script="country.name"/>
+        <key name="name1" script="country.name"/>
+        <key name="default_language_locale" script="country.default_language_locale"/>
+        <key name="default_language_locale1" script="country.default_language_locale"/>
+        <key name="phone_code" script="country.phone_code"/>
+        <key name="phone_code1" script="country.phone_code"/>
+        <key name="population" script="country.population"/>
+        <key name="population1" script="country.population"/>
+        <variable name="country1" entity="Country"/>
+        <key name="iso_code2" script="country1.iso_code"/>
+        <key name="iso_code3" script="country1.iso_code"/>
+        <key name="name2" script="country1.name"/>
+        <key name="name3" script="country1.name"/>
+        <key name="default_language_locale2" script="country1.default_language_locale"/>
+        <key name="default_language_locale3" script="country1.default_language_locale"/>
+        <key name="phone_code2" script="country1.phone_code"/>
+        <key name="phone_code3" script="country1.phone_code"/>
+        <key name="population2" script="country1.population"/>
+        <key name="population3" script="country1.population"/>
+    </generate>
+</setup>

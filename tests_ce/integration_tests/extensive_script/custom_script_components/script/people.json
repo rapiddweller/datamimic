@@ -1,0 +1,20 @@
+[
+  {
+    "name":"Alice",
+    "age":23,
+    "notes":""
+  },
+  {
+    "name":"Bob",
+    "age": "{ multiply(68,age) }",
+    "notes":null
+  },
+  {
+    "name":"Charly",
+    "age":45,
+    "notes": "{create_random_json()}",
+    "car":{
+      "maker":"Audi"
+    }
+  }
+]

@@ -1,0 +1,10 @@
+<setup multiprocessing="True">
+    <variable name="var" constant="data 1" />
+    <echo>Echo variable 1: {var}</echo>
+
+    <variable name="var2" script="[1, 2, 3]" />
+    <echo>Echo variable 2: {var2}</echo>
+
+    <variable name="var3" values="1.1, 2.2, 3.5" />
+    <echo>Echo variable 3: {var3}</echo>
+</setup>

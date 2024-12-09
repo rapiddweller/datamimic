@@ -1,0 +1,18 @@
+<setup multiprocessing="True">
+    <database id="dbPostgres" system="postgres"/>
+    <execute uri="script/backup.sql" target="dbPostgres"/>
+
+    <variable name="table_name" constant="public.db_postgres_types5"/>
+
+    <generate name="generate_selector"
+              source="dbPostgres"
+              selector="SELECT * FROM __table_name__" target="ConsoleExporter">
+    </generate>
+
+    <generate name="variable_selector" count="20" target="ConsoleExporter">
+        <variable name="query" source="dbPostgres" selector="SELECT id, text FROM __table_name__" />
+        <key name="id" script="query.id"/>
+        <key name="name" script="query.text"/>
+    </generate>
+
+</setup>

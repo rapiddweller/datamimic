@@ -1,0 +1,20 @@
+[
+  {
+    "name":"Alice",
+    "age":23,
+    "notes":""
+  },
+  {
+    "name":"Bob",
+    "age":34,
+    "notes":null
+  },
+  {
+    "name":"Charly",
+    "age":45,
+    "notes":null,
+    "car":{
+      "maker":"Audi"
+    }
+  }
+]

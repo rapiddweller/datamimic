@@ -1,0 +1,14 @@
+<setup multiprocessing="True">
+    <memstore id="mem"/>
+    <generate name="product" count="15" target="mem">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" values="'Alice', 'Bob', 'Cameron'"/>
+    </generate>
+
+    <generate name="non-cyclic-product" type="product" count="30" cyclic="False" source="mem" target=""
+              distribution="ordered"/>
+    <generate name="cyclic-product" type="product" count="30" cyclic="True" source="mem" target=""
+              distribution="ordered"/>
+    <generate name="big-cyclic-product" type="product" count="100" cyclic="True" source="mem" target=""
+              distribution="ordered"/>
+</setup>

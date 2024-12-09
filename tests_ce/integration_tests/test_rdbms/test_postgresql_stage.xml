@@ -1,0 +1,26 @@
+<setup>
+    <database id="sourceDB" system="postgresql" environment="environment"/>
+    <execute uri="script/postgresql.scr.sql" target="sourceDB"/>
+    <generate name="CUSTOMER" count="20" target="sourceDB,ConsoleExporter">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="tc_creation_src" constant="BEN"/>
+        <key name="tc_creation" generator="DateTimeGenerator"/>
+        <key name="no" generator="IncrementGenerator"/>
+        <key name="active" type="bool" constant="False"/>
+        <variable name="company" entity="Company" dataset="DE" locale="de_DE"/>
+        <key name="name" script="company.short_name"/>
+    </generate>
+    <generate name="USER" count="15" target="sourceDB,ConsoleExporter">
+        <variable name="person" entity="Person" dataset="DE" locale="de_DE"/>
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="tc_creation_src" constant="BEN"/>
+        <key name="tc_creation" generator="DateTimeGenerator(random=True)"/>
+        <key name="full_name" script="person.name"/>
+        <key name="email" script="id"/>
+        <key name="active" source="data/active.wgt.csv"/>
+        <key name="superuser" type="bool" values="False,True"/>
+        <key name="hashed_password" generator="StringGenerator(max_len=20)"/>
+        <key name="language" values="'german','english','vietnamese'"/>
+        <reference name="customer_id" source="sourceDB" sourceType="CUSTOMER" sourceKey="id"/>
+    </generate>
+</setup>

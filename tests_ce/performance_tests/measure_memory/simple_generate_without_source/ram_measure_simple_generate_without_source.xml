@@ -1,0 +1,4 @@
+<setup>
+    <include uri="conf/base.properties"/>
+    <include uri="simple_generate_without_source_model.xml"/>
+</setup>

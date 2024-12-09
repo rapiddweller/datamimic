@@ -1,0 +1,6 @@
+title = "MongoDB"
+description = "Showcases how to handle data in MongoDB (make sure to have a MongoDB environment set up.)"
+tags = ["#mongodb", "#nosql", "#query"]
+icon = "mongo"
+projectName = "demo-mongodb"
+id = "demo-mongodb"

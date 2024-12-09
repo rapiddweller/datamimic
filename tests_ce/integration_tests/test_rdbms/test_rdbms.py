@@ -1,0 +1,53 @@
+# DATAMIMIC
+# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0).
+# For commercial use, please contact Rapiddweller at info@rapiddweller.com to obtain a commercial license.
+# Full license text available at: http://creativecommons.org/licenses/by-nc-sa/4.0/
+
+
+
+from pathlib import Path
+
+import pytest
+
+from datamimic_ce.config import settings
+from datamimic_ce.data_mimic_test import DataMimicTest
+
+
+class TestRdbms:
+    _test_dir = Path(__file__).resolve().parent
+
+    @pytest.mark.skipif(
+        settings.RUNTIME_ENVIRONMENT == "production",
+        reason="This test can only test with local postgres credential",
+    )
+    def test_postgresql_local(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_postgresql_local.xml")
+        test_engine.test_with_timer()
+
+    @pytest.mark.skipif(
+        settings.RUNTIME_ENVIRONMENT == "development",
+        reason="This test can only test with stage postgres credential",
+    )
+    def test_postgresql_stage(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_postgresql_stage.xml")
+        test_engine.test_with_timer()
+
+    @pytest.mark.skip(reason="This test should be move to another job")
+    def test_mysql(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_mysql.xml")
+        test_engine.test_with_timer()
+
+    @pytest.mark.skip(reason="This test should be move to another job")
+    def test_mssql(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_mssql.xml")
+        test_engine.test_with_timer()
+
+    @pytest.mark.skip(reason="This test should be move to another job")
+    def test_oracle(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_oracle.xml")
+        test_engine.test_with_timer()
+
+    def test_sqlite(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_sqlite.xml")
+        test_engine.test_with_timer()

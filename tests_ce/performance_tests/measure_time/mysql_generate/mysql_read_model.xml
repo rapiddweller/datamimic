@@ -1,0 +1,4 @@
+<setup multiprocessing="{multiprocessing}">
+    <database id="sourceDB" system="mysql" environment="environment"/>
+    <generate name="time_measure" source="sourceDB" target=""/>
+</setup>

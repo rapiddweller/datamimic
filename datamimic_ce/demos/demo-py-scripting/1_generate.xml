@@ -1,0 +1,29 @@
+<setup>
+    <generate name="person" source="data/person.ent.csv" sourceScripted="True">
+        <variable name="age" type="integer" script="age"/>
+        <key name="multiply_result" type="int" script="multiply(age,10)"/>
+        <nestedKey name="person" type="list" sourceScripted="True" source="script/people.json"/>
+    </generate>
+
+    <generate name="p2" source="data/person.ent.csv" sourceScripted="True">
+        <variable name="age" type="integer" script="age"/>
+        <key name="multiply_result" type="int" script="multiply(age,10)"/>
+    </generate>
+
+    <generate name="script" count="10">
+        <variable name="count" type="integer" generator="IncrementGenerator"/>
+        <key name="multiply_result" type="int" script="multiply(count,10)"/>
+    </generate>
+
+    <generate name="script2" count="50">
+        <variable name="count" type="integer" generator="IncrementGenerator"/>
+        <key name="divide" type="float" script="divide(count, 10)"/>
+    </generate>
+
+    <generate name="script3" count="50">
+        <variable name="count" type="integer" generator="IncrementGenerator"/>
+        <key name="divide" type="float" script="divide(count, 10)"/>
+        <nestedKey name="random_json" script="create_random_json()"/>
+    </generate>
+</setup>
+

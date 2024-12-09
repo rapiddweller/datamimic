@@ -1,0 +1,31 @@
+<setup multiprocessing="True">
+    <include uri="conf/base.properties"/>
+    <generate name="parent" count="2" target="ConsoleExporter">
+        <variable name="id" generator="IncrementGenerator"/>
+        <variable name="count_global" type="int" constant="2"/>
+        <key name="id" script="id"/>
+        <generate name="child" count="{count_global}" target="ConsoleExporter">
+            <variable name="idx" generator="IncrementGenerator"/>
+            <key name="id" script="child.idx"/>
+            <generate name="grand_child" count="{child.idx}" target="ConsoleExporter">
+                <variable name="index" generator="IncrementGenerator"/>
+                <key name="id" script="child.grand_child.index"/>
+                <key name="child_idx" script="child.idx"/>
+                <generate name="great_grand_child" count="{child.grand_child.index}" target="ConsoleExporter">
+                    <variable name="ind" generator="IncrementGenerator"/>
+                    <key name="id" script="child.grand_child.great_grand_child.ind"/>
+                    <key name="grand_child.index" script="child.grand_child.index"/>
+                </generate>
+            </generate>
+        </generate>
+    </generate>
+
+    <generate name="items" count="{count}" target="ConsoleExporter">
+         <key name="id" generator="IncrementGenerator"/>
+    </generate>
+
+    <generate name="products" count="{count_1}" target="ConsoleExporter">
+         <key name="id" generator="IncrementGenerator"/>
+    </generate>
+
+</setup>

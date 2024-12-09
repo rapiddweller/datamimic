@@ -1,0 +1,11 @@
+<setup multiprocessing="0">
+    <memstore id="mem"/>
+    <generate name="data_source" count="100" target="mem">
+        <key name="counter" type="int" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="random_check" type="data_source" source="mem" target=""/>
+    <generate name="ordered_check" type="data_source" source="mem" target=""
+              distribution="ordered"/>
+    <generate name="cyclic_check_1" type="data_source" source="mem" target=""
+              cyclic="1" count="150"/>
+</setup>

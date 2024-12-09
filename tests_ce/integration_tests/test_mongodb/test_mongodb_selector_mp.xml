@@ -1,0 +1,10 @@
+<setup multiprocessing="True">
+    <mongodb id="mongodb"/>
+    <generate name="mongo2" target="ConsoleExporter, mongodb" count="2">
+        <key name="user_id" generator="IncrementGenerator"/>
+        <key name="user_name" values="'Bob', 'Frank', 'Phil'"/>
+    </generate>
+    <generate name="test" type="mongo2" source="mongodb" target="ConsoleExporter">
+        <key name="addition" values="'Addition 1', 'Addition 2', 'Addition 3'"/>
+    </generate>
+</setup>

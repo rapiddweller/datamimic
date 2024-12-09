@@ -1,0 +1,7 @@
+<setup multiprocessing="True">
+    <execute uri="script/my_function.py"/>
+    <generate name="script2" count="5" target="ConsoleExporter">
+        <key name="count" type="int" generator="IncrementGenerator"/>
+        <nestedKey name="random_dict" script="create_random_json()"/>
+    </generate>
+</setup>

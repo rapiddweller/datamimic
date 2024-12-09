@@ -1,0 +1,11 @@
+<setup multiprocessing="True" defaultSeparator=",">
+    <generate name="people" target="ConsoleExporter" count="1">
+        <variable name="name" source="data/person.ent.csv"/>
+        <nestedKey name="shortPeopleCsv" count="1" type="list" source="data/person.ent.csv" cyclic="True"/>
+        <nestedKey name="peopleCsv" count="10" type="list" source="data/person.ent.csv" cyclic="True">
+            <nestedKey name="subPeopleCsv" type="list" source="data/person.ent.csv">
+                <key name="sub_id" generator="IncrementGenerator"/>
+            </nestedKey>
+        </nestedKey>
+    </generate>
+</setup>

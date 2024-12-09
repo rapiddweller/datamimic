@@ -1,0 +1,56 @@
+<setup multiprocessing="1">
+    <generate name="special" source="script/template_xyz.json"
+              sourceScripted="True"
+              count="8000"
+              cyclic="True"
+              target="JSON"
+              pageSize="1000"
+    >
+        <variable name="randomNumberVar" type="int"/>
+        <key name="title" constant="Prisoners"/>
+        <key name="year" constant="2013"/>
+    </generate>
+    <generate name="special2" source="script/template_xyz.json"
+              sourceScripted="True"
+              count="1600"
+              cyclic="True"
+              target="JSON(use_ndjson=False)"
+    >
+        <variable name="randomNumberVar" type="int"/>
+        <key name="title" constant="Prisoners"/>
+        <key name="year" constant="2013"/>
+    </generate>
+    <generate name="special3" source="script/template_xyz.json"
+              sourceScripted="True"
+              count="16"
+              cyclic="True"
+              target="JSON(use_ndjson=False,chunk_size=1)"
+    >
+        <variable name="randomNumberVar" type="int"/>
+        <key name="title" constant="Prisoners"/>
+        <key name="year" constant="2013"/>
+    </generate>
+    <generate name="special1234" source="script/template_xyz.json"
+              sourceScripted="True"
+              count="10"
+              cyclic="True"
+              target="JSON"
+    >
+        <variable name="randomNumberVar" type="int"/>
+        <key name="title" constant="Prisoners"/>
+        <key name="year" constant="2013"/>
+        <generate name="special999" source="script/template_xyz.json"
+                  sourceScripted="True"
+                  count="2"
+                  cyclic="True"
+                  target="JSON"
+        >
+            <variable name="randomNumberVar" type="int"/>
+            <key name="title1" constant="Prisoners"/>
+            <key name="title2" constant="Prisoners"/>
+            <key name="title3" constant="Prisoners"/>
+            <key name="title4" constant="Prisoners"/>
+            <key name="year" constant="2013"/>
+        </generate>
+    </generate>
+</setup>

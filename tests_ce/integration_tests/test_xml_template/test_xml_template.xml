@@ -1,0 +1,9 @@
+<setup>
+    <generate name="book" source="data/book.template.xml" target="ConsoleExporter, XML">
+        <key name="author" type="string"/>
+        <key name="additionalTag" constant="extra">
+            <element name="new_key" constant="new_key_value"/>
+        </key>
+    </generate>
+
+</setup>

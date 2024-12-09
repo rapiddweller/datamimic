@@ -1,0 +1,5 @@
+<setup>
+    <generate name="uuid_generator_test" target="ConsoleExporter" count="100">
+        <key name="uuid_name" generator="UUIDGenerator"/>
+    </generate>
+</setup>

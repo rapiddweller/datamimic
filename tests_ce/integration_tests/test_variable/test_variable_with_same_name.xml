@@ -1,0 +1,16 @@
+<setup multiprocessing="True">
+    <!--  global variable 'group_name' will be overridden when have variable as the same name below -->
+    <variable name="group_name" values="'IEEE','ISO','IAEA'"/>
+    <generate name="group_name_override" count="3" target="ConsoleExporter">
+        <variable name="group_name" constant="override_name"/>
+        <key name="id" generator="IncrementGenerator"/>
+        <variable name="var_name" script="group_name" defaultValue="None"/>
+        <key name="name" script="var_name"/>
+    </generate>
+
+    <generate name="group_name_not_override" count="3" target="ConsoleExporter">
+        <key name="id" generator="IncrementGenerator"/>
+        <variable name="var_name" script="group_name" defaultValue="None"/>
+        <key name="name" script="var_name"/>
+    </generate>
+</setup>

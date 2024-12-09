@@ -1,0 +1,29 @@
+<setup multiprocessing="True" defaultSeparator=",">
+    <generate name="cyclic_product" source="data/products.ent.csv" count="10" cyclic="True"
+              target="ConsoleExporter">
+        <condition>
+            <if condition="category_id == 'FOOD/CNF'">
+                <variable name="com" entity="Company"/>
+                <key name="brand" script="com.short_name"/>
+            </if>
+            <else-if condition="category_id == 'DRNK/CNF'">
+                <key name="number" type="int" constant="2"/>
+            </else-if>
+            <else-if condition="category_id == 'DRNK/ALCO'">
+                <key name="quantity" values="1,2,3"/>
+            </else-if>
+            <else>
+                <key name="number" type="int" constant="8"/>
+            </else>
+        </condition>
+        <!--        <nestedKey name="order" type="dict">-->
+        <!--            <key name="id" generator="IncrementGenerator"/>-->
+        <!--            <key name="product_id" script="order.id"/>-->
+        <!--            <key name="quantity" values="1, 2, 3"/>-->
+        <!--            <if condition="category_id == 'DRNK/ALCO'">-->
+        <!--                <variable name="com" entity="Company"/>-->
+        <!--                <key name="brand" script="com.short_name"/>-->
+        <!--            </if>-->
+        <!--        </nestedKey>-->
+    </generate>
+</setup>

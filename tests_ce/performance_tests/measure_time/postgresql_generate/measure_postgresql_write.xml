@@ -1,0 +1,4 @@
+<setup>
+    <include uri="conf/base.properties"/>
+    <include uri="postgresql_write_model.xml"/>
+</setup>

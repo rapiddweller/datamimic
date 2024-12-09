@@ -1,0 +1,28 @@
+<setup>
+    <generate name="big_group" count="1">
+        <!-- RemoveNoneOrEmptyElement converter will remove any None or empty element -->
+        <generate name="group" count="5" target="ConsoleExporter" converter="RemoveNoneOrEmptyElement">
+            <key name="none_value" script="1+1" condition="False" defaultValue="None"/>
+
+            <!-- this list result is 'array': [] -->
+            <list name="array">
+                <item>
+                    <key name="var" script="1+1" condition="False" defaultValue="None"/>
+                </item>
+                <item>
+                    <key name="var_2" script="1+1" condition="False" defaultValue="None"/>
+                </item>
+            </list>
+
+            <!-- this nestedKey result is 'nested_list': [] -->
+            <nestedKey name="nested_list" type="list" count="1">
+                <key name="inside_ele" script="1+1" condition="False" defaultValue="None"/>
+            </nestedKey>
+
+            <!-- this nestedKey result is 'nested_dict': {} -->
+            <nestedKey name="nested_dict" type="dict">
+                <key name="inside_ele" script="1+1" condition="False" defaultValue="None"/>
+            </nestedKey>
+        </generate>
+    </generate>
+</setup>

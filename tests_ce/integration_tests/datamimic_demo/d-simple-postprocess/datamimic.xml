@@ -1,0 +1,9 @@
+<setup defaultDataset="US" defaultLocale="en" defaultSeparator="|">
+    <!-- Load config properties, setup memstore -->
+    <include uri="conf/base.properties"/>
+    <memstore id="mem"/>
+
+    <!-- Include Datamimic scripts -->
+    <include uri="1_prepare.xml"/>
+    <include uri="2_generate.xml"/>
+</setup>

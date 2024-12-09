@@ -1,0 +1,10 @@
+<setup>
+    <generate name="cross_collection" count="10" target="ConsoleExporter">
+        <variable name="var_id" source="sourceDB"
+                  selector='SELECT user.id, user.full_name, customer.name AS customer_name
+                  FROM functional.user JOIN functional.customer ON user.customer_id  = customer.id'/>
+        <key name="user_id" script="var_id.id"/>
+        <key name="user" script="var_id.full_name"/>
+        <key name="customer" script="var_id.customer_name"/>
+    </generate>
+</setup>

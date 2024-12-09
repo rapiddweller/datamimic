@@ -1,0 +1,10 @@
+<setup>
+    <mongodb id="mongodb"/>
+    <generate name="mongo2" target="ConsoleExporter, mongodb" count="10">
+        <key name="user_id" generator="IncrementGenerator"/>
+        <key name="user_name" values="'Bob', 'Frank', 'Phil'"/>
+    </generate>
+    <generate name="mongo2" type="mongo2" source="mongodb" target="ConsoleExporter, mongodb.update">
+        <key name="addition" values="'Addition 1', 'Addition 2', 'Addition 3'"/>
+    </generate>
+</setup>

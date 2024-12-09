@@ -1,0 +1,5 @@
+<setup multiprocessing="True">
+    <generate name="user" count="10" target="ConsoleExporter, JSON">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+</setup>

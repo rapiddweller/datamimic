@@ -1,0 +1,40 @@
+<setup>
+    <generate name="tdata" count="3" target="">
+        <generate name="lookup1" count="3" target="">
+            <key name="id" generator="IncrementGenerator"/>
+            <nestedKey name="output_keys" type="dict">
+                <key name="code" type="string" script="'code' + str(lookup1.get('id'))"/>
+                <key name="description" type="string" script="'description' + str(lookup1.get('id'))"/>
+            </nestedKey>
+        </generate>
+
+        <generate name="lookup2" count="3" target="">
+            <variable name="person" entity="Person(min_age=1, max_age=10, female_quota=1)"/>
+            <key name="academic_title" script="lookup2.person.academic_title"/>
+            <key name="age" script="lookup2.person.age"/>
+            <key name="birth_date" script="lookup2.person.birthdate"/>
+            <key name="given_name" script="lookup2.person.given_name"/>
+            <key name="family_name" script="lookup2.person.family_name"/>
+            <key name="email" script="lookup2.person.email"/>
+            <key name="gender" script="lookup2.person.gender"/>
+            <key name="salutation" script="lookup2.person.salutation"/>
+            <key name="id" generator="IncrementGenerator"/>
+            <nestedKey name="output_keys" type="dict">
+                <key name="code" type="string" script="'code' + str(lookup2.get('id'))"/>
+                <key name="description" type="string" script="'description' + str(lookup2.get('id'))"/>
+            </nestedKey>
+        </generate>
+
+
+        <generate name="lookup_test" count="50" target="ConsoleExporter">
+            <variable name="lookup1_var" source="lookup1" distribution="ordered" cyclic="True"/>
+            <variable name="lookup2_var" source="lookup2" distribution="ordered" cyclic="True"/>
+            <key name="ref_id" script="lookup_test.lookup1_var.get('id')"/>
+            <key name="test_value1" type="string" script="lookup_test.lookup1_var.output_keys.description"/>
+            <key name="test_value2" type="string" script="lookup_test.lookup1_var.output_keys.code"/>
+            <key name="test2_value1" type="string" script="lookup_test.lookup2_var.output_keys.description"/>
+            <key name="test2_value2" type="string" script="lookup_test.lookup2_var.output_keys.code"/>
+            <key name="test2_value3" type="string" script="lookup_test.lookup2_var.family_name"/>
+        </generate>
+    </generate>
+</setup>

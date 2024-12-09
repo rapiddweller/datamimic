@@ -1,0 +1,5 @@
+<setup multiprocessing="1">
+    <generate name="iterate_simple_user" type="simple_user" source="sourceDB" distribution="ordered"
+              target="ConsoleExporter">
+    </generate>
+</setup>

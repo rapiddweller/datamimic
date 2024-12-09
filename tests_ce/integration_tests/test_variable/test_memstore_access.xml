@@ -1,0 +1,13 @@
+<setup>
+    <memstore id="mem"/>
+    <generate name="user" count="5" target="mem, ConsoleExporter">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" type="string"/>
+    </generate>
+
+    <generate name="user_2" count="3" target="ConsoleExporter">
+        <variable name="use_mem" type="user" source="mem"/>
+        <key name="id" script="mem.get_data_by_type('user').id"/>
+        <key name="name" script="use_mem.name"/>
+    </generate>
+</setup>

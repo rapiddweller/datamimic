@@ -1,0 +1,24 @@
+<setup>
+
+    <!--  Generate 'customer' records. The count can be specified directly as e.g. count="100"
+    or retrieved from a global variable. If the target ist empty, entities will only be created for the UI preview.-->
+
+    <generate name="customer" count="{customer_count}">
+        <variable name="cars_data" type="CARS" source="mem" cyclic="True"/>
+        <variable name="person" entity="Person(min_age=21, max_age=67, female_quota=0.5)"/>
+        <variable name="company" entity="Company"/>
+        <key name="bool" generator="BooleanGenerator"/>
+        <key name="tc_creation" generator="IntegerGenerator(max=999999999)"/>
+        <key name="car" script="cars_data.model"/>
+        <key name="first_name" script="person.family_name"/>
+        <key name="last_name" script="person.given_name"/>
+        <!--  Converter allows processing operations such as conversions or formatting. -->
+        <key name="birthDate" script="person.birthdate" converter="DateFormat('%d.%m.%Y')"/>
+        <key name="superuser" type="bool" values="True, False"/>
+        <!--  Script allows to run various methods to fine-tune the intended output. -->
+        <key name="email" script="'info@' + company.short_name.replace(' ', '-') + str(tc_creation) + '.de'"/>
+        <!--  Weighting Data 'active' is used to retrieve the distribution of values defined in the file . -->
+        <key name="active" source="data/active.wgt.csv" separator="|"/>
+    </generate>
+
+</setup>

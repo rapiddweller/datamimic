@@ -1,0 +1,6 @@
+tags = ["#database", "#json"]
+title = "Basic JSON"
+description = "Showcases how to generate JSON data with DATAMIMIC."
+icon = "json"
+projectName = "demo-json"
+id = "demo-json"

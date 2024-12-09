@@ -1,0 +1,15 @@
+<setup multiprocessing="0" defaultDataset="US">
+    <generate name="customer" count="50000" target="">
+        <variable name="person" entity="Person(noble_quota=0.005)"/>
+        <key name="gender" script="person.gender"/>
+        <key name="birthdate" script="person.birthdate"/>
+        <key name="name" script="person.name"/>
+        <key name="given_name" script="person.given_name"/>
+        <key name="family_name" script="person.family_name"/>
+        <key name="email" script="person.email"/>
+        <key name="academic_title" script="person.academic_title"/>
+        <key name="age" script="person.age"/>
+        <key name="salutation" script="person.salutation"/>
+        <key name="noble_title" script="person.nobility_title"/>
+    </generate>
+</setup>

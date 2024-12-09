@@ -1,0 +1,27 @@
+<setup multiprocessing="True">
+    <database id="dbPostgres" system="postgres"/>
+    <execute uri="script/setup_test_variable_with_selector.sql" target="dbPostgres"/>
+    <execute uri="script/my_python.src.py"/>
+    <variable name="table_name" constant="db_postgres_test_variable_with_selector"/>
+    <generate name="user" source="dbPostgres"
+              selector="SELECT id, text FROM __table_name__" target="ConsoleExporter"/>
+
+    <generate name="user_cyclic" count="10" target="ConsoleExporter">
+        <variable name="user_cyclic" source="dbPostgres" cyclic="True"
+              selector="SELECT id, text FROM __table_name__" />
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="user_id" script="user_cyclic.id" />
+        <key name="user_text" script="user_cyclic.text" />
+    </generate>
+
+    <!--    <variable name="all_users" source="dbPostgres" cyclic="False"-->
+    <!--              iterationSelector="SELECT id, text FROM public.db_postgres_test_variable_with_selector"/>-->
+    <!--    <include uri="conf/base.properties"/>-->
+    <!--    <variable name="max_count" constant="10"/>-->
+    <!--    <generate name="query_variable_test" count="10" target="ConsoleExporter">-->
+    <!--        <nestedKey name="inner_list_1" type="list" count="{max_count}">-->
+    <!--            <key name="index" script="random(0, 10)"/>-->
+    <!--        </nestedKey>-->
+    <!--    </generate>-->
+
+</setup>

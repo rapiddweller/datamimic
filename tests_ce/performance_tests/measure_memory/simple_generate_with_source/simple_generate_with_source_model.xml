@@ -1,0 +1,5 @@
+<setup defaultSeparator="," multiprocessing="{multiprocessing}">
+    <generate name="cyclic_product" source="data/people.json" count="{count}" cyclic="True" target="">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+</setup>

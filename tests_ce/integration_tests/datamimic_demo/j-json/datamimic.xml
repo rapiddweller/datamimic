@@ -1,0 +1,7 @@
+<setup multiprocessing="True" defaultDataset="US" defaultLocale="en" defaultSeparator="|">
+    <memstore id="mem"/>
+
+    <include uri="1_generate.xml"/>
+    <include uri="2_template.xml"/>
+    <include uri="3_conditon.xml"/>
+</setup>

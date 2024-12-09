@@ -1,0 +1,26 @@
+<setup multiprocessing="True">
+    <database id="dbPostgres" system="postgres"/>
+    <execute uri="script/setup_test_variable_with_selector.sql" target="dbPostgres"/>
+    <execute uri="script/my_python.src.py"/>
+    <variable name="table_name" constant="db_postgres_test_variable_with_selector" distribution="ordered"/>
+    <generate name="user" source="dbPostgres"
+              selector="SELECT id, text FROM __table_name__" target="ConsoleExporter"/>
+
+    <generate name="selector_cyclic" count="10" target="ConsoleExporter">
+        <variable name="user_cyclic" source="dbPostgres" cyclic="True"
+                  selector="SELECT id, text FROM __table_name__" distribution="ordered"/>
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="user_id" script="user_cyclic.id"/>
+        <key name="user_text" script="user_cyclic.text"/>
+    </generate>
+
+    <!--  with iterationSelector cyclic will not affect -->
+    <generate name="iteration_selector_cyclic" count="10" target="ConsoleExporter">
+        <variable name="user_cyclic" source="dbPostgres" cyclic="True"
+                  iterationSelector="SELECT id, text FROM __table_name__"/>
+        <key name="id" values="0, 1, 2"/>
+        <key name="user_id" script="user_cyclic[id].get('id')"/>
+        <key name="user_text" script="user_cyclic[id].get('text')"/>
+    </generate>
+
+</setup>

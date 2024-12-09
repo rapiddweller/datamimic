@@ -1,0 +1,14 @@
+<setup multiprocessing="True" defaultSeparator=",">
+    <execute uri="python_function/py_functions.py"/>
+
+    <generate name="test_csv" count="10" target="">
+        <nestedKey name="people" type="list" source="data/people.wgt.ent.csv" sourceScripted="True">
+        </nestedKey>
+    </generate>
+
+    <generate name="test_json" count="10" target="">
+        <nestedKey name="people" type="list" source="data/people_script.json" sourceScripted="True">
+            <key name="name" script="people.name"/>
+        </nestedKey>
+    </generate>
+</setup>

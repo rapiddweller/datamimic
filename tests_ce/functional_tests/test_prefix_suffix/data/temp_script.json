@@ -1,0 +1,23 @@
+[
+  {
+    "type": "party",
+    "partyId": "party_no___partyIdCode__",
+    "individual_first_name": "C1",
+    "individual_family_name": "AHMED",
+    "individual_email_address": "c1.ahmed@gmail.com"
+  },
+  {
+    "type": "party",
+    "partyId": "party_no___partyIdCode__",
+    "individual_first_name": "C2",
+    "individual_family_name": "ALI",
+    "individual_email_address": "c2.ali@gmail.com"
+  },
+  {
+    "type": "party",
+    "partyId": "party_no___partyIdCode__",
+    "individual_first_name": "C3",
+    "individual_family_name": "BRUCE",
+    "individual_email_address": "c3.bruce@gmail.com"
+  }
+]

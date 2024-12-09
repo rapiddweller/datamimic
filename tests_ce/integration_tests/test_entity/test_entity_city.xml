@@ -1,0 +1,42 @@
+<setup multiprocessing="0">
+    <generate name="city" count="10" target="ConsoleExporter">
+        <variable name="city" entity="City"/>
+        <key name="name" script="city.name"/>
+        <key name="name1" script="city.name"/>
+        <key name="postal_code" script="city.postal_code"/>
+        <key name="postal_code1" script="city.postal_code"/>
+        <key name="area_code" script="city.area_code"/>
+        <key name="area_code1" script="city.area_code"/>
+        <key name="state" script="city.state"/>
+        <key name="state1" script="city.state"/>
+        <key name="language" script="city.language"/>
+        <key name="language1" script="city.language"/>
+        <key name="country" script="city.country"/>
+        <key name="country1" script="city.country"/>
+        <key name="country_code" script="city.country_code"/>
+        <key name="country_code1" script="city.country_code"/>
+        <key name="population" script="city.population"/>
+        <key name="population1" script="city.population"/>
+        <key name="name_extension" script="city.name_extension"/>
+        <key name="name_extension1" script="city.name_extension"/>
+        <variable name="city1" entity="City"/>
+        <key name="name2" script="city1.name"/>
+        <key name="name3" script="city1.name"/>
+        <key name="postal_code2" script="city1.postal_code"/>
+        <key name="postal_code3" script="city1.postal_code"/>
+        <key name="area_code2" script="city1.area_code"/>
+        <key name="area_code3" script="city1.area_code"/>
+        <key name="state2" script="city1.state"/>
+        <key name="state3" script="city1.state"/>
+        <key name="language2" script="city1.language"/>
+        <key name="language3" script="city1.language"/>
+        <key name="country2" script="city1.country"/>
+        <key name="country3" script="city1.country"/>
+        <key name="country_code2" script="city1.country_code"/>
+        <key name="country_code3" script="city1.country_code"/>
+        <key name="population2" script="city1.population"/>
+        <key name="population3" script="city1.population"/>
+        <key name="name_extension2" script="city1.name_extension"/>
+        <key name="name_extension3" script="city1.name_extension"/>
+    </generate>
+</setup>

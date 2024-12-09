@@ -1,0 +1,30 @@
+<setup>
+  <!-- for dynamic value, use variable name with prefix and suffix '__'  -->
+  <variable name="table_name" constant="public.db_postgres_demo" />
+
+  <!-- selector only execute once time -->
+  <generate name="dynamic_generator" source="database" selector="SELECT * FROM __table_name__" />
+
+  <generate name="dynamic_variable" count="10">
+    <variable name="query" source="database" selector="SELECT * FROM __table_name__" />
+    <key name="id" script="query.id" />
+    <key name="name" script="query.name" />
+  </generate>
+
+  <!--  for execute query multi times, use iterationSelector  -->
+  <!--  iterationSelector can only use as variable attribute  -->
+  <generate name="iteration_selector" count="10">
+    <key name="my_id" generator="IncrementGenerator" />
+    <variable
+      name="user"
+      source="database"
+      iterationSelector="SELECT id, name FROM __table_name__ where id = __my_id__"
+    />
+
+    <!-- result of iterationSelector is list of data, so use below code to output data -->
+    <key name="user_id" script="user[0].get('id')" defaultValue="None" />
+    <key name="user_name" script="user[0].get('name')" defaultValue="None" />
+    <!-- or use nestedKey -->
+    <nestedKey name="user_data" script="user" />
+  </generate>
+</setup>

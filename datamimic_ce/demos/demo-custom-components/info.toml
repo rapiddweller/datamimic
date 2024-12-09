@@ -1,0 +1,6 @@
+title = "Custom Components"
+description = "Showcases the capabilities of creating custom generators and converters and use them in the DATAMIMIC model."
+icon = "new-grid-item"
+tags = ["#custom", "#generator", "converter"]
+projectName = "demo-custom-components"
+id = "demo-custom-components"

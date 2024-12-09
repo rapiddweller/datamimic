@@ -1,0 +1,18 @@
+<setup>
+    <generate name="customer" source="data/ids.ent.csv" count="6" cyclic="True">
+        <generate name="data" source="data/notification.ent.csv" cyclic="True" count="4" target="ConsoleExporter">
+            <variable name="info" source="data/ids.ent.csv" cyclic="True" distribution="ordered"/>
+            <variable name="state" source="data/state.ent.csv" cyclic="True" distribution="ordered"/>
+            <key name="cs_id" type="string" script="data.info.id"/>
+            <nestedKey name="send_info" type="list" count="2">
+                <key name="phone" type="string" script="data.state.PHONE_IND"/>
+                <key name="time" type="string" script="data.state.Timestamp"/>
+                <variable name="contact_method" source="data/notification.ent.csv" distribution="ordered"/>
+                <nestedKey name="contact" type="list" count="3">
+                    <key name="email" type="string" script="data.send_info.contact_method.Email"/>
+                    <key name="SMS" type="string" script="data.send_info.contact_method.Sms"/>
+                </nestedKey>
+            </nestedKey>
+        </generate>
+    </generate>
+</setup>

@@ -1,0 +1,30 @@
+<setup>
+    <generate name="DateTimeConverter" count="10">
+        <variable name="datetime_generated" generator="DateTimeGenerator(random=True)"/>
+        <key name="row_id" generator="IncrementGenerator"/>
+        <key name="without_converter" script="datetime_generated"/>
+        <key name="converter_dd_mmm_yyyy" script="datetime_generated" converter="DateFormat('%d-%b-%Y')"/>
+        <key name="converter_dd_mmm_yyyy_UP" script="datetime_generated" outDateFormat="%d-%b-%Y"
+             converter="UpperCase"/>
+        <key name="converter_mmm_dd_HH_MM" script="datetime_generated" converter="DateFormat('%b-%d@%H%Mh')"/>
+
+        <!--    Convert a datetime string to an Epoch timestamp-->
+        <key name="epoch_in_seconds" constant="1692967891" inDateFormat="epoch" outDateFormat="%Y-%m-%d %H:%M:%S"/>
+        <key name="epoch_in_milliseconds" constant="1692967891000" inDateFormat="epoch"
+             outDateFormat="%Y-%m-%d %H:%M:%S"/>
+        <key name="to_epoch" generator="DateTimeGenerator" outDateFormat="epoch"/>
+        <key name="to_epoch_millis" generator="DateTimeGenerator" outDateFormat="epoch_millis"/>
+        <key name="to_epoch_micros" generator="DateTimeGenerator" outDateFormat="epoch_micros"/>
+        <key name="to_epoch_nanos" generator="DateTimeGenerator" outDateFormat="epoch_nanos"/>
+
+        <!--    Millisecond precision -->
+        <key name="to_datetime_3millis" generator="DateTimeGenerator" outDateFormat="%Y-%m-%d %H:%M:%S.%3f"/>
+        <key name="to_datetime_6millis" generator="DateTimeGenerator" outDateFormat="%Y-%m-%d %H:%M:%S.%f"/>
+
+
+        <!--    Use script to extract year, month or day-->
+        <key name="year" script="datetime_generated.year"/>
+        <key name="month" script="datetime_generated.month"/>
+        <key name="day" script="datetime_generated.day"/>
+    </generate>
+</setup>

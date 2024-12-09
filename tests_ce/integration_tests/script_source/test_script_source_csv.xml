@@ -1,0 +1,8 @@
+<setup multiprocessing="True" defaultSeparator=",">
+    <generate name="person" count="5" target="ConsoleExporter">
+        <variable name="personVar" source="data/person.ent.csv"/>
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" script="personVar.name"/>
+        <nestedKey name="pet" type="list" source="{'data/' + 'person.ent.csv'}"/>
+    </generate>
+</setup>

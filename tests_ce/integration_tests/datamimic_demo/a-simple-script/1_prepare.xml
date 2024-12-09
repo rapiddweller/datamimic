@@ -1,0 +1,3 @@
+<setup>
+    <generate name="CARS" source="data/car.ent.csv" separator="," target="mem"/>
+</setup>

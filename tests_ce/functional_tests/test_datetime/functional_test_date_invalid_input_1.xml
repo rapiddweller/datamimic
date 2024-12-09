@@ -1,0 +1,5 @@
+<setup multiprocessing="True">
+    <generate name="invalid_input_1" count="1" target="ConsoleExporter">
+        <key name="date_time" constant="01" inDateFormat="YYYY-MM-DD"/>
+    </generate>
+</setup>

@@ -1,0 +1,43 @@
+<setup multiprocessing="0">
+    <generate name="customer" count="10" target="ConsoleExporter">
+        <variable name="person" entity="Person"/>
+        <key name="gender" script="person.gender"/>
+        <key name="gender1" script="person.gender"/>
+        <key name="birthdate" script="person.birthdate"/>
+        <key name="birthdate1" script="person.birthdate"/>
+        <key name="given_name" script="person.given_name"/>
+        <key name="given_name1" script="person.given_name"/>
+        <key name="family_name" script="person.family_name"/>
+        <key name="family_name1" script="person.family_name"/>
+        <key name="email" script="person.email"/>
+        <key name="email1" script="person.email"/>
+        <key name="academic_title" script="person.academic_title"/>
+        <key name="academic_title1" script="person.academic_title"/>
+        <key name="age" script="person.age"/>
+        <key name="age1" script="person.age"/>
+        <key name="salutation" script="person.salutation"/>
+        <key name="salutation1" script="person.salutation"/>
+        <key name="name" script="person.name"/>
+        <key name="name1" script="person.name"/>
+        <variable name="person2" entity="Person"/>
+        <key name="gender2" script="person2.gender"/>
+        <key name="gender3" script="person2.gender"/>
+        <key name="birthdate2" script="person2.birthdate"/>
+        <key name="birthdate3" script="person2.birthdate"/>
+        <key name="given_name2" script="person2.given_name"/>
+        <key name="given_name3" script="person2.given_name"/>
+        <key name="family_name2" script="person2.family_name"/>
+        <key name="family_name3" script="person2.family_name"/>
+        <key name="email2" script="person2.email"/>
+        <key name="email3" script="person2.email"/>
+        <key name="academic_title2" script="person2.academic_title"/>
+        <key name="academic_title3" script="person2.academic_title"/>
+        <key name="age2" script="person2.age"/>
+        <key name="age3" script="person2.age"/>
+        <key name="salutation2" script="person2.salutation"/>
+        <key name="salutation3" script="person2.salutation"/>
+        <key name="name2" script="person2.name"/>
+        <key name="name3" script="person2.name"/>
+
+    </generate>
+</setup>

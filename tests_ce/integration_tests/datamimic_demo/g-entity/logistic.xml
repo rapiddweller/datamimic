@@ -1,0 +1,14 @@
+<setup>
+
+	<echo>Running DangerousGoodGenerator</echo>
+	<generate type="DangerousGood" count="50" consumer="">
+		<variable name="genobject" generator="DangerousGoodGenerator"/>
+		<attribute name="emergencyProcedure" script="genobject.emergencyProcedure"/>
+		<attribute name="hazardCode" script="genobject.hazardCode"/>
+		<attribute name="text1" script="genobject.text1"/>
+		<attribute name="text2" script="genobject.text2"/>
+		<attribute name="text3" script="genobject.text3"/>
+		<attribute name="unCode" script="genobject.unCode"/>
+	</generate>
+
+</setup>

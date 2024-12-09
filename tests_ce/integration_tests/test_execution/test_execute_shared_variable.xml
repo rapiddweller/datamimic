@@ -1,0 +1,9 @@
+<setup multiprocessing="True">
+    <execute uri="my_functions.py"/>
+    <generate name="customer" target="ConsoleExporter" count="5">
+        <nestedKey name="inner_list_1" type="list" count="5">
+            <key name="test2" script="cube(2)"/>
+            <!--             Must define scope of 'execution' that you are referring to           -->
+        </nestedKey>
+    </generate>
+</setup>

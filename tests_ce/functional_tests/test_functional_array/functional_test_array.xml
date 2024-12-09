@@ -1,0 +1,16 @@
+<setup multiprocessing="True">
+    <generate name="array_tag_test" count="50" target="">
+        <key name="count" type="int" generator="IncrementGenerator"/>
+        <nestedKey name="nested_key" type="dict">
+            <array name="string_array" type="string" count="10"/>
+        </nestedKey>
+        <array name="string_array" type="string" count="10"/>
+        <array name="int_array" type="int" count="10"/>
+        <array name="float_array" type="float" count="10"/>
+        <array name="bool_array" type="bool" count="10"/>
+        <array name="script_string_array" script="['Rose', 'Lotus', 'Jasmine']"/>
+        <array name="script_int_array" script="[10, 20, 30]"/>
+        <array name="script_bool_array" script="[True, False, True]"/>
+        <array name="script_float_array" script="[10.5, 5.8, 7.45]"/>
+    </generate>
+</setup>

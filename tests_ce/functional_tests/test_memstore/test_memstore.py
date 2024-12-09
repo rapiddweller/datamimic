@@ -1,0 +1,25 @@
+# DATAMIMIC
+# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0).
+# For commercial use, please contact Rapiddweller at info@rapiddweller.com to obtain a commercial license.
+# Full license text available at: http://creativecommons.org/licenses/by-nc-sa/4.0/
+
+
+
+from pathlib import Path
+
+from datamimic_ce.data_mimic_test import DataMimicTest
+
+
+class TestMemStore:
+    _test_dir = Path(__file__).resolve().parent
+
+    def test_in_memory_memstore(self):
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_in_memory_memstore.xml", capture_test_result=True
+        )
+        test_engine.test_with_timer()
+        result = test_engine.capture_result()
+        assert len(result["data"]) == 100000
+        assert len(result["data2"]) == len(result["data"])
+

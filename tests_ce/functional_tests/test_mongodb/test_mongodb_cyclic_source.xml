@@ -1,0 +1,49 @@
+<setup multiprocessing="True">
+    <memstore id="mem"/>
+    <mongodb id="mongodb"/>
+
+    <!-- clear mongo_func_test database -->
+    <generate name="delete" source="mongodb" selector="find: 'mongo_func_test', filter: {}" target="mongodb.delete">
+    </generate>
+
+    <!--  generate simple data  -->
+    <generate name="mongo_func_test" target="mongodb" count="5">
+        <key name="user_id" generator="IncrementGenerator"/>
+        <key name="user_name" values="'Bob', 'Frank', 'Phil'"/>
+    </generate>
+
+    <!--  query data from mongodb, except _id element cause it unique  -->
+    <generate name="mongo_selector" source="mongodb"
+              selector="find: 'mongo_func_test',
+                    filter: {},
+                    projection: {'_id': 0}"
+              cyclic="True" count="10">
+    </generate>
+
+    <!--  query data from mongodb in variable, don't need to except _id element -->
+    <generate name="variable_select_mongo" count="20">
+        <variable name="mongodb_var" source="mongodb"
+              selector="find: 'mongo_func_test', filter: {}"
+              cyclic="True" distribution="ordered"/>
+        <key name="user_id" script="mongodb_var.user_id"/>
+        <key name="user_name" script="mongodb_var.user_name"/>
+    </generate>
+
+    <!--  query data from mongodb in variable without cyclic result will limit to length of values in mongodb -->
+    <generate name="variable_select_non_cyclic" count="10">
+        <variable name="mongodb_var" source="mongodb"
+              selector="find: 'mongo_func_test', filter: {}"
+              distribution="ordered"/>
+        <key name="user_id" script="mongodb_var.user_id"/>
+        <key name="user_name" script="mongodb_var.user_name"/>
+    </generate>
+
+    <!--  delete data from mongodb  -->
+    <generate name="mongo_delete" source="mongodb"
+              selector="find: 'mongo_func_test', filter: {}"
+              target="mongodb.delete">
+    </generate>
+
+    <generate name="delete_check" type="mongo_func_test" source="mongodb" target="">
+    </generate>
+</setup>

@@ -1,0 +1,11 @@
+<setup multiprocessing="0">
+    <generate name="customer" count="10" target="">
+        <variable name="person" entity="Person"/>
+        <variable name="company" entity="Company"/>
+        <variable name="addr" entity="Address"/>
+        <variable name="bank" entity="Bank"/>
+        <variable name="city" entity="City"/>
+        <variable name="country" entity="Country"/>
+        <variable name="credit_card" entity="CreditCard"/>
+    </generate>
+</setup>

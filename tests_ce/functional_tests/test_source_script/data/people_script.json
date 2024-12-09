@@ -1,0 +1,22 @@
+[
+  {
+    "name": "May",
+    "age": 23,
+    "variable": "{addition_variable}"
+  },
+  {
+    "name": "Alice",
+    "age": "{23+3}",
+    "variable": "{addition_variable}"
+  },
+  {
+    "name": "Bob",
+    "age": "{random_age(10,40)}",
+    "variable": "{addition_variable}"
+  },
+  {
+    "name": "Other",
+    "age": "{random_age(10,40)}",
+    "variable": "This is a string, so that it won't evaluate script {random_age(20,40)}"
+  }
+]

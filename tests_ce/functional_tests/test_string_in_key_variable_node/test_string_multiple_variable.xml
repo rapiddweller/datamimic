@@ -1,0 +1,14 @@
+<setup>
+    <generate name="test_string_multiple_variable" count="3" target="ConsoleExporter">
+        <variable name="student" constant="'classA'"/>
+        <variable name="class_student" variablePrefix="@{"
+                  variableSuffix="}" string="find: @{student}"/>
+        <variable name="major" variablePrefix="__"
+                  variableSuffix="__" string="__class_student__"/>
+        <variable name="school" variablePrefix="@@"
+                  variableSuffix="@@" string="@@major@@"/>
+        <key name="query"
+             script="school"/>
+    </generate>
+
+</setup>

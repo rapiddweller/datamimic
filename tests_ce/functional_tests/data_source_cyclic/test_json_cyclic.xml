@@ -1,0 +1,8 @@
+<setup multiprocessing="True">
+    <generate name="non-cyclic-product" source="data/people.json" count="30" cyclic="False" target=""
+              distribution="ordered"/>
+    <generate name="cyclic-product" source="data/people.json" count="20" cyclic="True" target=""
+              distribution="ordered"/>
+    <generate name="big-cyclic-product" source="data/people.json" count="100" cyclic="True" target=""
+              distribution="ordered"/>
+</setup>

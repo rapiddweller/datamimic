@@ -1,0 +1,8 @@
+<setup defaultDataset="US" defaultLocale="en" defaultSeparator="|">
+    <include uri="conf/base.properties"/>
+    <memstore id="mem"/>
+    <database id="db" environment="environment" system="test"/>
+
+    <include uri="1_prepare.xml"/>
+    <include uri="2_generate.xml"/>
+</setup>

@@ -1,0 +1,12 @@
+<setup multiprocessing="False">
+    <generate name="customer" count="50000" target="">
+        <key name="rnd_str" type="string"/>
+        <key name="rnd_int" type="int"/>
+        <key name="rnd_float" type="float"/>
+        <key name="rnd_bool" type="bool"/>
+        <key name="regex" pattern="[a-zA-Z]{0,20}"/>
+        <key name="values" values="1,2,3,4,5,6,7,8,9,0"/>
+        <!--        <variable name="bank_account_weight" source="data/bank_account_weight.wgt.ent.csv" weightColumn="count"/>-->
+        <!--        <key name="bank_account_type_id" script="bank_account_weight.bank_account_type_id"/>-->
+    </generate>
+</setup>

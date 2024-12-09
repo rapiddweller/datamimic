@@ -1,0 +1,6 @@
+<setup multiprocessing="True">
+    <generate name="txt_consumer" count="1000" target="TXT">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" values="'Mary', 'Lan', 'Sara'"/>
+    </generate>
+</setup>

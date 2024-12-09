@@ -1,0 +1,21 @@
+<setup multiprocessing="True">
+    <database id="dbPostgres" system="postgres"/>
+    <memstore id="mem"/>
+    <execute uri="script/setup_test_variable_with_type.sql" target="dbPostgres"/>
+    <execute uri="script/my_python.src.py"/>
+    <variable name="table" source="dbPostgres"
+              type="db_postgres_test_variable_with_type"/>
+    <generate name="user" count="10" target="mem, ConsoleExporter">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="table_id" script="table.id"/>
+        <key name="table_name" script="table.text"/>
+        <key name="table_number" script="table.number"/>
+    </generate>
+
+    <generate name="user_2" count="15" target="ConsoleExporter">
+        <variable name="use_mem" type="user" source="mem"/>
+        <key name="id" script="use_mem.id"/>
+        <key name="name" script="use_mem.table_name"/>
+        <key name="number" script="use_mem.table_number"/>
+    </generate>
+</setup>

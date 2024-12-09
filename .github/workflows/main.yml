@@ -1,0 +1,536 @@
+name: Github Datamimic CE CI
+run-name: ${{ github.run_actor }} is running ${{ github.workflow }} on ${{ github.repository }}
+on:
+  push:
+    branches:
+      - development
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+  pull_request:
+    branches:
+      - development
+
+env:
+  RUNTIME_ENVIRONMENT: production
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Export latest tag
+        run: |
+          export RD_PROJECT_LATEST_TAG=${GITHUB_REF#refs/*/}
+          echo "RD_PROJECT_LATEST_TAG=$RD_PROJECT_LATEST_TAG"
+          echo "RD_PROJECT_LATEST_TAG=$RD_PROJECT_LATEST_TAG" >> build.env
+      - name: Export lib version without patch
+        run: |
+          export LIB_VERSION_WITHOUT_PATCH=$(echo "$RD_PROJECT_LATEST_TAG" | sed 's/\.[^.]*$//')
+          echo "LIB_VERSION_WITHOUT_PATCH=$LIB_VERSION_WITHOUT_PATCH"
+          echo "LIB_VERSION_WITHOUT_PATCH=$LIB_VERSION_WITHOUT_PATCH" >> build.env
+      - name: Upload build.env
+        uses: actions/upload-artifact@v4
+        with:
+          name: setup
+          path: build.env
+          if-no-files-found: error
+          retention-days: 1
+
+  install_dependencies:
+    runs-on: ubuntu-latest
+    container: python:3.11-slim-buster
+    needs: setup
+    permissions:
+      contents: read
+    steps:
+      - name: Install dependencies os packages
+        run: |
+          apt-get update
+          apt-get install -y libpq-dev curl build-essential git
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Cache python venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+      - name: Check version
+        run: |
+          uv --version
+          echo testdb=${DB_HOST}:${DB_PORT}/${DB_DATABASE}  with user=${DB_USER} password=${DB_PASSWORD}
+          echo MINIO_CONSUMER_HOST=${MINIO_CONSUMER_HOST} with MINIO_CONSUMER_ACCESS_KEY=${MINIO_CONSUMER_ACCESS_KEY} MINIO_CONSUMER_SECRET_KEY=${MINIO_CONSUMER_SECRET_KEY}
+          echo redis=${REDIS_HOST}:${REDIS_PORT} with password=${REDIS_PASSWORD}
+          echo logger_redis=${LOGGER_REDIS_HOST}:${LOGGER_REDIS_PORT} with password=${LOGGER_REDIS_PASSWORD}
+        shell: bash
+      - name: Create virtual env
+        run: |
+          uv venv .venv --python 3.11
+          . .venv/bin/activate
+      - name: Install dependencies
+        run: |
+          uv sync --all-extras
+        shell: bash
+
+  mypy:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    container: python:3.11-slim-buster
+    continue-on-error: true # TODO: Remove this line once all mypy errors are fixed
+    steps:
+      - name: Setup git
+        run: |
+          apt-get update
+          apt-get install -y git
+          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - name: Load venv cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+      - name: Run mypy
+        run: |
+          . .venv/bin/activate
+          uv run mypy datamimic_ce
+        shell: bash
+
+  ruff:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    container: python:3.11-slim-buster
+    continue-on-error: true # TODO: Remove this line once all ruff errors are fixed
+    steps:
+      - name: Setup git
+        run: |
+          apt-get update
+          apt-get install -y git
+          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - name: Load venv cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+      - name: Run ruff
+        run: |
+          . .venv/bin/activate
+          uv run ruff check datamimic_ce
+        shell: bash
+
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          ref: ${{ github.event.pull_request.head.ref || github.ref }}
+
+      - name: Set Up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv Package Manager
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies
+        run: |
+          uv sync
+        shell: bash
+
+      - name: Build Package
+        run: |
+          uv build
+        shell: bash
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: dist/*
+
+  unit_test:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    container: python:3.11-slim-buster
+    steps:
+      - name: Setup git
+        run: |
+          apt-get update
+          apt-get install -y git
+          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - name: Load venv cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+      - name: Run unit tests with coverage
+        run: |
+          . .venv/bin/activate
+          uv run pytest tests_ce/unit_tests/ -n auto --cov=. --cov-report=xml
+        shell: bash
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit
+          path: coverage.xml
+
+
+  functional_test:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    container: python:3.11-slim-buster
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: datamimic
+          POSTGRES_PASSWORD: datamimic
+          POSTGRES_DB: rd-datamimic
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      mongo:
+        image: mongo:4.4
+        env:
+          MONGO_INITDB_ROOT_USERNAME: datamimic
+          MONGO_INITDB_ROOT_PASSWORD: datamimic
+        ports:
+          - 27017:27017
+        options: --health-cmd "mongo --eval 'db.stats().ok'" --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - name: Setup git
+        run: |
+          apt-get update
+          apt-get install -y git
+          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - name: Load venv cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+      - name: Run functional tests with coverage
+        run: |
+          . .venv/bin/activate
+          uv run pytest tests_ce/functional_tests/ -n auto --cov=. --cov-report=xml
+        shell: bash
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-functional
+          path: coverage.xml
+
+
+  integration_test:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: datamimic
+          POSTGRES_PASSWORD: datamimic
+          POSTGRES_DB: rd-datamimic
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      mongo:
+        image: mongo:4.4
+        env:
+          MONGO_INITDB_ROOT_USERNAME: datamimic
+          MONGO_INITDB_ROOT_PASSWORD: datamimic
+        ports:
+          - 27017:27017
+        options: --health-cmd "mongo --eval 'db.stats().ok'" --health-interval 10s --health-timeout 5s --health-retries 5
+    container: python:3.11-slim-buster
+    steps:
+      - name: Setup git
+        run: |
+          apt-get update
+          apt-get install -y git
+          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - name: Load venv cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+      - name: Run integration tests with coverage
+        run: |
+          . .venv/bin/activate
+          uv run pytest tests_ce/integration_tests/ -n auto --cov=. --cov-report=xml
+        shell: bash
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-integration
+          path: coverage.xml
+
+  sonarcloud_analysis:
+    runs-on: ubuntu-latest
+    needs: [ unit_test, functional_test, integration_test ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download unit test coverage report
+        uses: actions/download-artifact@v4
+        with:
+          path: coverage-reports
+
+      - name: Move coverage reports to coverage directory and rename them
+        run: |
+          mv coverage-reports/coverage-functional/coverage.xml coverage-reports/coverage-functional.xml
+          mv coverage-reports/coverage-integration/coverage.xml coverage-reports/coverage-integration.xml
+          mv coverage-reports/coverage-unit/coverage.xml coverage-reports/coverage-unit.xml
+          rm -rf coverage-reports/coverage-functional
+          rm -rf coverage-reports/coverage-integration
+          rm -rf coverage-reports/coverage-unit
+          rm -rf coverage-reports/artifact
+          rm -rf coverage-reports/setup
+
+        shell: bash
+
+      - name: Display structure of downloaded files after renaming
+        run: ls -R coverage-reports
+
+      - name: Run SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  e2e_test:
+    name: E2E Test on ${{ matrix.os }} ${{ matrix.arch }}
+    if: github.ref == 'refs/heads/development' || startsWith(github.ref, 'refs/tags/')
+    runs-on: ${{ matrix.os }}
+    needs: [ build, unit_test, functional_test, integration_test ]
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        arch: [ x64, arm64 ]
+        python-version: [ '3.11' ]
+        exclude:
+          - os: windows-latest
+            arch: arm64  # Exclude Windows ARM64 as it's not supported
+          - os: ubuntu-latest
+            arch: arm64  # Ubuntu GitHub runners do not support ARM64 yet
+    steps:
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.arch }}
+
+      - name: Install uv Package Manager
+        run: |
+          python -m pip install --upgrade pip
+          pip install uv
+
+      - name: Download All Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Move *.whl and *.tar.gz to dist directory (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mv dist/artifact/*.whl dist
+          mv dist/artifact/*.tar.gz dist
+          rm -rf dist/artifact
+          rm -rf dist/setup
+
+      - name: Move *.whl and *.tar.gz to dist directory (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Move-Item dist\artifact\*.whl dist
+          Move-Item dist\artifact\*.tar.gz dist
+          Remove-Item -Path dist\artifact -Recurse -Force
+          Remove-Item -Path dist\setup -Recurse -Force
+        shell: pwsh
+
+
+      - name: List Contents of dist Directory
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            dir dist
+          else
+            ls dist
+          fi
+        shell: bash
+
+      - name: Install Built Package on Windows
+        if: runner.os == 'Windows'
+        run: |
+          $wheel = Get-ChildItem -Path dist\*.whl | Select-Object -First 1
+          pip install $wheel.FullName
+        shell: pwsh
+
+      - name: Install Built Package on Unix
+        if: runner.os != 'Windows'
+        run: |
+          pip install dist/*.whl
+        shell: bash
+
+      - name: Run DATAMIMIC Help Command
+        run: datamimic --help
+
+      - name: List Available Demos
+        run: datamimic demo list
+
+      - name: Create All Demos
+        run: datamimic demo create --all --target my_demos
+
+      - name: Run demo-condition
+        run: datamimic run ./my_demos/demo-condition/datamimic.xml
+
+      - name: Run demo-custom-components
+        run: datamimic run ./my_demos/demo-custom-components/datamimic.xml
+
+      - name: Run demo-database
+        run: datamimic run ./my_demos/demo-database/datamimic.xml
+
+      - name: Run demo-datetime
+        run: datamimic run ./my_demos/demo-datetime/datamimic.xml
+
+      - name: Run demo-db-mapping
+        run: datamimic run ./my_demos/demo-db-mapping/datamimic.xml
+
+      - name: Run demo-json
+        run: datamimic run ./my_demos/demo-json/datamimic.xml
+
+      - name: Run demo-masking
+        run: datamimic run ./my_demos/demo-masking/datamimic.xml
+
+      - name: Run demo-model
+        run: datamimic run ./my_demos/demo-model/datamimic.xml
+
+      - name: Run demo-postprocess
+        run: datamimic run ./my_demos/demo-postprocess/datamimic.xml
+
+      - name: Run demo-py-scripting
+        run: datamimic run ./my_demos/demo-py-scripting/datamimic.xml
+
+      - name: Run demo-watermark
+        run: datamimic run ./my_demos/demo-watermark/datamimic.xml
+
+      - name: Run demo-xml
+        run: datamimic run ./my_demos/demo-xml/datamimic.xml
+
+      - name: Run overview-converter
+        run: datamimic run ./my_demos/overview-converter/datamimic.xml
+
+      - name: Run overview-generator
+        run: datamimic run ./my_demos/overview-generator/datamimic.xml
+
+  publish_dev:
+    if: github.ref == 'refs/heads/development'
+    runs-on: ubuntu-latest
+    needs: [ e2e_test ]
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/datamimic_ce
+    permissions:
+      id-token: write # IMPORTANT: mandatory for trusted publishing https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
+      contents: read
+    steps:
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Download All Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Move *.whl and *.tar.gz to dist directory
+        run: |
+          mv dist/artifact/*.whl dist
+          mv dist/artifact/*.tar.gz dist
+          rm -rf dist/artifact
+          rm -rf dist/setup
+          rm -rf dist/coverage-functional
+          rm -rf dist/coverage-integration
+          rm -rf dist/coverage-unit
+
+      - name: List Contents of dist Directory
+        run: ls -R dist
+
+      - name: Publish distribution to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+  #          verbose: true
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    needs: [ e2e_test ]
+    environment:
+      name: pypi
+      url: https://pypi.org/p/datamimic_ce
+    permissions:
+      id-token: write # IMPORTANT: mandatory for trusted publishing https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
+      contents: read
+    steps:
+      - name: Download All Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Move *.whl and *.tar.gz to dist directory
+        run: |
+          mv dist/artifact/*.whl dist
+          mv dist/artifact/*.tar.gz dist
+          rm -rf dist/artifact
+          rm -rf dist/setup
+          rm -rf dist/coverage-functional
+          rm -rf dist/coverage-integration
+          rm -rf dist/coverage-unit
+
+      - name: List Contents of dist Directory
+        run: ls -R dist
+
+  #      - name: Publish distribution to PyPI
+  #        uses: pypa/gh-action-pypi-publish@release/v1
+  #        with:
+  #          password: ${{ secrets.PYPI_API_TOKEN }}
+
+  trigger_ee_dev:
+    if: github.ref == 'refs/heads/development'
+    runs-on: ubuntu-latest
+    needs: [ publish_dev ]
+    steps:
+      - name: trigger EE development pipelines
+        run: curl -X POST --fail -F token=$EE_TOKEN -F ref=development https://gitlab.dwellerlab.com/api/v4/projects/214/trigger/pipeline;
+        env:
+          EE_TOKEN: ${{ secrets.EE_TOKEN }}
+        shell: bash
+

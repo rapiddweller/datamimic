@@ -1,0 +1,6 @@
+title = "Basic Date Time"
+description = "Showcases how to generate and handle data for Date Time format."
+icon = "calendar"
+tags = ["#datetime"]
+projectName = "demo-datetime"
+id = "demo-datetime"

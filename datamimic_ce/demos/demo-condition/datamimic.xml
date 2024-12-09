@@ -1,0 +1,15 @@
+<setup>
+    <!--
+    Condition Demo
+    ======================================
+    DATAMIMIC Condition Demo demonstrates the condition with if, else-if and else tag.
+    Only one "if", "else" allow inside condition and please put these follow the order:
+    if -> else-if -> else
+    -->
+
+    <include uri="1_condition_tag.xml" />
+    <include uri="2_condition_attribute.xml" />
+    <include uri="3_condition_with_defaultvalue.xml" />
+    <include uri="4_condition_with_remove_none_element_converter.xml" />
+
+</setup>

@@ -1,0 +1,20 @@
+<setup>
+    <generate name="tdata" count="1" target="">
+
+        <generate name="lookup1" count="10" target="">
+            <key name="id" generator="IncrementGenerator"/>
+            <nestedKey name="output_keys" type="dict">
+                <key name="code" type="string" script="'code' + str(lookup1.get('id'))"/>
+                <key name="description" type="string" script="'description' + str(lookup1.get('id'))"/>
+            </nestedKey>
+        </generate>
+
+
+        <generate count="20" target="ConsoleExporter" name="lookup_test">
+            <variable name="lookup1_var" source="lookup1" cyclic="True" distribution="ordered"/>
+            <key name="ref_id" script="lookup_test.lookup1_var.get('id')"/>
+            <key name="test_value1" type="string" script="lookup_test.lookup1_var.output_keys.description"/>
+            <key name="test_value2" type="string" script="lookup_test.lookup1_var.output_keys.code"/>
+        </generate>
+    </generate>
+</setup>

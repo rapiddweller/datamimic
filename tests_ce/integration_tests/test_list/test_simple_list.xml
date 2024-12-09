@@ -1,0 +1,17 @@
+<setup multiprocessing="True">
+    <generate name="profile" count="2" target="ConsoleExporter">
+        <list name="petList">
+            <item>
+                <key name="number" type="int" constant="64"/>
+            </item>
+            <item>
+                <nestedKey name="pets" type="list" count="2">
+                    <nestedKey type="list" name="inner" count="1">
+                        <key name="str1" type="string"/>
+                    </nestedKey>
+                    <key name="str2" type="string"/>
+                </nestedKey>
+            </item>
+        </list>
+    </generate>
+</setup>

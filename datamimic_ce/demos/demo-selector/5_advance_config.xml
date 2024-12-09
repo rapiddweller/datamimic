@@ -1,0 +1,35 @@
+<setup defaultVariablePrefix="--" defaultVariableSuffix="--">
+  <!--  Default value of defaultVariablePrefix/defaultVariableSuffix are '__'-->
+  <!--  In this test, we set defaultVariablePrefix/defaultVariableSuffix to double dash -->
+  <variable name="table_name" constant="public.db_postgres_demo" />
+
+  <generate name="generate_selector" source="database" selector="SELECT * FROM --table_name--" />
+
+  <generate name="variable_selector" count="20">
+    <variable name="query" source="database" selector="SELECT id, name FROM --table_name--" />
+    <key name="id" script="query.id" />
+    <key name="name" script="query.name" />
+  </generate>
+
+  <!--  Set local variablePrefix/variableSuffix only affect that element -->
+  <generate
+    name="generate_selector2"
+    source="database"
+    variablePrefix="++"
+    variableSuffix="++"
+    selector="SELECT * FROM ++table_name++"
+  >
+  </generate>
+
+  <generate name="variable_selector2" count="20">
+    <variable
+      name="query"
+      source="database"
+      variablePrefix="${"
+      variableSuffix="}"
+      selector="SELECT id, name FROM ${table_name}"
+    />
+    <key name="id" script="query.id" />
+    <key name="name" script="query.name" />
+  </generate>
+</setup>

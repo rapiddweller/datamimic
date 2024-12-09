@@ -1,0 +1,4 @@
+<setup reportLogging="False">
+    <variable name="dynamic_uri" constant="conf/base.properties"/>
+    <include uri="{dynamic_uri}"/>
+</setup>

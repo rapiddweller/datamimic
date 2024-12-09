@@ -1,0 +1,27 @@
+<setup multiprocessing="0">
+    <generate name="customer" count="10" target="ConsoleExporter">
+        <key name="AcademicTitleGenerator1" generator="AcademicTitleGenerator"/>
+        <key name="BirthdateGenerator1" generator="BirthdateGenerator"/>
+        <key name="BooleanGenerator1" generator="BooleanGenerator"/>
+        <key name="CNPJGenerator1" generator="CNPJGenerator"/>
+        <key name="CompanyNameGenerator1" generator="CompanyNameGenerator"/>
+        <key name="CPFGenerator1" generator="CPFGenerator"/>
+        <key name="DateTimeGenerator1" generator="DateTimeGenerator"/>
+        <key name="DepartmentNameGenerator1" generator="DepartmentNameGenerator"/>
+        <key name="DomainGenerator1" generator="DomainGenerator"/>
+        <key name="EANGenerator1" generator="EANGenerator"/>
+        <key name="EmailAddressGenerator1" generator="EmailAddressGenerator"/>
+        <key name="FamilyNameGenerator1" generator="FamilyNameGenerator"/>
+        <key name="FloatGenerator1" generator="FloatGenerator"/>
+        <key name="GenderGenerator1" generator="GenderGenerator"/>
+        <key name="GivenNameGenerator1" generator="GivenNameGenerator"/>
+        <key name="IncrementGenerator1" generator="IncrementGenerator"/>
+        <key name="PhoneNumberGenerator1" generator="PhoneNumberGenerator"/>
+        <key name="SectorGenerator1" generator="SectorGenerator"/>
+        <key name="SSNGenerator1" generator="SSNGenerator"/>
+        <key name="StreetNameGenerator1" generator="StreetNameGenerator"/>
+        <key name="StringGenerator1" generator="StringGenerator"/>
+        <key name="UrlGenerator1" generator="UrlGenerator"/>
+        <key name="UUIDGenerator1" generator="UUIDGenerator"/>
+    </generate>
+</setup>

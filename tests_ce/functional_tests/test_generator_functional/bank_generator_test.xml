@@ -1,0 +1,9 @@
+<setup>
+    <generate name="bank" count="100" target="ConsoleExporter">
+		<variable name="prototype" entity="Bank"/>
+		<key name="bank_code" script="prototype.bank_code"/>
+		<key name="bic" script="prototype.bic"/>
+		<key name="bin" script="prototype.bin"/>
+		<key name="name" script="prototype.name"/>
+	</generate>
+</setup>

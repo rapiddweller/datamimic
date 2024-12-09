@@ -1,0 +1,13 @@
+<setup multiprocessing="True">
+    <echo>Begin echo</echo>
+    <generate name="echo_data" count="10" target="ConsoleExporter">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" values="'Bob','Frank','Phil'"/>
+        <echo>Current id is {id}, name is {name}</echo>
+        <nestedKey name="profile" type="list" count="2">
+            <key name="language" values="'german','vietnamese','english'"/>
+            <key name="age" type="int" values="11,12,13,14,15,16,22,23,25"/>
+        </nestedKey>
+    </generate>
+    <echo>End echo</echo>
+</setup>

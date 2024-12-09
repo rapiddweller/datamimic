@@ -1,0 +1,8 @@
+<setup multiprocessing="True">
+    <generate name="record" count="10" target="ConsoleExporter">
+        <key name="num_1" generator="IntegerGenerator"/>
+        <key name="num_2" generator="IntegerGenerator(min=10,max=20)"/>
+        <key name="str_1" generator="StringGenerator"/>
+        <key name="str_2" generator="StringGenerator(min_len=10,max_len=20)"/>
+    </generate>
+</setup>

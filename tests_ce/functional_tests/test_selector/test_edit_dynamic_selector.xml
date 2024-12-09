@@ -1,0 +1,40 @@
+<setup multiprocessing="True"
+       defaultVariablePrefix="--"
+       defaultVariableSuffix="--"
+>
+    <!--  Default value of defaultVariablePrefix/defaultVariableSuffix if not set are '__'-->
+    <!--  In this test set defaultVariablePrefix/defaultVariableSuffix to double dash -->
+    <database id="dbPostgres" system="postgres"/>
+    <execute uri="script/backup.sql" target="dbPostgres"/>
+
+    <variable name="table_name" constant="public.db_postgres_types5"/>
+
+    <generate name="generate_selector"
+              source="dbPostgres"
+              selector="SELECT * FROM --table_name--" target="ConsoleExporter">
+    </generate>
+
+    <generate name="variable_selector" count="20" target="ConsoleExporter">
+        <variable name="query" source="dbPostgres" selector="SELECT id, text FROM --table_name--" />
+        <key name="id" script="query.id"/>
+        <key name="name" script="query.text"/>
+    </generate>
+
+    <!--  Set local variablePrefix/variableSuffix only affect 1 element -->
+    <generate name="generate_selector2"
+              source="dbPostgres"
+              variablePrefix="++"
+              variableSuffix="++"
+              selector="SELECT * FROM ++table_name++" target="ConsoleExporter">
+    </generate>
+
+    <generate name="variable_selector2" count="20" target="ConsoleExporter">
+        <variable name="query"
+                  source="dbPostgres"
+                  variablePrefix="++"
+                  variableSuffix="++"
+                  selector="SELECT id, text FROM ++table_name++" />
+        <key name="id" script="query.id"/>
+        <key name="name" script="query.text"/>
+    </generate>
+</setup>

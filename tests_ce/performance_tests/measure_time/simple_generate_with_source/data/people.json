@@ -1,0 +1,44 @@
+[
+  {
+    "name":"Bob",
+    "age":23,
+    "profile1": [
+      {
+        "language": "german",
+        "learn": 4
+      }
+    ],
+    "profile2": {
+      "language": "vietnamese",
+      "leaned": 5
+    }
+  },
+  {
+    "name":"Frank",
+    "age":24,
+    "profile1": [
+      {
+        "language": "german",
+        "learn": 4
+      }
+    ],
+    "profile2": {
+      "language": "vietnamese",
+      "leaned": 5
+    }
+  },
+  {
+    "name":"Phil",
+    "age":25,
+    "profile1": [
+      {
+        "language": "german",
+        "learn": 4
+      }
+    ],
+    "profile2": {
+      "language": "vietnamese",
+      "leaned": 5
+    }
+  }
+]

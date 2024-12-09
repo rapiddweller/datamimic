@@ -1,0 +1,13 @@
+<setup>
+
+    <database id="sourceDB" system="source" environment="environment"/>
+
+    <include uri="conf/base.properties"/>
+
+    <!-- Run database setup scripts to create schema and tables -->
+    <include uri="1_prepare.xml"/>
+
+    <!-- Generate data into the prepared database and to the  consumer -->
+    <include uri="2_generate.xml"/>
+
+</setup>

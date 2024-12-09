@@ -1,0 +1,13 @@
+<setup>
+
+	<echo>Running CNPJGenerator</echo>
+	<generate name="CNPJ" count="10" >
+		<key name="value" generator="CNPJGenerator"/>
+	</generate>
+
+	<echo>Running CPFGenerator</echo>
+	<generate name="CPFG" count="10" >
+		<key name="value" generator="CPFGenerator"/>
+	</generate>
+
+</setup>

@@ -1,0 +1,47 @@
+<setup>
+
+	<echo>Running Address Entity</echo>
+	<generate name="Address" count="10" >
+		<variable name="genobject" entity="Address" />
+		<key name="street" script="genobject.street" />
+		<key name="house_number" script="genobject.house_number" />
+		<key name="postal_code" script="genobject.postal_code" />
+		<key name="city" script="genobject.city" />
+		<key name="state" script="genobject.state" />
+		<key name="country" script="genobject.country" />
+		<key name="office_phone" script="genobject.office_phone" />
+		<key name="private_phone" script="genobject.private_phone" />
+		<key name="mobile_phone" script="genobject.mobile_phone" />
+		<key name="fax" script="genobject.fax" />
+		<key name="organization" script="genobject.organization" />
+	</generate>
+
+	<echo>Running City Entity</echo>
+	<generate name="City" count="10" >
+		<variable name="genobject" entity="City" />
+		<key name="name" script="genobject.name" />
+		<key name="name_extension" script="genobject.name_extension" />
+		<key name="state" script="genobject.state" />
+		<key name="country" script="genobject.country" />
+		<key name="area_code" script="genobject.area_code" />
+		<key name="language" script="genobject.language" />
+		<key name="population" script="genobject.population" />
+	</generate>
+
+	<echo>Running Country Entity</echo>
+	<generate name="Country" count="10" >
+		<variable name="genobject" entity="Country" />
+		<key name="iso_code" script="genobject.iso_code" />
+		<key name="name" script="genobject.name" />
+		<key name="default_language_locale" script="genobject.default_language_locale" />
+		<key name="phone_code" script="genobject.phone_code" />
+		<key name="population" script="genobject.population" />
+	</generate>
+
+	<echo>Running StreetNameGenerator</echo>
+	<generate name="StreetName" count="10" >
+		<variable entity="Address" name="addr"/>
+        <key name="value" script="addr.street"/>
+	</generate>
+
+</setup>

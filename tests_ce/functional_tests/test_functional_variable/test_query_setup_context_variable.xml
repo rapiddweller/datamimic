@@ -1,0 +1,24 @@
+<setup multiprocessing="True">
+    <database id="dbPostgres" system="postgres"/>
+    <execute uri="script/setup_test_query_setup_context_variable.sql" target="dbPostgres"/>
+    <execute uri="script/my_python.src.py"/>
+
+    <variable name="user" source="dbPostgres" cyclic="False"
+              selector="SELECT id, text FROM public.db_postgres_test_query_setup_context_variable"
+              distribution="ordered"/>
+
+    <variable name="all_users" source="dbPostgres" cyclic="False"
+              iterationSelector="SELECT id, text FROM public.db_postgres_test_query_setup_context_variable"/>
+
+    <generate name="query_variable_test" count="10" target="ConsoleExporter">
+        <variable name="index" script="random(0,len(all_users)-1)"/>
+        <key name="id" script="all_users[index].get('id')"/>
+        <key name="name" script="all_users[index].get('text')"/>
+        <key name="static_id" script="user.id"/>
+        <key name="static_name" script="user.text"/>
+    </generate>
+
+    <echo>user is a DotableDict: {user}</echo>
+    <echo>all_users is a list of dict: {all_users}</echo>
+
+</setup>

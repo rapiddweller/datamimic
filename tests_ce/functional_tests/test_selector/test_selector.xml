@@ -1,0 +1,12 @@
+<setup multiprocessing="True">
+    <database id="dbPostgres" system="postgres"/>
+    <execute uri="script/backup.sql" target="dbPostgres"/>
+
+    <generate name="data" count="20" target="ConsoleExporter">
+        <key name="my_id" generator="IncrementGenerator"/>
+        <variable name="user" source="dbPostgres"
+                  selector="SELECT id, text FROM public.db_postgres_types5" distribution="ordered"/>
+        <key name="user_id" script="user.id" defaultValue="None"/>
+        <key name="user_name" script="user.text" defaultValue="None"/>
+    </generate>
+</setup>

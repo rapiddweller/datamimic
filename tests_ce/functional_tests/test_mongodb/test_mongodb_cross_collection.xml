@@ -1,0 +1,49 @@
+<setup multiprocessing="True">
+    <memstore id="mem"/>
+    <mongodb id="mongodb"/>
+
+    <!--  clear collections before run test  -->
+    <generate name="delete_users" source="mongodb" selector="find: 'users', filter: {}" target="mongodb.delete">
+    </generate>
+    <generate name="delete_orders" source="mongodb" selector="find: 'orders', filter: {}" target="mongodb.delete">
+    </generate>
+
+    <!--  generate orders collection  -->
+    <generate name="orders" source="script/orders.json" target="mongodb"/>
+
+    <!--  generate users collection  -->
+    <generate name="users" source="script/users.json" target="mongodb"/>
+
+    <generate name="summary" count="20" target="ConsoleExporter">
+        <variable name="result" source="mongodb" selector='aggregate: "users",
+                                                                pipeline: [
+                                                                   {
+                                                                      "$lookup":
+                                                                         {
+                                                                           "from": "orders",
+                                                                           "localField": "user_id",
+                                                                           "foreignField": "user_id",
+                                                                           "as": "userOrders"
+                                                                         }
+                                                                   },
+                                                                   {
+                                                                      "$unwind": "$userOrders"
+                                                                   },
+                                                                   {
+                                                                      "$group":
+                                                                         {
+                                                                           "_id": "$user_id",
+                                                                           "orders": { "$push": "$userOrders" }
+                                                                         }
+                                                                   }
+                                                                ]'/>
+        <nestedKey name="users_orders" script="result"/>
+    </generate>
+
+
+    <!--  clear collections after run test  -->
+    <generate name="delete_users" source="mongodb" selector="find: 'users', filter: {}" target="mongodb.delete">
+    </generate>
+    <generate name="delete_orders" source="mongodb" selector="find: 'orders', filter: {}" target="mongodb.delete">
+    </generate>
+</setup>

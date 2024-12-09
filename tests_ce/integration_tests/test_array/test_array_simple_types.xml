@@ -1,0 +1,8 @@
+<setup multiprocessing="True">
+    <generate name="data" target="ConsoleExporter" count="1">
+        <array name="stringArray" type="string" count="10"></array>
+        <array name="intArray" type="int" count="10"></array>
+        <array name="floatArray" type="float" count="10"></array>
+        <array name="boolArray" type="bool" count="10"></array>
+    </generate>
+</setup>

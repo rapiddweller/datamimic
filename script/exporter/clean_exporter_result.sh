@@ -1,0 +1,1 @@
+find . -type d -name 'exporter_result*' -exec rm -rf {} +

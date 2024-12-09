@@ -1,0 +1,10 @@
+<setup multiprocessing="1">
+    <generate name="customer" count="10" target="XML" pageSize="7">
+        <!--        <variable name="person" entity="Person"/>-->
+        <key name="id" generator="IncrementGenerator"/>
+        <!--        <key name="bool" type="bool"/>-->
+        <!--        <key name="name" script="person.given_name"/>-->
+        <!--        <key name="age" script="person.age"/>-->
+        <variable name="company" entity="Company"/>
+    </generate>
+</setup>

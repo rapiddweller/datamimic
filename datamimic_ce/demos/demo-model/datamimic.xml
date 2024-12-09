@@ -1,0 +1,28 @@
+<setup>
+
+    <!--
+
+    Basic Script
+    ======================================
+    DATAMIMIC Basic Script demo showcases data generation with built-in generators
+    as well as custom datasets from a file.
+
+    This 'datamimic script' is the main entry point for any processing
+    and always shown as the first item in the menu tree.
+    Base configuration and inclusion of additional files is done here.
+
+    -->
+
+    <!-- Include the 'base' property file for global variables -->
+    <include uri="conf/base.properties"/>
+
+    <!-- Define the in-memory storage -->
+    <memstore id="mem"/>
+
+    <!-- Load data into a temporary storage at runtime (memstore) -->
+    <include uri="1_prepare.xml"/>
+
+    <!-- DATAMIMIC model to generate the data -->
+    <include uri="2_generate.xml"/>
+
+</setup>
