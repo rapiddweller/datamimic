@@ -82,6 +82,7 @@ from datamimic_ce.tasks.mongodb_task import MongoDBTask
 from datamimic_ce.tasks.nested_key_task import NestedKeyTask
 from datamimic_ce.tasks.reference_task import ReferenceTask
 from datamimic_ce.tasks.task import Task
+from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 from datamimic_ce.utils.object_util import ObjectUtil
 
 
@@ -418,7 +419,7 @@ class TaskUtil:
         root_context: SetupContext,
         stmt: GenerateStatement,
         xml_result: list,
-        page_info: tuple,
+        page_info: MultiprocessingPageInfo,
     ) -> None:
         """
         Consume single list of product in generate statement.
@@ -458,7 +459,7 @@ class TaskUtil:
                     setup_context=root_context,
                     stmt=stmt,
                     targets=list(consumer_set),
-                    mp_idx=page_info[0],
+                    page_info=page_info,
                 )
             )
 
