@@ -49,13 +49,14 @@ class UnifiedBufferedExporter(Exporter, ABC):
         product_name: str,
         page_info: MultiprocessingPageInfo,
         chunk_size: Optional[int],
+        encoding: Optional[str],
     ):
         if chunk_size is not None and chunk_size <= 0:
             raise ValueError("Chunk size must be a positive integer or None for unlimited size.")
 
         self._exporter_type = exporter_type
         self.product_name = product_name  # Name of the product being exported
-        self._encoding = setup_context.default_encoding or "utf-8"
+        self._encoding = encoding or setup_context.default_encoding or "utf-8"
         use_sp = page_info is None or page_info.mp_idx is None
         mp_idx = None if use_sp else page_info.mp_idx
         self._pid = str(mp_idx) if mp_idx is not None else "None"

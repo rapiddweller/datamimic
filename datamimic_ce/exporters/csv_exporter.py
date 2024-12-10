@@ -30,6 +30,7 @@ class CSVExporter(UnifiedBufferedExporter):
         quotechar: Optional[str],
         quoting: Optional[int],
         line_terminator: Optional[str],
+        encoding: Optional[str],
     ):
         # Remove singleton pattern and initialize instance variables
         self.fieldnames = fieldnames
@@ -47,6 +48,7 @@ class CSVExporter(UnifiedBufferedExporter):
             product_name=product_name,
             chunk_size=chunk_size,
             page_info=page_info,
+            encoding=encoding,
         )
         logger.info(
             f"CSVExporter initialized with chunk size {chunk_size}, fieldnames '{fieldnames}', "
