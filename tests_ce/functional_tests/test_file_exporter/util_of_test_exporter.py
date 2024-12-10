@@ -12,6 +12,8 @@ def read_csv_txt_folder(folder_path: Path, have_header: bool = True):
     header = None
     data = []
     for name in file_names:
+        if name.split(".")[-1] not in ["txt", "csv"]:
+            continue
         with open(folder_path.joinpath(name), "r") as file:
             is_header = True if have_header is True else False
             for line in file:
@@ -49,6 +51,8 @@ def read_json_folder(folder_path: Path):
 
     data = []
     for name in file_names:
+        if name.split(".")[-1] != "json":
+            continue
         with open(folder_path.joinpath(name), "r") as file:
             data.extend(json.load(file))
     return data
@@ -62,6 +66,8 @@ def read_xml_folder(folder_path: Path):
 
     files = []
     for name in file_names:
+        if name.split(".")[-1] != "xml":
+            continue
         with open(folder_path.joinpath(name), "r") as file:
             datas = []
             for line in file:

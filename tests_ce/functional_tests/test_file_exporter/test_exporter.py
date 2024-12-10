@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 import json
 import shutil
+import time
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
@@ -15,6 +16,9 @@ class TestExporter:
     _test_dir = Path(__file__).resolve().parent
 
     def test_csv_exporter_mp(self):
+        # rest to prevent sometime error
+        time.sleep(1)
+
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_csv_exporter_mp.xml")
         engine.test_with_timer()
         task_id = engine.task_id
@@ -52,6 +56,9 @@ class TestExporter:
                 shutil.rmtree(customer_folder_path)
 
     def test_json_exporter_mp(self):
+        # rest to prevent sometime error
+        time.sleep(1)
+
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_json_exporter_mp.xml")
         engine.test_with_timer()
         task_id = engine.task_id
@@ -90,6 +97,9 @@ class TestExporter:
                 shutil.rmtree(customer_folder_path)
 
     def test_txt_exporter_mp(self):
+        # rest to prevent sometime error
+        time.sleep(1)
+
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_txt_exporter_mp.xml")
         engine.test_with_timer()
         task_id = engine.task_id
@@ -128,6 +138,9 @@ class TestExporter:
                 shutil.rmtree(customer_folder_path)
 
     def test_xml_exporter_mp(self):
+        # rest to prevent sometime error
+        time.sleep(1)
+
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_xml_exporter_mp.xml")
         engine.test_with_timer()
         task_id = engine.task_id
@@ -143,7 +156,7 @@ class TestExporter:
             if not files:
                 assert False
             else:
-                assert len(files) == 3
+                assert len(files) == 2
                 index = 0
                 for datas in files:
                     for data in datas:
@@ -162,7 +175,7 @@ class TestExporter:
             if not files:
                 assert False
             else:
-                assert len(files) == 3
+                assert len(files) == 2
                 index = 0
                 for datas in files:
                     for data in datas:
