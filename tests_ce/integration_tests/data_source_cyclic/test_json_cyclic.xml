@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <generate name="cyclic-product" source="data/people.json" count="5" cyclic="True" target="ConsoleExporter"/>
     <generate name="non-cyclic-product" source="data/people.json" count="5" cyclic="False" target="ConsoleExporter"/>
 </setup>

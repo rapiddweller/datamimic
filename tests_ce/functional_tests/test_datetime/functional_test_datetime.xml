@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <generate name="date_time_test" count="50" target="ConsoleExporter">
         <key name="count" type="int" generator="IncrementGenerator"/>
         <variable name="date_variable" generator="DateTimeGenerator"/>

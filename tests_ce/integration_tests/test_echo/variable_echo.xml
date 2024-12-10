@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <variable name="var" constant="data 1" />
     <echo>Echo variable 1: {var}</echo>
 

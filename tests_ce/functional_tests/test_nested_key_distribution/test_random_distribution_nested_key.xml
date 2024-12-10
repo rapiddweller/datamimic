@@ -1,4 +1,4 @@
-<setup multiprocessing="0">
+<setup multiprocessing="0" numProcess="2">
     <memstore id="mem"/>
     <generate name="data_source" count="100" target="mem">
         <key name="counter" type="int" generator="IncrementGenerator"/>

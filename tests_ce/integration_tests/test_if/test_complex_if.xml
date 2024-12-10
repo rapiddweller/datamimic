@@ -1,4 +1,4 @@
-<setup multiprocessing="True" defaultSeparator=",">
+<setup  multiprocessing="True" numProcess="2" defaultSeparator=",">
 
     <database id="sourceDB" system="source" environment="environment"/>
     <execute uri="script/setup.scr.sql" target="sourceDB"/>

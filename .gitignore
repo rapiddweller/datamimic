@@ -71,5 +71,6 @@ exported_data/
 test_artifacts/
 
 # Environment configuration
-#!**/**/environment.env.properties
+
 /data/
+/tests_ce/test-artifacts/

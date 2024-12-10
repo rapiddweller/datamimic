@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <execute uri="my_python.py"/>
     <generate name="user" count="5" target="ConsoleExporter">
         <variable name="age_var" script="random_age(18, 45)"/>

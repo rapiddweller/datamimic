@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <database id="dbPostgres" system="postgres"/>
     <execute uri="script/setup_test_variable_source_with_name_only.sql" target="dbPostgres"/>
     <execute uri="script/my_python.src.py"/>

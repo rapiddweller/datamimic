@@ -1,4 +1,4 @@
-<setup multiprocessing="True"
+<setup  multiprocessing="True" numProcess="2"
        defaultVariablePrefix="--"
        defaultVariableSuffix="--"
 >

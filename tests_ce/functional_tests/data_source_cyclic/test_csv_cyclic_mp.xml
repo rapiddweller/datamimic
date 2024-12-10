@@ -1,4 +1,4 @@
-<setup multiprocessing="True" defaultSeparator=",">
+<setup  multiprocessing="True" numProcess="2" defaultSeparator=",">
     <generate name="non-cyclic-product" source="data/products.ent.csv" count="15" cyclic="False"
               target="" distribution="ordered"/>
     <generate name="cyclic-product" source="data/products.ent.csv" count="20" cyclic="True" target=""

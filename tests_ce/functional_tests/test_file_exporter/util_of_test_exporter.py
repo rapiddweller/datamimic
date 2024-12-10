@@ -1,9 +1,10 @@
 import json
 import os
 from pathlib import Path
+from typing import Literal
 
 
-def read_csv_txt_folder(folder_path: Path, have_header: bool = True):
+def read_csv_txt_folder(folder_path: Path, file_extension: Literal["csv", "txt"], have_header: bool = True):
     if not folder_path.exists():
         return None, None
 
@@ -12,14 +13,15 @@ def read_csv_txt_folder(folder_path: Path, have_header: bool = True):
     header = None
     data = []
     for name in file_names:
-        with open(folder_path.joinpath(name), "r") as file:
-            is_header = True if have_header is True else False
-            for line in file:
-                if is_header:
-                    header = line.strip()
-                    is_header = False
-                else:
-                    data.append(line.strip())
+        if name.endswith(f".{file_extension}"):
+            with open(folder_path.joinpath(name), "r") as file:
+                is_header = True if have_header is True else False
+                for line in file:
+                    if is_header:
+                        header = line.strip()
+                        is_header = False
+                    else:
+                        data.append(line.strip())
     return header, data
 
 
@@ -49,8 +51,9 @@ def read_json_folder(folder_path: Path):
 
     data = []
     for name in file_names:
-        with open(folder_path.joinpath(name), "r") as file:
-            data.extend(json.load(file))
+        if name.endswith(".json"):
+            with open(folder_path.joinpath(name), "r") as file:
+                data.extend(json.load(file))
     return data
 
 
@@ -62,12 +65,13 @@ def read_xml_folder(folder_path: Path):
 
     files = []
     for name in file_names:
-        with open(folder_path.joinpath(name), "r") as file:
-            datas = []
-            for line in file:
-                datas.append(line.strip())
-            if datas:
-                files.append(datas)
+        if name.endswith(".xml"):
+            with open(folder_path.joinpath(name), "r") as file:
+                datas = []
+                for line in file:
+                    datas.append(line.strip())
+                if datas:
+                    files.append(datas)
     return files
 
 

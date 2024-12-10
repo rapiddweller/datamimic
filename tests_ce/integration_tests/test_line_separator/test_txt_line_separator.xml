@@ -1,4 +1,4 @@
-<setup multiprocessing="True" defaultLineSeparator="999">
+<setup  multiprocessing="True" numProcess="2" defaultLineSeparator="999">
     <generate name="txt_line_separator" count="100" target="TXT">
         <key name="id" generator="IncrementGenerator"/>
         <key name="name" values="'Mary', 'Lan', 'Sara'"/>

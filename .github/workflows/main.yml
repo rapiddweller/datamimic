@@ -237,7 +237,7 @@ jobs:
       - name: Run functional tests with coverage
         run: |
           . .venv/bin/activate
-          uv run pytest tests_ce/functional_tests/ -n auto --cov=. --cov-report=xml
+          uv run pytest tests_ce/functional_tests/ --cov=. --cov-report=xml
         shell: bash
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -286,7 +286,7 @@ jobs:
       - name: Run integration tests with coverage
         run: |
           . .venv/bin/activate
-          uv run pytest tests_ce/integration_tests/ -n auto --cov=. --cov-report=xml
+          uv run pytest tests_ce/integration_tests/ --cov=. --cov-report=xml
         shell: bash
       - name: Upload coverage report
         uses: actions/upload-artifact@v4

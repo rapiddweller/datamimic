@@ -1,4 +1,4 @@
-<setup multiprocessing="0">
+<setup multiprocessing="0" numProcess="2">
 
     <database id="sourceDB" system="postgresql"/>
 
