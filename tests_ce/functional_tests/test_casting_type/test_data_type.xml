@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <generate name="product" count="50" target="ConsoleExporter">
         <key name="id" generator="IncrementGenerator"/>
         <key name="hello_constant" constant="Hello, World!"/>

@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
 
     <!-- clear mongo_func_test database -->
     <generate name="delete" source="mongodb" selector="find: 'mongo_func_test', filter: {}" target="mongodb.delete"/>

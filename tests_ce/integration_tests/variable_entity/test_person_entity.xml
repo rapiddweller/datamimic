@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <generate name="user" count="5" target="ConsoleExporter">
         <variable name="person" entity="Person"/>
         <key name="id" generator="IncrementGenerator"/>

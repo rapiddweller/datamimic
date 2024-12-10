@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <memstore id="mem"/>
     <generate name="people_csv" source="data/person.ent.csv" target="mem" separator="," distribution="ordered"/>
     <generate name="people" target="ConsoleExporter" count="10">

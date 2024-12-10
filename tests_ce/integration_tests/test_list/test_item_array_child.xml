@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <generate name="array_child" count="2" target="ConsoleExporter">
         <list name="simple_list">
             <item>

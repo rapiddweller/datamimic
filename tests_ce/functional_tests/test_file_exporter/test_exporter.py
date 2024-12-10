@@ -26,7 +26,7 @@ class TestExporter:
 
         try:
             # test customer csv
-            header, data = util.read_csv_txt_folder(customer_folder_path)
+            header, data = util.read_csv_txt_folder(customer_folder_path, "csv")
             if not header or not data:
                 assert False
             else:
@@ -34,7 +34,7 @@ class TestExporter:
                 assert data == [str(tens) for tens in range(1, 11)]
 
             # test inner_user csv
-            header, data = util.read_csv_txt_folder(inner_user_folder_path)
+            header, data = util.read_csv_txt_folder(inner_user_folder_path, "csv")
             if not header or not data:
                 assert False
             else:
@@ -101,7 +101,7 @@ class TestExporter:
 
         try:
             # test customer csv
-            _, data = util.read_csv_txt_folder(customer_folder_path, have_header=False)
+            _, data = util.read_csv_txt_folder(customer_folder_path, "txt", have_header=False)
             if not data:
                 assert False
             else:
@@ -110,7 +110,7 @@ class TestExporter:
                     assert data[customer_data_len-1] == "customer: {'cid': " + str(customer_data_len) + "}"
 
             # test inner_user csv
-            _, data = util.read_csv_txt_folder(inner_user_folder_path, have_header=False)
+            _, data = util.read_csv_txt_folder(inner_user_folder_path, "txt", have_header=False)
             if not data:
                 assert False
             else:

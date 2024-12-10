@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <generate name="invalid_out" count="1" target="ConsoleExporter">
         <variable name="date_variable" generator="DateTimeGenerator"/>
         <key name="date_time_with_out" script="date_variable" outDateFormat="invalid"/>

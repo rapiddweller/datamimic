@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <generate name="test_order" count="3" target="ConsoleExporter">
         <variable name="collection" constant="'orders'"/>
         <variable name="status" constant="'shipped'"/>

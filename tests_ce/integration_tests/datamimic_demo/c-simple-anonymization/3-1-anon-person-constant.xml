@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <generate name="personConstant" type="personConstant" count="1" target="mem">
         <key name="streetAndNumber" constant="Main Street 1"/>
         <key name="zip" constant="12345"/>

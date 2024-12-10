@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <execute uri="my_functions.py"/>
     <generate name="customer" target="ConsoleExporter" count="5">
         <nestedKey name="inner_list_1" type="list" count="5">

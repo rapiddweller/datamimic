@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
 
     <!-- for dynamic value, use variable name with prefix and suffix '__'  -->
     <variable name="table_name" constant="public.db_postgres_demo"/>

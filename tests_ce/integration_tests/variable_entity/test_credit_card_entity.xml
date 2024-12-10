@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <generate name="card" count="100" target="ConsoleExporter">
         <variable name="credit_card" entity="CreditCard"/>
         <key name="id" generator="IncrementGenerator"/>

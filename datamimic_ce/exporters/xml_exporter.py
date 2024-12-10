@@ -43,8 +43,8 @@ class XMLExporter(UnifiedBufferedExporter):
             item_element (str, optional): The element name for each item. Defaults to 'item'.
         """
         # Initialize instance variables
-        self.root_element = root_element
-        self.item_element = item_element
+        self.root_element = root_element or "list"
+        self.item_element = item_element or "item"
 
         super().__init__(
             exporter_type="xml",

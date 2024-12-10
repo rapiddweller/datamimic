@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import time
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -83,7 +84,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
     def _get_buffer_tmp_dir(self) -> Path:
         return (
                 self._descriptor_dir
-                / f"exporter_result_{self._task_id}_exporter_{self._exporter_type}_product_{self.product_name}"
+                / f"temp_result_{self._task_id}{self._pid_placeholder}_exporter_{self._exporter_type}_product_{self.product_name}"
         )
 
     def _init_buffer_directory(self) -> None:
@@ -105,16 +106,6 @@ class UnifiedBufferedExporter(Exporter, ABC):
                         f"Failed to initialize buffer directory after {self.MAX_RETRIES} attempts: {e}"
                     )
                 time.sleep(self.RETRY_DELAY * (attempt + 1))
-
-    def _get_buffer_dir_by_pid(self) -> Path:
-        """
-        Returns the buffer directory for the current PID.
-        :return:
-        """
-        return (
-            self._descriptor_dir
-            / f"exporter_result_{self._task_id}_exporter_{self._exporter_type}_product_{self.product_name}"
-        )
 
     def _get_state_meta_file(self) -> Path:
         return self._buffer_tmp_dir / f"state_product_{self.product_name}{self._pid_placeholder}.meta"
@@ -325,7 +316,6 @@ class UnifiedBufferedExporter(Exporter, ABC):
         logger.debug(f"Storing data for '{self.product_name}' with {len(data)} records")
         self.store_data(data)
 
-
     def _craft_uri(self, metadata, suffix):
         # Extract metadata information
         chunk_index = metadata.get("chunk_index", 0)
@@ -390,6 +380,17 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
         except Exception as e:
             logger.error(f"Error during cleanup: {e}")
+
+    def save_exported_result(self) -> None:
+        """Copy all temporary files to the final destination."""
+        logger.info(f"Saving exported result for product {self.product_name}")
+
+        exporter_dir_path = self._descriptor_dir / f"exporter_result_{self._task_id}_exporter_{self._exporter_type}_product_{self.product_name}"
+        exporter_dir_path.mkdir(parents=True, exist_ok=True)
+
+        for file in self._buffer_tmp_dir.iterdir():
+            shutil.copy2(file, exporter_dir_path)
+
 
     def _reset_state(self) -> None:
         """Reset exporter state."""

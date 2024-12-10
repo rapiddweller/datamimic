@@ -1,4 +1,4 @@
-<setup multiprocessing="True" defaultSeparator=",">
+<setup  multiprocessing="True" numProcess="2" defaultSeparator=",">
     <execute uri="python_function/py_functions.py"/>
 
     <generate name="test_csv" count="10" target="">
