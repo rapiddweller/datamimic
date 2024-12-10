@@ -234,7 +234,7 @@ class ExporterUtil:
         elif name == EXPORTER_XML:
             return XMLExporter(setup_context, product_name, page_info, chunk_size, root_element, item_element)
         elif name == EXPORTER_TXT:
-            return TXTExporter(setup_context, product_name, page_info, chunk_size, line_terminator)
+            return TXTExporter(setup_context, product_name, page_info, chunk_size, delimiter, line_terminator)
         elif name == EXPORTER_TEST_RESULT_EXPORTER:
             return setup_context.test_result_exporter
         elif name in setup_context.clients:
