@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <generate name="record" count="10" target="ConsoleExporter">
         <key name="num_1" generator="IntegerGenerator"/>
         <key name="num_2" generator="IntegerGenerator(min=10,max=20)"/>

@@ -1,4 +1,4 @@
-<setup multiprocessing="True" defaultSeparator=",">
+<setup  multiprocessing="True" numProcess="2" defaultSeparator=",">
     <generate name="person" count="5" target="ConsoleExporter">
         <variable name="personVar" cyclic="True" source="data/person.ent.csv"/>
         <key name="id" generator="IncrementGenerator"/>

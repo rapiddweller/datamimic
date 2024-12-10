@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <execute uri="script/source.scr.sql" target="sourceDB"/>
     <execute uri="script/target.scr.sql" target="targetDB"/>
     <generate name="CUSTOMER" count="{customer_count}" target="sourceDB, ConsoleExporter">

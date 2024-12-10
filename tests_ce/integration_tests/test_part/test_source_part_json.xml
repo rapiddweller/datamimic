@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <generate name="people" target="ConsoleExporter" count="1">
         <nestedKey name="peopleJson" type="list" source="data/people.json"/>
         <nestedKey name="shortPeopleJson" count="1" type="list" source="data/people.json"/>

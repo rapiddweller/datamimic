@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <mongodb id="mongodb"/>
     <generate name="mongo2" target="ConsoleExporter, mongodb" count="2">
         <key name="user_id" generator="IncrementGenerator"/>

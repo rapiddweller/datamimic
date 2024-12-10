@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <generate name="script3" count="50" target="ConsoleExporter">
         <key name="count" type="int" generator="IncrementGenerator"/>
         <array name="random_array" type="string" count="10"/>

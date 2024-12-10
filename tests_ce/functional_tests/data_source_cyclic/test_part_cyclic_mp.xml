@@ -1,4 +1,4 @@
-<setup multiprocessing="True" defaultSeparator=",">
+<setup  multiprocessing="True" numProcess="2" defaultSeparator=",">
     <generate name="people" count="10" target="ConsoleExporter" distribution="ordered">
         <nestedKey name="product-cyclic" type="list" source="data/products.ent.csv" count="100" cyclic="True"
                    distribution="ordered"/>

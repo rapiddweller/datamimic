@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <echo>Generate data 1</echo>
     <generate name="data_1" target="ConsoleExporter" count="3">
         <echo>Processing one chunk of data_1</echo>

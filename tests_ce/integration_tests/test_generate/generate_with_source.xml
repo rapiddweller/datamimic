@@ -1,4 +1,4 @@
-<setup defaultSeparator="," multiprocessing="True">
+<setup defaultSeparator=","  multiprocessing="True" numProcess="2">
     <generate name="cyclic_product" source="data/person.ent.csv" count="10" cyclic="True" target="ConsoleExporter">
         <key name="id" generator="IncrementGenerator"/>
         <nestedKey name="order" type="list" count="3">

@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <database id="dbPostgres" system="postgres"/>
     <memstore id="mem"/>
     <execute uri="script/setup_test_variable_with_type.sql" target="dbPostgres"/>

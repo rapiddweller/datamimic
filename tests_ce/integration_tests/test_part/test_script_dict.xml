@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup  multiprocessing="True" numProcess="2">
     <execute uri="script/my_function.py"/>
     <generate name="script2" count="5" target="ConsoleExporter">
         <key name="count" type="int" generator="IncrementGenerator"/>
