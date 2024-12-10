@@ -356,10 +356,10 @@ def _consume_outermost_gen_stmt_by_page(
                 page_info=page_info,
             )
             if is_last_page:
-                _finalize_and_export_consumers(context, sub_stmt, page_info.mp_idx)
+                _finalize_and_export_consumers(context, sub_stmt)
 
 
-def _finalize_and_export_consumers(context: Context, stmt: GenerateStatement, mp_idx: int) -> None:
+def _finalize_and_export_consumers(context: Context, stmt: GenerateStatement) -> None:
     """
     Finalize chunks and export data for all consumers that require it.
 
@@ -367,7 +367,6 @@ def _finalize_and_export_consumers(context: Context, stmt: GenerateStatement, mp
     :param stmt: GenerateStatement instance.
     :return: None
     """
-    exporter_util_cls = context.root.class_factory_util.get_exporter_util()
     if hasattr(context.root, "_task_exporters"):
         # Find all exporters for this statement
         cache_key_prefix = f"{context.root.task_id}_{stmt.name}_"
@@ -390,6 +389,8 @@ def _finalize_and_export_consumers(context: Context, stmt: GenerateStatement, mp
                         consumer.upload_to_storage(
                             bucket=stmt.bucket or stmt.container, name=f"{context.root.task_id}/{stmt.name}"
                         )
+                    if hasattr(consumer, "save_exported_result"):
+                        consumer.save_exported_result()
 
                     # Only clean up on outermost generate task
                     if isinstance(context, SetupContext) and hasattr(consumer, "cleanup"):
