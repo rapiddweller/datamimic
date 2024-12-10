@@ -73,3 +73,4 @@ test_artifacts/
 # Environment configuration
 
 /data/
+/tests_ce/test-artifacts/
