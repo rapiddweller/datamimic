@@ -228,13 +228,13 @@ class ExporterUtil:
         elif name == EXPORTER_LOG_EXPORTER:
             return LogExporter()
         elif name == EXPORTER_JSON:
-            return JsonExporter(setup_context, product_name, mp_idx)
+            return JsonExporter(setup_context, product_name, page_info, chunk_size, use_ndjson)
         elif name == EXPORTER_CSV:
-            return CSVExporter(setup_context, product_name, mp_idx)
+            return CSVExporter(setup_context, product_name, page_info, chunk_size, fieldnames, delimiter, quotechar, quoting, line_terminator)
         elif name == EXPORTER_XML:
-            return XMLExporter(setup_context, product_name, mp_idx)
+            return XMLExporter(setup_context, product_name, page_info, chunk_size, root_element, item_element)
         elif name == EXPORTER_TXT:
-            return TXTExporter(setup_context, product_name, mp_idx)
+            return TXTExporter(setup_context, product_name, page_info, chunk_size, line_terminator)
         elif name == EXPORTER_TEST_RESULT_EXPORTER:
             return setup_context.test_result_exporter
         elif name in setup_context.clients:
