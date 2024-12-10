@@ -4,7 +4,7 @@
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=coverage)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
-[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](http://creativecommons.org/licenses/by-nc-sa/4.0/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/Python-≥3.10-blue.svg)](https://www.python.org/downloads/)
 [![GitHub Stars](https://img.shields.io/github/stars/rapiddweller/datamimic.svg)](https://github.com/rapiddweller/datamimic/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/rapiddweller/datamimic.svg)](https://github.com/rapiddweller/datamimic/network)
@@ -141,10 +141,17 @@ Check out our [Contribution Guidelines](CONTRIBUTING.md) and [Code of Conduct](C
 
 ## License
 
-DATAMIMIC is dual-licensed:
+DATAMIMIC CE is now open source and licensed under MIT:
 
-- 📄 **Non-Commercial Use**: Licensed under [CC BY-NC-SA 4.0](http://creativecommons.org/licenses/by-nc-sa/4.0/).
-- 💼 **Commercial Use**: Contact us at [info@rapiddweller.com](mailto:info@rapiddweller.com) for commercial licensing.
+- 📄 **Open Source License**: Licensed under the [MIT License](LICENSE)
+- 🆓 **Free for Everyone**: Use freely for both personal and commercial projects
+- 💡 **Key Permissions**:
+  - Commercial use
+  - Modification
+  - Distribution
+  - Private use
+
+For questions or support, contact us at [info@rapiddweller.com](mailto:info@rapiddweller.com).
 
 ---
 
