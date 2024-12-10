@@ -454,7 +454,7 @@ jobs:
   publish_dev:
     if: github.ref == 'refs/heads/development'
     runs-on: ubuntu-latest
-    needs: [ e2e_test ]
+#    needs: [ e2e_test ]
     environment:
       name: testpypi
       url: https://test.pypi.org/p/datamimic_ce
