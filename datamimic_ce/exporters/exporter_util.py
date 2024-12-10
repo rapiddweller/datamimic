@@ -217,6 +217,7 @@ class ExporterUtil:
         line_terminator = exporter_params_dict.get("line_terminator", None)
         root_element = exporter_params_dict.get("root_element", None)
         item_element = exporter_params_dict.get("item_element", None)
+        encoding = exporter_params_dict.get("encoding", None)
         if fieldnames is not None and isinstance(fieldnames, str):
             try:
                 fieldnames = ast.literal_eval(fieldnames)
@@ -228,13 +229,13 @@ class ExporterUtil:
         elif name == EXPORTER_LOG_EXPORTER:
             return LogExporter()
         elif name == EXPORTER_JSON:
-            return JsonExporter(setup_context, product_name, page_info, chunk_size, use_ndjson)
+            return JsonExporter(setup_context, product_name, page_info, chunk_size, use_ndjson, encoding)
         elif name == EXPORTER_CSV:
-            return CSVExporter(setup_context, product_name, page_info, chunk_size, fieldnames, delimiter, quotechar, quoting, line_terminator)
+            return CSVExporter(setup_context, product_name, page_info, chunk_size, fieldnames, delimiter, quotechar, quoting, line_terminator, encoding)
         elif name == EXPORTER_XML:
-            return XMLExporter(setup_context, product_name, page_info, chunk_size, root_element, item_element)
+            return XMLExporter(setup_context, product_name, page_info, chunk_size, root_element, item_element, encoding)
         elif name == EXPORTER_TXT:
-            return TXTExporter(setup_context, product_name, page_info, chunk_size, delimiter, line_terminator)
+            return TXTExporter(setup_context, product_name, page_info, chunk_size, delimiter, line_terminator, encoding)
         elif name == EXPORTER_TEST_RESULT_EXPORTER:
             return setup_context.test_result_exporter
         elif name in setup_context.clients:

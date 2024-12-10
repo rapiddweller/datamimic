@@ -35,11 +35,12 @@ class JsonExporter(UnifiedBufferedExporter):
         product_name: str,
         page_info: MultiprocessingPageInfo,
         chunk_size: Optional[int],
-        use_ndjson: Optional[bool]
+        use_ndjson: Optional[bool],
+        encoding: Optional[str],
     ):
         self.use_ndjson = use_ndjson
         self._task_id = setup_context.task_id
-        super().__init__("json", setup_context, product_name, chunk_size=chunk_size, page_info=page_info)
+        super().__init__("json", setup_context, product_name, chunk_size=chunk_size, page_info=page_info,encoding=encoding)
 
         logger.info(f"JsonExporter initialized with chunk size {chunk_size} and NDJSON format: {use_ndjson}")
 

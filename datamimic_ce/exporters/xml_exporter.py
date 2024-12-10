@@ -32,6 +32,7 @@ class XMLExporter(UnifiedBufferedExporter):
         chunk_size: Optional[int],
         root_element: Optional[str],
         item_element: Optional[str],
+        encoding: Optional[str]
     ):
         """
         Initializes the XMLExporter.
@@ -52,6 +53,7 @@ class XMLExporter(UnifiedBufferedExporter):
             product_name=product_name,
             chunk_size=chunk_size,
             page_info=page_info,
+            encoding=encoding
         )
         logger.info(
             f"XMLExporter initialized with chunk size {chunk_size}, root element '{self.root_element}', "
