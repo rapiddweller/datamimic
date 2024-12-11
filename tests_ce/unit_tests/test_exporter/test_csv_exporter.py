@@ -73,6 +73,7 @@ class TestCSVExporter(unittest.TestCase):
             line_terminator=line_terminator,
             page_info=None,
             fieldnames=None,
+            encoding=encoding,
         )
 
     def tearDown(self):
@@ -223,6 +224,7 @@ class TestCSVExporter(unittest.TestCase):
             line_terminator=None,
             page_info=None,
             fieldnames=None,
+            encoding='utf-8',
         )
 
         data = generate_mock_data(5)
