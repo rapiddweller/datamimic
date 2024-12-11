@@ -1,0 +1,13 @@
+<setup>
+
+    <!--
+    XML Demo
+    ======================================
+    DATAMIMIC XML Demo demonstrates processing of XML files.
+    -->
+
+    <include uri="1_xml_generate.xml" />
+    <include uri="2_xml_template_1.xml" />
+    <include uri="3_xml_template_2.xml" />
+    <include uri="4_xml_template_script.xml" />
+</setup>

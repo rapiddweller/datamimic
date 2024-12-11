@@ -1,0 +1,6 @@
+title = "Basic XML"
+description = "Showcases how to generate and export XML file with DATAMIMIC."
+icon = "xml"
+tags = ["#xml"]
+id = "demo-xml"
+projectName = "demo-xml"
