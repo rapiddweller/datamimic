@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<course xmlns="http://example.com/course"
+        xmlns:chap="http://example.com/chapter"
+        xmlns:lesson="http://example.com/lesson">
+    <title>XML Basics</title>
+    <chap:chapter>
+        <chap:title>Introduction to XML</chap:title>
+        <lesson:lesson>
+            <lesson:title>What is XML?</lesson:title>
+            <lesson:content>XML stands for eXtensible Markup Language.</lesson:content>
+        </lesson:lesson>
+    </chap:chapter>
+    <chap:chapter>
+        <chap:title>Working with XML</chap:title>
+        <lesson:lesson>
+            <lesson:title>XML Syntax</lesson:title>
+            <lesson:content>XML syntax is both strict and flexible.</lesson:content>
+        </lesson:lesson>
+    </chap:chapter>
+</course>

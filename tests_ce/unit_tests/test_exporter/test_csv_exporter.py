@@ -47,7 +47,7 @@ def worker(data_chunk, shared_storage_list, task_id, descriptor_dir, properties)
         line_terminator=None,
         encoding=None
     )
-    exporter._buffer_file = FileMock()
+    exporter._buffer_file = None
     product = ("test_product", data_chunk)
     exporter.consume(product)
     exporter.finalize_chunks()

@@ -1,0 +1,10 @@
+<setup multiprocessing="False">
+    <!-- ONLY USE COUNT="1" TO MAKE SURE GENERATE SINGLE DATA -->
+    <generate name="container" count="1">
+        <!-- this 'var' will replace '__var__' in xml_source_2 after import -->
+        <variable name="var" constant="XML Single Item"/>
+
+        <generate name="xml_single_item" source="data/xml_source_2.xml" sourceScripted="True" target="XML">
+        </generate>
+    </generate>
+</setup>

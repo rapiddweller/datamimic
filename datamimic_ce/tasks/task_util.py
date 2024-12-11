@@ -333,7 +333,7 @@ class TaskUtil:
                 except Exception as e:
                     logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
         # Load data from XML
-        elif source_str.endswith(".template.xml"):
+        elif source_str.endswith(".xml"):
             source_data = _load_xml_file(
                 root_context.descriptor_dir / source_str,
                 stmt.cyclic,
