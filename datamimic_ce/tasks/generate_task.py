@@ -707,7 +707,7 @@ class GenerateTask(Task):
         with gen_timer("process", setup_ctx.report_logging, self.statement.full_name) as timer_result:
             # 1. Determine the total record count and number of processes
             count = self._determine_count(setup_ctx)
-            num_processes = setup_ctx.num_process or multiprocessing.cpu_count()
+            num_processes = self.statement.num_process or setup_ctx.num_process or multiprocessing.cpu_count()
 
             timer_result["records_count"] = count
 

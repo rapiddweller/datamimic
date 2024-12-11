@@ -39,6 +39,7 @@ class GenerateStatement(CompositeStatement):
         self._variable_suffix = model.variable_suffix
         self._converter = model.converter
         self._bucket = model.bucket
+        self._num_process = model.num_process
 
     @property
     def count(self):
@@ -124,6 +125,10 @@ class GenerateStatement(CompositeStatement):
     @property
     def bucket(self) -> str:
         return self._bucket
+
+    @property
+    def num_process(self) -> int:
+        return self._num_process
 
     def contain_mongodb_upsert(self, setup_context: SetupContext) -> bool:
         """
