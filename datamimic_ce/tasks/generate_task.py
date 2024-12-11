@@ -490,7 +490,8 @@ def _load_xml_file(file_path: Path, cyclic: bool, start_idx: int, end_idx: int) 
     # Read the XML data from a file
     with file_path.open("r") as file:
         data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")
-        data = data["list"]["item"]
+        if data.get("list") and data.get("list").get("item"):
+            data = data["list"]["item"]
         data = [data] if isinstance(data, dict) else data
         pagination = (
             DataSourcePagination(start_idx, end_idx - start_idx)

@@ -1,0 +1,25 @@
+<setup multiprocessing="False">
+    <!-- This example how to generate and export basic xml -->
+    <!-- use target="XML" to export xml file -->
+    <!-- 'generate' name is export xml file name -->
+    <!-- (in this example is xml_single_item.xml if multiprocessing="False", otherwise xml_single_item_pid_0.xml) -->
+    <!-- first 'nestedKey' is a root of xml data, type always is dict. -->
+    <!-- ONLY CAN HAVE ONE 'nestedKey' as 'generate' direct child -->
+    <!-- ONLY USE COUNT="1" TO MAKE SURE GENERATE SINGLE DATA -->
+
+    <generate name="xml_single_item" count="1" target="XML">
+        <nestedKey name="course" type="dict">
+            <element name="xmlns" constant="http://example.com/course"/>
+            <element name="xmlns:chap" constant="http://example.com/chapter"/>
+            <element name="xmlns:lesson" constant="http://example.com/lesson"/>
+            <key name="title" constant="XML Basics"/>
+            <nestedKey name="chap:chapter" type="dict">
+                <key name="chap:title" constant="Introduction to XML"/>
+                <nestedKey name="lesson:lesson" type="dict">
+                    <key name="lesson:title" constant="What is XML?"/>
+                    <key name="lesson:content" constant="XML stands for eXtensible Markup Language."/>
+                </nestedKey>
+            </nestedKey>
+        </nestedKey>
+    </generate>
+</setup>
