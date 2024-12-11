@@ -62,7 +62,7 @@ class TestExporter:
         inner_user_folder_path = self._test_dir.joinpath(inner_user_folder_name)
 
         try:
-            # test customer csv
+            # test customer json
             data = util.read_json_folder(customer_folder_path)
             if not data:
                 assert False
@@ -71,7 +71,7 @@ class TestExporter:
                 for customer_data_len in range(1, 11):
                     assert data[customer_data_len-1]["cid"] == customer_data_len
 
-            # test inner_user csv
+            # test inner_user json
             data = util.read_json_folder(inner_user_folder_path)
             if not data:
                 assert False
@@ -100,7 +100,7 @@ class TestExporter:
         inner_user_folder_path = self._test_dir.joinpath(inner_user_folder_name)
 
         try:
-            # test customer csv
+            # test customer txt
             _, data = util.read_csv_txt_folder(customer_folder_path, "txt", have_header=False)
             if not data:
                 assert False
@@ -109,7 +109,7 @@ class TestExporter:
                 for customer_data_len in range(1, 11):
                     assert data[customer_data_len-1] == "customer: {'cid': " + str(customer_data_len) + "}"
 
-            # test inner_user csv
+            # test inner_user txt
             _, data = util.read_csv_txt_folder(inner_user_folder_path, "txt", have_header=False)
             if not data:
                 assert False
@@ -138,7 +138,7 @@ class TestExporter:
         inner_user_folder_path = self._test_dir.joinpath(inner_user_folder_name)
 
         try:
-            # test customer csv
+            # test customer xml
             files = util.read_xml_folder(customer_folder_path)
             if not files:
                 assert False
@@ -157,7 +157,7 @@ class TestExporter:
 
                 assert index == 10
 
-            # test inner_user csv
+            # test inner_user xml
             files = util.read_xml_folder(inner_user_folder_path)
             if not files:
                 assert False
@@ -242,7 +242,7 @@ class TestExporter:
         inner_user_file_path = inner_user_folder_path.joinpath(inner_user_file_name)
 
         try:
-            # test customer csv
+            # test customer json
             data = util.read_json_file(customer_file_path)
 
             if not data:
@@ -252,7 +252,7 @@ class TestExporter:
                 for customer_data_len in range(1, 11):
                     assert data[customer_data_len-1]["cid"] == customer_data_len
 
-            # test inner_user csv
+            # test inner_user json
             data = util.read_json_file(inner_user_file_path)
             if not data:
                 assert False
@@ -286,7 +286,7 @@ class TestExporter:
         inner_user_file_path = inner_user_folder_path.joinpath(inner_user_file_name)
 
         try:
-            # test customer csv
+            # test customer txt
             _, data = util.read_csv_txt_file(customer_file_path, have_header=False)
             if not data:
                 assert False
@@ -295,7 +295,7 @@ class TestExporter:
                 for customer_data_len in range(1, 11):
                     assert data[customer_data_len-1] == "customer: {'cid': " + str(customer_data_len) + "}"
 
-            # test inner_user csv
+            # test inner_user txt
             _, data = util.read_csv_txt_file(inner_user_file_path, have_header=False)
             if not data:
                 assert False
@@ -329,7 +329,7 @@ class TestExporter:
         inner_user_file_path = inner_user_folder_path.joinpath(inner_user_file_name)
 
         try:
-            # test customer csv
+            # test customer xml
             files = util.read_xml_file(customer_file_path)
             if not files:
                 assert False
@@ -348,7 +348,7 @@ class TestExporter:
 
                 assert index == 10
 
-            # test inner_user csv
+            # test inner_user xml
             files = util.read_xml_file(inner_user_file_path)
             if not files:
                 assert False
@@ -368,6 +368,105 @@ class TestExporter:
                             assert data == f"<item><uid>{tens}{units}</uid></item>"
 
                 assert index == 30
+        finally:
+            # Ensure the file is deleted after testing
+            if inner_user_folder_path.exists():
+                shutil.rmtree(inner_user_folder_path)
+            if customer_folder_path.exists():
+                shutil.rmtree(customer_folder_path)
+
+    def test_one_record_xml_exporter_mp(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_one_record_xml_exporter_mp.xml")
+        engine.test_with_timer()
+        task_id = engine.task_id
+
+        customer_folder_name = f"exporter_result_{task_id}_exporter_xml_product_customer"
+        customer_folder_path = self._test_dir.joinpath(customer_folder_name)
+        inner_user_folder_name = f"exporter_result_{task_id}_exporter_xml_product_inner_user"
+        inner_user_folder_path = self._test_dir.joinpath(inner_user_folder_name)
+
+        try:
+            # test customer xml
+            files = util.read_xml_folder(customer_folder_path)
+            if not files:
+                assert False
+            else:
+                assert len(files) == 1
+                for datas in files:
+                    assert datas[0] == f"<cid>1</cid>"
+
+            # test inner_user xml
+            files = util.read_xml_folder(inner_user_folder_path)
+            if not files:
+                assert False
+            else:
+                assert len(files) == 1
+                index = 0
+                for datas in files:
+                    for data in datas:
+                        if data == datas[0]:
+                            assert data == "<list>"
+                        elif data == datas[-1]:
+                            assert data == "</list>"
+                        else:
+                            tens = int(index / 3) + 1
+                            units = int(index % 3) + 1
+                            index += 1
+                            assert data == f"<item><uid>{tens}{units}</uid></item>"
+
+                assert index == 3
+        finally:
+            # Ensure the file is deleted after testing
+            if inner_user_folder_path.exists():
+                shutil.rmtree(inner_user_folder_path)
+            if customer_folder_path.exists():
+                shutil.rmtree(customer_folder_path)
+
+    def test_one_record_xml_exporter_sp(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_one_record_xml_exporter_sp.xml")
+        engine.test_with_timer()
+        task_id = engine.task_id
+
+        customer_folder_name = f"exporter_result_{task_id}_exporter_xml_product_customer"
+        customer_file_name = "product_customer_chunk_0.xml"
+        customer_folder_path = self._test_dir.joinpath(customer_folder_name)
+        customer_file_path = customer_folder_path.joinpath(customer_file_name)
+
+        inner_user_folder_name = f"exporter_result_{task_id}_exporter_xml_product_inner_user"
+        inner_user_file_name = "product_inner_user_chunk_0.xml"
+        inner_user_folder_path = self._test_dir.joinpath(inner_user_folder_name)
+        inner_user_file_path = inner_user_folder_path.joinpath(inner_user_file_name)
+
+        try:
+            # test customer xml
+            files = util.read_xml_file(customer_file_path)
+            if not files:
+                assert False
+            else:
+                assert len(files) == 1
+                for datas in files:
+                    assert datas[0] == f"<cid>1</cid>"
+
+            # test inner_user xml
+            files = util.read_xml_file(inner_user_file_path)
+            if not files:
+                assert False
+            else:
+                assert len(files) == 1
+                index = 0
+                for datas in files:
+                    for data in datas:
+                        if data == datas[0]:
+                            assert data == "<list>"
+                        elif data == datas[-1]:
+                            assert data == "</list>"
+                        else:
+                            tens = int(index / 3) + 1
+                            units = int(index % 3) + 1
+                            index += 1
+                            assert data == f"<item><uid>{tens}{units}</uid></item>"
+
+                assert index == 3
         finally:
             # Ensure the file is deleted after testing
             if inner_user_folder_path.exists():

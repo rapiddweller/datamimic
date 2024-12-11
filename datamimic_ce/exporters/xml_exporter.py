@@ -1,5 +1,11 @@
-# xml_exporter.py
+# DATAMIMIC
+# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
 
+
+import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -150,7 +156,48 @@ class XMLExporter(UnifiedBufferedExporter):
             logger.error(f"Error finalizing buffer file: {e}")
             raise ExporterError(f"Error finalizing buffer file: {e}") from e
 
+        is_single_item = self._is_single_item(buffer_file)
+        # Special case when xml only have one item
+        # remove <list> and <item>, leave only inside data
+        if is_single_item:
+
+            try:
+                with buffer_file.open("r", encoding=self.encoding) as xmlfile:
+                    xml_content = xmlfile.read()
+            except Exception as e:
+                logger.error(f"Error finalizing buffer file: {e}")
+                raise ExporterError(f"Error finalizing buffer file: {e}") from e
+            start_tag = "<item>"
+            end_tag = "</item>"
+            start_index = xml_content.find(start_tag)
+            end_index = xml_content.find(end_tag)
+            if start_index != -1 and end_index != -1:
+                # Extract content between <item> and </item>
+                item_content = xml_content[start_index + len(start_tag): end_index]
+                try:
+                    with buffer_file.open("w", encoding=self.encoding) as xmlfile:
+                        xmlfile.write(item_content)
+                except Exception as e:
+                    logger.error(f"Error finalizing buffer file: {e}")
+                    raise ExporterError(f"Error finalizing buffer file: {e}") from e
+
     def _reset_state(self):
         """Resets the exporter state for reuse."""
         super()._reset_state()
         logger.debug("XMLExporter state has been reset.")
+
+    def _is_single_item(self, buffer_file: Path) -> bool:
+        """Check if the root element contains exactly one 'item' with one child."""
+        try:
+            tree = ET.parse(buffer_file)
+            root = tree.getroot()
+
+            items = [child for child in root if child.tag == "item"]
+            is_single_item = len(items) == 1 and len(items[0]) == 1
+            return is_single_item
+        except ET.ParseError as e:
+            logger.error(f"Error parsing XML file: {e}")
+            raise ExporterError(f"Error parsing XML file: {e}") from e
+        except Exception as e:
+            logger.error(f"Unexpected error while processing XML file: {e}")
+            raise ExporterError(f"Unexpected error while processing XML file: {e}") from e
