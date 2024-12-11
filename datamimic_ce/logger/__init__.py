@@ -45,10 +45,7 @@ def setup_logger(logger_name, task_id, level=logging.INFO):
 
     if not l.handlers:  # Avoid adding duplicate handlers
         l.setLevel(level)
-        if settings.RUNTIME_ENVIRONMENT in ["development", "production"]:
-            l.addHandler(stream_handler)
-        else:
-            l.addHandler(stream_handler)
+        l.addHandler(stream_handler)
 
     l.propagate = False  # Avoid propagation to the parent logger
 
