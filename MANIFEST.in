@@ -5,15 +5,7 @@ global-exclude .git*
 global-exclude .DS_Store
 
 # Exclude all test directories and files
-recursive-exclude tests_ce *
-recursive-exclude tests *
-recursive-exclude * /test_*
-recursive-exclude * /*_test*
-recursive-exclude * tests
 recursive-exclude * tests_ce
 
 # Exclude specific test-related directories
 prune tests_ce
-prune tests
-prune **/tests
-prune **/tests_ce

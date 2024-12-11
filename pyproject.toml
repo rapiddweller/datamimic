@@ -47,14 +47,13 @@ local_scheme = "dirty-tag"  # Includes a "dirty" tag in version if working direc
 datamimic = "datamimic_ce.cli:app"  # Entry point for your CLI application
 
 [tool.setuptools]
-include-package-data = false
+include-package-data = true
 
 [tool.setuptools.packages.find]
-where = ["."]  # Changed from ["datamimic_ce"] to "." for better package discovery
+where = ["."]
+exclude = ["tests_ce"]
 namespaces = true
 
-[tool.setuptools.package-data]
-datamimic_ce = ["py.typed", "**/*.csv", "**/*.txt"]
 
 [tool.uv]
 
