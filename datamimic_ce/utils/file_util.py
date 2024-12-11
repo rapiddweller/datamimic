@@ -7,6 +7,7 @@
 import csv
 import json
 import random
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -265,3 +266,79 @@ class FileUtil:
             return values, weights
         except Exception as e:
             raise ValueError("Error loading CSV file:" + str(e)) from e
+
+    @staticmethod
+    def copy_file(source: Path, destination: Path) -> None:
+        """
+        Copy a file from source to destination.
+
+        Args:
+            source (Path): Source file path
+            destination (Path): Destination file path
+        """
+        shutil.copy2(source, destination)
+
+    @staticmethod
+    def create_project_structure(project_dir: Path) -> None:
+        """
+        Create the initial project structure with necessary files and directories.
+
+        Args:
+            project_dir (Path): Target project directory
+        """
+
+        initial_descriptor_content = """
+<setup>
+    <generate name="datamimic_user_list" count="100" target="CSV,JSON,XML">
+        <variable name="person" entity="Person(min_age=18, max_age=90, female_quota=0.5)"/>
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="first_name" script="person.given_name"/>
+        <key name="last_name" script="person.family_name"/>
+        <key name="gender" script="person.gender"/>
+        <key name="birthDate" script="person.birthdate" converter="DateFormat('%d.%m.%Y')"/>
+        <key name="email" script="person.family_name + '@' + person.given_name + '.de'"/>
+        <key name="ce_user" values="True, False"/>
+        <key name="ee_user" values="True, False"/>
+        <key name="datamimic_lover" constant="DEFINITELY"/>
+    </generate>
+</setup>
+        """
+
+        # Create basic directory structure
+        (project_dir / "data").mkdir(exist_ok=True)
+        (project_dir / "output").mkdir(exist_ok=True)
+        (project_dir / "config").mkdir(exist_ok=True)
+
+        # Create the descriptor file with the specified content
+        descriptor_path = project_dir / "datamimic.xml"
+        descriptor_path.write_text(initial_descriptor_content)
+
+        # Create a default README.md
+        readme_content = f"""
+# DATAMIMIC Project: {project_dir.name}
+This project was created using DATAMIMIC.
+
+## Project Structure
+- `data/`: Directory for input data files
+- `output/`: Directory for generated output
+- `config/`: Configuration files
+- `datamimic.xml`: Main project descriptor file
+
+## Initial Setup
+The project is initialized with a sample descriptor that generates user data with the following fields:
+- User ID (auto-incrementing)
+- First Name
+- Last Name
+- Gender
+- Birth Date
+- Email
+- CE User status
+- EE User status
+- DATAMIMIC Lover status
+
+## Getting Started
+1. Review and modify the `datamimic.xml` file to customize your data generation
+2. Place any required input files in the `data/` directory
+3. Run the project using: `datamimic run datamimic.xml`
+        """
+        (project_dir / "README.md").write_text(readme_content)
