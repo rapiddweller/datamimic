@@ -519,10 +519,10 @@ jobs:
       - name: List Contents of dist Directory
         run: ls -R dist
 
-  #      - name: Publish distribution to PyPI
-  #        uses: pypa/gh-action-pypi-publish@release/v1
-  #        with:
-  #          password: ${{ secrets.PYPI_API_TOKEN }}
+#      - name: Publish distribution to PyPI
+#        uses: pypa/gh-action-pypi-publish@release/v1
+#        with:
+#          repository-url: https://pypi.org/legacy/
 
   trigger_ee_dev:
     if: github.ref == 'refs/heads/development'
