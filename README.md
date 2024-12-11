@@ -60,70 +60,118 @@ Traditional test data generation can be time-consuming and may compromise data p
 
 ---
 
-## Getting Started
+## Installation
 
 ### Prerequisites
 
 - **Operating System**: Windows, macOS, or Linux
 - **Python**: Version **3.10** or higher
-- **uv Package Manager**: Install from [GitHub](https://github.com/astral-sh/uv)
+- **Optional**: uv Package Manager for development setup [GitHub](https://github.com/astral-sh/uv)
 
-### Quick Start
+### User Installation
 
-Get up and running with DATAMIMIC in just a few steps!
+The simplest way to get started with DATAMIMIC is through pip:
 
-1. **Install uv Package Manager**
+    ```bash
+    pip install datamimic-ce
+    ```
 
-   ```bash
-   pip install uv
-   ```
+Verify the installation:
 
-2. **Clone the Repository**
+    ```bash
+    datamimic --version
+    ```
 
-   ```bash
-   git clone https://github.com/rapiddweller/datamimic.git
-   cd datamimic
-   ```
+### Developer Installation
 
-3. **Install Dependencies**
+For contributors and developers who want to work with the source code:
 
-   ```bash
-   uv sync
-   ```
+1. Install uv Package Manager:
 
-4. **Run DATAMIMIC**
+    ```bash
+    pip install uv
+    ```
 
-   ```bash
-   uv run datamimic --help
-   ```
+2. Clone and set up the repository:
 
-5. **Explore Demos**
+    ```bash
+    git clone https://github.com/rapiddweller/datamimic.git
+    cd datamimic
+    uv sync
+    ```
 
-   List available demos:
+---
 
-   ```bash
-   uv run datamimic demo list
-   ```
+## Usage Guide
 
-   Run a demo:
+### Basic Usage
 
-   ```bash
-   uv run datamimic demo create demo-model
-   uv run datamimic run ./demo-model/datamimic.xml
-   ```
+1. Create a new data generation project:
+
+    ```bash
+    datamimic init my-project
+    cd my-project
+    ```
+
+2. Configure your data model in `datamimic.xml`:
+
+    ```xml
+    <setup>
+        <generate name="datamimic_user_list" count="100" target="CSV,JSON,XML">
+            <variable name="person" entity="Person(min_age=18, max_age=90, female_quota=0.5)"/>
+            <key name="id" generator="IncrementGenerator"/>
+            <key name="first_name" script="person.given_name"/>
+            <key name="last_name" script="person.family_name"/>
+            <key name="gender" script="person.gender"/>
+            <key name="birthDate" script="person.birthdate" converter="DateFormat('%d.%m.%Y')"/>
+            <key name="email" script="person.family_name + '@' + person.given_name + '.de'"/>
+            <key name="ce_user" values="True, False"/>
+            <key name="ee_user" values="True, False"/>
+            <key name="datamimic_lover" constant="DEFINITELY"/>
+        </generate>
+    </setup>
+    ```
+
+3. Generate data:
+
+    ```bash
+    datamimic run datamimic.xml
+    ```
+
+
+### Advanced Features
+
+DATAMIMIC supports various advanced features:
+
+- **Custom Generators**: Create your own data generators
+- **Data Relationships**: Define complex relationships between entities
+- **Export Formats**: Support for JSON, XML, CSV, and database outputs
+- **Validation Rules**: Define and enforce data validation rules
+- **Scripting**: Extend functionality using Python scripts
 
 ---
 
 ## Examples and Demos
 
-Discover the capabilities of DATAMIMIC through our curated demos:
+Explore our demo collection:
 
-- **Overview Generators**: Explore available entities and generators.
-- **Demo Model**: Generate data using built-in generators and custom datasets.
-- **Demo JSON/XML**: Generate and export JSON and XML data.
-- **Demo Database**: Connect to databases and perform read/write operations.
+```bash
+# List available demos
+datamimic demo list
 
-Find these and more in the `datamimic_ce/demos` directory.
+# Run a specific demo
+datamimic demo create demo-model
+datamimic run ./demo-model/datamimic.xml
+```
+
+Key demos include:
+- Basic entity generation
+- Complex relationships
+- Database integration
+- Custom generator creation
+- Privacy compliance examples
+
+Find more examples in the `datamimic_ce/demos` directory.
 
 ---
 
@@ -159,8 +207,10 @@ For questions or support, contact us at [info@rapiddweller.com](mailto:info@rapi
 
 Need help or have questions? We're here for you!
 
-- **Issues**: Open an [issue](https://github.com/rapiddweller/datamimic/issues) on GitHub.
-- **Email**: Reach out at [support@rapiddweller.com](mailto:support@rapiddweller.com).
+- 📚 [Documentation](https://docs.datamimic.io)
+- 💬 [GitHub Discussions](https://github.com/rapiddweller/datamimic/discussions)
+- 🐛 [Issue Tracker](https://github.com/rapiddweller/datamimic/issues)
+- 📧 [Email Support](mailto:support@rapiddweller.com)
 
 ---
 
@@ -172,28 +222,6 @@ Stay updated and connect with our community!
 - 🏢 **Rapiddweller**: [www.rapiddweller.com](https://rapiddweller.com)
 - 💼 **LinkedIn**: [rapiddweller](https://www.linkedin.com/company/rapiddweller)
 - 🐦 **Twitter**: [@rapiddweller](https://twitter.com/rapiddweller)
-
----
-
-## FAQ
-
-### Q: What Python versions are supported?
-
-**A:** DATAMIMIC requires Python **3.10** or higher.
-
-### Q: How do I install `uv`?
-
-**A:** Install `uv` using `pip`:
-
-```bash
-pip install uv
-```
-
-or just using `pip`
-
-```bash
-pip install datamimic-ce
-```
 
 ---
 
