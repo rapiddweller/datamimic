@@ -45,6 +45,7 @@ def worker(data_chunk, shared_storage_list, task_id, descriptor_dir, properties)
         quotechar=None,
         quoting=None,
         line_terminator=None,
+        encoding=None
     )
     exporter._buffer_file = FileMock()
     product = ("test_product", data_chunk)
@@ -73,6 +74,7 @@ class TestCSVExporter(unittest.TestCase):
             line_terminator=line_terminator,
             page_info=None,
             fieldnames=None,
+            encoding=encoding
         )
 
     def tearDown(self):
@@ -223,6 +225,7 @@ class TestCSVExporter(unittest.TestCase):
             line_terminator=None,
             page_info=None,
             fieldnames=None,
+            encoding=None
         )
 
         data = generate_mock_data(5)
