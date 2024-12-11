@@ -7,7 +7,7 @@ import json
 import os
 from importlib.resources import files
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Optional
 
 import toml
 import typer
@@ -21,7 +21,7 @@ from datamimic_ce.utils.demo_util import demo_autocomplete, handle_demo
 from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.version_util import get_datamimic_lib_version
 
-from utils.string_util import StringUtil
+from datamimic_ce.utils.string_util import StringUtil
 
 app = typer.Typer(help="DATAMIMIC Command Line Interface.", rich_markup_mode="markdown")
 demo_app = typer.Typer(help="Manage demos")
