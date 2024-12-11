@@ -457,7 +457,7 @@ jobs:
     needs: [ e2e_test ]
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/datamimic_ce
+      url: https://test.pypi.org/p/datamimic-ce
     permissions:
       id-token: write # IMPORTANT: mandatory for trusted publishing https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
       contents: read
@@ -495,7 +495,7 @@ jobs:
     needs: [ e2e_test ]
     environment:
       name: pypi
-      url: https://pypi.org/p/datamimic_ce
+      url: https://pypi.org/p/datamimic-ce
     permissions:
       id-token: write # IMPORTANT: mandatory for trusted publishing https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
       contents: read
@@ -521,7 +521,9 @@ jobs:
       - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          repository-url: https://pypi.org/legacy/
+          repository-url: https://upload.pypi.org/legacy/
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
 
   trigger_ee_dev:
     if: github.ref == 'refs/heads/development'
