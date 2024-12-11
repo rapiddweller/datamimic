@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from datamimic_ce.generators.company_name_generator import CompanyNameGenerator
 
 

@@ -84,8 +84,8 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
     def _get_buffer_tmp_dir(self) -> Path:
         return (
-                self._descriptor_dir
-                / f"temp_result_{self._task_id}{self._pid_placeholder}_exporter_{self._exporter_type}_product_{self.product_name}"
+            self._descriptor_dir
+            / f"temp_result_{self._task_id}{self._pid_placeholder}_exporter_{self._exporter_type}_product_{self.product_name}"
         )
 
     def _init_buffer_directory(self) -> None:
@@ -227,7 +227,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         while idx < total_data:
             space_left = self.chunk_size - self.current_counter if self.chunk_size else total_data - idx
             current_batch_size = min(batch_size, space_left)
-            batch = data[idx: idx + current_batch_size]
+            batch = data[idx : idx + current_batch_size]
 
             self._write_batch_with_retry(batch)
 
@@ -386,12 +386,14 @@ class UnifiedBufferedExporter(Exporter, ABC):
         """Copy all temporary files to the final destination."""
         logger.info(f"Saving exported result for product {self.product_name}")
 
-        exporter_dir_path = self._descriptor_dir / f"exporter_result_{self._task_id}_exporter_{self._exporter_type}_product_{self.product_name}"
+        exporter_dir_path = (
+            self._descriptor_dir
+            / f"exporter_result_{self._task_id}_exporter_{self._exporter_type}_product_{self.product_name}"
+        )
         exporter_dir_path.mkdir(parents=True, exist_ok=True)
 
         for file in self._buffer_tmp_dir.iterdir():
             shutil.copy2(file, exporter_dir_path)
-
 
     def _reset_state(self) -> None:
         """Reset exporter state."""

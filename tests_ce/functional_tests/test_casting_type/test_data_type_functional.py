@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from pathlib import Path
 from types import NoneType
 
@@ -37,7 +36,7 @@ class TestDataType:
             assert isinstance(product["none_values"], NoneType)
             assert isinstance(product["none_script"], NoneType)
             assert type(product["random_str_numbers"]) == str
-            assert product["random_str_numbers"] in ['1,2,3,4', '1,2,3', '1,2']
+            assert product["random_str_numbers"] in ["1,2,3,4", "1,2,3", "1,2"]
             assert isinstance(product["random_list_numbers"], list)
             assert isinstance(product["random_tuple_numbers"], tuple)
             assert isinstance(product["random_set_numbers"], set)
@@ -51,4 +50,3 @@ class TestDataType:
             assert product["active_bool_type"] is True
             assert type(product["inactive_bool_type"]) == bool
             assert product["inactive_bool_type"] is False
-

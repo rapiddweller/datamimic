@@ -197,7 +197,13 @@ class ExporterUtil:
         return parsed_functions
 
     @staticmethod
-    def get_exporter_by_name(setup_context: SetupContext, name: str, product_name: str, page_info: MultiprocessingPageInfo, exporter_params_dict: Dict) -> Exporter:
+    def get_exporter_by_name(
+        setup_context: SetupContext,
+        name: str,
+        product_name: str,
+        page_info: MultiprocessingPageInfo,
+        exporter_params_dict: Dict,
+    ) -> Exporter:
         """
         Consumer factory: Create consumer based on name
 
@@ -231,7 +237,18 @@ class ExporterUtil:
         elif name == EXPORTER_JSON:
             return JsonExporter(setup_context, product_name, page_info, chunk_size, use_ndjson, encoding)
         elif name == EXPORTER_CSV:
-            return CSVExporter(setup_context, product_name, page_info, chunk_size, fieldnames, delimiter, quotechar, quoting, line_terminator, encoding)
+            return CSVExporter(
+                setup_context,
+                product_name,
+                page_info,
+                chunk_size,
+                fieldnames,
+                delimiter,
+                quotechar,
+                quoting,
+                line_terminator,
+                encoding,
+            )
         elif name == EXPORTER_XML:
             return XMLExporter(setup_context, product_name, page_info, chunk_size, root_element, item_element, encoding)
         elif name == EXPORTER_TXT:

@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
@@ -174,7 +173,9 @@ class TestDataSourceCyclic:
         assert all(len(people_no_cyclic[idx]["people_json"]) == 12 for idx in range(0, 10))
 
     def test_part_memstore_cyclic(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_part_memstore_cyclic.xml", capture_test_result=True)
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_part_memstore_cyclic.xml", capture_test_result=True
+        )
         engine.test_with_timer()
         result = engine.capture_result()
 

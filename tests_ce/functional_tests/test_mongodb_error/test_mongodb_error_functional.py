@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from pathlib import Path
 
 from bson import ObjectId
@@ -30,8 +29,10 @@ class TestMongoDbErrorFunction:
             engine.test_with_timer()
             assert False
         except ValueError as err:
-            assert str(err) == ("Error while executing query 'update: 'mongo_func_test', filter: {}', "
-                                "currently Mongodb selector only support 'find' and 'aggregate'")
+            assert str(err) == (
+                "Error while executing query 'update: 'mongo_func_test', filter: {}', "
+                "currently Mongodb selector only support 'find' and 'aggregate'"
+            )
 
     def test_mongodb_two_find_query(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_mongodb_two_find_query.xml")
@@ -95,8 +96,10 @@ class TestMongoDbErrorFunction:
             engine.test_with_timer()
             assert False
         except ValueError as err:
-            assert str(err) == ("Wrong mongodb selector syntax: aggregate: 'mongo_func_test', "
-                                "error: Wrong query syntax 'pipeline' component not found")
+            assert str(err) == (
+                "Wrong mongodb selector syntax: aggregate: 'mongo_func_test', "
+                "error: Wrong query syntax 'pipeline' component not found"
+            )
 
     def test_mongodb_filter_not_exist(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_mongodb_filter_not_exist.xml")
@@ -104,5 +107,7 @@ class TestMongoDbErrorFunction:
             engine.test_with_timer()
             assert False
         except ValueError as err:
-            assert str(err) == ("Wrong mongodb selector syntax: find: 'mongo_func_test', "
-                                "error: Wrong query syntax 'filter' component not found")
+            assert str(err) == (
+                "Wrong mongodb selector syntax: find: 'mongo_func_test', "
+                "error: Wrong query syntax 'filter' component not found"
+            )

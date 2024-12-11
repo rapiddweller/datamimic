@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from datetime import datetime
 from pathlib import Path
 
@@ -18,7 +17,9 @@ class TestDateTime:
     _test_dir = Path(__file__).resolve().parent
 
     def test_datetime_functional(self) -> None:
-        engine = DataMimicTest(test_dir=self._test_dir, filename="functional_test_datetime.xml", capture_test_result=True)
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="functional_test_datetime.xml", capture_test_result=True
+        )
         engine.test_with_timer()
 
         result = engine.capture_result()
@@ -66,20 +67,23 @@ class TestDateTime:
             test_engine.test_with_timer()
 
     def test_datetime_epoch(self) -> None:
-        test_engine = DataMimicTest(test_dir=self._test_dir, filename="functional_test_date_epoch.xml", capture_test_result=True)
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="functional_test_date_epoch.xml", capture_test_result=True
+        )
         test_engine.test_with_timer()
         result = test_engine.capture_result()
         date_time_test = result["EpochConversionExample"]
         assert len(date_time_test) == 10
-        assert date_time_test[0]["epoch_output1"] == '1612174084'
-        assert date_time_test[0]["epoch_milli_output1"] == '1612174084000'
-        assert date_time_test[0]["epoch_output2"] == '1612174084'
-        assert date_time_test[0]["epoch_milli_output2"] == '1612174084000'
+        assert date_time_test[0]["epoch_output1"] == "1612174084"
+        assert date_time_test[0]["epoch_milli_output1"] == "1612174084000"
+        assert date_time_test[0]["epoch_output2"] == "1612174084"
+        assert date_time_test[0]["epoch_milli_output2"] == "1612174084000"
 
     def test_datetime_precision(self) -> None:
         # Initialize the test engine
-        test_engine = DataMimicTest(test_dir=self._test_dir, filename="functional_test_date_milliseconds.xml",
-                                    capture_test_result=True)
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="functional_test_date_milliseconds.xml", capture_test_result=True
+        )
         test_engine.test_with_timer()
 
         # Capture the test result
@@ -97,17 +101,20 @@ class TestDateTime:
             datetime_with_millis = entry["datetime_to_millis"]
             assert isinstance(datetime_with_millis, str), "The datetime with milliseconds should be a string."
             assert datetime_with_millis.endswith(
-                '.123'), f"Expected milliseconds to be '.123', but got '{datetime_with_millis}'"
+                ".123"
+            ), f"Expected milliseconds to be '.123', but got '{datetime_with_millis}'"
 
             # Validate microseconds precision
             datetime_with_microseconds = entry["datetime_to_microseconds"]
             assert datetime_with_microseconds.endswith(
-                '.123456'), f"Expected microseconds to be '.123456', but got '{datetime_with_microseconds}'"
+                ".123456"
+            ), f"Expected microseconds to be '.123456', but got '{datetime_with_microseconds}'"
 
             # Validate nanoseconds precision
             datetime_with_nanoseconds = entry["datetime_to_nanoseconds"]
             assert datetime_with_nanoseconds.endswith(
-                '.123456000'), f"Expected nanoseconds to be '.123456000', but got '{datetime_with_nanoseconds}'"
+                ".123456000"
+            ), f"Expected nanoseconds to be '.123456000', but got '{datetime_with_nanoseconds}'"
 
             # Check epoch outputs (seconds, millis, micros, and nanos)
             ref = entry["epoch_reference"]
@@ -116,11 +123,15 @@ class TestDateTime:
 
             ref = f'{entry["epoch_reference"]}000'
             expected_epoch_millis = entry["to_epoch_millis"]
-            assert ref == expected_epoch_millis, f"Expected epoch in milliseconds: {ref}, but got: {expected_epoch_millis}"
+            assert (
+                ref == expected_epoch_millis
+            ), f"Expected epoch in milliseconds: {ref}, but got: {expected_epoch_millis}"
 
             ref = f'{entry["epoch_reference"]}000000'
             expected_epoch_micros = entry["to_epoch_micros"]
-            assert ref == expected_epoch_micros, f"Expected epoch in microseconds: {ref}, but got: {expected_epoch_micros}"
+            assert (
+                ref == expected_epoch_micros
+            ), f"Expected epoch in microseconds: {ref}, but got: {expected_epoch_micros}"
 
             ref = f'{entry["epoch_reference"]}000000000'
             expected_epoch_nanos = entry["to_epoch_nanos"]

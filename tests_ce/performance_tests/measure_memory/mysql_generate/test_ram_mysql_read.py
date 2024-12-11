@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 import time
 from pathlib import Path
 
@@ -30,8 +29,7 @@ class TestRAMMysqlRead:
         yield results
 
         # modify result summary and print it
-        table = PerformanceTestUtil.modify_display_measure_result(header_cell="Avg RAM usage",
-                                                                  results=results)
+        table = PerformanceTestUtil.modify_display_measure_result(header_cell="Avg RAM usage", results=results)
         print("\nRAM Usage Summary for Mysql Read Data:")
         print(table)
 
@@ -83,10 +81,9 @@ class TestRAMMysqlRead:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=2)
     def test_single_thread_mysql_read_1000(self, class_fixture) -> None:
@@ -105,10 +102,9 @@ class TestRAMMysqlRead:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=3)
     def test_single_thread_mysql_read_10000(self, class_fixture) -> None:
@@ -127,10 +123,9 @@ class TestRAMMysqlRead:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=4)
     def test_multiprocessing_mysql_read_100(self, class_fixture) -> None:
@@ -149,10 +144,9 @@ class TestRAMMysqlRead:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=5)
     def test_multiprocessing_mysql_read_1000(self, class_fixture) -> None:
@@ -171,10 +165,9 @@ class TestRAMMysqlRead:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=6)
     def test_multiprocessing_mysql_read_10000(self, class_fixture) -> None:
@@ -193,7 +186,6 @@ class TestRAMMysqlRead:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )

@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 class UpperCaseConverter(Converter):
     def convert(self, value: str) -> str:
         return value.upper()
@@ -13,8 +12,8 @@ class UpperCaseConverter(Converter):
 
 class MaskEmailConverter(Converter):
     def convert(self, value: str) -> str:
-        local_part, domain = value.split('@')
-        masked_local = local_part[0] + '*' * (len(local_part) - 1)
+        local_part, domain = value.split("@")
+        masked_local = local_part[0] + "*" * (len(local_part) - 1)
         return f"{masked_local}@{domain}"
 
 
@@ -34,6 +33,6 @@ class TransactionTypeConverter(Converter):
             "purchase": "PURCHASE",
             "refund": "REFUND",
             "transfer": "TRANSFER",
-            "withdrawal": "WITHDRAWAL"
+            "withdrawal": "WITHDRAWAL",
         }
         return transaction_types.get(value.lower(), "OTHER")

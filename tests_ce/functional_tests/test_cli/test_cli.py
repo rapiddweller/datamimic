@@ -1,8 +1,13 @@
+import shutil
+from pathlib import Path
+from unittest.mock import patch
+
 from typer.testing import CliRunner
 
 from datamimic_ce.cli import app
 
 runner = CliRunner()
+
 
 class TestCLI:
     def test_version_info(self):
@@ -30,30 +35,25 @@ class TestCLI:
         # Setup
         demo_name = "demo-condition"
         target_dir = tmp_path / demo_name
-        
+
         try:
             # Execute
-            result = runner.invoke(app, [
-                "demo", 
-                "create", 
-                demo_name, 
-                "--target", 
-                str(target_dir)
-            ])
+            result = runner.invoke(app, ["demo", "create", demo_name, "--target", str(target_dir)])
 
             # Verify
             assert result.exit_code == 0
             assert target_dir.exists(), "Demo directory not created"
             assert (target_dir / "datamimic.xml").exists(), "Descriptor file missing"
-            
+
             # Verify content
             descriptor_content = (target_dir / "datamimic.xml").read_text()
             assert "<setup>" in descriptor_content, "Invalid descriptor content"
-            
+
         finally:
             # Cleanup
             if target_dir.exists():
                 import shutil
+
                 shutil.rmtree(target_dir)
 
     def test_run_requires_valid_descriptor_path(self):
@@ -67,3 +67,96 @@ class TestCLI:
                 f.write("<setup></setup>")
             result = runner.invoke(app, ["run", "valid_descriptor.xml"])
             assert result.exit_code == 0
+
+    @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
+    def test_init_creates_project_with_default_target(self, mock_create_structure, tmp_path):
+        """Test project initialization in the current directory"""
+        with runner.isolated_filesystem():
+            project_name = "test-project"
+            result = runner.invoke(app, ["init", project_name])
+
+            project_dir = Path.cwd() / project_name
+            try:
+                assert result.exit_code == 0
+                assert project_dir.exists(), "Project directory not created"
+                mock_create_structure.assert_called_once_with(project_dir)
+                assert "created successfully" in result.output
+            finally:
+                if project_dir.exists():
+                    shutil.rmtree(project_dir)
+
+    @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
+    def test_init_creates_project_with_custom_target(self, mock_create_structure, tmp_path):
+        """Test project initialization with a custom target directory"""
+        project_name = "test-project"
+        target_dir = tmp_path / "custom-location"
+
+        try:
+            result = runner.invoke(app, ["init", project_name, "--target", str(target_dir)])
+
+            project_path = target_dir / project_name
+            assert result.exit_code == 0
+            assert project_path.exists(), "Project directory not created"
+            mock_create_structure.assert_called_once_with(project_path)
+            assert "created successfully" in result.output
+        finally:
+            if target_dir.exists():
+                shutil.rmtree(target_dir)
+
+    @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
+    def test_init_creates_nested_directories(self, mock_create_structure, tmp_path):
+        """Test project initialization with nested directory structure"""
+        project_name = "test-project"  # Changed to valid project name
+        target_dir = tmp_path / "deep/nested/location"
+
+        try:
+            result = runner.invoke(app, ["init", project_name, "--target", str(target_dir)])
+
+            project_path = target_dir / project_name
+            assert result.exit_code == 0
+            assert project_path.exists(), "Nested project directory not created"
+            mock_create_structure.assert_called_once_with(project_path)
+        finally:
+            if target_dir.exists():
+                shutil.rmtree(target_dir)
+
+    @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
+    def test_init_with_existing_directory(self, mock_create_structure, tmp_path):
+        """Test project initialization in an existing directory"""
+        project_name = "existing-project"
+        project_dir = tmp_path / project_name
+        project_dir.mkdir(parents=True)
+
+        try:
+            result = runner.invoke(app, ["init", project_name, "--target", str(tmp_path)])
+
+            assert result.exit_code == 1  # Should fail without force option
+            assert "already exists" in result.output
+            mock_create_structure.assert_not_called()
+        finally:
+            if project_dir.exists():
+                shutil.rmtree(project_dir)
+
+    @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
+    def test_init_with_force_option(self, mock_create_structure, tmp_path):
+        """Test initialization with force option on existing directory"""
+        project_name = "existing-project"
+        project_dir = tmp_path / project_name
+        project_dir.mkdir(parents=True)
+
+        try:
+            result = runner.invoke(app, ["init", project_name, "--target", str(tmp_path), "--force"])
+
+            assert result.exit_code == 0
+            assert project_dir.exists()
+            mock_create_structure.assert_called_once_with(project_dir)
+            assert "created successfully" in result.output
+        finally:
+            if project_dir.exists():
+                shutil.rmtree(project_dir)
+
+    def test_init_with_invalid_project_name(self):
+        """Test initialization with invalid project name"""
+        result = runner.invoke(app, ["init", "invalid/name"])
+        assert result.exit_code == 1
+        assert "Error: Project name can only contain" in result.output

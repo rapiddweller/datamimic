@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 import math
 from pathlib import Path
 
@@ -30,8 +29,6 @@ class TestWeightedDataSourceFunctional:
         assert len(people_from_source) == expect_length_result
 
         for people in people_from_source:
-             active_value = people["active"]
-             if active_value is not None:
-                 assert not math.isnan(active_value), f"Active value is NaN for {people}"
-
-
+            active_value = people["active"]
+            if active_value is not None:
+                assert not math.isnan(active_value), f"Active value is NaN for {people}"

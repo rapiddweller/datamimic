@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest

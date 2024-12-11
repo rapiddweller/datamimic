@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 import os
 from pathlib import Path
 
@@ -28,8 +27,7 @@ class TestCPUPostgresqlWrite:
         yield results
 
         # modify result summary and print it
-        table = PerformanceTestUtil.modify_display_measure_result(header_cell="Avg CPU usage(%)",
-                                                                  results=results)
+        table = PerformanceTestUtil.modify_display_measure_result(header_cell="Avg CPU usage(%)", results=results)
         print("\nCPU Usage Summary for Postgresql Write Data:")
         print(f"Number of CPU cores: {os.cpu_count()}")
         print(table)
@@ -65,17 +63,16 @@ class TestCPUPostgresqlWrite:
         test_group = "single_thread_postgresql_write"
         test_case = f"test_{count}"
         rounds = 3
-        
+
         xml_path = self._test_dir.joinpath("cpu_measure_postgresql_write.xml")
         avg_process_usage = PerformanceTestUtil.cpu_measuring_handle(xml_path=xml_path, rounds=rounds)
         # add result to class_fixture results variable for late use in summary table
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=2)
     def test_single_thread_postgresql_write_1000(self, class_fixture):
@@ -94,10 +91,9 @@ class TestCPUPostgresqlWrite:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=3)
     def test_single_thread_postgresql_write_10000(self, class_fixture):
@@ -116,10 +112,9 @@ class TestCPUPostgresqlWrite:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=4)
     def test_multiprocessing_postgresql_write_100(self, class_fixture):
@@ -138,10 +133,9 @@ class TestCPUPostgresqlWrite:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=5)
     def test_multiprocessing_postgresql_write_1000(self, class_fixture):
@@ -160,10 +154,9 @@ class TestCPUPostgresqlWrite:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=6)
     def test_multiprocessing_postgresql_write_10000(self, class_fixture):
@@ -182,7 +175,6 @@ class TestCPUPostgresqlWrite:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )

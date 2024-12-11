@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from pathlib import Path
 
 import pytest
@@ -27,8 +26,7 @@ class TestRAMPostgresqlWrite:
         yield results
 
         # modify result summary and print it
-        table = PerformanceTestUtil.modify_display_measure_result(header_cell="Avg RAM usage",
-                                                                  results=results)
+        table = PerformanceTestUtil.modify_display_measure_result(header_cell="Avg RAM usage", results=results)
         print("\nRAM Usage Summary for Postgresql Write Data:")
         print(table)
 
@@ -63,17 +61,16 @@ class TestRAMPostgresqlWrite:
         test_group = "single_thread_postgresql_write"
         test_case = f"test_{count}"
         rounds = 3
-        
+
         xml_path = self._test_dir.joinpath("ram_measure_postgresql_write.xml")
         avg_process_usage = PerformanceTestUtil.ram_measuring_handle(xml_path=xml_path, rounds=rounds)
         # add result to class_fixture results variable for late use in summary table
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=2)
     def test_single_thread_postgresql_write_1000(self, class_fixture):
@@ -92,10 +89,9 @@ class TestRAMPostgresqlWrite:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=3)
     def test_single_thread_postgresql_write_10000(self, class_fixture):
@@ -114,10 +110,9 @@ class TestRAMPostgresqlWrite:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=4)
     def test_multiprocessing_postgresql_write_100(self, class_fixture):
@@ -136,10 +131,9 @@ class TestRAMPostgresqlWrite:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=5)
     def test_multiprocessing_postgresql_write_1000(self, class_fixture):
@@ -158,10 +152,9 @@ class TestRAMPostgresqlWrite:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=6)
     def test_multiprocessing_postgresql_write_10000(self, class_fixture):
@@ -180,7 +173,6 @@ class TestRAMPostgresqlWrite:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )

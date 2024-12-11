@@ -69,7 +69,7 @@ class TestExporter:
             else:
                 assert len(data) == 10
                 for customer_data_len in range(1, 11):
-                    assert data[customer_data_len-1]["cid"] == customer_data_len
+                    assert data[customer_data_len - 1]["cid"] == customer_data_len
 
             # test inner_user json
             data = util.read_json_folder(inner_user_folder_path)
@@ -107,7 +107,7 @@ class TestExporter:
             else:
                 assert len(data) == 10
                 for customer_data_len in range(1, 11):
-                    assert data[customer_data_len-1] == "customer: {'cid': " + str(customer_data_len) + "}"
+                    assert data[customer_data_len - 1] == "customer: {'cid': " + str(customer_data_len) + "}"
 
             # test inner_user txt
             _, data = util.read_csv_txt_folder(inner_user_folder_path, "txt", have_header=False)
@@ -250,7 +250,7 @@ class TestExporter:
             else:
                 assert len(data) == 10
                 for customer_data_len in range(1, 11):
-                    assert data[customer_data_len-1]["cid"] == customer_data_len
+                    assert data[customer_data_len - 1]["cid"] == customer_data_len
 
             # test inner_user json
             data = util.read_json_file(inner_user_file_path)
@@ -293,7 +293,7 @@ class TestExporter:
             else:
                 assert len(data) == 10
                 for customer_data_len in range(1, 11):
-                    assert data[customer_data_len-1] == "customer: {'cid': " + str(customer_data_len) + "}"
+                    assert data[customer_data_len - 1] == "customer: {'cid': " + str(customer_data_len) + "}"
 
             # test inner_user txt
             _, data = util.read_csv_txt_file(inner_user_file_path, have_header=False)
