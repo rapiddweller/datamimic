@@ -54,7 +54,7 @@ where = ["."]  # Changed from ["datamimic_ce"] to "." for better package discove
 namespaces = true
 
 [tool.setuptools.package-data]
-datamimic_ce = ["py.typed"]
+datamimic_ce = ["py.typed", "**/*.csv", "**/*.txt"]
 
 [tool.uv]
 
