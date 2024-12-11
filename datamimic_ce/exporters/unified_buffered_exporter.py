@@ -387,13 +387,13 @@ class UnifiedBufferedExporter(Exporter, ABC):
         logger.info(f"Saving exported result for product {self.product_name}")
 
         exporter_dir_path = (
-            self._descriptor_dir
-            / f"exporter_result_{self._task_id}_exporter_{self._exporter_type}_product_{self.product_name}"
+            self._descriptor_dir / "output" / f"{self._task_id}_{self._exporter_type}_{self.product_name}"
         )
         exporter_dir_path.mkdir(parents=True, exist_ok=True)
 
-        for file in self._buffer_tmp_dir.iterdir():
-            shutil.copy2(file, exporter_dir_path)
+        # Only move files with the correct extension
+        for file in self._buffer_tmp_dir.glob(f"*.{self.get_file_extension()}"):
+            shutil.move(file, exporter_dir_path)
 
     def _reset_state(self) -> None:
         """Reset exporter state."""

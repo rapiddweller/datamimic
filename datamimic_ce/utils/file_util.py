@@ -289,7 +289,7 @@ class FileUtil:
 
         initial_descriptor_content = """
 <setup>
-    <generate name="datamimic_user_list" count="100" target="CSV,JSON,XML">
+    <generate name="datamimic_user_list" count="1000" target="CSV,JSON">
         <variable name="person" entity="Person(min_age=18, max_age=90, female_quota=0.5)"/>
         <key name="id" generator="IncrementGenerator"/>
         <key name="first_name" script="person.given_name"/>
@@ -307,6 +307,7 @@ class FileUtil:
         # Create basic directory structure
         (project_dir / "data").mkdir(exist_ok=True)
         (project_dir / "output").mkdir(exist_ok=True)
+        (project_dir / "script").mkdir(exist_ok=True)
         (project_dir / "config").mkdir(exist_ok=True)
 
         # Create the descriptor file with the specified content
@@ -319,7 +320,8 @@ class FileUtil:
 This project was created using DATAMIMIC.
 
 ## Project Structure
-- `data/`: Directory for input data files
+- `data/`: Directory for input data files, like .ent.csv or .wgt.csv
+- `script/`: Directory for input scripts or custom functions
 - `output/`: Directory for generated output
 - `config/`: Configuration files
 - `datamimic.xml`: Main project descriptor file

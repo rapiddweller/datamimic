@@ -86,7 +86,7 @@ def init(
 
 The project is initialized with a sample descriptor that generates:
 - User data with personal information
-- Multiple output formats (CSV, JSON, XML)
+- Multiple output formats (CSV, JSON)
 - 100 sample records
 
 Next steps:

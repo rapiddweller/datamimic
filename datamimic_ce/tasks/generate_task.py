@@ -867,13 +867,11 @@ class GenerateTask(Task):
             else:
                 # Process data by page in single process
                 index_chunk = self._get_chunk_indices(page_size, count)
-                logger.info(
-                    f"Processing {len(index_chunk)} pages for {count - 1:,} products of '{self.statement.name}'"
-                )
+                logger.info(f"Processing {len(index_chunk)} pages for {count:,} products of '{self.statement.name}'")
                 for page_index, page_tuple in enumerate(index_chunk):
                     start, end = page_tuple
                     logger.info(
-                        f"Processing {end - start - 1:,} product '{self.statement.name}' on page {page_index + 1}/{len(index_chunk)} in a single process"
+                        f"Processing {end - start:,} product '{self.statement.name}' on page {page_index + 1}/{len(index_chunk)} in a single process"
                     )
                     # Generate product
                     result = self._sp_generate(context, start, end)
