@@ -177,14 +177,6 @@ Stay updated and connect with our community!
 
 ## FAQ
 
-### Q: When will the Community Edition be fully available?
-
-**A:** We are in the final stages of preparation. Stay tuned for updates in the coming weeks!
-
-### Q: Can I use DATAMIMIC for commercial purposes?
-
-**A:** The Community Edition is for non-commercial use only. For commercial licensing, please contact [info@rapiddweller.com](mailto:info@rapiddweller.com).
-
 ### Q: What Python versions are supported?
 
 **A:** DATAMIMIC requires Python **3.10** or higher.
@@ -195,6 +187,12 @@ Stay updated and connect with our community!
 
 ```bash
 pip install uv
+```
+
+or just using `pip`
+
+```bash
+pip install datamimic-ce
 ```
 
 ---
