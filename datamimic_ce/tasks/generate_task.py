@@ -284,8 +284,7 @@ def _consume_by_page(
         stmt,
         context,
         xml_result,
-        MultiprocessingPageInfo
-        (
+        MultiprocessingPageInfo(
             mp_idx,
             mp_chunk_size,
             page_idx,
@@ -549,8 +548,11 @@ def gen_timer(process: Literal["generate", "export", "process"], report_logging:
                 process_name = "Generating and exporting"
         logger.info(
             f"{process_name} {records_count:,} records '{product_name}' took {round(elapsed_time, 5)} seconds "
-            f"({int(records_count / elapsed_time):,} records/second)" if elapsed_time > 0 else "N/A records/second"
+            f"({int(records_count / elapsed_time):,} records/second)"
+            if elapsed_time > 0
+            else "N/A records/second"
         )
+
 
 class GenerateTask(Task):
     """

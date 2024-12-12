@@ -18,7 +18,9 @@ class NobilityTitleGenerator(Generator):
     Generate random nobility title
     """
 
-    def __init__(self, dataset: Optional[str] = None, gender: Optional[str] = None, noble_quota: Optional[float] = None):
+    def __init__(
+        self, dataset: Optional[str] = None, gender: Optional[str] = None, noble_quota: Optional[float] = None
+    ):
         self._gender = gender
         self._noble_quota = noble_quota if noble_quota is not None else 0.001
 
