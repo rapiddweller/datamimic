@@ -31,15 +31,15 @@ class StringGenerator:
         if min_len is None and max_len is None:
             self._min_len = 1
             self._max_len = 10
-        elif min_len is None:
+        elif min_len is None and max_len is not None:
             self._min_len = max_len // 2  # min_len is half of max_len if not provided
             self._max_len = max_len
-        elif max_len is None:
+        elif max_len is None and min_len is not None:
             self._max_len = min_len * 2  # max_len is twice the min_len if not provided
             self._min_len = min_len
         else:
-            self._min_len = min_len
-            self._max_len = max_len
+            self._min_len = min_len if min_len is not None else 1
+            self._max_len = max_len if max_len is not None else 10
 
         # Ensure min_len <= max_len
         if self._min_len > self._max_len:
