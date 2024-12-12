@@ -51,45 +51,45 @@ class ElementStatement(Statement):
         return self._generator
 
     @property
-    def source(self) -> str:
+    def source(self) -> str | None:
         return self._source
 
     @property
-    def separator(self) -> str:
+    def separator(self) -> str | None:
         return self._separator
 
     @property
-    def condition(self) -> str:
+    def condition(self) -> str | None:
         return self._condition
 
     @property
-    def converter(self) -> str:
+    def converter(self) -> str | None:
         return self._converter
 
     @property
-    def in_date_format(self) -> str:
+    def in_date_format(self) -> str | None:
         return self._in_date_format
 
     @property
-    def out_date_format(self) -> str:
+    def out_date_format(self) -> str | None:
         return self._out_date_format
 
     @property
-    def default_value(self) -> str:
+    def default_value(self) -> str | None:
         return self._default_value
 
     @property
-    def string(self) -> str:
+    def string(self) -> str | None:
         return self._string
 
     @property
-    def pattern(self) -> str:
+    def pattern(self) -> str | None:
         return self._pattern
 
     @property
-    def variable_prefix(self) -> str:
+    def variable_prefix(self) -> str | None:
         return self._variable_prefix
 
     @property
-    def variable_suffix(self) -> str:
+    def variable_suffix(self) -> str | None:
         return self._variable_suffix
