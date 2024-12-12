@@ -7,7 +7,6 @@
 import csv
 import random
 from pathlib import Path
-from typing import Optional, Iterator, Dict, Any
 
 from datamimic_ce.generators.generator import Generator
 from datamimic_ce.logger import logger
@@ -24,8 +23,8 @@ class PhoneNumberGenerator(Generator):
 
     def __init__(
         self,
-        dataset: Optional[str] = "US",
-        area_code: Optional[str] = None,
+        dataset: str | None = "US",
+        area_code: str | None = None,
         is_mobile: bool = False,
     ):
         self._dataset = (dataset or "US").upper()

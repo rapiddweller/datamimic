@@ -125,7 +125,7 @@ class KeyVariableTask(Task):
             raise ValueError(f"Cannot init generation mode for element '{self.statement.name}'")
 
     @abstractmethod
-    def execute(self, ctx: Context) -> None:
+    def execute(self, ctx: Context | GenIterContext | SetupContext) -> None:
         pass
 
     @property

@@ -41,14 +41,14 @@ class SetupContext(Context):
         default_variable_prefix: str,
         default_variable_suffix: str,
         default_line_separator: str,
-        current_seed: int = None,
-        clients: dict = None,
-        data_source_len: dict = None,
-        properties: dict = None,
-        namespace: dict = None,
-        global_variables: dict = None,
-        generators: dict = None,
-        default_source_scripted: bool = None,
+        current_seed: int | None = None,
+        clients: dict | None = None,
+        data_source_len: dict | None = None,
+        properties: dict | None = None,
+        namespace: dict | None = None,
+        global_variables: dict | None = None,
+        generators: dict | None = None,
+        default_source_scripted: bool | None = None,
         report_logging: bool = True,
     ):
         # SetupContext is always its root_context
@@ -362,7 +362,7 @@ class SetupContext(Context):
         return self._default_line_separator
 
     @property
-    def default_source_scripted(self) -> bool:
+    def default_source_scripted(self) -> bool | None:
         return self._default_source_scripted
 
     @property
@@ -386,7 +386,7 @@ class SetupContext(Context):
         """
         self._clients[client_id] = client
 
-    def get_client_by_id(self, client_id: str) -> Client:
+    def get_client_by_id(self, client_id: str):
         """
         Get client using id defined in descriptor file
         :param client_id:
