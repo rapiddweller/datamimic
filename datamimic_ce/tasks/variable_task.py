@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from collections.abc import Iterator
-from typing import Any
+from typing import Any, Final
 
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.constants.attribute_constants import (
@@ -42,12 +42,12 @@ from datamimic_ce.utils.string_util import StringUtil
 
 class VariableTask(KeyVariableTask):
     _iterator: Iterator[Any] | None
-    _ITERATOR_MODE = "iterator"
-    _ENTITY_MODE = "entity_builder"
-    _WEIGHTED_ENTITY_MODE = "weighted_entity"
-    _ITERATION_SELECTOR_MODE = "iteration_selector"
-    _RANDOM_DISTRIBUTION_MODE = "random_distribution"
-    _LAZY_ITERATOR_MODE = "lazy_iterator"
+    _ITERATOR_MODE: Final = "iterator"
+    _ENTITY_MODE: Final = "entity_builder"
+    _WEIGHTED_ENTITY_MODE: Final = "weighted_entity"
+    _ITERATION_SELECTOR_MODE: Final = "iteration_selector"
+    _RANDOM_DISTRIBUTION_MODE: Final = "random_distribution"
+    _LAZY_ITERATOR_MODE: Final = "lazy_iterator"
 
     def __init__(
         self,
@@ -56,6 +56,7 @@ class VariableTask(KeyVariableTask):
         pagination: DataSourcePagination,
     ):
         super().__init__(ctx, statement, pagination)
+        self._statement = statement
         self._source_script = (
             statement.source_script if statement.source_script is not None else bool(ctx.default_source_scripted)
         )

@@ -8,6 +8,7 @@ import ast
 import random
 from abc import abstractmethod
 from collections.abc import Iterable
+from typing import Optional
 
 import numpy
 
@@ -45,7 +46,7 @@ class KeyVariableTask(Task):
         self,
         ctx: SetupContext,
         statement: KeyStatement | VariableStatement | ElementStatement,
-        pagination: DataSourcePagination = None,
+        pagination: Optional[DataSourcePagination] = None,
     ):
         from datamimic_ce.tasks.task_util import TaskUtil
 
@@ -55,7 +56,7 @@ class KeyVariableTask(Task):
         self._pagination = pagination
         self._converter_list = TaskUtil.create_converter_list(ctx, statement.converter)
 
-        self._mode = None
+        self._mode: Optional[str] = None
 
         self._simple_type_set = {
             DATA_TYPE_STRING,
@@ -187,13 +188,17 @@ class KeyVariableTask(Task):
             self._mode = self._GENERATOR_MODE
             if isinstance(self._generator, SequenceTableGenerator):
                 value = self._generator.generate(ctx)
-            else:
+            elif self._generator is not None:
                 value = self._generator.generate()
+            else:
+                value = None
         elif self._mode == self._GENERATOR_MODE:
             if isinstance(self._generator, SequenceTableGenerator):
                 value = self._generator.generate(ctx)
-            else:
+            elif self._generator is not None:
                 value = self._generator.generate()
+            else:
+                value = None
             # Convert numpy.bool_ to bool for being compatible with consumer (db,...)
             if isinstance(value, numpy.bool_):
                 value = bool(value)

@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import re
+from typing import Any
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
@@ -140,7 +141,7 @@ class TaskUtil:
             raise ValueError(f"Cannot created task for statement {stmt.__class__.__name__}")
 
     @staticmethod
-    def evaluate_file_script_template(ctx: Context, datas: dict | list, prefix: str, suffix: str) -> dict | list:
+    def evaluate_file_script_template(ctx: Context, datas: Any, prefix: str, suffix: str) -> dict | list:
         """
         Check value in csv or json file that contain python expression
         then evaluate variables and functions
