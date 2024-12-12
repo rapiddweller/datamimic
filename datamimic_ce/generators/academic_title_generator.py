@@ -6,6 +6,7 @@
 
 import random
 from pathlib import Path
+from typing import Optional
 
 from datamimic_ce.generators.generator import Generator
 from datamimic_ce.logger import logger
@@ -18,7 +19,7 @@ class AcademicTitleGenerator(Generator):
     Generate random academic title
     """
 
-    def __init__(self, dataset: str = None, quota: float = 0.5):
+    def __init__(self, dataset: Optional[str] = None, quota: float = 0.5):
         if quota is None:
             quota = quota or 0.5
         elif quota > 1 or quota < 0:

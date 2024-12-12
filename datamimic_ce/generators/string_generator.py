@@ -3,7 +3,7 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-
+from typing import Optional
 
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
@@ -12,12 +12,12 @@ class StringGenerator:
     def __init__(
         self,
         class_factory_util: BaseClassFactoryUtil,
-        min_len: int | None = None,
-        max_len: int | None = None,
-        char_set: str | None = None,
+        min_len: Optional[int] = None,
+        max_len: Optional[int] = None,
+        char_set: Optional[str] = None,
         unique: bool = False,
-        prefix: str | None = None,
-        suffix: str | None = None,
+        prefix: Optional[str] = None,
+        suffix: Optional[str] = None,
     ):
         self._char_set = (
             char_set
