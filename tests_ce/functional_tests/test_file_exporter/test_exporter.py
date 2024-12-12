@@ -14,15 +14,28 @@ import tests_ce.functional_tests.test_file_exporter.util_of_test_exporter as uti
 class TestExporter:
     _test_dir = Path(__file__).resolve().parent
 
+    def _get_export_paths(self, task_id: str, export_type: str, product_name: str):
+        """Centralized method to generate export paths"""
+        base_folder = self._test_dir / "output"
+        folder_name = f"{task_id}_{export_type}_{product_name}"
+        folder_path = base_folder / folder_name
+        file_name = f"product_{product_name}_chunk_0.{export_type}"
+        file_path = folder_path / file_name
+        return folder_path, file_path
+
+    def _cleanup_folders(self, *folders):
+        """Helper method to clean up test folders"""
+        for folder in folders:
+            if folder.exists():
+                shutil.rmtree(folder)
+
     def test_csv_exporter_mp(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_csv_exporter_mp.xml")
         engine.test_with_timer()
         task_id = engine.task_id
 
-        customer_folder_name = f"exporter_result_{task_id}_exporter_csv_product_customer"
-        customer_folder_path = self._test_dir.joinpath(customer_folder_name)
-        inner_user_folder_name = f"exporter_result_{task_id}_exporter_csv_product_inner_user"
-        inner_user_folder_path = self._test_dir.joinpath(inner_user_folder_name)
+        customer_folder_path, _ = self._get_export_paths(task_id, "csv", "customer")
+        inner_user_folder_path, _ = self._get_export_paths(task_id, "csv", "inner_user")
 
         try:
             # test customer csv
@@ -40,26 +53,20 @@ class TestExporter:
             else:
                 assert len(data) == 30
                 inner_user_temp_list = []
-                for tens in range(1, 11):  # Tens place: 1-10
-                    for units in range(1, 4):  # Units place: 1-3
+                for tens in range(1, 11):
+                    for units in range(1, 4):
                         inner_user_temp_list.append(f"{tens}{units}")
                 assert data == inner_user_temp_list
         finally:
-            # Ensure the file is deleted after testing
-            if inner_user_folder_path.exists():
-                shutil.rmtree(inner_user_folder_path)
-            if customer_folder_path.exists():
-                shutil.rmtree(customer_folder_path)
+            self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
     def test_json_exporter_mp(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_json_exporter_mp.xml")
         engine.test_with_timer()
         task_id = engine.task_id
 
-        customer_folder_name = f"exporter_result_{task_id}_exporter_json_product_customer"
-        customer_folder_path = self._test_dir.joinpath(customer_folder_name)
-        inner_user_folder_name = f"exporter_result_{task_id}_exporter_json_product_inner_user"
-        inner_user_folder_path = self._test_dir.joinpath(inner_user_folder_name)
+        customer_folder_path, _ = self._get_export_paths(task_id, "json", "customer")
+        inner_user_folder_path, _ = self._get_export_paths(task_id, "json", "inner_user")
 
         try:
             # test customer json
@@ -78,26 +85,20 @@ class TestExporter:
             else:
                 assert len(data) == 30
                 inner_user_temp_list = []
-                for tens in range(1, 11):  # Tens place: 1-10
-                    for units in range(1, 4):  # Units place: 1-3
+                for tens in range(1, 11):
+                    for units in range(1, 4):
                         inner_user_temp_list.append({"uid": tens * 10 + units})
                 assert data == inner_user_temp_list
         finally:
-            # Ensure the file is deleted after testing
-            if inner_user_folder_path.exists():
-                shutil.rmtree(inner_user_folder_path)
-            if customer_folder_path.exists():
-                shutil.rmtree(customer_folder_path)
+            self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
     def test_txt_exporter_mp(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_txt_exporter_mp.xml")
         engine.test_with_timer()
         task_id = engine.task_id
 
-        customer_folder_name = f"exporter_result_{task_id}_exporter_txt_product_customer"
-        customer_folder_path = self._test_dir.joinpath(customer_folder_name)
-        inner_user_folder_name = f"exporter_result_{task_id}_exporter_txt_product_inner_user"
-        inner_user_folder_path = self._test_dir.joinpath(inner_user_folder_name)
+        customer_folder_path, _ = self._get_export_paths(task_id, "txt", "customer")
+        inner_user_folder_path, _ = self._get_export_paths(task_id, "txt", "inner_user")
 
         try:
             # test customer txt
@@ -107,7 +108,7 @@ class TestExporter:
             else:
                 assert len(data) == 10
                 for customer_data_len in range(1, 11):
-                    assert data[customer_data_len - 1] == "customer: {'cid': " + str(customer_data_len) + "}"
+                    assert data[customer_data_len - 1] == f"customer: {{'cid': {customer_data_len}}}"
 
             # test inner_user txt
             _, data = util.read_csv_txt_folder(inner_user_folder_path, "txt", have_header=False)
@@ -116,26 +117,20 @@ class TestExporter:
             else:
                 assert len(data) == 30
                 inner_user_temp_list = []
-                for tens in range(1, 11):  # Tens place: 1-10
-                    for units in range(1, 4):  # Units place: 1-3
+                for tens in range(1, 11):
+                    for units in range(1, 4):
                         inner_user_temp_list.append(f"inner_user: {{'uid': {tens}{units}}}")
                 assert data == inner_user_temp_list
         finally:
-            # Ensure the file is deleted after testing
-            if inner_user_folder_path.exists():
-                shutil.rmtree(inner_user_folder_path)
-            if customer_folder_path.exists():
-                shutil.rmtree(customer_folder_path)
+            self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
     def test_xml_exporter_mp(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_xml_exporter_mp.xml")
         engine.test_with_timer()
         task_id = engine.task_id
 
-        customer_folder_name = f"exporter_result_{task_id}_exporter_xml_product_customer"
-        customer_folder_path = self._test_dir.joinpath(customer_folder_name)
-        inner_user_folder_name = f"exporter_result_{task_id}_exporter_xml_product_inner_user"
-        inner_user_folder_path = self._test_dir.joinpath(inner_user_folder_name)
+        customer_folder_path, _ = self._get_export_paths(task_id, "xml", "customer")
+        inner_user_folder_path, _ = self._get_export_paths(task_id, "xml", "inner_user")
 
         try:
             # test customer xml
@@ -154,7 +149,6 @@ class TestExporter:
                         else:
                             index += 1
                             assert data == f"<item><cid>{index}</cid></item>"
-
                 assert index == 10
 
             # test inner_user xml
@@ -175,29 +169,17 @@ class TestExporter:
                             units = int(index % 3) + 1
                             index += 1
                             assert data == f"<item><uid>{tens}{units}</uid></item>"
-
                 assert index == 30
         finally:
-            # Ensure the file is deleted after testing
-            if inner_user_folder_path.exists():
-                shutil.rmtree(inner_user_folder_path)
-            if customer_folder_path.exists():
-                shutil.rmtree(customer_folder_path)
+            self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
     def test_csv_exporter_sp(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_csv_exporter_sp.xml")
         engine.test_with_timer()
         task_id = engine.task_id
 
-        customer_folder_name = f"exporter_result_{task_id}_exporter_csv_product_customer"
-        customer_file_name = "product_customer_chunk_0.csv"
-        customer_folder_path = self._test_dir.joinpath(customer_folder_name)
-        customer_file_path = customer_folder_path.joinpath(customer_file_name)
-
-        inner_user_folder_name = f"exporter_result_{task_id}_exporter_csv_product_inner_user"
-        inner_user_file_name = "product_inner_user_chunk_0.csv"
-        inner_user_folder_path = self._test_dir.joinpath(inner_user_folder_name)
-        inner_user_file_path = inner_user_folder_path.joinpath(inner_user_file_name)
+        customer_folder_path, customer_file_path = self._get_export_paths(task_id, "csv", "customer")
+        inner_user_folder_path, inner_user_file_path = self._get_export_paths(task_id, "csv", "inner_user")
 
         try:
             # test customer csv
@@ -215,36 +197,24 @@ class TestExporter:
             else:
                 assert len(data) == 30
                 inner_user_temp_list = []
-                for tens in range(1, 11):  # Tens place: 1-10
-                    for units in range(1, 4):  # Units place: 1-3
+                for tens in range(1, 11):
+                    for units in range(1, 4):
                         inner_user_temp_list.append(f"{tens}{units}")
                 assert data == inner_user_temp_list
         finally:
-            # Ensure the file is deleted after testing
-            if inner_user_folder_path.exists():
-                shutil.rmtree(inner_user_folder_path)
-            if customer_folder_path.exists():
-                shutil.rmtree(customer_folder_path)
+            self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
     def test_json_exporter_sp(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_json_exporter_sp.xml")
         engine.test_with_timer()
         task_id = engine.task_id
 
-        customer_folder_name = f"exporter_result_{task_id}_exporter_json_product_customer"
-        customer_file_name = "product_customer_chunk_0.json"
-        customer_folder_path = self._test_dir.joinpath(customer_folder_name)
-        customer_file_path = customer_folder_path.joinpath(customer_file_name)
-
-        inner_user_folder_name = f"exporter_result_{task_id}_exporter_json_product_inner_user"
-        inner_user_file_name = "product_inner_user_chunk_0.json"
-        inner_user_folder_path = self._test_dir.joinpath(inner_user_folder_name)
-        inner_user_file_path = inner_user_folder_path.joinpath(inner_user_file_name)
+        customer_folder_path, customer_file_path = self._get_export_paths(task_id, "json", "customer")
+        inner_user_folder_path, inner_user_file_path = self._get_export_paths(task_id, "json", "inner_user")
 
         try:
             # test customer json
             data = util.read_json_file(customer_file_path)
-
             if not data:
                 assert False
             else:
@@ -259,31 +229,20 @@ class TestExporter:
             else:
                 assert len(data) == 30
                 inner_user_temp_list = []
-                for tens in range(1, 11):  # Tens place: 1-10
-                    for units in range(1, 4):  # Units place: 1-3
+                for tens in range(1, 11):
+                    for units in range(1, 4):
                         inner_user_temp_list.append({"uid": tens * 10 + units})
                 assert data == inner_user_temp_list
         finally:
-            # Ensure the file is deleted after testing
-            if inner_user_folder_path.exists():
-                shutil.rmtree(inner_user_folder_path)
-            if customer_folder_path.exists():
-                shutil.rmtree(customer_folder_path)
+            self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
     def test_txt_exporter_sp(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_txt_exporter_sp.xml")
         engine.test_with_timer()
         task_id = engine.task_id
 
-        customer_folder_name = f"exporter_result_{task_id}_exporter_txt_product_customer"
-        customer_file_name = "product_customer_chunk_0.txt"
-        customer_folder_path = self._test_dir.joinpath(customer_folder_name)
-        customer_file_path = customer_folder_path.joinpath(customer_file_name)
-
-        inner_user_folder_name = f"exporter_result_{task_id}_exporter_txt_product_inner_user"
-        inner_user_file_name = "product_inner_user_chunk_0.txt"
-        inner_user_folder_path = self._test_dir.joinpath(inner_user_folder_name)
-        inner_user_file_path = inner_user_folder_path.joinpath(inner_user_file_name)
+        customer_folder_path, customer_file_path = self._get_export_paths(task_id, "txt", "customer")
+        inner_user_folder_path, inner_user_file_path = self._get_export_paths(task_id, "txt", "inner_user")
 
         try:
             # test customer txt
@@ -293,7 +252,7 @@ class TestExporter:
             else:
                 assert len(data) == 10
                 for customer_data_len in range(1, 11):
-                    assert data[customer_data_len - 1] == "customer: {'cid': " + str(customer_data_len) + "}"
+                    assert data[customer_data_len - 1] == f"customer: {{'cid': {customer_data_len}}}"
 
             # test inner_user txt
             _, data = util.read_csv_txt_file(inner_user_file_path, have_header=False)
@@ -302,31 +261,20 @@ class TestExporter:
             else:
                 assert len(data) == 30
                 inner_user_temp_list = []
-                for tens in range(1, 11):  # Tens place: 1-10
-                    for units in range(1, 4):  # Units place: 1-3
+                for tens in range(1, 11):
+                    for units in range(1, 4):
                         inner_user_temp_list.append(f"inner_user: {{'uid': {tens}{units}}}")
                 assert data == inner_user_temp_list
         finally:
-            # Ensure the file is deleted after testing
-            if inner_user_folder_path.exists():
-                shutil.rmtree(inner_user_folder_path)
-            if customer_folder_path.exists():
-                shutil.rmtree(customer_folder_path)
+            self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
     def test_xml_exporter_sp(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_xml_exporter_sp.xml")
         engine.test_with_timer()
         task_id = engine.task_id
 
-        customer_folder_name = f"exporter_result_{task_id}_exporter_xml_product_customer"
-        customer_file_name = "product_customer_chunk_0.xml"
-        customer_folder_path = self._test_dir.joinpath(customer_folder_name)
-        customer_file_path = customer_folder_path.joinpath(customer_file_name)
-
-        inner_user_folder_name = f"exporter_result_{task_id}_exporter_xml_product_inner_user"
-        inner_user_file_name = "product_inner_user_chunk_0.xml"
-        inner_user_folder_path = self._test_dir.joinpath(inner_user_folder_name)
-        inner_user_file_path = inner_user_folder_path.joinpath(inner_user_file_name)
+        customer_folder_path, customer_file_path = self._get_export_paths(task_id, "xml", "customer")
+        inner_user_folder_path, inner_user_file_path = self._get_export_paths(task_id, "xml", "inner_user")
 
         try:
             # test customer xml
@@ -345,7 +293,6 @@ class TestExporter:
                         else:
                             index += 1
                             assert data == f"<item><cid>{index}</cid></item>"
-
                 assert index == 10
 
             # test inner_user xml
@@ -366,24 +313,17 @@ class TestExporter:
                             units = int(index % 3) + 1
                             index += 1
                             assert data == f"<item><uid>{tens}{units}</uid></item>"
-
                 assert index == 30
         finally:
-            # Ensure the file is deleted after testing
-            if inner_user_folder_path.exists():
-                shutil.rmtree(inner_user_folder_path)
-            if customer_folder_path.exists():
-                shutil.rmtree(customer_folder_path)
+            self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
     def test_one_record_xml_exporter_mp(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_one_record_xml_exporter_mp.xml")
         engine.test_with_timer()
         task_id = engine.task_id
 
-        customer_folder_name = f"exporter_result_{task_id}_exporter_xml_product_customer"
-        customer_folder_path = self._test_dir.joinpath(customer_folder_name)
-        inner_user_folder_name = f"exporter_result_{task_id}_exporter_xml_product_inner_user"
-        inner_user_folder_path = self._test_dir.joinpath(inner_user_folder_name)
+        customer_folder_path, _ = self._get_export_paths(task_id, "xml", "customer")
+        inner_user_folder_path, _ = self._get_export_paths(task_id, "xml", "inner_user")
 
         try:
             # test customer xml
@@ -393,7 +333,7 @@ class TestExporter:
             else:
                 assert len(files) == 1
                 for datas in files:
-                    assert datas[0] == f"<cid>1</cid>"
+                    assert datas[0] == "<cid>1</cid>"
 
             # test inner_user xml
             files = util.read_xml_folder(inner_user_folder_path)
@@ -413,29 +353,17 @@ class TestExporter:
                             units = int(index % 3) + 1
                             index += 1
                             assert data == f"<item><uid>{tens}{units}</uid></item>"
-
                 assert index == 3
         finally:
-            # Ensure the file is deleted after testing
-            if inner_user_folder_path.exists():
-                shutil.rmtree(inner_user_folder_path)
-            if customer_folder_path.exists():
-                shutil.rmtree(customer_folder_path)
+            self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
     def test_one_record_xml_exporter_sp(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_one_record_xml_exporter_sp.xml")
         engine.test_with_timer()
         task_id = engine.task_id
 
-        customer_folder_name = f"exporter_result_{task_id}_exporter_xml_product_customer"
-        customer_file_name = "product_customer_chunk_0.xml"
-        customer_folder_path = self._test_dir.joinpath(customer_folder_name)
-        customer_file_path = customer_folder_path.joinpath(customer_file_name)
-
-        inner_user_folder_name = f"exporter_result_{task_id}_exporter_xml_product_inner_user"
-        inner_user_file_name = "product_inner_user_chunk_0.xml"
-        inner_user_folder_path = self._test_dir.joinpath(inner_user_folder_name)
-        inner_user_file_path = inner_user_folder_path.joinpath(inner_user_file_name)
+        customer_folder_path, customer_file_path = self._get_export_paths(task_id, "xml", "customer")
+        inner_user_folder_path, inner_user_file_path = self._get_export_paths(task_id, "xml", "inner_user")
 
         try:
             # test customer xml
@@ -445,7 +373,7 @@ class TestExporter:
             else:
                 assert len(files) == 1
                 for datas in files:
-                    assert datas[0] == f"<cid>1</cid>"
+                    assert datas[0] == "<cid>1</cid>"
 
             # test inner_user xml
             files = util.read_xml_file(inner_user_file_path)
@@ -465,11 +393,6 @@ class TestExporter:
                             units = int(index % 3) + 1
                             index += 1
                             assert data == f"<item><uid>{tens}{units}</uid></item>"
-
                 assert index == 3
         finally:
-            # Ensure the file is deleted after testing
-            if inner_user_folder_path.exists():
-                shutil.rmtree(inner_user_folder_path)
-            if customer_folder_path.exists():
-                shutil.rmtree(customer_folder_path)
+            self._cleanup_folders(customer_folder_path, inner_user_folder_path)
