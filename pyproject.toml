@@ -66,6 +66,7 @@ dev-dependencies = [
     "ruff>=0.8", # Fast Python linter written in Rust
     "sqlalchemy-stubs>=0.4",
     "prettytable==3.10.0", # from prettytable import PrettyTable
+    "mypy==1.8.0",
 
 ]
 
@@ -75,10 +76,10 @@ disallow_untyped_defs = false
 check_untyped_defs = false
 ignore_missing_imports = true
 no_implicit_optional = true  # Allow implicit optional types
-allow_untyped_calls = true  # Allow calls to functions without type annotations
+disallow_untyped_calls = false  # Allow calls to functions without type annotations
 allow_untyped_globals = true  # Allow global variables without type annotations
-allow_untyped_decorators = true  # Allow decorators without type annotations
-allow_incomplete_defs = true  # Allow functions with incomplete type annotations
+disallow_untyped_decorators = true  # Allow decorators without type annotations
+disallow_incomplete_defs = false  # Allow functions with incomplete type annotations
 
 [tool.pydantic-mypy]
 init_forbid_extra = false  # Allow extra arguments in Pydantic models' __init__
@@ -113,3 +114,6 @@ markers = ["run: Custom marker for running specific tests"]  # Custom markers fo
 [tool.pytest]
 parallel = true  # Enable parallel test execution
 addopts = "-n auto --dist=loadscope"
+
+[tool.pyright]
+typeCheckingMode="off"
