@@ -29,7 +29,7 @@ class SequenceTableGenerator(Generator):
             table_name=root_gen_stmt.type, col_name=self._stmt.name
         ) - int(root_gen_stmt.count)
         self._current = None
-        self._end = None
+        self._end: int | None = None
 
     def pre_execute(self, context):
         """
