@@ -10,7 +10,6 @@ from datamimic_ce.model.mongodb_model import MongoDBModel
 
 
 class TestMongodbCredential:
-
     mongodb_model = MongoDBModel(
         id="mongodb",
         host="localhost",

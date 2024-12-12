@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from datamimic_ce.generators.gender_generator import GenderGenerator
 
 
@@ -58,15 +57,18 @@ class TestGenderGenerator:
                         count_other += 1
 
                 assert self.__is_between_target_fluctuation(
-                    count_female / times, female_quota, deviation), f"Test female quota {f_index+1}-{o_index + 1} failed"
+                    count_female / times, female_quota, deviation
+                ), f"Test female quota {f_index+1}-{o_index + 1} failed"
 
                 other_true_quota = other_quota if (female_quota + other_quota <= 1) else (1 - female_quota)
                 assert self.__is_between_target_fluctuation(
-                    count_other / times, other_true_quota, deviation), f"Test other gender quota {f_index + 1}-{o_index + 1} failed"
+                    count_other / times, other_true_quota, deviation
+                ), f"Test other gender quota {f_index + 1}-{o_index + 1} failed"
 
                 male_quota = 1 - female_quota - other_true_quota
                 assert self.__is_between_target_fluctuation(
-                    count_male / times, male_quota, deviation), f"Test male quota {f_index + 1}-{o_index + 1} failed"
+                    count_male / times, male_quota, deviation
+                ), f"Test male quota {f_index + 1}-{o_index + 1} failed"
 
     @staticmethod
     def __is_between_target_fluctuation(value: float, target: float, deviation: float) -> bool:

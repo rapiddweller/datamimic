@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
@@ -15,7 +14,5 @@ class TestLogConsumer:
     _test_dir = Path(__file__).resolve().parent
 
     def test_log_consumer(self):
-        engine = DataMimicTest(
-            test_dir=self._test_dir, filename="test_log_consumer.xml"
-        )
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_log_consumer.xml")
         engine.test_with_timer()

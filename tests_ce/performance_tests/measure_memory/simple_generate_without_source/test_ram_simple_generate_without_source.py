@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from pathlib import Path
 
 import pytest
@@ -68,10 +67,9 @@ class TestRAMSimpleGenerateWithoutSource:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     def test_ram_single_thread_without_source_10000(self, class_fixture):
         count = "10000"
@@ -88,10 +86,9 @@ class TestRAMSimpleGenerateWithoutSource:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     def test_ram_single_thread_without_source_100000(self, class_fixture):
         count = "100000"
@@ -109,10 +106,9 @@ class TestRAMSimpleGenerateWithoutSource:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     def test_ram_multiprocessing_without_source_1000(self, class_fixture):
         count = "1000"
@@ -130,10 +126,9 @@ class TestRAMSimpleGenerateWithoutSource:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     def test_ram_multiprocessing_without_source_10000(self, class_fixture):
         count = "10000"
@@ -151,10 +146,9 @@ class TestRAMSimpleGenerateWithoutSource:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     def test_ram_multiprocessing_without_source_100000(self, class_fixture):
         count = "100000"
@@ -172,7 +166,6 @@ class TestRAMSimpleGenerateWithoutSource:
         results = class_fixture
         test_result = PerformanceTestUtil.format_mem_usage(avg_process_usage)
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )

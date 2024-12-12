@@ -39,7 +39,8 @@ class TestGenerateTask:
         # Property methods
         type(gen_iter_context).current_name = PropertyMock(return_value=gen_iter_context._current_name)
         type(gen_iter_context).current_product = PropertyMock(
-            return_value=gen_iter_context._current_product, fset=lambda self, value: setattr(self, "_current_product", value)
+            return_value=gen_iter_context._current_product,
+            fset=lambda self, value: setattr(self, "_current_product", value),
         )
         type(gen_iter_context).current_variables = PropertyMock(return_value=gen_iter_context._current_variables)
 
@@ -225,7 +226,9 @@ class TestGenerateTask:
             (15000, 10000),  # Max default page size is 10,000
         ],
     )
-    def test_calculate_default_page_size_various_counts(self, generate_task, mock_statement, entity_count, expected_size):
+    def test_calculate_default_page_size_various_counts(
+        self, generate_task, mock_statement, entity_count, expected_size
+    ):
         """Test _calculate_default_page_size with various entity counts."""
         mock_statement.page_size = None
         size = generate_task._calculate_default_page_size(entity_count)

@@ -11,20 +11,16 @@ from datamimic_ce.exporters.csv_exporter import CSVExporter
 
 def generate_mock_data(total_records=3000, title="Mock Title", year=2020):
     """Generate mock data for testing."""
-    return [{
-        "id": f"movie_{i + 1}",
-        "title": f"{title} {i + 1}",
-        "year": year
-    } for i in range(total_records)]
+    return [{"id": f"movie_{i + 1}", "title": f"{title} {i + 1}", "year": year} for i in range(total_records)]
 
 
 class MockSetupContext:
     def __init__(self, task_id, descriptor_dir):
         self.task_id = task_id
         self.descriptor_dir = descriptor_dir
-        self.default_encoding = 'utf-8'
-        self.default_separator = ','
-        self.default_line_separator = '\n'
+        self.default_encoding = "utf-8"
+        self.default_separator = ","
+        self.default_line_separator = "\n"
         self.use_mp = False
 
     def get_client_by_id(self, client_id):
@@ -45,7 +41,7 @@ def worker(data_chunk, shared_storage_list, task_id, descriptor_dir, properties)
         quotechar=None,
         quoting=None,
         line_terminator=None,
-        encoding=None
+        encoding=None,
     )
     exporter._buffer_file = None
     product = ("test_product", data_chunk)
@@ -56,7 +52,7 @@ def worker(data_chunk, shared_storage_list, task_id, descriptor_dir, properties)
 
 
 class TestCSVExporter(unittest.TestCase):
-    def setUp(self, encoding='utf-8', delimiter=None, quotechar=None, quoting=None, line_terminator=None):
+    def setUp(self, encoding="utf-8", delimiter=None, quotechar=None, quoting=None, line_terminator=None):
         """Set up for each test."""
         self.setup_context = MockSetupContext(task_id="test_task", descriptor_dir="test_dir")
         self.setup_context.task_id = f"test_task_{uuid.uuid4().hex}"
@@ -74,7 +70,7 @@ class TestCSVExporter(unittest.TestCase):
             line_terminator=line_terminator,
             page_info=None,
             fieldnames=None,
-            encoding=encoding
+            encoding=encoding,
         )
 
     def tearDown(self):
@@ -91,7 +87,7 @@ class TestCSVExporter(unittest.TestCase):
     def test_custom_delimiter_and_encoding(self):
         """Test exporting with custom delimiter and encoding."""
 
-        self.setUp(encoding='utf-16', delimiter=';')
+        self.setUp(encoding="utf-16", delimiter=";")
 
         original_data = generate_mock_data(10)
         product = ("test_product", original_data)
@@ -101,13 +97,13 @@ class TestCSVExporter(unittest.TestCase):
     def test_special_characters_in_data(self):
         """Test exporting data containing delimiters, quotes, and newlines."""
 
-        self.setUp(quoting=csv.QUOTE_ALL, delimiter=';')
+        self.setUp(quoting=csv.QUOTE_ALL, delimiter=";")
 
         special_data = [
-            {"id": "1", "title": 'Title with, comma', "year": 2020},
+            {"id": "1", "title": "Title with, comma", "year": 2020},
             {"id": "2", "title": 'Title with "quote"', "year": 2021},
-            {"id": "3", "title": 'Title with \n newline', "year": 2022},
-            {"id": "4", "title": 'Title with delimiter; semicolon', "year": 2023},
+            {"id": "3", "title": "Title with \n newline", "year": 2022},
+            {"id": "4", "title": "Title with delimiter; semicolon", "year": 2023},
         ]
         product = ("test_product", special_data)
         self.exporter.consume(product)
@@ -132,13 +128,14 @@ class TestCSVExporter(unittest.TestCase):
         self.exporter.consume(product)
         self.exporter.finalize_chunks()
 
-    @unittest.skipIf(os.name == 'posix', "Skipping multiprocessing test on Linux")
+    @unittest.skipIf(os.name == "posix", "Skipping multiprocessing test on Linux")
     def test_multiprocessing_export(self):
         total_processes = os.cpu_count() or 1
         total_records_per_process = 5000
         data = generate_mock_data(total_records_per_process * total_processes)
-        data_chunks = [data[i * total_records_per_process:(i + 1) * total_records_per_process] for i in
-                       range(total_processes)]
+        data_chunks = [
+            data[i * total_records_per_process : (i + 1) * total_records_per_process] for i in range(total_processes)
+        ]
 
         manager = multiprocessing.Manager()
         shared_storage_list = manager.list()
@@ -146,8 +143,13 @@ class TestCSVExporter(unittest.TestCase):
         for chunk in data_chunks:
             p = multiprocessing.Process(
                 target=worker,
-                args=(chunk, shared_storage_list, self.setup_context.task_id, self.setup_context.descriptor_dir,
-                      self.setup_context.properties)
+                args=(
+                    chunk,
+                    shared_storage_list,
+                    self.setup_context.task_id,
+                    self.setup_context.descriptor_dir,
+                    self.setup_context.properties,
+                ),
             )
             p.start()
             processes.append(p)
@@ -206,15 +208,12 @@ class TestCSVExporter(unittest.TestCase):
         self.exporter.fieldnames = None  # Ensure fieldnames are not set
         product = ("test_product", data)
         self.exporter.consume(product)
-        self.assertEqual(self.exporter.fieldnames, ['id', 'title', 'year'])  # Fieldnames inferred
+        self.assertEqual(self.exporter.fieldnames, ["id", "title", "year"])  # Fieldnames inferred
         self.exporter.finalize_chunks()
 
     def test_export_with_custom_quotechar(self):
         """Test exporting data with a custom quote character."""
-        self.setup_context.properties = {
-            'quotechar': "'",
-            'quoting': csv.QUOTE_ALL
-        }
+        self.setup_context.properties = {"quotechar": "'", "quoting": csv.QUOTE_ALL}
         self.exporter = CSVExporter(
             setup_context=self.setup_context,
             product_name="test_product",
@@ -225,7 +224,7 @@ class TestCSVExporter(unittest.TestCase):
             line_terminator=None,
             page_info=None,
             fieldnames=None,
-            encoding=None
+            encoding=None,
         )
 
         data = generate_mock_data(5)
@@ -245,7 +244,7 @@ class TestCSVExporter(unittest.TestCase):
 
     def test_export_with_custom_encoding(self):
         """Test exporting data with a custom encoding."""
-        self.setUp(encoding='utf-16')
+        self.setUp(encoding="utf-16")
 
         data = generate_mock_data(10)
         product = ("test_product", data)
@@ -259,5 +258,5 @@ class TestCSVExporter(unittest.TestCase):
         self.exporter.finalize_chunks()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -41,8 +41,10 @@ class TestBooleanGenerator:
             BooleanGenerator(prob_true=prob_true)
             assert False
         except ValueError as error:
-            assert (f"Probability prob_true of BooleanGenerator must be in [0.0, 1.0] range, "
-                    f"but got invalid value {prob_true}.") == str(error)
+            assert (
+                f"Probability prob_true of BooleanGenerator must be in [0.0, 1.0] range, "
+                f"but got invalid value {prob_true}."
+            ) == str(error)
 
     def test_invalid_probability_larger_than_one(self):
         prob_true = 2
@@ -50,8 +52,10 @@ class TestBooleanGenerator:
             BooleanGenerator(prob_true=prob_true)
             assert False
         except ValueError as error:
-            assert (f"Probability prob_true of BooleanGenerator must be in [0.0, 1.0] range, "
-                    f"but got invalid value {prob_true}.") == str(error)
+            assert (
+                f"Probability prob_true of BooleanGenerator must be in [0.0, 1.0] range, "
+                f"but got invalid value {prob_true}."
+            ) == str(error)
 
     def test_probability_edge_cases(self):
         generator_false = BooleanGenerator(prob_true=0.0)

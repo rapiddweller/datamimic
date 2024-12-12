@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
@@ -15,27 +14,29 @@ class TestVariableFunctional:
     _test_dir = Path(__file__).resolve().parent
 
     def test_query_setup_context_variable(self):
-        engine = DataMimicTest(test_dir=self._test_dir,
-                               filename="test_query_setup_context_variable.xml",
-                               capture_test_result=True)
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_query_setup_context_variable.xml", capture_test_result=True
+        )
         engine.test_with_timer()
         result = engine.capture_result()
-        query_variable_test = result.get('query_variable_test')
+        query_variable_test = result.get("query_variable_test")
         assert len(query_variable_test) == 10
         for element in query_variable_test:
             assert element.get("id") in [1, 2, 3]
-            assert element.get("name") in ['Name 1', 'Name 2', 'Name 3']
+            assert element.get("name") in ["Name 1", "Name 2", "Name 3"]
             if element.get("id") == 1:
-                assert element.get("name") == 'Name 1'
+                assert element.get("name") == "Name 1"
             elif element.get("id") == 2:
-                assert element.get("name") == 'Name 2'
+                assert element.get("name") == "Name 2"
             elif element.get("id") == 3:
-                assert element.get("name") == 'Name 3'
+                assert element.get("name") == "Name 3"
             assert element.get("static_id") == 1
-            assert element.get("static_name") == 'Name 1'
+            assert element.get("static_name") == "Name 1"
 
     def test_variable_with_type(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_variable_with_type.xml", capture_test_result=True)
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_variable_with_type.xml", capture_test_result=True
+        )
         engine.test_with_timer()
         result = engine.capture_result()
         variable_with_type = result["user"]
@@ -55,7 +56,9 @@ class TestVariableFunctional:
             assert ele.get("number") == 1
 
     def test_variable_source_with_name_only(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_variable_source_with_name_only.xml", capture_test_result=True)
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_variable_source_with_name_only.xml", capture_test_result=True
+        )
         engine.test_with_timer()
         result = engine.capture_result()
         variable_with_type = result["user"]
@@ -66,7 +69,9 @@ class TestVariableFunctional:
             assert ele.get("number") == 1
 
     def test_variable_with_selector_cyclic(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_variable_with_selector_cyclic.xml", capture_test_result=True)
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_variable_with_selector_cyclic.xml", capture_test_result=True
+        )
         engine.test_with_timer()
         result = engine.capture_result()
 
@@ -94,4 +99,3 @@ class TestVariableFunctional:
                 assert ele.get("user_text") == "Name 2"
             elif ele.get("user_id") == 3:
                 assert ele.get("user_text") == "Name 3"
-

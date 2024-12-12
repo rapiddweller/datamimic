@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
@@ -36,9 +35,7 @@ class TestSelector:
         assert result["simple_data"][:10] == result["iteration_data"][:10]
 
     def test_dynamic_selector(self):
-        engine = DataMimicTest(
-            test_dir=self._test_dir, filename="test_dynamic_selector.xml", capture_test_result=True
-        )
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_dynamic_selector.xml", capture_test_result=True)
         engine.test_with_timer()
 
         result = engine.capture_result()

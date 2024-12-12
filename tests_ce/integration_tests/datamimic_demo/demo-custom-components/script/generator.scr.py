@@ -5,34 +5,38 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 class RandomHexColorGenerator(Generator):
     def generate(self) -> str:
         import random
+
         return f"#{random.randint(0, 0xFFFFFF):06x}"
 
 
 class RandomIPAddressGenerator(Generator):
     def generate(self) -> str:
         import random
+
         return ".".join(map(str, (random.randint(0, 255) for _ in range(4))))
 
 
 class RandomUUIDGenerator(Generator):
     def generate(self) -> str:
         import uuid
+
         return str(uuid.uuid4())
 
 
 class RandomMACAddressGenerator(Generator):
     def generate(self) -> str:
         import random
+
         return ":".join([f"{random.randint(0, 255):02x}" for _ in range(6)])
 
 
 class RandomISBNGenerator(Generator):
     def generate(self) -> str:
         import random
+
         prefix = "978"
         group = random.randint(0, 1)
         publisher = random.randint(100, 999)
@@ -46,6 +50,7 @@ class RandomISBNGenerator(Generator):
 class RandomCoordinatesGenerator(Generator):
     def generate(self) -> str:
         import random
+
         latitude = random.uniform(-90, 90)
         longitude = random.uniform(-180, 180)
         return f"{latitude},{longitude}"
@@ -55,6 +60,7 @@ class RandomLicensePlateGenerator(Generator):
     def generate(self) -> str:
         import random
         import string
+
         letters = "".join(random.choices(string.ascii_uppercase, k=3))
         numbers = "".join(random.choices(string.digits, k=4))
         return f"{letters}-{numbers}"
@@ -67,6 +73,7 @@ class RandomPasswordGenerator(Generator):
     def generate(self) -> str:
         import random
         import string
+
         characters = string.ascii_letters + string.digits + string.punctuation
         return "".join(random.choices(characters, k=self.length))
 
@@ -74,6 +81,7 @@ class RandomPasswordGenerator(Generator):
 class RandomMovieTitleGenerator(Generator):
     def __init__(self):
         from faker import Faker
+
         self.fake = Faker()
 
     def generate(self) -> str:
@@ -83,6 +91,7 @@ class RandomMovieTitleGenerator(Generator):
 class RandomUserAgentGenerator(Generator):
     def __init__(self):
         from faker import Faker
+
         self.fake = Faker()
 
     def generate(self) -> str:
@@ -92,6 +101,7 @@ class RandomUserAgentGenerator(Generator):
 class RandomNameGenerator(Generator):
     def __init__(self):
         from faker import Faker
+
         self.fake = Faker()
 
     def generate(self) -> str:
@@ -101,6 +111,7 @@ class RandomNameGenerator(Generator):
 class RandomEmailGenerator(Generator):
     def __init__(self):
         from faker import Faker
+
         self.fake = Faker()
 
     def generate(self) -> str:
@@ -114,11 +125,13 @@ class RandomFloatGenerator(Generator):
 
     def generate(self) -> float:
         import random
+
         return random.uniform(self.min, self.max)
 
 
 class RandomTransactionTypeGenerator(Generator):
     def generate(self) -> str:
         import random
+
         transaction_types = ["purchase", "refund", "transfer", "withdrawal"]
         return random.choice(transaction_types)

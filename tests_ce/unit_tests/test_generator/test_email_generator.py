@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 import pytest
 from pydantic import BaseModel, ValidationError
 from pydantic.networks import EmailStr

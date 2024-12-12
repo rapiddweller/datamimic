@@ -5,6 +5,5 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 def square_of(count):
     return count * count

@@ -38,7 +38,7 @@ class XMLExporter(UnifiedBufferedExporter):
         chunk_size: Optional[int],
         root_element: Optional[str],
         item_element: Optional[str],
-        encoding: Optional[str]
+        encoding: Optional[str],
     ):
         """
         Initializes the XMLExporter.
@@ -59,7 +59,7 @@ class XMLExporter(UnifiedBufferedExporter):
             product_name=product_name,
             chunk_size=chunk_size,
             page_info=page_info,
-            encoding=encoding
+            encoding=encoding,
         )
         logger.info(
             f"XMLExporter initialized with chunk size {chunk_size}, root element '{self.root_element}', "
@@ -160,7 +160,6 @@ class XMLExporter(UnifiedBufferedExporter):
         # Special case when xml only have one item
         # remove <list> and <item>, leave only inside data
         if is_single_item:
-
             try:
                 with buffer_file.open("r", encoding=self.encoding) as xmlfile:
                     xml_content = xmlfile.read()
@@ -173,7 +172,7 @@ class XMLExporter(UnifiedBufferedExporter):
             end_index = xml_content.find(end_tag)
             if start_index != -1 and end_index != -1:
                 # Extract content between <item> and </item>
-                item_content = xml_content[start_index + len(start_tag): end_index]
+                item_content = xml_content[start_index + len(start_tag) : end_index]
                 try:
                     with buffer_file.open("w", encoding=self.encoding) as xmlfile:
                         xmlfile.write(item_content)
