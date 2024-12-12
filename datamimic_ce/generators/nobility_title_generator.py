@@ -75,4 +75,4 @@ class NobilityTitleGenerator(Generator):
             else:
                 """"""
         else:
-            return None
+            return ""
