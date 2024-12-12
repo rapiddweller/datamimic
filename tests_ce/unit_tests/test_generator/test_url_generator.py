@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 import pytest
 from pydantic.main import BaseModel
 from pydantic.networks import AnyUrl, HttpUrl

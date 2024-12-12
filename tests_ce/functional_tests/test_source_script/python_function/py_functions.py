@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 addition_variable = "addition_1"
 
 

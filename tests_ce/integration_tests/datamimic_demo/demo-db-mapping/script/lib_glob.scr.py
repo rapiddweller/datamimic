@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from functools import lru_cache
 
 from datamimic_ce.contexts.context import Context
@@ -26,15 +25,15 @@ class CustomBusinessMappingConverter(CustomConverter):
             client = context.get_client_by_id(self._client_id)
 
             from datamimic_ce.clients.database_client import DatabaseClient
+
             if client is None:
                 raise ValueError("Client with id 'mapping' not found")
             elif not isinstance(client, DatabaseClient):
-                raise ValueError(
-                    f"Client with id 'mapping' is not a DatabaseClient, but a {type(client)}"
-                )
+                raise ValueError(f"Client with id 'mapping' is not a DatabaseClient, but a {type(client)}")
             elif isinstance(client, DatabaseClient):
                 self.__class__._database_client = client
                 from datamimic_ce.logger import logger
+
                 logger.debug(f"The table has {client.count_table_length('business_mapping')} rows")
                 self.__class__._initialized = True
 
@@ -43,26 +42,23 @@ class CustomBusinessMappingConverter(CustomConverter):
         # logger.debug(f"Parsed data: {parsed_data}, start creating SQL query...")
 
         # Extract the columns to be selected
-        output_columns = ', '.join(parsed_data['output_columns'])
+        output_columns = ", ".join(parsed_data["output_columns"])
 
         # logger.debug(f"Output columns: {output_columns}, start creating WHERE clause...")
 
         # Construct the WHERE clause by combining all key-value pairs with AND, excluding 'output_columns'
         filters = [
             f"{key} = {value}" if isinstance(value, int) else f"{key} = '{value}'"
-            for key, value in parsed_data.items() if key != 'output_columns'
+            for key, value in parsed_data.items()
+            if key != "output_columns"
         ]
 
         # Join filters with ' AND ' only if there are more than one filter
-        where_clause = ' AND '.join(filters) if filters else ''
+        where_clause = " AND ".join(filters) if filters else ""
         # logger.debug(f"WHERE clause: {where_clause}")
 
         # Construct the final SQL query
-        sql_query = (
-            f"SELECT {output_columns} "
-            f"FROM business_mapping WHERE {where_clause} "
-            f"LIMIT 1"
-        )
+        sql_query = f"SELECT {output_columns} " f"FROM business_mapping WHERE {where_clause} " f"LIMIT 1"
         # logger.debug(f"SQL query: {sql_query}")
         return sql_query
 
@@ -78,6 +74,7 @@ class CustomBusinessMappingConverter(CustomConverter):
 
         # Regular expression pattern to match the key-value pairs
         import re
+
         pattern = re.compile(r"(\w+)=\[([^\]]*)\]|(\w+)=([^,]+)")
 
         # Initialize the dictionary to hold the parsed values
@@ -88,7 +85,7 @@ class CustomBusinessMappingConverter(CustomConverter):
             if match.group(1):
                 # Match for list values (e.g., output_column=['idTop','idSub'])
                 key = match.group(1)
-                value = [item.strip().strip("'") for item in match.group(2).split(',')]
+                value = [item.strip().strip("'") for item in match.group(2).split(",")]
             else:
                 # Match for single values (e.g., countryCode=234, city='Hamburg')
                 key = match.group(3)
@@ -123,13 +120,7 @@ class TransactionTypeConverter(Converter):
         return transaction_types.get(value, "OTHER")
 
 
-
 class CurrencySymbolConverter(Converter):
     def convert(self, value: str) -> str:
-        currency_symbols = {
-            'USD': '$',
-            'EUR': '€',
-            'GBP': '£',
-            'JPY': '¥'
-        }
-        return currency_symbols.get(value, 'Unknown currency code')
+        currency_symbols = {"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}
+        return currency_symbols.get(value, "Unknown currency code")

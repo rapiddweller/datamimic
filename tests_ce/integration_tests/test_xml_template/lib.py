@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 def generate_random_float_2dp(start, end):
     import random
 

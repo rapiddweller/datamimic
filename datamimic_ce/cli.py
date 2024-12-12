@@ -7,17 +7,21 @@ import json
 import os
 from importlib.resources import files
 from pathlib import Path
+from typing import Optional
 
 import toml
 import typer
 from rich.console import Console
 from rich.table import Table
+from rich.panel import Panel
 
 from datamimic_ce.datamimic import DataMimic
 from datamimic_ce.logger import logger
 from datamimic_ce.utils.demo_util import demo_autocomplete, handle_demo
 from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.version_util import get_datamimic_lib_version
+
+from datamimic_ce.utils.string_util import StringUtil
 
 app = typer.Typer(help="DATAMIMIC Command Line Interface.", rich_markup_mode="markdown")
 demo_app = typer.Typer(help="Manage demos")
@@ -35,6 +39,71 @@ def version_info():
     version = get_datamimic_lib_version()
     typer.echo(f"DATAMIMIC version: {version}")
     raise typer.Exit()
+
+
+@app.command("init")
+def init(
+    project_name: str = typer.Argument(..., help="Name of the project directory to create"),
+    target_directory: Optional[str] = typer.Option(None, "--target", "-t", help="Target directory for the project"),
+    force: bool = typer.Option(False, "--force", "-f", help="Force creation even if directory exists"),
+):
+    """Initialize a new DATAMIMIC project with a predefined user data generation setup."""
+    try:
+        if not StringUtil.validate_project_name(project_name):
+            typer.secho(
+                "Error: Project name can only contain letters, numbers, underscores, and dashes.",
+                fg=typer.colors.RED,
+            )
+            raise typer.Exit(1)
+
+        # Convert target_directory to Path if provided
+        project_dir = Path(target_directory) if target_directory else Path.cwd()
+        project_dir = project_dir / project_name
+
+        if project_dir.exists():
+            if not force:
+                typer.secho(
+                    f"Error: Directory '{project_dir}' already exists. Use --force to overwrite.",
+                    fg=typer.colors.RED,
+                )
+                raise typer.Exit(1)
+            if force and project_dir.is_file():
+                typer.secho(
+                    f"Error: '{project_dir}' exists and is a file.",
+                    fg=typer.colors.RED,
+                )
+                raise typer.Exit(1)
+
+        project_dir.mkdir(parents=True, exist_ok=force)
+        FileUtil.create_project_structure(project_dir)
+        console = Console(width=80)
+        # Show success message with project information
+        console.print(
+            Panel.fit(
+                f"""Project '{project_name}' created successfully!
+
+📁 Location: {project_dir}
+
+The project is initialized with a sample descriptor that generates:
+- User data with personal information
+- Multiple output formats (CSV, JSON)
+- 100 sample records
+
+Next steps:
+1. cd {project_name}
+2. Review datamimic.xml to customize the data generation
+3. Run 'datamimic run datamimic.xml' to start generation""",
+                title="DATAMIMIC Project Initialized",
+                border_style="green",
+            )
+        )
+
+    except Exception as e:
+        typer.secho(
+            f"Error initializing project: {str(e)}",
+            fg=typer.colors.RED,
+        )
+        raise typer.Exit(1)
 
 
 @demo_app.command("list")
