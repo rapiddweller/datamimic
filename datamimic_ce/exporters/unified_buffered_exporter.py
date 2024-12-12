@@ -383,12 +383,21 @@ class UnifiedBufferedExporter(Exporter, ABC):
             logger.error(f"Error during cleanup: {e}")
 
     def save_exported_result(self) -> None:
-        """Copy all temporary files to the final destination."""
+        """Copy all temporary files to the final destination.
+        If destination already exists, creates a versioned directory."""
         logger.info(f"Saving exported result for product {self.product_name}")
 
-        exporter_dir_path = (
-            self._descriptor_dir / "output" / f"{self._task_id}_{self._exporter_type}_{self.product_name}"
-        )
+        base_dir_path = self._descriptor_dir / "output"
+        base_name = f"{self._task_id}_{self._exporter_type}_{self.product_name}"
+        exporter_dir_path = base_dir_path / base_name
+
+        # Handle existing directory by adding version number
+        version = 1
+        while exporter_dir_path.exists():
+            logger.warning(f"Directory {exporter_dir_path} already exists. Creating version {version}")
+            exporter_dir_path = base_dir_path / f"{base_name}_v{version}"
+            version += 1
+
         exporter_dir_path.mkdir(parents=True, exist_ok=True)
 
         # Only move files with the correct extension
