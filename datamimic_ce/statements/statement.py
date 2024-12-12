@@ -53,7 +53,7 @@ class Statement(ABC):  # noqa: B024
         else:
             parent_stmt = self.parent_stmt
             while not isinstance(parent_stmt, GenerateStatement):
-                parent_stmt = parent_stmt.parent_stmt
+                parent_stmt = parent_stmt.parent_stmt if parent_stmt is not None else None
             return parent_stmt
 
     @staticmethod
