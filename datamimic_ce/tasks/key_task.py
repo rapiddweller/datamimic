@@ -30,7 +30,7 @@ class KeyTask(KeyVariableTask):
         self,
         ctx: SetupContext,
         statement: KeyStatement,
-        pagination: DataSourcePagination = None,
+        pagination: DataSourcePagination | None = None,
     ):
         super().__init__(ctx, statement, pagination)
         self._determine_generation_mode(ctx)
