@@ -80,14 +80,14 @@ class CustomBusinessMappingConverter(CustomConverter):
             if match.group(1):
                 # Match for list values (e.g., output_column=['idTop','idSub'])
                 key = match.group(1)
-                value = [item.strip().strip("'") for item in match.group(2).split(",")]
+                value = [item.strip().strip("'") for item in match.group(2).split(",")]  # type: ignore[assignment]
             else:
                 # Match for single values (e.g., countryCode=234, city='Hamburg')
                 key = match.group(3)
                 value = match.group(4).strip().strip("'")
                 # Convert value to integer if it is a digit
                 if value.isdigit():
-                    value = int(value)
+                    value = int(value)  # type: ignore[assignment]
 
             # Add the key-value pair to the parsed_data dictionary
             parsed_data[key] = value
