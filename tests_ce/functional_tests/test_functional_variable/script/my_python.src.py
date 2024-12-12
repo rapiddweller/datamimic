@@ -5,8 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 def random(start, end):
     import random
-    return random.randint(start, end)
 
+    return random.randint(start, end)

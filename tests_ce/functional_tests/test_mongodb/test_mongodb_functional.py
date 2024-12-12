@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from pathlib import Path
 
 from bson import ObjectId
@@ -138,7 +137,7 @@ class TestMongoDbFunction:
             assert "user_id" in m
             assert m["user_id"] in range(1, 6)
             assert "user_name" in m
-            assert m["user_name"] in ['Bob', 'Frank', 'Phil']
+            assert m["user_name"] in ["Bob", "Frank", "Phil"]
             assert "_id" not in m
 
         variable_select_mongo = result["variable_select_mongo"]
@@ -147,7 +146,7 @@ class TestMongoDbFunction:
             assert "user_id" in m
             assert m["user_id"] in range(1, 6)
             assert "user_name" in m
-            assert m["user_name"] in ['Bob', 'Frank', 'Phil']
+            assert m["user_name"] in ["Bob", "Frank", "Phil"]
             assert "_id" not in m
 
         variable_select_non_cyclic = result["variable_select_non_cyclic"]
@@ -156,7 +155,7 @@ class TestMongoDbFunction:
             assert "user_id" in m
             assert m["user_id"] in range(1, 6)
             assert "user_name" in m
-            assert m["user_name"] in ['Bob', 'Frank', 'Phil']
+            assert m["user_name"] in ["Bob", "Frank", "Phil"]
             assert "_id" not in m
 
     def test_mongodb_with_type(self):
@@ -176,7 +175,7 @@ class TestMongoDbFunction:
             assert "id" in m
             assert m["id"] in range_list
             assert "name" in m
-            assert m["name"] in ['Bob', 'Frank', 'Phil']
+            assert m["name"] in ["Bob", "Frank", "Phil"]
             assert "_id" not in m
         assert any(a["id"] != b for a, b in zip(mongo_data, range_list))
 
@@ -186,7 +185,7 @@ class TestMongoDbFunction:
             assert "id" in m
             assert m["id"] in range_list
             assert "name" in m
-            assert m["name"] in ['Bob', 'Frank', 'Phil']
+            assert m["name"] in ["Bob", "Frank", "Phil"]
             assert "_id" not in m
         assert all(a["id"] == b for a, b in zip(data_ordered, range_list))
 
@@ -196,7 +195,7 @@ class TestMongoDbFunction:
             assert "user_id" in m
             assert m["user_id"] in range_list
             assert "user_name" in m
-            assert m["user_name"] in ['Bob', 'Frank', 'Phil']
+            assert m["user_name"] in ["Bob", "Frank", "Phil"]
             assert "_id" in m
             assert isinstance(m["_id"], ObjectId)
         assert any(a["user_id"] != b for a, b in zip(mongo_selector, range_list))
@@ -207,7 +206,7 @@ class TestMongoDbFunction:
             assert "user_id" in m
             assert m["user_id"] in range_list
             assert "user_name" in m
-            assert m["user_name"] in ['Bob', 'Frank', 'Phil']
+            assert m["user_name"] in ["Bob", "Frank", "Phil"]
             assert "_id" in m
             assert isinstance(m["_id"], ObjectId)
         assert all(a["user_id"] == b for a, b in zip(mongo_selector_ordered, range_list))

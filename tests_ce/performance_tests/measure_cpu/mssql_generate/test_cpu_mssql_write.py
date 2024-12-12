@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 import os
 from pathlib import Path
 
@@ -28,8 +27,7 @@ class TestCPUMssqlWrite:
         yield results
 
         # modify result summary and print it
-        table = PerformanceTestUtil.modify_display_measure_result(header_cell="Avg CPU usage(%)",
-                                                                  results=results)
+        table = PerformanceTestUtil.modify_display_measure_result(header_cell="Avg CPU usage(%)", results=results)
         print("\nCPU Usage Summary for Mssql Write Data:")
         print(f"Number of CPU cores: {os.cpu_count()}")
         print(table)
@@ -72,10 +70,9 @@ class TestCPUMssqlWrite:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=2)
     def test_single_thread_mssql_write_1000(self, class_fixture):
@@ -94,10 +91,9 @@ class TestCPUMssqlWrite:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=3)
     def test_single_thread_mssql_write_10000(self, class_fixture):
@@ -116,10 +112,9 @@ class TestCPUMssqlWrite:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=4)
     def test_multiprocessing_mssql_write_100(self, class_fixture):
@@ -138,10 +133,9 @@ class TestCPUMssqlWrite:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=5)
     def test_multiprocessing_mssql_write_1000(self, class_fixture):
@@ -160,10 +154,9 @@ class TestCPUMssqlWrite:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     @pytest.mark.run(order=6)
     def test_multiprocessing_mssql_write_10000(self, class_fixture):
@@ -182,7 +175,6 @@ class TestCPUMssqlWrite:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )

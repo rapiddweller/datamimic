@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 import pytest
 
 from datamimic_ce.converter.java_hash_converter import JavaHashConverter

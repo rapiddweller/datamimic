@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 import random
 import string
 import uuid
@@ -57,6 +56,7 @@ class GlobRandomCoordinatesGenerator(Generator):
 class GlobRandomLicensePlateGenerator(Generator):
     def generate(self) -> str:
         import string
+
         letters = "".join(random.choices(string.ascii_uppercase, k=3))
         numbers = "".join(random.choices(string.digits, k=4))
         return f"{letters}-{numbers}"

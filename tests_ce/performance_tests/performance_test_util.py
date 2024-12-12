@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 import time
 from pathlib import Path
 
@@ -18,7 +17,6 @@ from datamimic_ce.logger import logger
 
 
 class PerformanceTestUtil:
-
     @staticmethod
     def measure_cpu_usage(xml_file: Path):
         """

@@ -76,3 +76,5 @@ test_artifacts/
 /tests_ce/test-artifacts/
 /db/
 /.run/
+/tests_ce/db/
+**/output/

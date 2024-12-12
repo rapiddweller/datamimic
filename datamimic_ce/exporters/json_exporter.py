@@ -92,7 +92,7 @@ class JsonExporter(UnifiedBufferedExporter):
             raise e
 
     def _finalize_buffer_file(self, buffer_file: Path) -> None:
-        """Finalizes the buffer file by ensuring it is a valid JSON array."""
+        """Finalizes the buffer file by ensuring it is a valid JSON array and write to output."""
         if not self.use_ndjson and (self.chunk_size is None or self.chunk_size > 1):
             with buffer_file.open("r+b") as file:
                 file.seek(0, os.SEEK_END)  # Move to the end of file

@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 import time
 from pathlib import Path
 
@@ -151,4 +150,3 @@ class TestTimeMongoDBRead:
         result = engine.capture_test_result()
         products = result["mongo_time_measure"]
         assert len(products) == int(count)
-

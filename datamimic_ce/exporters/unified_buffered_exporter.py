@@ -383,17 +383,30 @@ class UnifiedBufferedExporter(Exporter, ABC):
             logger.error(f"Error during cleanup: {e}")
 
     def save_exported_result(self) -> None:
-        """Copy all temporary files to the final destination."""
+        """Copy all temporary files to the final destination.
+        If destination already exists, creates a versioned directory."""
         logger.info(f"Saving exported result for product {self.product_name}")
 
-        exporter_dir_path = (
-            self._descriptor_dir
-            / f"exporter_result_{self._task_id}_exporter_{self._exporter_type}_product_{self.product_name}"
-        )
+        base_dir_path = self._descriptor_dir / "output"
+        base_name = f"{self._task_id}_{self._exporter_type}_{self.product_name}"
+        exporter_dir_path = base_dir_path / base_name
+
+        # Handle existing directory by adding version number
+
         exporter_dir_path.mkdir(parents=True, exist_ok=True)
 
-        for file in self._buffer_tmp_dir.iterdir():
-            shutil.copy2(file, exporter_dir_path)
+        # Only move files with the correct extension
+        for file in self._buffer_tmp_dir.glob(f"*.{self.get_file_extension()}"):
+            target_path = exporter_dir_path / file.name
+            version = 1
+            # If file exists, create versioned file
+            while target_path.exists():
+                logger.warning(f"File {target_path} already exists. Creating version {version}")
+                base_name = file.stem  # Gets filename without extension
+                target_path = exporter_dir_path / f"{base_name}_v{version}{file.suffix}"
+                version += 1
+
+            shutil.move(file, target_path)
 
     def _reset_state(self) -> None:
         """Reset exporter state."""

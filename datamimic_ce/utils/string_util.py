@@ -65,3 +65,20 @@ class StringUtil:
                             parameters[key.strip()] = value.strip()
 
         return entity_name, parameters
+
+    @staticmethod
+    def validate_project_name(name: str) -> bool:
+        """
+        Validate project name for invalid characters and patterns.
+
+        Args:
+            name (str): Project name to validate
+
+        Returns:
+            bool: True if valid, False otherwise
+        """
+        import re
+
+        # Check for valid characters (alphanumeric, dash, underscore)
+        pattern = re.compile(r"^[a-zA-Z0-9_-]+$")
+        return bool(pattern.match(name))

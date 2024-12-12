@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 import os
 from pathlib import Path
 
@@ -28,8 +27,7 @@ class TestCPUSimpleGenerateWithoutSource:
         yield results
 
         # modify result summary and print it
-        table = PerformanceTestUtil.modify_display_measure_result(header_cell="Avg CPU usage(%)",
-                                                                  results=results)
+        table = PerformanceTestUtil.modify_display_measure_result(header_cell="Avg CPU usage(%)", results=results)
         print("\nCPU Usage Summary for Simple Generation without Source:")
         print(f"Number of CPU cores: {os.cpu_count()}")
         print(table)
@@ -71,10 +69,9 @@ class TestCPUSimpleGenerateWithoutSource:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     def test_cpu_single_thread_without_source_10000(self, class_fixture):
         count = "10000"
@@ -91,10 +88,9 @@ class TestCPUSimpleGenerateWithoutSource:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     def test_cpu_single_thread_without_source_100000(self, class_fixture):
         count = "100000"
@@ -112,10 +108,9 @@ class TestCPUSimpleGenerateWithoutSource:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     def test_cpu_multiprocessing_without_source_1000(self, class_fixture):
         count = "1000"
@@ -133,10 +128,9 @@ class TestCPUSimpleGenerateWithoutSource:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     def test_cpu_multiprocessing_without_source_10000(self, class_fixture):
         count = "10000"
@@ -154,10 +148,9 @@ class TestCPUSimpleGenerateWithoutSource:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )
 
     def test_cpu_multiprocessing_without_source_100000(self, class_fixture):
         count = "100000"
@@ -175,7 +168,6 @@ class TestCPUSimpleGenerateWithoutSource:
         results = class_fixture
         test_result = f"{avg_process_usage:.2f}%"
 
-        self._add_test_values_to_class_fixture(class_fixture_results=results,
-                                               test_group=test_group,
-                                               test_case=test_case,
-                                               value=test_result)
+        self._add_test_values_to_class_fixture(
+            class_fixture_results=results, test_group=test_group, test_case=test_case, value=test_result
+        )

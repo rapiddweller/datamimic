@@ -13,27 +13,29 @@ from datamimic_ce.generators.academic_title_generator import AcademicTitleGenera
 class TestAcademicTitleGenerator:
     _dataset = "US"
 
-    _us_results = ['',
-                   "Bachelor",
-                   "Master",
-                   "PhD",
-                   "Asst. Prof.",
-                   "Assoc. Prof.",
-                   "Postdoc",
-                   "Prof.",
-                   "Distinguished Prof.",
-                   "Endowed Prof.",
-                   "Emeritus Prof.",
-                   ]
+    _us_results = [
+        "",
+        "Bachelor",
+        "Master",
+        "PhD",
+        "Asst. Prof.",
+        "Assoc. Prof.",
+        "Postdoc",
+        "Prof.",
+        "Distinguished Prof.",
+        "Endowed Prof.",
+        "Emeritus Prof.",
+    ]
 
-    _default_result = ['',
-                       "Bachelor",
-                       "Master",
-                       "PhD",
-                       "Assistant Prof.",
-                       "Associate Prof.",
-                       "Prof.",
-                       ]
+    _default_result = [
+        "",
+        "Bachelor",
+        "Master",
+        "PhD",
+        "Assistant Prof.",
+        "Associate Prof.",
+        "Prof.",
+    ]
 
     def test_academic_title(self):
         for _ in range(100):
@@ -64,7 +66,7 @@ class TestAcademicTitleGenerator:
         assert generator_3._quota == 0.5
 
     def test_invalid_dataset(self, caplog):
-        with caplog.at_level('INFO'):
+        with caplog.at_level("INFO"):
             academic_title_generator = AcademicTitleGenerator(dataset="SV")
         assert "Academic title for dataset SV is not supported, change to default Academic title" in caplog.text
         assert academic_title_generator._quota == 0.5
