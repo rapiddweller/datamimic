@@ -392,17 +392,21 @@ class UnifiedBufferedExporter(Exporter, ABC):
         exporter_dir_path = base_dir_path / base_name
 
         # Handle existing directory by adding version number
-        version = 1
-        while exporter_dir_path.exists():
-            logger.warning(f"Directory {exporter_dir_path} already exists. Creating version {version}")
-            exporter_dir_path = base_dir_path / f"{base_name}_v{version}"
-            version += 1
 
         exporter_dir_path.mkdir(parents=True, exist_ok=True)
 
         # Only move files with the correct extension
         for file in self._buffer_tmp_dir.glob(f"*.{self.get_file_extension()}"):
-            shutil.move(file, exporter_dir_path)
+            target_path = exporter_dir_path / file.name
+            version = 1
+            # If file exists, create versioned file
+            while target_path.exists():
+                logger.warning(f"File {target_path} already exists. Creating version {version}")
+                base_name = file.stem  # Gets filename without extension
+                target_path = exporter_dir_path / f"{base_name}_v{version}{file.suffix}"
+                version += 1
+
+            shutil.move(file, target_path)
 
     def _reset_state(self) -> None:
         """Reset exporter state."""
