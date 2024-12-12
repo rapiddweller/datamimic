@@ -56,7 +56,6 @@ class VariableTask(KeyVariableTask):
         pagination: DataSourcePagination,
     ):
         super().__init__(ctx, statement, pagination)
-        self._statement = statement
         self._source_script = (
             statement.source_script if statement.source_script is not None else bool(ctx.default_source_scripted)
         )
@@ -228,7 +227,10 @@ class VariableTask(KeyVariableTask):
 
     @property
     def statement(self) -> VariableStatement:
-        return self._statement
+        if isinstance(self._statement, VariableStatement):
+            return self._statement
+        else:
+            raise TypeError("Expected an VariableStatement")
 
     @staticmethod
     def _get_entity(ctx: SetupContext, entity_name: str, locale: str, dataset: str, count: int):
