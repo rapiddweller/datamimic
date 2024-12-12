@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from collections.abc import Iterator
-from typing import Any, Final, cast
+from typing import Any, Final
 
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.constants.attribute_constants import (
