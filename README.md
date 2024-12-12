@@ -8,7 +8,8 @@
 [![Python Version](https://img.shields.io/badge/Python-≥3.10-blue.svg)](https://www.python.org/downloads/)
 [![GitHub Stars](https://img.shields.io/github/stars/rapiddweller/datamimic.svg)](https://github.com/rapiddweller/datamimic/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/rapiddweller/datamimic.svg)](https://github.com/rapiddweller/datamimic/network)
-
+[![PyPI version](https://badge.fury.io/py/datamimic-ce.svg)](https://badge.fury.io/py/datamimic-ce)
+[![Downloads](https://pepy.tech/badge/datamimic-ce)](https://pepy.tech/project/datamimic-ce)
 ---
 
 ## Introduction
@@ -101,7 +102,7 @@ For contributors and developers who want to work with the source code:
 
     ```xml
     <setup>
-        <generate name="datamimic_user_list" count="100" target="CSV,JSON,XML">
+        <generate name="datamimic_user_list" count="100" target="CSV,JSON">
             <variable name="person" entity="Person(min_age=18, max_age=90, female_quota=0.5)"/>
             <key name="id" generator="IncrementGenerator"/>
             <key name="first_name" script="person.given_name"/>
@@ -121,6 +122,33 @@ For contributors and developers who want to work with the source code:
     ```bash
     datamimic run datamimic.xml
     ```
+   
+4. Access the generated data in the `output` directory.
+
+    **json export:**
+    ```json
+   [
+   {"id": 1, "first_name": "Mary", "last_name": "Mcgowan", "gender": "female", "birthDate": "1946-05-15T00:00:00", "email": "Mcgowan@Mary.de", "ce_user": false, "ee_user": true, "datamimic_lover": "DEFINITELY"},
+   {"id": 2, "first_name": "Gabrielle", "last_name": "Malone", "gender": "female", "birthDate": "1989-11-27T00:00:00", "email": "Malone@Gabrielle.de", "ce_user": false, "ee_user": true, "datamimic_lover": "DEFINITELY"},
+   {"id": 4, "first_name": "Margaret", "last_name": "Torres", "gender": "female", "birthDate": "2006-07-13T00:00:00", "email": "Torres@Margaret.de", "ce_user": false, "ee_user": false, "datamimic_lover": "DEFINITELY"},
+    {"id": 5, "first_name": "Monica", "last_name": "Meyers", "gender": "female", "birthDate": "1983-07-22T00:00:00", "email": "Meyers@Monica.de", "ce_user": true, "ee_user": false, "datamimic_lover": "DEFINITELY"},
+    {"id": 6, "first_name": "Jason", "last_name": "Davis", "gender": "male", "birthDate": "1941-07-05T00:00:00", "email": "Davis@Jason.de", "ce_user": true, "ee_user": false, "datamimic_lover": "DEFINITELY"},
+    {"...":  "..."},
+    {"id": 100, "first_name": "Jared", "last_name": "Rivas", "gender": "male", "birthDate": "1975-03-16T00:00:00", "email": "Rivas@Jared.de", "ce_user": true, "ee_user": true, "datamimic_lover": "DEFINITELY"}
+   ]
+    ```
+
+    **csv export:**
+    ```csv
+    id|first_name|last_name|gender|birthDate|email|ce_user|ee_user|datamimic_lover
+    1|Mary|Mcgowan|female|1946-05-15 00:00:00|Mcgowan@Mary.de|False|True|DEFINITELY
+    2|Gabrielle|Malone|female|1989-11-27 00:00:00|Malone@Gabrielle.de|False|True|DEFINITELY
+    3|Antonio|Davis|male|2005-05-12 00:00:00|Davis@Antonio.de|False|True|DEFINITELY
+    4|Margaret|Torres|female|2006-07-13 00:00:00|Torres@Margaret.de|False|False|DEFINITELY
+    5|Monica|Meyers|female|1983-07-22 00:00:00|Meyers@Monica.de|True|False|DEFINITELY
+    ...
+    100|Jason|Davis|male|1941-07-05 00:00:00|Davis@Jason.de|True|False|DEFINITELY
+    ```
 
 
 ### Advanced Features
@@ -129,7 +157,13 @@ DATAMIMIC supports various advanced features:
 
 - **Custom Generators**: Create your own data generators
 - **Data Relationships**: Define complex relationships between entities
-- **Export Formats**: Support for JSON, XML, CSV, and database outputs
+- **Import/Export Formats CE**: Support for JSON, XML, CSV, RDBMS and MongoDB
+- **Import/Export Formats EE**: Kafka, EDI, XSD and more
+- **Data Anonymization**: Anonymize data to comply with privacy regulations
+- **Data Validation**: Define and enforce data validation rules
+- **Scripting**: Extend functionality using Python scripts
+- **Database Integration**: Connect to databases for seamless data generation
+- **Model-Driven Generation**: Utilize models to generate realistic data
 - **Validation Rules**: Define and enforce data validation rules
 - **Scripting**: Extend functionality using Python scripts
 
