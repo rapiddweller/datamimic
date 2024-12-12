@@ -9,22 +9,6 @@
 [![GitHub Stars](https://img.shields.io/github/stars/rapiddweller/datamimic.svg)](https://github.com/rapiddweller/datamimic/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/rapiddweller/datamimic.svg)](https://github.com/rapiddweller/datamimic/network)
 
-## Table of Contents
-
-- [Introduction](#introduction)
-- [Key Features](#key-features)
-- [Why Use DATAMIMIC?](#why-use-datamimic)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Quick Start](#quick-start)
-- [Examples and Demos](#examples-and-demos)
-- [Contributing](#contributing)
-- [License](#license)
-- [Support](#support)
-- [Connect with Us](#connect-with-us)
-- [FAQ](#faq)
-- [Acknowledgments](#acknowledgments)
-
 ---
 
 ## Introduction
@@ -72,15 +56,15 @@ Traditional test data generation can be time-consuming and may compromise data p
 
 The simplest way to get started with DATAMIMIC is through pip:
 
-    ```bash
-    pip install datamimic-ce
-    ```
+```bash 
+pip install datamimic-ce
+```
 
 Verify the installation:
 
-    ```bash
-    datamimic --version
-    ```
+```bash
+datamimic --version
+```
 
 ### Developer Installation
 
