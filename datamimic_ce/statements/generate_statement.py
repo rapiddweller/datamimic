@@ -144,7 +144,7 @@ class GenerateStatement(CompositeStatement):
                     return True
         return False
 
-    def retrieve_sub_statement_by_fullname(self, name: str) -> "GenerateStatement" | None:
+    def retrieve_sub_statement_by_fullname(self, name: str):
         """
         Review sub GenerateStatement by statement fullname
         :param name:

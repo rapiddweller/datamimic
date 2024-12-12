@@ -5,13 +5,10 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
 
 from datamimic_ce.contexts.context import Context
+from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.statements.statement import Statement
-
-if TYPE_CHECKING:
-    from datamimic_ce.contexts.geniter_context import GenIterContext
 
 
 class Task(ABC):
