@@ -7,7 +7,7 @@
 import csv
 import random
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Iterator, Dict, Any
 
 from datamimic_ce.generators.generator import Generator
 from datamimic_ce.logger import logger
@@ -28,7 +28,7 @@ class PhoneNumberGenerator(Generator):
         area_code: Optional[str] = None,
         is_mobile: bool = False,
     ):
-        self._dataset = dataset.upper()
+        self._dataset = (dataset or "US").upper()
         prefix_path = Path(__file__).parent.parent
         country_file_path = prefix_path.joinpath("entities/data/country.csv")
         try:
@@ -54,7 +54,7 @@ class PhoneNumberGenerator(Generator):
 
                 try:
                     with open(f"{city_file_path}") as file:
-                        reader = csv.DictReader(file, delimiter=";")
+                        reader: Iterator[Dict[str, Any]] = csv.DictReader(file, delimiter=";")
                         area_codes = []
                         for row in reader:
                             area_codes.append(row["areaCode"])
@@ -67,7 +67,7 @@ class PhoneNumberGenerator(Generator):
                     city_file_path = prefix_path.joinpath("entities/data/city/city_US.csv")
 
                     with open(f"{city_file_path}") as file:
-                        reader = csv.DictReader(file, delimiter=";")
+                        reader: Iterator[Dict[str, Any]] = csv.DictReader(file, delimiter=";")
                         area_codes = []
                         for row in reader:
                             area_codes.append(row["areaCode"])

@@ -4,6 +4,8 @@ import uuid
 
 from faker import Faker
 
+from datamimic_ce.generators.generator import Generator
+
 
 class GlobRandomHexColorGenerator(Generator):
     def generate(self) -> str:

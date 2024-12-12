@@ -41,8 +41,8 @@ class EmailAddressGenerator(Generator):
         """
         create a email address
         """
-        given_name = (self._given_name or self._given_name_generator.generate()).lower()
-        family_name = (self._family_name or self._family_name_generator.generate()).lower()
+        given_name = str(self._given_name or self._given_name_generator.generate()).lower()
+        family_name = str(self._family_name or self._family_name_generator.generate()).lower()
         if self._company_name:
             domain = self._domain_generator.generate_with_company_name(self._company_name).lower()
         else:
