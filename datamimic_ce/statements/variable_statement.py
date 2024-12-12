@@ -46,63 +46,63 @@ class VariableStatement(Statement):
         self._string = model.string
 
     @property
-    def source(self) -> str:
+    def source(self) -> str | None:
         return self._source
 
     @property
-    def selector(self) -> str:
+    def selector(self) -> str | None:
         return self._selector
 
     @property
-    def type(self) -> str:
+    def type(self) -> str | None:
         return self._type
 
     @property
-    def cyclic(self) -> bool:
+    def cyclic(self) -> bool | None:
         return self._cyclic
 
     @property
-    def source_script(self) -> bool:
+    def source_script(self) -> bool | None:
         return self._source_script
 
     @property
-    def entity(self) -> str:
+    def entity(self) -> str | None:
         return self._entity
 
     @property
-    def script(self) -> str:
+    def script(self) -> str | None:
         return self._script
 
     @property
-    def weight_column(self) -> str:
+    def weight_column(self) -> str | None:
         return self._weight_column
 
     @property
-    def separator(self) -> str:
+    def separator(self) -> str | None:
         return self._separator
 
     @property
-    def dataset(self) -> str:
+    def dataset(self) -> str | None:
         return self._dataset
 
     @property
-    def locale(self) -> str:
+    def locale(self) -> str | None:
         return self._locale
 
     @property
-    def generator(self) -> str:
+    def generator(self) -> str | None:
         return self._generator
 
     @property
-    def in_date_format(self) -> str:
+    def in_date_format(self) -> str | None:
         return self._in_date_format
 
     @property
-    def out_date_format(self) -> str:
+    def out_date_format(self) -> str | None:
         return self._out_date_format
 
     @property
-    def converter(self) -> str:
+    def converter(self) -> str | None:
         return self._converter
 
     @property
@@ -114,33 +114,33 @@ class VariableStatement(Statement):
         return self._values
 
     @property
-    def iteration_selector(self) -> str:
+    def iteration_selector(self) -> str | None:
         return self._iteration_selector
 
     @property
-    def default_value(self) -> str:
+    def default_value(self) -> str | None:
         return self._default_value
 
     @property
-    def is_global_variable(self) -> bool:
+    def is_global_variable(self) -> bool | None:
         return self._is_global_variable
 
     @property
-    def pattern(self) -> str:
+    def pattern(self) -> str | None:
         return self._pattern
 
     @property
-    def distribution(self) -> str:
+    def distribution(self) -> str | None:
         return self._distribution
 
     @property
-    def variable_prefix(self) -> str:
+    def variable_prefix(self) -> str | None:
         return self._variable_prefix
 
     @property
-    def variable_suffix(self) -> str:
+    def variable_suffix(self) -> str | None:
         return self._variable_suffix
 
     @property
-    def string(self) -> str:
+    def string(self) -> str | None:
         return self._string

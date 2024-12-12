@@ -27,7 +27,7 @@ class DomainGenerator(Generator):
         self._web_iter = iter(FileUtil.select_records_from_wgt_file(web_path, count=generated_count))
         self._tld_iter = iter(FileUtil.select_records_from_wgt_file(tld_path, count=generated_count))
 
-        self._company_name = None
+        self._company_name: str | None = None
         self._company_name_generator = CompanyNameGenerator()
 
     def generate(self) -> str:

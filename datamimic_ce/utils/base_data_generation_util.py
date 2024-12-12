@@ -6,6 +6,7 @@
 
 from abc import ABC, abstractmethod
 from datetime import datetime
+from typing import Optional
 
 
 class BaseDataGenerationUtil(ABC):
@@ -20,7 +21,7 @@ class BaseDataGenerationUtil(ABC):
     @staticmethod
     @abstractmethod
     def generate_random_value_based_on_type(
-        data_type: str | None = None,
+        data_type: Optional[str] = None,
     ) -> str | int | bool | float:
         """
         Generate a random value based on the specified data type.

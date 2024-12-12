@@ -9,6 +9,7 @@ import os
 import traceback
 import uuid
 from pathlib import Path
+from typing import Optional
 
 from datamimic_ce.config import settings
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
@@ -26,11 +27,11 @@ class DataMimic:
     def __init__(
         self,
         descriptor_path: Path,
-        task_id: str | None = None,
-        platform_props: dict[str, str] | None = None,
-        platform_configs: dict | None = None,
+        task_id: Optional[str] = None,
+        platform_props: Optional[dict[str, str]] = None,
+        platform_configs: Optional[dict] = None,
         test_mode: bool = False,
-        args: argparse.Namespace = None,
+        args: Optional[argparse.Namespace] = None,
     ):
         """
         Initialize DataMimic with descriptor_path.
@@ -85,6 +86,6 @@ class DataMimic:
 
     def capture_test_result(self) -> dict | None:
         """Capture test result in test mode."""
-        if self._test_mode:
+        if self._test_mode and self._test_result_storage is not None:
             return self._test_result_storage.get_result()
         raise ValueError("Cannot capture test result in non-test mode") from None

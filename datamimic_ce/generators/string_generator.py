@@ -3,7 +3,7 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-
+from typing import Optional
 
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
@@ -12,12 +12,12 @@ class StringGenerator:
     def __init__(
         self,
         class_factory_util: BaseClassFactoryUtil,
-        min_len: int | None = None,
-        max_len: int | None = None,
-        char_set: str | None = None,
+        min_len: Optional[int] = None,
+        max_len: Optional[int] = None,
+        char_set: Optional[str] = None,
         unique: bool = False,
-        prefix: str | None = None,
-        suffix: str | None = None,
+        prefix: Optional[str] = None,
+        suffix: Optional[str] = None,
     ):
         self._char_set = (
             char_set
@@ -31,15 +31,15 @@ class StringGenerator:
         if min_len is None and max_len is None:
             self._min_len = 1
             self._max_len = 10
-        elif min_len is None:
+        elif min_len is None and max_len is not None:
             self._min_len = max_len // 2  # min_len is half of max_len if not provided
             self._max_len = max_len
-        elif max_len is None:
+        elif max_len is None and min_len is not None:
             self._max_len = min_len * 2  # max_len is twice the min_len if not provided
             self._min_len = min_len
         else:
-            self._min_len = min_len
-            self._max_len = max_len
+            self._min_len = min_len if min_len is not None else 1
+            self._max_len = max_len if max_len is not None else 10
 
         # Ensure min_len <= max_len
         if self._min_len > self._max_len:

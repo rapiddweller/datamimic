@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from abc import ABC
+from typing import Optional
 
 from datamimic_ce.statements.statement import Statement
 
@@ -14,7 +15,7 @@ class CompositeStatement(Statement, ABC):
     Combine many statements into a composite one
     """
 
-    def __init__(self, name: str | None, parent_stmt: Statement | None):
+    def __init__(self, name: Optional[str], parent_stmt: Optional[Statement]):
         super().__init__(name=name, parent_stmt=parent_stmt)
 
     @property

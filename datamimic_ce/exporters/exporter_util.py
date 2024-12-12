@@ -8,7 +8,6 @@ import json
 import re
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Dict
 
 import numpy
 from bson import ObjectId
@@ -202,8 +201,8 @@ class ExporterUtil:
         name: str,
         product_name: str,
         page_info: MultiprocessingPageInfo,
-        exporter_params_dict: Dict,
-    ) -> Exporter:
+        exporter_params_dict: dict,
+    ):
         """
         Consumer factory: Create consumer based on name
 
@@ -212,7 +211,7 @@ class ExporterUtil:
         :return:
         """
         if name is None or name == "":
-            return
+            return None
 
         chunk_size = exporter_params_dict.get("chunk_size", None)
         use_ndjson = exporter_params_dict.get("use_ndjson", None)

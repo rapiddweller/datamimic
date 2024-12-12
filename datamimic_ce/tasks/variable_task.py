@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from collections.abc import Iterator
-from typing import Any
+from typing import Any, Final, cast
 
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.constants.attribute_constants import (
@@ -18,6 +18,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VALUES,
 )
 from datamimic_ce.constants.element_constants import EL_VARIABLE
+from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
@@ -42,12 +43,12 @@ from datamimic_ce.utils.string_util import StringUtil
 
 class VariableTask(KeyVariableTask):
     _iterator: Iterator[Any] | None
-    _ITERATOR_MODE = "iterator"
-    _ENTITY_MODE = "entity_builder"
-    _WEIGHTED_ENTITY_MODE = "weighted_entity"
-    _ITERATION_SELECTOR_MODE = "iteration_selector"
-    _RANDOM_DISTRIBUTION_MODE = "random_distribution"
-    _LAZY_ITERATOR_MODE = "lazy_iterator"
+    _ITERATOR_MODE: Final = "iterator"
+    _ENTITY_MODE: Final = "entity_builder"
+    _WEIGHTED_ENTITY_MODE: Final = "weighted_entity"
+    _ITERATION_SELECTOR_MODE: Final = "iteration_selector"
+    _RANDOM_DISTRIBUTION_MODE: Final = "random_distribution"
+    _LAZY_ITERATOR_MODE: Final = "lazy_iterator"
 
     def __init__(
         self,
@@ -227,7 +228,10 @@ class VariableTask(KeyVariableTask):
 
     @property
     def statement(self) -> VariableStatement:
-        return self._statement
+        if isinstance(self._statement, VariableStatement):
+            return self._statement
+        else:
+            raise TypeError("Expected an VariableStatement")
 
     @staticmethod
     def _get_entity(ctx: SetupContext, entity_name: str, locale: str, dataset: str, count: int):
@@ -257,7 +261,7 @@ class VariableTask(KeyVariableTask):
         else:
             raise ValueError(f"Entity {entity_name} is not supported.")
 
-    def execute(self, ctx: GenIterContext | SetupContext) -> None:
+    def execute(self, ctx: Context | GenIterContext | SetupContext) -> None:
         """
         Generate data for element <variable>
         """

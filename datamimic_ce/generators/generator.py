@@ -4,15 +4,15 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from abc import ABC
+from abc import ABC, abstractmethod
+from typing import Any
 
 
 class Generator(ABC):
-    pass
-    # @abstractmethod
-    # def generate(self) -> Any:
-    #     """
-    #     Generate data and set this value to current product
-    #     :param ctx:
-    #     :return:
-    #     """
+    @abstractmethod
+    def generate(self) -> Any:
+        """
+        Generate data and set this value to current product
+        :param ctx:
+        :return:
+        """

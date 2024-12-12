@@ -8,7 +8,7 @@
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Dict
 
 import xmltodict
 
@@ -112,7 +112,7 @@ class XMLExporter(UnifiedBufferedExporter):
             raise ExporterError(f"Error writing data to buffer: {e}") from e
 
     @staticmethod
-    def _sanitize_record(data: dict[str, Any]) -> dict[str, str | dict[str, Any]] | list[dict[str, Any]] | str:
+    def _sanitize_record(data: dict[str, Any]) -> dict[str, Any]:
         """
         Recursively sanitize the record by converting values to strings,
         handling attributes, and formatting datetime objects.
@@ -123,25 +123,28 @@ class XMLExporter(UnifiedBufferedExporter):
         Returns:
             dict: Sanitized data with string values and attribute prefixes.
         """
-        if isinstance(data, dict):
-            sanitized = {}
-            for key, value in data.items():
-                if value is None:
-                    # Set None values as empty strings
-                    sanitized[key] = ""
-                else:
-                    sanitized[key] = XMLExporter._sanitize_record(value)
-            return sanitized
-        elif isinstance(data, list):
-            return [XMLExporter._sanitize_record(item) for item in data]
-        elif isinstance(data, datetime):
-            return data.strftime("%Y-%m-%d")
-        elif isinstance(data, float):
-            return str(data)
-        elif isinstance(data, bool):
-            return str(data).lower()
-        else:
-            return str(data)
+        def sanitize_value(recursion_data: Any) -> Any:
+            if isinstance(recursion_data, dict):
+                sanitized = {}
+                for rec_key, rec_value in recursion_data.items():
+                    if rec_value is None:
+                        # Set None values as empty strings
+                        sanitized[rec_key] = ""
+                    else:
+                        sanitized[rec_key] = sanitize_value(rec_value)
+                return sanitized
+            elif isinstance(recursion_data, list):
+                return [sanitize_value(item) for item in recursion_data]
+            elif isinstance(recursion_data, datetime):
+                return recursion_data.strftime("%Y-%m-%d")
+            elif isinstance(recursion_data, float):
+                return str(recursion_data)
+            elif isinstance(recursion_data, bool):
+                return str(recursion_data).lower()
+            else:
+                return str(recursion_data)
+
+        return {key: sanitize_value(value) for key, value in data.items()}
 
     def _finalize_buffer_file(self, buffer_file: Path) -> None:
         """Finalizes the current buffer file by closing the root element."""

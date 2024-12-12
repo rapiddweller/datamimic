@@ -25,6 +25,9 @@ class ElementStatement(Statement):
         self._type = model.type
         self._values = model.values
         self._default_value = model.default_value
+        self._pattern = model.pattern
+        self._variable_prefix = model.variable_prefix
+        self._variable_suffix = model.variable_suffix
         self._string = model.string
 
     @property
@@ -78,3 +81,15 @@ class ElementStatement(Statement):
     @property
     def string(self) -> str:
         return self._string
+
+    @property
+    def pattern(self) -> str:
+        return self._pattern
+
+    @property
+    def variable_prefix(self) -> str:
+        return self._variable_prefix
+
+    @property
+    def variable_suffix(self) -> str:
+        return self._variable_suffix

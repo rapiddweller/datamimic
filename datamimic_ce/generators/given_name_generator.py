@@ -6,7 +6,7 @@
 
 import random
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 from datamimic_ce.generators.generator import Generator
 from datamimic_ce.utils.file_util import FileUtil
@@ -17,7 +17,7 @@ class GivenNameGenerator(Generator):
     Generate random given name
     """
 
-    def __init__(self, dataset: str, generated_count: int, gender: str = None):
+    def __init__(self, dataset: str, generated_count: int, gender: Optional[str] = None):
         # check valid input dataset
         if len(dataset) != 2:
             raise ValueError(f"Invalid dataset: {dataset}")

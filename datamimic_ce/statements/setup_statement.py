@@ -29,41 +29,41 @@ class SetupStatement(CompositeStatement):
         self._default_variable_suffix = model.default_variable_suffix
 
     @property
-    def use_mp(self) -> bool:
+    def use_mp(self) -> bool | None:
         return self._use_mp
 
     @property
-    def default_separator(self) -> str:
+    def default_separator(self) -> str | None:
         return self._default_separator
 
     @property
-    def default_locale(self) -> str:
+    def default_locale(self) -> str | None:
         return self._default_locale
 
     @property
-    def default_dataset(self) -> str:
+    def default_dataset(self) -> str | None:
         return self._default_dataset
 
     @property
-    def num_process(self) -> int:
+    def num_process(self) -> int | None:
         return self._num_process
 
     @property
-    def default_line_separator(self) -> str:
+    def default_line_separator(self) -> str | None:
         return self._default_line_separator
 
     @property
-    def default_source_scripted(self) -> bool:
+    def default_source_scripted(self) -> bool | None:
         return self._default_source_scripted
 
     @property
-    def report_logging(self) -> bool:
+    def report_logging(self) -> bool | None:
         return self._report_logging
 
     @property
-    def default_variable_prefix(self) -> str:
+    def default_variable_prefix(self) -> str | None:
         return self._default_variable_prefix
 
     @property
-    def default_variable_suffix(self) -> str:
+    def default_variable_suffix(self) -> str | None:
         return self._default_variable_suffix

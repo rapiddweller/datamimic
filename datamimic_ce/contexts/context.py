@@ -21,11 +21,15 @@ import statistics
 import types
 import uuid
 from abc import ABC
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 import requests
 from faker import Faker
+
+if TYPE_CHECKING:
+    from datamimic_ce.contexts.setup_context import SetupContext
 
 # Create a safe evaluation environment
 SAFE_GLOBALS = {
