@@ -376,8 +376,8 @@ class TaskUtil:
                     source_data = client.get_by_page_with_query(original_query=selector, pagination=load_pagination)
                 else:
                     source_data = client.get_by_page_with_type(
-                        table_name=stmt.type or stmt.name,
-                        pagination=load_pagination,  # type: ignore
+                        table_name=stmt.type or stmt.name,  # type: ignore
+                        pagination=load_pagination,
                     )
             else:
                 raise ValueError(f"Cannot load data from client: {type(client).__name__}")
