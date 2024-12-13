@@ -61,7 +61,7 @@ class VariableTask(KeyVariableTask):
             statement.source_script if statement.source_script is not None else bool(ctx.default_source_scripted)
         )
         descriptor_dir = ctx.root.descriptor_dir
-        seed: int | None = None
+        seed: int
         file_data: list[dict[str, Any]] | None = None
         self._random_items_iterator = None
         is_random_distribution = self.statement.distribution in ("random", None)
@@ -103,6 +103,8 @@ class VariableTask(KeyVariableTask):
                 # Handle static selector
                 else:
                     # Evaluate script selector
+                    if self._selector is None:
+                        raise ValueError("No selector value in statement: {self._statement.name}")
                     selector = TaskUtil.evaluate_variable_concat_prefix_suffix(
                         context=ctx,
                         expr=self._selector,
@@ -120,7 +122,7 @@ class VariableTask(KeyVariableTask):
                         )
                     else:
                         # global variable (setup variable, out of generate_stmt scope) don't need pagination and cyclic
-                        if self._statement.is_global_variable:
+                        if isinstance(self._statement, VariableStatement) and self._statement.is_global_variable:
                             file_data = client.get_by_page_with_query(selector)
                         # Get data source with pagination
                         else:
@@ -129,11 +131,11 @@ class VariableTask(KeyVariableTask):
                                 len_data = client.count_query_length(selector)
                             file_data = client.get_cyclic_data(
                                 selector,
-                                statement.cyclic,
+                                statement.cyclic or False,
                                 len_data,
                                 pagination,
                             )
-                        self._iterator = iter(file_data)
+                        self._iterator = iter(file_data) if file_data else None
                         self._mode = self._ITERATOR_MODE
             else:
                 # Load data from csv or json file
@@ -169,7 +171,7 @@ class VariableTask(KeyVariableTask):
                         # in case of dbms product_type reflects the table name
                         product_type = statement.type or statement.name
                         # TODO: check if pagination is needed
-                        file_data = client.get_by_page_with_type(product_type)
+                        file_data = client.get_by_page_with_type(product_type) if product_type else None
                     # Get data from memstore
                     elif ctx.memstore_manager.contain(source_str):
                         product_type = statement.type or statement.name
@@ -192,10 +194,10 @@ class VariableTask(KeyVariableTask):
                                 DataSourceUtil.get_shuffled_data_with_cyclic(
                                     file_data, pagination, statement.cyclic, seed
                                 )
-                            )
+                            ) if file_data is not None else None
                             self._mode = self._RANDOM_DISTRIBUTION_MODE
                         else:
-                            self._iterator = iter(file_data)
+                            self._iterator = iter(file_data) if file_data is not None else None
                             self._mode = self._ITERATOR_MODE
         elif statement.entity is not None:
             # Create entity builder
@@ -275,6 +277,8 @@ class VariableTask(KeyVariableTask):
         elif self._mode == self._WEIGHTED_ENTITY_MODE:
             value = self._weighted_data_source.generate()
         elif self._mode == self._ITERATION_SELECTOR_MODE:
+            if self._selector is None:
+                raise ValueError("No selector value in statement: {self._statement.name}")
             selector = TaskUtil.evaluate_variable_concat_prefix_suffix(
                 context=ctx,
                 expr=self._selector,
@@ -284,10 +288,15 @@ class VariableTask(KeyVariableTask):
             value = self._client.get_by_page_with_query(selector)
         elif self._mode == self._RANDOM_DISTRIBUTION_MODE:
             if self._random_items_iterator is None:
-                raise StopIteration("No more random items to iterate for statement: " + self._statement.name)
+                raise StopIteration(f"No more random items to iterate for statement: {self._statement.name}")
             value = next(self._random_items_iterator)
         elif self._mode == self._LAZY_ITERATOR_MODE:
-            is_random_distribution = self._statement.distribution in ("random", None)
+            if isinstance(self._statement, VariableStatement):
+                is_random_distribution = self._statement.distribution in ("random", None)
+            else:
+                is_random_distribution = False
+            if self._statement.source is None:
+                return None
             file_data = ctx.evaluate_python_expression(self._statement.source)
             if is_random_distribution:
                 self._random_items_iterator = iter(
@@ -323,7 +332,7 @@ class VariableTask(KeyVariableTask):
                 # Default variable prefix and suffix
                 setup_ctx = ctx
                 while not isinstance(setup_ctx, SetupContext):
-                    setup_ctx = setup_ctx.parent
+                    setup_ctx = setup_ctx.parent  # type: ignore  # skip mypy check
                 variable_prefix = self.statement.variable_prefix or setup_ctx.default_variable_prefix
                 variable_suffix = self.statement.variable_suffix or setup_ctx.default_variable_suffix
                 # Evaluate source script
@@ -336,5 +345,5 @@ class VariableTask(KeyVariableTask):
         # Add variable to context for later retrieving
         if isinstance(ctx, SetupContext):
             ctx.global_variables[self._statement.name] = value
-        else:
+        elif isinstance(ctx, GenIterContext):
             ctx.current_variables[self._statement.name] = value

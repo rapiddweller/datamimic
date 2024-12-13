@@ -11,6 +11,7 @@ import random
 import xml.etree.ElementTree as ET
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Optional, Iterator
 
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
@@ -187,8 +188,8 @@ class DataSourceUtil:
 
     @staticmethod
     def get_cyclic_data_iterator(
-        data: Iterable, pagination: DataSourcePagination, cyclic: bool = False
-    ) -> Iterable | None:
+        data: Iterable, pagination: DataSourcePagination | None, cyclic: Optional[bool] = False
+    ) -> Iterator | None:
         """
         Get cyclic iterator from iterable data source
         """
@@ -207,7 +208,7 @@ class DataSourceUtil:
 
     @staticmethod
     def get_shuffled_data_with_cyclic(
-        data: Iterable, pagination: DataSourcePagination, cyclic: bool, seed: int
+        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None, seed: int
     ) -> list:
         """
         Get shuffled data from iterable data source
