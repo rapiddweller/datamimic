@@ -14,7 +14,7 @@ from datamimic_ce.tasks.task import Task
 
 
 class ReferenceTask(Task):
-    def __init__(self, statement: ReferenceStatement, pagination: DataSourcePagination):
+    def __init__(self, statement: ReferenceStatement, pagination: DataSourcePagination | None):
         self._statement = statement
         self._pagination = pagination
         self._iterator = None

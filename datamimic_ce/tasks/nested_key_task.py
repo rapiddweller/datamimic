@@ -32,14 +32,14 @@ class NestedKeyTask(Task):
         self._default_value = statement.default_value
         self._descriptor_dir = ctx.root.descriptor_dir
         self._class_factory_util = class_factory_util
-        self._sub_tasks = None
+        self._sub_tasks: list | None = None
         self._converter_list = class_factory_util.get_task_util_cls().create_converter_list(ctx, statement.converter)
 
     @property
     def statement(self) -> NestedKeyStatement:
         return self._statement
 
-    def execute(self, parent_context: GenIterContext):
+    def execute(self, parent_context: GenIterContext):  # type: ignore
         """
         Generate data for element "nestedKey"
         :param parent_context:
@@ -97,18 +97,19 @@ class NestedKeyTask(Task):
         nestedkey_type = self._statement.type
         if nestedkey_type == DATA_TYPE_LIST:
             nestedkey_len = self._determine_nestedkey_length(context=parent_context)
-            self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=nestedkey_len)
             value = []
-            # Generate data for each nestedkey record
-            for _ in range(nestedkey_len):
-                # Create sub-context for each list element creation
-                ctx = GenIterContext(parent_context, self._statement.name)
-                generated_value = self._try_execute_sub_tasks(ctx)
-                value.append(generated_value)
+            if nestedkey_len:
+                self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=nestedkey_len)
+                # Generate data for each nestedkey record
+                for _ in range(nestedkey_len):
+                    # Create sub-context for each list element creation
+                    ctx = GenIterContext(parent_context, str(self._statement.name))
+                    generated_value = self._try_execute_sub_tasks(ctx)
+                    value.append(generated_value)
         elif nestedkey_type == DATA_TYPE_DICT:
             self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=1)
             # Create sub-context for nestedkey creation
-            ctx = GenIterContext(parent_context, self._statement.name)
+            ctx = GenIterContext(parent_context, str(self._statement.name))
             value = self._try_execute_sub_tasks(ctx)
         else:
             # Load value from current product then assign to nestedkey if type is not defined,
@@ -119,7 +120,7 @@ class NestedKeyTask(Task):
             )
             nestedkey_data = parent_context.current_product[self._statement.name]
             self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=len(nestedkey_data))
-            ctx = GenIterContext(parent_context, self._statement.name)
+            ctx = GenIterContext(parent_context, str(self._statement.name))
             ctx.current_product = nestedkey_data
             value = self._try_execute_sub_tasks(ctx)
 
@@ -178,19 +179,20 @@ class NestedKeyTask(Task):
         """
         attributes = {}
         # Try to execute sub_tasks
-        for sub_task in self._sub_tasks:
-            try:
-                if isinstance(sub_task, ElementTask):
-                    attributes.update(sub_task.generate_xml_attribute(ctx))
-                else:
-                    sub_task.execute(ctx)
-            except StopIteration:
-                # Stop generating data if one of datasource reach the end
-                logger.info(
-                    f"Data generator sub-task {sub_task.__class__.__name__} '{sub_task.statement.name}' "
-                    f"has already reached the end"
-                )
-                break
+        if self._sub_tasks:
+            for sub_task in self._sub_tasks:
+                try:
+                    if isinstance(sub_task, ElementTask):
+                        attributes.update(sub_task.generate_xml_attribute(ctx))
+                    else:
+                        sub_task.execute(ctx)
+                except StopIteration:
+                    # Stop generating data if one of datasource reach the end
+                    logger.info(
+                        f"Data generator sub-task {sub_task.__class__.__name__} '{sub_task.statement.name}' "
+                        f"has already reached the end"
+                    )
+                    break
         ctx.current_product = self._post_convert(ctx.current_product)
         return {**ctx.current_product, **attributes}
 
@@ -291,7 +293,7 @@ class NestedKeyTask(Task):
         """
         self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=1)
         # Create sub-context for nestedkey creation
-        ctx = GenIterContext(parent_context, self._statement.name)
+        ctx = GenIterContext(parent_context, str(self._statement.name))
         ctx.current_product = copy.copy(value)
         modified_value = self._try_execute_sub_tasks(ctx)
         return modified_value
@@ -321,7 +323,7 @@ class NestedKeyTask(Task):
         self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=nestedkey_len)
         # Modify each nestedkey of the data
         for idx in range(nestedkey_len):
-            ctx = GenIterContext(parent_context, self._statement.name)
+            ctx = GenIterContext(parent_context, str(self._statement.name))
             ctx.current_product = iterate_value[idx]
 
             # Ensure current_product is a dictionary

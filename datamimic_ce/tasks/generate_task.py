@@ -16,7 +16,7 @@ import time
 from collections.abc import Callable
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Literal, Dict
+from typing import Literal, Dict, Optional
 
 import dill
 import xmltodict
@@ -407,12 +407,12 @@ def _load_csv_file(
     ctx: SetupContext,
     file_path: Path,
     separator: str,
-    cyclic: bool,
     start_idx: int,
     end_idx: int,
     source_scripted: bool,
     prefix: str,
     suffix: str,
+    cyclic: Optional[bool] = False,
 ) -> list[dict]:
     """
     Load CSV content from file with skip and limit.
@@ -442,7 +442,9 @@ def _load_csv_file(
         return result
 
 
-def _load_json_file(task_id: str, file_path: Path, cyclic: bool, start_idx: int, end_idx: int) -> list[dict]:
+def _load_json_file(
+    task_id: str, file_path: Path, start_idx: int, end_idx: int, cyclic: Optional[bool] = False
+) -> list[dict]:
     """
     Load JSON content from file using skip and limit.
 
@@ -476,7 +478,7 @@ def _load_json_file(task_id: str, file_path: Path, cyclic: bool, start_idx: int,
     return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
 
 
-def _load_xml_file(file_path: Path, cyclic: bool, start_idx: int, end_idx: int) -> list[dict]:
+def _load_xml_file(file_path: Path, start_idx: int, end_idx: int, cyclic: Optional[bool] = False) -> list[dict]:
     """
     Load XML content from file using skip and limit.
 

@@ -54,7 +54,7 @@ class VariableTask(KeyVariableTask):
         self,
         ctx: SetupContext,
         statement: VariableStatement,
-        pagination: DataSourcePagination,
+        pagination: DataSourcePagination | None,
     ):
         super().__init__(ctx, statement, pagination)
         self._source_script = (
@@ -129,12 +129,7 @@ class VariableTask(KeyVariableTask):
                             len_data = ctx.data_source_len.get(statement.full_name)
                             if len_data is None:
                                 len_data = client.count_query_length(selector)
-                            file_data = client.get_cyclic_data(
-                                selector,
-                                statement.cyclic or False,
-                                len_data,
-                                pagination,
-                            )
+                            file_data = client.get_cyclic_data(selector, len_data, pagination, statement.cyclic)
                         self._iterator = iter(file_data) if file_data is not None else None
                         self._mode = self._ITERATOR_MODE
             else:
@@ -190,11 +185,15 @@ class VariableTask(KeyVariableTask):
                         self._mode = self._LAZY_ITERATOR_MODE
                     else:
                         if is_random_distribution:
-                            self._random_items_iterator = iter(
-                                DataSourceUtil.get_shuffled_data_with_cyclic(
-                                    file_data, pagination, statement.cyclic, seed
+                            self._random_items_iterator = (
+                                iter(
+                                    DataSourceUtil.get_shuffled_data_with_cyclic(
+                                        file_data, pagination, statement.cyclic, seed
+                                    )
                                 )
-                            ) if file_data is not None else None
+                                if file_data is not None
+                                else None
+                            )
                             self._mode = self._RANDOM_DISTRIBUTION_MODE
                         else:
                             self._iterator = iter(file_data) if file_data is not None else None

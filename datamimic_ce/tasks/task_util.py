@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import re
-from typing import Any
+from typing import Any, Optional, Union
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
@@ -148,7 +148,7 @@ class TaskUtil:
         e.g. '{1+3}' -> 4
         """
         if isinstance(datas, dict):
-            result = {}
+            dict_result = {}
             for key, json_value in datas.items():
                 if isinstance(json_value, dict | list):
                     value = TaskUtil.evaluate_file_script_template(ctx, json_value, prefix, suffix)
@@ -156,20 +156,20 @@ class TaskUtil:
                     value = TaskUtil._evaluate_script_value(ctx, json_value, prefix, suffix)
                 else:
                     value = json_value
-                result.update({key: value})
-            return result
+                dict_result.update({key: value})
+            return dict_result
         elif isinstance(datas, list):
-            result = []
+            list_result: list[Any] = []
             for value in datas:
                 if isinstance(value, list):
-                    result.extend(TaskUtil.evaluate_file_script_template(ctx, value, prefix, suffix))
+                    list_result.extend(TaskUtil.evaluate_file_script_template(ctx, value, prefix, suffix))
                 elif isinstance(value, dict):
-                    result.append(TaskUtil.evaluate_file_script_template(ctx, value, prefix, suffix))
+                    list_result.append(TaskUtil.evaluate_file_script_template(ctx, value, prefix, suffix))
                 elif isinstance(value, str):
-                    result.append(TaskUtil._evaluate_script_value(ctx, value, prefix, suffix))
+                    list_result.append(TaskUtil._evaluate_script_value(ctx, value, prefix, suffix))
                 else:
-                    result.append(value)
-            return result
+                    list_result.append(value)
+            return list_result
         elif isinstance(datas, str):
             return TaskUtil._evaluate_script_value(ctx, datas, prefix, suffix)
         else:
@@ -190,7 +190,7 @@ class TaskUtil:
             is_whole_source_script = data[0] == "{" and data[-1] == "}"
             if is_whole_source_script:
                 match = re.search(r"^{(.*)}$", data)
-                return ctx.evaluate_python_expression(match.group(1))
+                return ctx.evaluate_python_expression(match.group(1)) if match is not None else None
 
             return TaskUtil.evaluate_variable_concat_prefix_suffix(ctx, data, prefix, suffix)
 
@@ -294,7 +294,7 @@ class TaskUtil:
         """
         build_from_source = True
         root_context = context.root
-        source_data = []
+        source_data: Union[dict, list] = []
 
         # get prefix and suffix
         setup_ctx = context.root if not isinstance(context, SetupContext) else context
@@ -309,21 +309,21 @@ class TaskUtil:
                 ctx=context,
                 file_path=root_context.descriptor_dir / source_str,
                 separator=separator,
-                cyclic=stmt.cyclic,
                 start_idx=load_start_idx,
                 end_idx=load_end_idx,
                 source_scripted=source_scripted,
                 prefix=prefix,
                 suffix=suffix,
+                cyclic=stmt.cyclic,
             )
         # Load data from JSON
         elif source_str.endswith(".json"):
             source_data = _load_json_file(
                 root_context.task_id,
                 root_context.descriptor_dir / source_str,
-                stmt.cyclic,
                 load_start_idx,
                 load_end_idx,
+                stmt.cyclic,
             )
             # if sourceScripted then evaluate python expression in json
             if source_scripted:
@@ -336,10 +336,7 @@ class TaskUtil:
         # Load data from XML
         elif source_str.endswith(".xml"):
             source_data = _load_xml_file(
-                root_context.descriptor_dir / source_str,
-                stmt.cyclic,
-                load_start_idx,
-                load_end_idx,
+                root_context.descriptor_dir / source_str, load_start_idx, load_end_idx, stmt.cyclic
             )
             # if sourceScripted then evaluate python expression in json
             if source_scripted:
@@ -379,14 +376,15 @@ class TaskUtil:
                     source_data = client.get_by_page_with_query(original_query=selector, pagination=load_pagination)
                 else:
                     source_data = client.get_by_page_with_type(
-                        table_name=stmt.type or stmt.name, pagination=load_pagination
+                        table_name=stmt.type or stmt.name,
+                        pagination=load_pagination,  # type: ignore
                     )
             else:
                 raise ValueError(f"Cannot load data from client: {type(client).__name__}")
         else:
             raise ValueError(f"cannot find data source {source_str} for iterate task")
 
-        return source_data, build_from_source
+        return source_data, build_from_source  # type: ignore
 
     # @staticmethod
     # def consume_minio_after_page_processing(stmt, context: Context) -> None:
@@ -441,13 +439,13 @@ class TaskUtil:
         # Create exporters cache in root context if it doesn't exist
         if not hasattr(root_context, "_task_exporters"):
             # Using task_id to namespace the cache
-            root_context._task_exporters = {}
+            root_context._task_exporters = {}  # type: ignore  # skip mypy check
 
         # Create a unique cache key incorporating task_id and statement details
         cache_key = f"{root_context.task_id}_{stmt.name}_{stmt.storage_id}_{stmt}"
 
         # Get or create exporters
-        if cache_key not in root_context._task_exporters:
+        if cache_key not in root_context._task_exporters:  # type: ignore  # skip mypy check
             # Create the consumer set once
             consumer_set = stmt.targets.copy()
             # consumer_set.add(EXPORTER_PREVIEW) deactivating preview exporter for multi-process
@@ -465,14 +463,14 @@ class TaskUtil:
             )
 
             # Cache the exporters
-            root_context._task_exporters[cache_key] = {
+            root_context._task_exporters[cache_key] = {  # type: ignore  # skip mypy check
                 "with_operation": consumers_with_operation,
                 "without_operation": consumers_without_operation,
                 "page_count": 0,  # Track number of pages processed
             }
 
         # Get cached exporters
-        exporters = root_context._task_exporters[cache_key]
+        exporters = root_context._task_exporters[cache_key]  # type: ignore  # skip mypy check
         exporters["page_count"] += 1
 
         # Use cached exporters

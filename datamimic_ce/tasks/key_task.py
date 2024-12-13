@@ -45,15 +45,18 @@ class KeyTask(KeyVariableTask):
     def pre_execute(self, ctx: Context):
         if self.statement.generator is not None and "SequenceTableGenerator" in self.statement.generator:
             sequence_table_generator = GeneratorUtil(ctx).create_generator(
-                self._statement.generator, self._statement, self._pagination
+                str(self._statement.generator), self._statement, self._pagination
             )
             sequence_table_generator.pre_execute(ctx)
 
     @property
     def statement(self) -> KeyStatement:
-        return self._statement
+        if isinstance(self._statement, KeyStatement):
+            return self._statement
+        else:
+            raise TypeError("Expected an KeyStatement")
 
-    def execute(self, ctx: GenIterContext):
+    def execute(self, ctx: GenIterContext):  # type: ignore
         """
         Generate data for element "attribute"
         If 'type' element is not specified, then default type of generated data is string
@@ -77,14 +80,15 @@ class KeyTask(KeyVariableTask):
                 value = self._convert_generated_value(value)
 
             attributes = {}
-            for stmt in self._statement.sub_statements:
-                task = task_util_cls.get_task_by_statement(root_ctx, stmt)
-                if isinstance(task, ElementTask):
-                    attributes.update(task.generate_xml_attribute(ctx))
-                else:
-                    raise ValueError(
-                        f"Cannot execute subtask {task.__class__.__name__} of <key> '{self.statement.name}'"
-                    )
+            if hasattr(self._statement, "sub_statements"):
+                for stmt in self._statement.sub_statements:
+                    task = task_util_cls.get_task_by_statement(root_ctx, stmt)
+                    if isinstance(task, ElementTask):
+                        attributes.update(task.generate_xml_attribute(ctx))
+                    else:
+                        raise ValueError(
+                            f"Cannot execute subtask {task.__class__.__name__} of <key> '{self.statement.name}'"
+                        )
 
             result = value if len(attributes) == 0 else {"#text": value, **attributes}
             # Add field "attribute" into current product

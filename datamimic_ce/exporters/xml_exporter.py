@@ -123,6 +123,7 @@ class XMLExporter(UnifiedBufferedExporter):
         Returns:
             dict: Sanitized data with string values and attribute prefixes.
         """
+
         def sanitize_value(recursion_data: Any) -> Any:
             if isinstance(recursion_data, dict):
                 sanitized = {}
