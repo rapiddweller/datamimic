@@ -135,7 +135,7 @@ class VariableTask(KeyVariableTask):
                                 len_data,
                                 pagination,
                             )
-                        self._iterator = iter(file_data) if file_data else None
+                        self._iterator = iter(file_data) if file_data is not None else None
                         self._mode = self._ITERATOR_MODE
             else:
                 # Load data from csv or json file
@@ -171,7 +171,7 @@ class VariableTask(KeyVariableTask):
                         # in case of dbms product_type reflects the table name
                         product_type = statement.type or statement.name
                         # TODO: check if pagination is needed
-                        file_data = client.get_by_page_with_type(product_type) if product_type else None
+                        file_data = client.get_by_page_with_type(product_type) if product_type is not None else None
                     # Get data from memstore
                     elif ctx.memstore_manager.contain(source_str):
                         product_type = statement.type or statement.name
