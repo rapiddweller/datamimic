@@ -17,16 +17,18 @@ class TestArray:
     def test_dir(self) -> Path:
         return Path(__file__).resolve().parent
 
-    def test_array_simple_types(self, test_dir: Path) -> None:
+    @pytest.mark.asyncio
+    async def test_array_simple_types(self, test_dir: Path) -> None:
         test_engine = DataMimicTest(test_dir=test_dir, filename="test_array_simple_types.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-    def test_array_invalid_type(self, test_dir: Path) -> None:
+    @pytest.mark.asyncio
+    async def test_array_invalid_type(self, test_dir: Path) -> None:
         test_engine = DataMimicTest(test_dir=test_dir, filename="test_array_invalid_type.xml")
-        # Use pytest.raises to capture the expected error
         with pytest.raises(ValueError):
-            test_engine.test_with_timer()
+            await test_engine.test_with_timer()
 
-    def test_array_script(self, test_dir: Path) -> None:
+    @pytest.mark.asyncio
+    async def test_array_script(self, test_dir: Path) -> None:
         test_engine = DataMimicTest(test_dir=test_dir, filename="test_array_script.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()

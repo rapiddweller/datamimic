@@ -1,4 +1,4 @@
-<setup  multiprocessing="True" numProcess="2">
+<setup>
     <!-- 1. Update active status of all customers with age between 25 and 40 -->
     <generate
             name="CUSTOMER"

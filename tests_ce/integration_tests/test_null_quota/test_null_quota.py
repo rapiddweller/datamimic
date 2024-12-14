@@ -13,10 +13,13 @@ from datamimic_ce.data_mimic_test import DataMimicTest
 
 
 class TestNullQuota:
+    _test_dir = Path(__file__).resolve().parent
+
     @pytest.fixture
     def test_dir(self) -> Path:
         return Path(__file__).resolve().parent
 
-    def test_null_quota(self, test_dir: Path) -> None:
+    @pytest.mark.asyncio
+    async def test_null_quota(self, test_dir: Path) -> None:
         test_engine = DataMimicTest(test_dir=test_dir, filename="test_null_quota.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()

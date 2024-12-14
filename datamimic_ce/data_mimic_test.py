@@ -28,7 +28,7 @@ class DataMimicTest:
     def task_id(self):
         return self._task_id
 
-    def test_with_timer(self):
+    async def test_with_timer(self) -> None:
         """
         Test with timer
         :return:
@@ -36,7 +36,10 @@ class DataMimicTest:
         start_time = time.time()
 
         # Use default string instead of UUID4 for testing if not able get task_id from celery request
-        self._engine.parse_and_execute()
+        if hasattr(self._engine, "parse_and_execute"):
+            await self._engine.parse_and_execute()  # Make this async
+        else:
+            raise RuntimeError("Engine missing parse_and_execute method")
 
         # Get the current time after the code execution
         end_time = time.time()

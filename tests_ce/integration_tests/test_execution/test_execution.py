@@ -8,11 +8,13 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestExecution:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_shared_variable(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_execute_shared_variable.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_shared_variable(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_execute_shared_variable.xml")
+        await test_engine.test_with_timer()

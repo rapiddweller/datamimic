@@ -1,4 +1,4 @@
-<setup multiprocessing="False">
+<setup>
     <mongodb id="mongodb"/>
 
     <!-- The following model creates sample records in the MongoDB -->

@@ -8,23 +8,28 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestEcho:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_simple_echo(self):
+    @pytest.mark.asyncio
+    async def test_simple_echo(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="simple_echo.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-    def test_scripted_echo(self):
+    @pytest.mark.asyncio
+    async def test_scripted_echo(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="scripted_echo.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-    def test_scripted_echo_mp(self):
+    @pytest.mark.asyncio
+    async def test_scripted_echo_mp(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="scripted_echo_mp.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-    def test_variable_echo(self):
+    @pytest.mark.asyncio
+    async def test_variable_echo(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="variable_echo.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()

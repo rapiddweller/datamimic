@@ -1,4 +1,0 @@
-<setup>
-    <include uri="conf/base.properties"/>
-    <include uri="mongodb_selector_model.xml"/>
-</setup>

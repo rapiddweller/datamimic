@@ -9,50 +9,70 @@ from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
 from datamimic_ce.utils.file_util import FileUtil
+import pytest
 
 
 class TestEntity:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_entity_person(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_person.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_entity_person(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_person.xml")
+        await test_engine.test_with_timer()
 
-    def test_entity_address(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_address.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_entity_address(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_address.xml")
+        await test_engine.test_with_timer()
 
-    def test_entity_bank_account(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_bank_account.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_entity_bank_account(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_bank_account.xml")
+        await test_engine.test_with_timer()
 
-    def test_entity_bank(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_bank.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_entity_bank(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_bank.xml")
+        await test_engine.test_with_timer()
 
-    def test_entity_city(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_city.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_entity_city(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_city.xml")
+        await test_engine.test_with_timer()
 
-    def test_entity_company(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_company.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_entity_company(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_company.xml")
+        await test_engine.test_with_timer()
 
-    def test_entity_country(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_country.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_entity_country(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_country.xml")
+        await test_engine.test_with_timer()
 
-    def test_entity_credit_card(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_credit_card.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_entity_credit_card(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_credit_card.xml")
+        await test_engine.test_with_timer()
 
-    def test_entity_person_relative_attribute(self):
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_entity_person_relative_attribute(self):
         default_dataset = "US"
-        engine = DataMimicTest(
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_entity_person_relative_attribute.xml", capture_test_result=True
         )
-        engine.test_with_timer()
-        customers = engine.capture_result().get("customer")
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
+        customers = result.get("customer", [])
         file_name_male = Path(__file__).parent.parent.parent.parent.joinpath(
             f"datamimic_ce/generators/data/person/givenName_male_{default_dataset}.csv"
         )

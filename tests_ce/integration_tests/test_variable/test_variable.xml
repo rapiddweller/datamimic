@@ -1,4 +1,4 @@
-<setup  multiprocessing="True" numProcess="2">
+<setup numProcess="2">
     <generate name="group" count="10" target="ConsoleExporter">
         <variable name="id" generator="IncrementGenerator"/>
         <variable name="random_int" type="int"/>

@@ -1,4 +1,0 @@
-<setup multiprocessing="{multiprocessing}">
-    <database id="sourceDB" system="postgresql" environment="environment"/>
-    <generate name="time_measure" source="sourceDB" target=""/>
-</setup>

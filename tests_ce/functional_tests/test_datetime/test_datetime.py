@@ -16,11 +16,12 @@ from datamimic_ce.data_mimic_test import DataMimicTest
 class TestDateTime:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_datetime_functional(self) -> None:
+    @pytest.mark.asyncio
+    async def test_datetime_functional(self) -> None:
         engine = DataMimicTest(
             test_dir=self._test_dir, filename="functional_test_datetime.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await engine.test_with_timer()
 
         result = engine.capture_result()
         date_time_test = result["date_time_test"]

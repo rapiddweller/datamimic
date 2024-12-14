@@ -24,7 +24,7 @@ from datamimic_ce.logger import logger
 
 
 class RdbmsClient(DatabaseClient):
-    def __init__(self, credential: RdbmsCredential, task_id: str = None):
+    def __init__(self, credential: RdbmsCredential, task_id: str | None = None):
         self._credential = credential
         self._engine = None
         self._task_id = task_id
@@ -469,3 +469,8 @@ class RdbmsClient(DatabaseClient):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._engine:
             self._engine.dispose()
+
+    def initialize_engine(self):
+        """Initialize the database engine if not already initialized."""
+        if self._engine is None:
+            self._engine = self._create_engine()

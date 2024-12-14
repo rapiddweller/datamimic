@@ -6,12 +6,14 @@
 
 import copy
 from pathlib import Path
+import inspect
 
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
 from datamimic_ce.statements.setup_statement import SetupStatement
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
+from datamimic_ce.tasks.generate_task import GenerateTask
 
 
 class SetupTask:
@@ -25,7 +27,7 @@ class SetupTask:
         test_result_storage: TestResultExporter | None,
         descriptor_dir: Path,
         class_factory_util: BaseClassFactoryUtil,
-        use_mp: bool = None,
+        use_mp: bool = False,
     ):
         self._descriptor_dir = descriptor_dir
         self._setup_stmt = setup_stmt
@@ -44,7 +46,7 @@ class SetupTask:
         self._default_variable_suffix = setup_stmt.default_variable_suffix or "__"
         self._class_factory_util = class_factory_util
 
-    def execute(self) -> None:
+    async def execute(self) -> None:
         # Init root context
         root_context = SetupContext(
             class_factory_util=self._class_factory_util,
@@ -69,23 +71,21 @@ class SetupTask:
         task_util_cls = self._class_factory_util.get_task_util_cls()
         for stmt in self._setup_stmt.sub_statements:
             task = task_util_cls.get_task_by_statement(root_context, stmt)
-            task.execute(root_context)
+            if inspect.iscoroutinefunction(task.execute):
+                await task.execute(root_context)  # Await async tasks
+            else:
+                task.execute(root_context)  # Execute sync tasks normally
 
     @staticmethod
-    def execute_include(setup_stmt: SetupStatement, parent_context: SetupContext) -> None:
-        """
-        Execute include in <setup>
-        :param setup_stmt:
-        :param parent_context:
-        :return:
-        """
-        # Use copy of parent_context as child_context
-        root_context = copy.deepcopy(parent_context)
-
-        # Update root_context with attributes defined in sub-setup statement
+    async def execute_include(setup_stmt: SetupStatement, parent_context: SetupContext) -> None:
+        """Execute include XML model inside <setup>"""
+        root_context = copy.deepcopy(parent_context.root)
         root_context.update_with_stmt(setup_stmt)
 
-        task_util_cls = parent_context.class_factory_util.get_task_util_cls()
+        task_util_cls = root_context.class_factory_util.get_task_util_cls()
         for stmt in setup_stmt.sub_statements:
             task = task_util_cls.get_task_by_statement(root_context, stmt)
-            task.execute(root_context)
+            if inspect.iscoroutinefunction(task.execute):
+                await task.execute(root_context)  # Await async tasks
+            else:
+                task.execute(root_context)  # Execute sync tasks normally

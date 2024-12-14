@@ -30,29 +30,30 @@ class SetupContext(Context):
         class_factory_util: BaseClassFactoryUtil,
         memstore_manager: MemstoreManager,
         task_id: str,
-        test_mode: bool,
-        test_result_exporter: TestResultExporter,
-        default_separator: str,
-        default_locale: str,
-        default_dataset: str,
         use_mp: bool,
-        descriptor_dir: Path,
-        num_process: int,
-        default_variable_prefix: str,
-        default_variable_suffix: str,
-        default_line_separator: str,
-        current_seed: int = None,
-        clients: dict = None,
-        data_source_len: dict = None,
-        properties: dict = None,
-        namespace: dict = None,
-        global_variables: dict = None,
-        generators: dict = None,
-        default_source_scripted: bool = None,
+        properties: dict | None = None,
+        test_mode: bool = False,
+        descriptor_dir: Path | None = None,
+        test_result_exporter: TestResultExporter | None = None,
+        default_separator: str = "|",
+        default_locale: str = "en",
+        default_dataset: str = "US",
+        num_process: int | None = None,
+        default_variable_prefix: str = "__",
+        default_variable_suffix: str = "__",
+        default_line_separator: str | None = None,
+        current_seed: int | None = None,
+        clients: dict | None = None,
+        data_source_len: dict | None = None,
+        namespace: dict | None = None,
+        global_variables: dict | None = None,
+        generators: dict | None = None,
+        default_source_scripted: bool | None = None,
         report_logging: bool = True,
     ):
         # SetupContext is always its root_context
         super().__init__(self)
+        self._task_exporters = {}
         self._class_factory_util = class_factory_util
         self._descriptor_dir = descriptor_dir
         self._clients = {} if clients is None else clients
@@ -66,7 +67,7 @@ class SetupContext(Context):
         self._max_count = 1000
         self._validate = False
         self._default_error_handler = None
-        self._default_separator = default_separator
+        self._default_separator = default_separator or "|"
         self._default_locale = default_locale
         self._default_dataset = default_dataset
         self._default_null = None
@@ -122,8 +123,8 @@ class SetupContext(Context):
             global_variables=self.global_variables,
             generators=copy.deepcopy(self._generators),
             num_process=copy.deepcopy(self._num_process, memo),
-            default_variable_prefix=self._default_variable_prefix,
-            default_variable_suffix=self._default_variable_suffix,
+            default_variable_prefix=self._default_variable_prefix or "__",
+            default_variable_suffix=self._default_variable_suffix or "__",
             default_line_separator=copy.deepcopy(self._default_line_separator, memo),
             default_source_scripted=self._default_source_scripted,
             report_logging=copy.deepcopy(self._report_logging),
@@ -359,11 +360,22 @@ class SetupContext(Context):
 
     @property
     def default_line_separator(self) -> str:
+        """Get default line separator."""
         return self._default_line_separator
+
+    @default_line_separator.setter
+    def default_line_separator(self, value: str) -> None:
+        """Set default line separator."""
+        self._default_line_separator = value
 
     @property
     def default_source_scripted(self) -> bool:
         return self._default_source_scripted
+
+    @default_source_scripted.setter
+    def default_source_scripted(self, value: bool | None) -> None:
+        """Set default source scripted flag."""
+        self._default_source_scripted = value
 
     @property
     def report_logging(self) -> bool:

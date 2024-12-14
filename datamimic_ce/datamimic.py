@@ -60,10 +60,13 @@ class DataMimic:
             logger.error(f"Invalid descriptor file path: {self._descriptor_path}")
             raise ValueError(f"Invalid file path: {self._descriptor_path}")
 
-    def parse_and_execute(self) -> None:
+    async def parse_and_execute(self) -> None:
         """Parse root XML descriptor file and execute."""
         try:
+            # Parse XML descriptor
             root_stmt = DescriptorParser.parse(self._class_factory_util, self._descriptor_path, self._platform_props)
+
+            # Create and execute setup task
             setup_task = SetupTask(
                 class_factory_util=self._class_factory_util,
                 setup_stmt=root_stmt,
@@ -74,7 +77,9 @@ class DataMimic:
                 test_result_storage=self._test_result_storage,
                 descriptor_dir=self._descriptor_path.parent,
             )
-            setup_task.execute()
+
+            await setup_task.execute()  # Add await here
+
         except ValueError as e:
             logger.error(f"Value error: {e}")
             raise e

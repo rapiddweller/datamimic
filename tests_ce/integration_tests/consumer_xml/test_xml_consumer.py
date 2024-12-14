@@ -17,23 +17,28 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestConsumerXmlMinio:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_single_item_xml_with_source_sp(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_single_item_xml_with_source_sp.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_single_item_xml_with_source_sp(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_single_item_xml_with_source_sp.xml")
+        await test_engine.test_with_timer()
 
-    def test_single_item_xml_with_source_mp(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_single_item_xml_with_source_mp.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_single_item_xml_with_source_mp(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_single_item_xml_with_source_mp.xml")
+        await test_engine.test_with_timer()
 
-    def test_generate_single_item_xml(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_generate_single_item_xml.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_generate_single_item_xml(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_generate_single_item_xml.xml")
+        await test_engine.test_with_timer()
 
-    def test_single_item_xml_source_scripted(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_single_item_xml_source_scripted.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_single_item_xml_source_scripted(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_single_item_xml_source_scripted.xml")
+        await test_engine.test_with_timer()

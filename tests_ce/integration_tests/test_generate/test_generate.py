@@ -8,19 +8,23 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestGenerate:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_simple_generate(self):
+    @pytest.mark.asyncio
+    async def test_simple_generate(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="simple_generate.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-    def test_generate_with_source(self):
+    @pytest.mark.asyncio
+    async def test_generate_with_source(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="generate_with_source.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-    def test_count(self):
+    @pytest.mark.asyncio
+    async def test_count(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_count.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()

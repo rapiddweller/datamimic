@@ -8,11 +8,13 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestPattern:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_primitive_generator(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_pattern.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_primitive_generator(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_pattern.xml")
+        await test_engine.test_with_timer()

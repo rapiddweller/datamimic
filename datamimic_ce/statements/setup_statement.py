@@ -30,40 +30,40 @@ class SetupStatement(CompositeStatement):
 
     @property
     def use_mp(self) -> bool:
-        return self._use_mp
+        return bool(self._use_mp) if self._use_mp is not None else False
 
     @property
     def default_separator(self) -> str:
-        return self._default_separator
+        return str(self._default_separator) if self._default_separator is not None else "|"
 
     @property
     def default_locale(self) -> str:
-        return self._default_locale
+        return str(self._default_locale) if self._default_locale is not None else "en_US"
 
     @property
     def default_dataset(self) -> str:
-        return self._default_dataset
+        return str(self._default_dataset) if self._default_dataset is not None else "US"
 
     @property
     def num_process(self) -> int:
-        return self._num_process
+        return int(self._num_process) if self._num_process is not None else 1
 
     @property
     def default_line_separator(self) -> str:
-        return self._default_line_separator
+        return str(self._default_line_separator) if self._default_line_separator is not None else "\n"
 
     @property
     def default_source_scripted(self) -> bool:
-        return self._default_source_scripted
+        return bool(self._default_source_scripted) if self._default_source_scripted is not None else False
 
     @property
     def report_logging(self) -> bool:
-        return self._report_logging
+        return bool(self._report_logging) if self._report_logging is not None else False
 
     @property
     def default_variable_prefix(self) -> str:
-        return self._default_variable_prefix
+        return str(self._default_variable_prefix) if self._default_variable_prefix is not None else "__"
 
     @property
     def default_variable_suffix(self) -> str:
-        return self._default_variable_suffix
+        return str(self._default_variable_suffix) if self._default_variable_suffix is not None else "__"

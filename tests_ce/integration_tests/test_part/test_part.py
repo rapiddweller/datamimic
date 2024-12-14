@@ -8,27 +8,33 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestPart:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_simple_part(self):
+    @pytest.mark.asyncio
+    async def test_simple_part(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_simple_part.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-    def test_source_part_json(self):
+    @pytest.mark.asyncio
+    async def test_source_part_json(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_source_part_json.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-    def test_source_part_csv(self):
+    @pytest.mark.asyncio
+    async def test_source_part_csv(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_source_part_csv.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-    def test_part_within_iterate(self):
+    @pytest.mark.asyncio
+    async def test_part_within_iterate(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="part_in_iterate.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-    def test_script_dict(self):
+    @pytest.mark.asyncio
+    async def test_script_dict(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_script_dict.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()

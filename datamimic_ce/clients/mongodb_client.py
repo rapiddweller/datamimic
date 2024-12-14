@@ -6,8 +6,8 @@
 
 import json
 import re
-
 from pymongo import MongoClient, UpdateOne
+from datamimic_ce.logger import logger
 
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.credentials.mongodb_credential import MongoDBCredential
@@ -32,6 +32,8 @@ class MongoDBClient(DatabaseClient):
             ars["authSource"] = cred_dump["authSource"]
         if "authMechanism" in cred_dump:
             ars["authMechanism"] = cred_dump["authMechanism"]
+
+        logger.info(f"Connecting to MongoDB with credentials: {ars}")
 
         return MongoClient(**ars)
 
@@ -197,20 +199,23 @@ class MongoDBClient(DatabaseClient):
     def count_table_length(self, table_name: str):
         pass
 
-    def insert(self, collection_name: str, data: list, is_update: bool) -> list:
-        """
-        Insert data into collection
-        :param collection_name:
-        :param data:
-        """
+    def insert(self, collection_name: str, data: list, is_update: bool) -> list | None:
+        """Insert data into collection with upsert."""
         if collection_name is None or collection_name.isspace():
             raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
         with self._create_connection() as conn:
             db = conn[self._credential.database]
             collection = db[collection_name]
-            inserted_ids = collection.insert_many(data).inserted_ids
-            # Retrieve all the inserted data
-            return list(collection.find({"_id": {"$in": inserted_ids}})) if is_update else None
+
+            # Use replace_one with upsert for each document
+            for doc in data:
+                if "_id" in doc:
+                    collection.replace_one({"_id": doc["_id"]}, doc, upsert=True)
+                else:
+                    collection.insert_one(doc)
+
+            # Return inserted docs if requested
+            return list(collection.find({"_id": {"$in": [d.get("_id") for d in data]}})) if is_update else None
 
     def update(self, query: dict, data: list) -> int:
         """

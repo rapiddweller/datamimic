@@ -13,9 +13,9 @@ from datamimic_ce.data_mimic_test import DataMimicTest
 class TestEntityFunctional:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_entity_person(self) -> None:
+    async def test_entity_person(self) -> None:
         engine = DataMimicTest(test_dir=self._test_dir, filename="person_entity_test.xml", capture_test_result=True)
-        engine.test_with_timer()
+        await engine.test_with_timer()
 
         result = engine.capture_result()
         assert result
