@@ -10,16 +10,20 @@ from pathlib import Path
 from bson import ObjectId
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestMongoDbFunction:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_mongodb_consumer(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_mongodb_consumer.xml", capture_test_result=True)
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_mongodb_consumer(self):
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_mongodb_consumer.xml", capture_test_result=True
+        )
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         mongo_data = result["mongo_func_test"]
         query_check = result["query_check"]
         selector_check = result["selector_check"]
@@ -53,13 +57,14 @@ class TestMongoDbFunction:
 
         assert len(delete_check) == bob_count
 
-    def test_mongodb_cross_collection(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_mongodb_cross_collection(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_mongodb_cross_collection.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         summary_datas = result["summary"]
         assert len(summary_datas) == 10
         assert set([d["users_orders"]["_id"] for d in summary_datas]) == set(range(1, 11))
@@ -109,25 +114,27 @@ class TestMongoDbFunction:
                 assert user_order["order_item"] == "pencil"
                 assert user_order["quantity"] == 10
 
-    def test_mongodb_more_cross_collection(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_mongodb_more_cross_collection(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_mongodb_more_cross_collection.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         summary = result["more_summary"]
         assert len(summary) == 10
         keys = ["_id", "user_name", "order_items", "quantities", "total_spending"]
         assert all(key in datas["users_orders"] for key in keys for datas in summary)
 
-    def test_mongodb_cyclic_source(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_mongodb_cyclic_source(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_mongodb_cyclic_source.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         mongo_func_test = result["mongo_func_test"]
         assert len(mongo_func_test) == 5
 
@@ -158,11 +165,14 @@ class TestMongoDbFunction:
             assert m["user_name"] in ["Bob", "Frank", "Phil"]
             assert "_id" not in m
 
-    def test_mongodb_with_type(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_mongodb_with_type.xml", capture_test_result=True)
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_mongodb_with_type(self):
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_mongodb_with_type.xml", capture_test_result=True
+        )
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
 
         range_list = list(range(1, 21))
 

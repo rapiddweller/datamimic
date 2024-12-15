@@ -8,21 +8,24 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestVariableDistribution:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_random_distribution(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_random_distribution(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_random_distribution.xml", capture_test_result=True
         )
-        engine.test_with_timer()
-        engine.capture_result()
+        await test_engine.test_with_timer()
+        test_engine.capture_result()
 
-    def test_ordered_distribution(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_ordered_distribution(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_ordered_distribution.xml", capture_test_result=True
         )
-        engine.test_with_timer()
-        engine.capture_result()
+        await test_engine.test_with_timer()
+        test_engine.capture_result()

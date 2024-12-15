@@ -38,7 +38,7 @@ dependencies = [
     "typer>=0.12.5",                      # import typer
     "psutil==5.9.8",                      # import psutil
     "exrex>=0.12.0",                      # import exrex - Used for generating random strings
-    "ray>=2.9.0",  # Add this line
+    "ray>=2.40.0",                        # import ray - Used for parallel processing
 ]
 
 [tool.setuptools_scm]
@@ -60,14 +60,14 @@ namespaces = true
 
 dev-dependencies = [
     "build>=1.2.2.post1", # PEP 517 build frontend for building distributions
-    "pytest~=8.0.0", # Testing framework
+    "pytest~=8.3.4", # Testing framework
     "pytest-xdist~=3.5.0", # Distributed testing (parallel execution)
     "pytest-cov~=6.0.0", # Coverage reporting for pytest
     "memory-profiler~=0.61.0", # Monitors memory usage during code execution
     "ruff>=0.8", # Fast Python linter written in Rust
     "sqlalchemy-stubs>=0.4",
     "prettytable==3.10.0", # from prettytable import PrettyTable
-
+    "pytest-asyncio~=0.25.0", # Asyncio support for pytest
 ]
 
 [tool.mypy]
@@ -86,6 +86,8 @@ init_forbid_extra = false  # Allow extra arguments in Pydantic models' __init__
 init_typed = false  # Do not enforce type annotations in __init__
 warn_required_dynamic_aliases = false  # Do not warn about required dynamic aliases
 warn_untyped_fields = false  # Do not warn about untyped fields
+
+
 
 [tool.ruff]
 line-length = 120                  # Maximum line length
@@ -110,6 +112,8 @@ select = [
 
 [tool.pytest.ini_options]
 markers = ["run: Custom marker for running specific tests"]  # Custom markers for pytest
+asyncio_default_fixture_loop_scope = "function"  # Default scope for asyncio fixtures
+addopts = "-ra -q --color=yes"  # Additional options for pytest
 
 [tool.pytest]
 parallel = true  # Enable parallel test execution

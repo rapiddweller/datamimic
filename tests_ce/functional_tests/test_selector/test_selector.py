@@ -8,37 +8,43 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestSelector:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_simple_selector(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_selector.xml", capture_test_result=True)
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_simple_selector(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_selector.xml", capture_test_result=True)
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
 
         data = result["data"]
 
         assert len(data) == 17
         assert data[0]["user_id"] == 1
 
-    def test_iteration_selector(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_iteration_selector(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_iteration_selector.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
 
         assert result["simple_data"][:10] == result["iteration_data"][:10]
 
-    def test_dynamic_selector(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_dynamic_selector.xml", capture_test_result=True)
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_dynamic_selector(self):
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_dynamic_selector.xml", capture_test_result=True
+        )
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
 
         assert len(result["generate_selector"]) == 17
 
@@ -46,13 +52,14 @@ class TestSelector:
         for e in variable_selector:
             assert e.get("name") == f"Name {e.get('id')}"
 
-    def test_edit_dynamic_selector(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_edit_dynamic_selector(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_edit_dynamic_selector.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
 
         assert len(result["generate_selector"]) == 17
 

@@ -450,7 +450,7 @@ class GenerateTask(Task):
             num_workers = int(self.statement.num_process or context.root.num_process or 1)
             chunk_size = math.ceil(count / num_workers)
 
-            workers = [GenerateWorker.remote() for _ in range(num_workers)]
+            workers = [GenerateWorker.remote() for w in range(num_workers)]
             chunks = [(i * chunk_size, min((i + 1) * chunk_size, count)) for i in range(num_workers)]
 
             futures = []

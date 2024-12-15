@@ -7,18 +7,22 @@
 
 from pathlib import Path
 
+import pytest
+
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestVariableFunctional:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_query_setup_context_variable(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_query_setup_context_variable(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_query_setup_context_variable.xml", capture_test_result=True
         )
-        engine.test_with_timer()
-        result = engine.capture_result()
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
         query_variable_test = result.get("query_variable_test")
         assert len(query_variable_test) == 10
         for element in query_variable_test:
@@ -33,12 +37,13 @@ class TestVariableFunctional:
             assert element.get("static_id") == 1
             assert element.get("static_name") == "Name 1"
 
-    def test_variable_with_type(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_variable_with_type(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_variable_with_type.xml", capture_test_result=True
         )
-        engine.test_with_timer()
-        result = engine.capture_result()
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
         variable_with_type = result["user"]
         assert len(variable_with_type) == 10
         for ele in variable_with_type:
@@ -55,12 +60,13 @@ class TestVariableFunctional:
             assert ele.get("name") == "Name 1"
             assert ele.get("number") == 1
 
-    def test_variable_source_with_name_only(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_variable_source_with_name_only(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_variable_source_with_name_only.xml", capture_test_result=True
         )
-        engine.test_with_timer()
-        result = engine.capture_result()
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
         variable_with_type = result["user"]
         assert len(variable_with_type) == 10
         for ele in variable_with_type:
@@ -68,12 +74,13 @@ class TestVariableFunctional:
             assert ele.get("name") == "Name 1"
             assert ele.get("number") == 1
 
-    def test_variable_with_selector_cyclic(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_variable_with_selector_cyclic(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_variable_with_selector_cyclic.xml", capture_test_result=True
         )
-        engine.test_with_timer()
-        result = engine.capture_result()
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
 
         user = result["user"]
         assert len(user) == 3

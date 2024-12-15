@@ -7,17 +7,23 @@
 
 from pathlib import Path
 
+import pytest
+
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestDataSourceCyclic:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_csv_cyclic(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_csv_cyclic_mp.xml", capture_test_result=True)
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_csv_cyclic(self):
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_csv_cyclic_mp.xml", capture_test_result=True
+        )
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         cyclic_product = result["cyclic-product"]
         big_cyclic_product = result["big-cyclic-product"]
         non_cyclic_product = result["non-cyclic-product"]
@@ -42,11 +48,12 @@ class TestDataSourceCyclic:
 
         assert result == result_non_np, "CSV cyclic results of mp and non-mp is not equal to each other"
 
-    def test_json_cyclic(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_json_cyclic.xml", capture_test_result=True)
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_json_cyclic(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_json_cyclic.xml", capture_test_result=True)
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         cyclic_product = result["cyclic-product"]
         big_cyclic_product = result["big-cyclic-product"]
         non_cyclic_product = result["non-cyclic-product"]
@@ -72,13 +79,14 @@ class TestDataSourceCyclic:
 
         assert result == result_non_np, "JSON cyclic results of mp and non-mp is not equal to each other"
 
-    def test_product_cyclic(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_product_cyclic(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_memstore_product_cyclic.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         cyclic_product = result["cyclic-product"]
         big_cyclic_product = result["big-cyclic-product"]
         non_cyclic_product = result["non-cyclic-product"]
@@ -106,13 +114,14 @@ class TestDataSourceCyclic:
             map(lambda product: product["id"], big_cyclic_product)
         ), "Memstore cyclic results of mp and non-mp is not equal to each other"
 
-    def test_variable_database_cyclic(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_variable_database_cyclic(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_variable_database_cyclic.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         non_cyclic_var_db = result["non-cyclic-var-db"]
         non_cyclic_var_db_2 = result["non-cyclic-var-db-2"]
         cyclic_var_db = result["cyclic-var-db"]
@@ -141,11 +150,14 @@ class TestDataSourceCyclic:
 
         assert result == result_non_np, "RDBMS cyclic results of mp and non-mp is not equal to each other"
 
-    def test_part_cyclic(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_part_cyclic_mp.xml", capture_test_result=True)
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_part_cyclic(self):
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_part_cyclic_mp.xml", capture_test_result=True
+        )
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         people = result["people"]
         assert len(people) == 10
 
@@ -162,22 +174,26 @@ class TestDataSourceCyclic:
             assert all(p["people-cyclic"][x]["name"] == "Franz" for x in range(5, 100, 12))
             assert all(p["people-cyclic"][x]["id"] == 6 for x in range(5, 100, 12))
 
-    def test_part_no_cyclic(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_part_no_cyclic.xml", capture_test_result=True)
-        engine.test_with_timer()
-        result = engine.capture_result()
+    @pytest.mark.asyncio
+    async def test_part_no_cyclic(self):
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_part_no_cyclic.xml", capture_test_result=True
+        )
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
 
         people_no_cyclic = result["people_no_cyclic"]
         assert len(people_no_cyclic) == 10
         assert all(len(people_no_cyclic[idx]["product_csv"]) == 11 for idx in range(0, 10))
         assert all(len(people_no_cyclic[idx]["people_json"]) == 12 for idx in range(0, 10))
 
-    def test_part_memstore_cyclic(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_part_memstore_cyclic(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_part_memstore_cyclic.xml", capture_test_result=True
         )
-        engine.test_with_timer()
-        result = engine.capture_result()
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
 
         # simple source data
         product = result["product"]

@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestDateTime:
@@ -18,12 +19,12 @@ class TestDateTime:
 
     @pytest.mark.asyncio
     async def test_datetime_functional(self) -> None:
-        engine = DataMimicTest(
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="functional_test_datetime.xml", capture_test_result=True
         )
-        await engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         date_time_test = result["date_time_test"]
 
         assert len(date_time_test) == 50
@@ -37,41 +38,47 @@ class TestDateTime:
             assert isinstance(data["date_time_with_out"], str)
             assert data["date_time_with_out"] == datetime.now().strftime("%d.%m.%Y")
 
-    def test_datetime_invalid_in_date_format(self) -> None:
+    @pytest.mark.asyncio
+    async def test_datetime_invalid_in_date_format(self) -> None:
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="functional_test_date_invalid_in_format.xml")
         # Use pytest.raises to capture the expected error
         with pytest.raises(ValueError):
-            test_engine.test_with_timer()
+            await test_engine.test_with_timer()
 
-    def test_datetime_empty_in_date_format(self) -> None:
+    @pytest.mark.asyncio
+    async def test_datetime_empty_in_date_format(self) -> None:
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="functional_test_date_empty_in_format.xml")
         # Use pytest.raises to capture the expected error
         with pytest.raises(ValueError):
-            test_engine.test_with_timer()
+            await test_engine.test_with_timer()
 
-    def test_datetime_empty_out_date_format(self) -> None:
+    @pytest.mark.asyncio
+    async def test_datetime_empty_out_date_format(self) -> None:
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="functional_test_date_empty_out_format.xml")
         # Use pytest.raises to capture the expected error
         with pytest.raises(ValueError):
-            test_engine.test_with_timer()
+            await test_engine.test_with_timer()
 
-    def test_datetime_invalid_input1(self) -> None:
+    @pytest.mark.asyncio
+    async def test_datetime_invalid_input1(self) -> None:
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="functional_test_date_invalid_input_1.xml")
         # Use pytest.raises to capture the expected error
         with pytest.raises(ValueError):
-            test_engine.test_with_timer()
+            await test_engine.test_with_timer()
 
-    def test_datetime_invalid_input2(self) -> None:
+    @pytest.mark.asyncio
+    async def test_datetime_invalid_input2(self) -> None:
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="functional_test_date_invalid_input_2.xml")
         # Use pytest.raises to capture the expected error
         with pytest.raises(ValueError):
-            test_engine.test_with_timer()
+            await test_engine.test_with_timer()
 
-    def test_datetime_epoch(self) -> None:
+    @pytest.mark.asyncio
+    async def test_datetime_epoch(self) -> None:
         test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="functional_test_date_epoch.xml", capture_test_result=True
         )
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
         result = test_engine.capture_result()
         date_time_test = result["EpochConversionExample"]
         assert len(date_time_test) == 10
@@ -80,12 +87,13 @@ class TestDateTime:
         assert date_time_test[0]["epoch_output2"] == "1612174084"
         assert date_time_test[0]["epoch_milli_output2"] == "1612174084000"
 
-    def test_datetime_precision(self) -> None:
+    @pytest.mark.asyncio
+    async def test_datetime_precision(self) -> None:
         # Initialize the test engine
         test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="functional_test_date_milliseconds.xml", capture_test_result=True
         )
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
         # Capture the test result
         result = test_engine.capture_result()

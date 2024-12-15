@@ -8,48 +8,55 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestStringInKeyVariableNode:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_string_with_key(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_string_with_key.xml", capture_test_result=True)
-        engine.test_with_timer()
-        result = engine.capture_result()
+    @pytest.mark.asyncio
+    async def test_string_with_key(self):
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_string_with_key.xml", capture_test_result=True
+        )
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
         query = result["test_string_key"]
         assert len(query) == 3
         for e in query:
             assert e["query"] == "find: 'orders', filter: 'status': 'active', 'priority': 'high'"
 
-    def test_string_variable(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_string_variable(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_string_in_variable.xml", capture_test_result=True
         )
-        engine.test_with_timer()
-        result = engine.capture_result()
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
         query = result["test_string_variable"]
         assert len(query) == 3
         for e in query:
             assert e["query"] == "find: 'ordered'"
 
-    def test_string_multiple_variable(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_string_multiple_variable(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_string_multiple_variable.xml", capture_test_result=True
         )
-        engine.test_with_timer()
-        result = engine.capture_result()
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
         query = result["test_string_multiple_variable"]
         assert len(query) == 3
         for e in query:
             assert e["query"] == "find: 'classA'"
 
-    def test_string_multiple_key(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_string_multiple_key(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_string_multiple_key.xml", capture_test_result=True
         )
-        engine.test_with_timer()
-        result = engine.capture_result()
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
         query = result["test_string_multiple_key"]
         assert len(query) == 3
         for e in query:

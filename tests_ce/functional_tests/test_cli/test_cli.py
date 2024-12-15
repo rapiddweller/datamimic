@@ -2,6 +2,7 @@ import shutil
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from typer.testing import CliRunner
 
 from datamimic_ce.cli import app
@@ -10,28 +11,28 @@ runner = CliRunner()
 
 
 class TestCLI:
-    def test_version_info(self):
+    async def test_version_info(self):
         result = runner.invoke(app, ["version"])
         assert result.exit_code == 0
         assert "DATAMIMIC version:" in result.output
 
-    def test_demo_list(self):
+    async def test_demo_list(self):
         result = runner.invoke(app, ["demo", "list"])
         assert result.exit_code == 0
         assert "Name" in result.output
         assert "Description" in result.output
 
-    def test_demo_create_requires_demo_name_or_all(self):
+    async def test_demo_create_requires_demo_name_or_all(self):
         result = runner.invoke(app, ["demo", "create"])
         assert result.exit_code == 1
         assert "Please specify a demo name or use '--all' to create all demos." in result.output
 
-    def test_demo_create_all_requires_target_directory(self):
+    async def test_demo_create_all_requires_target_directory(self):
         result = runner.invoke(app, ["demo", "create", "--all"])
         assert result.exit_code == 1
         assert "Target directory is required when using '--all'." in result.output
 
-    def test_demo_create_specific_demo(self, tmp_path):
+    async def test_demo_create_specific_demo(self, tmp_path):
         # Setup
         demo_name = "demo-condition"
         target_dir = tmp_path / demo_name
@@ -56,12 +57,12 @@ class TestCLI:
 
                 shutil.rmtree(target_dir)
 
-    def test_run_requires_valid_descriptor_path(self):
+    async def test_run_requires_valid_descriptor_path(self):
         result = runner.invoke(app, ["run", "invalid_descriptor.xml"])
         assert result.exit_code == 1
         assert "Invalid descriptor file path:" in result.output
 
-    def test_run_executes_with_valid_descriptor(self):
+    async def test_run_executes_with_valid_descriptor(self):
         with runner.isolated_filesystem():
             with open("valid_descriptor.xml", "w") as f:
                 f.write("<setup></setup>")
@@ -69,7 +70,7 @@ class TestCLI:
             assert result.exit_code == 0
 
     @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
-    def test_init_creates_project_with_default_target(self, mock_create_structure, tmp_path):
+    async def test_init_creates_project_with_default_target(self, mock_create_structure, tmp_path):
         """Test project initialization in the current directory"""
         with runner.isolated_filesystem():
             project_name = "test-project"
@@ -86,7 +87,7 @@ class TestCLI:
                     shutil.rmtree(project_dir)
 
     @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
-    def test_init_creates_project_with_custom_target(self, mock_create_structure, tmp_path):
+    async def test_init_creates_project_with_custom_target(self, mock_create_structure, tmp_path):
         """Test project initialization with a custom target directory"""
         project_name = "test-project"
         target_dir = tmp_path / "custom-location"
@@ -104,7 +105,7 @@ class TestCLI:
                 shutil.rmtree(target_dir)
 
     @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
-    def test_init_creates_nested_directories(self, mock_create_structure, tmp_path):
+    async def test_init_creates_nested_directories(self, mock_create_structure, tmp_path):
         """Test project initialization with nested directory structure"""
         project_name = "test-project"  # Changed to valid project name
         target_dir = tmp_path / "deep/nested/location"
@@ -121,7 +122,7 @@ class TestCLI:
                 shutil.rmtree(target_dir)
 
     @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
-    def test_init_with_existing_directory(self, mock_create_structure, tmp_path):
+    async def test_init_with_existing_directory(self, mock_create_structure, tmp_path):
         """Test project initialization in an existing directory"""
         project_name = "existing-project"
         project_dir = tmp_path / project_name
@@ -138,7 +139,7 @@ class TestCLI:
                 shutil.rmtree(project_dir)
 
     @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
-    def test_init_with_force_option(self, mock_create_structure, tmp_path):
+    async def test_init_with_force_option(self, mock_create_structure, tmp_path):
         """Test initialization with force option on existing directory"""
         project_name = "existing-project"
         project_dir = tmp_path / project_name
@@ -155,7 +156,7 @@ class TestCLI:
             if project_dir.exists():
                 shutil.rmtree(project_dir)
 
-    def test_init_with_invalid_project_name(self):
+    async def test_init_with_invalid_project_name(self):
         """Test initialization with invalid project name"""
         result = runner.invoke(app, ["init", "invalid/name"])
         assert result.exit_code == 1
