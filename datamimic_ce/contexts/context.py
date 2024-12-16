@@ -144,7 +144,7 @@ class Context(ABC):  # noqa: B024
         from datamimic_ce.contexts.geniter_context import GenIterContext
         from datamimic_ce.contexts.setup_context import SetupContext
 
-        data_dict = {}
+        data_dict: dict = {}
         # SetupContext evaluate script
         if isinstance(current_context, SetupContext):
             # Add current variable & product of outermost context
