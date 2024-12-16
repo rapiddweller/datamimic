@@ -17,7 +17,7 @@ class HashConverter(Converter):
     Optionally, can enhance the hash with salt
     """
 
-    def __init__(self, hash_type: str, output_format: str, salt: Optional[str] = None):
+    def __init__(self, hash_type: str, output_format: str, salt: str | None = None):
         support_hashes = set(support_hash.value for support_hash in SupportHash)
         support_output_format = set(support_output.value for support_output in SupportOutputFormat)
         if hash_type.lower() not in support_hashes:

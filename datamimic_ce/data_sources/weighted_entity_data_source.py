@@ -6,7 +6,6 @@
 
 import random
 from pathlib import Path
-from typing import Optional
 
 from datamimic_ce.generators.generator import Generator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
@@ -43,7 +42,7 @@ class WeightedEntityDataSource(Generator):
         file_path (str): file path of "entity.wgt.ent.csv", check Example for format detail of this file type
     """
 
-    def __init__(self, file_path: Path, separator: str, weight_column_name: Optional[str] = None):
+    def __init__(self, file_path: Path, separator: str, weight_column_name: str | None = None):
         file_store = FileContentStorage()
         weight_column = weight_column_name or "weight"
         self._weights, self._data_dict_list = file_store.load_file_with_custom_func(

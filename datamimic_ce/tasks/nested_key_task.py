@@ -96,6 +96,7 @@ class NestedKeyTask(Task):
         Create new data for nestedkey
         """
         nestedkey_type = self._statement.type
+        value: dict | list
         if nestedkey_type == DATA_TYPE_LIST:
             nestedkey_len = self._determine_nestedkey_length(context=parent_context)
             value = []

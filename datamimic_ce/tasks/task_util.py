@@ -449,7 +449,7 @@ class TaskUtil:
         cache_key = f"{root_context.task_id}_{stmt.name}_{stmt.storage_id}_{stmt}"
 
         # Get or create exporters
-        if cache_key not in root_context._task_exporters: # TODO: mypy issue [attr-defined]
+        if cache_key not in root_context._task_exporters:  # TODO: mypy issue [attr-defined]
             # Create the consumer set once
             consumer_set = stmt.targets.copy()
             # consumer_set.add(EXPORTER_PREVIEW) deactivating preview exporter for multi-process

@@ -13,7 +13,7 @@ from datamimic_ce.enums.converter_enums import SupportHash, SupportOutputFormat
 
 class ConverterUtil:
     @staticmethod
-    def get_hash_value(hash_type: str, output_format: str, value: str, salt: Optional[str] = None) -> str:
+    def get_hash_value(hash_type: str, output_format: str, value: str, salt: str | None = None) -> str:
         hash_module_name = hash_type
         try:
             hash_module = importlib.import_module("hashlib").__getattribute__(hash_module_name)

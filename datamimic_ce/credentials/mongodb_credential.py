@@ -18,8 +18,8 @@ class MongoDBCredential(BaseModel, Credential):
     host: str
     port: int
     database: str
-    user: Optional[str] = None
-    password: Optional[str] = None
+    user: str | None = None
+    password: str | None = None
 
     model_config = ConfigDict(extra="allow")
 
