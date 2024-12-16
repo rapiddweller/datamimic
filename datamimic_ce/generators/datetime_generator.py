@@ -6,7 +6,6 @@
 
 import random
 from datetime import datetime, timedelta
-from typing import Optional
 
 from datamimic_ce.generators.generator import Generator
 
@@ -19,11 +18,11 @@ class DateTimeGenerator(Generator):
 
     def __init__(
         self,
-        min: Optional[str] = None,
-        max: Optional[str] = None,
-        value: Optional[str] = None,
+        min: str | None = None,
+        max: str | None = None,
+        value: str | None = None,
         random: bool = False,
-        input_format: Optional[str] = None,
+        input_format: str | None = None,
     ):
         input_format = input_format if input_format else "%Y-%m-%d %H:%M:%S"
         # Handle custom (fixed) datetype value

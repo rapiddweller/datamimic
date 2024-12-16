@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 from datamimic_ce.converter.converter import Converter
 
+
 class UpperCaseConverter(Converter):
     def convert(self, value: str) -> str:
         return value.upper()

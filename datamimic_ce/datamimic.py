@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 import argparse
 import logging
-import os
 import traceback
 import uuid
 from pathlib import Path

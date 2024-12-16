@@ -3,7 +3,6 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-from typing import Optional
 
 from datamimic_ce.constants.attribute_constants import (
     ATTR_CONSTANT,
@@ -27,7 +26,7 @@ class ElementTask(KeyVariableTask):
         self,
         ctx: SetupContext,
         statement: ElementStatement,
-        pagination: Optional[DataSourcePagination] = None,
+        pagination: DataSourcePagination | None = None,
     ):
         super().__init__(ctx, statement, pagination)
         self._determine_generation_mode(ctx)

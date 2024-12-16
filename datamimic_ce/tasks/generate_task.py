@@ -7,16 +7,15 @@
 import copy
 import csv
 import json
-import os
-
 import math
 import multiprocessing
+import os
 import shutil
 import time
 from collections.abc import Callable
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Literal, Dict, Optional
+from typing import Literal
 
 import dill
 import xmltodict
@@ -335,7 +334,7 @@ def _consume_outermost_gen_stmt_by_page(
 
     # Initialize start times for statements if this is the first page
     if page_info.page_idx == 0:  # Check if this is the first page
-        for stmt_full_name in result_dict.keys():
+        for stmt_full_name in result_dict:
             context._statement_start_times[stmt_full_name] = time.time()
 
     with gen_timer("export", report_logging, stmt.full_name) as timer_result:
@@ -404,15 +403,15 @@ def _finalize_and_export_consumers(context: Context, stmt: GenerateStatement) ->
 
 
 def _load_csv_file(
-        ctx: SetupContext,
-        file_path: Path,
-        separator: str,
-        cyclic: bool | None,
-        start_idx: int,
-        end_idx: int,
-        source_scripted: bool,
-        prefix: str,
-        suffix: str,
+    ctx: SetupContext,
+    file_path: Path,
+    separator: str,
+    cyclic: bool | None,
+    start_idx: int,
+    end_idx: int,
+    source_scripted: bool,
+    prefix: str,
+    suffix: str,
 ) -> list[dict]:
     """
     Load CSV content from file with skip and limit.
@@ -531,7 +530,7 @@ def gen_timer(process: Literal["generate", "export", "process"], report_logging:
     :param product_name: Name of the product being processed.
     :return: Context manager.
     """
-    timer_result: Dict = {}
+    timer_result: dict = {}
     # Ignore timer if report_logging is False
     if not report_logging:
         yield timer_result

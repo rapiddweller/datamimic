@@ -7,7 +7,6 @@
 import re
 import sys
 from pathlib import Path
-from typing import Optional
 from urllib.parse import quote
 
 import oracledb

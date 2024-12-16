@@ -5,8 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import random
+from collections.abc import Callable
 from pathlib import Path
-from typing import cast, Callable
+from typing import cast
 
 import numpy as np
 

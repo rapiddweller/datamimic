@@ -213,16 +213,16 @@ class ExporterUtil:
         if name is None or name == "":
             return None
 
-        chunk_size = exporter_params_dict.get("chunk_size", None)
-        use_ndjson = exporter_params_dict.get("use_ndjson", None)
-        fieldnames = exporter_params_dict.get("fieldnames", None)
-        delimiter = exporter_params_dict.get("delimiter", None)
-        quotechar = exporter_params_dict.get("quotechar", None)
-        quoting = exporter_params_dict.get("quoting", None)
-        line_terminator = exporter_params_dict.get("line_terminator", None)
-        root_element = exporter_params_dict.get("root_element", None)
-        item_element = exporter_params_dict.get("item_element", None)
-        encoding = exporter_params_dict.get("encoding", None)
+        chunk_size = exporter_params_dict.get("chunk_size")
+        use_ndjson = exporter_params_dict.get("use_ndjson")
+        fieldnames = exporter_params_dict.get("fieldnames")
+        delimiter = exporter_params_dict.get("delimiter")
+        quotechar = exporter_params_dict.get("quotechar")
+        quoting = exporter_params_dict.get("quoting")
+        line_terminator = exporter_params_dict.get("line_terminator")
+        root_element = exporter_params_dict.get("root_element")
+        item_element = exporter_params_dict.get("item_element")
+        encoding = exporter_params_dict.get("encoding")
         if fieldnames is not None and isinstance(fieldnames, str):
             try:
                 fieldnames = ast.literal_eval(fieldnames)

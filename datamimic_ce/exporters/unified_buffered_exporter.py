@@ -5,7 +5,6 @@ import time
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List
 
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.exporter import Exporter
@@ -48,8 +47,8 @@ class UnifiedBufferedExporter(Exporter, ABC):
         setup_context: SetupContext,
         product_name: str,
         page_info: MultiprocessingPageInfo,
-        chunk_size: Optional[int],
-        encoding: Optional[str],
+        chunk_size: int | None,
+        encoding: str | None,
     ):
         if chunk_size is not None and chunk_size <= 0:
             raise ValueError("Chunk size must be a positive integer or None for unlimited size.")
@@ -243,7 +242,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
                 # Rotate chunk only if there is more data to process
                 self._rotate_chunk()
 
-    def _write_batch_with_retry(self, batch: List[dict]) -> None:
+    def _write_batch_with_retry(self, batch: list[dict]) -> None:
         """Write a batch of data with retry mechanism."""
         for attempt in range(self.MAX_RETRIES):
             try:

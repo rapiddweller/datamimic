@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 from datamimic_ce.generators.generator import Generator
 
+
 class RandomHexColorGenerator(Generator):
     def generate(self) -> str:
         import random

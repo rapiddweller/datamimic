@@ -8,7 +8,6 @@ import ast
 import random
 from abc import abstractmethod
 from collections.abc import Iterable
-from typing import Optional
 
 import numpy
 
@@ -46,7 +45,7 @@ class KeyVariableTask(Task):
         self,
         ctx: SetupContext,
         statement: KeyStatement | VariableStatement | ElementStatement,
-        pagination: Optional[DataSourcePagination] = None,
+        pagination: DataSourcePagination | None = None,
     ):
         from datamimic_ce.tasks.task_util import TaskUtil
 
@@ -56,7 +55,7 @@ class KeyVariableTask(Task):
         self._pagination = pagination
         self._converter_list = TaskUtil.create_converter_list(ctx, statement.converter)
 
-        self._mode: Optional[str] = None
+        self._mode: str | None = None
 
         self._simple_type_set = {
             DATA_TYPE_STRING,

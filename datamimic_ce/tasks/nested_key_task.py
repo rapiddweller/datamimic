@@ -40,7 +40,6 @@ class NestedKeyTask(Task):
         return self._statement
 
     def execute(self, parent_context: GenIterContext):  # TODO: mypy issue [override]
-
         """
         Generate data for element "nestedKey"
         :param parent_context:
@@ -239,7 +238,9 @@ class NestedKeyTask(Task):
             # Read data from source
             if source.endswith("csv"):
                 separator = self._statement.separator or parent_context.root.default_separator
-                list_value = FileUtil.read_csv_to_dict_list(file_path=self._descriptor_dir / source, separator=separator)
+                list_value = FileUtil.read_csv_to_dict_list(
+                    file_path=self._descriptor_dir / source, separator=separator
+                )
             elif source.endswith("json"):
                 list_value = FileUtil.read_json_to_dict_list(self._descriptor_dir / source)
             else:
@@ -283,8 +284,7 @@ class NestedKeyTask(Task):
             variable_suffix = self.statement.variable_suffix or setup_ctx.default_variable_suffix
 
             # Evaluate source_script
-            result = TaskUtil.evaluate_file_script_template(
-                parent_context, result, variable_prefix, variable_suffix)
+            result = TaskUtil.evaluate_file_script_template(parent_context, result, variable_prefix, variable_suffix)
 
         return result
 

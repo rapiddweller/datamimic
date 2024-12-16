@@ -18,7 +18,6 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VALUES,
 )
 from datamimic_ce.constants.element_constants import EL_VARIABLE
-from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
@@ -193,7 +192,9 @@ class VariableTask(KeyVariableTask):
                             self._random_items_iterator = iter(
                                 DataSourceUtil.get_shuffled_data_with_cyclic(
                                     file_data, pagination, statement.cyclic, seed
-                                ) if file_data is not None else None
+                                )
+                                if file_data is not None
+                                else None
                             )
                             self._mode = self._RANDOM_DISTRIBUTION_MODE
                         else:

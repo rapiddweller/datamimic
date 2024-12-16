@@ -2,7 +2,6 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from bson import ObjectId
 
@@ -34,9 +33,9 @@ class JsonExporter(UnifiedBufferedExporter):
         setup_context: SetupContext,
         product_name: str,
         page_info: MultiprocessingPageInfo,
-        chunk_size: Optional[int],
-        use_ndjson: Optional[bool],
-        encoding: Optional[str],
+        chunk_size: int | None,
+        use_ndjson: bool | None,
+        encoding: str | None,
     ):
         self.use_ndjson = use_ndjson
         self._task_id = setup_context.task_id

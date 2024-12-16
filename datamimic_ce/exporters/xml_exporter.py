@@ -8,7 +8,7 @@
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Dict
+from typing import Any
 
 import xmltodict
 
@@ -35,10 +35,10 @@ class XMLExporter(UnifiedBufferedExporter):
         setup_context: SetupContext,
         product_name: str,
         page_info: MultiprocessingPageInfo,
-        chunk_size: Optional[int],
-        root_element: Optional[str],
-        item_element: Optional[str],
-        encoding: Optional[str],
+        chunk_size: int | None,
+        root_element: str | None,
+        item_element: str | None,
+        encoding: str | None,
     ):
         """
         Initializes the XMLExporter.

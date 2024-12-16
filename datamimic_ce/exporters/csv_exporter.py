@@ -6,7 +6,6 @@
 import csv
 import os
 from pathlib import Path
-from typing import Optional, List
 
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
@@ -24,13 +23,13 @@ class CSVExporter(UnifiedBufferedExporter):
         setup_context: SetupContext,
         product_name: str,
         page_info: MultiprocessingPageInfo,
-        chunk_size: Optional[int],
-        fieldnames: Optional[List[str]],
-        delimiter: Optional[str],
-        quotechar: Optional[str],
-        quoting: Optional[int],
-        line_terminator: Optional[str],
-        encoding: Optional[str],
+        chunk_size: int | None,
+        fieldnames: list[str] | None,
+        delimiter: str | None,
+        quotechar: str | None,
+        quoting: int | None,
+        line_terminator: str | None,
+        encoding: str | None,
     ):
         # Remove singleton pattern and initialize instance variables
         self.fieldnames = fieldnames

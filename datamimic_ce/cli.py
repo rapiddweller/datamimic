@@ -7,7 +7,6 @@ import json
 import os
 from importlib.resources import files
 from pathlib import Path
-from typing import Optional
 
 import toml
 import typer
@@ -43,7 +42,7 @@ def version_info():
 @app.command("init")
 def init(
     project_name: str = typer.Argument(..., help="Name of the project directory to create"),
-    target_directory: Optional[str] = typer.Option(None, "--target", "-t", help="Target directory for the project"),
+    target_directory: str | None = typer.Option(None, "--target", "-t", help="Target directory for the project"),
     force: bool = typer.Option(False, "--force", "-f", help="Force creation even if directory exists"),
 ):
     """Initialize a new DATAMIMIC project with a predefined user data generation setup."""

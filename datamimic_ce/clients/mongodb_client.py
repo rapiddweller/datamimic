@@ -6,7 +6,8 @@
 
 import json
 import re
-from typing import cast, Mapping, Any
+from collections.abc import Mapping
+from typing import Any, cast
 
 from pymongo import MongoClient, UpdateOne
 
@@ -224,7 +225,7 @@ class MongoDBClient(DatabaseClient):
         if "selector" in query:
             value = query.get("selector")
             if value is None or value.isspace():
-                raise ValueError(f"Syntax error: selector is not found")
+                raise ValueError("Syntax error: selector is not found")
             find_query = self._decompose_find_query(value)
             collection_name = find_query.get("find")
         elif "type" in query:
@@ -254,7 +255,7 @@ class MongoDBClient(DatabaseClient):
         if "selector" in selector_dict:
             selector_value = selector_dict.get("selector")
             if selector_value is None or selector_value.isspace():
-                raise ValueError(f"Syntax error: selector is not found")
+                raise ValueError("Syntax error: selector is not found")
             find_query = self._decompose_find_query(selector_value)
             collection_name = find_query.get("find")
             filter_query = find_query["filter"]
@@ -401,7 +402,7 @@ class MongoDBClient(DatabaseClient):
         if "selector" in query:
             selector_value = query.get("selector")
             if selector_value is None or selector_value.isspace():
-                raise ValueError(f"Syntax error: selector is not found")
+                raise ValueError("Syntax error: selector is not found")
             find_query = self._decompose_find_query(selector_value)
             collection_name = find_query.get("find")
         elif "type" in query:
