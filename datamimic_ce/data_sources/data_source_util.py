@@ -235,7 +235,7 @@ class DataSourceUtil:
         current_seed = seed + int(start_idx / source_len)
         current_idx = start_idx
 
-        res = []
+        res: list = []
         # Check if amount of returned data is enough
         # Extend data until len of result is larger than page len and higher than end_idx
         while len(res) <= end_idx - start_idx or len(res) < (start_idx % source_len) + end_idx - start_idx:

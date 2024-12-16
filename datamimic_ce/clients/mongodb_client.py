@@ -6,6 +6,7 @@
 
 import json
 import re
+from typing import cast, Mapping, Any
 
 from pymongo import MongoClient, UpdateOne
 
@@ -67,6 +68,7 @@ class MongoDBClient(DatabaseClient):
                 find_query = self._decompose_find_query(query)
                 collection_name = find_query.get("find")
                 find_filter = find_query.get("filter")
+                # TODO: Validate find_filter syntax
                 find_projection = find_query.get("projection")
                 if collection_name is not None and not collection_name.isspace():
                     collection = db[collection_name]
@@ -159,7 +161,7 @@ class MongoDBClient(DatabaseClient):
                     collection = db[collection_name]
                 else:
                     raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
-                return collection.count_documents(find_filter)
+                return collection.count_documents(cast(Mapping[str, Any], find_filter))
             elif query_type == "aggregate":
                 query_result = self._query_aggregate_handler(query=query, connection=conn)
                 return len(query_result)
@@ -210,7 +212,7 @@ class MongoDBClient(DatabaseClient):
             collection = db[collection_name]
             inserted_ids = collection.insert_many(data).inserted_ids
             # Retrieve all the inserted data
-            return list(collection.find({"_id": {"$in": inserted_ids}})) if is_update else None
+            return list(collection.find({"_id": {"$in": inserted_ids}})) if is_update else None # TODO: mypy issue [return-value]
 
     def update(self, query: dict, data: list) -> int:
         """
@@ -221,6 +223,8 @@ class MongoDBClient(DatabaseClient):
         """
         if "selector" in query:
             value = query.get("selector")
+            if value is None or value.isspace():
+                raise ValueError(f"Syntax error: selector is not found")
             find_query = self._decompose_find_query(value)
             collection_name = find_query.get("find")
         elif "type" in query:
@@ -249,6 +253,8 @@ class MongoDBClient(DatabaseClient):
         """
         if "selector" in selector_dict:
             selector_value = selector_dict.get("selector")
+            if selector_value is None or selector_value.isspace():
+                raise ValueError(f"Syntax error: selector is not found")
             find_query = self._decompose_find_query(selector_value)
             collection_name = find_query.get("find")
             filter_query = find_query["filter"]
@@ -262,6 +268,8 @@ class MongoDBClient(DatabaseClient):
         # Merge updated_data and filter query
         updated_data = [{**filter_query, **data} for data in updated_data]
 
+        if collection_name is None or collection_name.isspace():
+            raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
         # Write new data to database in case no data found by query
         if updated_data[0].get("_id") is None:
             return self.insert(collection_name, updated_data, True)
@@ -392,12 +400,17 @@ class MongoDBClient(DatabaseClient):
         """
         if "selector" in query:
             selector_value = query.get("selector")
+            if selector_value is None or selector_value.isspace():
+                raise ValueError(f"Syntax error: selector is not found")
             find_query = self._decompose_find_query(selector_value)
             collection_name = find_query.get("find")
         elif "type" in query:
             collection_name = query.get("type")
         else:
             raise ValueError("'type' or 'selector' statement's attribute is missing")
+
+        if collection_name is None or collection_name.isspace():
+            raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
         with self._create_connection() as conn:
             db = conn[self._credential.database]
             collection = db[collection_name]

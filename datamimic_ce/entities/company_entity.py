@@ -6,6 +6,7 @@
 
 import random
 from pathlib import Path
+from typing import cast, Callable
 
 import numpy as np
 
@@ -148,7 +149,7 @@ class CompanyEntity(Entity):
         }
         self._field_generator = {}
         for key, val in generator_fn_dict.items():
-            self._field_generator[key] = FieldGenerator(val)  # TODO: mypy issue [arg-type]
+            self._field_generator[key] = FieldGenerator(cast(Callable, val))
 
     @property
     def id(self):
