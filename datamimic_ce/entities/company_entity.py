@@ -103,7 +103,7 @@ class CompanyEntity(Entity):
 
         """
         super().__init__(locale, dataset)
-
+        self._dataset = dataset
         # Load file data
         self._sector = FileUtil.read_csv_having_single_column(
             Path(__file__).parent / f"data/organization/sector_{self._locale}.csv",
@@ -148,7 +148,7 @@ class CompanyEntity(Entity):
         }
         self._field_generator = {}
         for key, val in generator_fn_dict.items():
-            self._field_generator[key] = FieldGenerator(val)
+            self._field_generator[key] = FieldGenerator(val)  # TODO: mypy issue [arg-type]
 
     @property
     def id(self):
