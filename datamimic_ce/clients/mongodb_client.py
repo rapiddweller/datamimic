@@ -199,7 +199,7 @@ class MongoDBClient(DatabaseClient):
     def count_table_length(self, table_name: str):
         pass
 
-    def insert(self, collection_name: str, data: list, is_update: bool) -> list:
+    def insert(self, collection_name: str, data: list, is_update: bool):
         """
         Insert data into collection
         :param collection_name:
@@ -212,7 +212,7 @@ class MongoDBClient(DatabaseClient):
             collection = db[collection_name]
             inserted_ids = collection.insert_many(data).inserted_ids
             # Retrieve all the inserted data
-            return list(collection.find({"_id": {"$in": inserted_ids}})) if is_update else None # TODO: mypy issue [return-value]
+            return list(collection.find({"_id": {"$in": inserted_ids}})) if is_update else None
 
     def update(self, query: dict, data: list) -> int:
         """
