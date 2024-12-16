@@ -129,7 +129,12 @@ class VariableTask(KeyVariableTask):
                             len_data = ctx.data_source_len.get(statement.full_name)
                             if len_data is None:
                                 len_data = client.count_query_length(selector)
-                            file_data = client.get_cyclic_data(selector, len_data, pagination, statement.cyclic)
+                            file_data = client.get_cyclic_data(
+                                selector,
+                                statement.cyclic,
+                                len_data,
+                                pagination,
+                            )
                         self._iterator = iter(file_data) if file_data is not None else None
                         self._mode = self._ITERATOR_MODE
             else:
@@ -185,14 +190,10 @@ class VariableTask(KeyVariableTask):
                         self._mode = self._LAZY_ITERATOR_MODE
                     else:
                         if is_random_distribution:
-                            self._random_items_iterator = (
-                                iter(
-                                    DataSourceUtil.get_shuffled_data_with_cyclic(
-                                        file_data, pagination, statement.cyclic, seed
-                                    )
-                                )
-                                if file_data is not None
-                                else None
+                            self._random_items_iterator = iter(
+                                DataSourceUtil.get_shuffled_data_with_cyclic(
+                                    file_data, pagination, statement.cyclic, seed
+                                ) if file_data is not None else None
                             )
                             self._mode = self._RANDOM_DISTRIBUTION_MODE
                         else:
@@ -262,7 +263,7 @@ class VariableTask(KeyVariableTask):
         else:
             raise ValueError(f"Entity {entity_name} is not supported.")
 
-    def execute(self, ctx: Context | GenIterContext | SetupContext) -> None:
+    def execute(self, ctx: GenIterContext | SetupContext) -> None:
         """
         Generate data for element <variable>
         """
@@ -277,7 +278,7 @@ class VariableTask(KeyVariableTask):
             value = self._weighted_data_source.generate()
         elif self._mode == self._ITERATION_SELECTOR_MODE:
             if self._selector is None:
-                raise ValueError("No selector value in statement: {self._statement.name}")
+                raise ValueError(f"No selector value in statement: {self._statement.name}")
             selector = TaskUtil.evaluate_variable_concat_prefix_suffix(
                 context=ctx,
                 expr=self._selector,
@@ -287,7 +288,7 @@ class VariableTask(KeyVariableTask):
             value = self._client.get_by_page_with_query(selector)
         elif self._mode == self._RANDOM_DISTRIBUTION_MODE:
             if self._random_items_iterator is None:
-                raise StopIteration(f"No more random items to iterate for statement: {self._statement.name}")
+                raise StopIteration("No more random items to iterate for statement: " + self._statement.name)
             value = next(self._random_items_iterator)
         elif self._mode == self._LAZY_ITERATOR_MODE:
             if isinstance(self._statement, VariableStatement):

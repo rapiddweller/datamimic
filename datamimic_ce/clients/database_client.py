@@ -31,9 +31,7 @@ class DatabaseClient(Client):
         """
 
     @abstractmethod
-    def get_cyclic_data(
-        self, query: str, data_len: int, pagination: DataSourcePagination, cyclic: bool = False
-    ) -> list:
+    def get_cyclic_data(self, query: str, cyclic: bool, data_len: int, pagination: DataSourcePagination) -> list:
         """
         Get cyclic data from database
         """

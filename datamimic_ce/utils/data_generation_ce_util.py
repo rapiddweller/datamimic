@@ -8,7 +8,6 @@ import random
 import re
 import string
 from datetime import datetime, timedelta
-from typing import Optional
 
 import exrex
 
@@ -25,7 +24,7 @@ from datamimic_ce.utils.base_data_generation_util import BaseDataGenerationUtil
 class DataGenerationCEUtil(BaseDataGenerationUtil):
     @staticmethod
     def generate_random_value_based_on_type(
-        data_type: Optional[str] = None,
+        data_type: str | None = None,
     ) -> str | int | bool | float:
         if data_type == DATA_TYPE_STRING:
             min_len = 0

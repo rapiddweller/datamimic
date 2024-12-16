@@ -404,15 +404,15 @@ def _finalize_and_export_consumers(context: Context, stmt: GenerateStatement) ->
 
 
 def _load_csv_file(
-    ctx: SetupContext,
-    file_path: Path,
-    separator: str,
-    start_idx: int,
-    end_idx: int,
-    source_scripted: bool,
-    prefix: str,
-    suffix: str,
-    cyclic: Optional[bool] = False,
+        ctx: SetupContext,
+        file_path: Path,
+        separator: str,
+        cyclic: bool | None,
+        start_idx: int,
+        end_idx: int,
+        source_scripted: bool,
+        prefix: str,
+        suffix: str,
 ) -> list[dict]:
     """
     Load CSV content from file with skip and limit.
@@ -425,6 +425,8 @@ def _load_csv_file(
     :return: List of dictionaries representing CSV rows.
     """
     from datamimic_ce.tasks.task_util import TaskUtil
+
+    cyclic = cyclic if cyclic is not None else False
 
     with file_path.open(newline="") as csvfile:
         reader = csv.DictReader(csvfile, delimiter=separator)
@@ -442,9 +444,7 @@ def _load_csv_file(
         return result
 
 
-def _load_json_file(
-    task_id: str, file_path: Path, start_idx: int, end_idx: int, cyclic: Optional[bool] = False
-) -> list[dict]:
+def _load_json_file(task_id: str, file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
     """
     Load JSON content from file using skip and limit.
 
@@ -454,6 +454,8 @@ def _load_json_file(
     :param end_idx: Ending index.
     :return: List of dictionaries representing JSON objects.
     """
+    cyclic = cyclic if cyclic is not None else False
+
     # Try to load JSON data from InMemoryCache
     in_mem_cache = InMemoryCache()
     # Add task_id to cache_key for testing lib without platform
@@ -478,7 +480,7 @@ def _load_json_file(
     return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
 
 
-def _load_xml_file(file_path: Path, start_idx: int, end_idx: int, cyclic: Optional[bool] = False) -> list[dict]:
+def _load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
     """
     Load XML content from file using skip and limit.
 
@@ -488,6 +490,7 @@ def _load_xml_file(file_path: Path, start_idx: int, end_idx: int, cyclic: Option
     :param end_idx: Ending index.
     :return: List of dictionaries representing XML items.
     """
+    cyclic = cyclic if cyclic is not None else False
     # Read the XML data from a file
     with file_path.open("r") as file:
         data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")

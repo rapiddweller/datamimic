@@ -305,26 +305,14 @@ class TaskUtil:
             build_from_source = False
         # Load data from CSV
         elif source_str.endswith(".csv"):
-            source_data = _load_csv_file(
-                ctx=context,
-                file_path=root_context.descriptor_dir / source_str,
-                separator=separator,
-                start_idx=load_start_idx,
-                end_idx=load_end_idx,
-                source_scripted=source_scripted,
-                prefix=prefix,
-                suffix=suffix,
-                cyclic=stmt.cyclic,
-            )
+            source_data = _load_csv_file(ctx=context, file_path=root_context.descriptor_dir / source_str,
+                                         separator=separator, cyclic=stmt.cyclic, start_idx=load_start_idx,
+                                         end_idx=load_end_idx, source_scripted=source_scripted, prefix=prefix,
+                                         suffix=suffix)
         # Load data from JSON
         elif source_str.endswith(".json"):
-            source_data = _load_json_file(
-                root_context.task_id,
-                root_context.descriptor_dir / source_str,
-                load_start_idx,
-                load_end_idx,
-                stmt.cyclic,
-            )
+            source_data = _load_json_file(root_context.task_id, root_context.descriptor_dir / source_str, stmt.cyclic,
+                                          load_start_idx, load_end_idx)
             # if sourceScripted then evaluate python expression in json
             if source_scripted:
                 try:
@@ -335,9 +323,8 @@ class TaskUtil:
                     logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
         # Load data from XML
         elif source_str.endswith(".xml"):
-            source_data = _load_xml_file(
-                root_context.descriptor_dir / source_str, load_start_idx, load_end_idx, stmt.cyclic
-            )
+            source_data = _load_xml_file(root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx,
+                                         load_end_idx)
             # if sourceScripted then evaluate python expression in json
             if source_scripted:
                 source_data = TaskUtil.evaluate_file_script_template(
