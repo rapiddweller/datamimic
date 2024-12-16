@@ -56,7 +56,7 @@ class KeyTask(KeyVariableTask):
         else:
             raise TypeError("Expected an KeyStatement")
 
-    def execute(self, ctx: GenIterContext):  # type: ignore
+    def execute(self, ctx: GenIterContext):  # TODO: mypy issue [override]
         """
         Generate data for element "attribute"
         If 'type' element is not specified, then default type of generated data is string

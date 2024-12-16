@@ -33,7 +33,7 @@ class GenerateParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self, descriptor_dir: Path, parent_stmt: Statement, lazy_parse: bool = False) -> GenerateStatement:  # type: ignore[override]
+    def parse(self, descriptor_dir: Path, parent_stmt: Statement, lazy_parse: bool = False) -> GenerateStatement:  # TODO: mypy issue [override]
         """
         Parse element "generate" into GenerateStatement
         :return:

@@ -331,7 +331,7 @@ class VariableTask(KeyVariableTask):
                 # Default variable prefix and suffix
                 setup_ctx = ctx
                 while not isinstance(setup_ctx, SetupContext):
-                    setup_ctx = setup_ctx.parent  # type: ignore  # skip mypy check
+                    setup_ctx = setup_ctx.parent  # TODO: mypy issue [attr-defined]
                 variable_prefix = self.statement.variable_prefix or setup_ctx.default_variable_prefix
                 variable_suffix = self.statement.variable_suffix or setup_ctx.default_variable_suffix
                 # Evaluate source script

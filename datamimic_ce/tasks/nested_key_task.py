@@ -39,7 +39,8 @@ class NestedKeyTask(Task):
     def statement(self) -> NestedKeyStatement:
         return self._statement
 
-    def execute(self, parent_context: GenIterContext):  # type: ignore
+    def execute(self, parent_context: GenIterContext):  # TODO: mypy issue [override]
+
         """
         Generate data for element "nestedKey"
         :param parent_context:
@@ -196,7 +197,7 @@ class NestedKeyTask(Task):
         ctx.current_product = self._post_convert(ctx.current_product)
         return {**ctx.current_product, **attributes}
 
-    def _evaluate_value_from_script(self, parent_context: GenIterContext) -> dict:
+    def _evaluate_value_from_script(self, parent_context: GenIterContext) -> list | dict:
         """
         Evaluate data using script
 
@@ -204,6 +205,7 @@ class NestedKeyTask(Task):
         :return:
         """
         value = parent_context.evaluate_python_expression(self._statement.script)
+        result: dict | list
         if isinstance(value, list):
             result = self._modify_nestedkey_data_list(parent_context, value)
         elif isinstance(value, dict):
@@ -215,7 +217,7 @@ class NestedKeyTask(Task):
             )
         return result
 
-    def _load_data_from_source(self, parent_context: GenIterContext) -> list:
+    def _load_data_from_source(self, parent_context: GenIterContext) -> list | dict:
         """
         Load data from source
 
@@ -224,6 +226,7 @@ class NestedKeyTask(Task):
         """
         source_str = self._statement.source
         nestedkey_type = self._statement.type
+        result: dict | list
 
         # Evaluate scripted source string
         source = (
@@ -235,28 +238,28 @@ class NestedKeyTask(Task):
             # Read data from source
             if source.endswith("csv"):
                 separator = self._statement.separator or parent_context.root.default_separator
-                value = FileUtil.read_csv_to_dict_list(file_path=self._descriptor_dir / source, separator=separator)
+                list_value = FileUtil.read_csv_to_dict_list(file_path=self._descriptor_dir / source, separator=separator)
             elif source.endswith("json"):
-                value = FileUtil.read_json_to_dict_list(self._descriptor_dir / source)
+                list_value = FileUtil.read_json_to_dict_list(self._descriptor_dir / source)
             else:
                 raise ValueError(f"Invalid source '{source}' of nestedkey '{self._statement.name}'")
 
-            result = self._modify_nestedkey_data_list(parent_context, value)
+            result = self._modify_nestedkey_data_list(parent_context, list_value)
 
         elif nestedkey_type == DATA_TYPE_DICT:
             if source.endswith("json"):
-                value = FileUtil.read_json_to_dict(self._descriptor_dir / source)
-                result = self._modify_nestedkey_data_dict(parent_context, value)
+                dict_value = FileUtil.read_json_to_dict(self._descriptor_dir / source)
+                result = self._modify_nestedkey_data_dict(parent_context, dict_value)
             else:
                 raise ValueError(f"Source of nestedkey having type as 'dict' does not support format {source}")
 
         # handle memstore source
         elif parent_context.root.memstore_manager.contain(source_str):
-            value = parent_context.root.memstore_manager.get_memstore(source_str).get_data_by_type(
+            list_value = parent_context.root.memstore_manager.get_memstore(source_str).get_data_by_type(
                 self._statement.type, None, self._statement.cyclic
             )
 
-            result = self._modify_nestedkey_data_list(parent_context, value)
+            result = self._modify_nestedkey_data_list(parent_context, list_value)
         else:
             raise ValueError(
                 f"Cannot load data from source '{self._statement.source}' of <nestedKey> '{self._statement.name}'"
@@ -274,12 +277,13 @@ class NestedKeyTask(Task):
             # Determine variable prefix and suffix
             setup_ctx = parent_context.parent
             while not isinstance(setup_ctx, SetupContext):
-                setup_ctx = setup_ctx.parent
+                setup_ctx = setup_ctx.parent  # TODO: mypy issue [attr-defined]
             variable_prefix = self.statement.variable_prefix or setup_ctx.default_variable_prefix
             variable_suffix = self.statement.variable_suffix or setup_ctx.default_variable_suffix
 
             # Evaluate source_script
-            result = TaskUtil.evaluate_file_script_template(parent_context, result, variable_prefix, variable_suffix)
+            result = TaskUtil.evaluate_file_script_template(
+                parent_context, result, variable_prefix, variable_suffix)
 
         return result
 
