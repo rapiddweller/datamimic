@@ -34,8 +34,8 @@ class PhoneNumberGenerator(Generator):
             with open(f"{country_file_path}") as file:
                 country_reader = csv.reader(file, delimiter=",")
                 country_codes = {}
-                for row in country_reader:
-                    country_codes[row[0]] = row[2]
+                for country_reader_row in country_reader:
+                    country_codes[country_reader_row[0]] = country_reader_row[2]
             self._country_codes = country_codes
         except FileNotFoundError:
             raise FileNotFoundError(f"File not found: {country_file_path}")
@@ -55,8 +55,8 @@ class PhoneNumberGenerator(Generator):
                     with open(f"{city_file_path}") as file:
                         city_reader = csv.DictReader(file, delimiter=";")
                         area_codes = []
-                        for row in city_reader:
-                            area_codes.append(row["areaCode"])
+                        for city_reader_row in city_reader:
+                            area_codes.append(city_reader_row["areaCode"])
                     # only get max 100 data
                     self._area_data = random.sample(area_codes, 100) if len(area_codes) > 100 else area_codes
 
@@ -68,8 +68,8 @@ class PhoneNumberGenerator(Generator):
                     with open(f"{city_file_path}") as file:
                         city_reader = csv.DictReader(file, delimiter=";")
                         area_codes = []
-                        for row in city_reader:
-                            area_codes.append(row["areaCode"])
+                        for city_reader_row in city_reader:
+                            area_codes.append(city_reader_row["areaCode"])
                     # only get max 100 data
                     self._area_data = random.sample(area_codes, 100) if len(area_codes) > 100 else area_codes
                     self._dataset = "US"
