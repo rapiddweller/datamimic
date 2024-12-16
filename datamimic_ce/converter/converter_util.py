@@ -6,7 +6,6 @@
 
 import importlib
 from base64 import b64encode
-from typing import Optional
 
 from datamimic_ce.enums.converter_enums import SupportHash, SupportOutputFormat
 

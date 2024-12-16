@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+
 from pydantic import BaseModel, ConfigDict
 
 from datamimic_ce.credentials.credential import Credential
