@@ -9,9 +9,8 @@ import itertools
 import json
 import random
 import xml.etree.ElementTree as ET
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Optional, Iterator
 
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
@@ -188,7 +187,7 @@ class DataSourceUtil:
 
     @staticmethod
     def get_cyclic_data_iterator(
-        data: Iterable, pagination: DataSourcePagination | None, cyclic: Optional[bool] = False
+        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None = False
     ) -> Iterator | None:
         """
         Get cyclic iterator from iterable data source

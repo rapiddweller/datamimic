@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from typing import Any, NoReturn, Optional
+from typing import Any, NoReturn
 
 from datamimic_ce.converter.converter import Converter
 from datamimic_ce.converter.converter_util import ConverterUtil
