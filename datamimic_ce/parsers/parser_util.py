@@ -7,7 +7,7 @@
 import copy
 import re
 from pathlib import Path
-from typing import cast
+from typing import cast, Any
 from xml.etree.ElementTree import Element
 
 from datamimic_ce.statements.composite_statement import CompositeStatement
@@ -267,7 +267,7 @@ class ParserUtil:
         return result
 
     @staticmethod
-    def retrieve_element_attributes(attributes: dict[str, str], properties: dict[str, str]) -> dict[str, str]:
+    def retrieve_element_attributes(attributes: dict[str, Any], properties: dict[str, str]) -> dict[str, str]:
         """
         Retrieve element's attributes using environment properties
         :param attributes:
@@ -288,9 +288,10 @@ class ParserUtil:
                 else:
                     # prop_key with dot mean that properties have nested level
                     prop_keys = prop_key.split(".")
-                    temp_value = copy.deepcopy(properties)
+                    temp_value: dict | None = copy.deepcopy(properties)
                     for k in prop_keys:
-                        temp_value = temp_value.get(k)
+                        if temp_value:
+                            temp_value = temp_value.get(k)
                         if temp_value is None:
                             break
                     attributes[key] = temp_value or value
