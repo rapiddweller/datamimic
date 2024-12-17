@@ -74,7 +74,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         self._init_buffer_directory()
 
         # Initialize state variables
-        self._is_first_write = None
+        self._is_first_write: Optional[bool] = None
         self._load_state()
 
     @property
@@ -199,6 +199,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
             except Exception as e:
                 logger.error(f"Attempt {attempt + 1} failed to initialize buffer file: {e}")
                 if attempt == self.MAX_RETRIES - 1:
+                    # TODO: mypy issue [return], mypy don't understand this logic
                     raise BufferFileError(f"Failed to initialize buffer file after {self.MAX_RETRIES} attempts: {e}")
                 time.sleep(self.RETRY_DELAY * (attempt + 1))
 

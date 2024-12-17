@@ -23,7 +23,7 @@ class ReferenceTask(Task):
     def statement(self) -> ReferenceStatement:
         return self._statement
 
-    def execute(self, ctx: GenIterContext):
+    def execute(self, ctx: GenIterContext):  # TODO: mypy issue  [override]
         """
         Generate data for element "reference"
         :param ctx:
@@ -36,6 +36,7 @@ class ReferenceTask(Task):
             if not isinstance(client, RdbmsClient):
                 raise ValueError("<reference> currently support only data source RDBMS")
             # Load dataset from source
+            # TODO: mypy issue need to handle case that self._pagination is None
             dataset = client.get_random_rows_by_column(
                 self.statement.source_type,
                 self.statement.source_key,
