@@ -1,0 +1,34 @@
+<setup>
+    <generate name="personConstant" type="personConstant" count="10" target="mem">
+        <key name="streetAndNumber" constant="Main Street 1" />
+        <key name="zip" constant="12345" />
+        <key name="city" constant="Grandville" />
+
+        <key name="email" constant="alison.harris@yahoo.com" />
+        <key name="workPhone" constant="123456789" />
+
+        <key name="firstName" constant="Alison" />
+        <key name="midName" constant="Emma" />
+        <key name="lastName" constant="Harris" />
+
+        <key name="CardExp" constant="03/25" />
+        <key name="Cardno" constant="1234567890123456" />
+    </generate>
+
+    <generate name="personConstant" type="personConstant" source="mem" count="{anon_count}">
+        <key name="streetAndNumber" constant="xxxxx" />
+        <key name="zip" constant="xxxxx" />
+        <key name="city" constant="xxxxx" />
+
+        <key name="email" constant="xxxxx" />
+        <key name="workPhone" constant="xxxxx" />
+
+        <key name="firstName" constant="xxxxx" />
+        <key name="midName" constant="xxxxx" />
+        <key name="lastName" constant="xxxxx" />
+        <key name="workPhone" constant="xxxxx" />
+
+        <key name="CardExp" constant="xxxxx" />
+        <key name="Cardno" constant="xxxxx" />
+    </generate>
+</setup>

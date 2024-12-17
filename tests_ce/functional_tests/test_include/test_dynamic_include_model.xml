@@ -1,0 +1,5 @@
+<setup reportLogging="False">
+    <generate name="ctrl" source="data/control.ent.csv">
+        <include uri="{model}"/>
+    </generate>
+</setup>

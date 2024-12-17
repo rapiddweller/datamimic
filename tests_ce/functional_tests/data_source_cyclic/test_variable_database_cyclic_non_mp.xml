@@ -1,0 +1,34 @@
+<setup multiprocessing="False">
+    <database id="dbPostgres" system="postgres"/>
+    <execute uri="script/backup.sql" target="dbPostgres"/>
+
+    <generate name="non-cyclic-var-db" count="20" target="">
+        <variable name="user" source="dbPostgres" cyclic="False"
+                  selector="SELECT id, text FROM public.db_postgres_types5" distribution="ordered"/>
+        <key name="user_id" script="user.id"/>
+    </generate>
+
+    <generate name="non-cyclic-var-db-2" count="20" target="">
+        <variable name="user" source="dbPostgres" cyclic="False"
+                  selector="SELECT id, text FROM public.db_postgres_types5 OFFSET 5 LIMIT 10" distribution="ordered"/>
+        <key name="user_id" script="user.id"/>
+    </generate>
+
+    <generate name="cyclic-var-db" count="20" target="">
+        <variable name="user" source="dbPostgres" cyclic="True"
+                  selector="SELECT id, text FROM public.db_postgres_types5" distribution="ordered"/>
+        <key name="user_id" script="user.id"/>
+    </generate>
+
+    <generate name="cyclic-var-db-2" count="20" target="">
+        <variable name="user" source="dbPostgres" cyclic="True"
+                  selector="SELECT id, text FROM public.db_postgres_types5 OFFSET 5 LIMIT 10" distribution="ordered"/>
+        <key name="user_id" script="user.id"/>
+    </generate>
+
+    <generate name="big-cyclic-var-db-2" count="100" target="">
+        <variable name="user" source="dbPostgres" cyclic="True"
+                  selector="SELECT id, text FROM public.db_postgres_types5 OFFSET 5 LIMIT 12" distribution="ordered"/>
+        <key name="user_id" script="user.id"/>
+    </generate>
+</setup>

@@ -1,0 +1,33 @@
+<setup>
+
+    <!--
+    inDateFormat is used for input string -> result is datetime value
+    outDateFormat is used for input datetime -> result is string value
+    Date2Timestamp is used to convert a datetime to an Epoch timestamp
+    Timestamp2Date is used to convert an Epoch timestamp back to a datetime string
+    -->
+    <generate name="EpochConversionExample" count="10" target="ConsoleExporter">
+        <!--        &lt;!&ndash; Convert a datetime string to an Epoch timestamp &ndash;&gt;-->
+        <key name="datetime_input" constant="2021-02-01 12:08:04" inDateFormat="%Y-%m-%d %H:%M:%S"/>
+        <key name="epoch_output" script="datetime_input" converter="Date2Timestamp"/>
+
+        <!-- Convert an Epoch timestamp back to a datetime string -->
+        <key name="epoch_in" constant="1612174084" inDateFormat="epoch"/>
+        <key name="epoch_millis_in" constant="1612174084000" inDateFormat="epoch"/>
+
+        <!-- Additional examples for day, month, year extraction -->
+        <key name="day_out" script="epoch_in" outDateFormat="%d"/>
+        <key name="month_out" script="epoch_in" outDateFormat="%m"/>
+        <key name="year_out" script="epoch_in" outDateFormat="%Y"/>
+        <key name="time_out" script="epoch_in" outDateFormat="%H:%M:%S"/>
+
+        <!-- The other way around Datetimeobject to Epoch and Epoch milli-->
+        <key name="epoch_output1" script="epoch_in" outDateFormat="epoch"/>
+        <key name="epoch_milli_output1" script="epoch_in" outDateFormat="epoch_millis"/>
+
+        <key name="epoch_output2" script="epoch_millis_in" outDateFormat="epoch"/>
+        <key name="epoch_milli_output2" script="epoch_millis_in" outDateFormat="epoch_millis"/>
+
+    </generate>
+
+</setup>

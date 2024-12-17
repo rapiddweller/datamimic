@@ -1,0 +1,12 @@
+<setup multiprocessing="False" defaultSeparator=",">
+    <execute uri="python_function/py_functions.py"/>
+
+    <generate name="json-product" count="100" target="">
+        <variable name="addition_variable" script="'addition_1'"/>
+        <variable name="people" source="data/people_script.json" sourceScripted="True" cyclic="True"
+                  distribution="ordered"/>
+        <key name="name" script="people.name"/>
+        <key name="age" script="people.age"/>
+        <key name="variable" script="people.variable"/>
+    </generate>
+</setup>

@@ -1,0 +1,10 @@
+<setup defaultDataset="DE">
+	<generate name="bank_account" count="100" target="ConsoleExporter">
+		<variable name="prototype" entity="BankAccount"/>
+		<key name="account_number" script="prototype.account_number"/>
+		<key name="bank_code" script="prototype.bank_code"/>
+		<key name="bank_name" script="prototype.bank_name"/>
+		<key name="bic" script="prototype.bic"/>
+		<key name="iban" script="prototype.iban"/>
+	</generate>
+</setup>

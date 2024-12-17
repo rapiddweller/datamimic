@@ -1,0 +1,42 @@
+<setup>
+    <generate name="group_name_not_override" count="10">
+        <key name="id" generator="IncrementGenerator"/>
+        <variable name="ifVar" generator="BooleanGenerator"/>
+        <variable name="elseIfVar" generator="BooleanGenerator"/>
+
+        <nestedKey name="emptyList" script="" defaultValue="[]"/> <!-- 'emptyList': '[]' -->
+        <nestedKey name="emptyList2" script="null" defaultValue="[]"/> <!-- 'emptyList2': '[]' -->
+        <nestedKey name="emptyList3" script="None" defaultValue="[]"/> <!-- 'emptyList3': None -->
+        <nestedKey name="emptyDict" script="" defaultValue="{}"/> <!-- 'emptyDict': '{}' -->
+        <nestedKey name="emptyDict2" script="null" defaultValue="{}"/> <!-- 'emptyDict2': '{}' -->
+        <nestedKey name="emptyDict3" script="None" defaultValue="{}"/> <!-- 'emptyDict3': None -->
+        <nestedKey name="removeElement" script="" defaultValue="{}" condition="False"/> <!-- Not generate cause condition False -->
+        <nestedKey name="removeElementorEmpty" script="" condition="False" defaultValue="{}"/> <!-- Not generate cause condition False -->
+
+        <condition>
+            <if condition="ifVar">
+                <key name="if_true" constant="true"/> <!-- generate when ifVar = True -->
+            </if>
+            <else-if condition="elseIfVar">
+                <key name="else-if_true" constant="true"/> <!-- generate when ifVar = False and elseIfVar = True-->
+            </else-if>
+            <else>
+                <key name="else_true" constant="true"/> <!-- generate when ifVar = False and elseIfVar = False-->
+            </else>
+        </condition>
+
+        <nestedKey name="list" type="list" count="2" condition="True" defaultValue="[]"> <!-- defaultValue not used when condition True -->
+            <key name="id" type="int"/>
+        </nestedKey>
+        <nestedKey name="list2" type="list" count="2"  condition="False" defaultValue="[]"> <!-- 'list2': [] -->
+            <key name="id" type="int"/>
+        </nestedKey>
+        <nestedKey name="dict" type="dict" condition="True" defaultValue="{}"> <!-- defaultValue not used when condition True -->
+            <key name="id" type="int"/>
+        </nestedKey>
+        <nestedKey name="dict2" type="dict" condition="False" defaultValue="{}"> <!-- 'dict2': {} -->
+            <key name="id" type="int"/>
+        </nestedKey>
+
+    </generate>
+</setup>

@@ -1,0 +1,29 @@
+<setup>
+
+    <!--
+
+    Domains
+    ======================================
+    DATAMIMIC Entity demo showcases the various generators for multiple domains to
+     create data e.g. for personal data, addresses, internet, banking, telecom. They may be localized to specific
+    languages and be grouped into hierarchical datasets, e.g. for continents, countries, and regions.
+
+    DATAMIMIC comes packaged with several entity types and generators for your business area.
+
+    We are there to extend existing generators for your use-cases.
+    Please get in touch via team@rapiddweller.com or our support channels.
+
+    -->
+
+	<include uri="address.xml" />
+	<include uri="br.xml" />
+	<include uri="company.xml" />
+	<include uri="finance.xml" />
+	<include uri="faker.xml" />
+	<include uri="net.xml" />
+	<include uri="organization.xml" />
+	<include uri="person.xml" />
+	<include uri="product.xml" />
+	<include uri="us.xml" />
+
+</setup>

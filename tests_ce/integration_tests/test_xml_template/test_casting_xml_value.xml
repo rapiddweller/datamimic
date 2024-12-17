@@ -1,0 +1,11 @@
+<setup>
+    <execute uri="lib.py"/>
+    <generate name="data" count="1">
+        <generate name="courses" source="data/book.template.xml" sourceScripted="True" target="XML">
+            <key name="price" type="float" script="generate_random_float_2dp(500.00, 2000.00)">
+                <element name="currency" type="string" constant="EUR"/>
+                <element name="category" values="'A','B','C'"/>
+            </key>
+        </generate>
+    </generate>
+</setup>

@@ -1,0 +1,5 @@
+<setup defaultSeparator="," defaultSourceScripted="1">
+    <generate name="people_from_source" count="1" target="ConsoleExporter">
+        <nestedKey name="list" type="list" count="3" source="data/people.ent.csv"/>
+    </generate>
+</setup>

@@ -1,0 +1,5 @@
+<setup reportLogging="False">
+    <generate name="test_include_generate" count="{count}" target="ConsoleExporter">
+        <key name="target" script="target"/>
+    </generate>
+</setup>

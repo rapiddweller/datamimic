@@ -1,0 +1,26 @@
+<setup multiprocessing="0" defaultSeparator=",">
+    <generate name="p" source="data/products.ent.csv">
+        <generate name="special00001" source="script/template_xyz.json"
+                  sourceScripted="True"
+                  count="800"
+                  cyclic="True"
+                  target="JSON"
+                  pageSize="100"
+        >
+            <variable name="randomNumberVar" type="int"/>
+            <key name="title" constant="Prisoners"/>
+            <key name="year" constant="2013"/>
+        </generate>
+        <generate name="special00002" source="script/template_xyz.json"
+                  sourceScripted="True"
+                  count="400"
+                  cyclic="True"
+                  target="JSON"
+                  pageSize="100"
+        >
+            <variable name="randomNumberVar" type="int"/>
+            <key name="title" constant="Prisoners"/>
+            <key name="year" constant="2013"/>
+        </generate>
+    </generate>
+</setup>

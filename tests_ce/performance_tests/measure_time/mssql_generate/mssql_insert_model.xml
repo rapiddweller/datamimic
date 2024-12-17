@@ -1,0 +1,14 @@
+<setup multiprocessing="{multiprocessing}">
+    <database id="sourceDB" system="mssql" environment="environment"/>
+    <execute uri="script/mssql.scr.sql" target="sourceDB"/>
+
+    <generate name="time_measure" count="{count}" target="sourceDB">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="tc_creation_src" constant="BEN"/>
+        <key name="tc_creation" generator="DateTimeGenerator"/>
+        <key name="no" generator="IncrementGenerator"/>
+        <key name="active" type="bool" constant="False"/>
+        <variable name="company" entity="Company" dataset="DE" locale="de_DE"/>
+        <key name="name" script="company.short_name"/>
+    </generate>
+</setup>

@@ -1,0 +1,29 @@
+<setup  multiprocessing="True" numProcess="2">
+    <generate name="product" count="50" target="ConsoleExporter">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="hello_constant" constant="Hello, World!"/>
+        <key name="none_constant" constant="None"/>
+        <key name="empty_constant" constant=""/>
+
+
+        <key name="age" values="18,19,20"/>
+        <key name="GPA" values="1,1.5,2,2.5,3,3.5,4"/>
+        <key name="active" script="True"/>
+        <key name="inactive" script="False"/>
+        <key name="none_values" values="None"/>
+        <key name="none_script" script="None"/>
+        <key name="random_str_numbers" values="'1,2,3,4', '1,2,3', '1,2'"/>
+        <key name="random_list_numbers" values="[1,2,3,4], [1,2,3], [1,2]"/>
+        <key name="random_tuple_numbers" values="(1,2,3,4), (1,2,3), (1,2)"/>
+        <key name="random_set_numbers" values="{1,2,3,4}, {1,2,3}, {1,2}"/>
+        <key name="random_dict_numbers" values="{'one': 1}, {'two': 2}, {'three': 3}"/>
+
+        <key name="hello_constant_string_type" type="string" constant="Hello, World!"/>
+        <key name="age_int_type" type="int" values="18,19,20"/>
+        <key name="GPA_float_type" type="float" values="1,1.5,2,2.5,3,3.5,4"/>
+        <key name="active_bool_type" type="bool" constant="1"/>
+        <key name="inactive_bool_type" type="bool" constant="0"/>
+
+
+    </generate>
+</setup>

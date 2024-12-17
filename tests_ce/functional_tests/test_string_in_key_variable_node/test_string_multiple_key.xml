@@ -1,0 +1,19 @@
+<setup>
+    <generate name="test_string_multiple_key" count="3" target="ConsoleExporter">
+        <variable name="shipping_card" constant="'package'"/>
+        <key name="shipping_card_2" variablePrefix="__"
+             variableSuffix="__"
+             string="__shipping_card__ is being prepared."/>
+        <key name="shipping_card_3" variablePrefix="-{"
+             variableSuffix="}-"
+             string="-{shipping_card}- has already been shipped."/>
+        <key name="shipping_card_4" variablePrefix="|"
+             variableSuffix="|"
+             string="Now |shipping_card| has arrived to your address."/>
+        <key name="shipping_card_5" variablePrefix="|"
+             variableSuffix="|"
+             string="Details of shipping card: |shipping_card_2| |shipping_card_3| |shipping_card_3|"/>
+
+    </generate>
+
+</setup>

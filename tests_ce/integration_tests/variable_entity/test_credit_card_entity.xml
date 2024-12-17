@@ -1,0 +1,12 @@
+<setup  multiprocessing="True" numProcess="2">
+    <generate name="card" count="100" target="ConsoleExporter">
+        <variable name="credit_card" entity="CreditCard"/>
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="card_info" script="str(credit_card)"/>
+        <key name="credit_card_number" script="credit_card.credit_card_number"/>
+        <key name="expiration_date" script="credit_card.expiration_date"/>
+        <key name="card_holder" script="credit_card.card_holder"/>
+        <key name="card_type" script="credit_card.credit_card_provider"/>
+        <key name="security_code" script="credit_card.cvc_number"/>
+    </generate>
+</setup>

@@ -1,0 +1,4 @@
+<setup>
+    <include uri="conf/base.properties"/>
+    <include uri="mongodb_insert_model.xml"/>
+</setup>

@@ -1,0 +1,22 @@
+<setup>
+
+    <database id="sourceDB" system="mssql"/>
+
+    <include uri="conf/base.properties"/>
+
+    <!-- Run database setup scripts to create schema and tables -->
+    <execute uri="script/setup_mssql.scr.sql" target="sourceDB"/>
+
+    <generate name="pre-gen" type="sequence_table_generator" count="10" target="sourceDB">
+        <key name="name" type="string"/>
+    </generate>
+    <generate name="seq-gen" type="sequence_table_generator" count="10" target="sourceDB">
+        <key name="stop_id" generator="IncrementGenerator(1,5)"/>
+        <key name="id" database="sourceDB" generator="SequenceTableGenerator"/>
+        <key name="name" type="string"/>
+    </generate>
+    <generate name="post-gen" type="sequence_table_generator" count="10" target="sourceDB">
+        <key name="name" type="string"/>
+    </generate>
+    <generate name="check" type="sequence_table_generator" source="sourceDB" target="ConsoleExporter"/>
+</setup>

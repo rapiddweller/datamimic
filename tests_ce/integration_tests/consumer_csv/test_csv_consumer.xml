@@ -1,0 +1,6 @@
+<setup multiprocessing="0">
+    <generate name="csv_consumer" count="800" pageSize="50" target="CSV">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" values="'Harry', 'Hermione', 'Ron'"/>
+    </generate>
+</setup>

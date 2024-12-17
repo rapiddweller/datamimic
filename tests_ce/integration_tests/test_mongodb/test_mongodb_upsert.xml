@@ -1,0 +1,14 @@
+<setup>
+    <mongodb id="mongodb"/>
+    <!--    <generate name="mongo4" target="ConsoleExporter, mongodb" count="10">-->
+    <!--        <key name="user_id" generator="IncrementGenerator"/>-->
+    <!--        <key name="user_name" values="'Bob', 'Frank', 'Phil'"/>-->
+    <!--    </generate>-->
+    <generate name="mongo4" source="mongodb"
+              selector="find: 'mongo4', filter: {'user_name': 'Mary'}"
+              target="mongodb.upsert, ConsoleExporter">
+        <key name="addition" values="'value1', 'value2', 'value3'"/>
+        <key name="second_addition" values="'value1', 'value2', 'value3'"/>
+        <key name="other_addition" values="'value1', 'value2', 'value3'"/>
+    </generate>
+</setup>

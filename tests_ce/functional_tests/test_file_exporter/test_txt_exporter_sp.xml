@@ -1,0 +1,9 @@
+<setup multiprocessing="0">
+    <generate name="customer" count="10" target="TXT" pageSize="7">
+        <key name="cid" generator="IncrementGenerator"/>
+        <generate name="inner_user" count="3" target="TXT">
+            <variable name="iid" generator="IncrementGenerator"/>
+            <key name="uid" script="cid*10 + inner_user.iid"/>
+        </generate>
+    </generate>
+</setup>

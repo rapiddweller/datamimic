@@ -1,0 +1,50 @@
+[{
+  "user_id": 1,
+  "order_item": "notebook",
+  "quantity": 7
+},
+{
+  "user_id": 2,
+  "order_item": "book",
+  "quantity": 7
+},
+{
+  "user_id": 3,
+  "order_item": "pencil",
+  "quantity": 10
+},
+{
+  "user_id": 4,
+  "order_item": "book",
+  "quantity": 10
+},
+{
+  "user_id": 5,
+  "order_item": "book",
+  "quantity": 10
+},
+{
+  "user_id": 6,
+  "order_item": "notebook",
+  "quantity": 7
+},
+{
+  "user_id": 7,
+  "order_item": "pencil",
+  "quantity": 7
+},
+{
+  "user_id": 8,
+  "order_item": "book",
+  "quantity": 5
+},
+{
+  "user_id": 9,
+  "order_item": "notebook",
+  "quantity": 10
+},
+{
+  "user_id": 10,
+  "order_item": "pencil",
+  "quantity": 10
+}]

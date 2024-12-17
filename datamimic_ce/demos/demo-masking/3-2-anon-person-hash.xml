@@ -1,0 +1,33 @@
+<setup>
+    <generate name="personHash" type="personHash" count="10" target="mem">
+        <key name="streetAndNumber" constant="Main Street 1" />
+        <key name="zip" constant="12345" />
+        <key name="city" constant="Grandville" />
+
+        <key name="email" constant="alison.harris@yahoo.com" />
+        <key name="workPhone" constant="123456789" />
+
+        <key name="firstName" constant="Alison" />
+        <key name="midName" constant="Emma" />
+        <key name="lastName" constant="Harris" />
+
+        <key name="CardExp" constant="03/25" />
+        <key name="Cardno" constant="1234567890123456" />
+    </generate>
+
+    <generate name="personHash" type="personHash" source="mem" count="{anon_count}">
+        <key name="streetAndNumber" script="streetAndNumber" converter="Mask" />
+        <key name="zip" script="zip" converter="Mask" />
+        <key name="city" script="city" converter="Mask" />
+
+        <key name="email" script="email" converter="Mask" />
+        <key name="workPhone" script="workPhone" converter="Mask" />
+
+        <key name="firstName" script="firstName" converter="Mask" />
+        <key name="midName" script="midName" converter="Mask" />
+        <key name="lastName" script="lastName" converter="Mask" />
+
+        <key name="CardExp" script="CardExp" converter="Mask" />
+        <key name="Cardno" script="Cardno" converter="Mask" />
+    </generate>
+</setup>

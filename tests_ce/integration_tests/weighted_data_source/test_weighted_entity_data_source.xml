@@ -1,0 +1,8 @@
+<setup defaultSeparator=",">
+    <generate name="people_from_source" count="100" target="ConsoleExporter">
+        <variable name="people" source="data/people.wgt.ent.csv"/>
+        <key name="people_id" script="people.id"/>
+        <key name="people_name" script="people.name"/>
+        <key name="people_age" script="people.age"/>
+    </generate>
+</setup>

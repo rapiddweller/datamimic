@@ -1,0 +1,4 @@
+<setup defaultSeparator="," defaultSourceScripted="1">
+    <generate name="people_from_source" source="data/people.ent.csv" target="ConsoleExporter">
+    </generate>
+</setup>

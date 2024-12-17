@@ -1,0 +1,7 @@
+<setup  multiprocessing="True" numProcess="2">
+    <generate name="data" target="ConsoleExporter" count="10">
+        <key name="null" type="string" nullQuota="1"/>
+        <key name="notNull" type="string" nullQuota="0"/>
+        <key name="nullable" type="string" nullQuota="0.5"/>
+    </generate>
+</setup>

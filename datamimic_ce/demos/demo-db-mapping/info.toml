@@ -1,0 +1,6 @@
+title = "DB Mapping Demo"
+description = "Showcases how to apply complex mappings based on a database table with differen selector and filters."
+icon = "mapping"
+tags = ["#datamimic", "#mapping", "#database"]
+projectName = "demo-db-mapping"
+id = "demo-db-mapping"

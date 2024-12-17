@@ -1,0 +1,11 @@
+global-exclude *.py[cod]
+global-exclude __pycache__
+global-exclude *.so
+global-exclude .git*
+global-exclude .DS_Store
+
+# Exclude all test directories and files
+recursive-exclude * tests_ce
+
+# Exclude specific test-related directories
+prune tests_ce

@@ -1,0 +1,18 @@
+<setup  multiprocessing="True" numProcess="2">
+    <mongodb id="mongodb"/>
+
+    <!-- clear mongo_func_test database -->
+    <generate name="delete" source="mongodb" selector="find: 'mongo_func_test', filter: {}" target="mongodb.delete"/>
+
+    <!--  generate simple data  -->
+    <generate name="mongo_func_test" target="mongodb" count="10">
+        <key name="user_id" generator="IncrementGenerator"/>
+        <key name="user_name" values="'Bob', 'Frank', 'Phil'"/>
+    </generate>
+
+    <!--  query data from mongodb  -->
+    <generate name="data" source="mongodb"
+              selector="find: 'mongo_func_test', filter: {'user_id'=1}, filter: {'user_name': {'$ne': 'Bob'}}"/>
+
+    <generate name="delete_check" type="mongo_func_test" source="mongodb" target=""/>
+</setup>

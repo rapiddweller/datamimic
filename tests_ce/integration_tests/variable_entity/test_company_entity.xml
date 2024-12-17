@@ -1,0 +1,8 @@
+<setup  multiprocessing="True" numProcess="2">
+    <generate name="company" count="5" target="ConsoleExporter">
+        <variable name="com" entity="Company"/>
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="short_name" script="com.short_name"/>
+        <key name="full_name" script="com.full_name"/>
+    </generate>
+</setup>

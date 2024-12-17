@@ -1,0 +1,6 @@
+<setup  multiprocessing="True" numProcess="2">
+	<include uri="common.xml" />
+	<include uri="hash.xml" />
+	<include uri="remove_none_or_empty_element.xml" />
+
+</setup>

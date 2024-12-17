@@ -1,0 +1,22 @@
+<setup>
+
+	<echo>Running VesselGenerator</echo>
+	<generate type="Vessel" count="50" consumer="">
+		<variable name="genobject" generator="VesselGenerator"/>
+		<attribute name="callSign" script="genobject.callSign"/>
+		<attribute name="imo" script="genobject.imo"/>
+		<attribute name="mmsi" script="genobject.mmsi"/>
+		<attribute name="name" script="genobject.name"/>
+		<attribute name="ownerId" script="genobject.ownerId"/>
+	</generate>
+
+	<echo>Running PortGenerator</echo>
+	<generate type="Port" count="50" consumer="">
+		<variable name="genobject" generator="PortGenerator"/>
+		<attribute name="code" script="genobject.code"/>
+		<attribute name="country" script="genobject.country"/>
+		<attribute name="countryCode" script="genobject.countryCode"/>
+		<attribute name="name" script="genobject.name"/>
+	</generate>
+
+</setup>

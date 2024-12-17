@@ -1,0 +1,31 @@
+<setup numProcess="4">
+
+    <!--
+    Custom Component Demo
+    ======================================
+    This DATAMIMIC Custom Component demo showcases the creation of custom generators and converters
+    and their usage in the DATAMIMIC model.
+    -->
+
+    <include uri="conf/base.properties"/>
+    <memstore id="mem"/>
+
+    <!-- Load scripts into the global context using <execute> -->
+    <execute uri="script/generator.scr.py"/>
+    <execute uri="script/converter.scr.py"/>
+
+    <!-- Include the model using multiprocessing with custom generators, which use local imports -->
+    <include uri="1_generator_multi.xml"/>
+
+    <!-- Include the model using multiprocessing with custom converters -->
+    <include uri="2_converter_multi.xml"/>
+
+    <!-- Load scripts with global imports into the context. Note: executing this before
+    <include uri="1_generator_multi.xml"/> will cause an error because multithreading and
+    global imports are not supported together -->
+    <execute uri="script/generator_glob.scr.py"/>
+
+    <!-- Include the model using single processing with custom generators, which use global imports -->
+    <include uri="3_generator_global_single.xml"/>
+
+</setup>

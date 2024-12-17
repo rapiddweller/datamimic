@@ -1,0 +1,17 @@
+<setup multiprocessing="True">
+    <!-- update collection with upsert true -->
+    <!-- in this case if didn't find user_name = Mary, insert user_name:'Mary' and below values -->
+    <generate name="CUSTOMER"
+              source="mongodb"
+              selector="find: 'CUSTOMER', filter: {'user_name': 'Mary'}"
+              target="mongodb.upsert">
+        <key name="addition" values="'addition_value1', 'addition_value2', 'addition_value3'"/>
+        <key name="second_addition" values="'value1', 'value2', 'value3'"/>
+        <key name="other_addition" values="'other_value1', 'other_value2', 'other_value3'"/>
+    </generate>
+
+    <!-- clear CUSTOMER collection -->
+    <generate name="delete" source="mongodb" selector="find: 'CUSTOMER', filter: {}" target="mongodb.delete"/>
+
+    <generate name="check_all_clear" type="CUSTOMER" source="mongodb" target="ConsoleExporter"/>
+</setup>

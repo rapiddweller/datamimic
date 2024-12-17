@@ -1,0 +1,25 @@
+<setup  multiprocessing="True" numProcess="2">
+    <mongodb id="mongodb"/>
+
+    <!-- clear collection before run test -->
+    <generate name="delete" type="users" source="mongodb" target="mongodb.delete"/>
+
+    <generate name="users" target="ConsoleExporter, mongodb" count="10">
+        <key name="user_id" generator="IncrementGenerator"/>
+        <key name="user_name" values="'Bob', 'Frank', 'Phil'"/>
+        <key name="amount" values="100, 200, 250"/>
+    </generate>
+
+    <generate name="aggregate"
+              source="mongodb"
+              selector='aggregate: "users",
+                        pipeline: [
+                                    {"$group": { "_id": "$user_name", "total": { "$sum": "$amount" } }}
+                                 ]'
+              target="ConsoleExporter"
+    />
+
+
+    <!-- clear collection after run test -->
+    <generate name="delete" type="users" source="mongodb" target="mongodb.delete"/>
+</setup>

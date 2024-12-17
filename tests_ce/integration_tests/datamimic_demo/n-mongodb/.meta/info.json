@@ -1,0 +1,13 @@
+{
+	"title": "Mongo DB",
+	"description": "Demo showcases how to handle data in Mongo DB, make sure to have Mongo DB configured as environments",
+	"iconImg": "mongo",
+	"iconSize": "11pt",
+	"tags": [
+		"#mongodb",
+		"#nosql",
+		"#query"
+	],
+	"demoName": "n-mongodb",
+	"index": 0
+}

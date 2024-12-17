@@ -1,0 +1,56 @@
+<setup  multiprocessing="True" numProcess="2" defaultSeparator=",">
+
+    <database id="sourceDB" system="source" environment="environment"/>
+    <execute uri="script/setup.scr.sql" target="sourceDB"/>
+
+    <generate name="IFTEST" count="10" target="sourceDB,ConsoleExporter">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="tc_creation_src" constant="BEN"/>
+        <key name="tc_creation" generator="DateTimeGenerator"/>
+        <key name="no" generator="IncrementGenerator"/>
+        <key name="active" type="bool" constant="False"/>
+        <variable name="company" entity="Company" dataset="DE" locale="de_DE"/>
+        <key name="name" script="company.short_name"/>
+    </generate>
+
+    <generate name="cyclic_product" source="data/products.ent.csv" count="10" cyclic="True"
+              target="ConsoleExporter">
+        <condition>
+            <if condition="category_id == 'DRNK/ALCO'">
+                <echo>Category: DRNK/ALCO (if only)</echo>
+                <variable name="com" entity="Company"/>
+                <key name="brand" script="com.short_name"/>
+            </if>
+        </condition>
+
+        <condition>
+            <if condition="category_id == 'FOOD/CONF'">
+                <echo>Category: FOOD/CONF (if-else-if)</echo>
+                <list name="detail">
+                    <item>
+                        <key name="number" type="int" constant="2"/>
+                    </item>
+                    <item>
+                        <key name="text" type="string"/>
+                    </item>
+                </list>
+            </if>
+            <else-if condition="category_id == 'FOOD/MISC'">
+                <echo>Category: FOOD/MISC (if-else-if)</echo>
+            </else-if>
+        </condition>
+
+        <condition>
+            <if condition="category_id == 'DRNK/ALCO'">
+                <echo>Category: DRNK/ALCO (if-else-if-else)</echo>
+            </if>
+            <else-if condition="category_id == 'FOOD/CONF'">
+                <echo>Category: FOOD/CONF (if-else-if-else)</echo>
+            </else-if>
+            <else>
+                <echo>Category not found (if-else-if-else)</echo>
+            </else>
+        </condition>
+
+    </generate>
+</setup>

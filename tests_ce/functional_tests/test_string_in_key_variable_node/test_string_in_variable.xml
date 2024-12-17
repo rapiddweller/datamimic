@@ -1,0 +1,10 @@
+<setup>
+    <generate name="test_string_variable" count="3" target="ConsoleExporter">
+        <variable name="shopping_card" constant="'ordered'"/>
+        <variable name="status" variablePrefix="@{"
+                  variableSuffix="}" string="find: @{shopping_card}"/>
+        <key name="query"
+             script="status"/>
+    </generate>
+
+</setup>

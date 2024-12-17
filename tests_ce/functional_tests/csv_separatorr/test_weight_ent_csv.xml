@@ -1,0 +1,14 @@
+<setup defaultSeparator=",">
+    <generate name="people1" count="10" target="ConsoleExporter">
+        <variable name="people" source="data/people.wgt.ent.csv" weightColumn="weight"/>
+        <key name="people_id" script="people.id"/>
+        <key name="people_name" script="people.name"/>
+        <key name="people_age" script="people.age"/>
+    </generate>
+    <generate name="people2" count="10" target="ConsoleExporter">
+        <variable name="people" source="data/people_2.wgt.ent.csv" separator="|" weightColumn="weight"/>
+        <key name="people_id" script="people.id"/>
+        <key name="people_name" script="people.name"/>
+        <key name="people_age" script="people.age"/>
+    </generate>
+</setup>

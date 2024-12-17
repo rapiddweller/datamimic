@@ -1,0 +1,10 @@
+<setup multiprocessing="False">
+    <mongodb id="mongodb"/>
+
+    <!-- The following model creates sample records in the MongoDB -->
+    <include uri="1_generate.xml"/>
+
+    <!-- The following model showcases several queries performed against MongoDB to retrieve and
+    update records  -->
+    <include uri="2_query_update.xml"/>
+</setup>

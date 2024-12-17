@@ -1,0 +1,20 @@
+<setup  multiprocessing="True" numProcess="2">
+    <database id="dbPostgres" system="postgres"/>
+    <execute uri="script/backup.sql" target="dbPostgres"/>
+
+    <generate name="simple_data" count="20" target="ConsoleExporter">
+        <key name="my_id" generator="IncrementGenerator"/>
+        <variable name="user" source="dbPostgres"
+                  selector="SELECT id, text FROM public.db_postgres_types5" distribution="ordered"/>
+        <key name="user_id" script="user.id" defaultValue="None"/>
+        <key name="user_name" script="user.text" defaultValue="None"/>
+    </generate>
+
+    <generate name="iteration_data" count="20" target="ConsoleExporter">
+        <key name="my_id" generator="IncrementGenerator"/>
+        <variable name="user" source="dbPostgres"
+                  iterationSelector="SELECT id, text FROM public.db_postgres_types5 where id = __my_id__"/>
+        <key name="user_id" script="user[0].get('id')" defaultValue="None"/>
+        <key name="user_name" script="user[0].get('text')" defaultValue="None"/>
+    </generate>
+</setup>

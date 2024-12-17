@@ -1,0 +1,14 @@
+<setup  multiprocessing="True" numProcess="2">
+
+    <database id="sourceDB" system="source" environment="environment"/>
+
+    <include uri="conf/base.properties"/>
+
+    <!-- Run database setup scripts to create schema and tables -->
+    <execute uri="script/setup_more_table.scr.sql" target="sourceDB"/>
+
+    <include uri="3_with_variable.xml"/>
+
+    <include uri="4_iterate.xml"/>
+
+</setup>

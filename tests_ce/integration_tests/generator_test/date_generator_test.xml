@@ -1,0 +1,19 @@
+<setup>
+    <generate name="date_generator_test" target="ConsoleExporter" count="3">
+        <key name="current_date" generator="DateTimeGenerator"/>
+        <key name="random_date" generator="DateTimeGenerator(random=True)"/>
+        <key name="specified_date" generator="DateTimeGenerator(value='1995-1-15 0:0:0')"/>
+        <key name="specified_date_with_input_format"
+             generator="DateTimeGenerator(value='17-8-1999', input_format='%d-%m-%Y')"/>
+        <key name="min_max_date"
+             generator="DateTimeGenerator(min='2000-1-1 0:0:0', max='2000-12-31 0:0:0')"/>
+        <key name="min_max_date_with_input_format"
+             generator="DateTimeGenerator(min='1-1-2000', max='31-12-2000', input_format='%d-%m-%Y')"/>
+        <key name="random_birthdate" generator="BirthdateGenerator"/>
+        <key name="vn_phone_number" generator="PhoneNumberGenerator(dataset='VN')"/>
+        <key name="vn_mobile_number" generator="PhoneNumberGenerator(dataset='VN', is_mobile=True)"/>
+        <key name="email" generator="EmailAddressGenerator"/>
+        <key name="fname1" generator="FamilyNameGenerator(dataset='US')"/>
+
+    </generate>
+</setup>

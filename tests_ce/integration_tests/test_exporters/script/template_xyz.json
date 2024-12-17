@@ -1,0 +1,32 @@
+[
+  {
+    "type": "party",
+    "partyId": 9000733200,
+    "individual_first_name": "C1",
+    "individual_family_name": "AHMED",
+    "individual_email_address": "c1.ahmed@gmail.com",
+    "party_cust_arrangement_partyrelation": {
+      "name": "party"
+    }
+  },
+  {
+    "type": "party",
+    "partyId": 9000733201,
+    "individual_first_name": "C2",
+    "individual_family_name": "ALI",
+    "individual_email_address": "c2.ali@gmail.com",
+    "party_cust_arrangement_partyrelation": {
+      "name": "party"
+    }
+  },
+  {
+    "type": "party",
+    "partyId": 9000733202,
+    "individual_first_name": "C3",
+    "individual_family_name": "BRUCE",
+    "individual_email_address": "c3.bruce@gmail.com",
+    "party_cust_arrangement_partyrelation": {
+      "name": "party"
+    }
+  }
+]

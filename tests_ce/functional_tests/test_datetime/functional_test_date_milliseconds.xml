@@ -1,0 +1,59 @@
+<setup>
+
+    <!--
+    This setup demonstrates the conversion of datetime values with millisecond, microsecond, and nanosecond precision.
+    It tests the extension that allows configurable digits of fractional seconds (e.g., 3 digits for milliseconds, 6 digits for microseconds, 9 digits for nanoseconds).
+    inDateFormat is used for input string -> result is datetime value.
+    outDateFormat is used for input datetime -> result is string value.
+    -->
+
+    <generate name="PrecisionExample" count="10" target="ConsoleExporter">
+
+        <!-- Convert a datetime string to Epoch with milliseconds -->
+        <key name="datetime_input" constant="2021-02-01 12:08:04.123456" inDateFormat="%Y-%m-%d %H:%M:%S.%f"/>
+        <key name="epoch_output" script="datetime_input" converter="Date2Timestamp"/>
+
+        <!-- Test conversion of the datetime back to milliseconds precision -->
+        <key name="datetime_to_millis" script="datetime_input" outDateFormat="%Y-%m-%d %H:%M:%S.%3f"/>
+        <key name="datetime_to_microseconds" script="datetime_input" outDateFormat="%Y-%m-%d %H:%M:%S.%6f"/>
+        <key name="datetime_to_nanoseconds" script="datetime_input" outDateFormat="%Y-%m-%d %H:%M:%S.%9f"/>
+
+        <!-- Convert Epoch timestamp (with milliseconds) back to a datetime string -->
+        <key name="epoch_millis_in" constant="1612174084123" inDateFormat="epoch"/>
+        <key name="epoch_millis_to_datetime" script="epoch_millis_in" outDateFormat="%Y-%m-%d %H:%M:%S.%3f"/>
+
+        <!-- Convert an Epoch timestamp back to a datetime string with full microseconds -->
+        <key name="epoch_in" constant="1612174084123456" inDateFormat="epoch"/>
+        <key name="epoch_to_microseconds" script="epoch_in" outDateFormat="%Y-%m-%d %H:%M:%S.%6f"/>
+
+        <!-- Convert an Epoch timestamp with nanoseconds -->
+        <key name="epoch_nano_in" constant="1612174084123456789" inDateFormat="epoch"/>
+        <key name="epoch_to_nanoseconds" script="epoch_nano_in" outDateFormat="%Y-%m-%d %H:%M:%S.%9f"/>
+
+        <!-- Extract and format the milliseconds from the datetime object -->
+        <key name="milliseconds_output" script="epoch_in" outDateFormat="%3f"/>
+
+        <!-- Additional examples for day, month, year extraction -->
+        <key name="day_out" script="epoch_in" outDateFormat="%d"/>
+        <key name="month_out" script="epoch_in" outDateFormat="%m"/>
+        <key name="year_out" script="epoch_in" outDateFormat="%Y"/>
+        <key name="time_out" script="epoch_in" outDateFormat="%H:%M:%S"/>
+
+        <!-- Convert a datetime object to epoch (in seconds), milliseconds, microseconds, and nanoseconds -->
+        <key name="epoch_output1" script="epoch_in" outDateFormat="epoch"/>
+        <key name="epoch_milli_output1" script="epoch_in" outDateFormat="epoch_millis"/>
+        <key name="epoch_micro_output1" script="epoch_in" outDateFormat="epoch_micros"/>
+        <key name="epoch_nano_output1" script="epoch_in" outDateFormat="epoch_nanos"/>
+
+        <key name="epoch_in_seconds" constant="1692967891" inDateFormat="epoch" outDateFormat="%Y-%m-%d %H:%M:%S"/>
+        <key name="epoch_in_milliseconds" constant="1692967891000" inDateFormat="epoch"
+             outDateFormat="%Y-%m-%d %H:%M:%S"/>
+        <key name="epoch_reference" constant="1692967891"/>
+        <key name="epoch_reference_datetime" script="epoch_reference" inDateFormat="epoch"/>
+        <key name="to_epoch" script="epoch_reference_datetime" outDateFormat="epoch"/>
+        <key name="to_epoch_millis" script="epoch_reference_datetime" outDateFormat="epoch_millis"/>
+        <key name="to_epoch_micros" script="epoch_reference_datetime" outDateFormat="epoch_micros"/>
+        <key name="to_epoch_nanos" script="epoch_reference_datetime" outDateFormat="epoch_nanos"/>
+    </generate>
+
+</setup>

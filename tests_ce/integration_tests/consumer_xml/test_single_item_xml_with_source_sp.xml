@@ -1,0 +1,15 @@
+<setup multiprocessing="False">
+
+    <!-- This example how to use xml source and export as basic xml -->
+    <!-- use source to import xml file, and target="XML" to export it -->
+    <!-- to edit source xml data, inside 'generate' only can have one 'nestedKey' as child -->
+    <!-- that 'nestedKey' is a root of xml data -->
+    <!-- and 'generate' name is export xml file name (in example is xml_single_item.xml) -->
+    <!-- REMEMBER IF USE COUNT ATTRIBUTE, ONLY USE COUNT="1" TO MAKE SURE GENERATE SINGLE DATA -->
+
+    <generate name="xml_single_item" source="data/xml_source.xml" target="XML">
+        <nestedKey name="course">
+            <key name="title" constant="XML Single Item"/>
+        </nestedKey>
+    </generate>
+</setup>

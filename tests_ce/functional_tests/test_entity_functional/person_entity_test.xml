@@ -1,0 +1,25 @@
+<setup >
+    <generate name="female" count="50" target="">
+        <variable name="person" entity="Person(min_age=1, max_age=10, female_quota=1)"/>
+        <key name="academic_title" script="person.academic_title"/>
+        <key name="age" script="person.age"/>
+        <key name="birth_date" script="person.birthdate"/>
+        <key name="given_name" script="person.given_name"/>
+        <key name="family_name" script="person.family_name"/>
+        <key name="email" script="person.email"/>
+        <key name="gender" script="person.gender"/>
+        <key name="salutation" script="person.salutation"/>
+    </generate>
+
+    <generate name="male" count="50" target="">
+        <variable name="person" entity="Person(min_age=20, max_age=45, female_quota=0, other_gender_quota=0)"/>
+        <key name="academic_title" script="person.academic_title"/>
+        <key name="age" script="person.age"/>
+        <key name="birth_date" script="person.birthdate"/>
+        <key name="given_name" script="person.given_name"/>
+        <key name="family_name" script="person.family_name"/>
+        <key name="email" script="person.email"/>
+        <key name="gender" script="person.gender"/>
+        <key name="salutation" script="person.salutation"/>
+    </generate>
+</setup>

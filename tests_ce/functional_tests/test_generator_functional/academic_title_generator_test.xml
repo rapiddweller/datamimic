@@ -1,0 +1,11 @@
+<setup>
+	<generate name="academic_title" count="100" target="">
+		<key name="title" generator="AcademicTitleGenerator(quota=1)"/>
+		<key name="non-title" generator="AcademicTitleGenerator(quota=0)"/>
+		<key name="CN-title" generator="AcademicTitleGenerator(dataset='CN', quota=1)"/>
+		<key name="DE-title" generator="AcademicTitleGenerator(dataset='DE', quota=1)"/>
+		<key name="FR-title" generator="AcademicTitleGenerator(dataset='FR', quota=1)"/>
+		<key name="IT-title" generator="AcademicTitleGenerator(dataset='IT', quota=1)"/>
+		<key name="US-title" generator="AcademicTitleGenerator(dataset='US', quota=1)"/>
+	</generate>
+</setup>

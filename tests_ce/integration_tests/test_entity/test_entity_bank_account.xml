@@ -1,0 +1,30 @@
+<setup multiprocessing="0">
+    <generate name="bank_account" count="10" target="ConsoleExporter">
+        <variable name="bank_account" entity="BankAccount"/>
+        <key name="account_number" script="bank_account.account_number"/>
+        <key name="account_number1" script="bank_account.account_number"/>
+        <key name="bank_name" script="bank_account.bank_name"/>
+        <key name="bank_name1" script="bank_account.bank_name"/>
+        <key name="bank_code" script="bank_account.bank_code"/>
+        <key name="bank_code1" script="bank_account.bank_code"/>
+        <key name="bic" script="bank_account.bic"/>
+        <key name="bic1" script="bank_account.bic"/>
+        <key name="bin" script="bank_account.bin"/>
+        <key name="bin1" script="bank_account.bin"/>
+        <key name="iban" script="bank_account.iban"/>
+        <key name="iban1" script="bank_account.iban"/>
+        <variable name="bank_account1" entity="BankAccount"/>
+        <key name="account_number2" script="bank_account1.account_number"/>
+        <key name="account_number3" script="bank_account1.account_number"/>
+        <key name="bank_name2" script="bank_account1.bank_name"/>
+        <key name="bank_name3" script="bank_account1.bank_name"/>
+        <key name="bank_code2" script="bank_account1.bank_code"/>
+        <key name="bank_code3" script="bank_account1.bank_code"/>
+        <key name="bic2" script="bank_account1.bic"/>
+        <key name="bic3" script="bank_account1.bic"/>
+        <key name="bin2" script="bank_account1.bin"/>
+        <key name="bin3" script="bank_account1.bin"/>
+        <key name="iban2" script="bank_account1.iban"/>
+        <key name="iban3" script="bank_account1.iban"/>
+    </generate>
+</setup>

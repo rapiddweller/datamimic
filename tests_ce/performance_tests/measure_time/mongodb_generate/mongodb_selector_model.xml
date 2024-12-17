@@ -1,0 +1,7 @@
+<setup multiprocessing="{multiprocessing}">
+    <mongodb id="mongodb"/>
+    <generate name="mongo_time_measure" source="mongodb"
+              selector="find: 'mongo_time_measure', filter: {}, projection: {}"
+              target="">
+    </generate>
+</setup>

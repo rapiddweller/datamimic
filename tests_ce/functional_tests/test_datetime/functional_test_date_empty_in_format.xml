@@ -1,0 +1,5 @@
+<setup  multiprocessing="True" numProcess="2">
+    <generate name="empty_in" count="1" target="ConsoleExporter">
+        <key name="date_time_with_in" constant="2021-02-01" inDateFormat=""/>
+    </generate>
+</setup>

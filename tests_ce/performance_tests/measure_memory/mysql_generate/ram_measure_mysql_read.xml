@@ -1,0 +1,4 @@
+<setup>
+    <include uri="conf/base.properties"/>
+    <include uri="mysql_read_model.xml"/>
+</setup>

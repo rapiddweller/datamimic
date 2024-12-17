@@ -1,0 +1,10 @@
+<setup>
+    <database id="sourceDB" system="source" />
+    <database id="configDB" system="config" />
+    <database id="targetDB" system="target" />
+    <!-- Run database setup scripts to create schema and tables -->
+    <include uri="1_prepare.xml"/>
+
+    <!-- Generate data into the prepared database and to the  consumer -->
+    <include uri="2_watermark.xml"/>
+</setup>

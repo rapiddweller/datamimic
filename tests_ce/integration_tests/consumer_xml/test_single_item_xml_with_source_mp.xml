@@ -1,0 +1,11 @@
+<setup multiprocessing="True">
+
+    <!-- With xml_single_item multiprocessing True or False only effect exporter name -->
+    <!-- 'generate' name is part of export xml file name (in this example is xml_single_item_pid_0.xml) -->
+
+    <generate name="xml_single_item" source="data/xml_source.xml" count="1" target="XML">
+        <nestedKey name="course">
+            <key name="title" constant="XML Single Item"/>
+        </nestedKey>
+    </generate>
+</setup>

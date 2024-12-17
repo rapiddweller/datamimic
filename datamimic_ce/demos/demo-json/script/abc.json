@@ -1,0 +1,93 @@
+[
+  {
+    "name": "Alice",
+    "age": 23,
+    "notes": {
+      "car": "Audi A3",
+      "pet": "Dog",
+      "hobby": "Skiing",
+      "friend": "Bob",
+      "family": "Dad",
+      "work": "Google"
+    },
+    "cars": [
+      {
+        "name": "Audi A3",
+        "year": 2012,
+        "color": "black",
+        "price": 20000,
+        "notes": ""
+      },
+      {
+        "name": "Audi A4",
+        "year": 2013,
+        "color": "white",
+        "price": 30000,
+        "notes": ""
+      },
+      {
+        "name": "Audi A5",
+        "year": 2014,
+        "color": "red",
+        "price": 40000,
+        "notes": ""
+      }
+    ],
+    "pets": [
+      {
+        "name": "Dog",
+        "age": 3,
+        "notes": ""
+      },
+      {
+        "name": "Cat",
+        "age": 4,
+        "notes": ""
+      }
+    ],
+    "hobbies": [
+      {
+        "name": "Skiing",
+        "notes": ""
+      },
+      {
+        "name": "Swimming",
+        "notes": ""
+      }
+    ],
+    "friends": [
+      {
+        "name": "Bob",
+        "age": 24,
+        "notes": ""
+      },
+      {
+        "name": "John",
+        "age": 25,
+        "notes": ""
+      }
+    ],
+    "family": [
+      {
+        "name": "Dad",
+        "age": 50,
+        "notes": ""
+      },
+      {
+        "name": "Mom",
+        "age": 45,
+        "notes": ""
+      }
+    ],
+    "work": [
+      {
+        "name": "Google",
+        "notes": ""
+      },
+      {
+        "name": "Facebook",
+        "notes": ""
+      }
+    ]
+  }
+]

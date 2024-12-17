@@ -1,0 +1,8 @@
+<setup>
+    <generate name="standalone_generator" target="ConsoleExporter" count="3">
+        <key name="email" generator="EmailAddressGenerator"/>
+        <key name="fname1" generator="FamilyNameGenerator(dataset='US')"/>
+        <key name="domain" generator="DomainGenerator"/>
+        <key name="gname1" generator="GivenNameGenerator(dataset='BR')"/>
+    </generate>
+</setup>

@@ -1,0 +1,8 @@
+<setup defaultSeparator=",">
+    <generate name="customer_data" source="data/person.ent.csv">
+        <generate name="test_data" count="3" target="ConsoleExporter">
+            <key name="id" generator="IncrementGenerator"/>
+            <key name="customer_id" script="name"/>
+        </generate>
+    </generate>
+</setup>

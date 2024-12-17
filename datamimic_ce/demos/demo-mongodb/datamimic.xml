@@ -1,0 +1,27 @@
+<setup>
+
+  <!--
+
+    MongoDB scenario
+    ======================================
+    DATAMIMIC MongoDB demo showcases how to
+    handle data in MongoDB.
+
+    Prerequisites:
+    Successfully executing this demo requires connecting a MongoDB.
+    Go to Settings > Environments and set up a MongoDB with the name 'mongodb'
+
+    MongoDB values can be consumed by the same or another MongoDB connection.
+    -->
+
+  <mongodb id="mongodb" />
+
+  <!-- The following model creates sample records in the MongoDB -->
+  <include uri="1_generate.xml" />
+
+  <!-- The following model showcases several queries performed against MongoDB to retrieve and
+  update records  -->
+  <include uri="2_query_update.xml" />
+
+  <include uri="3_upsert_delete.xml"/>
+</setup>

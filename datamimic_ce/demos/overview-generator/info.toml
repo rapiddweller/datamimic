@@ -1,0 +1,6 @@
+title = "Generator Overview"
+description = "Explore available entities and generators."
+icon = "generator"
+tags = ["#generator", "#datasets", "#domains"]
+projectName = "overview-generator"
+id = "overview-generator"

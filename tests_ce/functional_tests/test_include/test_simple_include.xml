@@ -1,0 +1,4 @@
+<setup reportLogging="False">
+    <include uri="conf/base.properties"/>
+    <include uri="generate.xml"/>
+</setup>

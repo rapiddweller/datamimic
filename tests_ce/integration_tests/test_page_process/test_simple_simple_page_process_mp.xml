@@ -1,0 +1,14 @@
+<setup  multiprocessing="True" numProcess="2">
+    <generate name="customer" count="20" target="" pageSize="2">
+        <!--        <variable name="person" entity="Person"/>-->
+        <key name="cid" generator="IncrementGenerator"/>
+        <!--        <key name="bool" type="bool"/>-->
+        <!--        <key name="name" script="person.given_name"/>-->
+        <!--        <key name="age" script="person.age"/>-->
+        <variable name="company" entity="Company"/>
+        <generate name="inner_user" count="3" target="">
+            <variable name="iid" generator="IncrementGenerator"/>
+            <key name="uid" script="cid*10 + inner_user.iid"/>
+        </generate>
+    </generate>
+</setup>

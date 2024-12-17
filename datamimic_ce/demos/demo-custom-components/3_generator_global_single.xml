@@ -1,0 +1,29 @@
+<setup multiprocessing="False">
+
+    <!--
+    Custom Generator with Global Imports Example
+    ============================================
+    This setup demonstrates the generation of various custom keys using globally imported custom generators.
+    Multiprocessing is disabled to ensure compatibility with global imports.
+    -->
+
+    <!-- The generate tag defines a data generation process -->
+    <generate name="customGeneratorGlobalImportExample" count="{global_count}">
+
+        <!-- Define a key 'id' with an integer type, using an IncrementGenerator -->
+        <key name="id" type="int" generator="IncrementGenerator"/>
+
+        <!-- Define keys with custom generators for various types of random data -->
+        <key name="hexColor" generator="GlobRandomHexColorGenerator()"/>
+        <key name="ipAddress" generator="GlobRandomIPAddressGenerator()"/>
+        <key name="uuid" generator="GlobRandomUUIDGenerator()"/>
+        <key name="macAddress" generator="GlobRandomMACAddressGenerator()"/>
+        <key name="isbn" generator="GlobRandomISBNGenerator()"/>
+        <key name="coordinates" generator="GlobRandomCoordinatesGenerator()"/>
+        <key name="licensePlate" generator="GlobRandomLicensePlateGenerator()"/>
+        <key name="password" generator="GlobRandomPasswordGenerator(length=16)"/>
+        <key name="movieTitle" generator="GlobRandomMovieTitleGenerator()"/>
+        <key name="userAgent" generator="GlobRandomUserAgentGenerator()"/>
+    </generate>
+
+</setup>

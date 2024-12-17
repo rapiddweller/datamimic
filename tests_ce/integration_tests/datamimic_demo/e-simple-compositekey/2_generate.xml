@@ -1,0 +1,19 @@
+<setup>
+
+    <generate name="playlist" count="50" target="db,ConsoleExporter">
+        <key name="PLAYLIST_ID" type="int" generator="IncrementGenerator"/>
+        <key name="name" type="string"/>
+    </generate>
+
+    <generate name="TRACK" count="50" target="db,ConsoleExporter">
+        <key name="TRACK_ID" type="int" generator="IncrementGenerator"/>
+        <key name="name" type="string"/>
+    </generate>
+
+    <generate name="PLAYLIST_TRACK" count="50" target="db,ConsoleExporter">
+        <reference name="PLAYLIST_ID" source="db" sourceType="playlist" sourceKey="PLAYLIST_ID" unique="True"/>
+        <reference name="TRACK_ID" source="db" sourceType="TRACK" sourceKey="TRACK_ID"/>
+        <key name="name" type="string"/>
+    </generate>
+
+</setup>

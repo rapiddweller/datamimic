@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS data;
+CREATE TABLE "data"
+(
+    id SERIAL PRIMARY KEY,
+    no VARCHAR NOT NULL,
+    name VARCHAR,
+    company VARCHAR,
+    date TIMESTAMP NOT NULL
+);

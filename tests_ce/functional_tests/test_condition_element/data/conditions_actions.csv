@@ -1,0 +1,6 @@
+condition,action,name,age,sex
+user_logged_in,Show welcome message,John Doe,30,Male
+user_is_admin,Show admin dashboard,Admin User,35,Female
+user_is_guest,Show guest dashboard,Guest User,25,Female
+user_is_premium,Show premium content,Premium User,40,Male
+else,Redirect to login page,Visitor,Unknown,Unknown

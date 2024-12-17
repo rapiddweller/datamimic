@@ -1,0 +1,6 @@
+<setup multiprocessing="0">
+    <generate name="product" count="120" target="LogExporter">
+        <key name="addition" values="'Bob','Frank','Phil'"/>
+        <key name="name" values="'Bob','Frank','Phil'"/>
+    </generate>
+</setup>

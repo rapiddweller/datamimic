@@ -1,0 +1,10 @@
+<setup  multiprocessing="True" numProcess="2">
+    <memstore id="mem"/>
+    <generate name="product" count="3" target="ConsoleExporter, mem">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" values="'Alice', 'Bob', 'Cameron'"/>
+    </generate>
+    <generate name="cyclic-product" type="product" count="10" cyclic="True" source="mem" target="ConsoleExporter"/>
+    <generate name="non-cyclic-product" type="product" count="10" cyclic="False" source="mem"
+              target="ConsoleExporter"/>
+</setup>

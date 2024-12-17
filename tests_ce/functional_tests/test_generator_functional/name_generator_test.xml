@@ -1,0 +1,9 @@
+<setup>
+    <generate name="container" source="data/name_dataset.ent.csv">
+        <variable name="dataset" script="name_dataset" />
+        <generate name="name_test" target="ConsoleExporter" count="10">
+            <key name="family_name" generator="FamilyNameGenerator(dataset=dataset)"/>
+            <key name="given_name" generator="GivenNameGenerator(dataset=dataset)"/>
+        </generate>
+    </generate>
+</setup>

@@ -1,0 +1,16 @@
+<setup  multiprocessing="True" numProcess="2" defaultSeparator=",">
+    <generate name="CONDITIONTEST" count="5" source="data/conditions_actions.csv"
+              target="ConsoleExporter">
+        <condition>
+            <if condition="condition == 'user_logged_in'">
+                <key name="IfCondition" constant="Show logged content"/>
+            </if>
+            <else-if condition="condition == 'user_is_premium'">
+                <key name="ElseIfCondition" constant="Show gold message"/>
+            </else-if>
+            <else>
+                <key name="ElseCondition" constant="Redirect to login page"/>
+            </else>
+        </condition>
+    </generate>
+</setup>

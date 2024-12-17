@@ -1,0 +1,11 @@
+<setup>
+    <generate name="edited_TX" type="TX" source="mem">
+        <key name="ID" type="int" generator="IncrementGenerator(start=1000)"/>
+
+        <!-- Postprocess values with a simple equals check -->
+        <key name="CARD" type="string" script="CARD == 'Y' if 1 else 0"/>
+
+        <!-- Use UpperCase to postprocess values -->
+        <key name="PRODUCT" type="string" script="PRODUCT" converter="UpperCase"/>
+    </generate>
+</setup>

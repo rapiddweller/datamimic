@@ -1,0 +1,9 @@
+<setup>
+    <generate name="float_generator" target="ConsoleExporter" count="100">
+        <key name="no_param" generator="FloatGenerator"/>
+        <key name="min_param" generator="FloatGenerator(min=9)"/>
+        <key name="max_param" generator="FloatGenerator(max=100)"/>
+        <key name="granularity_param" generator="FloatGenerator(granularity=0.01)"/>
+        <key name="full_param" generator="FloatGenerator(min=10, max=20, granularity=0.0003)"/>
+    </generate>
+</setup>

@@ -1,0 +1,22 @@
+<setup>
+    <generate name="university" source="script/university.template.xml" target="XML">
+        <!--    Keep students element values    -->
+        <nestedKey name="students" script="students">
+            <!--    Keep student element values    -->
+            <nestedKey name="student" script="students.student">
+                <!--    Rewrite name elements    -->
+                <variable name="person" entity="Person"/>
+                <nestedKey name="name" type="dict">
+                    <key name="first" script="students.student.person.given_name"/>
+                    <key name="last" script="students.student.person.family_name"/>
+                </nestedKey>
+                <!--    Keep phone element of contact, and rewrite email element    -->
+                <nestedKey name="contact" script="students.student.contact">
+                    <key name="email" script="students.student.person.email"/>
+                </nestedKey>
+                <!--    Add new element: gender    -->
+                <key name="gender" script="students.student.person.gender"/>
+            </nestedKey>
+        </nestedKey>
+    </generate>
+</setup>

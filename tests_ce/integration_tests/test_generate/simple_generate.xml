@@ -1,0 +1,15 @@
+<setup  multiprocessing="True" numProcess="2">
+    <generate name="data2" target="ConsoleExporter" count="3">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" values="'Bob','Frank','Phil'"/>
+        <nestedKey name="profile1" type="list" count="2">
+            <key name="language" values="'german','vietnamese','english'"/>
+            <key name="age" type="int" values="11,12,13,14,15,16,22,23,25"/>
+        </nestedKey>
+        <nestedKey name="profile2" type="dict">
+            <key name="language" values="'german','vietnamese','english'"/>
+            <key name="age" type="int" values="11,12,13,14,15,16,22,23,25"/>
+        </nestedKey>
+        <key name="age" type="int" values="11,12,13,14,15,16,22,23,25"/>
+    </generate>
+</setup>

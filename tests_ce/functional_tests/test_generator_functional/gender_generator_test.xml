@@ -1,0 +1,8 @@
+<setup>
+    <generate name="gender_test" count="1000">
+        <key name="female_gender" generator="GenderGenerator(female_quota=1)"/>
+        <key name="other_gender" generator="GenderGenerator(other_gender_quota=1)"/>
+        <key name="male_gender" generator="GenderGenerator(female_quota=0, other_gender_quota=0)"/>
+        <key name="default_gender" generator="GenderGenerator"/>
+    </generate>
+</setup>

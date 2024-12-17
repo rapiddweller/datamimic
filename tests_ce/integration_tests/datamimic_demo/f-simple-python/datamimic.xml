@@ -1,0 +1,7 @@
+<setup defaultSeparator="|">
+    <include uri="conf/base.properties"/>
+    <memstore id="mem"/>
+    <execute uri="script/lib.scr.py"/>
+
+    <include uri="1_generate.xml"/>
+</setup>

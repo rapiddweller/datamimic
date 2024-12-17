@@ -1,0 +1,7 @@
+<setup defaultSeparator="|" multiprocessing="1">
+    <include uri="conf/base.properties"/>
+    <memstore id="mem"/>
+
+    <include uri="1_prepare.xml"/>
+    <include uri="2_generate.xml"/>
+</setup>

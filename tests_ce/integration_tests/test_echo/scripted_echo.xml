@@ -1,0 +1,43 @@
+<setup multiprocessing="False">
+    <echo>Begin echo_1</echo>
+    <generate name="echo_1" count="3" target="ConsoleExporter">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" values="'Bob','Frank','Phil'"/>
+        <echo>Current id is {id}, name is {name}</echo>
+        <nestedKey name="profile" type="list" count="2">
+            <key name="language" values="'german','vietnamese','english'"/>
+            <key name="age" type="int" values="11,12,13,14,15,16,22,23,25"/>
+            <echo>{name}'s age is {profile.age}, language is {profile.language}</echo>
+        </nestedKey>
+    </generate>
+    <echo>End echo_1</echo>
+    <echo>Begin echo_2</echo>
+    <generate name="echo_2" count="1" target="ConsoleExporter">
+        <echo>inside generate</echo>
+        <condition>
+            <if condition="True">
+                <echo>inside if True</echo>
+                <key name="if_true" constant="true"/>
+            </if>
+        </condition>
+        <condition>
+            <if condition="False">
+               <echo>inside if False</echo>
+                <key name="if_false" constant="false"/>
+            </if>
+        </condition>
+        <list name="simple_list">
+            <item>
+                <key name="item_1" type="int" constant="11"/>
+            </item>
+            <item>
+                <key name="item_2" type="int" constant="22"/>
+            </item>
+        </list>
+        <echo>simple_list= {simple_list}</echo>
+        <nestedKey name="empty_nestedKey" type="dict" count="1">
+            <echo>inside nestedKey</echo>
+        </nestedKey>
+    </generate>
+    <echo>End echo_2</echo>
+</setup>

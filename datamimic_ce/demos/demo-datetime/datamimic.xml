@@ -1,0 +1,13 @@
+<setup>
+    <!--
+    DateTime Demo
+    ======================================
+    DATAMIMIC DateTime Demo demonstrates the handling of date and time.
+    -->
+
+    <include uri="1_datetime_generator.xml" />
+    <include uri="2_in_out_datetime_format.xml" />
+    <include uri="3_datetime_converter.xml" />
+    <include uri="4_datetime_series.xml" />
+    <include uri="5_datetime_timestamp_converter.xml" />
+</setup>

@@ -1,0 +1,27 @@
+<setup>
+    <generate name="in_out" count="{user_count}" target="ConsoleExporter">
+        <variable name="person" entity="Person" dataset="DE" locale="de_DE"/>
+        <variable name="id" generator="IncrementGenerator(start=100)"/>
+        <variable name="count" constant="1"/>
+        <variable name="get_simple_user" source="sourceDB" cyclic="True"
+                  selector="SELECT COALESCE(MAX(id), 0) AS user_id from functional.simple_user"/>
+
+        <key name="id_tcr" script="id"/>
+
+        <generate name="simple_user" count="{count}" target="sourceDB,ConsoleExporter">
+            <variable name="id" generator="IncrementGenerator"/>
+            <key name="id" script="id + simple_user.id"/>
+            <key name="tc_creation_src" constant="BEN"/>
+            <key name="tc_creation" generator="DateTimeGenerator(random=True)"/>
+            <key name="tc_update_src" type="string"/>
+            <key name="tc_update" generator="DateTimeGenerator(random=True)"/>
+            <key name="full_name" script="person.name"/>
+            <key name="email" script="person.email"/>
+            <key name="active" source="data/active.wgt.csv"/>
+            <key name="superuser" type="bool" values="False,True"/>
+            <key name="hashed_password" generator="StringGenerator(max_len=20)"/>
+            <key name="language" values="'german','english','vietnamese'"/>
+        </generate>
+    </generate>
+
+</setup>

@@ -1,0 +1,47 @@
+<setup>
+
+  <variable name="customer_count" constant="10"/>
+
+  <!-- prepare source data -->
+  <generate name="data" count="{customer_count}" target="source">
+    <key name="no" generator="IncrementGenerator" />
+    <variable name="person" entity="Person"/>
+    <key name="name" script="person.name" />
+    <variable name="comp" entity="Company"/>
+    <key name="company" script="comp.short_name" />
+    <key name="date" generator="DateTimeGenerator" />
+  </generate>
+
+  <echo>Initial data:</echo>
+  <generate name="data" source="source"/>
+
+  <!-- Read watermark - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+  <echo>Reading watermark</echo>
+  <variable name="from_ts" source="config" cyclic="False" selector="select value_column from watermark where key_column = 'last_processed_datetime'"/>
+  <!-- change timestamp to text string -->
+  <variable name="from_ts" script="from_ts.value_column" />
+  <variable name="until_date" generator="DateTimeGenerator" />
+
+
+  <!-- Anonymize data since the watermark timestamp - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+  <echo>Anonymizing data between {from_ts} and {until_date} from sourceDB into targetDB</echo>
+  <generate name="data" source="source"
+            selector="SELECT * FROM data WHERE date BETWEEN '__from_ts__' AND '__until_date__'"
+            target="target">
+    <variable name="person_ent" entity="Person"/>
+    <variable name="company_ent" entity="Company"/>
+    <key name="name" script="person_ent.name"/>
+    <key name="company" script="company_ent.full_name"/>
+    <key name="date" script="date" inDateFormat="%Y-%m-%d %H:%M:%S.%f"/>
+  </generate>
+
+
+  <!-- Update watermark - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+
+  <echo>Updating watermark to {until_date}</echo>
+  <execute uri="script/update_watermark.scr.sql" target="config"/>
+  <generate name="watermark" source="config"/>
+
+</setup>

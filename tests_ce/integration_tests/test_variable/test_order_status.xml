@@ -1,0 +1,10 @@
+<setup  multiprocessing="True" numProcess="2">
+    <generate name="test_order" count="3" target="ConsoleExporter">
+        <variable name="collection" constant="'orders'"/>
+        <variable name="status" constant="'shipped'"/>
+        <key name="query" variablePrefix="__"
+             variableSuffix="__" string="find: __collection__, filter: {{'status': __status__, 'birth': {{'$gt': new Date('1950-01-01')}}}}}}"/>
+        <key name="check_birthday" variablePrefix="__"
+             variableSuffix="__" string="find: __collection__, filter: {{ birth: {{ $gt: new Date('1950-01-01') }} }}"/>
+    </generate>
+</setup>

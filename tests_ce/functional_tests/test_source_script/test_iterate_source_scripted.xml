@@ -1,0 +1,9 @@
+<setup  multiprocessing="True" numProcess="2" defaultSeparator=",">
+
+    <generate name="iterate_csv" source="data/people.wgt.ent.csv" sourceScripted="True" target="">
+    </generate>
+
+    <execute uri="python_function/py_functions.py"/>
+    <generate name="iterate_json" source="data/people_script.json" sourceScripted="True" target="">
+    </generate>
+</setup>

@@ -1,0 +1,35 @@
+<setup>
+
+    <!-- Create 10 records into a collection named CUSTOMER -->
+    <generate name="CUSTOMER" type="CUSTOMER" count="10" target="mongodb">
+        <key name="tc_creation_src" constant="DATAMIMIC" />
+        <key name="tc_creation" generator="DateTimeGenerator" />
+        <key name="no" generator="IncrementGenerator" />
+        <key name="gender" values="'male','female'" />
+        <key name="age" generator="IntegerGenerator(min=1,max=65)" />
+        <key name="selector" values="'A','B','C','D','E'" />
+        <key name="active" constant="false" />
+
+        <!-- Add a nested list from an entity file -->
+        <nestedKey name="persons" type="list" source="data/person.ent.csv">
+            <key name="tc_creation_src" constant="DATAMIMIC" />
+            <key name="tc_creation" generator="DateTimeGenerator" />
+            <key name="no" generator="IncrementGenerator" />
+
+            <nestedKey name="friends" type="list" source="data/friends.ent.csv">
+                <key name="tc_creation_src" constant="DATAMIMIC" />
+                <key name="tc_creation" generator="DateTimeGenerator" />
+                <key name="no" generator="IncrementGenerator" />
+                <nestedKey name="newSubSubElementFromEnt" type="list" source="data/person.ent.csv" />
+            </nestedKey>
+        </nestedKey>
+    </generate>
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'selector': 'E', 'age': {'$gt': 55}}"
+        target="mongodb.update"
+    >
+        <key name="tc_creation" generator="DateTimeGenerator" />
+    </generate>
+</setup>

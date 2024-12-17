@@ -1,0 +1,6 @@
+<setup defaultSeparator="," defaultSourceScripted="True">
+    <generate name="people_from_source" count="10" target="ConsoleExporter">
+        <variable name="people" source="data/people.ent.csv"/>
+        <key name="people_age" script="people.age"/>
+    </generate>
+</setup>

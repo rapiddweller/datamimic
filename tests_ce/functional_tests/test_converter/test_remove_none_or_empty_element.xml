@@ -1,0 +1,46 @@
+<setup>
+    <generate name="big_group" count="1">
+        <!-- RemoveNoneOrEmptyElement converter will remove any None or empty element -->
+        <generate name="group" count="5" target="ConsoleExporter" converter="RemoveNoneOrEmptyElement">
+            <key name="none_value" script="1+1" condition="False" defaultValue="None"/>
+
+            <!--This will not show in result cause its elements all None -->
+            <list name="none_array">
+                <item>
+                    <key name="var" script="1+1" condition="False" defaultValue="None"/>
+                </item>
+                <item>
+                    <key name="var_2" script="1+1" condition="False" defaultValue="None"/>
+                </item>
+            </list>
+            <!--This will not show in result cause its elements all None -->
+            <nestedKey name="none_nested_list" type="list" count="2">
+                <key name="inside_ele" script="1+1" condition="False" defaultValue="None"/>
+            </nestedKey>
+            <!--This will not show in result cause its elements all None -->
+            <nestedKey name="none_nested_dict" type="dict">
+                <key name="inside_ele" script="1+1" condition="False" defaultValue="None"/>
+            </nestedKey>
+
+            <!--Those will not show in result cause their elements all empty -->
+            <list name="empty_array">
+                <item>
+                    <key name="var" script="1+1" condition="False"/>
+                </item>
+            </list>
+            <nestedKey name="empty_nested_list" type="list" count="2">
+                <key name="inside_ele" script="1+1" condition="False"/>
+            </nestedKey>
+            <nestedKey name="empty_nested_dict" type="dict">
+                <key name="inside_ele" script="1+1" condition="False"/>
+            </nestedKey>
+
+            <!--This will not show as: 'nested_list': [{'inside_ele': 2}] -->
+            <nestedKey name="nested_list" type="list" count="3">
+                <variable name="var" generator="IncrementGenerator"/>
+                <key name="inside_ele" script="1+1" condition="group.nested_list.var==2" defaultValue="None"/>
+            </nestedKey>
+
+        </generate>
+    </generate>
+</setup>

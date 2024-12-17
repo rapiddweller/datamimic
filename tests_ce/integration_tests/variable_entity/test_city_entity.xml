@@ -1,0 +1,11 @@
+<setup  multiprocessing="True" numProcess="2">
+    <generate name="city" count="10" target="ConsoleExporter">
+        <variable name="city" entity="City"/>
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="city_name" script="city.name"/>
+        <key name="postal_code" script="city.postal_code"/>
+        <key name="state" script="city.state"/>
+        <key name="country" script="city.country"/>
+        <key name="language_code" script="city.language"/>
+    </generate>
+</setup>

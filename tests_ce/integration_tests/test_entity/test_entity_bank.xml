@@ -1,0 +1,22 @@
+<setup multiprocessing="0">
+    <generate name="bank" count="10" target="ConsoleExporter">
+        <variable name="bank" entity="Bank"/>
+        <key name="name" script="bank.name"/>
+        <key name="name1" script="bank.name"/>
+        <key name="bank_code" script="bank.bank_code"/>
+        <key name="bank_code1" script="bank.bank_code"/>
+        <key name="bic" script="bank.bic"/>
+        <key name="bic1" script="bank.bic"/>
+        <key name="bin" script="bank.bin"/>
+        <key name="bin1" script="bank.bin"/>
+        <variable name="bank1" entity="Bank"/>
+        <key name="name2" script="bank1.name"/>
+        <key name="name3" script="bank1.name"/>
+        <key name="bank_code2" script="bank1.bank_code"/>
+        <key name="bank_code3" script="bank1.bank_code"/>
+        <key name="bic2" script="bank1.bic"/>
+        <key name="bic3" script="bank1.bic"/>
+        <key name="bin2" script="bank1.bin"/>
+        <key name="bin3" script="bank1.bin"/>
+    </generate>
+</setup>

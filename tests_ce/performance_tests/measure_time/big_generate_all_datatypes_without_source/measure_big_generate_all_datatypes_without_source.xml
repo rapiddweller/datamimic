@@ -1,0 +1,4 @@
+<setup>
+    <include uri="conf/base.properties"/>
+    <include uri="big_generate_all_datatypes_without_source_model.xml"/>
+</setup>

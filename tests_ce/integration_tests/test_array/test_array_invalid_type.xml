@@ -1,0 +1,5 @@
+<setup  multiprocessing="True" numProcess="2">
+    <generate name="data" target="ConsoleExporter" count="1">
+        <array name="profile1" type="invalid" count="10"></array>
+    </generate>
+</setup>

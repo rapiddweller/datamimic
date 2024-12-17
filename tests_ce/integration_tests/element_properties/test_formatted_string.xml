@@ -1,0 +1,11 @@
+<setup  multiprocessing="True" numProcess="2">
+    <generate name="product" count="3" target="ConsoleExporter">
+        <key name="comment1" type="string" constant="John"/>
+        <nestedKey name="dict1" type="dict">
+            <key name="comment2" type="string" script="f'hello {comment1}'"/>
+            <nestedKey name="copy1" type="dict">
+                <key name="comment2" script="f&quot;print: {dict1.comment2}&quot;"/>
+            </nestedKey>
+        </nestedKey>
+    </generate>
+</setup>
