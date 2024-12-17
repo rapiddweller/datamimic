@@ -23,7 +23,7 @@ class StatementParser(ABC):
     Super class of all element parser
     """
     # Define a type variable T, which is a subclass of BaseModel
-    T = TypeVar('T', bound=BaseModel)
+    BaseModelRelativeClass = TypeVar('BaseModelRelativeClass', bound=BaseModel)
 
     def __init__(
         self,
@@ -126,7 +126,7 @@ class StatementParser(ABC):
                     f", expects: {', '.join(map(lambda ele: f'<{ele}>', self._valid_sub_elements))}, "
                 )
 
-    def validate_attributes(self, model: type[T], fulfilled_credentials: dict | None = None) -> T:
+    def validate_attributes(self, model: type[BaseModelRelativeClass], fulfilled_credentials: dict | None = None) -> BaseModelRelativeClass:
         """
         Validate XML model attributes
         :return:
