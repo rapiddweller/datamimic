@@ -3,7 +3,7 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-from typing import Any, cast
+from typing import Any
 from xml.etree.ElementTree import Element
 
 from datamimic_ce.constants.element_constants import EL_MEMSTORE
