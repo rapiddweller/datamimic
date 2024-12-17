@@ -20,17 +20,102 @@ Welcome to **DATAMIMIC**, the Model-Driven and AI-powered platform that revoluti
 
 ---
 
-## Key Features
+# DATAMIMIC Feature Overview 🎯
 
-- 🧠 **Model-Driven Data Generation**: Utilize sophisticated algorithms to simulate real-world data scenarios.
-- 🔮 **AI-Powered Data Generation ( only EE )**: Simulate real-world data scenarios using cutting-edge AI algorithms. (Like GANs, LLMs, and more)
-- 🛡️ **Data Privacy Compliance**: Anonymize and pseudonymize data to meet GDPR and global data protection standards.
-- 🚀 **High Performance**: Engineered for scalability to handle complex datasets efficiently.
-- 🐍 **Seamless Python Integration**: Easily integrate with Python projects and manage dependencies.
-- ⚙️ **Extensibility**: Customize and extend functionalities to suit your specific testing needs.
+## Core Features 🔵
+*Available in Both Community and Enterprise Editions*
 
-> **Note:** The **Community Edition** focuses on core functionalities and does **not** include AI-powered features like GANs, LLMs and automatic model generation. These advanced features are available in the **Enterprise Edition**.
+### 🧠 Model-Driven Generation
+- Create sophisticated data models for consistent test data generation
+- Define complex relationships between entities
+- Support for nested and hierarchical data structures
 
+### 📊 Data Types & Integration
+- **Basic Data Types Support**
+  - All standard primitive types
+  - Complex data structures
+  - Custom data type definitions
+- **Core Database Integration**
+  - RDBMS support (PostgreSQL, MySQL, Oracle)
+  - MongoDB integration
+  - Basic import/export functionality
+
+### 🛡️ Data Privacy & Compliance
+- GDPR-compliant data anonymization
+- Basic pseudonymization capabilities
+- Data masking for sensitive information
+- Configurable privacy rules
+
+### ⚡ Core Capabilities
+- **High Performance Engine**
+  - Optimized for large datasets
+  - Parallel processing support
+  - Memory-efficient operations
+- **Python Integration**
+  - Native Python API
+  - Seamless dependency management
+  - Python script extensions
+- **Basic Extensibility**
+  - Custom generator support
+  - Plugin architecture
+  - Basic scripting capabilities
+
+---
+
+## Enterprise Features 🟣
+*Exclusive to Enterprise Edition*
+
+### 🧠 AI-Powered Generation
+> Advanced AI capabilities for realistic data creation
+- **GAN-based Synthesis**
+  - Realistic data patterns
+  - Learning from existing datasets
+  - Pattern replication
+- **LLM Integration**
+  - Natural language content
+  - Context-aware generation
+  - Semantic consistency
+- **Automatic Modeling**
+  - Schema inference
+  - Pattern detection
+  - Model optimization
+
+### 🔗 Advanced Integrations
+> Enterprise-grade system integration capabilities
+- **Streaming Support**
+  - Kafka integration
+  - Real-time data generation
+  - Stream processing
+- **Enterprise Formats**
+  - EDI processing
+  - Advanced XSD handling
+  - Custom format support
+- **Advanced Connectors**
+  - Enterprise systems
+  - Cloud platforms
+  - Legacy systems
+
+### 🛡️ Enhanced Privacy Features
+> Advanced data protection and compliance
+- **Advanced Anonymization**
+  - Context-aware masking
+  - Reversible anonymization
+  - Custom privacy rules
+- **Compliance Tools**
+  - Audit logging
+  - Compliance reporting
+  - Policy enforcement
+- **Enterprise Security**
+  - Role-based access
+  - Encryption support
+  - Security audit trails
+
+### 📈 Advanced Data Validation
+> Comprehensive data quality assurance
+- **Validation Framework**
+  - Custom rule engines
+  - Complex validation logic
+  - Cross-field validation
 
 ---
 
@@ -201,23 +286,97 @@ We ❤️ contributions! Here's how you can help:
 - **Documentation**: Improve existing docs or help with translations.
 - **Community Engagement**: Join discussions and support other users.
 
-Check out our [Contribution Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
+---
+
+# 📜 DATAMIMIC Licensing Options
+
+## 🌟 Community Edition
+*Open Source Freedom for Everyone*
+
+### ✨ Key Benefits
+- **🔓 MIT License**: Maximum freedom for innovation
+- **💼 Commercial Ready**: Use freely in commercial projects
+- **🔄 Modification Rights**: Full source code access and modification rights
+- **🌍 No Restrictions**: Deploy anywhere, anytime
+
+### 🎁 What's Included
+- **📦 Core Features**
+  - Model-driven data generation
+  - Basic data types & integrations
+  - GDPR compliance tools
+  
+- **👥 Community Support**
+  - Active GitHub community
+  - Public issue tracking
+  - Community discussions
+  - Regular updates
+
+### 💫 Perfect For
+- Individual developers
+- Startups & small teams
+- Open source projects
+- Learning & evaluation
+- POC development
 
 ---
 
-## License
+## ⭐ Enterprise Edition
+*Professional Power for Business Success*
 
-DATAMIMIC CE is now open source and licensed under MIT:
+### 🚀 Premium Benefits
+- **📋 Commercial License**: Enterprise-grade flexibility
+- **🔐 Advanced Features**: Full suite of professional tools
+- **🎯 Priority Support**: Direct access to expert team
+- **🛠️ Custom Solutions**: Tailored to your needs
 
-- 📄 **Open Source License**: Licensed under the [MIT License](LICENSE)
-- 🆓 **Free for Everyone**: Use freely for both personal and commercial projects
-- 💡 **Key Permissions**:
-  - Commercial use
-  - Modification
-  - Distribution
-  - Private use
+### 💎 Premium Features
+- **🤖 AI Capabilities**
+  - GAN-based synthesis
+  - LLM integration
+  - Automated modeling
+  
+- **🔗 Enterprise Integration**
+  - Advanced connectors
+  - Kafka streaming
+  - EDI support
+  
+- **🛡️ Enhanced Security**
+  - Advanced privacy features
+  - Compliance reporting
+  - Audit trails
 
-For questions or support, contact us at [info@rapiddweller.com](mailto:info@rapiddweller.com).
+### 🎯 Ideal For
+- Large enterprises
+- Financial institutions
+- Healthcare organizations
+- Government agencies
+- High-compliance industries
+
+### 📞 Get Started
+> Ready to unlock the full potential of DATAMIMIC?
+
+**Contact Our Team:**
+- 📧 Email: [sales@rapiddweller.com](mailto:sales@rapiddweller.com)
+- 🌐 Visit: [datamimic.io/enterprise](https://datamimic.io)
+
+---
+
+### 🤝 Compare Editions
+
+| Feature | Community | Enterprise |
+|---------|-----------|------------|
+| Base Features | ✅ | ✅ |
+| Source Code Access | ✅ | ✅ |
+| Commercial Use | ✅ | ✅ |
+| AI Features | ❌ | ✅ |
+| Priority Support | ❌ | ✅ |
+| Enterprise Integrations | ❌ | ✅ |
+| SLA Support | ❌ | ✅ |
+| Custom Development | ❌ | ✅ |
+
+---
+
+> ***"Empower your data generation journey with the right DATAMIMIC edition for your needs"***
 
 ---
 
