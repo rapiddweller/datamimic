@@ -49,6 +49,7 @@ class IfElseBaseParser(StatementParser, ABC):
         # Validate sub elements
         self._validate_sub_elements(valid_sub_ele_set, composite_stmt)
 
+        parsed_stmt: IfStatement | ElseIfStatement | ElseStatement
         match self._valid_element_tag:
             case "if":
                 parsed_stmt = IfStatement(self.validate_attributes(IfModel), parent_stmt)
