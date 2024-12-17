@@ -36,4 +36,4 @@ class ReferenceParser(StatementParser):
         Parse element "reference" into ReferenceStatement
         :return:
         """
-        return ReferenceStatement(cast(ReferenceModel, self.validate_attributes(ReferenceModel)))
+        return ReferenceStatement(self.validate_attributes(ReferenceModel))

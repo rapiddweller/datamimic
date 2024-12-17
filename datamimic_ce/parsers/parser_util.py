@@ -241,9 +241,9 @@ class ParserUtil:
                     parser,
                     KeyParser | ConditionParser | IfParser | ElseIfParser | ElseParser,
                 ):
-                    stmt = parser.parse(descriptor_dir, parent_stmt)
+                    stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
                 else:
-                    stmt = parser.parse(descriptor_dir)
+                    stmt = parser.parse(descriptor_dir=descriptor_dir)
 
             if stmt is None:
                 raise ValueError(f"Cannot parse element <{child_ele.tag}>")

@@ -6,7 +6,7 @@
 
 import copy
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, TypeVar
 from xml.etree.ElementTree import Element
 
 from pydantic import BaseModel, ValidationError
@@ -22,6 +22,8 @@ class StatementParser(ABC):
     """
     Super class of all element parser
     """
+    # Define a type variable T, which is a subclass of BaseModel
+    T = TypeVar('T', bound=BaseModel)
 
     def __init__(
         self,
@@ -124,7 +126,7 @@ class StatementParser(ABC):
                     f", expects: {', '.join(map(lambda ele: f'<{ele}>', self._valid_sub_elements))}, "
                 )
 
-    def validate_attributes(self, model: type[BaseModel], fulfilled_credentials: dict | None = None) -> BaseModel:
+    def validate_attributes(self, model: type[T], fulfilled_credentials: dict | None = None) -> T:
         """
         Validate XML model attributes
         :return:

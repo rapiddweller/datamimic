@@ -3,7 +3,7 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-
+from typing import Any, cast
 from xml.etree.ElementTree import Element
 
 from datamimic_ce.constants.element_constants import EL_INCLUDE
@@ -31,7 +31,7 @@ class IncludeParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self) -> IncludeStatement:
+    def parse(self, **kwargs: Any) -> IncludeStatement:
         """
         Parse element "include" to IncludeStatement
         :return:

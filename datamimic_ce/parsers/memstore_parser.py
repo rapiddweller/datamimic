@@ -36,4 +36,4 @@ class MemstoreParser(StatementParser):
         Parse element "memstore" to MemstoreStatement
         :return:
         """
-        return MemstoreStatement(cast(MemstoreModel, self.validate_attributes(MemstoreModel)))
+        return MemstoreStatement(self.validate_attributes(MemstoreModel))

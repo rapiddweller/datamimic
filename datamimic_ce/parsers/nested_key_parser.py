@@ -37,7 +37,7 @@ class NestedKeyParser(StatementParser):
         """
         # Parse sub elements
 
-        nested_key_stmt = NestedKeyStatement(cast(NestedKeyModel, self.validate_attributes(NestedKeyModel)), parent_stmt)
+        nested_key_stmt = NestedKeyStatement(self.validate_attributes(NestedKeyModel), parent_stmt)
         sub_stmt_list = self._class_factory_util.get_parser_util_cls()().parse_sub_elements(
             class_factory_util=self._class_factory_util,
             descriptor_dir=descriptor_dir,

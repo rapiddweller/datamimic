@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from pathlib import Path
+from typing import cast
 from xml.etree.ElementTree import Element
 
 from datamimic_ce.constants.element_constants import EL_ITEM
@@ -28,7 +29,7 @@ class ItemParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self, descriptor_dir: Path) -> ItemStatement:
+    def parse(self, descriptor_dir: Path) -> ItemStatement:  # TODO: mypy issue [override]
         """
         Parse element "item" to ItemStatement
         :return:

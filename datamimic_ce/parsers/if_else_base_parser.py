@@ -6,6 +6,7 @@
 
 from abc import ABC
 from pathlib import Path
+from typing import Any
 from xml.etree.ElementTree import Element
 
 from datamimic_ce.model.else_if_model import ElseIfModel
@@ -36,9 +37,9 @@ class IfElseBaseParser(StatementParser, ABC):
 
     def parse(
         self, descriptor_dir: Path, parent_stmt: ConditionStatement
-    ) -> IfStatement | ElseIfStatement | ElseStatement:
+    ) -> IfStatement | ElseIfStatement | ElseStatement:  # TODO: mypy issue [override]
         # Retrieve the root composite statement
-        composite_stmt = parent_stmt
+        composite_stmt: Any = parent_stmt
         while isinstance(composite_stmt, ConditionStatement | IfStatement):
             composite_stmt = composite_stmt.parent_stmt
         # Get valid sub elements of the composite statement
