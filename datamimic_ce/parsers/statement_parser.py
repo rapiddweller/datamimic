@@ -104,7 +104,7 @@ class StatementParser(ABC):
         if self._element.tag != self._valid_element_tag:
             raise ValueError(f"Expect element tag name '{self._valid_element_tag}', but got '{self._element.tag}'")
 
-    def _validate_sub_elements(self, valid_sub_ele_set: set, composite_stmt: CompositeStatement = None) -> None:
+    def _validate_sub_elements(self, valid_sub_ele_set: set, composite_stmt: CompositeStatement | None = None) -> None:
         """
         Validate sub elements
         :return:

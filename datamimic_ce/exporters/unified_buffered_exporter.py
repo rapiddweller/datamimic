@@ -74,7 +74,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         self._init_buffer_directory()
 
         # Initialize state variables
-        self._is_first_write: Optional[bool] = None
+        self._is_first_write: bool | None = None
         self._load_state()
 
     @property
