@@ -20,33 +20,39 @@ class TestRdbms:
         settings.RUNTIME_ENVIRONMENT == "production",
         reason="This test can only test with local postgres credential",
     )
-    def test_postgresql_local(self):
+    @pytest.mark.asyncio
+    async def test_postgresql_local(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_postgresql_local.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
     @pytest.mark.skipif(
         settings.RUNTIME_ENVIRONMENT == "development",
         reason="This test can only test with stage postgres credential",
     )
-    def test_postgresql_stage(self):
+    @pytest.mark.asyncio
+    async def test_postgresql_stage(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_postgresql_stage.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
     @pytest.mark.skip(reason="This test should be move to another job")
-    def test_mysql(self):
+    @pytest.mark.asyncio
+    async def test_mysql(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_mysql.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
     @pytest.mark.skip(reason="This test should be move to another job")
-    def test_mssql(self):
+    @pytest.mark.asyncio
+    async def test_mssql(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_mssql.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
     @pytest.mark.skip(reason="This test should be move to another job")
-    def test_oracle(self):
+    @pytest.mark.asyncio
+    async def test_oracle(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_oracle.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-    def test_sqlite(self):
+    @pytest.mark.asyncio
+    async def test_sqlite(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_sqlite.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()

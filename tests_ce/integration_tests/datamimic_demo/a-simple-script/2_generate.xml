@@ -1,5 +1,5 @@
 <setup multiprocessing="0">
-    <generate name="customer" count="{customer_count}" target="">
+    <generate name="customer" count="100000" target="CSV">
         <variable name="cars_data" type="CARS" source="mem"/>
         <variable name="person" entity="Person(min_age=21, max_age=67, female_quota=0.5)"/>
         <variable name="company" entity="Company"/>

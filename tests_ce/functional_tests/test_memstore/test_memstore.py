@@ -8,16 +8,18 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestMemStore:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_in_memory_memstore(self):
+    @pytest.mark.asyncio
+    async def test_in_memory_memstore(self):
         test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_in_memory_memstore.xml", capture_test_result=True
         )
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
         result = test_engine.capture_result()
         assert len(result["data"]) == 100000
         assert len(result["data2"]) == len(result["data"])

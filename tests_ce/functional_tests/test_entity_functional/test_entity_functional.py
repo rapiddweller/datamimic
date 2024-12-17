@@ -8,16 +8,20 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestEntityFunctional:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_entity_person(self) -> None:
-        engine = DataMimicTest(test_dir=self._test_dir, filename="person_entity_test.xml", capture_test_result=True)
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_entity_person(self) -> None:
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="person_entity_test.xml", capture_test_result=True
+        )
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         assert result
 
         females = result["female"]

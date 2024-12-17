@@ -5,6 +5,12 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import re
+from contextlib import contextmanager
+from typing import Any
+from pathlib import Path
+import csv
+import json
+import xmltodict
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
@@ -27,6 +33,7 @@ from datamimic_ce.converter.remove_none_or_empty_element_converter import (
 from datamimic_ce.converter.timestamp2date_converter import Timestamp2DateConverter
 from datamimic_ce.converter.upper_case_converter import UpperCaseConverter
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.data_sources.data_source_util import DataSourceUtil
 from datamimic_ce.enums.converter_enums import ConverterEnum
 from datamimic_ce.exporters.csv_exporter import CSVExporter
 from datamimic_ce.exporters.json_exporter import JsonExporter
@@ -65,11 +72,6 @@ from datamimic_ce.tasks.else_task import ElseTask
 from datamimic_ce.tasks.execute_task import ExecuteTask
 from datamimic_ce.tasks.generate_task import (
     GenerateTask,
-    _evaluate_selector_script,
-    _load_csv_file,
-    _load_json_file,
-    _load_xml_file,
-    _pre_consume_product,
 )
 from datamimic_ce.tasks.generator_task import GeneratorTask
 from datamimic_ce.tasks.if_task import IfTask
@@ -79,11 +81,13 @@ from datamimic_ce.tasks.key_task import KeyTask
 from datamimic_ce.tasks.list_task import ListTask
 from datamimic_ce.tasks.memstore_task import MemstoreTask
 from datamimic_ce.tasks.mongodb_task import MongoDBTask
+from datamimic_ce.tasks.mongodb_task import MongoDBTask
 from datamimic_ce.tasks.nested_key_task import NestedKeyTask
 from datamimic_ce.tasks.reference_task import ReferenceTask
 from datamimic_ce.tasks.task import Task
 from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 from datamimic_ce.utils.object_util import ObjectUtil
+from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
 
 
 class TaskUtil:
@@ -140,39 +144,102 @@ class TaskUtil:
             raise ValueError(f"Cannot created task for statement {stmt.__class__.__name__}")
 
     @staticmethod
-    def evaluate_file_script_template(ctx: Context, datas: dict | list, prefix: str, suffix: str) -> dict | list:
-        """
-        Check value in csv or json file that contain python expression
-        then evaluate variables and functions
-        e.g. '{1+3}' -> 4
-        """
+    def _load_csv_file(
+        ctx: SetupContext,
+        file_path: Path,
+        separator: str,
+        cyclic: bool,
+        start_idx: int,
+        end_idx: int,
+        source_scripted: bool,
+        prefix: str,
+        suffix: str,
+    ) -> list[dict]:
+        """Load CSV content from file."""
+        with file_path.open(newline="") as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=separator)
+            pagination = (
+                DataSourcePagination(start_idx, end_idx - start_idx)
+                if (start_idx is not None and end_idx is not None)
+                else None
+            )
+            result = DataSourceUtil.get_cyclic_data_list(data=list(reader), cyclic=cyclic, pagination=pagination)
+            if source_scripted:
+                return TaskUtil.evaluate_file_script_template(ctx=ctx, datas=result, prefix=prefix, suffix=suffix)
+            return result
+
+    @staticmethod
+    def _load_json_file(task_id: str, file_path: Path, cyclic: bool, start_idx: int, end_idx: int) -> list[dict]:
+        """Load JSON content from file."""
+        in_mem_cache = InMemoryCache()
+        cache_key = str(file_path) if task_id in str(file_path) else f"{task_id}_{str(file_path)}"
+        cache_data = in_mem_cache.get(cache_key)
+        data = json.loads(cache_data) if cache_data else json.loads(file_path.read_text())
+        if not isinstance(data, list):
+            raise ValueError(f"JSON file '{file_path.name}' must contain a list of objects")
+        pagination = (
+            DataSourcePagination(start_idx, end_idx - start_idx)
+            if (start_idx is not None and end_idx is not None)
+            else None
+        )
+        return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
+
+    @staticmethod
+    def _load_xml_file(file_path: Path, cyclic: bool, start_idx: int, end_idx: int) -> list[dict]:
+        """Load XML content from file."""
+        content = xmltodict.parse(file_path.read_text())
+        if "root" not in content or "list" not in content["root"]:
+            raise ValueError(f"XML file '{file_path.name}' must contain a list of objects")
+        items = content["root"]["list"]["item"]
+        items = [items] if isinstance(items, dict) else items
+        if start_idx is not None and end_idx is not None:
+            items = items[start_idx:end_idx]
+        return items
+
+    @staticmethod
+    def evaluate_file_script_template(
+        ctx: Context, datas: dict | list, prefix: str, suffix: str
+    ) -> list[dict[str, Any]]:
+        """Evaluate file script template."""
+        result = TaskUtil._evaluate_template(ctx, datas, prefix, suffix)
+        # Ensure we return a list of dicts
+        if isinstance(result, dict):
+            return [result]
+        elif isinstance(result, list):
+            return [item if isinstance(item, dict) else {"value": item} for item in result]
+        else:
+            return [{"value": result}]
+
+    @staticmethod
+    def _evaluate_template(ctx: Context, datas: dict | list, prefix: str, suffix: str) -> Any:
+        """Internal template evaluation."""
         if isinstance(datas, dict):
             result = {}
             for key, json_value in datas.items():
                 if isinstance(json_value, dict | list):
-                    value = TaskUtil.evaluate_file_script_template(ctx, json_value, prefix, suffix)
+                    value = TaskUtil._evaluate_template(ctx, json_value, prefix, suffix)
                 elif isinstance(json_value, str):
                     value = TaskUtil._evaluate_script_value(ctx, json_value, prefix, suffix)
                 else:
                     value = json_value
-                result.update({key: value})
+                result[key] = value
             return result
         elif isinstance(datas, list):
-            result = []
-            for value in datas:
-                if isinstance(value, list):
-                    result.extend(TaskUtil.evaluate_file_script_template(ctx, value, prefix, suffix))
-                elif isinstance(value, dict):
-                    result.append(TaskUtil.evaluate_file_script_template(ctx, value, prefix, suffix))
-                elif isinstance(value, str):
-                    result.append(TaskUtil._evaluate_script_value(ctx, value, prefix, suffix))
-                else:
-                    result.append(value)
-            return result
+            return [TaskUtil._evaluate_template(ctx, value, prefix, suffix) for value in datas]
         elif isinstance(datas, str):
             return TaskUtil._evaluate_script_value(ctx, datas, prefix, suffix)
-        else:
-            return datas
+        return datas
+
+    @staticmethod
+    def evaluate_selector_script(context: Context, stmt: GenerateStatement) -> str:
+        """Evaluate selector script to get the actual selector string."""
+        prefix = stmt.variable_prefix or context.root.default_variable_prefix
+        suffix = stmt.variable_suffix or context.root.default_variable_suffix
+        result = TaskUtil.evaluate_variable_concat_prefix_suffix(context, stmt.selector, prefix, suffix)
+        # Extract value from dict if needed
+        if isinstance(result, dict) and "value" in result:
+            return result["value"]
+        return result
 
     @staticmethod
     def _evaluate_script_value(ctx: Context, data: str, prefix: str, suffix: str):
@@ -287,7 +354,7 @@ class TaskUtil:
         load_start_idx: int,
         load_end_idx: int,
         load_pagination: DataSourcePagination,
-    ) -> tuple[list[dict], bool]:
+    ) -> tuple[list[dict[str, Any]], bool]:
         """
         Generate task to load data from source
         """
@@ -304,7 +371,7 @@ class TaskUtil:
             build_from_source = False
         # Load data from CSV
         elif source_str.endswith(".csv"):
-            source_data = _load_csv_file(
+            source_data = TaskUtil._load_csv_file(
                 ctx=context,
                 file_path=root_context.descriptor_dir / source_str,
                 separator=separator,
@@ -317,7 +384,7 @@ class TaskUtil:
             )
         # Load data from JSON
         elif source_str.endswith(".json"):
-            source_data = _load_json_file(
+            source_data = TaskUtil._load_json_file(
                 root_context.task_id,
                 root_context.descriptor_dir / source_str,
                 stmt.cyclic,
@@ -327,14 +394,15 @@ class TaskUtil:
             # if sourceScripted then evaluate python expression in json
             if source_scripted:
                 try:
-                    source_data = TaskUtil.evaluate_file_script_template(
+                    evaluated_data = TaskUtil.evaluate_file_script_template(
                         ctx=context, datas=source_data, prefix=prefix, suffix=suffix
                     )
+                    source_data = evaluated_data if isinstance(evaluated_data, list) else [evaluated_data]
                 except Exception as e:
                     logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
         # Load data from XML
         elif source_str.endswith(".xml"):
-            source_data = _load_xml_file(
+            source_data = TaskUtil._load_xml_file(
                 root_context.descriptor_dir / source_str,
                 stmt.cyclic,
                 load_start_idx,
@@ -356,7 +424,7 @@ class TaskUtil:
             # Load data from MongoDB
             if isinstance(client, MongoDBClient):
                 if stmt.selector:
-                    selector = _evaluate_selector_script(context, stmt)
+                    selector = TaskUtil.evaluate_selector_script(context, stmt)
                     source_data = client.get_by_page_with_query(query=selector, pagination=load_pagination)
                 elif stmt.type:
                     source_data = client.get_by_page_with_type(collection_name=stmt.type, pagination=load_pagination)
@@ -374,7 +442,7 @@ class TaskUtil:
             # Load data from RDBMS
             elif isinstance(client, RdbmsClient):
                 if stmt.selector:
-                    selector = _evaluate_selector_script(context, stmt)
+                    selector = TaskUtil.evaluate_selector_script(context, stmt)
                     source_data = client.get_by_page_with_query(original_query=selector, pagination=load_pagination)
                 else:
                     source_data = client.get_by_page_with_type(
@@ -386,6 +454,22 @@ class TaskUtil:
             raise ValueError(f"cannot find data source {source_str} for iterate task")
 
         return source_data, build_from_source
+
+    @staticmethod
+    def pre_consume_product(statement: GenerateStatement, product_result: list) -> tuple[str, list, dict]:
+        """
+        Prepare product data for consumption by exporters.
+        """
+        if not product_result:
+            return statement.full_name, [], {}
+
+        # Create product key and value tuple for consumer
+        product_key: str = statement.full_name
+        product_value: list[dict[str, Any]] = product_result
+        product_info: dict[str, Any] = {}
+
+        # Return as tuple for consistent consumer interface
+        return product_key, product_value, product_info
 
     # @staticmethod
     # def consume_minio_after_page_processing(stmt, context: Context) -> None:
@@ -435,7 +519,7 @@ class TaskUtil:
 
         # Wrap product key and value into a tuple
         # for iterate database may have key, value, and other statement attribute info
-        json_product = _pre_consume_product(stmt, json_result)
+        json_product = TaskUtil.pre_consume_product(stmt, json_result)
 
         # Create exporters cache in root context if it doesn't exist
         if not hasattr(root_context, "_task_exporters"):
@@ -489,10 +573,48 @@ class TaskUtil:
             try:
                 if isinstance(consumer, XMLExporter):
                     consumer.consume((json_product[0], xml_result))
-                elif isinstance(consumer, (JsonExporter, TXTExporter, CSVExporter)):
+                elif isinstance(consumer, JsonExporter | TXTExporter | CSVExporter):
                     consumer.consume(json_product)
                 else:
                     consumer.consume(json_product)
             except Exception as e:
                 logger.error(f"Error in consumer {type(consumer).__name__}: {str(e)}")
                 raise
+
+    @staticmethod
+    def _validate_execution_context(context):
+        # Add validation logic
+        return True
+
+    @staticmethod
+    def _cleanup_on_error(self):
+        # Add cleanup logic
+        pass
+
+    @staticmethod
+    @contextmanager
+    def _manage_resources(self):
+        try:
+            yield
+        finally:
+            # Cleanup resources
+            pass
+
+    @staticmethod
+    def validate_exporter_config(exporter_config):
+        required_fields = ["name", "type", "parameters"]
+        for field in required_fields:
+            if field not in exporter_config:
+                raise ValueError(f"Missing required field: {field}")
+
+
+class ExporterBase:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.cleanup()
+
+    def cleanup(self):
+        # Implement cleanup logic
+        pass

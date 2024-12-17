@@ -9,6 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 from datamimic_ce.generators.generator_util import GeneratorUtil
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -32,39 +33,49 @@ def count_digits_after_decimal(number):
 class TestDatamimicGeneratorFunctional:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_uuid_generator(self) -> None:
-        engine = DataMimicTest(test_dir=self._test_dir, filename="uuid_generator_test.xml", capture_test_result=True)
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_uuid_generator(self) -> None:
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="uuid_generator_test.xml", capture_test_result=True
+        )
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         assert result
 
         result_uuid_list = result["uuid_generator_test"]
         for output_result in result_uuid_list:
             assert GeneratorUtil.is_valid_uuid(output_result["uuid_name"]) is True
 
-    def test_bank_generator(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="bank_generator_test.xml", capture_test_result=True)
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_bank_generator(self):
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="bank_generator_test.xml", capture_test_result=True
+        )
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         bank = result["bank"]
         assert len(bank) == 100
 
-    def test_bank_account_generator(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_bank_account_generator(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="bank_account_generator_test.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         bank_account = result["bank_account"]
         assert len(bank_account) == 100
 
-    def test_float_generator(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="float_generator_test.xml", capture_test_result=True)
-        engine.test_with_timer()
-        result = engine.capture_result()
+    @pytest.mark.asyncio
+    async def test_float_generator(self):
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="float_generator_test.xml", capture_test_result=True
+        )
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
         float_generator = result["float_generator"]
         assert len(float_generator) == 100
         for e in float_generator:
@@ -81,22 +92,26 @@ class TestDatamimicGeneratorFunctional:
         assert any(count_digits_after_decimal(element.get("granularity_param")) == 2 for element in float_generator)
         assert any(count_digits_after_decimal(element.get("full_param")) == 4 for element in float_generator)
 
-    def test_name_generator(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="name_generator_test.xml", capture_test_result=True)
-        engine.test_with_timer()
-        result = engine.capture_result()
+    @pytest.mark.asyncio
+    async def test_name_generator(self):
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="name_generator_test.xml", capture_test_result=True
+        )
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
         container = result["container"]
         assert container is not None
         name_test = result["name_test"]
         assert name_test is not None
         assert len(name_test) == len(container) * 10
 
-    def test_academic_title_generator(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_academic_title_generator(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="academic_title_generator_test.xml", capture_test_result=True
         )
-        engine.test_with_timer()
-        result = engine.capture_result()
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
         academic_title = result["academic_title"]
         assert len(academic_title) == 100
         prefix = self._test_dir.parent.parent.parent
@@ -129,10 +144,13 @@ class TestDatamimicGeneratorFunctional:
             assert element["IT-title"] in it_titles
             assert element["US-title"] in us_titles
 
-    def test_gender_generator(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="gender_generator_test.xml", capture_test_result=True)
-        engine.test_with_timer()
-        result = engine.capture_result()
+    @pytest.mark.asyncio
+    async def test_gender_generator(self):
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="gender_generator_test.xml", capture_test_result=True
+        )
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
         valid_genders = ["female", "male", "other"]
         gender_test = result["gender_test"]
         assert len(gender_test) == 1000

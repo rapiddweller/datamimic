@@ -8,21 +8,27 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestInclude:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_simple_include(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_simple_include.xml", capture_test_result=True)
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_simple_include(self):
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_simple_include.xml", capture_test_result=True
+        )
+        await test_engine.test_with_timer()
 
-    def test_dynamic_uri_include(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_dynamic_uri.xml", capture_test_result=True)
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_dynamic_uri_include(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_dynamic_uri.xml", capture_test_result=True)
+        await test_engine.test_with_timer()
 
-    def test_dynamic_include_model(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_dynamic_include_model(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_dynamic_include_model.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()

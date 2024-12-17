@@ -6,6 +6,7 @@
 
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.utils.dict_util import dict_nested_update
+from typing import Any
 
 
 class GenIterContext(Context):
@@ -15,12 +16,21 @@ class GenIterContext(Context):
     """
 
     def __init__(self, parent: Context, current_name: str):
+        """Initialize GenIterContext with parent context and current name.
+
+        Args:
+            parent: Parent context (can be SetupContext or GenIterContext)
+            current_name: Current context name
+        """
         super().__init__(parent.root)
         self._parent = parent
         self._current_name = current_name
-        self._current_product = {}
-        self._current_variables = {}
-        self._namespace = {}
+        self._current_product: dict = {}
+        self._current_variables: dict[str, Any] = {}
+        self._namespace: dict = {}
+
+        # Get clients from root context
+        self.clients = self.root.clients
 
     @property
     def current_name(self) -> str:

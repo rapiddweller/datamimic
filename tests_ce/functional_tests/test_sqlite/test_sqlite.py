@@ -8,21 +8,24 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestSqlite:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_sqlite(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="datamimic.xml", capture_test_result=True)
-        engine.test_with_timer()
-        result = engine.capture_result()
+    @pytest.mark.asyncio
+    async def test_sqlite(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="datamimic.xml", capture_test_result=True)
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
         assert len(result) == 2
 
-    def test_more_sqlite(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="more_sqlite_test.xml", capture_test_result=True)
-        engine.test_with_timer()
-        result = engine.capture_result()
+    @pytest.mark.asyncio
+    async def test_more_sqlite(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="more_sqlite_test.xml", capture_test_result=True)
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
         assert len(result) == 3
         simple_user = result["simple_user"]
         assert len(simple_user) == 10

@@ -12,6 +12,8 @@ from datamimic_ce.statements.include_statement import IncludeStatement
 from datamimic_ce.tasks.task import Task
 from datamimic_ce.utils.file_util import FileUtil
 
+from typing import Any
+
 
 class IncludeTask(Task):
     """
@@ -25,7 +27,7 @@ class IncludeTask(Task):
     def statement(self) -> IncludeStatement:
         return self._statement
 
-    def execute(self, ctx: Context) -> None:
+    async def execute(self, ctx: Context) -> dict[str, list[Any]]:
         """
         Execute the include task
         :param ctx:
@@ -37,11 +39,16 @@ class IncludeTask(Task):
             uri = ctx.evaluate_python_expression(uri[1:-1])
 
         if isinstance(ctx, SetupContext):
-            self._execute_with_setup_context(ctx, uri)
+            await self._execute_with_setup_context(ctx, uri)
         else:
-            self._execute_with_geniter_context(ctx, uri)
+            # Execute the include task with geniter context (in <generate>)
+            if isinstance(ctx, GenIterContext):
+                await self._execute_with_geniter_context(ctx, uri)
+            else:
+                raise ValueError(f"Unsupported context type: {type(ctx)} for include task")
+        return {}
 
-    def _execute_with_setup_context(self, ctx: SetupContext, uri: str) -> None:
+    async def _execute_with_setup_context(self, ctx: SetupContext, uri: str) -> None:
         """
         Execute the include task with setup context (in <setup>)
         :param ctx:
@@ -63,17 +70,12 @@ class IncludeTask(Task):
                 ctx.descriptor_dir / self.statement.uri,
                 ctx.properties,
             )
-            SetupTask.execute_include(setup_stmt=sub_setup_stmt, parent_context=ctx)
+            await SetupTask.execute_include(setup_stmt=sub_setup_stmt, parent_context=ctx)
         else:
             raise ValueError(f"Unsupported include file type: {uri}. Only .properties and .xml are supported")
 
-    def _execute_with_geniter_context(self, ctx: GenIterContext, uri: str) -> None:
-        """
-        Execute the include task with geniter context (in <generate>)
-        :param ctx:
-        :param uri:
-        :return:
-        """
+    async def _execute_with_geniter_context(self, ctx: GenIterContext, uri: str) -> None:
+        """Execute the include task with geniter context (in <generate>)"""
         root_ctx = ctx.root
         if uri.endswith(".xml"):
             from datamimic_ce.tasks.generate_task import GenerateTask
@@ -84,6 +86,6 @@ class IncludeTask(Task):
                 root_ctx.descriptor_dir / uri,
                 root_ctx.properties,
             )
-            GenerateTask.execute_include(setup_stmt=sub_geniter_stmt, parent_context=ctx)
+            await GenerateTask.execute_include(setup_stmt=sub_geniter_stmt, parent_context=ctx)
         else:
             raise ValueError(f"Unsupported include file type: {uri} inside <generate>. Only .xml is supported")

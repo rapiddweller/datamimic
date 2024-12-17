@@ -8,11 +8,14 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestVariableScript:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_variable_script(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_variable_script.xml")
-        engine.test_with_timer()
+
+@pytest.mark.asyncio
+async def test_variable_script(self):
+    engine = DataMimicTest(test_dir=self._test_dir, filename="test_variable_script.xml")
+    engineawait.test_with_timer()

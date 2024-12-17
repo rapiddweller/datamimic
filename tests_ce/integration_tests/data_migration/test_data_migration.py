@@ -8,11 +8,13 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestDataMigration:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_postgres(self):
+    @pytest.mark.asyncio
+    async def test_postgres(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="datamimic.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()

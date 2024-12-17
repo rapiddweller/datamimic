@@ -16,6 +16,7 @@ class CompositeStatement(Statement, ABC):
 
     def __init__(self, name: str | None, parent_stmt: Statement | None):
         super().__init__(name=name, parent_stmt=parent_stmt)
+        self._sub_statements: list[Statement] = []
 
     @property
     def sub_statements(self) -> list[Statement]:

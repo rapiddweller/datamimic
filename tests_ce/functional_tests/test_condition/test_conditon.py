@@ -11,15 +11,17 @@ from unittest import TestCase
 import pytest
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestCondition(TestCase):
     _test_dir = Path(__file__).resolve().parent
 
-    def test_condition(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_condition.xml", capture_test_result=True)
-        engine.test_with_timer()
-        result = engine.capture_result()
+    @pytest.mark.asyncio
+    async def test_condition(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_condition.xml", capture_test_result=True)
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
 
         bikes = result["bike"]
         assert len(bikes) == 100
@@ -39,12 +41,13 @@ class TestCondition(TestCase):
                 with pytest.raises(KeyError):
                     bike["attributes"]
 
-    def test_condition_with_defaultValue(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_condition_with_defaultValue(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_nestedKey_condition_with_defaultValue.xml", capture_test_result=True
         )
-        engine.test_with_timer()
-        result = engine.capture_result()
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
 
         bikes = result["bike"]
         assert len(bikes) == 100

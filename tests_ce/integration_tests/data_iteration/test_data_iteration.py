@@ -8,15 +8,18 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestDataIteration:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_simple_iteration_csv(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_simple_iterate_csv.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_simple_iteration_csv(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_simple_iterate_csv.xml")
+        await test_engine.test_with_timer()
 
-    def test_simple_iteration_json(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_simple_iterate_json.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_simple_iteration_json(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_simple_iterate_json.xml")
+        await test_engine.test_with_timer()

@@ -8,15 +8,18 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestIterate:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_simple_iterate(self):
+    @pytest.mark.asyncio
+    async def test_simple_iterate(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="simple_iterate.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-    def test_nested_iterate(self):
+    @pytest.mark.asyncio
+    async def test_nested_iterate(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="nested_iterate.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()

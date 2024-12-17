@@ -8,24 +8,26 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestSourceScripted:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_csv_source_scripted(self):
+    @pytest.mark.asyncio
+    async def test_csv_source_scripted(self):
         """
         Test if the output of generation match the expect result.
         For example check if the age column is a number , which mean the source script is evaluate correctly
         Args:
             test_dir (): current test dir
         """
-        engine = DataMimicTest(
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_csv_source_scripted.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         people_from_source = result["people_from_source"]
 
         assert result
@@ -42,13 +44,14 @@ class TestSourceScripted:
             elif people["people_name"] == "Ocean":
                 assert people["people_age"] == 103
 
-    def test_json_source_script_cyclic(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_json_source_script_cyclic(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_json_source_scripted.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         json_product = result["json-product"]
 
         assert len(json_product) == 100
@@ -67,13 +70,14 @@ class TestSourceScripted:
             else:
                 assert product.get("variable") == "addition_1"
 
-    def test_iterate_source_script(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_iterate_source_script(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_iterate_source_scripted.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         iterate_json = result["iterate_json"]
 
         assert len(iterate_json) == 4
@@ -107,13 +111,14 @@ class TestSourceScripted:
             elif people["name"] == "Ocean":
                 assert people["age"] == 103
 
-    def test_part_source_script(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_part_source_script(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_part_source_scripted.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         iterate_json = result["test_json"]
 
         assert len(iterate_json) == 10

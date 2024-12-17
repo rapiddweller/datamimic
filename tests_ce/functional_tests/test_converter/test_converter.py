@@ -8,31 +8,34 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestConverter:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_remove_none_or_empty_element(self) -> None:
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_remove_none_or_empty_element(self) -> None:
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_remove_none_or_empty_element.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         groups = result["group"]
         assert len(groups) == 5
 
         for group in groups:
             assert group == {"nested_list": [{"inside_ele": 2}]}
 
-    def test_remove_none_or_empty_element_more(self) -> None:
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_remove_none_or_empty_element_more(self) -> None:
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_remove_none_or_empty_element_more.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         groups = result["group"]
         assert len(groups) == 5
 

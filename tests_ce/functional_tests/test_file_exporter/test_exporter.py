@@ -8,6 +8,7 @@ import shutil
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 import tests_ce.functional_tests.test_file_exporter.util_of_test_exporter as util
 
 
@@ -29,9 +30,10 @@ class TestExporter:
             if folder.exists():
                 shutil.rmtree(folder)
 
-    def test_csv_exporter_mp(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_csv_exporter_mp.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_csv_exporter_mp(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_csv_exporter_mp.xml")
+        await test_engine.test_with_timer()
         task_id = engine.task_id
 
         customer_folder_path, _ = self._get_export_paths(task_id, "csv", "customer")
@@ -60,9 +62,10 @@ class TestExporter:
         finally:
             self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
-    def test_json_exporter_mp(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_json_exporter_mp.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_json_exporter_mp(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_json_exporter_mp.xml")
+        await test_engine.test_with_timer()
         task_id = engine.task_id
 
         customer_folder_path, _ = self._get_export_paths(task_id, "json", "customer")
@@ -92,9 +95,10 @@ class TestExporter:
         finally:
             self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
-    def test_txt_exporter_mp(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_txt_exporter_mp.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_txt_exporter_mp(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_txt_exporter_mp.xml")
+        await test_engine.test_with_timer()
         task_id = engine.task_id
 
         customer_folder_path, _ = self._get_export_paths(task_id, "txt", "customer")
@@ -124,9 +128,10 @@ class TestExporter:
         finally:
             self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
-    def test_xml_exporter_mp(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_xml_exporter_mp.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_xml_exporter_mp(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_xml_exporter_mp.xml")
+        await test_engine.test_with_timer()
         task_id = engine.task_id
 
         customer_folder_path, _ = self._get_export_paths(task_id, "xml", "customer")
@@ -173,9 +178,10 @@ class TestExporter:
         finally:
             self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
-    def test_csv_exporter_sp(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_csv_exporter_sp.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_csv_exporter_sp(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_csv_exporter_sp.xml")
+        await test_engine.test_with_timer()
         task_id = engine.task_id
 
         customer_folder_path, customer_file_path = self._get_export_paths(task_id, "csv", "customer")
@@ -204,9 +210,10 @@ class TestExporter:
         finally:
             self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
-    def test_json_exporter_sp(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_json_exporter_sp.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_json_exporter_sp(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_json_exporter_sp.xml")
+        await test_engine.test_with_timer()
         task_id = engine.task_id
 
         customer_folder_path, customer_file_path = self._get_export_paths(task_id, "json", "customer")
@@ -236,9 +243,10 @@ class TestExporter:
         finally:
             self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
-    def test_txt_exporter_sp(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_txt_exporter_sp.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_txt_exporter_sp(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_txt_exporter_sp.xml")
+        await test_engine.test_with_timer()
         task_id = engine.task_id
 
         customer_folder_path, customer_file_path = self._get_export_paths(task_id, "txt", "customer")
@@ -268,9 +276,10 @@ class TestExporter:
         finally:
             self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
-    def test_xml_exporter_sp(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_xml_exporter_sp.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_xml_exporter_sp(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_xml_exporter_sp.xml")
+        await test_engine.test_with_timer()
         task_id = engine.task_id
 
         customer_folder_path, customer_file_path = self._get_export_paths(task_id, "xml", "customer")
@@ -317,9 +326,10 @@ class TestExporter:
         finally:
             self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
-    def test_one_record_xml_exporter_mp(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_one_record_xml_exporter_mp.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_one_record_xml_exporter_mp(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_one_record_xml_exporter_mp.xml")
+        await test_engine.test_with_timer()
         task_id = engine.task_id
 
         customer_folder_path, _ = self._get_export_paths(task_id, "xml", "customer")
@@ -357,9 +367,10 @@ class TestExporter:
         finally:
             self._cleanup_folders(customer_folder_path, inner_user_folder_path)
 
-    def test_one_record_xml_exporter_sp(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_one_record_xml_exporter_sp.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_one_record_xml_exporter_sp(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_one_record_xml_exporter_sp.xml")
+        await test_engine.test_with_timer()
         task_id = engine.task_id
 
         customer_folder_path, customer_file_path = self._get_export_paths(task_id, "xml", "customer")

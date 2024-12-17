@@ -10,26 +10,28 @@ from pathlib import Path
 import pytest
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestNestedPart:
     @pytest.fixture
-    def test_dir(self):
+    async def test_dir(self):
         return Path(__file__).resolve().parent
 
-    def test_nested_part_with_csv_source_scripted(self, test_dir):
+    @pytest.mark.asyncio
+    async def test_nested_part_with_csv_source_scripted(self, test_dir):
         """
         Test if the output of generation match the expect result.
         For example check if the age column is a number , which mean the source script is evaluate correctly
         Args:
             test_dir (): current test dir
         """
-        engine = DataMimicTest(
+        test_engine = DataMimicTest(
             test_dir=test_dir, filename="test_nested_part_csv_source_scripted.xml", capture_test_result=True
         )
-        engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         customer = result["customer"]
         data = result["data"]
 
@@ -62,11 +64,14 @@ class TestNestedPart:
                     assert contact[c]["email"] == email[int(s % 2)]
                     assert contact[c]["SMS"] == sms[int(s % 2)]
 
-    def test_nested_part_with_memstore(self, test_dir):
-        engine = DataMimicTest(test_dir=test_dir, filename="test_nested_part_memstore.xml", capture_test_result=True)
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_nested_part_with_memstore(self, test_dir):
+        test_engine = DataMimicTest(
+            test_dir=test_dir, filename="test_nested_part_memstore.xml", capture_test_result=True
+        )
+        await test_engine.test_with_timer()
 
-        result = engine.capture_result()
+        result = test_engine.capture_result()
         people = result.get("people")
         assert len(people) == 10
 

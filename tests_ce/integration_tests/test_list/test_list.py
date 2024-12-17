@@ -8,15 +8,18 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestList:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_simple_list(self):
+    @pytest.mark.asyncio
+    async def test_simple_list(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_simple_list.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()
 
-    def test_item_array_child(self):
+    @pytest.mark.asyncio
+    async def test_item_array_child(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_item_array_child.xml")
-        test_engine.test_with_timer()
+        await test_engine.test_with_timer()

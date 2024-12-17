@@ -8,17 +8,19 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestVariableDistribution:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_random_distribution_nested_key(self):
-        engine = DataMimicTest(
+    @pytest.mark.asyncio
+    async def test_random_distribution_nested_key(self):
+        test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_random_distribution_nested_key.xml", capture_test_result=True
         )
-        engine.test_with_timer()
-        result = engine.capture_result()
+        await test_engine.test_with_timer()
+        result = test_engine.capture_result()
 
         nested_key = result.get("check", [])[0].get("nested_key")
         assert len(nested_key) == 100

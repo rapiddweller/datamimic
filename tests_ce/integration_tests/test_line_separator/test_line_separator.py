@@ -8,15 +8,18 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+import pytest
 
 
 class TestLineSeparator:
     _test_dir = Path(__file__).resolve().parent
 
-    def test_csv_line_separator(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_csv_line_separator.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_csv_line_separator(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_csv_line_separator.xml")
+        await test_engine.test_with_timer()
 
-    def test_txt_line_separator(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_txt_line_separator.xml")
-        engine.test_with_timer()
+    @pytest.mark.asyncio
+    async def test_txt_line_separator(self):
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_txt_line_separator.xml")
+        await test_engine.test_with_timer()
