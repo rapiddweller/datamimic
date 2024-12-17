@@ -14,7 +14,7 @@
 
 ## Introduction
 
-Welcome to **DATAMIMIC Community Edition**, the Model-Driven and AI-powered platform that revolutionizes test data generation! By leveraging advanced AI and model-driven technologies, DATAMIMIC enables developers and testers to create realistic, scalable, and privacy-compliant test data with ease.
+Welcome to **DATAMIMIC**, the Model-Driven and AI-powered platform that revolutionizes test data generation! By leveraging advanced AI and model-driven technologies, DATAMIMIC enables developers and testers to create realistic, scalable, and privacy-compliant test data with ease.
 
 [![Watch the video](https://img.youtube.com/vi/sycO7qd1Bhk/0.jpg)](https://www.youtube.com/watch?v=sycO7qd1Bhk)
 
@@ -29,7 +29,7 @@ Welcome to **DATAMIMIC Community Edition**, the Model-Driven and AI-powered plat
 - 🐍 **Seamless Python Integration**: Easily integrate with Python projects and manage dependencies.
 - ⚙️ **Extensibility**: Customize and extend functionalities to suit your specific testing needs.
 
-> **Note:** The Community Edition focuses on core functionalities and does not include AI-powered features like automatic model generation. These advanced features are available in the **Enterprise Edition**.
+> **Note:** The **Community Edition** focuses on core functionalities and does **not** include AI-powered features like GANs, LLMs and automatic model generation. These advanced features are available in the **Enterprise Edition**.
 
 
 ---
@@ -108,7 +108,7 @@ For contributors and developers who want to work with the source code:
             <key name="first_name" script="person.given_name"/>
             <key name="last_name" script="person.family_name"/>
             <key name="gender" script="person.gender"/>
-            <key name="birthDate" script="person.birthdate" converter="DateFormat('%d.%m.%Y')"/>
+            <key name="birth_date" script="person.birthdate" converter="DateFormat('%d.%m.%Y')"/>
             <key name="email" script="person.family_name + '@' + person.given_name + '.de'"/>
             <key name="ce_user" values="True, False"/>
             <key name="ee_user" values="True, False"/>
@@ -128,19 +128,19 @@ For contributors and developers who want to work with the source code:
     **json export:**
     ```json
    [
-   {"id": 1, "first_name": "Mary", "last_name": "Mcgowan", "gender": "female", "birthDate": "1946-05-15T00:00:00", "email": "Mcgowan@Mary.de", "ce_user": false, "ee_user": true, "datamimic_lover": "DEFINITELY"},
-   {"id": 2, "first_name": "Gabrielle", "last_name": "Malone", "gender": "female", "birthDate": "1989-11-27T00:00:00", "email": "Malone@Gabrielle.de", "ce_user": false, "ee_user": true, "datamimic_lover": "DEFINITELY"},
-   {"id": 4, "first_name": "Margaret", "last_name": "Torres", "gender": "female", "birthDate": "2006-07-13T00:00:00", "email": "Torres@Margaret.de", "ce_user": false, "ee_user": false, "datamimic_lover": "DEFINITELY"},
-    {"id": 5, "first_name": "Monica", "last_name": "Meyers", "gender": "female", "birthDate": "1983-07-22T00:00:00", "email": "Meyers@Monica.de", "ce_user": true, "ee_user": false, "datamimic_lover": "DEFINITELY"},
-    {"id": 6, "first_name": "Jason", "last_name": "Davis", "gender": "male", "birthDate": "1941-07-05T00:00:00", "email": "Davis@Jason.de", "ce_user": true, "ee_user": false, "datamimic_lover": "DEFINITELY"},
+   {"id": 1, "first_name": "Mary", "last_name": "Mcgowan", "gender": "female", "birth_date": "1946-05-15T00:00:00", "email": "Mcgowan@Mary.de", "ce_user": false, "ee_user": true, "datamimic_lover": "DEFINITELY"},
+   {"id": 2, "first_name": "Gabrielle", "last_name": "Malone", "gender": "female", "birth_date": "1989-11-27T00:00:00", "email": "Malone@Gabrielle.de", "ce_user": false, "ee_user": true, "datamimic_lover": "DEFINITELY"},
+   {"id": 4, "first_name": "Margaret", "last_name": "Torres", "gender": "female", "birth_date": "2006-07-13T00:00:00", "email": "Torres@Margaret.de", "ce_user": false, "ee_user": false, "datamimic_lover": "DEFINITELY"},
+    {"id": 5, "first_name": "Monica", "last_name": "Meyers", "gender": "female", "birth_date": "1983-07-22T00:00:00", "email": "Meyers@Monica.de", "ce_user": true, "ee_user": false, "datamimic_lover": "DEFINITELY"},
+    {"id": 6, "first_name": "Jason", "last_name": "Davis", "gender": "male", "birth_date": "1941-07-05T00:00:00", "email": "Davis@Jason.de", "ce_user": true, "ee_user": false, "datamimic_lover": "DEFINITELY"},
     {"...":  "..."},
-    {"id": 100, "first_name": "Jared", "last_name": "Rivas", "gender": "male", "birthDate": "1975-03-16T00:00:00", "email": "Rivas@Jared.de", "ce_user": true, "ee_user": true, "datamimic_lover": "DEFINITELY"}
+    {"id": 100, "first_name": "Jared", "last_name": "Rivas", "gender": "male", "birth_date": "1975-03-16T00:00:00", "email": "Rivas@Jared.de", "ce_user": true, "ee_user": true, "datamimic_lover": "DEFINITELY"}
    ]
     ```
 
     **csv export:**
     ```csv
-    id|first_name|last_name|gender|birthDate|email|ce_user|ee_user|datamimic_lover
+    id|first_name|last_name|gender|birth_date|email|ce_user|ee_user|datamimic_lover
     1|Mary|Mcgowan|female|1946-05-15 00:00:00|Mcgowan@Mary.de|False|True|DEFINITELY
     2|Gabrielle|Malone|female|1989-11-27 00:00:00|Malone@Gabrielle.de|False|True|DEFINITELY
     3|Antonio|Davis|male|2005-05-12 00:00:00|Davis@Antonio.de|False|True|DEFINITELY
@@ -239,7 +239,6 @@ Stay updated and connect with our community!
 - 🌐 **Website**: [www.datamimic.io](https://datamimic.io)
 - 🏢 **Rapiddweller**: [www.rapiddweller.com](https://rapiddweller.com)
 - 💼 **LinkedIn**: [rapiddweller](https://www.linkedin.com/company/rapiddweller)
-- 🐦 **Twitter**: [@rapiddweller](https://twitter.com/rapiddweller)
 
 ---
 
