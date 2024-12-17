@@ -3,7 +3,7 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-
+from typing import Any, cast
 from xml.etree.ElementTree import Element
 
 from datamimic_ce.constants.element_constants import EL_REFERENCE
@@ -31,9 +31,9 @@ class ReferenceParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self) -> ReferenceStatement:
+    def parse(self, **kwargs: Any) -> ReferenceStatement:
         """
         Parse element "reference" into ReferenceStatement
         :return:
         """
-        return ReferenceStatement(self.validate_attributes(ReferenceModel))
+        return ReferenceStatement(cast(ReferenceModel, self.validate_attributes(ReferenceModel)))

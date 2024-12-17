@@ -32,7 +32,7 @@ class VariableParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self, parent_stmt: Statement, has_parent_setup: bool | None = False) -> VariableStatement:
+    def parse(self, parent_stmt: Statement, has_parent_setup: bool | None = False) -> VariableStatement:  # TODO: mypy issue [override] -> different arguments
         """
         Parse element "variable" into VariableStatement
         :return:

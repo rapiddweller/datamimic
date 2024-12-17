@@ -3,7 +3,7 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-
+from typing import Any, cast
 from xml.etree.ElementTree import Element
 
 from datamimic_ce.constants.element_constants import EL_MEMSTORE
@@ -31,9 +31,9 @@ class MemstoreParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self) -> MemstoreStatement:
+    def parse(self,  **kwargs: Any) -> MemstoreStatement:
         """
         Parse element "memstore" to MemstoreStatement
         :return:
         """
-        return MemstoreStatement(self.validate_attributes(MemstoreModel))
+        return MemstoreStatement(cast(MemstoreModel, self.validate_attributes(MemstoreModel)))
