@@ -18,7 +18,7 @@ class MongoDBTask(Task):
     def statement(self) -> MongoDBStatement:
         return self._statement
 
-    def execute(self, ctx: SetupContext):
+    def execute(self, ctx: SetupContext):  # TODO: mypy issue [override]
         ctx.add_client(
             self._statement.mongodb_id,
             MongoDBClient(self._statement.mongodb_credential),
