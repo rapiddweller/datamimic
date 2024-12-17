@@ -32,7 +32,7 @@ class DatabaseParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self, descriptor_dir: Path) -> DatabaseStatement:
+    def parse(self, descriptor_dir: Path) -> DatabaseStatement:  # TODO: mypy issue [override]
         """
         Parse element "database" into DatabaseStatement
         :return:

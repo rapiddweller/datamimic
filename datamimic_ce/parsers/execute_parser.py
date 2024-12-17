@@ -33,7 +33,7 @@ class ExecuteParser(StatementParser):
         if element.text:
             raise ValueError("Element <execute> cannot contain text. Please put script into files.")
 
-    def parse(self) -> ExecuteStatement:
+    def parse(self, **kwargs) -> ExecuteStatement:
         """
         Parse element "memstore" to MemstoreStatement
         :return:

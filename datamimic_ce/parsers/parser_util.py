@@ -7,7 +7,10 @@
 import copy
 import re
 from pathlib import Path
+from typing import cast
 from xml.etree.ElementTree import Element
+
+from datamimic_ce.statements.composite_statement import CompositeStatement
 
 from datamimic_ce.config import settings
 from datamimic_ce.constants.attribute_constants import (
@@ -86,7 +89,9 @@ class ParserUtil:
             raise ValueError(f"Cannot get element tag for statement {stmt.__class__.__name__}")
 
     @staticmethod
-    def get_valid_sub_elements_set_by_tag(ele_tag: str) -> set:
+    def get_valid_sub_elements_set_by_tag(ele_tag: str) -> set | None:
+        # return None mean that element can have all kind of sub element,
+        # check StatementParser._validate_sub_elements for detail
         valid_sub_element_dict = {
             EL_SETUP: {
                 EL_MONGODB,
@@ -218,6 +223,7 @@ class ParserUtil:
             parser = self.get_parser_by_element(class_factory_util, child_ele, copied_props)
             # TODO: add more child-element-able parsers such as
             #  attribute, reference, part,... (i.e. elements which have attribute 'name')
+            stmt: Statement
             if isinstance(parser, VariableParser | GenerateParser | NestedKeyParser | ElementParser):
                 if isinstance(parser, VariableParser) and element.tag == "setup":
                     stmt = parser.parse(parent_stmt=parent_stmt, has_parent_setup=True)
@@ -234,14 +240,17 @@ class ParserUtil:
                     | ReferenceParser
                     | ArrayParser
                     | EchoParser
-                    | GeneratorParser,
+                    | GeneratorParser
                 ):
                     stmt = parser.parse()
-                elif isinstance(
-                    parser,
-                    KeyParser | ConditionParser | IfParser | ElseIfParser | ElseParser,
-                ):
+                elif isinstance(parser, KeyParser):
                     stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
+                elif isinstance(parser, ConditionParser):
+                    stmt = parser.parse(descriptor_dir=descriptor_dir,
+                                        parent_stmt=cast(CompositeStatement, parent_stmt))
+                elif isinstance(parser, IfParser | ElseIfParser | ElseParser):
+                    stmt = parser.parse(descriptor_dir=descriptor_dir,
+                                        parent_stmt=cast(ConditionStatement, parent_stmt))
                 else:
                     stmt = parser.parse(descriptor_dir=descriptor_dir)
 
