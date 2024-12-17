@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from decimal import Decimal
 from pathlib import Path
 

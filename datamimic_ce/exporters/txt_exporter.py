@@ -37,7 +37,7 @@ class TXTExporter(UnifiedBufferedExporter):
         chunk_size: Optional[int],
         separator: Optional[str],
         line_terminator: Optional[str],
-        encoding: Optional[str]
+        encoding: Optional[str],
     ):
         """
         Initializes the TXTExporter.
@@ -55,7 +55,9 @@ class TXTExporter(UnifiedBufferedExporter):
 
         # Pass encoding via kwargs to the base class
 
-        super().__init__("txt", setup_context, product_name, chunk_size=chunk_size, page_info=page_info, encoding=encoding)
+        super().__init__(
+            "txt", setup_context, product_name, chunk_size=chunk_size, page_info=page_info, encoding=encoding
+        )
         logger.info(
             f"TXTExporter initialized with chunk size {chunk_size}, separator '{self.separator}', "
             f"encoding '{self.encoding}', line terminator '{self.line_terminator}'"

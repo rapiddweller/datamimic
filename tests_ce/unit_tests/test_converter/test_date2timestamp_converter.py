@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from datetime import datetime
 
 import pytest
@@ -14,7 +13,6 @@ from datamimic_ce.converter.date2timestamp_converter import Date2TimestampConver
 
 
 class TestDate2TimestampConverter:
-
     def test_convert_valid_datetime(self):
         converter = Date2TimestampConverter()
         value = datetime(2023, 10, 1, 12, 0, 0)

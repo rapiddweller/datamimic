@@ -284,8 +284,7 @@ def _consume_by_page(
         stmt,
         context,
         xml_result,
-        MultiprocessingPageInfo
-        (
+        MultiprocessingPageInfo(
             mp_idx,
             mp_chunk_size,
             page_idx,
@@ -549,8 +548,11 @@ def gen_timer(process: Literal["generate", "export", "process"], report_logging:
                 process_name = "Generating and exporting"
         logger.info(
             f"{process_name} {records_count:,} records '{product_name}' took {round(elapsed_time, 5)} seconds "
-            f"({int(records_count / elapsed_time):,} records/second)" if elapsed_time > 0 else "N/A records/second"
+            f"({int(records_count / elapsed_time):,} records/second)"
+            if elapsed_time > 0
+            else "N/A records/second"
         )
+
 
 class GenerateTask(Task):
     """
@@ -865,13 +867,11 @@ class GenerateTask(Task):
             else:
                 # Process data by page in single process
                 index_chunk = self._get_chunk_indices(page_size, count)
-                logger.info(
-                    f"Processing {len(index_chunk)} pages for {count - 1:,} products of '{self.statement.name}'"
-                )
+                logger.info(f"Processing {len(index_chunk)} pages for {count:,} products of '{self.statement.name}'")
                 for page_index, page_tuple in enumerate(index_chunk):
                     start, end = page_tuple
                     logger.info(
-                        f"Processing {end - start - 1:,} product '{self.statement.name}' on page {page_index + 1}/{len(index_chunk)} in a single process"
+                        f"Processing {end - start:,} product '{self.statement.name}' on page {page_index + 1}/{len(index_chunk)} in a single process"
                     )
                     # Generate product
                     result = self._sp_generate(context, start, end)

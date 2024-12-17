@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 import json
 import subprocess
 from pathlib import Path
@@ -25,10 +24,14 @@ class TestMeasureTimeSummary:
         create_folder_command = ["mkdir", "-p", Path(save_uri).parent]
         subprocess.run(create_folder_command)
         # Define the command, save benchmark result to save_uri
-        command = ["poetry", "run", "pytest",
-                   "--benchmark-sort=name",
-                   "--benchmark-columns=min,max,mean,rounds",
-                   f"--benchmark-json={save_uri}"]
+        command = [
+            "poetry",
+            "run",
+            "pytest",
+            "--benchmark-sort=name",
+            "--benchmark-columns=min,max,mean,rounds",
+            f"--benchmark-json={save_uri}",
+        ]
         command.extend(test_uri)
         # Run the command
         subprocess.run(command)
@@ -67,8 +70,7 @@ class TestMeasureTimeSummary:
                 consolidated_data[name] = {group: "" for group in group_names}
 
             # get mean value
-            mean_value = benchmark["stats"]["mean"] if "stats" in benchmark and "mean" in benchmark[
-                "stats"] else None
+            mean_value = benchmark["stats"]["mean"] if "stats" in benchmark and "mean" in benchmark["stats"] else None
 
             if mean_value is not None and mean_value >= 0:
                 # Convert mean value to milliseconds if time_unit is "ms"
@@ -92,8 +94,9 @@ class TestMeasureTimeSummary:
 
         # Populate the table with consolidated data
         for name, values in sorted_consolidated_data.items():
-            row_values = [name] + [values[group] if values[group] != "undefined" else "undefined" for group in
-                                   sorted(group_names)]
+            row_values = [name] + [
+                values[group] if values[group] != "undefined" else "undefined" for group in sorted(group_names)
+            ]
             table.add_row(row_values)
 
         return table

@@ -62,4 +62,3 @@ class TestFakerGenerator:
                 assert False
             except ValueError as e:
                 assert str(e) == f"Wrong Faker method: {invalid_method} does not exist"
-

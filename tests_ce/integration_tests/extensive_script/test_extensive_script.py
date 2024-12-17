@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from pathlib import Path
 
 import pytest
@@ -38,4 +37,3 @@ class TestExtensiveScript:
     def test_custom_components_global_import_single(self) -> None:
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="local_global_import/single_global.xml")
         test_engine.test_with_timer()
-

@@ -10,7 +10,6 @@ from datamimic_ce.model.database_model import DatabaseModel
 
 
 class TestRdbmsCredential:
-
     database_model = DatabaseModel(
         id="sourceDB",
         host="localhost",

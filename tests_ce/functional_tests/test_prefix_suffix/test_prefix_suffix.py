@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
@@ -15,8 +14,9 @@ class TestPrefixSuffix:
     _test_dir = Path(__file__).resolve().parent
 
     def test_default_prefix_suffix(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_default_prefix_suffix.xml",
-                               capture_test_result=True)
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_default_prefix_suffix.xml", capture_test_result=True
+        )
         engine.test_with_timer()
         result = engine.capture_result()
 

@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 def random_age(min, max):
     # IMPORTANT: always put "import" in function scope (not global) to avoid pickle issue
     import random

@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from datetime import datetime
 from pathlib import Path
 
@@ -82,8 +81,7 @@ class TestRdbmsFunctional:
     @pytest.mark.skip(reason="This test should be move to another job")
     def test_oracle_functional(self):
         try:
-            engine = DataMimicTest(test_dir=self._test_dir, filename="more_oracle_test.xml",
-                                   capture_test_result=True)
+            engine = DataMimicTest(test_dir=self._test_dir, filename="more_oracle_test.xml", capture_test_result=True)
             engine.test_with_timer()
             result = engine.capture_result()
         except Exception as e:
@@ -103,9 +101,9 @@ class TestRdbmsFunctional:
 
         # Verify iterate_simple_user
         iterate_simple_user = result["iterate_simple_user"]
-        assert len(iterate_simple_user) == len(simple_user), (
-            f"Expected iterate_simple_user length {len(simple_user)}, got {len(iterate_simple_user)}"
-        )
+        assert len(iterate_simple_user) == len(
+            simple_user
+        ), f"Expected iterate_simple_user length {len(simple_user)}, got {len(iterate_simple_user)}"
         for i in range(len(simple_user)):
             for key, value in simple_user[i].items():
                 assert iterate_simple_user[i].get(key) == value, (

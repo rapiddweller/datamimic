@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 from pathlib import Path
 from unittest import TestCase
 
@@ -41,7 +40,9 @@ class TestCondition(TestCase):
                     bike["attributes"]
 
     def test_condition_with_defaultValue(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_nestedKey_condition_with_defaultValue.xml", capture_test_result=True)
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_nestedKey_condition_with_defaultValue.xml", capture_test_result=True
+        )
         engine.test_with_timer()
         result = engine.capture_result()
 

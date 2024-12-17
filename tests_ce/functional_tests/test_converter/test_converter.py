@@ -14,9 +14,9 @@ class TestConverter:
     _test_dir = Path(__file__).resolve().parent
 
     def test_remove_none_or_empty_element(self) -> None:
-        engine = DataMimicTest(test_dir=self._test_dir,
-                               filename="test_remove_none_or_empty_element.xml",
-                               capture_test_result=True)
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_remove_none_or_empty_element.xml", capture_test_result=True
+        )
         engine.test_with_timer()
 
         result = engine.capture_result()
@@ -24,12 +24,12 @@ class TestConverter:
         assert len(groups) == 5
 
         for group in groups:
-            assert group == {'nested_list': [{'inside_ele': 2}]}
+            assert group == {"nested_list": [{"inside_ele": 2}]}
 
     def test_remove_none_or_empty_element_more(self) -> None:
-        engine = DataMimicTest(test_dir=self._test_dir,
-                               filename="test_remove_none_or_empty_element_more.xml",
-                               capture_test_result=True)
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_remove_none_or_empty_element_more.xml", capture_test_result=True
+        )
         engine.test_with_timer()
 
         result = engine.capture_result()

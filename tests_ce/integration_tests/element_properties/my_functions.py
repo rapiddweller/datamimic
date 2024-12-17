@@ -5,13 +5,12 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
 def calc_square(x):
-    return x ** 2
+    return x**2
 
 
 def cube(x):
-    return x ** 3
+    return x**3
 
 
 #  Copyright (c) 2024 Rapiddweller Asia Co., Ltd.
