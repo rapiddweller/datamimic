@@ -14,7 +14,7 @@
 
 ## Introduction
 
-Welcome to **DATAMIMIC Community Edition**, the AI-powered platform that revolutionizes test data generation! By leveraging advanced AI and model-driven technologies, DATAMIMIC enables developers and testers to create realistic, scalable, and privacy-compliant test data with ease.
+Welcome to **DATAMIMIC Community Edition**, the Model-Driven and AI-powered platform that revolutionizes test data generation! By leveraging advanced AI and model-driven technologies, DATAMIMIC enables developers and testers to create realistic, scalable, and privacy-compliant test data with ease.
 
 [![Watch the video](https://img.youtube.com/vi/sycO7qd1Bhk/0.jpg)](https://www.youtube.com/watch?v=sycO7qd1Bhk)
 
@@ -23,7 +23,7 @@ Welcome to **DATAMIMIC Community Edition**, the AI-powered platform that revolut
 ## Key Features
 
 - 🧠 **Model-Driven Data Generation**: Utilize sophisticated algorithms to simulate real-world data scenarios.
-- 🔮 **AI-Powered Data Generation**: Simulate real-world data scenarios using cutting-edge AI algorithms. (Like GANs, LLMs, and more)
+- 🔮 **AI-Powered Data Generation ( only EE )**: Simulate real-world data scenarios using cutting-edge AI algorithms. (Like GANs, LLMs, and more)
 - 🛡️ **Data Privacy Compliance**: Anonymize and pseudonymize data to meet GDPR and global data protection standards.
 - 🚀 **High Performance**: Engineered for scalability to handle complex datasets efficiently.
 - 🐍 **Seamless Python Integration**: Easily integrate with Python projects and manage dependencies.
@@ -157,8 +157,8 @@ DATAMIMIC supports various advanced features:
 
 - **Custom Generators**: Create your own data generators
 - **Data Relationships**: Define complex relationships between entities
-- **Import/Export Formats CE**: Support for JSON, XML, CSV, RDBMS and MongoDB
-- **Import/Export Formats EE**: Kafka, EDI, XSD and more
+- **Import/Export Formats**: Support for JSON, XML, CSV, RDBMS and MongoDB
+- **Import/Export Formats ( only EE )**: Kafka, EDI, XSD and more
 - **Data Anonymization**: Anonymize data to comply with privacy regulations
 - **Data Validation**: Define and enforce data validation rules
 - **Scripting**: Extend functionality using Python scripts
