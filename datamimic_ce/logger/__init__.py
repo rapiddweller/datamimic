@@ -13,18 +13,6 @@ from datetime import datetime
 from datamimic_ce.config import settings
 
 
-class CustomLogFormatter(logging.Formatter):
-    def format(self, record):
-        log_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
-        total_width = 7  # Total available width for the log level and surrounding space
-        log_level = record.levelname
-        centered_log_level = f"{log_level:^{total_width}}"  # Center the log level in the fixed-width space
-        logger_name = f"{record.name:<9}"
-        message = f"{log_time} | {centered_log_level} | {logger_name} | {record.getMessage()}"
-
-        return message
-
-
 def setup_logger(logger_name, task_id, level=logging.INFO):
     l = logging.getLogger(logger_name)
     logging.addLevelName(logging.DEBUG, "DEBUG")
@@ -40,21 +28,14 @@ def setup_logger(logger_name, task_id, level=logging.INFO):
         datefmt="%Y-%m-%d %H:%M:%S,%f"[:-3],
     )
 
-    stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setFormatter(formatter)
-
-    if not l.handlers:  # Avoid adding duplicate handlers
+    # Avoid adding duplicate stream handlers
+    if not any(isinstance(handler, logging.StreamHandler) for handler in l.handlers):
+        stream_handler = logging.StreamHandler(sys.stdout)
+        stream_handler.setFormatter(formatter)
         l.setLevel(level)
         l.addHandler(stream_handler)
 
     l.propagate = False  # Avoid propagation to the parent logger
-
-
-def shutdown_logger(logger_name):
-    l = logging.getLogger(logger_name)
-    for handler in l.handlers:
-        handler.close()
-        l.removeHandler(handler)
 
 
 def get_current_process_name():
