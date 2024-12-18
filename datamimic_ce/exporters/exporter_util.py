@@ -227,7 +227,7 @@ class ExporterUtil:
             try:
                 fieldnames = ast.literal_eval(fieldnames)
             except Exception as e:
-                raise ValueError(f"Error parsing fieldnames {fieldnames}: {e}")
+                raise ValueError(f"Error parsing fieldnames {fieldnames}: {e}") from e
 
         elif name == EXPORTER_CONSOLE_EXPORTER:
             return ConsoleExporter()
@@ -263,7 +263,12 @@ class ExporterUtil:
             return setup_context.memstore_manager.get_memstore(name)
         else:
             raise ValueError(
-                f"Target not found: {name}, please check the target name again. Expected: {EXPORTER_JSON}, {EXPORTER_CSV}, {EXPORTER_XML}, {EXPORTER_TXT}, {EXPORTER_TEST_RESULT_EXPORTER}, {EXPORTER_JSON_SINGLE}, {EXPORTER_CONSOLE_EXPORTER}, {EXPORTER_LOG_EXPORTER}, or client {list(setup_context.clients.keys())} or memstore {setup_context.memstore_manager.get_memstores_list()}"
+                f"Target not found: {name}, please check the target name again. "
+                f"Expected: {EXPORTER_JSON}, {EXPORTER_CSV}, {EXPORTER_XML}, "
+                f"{EXPORTER_TXT}, {EXPORTER_TEST_RESULT_EXPORTER}, {EXPORTER_JSON_SINGLE}, "
+                f"{EXPORTER_CONSOLE_EXPORTER}, {EXPORTER_LOG_EXPORTER}, "
+                f"or client {list(setup_context.clients.keys())} "
+                f"or memstore {setup_context.memstore_manager.get_memstores_list()}"
             )
 
     @staticmethod

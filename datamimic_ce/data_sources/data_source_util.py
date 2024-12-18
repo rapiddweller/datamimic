@@ -91,12 +91,14 @@ class DataSourceUtil:
                         ds_len = client.count_query_length(query=stmt.iteration_selector)
                     except ProgrammingError:
                         logger.error(
-                            f"Cannot get length of database source '{source_str}' with iterationSelector '{stmt.iteration_selector}'"
+                            f"Cannot get length of database source '{source_str}' "
+                            f"with iterationSelector '{stmt.iteration_selector}'"
                         )
                         return
                     except OperationalError:
                         logger.error(
-                            f"Cannot get length of database source '{source_str}' with iterationSelector '{stmt.iteration_selector}'"
+                            f"Cannot get length of database source '{source_str}' "
+                            f"with iterationSelector '{stmt.iteration_selector}'"
                         )
                         return
                 else:
@@ -118,7 +120,8 @@ class DataSourceUtil:
                         ds_len = client.count_query_length(query=stmt.iteration_selector)
                     except ValueError:
                         logger.error(
-                            f"Cannot get length of database source '{source_str}' with iterationSelector '{stmt.iteration_selector}'"
+                            f"Cannot get length of database source '{source_str}' "
+                            f"with iterationSelector '{stmt.iteration_selector}'"
                         )
                         return
                 else:

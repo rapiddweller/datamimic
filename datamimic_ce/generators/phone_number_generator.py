@@ -37,8 +37,8 @@ class PhoneNumberGenerator(Generator):
                 for country_reader_row in country_reader:
                     country_codes[country_reader_row[0]] = country_reader_row[2]
             self._country_codes = country_codes
-        except FileNotFoundError:
-            raise FileNotFoundError(f"File not found: {country_file_path}")
+        except FileNotFoundError as err:
+            raise FileNotFoundError(f"File not found: {country_file_path}") from err
 
         # use later when generate
         self._is_mobile = is_mobile

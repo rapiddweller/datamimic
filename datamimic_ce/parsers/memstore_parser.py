@@ -31,7 +31,7 @@ class MemstoreParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self,  **kwargs: Any) -> MemstoreStatement:
+    def parse(self, **kwargs: Any) -> MemstoreStatement:
         """
         Parse element "memstore" to MemstoreStatement
         :return:

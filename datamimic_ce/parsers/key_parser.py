@@ -8,11 +8,10 @@ from pathlib import Path
 from typing import cast
 from xml.etree.ElementTree import Element
 
-from datamimic_ce.statements.composite_statement import CompositeStatement
-
 from datamimic_ce.constants.element_constants import EL_KEY
 from datamimic_ce.model.key_model import KeyModel
 from datamimic_ce.parsers.statement_parser import StatementParser
+from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil

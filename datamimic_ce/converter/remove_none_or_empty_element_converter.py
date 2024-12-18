@@ -22,7 +22,7 @@ class RemoveNoneOrEmptyElementConverter(Converter):
     def convert(self, value: list[Any] | dict[str, Any]) -> list[Any] | dict[str, Any]:
         """Recursively removes empty elements."""
         # Early return for primitive types
-        if not isinstance(value, (list, dict)):
+        if not isinstance(value, list | dict):
             return value
 
         # Dispatch to specialized handlers

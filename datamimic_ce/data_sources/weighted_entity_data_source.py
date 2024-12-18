@@ -14,7 +14,8 @@ from datamimic_ce.utils.file_util import FileUtil
 
 class WeightedEntityDataSource(Generator):
     """
-    Purpose: generate a dict of entity (header_name: row_value) from "entity.wgt.ent.csv" file with corresponding weight.
+    Purpose: generate a dict of entity (header_name: row_value)
+    from "entity.wgt.ent.csv" file with corresponding weight.
 
     Extends: Generator (Abstract Class).
 

@@ -15,7 +15,7 @@ import time
 from collections.abc import Callable
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Literal, Any
+from typing import Literal
 
 import dill
 import xmltodict
@@ -439,7 +439,9 @@ def _load_csv_file(
 
         # if sourceScripted then evaluate python expression in csv
         if source_scripted:
-            evaluated_result = TaskUtil.evaluate_file_script_template(ctx=ctx, datas=result, prefix=prefix, suffix=suffix)
+            evaluated_result = TaskUtil.evaluate_file_script_template(
+                ctx=ctx, datas=result, prefix=prefix, suffix=suffix
+            )
             return evaluated_result if isinstance(evaluated_result, list) else [evaluated_result]
 
         return result
@@ -506,7 +508,9 @@ def _load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int, end_idx
         return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
 
 
-def _evaluate_selector_script(context: Context, stmt: GenerateStatement):  # TODO: mypy issue, maybe add selector as input param
+def _evaluate_selector_script(
+    context: Context, stmt: GenerateStatement
+):  # TODO: mypy issue, maybe add selector as input param
     """
     Evaluate script selector.
 
@@ -594,7 +598,9 @@ class GenerateTask(Task):
             if self.statement.selector:
                 # Evaluate script selector
                 selector = _evaluate_selector_script(context=context, stmt=self._statement)
-                client = root_context.get_client_by_id(self.statement.source) if self.statement.source is not None else None
+                client = (
+                    root_context.get_client_by_id(self.statement.source) if self.statement.source is not None else None
+                )
                 if isinstance(client, DatabaseClient):
                     count = client.count_query_length(selector)
                 else:
@@ -877,7 +883,8 @@ class GenerateTask(Task):
                 for page_index, page_tuple in enumerate(index_chunk):
                     start, end = page_tuple
                     logger.info(
-                        f"Processing {end - start:,} product '{self.statement.name}' on page {page_index + 1}/{len(index_chunk)} in a single process"
+                        f"Processing {end - start:,} product '{self.statement.name}' on page "
+                        f"{page_index + 1}/{len(index_chunk)} in a single process"
                     )
                     # Generate product
                     result = self._sp_generate(context, start, end)

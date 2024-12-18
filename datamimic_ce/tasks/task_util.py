@@ -384,10 +384,7 @@ class TaskUtil:
         else:
             raise ValueError(f"cannot find data source {source_str} for iterate task")
 
-        if isinstance(source_data, list):
-            return_source_data = source_data
-        else:
-            return_source_data = [source_data]
+        return_source_data = source_data if isinstance(source_data, list) else [source_data]
         return return_source_data, build_from_source
 
     # @staticmethod
@@ -457,13 +454,14 @@ class TaskUtil:
                 consumer_set.add(EXPORTER_TEST_RESULT_EXPORTER)
 
             # Create exporters with operations
-            consumers_with_operation, consumers_without_operation = (
-                root_context.class_factory_util.get_exporter_util().create_exporter_list(
-                    setup_context=root_context,
-                    stmt=stmt,
-                    targets=list(consumer_set),
-                    page_info=page_info,
-                )
+            (
+                consumers_with_operation,
+                consumers_without_operation,
+            ) = root_context.class_factory_util.get_exporter_util().create_exporter_list(
+                setup_context=root_context,
+                stmt=stmt,
+                targets=list(consumer_set),
+                page_info=page_info,
             )
 
             # Cache the exporters
@@ -492,7 +490,7 @@ class TaskUtil:
             try:
                 if isinstance(consumer, XMLExporter):
                     consumer.consume((json_product[0], xml_result))
-                elif isinstance(consumer, (JsonExporter, TXTExporter, CSVExporter)):
+                elif isinstance(consumer, JsonExporter | TXTExporter | CSVExporter):
                     consumer.consume(json_product)
                 else:
                     consumer.consume(json_product)

@@ -309,7 +309,7 @@ class MongoDBClient(DatabaseClient):
             else:
                 return result
         except Exception as err:
-            raise ValueError(f"Wrong mongodb selector syntax: {query}, error: {err}")
+            raise ValueError(f"Wrong mongodb selector syntax: {query}, error: {err}") from err
 
     def _decompose_aggregate_query(self, query: str) -> dict:
         """
@@ -333,7 +333,7 @@ class MongoDBClient(DatabaseClient):
             else:
                 return result
         except Exception as err:
-            raise ValueError(f"Wrong mongodb selector syntax: {query}, error: {err}")
+            raise ValueError(f"Wrong mongodb selector syntax: {query}, error: {err}") from err
 
     @staticmethod
     def _validate_query_command(query: str):

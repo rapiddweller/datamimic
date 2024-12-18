@@ -50,8 +50,8 @@ class GivenNameGenerator(Generator):
     def _select_records(self, file_path, generated_count):
         try:
             values, wgt = FileUtil.read_mutil_column_wgt_file(file_path)
-        except Exception:
-            raise ValueError(f"Not support dataset: {self._dataset}")
+        except Exception as err:
+            raise ValueError(f"Not support dataset: {self._dataset}") from err
 
         first_column = [row[0] for row in values]
         data = random.choices(first_column, wgt, k=generated_count)

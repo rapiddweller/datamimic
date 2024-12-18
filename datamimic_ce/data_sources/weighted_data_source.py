@@ -31,4 +31,4 @@ class WeightedDataSource(Generator):
         except Exception as err:
             raise ValueError(
                 f"Cannot get data from csv file '{self._file_path}', please check file path or separator again: {err}"
-            )
+            ) from err

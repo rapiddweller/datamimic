@@ -26,7 +26,7 @@ class CustomLogFormatter(logging.Formatter):
 
 
 def setup_logger(logger_name, task_id, level=logging.INFO):
-    l = logging.getLogger(logger_name)
+    getted_logger = logging.getLogger(logger_name)
     logging.addLevelName(logging.DEBUG, "DEBUG")
     logging.addLevelName(logging.INFO, "INFO ")
     logging.addLevelName(logging.WARNING, "WARN ")
@@ -43,22 +43,23 @@ def setup_logger(logger_name, task_id, level=logging.INFO):
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(formatter)
 
-    if not l.handlers:  # Avoid adding duplicate handlers
-        l.setLevel(level)
-        l.addHandler(stream_handler)
+    if not getted_logger.handlers:  # Avoid adding duplicate handlers
+        getted_logger.setLevel(level)
+        getted_logger.addHandler(stream_handler)
 
-    l.propagate = False  # Avoid propagation to the parent logger
+    getted_logger.propagate = False  # Avoid propagation to the parent logger
 
 
 def shutdown_logger(logger_name):
-    l = logging.getLogger(logger_name)
-    for handler in l.handlers:
+    getted_logger = logging.getLogger(logger_name)
+    for handler in getted_logger.handlers:
         handler.close()
-        l.removeHandler(handler)
+        getted_logger.removeHandler(handler)
 
 
 def get_current_process_name():
-    # Get process information for logging purposes (e.g., process name) and WORKER should have WORKER-PID    current_process = multiprocessing.current_process()
+    # Get process information for logging purposes (e.g., process name) and WORKER should have WORKER-PID
+    # current_process = multiprocessing.current_process()
     current_process = multiprocessing.current_process()
     pid = os.getpid()
     if current_process.name == "MainProcess":

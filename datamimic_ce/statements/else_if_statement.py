@@ -6,7 +6,6 @@
 
 from datamimic_ce.model.else_if_model import ElseIfModel
 from datamimic_ce.statements.composite_statement import CompositeStatement
-from datamimic_ce.statements.statement import Statement
 
 
 class ElseIfStatement(CompositeStatement):

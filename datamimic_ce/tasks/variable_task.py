@@ -191,11 +191,15 @@ class VariableTask(KeyVariableTask):
                         self._mode = self._LAZY_ITERATOR_MODE
                     else:
                         if is_random_distribution:
-                            self._random_items_iterator = iter(
-                                DataSourceUtil.get_shuffled_data_with_cyclic(
-                                    file_data, pagination, statement.cyclic, seed
+                            self._random_items_iterator = (
+                                iter(
+                                    DataSourceUtil.get_shuffled_data_with_cyclic(
+                                        file_data, pagination, statement.cyclic, seed
+                                    )
                                 )
-                            ) if file_data is not None else None
+                                if file_data is not None
+                                else None
+                            )
                             self._mode = self._RANDOM_DISTRIBUTION_MODE
                         else:
                             self._iterator = iter(file_data) if file_data is not None else None

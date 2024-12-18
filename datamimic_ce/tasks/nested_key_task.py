@@ -139,7 +139,8 @@ class NestedKeyTask(Task):
                 if self._default_value is not None:
                     result = parent_context.evaluate_python_expression(self._default_value)
                     logger.debug(
-                        f"Could not evaluate script of element '{self._statement.name}'. Default value '{self._default_value}'  will be used instead."
+                        f"Could not evaluate script of element '{self._statement.name}'. "
+                        f"Default value '{self._default_value}'  will be used instead."
                     )
                 else:
                     raise ValueError(f"Failed when execute script of element '{self._statement.name}'") from e

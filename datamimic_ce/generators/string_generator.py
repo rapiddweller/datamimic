@@ -49,7 +49,8 @@ class StringGenerator:
         # Validate unique constraint
         if self.unique and len(self._char_set) < self._max_len:
             raise ValueError(
-                f"Cannot generate unique string with length {self._max_len} from character set of size {len(self._char_set)}"
+                f"Cannot generate unique string with length {self._max_len} "
+                f"from character set of size {len(self._char_set)}"
             )
         self._class_factory_util = class_factory_util.get_data_generation_util()
 

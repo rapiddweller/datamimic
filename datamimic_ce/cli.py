@@ -101,7 +101,7 @@ Next steps:
             f"Error initializing project: {str(e)}",
             fg=typer.colors.RED,
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
 
 
 @demo_app.command("list")
@@ -164,9 +164,7 @@ def demo_create(
 
 @app.command("run")
 def run(
-    descriptor_path: Path = typer.Argument(  # noqa: B008
-        DEFAULT_DESCRIPTOR, help="Path to the descriptor file"
-    ),
+    descriptor_path: Path = typer.Argument(DEFAULT_DESCRIPTOR, help="Path to the descriptor file"),  # noqa: B008
     platform_configs: str | None = typer.Option(
         None,
         "--platform-configs",

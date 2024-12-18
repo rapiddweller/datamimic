@@ -183,9 +183,11 @@ class KeyVariableTask(Task):
             value = None if self._values is None else random.choice(self._values)
         elif self._mode == self._LAZY_GENERATOR_MODE:
             # Try to init generator again in first task execution
-            self._generator = GeneratorUtil(ctx).create_generator(
-                self._statement.generator, self.statement, self._pagination
-            ) if self._statement.generator is not None else None
+            self._generator = (
+                GeneratorUtil(ctx).create_generator(self._statement.generator, self.statement, self._pagination)
+                if self._statement.generator is not None
+                else None
+            )
             # Switch mode to GENERATE_MODE for next task execution
             self._mode = self._GENERATOR_MODE
             if self._generator is not None and isinstance(self._generator, SequenceTableGenerator):

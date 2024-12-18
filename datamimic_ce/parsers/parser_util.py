@@ -7,10 +7,8 @@
 import copy
 import re
 from pathlib import Path
-from typing import cast, Any
+from typing import Any, cast
 from xml.etree.ElementTree import Element
-
-from datamimic_ce.statements.composite_statement import CompositeStatement
 
 from datamimic_ce.config import settings
 from datamimic_ce.constants.attribute_constants import (
@@ -62,6 +60,7 @@ from datamimic_ce.parsers.nested_key_parser import NestedKeyParser
 from datamimic_ce.parsers.reference_parser import ReferenceParser
 from datamimic_ce.parsers.variable_parser import VariableParser
 from datamimic_ce.statements.array_statement import ArrayStatement
+from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.condition_statement import ConditionStatement
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.include_statement import IncludeStatement
@@ -240,17 +239,19 @@ class ParserUtil:
                     | ReferenceParser
                     | ArrayParser
                     | EchoParser
-                    | GeneratorParser
+                    | GeneratorParser,
                 ):
                     stmt = parser.parse()
                 elif isinstance(parser, KeyParser):
                     stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
                 elif isinstance(parser, ConditionParser):
-                    stmt = parser.parse(descriptor_dir=descriptor_dir,
-                                        parent_stmt=cast(CompositeStatement, parent_stmt))
+                    stmt = parser.parse(
+                        descriptor_dir=descriptor_dir, parent_stmt=cast(CompositeStatement, parent_stmt)
+                    )
                 elif isinstance(parser, IfParser | ElseIfParser | ElseParser):
-                    stmt = parser.parse(descriptor_dir=descriptor_dir,
-                                        parent_stmt=cast(ConditionStatement, parent_stmt))
+                    stmt = parser.parse(
+                        descriptor_dir=descriptor_dir, parent_stmt=cast(ConditionStatement, parent_stmt)
+                    )
                 else:
                     stmt = parser.parse(descriptor_dir=descriptor_dir)
 
