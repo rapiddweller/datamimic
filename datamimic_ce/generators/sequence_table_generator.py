@@ -22,8 +22,10 @@ class SequenceTableGenerator(Generator):
     def __init__(self, context: Context, stmt: KeyStatement | VariableStatement):
         self._stmt = stmt
         self._context = context
+        # TODO: mypy issue VariableStatement don't have `database` attribute
         self._source_name = stmt.database
         rdbms_client = context.root.clients.get(self._source_name)
+        # TODO: mypy issue, how to make sure `root_gen_stmt` is not None
         root_gen_stmt = self._stmt.get_root_generate_statement()
         self._start = rdbms_client.get_current_sequence_number(
             table_name=root_gen_stmt.type, col_name=self._stmt.name
@@ -59,11 +61,14 @@ class SequenceTableGenerator(Generator):
         self._end = self._start + pagination.limit
         self._current = self._start
 
-    def generate(self, ctx: GenIterContext) -> int:
+    def generate(self, ctx: GenIterContext) -> int:  # TODO: mypy issue [override]
         """
         Generate current number of sequence
         :return:
         """
+        if self._current is None:
+            raise StopIteration("Generator can't generate value cause current sequence is None")
+
         result = self._current
         self._current += 1
 
