@@ -13,20 +13,8 @@ from datetime import datetime
 from datamimic_ce.config import settings
 
 
-class CustomLogFormatter(logging.Formatter):
-    def format(self, record):
-        log_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
-        total_width = 7  # Total available width for the log level and surrounding space
-        log_level = record.levelname
-        centered_log_level = f"{log_level:^{total_width}}"  # Center the log level in the fixed-width space
-        logger_name = f"{record.name:<9}"
-        message = f"{log_time} | {centered_log_level} | {logger_name} | {record.getMessage()}"
-
-        return message
-
-
 def setup_logger(logger_name, task_id, level=logging.INFO):
-    getted_logger = logging.getLogger(logger_name)
+    l = logging.getLogger(logger_name)
     logging.addLevelName(logging.DEBUG, "DEBUG")
     logging.addLevelName(logging.INFO, "INFO ")
     logging.addLevelName(logging.WARNING, "WARN ")
@@ -40,26 +28,18 @@ def setup_logger(logger_name, task_id, level=logging.INFO):
         datefmt="%Y-%m-%d %H:%M:%S,%f"[:-3],
     )
 
-    stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setFormatter(formatter)
+    # Avoid adding duplicate stream handlers
+    if not any(isinstance(handler, logging.StreamHandler) for handler in l.handlers):
+        stream_handler = logging.StreamHandler(sys.stdout)
+        stream_handler.setFormatter(formatter)
+        l.setLevel(level)
+        l.addHandler(stream_handler)
 
-    if not getted_logger.handlers:  # Avoid adding duplicate handlers
-        getted_logger.setLevel(level)
-        getted_logger.addHandler(stream_handler)
-
-    getted_logger.propagate = False  # Avoid propagation to the parent logger
-
-
-def shutdown_logger(logger_name):
-    getted_logger = logging.getLogger(logger_name)
-    for handler in getted_logger.handlers:
-        handler.close()
-        getted_logger.removeHandler(handler)
+    l.propagate = False  # Avoid propagation to the parent logger
 
 
 def get_current_process_name():
-    # Get process information for logging purposes (e.g., process name) and WORKER should have WORKER-PID
-    # current_process = multiprocessing.current_process()
+    # Get process information for logging purposes (e.g., process name) and WORKER should have WORKER-PID    current_process = multiprocessing.current_process()
     current_process = multiprocessing.current_process()
     pid = os.getpid()
     if current_process.name == "MainProcess":
