@@ -39,7 +39,7 @@ class IncludeTask(Task):
         if isinstance(ctx, SetupContext):
             self._execute_with_setup_context(ctx, uri)
         else:
-            self._execute_with_geniter_context(ctx, uri)
+            self._execute_with_geniter_context(ctx, uri)  # TODO: mypy issue: need to check ctx isinstance Context
 
     def _execute_with_setup_context(self, ctx: SetupContext, uri: str) -> None:
         """

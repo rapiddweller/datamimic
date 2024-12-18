@@ -18,7 +18,7 @@ class VariableStatement(Statement):
     ):
         name = model.name
         super().__init__(name, parent_stmt)
-        self._name = name
+        self._name: str = name
         self._constant = model.constant
         self._converter = model.converter
         self._cyclic = model.cyclic
@@ -44,6 +44,10 @@ class VariableStatement(Statement):
         self._variable_prefix = model.variable_prefix
         self._variable_suffix = model.variable_suffix
         self._string = model.string
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     @property
     def source(self) -> str | None:

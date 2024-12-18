@@ -216,7 +216,7 @@ class TaskUtil:
             )
 
     @staticmethod
-    def create_converter_list(context: Context, converter_str: str) -> list[Converter]:
+    def create_converter_list(context: Context, converter_str: str | None) -> list[Converter]:
         """
         Create converter instance from converter_string
         :param context:
