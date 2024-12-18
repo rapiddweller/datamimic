@@ -56,8 +56,8 @@ class ElementTask(KeyVariableTask):
 
         # check condition to enable or disable element, default True
         condition = TaskUtil.evaluate_condition_value(
-            ctx=ctx, element_name=self.statement.name, value=self.statement.condition
-        ) if self.statement.condition is not None else None
+            ctx=ctx, element_name=self._statement.name, value=self.statement.condition
+        )
 
         if not condition:
             return {}

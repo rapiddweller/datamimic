@@ -199,7 +199,7 @@ class TaskUtil:
             raise e
 
     @staticmethod
-    def evaluate_condition_value(ctx: Context, element_name: str, value: str) -> bool:
+    def evaluate_condition_value(ctx: Context, element_name: str, value: str | None) -> bool:
         """
         Evaluate value in 'condition' property
         Value must be a boolean expression
