@@ -36,7 +36,7 @@ class KeyParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self, descriptor_dir: Path, parent_stmt: Statement) -> KeyStatement:  # TODO: mypy issue [override]
+    def parse(self, descriptor_dir: Path, parent_stmt: Statement) -> KeyStatement:
         """
         Parse element "attribute" into AttributeStatement
         :return:

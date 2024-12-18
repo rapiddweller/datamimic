@@ -33,7 +33,7 @@ class MongoDBParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self, descriptor_dir: Path) -> MongoDBStatement:  # TODO: mypy issue [override]
+    def parse(self, descriptor_dir: Path) -> MongoDBStatement:
         """
         Parse element "mongodb" into MongoDBStatement
         :return:

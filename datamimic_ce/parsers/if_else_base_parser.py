@@ -37,7 +37,7 @@ class IfElseBaseParser(StatementParser, ABC):
 
     def parse(
         self, descriptor_dir: Path, parent_stmt: ConditionStatement
-    ) -> IfStatement | ElseIfStatement | ElseStatement:  # TODO: mypy issue [override]
+    ) -> IfStatement | ElseIfStatement | ElseStatement:
         # Retrieve the root composite statement
         composite_stmt: Any = parent_stmt
         while isinstance(composite_stmt, ConditionStatement | IfStatement):

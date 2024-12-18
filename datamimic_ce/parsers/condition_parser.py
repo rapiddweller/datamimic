@@ -32,7 +32,7 @@ class ConditionParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self, descriptor_dir: Path, parent_stmt: CompositeStatement) -> ConditionStatement:  # TODO: mypy issue [override]
+    def parse(self, descriptor_dir: Path, parent_stmt: CompositeStatement) -> ConditionStatement:
         """
         Parse element "condition" to ConditionStatement.
         :return:

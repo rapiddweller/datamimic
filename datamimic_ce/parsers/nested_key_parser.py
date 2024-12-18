@@ -29,7 +29,7 @@ class NestedKeyParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self, descriptor_dir: Path, parent_stmt: Statement) -> NestedKeyStatement:  # TODO: mypy issue [override]
+    def parse(self, descriptor_dir: Path, parent_stmt: Statement) -> NestedKeyStatement:
         """
         Parse element "part" to PartStatement
         :return:

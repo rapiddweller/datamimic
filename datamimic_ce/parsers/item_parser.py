@@ -28,7 +28,7 @@ class ItemParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self, descriptor_dir: Path) -> ItemStatement:  # TODO: mypy issue [override]
+    def parse(self, descriptor_dir: Path) -> ItemStatement:
         """
         Parse element "item" to ItemStatement
         :return:

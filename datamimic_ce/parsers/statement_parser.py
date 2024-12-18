@@ -52,7 +52,7 @@ class StatementParser(ABC):
         return self._properties
 
     @abstractmethod
-    def parse(self, **kwargs: Any) -> Statement:
+    def parse(self, *args, **kwargs: Any) -> Statement:
         """
         Parse Element to Statement
         :return:

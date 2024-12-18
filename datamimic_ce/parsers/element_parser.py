@@ -28,7 +28,7 @@ class ElementParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self, parent_stmt: Statement) -> ElementStatement:  # TODO: mypy issue [override]
+    def parse(self, parent_stmt: Statement) -> ElementStatement:
         """
         Parse element "xml-attribute" to XmlAttributeStatement
         :return:
