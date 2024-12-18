@@ -10,7 +10,7 @@ from datamimic_ce.contexts.context import Context
 
 class StatementUtil:
     @staticmethod
-    def parse_consumer(consumer_string: str) -> set[str]:
+    def parse_consumer(consumer_string: str | None) -> set[str]:
         """
         Parse the 'consumer' attribute into a set of consumers.
         Splits on commas not enclosed within parentheses.
@@ -31,7 +31,7 @@ class StatementUtil:
         return consumer_set
 
     @staticmethod
-    def get_int_count(count: str, ctx: Context):
+    def get_int_count(count: str | None, ctx: Context):
         """
         Evaluate count (str) and return as int value for statement
 

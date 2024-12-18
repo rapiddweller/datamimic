@@ -17,6 +17,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_EXPORT_URI,
     ATTR_MULTIPROCESSING,
     ATTR_NAME,
+    ATTR_NUM_PROCESS,
     ATTR_PAGE_SIZE,
     ATTR_SELECTOR,
     ATTR_SEPARATOR,
@@ -28,7 +29,6 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_TYPE,
     ATTR_VARIABLE_PREFIX,
     ATTR_VARIABLE_SUFFIX,
-    ATTR_NUM_PROCESS,
 )
 from datamimic_ce.model.model_util import ModelUtil
 

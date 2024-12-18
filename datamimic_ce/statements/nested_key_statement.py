@@ -54,15 +54,15 @@ class NestedKeyStatement(CompositeStatement):
         return self._source
 
     @property
-    def source_script(self) -> bool:
+    def source_script(self):
         return self._source_script
 
     @property
-    def cyclic(self) -> bool:
+    def cyclic(self):
         return self._cyclic
 
     @property
-    def separator(self) -> str:
+    def separator(self):
         return self._separator
 
     @property

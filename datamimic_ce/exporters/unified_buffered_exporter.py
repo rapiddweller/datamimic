@@ -5,7 +5,6 @@ import time
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List
 
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.exporter import Exporter
@@ -48,8 +47,8 @@ class UnifiedBufferedExporter(Exporter, ABC):
         setup_context: SetupContext,
         product_name: str,
         page_info: MultiprocessingPageInfo,
-        chunk_size: Optional[int],
-        encoding: Optional[str],
+        chunk_size: int | None,
+        encoding: str | None,
     ):
         if chunk_size is not None and chunk_size <= 0:
             raise ValueError("Chunk size must be a positive integer or None for unlimited size.")
@@ -75,7 +74,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         self._init_buffer_directory()
 
         # Initialize state variables
-        self._is_first_write = None
+        self._is_first_write: bool | None = None
         self._load_state()
 
     @property
@@ -85,7 +84,8 @@ class UnifiedBufferedExporter(Exporter, ABC):
     def _get_buffer_tmp_dir(self) -> Path:
         return (
             self._descriptor_dir
-            / f"temp_result_{self._task_id}{self._pid_placeholder}_exporter_{self._exporter_type}_product_{self.product_name}"
+            / f"temp_result_{self._task_id}{self._pid_placeholder}_exporter_"
+              f"{self._exporter_type}_product_{self.product_name}"
         )
 
     def _init_buffer_directory(self) -> None:
@@ -105,7 +105,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
                 if attempt == self.MAX_RETRIES - 1:
                     raise BufferFileError(
                         f"Failed to initialize buffer directory after {self.MAX_RETRIES} attempts: {e}"
-                    )
+                    ) from e
                 time.sleep(self.RETRY_DELAY * (attempt + 1))
 
     def _get_state_meta_file(self) -> Path:
@@ -164,7 +164,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
             except Exception as e:
                 logger.error(f"Attempt {attempt + 1} failed to save state: {e}")
                 if attempt == self.MAX_RETRIES - 1:
-                    raise BufferFileError(f"Failed to save state after {self.MAX_RETRIES} attempts: {e}")
+                    raise BufferFileError(f"Failed to save state after {self.MAX_RETRIES} attempts: {e}") from e
                 time.sleep(self.RETRY_DELAY * (attempt + 1))
 
     def _load_metadata(self, metadata_file: Path) -> dict:
@@ -200,7 +200,10 @@ class UnifiedBufferedExporter(Exporter, ABC):
             except Exception as e:
                 logger.error(f"Attempt {attempt + 1} failed to initialize buffer file: {e}")
                 if attempt == self.MAX_RETRIES - 1:
-                    raise BufferFileError(f"Failed to initialize buffer file after {self.MAX_RETRIES} attempts: {e}")
+                    # TODO: mypy issue [return], mypy don't understand this logic
+                    raise BufferFileError(
+                        f"Failed to initialize buffer file after {self.MAX_RETRIES} attempts: {e}"
+                    ) from e
                 time.sleep(self.RETRY_DELAY * (attempt + 1))
 
     def _rotate_chunk(self) -> None:
@@ -243,7 +246,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
                 # Rotate chunk only if there is more data to process
                 self._rotate_chunk()
 
-    def _write_batch_with_retry(self, batch: List[dict]) -> None:
+    def _write_batch_with_retry(self, batch: list[dict]) -> None:
         """Write a batch of data with retry mechanism."""
         for attempt in range(self.MAX_RETRIES):
             try:
@@ -252,7 +255,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
             except Exception as e:
                 logger.error(f"Attempt {attempt + 1} failed to write batch: {e}")
                 if attempt == self.MAX_RETRIES - 1:
-                    raise BufferFileError(f"Failed to write batch after {self.MAX_RETRIES} attempts: {e}")
+                    raise BufferFileError(f"Failed to write batch after {self.MAX_RETRIES} attempts: {e}") from e
                 time.sleep(self.RETRY_DELAY * (attempt + 1))
 
     def _update_metadata_file(self) -> None:
@@ -273,7 +276,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
             except Exception as e:
                 logger.error(f"Attempt {attempt + 1} failed to update metadata: {e}")
                 if attempt == self.MAX_RETRIES - 1:
-                    raise BufferFileError(f"Failed to update metadata after {self.MAX_RETRIES} attempts: {e}")
+                    raise BufferFileError(f"Failed to update metadata after {self.MAX_RETRIES} attempts: {e}") from e
                 time.sleep(self.RETRY_DELAY * (attempt + 1))
 
     @abstractmethod
@@ -359,7 +362,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
                 self._finalize_buffer_file(buffer_file)
         except Exception as e:
             logger.error(f"Failed to finalize chunks: {e}")
-            raise ExportError(f"Failed to finalize chunks: {e}")
+            raise ExportError(f"Failed to finalize chunks: {e}") from e
 
     def cleanup(self) -> None:
         """Clean up temporary files with error handling."""

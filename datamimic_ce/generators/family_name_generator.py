@@ -26,8 +26,8 @@ class FamilyNameGenerator(Generator):
             values, wgt = FileUtil.read_mutil_column_wgt_file(
                 file_path,
             )
-        except Exception:
-            raise ValueError(f"Not support dataset: {dataset}")
+        except Exception as err:
+            raise ValueError(f"Not support dataset: {dataset}") from err
 
         first_column = [row[0] for row in values]
         data = random.choices(first_column, wgt, k=generated_count)

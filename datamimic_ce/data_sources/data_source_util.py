@@ -9,7 +9,7 @@ import itertools
 import json
 import random
 import xml.etree.ElementTree as ET
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from pathlib import Path
 
 from sqlalchemy.exc import OperationalError, ProgrammingError
@@ -25,7 +25,9 @@ from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
 
 class DataSourceUtil:
     @staticmethod
-    def set_data_source_length(ctx: SetupContext, stmt: Statement) -> None:
+    def set_data_source_length(
+        ctx: SetupContext, stmt: Statement
+    ) -> None:  # TODO: mypy issue[attr-defined]: Statement don't have many attribute
         """
         Calculate length of data source then save into context
         :param ctx:
@@ -89,12 +91,14 @@ class DataSourceUtil:
                         ds_len = client.count_query_length(query=stmt.iteration_selector)
                     except ProgrammingError:
                         logger.error(
-                            f"Cannot get length of database source '{source_str}' with iterationSelector '{stmt.iteration_selector}'"
+                            f"Cannot get length of database source '{source_str}' "
+                            f"with iterationSelector '{stmt.iteration_selector}'"
                         )
                         return
                     except OperationalError:
                         logger.error(
-                            f"Cannot get length of database source '{source_str}' with iterationSelector '{stmt.iteration_selector}'"
+                            f"Cannot get length of database source '{source_str}' "
+                            f"with iterationSelector '{stmt.iteration_selector}'"
                         )
                         return
                 else:
@@ -116,7 +120,8 @@ class DataSourceUtil:
                         ds_len = client.count_query_length(query=stmt.iteration_selector)
                     except ValueError:
                         logger.error(
-                            f"Cannot get length of database source '{source_str}' with iterationSelector '{stmt.iteration_selector}'"
+                            f"Cannot get length of database source '{source_str}' "
+                            f"with iterationSelector '{stmt.iteration_selector}'"
                         )
                         return
                 else:
@@ -187,8 +192,8 @@ class DataSourceUtil:
 
     @staticmethod
     def get_cyclic_data_iterator(
-        data: Iterable, pagination: DataSourcePagination, cyclic: bool = False
-    ) -> Iterable | None:
+        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None = False
+    ) -> Iterator | None:
         """
         Get cyclic iterator from iterable data source
         """
@@ -207,7 +212,7 @@ class DataSourceUtil:
 
     @staticmethod
     def get_shuffled_data_with_cyclic(
-        data: Iterable, pagination: DataSourcePagination, cyclic: bool, seed: int
+        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None, seed: int
     ) -> list:
         """
         Get shuffled data from iterable data source
@@ -234,7 +239,7 @@ class DataSourceUtil:
         current_seed = seed + int(start_idx / source_len)
         current_idx = start_idx
 
-        res = []
+        res: list = []
         # Check if amount of returned data is enough
         # Extend data until len of result is larger than page len and higher than end_idx
         while len(res) <= end_idx - start_idx or len(res) < (start_idx % source_len) + end_idx - start_idx:

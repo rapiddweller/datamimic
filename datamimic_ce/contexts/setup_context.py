@@ -31,24 +31,24 @@ class SetupContext(Context):
         memstore_manager: MemstoreManager,
         task_id: str,
         test_mode: bool,
-        test_result_exporter: TestResultExporter,
+        test_result_exporter: TestResultExporter | None,
         default_separator: str,
         default_locale: str,
         default_dataset: str,
-        use_mp: bool,
+        use_mp: bool | None,
         descriptor_dir: Path,
-        num_process: int,
+        num_process: int | None,
         default_variable_prefix: str,
         default_variable_suffix: str,
-        default_line_separator: str,
-        current_seed: int = None,
-        clients: dict = None,
-        data_source_len: dict = None,
-        properties: dict = None,
-        namespace: dict = None,
-        global_variables: dict = None,
-        generators: dict = None,
-        default_source_scripted: bool = None,
+        default_line_separator: str | None,
+        current_seed: int | None = None,
+        clients: dict | None = None,
+        data_source_len: dict | None = None,
+        properties: dict | None = None,
+        namespace: dict | None = None,
+        global_variables: dict | None = None,
+        generators: dict | None = None,
+        default_source_scripted: bool | None = None,
         report_logging: bool = True,
     ):
         # SetupContext is always its root_context
@@ -72,7 +72,7 @@ class SetupContext(Context):
         self._default_null = None
         self._default_script = "py"
         self._default_batch_size = 1
-        self._default_line_separator = "\n"
+        self._default_line_separator = default_line_separator or "\n"
         self._default_encoding = "utf-8"
         self._use_mp = use_mp  # IMPORTANT: do not set default bool value to use_mp for config propagation
         self._task_id = task_id
@@ -83,7 +83,6 @@ class SetupContext(Context):
         self._num_process = num_process
         self._default_variable_prefix = default_variable_prefix
         self._default_variable_suffix = default_variable_suffix
-        self._default_line_separator = default_line_separator
         # IMPORTANT: do not set default bool value to default_source_scripted for config propagation
         self._default_source_scripted = default_source_scripted
         self._report_logging = report_logging
@@ -274,7 +273,7 @@ class SetupContext(Context):
         self._namespace_functions = value
 
     @property
-    def use_mp(self) -> bool:
+    def use_mp(self) -> bool | None:
         return self._use_mp
 
     @use_mp.setter
@@ -290,7 +289,7 @@ class SetupContext(Context):
         return self._test_mode
 
     @property
-    def test_result_exporter(self) -> TestResultExporter:
+    def test_result_exporter(self) -> TestResultExporter | None:
         return self._test_result_exporter
 
     @property
@@ -334,7 +333,7 @@ class SetupContext(Context):
         self._generators = value
 
     @property
-    def num_process(self) -> int:
+    def num_process(self) -> int | None:
         return self._num_process
 
     @num_process.setter
@@ -362,7 +361,7 @@ class SetupContext(Context):
         return self._default_line_separator
 
     @property
-    def default_source_scripted(self) -> bool:
+    def default_source_scripted(self) -> bool | None:
         return self._default_source_scripted
 
     @property
@@ -386,7 +385,7 @@ class SetupContext(Context):
         """
         self._clients[client_id] = client
 
-    def get_client_by_id(self, client_id: str) -> Client:
+    def get_client_by_id(self, client_id: str):
         """
         Get client using id defined in descriptor file
         :param client_id:

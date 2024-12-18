@@ -32,14 +32,14 @@ class NestedKeyTask(Task):
         self._default_value = statement.default_value
         self._descriptor_dir = ctx.root.descriptor_dir
         self._class_factory_util = class_factory_util
-        self._sub_tasks = None
+        self._sub_tasks: list | None = None
         self._converter_list = class_factory_util.get_task_util_cls().create_converter_list(ctx, statement.converter)
 
     @property
     def statement(self) -> NestedKeyStatement:
         return self._statement
 
-    def execute(self, parent_context: GenIterContext):
+    def execute(self, parent_context: GenIterContext):  # TODO: mypy issue [override]
         """
         Generate data for element "nestedKey"
         :param parent_context:
@@ -95,20 +95,22 @@ class NestedKeyTask(Task):
         Create new data for nestedkey
         """
         nestedkey_type = self._statement.type
+        value: dict | list
         if nestedkey_type == DATA_TYPE_LIST:
             nestedkey_len = self._determine_nestedkey_length(context=parent_context)
-            self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=nestedkey_len)
             value = []
-            # Generate data for each nestedkey record
-            for _ in range(nestedkey_len):
-                # Create sub-context for each list element creation
-                ctx = GenIterContext(parent_context, self._statement.name)
-                generated_value = self._try_execute_sub_tasks(ctx)
-                value.append(generated_value)
+            if nestedkey_len:
+                self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=nestedkey_len)
+                # Generate data for each nestedkey record
+                for _ in range(nestedkey_len):
+                    # Create sub-context for each list element creation
+                    ctx = GenIterContext(parent_context, str(self._statement.name))
+                    generated_value = self._try_execute_sub_tasks(ctx)
+                    value.append(generated_value)
         elif nestedkey_type == DATA_TYPE_DICT:
             self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=1)
             # Create sub-context for nestedkey creation
-            ctx = GenIterContext(parent_context, self._statement.name)
+            ctx = GenIterContext(parent_context, str(self._statement.name))
             value = self._try_execute_sub_tasks(ctx)
         else:
             # Load value from current product then assign to nestedkey if type is not defined,
@@ -119,7 +121,7 @@ class NestedKeyTask(Task):
             )
             nestedkey_data = parent_context.current_product[self._statement.name]
             self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=len(nestedkey_data))
-            ctx = GenIterContext(parent_context, self._statement.name)
+            ctx = GenIterContext(parent_context, str(self._statement.name))
             ctx.current_product = nestedkey_data
             value = self._try_execute_sub_tasks(ctx)
 
@@ -137,7 +139,8 @@ class NestedKeyTask(Task):
                 if self._default_value is not None:
                     result = parent_context.evaluate_python_expression(self._default_value)
                     logger.debug(
-                        f"Could not evaluate script of element '{self._statement.name}'. Default value '{self._default_value}'  will be used instead."
+                        f"Could not evaluate script of element '{self._statement.name}'. "
+                        f"Default value '{self._default_value}'  will be used instead."
                     )
                 else:
                     raise ValueError(f"Failed when execute script of element '{self._statement.name}'") from e
@@ -178,23 +181,24 @@ class NestedKeyTask(Task):
         """
         attributes = {}
         # Try to execute sub_tasks
-        for sub_task in self._sub_tasks:
-            try:
-                if isinstance(sub_task, ElementTask):
-                    attributes.update(sub_task.generate_xml_attribute(ctx))
-                else:
-                    sub_task.execute(ctx)
-            except StopIteration:
-                # Stop generating data if one of datasource reach the end
-                logger.info(
-                    f"Data generator sub-task {sub_task.__class__.__name__} '{sub_task.statement.name}' "
-                    f"has already reached the end"
-                )
-                break
+        if self._sub_tasks:
+            for sub_task in self._sub_tasks:
+                try:
+                    if isinstance(sub_task, ElementTask):
+                        attributes.update(sub_task.generate_xml_attribute(ctx))
+                    else:
+                        sub_task.execute(ctx)
+                except StopIteration:
+                    # Stop generating data if one of datasource reach the end
+                    logger.info(
+                        f"Data generator sub-task {sub_task.__class__.__name__} '{sub_task.statement.name}' "
+                        f"has already reached the end"
+                    )
+                    break
         ctx.current_product = self._post_convert(ctx.current_product)
         return {**ctx.current_product, **attributes}
 
-    def _evaluate_value_from_script(self, parent_context: GenIterContext) -> dict:
+    def _evaluate_value_from_script(self, parent_context: GenIterContext) -> list | dict:
         """
         Evaluate data using script
 
@@ -202,6 +206,7 @@ class NestedKeyTask(Task):
         :return:
         """
         value = parent_context.evaluate_python_expression(self._statement.script)
+        result: dict | list
         if isinstance(value, list):
             result = self._modify_nestedkey_data_list(parent_context, value)
         elif isinstance(value, dict):
@@ -213,7 +218,7 @@ class NestedKeyTask(Task):
             )
         return result
 
-    def _load_data_from_source(self, parent_context: GenIterContext) -> list:
+    def _load_data_from_source(self, parent_context: GenIterContext) -> list | dict:
         """
         Load data from source
 
@@ -222,6 +227,7 @@ class NestedKeyTask(Task):
         """
         source_str = self._statement.source
         nestedkey_type = self._statement.type
+        result: dict | list
 
         # Evaluate scripted source string
         source = (
@@ -233,28 +239,30 @@ class NestedKeyTask(Task):
             # Read data from source
             if source.endswith("csv"):
                 separator = self._statement.separator or parent_context.root.default_separator
-                value = FileUtil.read_csv_to_dict_list(file_path=self._descriptor_dir / source, separator=separator)
+                list_value = FileUtil.read_csv_to_dict_list(
+                    file_path=self._descriptor_dir / source, separator=separator
+                )
             elif source.endswith("json"):
-                value = FileUtil.read_json_to_dict_list(self._descriptor_dir / source)
+                list_value = FileUtil.read_json_to_dict_list(self._descriptor_dir / source)
             else:
                 raise ValueError(f"Invalid source '{source}' of nestedkey '{self._statement.name}'")
 
-            result = self._modify_nestedkey_data_list(parent_context, value)
+            result = self._modify_nestedkey_data_list(parent_context, list_value)
 
         elif nestedkey_type == DATA_TYPE_DICT:
             if source.endswith("json"):
-                value = FileUtil.read_json_to_dict(self._descriptor_dir / source)
-                result = self._modify_nestedkey_data_dict(parent_context, value)
+                dict_value = FileUtil.read_json_to_dict(self._descriptor_dir / source)
+                result = self._modify_nestedkey_data_dict(parent_context, dict_value)
             else:
                 raise ValueError(f"Source of nestedkey having type as 'dict' does not support format {source}")
 
         # handle memstore source
         elif parent_context.root.memstore_manager.contain(source_str):
-            value = parent_context.root.memstore_manager.get_memstore(source_str).get_data_by_type(
+            list_value = parent_context.root.memstore_manager.get_memstore(source_str).get_data_by_type(
                 self._statement.type, None, self._statement.cyclic
             )
 
-            result = self._modify_nestedkey_data_list(parent_context, value)
+            result = self._modify_nestedkey_data_list(parent_context, list_value)
         else:
             raise ValueError(
                 f"Cannot load data from source '{self._statement.source}' of <nestedKey> '{self._statement.name}'"
@@ -272,7 +280,7 @@ class NestedKeyTask(Task):
             # Determine variable prefix and suffix
             setup_ctx = parent_context.parent
             while not isinstance(setup_ctx, SetupContext):
-                setup_ctx = setup_ctx.parent
+                setup_ctx = setup_ctx.parent  # TODO: mypy issue [attr-defined]
             variable_prefix = self.statement.variable_prefix or setup_ctx.default_variable_prefix
             variable_suffix = self.statement.variable_suffix or setup_ctx.default_variable_suffix
 
@@ -291,7 +299,7 @@ class NestedKeyTask(Task):
         """
         self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=1)
         # Create sub-context for nestedkey creation
-        ctx = GenIterContext(parent_context, self._statement.name)
+        ctx = GenIterContext(parent_context, str(self._statement.name))
         ctx.current_product = copy.copy(value)
         modified_value = self._try_execute_sub_tasks(ctx)
         return modified_value
@@ -321,7 +329,7 @@ class NestedKeyTask(Task):
         self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=nestedkey_len)
         # Modify each nestedkey of the data
         for idx in range(nestedkey_len):
-            ctx = GenIterContext(parent_context, self._statement.name)
+            ctx = GenIterContext(parent_context, str(self._statement.name))
             ctx.current_product = iterate_value[idx]
 
             # Ensure current_product is a dictionary

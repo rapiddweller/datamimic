@@ -124,7 +124,7 @@ class BaseDataGenerationUtil(ABC):
 
     @staticmethod
     @abstractmethod
-    def rnd_int(min_val: int, max_val: int) -> str:
+    def rnd_int(min_val: int, max_val: int) -> int:
         """
         Generate a random integer between the specified minimum and maximum values.
 
@@ -133,7 +133,7 @@ class BaseDataGenerationUtil(ABC):
             max_val (int): The maximum value.
 
         Returns:
-            str: The generated random integer.
+            int: The generated random integer.
         """
 
     @staticmethod

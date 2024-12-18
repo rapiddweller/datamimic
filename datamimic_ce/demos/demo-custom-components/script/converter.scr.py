@@ -1,3 +1,6 @@
+from datamimic_ce.converter.converter import Converter
+
+
 class UpperCaseConverter(Converter):  # noqa: F821
     def convert(self, value: str) -> str:
         return value.upper()

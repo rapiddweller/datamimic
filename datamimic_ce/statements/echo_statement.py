@@ -8,7 +8,7 @@ from datamimic_ce.statements.statement import Statement
 
 
 class EchoStatement(Statement):
-    def __init__(self, value: str):
+    def __init__(self, value: str | None):
         super().__init__(None, None)
         self._value = value
 

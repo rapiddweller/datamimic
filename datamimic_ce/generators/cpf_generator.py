@@ -11,7 +11,8 @@ from datamimic_ce.generators.generator import Generator
 class CPFGenerator(Generator):
     """
     Generate Brazilian SSN also known in Brazil as CPF.
-    Can also use SSN Generator but The SSN returns a valid number with numbers only The CPF return a valid number formatted with Brazilian mask.
+    Can also use SSN Generator but The SSN returns a valid number with numbers
+    only The CPF return a valid number formatted with Brazilian mask.
     eg nnn.nnn.nnn-nn
     """
 

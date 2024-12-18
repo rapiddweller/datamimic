@@ -25,5 +25,5 @@ class ArrayStatement(Statement):
         return self._count
 
     @property
-    def script(self) -> str:
+    def script(self) -> str | None:
         return self._script

@@ -21,11 +21,15 @@ import statistics
 import types
 import uuid
 from abc import ABC
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 import requests
 from faker import Faker
+
+if TYPE_CHECKING:
+    from datamimic_ce.contexts.setup_context import SetupContext
 
 # Create a safe evaluation environment
 SAFE_GLOBALS = {
@@ -140,7 +144,7 @@ class Context(ABC):  # noqa: B024
         from datamimic_ce.contexts.geniter_context import GenIterContext
         from datamimic_ce.contexts.setup_context import SetupContext
 
-        data_dict = {}
+        data_dict: dict = {}
         # SetupContext evaluate script
         if isinstance(current_context, SetupContext):
             # Add current variable & product of outermost context

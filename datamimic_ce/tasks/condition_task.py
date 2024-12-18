@@ -23,7 +23,7 @@ class ConditionTask(Task):
     def statement(self) -> ConditionStatement:
         return self._statement
 
-    def execute(self, parent_context: GenIterContext) -> None | dict:
+    def execute(self, parent_context: GenIterContext) -> None | dict:  # TODO: mypy issue [override]
         """
         Generate data for element "condition"
         :param parent_context:

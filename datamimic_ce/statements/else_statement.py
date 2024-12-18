@@ -6,9 +6,8 @@
 
 from datamimic_ce.model.else_model import ElseModel
 from datamimic_ce.statements.composite_statement import CompositeStatement
-from datamimic_ce.statements.statement import Statement
 
 
-class ElseStatement(Statement):
+class ElseStatement(CompositeStatement):
     def __init__(self, model: ElseModel, parent_stmt: CompositeStatement):
         super().__init__(name=None, parent_stmt=parent_stmt)

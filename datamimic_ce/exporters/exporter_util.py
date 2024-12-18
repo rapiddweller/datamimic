@@ -8,7 +8,6 @@ import json
 import re
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Dict
 
 import numpy
 from bson import ObjectId
@@ -202,8 +201,8 @@ class ExporterUtil:
         name: str,
         product_name: str,
         page_info: MultiprocessingPageInfo,
-        exporter_params_dict: Dict,
-    ) -> Exporter:
+        exporter_params_dict: dict,
+    ):
         """
         Consumer factory: Create consumer based on name
 
@@ -212,23 +211,23 @@ class ExporterUtil:
         :return:
         """
         if name is None or name == "":
-            return
+            return None
 
-        chunk_size = exporter_params_dict.get("chunk_size", None)
-        use_ndjson = exporter_params_dict.get("use_ndjson", None)
-        fieldnames = exporter_params_dict.get("fieldnames", None)
-        delimiter = exporter_params_dict.get("delimiter", None)
-        quotechar = exporter_params_dict.get("quotechar", None)
-        quoting = exporter_params_dict.get("quoting", None)
-        line_terminator = exporter_params_dict.get("line_terminator", None)
-        root_element = exporter_params_dict.get("root_element", None)
-        item_element = exporter_params_dict.get("item_element", None)
-        encoding = exporter_params_dict.get("encoding", None)
+        chunk_size = exporter_params_dict.get("chunk_size")
+        use_ndjson = exporter_params_dict.get("use_ndjson")
+        fieldnames = exporter_params_dict.get("fieldnames")
+        delimiter = exporter_params_dict.get("delimiter")
+        quotechar = exporter_params_dict.get("quotechar")
+        quoting = exporter_params_dict.get("quoting")
+        line_terminator = exporter_params_dict.get("line_terminator")
+        root_element = exporter_params_dict.get("root_element")
+        item_element = exporter_params_dict.get("item_element")
+        encoding = exporter_params_dict.get("encoding")
         if fieldnames is not None and isinstance(fieldnames, str):
             try:
                 fieldnames = ast.literal_eval(fieldnames)
             except Exception as e:
-                raise ValueError(f"Error parsing fieldnames {fieldnames}: {e}")
+                raise ValueError(f"Error parsing fieldnames {fieldnames}: {e}") from e
 
         elif name == EXPORTER_CONSOLE_EXPORTER:
             return ConsoleExporter()
@@ -264,7 +263,12 @@ class ExporterUtil:
             return setup_context.memstore_manager.get_memstore(name)
         else:
             raise ValueError(
-                f"Target not found: {name}, please check the target name again. Expected: {EXPORTER_JSON}, {EXPORTER_CSV}, {EXPORTER_XML}, {EXPORTER_TXT}, {EXPORTER_TEST_RESULT_EXPORTER}, {EXPORTER_JSON_SINGLE}, {EXPORTER_CONSOLE_EXPORTER}, {EXPORTER_LOG_EXPORTER}, or client {list(setup_context.clients.keys())} or memstore {setup_context.memstore_manager.get_memstores_list()}"
+                f"Target not found: {name}, please check the target name again. "
+                f"Expected: {EXPORTER_JSON}, {EXPORTER_CSV}, {EXPORTER_XML}, "
+                f"{EXPORTER_TXT}, {EXPORTER_TEST_RESULT_EXPORTER}, {EXPORTER_JSON_SINGLE}, "
+                f"{EXPORTER_CONSOLE_EXPORTER}, {EXPORTER_LOG_EXPORTER}, "
+                f"or client {list(setup_context.clients.keys())} "
+                f"or memstore {setup_context.memstore_manager.get_memstores_list()}"
             )
 
     @staticmethod

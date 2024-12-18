@@ -15,7 +15,6 @@
 #
 import os
 from pathlib import Path
-from typing import Optional
 
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
@@ -34,10 +33,10 @@ class TXTExporter(UnifiedBufferedExporter):
         setup_context: SetupContext,
         product_name: str,
         page_info: MultiprocessingPageInfo,
-        chunk_size: Optional[int],
-        separator: Optional[str],
-        line_terminator: Optional[str],
-        encoding: Optional[str],
+        chunk_size: int | None,
+        separator: str | None,
+        line_terminator: str | None,
+        encoding: str | None,
     ):
         """
         Initializes the TXTExporter.

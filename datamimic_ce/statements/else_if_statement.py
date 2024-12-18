@@ -6,10 +6,9 @@
 
 from datamimic_ce.model.else_if_model import ElseIfModel
 from datamimic_ce.statements.composite_statement import CompositeStatement
-from datamimic_ce.statements.statement import Statement
 
 
-class ElseIfStatement(Statement):
+class ElseIfStatement(CompositeStatement):
     def __init__(self, model: ElseIfModel, parent_stmt: CompositeStatement):
         super().__init__(name=None, parent_stmt=parent_stmt)
         self._condition = model.condition

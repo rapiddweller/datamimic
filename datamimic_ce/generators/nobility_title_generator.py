@@ -6,7 +6,6 @@
 
 import random
 from pathlib import Path
-from typing import Literal
 
 from datamimic_ce.generators.generator import Generator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
@@ -18,7 +17,7 @@ class NobilityTitleGenerator(Generator):
     Generate random nobility title
     """
 
-    def __init__(self, dataset: str = None, gender: str = None, noble_quota: float = None):
+    def __init__(self, dataset: str | None = None, gender: str | None = None, noble_quota: float | None = None):
         self._gender = gender
         self._noble_quota = noble_quota if noble_quota is not None else 0.001
 
@@ -55,12 +54,12 @@ class NobilityTitleGenerator(Generator):
             Returns:
                 Optional[str]: Returns a string if successful, otherwise returns None.
         """
-        if self._gender in {"male", "female", "other"}:
+        if self._gender in ["male", "female", "other"]:
             return self.generate_with_gender(self._gender)
         else:
             return ""
 
-    def generate_with_gender(self, gender: Literal["male", "female", "other"]) -> str | None:
+    def generate_with_gender(self, gender: str):
         """
         Generate random nobility title
             Returns:

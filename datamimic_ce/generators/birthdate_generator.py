@@ -15,9 +15,12 @@ class BirthdateGenerator(Generator):
     Purpose: generate a random birthdate between min_age and max_age.
 
     Use case (config):
-        - Generate random birthdate (default age = 1 - 100). Example: birthdate_generator = BirthdateGenerator()
-        - Generate specified birthdate with age (set: min = max = age). Example: birthdate_generator = BirthdateGenerator(20, 20)
-        - Generate birthdate from min and max age. Example: birthdate_generator = BirthdateGenerator(20, 60)
+        - Generate random birthdate (default age = 1 - 100).
+        Example: birthdate_generator = BirthdateGenerator()
+        - Generate specified birthdate with age (set: min = max = age).
+        Example: birthdate_generator = BirthdateGenerator(20, 20)
+        - Generate birthdate from min and max age.
+        Example: birthdate_generator = BirthdateGenerator(20, 60)
 
     Attributes:
         min_age (int): minimum age value (inclusively).
@@ -62,7 +65,8 @@ class BirthdateGenerator(Generator):
     @staticmethod
     def convert_birthdate_to_age(birth_date: datetime) -> int:
         """
-        age are calculated from given birthday and today (today value depends on system time and change over time, not fixed).
+        age are calculated from given birthday and today
+        (today value depends on system time and change over time, not fixed).
 
         Returns:
             age (int): calculated age (hour, minute, second, microsecond in datetime object equal 0 as default)

@@ -7,6 +7,7 @@
 import csv
 import datetime
 from pathlib import Path
+from typing import Literal
 
 from datamimic_ce.entities.entity_util import EntityUtil
 from datamimic_ce.generators.academic_title_generator import AcademicTitleGenerator
@@ -102,7 +103,7 @@ class PersonEntity:
 
         generator_fn_dict = {
             "birth_day": lambda: birth_day_gen.generate(),
-            "given_name": lambda: given_name_gen.generate_with_gender(self.gender.lower()),
+            "given_name": lambda: given_name_gen.generate_with_gender(self.gender),
             "gender": lambda: gender_gen.generate(),
             "family_name": lambda: family_name_gen.generate(),
             "academic_title": lambda: "" if self.age < 20 else academic_title_gen.generate(),
@@ -115,7 +116,7 @@ class PersonEntity:
         self._field_generator = EntityUtil.create_field_generator_dict(generator_fn_dict)
 
     @property
-    def gender(self) -> str:
+    def gender(self) -> Literal["male", "female", "other"]:
         """
         Get the gender of the person.
 

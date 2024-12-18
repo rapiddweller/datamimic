@@ -24,7 +24,7 @@ from datamimic_ce.logger import logger
 
 
 class RdbmsClient(DatabaseClient):
-    def __init__(self, credential: RdbmsCredential, task_id: str = None):
+    def __init__(self, credential: RdbmsCredential, task_id: str | None = None):
         self._credential = credential
         self._engine = None
         self._task_id = task_id

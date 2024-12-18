@@ -94,7 +94,8 @@ class NestedKeyModel(BaseModel):
             # Not allow minCount or maxCount is defined with count
             if ATTR_MIN_COUNT in key_set or ATTR_MAX_COUNT in key_set:
                 raise ValueError(
-                    f"'{ATTR_MIN_COUNT}' and '{ATTR_MAX_COUNT}' must not be defined when '{ATTR_COUNT}' exists in <nestedKey>"
+                    f"'{ATTR_MIN_COUNT}' and '{ATTR_MAX_COUNT}' must not be defined "
+                    f"when '{ATTR_COUNT}' exists in <nestedKey>"
                 )
         else:
             if (
@@ -123,7 +124,8 @@ class NestedKeyModel(BaseModel):
         # Make sure 'count' is defined in part list generation mode
         if not count_defined and part_type == DATA_TYPE_LIST and ATTR_SOURCE not in key_set:
             raise ValueError(
-                f"'{ATTR_COUNT}', '{ATTR_MIN_COUNT}' or '{ATTR_MAX_COUNT}' must be defined in part having {ATTR_TYPE} '{part_type}' without '{ATTR_SOURCE}'"
+                f"'{ATTR_COUNT}', '{ATTR_MIN_COUNT}' or '{ATTR_MAX_COUNT}' "
+                f"must be defined in part having {ATTR_TYPE} '{part_type}' without '{ATTR_SOURCE}'"
             )
         return values
 

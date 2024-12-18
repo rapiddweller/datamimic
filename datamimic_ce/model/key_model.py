@@ -134,7 +134,8 @@ class KeyModel(BaseModel):
                 else:
                     # Raise error if finding 2 modes in same element
                     raise ValueError(
-                        f"Must defined only one of following attributes {generation_mode}, but got: {first_mode} & {mode}"
+                        f"Must defined only one of following attributes {generation_mode}, "
+                        f"but got: {first_mode} & {mode}"
                     )
         return values
 

@@ -31,7 +31,7 @@ class GeneratorParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self) -> GeneratorStatement:
+    def parse(self, **kwargs) -> GeneratorStatement:
         """
         Parse element "generator" to GeneratorStatement
         :return:

@@ -32,7 +32,7 @@ class ObjectUtil:
             # Try to init instance
             return context.evaluate_python_expression(constructor_str, class_dict)
         # Handle simple instance init (without constructor in attribute value)
-        if "CustomConverter" in cls.__base__.__name__:  # Check if class is CustomConverter
+        if cls.__base__ is not None and "CustomConverter" in cls.__base__.__name__:  # Check if class is CustomConverter
             return cls(context)
         else:
             return cls()

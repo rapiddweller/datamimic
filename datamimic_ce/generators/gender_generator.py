@@ -19,7 +19,7 @@ class GenderGenerator(Generator):
         female_quota (float): female quota to generate FEMALE gender.
     """
 
-    def __init__(self, female_quota: float = None, other_gender_quota: float = None):
+    def __init__(self, female_quota: float | None = None, other_gender_quota: float | None = None):
         """
         Constructor for GenderGenerator with default quota of female/male/other are 0.49/0.49/0.02
         (if argument is not passed in constructor).

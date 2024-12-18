@@ -12,7 +12,7 @@ class KeyStatement(CompositeStatement):
     def __init__(self, model: KeyModel, parent_stmt: CompositeStatement):
         name = model.name
         super().__init__(name, parent_stmt)
-        self._name = name
+        self._name: str = name
         self._condition = model.condition
         self._constant = model.constant
         self._converter = model.converter
@@ -31,6 +31,10 @@ class KeyStatement(CompositeStatement):
         self._variable_prefix = model.variable_prefix
         self._variable_suffix = model.variable_suffix
         self._string = model.string
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     @property
     def type(self):
@@ -53,53 +57,53 @@ class KeyStatement(CompositeStatement):
         return self._generator
 
     @property
-    def source(self) -> str:
+    def source(self) -> str | None:
         return self._source
 
     @property
-    def separator(self) -> str:
+    def separator(self) -> str | None:
         return self._separator
 
     @property
-    def condition(self) -> str:
+    def condition(self) -> str | None:
         return self._condition
 
     @property
-    def converter(self) -> str:
+    def converter(self) -> str | None:
         return self._converter
 
     @property
-    def in_date_format(self) -> str:
+    def in_date_format(self) -> str | None:
         return self._in_date_format
 
     @property
-    def out_date_format(self) -> str:
+    def out_date_format(self) -> str | None:
         return self._out_date_format
 
     @property
-    def default_value(self) -> str:
+    def default_value(self) -> str | None:
         return self._default_value
 
     @property
-    def null_quota(self) -> float:
+    def null_quota(self) -> float | None:
         return self._null_quota
 
     @property
-    def pattern(self) -> str:
+    def pattern(self) -> str | None:
         return self._pattern
 
     @property
-    def database(self) -> str:
+    def database(self) -> str | None:
         return self._database
 
     @property
-    def string(self) -> str:
+    def string(self) -> str | None:
         return self._string
 
     @property
-    def variable_prefix(self) -> str:
+    def variable_prefix(self) -> str | None:
         return self._variable_prefix
 
     @property
-    def variable_suffix(self) -> str:
+    def variable_suffix(self) -> str | None:
         return self._variable_suffix

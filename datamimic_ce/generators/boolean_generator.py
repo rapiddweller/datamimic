@@ -12,8 +12,10 @@ class BooleanGenerator:
     Purpose: generate a random boolean value (True or False).
 
     Use case (config):
-        - Generate a random boolean with equal probability. Example: boolean_generator = BooleanGenerator()
-        - Generate a random boolean with custom probability for True. Example: boolean_generator = BooleanGenerator(prob_true=0.7)
+        - Generate a random boolean with equal probability.
+        Example: boolean_generator = BooleanGenerator()
+        - Generate a random boolean with custom probability for True.
+        Example: boolean_generator = BooleanGenerator(prob_true=0.7)
 
     Attributes:
         prob_true (float): probability of generating a True value (default is 0.5).
@@ -25,11 +27,13 @@ class BooleanGenerator:
             prob_true (float): probability of generating a True value (default is 0.5).
 
         Throws:
-            ValueError: Probability prob_true of BooleanGenerator must be in [0.0, 1.0] range, but got invalid value {prob_true}.
+            ValueError: Probability prob_true of BooleanGenerator must be in [0.0, 1.0] range,
+            but got invalid value {prob_true}.
         """
         if not (0.0 <= prob_true <= 1.0):
             raise ValueError(
-                f"Probability prob_true of BooleanGenerator must be in [0.0, 1.0] range, but got invalid value {prob_true}."
+                f"Probability prob_true of BooleanGenerator must be in [0.0, 1.0] range, "
+                f"but got invalid value {prob_true}."
             )
         self.prob_true = prob_true
 

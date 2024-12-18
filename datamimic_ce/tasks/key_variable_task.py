@@ -45,7 +45,7 @@ class KeyVariableTask(Task):
         self,
         ctx: SetupContext,
         statement: KeyStatement | VariableStatement | ElementStatement,
-        pagination: DataSourcePagination = None,
+        pagination: DataSourcePagination | None = None,
     ):
         from datamimic_ce.tasks.task_util import TaskUtil
 
@@ -55,7 +55,7 @@ class KeyVariableTask(Task):
         self._pagination = pagination
         self._converter_list = TaskUtil.create_converter_list(ctx, statement.converter)
 
-        self._mode = None
+        self._mode: str | None = None
 
         self._simple_type_set = {
             DATA_TYPE_STRING,
@@ -112,6 +112,7 @@ class KeyVariableTask(Task):
             if not source.endswith("wgt.csv"):
                 raise ValueError(f"Data source of attribute '{self._statement.name}' must be type of: 'wgt.csv'")
             separator = self._statement.separator or ctx.default_separator
+            # TODO: mypy issue[assignment]
             self._generator = WeightedDataSource(file_path=ctx.descriptor_dir / source, separator=separator)
             self._mode = self._GENERATOR_MODE
         elif self._statement.pattern is not None:
@@ -124,7 +125,7 @@ class KeyVariableTask(Task):
             raise ValueError(f"Cannot init generation mode for element '{self.statement.name}'")
 
     @abstractmethod
-    def execute(self, ctx: Context) -> None:
+    def execute(self, ctx: Context | GenIterContext | SetupContext) -> None:
         pass
 
     @property
@@ -132,7 +133,7 @@ class KeyVariableTask(Task):
     def statement(self) -> KeyStatement | VariableStatement | ElementStatement:
         return self._statement
 
-    def _generate_value(self, ctx: GenIterContext):
+    def _generate_value(self, ctx: Context):
         """
         Generate data based on generation mode
         :param ctx:
@@ -141,6 +142,7 @@ class KeyVariableTask(Task):
 
         if self._mode == self._SCRIPT_MODE:
             try:
+                # TODO: mypy issue `self._statement.script` maybe None
                 value = ctx.evaluate_python_expression(self._statement.script)
             except Exception as e:
                 if self._statement.default_value is not None:
@@ -169,6 +171,7 @@ class KeyVariableTask(Task):
         elif self._mode == self._STRING_MODE:
             self._prefix = self.statement.variable_prefix or ctx.root.default_variable_prefix
             self._suffix = self.statement.variable_suffix or ctx.root.default_variable_suffix
+            # TODO: mypy issue: `self.statement.string` maybe None
             value = TaskUtil.evaluate_variable_concat_prefix_suffix(
                 context=ctx,
                 expr=self.statement.string,
@@ -180,20 +183,26 @@ class KeyVariableTask(Task):
             value = None if self._values is None else random.choice(self._values)
         elif self._mode == self._LAZY_GENERATOR_MODE:
             # Try to init generator again in first task execution
-            self._generator = GeneratorUtil(ctx).create_generator(
-                self._statement.generator, self.statement, self._pagination
+            self._generator = (
+                GeneratorUtil(ctx).create_generator(self._statement.generator, self.statement, self._pagination)
+                if self._statement.generator is not None
+                else None
             )
             # Switch mode to GENERATE_MODE for next task execution
             self._mode = self._GENERATOR_MODE
-            if isinstance(self._generator, SequenceTableGenerator):
+            if self._generator is not None and isinstance(self._generator, SequenceTableGenerator):
                 value = self._generator.generate(ctx)
-            else:
+            elif self._generator is not None:
                 value = self._generator.generate()
+            else:
+                value = None
         elif self._mode == self._GENERATOR_MODE:
             if isinstance(self._generator, SequenceTableGenerator):
                 value = self._generator.generate(ctx)
-            else:
+            elif self._generator is not None:
                 value = self._generator.generate()
+            else:
+                value = None
             # Convert numpy.bool_ to bool for being compatible with consumer (db,...)
             if isinstance(value, numpy.bool_):
                 value = bool(value)
