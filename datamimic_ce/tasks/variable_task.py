@@ -59,6 +59,7 @@ class VariableTask(KeyVariableTask):
         self._source_script = (
             statement.source_script if statement.source_script is not None else bool(ctx.default_source_scripted)
         )
+        self._statement: VariableStatement = statement
         descriptor_dir = ctx.root.descriptor_dir
         seed: int
         file_data: list[dict[str, Any]] | None = None
@@ -121,13 +122,14 @@ class VariableTask(KeyVariableTask):
                         )
                     else:
                         # global variable (setup variable, out of generate_stmt scope) don't need pagination and cyclic
-                        if isinstance(self._statement, VariableStatement) and self._statement.is_global_variable:
+                        if self._statement.is_global_variable:
                             file_data = client.get_by_page_with_query(selector)
                         # Get data source with pagination
                         else:
                             len_data = ctx.data_source_len.get(statement.full_name)
                             if len_data is None:
                                 len_data = client.count_query_length(selector)
+                            # TODO: mypy issue handle when cyclic is None, pagination is None
                             file_data = client.get_cyclic_data(
                                 selector,
                                 statement.cyclic,
@@ -193,9 +195,7 @@ class VariableTask(KeyVariableTask):
                                 DataSourceUtil.get_shuffled_data_with_cyclic(
                                     file_data, pagination, statement.cyclic, seed
                                 )
-                                if file_data is not None
-                                else None
-                            )
+                            ) if file_data is not None else None
                             self._mode = self._RANDOM_DISTRIBUTION_MODE
                         else:
                             self._iterator = iter(file_data) if file_data is not None else None
@@ -231,10 +231,7 @@ class VariableTask(KeyVariableTask):
 
     @property
     def statement(self) -> VariableStatement:
-        if isinstance(self._statement, VariableStatement):
-            return self._statement
-        else:
-            raise TypeError("Expected an VariableStatement")
+        return self._statement
 
     @staticmethod
     def _get_entity(ctx: SetupContext, entity_name: str, locale: str, dataset: str, count: int):
@@ -264,7 +261,7 @@ class VariableTask(KeyVariableTask):
         else:
             raise ValueError(f"Entity {entity_name} is not supported.")
 
-    def execute(self, ctx: GenIterContext | SetupContext) -> None:
+    def execute(self, ctx: GenIterContext | SetupContext) -> None:  # TODO: mypy issue [override]
         """
         Generate data for element <variable>
         """
@@ -289,7 +286,7 @@ class VariableTask(KeyVariableTask):
             value = self._client.get_by_page_with_query(selector)
         elif self._mode == self._RANDOM_DISTRIBUTION_MODE:
             if self._random_items_iterator is None:
-                raise StopIteration("No more random items to iterate for statement: " + self._statement.name)
+                raise StopIteration(f"No more random items to iterate for statement: {self._statement.name}")
             value = next(self._random_items_iterator)
         elif self._mode == self._LAZY_ITERATOR_MODE:
             if isinstance(self._statement, VariableStatement):

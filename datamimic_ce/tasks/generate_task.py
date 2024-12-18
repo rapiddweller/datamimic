@@ -15,7 +15,7 @@ import time
 from collections.abc import Callable
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Any
 
 import dill
 import xmltodict
@@ -118,7 +118,7 @@ def _geniter_single_process_generate(args: tuple) -> dict[str, list]:
         # Don't use pagination for random distribution to load all data before shuffle
         load_start_idx = None
         load_end_idx = None
-        load_pagination = None
+        load_pagination = None  # TODO: mypy issue: below function not accept load_pagination as None
     source_data, build_from_source = context.root.class_factory_util.get_task_util_cls().gen_task_load_data_from_source(
         context,
         stmt,
@@ -159,7 +159,7 @@ def _geniter_single_process_generate(args: tuple) -> dict[str, list]:
                 # Add sub generate product to current product_holder
                 if isinstance(task, GenerateTask | ConditionTask):
                     # Execute sub generate task
-                    sub_gen_result = task.execute(ctx)
+                    sub_gen_result = task.execute(ctx)  # TODO: mypy issue [arg-type]
                     if sub_gen_result:
                         for key, value in sub_gen_result.items():
                             # Store product for later export
@@ -216,7 +216,7 @@ def _geniter_single_process_generate_and_consume_by_page(args: tuple) -> dict:
     return_product_result = context.test_mode or any(
         [context.memstore_manager.contain(consumer_str) for consumer_str in stmt.targets]
     )
-    result = {}
+    result: dict = {}
 
     # Generate and consume product by page
     args_list = list(args)
@@ -301,6 +301,7 @@ def _pre_consume_product(stmt: GenerateStatement, dict_result: list[dict]) -> tu
     :param dict_result: Generated data.
     :return: Preprocessed product tuple.
     """
+    packed_result: tuple
     if getattr(stmt, "selector", False):
         packed_result = (stmt.name, dict_result, {"selector": stmt.selector})
     elif getattr(stmt, "type", False):
@@ -330,7 +331,7 @@ def _consume_outermost_gen_stmt_by_page(
 
     # Create a dictionary to track start times for each statement
     if not hasattr(context, "_statement_start_times"):
-        context._statement_start_times = {}
+        context._statement_start_times = {}  # TODO: mypy issue [attr-defined]
 
     # Initialize start times for statements if this is the first page
     if page_info.page_idx == 0:  # Check if this is the first page
@@ -438,7 +439,8 @@ def _load_csv_file(
 
         # if sourceScripted then evaluate python expression in csv
         if source_scripted:
-            return TaskUtil.evaluate_file_script_template(ctx=ctx, datas=result, prefix=prefix, suffix=suffix)
+            evaluated_result = TaskUtil.evaluate_file_script_template(ctx=ctx, datas=result, prefix=prefix, suffix=suffix)
+            return evaluated_result if isinstance(evaluated_result, list) else [evaluated_result]
 
         return result
 
@@ -504,7 +506,7 @@ def _load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int, end_idx
         return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
 
 
-def _evaluate_selector_script(context: Context, stmt: GenerateStatement):
+def _evaluate_selector_script(context: Context, stmt: GenerateStatement):  # TODO: mypy issue, maybe add selector as input param
     """
     Evaluate script selector.
 
@@ -592,7 +594,7 @@ class GenerateTask(Task):
             if self.statement.selector:
                 # Evaluate script selector
                 selector = _evaluate_selector_script(context=context, stmt=self._statement)
-                client = root_context.get_client_by_id(self.statement.source)
+                client = root_context.get_client_by_id(self.statement.source) if self.statement.source is not None else None
                 if isinstance(client, DatabaseClient):
                     count = client.count_query_length(selector)
                 else:
@@ -694,7 +696,7 @@ class GenerateTask(Task):
         self,
         setup_ctx: SetupContext,
         page_size: int,
-        single_process_execute_function: Callable[[tuple], None],
+        single_process_execute_function: Callable[[tuple], dict | None],
     ):
         """
         Multi-process page generation and consumption of products.
@@ -817,7 +819,7 @@ class GenerateTask(Task):
             for child_stmt in statement.sub_statements:
                 GenerateTask._scan_data_source(ctx, child_stmt)
 
-    def execute(self, context: SetupContext) -> dict[str, list] | None:
+    def execute(self, context: SetupContext) -> dict[str, list] | None:  # TODO: mypy issue [override]
         """
         Execute generate task. If gen_stmt is inner, return generated product; otherwise, consume them.
 
@@ -880,6 +882,7 @@ class GenerateTask(Task):
                     # Generate product
                     result = self._sp_generate(context, start, end)
                     # Consume by page
+                    # TODO: mypy issue in _consume_by_page: mp_idx and mp_chunk_size param not accept None
                     _consume_by_page(
                         self.statement,
                         context,

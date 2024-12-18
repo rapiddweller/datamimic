@@ -33,6 +33,7 @@ class KeyTask(KeyVariableTask):
         pagination: DataSourcePagination | None = None,
     ):
         super().__init__(ctx, statement, pagination)
+        self._statement: KeyStatement = statement
         self._determine_generation_mode(ctx)
 
         if self._mode is None:
@@ -51,10 +52,7 @@ class KeyTask(KeyVariableTask):
 
     @property
     def statement(self) -> KeyStatement:
-        if isinstance(self._statement, KeyStatement):
-            return self._statement
-        else:
-            raise TypeError("Expected an KeyStatement")
+        return self._statement
 
     def execute(self, ctx: GenIterContext):  # TODO: mypy issue [override]
         """

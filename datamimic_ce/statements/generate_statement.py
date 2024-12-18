@@ -20,6 +20,12 @@ class GenerateStatement(CompositeStatement):
     def __init__(self, model: GenerateModel, parent_stmt: Statement):
         name = model.name
         super().__init__(name, parent_stmt)
+        self._name: str = name
+        self._full_name: str = (
+            name
+            if (parent_stmt is None or parent_stmt.full_name is None)
+            else f"{parent_stmt.full_name}{NAME_SEPARATOR}{self._name}"
+        )
         self._count = model.count
         self._source = model.source
         self._cyclic = model.cyclic
@@ -40,6 +46,14 @@ class GenerateStatement(CompositeStatement):
         self._converter = model.converter
         self._bucket = model.bucket
         self._num_process = model.num_process
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def full_name(self) -> str:
+        return self._full_name
 
     @property
     def count(self):

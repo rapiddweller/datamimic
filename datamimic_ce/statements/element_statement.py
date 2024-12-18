@@ -12,7 +12,7 @@ class ElementStatement(Statement):
     def __init__(self, model: ElementModel, parent_stmt: Statement):
         name = model.name
         super().__init__(name, parent_stmt)
-        self._name = name
+        self._name: str = name
         self._condition = model.condition
         self._constant = model.constant
         self._converter = model.converter
@@ -29,6 +29,10 @@ class ElementStatement(Statement):
         self._variable_prefix = model.variable_prefix
         self._variable_suffix = model.variable_suffix
         self._string = model.string
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     @property
     def type(self):

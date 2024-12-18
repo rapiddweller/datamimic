@@ -29,6 +29,7 @@ class ElementTask(KeyVariableTask):
         pagination: DataSourcePagination | None = None,
     ):
         super().__init__(ctx, statement, pagination)
+        self._statement: ElementStatement = statement
         self._determine_generation_mode(ctx)
 
         if self._mode is None:
@@ -40,10 +41,7 @@ class ElementTask(KeyVariableTask):
 
     @property
     def statement(self) -> ElementStatement:
-        if isinstance(self._statement, ElementStatement):
-            return self._statement
-        else:
-            raise TypeError("Expected an ElementStatement")
+        return self._statement
 
     def execute(self, ctx: Context) -> None:
         pass
@@ -58,8 +56,8 @@ class ElementTask(KeyVariableTask):
 
         # check condition to enable or disable element, default True
         condition = TaskUtil.evaluate_condition_value(
-            ctx=ctx, element_name=self._statement.name, value=self.statement.condition
-        )
+            ctx=ctx, element_name=self.statement.name, value=self.statement.condition
+        ) if self.statement.condition is not None else None
 
         if not condition:
             return {}
