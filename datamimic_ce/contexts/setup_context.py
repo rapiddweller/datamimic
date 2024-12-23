@@ -7,6 +7,7 @@
 import copy
 import uuid
 from pathlib import Path
+from typing import Any
 
 from datamimic_ce.clients.database_client import Client
 from datamimic_ce.contexts.context import Context
@@ -87,6 +88,7 @@ class SetupContext(Context):
         self._default_source_scripted = default_source_scripted
         self._report_logging = report_logging
         self._current_seed = current_seed
+        self._task_exporters: dict[str, dict[str, Any]] = {}
 
     def __deepcopy__(self, memo):
         """
@@ -295,6 +297,14 @@ class SetupContext(Context):
     @property
     def descriptor_dir(self) -> Path:
         return self._descriptor_dir
+
+    @property
+    def task_exporters(self) -> dict[str, dict[str, Any]]:
+        return self._task_exporters
+
+    @task_exporters.setter
+    def task_exporters(self, value: dict[str, dict[str, Any]]) -> None:
+        self._task_exporters = value
 
     @property
     def default_separator(self) -> str:

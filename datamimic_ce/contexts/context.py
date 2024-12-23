@@ -87,10 +87,19 @@ SPECIAL_FUNCTION = {
 class Context(ABC):  # noqa: B024
     def __init__(self, root_context: SetupContext):  # noqa: F821
         self._root = root_context
+        self._statement_start_times: dict[str, float] = {}
 
     @property
     def root(self) -> SetupContext:  # noqa: F821
         return self._root
+
+    @property
+    def statement_start_times(self) -> dict[str, float]:
+        return self._statement_start_times
+
+    @statement_start_times.setter
+    def statement_start_times(self, value: dict[str, float]) -> None:
+        self._statement_start_times = value
 
     def evaluate_python_expression(self, expr: str, local_namespace: dict | None = None):
         """

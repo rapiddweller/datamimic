@@ -387,33 +387,6 @@ class TaskUtil:
         return_source_data = source_data if isinstance(source_data, list) else [source_data]
         return return_source_data, build_from_source
 
-    # @staticmethod
-    # def consume_minio_after_page_processing(stmt, context: Context) -> None:
-    #     """
-    #     Load all temp files and consume MinioConsumer
-    #     :param stmt:
-    #     :param context:
-    #     :return:
-    #     """
-    #     # Load temp result file
-    #     result_temp_dir = context.root.descriptor_dir / f"temp_result_{context.root.task_id}"
-    #     consumed_result = _load_temp_result_file(result_temp_dir)
-    #
-    #     for stmt_name, product_result in consumed_result.items():
-    #         # Load current gen_stmt with corresponding targets
-    #         current_stmt = stmt.retrieve_sub_statement_by_fullname(stmt_name)
-    #
-    #         # Get list of MinioConsumer
-    #         _, consumers_without_operation = ExporterUtil.create_exporter_list(
-    #             setup_context=context.root, stmt=current_stmt
-    #         )
-    #
-    #         # Preprocess and consume data
-    #         consumed_result = _pre_consume_product(current_stmt, product_result)
-    #         for consumer in consumers_without_operation:
-    #             if isinstance(consumer, (XMLExporter, JsonExporter, TXTExporter, CSVExporter)):
-    #                 consumer.consume(consumed_result)
-
     @staticmethod
     def consume_product_by_page(
         root_context: SetupContext,
@@ -440,13 +413,13 @@ class TaskUtil:
         # Create exporters cache in root context if it doesn't exist
         if not hasattr(root_context, "_task_exporters"):
             # Using task_id to namespace the cache
-            root_context._task_exporters = {}  # TODO: mypy issue [attr-defined]
+            root_context.task_exporters = {}
 
         # Create a unique cache key incorporating task_id and statement details
         cache_key = f"{root_context.task_id}_{stmt.name}_{stmt.storage_id}_{stmt}"
 
         # Get or create exporters
-        if cache_key not in root_context._task_exporters:  # TODO: mypy issue [attr-defined]
+        if cache_key not in root_context.task_exporters:
             # Create the consumer set once
             consumer_set = stmt.targets.copy()
             # consumer_set.add(EXPORTER_PREVIEW) deactivating preview exporter for multi-process
@@ -465,14 +438,14 @@ class TaskUtil:
             )
 
             # Cache the exporters
-            root_context._task_exporters[cache_key] = {  # TODO: mypy issue [attr-defined]
+            root_context.task_exporters[cache_key] = {
                 "with_operation": consumers_with_operation,
                 "without_operation": consumers_without_operation,
                 "page_count": 0,  # Track number of pages processed
             }
 
         # Get cached exporters
-        exporters = root_context._task_exporters[cache_key]  # TODO: mypy issue [attr-defined]
+        exporters = root_context.task_exporters[cache_key]
         exporters["page_count"] += 1
 
         # Use cached exporters

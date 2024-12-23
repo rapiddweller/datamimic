@@ -269,15 +269,6 @@ def _consume_by_page(
     :param mp_chunk_size: Chunk size for multiprocessing.
     :return: None
     """
-    # root_ctx = context.root
-    #
-    # # Consume specific exporters by writing temp files if necessary
-    # for stmt_name, xml_value in xml_result.items():
-    #     # Load current gen_stmt with corresponding targets
-    #     current_stmt = stmt.retrieve_sub_statement_by_fullname(stmt_name)
-    #     if current_stmt is None:
-    #         raise ValueError(f"Cannot find element <generate> '{stmt_name}'")
-
     # Consume non-specific exporters
     _consume_outermost_gen_stmt_by_page(
         stmt,
@@ -371,7 +362,7 @@ def _finalize_and_export_consumers(context: Context, stmt: GenerateStatement) ->
         cache_key_prefix = f"{context.root.task_id}_{stmt.name}_"
         relevant_exporters = [
             exporters
-            for cache_key, exporters in context.root._task_exporters.items()
+            for cache_key, exporters in context.root.task_exporters.items()
             if cache_key.startswith(cache_key_prefix)
         ]
 
@@ -520,7 +511,7 @@ def _evaluate_selector_script(
     """
     from datamimic_ce.tasks.task_util import TaskUtil
 
-    selector = stmt.selector
+    selector = stmt.selector or ""
     prefix = stmt.variable_prefix or context.root.default_variable_prefix
     suffix = stmt.variable_suffix or context.root.default_variable_suffix
     return TaskUtil.evaluate_variable_concat_prefix_suffix(context, selector, prefix=prefix, suffix=suffix)
