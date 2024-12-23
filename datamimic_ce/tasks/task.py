@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
@@ -13,7 +14,7 @@ from datamimic_ce.statements.statement import Statement
 
 class Task(ABC):
     @abstractmethod
-    def execute(self, ctx: Context | GenIterContext) -> None:
+    def execute(self, ctx: Context | GenIterContext) -> Any:
         pass
 
     @property

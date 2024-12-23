@@ -1,5 +1,5 @@
 name: Github Datamimic CE CI
-run-name: ${{ github.run_actor }} is running ${{ github.workflow }} on ${{ github.repository }}
+run-name: ${{ github.actor || 'unknown' }} is running ${{ github.workflow || 'workflow' }} on ${{ github.repository || 'repo' }}
 on:
   push:
     branches:

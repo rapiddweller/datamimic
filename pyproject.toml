@@ -66,7 +66,7 @@ dev-dependencies = [
     "ruff>=0.8", # Fast Python linter written in Rust
     "sqlalchemy-stubs>=0.4",
     "prettytable==3.10.0", # from prettytable import PrettyTable
-    "mypy==1.8.0",
+    "mypy==1.14.0",
     "types-toml>=0.10.8.20240310",
     "types-requests>=2.32.0.20241016",
 ]

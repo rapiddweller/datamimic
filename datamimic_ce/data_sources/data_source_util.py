@@ -40,8 +40,10 @@ class DataSourceUtil:
         # 1: Check if prop source is available
         if not hasattr(stmt, "source") or stmt.source is None:
             return
-        source_str = stmt.source
-        source_id = stmt.full_name
+        if hasattr(stmt, "source"):
+            source_str = stmt.source
+        source_id: str | None = stmt.full_name
+        ds_len: int = 0
         # Try to evaluate script as source string
         # Ignore to check scripted source if eval failed in pre-execute task
         if source_str.startswith("{") and source_str.endswith("}"):
@@ -72,7 +74,7 @@ class DataSourceUtil:
             # handle database collection/table as data source
             from datamimic_ce.clients.rdbms_client import RdbmsClient
 
-            if isinstance(client, RdbmsClient):
+            if isinstance(client, RdbmsClient) and hasattr(stmt, "selector"):
                 if stmt.selector is not None:
                     try:
                         ds_len = client.count_query_length(query=stmt.selector)
@@ -101,10 +103,10 @@ class DataSourceUtil:
                             f"with iterationSelector '{stmt.iteration_selector}'"
                         )
                         return
-                else:
-                    ds_len = client.count_table_length(table_name=stmt.type or stmt.name)
+                elif hasattr(stmt, "type") and stmt.type is not None:
+                    ds_len = client.count_table_length(table_name=str(stmt.type) or str(stmt.name))
 
-            elif isinstance(client, MongoDBClient):
+            elif isinstance(client, MongoDBClient) and hasattr(stmt, "selector") and hasattr(stmt, "type"):
                 if stmt.selector is not None:
                     try:
                         ds_len = client.count_query_length(stmt.selector)

@@ -315,7 +315,7 @@ class RdbmsClient(DatabaseClient):
         self,
         table_name: str,
         column_name: str,
-        pagination: DataSourcePagination,
+        pagination: DataSourcePagination | None,
         unique: bool,
     ) -> list:
         """
@@ -339,11 +339,14 @@ class RdbmsClient(DatabaseClient):
             else:
                 order_func = func.random()
 
-            query = (
-                select([table.c[column_name]]).offset(pagination.skip).limit(pagination.limit)
-                if unique
-                else select([table.c[column_name]]).order_by(order_func)
-            )
+            if pagination and hasattr(pagination, "skip") and hasattr(pagination, "limit"):
+                query = (
+                    select([table.c[column_name]]).offset(pagination.skip).limit(pagination.limit)
+                    if unique
+                    else select([table.c[column_name]]).order_by(order_func)
+                )
+            else:
+                query = select([table.c[column_name]])
 
             random_rows = conn.execute(query).fetchall()
 
