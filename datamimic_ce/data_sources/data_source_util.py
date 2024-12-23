@@ -65,7 +65,7 @@ class DataSourceUtil:
         elif source_str.endswith(".xml"):
             ds_len = len(list(ET.parse(ctx.descriptor_dir / source_str).getroot()))
         # 2.4: Check if datasource is memstore
-        elif ctx.memstore_manager.contain(source_str):
+        elif ctx.memstore_manager.contain(source_str) and hasattr(stmt, "type"):
             ds_len = ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(stmt.type or stmt.name)
         elif ctx.get_client_by_id(source_str) is not None:
             client = ctx.get_client_by_id(source_str)

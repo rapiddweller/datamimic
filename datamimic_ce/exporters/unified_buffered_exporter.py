@@ -199,11 +199,11 @@ class UnifiedBufferedExporter(Exporter, ABC):
             except Exception as e:
                 logger.error(f"Attempt {attempt + 1} failed to initialize buffer file: {e}")
                 if attempt == self.MAX_RETRIES - 1:
-                    # TODO: mypy issue [return], mypy don't understand this logic
                     raise BufferFileError(
                         f"Failed to initialize buffer file after {self.MAX_RETRIES} attempts: {e}"
                     ) from e
                 time.sleep(self.RETRY_DELAY * (attempt + 1))
+        return buffer_file
 
     def _rotate_chunk(self) -> None:
         """Finalizes current chunk and creates new one with proper error handling."""
@@ -259,24 +259,28 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
     def _update_metadata_file(self) -> None:
         """Updates the metadata file with retry mechanism."""
-        metadata_file = self._get_buffer_file().with_suffix(".meta")
+        buffer_file: Path | None = self._get_buffer_file()
+        if buffer_file:
+            metadata_file = buffer_file.with_suffix(".meta")
 
-        for attempt in range(self.MAX_RETRIES):
-            try:
-                with metadata_file.open("r+", encoding=self._encoding) as f:
-                    metadata = json.load(f)
-                    metadata["total_count"] = self.global_counter
-                    metadata["chunk_index"] = self.chunk_index
-                    f.seek(0)  # Move to the start of the file to overwrite
-                    json.dump(metadata, f)
-                    f.truncate()  # Remove any leftover data from previous writes
-                logger.debug(f"Updated metadata file {metadata_file} with total_count: {self.global_counter}")
-                return
-            except Exception as e:
-                logger.error(f"Attempt {attempt + 1} failed to update metadata: {e}")
-                if attempt == self.MAX_RETRIES - 1:
-                    raise BufferFileError(f"Failed to update metadata after {self.MAX_RETRIES} attempts: {e}") from e
-                time.sleep(self.RETRY_DELAY * (attempt + 1))
+            for attempt in range(self.MAX_RETRIES):
+                try:
+                    with metadata_file.open("r+", encoding=self._encoding) as f:
+                        metadata = json.load(f)
+                        metadata["total_count"] = self.global_counter
+                        metadata["chunk_index"] = self.chunk_index
+                        f.seek(0)  # Move to the start of the file to overwrite
+                        json.dump(metadata, f)
+                        f.truncate()  # Remove any leftover data from previous writes
+                    logger.debug(f"Updated metadata file {metadata_file} with total_count: {self.global_counter}")
+                    return
+                except Exception as e:
+                    logger.error(f"Attempt {attempt + 1} failed to update metadata: {e}")
+                    if attempt == self.MAX_RETRIES - 1:
+                        raise BufferFileError(
+                            f"Failed to update metadata after {self.MAX_RETRIES} attempts: {e}"
+                        ) from e
+                    time.sleep(self.RETRY_DELAY * (attempt + 1))
 
     @abstractmethod
     def _write_data_to_buffer(self, data: list[dict]) -> None:

@@ -96,16 +96,20 @@ class XMLExporter(UnifiedBufferedExporter):
                 items_xml += item_xml + "\n"  # Add newline for readability
 
             buffer_file = self._get_buffer_file()
-            # If buffer does not exist or is empty, start with the root element
-            if not buffer_file.exists() or buffer_file.stat().st_size == 0:
-                with buffer_file.open("w", encoding=self.encoding) as xmlfile:
-                    xmlfile.write(f"<{self.root_element}>\n")
+
+            if buffer_file is None:
+                return
+            else:
+                # If buffer does not exist or is empty, start with the root element
+                if not buffer_file.exists() or buffer_file.stat().st_size == 0:
+                    with buffer_file.open("w", encoding=self.encoding) as xmlfile:
+                        xmlfile.write(f"<{self.root_element}>\n")
                 logger.debug(f"Created root element in buffer file: {buffer_file}")
 
-            # Append items to the root element
-            with buffer_file.open("a", encoding=self.encoding) as xmlfile:
-                xmlfile.write(items_xml)
-            logger.debug(f"Wrote {len(data)} records to buffer file: {buffer_file}")
+                # Append items to the root element
+                with buffer_file.open("a", encoding=self.encoding) as xmlfile:
+                    xmlfile.write(items_xml)
+                logger.debug(f"Wrote {len(data)} records to buffer file: {buffer_file}")
 
         except Exception as e:
             logger.error(f"Error writing data to buffer: {e}")
