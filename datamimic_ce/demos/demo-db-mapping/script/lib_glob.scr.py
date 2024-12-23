@@ -57,7 +57,7 @@ class CustomBusinessMappingConverter(CustomConverter):
         # logger.debug(f"SQL query: {sql_query}")
         return sql_query
 
-    @lru_cache
+    @lru_cache(maxsize=1000)  # noqa: B019
     def convert(self, value: str):
         """
         Generate data and set this value to current product

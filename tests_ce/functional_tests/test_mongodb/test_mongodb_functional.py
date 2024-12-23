@@ -177,7 +177,7 @@ class TestMongoDbFunction:
             assert "name" in m
             assert m["name"] in ["Bob", "Frank", "Phil"]
             assert "_id" not in m
-        assert any(a["id"] != b for a, b in zip(mongo_data, range_list))
+        assert any(a["id"] != b for a, b in zip(mongo_data, range_list, strict=False))
 
         data_ordered = result["data_ordered"]
         assert len(data_ordered) == 20
@@ -187,7 +187,7 @@ class TestMongoDbFunction:
             assert "name" in m
             assert m["name"] in ["Bob", "Frank", "Phil"]
             assert "_id" not in m
-        assert all(a["id"] == b for a, b in zip(data_ordered, range_list))
+        assert all(a["id"] == b for a, b in zip(data_ordered, range_list, strict=False))
 
         mongo_selector = result["mongo_selector"]
         assert len(mongo_selector) == 20
@@ -198,7 +198,7 @@ class TestMongoDbFunction:
             assert m["user_name"] in ["Bob", "Frank", "Phil"]
             assert "_id" in m
             assert isinstance(m["_id"], ObjectId)
-        assert any(a["user_id"] != b for a, b in zip(mongo_selector, range_list))
+        assert any(a["user_id"] != b for a, b in zip(mongo_selector, range_list, strict=False))
 
         mongo_selector_ordered = result["mongo_selector_ordered"]
         assert len(mongo_selector_ordered) == 20
@@ -209,4 +209,4 @@ class TestMongoDbFunction:
             assert m["user_name"] in ["Bob", "Frank", "Phil"]
             assert "_id" in m
             assert isinstance(m["_id"], ObjectId)
-        assert all(a["user_id"] == b for a, b in zip(mongo_selector_ordered, range_list))
+        assert all(a["user_id"] == b for a, b in zip(mongo_selector_ordered, range_list, strict=False))

@@ -83,9 +83,8 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
     def _get_buffer_tmp_dir(self) -> Path:
         return (
-            self._descriptor_dir
-            / f"temp_result_{self._task_id}{self._pid_placeholder}_exporter_"
-              f"{self._exporter_type}_product_{self.product_name}"
+            self._descriptor_dir / f"temp_result_{self._task_id}{self._pid_placeholder}_exporter_"
+            f"{self._exporter_type}_product_{self.product_name}"
         )
 
     def _init_buffer_directory(self) -> None:
