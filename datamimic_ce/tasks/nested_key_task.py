@@ -39,7 +39,7 @@ class NestedKeyTask(Task):
     def statement(self) -> NestedKeyStatement:
         return self._statement
 
-    def execute(self, parent_context: GenIterContext):  # TODO: mypy issue [override]
+    def execute(self, parent_context: Context) -> None:
         """
         Generate data for element "nestedKey"
         :param parent_context:
@@ -61,17 +61,18 @@ class NestedKeyTask(Task):
             element_name=self._statement.name,
             value=self._statement.condition,
         )
-        if condition:
-            # If both source and script are None, create new nestedkey instead of loading data from file
-            if self._statement.source is None and self._statement.script is None:
-                self._execute_generate(parent_context)
-            else:
-                self._execute_iterate(parent_context)
-        elif self._default_value is not None:
-            # If condition false and default_value exist, assign default value to nestedKey
-            default_value = parent_context.evaluate_python_expression(self._default_value)
-            default_value = self._post_convert(default_value)
-            parent_context.add_current_product_field(self._statement.name, default_value)
+        if isinstance(parent_context, GenIterContext):
+            if condition:
+                # If both source and script are None, create new nestedkey instead of loading data from file
+                if self._statement.source is None and self._statement.script is None:
+                    self._execute_generate(parent_context)
+                else:
+                    self._execute_iterate(parent_context)
+            elif self._default_value is not None:
+                # If condition false and default_value exist, assign default value to nestedKey
+                default_value = parent_context.evaluate_python_expression(self._default_value)
+                default_value = self._post_convert(default_value)
+                parent_context.add_current_product_field(self._statement.name, default_value)
 
     def _lazy_init_sub_tasks(self, parent_context: GenIterContext, nestedkey_length: int):
         """
@@ -218,7 +219,7 @@ class NestedKeyTask(Task):
             )
         return result
 
-    def _load_data_from_source(self, parent_context: GenIterContext) -> list | dict:
+    def _load_data_from_source(self, parent_context: Context) -> list | dict:
         """
         Load data from source
 
@@ -235,7 +236,7 @@ class NestedKeyTask(Task):
             if source_str.startswith("{") and source_str.endswith("}")
             else source_str
         )
-        if nestedkey_type == DATA_TYPE_LIST:
+        if nestedkey_type == DATA_TYPE_LIST and isinstance(parent_context, GenIterContext):
             # Read data from source
             if source.endswith("csv"):
                 separator = self._statement.separator or parent_context.root.default_separator
@@ -249,7 +250,7 @@ class NestedKeyTask(Task):
 
             result = self._modify_nestedkey_data_list(parent_context, list_value)
 
-        elif nestedkey_type == DATA_TYPE_DICT:
+        elif nestedkey_type == DATA_TYPE_DICT and isinstance(parent_context, GenIterContext):
             if source.endswith("json"):
                 dict_value = FileUtil.read_json_to_dict(self._descriptor_dir / source)
                 result = self._modify_nestedkey_data_dict(parent_context, dict_value)
@@ -257,7 +258,7 @@ class NestedKeyTask(Task):
                 raise ValueError(f"Source of nestedkey having type as 'dict' does not support format {source}")
 
         # handle memstore source
-        elif parent_context.root.memstore_manager.contain(source_str):
+        elif parent_context.root.memstore_manager.contain(source_str) and isinstance(parent_context, GenIterContext):
             list_value = parent_context.root.memstore_manager.get_memstore(source_str).get_data_by_type(
                 self._statement.type, None, self._statement.cyclic
             )
@@ -278,11 +279,15 @@ class NestedKeyTask(Task):
             from datamimic_ce.tasks.task_util import TaskUtil
 
             # Determine variable prefix and suffix
-            setup_ctx = parent_context.parent
-            while not isinstance(setup_ctx, SetupContext):
-                setup_ctx = setup_ctx.parent  # TODO: mypy issue [attr-defined]
-            variable_prefix = self.statement.variable_prefix or setup_ctx.default_variable_prefix
-            variable_suffix = self.statement.variable_suffix or setup_ctx.default_variable_suffix
+            ctx = parent_context.parent if isinstance(parent_context, GenIterContext) else parent_context
+            while isinstance(ctx, GenIterContext):
+                ctx = ctx.parent
+            if isinstance(ctx, SetupContext):
+                variable_prefix = self.statement.variable_prefix or ctx.default_variable_prefix
+                variable_suffix = self.statement.variable_suffix or ctx.default_variable_suffix
+            else:
+                variable_prefix = self.statement.variable_prefix
+                variable_suffix = self.statement.variable_suffix
 
             # Evaluate source_script
             result = TaskUtil.evaluate_file_script_template(parent_context, result, variable_prefix, variable_suffix)

@@ -54,7 +54,7 @@ class KeyTask(KeyVariableTask):
     def statement(self) -> KeyStatement:
         return self._statement
 
-    def execute(self, ctx: GenIterContext):  # TODO: mypy issue [override]
+    def execute(self, ctx: Context) -> None:
         """
         Generate data for element "attribute"
         If 'type' element is not specified, then default type of generated data is string
@@ -90,8 +90,10 @@ class KeyTask(KeyVariableTask):
 
             result = value if len(attributes) == 0 else {"#text": value, **attributes}
             # Add field "attribute" into current product
-            ctx.add_current_product_field(self._statement.name, result)
+            if isinstance(ctx, GenIterContext):
+                ctx.add_current_product_field(self._statement.name, result)
         elif self.statement.default_value is not None:
             # If condition false and default_value exist, assign default value to key
             default_value = ctx.evaluate_python_expression(self.statement.default_value)
-            ctx.add_current_product_field(self._statement.name, default_value)
+            if isinstance(ctx, GenIterContext):
+                ctx.add_current_product_field(self._statement.name, default_value)
