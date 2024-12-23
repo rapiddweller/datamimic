@@ -130,10 +130,9 @@ class VariableTask(KeyVariableTask):
                             len_data = ctx.data_source_len.get(statement.full_name)
                             if len_data is None:
                                 len_data = client.count_query_length(selector)
-                            # TODO: mypy issue handle when cyclic is None, pagination is None
                             file_data = client.get_cyclic_data(
                                 selector,
-                                statement.cyclic,
+                                statement.cyclic or False,
                                 len_data,
                                 pagination,
                             )

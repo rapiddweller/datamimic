@@ -81,7 +81,7 @@ class KeyTask(KeyVariableTask):
             if hasattr(self._statement, "sub_statements"):
                 for stmt in self._statement.sub_statements:
                     task = task_util_cls.get_task_by_statement(root_ctx, stmt)
-                    if isinstance(task, ElementTask):
+                    if isinstance(task, ElementTask) and isinstance(ctx, GenIterContext):
                         attributes.update(task.generate_xml_attribute(ctx))
                     else:
                         raise ValueError(

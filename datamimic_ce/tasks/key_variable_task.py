@@ -51,7 +51,7 @@ class KeyVariableTask(Task):
 
         self._element_tag = "key" if isinstance(statement, KeyStatement) else "variable"
         self._statement = statement
-        self._generator = None
+        self._generator: WeightedDataSource | None = None
         self._pagination = pagination
         self._converter_list = TaskUtil.create_converter_list(ctx, statement.converter)
 
@@ -112,8 +112,9 @@ class KeyVariableTask(Task):
             if not source.endswith("wgt.csv"):
                 raise ValueError(f"Data source of attribute '{self._statement.name}' must be type of: 'wgt.csv'")
             separator = self._statement.separator or ctx.default_separator
-            # TODO: mypy issue[assignment]
-            self._generator = WeightedDataSource(file_path=ctx.descriptor_dir / source, separator=separator)
+            self._generator: WeightedDataSource = WeightedDataSource(
+                file_path=ctx.descriptor_dir / source, separator=separator
+            )
             self._mode = self._GENERATOR_MODE
         elif self._statement.pattern is not None:
             self._mode = self._PATTERN_MODE
@@ -142,8 +143,8 @@ class KeyVariableTask(Task):
 
         if self._mode == self._SCRIPT_MODE:
             try:
-                # TODO: mypy issue `self._statement.script` maybe None
-                value = ctx.evaluate_python_expression(self._statement.script)
+                if self._statement.script is not None:
+                    value = ctx.evaluate_python_expression(self._statement.script)
             except Exception as e:
                 if self._statement.default_value is not None:
                     value = (
@@ -174,7 +175,7 @@ class KeyVariableTask(Task):
             # TODO: mypy issue: `self.statement.string` maybe None
             value = TaskUtil.evaluate_variable_concat_prefix_suffix(
                 context=ctx,
-                expr=self.statement.string,
+                expr=self.statement.string or "",
                 prefix=self._prefix,
                 suffix=self._suffix,
             )

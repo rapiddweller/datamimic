@@ -67,8 +67,8 @@ class SetupContext(Context):
         self._max_count = 1000
         self._validate = False
         self._default_error_handler = None
-        self._default_separator = default_separator
-        self._default_locale = default_locale
+        self._default_separator = default_separator or ","
+        self._default_locale: str = default_locale or "en_US"
         self._default_dataset = default_dataset
         self._default_null = None
         self._default_script = "py"
