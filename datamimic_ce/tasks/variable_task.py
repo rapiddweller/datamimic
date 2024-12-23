@@ -18,6 +18,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VALUES,
 )
 from datamimic_ce.constants.element_constants import EL_VARIABLE
+from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
@@ -238,9 +239,10 @@ class VariableTask(KeyVariableTask):
         return self._statement
 
     @staticmethod
-    def _get_entity(ctx: SetupContext, entity_name: str, locale: str, dataset: str, count: int):
+    def _get_entity(ctx: Context, entity_name: str, locale: str, dataset: str, count: int):
         entity_class_name, kwargs = StringUtil.parse_constructor_string(entity_name)
-        cls_factory_util = ctx.class_factory_util
+        if isinstance(ctx, SetupContext) and hasattr(ctx, "class_factory_util"):
+            cls_factory_util = ctx.class_factory_util
         if entity_class_name == "Person":
             return PersonEntity(cls_factory_util, dataset=dataset, count=count, locale=locale, **kwargs)
         if entity_class_name == "Company":
@@ -265,7 +267,7 @@ class VariableTask(KeyVariableTask):
         else:
             raise ValueError(f"Entity {entity_name} is not supported.")
 
-    def execute(self, ctx: GenIterContext | SetupContext) -> None:  # TODO: mypy issue [override]
+    def execute(self, ctx: Context) -> None:  # TODO: mypy issue [override]
         """
         Generate data for element <variable>
         """
@@ -333,10 +335,11 @@ class VariableTask(KeyVariableTask):
             ]:
                 # Default variable prefix and suffix
                 setup_ctx = ctx
-                while not isinstance(setup_ctx, SetupContext):
-                    setup_ctx = setup_ctx.parent  # TODO: mypy issue [attr-defined]
-                variable_prefix = self.statement.variable_prefix or setup_ctx.default_variable_prefix
-                variable_suffix = self.statement.variable_suffix or setup_ctx.default_variable_suffix
+                while isinstance(setup_ctx, GenIterContext):
+                    setup_ctx = setup_ctx.parent
+                if isinstance(setup_ctx, SetupContext):
+                    variable_prefix = self.statement.variable_prefix or setup_ctx.default_variable_prefix
+                    variable_suffix = self.statement.variable_suffix or setup_ctx.default_variable_suffix
                 # Evaluate source script
                 value = TaskUtil.evaluate_file_script_template(ctx, value, variable_prefix, variable_suffix)
             else:
