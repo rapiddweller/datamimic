@@ -12,7 +12,6 @@ from urllib.parse import quote
 import oracledb
 import sqlalchemy
 from sqlalchemy import MetaData, func, inspect, select, text
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 
 from datamimic_ce.clients.database_client import DatabaseClient
@@ -217,7 +216,7 @@ class RdbmsClient(DatabaseClient):
         engine = self._create_engine()
         table = self._get_metadata(engine).tables[self._get_actual_table_name(table_name)]
         with engine.connect() as connection:
-            count_query = select([func.count().label("row_count")]).select_from(table)
+            count_query = select(func.count().label("row_count")).select_from(table)
             result = connection.execute(count_query)
             return result.scalar()
 
@@ -265,29 +264,32 @@ class RdbmsClient(DatabaseClient):
 
             if pagination is None:
                 logger.info(f"page is None, get all data from table {actual_table_name}")
-                query = select([table])
+                query = select(table)
             elif self._credential.dbms == "mssql":
-                # query mssql table requires an order_by when using an OFFSET or a non-simple LIMIT clause
-                ordering_column = table.primary_key.columns.values() if table.primary_key else next(iter(table.c))
-                query = select([table]).order_by(*ordering_column).offset(pagination.skip).limit(pagination.limit)
+                ordering_column = table.primary_key.columns.values() if table.primary_key else [next(iter(table.c))]
+                query = select(table).order_by(*ordering_column).offset(pagination.skip).limit(pagination.limit)
             else:
-                query = select([table]).offset(pagination.skip).limit(pagination.limit)
+                query = select(table).offset(pagination.skip).limit(pagination.limit)
 
             result = conn.execute(query).fetchall()
-            # Convert the LegacyRow from SQLAlchemy into dict
-            return [dict(row) for row in result]
+            return [dict(row._mapping) for row in result]
 
     def get_by_page_with_query(self, original_query: str, pagination: DataSourcePagination | None = None):
         """
-        Get rows from database by pagination
-        :param original_query:
-        :param pagination:
-        :return:
+        Get rows from database by pagination with SQL query
+
+        Args:
+            original_query: SQL query string
+            pagination: Pagination settings
+
+        Returns:
+            List of dictionaries containing the query results
         """
         if pagination is None:
             logger.info(f"page is None, get all data from query {original_query}")
             result = self.get(original_query)
-            return [dict(row) for row in result]
+            # Use _mapping attribute for SQLAlchemy 2.0 Row objects
+            return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
 
         if self._credential.dbms == "mssql":
             # mssql OFFSET require ORDER BY -> hard code ORDER BY the first column
@@ -308,8 +310,9 @@ class RdbmsClient(DatabaseClient):
                 f"LIMIT {pagination.limit} OFFSET {pagination.skip}"
             )
             result = self.get(pagination_query)
-        # Convert the LegacyRow from SQLAlchemy into dict
-        return [dict(row) for row in result]
+
+        # Handle both SQLAlchemy 1.x and 2.x Row objects
+        return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
 
     def get_random_rows_by_column(
         self,
@@ -341,16 +344,16 @@ class RdbmsClient(DatabaseClient):
 
             if pagination and hasattr(pagination, "skip") and hasattr(pagination, "limit"):
                 query = (
-                    select([table.c[column_name]]).offset(pagination.skip).limit(pagination.limit)
+                    select(table.c[column_name]).offset(pagination.skip).limit(pagination.limit)
                     if unique
-                    else select([table.c[column_name]]).order_by(order_func)
+                    else select(table.c[column_name]).order_by(order_func)
                 )
             else:
-                query = select([table.c[column_name]])
+                query = select(table.c[column_name])
 
             random_rows = conn.execute(query).fetchall()
 
-            return [row[column_name] for row in random_rows]
+            return [row[0] for row in random_rows]
 
     def insert(self, table_name: str, data_list: list):
         """
@@ -365,22 +368,31 @@ class RdbmsClient(DatabaseClient):
         # Reflect the table schema from the database
         table = self._get_metadata(engine).tables[actual_table_name]
 
-        # Insert data from the list of dictionaries
-        with engine.connect():
+        if not data_list:
+            return
+
+        with engine.begin() as connection:
             try:
-                session = sessionmaker(bind=engine)()
-                session.execute(table.insert(), data_list)  # Bulk insert using a single statement
-                session.commit()  # Commit the changes to the database
-
-                # Optional: Close session for clarity (not strictly necessary here)
-                session.close()
+                connection.execute(table.insert(), data_list)
             except Exception as err:
-                raise RuntimeError(f"Error when write data to RDBMS. Message: {err}") from err
+                raise RuntimeError(f"Error when writing data to RDBMS: {err}") from err
 
-    def get_cyclic_data(self, query: str, cyclic: bool, data_len: int, pagination: DataSourcePagination) -> list:
+    def get_cyclic_data(self, query: str, cyclic: bool, data_len: int, pagination: DataSourcePagination | None) -> list:
         """
-        Get cyclic data from relational database
+        Get cyclic data from relational database with SQLAlchemy 2.x compatibility.
+
+        Args:
+            query: SQL query string
+            cyclic: Whether to cycle through data
+            data_len: Length of data
+            pagination: Pagination settings, can be None
+
+        Returns:
+            List of query results
         """
+        if pagination is None:
+            return self.get(query)
+
         skip = pagination.skip
         limit = pagination.limit
 
@@ -388,8 +400,8 @@ class RdbmsClient(DatabaseClient):
         if cyclic and (limit > data_len or skip + limit > data_len):
             data = self.get(query)
             return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
-        else:
-            return self.get_by_page_with_query(query, pagination)
+
+        return self.get_by_page_with_query(query, pagination)
 
     def _get_actual_table_name(self, table_name: str) -> str:
         """
@@ -409,65 +421,59 @@ class RdbmsClient(DatabaseClient):
 
         return f"{self._credential.db_schema}.{actual_table_name}" if self._credential.db_schema else actual_table_name
 
-    def get_current_sequence_number(self, table_name: str, col_name) -> int:
+    def get_current_sequence_number(self, sequence_name: str) -> int:
         """
-        Get current sequence number of table
-        :param table_name:
-        :param col_name:
-        :return:
+        Get the current value of a database sequence.
+        :param sequence_name: Name of the sequence
+        :return: Current sequence number
         """
-        engine = self._create_engine()
-        with engine.connect() as connection:
-            match self._credential.dbms:
-                case "mysql":
-                    sequence_query = (
-                        f"SELECT AUTO_INCREMENT FROM information_schema.TABLES "
-                        f"WHERE TABLE_SCHEMA = '{self._credential.db_schema}' "
-                        f"AND TABLE_NAME = '{table_name}'"
-                    )
-                    result = connection.execute(sequence_query).scalar()
-                case "postgresql":
-                    sequence_name = f"{self._get_actual_table_name(table_name)}_{col_name}_seq"
-                    sequence_query = f"SELECT last_value FROM {sequence_name}"
-
-                    result = connection.execute(sequence_query).scalar()
-                case _:
-                    logger.error("Only MySQL and PostgreSQL are supported for getting sequence number")
-                    raise ValueError("Only MySQL and PostgreSQL are supported for getting sequence number")
-            return result
-
-    def increase_sequence_number(self, table_name: str, col_name: str, count: int) -> None:
-        """
-        Increase sequence number in sequence table
-        :param table_name:
-        :param col_name:
-        :param count:
-        :return:
-        """
-        engine = self._create_engine()
-        with engine.connect() as connection:
+        with self._create_engine().connect() as connection:
             transaction = connection.begin()
             try:
-                actual_table_name = self._get_actual_table_name(table_name)
-                current_value = self.get_current_sequence_number(table_name, col_name)
-                new_value = current_value + int(count) + (1 if self._credential.dbms == "postgresql" else 0)
-                match self._credential.dbms:
-                    case "mysql":
-                        connection.execute(
-                            text(f"ALTER TABLE {actual_table_name} AUTO_INCREMENT = :value"),
-                            {"value": new_value},
-                        )
-                    case "postgresql":
-                        sequence_name = f"{actual_table_name}_{col_name}_seq"
-                        connection.execute(text(f"SELECT setval('{sequence_name}', {new_value}, false);"))
-                    case _:
-                        logger.error("Only MySQL and PostgreSQL are supported for increasing sequence number")
-                        raise ValueError("Only MySQL and PostgreSQL are supported for increasing sequence number")
+                # Check if sequence exists in the specified schema
+                schema = self._credential.db_schema or "public"
+                check_query = text(
+                    "SELECT EXISTS (SELECT 1 FROM pg_sequences "
+                    "WHERE schemaname = :schema AND sequencename = :seq_name)"
+                )
+                exists = connection.execute(check_query, {"schema": schema, "seq_name": sequence_name}).scalar()
+
+                if not exists:
+                    # Create sequence if it doesn't exist
+                    create_query = text(f"CREATE SEQUENCE IF NOT EXISTS {schema}.{sequence_name}")
+                    connection.execute(create_query)
+
+                # Get the next value from the sequence
+                query = text(f"SELECT nextval('{schema}.{sequence_name}')")
+                result = connection.execute(query)
+                current_value = result.scalar()
+                transaction.commit()
+                return current_value
+            except Exception as err:
+                transaction.rollback()
+                logger.error(f"Failed to get current sequence number for {sequence_name}: {err}")
+                raise
+
+    def increase_sequence_number(self, sequence_name: str, increment: int = 1) -> None:
+        """
+        Increase the sequence number by a specified increment.
+        :param sequence_name: Name of the sequence
+        :param increment: Increment value
+        """
+        with self._create_engine().connect() as connection:
+            transaction = connection.begin()
+            try:
+                schema = self._credential.db_schema or "public"
+                # Use a transaction to ensure atomicity
+                query = text(
+                    f"SELECT setval('{schema}.{sequence_name}', nextval('{schema}.{sequence_name}') + :increment)"
+                )
+                connection.execute(query, {"increment": increment})
                 transaction.commit()
             except Exception as err:
                 transaction.rollback()
-                logger.error(f"Error when increase sequence number. Message: {err}")
-                raise RuntimeError(f"Error when increase sequence number. Message: {err}") from err
+                logger.error(f"Failed to increase sequence number for {sequence_name}: {err}")
+                raise
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._engine:

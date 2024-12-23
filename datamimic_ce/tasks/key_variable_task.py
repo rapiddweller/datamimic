@@ -198,9 +198,7 @@ class KeyVariableTask(Task):
             else:
                 value = None
         elif self._mode == self._GENERATOR_MODE:
-            if isinstance(self._generator, SequenceTableGenerator):
-                value = self._generator.generate(ctx)
-            elif self._generator is not None:
+            if isinstance(self._generator, SequenceTableGenerator) or self._generator is not None:
                 value = self._generator.generate()
             else:
                 value = None

@@ -107,6 +107,7 @@ class GeneratorUtil:
     ):
         """
         Create a generator based on the element's attribute "generator".
+        Handles special cases for multi-process safe sequence generation.
 
         Args:
             generator_str (str): The generator string.
@@ -115,6 +116,9 @@ class GeneratorUtil:
 
         Returns:
             Any: The created generator instance.
+
+        Raises:
+            ValueError: If generator creation fails or configuration is invalid
         """
         # Set generated_count as 1 for inner geniter_context which has no pagination
         generated_count = 1 if pagination is None else pagination.limit
@@ -132,35 +136,44 @@ class GeneratorUtil:
                 if isinstance(self._context, SetupContext):
                     cls = self._context.get_dynamic_class(class_name)
                 elif isinstance(self._context, Context):
-                    # Get dynamic class from root context
-                    # TODO - Check if this is correct, usually the root context is the same as the setup context
                     cls = self._context.root.get_dynamic_class(class_name)
                 else:
                     raise ValueError(f"Cannot find generator {class_name}")
 
-            # Check if a constructor call was found
+            # Initialize result variable
+            result = None
+
+            # Special handling for sequence generator in multi-process environment
+            if class_name == "SequenceTableGenerator":
+                # Create sequence generator with process-aware context
+                result = cls(context=self._context, stmt=stmt)
+
+                # Add pagination with process-specific adjustments if needed
+                if pagination:
+                    result.add_pagination(pagination=pagination)
+                return result
+
+            # Handle other generators with constructor parameters
             if class_name != generator_str:
                 local_ns = copy.deepcopy(self._class_dict)
-                # Try to init instance
                 if class_name in self._generator_with_count or class_name in self._generator_with_class_factory_util:
                     class_name, args_str = generator_str[:-1].split("(")
                     args = args_str.split(",")
                     args = [arg.strip() for arg in args]
-                    # Add count parameter
+
                     if class_name in self._generator_with_count:
                         args.append(f"generated_count={generated_count}")
-                    # Add class_factory_util
                     else:
                         args.append("class_factory_util=class_factory_util")
                         local_ns.update({"class_factory_util": self._context.root.class_factory_util})
+
                     new_args_str = ", ".join(args)
                     generator_str = f"{class_name}({new_args_str})"
-                # Init generator instance
+
                 result = self._context.evaluate_python_expression(generator_str, local_ns)
-            # Handle simple instance init (without constructor in attribute value)
             else:
+                # Handle simple instance initialization
                 if class_name in self._generator_with_count:
-                    # Check if Generator constructor has parameter 'dataset'
                     if class_name == "DomainGenerator":
                         result = cls(generated_count=generated_count)
                     else:
@@ -171,13 +184,14 @@ class GeneratorUtil:
                 elif class_name in self._generator_with_class_factory_util:
                     result = cls(class_factory_util=self._context.root.class_factory_util)
                 else:
-                    result = cls(context=self._context, stmt=stmt) if class_name == "SequenceTableGenerator" else cls()
+                    result = cls()
 
-            # Add pagination to IncrementGenerator
-            if isinstance(result, IncrementGenerator | SequenceTableGenerator):
+            # Add pagination for increment generators
+            if isinstance(result, IncrementGenerator):
                 result.add_pagination(pagination=pagination)
 
             return result
+
         except Exception as e:
             logger.error("Error creating generator: %s", e)
             raise ValueError(f"Cannot create generator '{class_name}' of element '{stmt.name}': {e}") from e
