@@ -31,7 +31,7 @@ dependencies = [
     "pyodbc==5.1.0",                       # import pyodbc - Used for ODBC connections
     "python-dotenv==1.0.1",                # from dotenv import load_dotenv
     "requests==2.32.2",                    # import requests - Used for making HTTP requests
-    "sqlalchemy==1.4.52",                 # from sqlalchemy import create_engine
+    "sqlalchemy==2.0.36",                         # from sqlalchemy import create_engine
     "xmltodict==0.13.0",                  # import xmltodict - Used for parsing XML data to Python dictionaries
     "pandas==2.2.3",                      # import pandas as pd - Used for data manipulation
     "toml>=0.10.2",                       # import toml
