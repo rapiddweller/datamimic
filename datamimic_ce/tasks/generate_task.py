@@ -37,7 +37,7 @@ from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.setup_statement import SetupStatement
 from datamimic_ce.statements.statement import Statement
-from datamimic_ce.tasks.task import Task
+from datamimic_ce.tasks.task import Task, CommonSubTask
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
 from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
@@ -83,7 +83,7 @@ def _geniter_single_process_generate(args: tuple) -> dict[str, list]:
     """
 
     # Parse args
-    context: Context = args[0]
+    context: SetupContext | GenIterContext = args[0]
     root_context: SetupContext = context.root
     stmt: GenerateStatement = args[1]
     start_idx, end_idx = args[2]
@@ -95,7 +95,7 @@ def _geniter_single_process_generate(args: tuple) -> dict[str, list]:
     # Prepare loaded datasource pagination
     load_start_idx = start_idx
     load_end_idx = end_idx
-    load_pagination = pagination
+    load_pagination: DataSourcePagination | None = pagination
 
     # Extract converter list
     task_util_cls = root_context.class_factory_util.get_task_util_cls()
@@ -253,8 +253,8 @@ def _consume_by_page(
     xml_result: dict,
     page_idx: int,
     page_size: int,
-    mp_idx: int,
-    mp_chunk_size: int,
+    mp_idx: int | None,
+    mp_chunk_size: int | None,
     is_last_page: bool,
 ) -> None:
     """
@@ -555,7 +555,7 @@ def gen_timer(process: Literal["generate", "export", "process"], report_logging:
         )
 
 
-class GenerateTask(Task):
+class GenerateTask(CommonSubTask):
     """
     Task class for generating data based on the GenerateStatement.
 
@@ -816,7 +816,7 @@ class GenerateTask(Task):
             for child_stmt in statement.sub_statements:
                 GenerateTask._scan_data_source(ctx, child_stmt)
 
-    def execute(self, context: SetupContext) -> dict[str, list] | None:  # TODO: mypy issue [override]
+    def execute(self, context: SetupContext | GenIterContext) -> dict[str, list] | None:
         """
         Execute generate task. If gen_stmt is inner, return generated product; otherwise, consume them.
 
@@ -903,6 +903,8 @@ class GenerateTask(Task):
         else:
             # Do not apply process by page for inner gen_stmt
             return self._sp_generate(context, 0, count)
+
+        return None
 
     @staticmethod
     def convert_xml_dict_to_json_dict(xml_dict: dict):

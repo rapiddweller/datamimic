@@ -29,7 +29,7 @@ class StatementParser(ABC):
     def __init__(
         self,
         element: Element,
-        env_properties: dict[str, str],
+        env_properties: dict[str, str] | None,
         valid_element_tag: str,
         class_factory_util: BaseClassFactoryUtil,
     ):
@@ -49,7 +49,7 @@ class StatementParser(ABC):
         self._validate_statement_name()
 
     @property
-    def properties(self) -> dict[str, str]:
+    def properties(self) -> dict[str, str] | None:
         return self._properties
 
     @abstractmethod

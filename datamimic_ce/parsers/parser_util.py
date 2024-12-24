@@ -268,7 +268,7 @@ class ParserUtil:
         return result
 
     @staticmethod
-    def retrieve_element_attributes(attributes: dict[str, Any], properties: dict[str, str]) -> dict[str, str]:
+    def retrieve_element_attributes(attributes: dict[str, Any], properties: dict[str, str] | None) -> dict[str, str]:
         """
         Retrieve element's attributes using environment properties
         :param attributes:
@@ -303,7 +303,7 @@ class ParserUtil:
     def fulfill_credentials_v2(
         descriptor_dir: Path,
         descriptor_attr: dict,
-        env_props: dict,
+        env_props: dict[str, str] | None,
         system_type: str,
     ) -> dict:
         """

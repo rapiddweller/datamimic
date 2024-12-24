@@ -19,7 +19,7 @@ class SetupParser(StatementParser):
     Parse element "setup" into RootStatement
     """
 
-    def __init__(self, cls_factory_util: BaseClassFactoryUtil, element: Element, properties: dict):
+    def __init__(self, cls_factory_util: BaseClassFactoryUtil, element: Element, properties: dict | None):
         super().__init__(
             element,
             properties,

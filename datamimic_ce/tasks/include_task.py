@@ -9,11 +9,11 @@ from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.parsers.descriptor_parser import DescriptorParser
 from datamimic_ce.statements.include_statement import IncludeStatement
-from datamimic_ce.tasks.task import Task
+from datamimic_ce.tasks.task import Task, CommonSubTask
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class IncludeTask(Task):
+class IncludeTask(CommonSubTask):
     """
     Include environment properties loaded from file or execute other descriptor files
     """
@@ -25,7 +25,7 @@ class IncludeTask(Task):
     def statement(self) -> IncludeStatement:
         return self._statement
 
-    def execute(self, ctx: Context) -> None:
+    def execute(self, ctx: SetupContext | GenIterContext) -> None:
         """
         Execute the include task
         :param ctx:
@@ -39,7 +39,7 @@ class IncludeTask(Task):
         if isinstance(ctx, SetupContext):
             self._execute_with_setup_context(ctx, uri)
         else:
-            self._execute_with_geniter_context(ctx, uri)  # TODO: mypy issue: need to check ctx isinstance Context
+            self._execute_with_geniter_context(ctx, uri)
 
     def _execute_with_setup_context(self, ctx: SetupContext, uri: str) -> None:
         """

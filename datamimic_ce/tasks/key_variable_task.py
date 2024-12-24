@@ -112,7 +112,7 @@ class KeyVariableTask(Task):
             if not source.endswith("wgt.csv"):
                 raise ValueError(f"Data source of attribute '{self._statement.name}' must be type of: 'wgt.csv'")
             separator = self._statement.separator or ctx.default_separator
-            self._generator: WeightedDataSource = WeightedDataSource(
+            self._generator = WeightedDataSource(
                 file_path=ctx.descriptor_dir / source, separator=separator
             )
             self._mode = self._GENERATOR_MODE

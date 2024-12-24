@@ -37,26 +37,7 @@ class MongoDBClient(DatabaseClient):
 
         return MongoClient(**ars)
 
-    def get_cyclic_data(self, query: str, cyclic: bool, data_len: int, pagination: DataSourcePagination) -> list:
-        """
-        Get cyclic data from query
-        """
-        skip = pagination.skip
-        limit = pagination.limit
-
-        # Get whole queried data if data count or data limit exceed data len
-        if cyclic and (limit > data_len or skip + limit > data_len):
-            data = self.get_documents_by_query(query)
-            from datamimic_ce.data_sources.data_source_util import DataSourceUtil
-
-            return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
-        else:
-            return self.get_by_page_with_query(query, pagination)
-
-    # def get(self):
-    #     pass
-
-    def get_documents_by_query(self, query: str) -> list:
+    def get(self, query: str) -> list:
         """
         Get documents from collection
         :param query:
@@ -90,7 +71,7 @@ class MongoDBClient(DatabaseClient):
         :return:
         """
         # TODO: cache queried result for better performance
-        docs = self.get_documents_by_query(query)
+        docs = self.get(query)
         if pagination is None:
             return docs
         else:
