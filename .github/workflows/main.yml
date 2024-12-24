@@ -101,6 +101,7 @@ jobs:
       - name: Run mypy
         run: |
           . .venv/bin/activate
+          uv run mypy --install-types
           uv run mypy datamimic_ce
         shell: bash
 
