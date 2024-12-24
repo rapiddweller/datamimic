@@ -27,7 +27,7 @@ class ArrayParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self) -> ArrayStatement:
+    def parse(self, **kwargs) -> ArrayStatement:
         """
         Parse element "array" to ArrayStatement
         :return:

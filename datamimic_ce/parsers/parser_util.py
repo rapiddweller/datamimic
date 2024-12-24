@@ -7,14 +7,11 @@
 import copy
 import re
 from pathlib import Path
+from typing import Any, cast
 from xml.etree.ElementTree import Element
 
 from datamimic_ce.config import settings
-from datamimic_ce.constants.attribute_constants import (
-    ATTR_ENVIRONMENT,
-    ATTR_ID,
-    ATTR_SYSTEM,
-)
+from datamimic_ce.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
 from datamimic_ce.constants.element_constants import (
     EL_ARRAY,
     EL_CONDITION,
@@ -59,6 +56,7 @@ from datamimic_ce.parsers.nested_key_parser import NestedKeyParser
 from datamimic_ce.parsers.reference_parser import ReferenceParser
 from datamimic_ce.parsers.variable_parser import VariableParser
 from datamimic_ce.statements.array_statement import ArrayStatement
+from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.condition_statement import ConditionStatement
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.include_statement import IncludeStatement
@@ -86,7 +84,9 @@ class ParserUtil:
             raise ValueError(f"Cannot get element tag for statement {stmt.__class__.__name__}")
 
     @staticmethod
-    def get_valid_sub_elements_set_by_tag(ele_tag: str) -> set:
+    def get_valid_sub_elements_set_by_tag(ele_tag: str) -> set | None:
+        # return None mean that element can have all kind of sub element,
+        # check StatementParser._validate_sub_elements for detail
         valid_sub_element_dict = {
             EL_SETUP: {
                 EL_MONGODB,
@@ -218,6 +218,7 @@ class ParserUtil:
             parser = self.get_parser_by_element(class_factory_util, child_ele, copied_props)
             # TODO: add more child-element-able parsers such as
             #  attribute, reference, part,... (i.e. elements which have attribute 'name')
+            stmt: Statement
             if isinstance(parser, VariableParser | GenerateParser | NestedKeyParser | ElementParser):
                 if isinstance(parser, VariableParser) and element.tag == "setup":
                     stmt = parser.parse(parent_stmt=parent_stmt, has_parent_setup=True)
@@ -237,13 +238,18 @@ class ParserUtil:
                     | GeneratorParser,
                 ):
                     stmt = parser.parse()
-                elif isinstance(
-                    parser,
-                    KeyParser | ConditionParser | IfParser | ElseIfParser | ElseParser,
-                ):
-                    stmt = parser.parse(descriptor_dir, parent_stmt)
+                elif isinstance(parser, KeyParser):
+                    stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
+                elif isinstance(parser, ConditionParser):
+                    stmt = parser.parse(
+                        descriptor_dir=descriptor_dir, parent_stmt=cast(CompositeStatement, parent_stmt)
+                    )
+                elif isinstance(parser, IfParser | ElseIfParser | ElseParser):
+                    stmt = parser.parse(
+                        descriptor_dir=descriptor_dir, parent_stmt=cast(ConditionStatement, parent_stmt)
+                    )
                 else:
-                    stmt = parser.parse(descriptor_dir)
+                    stmt = parser.parse(descriptor_dir=descriptor_dir)
 
             if stmt is None:
                 raise ValueError(f"Cannot parse element <{child_ele.tag}>")
@@ -258,7 +264,7 @@ class ParserUtil:
         return result
 
     @staticmethod
-    def retrieve_element_attributes(attributes: dict[str, str], properties: dict[str, str]) -> dict[str, str]:
+    def retrieve_element_attributes(attributes: dict[str, Any], properties: dict[str, str] | None) -> dict[str, str]:
         """
         Retrieve element's attributes using environment properties
         :param attributes:
@@ -279,9 +285,10 @@ class ParserUtil:
                 else:
                     # prop_key with dot mean that properties have nested level
                     prop_keys = prop_key.split(".")
-                    temp_value = copy.deepcopy(properties)
+                    temp_value: dict | None = copy.deepcopy(properties)
                     for k in prop_keys:
-                        temp_value = temp_value.get(k)
+                        if temp_value:
+                            temp_value = temp_value.get(k)
                         if temp_value is None:
                             break
                     attributes[key] = temp_value or value
@@ -292,7 +299,7 @@ class ParserUtil:
     def fulfill_credentials_v2(
         descriptor_dir: Path,
         descriptor_attr: dict,
-        env_props: dict,
+        env_props: dict[str, str] | None,
         system_type: str,
     ) -> dict:
         """

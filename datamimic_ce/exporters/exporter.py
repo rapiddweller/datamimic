@@ -4,11 +4,10 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
 class Exporter(ABC):
-    pass
-    # @abstractmethod
-    # def consume(self, product: tuple):
-    #     pass
+    @abstractmethod
+    def consume(self, product: tuple):
+        pass

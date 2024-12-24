@@ -21,7 +21,7 @@ class DescriptorParser:
     def parse(
         cls_factory_util: BaseClassFactoryUtil,
         descriptor_file_path: Path,
-        properties: dict | None = None,
+        properties: dict | None,
     ) -> SetupStatement:
         """
         Parsing descriptor file to RootStatement

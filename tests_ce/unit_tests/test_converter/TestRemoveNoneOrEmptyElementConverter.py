@@ -1,5 +1,4 @@
 import unittest
-from typing import Any, Dict, List
 
 from datamimic_ce.converter.remove_none_or_empty_element_converter import RemoveNoneOrEmptyElementConverter
 

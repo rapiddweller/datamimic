@@ -30,9 +30,10 @@ class KeyTask(KeyVariableTask):
         self,
         ctx: SetupContext,
         statement: KeyStatement,
-        pagination: DataSourcePagination = None,
+        pagination: DataSourcePagination | None = None,
     ):
         super().__init__(ctx, statement, pagination)
+        self._statement: KeyStatement = statement
         self._determine_generation_mode(ctx)
 
         if self._mode is None:
@@ -45,7 +46,7 @@ class KeyTask(KeyVariableTask):
     def pre_execute(self, ctx: Context):
         if self.statement.generator is not None and "SequenceTableGenerator" in self.statement.generator:
             sequence_table_generator = GeneratorUtil(ctx).create_generator(
-                self._statement.generator, self._statement, self._pagination
+                str(self._statement.generator), self._statement, self._pagination
             )
             sequence_table_generator.pre_execute(ctx)
 
@@ -53,7 +54,7 @@ class KeyTask(KeyVariableTask):
     def statement(self) -> KeyStatement:
         return self._statement
 
-    def execute(self, ctx: GenIterContext):
+    def execute(self, ctx: Context) -> None:
         """
         Generate data for element "attribute"
         If 'type' element is not specified, then default type of generated data is string
@@ -77,19 +78,22 @@ class KeyTask(KeyVariableTask):
                 value = self._convert_generated_value(value)
 
             attributes = {}
-            for stmt in self._statement.sub_statements:
-                task = task_util_cls.get_task_by_statement(root_ctx, stmt)
-                if isinstance(task, ElementTask):
-                    attributes.update(task.generate_xml_attribute(ctx))
-                else:
-                    raise ValueError(
-                        f"Cannot execute subtask {task.__class__.__name__} of <key> '{self.statement.name}'"
-                    )
+            if hasattr(self._statement, "sub_statements"):
+                for stmt in self._statement.sub_statements:
+                    task = task_util_cls.get_task_by_statement(root_ctx, stmt)
+                    if isinstance(task, ElementTask) and isinstance(ctx, GenIterContext):
+                        attributes.update(task.generate_xml_attribute(ctx))
+                    else:
+                        raise ValueError(
+                            f"Cannot execute subtask {task.__class__.__name__} of <key> '{self.statement.name}'"
+                        )
 
             result = value if len(attributes) == 0 else {"#text": value, **attributes}
             # Add field "attribute" into current product
-            ctx.add_current_product_field(self._statement.name, result)
+            if isinstance(ctx, GenIterContext):
+                ctx.add_current_product_field(self._statement.name, result)
         elif self.statement.default_value is not None:
             # If condition false and default_value exist, assign default value to key
             default_value = ctx.evaluate_python_expression(self.statement.default_value)
-            ctx.add_current_product_field(self._statement.name, default_value)
+            if isinstance(ctx, GenIterContext):
+                ctx.add_current_product_field(self._statement.name, default_value)

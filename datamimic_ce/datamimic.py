@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 import argparse
 import logging
-import os
 import traceback
 import uuid
 from pathlib import Path
@@ -30,7 +29,7 @@ class DataMimic:
         platform_props: dict[str, str] | None = None,
         platform_configs: dict | None = None,
         test_mode: bool = False,
-        args: argparse.Namespace = None,
+        args: argparse.Namespace | None = None,
     ):
         """
         Initialize DataMimic with descriptor_path.
@@ -85,6 +84,6 @@ class DataMimic:
 
     def capture_test_result(self) -> dict | None:
         """Capture test result in test mode."""
-        if self._test_mode:
+        if self._test_mode and self._test_result_storage is not None:
             return self._test_result_storage.get_result()
         raise ValueError("Cannot capture test result in non-test mode") from None

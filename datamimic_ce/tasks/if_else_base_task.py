@@ -42,9 +42,10 @@ class IfElseBaseTask(Task, ABC):
         ]
 
         # store statement of executed task to parent statement (condition statement) for later use
-        self._statement.parent_stmt.add_executed_statement(self.statement)
+        if self._statement.parent_stmt is not None and hasattr(self._statement.parent_stmt, "add_executed_statement"):
+            self._statement.parent_stmt.add_executed_statement(self.statement)
 
-        product_holder = {}
+        product_holder: dict = {}
         for child_task in child_tasks:
             # Add generate product to current product_holder
             if isinstance(child_task, GenerateTask | ConditionTask):

@@ -14,7 +14,7 @@ def read_csv_txt_folder(folder_path: Path, file_extension: Literal["csv", "txt"]
     data = []
     for name in file_names:
         if name.endswith(f".{file_extension}"):
-            with open(folder_path.joinpath(name), "r") as file:
+            with open(folder_path.joinpath(name)) as file:
                 is_header = True if have_header is True else False
                 for line in file:
                     if is_header:
@@ -31,7 +31,7 @@ def read_csv_txt_file(file_path: Path, have_header: bool = True):
 
     header = None
     data = []
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         is_header = True if have_header is True else False
         for line in file:
             if is_header:
@@ -52,7 +52,7 @@ def read_json_folder(folder_path: Path):
     data = []
     for name in file_names:
         if name.endswith(".json"):
-            with open(folder_path.joinpath(name), "r") as file:
+            with open(folder_path.joinpath(name)) as file:
                 data.extend(json.load(file))
     return data
 
@@ -66,7 +66,7 @@ def read_xml_folder(folder_path: Path):
     files = []
     for name in file_names:
         if name.endswith(".xml"):
-            with open(folder_path.joinpath(name), "r") as file:
+            with open(folder_path.joinpath(name)) as file:
                 datas = []
                 for line in file:
                     datas.append(line.strip())
@@ -79,7 +79,7 @@ def read_json_file(file_path: Path):
     if not file_path.exists():
         return None
 
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         return json.load(file)
 
 
@@ -88,7 +88,7 @@ def read_xml_file(file_path: Path):
         return None
 
     files = []
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         datas = []
         for line in file:
             datas.append(line.strip())

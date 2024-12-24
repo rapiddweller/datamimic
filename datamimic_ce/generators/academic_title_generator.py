@@ -18,7 +18,7 @@ class AcademicTitleGenerator(Generator):
     Generate random academic title
     """
 
-    def __init__(self, dataset: str = None, quota: float = 0.5):
+    def __init__(self, dataset: str | None = None, quota: float = 0.5):
         if quota is None:
             quota = quota or 0.5
         elif quota > 1 or quota < 0:

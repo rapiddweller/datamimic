@@ -1,4 +1,4 @@
-# **DATAMIMIC Community Edition**
+# DATAMIMIC Community Edition 🌟
 
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
@@ -20,17 +20,16 @@ Welcome to **DATAMIMIC**, the Model-Driven and AI-powered platform that revoluti
 
 ---
 
-# DATAMIMIC Feature Overview 🎯
+## DATAMIMIC Feature Overview 🎯
 
-## Core Features 🔵
-*Available in Both Community and Enterprise Editions*
+### Core Features 🔵
 
-### 🧠 Model-Driven Generation
+#### 🧠 Model-Driven Generation
 - Create sophisticated data models for consistent test data generation
 - Define complex relationships between entities
 - Support for nested and hierarchical data structures
 
-### 📊 Data Types & Integration
+#### 📊 Data Types & Integration
 - **Basic Data Types Support**
   - All standard primitive types
   - Complex data structures
@@ -40,13 +39,13 @@ Welcome to **DATAMIMIC**, the Model-Driven and AI-powered platform that revoluti
   - MongoDB integration
   - Basic import/export functionality
 
-### 🛡️ Data Privacy & Compliance
+#### 🛡️ Data Privacy & Compliance
 - GDPR-compliant data anonymization
 - Basic pseudonymization capabilities
 - Data masking for sensitive information
 - Configurable privacy rules
 
-### ⚡ Core Capabilities
+#### ⚡ Core Capabilities
 - **High Performance Engine**
   - Optimized for large datasets
   - Parallel processing support
@@ -62,10 +61,9 @@ Welcome to **DATAMIMIC**, the Model-Driven and AI-powered platform that revoluti
 
 ---
 
-## Enterprise Features 🟣
-*Exclusive to Enterprise Edition*
+### Enterprise Features 🟣
 
-### 🧠 AI-Powered Generation
+#### 🧠 AI-Powered Generation
 > Advanced AI capabilities for realistic data creation
 - **GAN-based Synthesis**
   - Realistic data patterns
@@ -80,7 +78,7 @@ Welcome to **DATAMIMIC**, the Model-Driven and AI-powered platform that revoluti
   - Pattern detection
   - Model optimization
 
-### 🔗 Advanced Integrations
+#### 🔗 Advanced Integrations
 > Enterprise-grade system integration capabilities
 - **Streaming Support**
   - Kafka integration
@@ -95,7 +93,7 @@ Welcome to **DATAMIMIC**, the Model-Driven and AI-powered platform that revoluti
   - Cloud platforms
   - Legacy systems
 
-### 🛡️ Enhanced Privacy Features
+#### 🛡️ Enhanced Privacy Features
 > Advanced data protection and compliance
 - **Advanced Anonymization**
   - Context-aware masking
@@ -110,7 +108,7 @@ Welcome to **DATAMIMIC**, the Model-Driven and AI-powered platform that revoluti
   - Encryption support
   - Security audit trails
 
-### 📈 Advanced Data Validation
+#### 📈 Advanced Data Validation
 > Comprehensive data quality assurance
 - **Validation Framework**
   - Custom rule engines
@@ -288,18 +286,19 @@ We ❤️ contributions! Here's how you can help:
 
 ---
 
-# 📜 DATAMIMIC Licensing Options
+## 📜 DATAMIMIC Licensing Options
 
-## 🌟 Community Edition
-*Open Source Freedom for Everyone*
+### 🌟 Community Edition
 
-### ✨ Key Benefits
+Open Source Freedom for Everyone
+
+#### ✨ Key Benefits
 - **🔓 MIT License**: Maximum freedom for innovation
 - **💼 Commercial Ready**: Use freely in commercial projects
 - **🔄 Modification Rights**: Full source code access and modification rights
 - **🌍 No Restrictions**: Deploy anywhere, anytime
 
-### 🎁 What's Included
+#### 🎁 What's Included
 - **📦 Core Features**
   - Model-driven data generation
   - Basic data types & integrations
@@ -311,7 +310,7 @@ We ❤️ contributions! Here's how you can help:
   - Community discussions
   - Regular updates
 
-### 💫 Perfect For
+#### 💫 Perfect For
 - Individual developers
 - Startups & small teams
 - Open source projects
@@ -320,16 +319,17 @@ We ❤️ contributions! Here's how you can help:
 
 ---
 
-## ⭐ Enterprise Edition
-*Professional Power for Business Success*
+### ⭐ Enterprise Edition
 
-### 🚀 Premium Benefits
+Professional Power for Business Success
+
+#### 🚀 Premium Benefits
 - **📋 Commercial License**: Enterprise-grade flexibility
 - **🔐 Advanced Features**: Full suite of professional tools
 - **🎯 Priority Support**: Direct access to expert team
 - **🛠️ Custom Solutions**: Tailored to your needs
 
-### 💎 Premium Features
+#### 💎 Premium Features
 - **🤖 AI Capabilities**
   - GAN-based synthesis
   - LLM integration
@@ -345,14 +345,14 @@ We ❤️ contributions! Here's how you can help:
   - Compliance reporting
   - Audit trails
 
-### 🎯 Ideal For
+#### 🎯 Ideal For
 - Large enterprises
 - Financial institutions
 - Healthcare organizations
 - Government agencies
 - High-compliance industries
 
-### 📞 Get Started
+#### 📞 Get Started
 > Ready to unlock the full potential of DATAMIMIC?
 
 **Contact Our Team:**
@@ -411,6 +411,6 @@ A big thank you to all our contributors! Your efforts make DATAMIMIC possible.
 
 ---
 
-**Legal Notices**
+## Legal Notices
 
 For detailed licensing information, please see the [LICENSE](LICENSE) file.

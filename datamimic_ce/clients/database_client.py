@@ -30,11 +30,20 @@ class DatabaseClient(Client):
         Get data from database when there is a type (table name) by pagination
         """
 
-    @abstractmethod
-    def get_cyclic_data(self, query: str, cyclic: bool, data_len: int, pagination: DataSourcePagination) -> list:
+    def get_cyclic_data(self, query: str, cyclic: bool, data_len: int, pagination: DataSourcePagination | None) -> list:
         """
         Get cyclic data from database
         """
+        # Get whole queried data if data count or data limit exceed data len
+        if (pagination is None) or (
+            cyclic and (pagination.limit > data_len or pagination.skip + pagination.limit > data_len)
+        ):
+            data = self.get(query)
+            from datamimic_ce.data_sources.data_source_util import DataSourceUtil
+
+            return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
+        else:
+            return self.get_by_page_with_query(query, pagination)
 
     @abstractmethod
     def count_table_length(self, table_name: str) -> int:
@@ -50,4 +59,10 @@ class DatabaseClient(Client):
         Count number of database length when there is selector
         :param query:
         :return:
+        """
+
+    @abstractmethod
+    def get(self, query: str) -> list:
+        """
+        Get data from database by query
         """

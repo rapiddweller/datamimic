@@ -5,9 +5,12 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from abc import ABC
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from datamimic_ce.constants.convention_constants import NAME_SEPARATOR
+
+if TYPE_CHECKING:
+    from datamimic_ce.statements.generate_statement import GenerateStatement
 
 
 class Statement(ABC):  # noqa: B024
@@ -22,11 +25,11 @@ class Statement(ABC):  # noqa: B024
         )
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         return self._name
 
     @property
-    def full_name(self) -> str:
+    def full_name(self) -> str | None:
         return self._full_name
 
     @property
@@ -50,7 +53,7 @@ class Statement(ABC):  # noqa: B024
         else:
             parent_stmt = self.parent_stmt
             while not isinstance(parent_stmt, GenerateStatement):
-                parent_stmt = parent_stmt.parent_stmt
+                parent_stmt = parent_stmt.parent_stmt if parent_stmt is not None else None
             return parent_stmt
 
     @staticmethod

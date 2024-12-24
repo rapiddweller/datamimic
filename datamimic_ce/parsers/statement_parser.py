@@ -6,7 +6,7 @@
 
 import copy
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, TypeVar
 from xml.etree.ElementTree import Element
 
 from pydantic import BaseModel, ValidationError
@@ -23,10 +23,13 @@ class StatementParser(ABC):
     Super class of all element parser
     """
 
+    # Define a type variable T, which is a subclass of BaseModel
+    BaseModelRelativeClass = TypeVar("BaseModelRelativeClass", bound=BaseModel)
+
     def __init__(
         self,
         element: Element,
-        env_properties: dict[str, str],
+        env_properties: dict[str, str] | None,
         valid_element_tag: str,
         class_factory_util: BaseClassFactoryUtil,
     ):
@@ -46,11 +49,11 @@ class StatementParser(ABC):
         self._validate_statement_name()
 
     @property
-    def properties(self) -> dict[str, str]:
+    def properties(self) -> dict[str, str] | None:
         return self._properties
 
     @abstractmethod
-    def parse(self, **kwargs: Any) -> Statement:
+    def parse(self, *args, **kwargs: Any) -> Statement:
         """
         Parse Element to Statement
         :return:
@@ -104,7 +107,7 @@ class StatementParser(ABC):
         if self._element.tag != self._valid_element_tag:
             raise ValueError(f"Expect element tag name '{self._valid_element_tag}', but got '{self._element.tag}'")
 
-    def _validate_sub_elements(self, valid_sub_ele_set: set, composite_stmt: CompositeStatement = None) -> None:
+    def _validate_sub_elements(self, valid_sub_ele_set: set, composite_stmt: CompositeStatement | None = None) -> None:
         """
         Validate sub elements
         :return:
@@ -124,7 +127,9 @@ class StatementParser(ABC):
                     f", expects: {', '.join(map(lambda ele: f'<{ele}>', self._valid_sub_elements))}, "
                 )
 
-    def validate_attributes(self, model: type[BaseModel], fulfilled_credentials: dict | None = None) -> BaseModel:
+    def validate_attributes(
+        self, model: type[BaseModelRelativeClass], fulfilled_credentials: dict | None = None
+    ) -> BaseModelRelativeClass:
         """
         Validate XML model attributes
         :return:

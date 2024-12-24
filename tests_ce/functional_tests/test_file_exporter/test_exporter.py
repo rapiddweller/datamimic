@@ -3,12 +3,11 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-import json
 import shutil
 from pathlib import Path
 
-from datamimic_ce.data_mimic_test import DataMimicTest
 import tests_ce.functional_tests.test_file_exporter.util_of_test_exporter as util
+from datamimic_ce.data_mimic_test import DataMimicTest
 
 
 class TestExporter:

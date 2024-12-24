@@ -5,7 +5,6 @@ import time
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List
 
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.exporter import Exporter
@@ -48,8 +47,8 @@ class UnifiedBufferedExporter(Exporter, ABC):
         setup_context: SetupContext,
         product_name: str,
         page_info: MultiprocessingPageInfo,
-        chunk_size: Optional[int],
-        encoding: Optional[str],
+        chunk_size: int | None,
+        encoding: str | None,
     ):
         if chunk_size is not None and chunk_size <= 0:
             raise ValueError("Chunk size must be a positive integer or None for unlimited size.")
@@ -62,9 +61,9 @@ class UnifiedBufferedExporter(Exporter, ABC):
         self._pid = str(mp_idx) if mp_idx is not None else "None"
         self._pid_placeholder = "" if mp_idx is None else f"_pid_{str(mp_idx)}"
         self._start_chunk_index = (
-            0 if use_sp else page_info.mp_idx * page_info.mp_chunk_size + page_info.page_idx * page_info.page_size
+            0 if use_sp else page_info.mp_idx * page_info.mp_chunk_size + page_info.page_idx * page_info.page_size  # type: ignore
         )
-        self._chunk_pad_len = None if use_sp else len(str(100 * page_info.mp_chunk_size))
+        self._chunk_pad_len = None if use_sp else len(str(100 * page_info.mp_chunk_size))  # type: ignore
         self._mp = setup_context.use_mp  # Multiprocessing flag
         self._task_id = setup_context.task_id  # Task ID for tracking
         self._descriptor_dir = setup_context.descriptor_dir  # Directory for storing temp files
@@ -75,7 +74,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         self._init_buffer_directory()
 
         # Initialize state variables
-        self._is_first_write = None
+        self._is_first_write: bool | None = None
         self._load_state()
 
     @property
@@ -84,8 +83,8 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
     def _get_buffer_tmp_dir(self) -> Path:
         return (
-            self._descriptor_dir
-            / f"temp_result_{self._task_id}{self._pid_placeholder}_exporter_{self._exporter_type}_product_{self.product_name}"
+            self._descriptor_dir / f"temp_result_{self._task_id}{self._pid_placeholder}_exporter_"
+            f"{self._exporter_type}_product_{self.product_name}"
         )
 
     def _init_buffer_directory(self) -> None:
@@ -105,7 +104,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
                 if attempt == self.MAX_RETRIES - 1:
                     raise BufferFileError(
                         f"Failed to initialize buffer directory after {self.MAX_RETRIES} attempts: {e}"
-                    )
+                    ) from e
                 time.sleep(self.RETRY_DELAY * (attempt + 1))
 
     def _get_state_meta_file(self) -> Path:
@@ -164,7 +163,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
             except Exception as e:
                 logger.error(f"Attempt {attempt + 1} failed to save state: {e}")
                 if attempt == self.MAX_RETRIES - 1:
-                    raise BufferFileError(f"Failed to save state after {self.MAX_RETRIES} attempts: {e}")
+                    raise BufferFileError(f"Failed to save state after {self.MAX_RETRIES} attempts: {e}") from e
                 time.sleep(self.RETRY_DELAY * (attempt + 1))
 
     def _load_metadata(self, metadata_file: Path) -> dict:
@@ -200,8 +199,11 @@ class UnifiedBufferedExporter(Exporter, ABC):
             except Exception as e:
                 logger.error(f"Attempt {attempt + 1} failed to initialize buffer file: {e}")
                 if attempt == self.MAX_RETRIES - 1:
-                    raise BufferFileError(f"Failed to initialize buffer file after {self.MAX_RETRIES} attempts: {e}")
+                    raise BufferFileError(
+                        f"Failed to initialize buffer file after {self.MAX_RETRIES} attempts: {e}"
+                    ) from e
                 time.sleep(self.RETRY_DELAY * (attempt + 1))
+        return buffer_file
 
     def _rotate_chunk(self) -> None:
         """Finalizes current chunk and creates new one with proper error handling."""
@@ -243,7 +245,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
                 # Rotate chunk only if there is more data to process
                 self._rotate_chunk()
 
-    def _write_batch_with_retry(self, batch: List[dict]) -> None:
+    def _write_batch_with_retry(self, batch: list[dict]) -> None:
         """Write a batch of data with retry mechanism."""
         for attempt in range(self.MAX_RETRIES):
             try:
@@ -252,29 +254,33 @@ class UnifiedBufferedExporter(Exporter, ABC):
             except Exception as e:
                 logger.error(f"Attempt {attempt + 1} failed to write batch: {e}")
                 if attempt == self.MAX_RETRIES - 1:
-                    raise BufferFileError(f"Failed to write batch after {self.MAX_RETRIES} attempts: {e}")
+                    raise BufferFileError(f"Failed to write batch after {self.MAX_RETRIES} attempts: {e}") from e
                 time.sleep(self.RETRY_DELAY * (attempt + 1))
 
     def _update_metadata_file(self) -> None:
         """Updates the metadata file with retry mechanism."""
-        metadata_file = self._get_buffer_file().with_suffix(".meta")
+        buffer_file: Path | None = self._get_buffer_file()
+        if buffer_file:
+            metadata_file = buffer_file.with_suffix(".meta")
 
-        for attempt in range(self.MAX_RETRIES):
-            try:
-                with metadata_file.open("r+", encoding=self._encoding) as f:
-                    metadata = json.load(f)
-                    metadata["total_count"] = self.global_counter
-                    metadata["chunk_index"] = self.chunk_index
-                    f.seek(0)  # Move to the start of the file to overwrite
-                    json.dump(metadata, f)
-                    f.truncate()  # Remove any leftover data from previous writes
-                logger.debug(f"Updated metadata file {metadata_file} with total_count: {self.global_counter}")
-                return
-            except Exception as e:
-                logger.error(f"Attempt {attempt + 1} failed to update metadata: {e}")
-                if attempt == self.MAX_RETRIES - 1:
-                    raise BufferFileError(f"Failed to update metadata after {self.MAX_RETRIES} attempts: {e}")
-                time.sleep(self.RETRY_DELAY * (attempt + 1))
+            for attempt in range(self.MAX_RETRIES):
+                try:
+                    with metadata_file.open("r+", encoding=self._encoding) as f:
+                        metadata = json.load(f)
+                        metadata["total_count"] = self.global_counter
+                        metadata["chunk_index"] = self.chunk_index
+                        f.seek(0)  # Move to the start of the file to overwrite
+                        json.dump(metadata, f)
+                        f.truncate()  # Remove any leftover data from previous writes
+                    logger.debug(f"Updated metadata file {metadata_file} with total_count: {self.global_counter}")
+                    return
+                except Exception as e:
+                    logger.error(f"Attempt {attempt + 1} failed to update metadata: {e}")
+                    if attempt == self.MAX_RETRIES - 1:
+                        raise BufferFileError(
+                            f"Failed to update metadata after {self.MAX_RETRIES} attempts: {e}"
+                        ) from e
+                    time.sleep(self.RETRY_DELAY * (attempt + 1))
 
     @abstractmethod
     def _write_data_to_buffer(self, data: list[dict]) -> None:
@@ -359,7 +365,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
                 self._finalize_buffer_file(buffer_file)
         except Exception as e:
             logger.error(f"Failed to finalize chunks: {e}")
-            raise ExportError(f"Failed to finalize chunks: {e}")
+            raise ExportError(f"Failed to finalize chunks: {e}") from e
 
     def cleanup(self) -> None:
         """Clean up temporary files with error handling."""

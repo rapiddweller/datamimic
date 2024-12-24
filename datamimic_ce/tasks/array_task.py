@@ -5,12 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.constants.data_type_constants import (
-    DATA_TYPE_BOOL,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
-    DATA_TYPE_STRING,
-)
+from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.statements.array_statement import ArrayStatement
@@ -49,6 +44,9 @@ class ArrayTask(Task):
         array_type = self._statement.type
         count = self.statement.count
 
+        if not count:
+            return None
+
         data_generation_util = parent_context.root.class_factory_util.get_data_generation_util()
 
         value: list[str | int | bool | float] = [
@@ -63,6 +61,10 @@ class ArrayTask(Task):
         Result value datatype must be a List
         """
         valid_py_types = ["str", "int", "bool", "float"]
+
+        if not self._statement.script:
+            return None
+
         value = parent_context.evaluate_python_expression(self._statement.script)
         if isinstance(value, list):
             if len(value) > 0:

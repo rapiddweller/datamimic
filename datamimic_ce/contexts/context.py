@@ -21,11 +21,15 @@ import statistics
 import types
 import uuid
 from abc import ABC
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 import requests
 from faker import Faker
+
+if TYPE_CHECKING:
+    from datamimic_ce.contexts.setup_context import SetupContext
 
 # Create a safe evaluation environment
 SAFE_GLOBALS = {
@@ -83,10 +87,19 @@ SPECIAL_FUNCTION = {
 class Context(ABC):  # noqa: B024
     def __init__(self, root_context: SetupContext):  # noqa: F821
         self._root = root_context
+        self._statement_start_times: dict[str, float] = {}
 
     @property
     def root(self) -> SetupContext:  # noqa: F821
         return self._root
+
+    @property
+    def statement_start_times(self) -> dict[str, float]:
+        return self._statement_start_times
+
+    @statement_start_times.setter
+    def statement_start_times(self, value: dict[str, float]) -> None:
+        self._statement_start_times = value
 
     def evaluate_python_expression(self, expr: str, local_namespace: dict | None = None):
         """
@@ -140,7 +153,7 @@ class Context(ABC):  # noqa: B024
         from datamimic_ce.contexts.geniter_context import GenIterContext
         from datamimic_ce.contexts.setup_context import SetupContext
 
-        data_dict = {}
+        data_dict: dict = {}
         # SetupContext evaluate script
         if isinstance(current_context, SetupContext):
             # Add current variable & product of outermost context

@@ -6,7 +6,6 @@
 import csv
 import os
 from pathlib import Path
-from typing import Optional, List
 
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
@@ -24,16 +23,16 @@ class CSVExporter(UnifiedBufferedExporter):
         setup_context: SetupContext,
         product_name: str,
         page_info: MultiprocessingPageInfo,
-        chunk_size: Optional[int],
-        fieldnames: Optional[List[str]],
-        delimiter: Optional[str],
-        quotechar: Optional[str],
-        quoting: Optional[int],
-        line_terminator: Optional[str],
-        encoding: Optional[str],
+        chunk_size: int | None,
+        fieldnames: list[str] | None,
+        delimiter: str | None,
+        quotechar: str | None,
+        quoting: int | None,
+        line_terminator: str | None,
+        encoding: str | None,
     ):
         # Remove singleton pattern and initialize instance variables
-        self.fieldnames = fieldnames
+        self.fieldnames = fieldnames or []
         self._task_id = setup_context.task_id
 
         # Retrieve encoding and delimiter from setup_context or use defaults
@@ -59,6 +58,8 @@ class CSVExporter(UnifiedBufferedExporter):
         """Writes data to the current buffer file in CSV format."""
         try:
             buffer_file = self._get_buffer_file()
+            if buffer_file is None:
+                return
             write_header = not buffer_file.exists()
             with buffer_file.open("a", newline="", encoding=self._encoding) as csvfile:
                 if not self.fieldnames and data:

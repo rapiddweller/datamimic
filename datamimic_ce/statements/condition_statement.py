@@ -17,7 +17,7 @@ from datamimic_ce.statements.if_statement import IfStatement
 class ConditionStatement(CompositeStatement):
     def __init__(self, parent_stmt: CompositeStatement):
         super().__init__(name=None, parent_stmt=parent_stmt)
-        self._executed_statements = set()
+        self._executed_statements: set = set()
 
     def add_executed_statement(self, value: IfStatement | ElseIfStatement | ElseStatement):
         """
@@ -25,7 +25,7 @@ class ConditionStatement(CompositeStatement):
         """
         self._executed_statements.add(value)
 
-    def retrieve_executed_sub_gen_statement_by_name(self, name) -> "GenerateStatement":
+    def retrieve_executed_sub_gen_statement_by_name(self, name):
         """
         Retrieve sub GenerateStatement by statement fullname
         :param name: full path name from <condition> parent to searching statement short name.

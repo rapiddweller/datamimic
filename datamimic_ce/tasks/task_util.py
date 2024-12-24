@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import re
+from typing import Any
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
@@ -21,9 +22,7 @@ from datamimic_ce.converter.java_hash_converter import JavaHashConverter
 from datamimic_ce.converter.lower_case_converter import LowerCaseConverter
 from datamimic_ce.converter.mask_converter import MaskConverter
 from datamimic_ce.converter.middle_mask_converter import MiddleMaskConverter
-from datamimic_ce.converter.remove_none_or_empty_element_converter import (
-    RemoveNoneOrEmptyElementConverter,
-)
+from datamimic_ce.converter.remove_none_or_empty_element_converter import RemoveNoneOrEmptyElementConverter
 from datamimic_ce.converter.timestamp2date_converter import Timestamp2DateConverter
 from datamimic_ce.converter.upper_case_converter import UpperCaseConverter
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
@@ -140,14 +139,14 @@ class TaskUtil:
             raise ValueError(f"Cannot created task for statement {stmt.__class__.__name__}")
 
     @staticmethod
-    def evaluate_file_script_template(ctx: Context, datas: dict | list, prefix: str, suffix: str) -> dict | list:
+    def evaluate_file_script_template(ctx: Context, datas: Any, prefix: str, suffix: str) -> dict | list:
         """
         Check value in csv or json file that contain python expression
         then evaluate variables and functions
         e.g. '{1+3}' -> 4
         """
         if isinstance(datas, dict):
-            result = {}
+            dict_result = {}
             for key, json_value in datas.items():
                 if isinstance(json_value, dict | list):
                     value = TaskUtil.evaluate_file_script_template(ctx, json_value, prefix, suffix)
@@ -155,20 +154,20 @@ class TaskUtil:
                     value = TaskUtil._evaluate_script_value(ctx, json_value, prefix, suffix)
                 else:
                     value = json_value
-                result.update({key: value})
-            return result
+                dict_result.update({key: value})
+            return dict_result
         elif isinstance(datas, list):
-            result = []
+            list_result: list[Any] = []
             for value in datas:
                 if isinstance(value, list):
-                    result.extend(TaskUtil.evaluate_file_script_template(ctx, value, prefix, suffix))
+                    list_result.extend(TaskUtil.evaluate_file_script_template(ctx, value, prefix, suffix))
                 elif isinstance(value, dict):
-                    result.append(TaskUtil.evaluate_file_script_template(ctx, value, prefix, suffix))
+                    list_result.append(TaskUtil.evaluate_file_script_template(ctx, value, prefix, suffix))
                 elif isinstance(value, str):
-                    result.append(TaskUtil._evaluate_script_value(ctx, value, prefix, suffix))
+                    list_result.append(TaskUtil._evaluate_script_value(ctx, value, prefix, suffix))
                 else:
-                    result.append(value)
-            return result
+                    list_result.append(value)
+            return list_result
         elif isinstance(datas, str):
             return TaskUtil._evaluate_script_value(ctx, datas, prefix, suffix)
         else:
@@ -189,7 +188,7 @@ class TaskUtil:
             is_whole_source_script = data[0] == "{" and data[-1] == "}"
             if is_whole_source_script:
                 match = re.search(r"^{(.*)}$", data)
-                return ctx.evaluate_python_expression(match.group(1))
+                return ctx.evaluate_python_expression(match.group(1)) if match is not None else None
 
             return TaskUtil.evaluate_variable_concat_prefix_suffix(ctx, data, prefix, suffix)
 
@@ -198,7 +197,7 @@ class TaskUtil:
             raise e
 
     @staticmethod
-    def evaluate_condition_value(ctx: Context, element_name: str, value: str) -> bool:
+    def evaluate_condition_value(ctx: Context, element_name: str, value: str | None) -> bool:
         """
         Evaluate value in 'condition' property
         Value must be a boolean expression
@@ -215,7 +214,7 @@ class TaskUtil:
             )
 
     @staticmethod
-    def create_converter_list(context: Context, converter_str: str) -> list[Converter]:
+    def create_converter_list(context: Context, converter_str: str | None) -> list[Converter]:
         """
         Create converter instance from converter_string
         :param context:
@@ -286,14 +285,14 @@ class TaskUtil:
         processed_data_count: int,
         load_start_idx: int,
         load_end_idx: int,
-        load_pagination: DataSourcePagination,
+        load_pagination: DataSourcePagination | None,
     ) -> tuple[list[dict], bool]:
         """
         Generate task to load data from source
         """
         build_from_source = True
         root_context = context.root
-        source_data = []
+        source_data: dict | list = []
 
         # get prefix and suffix
         setup_ctx = context.root if not isinstance(context, SetupContext) else context
@@ -335,10 +334,7 @@ class TaskUtil:
         # Load data from XML
         elif source_str.endswith(".xml"):
             source_data = _load_xml_file(
-                root_context.descriptor_dir / source_str,
-                stmt.cyclic,
-                load_start_idx,
-                load_end_idx,
+                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
             )
             # if sourceScripted then evaluate python expression in json
             if source_scripted:
@@ -378,41 +374,16 @@ class TaskUtil:
                     source_data = client.get_by_page_with_query(original_query=selector, pagination=load_pagination)
                 else:
                     source_data = client.get_by_page_with_type(
-                        table_name=stmt.type or stmt.name, pagination=load_pagination
+                        table_name=stmt.type or stmt.name,
+                        pagination=load_pagination,
                     )
             else:
                 raise ValueError(f"Cannot load data from client: {type(client).__name__}")
         else:
             raise ValueError(f"cannot find data source {source_str} for iterate task")
 
-        return source_data, build_from_source
-
-    # @staticmethod
-    # def consume_minio_after_page_processing(stmt, context: Context) -> None:
-    #     """
-    #     Load all temp files and consume MinioConsumer
-    #     :param stmt:
-    #     :param context:
-    #     :return:
-    #     """
-    #     # Load temp result file
-    #     result_temp_dir = context.root.descriptor_dir / f"temp_result_{context.root.task_id}"
-    #     consumed_result = _load_temp_result_file(result_temp_dir)
-    #
-    #     for stmt_name, product_result in consumed_result.items():
-    #         # Load current gen_stmt with corresponding targets
-    #         current_stmt = stmt.retrieve_sub_statement_by_fullname(stmt_name)
-    #
-    #         # Get list of MinioConsumer
-    #         _, consumers_without_operation = ExporterUtil.create_exporter_list(
-    #             setup_context=context.root, stmt=current_stmt
-    #         )
-    #
-    #         # Preprocess and consume data
-    #         consumed_result = _pre_consume_product(current_stmt, product_result)
-    #         for consumer in consumers_without_operation:
-    #             if isinstance(consumer, (XMLExporter, JsonExporter, TXTExporter, CSVExporter)):
-    #                 consumer.consume(consumed_result)
+        return_source_data = source_data if isinstance(source_data, list) else [source_data]
+        return return_source_data, build_from_source
 
     @staticmethod
     def consume_product_by_page(
@@ -440,13 +411,13 @@ class TaskUtil:
         # Create exporters cache in root context if it doesn't exist
         if not hasattr(root_context, "_task_exporters"):
             # Using task_id to namespace the cache
-            root_context._task_exporters = {}
+            root_context.task_exporters = {}
 
         # Create a unique cache key incorporating task_id and statement details
         cache_key = f"{root_context.task_id}_{stmt.name}_{stmt.storage_id}_{stmt}"
 
         # Get or create exporters
-        if cache_key not in root_context._task_exporters:
+        if cache_key not in root_context.task_exporters:
             # Create the consumer set once
             consumer_set = stmt.targets.copy()
             # consumer_set.add(EXPORTER_PREVIEW) deactivating preview exporter for multi-process
@@ -454,24 +425,25 @@ class TaskUtil:
                 consumer_set.add(EXPORTER_TEST_RESULT_EXPORTER)
 
             # Create exporters with operations
-            consumers_with_operation, consumers_without_operation = (
-                root_context.class_factory_util.get_exporter_util().create_exporter_list(
-                    setup_context=root_context,
-                    stmt=stmt,
-                    targets=list(consumer_set),
-                    page_info=page_info,
-                )
+            (
+                consumers_with_operation,
+                consumers_without_operation,
+            ) = root_context.class_factory_util.get_exporter_util().create_exporter_list(
+                setup_context=root_context,
+                stmt=stmt,
+                targets=list(consumer_set),
+                page_info=page_info,
             )
 
             # Cache the exporters
-            root_context._task_exporters[cache_key] = {
+            root_context.task_exporters[cache_key] = {
                 "with_operation": consumers_with_operation,
                 "without_operation": consumers_without_operation,
                 "page_count": 0,  # Track number of pages processed
             }
 
         # Get cached exporters
-        exporters = root_context._task_exporters[cache_key]
+        exporters = root_context.task_exporters[cache_key]
         exporters["page_count"] += 1
 
         # Use cached exporters
@@ -489,7 +461,7 @@ class TaskUtil:
             try:
                 if isinstance(consumer, XMLExporter):
                     consumer.consume((json_product[0], xml_result))
-                elif isinstance(consumer, (JsonExporter, TXTExporter, CSVExporter)):
+                elif isinstance(consumer, JsonExporter | TXTExporter | CSVExporter):
                     consumer.consume(json_product)
                 else:
                     consumer.consume(json_product)

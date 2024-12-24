@@ -4,7 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-
 from datamimic_ce.generators.data_faker_generator import DataFakerGenerator
 from datamimic_ce.generators.generator import Generator
 
