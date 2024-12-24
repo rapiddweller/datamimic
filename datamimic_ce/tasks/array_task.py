@@ -26,7 +26,7 @@ class ArrayTask(Task):
     def statement(self) -> ArrayStatement:
         return self._statement
 
-    def execute(self, parent_context: GenIterContext) -> None:  # TODO: mypy issue [override]
+    def execute(self, parent_context: GenIterContext) -> None:
         """
         Generate data for element "array"
         :param parent_context:

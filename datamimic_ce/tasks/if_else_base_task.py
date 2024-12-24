@@ -29,7 +29,7 @@ class IfElseBaseTask(Task, ABC):
     def statement(self) -> IfStatement | ElseIfStatement | ElseStatement:
         return self._statement
 
-    def execute(self, parent_context: GenIterContext):  # TODO: mypy issue [override]
+    def execute(self, parent_context: GenIterContext):
         """
         Generate data for element "if", "else_if" and "else"
         :param parent_context:
@@ -50,7 +50,7 @@ class IfElseBaseTask(Task, ABC):
             # Add generate product to current product_holder
             if isinstance(child_task, GenerateTask | ConditionTask):
                 # Execute sub generate task
-                values = child_task.execute(parent_context)  # TODO: mypy issue [arg-type]
+                values = child_task.execute(parent_context)
                 if isinstance(values, dict):
                     for key, value in values.items():
                         product_holder[key] = product_holder.get(key, []) + value

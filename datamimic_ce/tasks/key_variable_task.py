@@ -165,7 +165,6 @@ class KeyVariableTask(Task):
         elif self._mode == self._STRING_MODE:
             self._prefix = self.statement.variable_prefix or ctx.root.default_variable_prefix
             self._suffix = self.statement.variable_suffix or ctx.root.default_variable_suffix
-            # TODO: mypy issue: `self.statement.string` maybe None
             value = TaskUtil.evaluate_variable_concat_prefix_suffix(
                 context=ctx,
                 expr=self.statement.string or "",

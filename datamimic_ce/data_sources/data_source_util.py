@@ -25,9 +25,7 @@ from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
 
 class DataSourceUtil:
     @staticmethod
-    def set_data_source_length(
-        ctx: SetupContext, stmt: Statement
-    ) -> None:  # TODO: mypy issue[attr-defined]: Statement don't have many attribute
+    def set_data_source_length(ctx: SetupContext, stmt: Statement) -> None:
         """
         Calculate length of data source then save into context
         :param ctx:

@@ -31,7 +31,7 @@ class ItemTask(Task):
     def statement(self) -> ItemStatement:
         return self._statement
 
-    def execute(self, parent_context: GenIterContext):  # TODO: mypy issue [override]
+    def execute(self, parent_context: GenIterContext):
         """
         Generate data for element "item"
         :param parent_context:

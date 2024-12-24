@@ -64,7 +64,6 @@ class CSVExporter(UnifiedBufferedExporter):
             with buffer_file.open("a", newline="", encoding=self._encoding) as csvfile:
                 if not self.fieldnames and data:
                     self.fieldnames = list(data[0].keys())
-                # TODO: mypy issue [arg-type]
                 writer = csv.DictWriter(
                     csvfile,
                     fieldnames=self.fieldnames,

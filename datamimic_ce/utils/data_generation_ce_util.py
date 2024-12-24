@@ -9,7 +9,7 @@ import re
 import string
 from datetime import datetime, timedelta
 
-import exrex
+import exrex  # type: ignore
 
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
 from datamimic_ce.generators.generator_util import GeneratorUtil

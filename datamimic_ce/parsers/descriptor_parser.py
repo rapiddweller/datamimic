@@ -34,7 +34,6 @@ class DescriptorParser:
             root = tree.getroot()
 
             # Use SetupParser to parse root element "setup"
-            # TODO: mypy issue handle when properties is None
             setup_parser = SetupParser(cls_factory_util, root, properties)
             root_stmt = setup_parser.parse(descriptor_file_path.parent)
             return root_stmt

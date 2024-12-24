@@ -374,7 +374,7 @@ class TaskUtil:
                     source_data = client.get_by_page_with_query(original_query=selector, pagination=load_pagination)
                 else:
                     source_data = client.get_by_page_with_type(
-                        table_name=stmt.type or stmt.name,  # TODO: mypy issue handle when both type and name are None
+                        table_name=stmt.type or stmt.name,
                         pagination=load_pagination,
                     )
             else:

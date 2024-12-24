@@ -15,9 +15,9 @@ import time
 from collections.abc import Callable
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Literal
+from typing import Literal, OrderedDict
 
-import dill
+import dill  # type: ignore
 import xmltodict
 
 from datamimic_ce.clients.database_client import DatabaseClient
@@ -116,7 +116,7 @@ def _geniter_single_process_generate(args: tuple) -> dict[str, list]:
         # Don't use pagination for random distribution to load all data before shuffle
         load_start_idx = None
         load_end_idx = None
-        load_pagination = None  # TODO: mypy issue: below function not accept load_pagination as None
+        load_pagination = None
     source_data, build_from_source = context.root.class_factory_util.get_task_util_cls().gen_task_load_data_from_source(
         context,
         stmt,
@@ -157,7 +157,7 @@ def _geniter_single_process_generate(args: tuple) -> dict[str, list]:
                 # Add sub generate product to current product_holder
                 if isinstance(task, GenerateTask | ConditionTask):
                     # Execute sub generate task
-                    sub_gen_result = task.execute(ctx)  # TODO: mypy issue [arg-type]
+                    sub_gen_result = task.execute(ctx)
                     if sub_gen_result:
                         for key, value in sub_gen_result.items():
                             # Store product for later export
@@ -320,7 +320,7 @@ def _consume_outermost_gen_stmt_by_page(
 
     # Create a dictionary to track start times for each statement
     if not hasattr(context, "_statement_start_times"):
-        context._statement_start_times = {}  # TODO: mypy issue [attr-defined]
+        context._statement_start_times = {}
 
     # Initialize start times for statements if this is the first page
     if page_info.page_idx == 0:  # Check if this is the first page
@@ -486,20 +486,32 @@ def _load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int, end_idx
     # Read the XML data from a file
     with file_path.open("r") as file:
         data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")
-        if data.get("list") and data.get("list").get("item"):
-            data = data["list"]["item"]
-        data = [data] if isinstance(data, dict) else data
+        # Handle the case where data might be None
+        if data is None:
+            return []
+
+        # Extract items from list structure if present
+        if isinstance(data, dict) and data.get("list") and data.get("list", {}).get("item"):
+            items = data["list"]["item"]
+        else:
+            items = data
+
+        # Convert single item to list if needed
+        if isinstance(items, OrderedDict):
+            items = [items]
+        elif not isinstance(items, list):
+            items = []
+
+        # Apply pagination if needed
         pagination = (
             DataSourcePagination(start_idx, end_idx - start_idx)
             if (start_idx is not None and end_idx is not None)
             else None
         )
-        return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
+        return DataSourceUtil.get_cyclic_data_list(data=items, cyclic=cyclic, pagination=pagination)
 
 
-def _evaluate_selector_script(
-    context: Context, stmt: GenerateStatement
-):  # TODO: mypy issue, maybe add selector as input param
+def _evaluate_selector_script(context: Context, stmt: GenerateStatement):
     """
     Evaluate script selector.
 
@@ -878,7 +890,6 @@ class GenerateTask(CommonSubTask):
                     # Generate product
                     result = self._sp_generate(context, start, end)
                     # Consume by page
-                    # TODO: mypy issue in _consume_by_page: mp_idx and mp_chunk_size param not accept None
                     _consume_by_page(
                         self.statement,
                         context,

@@ -264,7 +264,7 @@ class VariableTask(KeyVariableTask):
         else:
             raise ValueError(f"Entity {entity_name} is not supported.")
 
-    def execute(self, ctx: Context) -> None:  # TODO: mypy issue [override]
+    def execute(self, ctx: Context) -> None:
         """
         Generate data for element <variable>
         """
