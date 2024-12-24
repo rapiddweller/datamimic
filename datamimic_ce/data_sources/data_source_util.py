@@ -175,7 +175,7 @@ class DataSourceUtil:
         return len(data)
 
     @staticmethod
-    def get_cyclic_data_list(data: Iterable, pagination: DataSourcePagination, cyclic: bool = False) -> list:
+    def get_cyclic_data_list(data: Iterable, pagination: DataSourcePagination | None, cyclic: bool = False) -> list:
         """
         Get cyclic data from iterable data source
         """

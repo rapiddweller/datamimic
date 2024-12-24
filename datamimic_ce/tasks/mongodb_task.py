@@ -7,10 +7,11 @@
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.statements.mongodb_statement import MongoDBStatement
+from datamimic_ce.tasks.setup_sub_task import SetupSubTask
 from datamimic_ce.tasks.task import Task
 
 
-class MongoDBTask(Task):
+class MongoDBTask(SetupSubTask):
     def __init__(self, statement: MongoDBStatement):
         self._statement = statement
 

@@ -377,32 +377,6 @@ class RdbmsClient(DatabaseClient):
             except Exception as err:
                 raise RuntimeError(f"Error when writing data to RDBMS: {err}") from err
 
-    def get_cyclic_data(self, query: str, cyclic: bool, data_len: int, pagination: DataSourcePagination | None) -> list:
-        """
-        Get cyclic data from relational database with SQLAlchemy 2.x compatibility.
-
-        Args:
-            query: SQL query string
-            cyclic: Whether to cycle through data
-            data_len: Length of data
-            pagination: Pagination settings, can be None
-
-        Returns:
-            List of query results
-        """
-        if pagination is None:
-            return self.get(query)
-
-        skip = pagination.skip
-        limit = pagination.limit
-
-        # Get whole queried data if data count or data limit exceed data len
-        if cyclic and (limit > data_len or skip + limit > data_len):
-            data = self.get(query)
-            return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
-
-        return self.get_by_page_with_query(query, pagination)
-
     def _get_actual_table_name(self, table_name: str) -> str:
         """
         Get actual table name (for match-case)

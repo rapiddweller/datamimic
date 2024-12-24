@@ -287,7 +287,7 @@ class TaskUtil:
         processed_data_count: int,
         load_start_idx: int,
         load_end_idx: int,
-        load_pagination: DataSourcePagination,
+        load_pagination: DataSourcePagination | None,
     ) -> tuple[list[dict], bool]:
         """
         Generate task to load data from source

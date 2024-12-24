@@ -20,7 +20,7 @@ class MultiprocessingPageInfo:
     Utility class to manage multiprocessing page info.
     """
 
-    def __init__(self, mp_idx: int, mp_chunk_size: int, page_idx: int, page_size: int):
+    def __init__(self, mp_idx: int | None, mp_chunk_size: int | None, page_idx: int, page_size: int):
         """
         Initializes the multiprocessing page info.
 
@@ -36,7 +36,7 @@ class MultiprocessingPageInfo:
         self._page_size = page_size
 
     @property
-    def mp_idx(self) -> int:
+    def mp_idx(self) -> int | None:
         """
         Get the multiprocessing index.
 
@@ -46,7 +46,7 @@ class MultiprocessingPageInfo:
         return self._mp_idx
 
     @property
-    def mp_chunk_size(self) -> int:
+    def mp_chunk_size(self) -> int | None:
         """
         Get the multiprocessing chunk size.
 
