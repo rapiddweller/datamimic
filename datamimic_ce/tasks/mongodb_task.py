@@ -7,8 +7,7 @@
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.statements.mongodb_statement import MongoDBStatement
-from datamimic_ce.tasks.setup_sub_task import SetupSubTask
-from datamimic_ce.tasks.task import Task
+from datamimic_ce.tasks.task import SetupSubTask
 
 
 class MongoDBTask(SetupSubTask):

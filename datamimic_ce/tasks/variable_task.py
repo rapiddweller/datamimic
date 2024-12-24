@@ -23,9 +23,7 @@ from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_util import DataSourceUtil
-from datamimic_ce.data_sources.weighted_entity_data_source import (
-    WeightedEntityDataSource,
-)
+from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntityDataSource
 from datamimic_ce.entities.address_entity import AddressEntity
 from datamimic_ce.entities.bank_account_entity import BankAccountEntity
 from datamimic_ce.entities.bank_entity import BankEntity

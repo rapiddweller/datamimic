@@ -22,9 +22,7 @@ import xmltodict
 
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.constants.exporter_constants import (
-    EXPORTER_TEST_RESULT_EXPORTER,
-)
+from datamimic_ce.constants.exporter_constants import EXPORTER_TEST_RESULT_EXPORTER
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
@@ -37,7 +35,7 @@ from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.setup_statement import SetupStatement
 from datamimic_ce.statements.statement import Statement
-from datamimic_ce.tasks.task import Task, CommonSubTask
+from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
 from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo

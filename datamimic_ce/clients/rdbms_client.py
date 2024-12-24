@@ -18,7 +18,6 @@ from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.config import settings
 from datamimic_ce.credentials.rdbms_credential import RdbmsCredential
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_util import DataSourceUtil
 from datamimic_ce.logger import logger
 
 

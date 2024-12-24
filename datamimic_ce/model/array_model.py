@@ -8,18 +8,8 @@ from typing import Any
 
 from pydantic import BaseModel, field_validator, model_validator
 
-from datamimic_ce.constants.attribute_constants import (
-    ATTR_COUNT,
-    ATTR_NAME,
-    ATTR_SCRIPT,
-    ATTR_TYPE,
-)
-from datamimic_ce.constants.data_type_constants import (
-    DATA_TYPE_BOOL,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
-    DATA_TYPE_STRING,
-)
+from datamimic_ce.constants.attribute_constants import ATTR_COUNT, ATTR_NAME, ATTR_SCRIPT, ATTR_TYPE
+from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
 from datamimic_ce.model.model_util import ModelUtil
 
 

@@ -61,9 +61,9 @@ class UnifiedBufferedExporter(Exporter, ABC):
         self._pid = str(mp_idx) if mp_idx is not None else "None"
         self._pid_placeholder = "" if mp_idx is None else f"_pid_{str(mp_idx)}"
         self._start_chunk_index = (
-            0 if use_sp else page_info.mp_idx * page_info.mp_chunk_size + page_info.page_idx * page_info.page_size # type: ignore
+            0 if use_sp else page_info.mp_idx * page_info.mp_chunk_size + page_info.page_idx * page_info.page_size  # type: ignore
         )
-        self._chunk_pad_len = None if use_sp else len(str(100 * page_info.mp_chunk_size)) # type: ignore
+        self._chunk_pad_len = None if use_sp else len(str(100 * page_info.mp_chunk_size))  # type: ignore
         self._mp = setup_context.use_mp  # Multiprocessing flag
         self._task_id = setup_context.task_id  # Task ID for tracking
         self._descriptor_dir = setup_context.descriptor_dir  # Directory for storing temp files

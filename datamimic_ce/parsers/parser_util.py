@@ -11,11 +11,7 @@ from typing import Any, cast
 from xml.etree.ElementTree import Element
 
 from datamimic_ce.config import settings
-from datamimic_ce.constants.attribute_constants import (
-    ATTR_ENVIRONMENT,
-    ATTR_ID,
-    ATTR_SYSTEM,
-)
+from datamimic_ce.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
 from datamimic_ce.constants.element_constants import (
     EL_ARRAY,
     EL_CONDITION,

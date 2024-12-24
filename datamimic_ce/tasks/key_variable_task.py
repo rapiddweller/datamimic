@@ -11,12 +11,7 @@ from collections.abc import Iterable
 
 import numpy
 
-from datamimic_ce.constants.data_type_constants import (
-    DATA_TYPE_BOOL,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
-    DATA_TYPE_STRING,
-)
+from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
@@ -112,9 +107,7 @@ class KeyVariableTask(Task):
             if not source.endswith("wgt.csv"):
                 raise ValueError(f"Data source of attribute '{self._statement.name}' must be type of: 'wgt.csv'")
             separator = self._statement.separator or ctx.default_separator
-            self._generator = WeightedDataSource(
-                file_path=ctx.descriptor_dir / source, separator=separator
-            )
+            self._generator = WeightedDataSource(file_path=ctx.descriptor_dir / source, separator=separator)
             self._mode = self._GENERATOR_MODE
         elif self._statement.pattern is not None:
             self._mode = self._PATTERN_MODE

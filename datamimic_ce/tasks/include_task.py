@@ -4,12 +4,11 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.parsers.descriptor_parser import DescriptorParser
 from datamimic_ce.statements.include_statement import IncludeStatement
-from datamimic_ce.tasks.task import Task, CommonSubTask
+from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.utils.file_util import FileUtil
 
 

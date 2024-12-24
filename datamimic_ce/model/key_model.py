@@ -29,12 +29,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VARIABLE_PREFIX,
     ATTR_VARIABLE_SUFFIX,
 )
-from datamimic_ce.constants.data_type_constants import (
-    DATA_TYPE_BOOL,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
-    DATA_TYPE_STRING,
-)
+from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
 from datamimic_ce.model.model_util import ModelUtil
 
 

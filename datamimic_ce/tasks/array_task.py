@@ -5,12 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.constants.data_type_constants import (
-    DATA_TYPE_BOOL,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
-    DATA_TYPE_STRING,
-)
+from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.statements.array_statement import ArrayStatement
