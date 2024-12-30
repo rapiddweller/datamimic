@@ -1,0 +1,43 @@
+<setup>
+    <generate name="generate_container" count="6" target="">
+        <key name="id" generator="IncrementGenerator"/>
+        <condition>
+            <if condition="id % 2 == 0">
+                <generate name="container_1" count="3" target="ConsoleExporter">
+                    <key name="lucky_1" type="float"/>
+                </generate>
+            </if>
+            <else-if condition="id % 3 == 0">
+                <generate name="container_2" count="3" target="ConsoleExporter">
+                    <key name="lucky_2" type="string"/>
+                </generate>
+            </else-if>
+            <else>
+                <condition>
+                    <if condition="True">
+                        <generate name="sup_3" count="3" target="">
+                            <generate name="container_3" count="1" target="ConsoleExporter">
+                                <key name="lucky_3" type="int"/>
+                            </generate>
+                        </generate>
+                    </if>
+                </condition>
+            </else>
+        </condition>
+    </generate>
+
+    <generate name="normal_condition" count="10" target="ConsoleExporter">
+        <key name="id" generator="IncrementGenerator"/>
+        <condition>
+            <if condition="id % 2 == 0">
+                <key name="lucky_1" type="float"/>
+            </if>
+            <else-if condition="id % 3 == 0">
+                <key name="lucky_2" type="string"/>
+            </else-if>
+            <else>
+                <key name="lucky_3" type="int"/>
+            </else>
+        </condition>
+    </generate>
+</setup>
