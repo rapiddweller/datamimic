@@ -4,7 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.constants.convention_constants import NAME_SEPARATOR
 from datamimic_ce.contexts.context import Context
@@ -20,12 +19,6 @@ class GenerateStatement(CompositeStatement):
     def __init__(self, model: GenerateModel, parent_stmt: Statement):
         name = model.name
         super().__init__(name, parent_stmt)
-        self._name: str = name
-        self._full_name: str = (
-            name
-            if (parent_stmt is None or parent_stmt.full_name is None)
-            else f"{parent_stmt.full_name}{NAME_SEPARATOR}{self._name}"
-        )
         self._count = model.count
         self._source = model.source
         self._cyclic = model.cyclic
@@ -49,10 +42,14 @@ class GenerateStatement(CompositeStatement):
 
     @property
     def name(self) -> str:
+        if self._name is None:
+            raise ValueError("Error while parsing element <generate>: 'name' cannot be None")
         return self._name
 
     @property
     def full_name(self) -> str:
+        if self._full_name is None:
+            raise ValueError("Error while parsing element <generate>: 'full_name' cannot be None")
         return self._full_name
 
     @property

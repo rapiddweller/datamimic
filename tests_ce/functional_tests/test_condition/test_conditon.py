@@ -75,3 +75,57 @@ class TestCondition(TestCase):
 
             with self.assertRaises(KeyError):
                 assert bike["if_false"]
+
+    def test_generate_with_condition(self):
+        engine = DataMimicTest(
+            test_dir=self._test_dir,
+            filename="test_generate_with_condition.xml",
+            capture_test_result=True,
+        )
+        engine.test_with_timer()
+        result = engine.capture_result()
+
+        containers = result["generate_container"]
+        assert len(containers) == 6
+
+        container_1 = result["container_1"]
+        assert len(container_1) == 3 * 3
+        for c_1 in container_1:
+            assert c_1["lucky_1"] is not None
+            assert isinstance(c_1["lucky_1"], float)
+
+        container_2 = result["container_2"]
+        assert len(container_2) == 3 * 1
+        for c_2 in container_2:
+            assert c_2["lucky_2"] is not None
+            assert isinstance(c_2["lucky_2"], str)
+
+        container_3 = result["container_3"]
+        assert len(container_3) == 3 * 2
+        for c_3 in container_3:
+            assert c_3["lucky_3"] is not None
+            assert isinstance(c_3["lucky_3"], int)
+
+        normal_condition = result["normal_condition"]
+        assert len(normal_condition) == 10
+        for n in normal_condition:
+            normal_id = n["id"]
+            assert normal_id in range(1, 11)
+            lucky_1 = n.get("lucky_1")
+            lucky_2 = n.get("lucky_2")
+            lucky_3 = n.get("lucky_3")
+            if normal_id % 2 == 0:
+                assert lucky_1 is not None
+                assert isinstance(lucky_1, float)
+                assert lucky_2 is None
+                assert lucky_3 is None
+            elif normal_id % 3 == 0:
+                assert lucky_1 is None
+                assert lucky_2 is not None
+                assert isinstance(lucky_2, str)
+                assert lucky_3 is None
+            else:
+                assert lucky_1 is None
+                assert lucky_2 is None
+                assert lucky_3 is not None
+                assert isinstance(lucky_3, int)
