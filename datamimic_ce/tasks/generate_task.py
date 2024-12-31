@@ -498,7 +498,7 @@ def _load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int, end_idx
             items = data
 
         # Convert single item to list if needed
-        if isinstance(items, OrderedDict) or isinstance(items, dict):
+        if isinstance(items, (OrderedDict, dict)):
             items = [items]
         elif not isinstance(items, list):
             items = []
