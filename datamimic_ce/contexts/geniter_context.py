@@ -18,9 +18,9 @@ class GenIterContext(Context):
         super().__init__(parent.root)
         self._parent = parent
         self._current_name = current_name
-        self._current_product = {}
-        self._current_variables = {}
-        self._namespace = {}
+        self._current_product: dict = {}
+        self._current_variables: dict = {}
+        self._namespace: dict = {}
 
     @property
     def current_name(self) -> str:

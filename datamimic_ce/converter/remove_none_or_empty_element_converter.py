@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
-from typing import Dict, List, Union, Any
+from typing import Any
 
 from datamimic_ce.converter.converter import Converter
 
@@ -19,10 +19,10 @@ class RemoveNoneOrEmptyElementConverter(Converter):
 
     EMPTY_VALUES: list = list((None, "", [], {}))
 
-    def convert(self, value: Union[List[Any], Dict[str, Any]]) -> Union[List[Any], Dict[str, Any]]:
+    def convert(self, value: list[Any] | dict[str, Any]) -> list[Any] | dict[str, Any]:
         """Recursively removes empty elements."""
         # Early return for primitive types
-        if not isinstance(value, (list, dict)):
+        if not isinstance(value, list | dict):
             return value
 
         # Dispatch to specialized handlers
@@ -30,7 +30,7 @@ class RemoveNoneOrEmptyElementConverter(Converter):
         copy_value = copy.deepcopy(value)
         return self._convert_list(copy_value) if isinstance(copy_value, list) else self._convert_dict(copy_value)
 
-    def _convert_list(self, values: List[Any]) -> List[Any]:
+    def _convert_list(self, values: list[Any]) -> list[Any]:
         """Process list elements with list comprehension."""
         # Single-pass list comprehension with inline conversion
         result = []
@@ -41,7 +41,7 @@ class RemoveNoneOrEmptyElementConverter(Converter):
                     result.append(converted)
         return result
 
-    def _convert_dict(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _convert_dict(self, data: dict[str, Any]) -> dict[str, Any]:
         """Process dictionary with minimal copying."""
         # Create new dict directly with filtered items
         result = {}

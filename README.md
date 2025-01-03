@@ -1,4 +1,4 @@
-# **DATAMIMIC Community Edition**
+# DATAMIMIC Community Edition 🌟
 
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
@@ -14,23 +14,106 @@
 
 ## Introduction
 
-Welcome to **DATAMIMIC Community Edition**, the AI-powered platform that revolutionizes test data generation! By leveraging advanced AI and model-driven technologies, DATAMIMIC enables developers and testers to create realistic, scalable, and privacy-compliant test data with ease.
+Welcome to **DATAMIMIC**, the Model-Driven and AI-powered platform that revolutionizes test data generation! By leveraging advanced AI and model-driven technologies, DATAMIMIC enables developers and testers to create realistic, scalable, and privacy-compliant test data with ease.
 
 [![Watch the video](https://img.youtube.com/vi/sycO7qd1Bhk/0.jpg)](https://www.youtube.com/watch?v=sycO7qd1Bhk)
 
 ---
 
-## Key Features
+## DATAMIMIC Feature Overview 🎯
 
-- 🧠 **Model-Driven Data Generation**: Utilize sophisticated algorithms to simulate real-world data scenarios.
-- 🔮 **AI-Powered Data Generation**: Simulate real-world data scenarios using cutting-edge AI algorithms. (Like GANs, LLMs, and more)
-- 🛡️ **Data Privacy Compliance**: Anonymize and pseudonymize data to meet GDPR and global data protection standards.
-- 🚀 **High Performance**: Engineered for scalability to handle complex datasets efficiently.
-- 🐍 **Seamless Python Integration**: Easily integrate with Python projects and manage dependencies.
-- ⚙️ **Extensibility**: Customize and extend functionalities to suit your specific testing needs.
+### Core Features 🔵
 
-> **Note:** The Community Edition focuses on core functionalities and does not include AI-powered features like automatic model generation. These advanced features are available in the **Enterprise Edition**.
+#### 🧠 Model-Driven Generation
+- Create sophisticated data models for consistent test data generation
+- Define complex relationships between entities
+- Support for nested and hierarchical data structures
 
+#### 📊 Data Types & Integration
+- **Basic Data Types Support**
+  - All standard primitive types
+  - Complex data structures
+  - Custom data type definitions
+- **Core Database Integration**
+  - RDBMS support (PostgreSQL, MySQL, Oracle)
+  - MongoDB integration
+  - Basic import/export functionality
+
+#### 🛡️ Data Privacy & Compliance
+- GDPR-compliant data anonymization
+- Basic pseudonymization capabilities
+- Data masking for sensitive information
+- Configurable privacy rules
+
+#### ⚡ Core Capabilities
+- **High Performance Engine**
+  - Optimized for large datasets
+  - Parallel processing support
+  - Memory-efficient operations
+- **Python Integration**
+  - Native Python API
+  - Seamless dependency management
+  - Python script extensions
+- **Basic Extensibility**
+  - Custom generator support
+  - Plugin architecture
+  - Basic scripting capabilities
+
+---
+
+### Enterprise Features 🟣
+
+#### 🧠 AI-Powered Generation
+> Advanced AI capabilities for realistic data creation
+- **GAN-based Synthesis**
+  - Realistic data patterns
+  - Learning from existing datasets
+  - Pattern replication
+- **LLM Integration**
+  - Natural language content
+  - Context-aware generation
+  - Semantic consistency
+- **Automatic Modeling**
+  - Schema inference
+  - Pattern detection
+  - Model optimization
+
+#### 🔗 Advanced Integrations
+> Enterprise-grade system integration capabilities
+- **Streaming Support**
+  - Kafka integration
+  - Real-time data generation
+  - Stream processing
+- **Enterprise Formats**
+  - EDI processing
+  - Advanced XSD handling
+  - Custom format support
+- **Advanced Connectors**
+  - Enterprise systems
+  - Cloud platforms
+  - Legacy systems
+
+#### 🛡️ Enhanced Privacy Features
+> Advanced data protection and compliance
+- **Advanced Anonymization**
+  - Context-aware masking
+  - Reversible anonymization
+  - Custom privacy rules
+- **Compliance Tools**
+  - Audit logging
+  - Compliance reporting
+  - Policy enforcement
+- **Enterprise Security**
+  - Role-based access
+  - Encryption support
+  - Security audit trails
+
+#### 📈 Advanced Data Validation
+> Comprehensive data quality assurance
+- **Validation Framework**
+  - Custom rule engines
+  - Complex validation logic
+  - Cross-field validation
 
 ---
 
@@ -108,7 +191,7 @@ For contributors and developers who want to work with the source code:
             <key name="first_name" script="person.given_name"/>
             <key name="last_name" script="person.family_name"/>
             <key name="gender" script="person.gender"/>
-            <key name="birthDate" script="person.birthdate" converter="DateFormat('%d.%m.%Y')"/>
+            <key name="birth_date" script="person.birthdate" converter="DateFormat('%d.%m.%Y')"/>
             <key name="email" script="person.family_name + '@' + person.given_name + '.de'"/>
             <key name="ce_user" values="True, False"/>
             <key name="ee_user" values="True, False"/>
@@ -128,19 +211,19 @@ For contributors and developers who want to work with the source code:
     **json export:**
     ```json
    [
-   {"id": 1, "first_name": "Mary", "last_name": "Mcgowan", "gender": "female", "birthDate": "1946-05-15T00:00:00", "email": "Mcgowan@Mary.de", "ce_user": false, "ee_user": true, "datamimic_lover": "DEFINITELY"},
-   {"id": 2, "first_name": "Gabrielle", "last_name": "Malone", "gender": "female", "birthDate": "1989-11-27T00:00:00", "email": "Malone@Gabrielle.de", "ce_user": false, "ee_user": true, "datamimic_lover": "DEFINITELY"},
-   {"id": 4, "first_name": "Margaret", "last_name": "Torres", "gender": "female", "birthDate": "2006-07-13T00:00:00", "email": "Torres@Margaret.de", "ce_user": false, "ee_user": false, "datamimic_lover": "DEFINITELY"},
-    {"id": 5, "first_name": "Monica", "last_name": "Meyers", "gender": "female", "birthDate": "1983-07-22T00:00:00", "email": "Meyers@Monica.de", "ce_user": true, "ee_user": false, "datamimic_lover": "DEFINITELY"},
-    {"id": 6, "first_name": "Jason", "last_name": "Davis", "gender": "male", "birthDate": "1941-07-05T00:00:00", "email": "Davis@Jason.de", "ce_user": true, "ee_user": false, "datamimic_lover": "DEFINITELY"},
+   {"id": 1, "first_name": "Mary", "last_name": "Mcgowan", "gender": "female", "birth_date": "1946-05-15T00:00:00", "email": "Mcgowan@Mary.de", "ce_user": false, "ee_user": true, "datamimic_lover": "DEFINITELY"},
+   {"id": 2, "first_name": "Gabrielle", "last_name": "Malone", "gender": "female", "birth_date": "1989-11-27T00:00:00", "email": "Malone@Gabrielle.de", "ce_user": false, "ee_user": true, "datamimic_lover": "DEFINITELY"},
+   {"id": 4, "first_name": "Margaret", "last_name": "Torres", "gender": "female", "birth_date": "2006-07-13T00:00:00", "email": "Torres@Margaret.de", "ce_user": false, "ee_user": false, "datamimic_lover": "DEFINITELY"},
+    {"id": 5, "first_name": "Monica", "last_name": "Meyers", "gender": "female", "birth_date": "1983-07-22T00:00:00", "email": "Meyers@Monica.de", "ce_user": true, "ee_user": false, "datamimic_lover": "DEFINITELY"},
+    {"id": 6, "first_name": "Jason", "last_name": "Davis", "gender": "male", "birth_date": "1941-07-05T00:00:00", "email": "Davis@Jason.de", "ce_user": true, "ee_user": false, "datamimic_lover": "DEFINITELY"},
     {"...":  "..."},
-    {"id": 100, "first_name": "Jared", "last_name": "Rivas", "gender": "male", "birthDate": "1975-03-16T00:00:00", "email": "Rivas@Jared.de", "ce_user": true, "ee_user": true, "datamimic_lover": "DEFINITELY"}
+    {"id": 100, "first_name": "Jared", "last_name": "Rivas", "gender": "male", "birth_date": "1975-03-16T00:00:00", "email": "Rivas@Jared.de", "ce_user": true, "ee_user": true, "datamimic_lover": "DEFINITELY"}
    ]
     ```
 
     **csv export:**
     ```csv
-    id|first_name|last_name|gender|birthDate|email|ce_user|ee_user|datamimic_lover
+    id|first_name|last_name|gender|birth_date|email|ce_user|ee_user|datamimic_lover
     1|Mary|Mcgowan|female|1946-05-15 00:00:00|Mcgowan@Mary.de|False|True|DEFINITELY
     2|Gabrielle|Malone|female|1989-11-27 00:00:00|Malone@Gabrielle.de|False|True|DEFINITELY
     3|Antonio|Davis|male|2005-05-12 00:00:00|Davis@Antonio.de|False|True|DEFINITELY
@@ -157,8 +240,8 @@ DATAMIMIC supports various advanced features:
 
 - **Custom Generators**: Create your own data generators
 - **Data Relationships**: Define complex relationships between entities
-- **Import/Export Formats CE**: Support for JSON, XML, CSV, RDBMS and MongoDB
-- **Import/Export Formats EE**: Kafka, EDI, XSD and more
+- **Import/Export Formats**: Support for JSON, XML, CSV, RDBMS and MongoDB
+- **Import/Export Formats ( only EE )**: Kafka, EDI, XSD and more
 - **Data Anonymization**: Anonymize data to comply with privacy regulations
 - **Data Validation**: Define and enforce data validation rules
 - **Scripting**: Extend functionality using Python scripts
@@ -201,23 +284,99 @@ We ❤️ contributions! Here's how you can help:
 - **Documentation**: Improve existing docs or help with translations.
 - **Community Engagement**: Join discussions and support other users.
 
-Check out our [Contribution Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
+---
+
+## 📜 DATAMIMIC Licensing Options
+
+### 🌟 Community Edition
+
+Open Source Freedom for Everyone
+
+#### ✨ Key Benefits
+- **🔓 MIT License**: Maximum freedom for innovation
+- **💼 Commercial Ready**: Use freely in commercial projects
+- **🔄 Modification Rights**: Full source code access and modification rights
+- **🌍 No Restrictions**: Deploy anywhere, anytime
+
+#### 🎁 What's Included
+- **📦 Core Features**
+  - Model-driven data generation
+  - Basic data types & integrations
+  - GDPR compliance tools
+  
+- **👥 Community Support**
+  - Active GitHub community
+  - Public issue tracking
+  - Community discussions
+  - Regular updates
+
+#### 💫 Perfect For
+- Individual developers
+- Startups & small teams
+- Open source projects
+- Learning & evaluation
+- POC development
 
 ---
 
-## License
+### ⭐ Enterprise Edition
 
-DATAMIMIC CE is now open source and licensed under MIT:
+Professional Power for Business Success
 
-- 📄 **Open Source License**: Licensed under the [MIT License](LICENSE)
-- 🆓 **Free for Everyone**: Use freely for both personal and commercial projects
-- 💡 **Key Permissions**:
-  - Commercial use
-  - Modification
-  - Distribution
-  - Private use
+#### 🚀 Premium Benefits
+- **📋 Commercial License**: Enterprise-grade flexibility
+- **🔐 Advanced Features**: Full suite of professional tools
+- **🎯 Priority Support**: Direct access to expert team
+- **🛠️ Custom Solutions**: Tailored to your needs
 
-For questions or support, contact us at [info@rapiddweller.com](mailto:info@rapiddweller.com).
+#### 💎 Premium Features
+- **🤖 AI Capabilities**
+  - GAN-based synthesis
+  - LLM integration
+  - Automated modeling
+  
+- **🔗 Enterprise Integration**
+  - Advanced connectors
+  - Kafka streaming
+  - EDI support
+  
+- **🛡️ Enhanced Security**
+  - Advanced privacy features
+  - Compliance reporting
+  - Audit trails
+
+#### 🎯 Ideal For
+- Large enterprises
+- Financial institutions
+- Healthcare organizations
+- Government agencies
+- High-compliance industries
+
+#### 📞 Get Started
+> Ready to unlock the full potential of DATAMIMIC?
+
+**Contact Our Team:**
+- 📧 Email: [sales@rapiddweller.com](mailto:sales@rapiddweller.com)
+- 🌐 Visit: [datamimic.io/enterprise](https://datamimic.io)
+
+---
+
+### 🤝 Compare Editions
+
+| Feature | Community | Enterprise |
+|---------|-----------|------------|
+| Base Features | ✅ | ✅ |
+| Source Code Access | ✅ | ✅ |
+| Commercial Use | ✅ | ✅ |
+| AI Features | ❌ | ✅ |
+| Priority Support | ❌ | ✅ |
+| Enterprise Integrations | ❌ | ✅ |
+| SLA Support | ❌ | ✅ |
+| Custom Development | ❌ | ✅ |
+
+---
+
+> ***"Empower your data generation journey with the right DATAMIMIC edition for your needs"***
 
 ---
 
@@ -239,7 +398,6 @@ Stay updated and connect with our community!
 - 🌐 **Website**: [www.datamimic.io](https://datamimic.io)
 - 🏢 **Rapiddweller**: [www.rapiddweller.com](https://rapiddweller.com)
 - 💼 **LinkedIn**: [rapiddweller](https://www.linkedin.com/company/rapiddweller)
-- 🐦 **Twitter**: [@rapiddweller](https://twitter.com/rapiddweller)
 
 ---
 
@@ -253,6 +411,6 @@ A big thank you to all our contributors! Your efforts make DATAMIMIC possible.
 
 ---
 
-**Legal Notices**
+## Legal Notices
 
 For detailed licensing information, please see the [LICENSE](LICENSE) file.

@@ -12,7 +12,7 @@ class ElementStatement(Statement):
     def __init__(self, model: ElementModel, parent_stmt: Statement):
         name = model.name
         super().__init__(name, parent_stmt)
-        self._name = name
+        self._name: str = name
         self._condition = model.condition
         self._constant = model.constant
         self._converter = model.converter
@@ -25,7 +25,14 @@ class ElementStatement(Statement):
         self._type = model.type
         self._values = model.values
         self._default_value = model.default_value
+        self._pattern = model.pattern
+        self._variable_prefix = model.variable_prefix
+        self._variable_suffix = model.variable_suffix
         self._string = model.string
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     @property
     def type(self):
@@ -48,33 +55,45 @@ class ElementStatement(Statement):
         return self._generator
 
     @property
-    def source(self) -> str:
+    def source(self) -> str | None:
         return self._source
 
     @property
-    def separator(self) -> str:
+    def separator(self) -> str | None:
         return self._separator
 
     @property
-    def condition(self) -> str:
+    def condition(self) -> str | None:
         return self._condition
 
     @property
-    def converter(self) -> str:
+    def converter(self) -> str | None:
         return self._converter
 
     @property
-    def in_date_format(self) -> str:
+    def in_date_format(self) -> str | None:
         return self._in_date_format
 
     @property
-    def out_date_format(self) -> str:
+    def out_date_format(self) -> str | None:
         return self._out_date_format
 
     @property
-    def default_value(self) -> str:
+    def default_value(self) -> str | None:
         return self._default_value
 
     @property
-    def string(self) -> str:
+    def string(self) -> str | None:
         return self._string
+
+    @property
+    def pattern(self) -> str | None:
+        return self._pattern
+
+    @property
+    def variable_prefix(self) -> str | None:
+        return self._variable_prefix
+
+    @property
+    def variable_suffix(self) -> str | None:
+        return self._variable_suffix

@@ -5,6 +5,8 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+from typing import Any
+
 from pydantic import BaseModel, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import ATTR_ID
@@ -16,7 +18,7 @@ class MemstoreModel(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def check_execute_valid_attributes(cls, values: dict):
+    def check_execute_valid_attributes(cls, values: dict[str, Any]) -> dict[str, Any]:
         return ModelUtil.check_valid_attributes(
             values=values,
             valid_attributes={ATTR_ID},

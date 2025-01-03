@@ -2,6 +2,8 @@ from functools import lru_cache
 
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.converter.converter import Converter
+from datamimic_ce.converter.custom_converter import CustomConverter
 
 
 class CustomBusinessMappingConverter(CustomConverter):
@@ -55,7 +57,7 @@ class CustomBusinessMappingConverter(CustomConverter):
         # logger.debug(f"SQL query: {sql_query}")
         return sql_query
 
-    @lru_cache
+    @lru_cache(maxsize=1000)  # noqa: B019
     def convert(self, value: str):
         """
         Generate data and set this value to current product
@@ -78,14 +80,14 @@ class CustomBusinessMappingConverter(CustomConverter):
             if match.group(1):
                 # Match for list values (e.g., output_column=['idTop','idSub'])
                 key = match.group(1)
-                value = [item.strip().strip("'") for item in match.group(2).split(",")]
+                value = [item.strip().strip("'") for item in match.group(2).split(",")]  # type: ignore[assignment]
             else:
                 # Match for single values (e.g., countryCode=234, city='Hamburg')
                 key = match.group(3)
                 value = match.group(4).strip().strip("'")
                 # Convert value to integer if it is a digit
                 if value.isdigit():
-                    value = int(value)
+                    value = int(value)  # type: ignore[assignment]
 
             # Add the key-value pair to the parsed_data dictionary
             parsed_data[key] = value

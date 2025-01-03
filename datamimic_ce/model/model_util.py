@@ -51,7 +51,8 @@ class ModelUtil:
         """
         if ATTR_SOURCE not in values and ATTR_COUNT not in values:
             raise ValueError(
-                f"Missing attribute '{ATTR_COUNT}' ('{ATTR_COUNT}' might be optional in case '{ATTR_SOURCE} is defined')"
+                f"Missing attribute '{ATTR_COUNT}' ('{ATTR_COUNT}' might be optional "
+                f"in case '{ATTR_SOURCE} is defined')"
             )
         return values
 

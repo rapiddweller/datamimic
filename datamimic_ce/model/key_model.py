@@ -29,12 +29,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VARIABLE_PREFIX,
     ATTR_VARIABLE_SUFFIX,
 )
-from datamimic_ce.constants.data_type_constants import (
-    DATA_TYPE_BOOL,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
-    DATA_TYPE_STRING,
-)
+from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
 from datamimic_ce.model.model_util import ModelUtil
 
 
@@ -134,7 +129,8 @@ class KeyModel(BaseModel):
                 else:
                     # Raise error if finding 2 modes in same element
                     raise ValueError(
-                        f"Must defined only one of following attributes {generation_mode}, but got: {first_mode} & {mode}"
+                        f"Must defined only one of following attributes {generation_mode}, "
+                        f"but got: {first_mode} & {mode}"
                     )
         return values
 

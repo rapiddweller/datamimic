@@ -6,6 +6,8 @@
 
 import json
 import re
+from collections.abc import Mapping
+from typing import Any, cast
 
 from pymongo import MongoClient, UpdateOne
 
@@ -35,26 +37,7 @@ class MongoDBClient(DatabaseClient):
 
         return MongoClient(**ars)
 
-    def get_cyclic_data(self, query: str, cyclic: bool, data_len: int, pagination: DataSourcePagination) -> list:
-        """
-        Get cyclic data from query
-        """
-        skip = pagination.skip
-        limit = pagination.limit
-
-        # Get whole queried data if data count or data limit exceed data len
-        if cyclic and (limit > data_len or skip + limit > data_len):
-            data = self.get_documents_by_query(query)
-            from datamimic_ce.data_sources.data_source_util import DataSourceUtil
-
-            return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
-        else:
-            return self.get_by_page_with_query(query, pagination)
-
-    # def get(self):
-    #     pass
-
-    def get_documents_by_query(self, query: str) -> list:
+    def get(self, query: str) -> list:
         """
         Get documents from collection
         :param query:
@@ -67,6 +50,7 @@ class MongoDBClient(DatabaseClient):
                 find_query = self._decompose_find_query(query)
                 collection_name = find_query.get("find")
                 find_filter = find_query.get("filter")
+                # TODO: Validate find_filter syntax
                 find_projection = find_query.get("projection")
                 if collection_name is not None and not collection_name.isspace():
                     collection = db[collection_name]
@@ -87,7 +71,7 @@ class MongoDBClient(DatabaseClient):
         :return:
         """
         # TODO: cache queried result for better performance
-        docs = self.get_documents_by_query(query)
+        docs = self.get(query)
         if pagination is None:
             return docs
         else:
@@ -159,7 +143,7 @@ class MongoDBClient(DatabaseClient):
                     collection = db[collection_name]
                 else:
                     raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
-                return collection.count_documents(find_filter)
+                return collection.count_documents(cast(Mapping[str, Any], find_filter))
             elif query_type == "aggregate":
                 query_result = self._query_aggregate_handler(query=query, connection=conn)
                 return len(query_result)
@@ -197,7 +181,7 @@ class MongoDBClient(DatabaseClient):
     def count_table_length(self, table_name: str):
         pass
 
-    def insert(self, collection_name: str, data: list, is_update: bool) -> list:
+    def insert(self, collection_name: str, data: list, is_update: bool):
         """
         Insert data into collection
         :param collection_name:
@@ -221,6 +205,8 @@ class MongoDBClient(DatabaseClient):
         """
         if "selector" in query:
             value = query.get("selector")
+            if value is None or value.isspace():
+                raise ValueError("Syntax error: selector is not found")
             find_query = self._decompose_find_query(value)
             collection_name = find_query.get("find")
         elif "type" in query:
@@ -249,6 +235,8 @@ class MongoDBClient(DatabaseClient):
         """
         if "selector" in selector_dict:
             selector_value = selector_dict.get("selector")
+            if selector_value is None or selector_value.isspace():
+                raise ValueError("Syntax error: selector is not found")
             find_query = self._decompose_find_query(selector_value)
             collection_name = find_query.get("find")
             filter_query = find_query["filter"]
@@ -262,6 +250,8 @@ class MongoDBClient(DatabaseClient):
         # Merge updated_data and filter query
         updated_data = [{**filter_query, **data} for data in updated_data]
 
+        if collection_name is None or collection_name.isspace():
+            raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
         # Write new data to database in case no data found by query
         if updated_data[0].get("_id") is None:
             return self.insert(collection_name, updated_data, True)
@@ -300,7 +290,7 @@ class MongoDBClient(DatabaseClient):
             else:
                 return result
         except Exception as err:
-            raise ValueError(f"Wrong mongodb selector syntax: {query}, error: {err}")
+            raise ValueError(f"Wrong mongodb selector syntax: {query}, error: {err}") from err
 
     def _decompose_aggregate_query(self, query: str) -> dict:
         """
@@ -324,7 +314,7 @@ class MongoDBClient(DatabaseClient):
             else:
                 return result
         except Exception as err:
-            raise ValueError(f"Wrong mongodb selector syntax: {query}, error: {err}")
+            raise ValueError(f"Wrong mongodb selector syntax: {query}, error: {err}") from err
 
     @staticmethod
     def _validate_query_command(query: str):
@@ -392,12 +382,17 @@ class MongoDBClient(DatabaseClient):
         """
         if "selector" in query:
             selector_value = query.get("selector")
+            if selector_value is None or selector_value.isspace():
+                raise ValueError("Syntax error: selector is not found")
             find_query = self._decompose_find_query(selector_value)
             collection_name = find_query.get("find")
         elif "type" in query:
             collection_name = query.get("type")
         else:
             raise ValueError("'type' or 'selector' statement's attribute is missing")
+
+        if collection_name is None or collection_name.isspace():
+            raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
         with self._create_connection() as conn:
             db = conn[self._credential.database]
             collection = db[collection_name]

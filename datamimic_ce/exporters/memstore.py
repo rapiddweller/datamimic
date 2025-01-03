@@ -17,7 +17,7 @@ class Memstore(Exporter):
 
     def __init__(self, memstore_id: str):
         self._memstore_id = memstore_id
-        self._storage = {}
+        self._storage: dict = {}
 
     def get_all_data_by_type(self, product_type: str):
         """
@@ -27,7 +27,7 @@ class Memstore(Exporter):
         """
         return self._storage.get(product_type, [])
 
-    def get_data_by_type(self, product_type: str, pagination: DataSourcePagination, cyclic: bool):
+    def get_data_by_type(self, product_type: str, pagination: DataSourcePagination | None, cyclic: bool):
         """
         Get data in memstore by data type and pagination
         :param product_type:

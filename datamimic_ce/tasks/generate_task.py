@@ -7,25 +7,23 @@
 import copy
 import csv
 import json
-import os
-
 import math
 import multiprocessing
+import os
 import shutil
 import time
+from collections import OrderedDict
 from collections.abc import Callable
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Literal, Dict
+from typing import Literal
 
-import dill
+import dill  # type: ignore
 import xmltodict
 
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.constants.exporter_constants import (
-    EXPORTER_TEST_RESULT_EXPORTER,
-)
+from datamimic_ce.constants.exporter_constants import EXPORTER_TEST_RESULT_EXPORTER
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
@@ -38,7 +36,7 @@ from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.setup_statement import SetupStatement
 from datamimic_ce.statements.statement import Statement
-from datamimic_ce.tasks.task import Task
+from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
 from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
@@ -84,7 +82,7 @@ def _geniter_single_process_generate(args: tuple) -> dict[str, list]:
     """
 
     # Parse args
-    context: Context = args[0]
+    context: SetupContext | GenIterContext = args[0]
     root_context: SetupContext = context.root
     stmt: GenerateStatement = args[1]
     start_idx, end_idx = args[2]
@@ -96,7 +94,7 @@ def _geniter_single_process_generate(args: tuple) -> dict[str, list]:
     # Prepare loaded datasource pagination
     load_start_idx = start_idx
     load_end_idx = end_idx
-    load_pagination = pagination
+    load_pagination: DataSourcePagination | None = pagination
 
     # Extract converter list
     task_util_cls = root_context.class_factory_util.get_task_util_cls()
@@ -217,7 +215,7 @@ def _geniter_single_process_generate_and_consume_by_page(args: tuple) -> dict:
     return_product_result = context.test_mode or any(
         [context.memstore_manager.contain(consumer_str) for consumer_str in stmt.targets]
     )
-    result = {}
+    result: dict = {}
 
     # Generate and consume product by page
     args_list = list(args)
@@ -254,8 +252,8 @@ def _consume_by_page(
     xml_result: dict,
     page_idx: int,
     page_size: int,
-    mp_idx: int,
-    mp_chunk_size: int,
+    mp_idx: int | None,
+    mp_chunk_size: int | None,
     is_last_page: bool,
 ) -> None:
     """
@@ -270,15 +268,6 @@ def _consume_by_page(
     :param mp_chunk_size: Chunk size for multiprocessing.
     :return: None
     """
-    # root_ctx = context.root
-    #
-    # # Consume specific exporters by writing temp files if necessary
-    # for stmt_name, xml_value in xml_result.items():
-    #     # Load current gen_stmt with corresponding targets
-    #     current_stmt = stmt.retrieve_sub_statement_by_fullname(stmt_name)
-    #     if current_stmt is None:
-    #         raise ValueError(f"Cannot find element <generate> '{stmt_name}'")
-
     # Consume non-specific exporters
     _consume_outermost_gen_stmt_by_page(
         stmt,
@@ -302,6 +291,7 @@ def _pre_consume_product(stmt: GenerateStatement, dict_result: list[dict]) -> tu
     :param dict_result: Generated data.
     :return: Preprocessed product tuple.
     """
+    packed_result: tuple
     if getattr(stmt, "selector", False):
         packed_result = (stmt.name, dict_result, {"selector": stmt.selector})
     elif getattr(stmt, "type", False):
@@ -335,7 +325,7 @@ def _consume_outermost_gen_stmt_by_page(
 
     # Initialize start times for statements if this is the first page
     if page_info.page_idx == 0:  # Check if this is the first page
-        for stmt_full_name in result_dict.keys():
+        for stmt_full_name in result_dict:
             context._statement_start_times[stmt_full_name] = time.time()
 
     with gen_timer("export", report_logging, stmt.full_name) as timer_result:
@@ -371,7 +361,7 @@ def _finalize_and_export_consumers(context: Context, stmt: GenerateStatement) ->
         cache_key_prefix = f"{context.root.task_id}_{stmt.name}_"
         relevant_exporters = [
             exporters
-            for cache_key, exporters in context.root._task_exporters.items()
+            for cache_key, exporters in context.root.task_exporters.items()
             if cache_key.startswith(cache_key_prefix)
         ]
 
@@ -407,7 +397,7 @@ def _load_csv_file(
     ctx: SetupContext,
     file_path: Path,
     separator: str,
-    cyclic: bool,
+    cyclic: bool | None,
     start_idx: int,
     end_idx: int,
     source_scripted: bool,
@@ -426,6 +416,8 @@ def _load_csv_file(
     """
     from datamimic_ce.tasks.task_util import TaskUtil
 
+    cyclic = cyclic if cyclic is not None else False
+
     with file_path.open(newline="") as csvfile:
         reader = csv.DictReader(csvfile, delimiter=separator)
         pagination = (
@@ -437,12 +429,15 @@ def _load_csv_file(
 
         # if sourceScripted then evaluate python expression in csv
         if source_scripted:
-            return TaskUtil.evaluate_file_script_template(ctx=ctx, datas=result, prefix=prefix, suffix=suffix)
+            evaluated_result = TaskUtil.evaluate_file_script_template(
+                ctx=ctx, datas=result, prefix=prefix, suffix=suffix
+            )
+            return evaluated_result if isinstance(evaluated_result, list) else [evaluated_result]
 
         return result
 
 
-def _load_json_file(task_id: str, file_path: Path, cyclic: bool, start_idx: int, end_idx: int) -> list[dict]:
+def _load_json_file(task_id: str, file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
     """
     Load JSON content from file using skip and limit.
 
@@ -452,6 +447,8 @@ def _load_json_file(task_id: str, file_path: Path, cyclic: bool, start_idx: int,
     :param end_idx: Ending index.
     :return: List of dictionaries representing JSON objects.
     """
+    cyclic = cyclic if cyclic is not None else False
+
     # Try to load JSON data from InMemoryCache
     in_mem_cache = InMemoryCache()
     # Add task_id to cache_key for testing lib without platform
@@ -476,7 +473,7 @@ def _load_json_file(task_id: str, file_path: Path, cyclic: bool, start_idx: int,
     return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
 
 
-def _load_xml_file(file_path: Path, cyclic: bool, start_idx: int, end_idx: int) -> list[dict]:
+def _load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
     """
     Load XML content from file using skip and limit.
 
@@ -486,18 +483,33 @@ def _load_xml_file(file_path: Path, cyclic: bool, start_idx: int, end_idx: int) 
     :param end_idx: Ending index.
     :return: List of dictionaries representing XML items.
     """
+    cyclic = cyclic if cyclic is not None else False
     # Read the XML data from a file
     with file_path.open("r") as file:
         data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")
-        if data.get("list") and data.get("list").get("item"):
-            data = data["list"]["item"]
-        data = [data] if isinstance(data, dict) else data
+        # Handle the case where data might be None
+        if data is None:
+            return []
+
+        # Extract items from list structure if present
+        if isinstance(data, dict) and data.get("list") and data.get("list", {}).get("item"):
+            items = data["list"]["item"]
+        else:
+            items = data
+
+        # Convert single item to list if needed
+        if isinstance(items, OrderedDict):
+            items = [items]
+        elif not isinstance(items, list):
+            items = []
+
+        # Apply pagination if needed
         pagination = (
             DataSourcePagination(start_idx, end_idx - start_idx)
             if (start_idx is not None and end_idx is not None)
             else None
         )
-        return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
+        return DataSourceUtil.get_cyclic_data_list(data=items, cyclic=cyclic, pagination=pagination)
 
 
 def _evaluate_selector_script(context: Context, stmt: GenerateStatement):
@@ -510,7 +522,7 @@ def _evaluate_selector_script(context: Context, stmt: GenerateStatement):
     """
     from datamimic_ce.tasks.task_util import TaskUtil
 
-    selector = stmt.selector
+    selector = stmt.selector or ""
     prefix = stmt.variable_prefix or context.root.default_variable_prefix
     suffix = stmt.variable_suffix or context.root.default_variable_suffix
     return TaskUtil.evaluate_variable_concat_prefix_suffix(context, selector, prefix=prefix, suffix=suffix)
@@ -526,7 +538,7 @@ def gen_timer(process: Literal["generate", "export", "process"], report_logging:
     :param product_name: Name of the product being processed.
     :return: Context manager.
     """
-    timer_result: Dict = {}
+    timer_result: dict = {}
     # Ignore timer if report_logging is False
     if not report_logging:
         yield timer_result
@@ -554,7 +566,7 @@ def gen_timer(process: Literal["generate", "export", "process"], report_logging:
         )
 
 
-class GenerateTask(Task):
+class GenerateTask(CommonSubTask):
     """
     Task class for generating data based on the GenerateStatement.
 
@@ -588,7 +600,9 @@ class GenerateTask(Task):
             if self.statement.selector:
                 # Evaluate script selector
                 selector = _evaluate_selector_script(context=context, stmt=self._statement)
-                client = root_context.get_client_by_id(self.statement.source)
+                client = (
+                    root_context.get_client_by_id(self.statement.source) if self.statement.source is not None else None
+                )
                 if isinstance(client, DatabaseClient):
                     count = client.count_query_length(selector)
                 else:
@@ -690,7 +704,7 @@ class GenerateTask(Task):
         self,
         setup_ctx: SetupContext,
         page_size: int,
-        single_process_execute_function: Callable[[tuple], None],
+        single_process_execute_function: Callable[[tuple], dict | None],
     ):
         """
         Multi-process page generation and consumption of products.
@@ -813,7 +827,7 @@ class GenerateTask(Task):
             for child_stmt in statement.sub_statements:
                 GenerateTask._scan_data_source(ctx, child_stmt)
 
-    def execute(self, context: SetupContext) -> dict[str, list] | None:
+    def execute(self, context: SetupContext | GenIterContext) -> dict[str, list] | None:
         """
         Execute generate task. If gen_stmt is inner, return generated product; otherwise, consume them.
 
@@ -871,7 +885,8 @@ class GenerateTask(Task):
                 for page_index, page_tuple in enumerate(index_chunk):
                     start, end = page_tuple
                     logger.info(
-                        f"Processing {end - start:,} product '{self.statement.name}' on page {page_index + 1}/{len(index_chunk)} in a single process"
+                        f"Processing {end - start:,} product '{self.statement.name}' on page "
+                        f"{page_index + 1}/{len(index_chunk)} in a single process"
                     )
                     # Generate product
                     result = self._sp_generate(context, start, end)
@@ -898,6 +913,8 @@ class GenerateTask(Task):
         else:
             # Do not apply process by page for inner gen_stmt
             return self._sp_generate(context, 0, count)
+
+        return None
 
     @staticmethod
     def convert_xml_dict_to_json_dict(xml_dict: dict):

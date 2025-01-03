@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+from typing import Any
 from xml.etree.ElementTree import Element
 
 from datamimic_ce.constants.element_constants import EL_ECHO
@@ -30,7 +31,7 @@ class EchoParser(StatementParser):
             class_factory_util=class_factory_util,
         )
 
-    def parse(self) -> EchoStatement:
+    def parse(self, **kwargs: Any) -> EchoStatement:
         """
         Parse element "echo" to EchoStatement
         :return:

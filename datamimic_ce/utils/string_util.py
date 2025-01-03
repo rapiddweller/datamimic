@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from ast import literal_eval
+from typing import Any
 
 
 class StringUtil:
@@ -21,7 +22,7 @@ class StringUtil:
         return original_string[:index_of_opening_parenthesis] if index_of_opening_parenthesis != -1 else original_string
 
     @staticmethod
-    def parse_constructor_string(constructor_string: str) -> tuple[str, dict[str, any]]:
+    def parse_constructor_string(constructor_string: str) -> tuple[str, dict[str, Any]]:
         """
         Get entity name and parameters from constructor
 

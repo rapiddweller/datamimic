@@ -8,13 +8,12 @@ import logging
 import multiprocessing
 import os
 import sys
-from datetime import datetime
 
 from datamimic_ce.config import settings
 
 
 def setup_logger(logger_name, task_id, level=logging.INFO):
-    l = logging.getLogger(logger_name)
+    current_logger = logging.getLogger(logger_name)
     logging.addLevelName(logging.DEBUG, "DEBUG")
     logging.addLevelName(logging.INFO, "INFO ")
     logging.addLevelName(logging.WARNING, "WARN ")
@@ -29,17 +28,18 @@ def setup_logger(logger_name, task_id, level=logging.INFO):
     )
 
     # Avoid adding duplicate stream handlers
-    if not any(isinstance(handler, logging.StreamHandler) for handler in l.handlers):
+    if not any(isinstance(handler, logging.StreamHandler) for handler in current_logger.handlers):
         stream_handler = logging.StreamHandler(sys.stdout)
         stream_handler.setFormatter(formatter)
-        l.setLevel(level)
-        l.addHandler(stream_handler)
+        current_logger.setLevel(level)
+        current_logger.addHandler(stream_handler)
 
-    l.propagate = False  # Avoid propagation to the parent logger
+    current_logger.propagate = False  # Avoid propagation to the parent logger
 
 
 def get_current_process_name():
-    # Get process information for logging purposes (e.g., process name) and WORKER should have WORKER-PID    current_process = multiprocessing.current_process()
+    # Get process information for logging purposes (e.g., process name) and WORKER should have WORKER-PID
+    # current_process = multiprocessing.current_process()
     current_process = multiprocessing.current_process()
     pid = os.getpid()
     if current_process.name == "MainProcess":

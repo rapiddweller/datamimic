@@ -4,7 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.constants.convention_constants import NAME_SEPARATOR
 from datamimic_ce.contexts.context import Context
@@ -42,6 +41,18 @@ class GenerateStatement(CompositeStatement):
         self._num_process = model.num_process
 
     @property
+    def name(self) -> str:
+        if self._name is None:
+            raise ValueError("Error while parsing element <generate>: 'name' cannot be None")
+        return self._name
+
+    @property
+    def full_name(self) -> str:
+        if self._full_name is None:
+            raise ValueError("Error while parsing element <generate>: 'full_name' cannot be None")
+        return self._full_name
+
+    @property
     def count(self):
         return self._count
 
@@ -55,27 +66,27 @@ class GenerateStatement(CompositeStatement):
         return StatementUtil.get_int_count(count=self._count, ctx=ctx)
 
     @property
-    def source(self) -> str:
+    def source(self) -> str | None:
         return self._source
 
     @property
-    def cyclic(self) -> bool:
+    def cyclic(self) -> bool | None:
         return self._cyclic
 
     @property
-    def source_script(self) -> bool:
+    def source_script(self) -> bool | None:
         return self._source_script
 
     @property
-    def type(self) -> str:
+    def type(self) -> str | None:
         return self._type
 
     @property
-    def selector(self) -> str:
+    def selector(self) -> str | None:
         return self._selector
 
     @property
-    def separator(self) -> str:
+    def separator(self) -> str | None:
         return self._separator
 
     @property
@@ -83,51 +94,51 @@ class GenerateStatement(CompositeStatement):
         return self._targets
 
     @property
-    def page_size(self) -> int:
+    def page_size(self) -> int | None:
         return self._page_size
 
     @property
-    def source_uri(self) -> str:
+    def source_uri(self) -> str | None:
         return self._source_uri
 
     @property
-    def container(self) -> str:
+    def container(self) -> str | None:
         return self._container
 
     @property
-    def storage_id(self) -> str:
+    def storage_id(self) -> str | None:
         return self._storage_id
 
     @property
-    def multiprocessing(self) -> bool:
+    def multiprocessing(self) -> bool | None:
         return self._mp
 
     @property
-    def export_uri(self) -> str:
+    def export_uri(self) -> str | None:
         return self._export_uri
 
     @property
-    def distribution(self) -> str:
+    def distribution(self) -> str | None:
         return self._distribution
 
     @property
-    def variable_prefix(self) -> str:
+    def variable_prefix(self) -> str | None:
         return self._variable_prefix
 
     @property
-    def variable_suffix(self) -> str:
+    def variable_suffix(self) -> str | None:
         return self._variable_suffix
 
     @property
-    def converter(self) -> str:
+    def converter(self) -> str | None:
         return self._converter
 
     @property
-    def bucket(self) -> str:
+    def bucket(self) -> str | None:
         return self._bucket
 
     @property
-    def num_process(self) -> int:
+    def num_process(self) -> int | None:
         return self._num_process
 
     def contain_mongodb_upsert(self, setup_context: SetupContext) -> bool:
@@ -144,7 +155,7 @@ class GenerateStatement(CompositeStatement):
                     return True
         return False
 
-    def retrieve_sub_statement_by_fullname(self, name: str) -> "GenerateStatement":
+    def retrieve_sub_statement_by_fullname(self, name: str):
         """
         Review sub GenerateStatement by statement fullname
         :param name:

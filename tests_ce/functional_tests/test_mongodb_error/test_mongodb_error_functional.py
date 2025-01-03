@@ -7,8 +7,6 @@
 
 from pathlib import Path
 
-from bson import ObjectId
-
 from datamimic_ce.data_mimic_test import DataMimicTest
 
 

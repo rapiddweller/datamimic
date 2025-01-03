@@ -25,7 +25,6 @@ class SetupTask:
         test_result_storage: TestResultExporter | None,
         descriptor_dir: Path,
         class_factory_util: BaseClassFactoryUtil,
-        use_mp: bool = None,
     ):
         self._descriptor_dir = descriptor_dir
         self._setup_stmt = setup_stmt
@@ -36,7 +35,7 @@ class SetupTask:
         self._test_mode = test_mode
         self._test_result_storage = test_result_storage
         # Assign default setup config value
-        self._use_mp = use_mp
+        self._use_mp = self._setup_stmt.use_mp
         self._default_separator = setup_stmt.default_separator or "|"
         self._default_locale = setup_stmt.default_locale or "en"
         self._default_dataset = setup_stmt.default_dataset or "US"
@@ -50,7 +49,7 @@ class SetupTask:
             class_factory_util=self._class_factory_util,
             memstore_manager=self._memstore_manager,
             task_id=self._task_id,
-            use_mp=self._setup_stmt.use_mp,
+            use_mp=self._use_mp,
             properties=self._properties,
             test_mode=self._test_mode,
             descriptor_dir=self._descriptor_dir,

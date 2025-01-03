@@ -27,18 +27,18 @@ class PhoneNumberGenerator(Generator):
         area_code: str | None = None,
         is_mobile: bool = False,
     ):
-        self._dataset = dataset.upper()
+        self._dataset = (dataset or "US").upper()
         prefix_path = Path(__file__).parent.parent
         country_file_path = prefix_path.joinpath("entities/data/country.csv")
         try:
             with open(f"{country_file_path}") as file:
-                reader = csv.reader(file, delimiter=",")
+                country_reader = csv.reader(file, delimiter=",")
                 country_codes = {}
-                for row in reader:
-                    country_codes[row[0]] = row[2]
+                for country_reader_row in country_reader:
+                    country_codes[country_reader_row[0]] = country_reader_row[2]
             self._country_codes = country_codes
-        except FileNotFoundError:
-            raise FileNotFoundError(f"File not found: {country_file_path}")
+        except FileNotFoundError as err:
+            raise FileNotFoundError(f"File not found: {country_file_path}") from err
 
         # use later when generate
         self._is_mobile = is_mobile
@@ -53,10 +53,10 @@ class PhoneNumberGenerator(Generator):
 
                 try:
                     with open(f"{city_file_path}") as file:
-                        reader = csv.DictReader(file, delimiter=";")
+                        city_reader = csv.DictReader(file, delimiter=";")
                         area_codes = []
-                        for row in reader:
-                            area_codes.append(row["areaCode"])
+                        for city_reader_row in city_reader:
+                            area_codes.append(city_reader_row["areaCode"])
                     # only get max 100 data
                     self._area_data = random.sample(area_codes, 100) if len(area_codes) > 100 else area_codes
 
@@ -66,10 +66,10 @@ class PhoneNumberGenerator(Generator):
                     city_file_path = prefix_path.joinpath("entities/data/city/city_US.csv")
 
                     with open(f"{city_file_path}") as file:
-                        reader = csv.DictReader(file, delimiter=";")
+                        city_reader = csv.DictReader(file, delimiter=";")
                         area_codes = []
-                        for row in reader:
-                            area_codes.append(row["areaCode"])
+                        for city_reader_row in city_reader:
+                            area_codes.append(city_reader_row["areaCode"])
                     # only get max 100 data
                     self._area_data = random.sample(area_codes, 100) if len(area_codes) > 100 else area_codes
                     self._dataset = "US"

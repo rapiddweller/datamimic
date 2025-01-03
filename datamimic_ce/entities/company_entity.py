@@ -5,7 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import random
+from collections.abc import Callable
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 
@@ -103,7 +105,7 @@ class CompanyEntity(Entity):
 
         """
         super().__init__(locale, dataset)
-
+        self._dataset = dataset
         # Load file data
         self._sector = FileUtil.read_csv_having_single_column(
             Path(__file__).parent / f"data/organization/sector_{self._locale}.csv",
@@ -148,7 +150,7 @@ class CompanyEntity(Entity):
         }
         self._field_generator = {}
         for key, val in generator_fn_dict.items():
-            self._field_generator[key] = FieldGenerator(val)
+            self._field_generator[key] = FieldGenerator(cast(Callable, val))
 
     @property
     def id(self):

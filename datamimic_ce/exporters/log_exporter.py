@@ -30,7 +30,8 @@ class LogExporter(Exporter):
         if len(data) > self.MAX_ITEM_TO_LOG:
             logger.info(f"{self.__class__.__name__} {name}: {len(data) - self.MAX_ITEM_TO_LOG} rows are not printed")
             logger.info(
-                f"{self.__class__.__name__} has a default limit of {self.MAX_ITEM_TO_LOG} items.For larger datasets, consider using other exporter such as CSV or TXT."
+                f"{self.__class__.__name__} has a default limit of {self.MAX_ITEM_TO_LOG} items. "
+                f"For larger datasets, consider using other exporter such as CSV or TXT."
             )
 
         logger.info(f"{ self.__class__.__name__ } - Close")

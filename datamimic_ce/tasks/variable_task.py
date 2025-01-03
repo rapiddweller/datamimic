@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from collections.abc import Iterator
-from typing import Any
+from typing import Any, Final
 
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.constants.attribute_constants import (
@@ -18,13 +18,12 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VALUES,
 )
 from datamimic_ce.constants.element_constants import EL_VARIABLE
+from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_util import DataSourceUtil
-from datamimic_ce.data_sources.weighted_entity_data_source import (
-    WeightedEntityDataSource,
-)
+from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntityDataSource
 from datamimic_ce.entities.address_entity import AddressEntity
 from datamimic_ce.entities.bank_account_entity import BankAccountEntity
 from datamimic_ce.entities.bank_entity import BankEntity
@@ -42,25 +41,26 @@ from datamimic_ce.utils.string_util import StringUtil
 
 class VariableTask(KeyVariableTask):
     _iterator: Iterator[Any] | None
-    _ITERATOR_MODE = "iterator"
-    _ENTITY_MODE = "entity_builder"
-    _WEIGHTED_ENTITY_MODE = "weighted_entity"
-    _ITERATION_SELECTOR_MODE = "iteration_selector"
-    _RANDOM_DISTRIBUTION_MODE = "random_distribution"
-    _LAZY_ITERATOR_MODE = "lazy_iterator"
+    _ITERATOR_MODE: Final = "iterator"
+    _ENTITY_MODE: Final = "entity_builder"
+    _WEIGHTED_ENTITY_MODE: Final = "weighted_entity"
+    _ITERATION_SELECTOR_MODE: Final = "iteration_selector"
+    _RANDOM_DISTRIBUTION_MODE: Final = "random_distribution"
+    _LAZY_ITERATOR_MODE: Final = "lazy_iterator"
 
     def __init__(
         self,
         ctx: SetupContext,
         statement: VariableStatement,
-        pagination: DataSourcePagination,
+        pagination: DataSourcePagination | None,
     ):
         super().__init__(ctx, statement, pagination)
         self._source_script = (
             statement.source_script if statement.source_script is not None else bool(ctx.default_source_scripted)
         )
+        self._statement: VariableStatement = statement
         descriptor_dir = ctx.root.descriptor_dir
-        seed: int | None = None
+        seed: int
         file_data: list[dict[str, Any]] | None = None
         self._random_items_iterator = None
         is_random_distribution = self.statement.distribution in ("random", None)
@@ -102,6 +102,8 @@ class VariableTask(KeyVariableTask):
                 # Handle static selector
                 else:
                     # Evaluate script selector
+                    if self._selector is None:
+                        raise ValueError("No selector value in statement: {self._statement.name}")
                     selector = TaskUtil.evaluate_variable_concat_prefix_suffix(
                         context=ctx,
                         expr=self._selector,
@@ -128,11 +130,11 @@ class VariableTask(KeyVariableTask):
                                 len_data = client.count_query_length(selector)
                             file_data = client.get_cyclic_data(
                                 selector,
-                                statement.cyclic,
+                                statement.cyclic or False,
                                 len_data,
                                 pagination,
                             )
-                        self._iterator = iter(file_data)
+                        self._iterator = iter(file_data) if file_data is not None else None
                         self._mode = self._ITERATOR_MODE
             else:
                 # Load data from csv or json file
@@ -168,7 +170,7 @@ class VariableTask(KeyVariableTask):
                         # in case of dbms product_type reflects the table name
                         product_type = statement.type or statement.name
                         # TODO: check if pagination is needed
-                        file_data = client.get_by_page_with_type(product_type)
+                        file_data = client.get_by_page_with_type(product_type) if product_type is not None else None
                     # Get data from memstore
                     elif ctx.memstore_manager.contain(source_str):
                         product_type = statement.type or statement.name
@@ -187,14 +189,18 @@ class VariableTask(KeyVariableTask):
                         self._mode = self._LAZY_ITERATOR_MODE
                     else:
                         if is_random_distribution:
-                            self._random_items_iterator = iter(
-                                DataSourceUtil.get_shuffled_data_with_cyclic(
-                                    file_data, pagination, statement.cyclic, seed
+                            self._random_items_iterator = (
+                                iter(
+                                    DataSourceUtil.get_shuffled_data_with_cyclic(
+                                        file_data, pagination, statement.cyclic, seed
+                                    )
                                 )
+                                if file_data is not None
+                                else None
                             )
                             self._mode = self._RANDOM_DISTRIBUTION_MODE
                         else:
-                            self._iterator = iter(file_data)
+                            self._iterator = iter(file_data) if file_data is not None else None
                             self._mode = self._ITERATOR_MODE
         elif statement.entity is not None:
             # Create entity builder
@@ -230,9 +236,10 @@ class VariableTask(KeyVariableTask):
         return self._statement
 
     @staticmethod
-    def _get_entity(ctx: SetupContext, entity_name: str, locale: str, dataset: str, count: int):
+    def _get_entity(ctx: Context, entity_name: str, locale: str, dataset: str, count: int):
         entity_class_name, kwargs = StringUtil.parse_constructor_string(entity_name)
-        cls_factory_util = ctx.class_factory_util
+        if isinstance(ctx, SetupContext) and hasattr(ctx, "class_factory_util"):
+            cls_factory_util = ctx.class_factory_util
         if entity_class_name == "Person":
             return PersonEntity(cls_factory_util, dataset=dataset, count=count, locale=locale, **kwargs)
         if entity_class_name == "Company":
@@ -257,7 +264,7 @@ class VariableTask(KeyVariableTask):
         else:
             raise ValueError(f"Entity {entity_name} is not supported.")
 
-    def execute(self, ctx: GenIterContext | SetupContext) -> None:
+    def execute(self, ctx: Context) -> None:
         """
         Generate data for element <variable>
         """
@@ -271,6 +278,8 @@ class VariableTask(KeyVariableTask):
         elif self._mode == self._WEIGHTED_ENTITY_MODE:
             value = self._weighted_data_source.generate()
         elif self._mode == self._ITERATION_SELECTOR_MODE:
+            if self._selector is None:
+                raise ValueError(f"No selector value in statement: {self._statement.name}")
             selector = TaskUtil.evaluate_variable_concat_prefix_suffix(
                 context=ctx,
                 expr=self._selector,
@@ -280,10 +289,15 @@ class VariableTask(KeyVariableTask):
             value = self._client.get_by_page_with_query(selector)
         elif self._mode == self._RANDOM_DISTRIBUTION_MODE:
             if self._random_items_iterator is None:
-                raise StopIteration("No more random items to iterate for statement: " + self._statement.name)
+                raise StopIteration(f"No more random items to iterate for statement: {self._statement.name}")
             value = next(self._random_items_iterator)
         elif self._mode == self._LAZY_ITERATOR_MODE:
-            is_random_distribution = self._statement.distribution in ("random", None)
+            if isinstance(self._statement, VariableStatement):
+                is_random_distribution = self._statement.distribution in ("random", None)
+            else:
+                is_random_distribution = False
+            if self._statement.source is None:
+                return None
             file_data = ctx.evaluate_python_expression(self._statement.source)
             if is_random_distribution:
                 self._random_items_iterator = iter(
@@ -318,10 +332,11 @@ class VariableTask(KeyVariableTask):
             ]:
                 # Default variable prefix and suffix
                 setup_ctx = ctx
-                while not isinstance(setup_ctx, SetupContext):
+                while isinstance(setup_ctx, GenIterContext):
                     setup_ctx = setup_ctx.parent
-                variable_prefix = self.statement.variable_prefix or setup_ctx.default_variable_prefix
-                variable_suffix = self.statement.variable_suffix or setup_ctx.default_variable_suffix
+                if isinstance(setup_ctx, SetupContext):
+                    variable_prefix = self.statement.variable_prefix or setup_ctx.default_variable_prefix
+                    variable_suffix = self.statement.variable_suffix or setup_ctx.default_variable_suffix
                 # Evaluate source script
                 value = TaskUtil.evaluate_file_script_template(ctx, value, variable_prefix, variable_suffix)
             else:
@@ -332,5 +347,5 @@ class VariableTask(KeyVariableTask):
         # Add variable to context for later retrieving
         if isinstance(ctx, SetupContext):
             ctx.global_variables[self._statement.name] = value
-        else:
+        elif isinstance(ctx, GenIterContext):
             ctx.current_variables[self._statement.name] = value

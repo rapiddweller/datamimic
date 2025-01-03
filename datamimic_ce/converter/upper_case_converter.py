@@ -17,6 +17,7 @@ class UpperCaseConverter(Converter):
     def convert(self, value: Any) -> str:
         if not isinstance(value, str):
             raise ValueError(
-                f"Converter UpperCase expect datatype 'string', but got value {value} with invalid datatype {type(value)}"
+                f"Converter UpperCase expect datatype 'string', "
+                f"but got value {value} with invalid datatype {type(value)}"
             )
         return value.upper()
