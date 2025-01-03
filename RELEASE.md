@@ -3,6 +3,7 @@
 ## Overview
 
 This document describes the release workflow for DATAMIMIC. We use a streamlined approach where:
+
 - Development happens on the `development` branch
 - Releases are tagged on `development`
 - Main branch serves as a clean release history
@@ -16,6 +17,7 @@ This document describes the release workflow for DATAMIMIC. We use a streamlined
 ## Development Workflow
 
 1. **Feature Development**
+
 ```bash
 # Create feature branch from development
 git checkout development
@@ -32,6 +34,7 @@ git rebase origin/development
 ```
 
 2. **Feature Completion**
+
 ```bash
 # Ensure tests pass
 pytest
@@ -45,6 +48,7 @@ git push origin development
 ## Release Process
 
 1. **Prepare Release on Development**
+
 ```bash
 # Ensure development is clean
 git checkout development
@@ -57,10 +61,11 @@ git push origin development --tags
 ```
 
 2. **Update Main Branch**
+
 ```bash
 # Squash merge release to main
 git checkout main
-git merge --squash X.Y.Z
+git merge --squash development --strategy-option theirs
 git commit -m "release: X.Y.Z"
 git push origin main
 ```
@@ -68,6 +73,7 @@ git push origin main
 ## Version Numbering
 
 We follow semantic versioning (MAJOR.MINOR.PATCH):
+
 - MAJOR: Breaking changes
 - MINOR: New features, backward compatible
 - PATCH: Bug fixes, backward compatible
@@ -84,6 +90,7 @@ We follow semantic versioning (MAJOR.MINOR.PATCH):
    - Main branch is for historical record only
 
 3. **Rollback Process**
+
 ```bash
 # To rollback to a previous release
 git checkout main
@@ -94,6 +101,7 @@ git push --force-with-lease origin main
 ## Emergency Hotfix Process
 
 1. **Create Hotfix**
+
 ```bash
 # Create hotfix branch from latest release tag
 git checkout -b hotfix/DAT-XXX-description X.Y.Z
@@ -103,6 +111,7 @@ git commit -m "fix: critical issue"
 ```
 
 2. **Release Hotfix**
+
 ```bash
 # Tag on development
 git checkout development
@@ -112,7 +121,7 @@ git push origin development --tags
 
 # Update main
 git checkout main
-git merge --squash X.Y.Z+1
+git merge --squash development --strategy-option theirs
 git commit -m "release: X.Y.Z+1"
 git push origin main
 ```
