@@ -9,6 +9,8 @@ import traceback
 import uuid
 from pathlib import Path
 
+import ray
+
 from datamimic_ce.config import settings
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger, setup_logger
@@ -34,6 +36,8 @@ class DataMimic:
         """
         Initialize DataMimic with descriptor_path.
         """
+        ray.init()
+
         # Set up logger
         log_level = getattr(logging, args.log_level.upper(), logging.INFO) if args else logging.INFO
         setup_logger(logger_name=settings.DEFAULT_LOGGER, task_id=task_id, level=log_level)

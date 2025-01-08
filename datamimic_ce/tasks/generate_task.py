@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Literal
 
 import dill  # type: ignore
+import ray
 import xmltodict
 
 from datamimic_ce.clients.database_client import DatabaseClient
@@ -42,6 +43,7 @@ from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
 from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 
 
+@ray.remote
 def _wrapper(args):
     """
     Wrapper multiprocessing function to deserialize args and execute the generate function.
@@ -247,14 +249,14 @@ def _geniter_single_process_generate_and_consume_by_page(args: tuple) -> dict:
 
 
 def _consume_by_page(
-    stmt: GenerateStatement,
-    context: Context,
-    xml_result: dict,
-    page_idx: int,
-    page_size: int,
-    mp_idx: int | None,
-    mp_chunk_size: int | None,
-    is_last_page: bool,
+        stmt: GenerateStatement,
+        context: Context,
+        xml_result: dict,
+        page_idx: int,
+        page_size: int,
+        mp_idx: int | None,
+        mp_chunk_size: int | None,
+        is_last_page: bool,
 ) -> None:
     """
     Consume product by page.
@@ -302,11 +304,11 @@ def _pre_consume_product(stmt: GenerateStatement, dict_result: list[dict]) -> tu
 
 
 def _consume_outermost_gen_stmt_by_page(
-    stmt: GenerateStatement,
-    context: Context,
-    result_dict: dict,
-    page_info: MultiprocessingPageInfo,
-    is_last_page: bool,
+        stmt: GenerateStatement,
+        context: Context,
+        result_dict: dict,
+        page_info: MultiprocessingPageInfo,
+        is_last_page: bool,
 ) -> None:
     """
     Consume result_dict returned by outermost gen_stmt.
@@ -394,15 +396,15 @@ def _finalize_and_export_consumers(context: Context, stmt: GenerateStatement) ->
 
 
 def _load_csv_file(
-    ctx: SetupContext,
-    file_path: Path,
-    separator: str,
-    cyclic: bool | None,
-    start_idx: int,
-    end_idx: int,
-    source_scripted: bool,
-    prefix: str,
-    suffix: str,
+        ctx: SetupContext,
+        file_path: Path,
+        separator: str,
+        cyclic: bool | None,
+        start_idx: int,
+        end_idx: int,
+        source_scripted: bool,
+        prefix: str,
+        suffix: str,
 ) -> list[dict]:
     """
     Load CSV content from file with skip and limit.
@@ -620,12 +622,12 @@ class GenerateTask(CommonSubTask):
         return count
 
     def _prepare_mp_generate_args(
-        self,
-        setup_ctx: SetupContext,
-        single_process_execute_function: Callable,
-        count: int,
-        num_processes: int,
-        page_size: int,
+            self,
+            setup_ctx: SetupContext,
+            single_process_execute_function: Callable,
+            count: int,
+            num_processes: int,
+            page_size: int,
     ) -> list[tuple]:
         """
         Prepare arguments for multiprocessing function.
@@ -701,10 +703,10 @@ class GenerateTask(CommonSubTask):
         return result
 
     def _mp_page_process(
-        self,
-        setup_ctx: SetupContext,
-        page_size: int,
-        single_process_execute_function: Callable[[tuple], dict | None],
+            self,
+            setup_ctx: SetupContext,
+            page_size: int,
+            single_process_execute_function: Callable[[tuple], dict | None],
     ):
         """
         Multi-process page generation and consumption of products.
@@ -762,9 +764,11 @@ class GenerateTask(CommonSubTask):
             )
 
             # 4. Run multiprocessing Pool to handle the generation/consumption function for each chunk
-            with multiprocessing.Pool(processes=num_processes) as pool:
-                # Collect then merge result
-                mp_result_list = pool.map(_wrapper, arg_list)
+            ray_futures = [_wrapper.remote(args) for args in arg_list]
+            mp_result_list = ray.get(ray_futures)
+            # with multiprocessing.Pool(processes=num_processes) as pool:
+            #     # Collect then merge result
+            #     mp_result_list = pool.map(_wrapper, arg_list)
 
             # 5. Post-processing with consumer consumption for merged results across processes
             if post_consumer_list_instances:
