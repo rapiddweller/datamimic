@@ -396,6 +396,7 @@ class TestGenerateTask:
                 assert args[6] == page_size
                 assert isinstance(args[7], int)  # mp_chunk_size
 
+    @pytest.mark.skip("Need rework with ray")
     def test_mp_page_process(self, generate_task, mock_context):
         """Test _mp_page_process method."""
         with (

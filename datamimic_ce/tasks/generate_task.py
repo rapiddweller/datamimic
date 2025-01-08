@@ -44,6 +44,7 @@ from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 
 ray.init(ignore_reinit_error=True)
 
+
 @ray.remote
 def _wrapper(args):
     """

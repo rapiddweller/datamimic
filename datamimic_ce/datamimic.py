@@ -9,8 +9,6 @@ import traceback
 import uuid
 from pathlib import Path
 
-import ray
-
 from datamimic_ce.config import settings
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger, setup_logger
