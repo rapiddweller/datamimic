@@ -36,8 +36,6 @@ class DataMimic:
         """
         Initialize DataMimic with descriptor_path.
         """
-        ray.init()
-
         # Set up logger
         log_level = getattr(logging, args.log_level.upper(), logging.INFO) if args else logging.INFO
         setup_logger(logger_name=settings.DEFAULT_LOGGER, task_id=task_id, level=log_level)

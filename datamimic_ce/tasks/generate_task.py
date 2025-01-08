@@ -42,6 +42,7 @@ from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
 from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 
+ray.init(ignore_reinit_error=True)
 
 @ray.remote
 def _wrapper(args):
