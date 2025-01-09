@@ -45,39 +45,8 @@ from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 ray.init(ignore_reinit_error=True)
 
 
-@ray.remote
-def _wrapper(args):
-    """
-    Wrapper multiprocessing function to deserialize args and execute the generate function.
-
-    :param args: Tuple containing necessary arguments.
-    :return: Result from single_process_execute_function.
-    """
-    (
-        local_ctx,
-        statement,
-        chunk_data,
-        single_process_execute_function,
-        namespace_functions,
-        mp_idx,
-        page_size,
-        mp_chunk_size,
-    ) = args
-    # Re-initialize logging for this child process
-    loglevel = os.getenv("LOG_LEVEL", "INFO")
-    setup_logger_func = local_ctx.class_factory_util.get_setup_logger_func()
-    app_settings = local_ctx.class_factory_util.get_app_settings()
-    setup_logger_func(logger_name=app_settings.DEFAULT_LOGGER, task_id=local_ctx.task_id, level=loglevel)
-
-    # Deserialize utility functions
-    namespace_functions = dill.loads(namespace_functions)
-    local_ctx.namespace.update(namespace_functions)
-    local_ctx.generators = dill.loads(local_ctx.generators)
-
-    return single_process_execute_function((local_ctx, statement, chunk_data, mp_idx, page_size, mp_chunk_size))
-
-
-def _geniter_single_process_generate(args: tuple) -> dict[str, list]:
+def _geniter_single_process_generate(context: SetupContext | GenIterContext, stmt: GenerateStatement, page_start: int,
+                                     page_end: int) -> dict[str, list]:
     """
     (IMPORTANT: Only to be used as multiprocessing function) Generate product in each single process.
 
@@ -86,18 +55,15 @@ def _geniter_single_process_generate(args: tuple) -> dict[str, list]:
     """
 
     # Parse args
-    context: SetupContext | GenIterContext = args[0]
     root_context: SetupContext = context.root
-    stmt: GenerateStatement = args[1]
-    start_idx, end_idx = args[2]
 
     # Determine number of data to be processed
-    processed_data_count = end_idx - start_idx
-    pagination = DataSourcePagination(skip=start_idx, limit=processed_data_count)
+    processed_data_count = page_end - page_start
+    pagination = DataSourcePagination(skip=page_start, limit=processed_data_count)
 
     # Prepare loaded datasource pagination
-    load_start_idx = start_idx
-    load_end_idx = end_idx
+    load_start_idx = page_start
+    load_end_idx = page_end
     load_pagination: DataSourcePagination | None = pagination
 
     # Extract converter list
@@ -197,114 +163,6 @@ def _geniter_single_process_generate(args: tuple) -> dict[str, list]:
     return product_holder
 
 
-def _geniter_single_process_generate_and_consume_by_page(args: tuple) -> dict:
-    """
-    IMPORTANT: Used as multiprocessing page process function only.
-    Generate then consume product in each single process by page.
-
-    :param args: Tuple containing necessary arguments.
-    :return: Dictionary with generated products if needed.
-    """
-    context: SetupContext = args[0]
-    stmt: GenerateStatement = args[1]
-    mp_idx = args[3]
-    start_idx, end_idx = args[2]
-    page_size = args[4]
-    mp_chunk_size = args[5]
-
-    # Calculate page chunk
-    index_chunk = [(i, min(i + page_size, end_idx)) for i in range(start_idx, end_idx, page_size)]
-
-    # Check if product result should be returned on multiprocessing process
-    return_product_result = context.test_mode or any(
-        [context.memstore_manager.contain(consumer_str) for consumer_str in stmt.targets]
-    )
-    result: dict = {}
-
-    # Generate and consume product by page
-    args_list = list(args)
-    for page_idx, index_tuple in enumerate(index_chunk):
-        # Index tuple for each page
-        args_list[2] = index_tuple
-        updated_args = tuple(args_list)
-
-        result_dict = _geniter_single_process_generate(updated_args)
-        _consume_by_page(
-            stmt,
-            context,
-            result_dict,
-            page_idx,
-            page_size,
-            mp_idx,
-            mp_chunk_size,
-            page_idx == len(index_chunk) - 1,
-        )
-        if return_product_result:
-            for key, value in result_dict.items():
-                result[key] = result.get(key, []) + value
-
-        # Manual garbage collection
-        del result_dict
-        # gc.collect()
-
-    return result
-
-
-def _consume_by_page(
-        stmt: GenerateStatement,
-        context: Context,
-        xml_result: dict,
-        page_idx: int,
-        page_size: int,
-        mp_idx: int | None,
-        mp_chunk_size: int | None,
-        is_last_page: bool,
-) -> None:
-    """
-    Consume product by page.
-
-    :param stmt: GenerateStatement instance.
-    :param context: Context instance.
-    :param xml_result: Generated product data.
-    :param page_idx: Current page index.
-    :param page_size: Page size for processing.
-    :param mp_idx: Multiprocessing index.
-    :param mp_chunk_size: Chunk size for multiprocessing.
-    :return: None
-    """
-    # Consume non-specific exporters
-    _consume_outermost_gen_stmt_by_page(
-        stmt,
-        context,
-        xml_result,
-        MultiprocessingPageInfo(
-            mp_idx,
-            mp_chunk_size,
-            page_idx,
-            page_size,
-        ),
-        is_last_page,
-    )
-
-
-def _pre_consume_product(stmt: GenerateStatement, dict_result: list[dict]) -> tuple:
-    """
-    Preprocess consumer data to adapt some special consumer (e.g., MongoDB upsert).
-
-    :param stmt: GenerateStatement instance.
-    :param dict_result: Generated data.
-    :return: Preprocessed product tuple.
-    """
-    packed_result: tuple
-    if getattr(stmt, "selector", False):
-        packed_result = (stmt.name, dict_result, {"selector": stmt.selector})
-    elif getattr(stmt, "type", False):
-        packed_result = (stmt.name, dict_result, {"type": stmt.type})
-    else:
-        packed_result = (stmt.name, dict_result)
-    return packed_result
-
-
 def _consume_outermost_gen_stmt_by_page(
         stmt: GenerateStatement,
         context: Context,
@@ -360,6 +218,7 @@ def _finalize_and_export_consumers(context: Context, stmt: GenerateStatement) ->
     :param stmt: GenerateStatement instance.
     :return: None
     """
+    # TODO: manage client life cycle
     if hasattr(context.root, "_task_exporters"):
         # Find all exporters for this statement
         cache_key_prefix = f"{context.root.task_id}_{stmt.name}_"
@@ -395,141 +254,6 @@ def _finalize_and_export_consumers(context: Context, stmt: GenerateStatement) ->
 
         # Clear the cache after finalization
         context.root._task_exporters = {}
-
-
-def _load_csv_file(
-        ctx: SetupContext,
-        file_path: Path,
-        separator: str,
-        cyclic: bool | None,
-        start_idx: int,
-        end_idx: int,
-        source_scripted: bool,
-        prefix: str,
-        suffix: str,
-) -> list[dict]:
-    """
-    Load CSV content from file with skip and limit.
-
-    :param file_path: Path to the CSV file.
-    :param separator: CSV delimiter.
-    :param cyclic: Whether to cycle through data.
-    :param start_idx: Starting index.
-    :param end_idx: Ending index.
-    :return: List of dictionaries representing CSV rows.
-    """
-    from datamimic_ce.tasks.task_util import TaskUtil
-
-    cyclic = cyclic if cyclic is not None else False
-
-    with file_path.open(newline="") as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=separator)
-        pagination = (
-            DataSourcePagination(start_idx, end_idx - start_idx)
-            if (start_idx is not None and end_idx is not None)
-            else None
-        )
-        result = DataSourceUtil.get_cyclic_data_list(data=list(reader), cyclic=cyclic, pagination=pagination)
-
-        # if sourceScripted then evaluate python expression in csv
-        if source_scripted:
-            evaluated_result = TaskUtil.evaluate_file_script_template(
-                ctx=ctx, datas=result, prefix=prefix, suffix=suffix
-            )
-            return evaluated_result if isinstance(evaluated_result, list) else [evaluated_result]
-
-        return result
-
-
-def _load_json_file(task_id: str, file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
-    """
-    Load JSON content from file using skip and limit.
-
-    :param file_path: Path to the JSON file.
-    :param cyclic: Whether to cycle through data.
-    :param start_idx: Starting index.
-    :param end_idx: Ending index.
-    :return: List of dictionaries representing JSON objects.
-    """
-    cyclic = cyclic if cyclic is not None else False
-
-    # Try to load JSON data from InMemoryCache
-    in_mem_cache = InMemoryCache()
-    # Add task_id to cache_key for testing lib without platform
-    cache_key = str(file_path) if task_id in str(file_path) else f"{task_id}_{str(file_path)}"
-    cache_data = in_mem_cache.get(cache_key)
-    if cache_data:
-        data = json.loads(cache_data)
-    else:
-        # Read the JSON data from a file and store it in redis
-        with file_path.open("r") as file:
-            data = json.load(file)
-        # Store data in redis for 24 hours
-        in_mem_cache.set(str(file_path), json.dumps(data))
-
-    if not isinstance(data, list):
-        raise ValueError(f"JSON file '{file_path.name}' must contain a list of objects")
-    pagination = (
-        DataSourcePagination(start_idx, end_idx - start_idx)
-        if (start_idx is not None and end_idx is not None)
-        else None
-    )
-    return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
-
-
-def _load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
-    """
-    Load XML content from file using skip and limit.
-
-    :param file_path: Path to the XML file.
-    :param cyclic: Whether to cycle through data.
-    :param start_idx: Starting index.
-    :param end_idx: Ending index.
-    :return: List of dictionaries representing XML items.
-    """
-    cyclic = cyclic if cyclic is not None else False
-    # Read the XML data from a file
-    with file_path.open("r") as file:
-        data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")
-        # Handle the case where data might be None
-        if data is None:
-            return []
-
-        # Extract items from list structure if present
-        if isinstance(data, dict) and data.get("list") and data.get("list", {}).get("item"):
-            items = data["list"]["item"]
-        else:
-            items = data
-
-        # Convert single item to list if needed
-        if isinstance(items, OrderedDict):
-            items = [items]
-        elif not isinstance(items, list):
-            items = []
-
-        # Apply pagination if needed
-        pagination = (
-            DataSourcePagination(start_idx, end_idx - start_idx)
-            if (start_idx is not None and end_idx is not None)
-            else None
-        )
-        return DataSourceUtil.get_cyclic_data_list(data=items, cyclic=cyclic, pagination=pagination)
-
-
-def _evaluate_selector_script(context: Context, stmt: GenerateStatement):
-    """
-    Evaluate script selector.
-
-    :param context: Context instance.
-    :param stmt: GenerateStatement instance.
-    :return: Evaluated selector.
-    """
-    from datamimic_ce.tasks.task_util import TaskUtil
-
-    selector = stmt.selector or ""
-    prefix = stmt.variable_prefix or context.root.default_variable_prefix
-    suffix = stmt.variable_suffix or context.root.default_variable_suffix
-    return TaskUtil.evaluate_variable_concat_prefix_suffix(context, selector, prefix=prefix, suffix=suffix)
 
 
 @contextmanager
@@ -603,7 +327,8 @@ class GenerateTask(CommonSubTask):
             # Check if "selector" is defined with "source"
             if self.statement.selector:
                 # Evaluate script selector
-                selector = _evaluate_selector_script(context=context, stmt=self._statement)
+                from datamimic_ce.tasks.task_util import TaskUtil
+                selector = TaskUtil.evaluate_selector_script(context=context, stmt=self._statement)
                 client = (
                     root_context.get_client_by_id(self.statement.source) if self.statement.source is not None else None
                 )
@@ -622,168 +347,6 @@ class GenerateTask(CommonSubTask):
             count = 1
 
         return count
-
-    def _prepare_mp_generate_args(
-            self,
-            setup_ctx: SetupContext,
-            single_process_execute_function: Callable,
-            count: int,
-            num_processes: int,
-            page_size: int,
-    ) -> list[tuple]:
-        """
-        Prepare arguments for multiprocessing function.
-
-        :param setup_ctx: SetupContext instance.
-        :param single_process_execute_function: Function to execute in single process.
-        :param count: Total number of records.
-        :param num_processes: Number of processes.
-        :param page_size: Page size for processing.
-        :return: List of argument tuples.
-        """
-        # Determine chunk size
-        mp_chunk_size = math.ceil(count / num_processes)
-
-        # Log processing info
-        logger.info(
-            f"Run {type(self.statement).__name__} task for entity {self.statement.name} with "
-            f"{num_processes} processes in parallel and chunk size: {mp_chunk_size}"
-        )
-
-        # Determine chunk indices
-        chunk_data_list = self._get_chunk_indices(mp_chunk_size, count)
-
-        # Split namespace functions from current namespace
-        namespace_functions = {k: v for k, v in setup_ctx.namespace.items() if callable(v)}
-        for func in namespace_functions:
-            setup_ctx.namespace.pop(func)
-
-        # Serialize namespace functions
-        setup_ctx.namespace_functions = dill.dumps(namespace_functions)
-
-        setup_ctx.generators = dill.dumps(setup_ctx.generators)
-
-        # Close RDBMS engine
-        for _key, value in setup_ctx.clients.items():
-            if isinstance(value, RdbmsClient) and value.engine is not None:
-                value.engine.dispose()
-                value.engine = None
-
-        # List of arguments to be processed in parallel
-        return [
-            (
-                setup_ctx,
-                self._statement,
-                chunk_data_list[idx],
-                single_process_execute_function,
-                setup_ctx.namespace_functions,
-                idx,
-                page_size,
-                mp_chunk_size,
-            )
-            for idx in range(len(chunk_data_list))
-        ]
-
-    def _sp_generate(self, context: Context, start: int, end: int) -> dict[str, list]:
-        """
-        Single-process generate product.
-
-        :param context: Context instance.
-        :param start: Start index.
-        :param end: End index.
-        :return: Generated product data.
-        """
-        if end - start == 0:
-            return {}
-
-        report_logging = isinstance(context, SetupContext) and context.report_logging
-        with gen_timer("generate", report_logging, self.statement.full_name) as timer_result:
-            # Generate product
-            result = _geniter_single_process_generate((context, self._statement, (start, end)))
-            timer_result["records_count"] = len(result.get(self._statement.full_name, []))
-
-        return result
-
-    def _mp_page_process(
-            self,
-            setup_ctx: SetupContext,
-            page_size: int,
-            single_process_execute_function: Callable[[tuple], dict | None],
-    ):
-        """
-        Multi-process page generation and consumption of products.
-
-        This method divides the work across multiple processes, each of which generates and consumes
-        products in chunks. After multiprocessing, a post-processing step applies any necessary
-        consumer/exporter operations on the merged results from all processes.
-
-        :param setup_ctx: The setup context instance containing configurations and resources.
-        :param page_size: The page size for each process to handle per batch.
-        :param single_process_execute_function: The function each process will execute.
-        """
-        exporter_util = setup_ctx.root.class_factory_util.get_exporter_util()
-
-        # Start timer to measure entire process duration
-        with gen_timer("process", setup_ctx.report_logging, self.statement.full_name) as timer_result:
-            # 1. Determine the total record count and number of processes
-            count = self._determine_count(setup_ctx)
-            num_processes = self.statement.num_process or setup_ctx.num_process or multiprocessing.cpu_count()
-
-            timer_result["records_count"] = count
-
-            # 2. Prepare arguments for each process based on count, process count, and page size
-            arg_list = self._prepare_mp_generate_args(
-                setup_ctx,
-                single_process_execute_function,
-                count,
-                num_processes,
-                page_size,
-            )
-
-            # Debug log the chunks each process will handle
-            chunk_info = [args[2] for args in arg_list]
-            logger.debug(f"Start generating {count} products with {num_processes} processes, chunks: {chunk_info}")
-            # 3. Initialize any required post-process consumers, e.g., for testing or memory storage
-            post_consumer_list = []
-            # Add test result exporter if test mode is enabled
-            if setup_ctx.test_mode:
-                post_consumer_list.append(EXPORTER_TEST_RESULT_EXPORTER)
-            # Add memstore exporters
-            post_consumer_list.extend(
-                filter(
-                    lambda consumer_str: setup_ctx.memstore_manager.contain(consumer_str),
-                    self.statement.targets,
-                )
-            )
-
-            # Initialize exporters for each post-process consumer
-            _, post_consumer_list_instances = exporter_util.create_exporter_list(
-                setup_ctx, self.statement, post_consumer_list, None
-            )
-            logger.debug(
-                f"Post-consumer exporters initialized: "
-                f"{[consumer.__class__.__name__ for consumer in post_consumer_list_instances]}"
-            )
-
-            # 4. Run multiprocessing Pool to handle the generation/consumption function for each chunk
-            ray_futures = [_wrapper.remote(args) for args in arg_list]
-            mp_result_list = ray.get(ray_futures)
-            # with multiprocessing.Pool(processes=num_processes) as pool:
-            #     # Collect then merge result
-            #     mp_result_list = pool.map(_wrapper, arg_list)
-
-            # 5. Post-processing with consumer consumption for merged results across processes
-            if post_consumer_list_instances:
-                logger.debug("Processing merged results with post-consumers.")
-                for consumer in post_consumer_list_instances:
-                    for mp_result in mp_result_list:
-                        for key, value in mp_result.items():
-                            logger.debug(f"Consuming result for {key} with {consumer.__class__.__name__}")
-                            consumer.consume((key, value))
-
-            # 6. Clean up and finalize
-            del mp_result_list  # Free up memory from the merged results
-            logger.info("Completed multi-process page processing.")
 
     def _calculate_default_page_size(self, entity_count: int) -> int:
         """
@@ -840,87 +403,51 @@ class GenerateTask(CommonSubTask):
         :param context: Context instance.
         :return: Generated product data or None.
         """
-        self.pre_execute(context)
+        try:
+            # Pre-execute sub-tasks
+            self.pre_execute(context)
 
-        # Determine count of generate process
-        count = self._determine_count(context)
+            # Determine count of generate process
+            count = self._determine_count(context)
 
-        if count == 0:
-            return {self.statement.full_name: []}
+            # Early return if count is 0
+            if count == 0:
+                return {self.statement.full_name: []}
 
-        page_size = self._calculate_default_page_size(count)
+            # Calculate page size for processing by page
+            page_size = self._calculate_default_page_size(count)
 
-        # Generate and export if gen_stmt is outermost (which has context as SetupContext)
-        exporter_util = context.root.class_factory_util.get_exporter_util()
-        if isinstance(context, SetupContext):
-            consumer_with_operations, consumer_without_operations = exporter_util.create_exporter_list(
-                setup_context=context,
-                stmt=self.statement,
-                targets=self.statement.targets,
-                page_info=None,
-            )
-            # Check for conditions to use multiprocessing
-            has_mongodb_delete = any(
-                [
-                    operation == "delete" and isinstance(consumer, MongoDBExporter)
-                    for consumer, operation in consumer_with_operations
-                ]
-            )
-            match self.statement.multiprocessing:
-                case None:
-                    use_mp = (not has_mongodb_delete) and context.use_mp
-                case _:
-                    use_mp = bool(self.statement.multiprocessing)
+            # Determine number of Ray workers
+            num_workers = int(self.statement.num_process or context.root.num_process or 1)
 
-            # Generate in multiprocessing
-            if use_mp:
-                # IMPORTANT: always use deep copied setup_ctx for mp to avoid modify original setup_ctx accidentally
-                copied_ctx = copy.deepcopy(context)
-                # Process data by page
-                logger.info(f"Processing by page with size {page_size} for '{self.statement.name}'")
-                self._mp_page_process(
-                    copied_ctx,
-                    page_size,
-                    _geniter_single_process_generate_and_consume_by_page,
-                )
-            # Generate and consume in single process
-            else:
-                # Process data by page in single process
-                index_chunk = self._get_chunk_indices(page_size, count)
-                logger.info(f"Processing {len(index_chunk)} pages for {count:,} products of '{self.statement.name}'")
-                for page_index, page_tuple in enumerate(index_chunk):
-                    start, end = page_tuple
-                    logger.info(
-                        f"Processing {end - start:,} product '{self.statement.name}' on page "
-                        f"{page_index + 1}/{len(index_chunk)} in a single process"
-                    )
-                    # Generate product
-                    result = self._sp_generate(context, start, end)
-                    # Consume by page
-                    _consume_by_page(
-                        self.statement,
-                        context,
-                        result,
-                        page_index,
-                        page_size,
-                        None,
-                        None,
-                        page_index == len(index_chunk) - 1,
-                    )
+            # Determine chunk size for each worker
+            chunk_size = math.ceil(count / num_workers)
 
-                    # Manual garbage collection to free memory
-                    del result
+            # Execute generate task using Ray
+            workers = [GenerateWorker.remote() for w in range(num_workers)]
+            chunks = [(i * chunk_size, min((i + 1) * chunk_size, count)) for i in range(num_workers)]
 
+            futures = []
+            for worker, (start, end) in zip(workers, chunks, strict=True):
+                logger.info(f"Generating chunk {start}-{end} with page size {page_size}")
+                context_copy = copy.deepcopy(context)
+                futures.append(worker.generate_by_chunk.remote(context_copy, self._statement, start, end, page_size))
+
+            results = ray.get(futures)
+
+            # Return results if inner gen_stmt
+            if isinstance(context, GenIterContext):
+                return results
+
+            # Execute lazy exporter if outermost gen_stmt
+            if isinstance(context, SetupContext):
+                # TODO: fulfill args
+                _consume_outermost_gen_stmt_by_page()
+
+        finally:
             # Clean temp directory on outermost gen_stmt
             for temp_dir in context.descriptor_dir.glob(f"temp_result_{context.task_id}*"):
                 shutil.rmtree(temp_dir)
-
-        # Just return product generated in single process if gen_stmt is inner one
-        else:
-            # Do not apply process by page for inner gen_stmt
-            return self._sp_generate(context, 0, count)
-
-        return None
 
     @staticmethod
     def convert_xml_dict_to_json_dict(xml_dict: dict):
@@ -995,3 +522,34 @@ class GenerateTask(CommonSubTask):
         for stmt in setup_stmt.sub_statements:
             task = task_util_cls.get_task_by_statement(root_context, stmt)
             task.execute(root_context)
+
+
+@ray.remote
+class GenerateWorker:
+    @staticmethod
+    def generate_by_chunk(context: SetupContext | GenIterContext, stmt: GenerateStatement, chunk_start: int,
+                          chunk_end: int, page_size: int) -> dict:
+        # Determine chunk data range, like (0, 1000), (1000, 2000), etc.
+        index_chunk = [(i, min(i + page_size, chunk_end)) for i in range(chunk_start, chunk_end, page_size)]
+
+        # Check if product result should be returned for test mode or memstore consumers
+        return_product_result = context.test_mode or any(
+            [context.memstore_manager.contain(consumer_str) for consumer_str in stmt.targets]
+        )
+        result: dict = {}
+
+        non_lazy_exporter = []
+
+        # Generate and consume product by page
+        for page_idx, index_tuple in enumerate(index_chunk):
+            # TODO: fulfill args
+            result_dict = _geniter_single_process_generate()
+            for exporter in non_lazy_exporter:
+                exporter.consume(result_dict)
+
+            # Collect result for later capture
+            if return_product_result:
+                for key, value in result_dict.items():
+                    result[key] = result.get(key, []) + value
+
+        return result

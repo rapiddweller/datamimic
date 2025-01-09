@@ -3,9 +3,13 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-
+import csv
+import json
 import re
-from typing import Any
+from pathlib import Path
+from typing import Any, OrderedDict
+
+import xmltodict
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
@@ -26,6 +30,7 @@ from datamimic_ce.converter.remove_none_or_empty_element_converter import Remove
 from datamimic_ce.converter.timestamp2date_converter import Timestamp2DateConverter
 from datamimic_ce.converter.upper_case_converter import UpperCaseConverter
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.data_sources.data_source_util import DataSourceUtil
 from datamimic_ce.enums.converter_enums import ConverterEnum
 from datamimic_ce.exporters.csv_exporter import CSVExporter
 from datamimic_ce.exporters.json_exporter import JsonExporter
@@ -64,7 +69,6 @@ from datamimic_ce.tasks.else_task import ElseTask
 from datamimic_ce.tasks.execute_task import ExecuteTask
 from datamimic_ce.tasks.generate_task import (
     GenerateTask,
-    _evaluate_selector_script,
     _load_csv_file,
     _load_json_file,
     _load_xml_file,
@@ -81,6 +85,7 @@ from datamimic_ce.tasks.mongodb_task import MongoDBTask
 from datamimic_ce.tasks.nested_key_task import NestedKeyTask
 from datamimic_ce.tasks.reference_task import ReferenceTask
 from datamimic_ce.tasks.task import Task
+from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
 from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 from datamimic_ce.utils.object_util import ObjectUtil
 
@@ -352,7 +357,7 @@ class TaskUtil:
             # Load data from MongoDB
             if isinstance(client, MongoDBClient):
                 if stmt.selector:
-                    selector = _evaluate_selector_script(context, stmt)
+                    selector = TaskUtil.evaluate_selector_script(context, stmt)
                     source_data = client.get_by_page_with_query(query=selector, pagination=load_pagination)
                 elif stmt.type:
                     source_data = client.get_by_page_with_type(collection_name=stmt.type, pagination=load_pagination)
@@ -370,7 +375,7 @@ class TaskUtil:
             # Load data from RDBMS
             elif isinstance(client, RdbmsClient):
                 if stmt.selector:
-                    selector = _evaluate_selector_script(context, stmt)
+                    selector = TaskUtil.evaluate_selector_script(context, stmt)
                     source_data = client.get_by_page_with_query(original_query=selector, pagination=load_pagination)
                 else:
                     source_data = client.get_by_page_with_type(
@@ -406,7 +411,12 @@ class TaskUtil:
 
         # Wrap product key and value into a tuple
         # for iterate database may have key, value, and other statement attribute info
-        json_product = _pre_consume_product(stmt, json_result)
+        if getattr(stmt, "selector", False):
+            json_product = (stmt.name, json_result, {"selector": stmt.selector})
+        elif getattr(stmt, "type", False):
+            json_product = (stmt.name, json_result, {"type": stmt.type})
+        else:
+            json_product = (stmt.name, json_result)
 
         # Create exporters cache in root context if it doesn't exist
         if not hasattr(root_context, "_task_exporters"):
@@ -468,3 +478,134 @@ class TaskUtil:
             except Exception as e:
                 logger.error(f"Error in consumer {type(consumer).__name__}: {str(e)}")
                 raise
+
+    @staticmethod
+    def evaluate_selector_script(context: Context, stmt: GenerateStatement):
+        """
+        Evaluate script selector.
+
+        :param context: Context instance.
+        :param stmt: GenerateStatement instance.
+        :return: Evaluated selector.
+        """
+        selector = stmt.selector or ""
+        prefix = stmt.variable_prefix or context.root.default_variable_prefix
+        suffix = stmt.variable_suffix or context.root.default_variable_suffix
+        return TaskUtil.evaluate_variable_concat_prefix_suffix(context, selector, prefix=prefix, suffix=suffix)
+
+    @staticmethod
+    def _load_csv_file(
+        ctx: SetupContext,
+        file_path: Path,
+        separator: str,
+        cyclic: bool | None,
+        start_idx: int,
+        end_idx: int,
+        source_scripted: bool,
+        prefix: str,
+        suffix: str,
+    ) -> list[dict]:
+        """
+        Load CSV content from file with skip and limit.
+
+        :param file_path: Path to the CSV file.
+        :param separator: CSV delimiter.
+        :param cyclic: Whether to cycle through data.
+        :param start_idx: Starting index.
+        :param end_idx: Ending index.
+        :return: List of dictionaries representing CSV rows.
+        """
+        cyclic = cyclic if cyclic is not None else False
+
+        with file_path.open(newline="") as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=separator)
+            pagination = (
+                DataSourcePagination(start_idx, end_idx - start_idx)
+                if (start_idx is not None and end_idx is not None)
+                else None
+            )
+            result = DataSourceUtil.get_cyclic_data_list(data=list(reader), cyclic=cyclic, pagination=pagination)
+
+            # if sourceScripted then evaluate python expression in csv
+            if source_scripted:
+                evaluated_result = TaskUtil.evaluate_file_script_template(
+                    ctx=ctx, datas=result, prefix=prefix, suffix=suffix
+                )
+                return evaluated_result if isinstance(evaluated_result, list) else [evaluated_result]
+
+            return result
+
+    @staticmethod
+    def _load_json_file(task_id: str, file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
+        """
+        Load JSON content from file using skip and limit.
+
+        :param file_path: Path to the JSON file.
+        :param cyclic: Whether to cycle through data.
+        :param start_idx: Starting index.
+        :param end_idx: Ending index.
+        :return: List of dictionaries representing JSON objects.
+        """
+        cyclic = cyclic if cyclic is not None else False
+
+        # Try to load JSON data from InMemoryCache
+        in_mem_cache = InMemoryCache()
+        # Add task_id to cache_key for testing lib without platform
+        cache_key = str(file_path) if task_id in str(file_path) else f"{task_id}_{str(file_path)}"
+        cache_data = in_mem_cache.get(cache_key)
+        if cache_data:
+            data = json.loads(cache_data)
+        else:
+            # Read the JSON data from a file and store it in redis
+            with file_path.open("r") as file:
+                data = json.load(file)
+            # Store data in redis for 24 hours
+            in_mem_cache.set(str(file_path), json.dumps(data))
+
+        if not isinstance(data, list):
+            raise ValueError(f"JSON file '{file_path.name}' must contain a list of objects")
+        pagination = (
+            DataSourcePagination(start_idx, end_idx - start_idx)
+            if (start_idx is not None and end_idx is not None)
+            else None
+        )
+        return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
+
+    @staticmethod
+    def _load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
+        """
+        Load XML content from file using skip and limit.
+
+        :param file_path: Path to the XML file.
+        :param cyclic: Whether to cycle through data.
+        :param start_idx: Starting index.
+        :param end_idx: Ending index.
+        :return: List of dictionaries representing XML items.
+        """
+        cyclic = cyclic if cyclic is not None else False
+        # Read the XML data from a file
+        with file_path.open("r") as file:
+            data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")
+            # Handle the case where data might be None
+            if data is None:
+                return []
+
+            # Extract items from list structure if present
+            if isinstance(data, dict) and data.get("list") and data.get("list", {}).get("item"):
+                items = data["list"]["item"]
+            else:
+                items = data
+
+            # Convert single item to list if needed
+            if isinstance(items, OrderedDict):
+                items = [items]
+            elif not isinstance(items, list):
+                items = []
+
+            # Apply pagination if needed
+            pagination = (
+                DataSourcePagination(start_idx, end_idx - start_idx)
+                if (start_idx is not None and end_idx is not None)
+                else None
+            )
+            return DataSourceUtil.get_cyclic_data_list(data=items, cyclic=cyclic, pagination=pagination)
