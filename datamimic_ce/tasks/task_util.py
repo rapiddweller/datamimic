@@ -304,7 +304,7 @@ class TaskUtil:
             build_from_source = False
         # Load data from CSV
         elif source_str.endswith(".csv"):
-            source_data = _load_csv_file(
+            source_data = TaskUtil._load_csv_file(
                 ctx=context,
                 file_path=root_context.descriptor_dir / source_str,
                 separator=separator,
@@ -317,7 +317,7 @@ class TaskUtil:
             )
         # Load data from JSON
         elif source_str.endswith(".json"):
-            source_data = _load_json_file(
+            source_data = TaskUtil._load_json_file(
                 root_context.task_id,
                 root_context.descriptor_dir / source_str,
                 stmt.cyclic,
@@ -334,7 +334,7 @@ class TaskUtil:
                     logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
         # Load data from XML
         elif source_str.endswith(".xml"):
-            source_data = _load_xml_file(
+            source_data = TaskUtil._load_xml_file(
                 root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
             )
             # if sourceScripted then evaluate python expression in json
@@ -427,8 +427,8 @@ class TaskUtil:
             # Create the consumer set once
             consumer_set = stmt.targets.copy()
             # consumer_set.add(EXPORTER_PREVIEW) deactivating preview exporter for multi-process
-            if root_context.test_mode and not root_context.use_mp:
-                consumer_set.add(EXPORTER_TEST_RESULT_EXPORTER)
+            # if root_context.test_mode and not root_context.use_mp:
+            #     consumer_set.add(EXPORTER_TEST_RESULT_EXPORTER)
 
             # Create exporters with operations
             (

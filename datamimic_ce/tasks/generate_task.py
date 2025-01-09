@@ -31,6 +31,7 @@ from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_util import DataSourceUtil
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
+from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.generate_statement import GenerateStatement
@@ -42,7 +43,8 @@ from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
 from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 
-ray.init(ignore_reinit_error=True)
+# TODO: set dynamic debug mode
+ray.init(ignore_reinit_error=True, local_mode=True)
 
 
 def _geniter_single_process_generate(context: SetupContext | GenIterContext, stmt: GenerateStatement, page_start: int,
@@ -435,6 +437,14 @@ class GenerateTask(CommonSubTask):
 
             results = ray.get(futures)
 
+            if isinstance(context, SetupContext):
+                # Export lazy exporter here, such as TestResultExporter, MemstoreExporter
+                if context.test_mode:
+                    test_result_exporter = context.root.test_result_exporter
+                    for product_result in results:
+                        for product_name, product_records in product_result.items():
+                            test_result_exporter.consume((product_name, product_records))
+
             return results
 
         finally:
@@ -546,6 +556,7 @@ class GenerateWorker:
                 for key, value in result_dict.items():
                     result[key] = result.get(key, []) + value
 
+            # TODO: export non-lazy exporter here
             # Execute lazy exporter if outermost gen_stmt
             if isinstance(context, SetupContext):
                 # TODO: check if mp_idx and mp_chunk_size is necessary for MultiprocessingPageInfo
@@ -553,7 +564,7 @@ class GenerateWorker:
                 _consume_outermost_gen_stmt_by_page(stmt, context, result, page_info, is_last_page=page_idx == len(index_chunk) - 1)
 
         # Return results if inner gen_stmt
-        if isinstance(context, GenIterContext):
+        if isinstance(context, GenIterContext) or context.root.test_mode:
             return result
 
         return {}
