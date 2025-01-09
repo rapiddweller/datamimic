@@ -69,10 +69,6 @@ from datamimic_ce.tasks.else_task import ElseTask
 from datamimic_ce.tasks.execute_task import ExecuteTask
 from datamimic_ce.tasks.generate_task import (
     GenerateTask,
-    _load_csv_file,
-    _load_json_file,
-    _load_xml_file,
-    _pre_consume_product,
 )
 from datamimic_ce.tasks.generator_task import GeneratorTask
 from datamimic_ce.tasks.if_task import IfTask

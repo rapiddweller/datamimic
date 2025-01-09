@@ -435,14 +435,7 @@ class GenerateTask(CommonSubTask):
 
             results = ray.get(futures)
 
-            # Return results if inner gen_stmt
-            if isinstance(context, GenIterContext):
-                return results
-
-            # Execute lazy exporter if outermost gen_stmt
-            if isinstance(context, SetupContext):
-                # TODO: fulfill args
-                _consume_outermost_gen_stmt_by_page()
+            return results
 
         finally:
             # Clean temp directory on outermost gen_stmt
@@ -543,7 +536,8 @@ class GenerateWorker:
         # Generate and consume product by page
         for page_idx, index_tuple in enumerate(index_chunk):
             # TODO: fulfill args
-            result_dict = _geniter_single_process_generate()
+            page_start, page_end = index_tuple
+            result_dict = _geniter_single_process_generate(context, stmt, page_start, page_end)
             for exporter in non_lazy_exporter:
                 exporter.consume(result_dict)
 
@@ -552,4 +546,14 @@ class GenerateWorker:
                 for key, value in result_dict.items():
                     result[key] = result.get(key, []) + value
 
-        return result
+            # Execute lazy exporter if outermost gen_stmt
+            if isinstance(context, SetupContext):
+                # TODO: check if mp_idx and mp_chunk_size is necessary for MultiprocessingPageInfo
+                page_info = MultiprocessingPageInfo(None, None, page_idx, len(index_chunk))
+                _consume_outermost_gen_stmt_by_page(stmt, context, result, page_info, is_last_page=page_idx == len(index_chunk) - 1)
+
+        # Return results if inner gen_stmt
+        if isinstance(context, GenIterContext):
+            return result
+
+        return {}
