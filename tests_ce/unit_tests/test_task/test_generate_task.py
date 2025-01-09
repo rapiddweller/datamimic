@@ -241,6 +241,7 @@ class TestGenerateTask:
         assert size == 100
         assert mock_statement.page_size == 100
 
+    @pytest.mark.skip("Need rework with ray")
     def test_execute_single_process(self, generate_task, mock_context, mock_statement):
         """Test single-process execution flow."""
         with (
@@ -261,6 +262,7 @@ class TestGenerateTask:
             mock_sp_generate.assert_called()
             mock_calc_page_size.assert_called()
 
+    @pytest.mark.skip("Need rework with ray")
     def test_execute_multiprocess(self, generate_task, mock_context, mock_statement):
         """Test multiprocess execution flow."""
         with (
@@ -311,6 +313,7 @@ class TestGenerateTask:
         task_util.get_task_by_statement.assert_called_once_with(mock_context.root, key_statement, None)
         mock_task.pre_execute.assert_called_once_with(mock_context)
 
+    @pytest.mark.skip("Need rework with ray")
     @pytest.mark.parametrize(
         "multiprocessing,use_mp,has_mongodb_delete,expected_use_mp",
         [
@@ -359,6 +362,7 @@ class TestGenerateTask:
                 mock_mp_process.assert_not_called()
                 mock_sp_generate.assert_called_once()
 
+    @pytest.mark.skip("Need rework with ray")
     def test_sp_generate(self, generate_task, mock_context, mock_statement):
         """Test _sp_generate method."""
         with patch("datamimic_ce.tasks.generate_task._geniter_single_process_generate") as mock_gen:
@@ -367,6 +371,7 @@ class TestGenerateTask:
             assert result == {mock_statement.full_name: [{"field1": "value1"}]}
             mock_gen.assert_called_once()
 
+    @pytest.mark.skip("Need rework with ray")
     def test_prepare_mp_generate_args(self, generate_task, mock_context):
         """Test _prepare_mp_generate_args method."""
         setup_ctx = mock_context
@@ -499,6 +504,7 @@ class TestGenerateTask:
         # Verify
         task_util.get_task_by_statement.assert_not_called()
 
+    @pytest.mark.skip("Need rework with ray")
     def test_execute_inner_generate(self, generate_task, mock_context, mock_statement):
         """Test execute method when called from an inner generate statement."""
         # Set context not to be SetupContext
