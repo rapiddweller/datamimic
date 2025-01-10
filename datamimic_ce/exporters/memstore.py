@@ -35,11 +35,15 @@ class Memstore(Exporter):
         :param cyclic:
         :return:
         """
-        from datamimic_ce.data_sources.data_source_util import DataSourceUtil
+        try:
+            from datamimic_ce.data_sources.data_source_util import DataSourceUtil
 
-        return DataSourceUtil.get_cyclic_data_list(
-            data=self._storage[product_type], cyclic=cyclic, pagination=pagination
-        )
+            return DataSourceUtil.get_cyclic_data_list(
+                data=self._storage[product_type], cyclic=cyclic, pagination=pagination
+            )
+        except KeyError as e:
+            logger.error(f"Data naming '{product_type}' is empty in memstore: {e}")
+            raise KeyError(f"Data naming '{product_type}' is empty in memstore: {e}")
 
     def get_data_len_by_type(self, entity_name: str) -> int:
         """

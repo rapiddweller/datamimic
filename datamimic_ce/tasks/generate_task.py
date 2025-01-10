@@ -24,12 +24,15 @@ import xmltodict
 
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.constants.exporter_constants import EXPORTER_TEST_RESULT_EXPORTER
+from datamimic_ce.config import settings
+from datamimic_ce.constants.exporter_constants import EXPORTER_TEST_RESULT_EXPORTER, EXPORTER_JSON_SINGLE, EXPORTER_XML, \
+    EXPORTER_CSV, EXPORTER_TXT, EXPORTER_JSON
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_util import DataSourceUtil
+from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger
@@ -43,30 +46,44 @@ from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
 from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 
-# TODO: set dynamic debug mode
-ray.init(ignore_reinit_error=True, local_mode=True)
+ray.init(ignore_reinit_error=True, local_mode=settings.RUNTIME_ENVIRONMENT == "development")
 
 
-def _geniter_single_process_generate(context: SetupContext | GenIterContext, stmt: GenerateStatement, page_start: int,
-                                     page_end: int) -> dict[str, list]:
+def _geniter_single_process_generate(
+        context: SetupContext | GenIterContext,
+        stmt: GenerateStatement,
+        page_start: int,
+        page_end: int
+    ) -> dict[str, list]:
     """
-    (IMPORTANT: Only to be used as multiprocessing function) Generate product in each single process.
+    (IMPORTANT: Only to be used as multiprocessing function)
+    This function is used to generate data for a single process, includes steps:
+    1. Build sub-tasks in GenIterStatement
+    2. Load data source (if any)
+    3. Modify/Generate data by executing sub-tasks
 
-    :param args: Tuple containing context, statement, and index range.
     :return: Dictionary with generated products.
     """
-
-    # Parse args
     root_context: SetupContext = context.root
 
     # Determine number of data to be processed
     processed_data_count = page_end - page_start
     pagination = DataSourcePagination(skip=page_start, limit=processed_data_count)
 
-    # Prepare loaded datasource pagination
-    load_start_idx = page_start
-    load_end_idx = page_end
-    load_pagination: DataSourcePagination | None = pagination
+    # Determined page of data source to load
+    # If distribution is random, load all data before shuffle, which means no pagination (pagination=None)
+    # If distribution is not random, load data by pagination
+    is_random_distribution = stmt.distribution in ("random", None)
+    if is_random_distribution:
+        # Use task_id as seed for random distribution
+        # Don't use pagination for random distribution to load all data before shuffle
+        load_start_idx = None
+        load_end_idx = None
+        load_pagination = None
+    else:
+        load_start_idx = page_start
+        load_end_idx = page_end
+        load_pagination: DataSourcePagination | None = pagination
 
     # Extract converter list
     task_util_cls = root_context.class_factory_util.get_task_util_cls()
@@ -83,13 +100,7 @@ def _geniter_single_process_generate(context: SetupContext | GenIterContext, stm
         stmt.source_script if stmt.source_script is not None else bool(root_context.default_source_scripted)
     )
     separator = stmt.separator or root_context.default_separator
-    is_random_distribution = stmt.distribution in ("random", None)
-    if is_random_distribution:
-        # Use task_id as seed for random distribution
-        # Don't use pagination for random distribution to load all data before shuffle
-        load_start_idx = None
-        load_end_idx = None
-        load_pagination = None
+
     source_data, build_from_source = context.root.class_factory_util.get_task_util_cls().gen_task_load_data_from_source(
         context,
         stmt,
@@ -161,107 +172,108 @@ def _geniter_single_process_generate(context: SetupContext | GenIterContext, stm
             )
             break
 
+    # 4. Return product for later export
     product_holder[stmt.full_name] = result
     return product_holder
 
 
-def _consume_outermost_gen_stmt_by_page(
-        stmt: GenerateStatement,
-        context: Context,
-        result_dict: dict,
-        page_info: MultiprocessingPageInfo,
-        is_last_page: bool,
-) -> None:
-    """
-    Consume result_dict returned by outermost gen_stmt.
+# def _consume_outermost_gen_stmt_by_page(
+#         stmt: GenerateStatement,
+#         context: Context,
+#         result_dict: dict,
+#         page_info: MultiprocessingPageInfo,
+#         is_last_page: bool,
+# ) -> None:
+#     """
+#     Consume result_dict returned by outermost gen_stmt.
+#
+#     :param stmt: GenerateStatement instance.
+#     :param context: Context instance.
+#     :param result_dict: Generated product data.
+#     :param page_info: Tuple containing page information.
+#     :return: None
+#     """
+#     report_logging = False
+#
+#     # Create a dictionary to track start times for each statement
+#     if not hasattr(context, "_statement_start_times"):
+#         context._statement_start_times = {}
+#
+#     # Initialize start times for statements if this is the first page
+#     if page_info.page_idx == 0:  # Check if this is the first page
+#         for stmt_full_name in result_dict:
+#             context._statement_start_times[stmt_full_name] = time.time()
+#
+#     with gen_timer("export", report_logging, stmt.full_name) as timer_result:
+#         timer_result["records_count"] = len(result_dict.get(stmt.full_name, []))
+#
+#         consumed_result = result_dict
+#
+#         for stmt_full_name, result in consumed_result.items():
+#             # Retrieve GenerateStatement using fullname
+#             sub_stmt = stmt.retrieve_sub_statement_by_fullname(stmt_full_name)
+#             if sub_stmt is None:
+#                 raise ValueError(f"Cannot find element <generate> '{stmt_full_name}'")
+#             context.root.class_factory_util.get_task_util_cls().consume_product_by_page(
+#                 root_context=context.root,
+#                 stmt=sub_stmt,
+#                 xml_result=result,
+#                 page_info=page_info,
+#             )
+#             if is_last_page:
+#                 _finalize_and_export_consumers(context, sub_stmt)
 
-    :param stmt: GenerateStatement instance.
-    :param context: Context instance.
-    :param result_dict: Generated product data.
-    :param page_info: Tuple containing page information.
-    :return: None
-    """
-    report_logging = False
 
-    # Create a dictionary to track start times for each statement
-    if not hasattr(context, "_statement_start_times"):
-        context._statement_start_times = {}
-
-    # Initialize start times for statements if this is the first page
-    if page_info.page_idx == 0:  # Check if this is the first page
-        for stmt_full_name in result_dict:
-            context._statement_start_times[stmt_full_name] = time.time()
-
-    with gen_timer("export", report_logging, stmt.full_name) as timer_result:
-        timer_result["records_count"] = len(result_dict.get(stmt.full_name, []))
-
-        consumed_result = result_dict
-
-        for stmt_full_name, result in consumed_result.items():
-            # Retrieve GenerateStatement using fullname
-            sub_stmt = stmt.retrieve_sub_statement_by_fullname(stmt_full_name)
-            if sub_stmt is None:
-                raise ValueError(f"Cannot find element <generate> '{stmt_full_name}'")
-            context.root.class_factory_util.get_task_util_cls().consume_product_by_page(
-                root_context=context.root,
-                stmt=sub_stmt,
-                xml_result=result,
-                page_info=page_info,
-            )
-            if is_last_page:
-                _finalize_and_export_consumers(context, sub_stmt)
-
-
-def _finalize_and_export_consumers(context: Context, stmt: GenerateStatement) -> None:
-    """
-    Finalize chunks and export data for all consumers that require it.
-
-    :param context: Context instance.
-    :param stmt: GenerateStatement instance.
-    :return: None
-    """
-    # TODO: manage client life cycle
-    if hasattr(context.root, "_task_exporters"):
-        # Find all exporters for this statement
-        cache_key_prefix = f"{context.root.task_id}_{stmt.name}_"
-        relevant_exporters = [
-            exporters
-            for cache_key, exporters in context.root.task_exporters.items()
-            if cache_key.startswith(cache_key_prefix)
-        ]
-
-        for exporter_set in relevant_exporters:
-            # Combine all exporters that need finalization
-            all_exporters = [consumer for consumer, _ in exporter_set["with_operation"]] + exporter_set[
-                "without_operation"
-            ]
-            for consumer in all_exporters:
-                try:
-                    if hasattr(consumer, "finalize_chunks"):
-                        consumer.finalize_chunks()
-                    if hasattr(consumer, "upload_to_storage"):
-                        consumer.upload_to_storage(
-                            bucket=stmt.bucket or stmt.container, name=f"{context.root.task_id}/{stmt.name}"
-                        )
-                    if hasattr(consumer, "save_exported_result"):
-                        consumer.save_exported_result()
-
-                    # Only clean up on outermost generate task
-                    if isinstance(context, SetupContext) and hasattr(consumer, "cleanup"):
-                        consumer.cleanup()
-
-                except Exception as e:
-                    logger.error(f"Error finalizing consumer {type(consumer).__name__}: {str(e)}")
-                    raise
-
-        # Clear the cache after finalization
-        context.root._task_exporters = {}
+# def _finalize_and_export_consumers(context: Context, stmt: GenerateStatement) -> None:
+#     """
+#     Finalize chunks and export data for all consumers that require it.
+#
+#     :param context: Context instance.
+#     :param stmt: GenerateStatement instance.
+#     :return: None
+#     """
+#     # TODO: manage client life cycle
+#     if hasattr(context.root, "_task_exporters"):
+#         # Find all exporters for this statement
+#         cache_key_prefix = f"{context.root.task_id}_{stmt.name}_"
+#         relevant_exporters = [
+#             exporters
+#             for cache_key, exporters in context.root.task_exporters.items()
+#             if cache_key.startswith(cache_key_prefix)
+#         ]
+#
+#         for exporter_set in relevant_exporters:
+#             # Combine all exporters that need finalization
+#             all_exporters = [consumer for consumer, _ in exporter_set["with_operation"]] + exporter_set[
+#                 "without_operation"
+#             ]
+#             for consumer in all_exporters:
+#                 try:
+#                     if hasattr(consumer, "finalize_chunks"):
+#                         consumer.finalize_chunks()
+#                     if hasattr(consumer, "upload_to_storage"):
+#                         consumer.upload_to_storage(
+#                             bucket=stmt.bucket or stmt.container, name=f"{context.root.task_id}/{stmt.name}"
+#                         )
+#                     if hasattr(consumer, "save_exported_result"):
+#                         consumer.save_exported_result()
+#
+#                     # Only clean up on outermost generate task
+#                     if isinstance(context, SetupContext) and hasattr(consumer, "cleanup"):
+#                         consumer.cleanup()
+#
+#                 except Exception as e:
+#                     logger.error(f"Error finalizing consumer {type(consumer).__name__}: {str(e)}")
+#                     raise
+#
+#         # Clear the cache after finalization
+#         context.root._task_exporters = {}
 
 
 @contextmanager
 def gen_timer(process: Literal["generate", "export", "process"], report_logging: bool, product_name: str):
     """
-    Timer for generate and consume process.
+    Timer for generate and export process.
 
     :param process: Type of process ('generate', 'consume', 'process').
     :param report_logging: Whether to log the timing information.
@@ -301,7 +313,6 @@ class GenerateTask(CommonSubTask):
     Task class for generating data based on the GenerateStatement.
 
     """
-
     def __init__(self, statement: GenerateStatement, class_factory_util: BaseClassFactoryUtil):
         self._statement = statement
         self._class_factory_util = class_factory_util
@@ -400,13 +411,16 @@ class GenerateTask(CommonSubTask):
 
     def execute(self, context: SetupContext | GenIterContext) -> dict[str, list] | None:
         """
-        Execute generate task. If gen_stmt is inner, return generated product; otherwise, consume them.
+        Execute generate task.
+        First, generate data and export data by page.
+        If gen_stmt is inner, return generated product to outermost gen_stmt.
+        Otherwise, export gathered product with lazy exporter on outermost gen_stmt.
 
         :param context: Context instance.
         :return: Generated product data or None.
         """
         try:
-            # Pre-execute sub-tasks
+            # Pre-execute sub-tasks before generating any data
             self.pre_execute(context)
 
             # Determine count of generate process
@@ -420,37 +434,80 @@ class GenerateTask(CommonSubTask):
             page_size = self._calculate_default_page_size(count)
 
             # Determine number of Ray workers
-            num_workers = int(self.statement.num_process or context.root.num_process or 1)
+            num_workers = self.statement.num_process
 
-            # Determine chunk size for each worker
+            # Determine chunk data indices based on chunk size and required data count
+            # then populate to workers, such as (0, 1000), (1000, 2000), etc.
             chunk_size = math.ceil(count / num_workers)
-
-            # Execute generate task using Ray
-            workers = [GenerateWorker.remote() for w in range(num_workers)]
             chunks = [(i * chunk_size, min((i + 1) * chunk_size, count)) for i in range(num_workers)]
 
+            # Create Ray workers
+            workers = [GenerateWorker.remote() for w in range(num_workers)]
+
+            # Execute generate task using Ray
             futures = []
-            for worker, (start, end) in zip(workers, chunks, strict=True):
-                logger.info(f"Generating chunk {start}-{end} with page size {page_size}")
-                context_copy = copy.deepcopy(context)
-                futures.append(worker.generate_by_chunk.remote(context_copy, self._statement, start, end, page_size))
+            for worker_id, worker, (chunk_start, chunk_end) in zip(range(1, num_workers + 1), workers, chunks, strict=True):
+                logger.info(f"Generating chunk {chunk_start}-{chunk_end} with page size {page_size}")
+                futures.append(worker.generate_by_chunk.remote(context, self._statement, worker_id, chunk_start, chunk_end, page_size))
 
-            results = ray.get(futures)
+            ray_result = ray.get(futures)
+            # Merge result from all workers by product name
+            merged_result = {}
+            for result in ray_result:
+                for product_name, product_data_list in result:
+                    merged_result[product_name] = merged_result.get(product_name, []) + product_data_list
 
+            # At the end of OUTERMOST gen_stmt:
+            # - export gathered product with LAZY exporters, such as TestResultExporter, MemstoreExporter,...
+            # - gather and upload ARTIFACT exporters, such as TXT, JSON,... then clean temp directory
             if isinstance(context, SetupContext):
-                # Export lazy exporter here, such as TestResultExporter, MemstoreExporter
+                # Determine lazy exporters
+                lazy_exporters = []
                 if context.test_mode:
-                    test_result_exporter = context.root.test_result_exporter
-                    for product_result in results:
-                        for product_name, product_records in product_result.items():
-                            test_result_exporter.consume((product_name, product_records))
+                    lazy_exporters.append(context.root.test_result_exporter)
+                for exporter_str in self.statement.targets:
+                    if context.memstore_manager.contain(exporter_str):
+                        lazy_exporters.append(context.memstore_manager.get_memstore(exporter_str))
+                # Export gathered product with lazy exporters
+                for exporter in lazy_exporters:
+                    for product_name, product_records in merged_result.items():
+                        exporter.consume((product_name, product_records))
 
-            return results
+                # Upload ARTIFACT files at the end of ALL chunks processes
+                self.export_artifact_files(context, self.statement)
+
+            return merged_result
 
         finally:
             # Clean temp directory on outermost gen_stmt
-            for temp_dir in context.descriptor_dir.glob(f"temp_result_{context.task_id}*"):
-                shutil.rmtree(temp_dir)
+            if isinstance(context, SetupContext):
+                for temp_dir in context.descriptor_dir.glob(f"temp_result_{context.task_id}*"):
+                    shutil.rmtree(temp_dir)
+
+    @staticmethod
+    def export_artifact_files(context: SetupContext, stmt: GenerateStatement):
+        """
+        Export artifact files to storage.
+        Execute on outermost gen_stmt and all inner gen_stmts.
+        """
+        # Define artifact exporters
+        artifact_exporters_set = {EXPORTER_JSON, EXPORTER_TXT, EXPORTER_CSV, EXPORTER_XML, EXPORTER_JSON_SINGLE}
+        # Determine number of Ray workers
+        num_workers = stmt.num_process
+
+        # Export artifact files of current statement
+        for exporter_str in stmt.targets:
+            if exporter_str in artifact_exporters_set:
+                exporter = context.root.class_factory_util.get_exporter_util().get_exporter_by_name(
+                    context.root, exporter_str, stmt.name, {})
+                for worker_id in range(1, num_workers + 1):
+                    exporter.save_exported_result(worker_id, stmt.name)
+                # exporter.upload_to_storage(bucket=self.statement.bucket or self.statement.container, name=f"{context.root.task_id}/{self.statement.name}")
+
+        # Export artifact files of sub-gen_stmts
+        for sub_stmt in stmt.sub_statements:
+            if isinstance(sub_stmt, GenerateStatement):
+                GenerateTask.export_artifact_files(context, sub_stmt)
 
     @staticmethod
     def convert_xml_dict_to_json_dict(xml_dict: dict):
@@ -530,38 +587,32 @@ class GenerateTask(CommonSubTask):
 @ray.remote
 class GenerateWorker:
     @staticmethod
-    def generate_by_chunk(context: SetupContext | GenIterContext, stmt: GenerateStatement, chunk_start: int,
+    def generate_by_chunk(context: SetupContext | GenIterContext, stmt: GenerateStatement, worker_id: int, chunk_start: int,
                           chunk_end: int, page_size: int) -> dict:
         # Determine chunk data range, like (0, 1000), (1000, 2000), etc.
         index_chunk = [(i, min(i + page_size, chunk_end)) for i in range(chunk_start, chunk_end, page_size)]
 
         # Check if product result should be returned for test mode or memstore consumers
-        return_product_result = context.test_mode or any(
-            [context.memstore_manager.contain(consumer_str) for consumer_str in stmt.targets]
+        return_product_result = context.root.test_mode or any(
+            [context.root.memstore_manager.contain(consumer_str) for consumer_str in stmt.targets]
         )
         result: dict = {}
 
-        non_lazy_exporter = []
+        exporter_state_manager = ExporterStateManager(worker_id)
 
         # Generate and consume product by page
         for page_idx, index_tuple in enumerate(index_chunk):
-            # TODO: fulfill args
             page_start, page_end = index_tuple
+            # Generate product
             result_dict = _geniter_single_process_generate(context, stmt, page_start, page_end)
-            for exporter in non_lazy_exporter:
-                exporter.consume(result_dict)
+
+            # Export product by page
+            context.root.class_factory_util.get_task_util_cls().export_product_by_page(context.root, stmt, result_dict, exporter_state_manager)
 
             # Collect result for later capture
             if return_product_result:
                 for key, value in result_dict.items():
                     result[key] = result.get(key, []) + value
-
-            # TODO: export non-lazy exporter here
-            # Execute lazy exporter if outermost gen_stmt
-            if isinstance(context, SetupContext):
-                # TODO: check if mp_idx and mp_chunk_size is necessary for MultiprocessingPageInfo
-                page_info = MultiprocessingPageInfo(None, None, page_idx, len(index_chunk))
-                _consume_outermost_gen_stmt_by_page(stmt, context, result, page_info, is_last_page=page_idx == len(index_chunk) - 1)
 
         # Return results if inner gen_stmt
         if isinstance(context, GenIterContext) or context.root.test_mode:

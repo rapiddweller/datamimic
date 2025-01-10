@@ -33,7 +33,9 @@ from datamimic_ce.data_sources.data_source_pagination import DataSourcePaginatio
 from datamimic_ce.data_sources.data_source_util import DataSourceUtil
 from datamimic_ce.enums.converter_enums import ConverterEnum
 from datamimic_ce.exporters.csv_exporter import CSVExporter
+from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.json_exporter import JsonExporter
+from datamimic_ce.exporters.memstore import Memstore
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.exporters.txt_exporter import TXTExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
@@ -387,23 +389,23 @@ class TaskUtil:
         return return_source_data, build_from_source
 
     @staticmethod
-    def consume_product_by_page(
+    def export_product_by_page(
         root_context: SetupContext,
         stmt: GenerateStatement,
-        xml_result: list,
-        page_info: MultiprocessingPageInfo,
+        xml_result: dict[str, list[dict]],
+        exporter_state_manager: ExporterStateManager,
     ) -> None:
         """
-        Consume single list of product in generate statement.
+        Export single page of product in generate statement.
 
         :param root_context: SetupContext instance.
         :param stmt: GenerateStatement instance.
-        :param xml_result: List of generated product data.
-        :param page_info: Tuple containing page information.
+        :param xml_result: Dictionary of product data.
+        :param exporter_state_manager: ExporterStateManager instance.
         :return: None
         """
-        # Convert XML result into JSON result
-        json_result = [GenerateTask.convert_xml_dict_to_json_dict(res) for res in xml_result]
+        # If product is in XML format, convert it to JSON
+        json_result = [GenerateTask.convert_xml_dict_to_json_dict(product) for product in xml_result[stmt.full_name]]
 
         # Wrap product key and value into a tuple
         # for iterate database may have key, value, and other statement attribute info
@@ -414,21 +416,13 @@ class TaskUtil:
         else:
             json_product = (stmt.name, json_result)
 
-        # Create exporters cache in root context if it doesn't exist
-        if not hasattr(root_context, "_task_exporters"):
-            # Using task_id to namespace the cache
-            root_context.task_exporters = {}
-
         # Create a unique cache key incorporating task_id and statement details
-        cache_key = f"{root_context.task_id}_{stmt.name}_{stmt.storage_id}_{stmt}"
+        exporters_cache_key = stmt.full_name
 
         # Get or create exporters
-        if cache_key not in root_context.task_exporters:
-            # Create the consumer set once
-            consumer_set = stmt.targets.copy()
-            # consumer_set.add(EXPORTER_PREVIEW) deactivating preview exporter for multi-process
-            # if root_context.test_mode and not root_context.use_mp:
-            #     consumer_set.add(EXPORTER_TEST_RESULT_EXPORTER)
+        if exporters_cache_key not in root_context.task_exporters:
+            # Create the exporter set once
+            exporters_set = stmt.targets.copy()
 
             # Create exporters with operations
             (
@@ -437,43 +431,47 @@ class TaskUtil:
             ) = root_context.class_factory_util.get_exporter_util().create_exporter_list(
                 setup_context=root_context,
                 stmt=stmt,
-                targets=list(consumer_set),
-                page_info=page_info,
+                targets=list(exporters_set),
             )
 
             # Cache the exporters
-            root_context.task_exporters[cache_key] = {
+            root_context.task_exporters[exporters_cache_key] = {
                 "with_operation": consumers_with_operation,
                 "without_operation": consumers_without_operation,
                 "page_count": 0,  # Track number of pages processed
             }
 
         # Get cached exporters
-        exporters = root_context.task_exporters[cache_key]
+        exporters = root_context.task_exporters[exporters_cache_key]
         exporters["page_count"] += 1
 
         # Use cached exporters
-        # Run consumers with operations first
-        for consumer, operation in exporters["with_operation"]:
-            if isinstance(consumer, MongoDBExporter) and operation == "upsert":
-                json_product = consumer.upsert(product=json_product)
-            elif hasattr(consumer, operation):
-                getattr(consumer, operation)(json_product)
+        # Run exporters with operations first
+        for exporter, operation in exporters["with_operation"]:
+            if isinstance(exporter, MongoDBExporter) and operation == "upsert":
+                json_product = exporter.upsert(product=json_product)
+            elif hasattr(exporter, operation):
+                getattr(exporter, operation)(json_product)
             else:
-                raise ValueError(f"Consumer does not support operation: {consumer}.{operation}")
+                raise ValueError(f"Exporter does not support operation: {exporter}.{operation}")
 
-        # Run consumers without operations
-        for consumer in exporters["without_operation"]:
+        # Run exporters without operations
+        for exporter in exporters["without_operation"]:
             try:
-                if isinstance(consumer, XMLExporter):
-                    consumer.consume((json_product[0], xml_result))
-                elif isinstance(consumer, JsonExporter | TXTExporter | CSVExporter):
-                    consumer.consume(json_product)
+                # Skip lazy exporters
+                if isinstance(exporter, Memstore):
+                    continue
+                elif isinstance(exporter, XMLExporter):
+                    exporter.consume((json_product[0], xml_result))
+                elif isinstance(exporter, JsonExporter | TXTExporter | CSVExporter):
+                    exporter.consume(json_product, stmt.full_name, exporter_state_manager)
                 else:
-                    consumer.consume(json_product)
+                    exporter.consume(json_product)
             except Exception as e:
-                logger.error(f"Error in consumer {type(consumer).__name__}: {str(e)}")
-                raise
+                import traceback
+                traceback.print_exc()
+                logger.error(f"Error in exporter {type(exporter).__name__}: {str(e)}")
+                raise ValueError(f"Error in exporter {type(exporter).__name__}: {str(e)}")
 
     @staticmethod
     def evaluate_selector_script(context: Context, stmt: GenerateStatement):

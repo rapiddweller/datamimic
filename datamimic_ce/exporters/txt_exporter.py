@@ -32,7 +32,6 @@ class TXTExporter(UnifiedBufferedExporter):
         self,
         setup_context: SetupContext,
         product_name: str,
-        page_info: MultiprocessingPageInfo,
         chunk_size: int | None,
         separator: str | None,
         line_terminator: str | None,
@@ -55,7 +54,7 @@ class TXTExporter(UnifiedBufferedExporter):
         # Pass encoding via kwargs to the base class
 
         super().__init__(
-            "txt", setup_context, product_name, chunk_size=chunk_size, page_info=page_info, encoding=encoding
+            "txt", setup_context, product_name, chunk_size=chunk_size, encoding=encoding
         )
         logger.info(
             f"TXTExporter initialized with chunk size {chunk_size}, separator '{self.separator}', "
@@ -70,10 +69,10 @@ class TXTExporter(UnifiedBufferedExporter):
         """Returns the MIME type for the data content."""
         return "text/plain"
 
-    def _write_data_to_buffer(self, data: list[dict]) -> None:
+    def _write_data_to_buffer(self, data: list[dict], worker_id: int, product_name: str, chunk_idx: int) -> None:
         """Writes data to the current buffer file in TXT format."""
         try:
-            buffer_file = self._get_buffer_file()
+            buffer_file = self._get_buffer_file(worker_id, product_name, chunk_idx)
             with buffer_file.open("a", encoding=self.encoding) as txtfile:
                 for record in data:
                     # Format each record as "name: item"

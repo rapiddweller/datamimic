@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 
 
 class Exporter(ABC):
-    @abstractmethod
-    def consume(self, product: tuple):
-        pass
+    pass
+    # @abstractmethod
+    # def consume(self, product: tuple):
+    #     pass

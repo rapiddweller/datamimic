@@ -63,7 +63,6 @@ class ExporterUtil:
         setup_context: SetupContext,
         stmt: GenerateStatement,
         targets: list[str],
-        page_info: MultiprocessingPageInfo,
     ) -> tuple[list[tuple[Exporter, str]], list[Exporter]]:
         """
         Create list of consumers with and without operation from consumer string
@@ -76,10 +75,8 @@ class ExporterUtil:
         consumers_with_operation = []
         consumers_without_operation = []
 
-        exporter_str_list = list(targets)
-
-        # Join the list back into a string
-        target_str = ",".join(exporter_str_list)
+        # Join the targets list into a single string
+        target_str = ",".join(list(targets))
 
         # Parse the target string using the parse_function_string function
         try:
@@ -103,7 +100,6 @@ class ExporterUtil:
                     setup_context=setup_context,
                     name=exporter_name,
                     product_name=stmt.name,
-                    page_info=page_info,
                     exporter_params_dict=params,
                 )
                 if consumer is not None:
@@ -200,7 +196,6 @@ class ExporterUtil:
         setup_context: SetupContext,
         name: str,
         product_name: str,
-        page_info: MultiprocessingPageInfo,
         exporter_params_dict: dict,
     ):
         """
@@ -208,6 +203,9 @@ class ExporterUtil:
 
         :param setup_context:
         :param name:
+        :param product_name:
+        :param exporter_params_dict:
+        :param worker_id:
         :return:
         """
         if name is None or name == "":
@@ -251,7 +249,7 @@ class ExporterUtil:
         elif name == EXPORTER_XML:
             return XMLExporter(setup_context, product_name, page_info, chunk_size, root_element, item_element, encoding)
         elif name == EXPORTER_TXT:
-            return TXTExporter(setup_context, product_name, page_info, chunk_size, delimiter, line_terminator, encoding)
+            return TXTExporter(setup_context, product_name, chunk_size, delimiter, line_terminator, encoding)
         elif name == EXPORTER_TEST_RESULT_EXPORTER:
             return setup_context.test_result_exporter
         elif name in setup_context.clients:
