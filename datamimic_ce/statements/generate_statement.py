@@ -38,7 +38,7 @@ class GenerateStatement(CompositeStatement):
         self._variable_suffix = model.variable_suffix
         self._converter = model.converter
         self._bucket = model.bucket
-        self._num_process = model.num_process if model.num_process is not None else 1
+        self._num_process = model.num_process
 
     @property
     def name(self) -> str:

@@ -34,7 +34,6 @@ class XMLExporter(UnifiedBufferedExporter):
         self,
         setup_context: SetupContext,
         product_name: str,
-        page_info: MultiprocessingPageInfo,
         chunk_size: int | None,
         root_element: str | None,
         item_element: str | None,
@@ -58,7 +57,6 @@ class XMLExporter(UnifiedBufferedExporter):
             setup_context=setup_context,
             product_name=product_name,
             chunk_size=chunk_size,
-            page_info=page_info,
             encoding=encoding,
         )
         logger.info(
@@ -74,7 +72,7 @@ class XMLExporter(UnifiedBufferedExporter):
         """Returns the MIME type for the data content."""
         return "application/xml"
 
-    def _write_data_to_buffer(self, data: list[dict[str, Any]]) -> None:
+    def _write_data_to_buffer(self, data: list[dict[str, Any]], worker_id: int, chunk_idx: int) -> None:
         """
         Writes data to the current buffer file in XML format.
 
@@ -95,7 +93,7 @@ class XMLExporter(UnifiedBufferedExporter):
                 )
                 items_xml += item_xml + "\n"  # Add newline for readability
 
-            buffer_file = self._get_buffer_file()
+            buffer_file = self._get_buffer_file(worker_id, chunk_idx)
 
             if buffer_file is None:
                 return
@@ -161,6 +159,8 @@ class XMLExporter(UnifiedBufferedExporter):
                     xmlfile.write(f"</{self.root_element}>")
             logger.debug(f"Finalized XML file: {buffer_file}")
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             logger.error(f"Error finalizing buffer file: {e}")
             raise ExporterError(f"Error finalizing buffer file: {e}") from e
 

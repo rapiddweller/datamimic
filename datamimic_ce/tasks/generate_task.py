@@ -409,6 +409,22 @@ class GenerateTask(CommonSubTask):
             for child_stmt in statement.sub_statements:
                 GenerateTask._scan_data_source(ctx, child_stmt)
 
+    @staticmethod
+    def determine_num_workers(context: GenIterContext | SetupContext, stmt: GenerateStatement) -> int:
+        # Determine number of Ray workers
+        current_setup_context = context
+        while not isinstance(current_setup_context, SetupContext):
+            current_setup_context = current_setup_context.parent
+
+        if stmt.num_process is not None:
+            num_workers = stmt.num_process
+        elif current_setup_context.num_process is not None:
+            num_workers = current_setup_context.num_process
+        else:
+            num_workers = 1
+
+        return num_workers
+
     def execute(self, context: SetupContext | GenIterContext) -> dict[str, list] | None:
         """
         Execute generate task.
@@ -433,8 +449,7 @@ class GenerateTask(CommonSubTask):
             # Calculate page size for processing by page
             page_size = self._calculate_default_page_size(count)
 
-            # Determine number of Ray workers
-            num_workers = self.statement.num_process
+            num_workers = self.determine_num_workers(context, self.statement)
 
             # Determine chunk data indices based on chunk size and required data count
             # then populate to workers, such as (0, 1000), (1000, 2000), etc.
@@ -444,17 +459,32 @@ class GenerateTask(CommonSubTask):
             # Create Ray workers
             workers = [GenerateWorker.remote() for w in range(num_workers)]
 
+            # Serialize context for Ray multiprocessing
+            copied_context = copy.deepcopy(context)
+            current_processed_setup_context = copied_context
+            while current_processed_setup_context != copied_context.root:
+                if not isinstance(current_processed_setup_context, SetupContext):
+                    current_processed_setup_context = current_processed_setup_context.parent
+                    continue
+
+                namespace_functions = {k: v for k, v in current_processed_setup_context.namespace.items() if callable(v)}
+                for func in namespace_functions:
+                    current_processed_setup_context.namespace.pop(func)
+                current_processed_setup_context.namespace_functions = dill.dumps(namespace_functions)
+
+                current_processed_setup_context.generators = dill.dumps(current_processed_setup_context.generators)
+
             # Execute generate task using Ray
             futures = []
             for worker_id, worker, (chunk_start, chunk_end) in zip(range(1, num_workers + 1), workers, chunks, strict=True):
                 logger.info(f"Generating chunk {chunk_start}-{chunk_end} with page size {page_size}")
-                futures.append(worker.generate_by_chunk.remote(context, self._statement, worker_id, chunk_start, chunk_end, page_size))
+                futures.append(worker.generate_by_chunk.remote(copied_context, self._statement, worker_id, chunk_start, chunk_end, page_size))
 
             ray_result = ray.get(futures)
             # Merge result from all workers by product name
             merged_result = {}
             for result in ray_result:
-                for product_name, product_data_list in result:
+                for product_name, product_data_list in result.items():
                     merged_result[product_name] = merged_result.get(product_name, []) + product_data_list
 
             # At the end of OUTERMOST gen_stmt:
@@ -473,6 +503,9 @@ class GenerateTask(CommonSubTask):
                     for product_name, product_records in merged_result.items():
                         exporter.consume((product_name, product_records))
 
+                # # Finalize chunks files (writing end of file)
+                self.finalize_temp_files_chunks(context, self.statement)
+
                 # Upload ARTIFACT files at the end of ALL chunks processes
                 self.export_artifact_files(context, self.statement)
 
@@ -485,6 +518,22 @@ class GenerateTask(CommonSubTask):
                     shutil.rmtree(temp_dir)
 
     @staticmethod
+    def finalize_temp_files_chunks(context: SetupContext, stmt: GenerateStatement):
+        num_workers = GenerateTask.determine_num_workers(context, stmt)
+        for exporter_str in stmt.targets:
+            # Ignore exporters with operation
+            if "." in exporter_str:
+                continue
+            exporter = context.root.class_factory_util.get_exporter_util().get_exporter_by_name(context, exporter_str, stmt.name, {})
+            if hasattr(exporter, "finalize_chunks"):
+                for worker_id in range(1, num_workers + 1):
+                    exporter.finalize_chunks(worker_id)
+
+        for sub_stmt in stmt.sub_statements:
+            if isinstance(sub_stmt, GenerateStatement):
+                GenerateTask.finalize_temp_files_chunks(context, sub_stmt)
+
+    @staticmethod
     def export_artifact_files(context: SetupContext, stmt: GenerateStatement):
         """
         Export artifact files to storage.
@@ -493,7 +542,7 @@ class GenerateTask(CommonSubTask):
         # Define artifact exporters
         artifact_exporters_set = {EXPORTER_JSON, EXPORTER_TXT, EXPORTER_CSV, EXPORTER_XML, EXPORTER_JSON_SINGLE}
         # Determine number of Ray workers
-        num_workers = stmt.num_process
+        num_workers = GenerateTask.determine_num_workers(context, stmt)
 
         # Export artifact files of current statement
         for exporter_str in stmt.targets:
@@ -501,7 +550,7 @@ class GenerateTask(CommonSubTask):
                 exporter = context.root.class_factory_util.get_exporter_util().get_exporter_by_name(
                     context.root, exporter_str, stmt.name, {})
                 for worker_id in range(1, num_workers + 1):
-                    exporter.save_exported_result(worker_id, stmt.name)
+                    exporter.save_exported_result(worker_id)
                 # exporter.upload_to_storage(bucket=self.statement.bucket or self.statement.container, name=f"{context.root.task_id}/{self.statement.name}")
 
         # Export artifact files of sub-gen_stmts
@@ -589,6 +638,16 @@ class GenerateWorker:
     @staticmethod
     def generate_by_chunk(context: SetupContext | GenIterContext, stmt: GenerateStatement, worker_id: int, chunk_start: int,
                           chunk_end: int, page_size: int) -> dict:
+        # Deserialize multiprocessing arguments
+        current_ctx = context
+        while current_ctx != current_ctx.root:
+            if not isinstance(current_ctx, SetupContext):
+                current_ctx = current_ctx.parent
+                continue
+
+            current_ctx.namespace_functions = dill.loads(current_ctx.namespace_functions)
+            current_ctx.generators = dill.loads(current_ctx.generators)
+
         # Determine chunk data range, like (0, 1000), (1000, 2000), etc.
         index_chunk = [(i, min(i + page_size, chunk_end)) for i in range(chunk_start, chunk_end, page_size)]
 
@@ -613,6 +672,7 @@ class GenerateWorker:
             if return_product_result:
                 for key, value in result_dict.items():
                     result[key] = result.get(key, []) + value
+
 
         # Return results if inner gen_stmt
         if isinstance(context, GenIterContext) or context.root.test_mode:

@@ -1,4 +1,4 @@
-<setup multiprocessing="1" numProcess="3">
+<setup numProcess="3">
     <generate name="customer" count="10" target="XML" pageSize="7">
         <key name="cid" generator="IncrementGenerator"/>
         <generate name="inner_user" count="3" target="XML">

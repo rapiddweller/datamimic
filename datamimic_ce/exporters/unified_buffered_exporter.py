@@ -60,7 +60,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         self._mp = setup_context.use_mp  # Multiprocessing flag
         self._task_id = setup_context.task_id  # Task ID for tracking
         self._descriptor_dir = setup_context.descriptor_dir  # Directory for storing temp files
-        # self.chunk_size = chunk_size  # Max entities per chunk
+        self._chunk_size = chunk_size  # Max entities per chunk
 
         # Prepare temporary buffer directory
         # self._buffer_tmp_dir = self._get_buffer_tmp_dir()
@@ -165,18 +165,18 @@ class UnifiedBufferedExporter(Exporter, ABC):
     #         metadata = json.load(f)
     #     return metadata
 
-    def _get_buffer_tmp_dir(self, worker_id: int, product_name: str) -> Path:
+    def _get_buffer_tmp_dir(self, worker_id: int) -> Path:
         buffer_temp_dir = (
-                self._descriptor_dir / f"temp_result_{self._task_id}_worker_id_{worker_id}_exporter_"
-                                       f"{self._exporter_type}_product_{product_name}"
+                self._descriptor_dir / f"temp_result_{self._task_id}_pid_{worker_id}_exporter_"
+                                       f"{self._exporter_type}_product_{self.product_name}"
         )
         pathlib.Path(buffer_temp_dir).mkdir(parents=True, exist_ok=True)
         return buffer_temp_dir
 
-    def _get_buffer_file(self, worker_id: int, product_name: str, chunk_index: int) -> Path:
+    def _get_buffer_file(self, worker_id: int, chunk_index: int) -> Path:
         """Get the buffer file for the current chunk."""
-        buffer_file = self._get_buffer_tmp_dir(worker_id, product_name) / Path(
-            f"product_{product_name}_worker_{worker_id}_chunk_{chunk_index}.{self.get_file_extension()}"
+        buffer_file = self._get_buffer_tmp_dir(worker_id) / Path(
+            f"product_{self.product_name}_pid_{worker_id}_chunk_{chunk_index}.{self.get_file_extension()}"
         )
 
         return buffer_file
@@ -194,11 +194,11 @@ class UnifiedBufferedExporter(Exporter, ABC):
     #         logger.error(f"Failed to rotate chunk: {e}")
     #         raise BufferFileError(f"Failed to rotate chunk: {e}") from e
 
-    def _write_batch_with_retry(self, batch: list[dict], worker_id: int, product_name: str, chunk_idx: int) -> None:
+    def _write_batch_with_retry(self, batch: list[dict], worker_id: int, chunk_idx: int) -> None:
         """Write a batch of data with retry mechanism."""
         for attempt in range(self.MAX_RETRIES):
             try:
-                self._write_data_to_buffer(batch, worker_id, product_name, chunk_idx)
+                self._write_data_to_buffer(batch, worker_id, chunk_idx)
                 return
             except Exception as e:
                 logger.error(f"Attempt {attempt + 1} failed to write batch: {e}")
@@ -232,17 +232,17 @@ class UnifiedBufferedExporter(Exporter, ABC):
     #                 time.sleep(self.RETRY_DELAY * (attempt + 1))
 
     @abstractmethod
-    def _write_data_to_buffer(self, data: list[dict], worker_id: int, product_name: str, chunk_idx: int) -> None:
+    def _write_data_to_buffer(self, data: list[dict], worker_id: int, chunk_idx: int) -> None:
         """Writes data to the current buffer file."""
         pass
 
     @staticmethod
-    def _validate_product(product: tuple) -> tuple[str, list[dict], dict | None]:
+    def _validate_product(product: tuple) -> tuple[list[dict], dict | None]:
         """
         Validates the structure of a product tuple.
 
         :param product: Tuple in the form of (name, data) or (name, data, extra).
-        :return: Tuple unpacked as (name, data, extra).
+        :return: Tuple unpacked as (data, extra).
         :raises ValueError: If product structure is invalid.
         """
         # Check the type and length of product
@@ -263,7 +263,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         if extra is not None and not isinstance(extra, dict):
             raise ValueError("Extra data, if present, must be a dictionary")
 
-        return name, data, extra
+        return data, extra
 
     def consume(self, product: tuple, stmt_full_name: str, exporter_state_manager: ExporterStateManager):
         """
@@ -271,18 +271,18 @@ class UnifiedBufferedExporter(Exporter, ABC):
         """
 
         # Validate product structure
-        self.product_name, data, extra = self._validate_product(product)
+        data, extra = self._validate_product(product)
         # logger.debug(f"Storing data for '{self.product_name}' with {len(data)} records")
 
         exporter_state_key = f"product_{stmt_full_name}_{self.get_file_extension()}"
         state_storage = exporter_state_manager.get_storage(exporter_state_key)
         global_counter = state_storage.global_counter
         current_counter = state_storage.current_counter
-        chunk_size = state_storage.chunk_size
+        # chunk_size = state_storage.chunk_size
         # global_counter, current_counter, chunk_index, chunk_size = exporter_state_manager.load_exporter_state(exporter_state_key)
 
         # Determine writing batch size
-        batch_size = min(1000, chunk_size or len(data))
+        batch_size = min(1000, self._chunk_size or len(data))
 
         idx = 0
         total_data = len(data)
@@ -290,17 +290,17 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
         # Write data in batches
         while idx < total_data:
-            space_left = chunk_size - current_counter if chunk_size else total_data - idx
+            space_left = self._chunk_size - current_counter if self._chunk_size else total_data - idx
             current_batch_size = min(batch_size, space_left)
             batch = data[idx: idx + current_batch_size]
 
-            self._write_batch_with_retry(batch, exporter_state_manager.worker_id, self.product_name, state_storage.chunk_index)
+            self._write_batch_with_retry(batch, exporter_state_manager.worker_id, state_storage.chunk_index)
 
             current_counter += len(batch)
             global_counter += len(batch)
 
             idx += len(batch)
-            if chunk_size and current_counter >= chunk_size and idx < total_data:
+            if self._chunk_size and current_counter >= self._chunk_size and idx < total_data:
                 # Rotate chunk only if there is more data to process
                 exporter_state_manager.rotate_chunk(exporter_state_key)
 
@@ -341,11 +341,11 @@ class UnifiedBufferedExporter(Exporter, ABC):
         """Return MIME type for data content."""
         pass
 
-    def finalize_chunks(self) -> None:
+    def finalize_chunks(self, worker_id: int) -> None:
         """Finalize remaining chunks with error handling."""
         try:
             pattern = f"*.{self.get_file_extension()}"
-            for buffer_file in self._buffer_tmp_dir.glob(pattern):
+            for buffer_file in self._get_buffer_tmp_dir(worker_id).glob(pattern):
                 self._finalize_buffer_file(buffer_file)
         except Exception as e:
             logger.error(f"Failed to finalize chunks: {e}")
@@ -372,7 +372,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         except Exception as e:
             logger.error(f"Error during cleanup: {e}")
 
-    def save_exported_result(self, worker_id: int, product_name: str) -> None:
+    def save_exported_result(self, worker_id: int) -> None:
         """Copy all temporary files to the final destination.
         If destination already exists, creates a versioned directory."""
         logger.info(f"Saving exported result for product {self.product_name}")
@@ -386,7 +386,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         exporter_dir_path.mkdir(parents=True, exist_ok=True)
 
         # Only move files with the correct extension
-        for file in self._get_buffer_tmp_dir(worker_id, product_name).glob(f"*.{self.get_file_extension()}"):
+        for file in self._get_buffer_tmp_dir(worker_id).glob(f"*.{self.get_file_extension()}"):
             target_path = exporter_dir_path / file.name
             version = 1
             # If file exists, create versioned file

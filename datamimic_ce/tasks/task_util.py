@@ -462,7 +462,7 @@ class TaskUtil:
                 if isinstance(exporter, Memstore):
                     continue
                 elif isinstance(exporter, XMLExporter):
-                    exporter.consume((json_product[0], xml_result))
+                    exporter.consume((json_product[0], xml_result[stmt.full_name]), stmt.full_name, exporter_state_manager)
                 elif isinstance(exporter, JsonExporter | TXTExporter | CSVExporter):
                     exporter.consume(json_product, stmt.full_name, exporter_state_manager)
                 else:
