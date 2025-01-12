@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.contexts.context import Context
+from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.utils.dict_util import dict_nested_update
 
 
@@ -21,6 +22,7 @@ class GenIterContext(Context):
         self._current_product: dict = {}
         self._current_variables: dict = {}
         self._namespace: dict = {}
+        self._worker_id = None
 
     @property
     def current_name(self) -> str:
@@ -41,6 +43,20 @@ class GenIterContext(Context):
     @property
     def parent(self) -> Context:
         return self._parent
+
+    @property
+    def worker_id(self) -> int:
+        if self._worker_id is not None:
+            return self._worker_id
+
+        if isinstance(self._parent, GenIterContext):
+            return self._parent.worker_id
+
+        raise ValueError("Worker ID not found in context hierarchy.")
+
+    @worker_id.setter
+    def worker_id(self, value: int) -> None:
+        self._worker_id = value
 
     def add_current_product_field(self, key_path, value):
         """

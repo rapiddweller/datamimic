@@ -31,7 +31,7 @@ class ListTask(Task):
     def statement(self) -> ListStatement:
         return self._statement
 
-    def execute(self, parent_context: GenIterContext | Context):
+    def execute(self, parent_context: GenIterContext):
         """
         Generate data for element "list"
         :param parent_context:
@@ -53,5 +53,4 @@ class ListTask(Task):
             value.append(ctx.current_product.get("temp_item_name"))
         for converter in self._converter_list:
             value = converter.convert(value)
-        if isinstance(parent_context, GenIterContext):
-            parent_context.add_current_product_field(self._statement.name, value)
+        parent_context.add_current_product_field(self._statement.name, value)

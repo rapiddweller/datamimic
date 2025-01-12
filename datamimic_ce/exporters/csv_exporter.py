@@ -22,7 +22,6 @@ class CSVExporter(UnifiedBufferedExporter):
         self,
         setup_context: SetupContext,
         product_name: str,
-        page_info: MultiprocessingPageInfo,
         chunk_size: int | None,
         fieldnames: list[str] | None,
         delimiter: str | None,
@@ -46,7 +45,6 @@ class CSVExporter(UnifiedBufferedExporter):
             setup_context=setup_context,
             product_name=product_name,
             chunk_size=chunk_size,
-            page_info=page_info,
             encoding=encoding,
         )
         logger.info(
@@ -54,10 +52,10 @@ class CSVExporter(UnifiedBufferedExporter):
             f"encoding '{self._encoding}', delimiter '{self.delimiter}'"
         )
 
-    def _write_data_to_buffer(self, data: list[dict]) -> None:
+    def _write_data_to_buffer(self, data: list[dict], worker_id: int, chunk_idx: int) -> None:
         """Writes data to the current buffer file in CSV format."""
         try:
-            buffer_file = self._get_buffer_file()
+            buffer_file = self._get_buffer_file(worker_id, chunk_idx)
             if buffer_file is None:
                 return
             write_header = not buffer_file.exists()

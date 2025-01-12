@@ -74,6 +74,10 @@ class UnifiedBufferedExporter(Exporter, ABC):
     def encoding(self) -> str:
         return self._encoding
 
+    @property
+    def chunk_size(self) -> int | None:
+        return self._chunk_size
+
     # def _get_buffer_tmp_dir(self) -> Path:
     #     return (
     #         self._descriptor_dir / f"temp_result_{self._task_id}{self._pid_placeholder}_exporter_"
@@ -301,6 +305,8 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
             idx += len(batch)
             if self._chunk_size and current_counter >= self._chunk_size and idx < total_data:
+                # Finalize chunk and rotate
+                # self._finalize_buffer_file(self._get_buffer_file(exporter_state_manager.worker_id, state_storage.chunk_index))
                 # Rotate chunk only if there is more data to process
                 exporter_state_manager.rotate_chunk(exporter_state_key)
 
@@ -372,7 +378,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         except Exception as e:
             logger.error(f"Error during cleanup: {e}")
 
-    def save_exported_result(self, worker_id: int) -> None:
+    def save_exported_result(self) -> None:
         """Copy all temporary files to the final destination.
         If destination already exists, creates a versioned directory."""
         logger.info(f"Saving exported result for product {self.product_name}")
@@ -386,17 +392,19 @@ class UnifiedBufferedExporter(Exporter, ABC):
         exporter_dir_path.mkdir(parents=True, exist_ok=True)
 
         # Only move files with the correct extension
-        for file in self._get_buffer_tmp_dir(worker_id).glob(f"*.{self.get_file_extension()}"):
-            target_path = exporter_dir_path / file.name
-            version = 1
-            # If file exists, create versioned file
-            while target_path.exists():
-                logger.warning(f"File {target_path} already exists. Creating version {version}")
-                base_name = file.stem  # Gets filename without extension
-                target_path = exporter_dir_path / f"{base_name}_v{version}{file.suffix}"
-                version += 1
+        all_buffer_tmp_dirs = self._descriptor_dir.glob(f"temp_result_{self._task_id}_pid_*_exporter_{self._exporter_type}_product_{self.product_name}")
+        for buffer_tmp_dir in all_buffer_tmp_dirs:
+            for file in buffer_tmp_dir.glob(f"*.{self.get_file_extension()}"):
+                target_path = exporter_dir_path / file.name
+                version = 1
+                # If file exists, create versioned file
+                while target_path.exists():
+                    logger.warning(f"File {target_path} already exists. Creating version {version}")
+                    base_name = file.stem  # Gets filename without extension
+                    target_path = exporter_dir_path / f"{base_name}_v{version}{file.suffix}"
+                    version += 1
 
-            shutil.move(file, target_path)
+                shutil.move(file, target_path)
 
     # def _reset_state(self) -> None:
     #     """Reset exporter state."""

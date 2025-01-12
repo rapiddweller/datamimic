@@ -45,10 +45,10 @@ class JsonExporter(UnifiedBufferedExporter):
 
         logger.info(f"JsonExporter initialized with chunk size {chunk_size} and NDJSON format: {use_ndjson}")
 
-    def _write_data_to_buffer(self, data: list[dict]) -> None:
+    def _write_data_to_buffer(self, data: list[dict], worker_id: int, chunk_idx: int) -> None:
         """Writes data to the current buffer file in NDJSON format."""
         try:
-            buffer_file = self._get_buffer_file()
+            buffer_file = self._get_buffer_file(worker_id, chunk_idx)
             # Open buffer file in append mode
             with buffer_file.open("a+") as file:
                 # Handle chunk size == 1

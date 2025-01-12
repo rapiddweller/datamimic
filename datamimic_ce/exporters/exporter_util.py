@@ -232,12 +232,11 @@ class ExporterUtil:
         elif name == EXPORTER_LOG_EXPORTER:
             return LogExporter()
         elif name == EXPORTER_JSON:
-            return JsonExporter(setup_context, product_name, page_info, chunk_size, use_ndjson, encoding)
+            return JsonExporter(setup_context, product_name, chunk_size, use_ndjson, encoding)
         elif name == EXPORTER_CSV:
             return CSVExporter(
                 setup_context,
                 product_name,
-                page_info,
                 chunk_size,
                 fieldnames,
                 delimiter,

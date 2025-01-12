@@ -69,10 +69,10 @@ class TXTExporter(UnifiedBufferedExporter):
         """Returns the MIME type for the data content."""
         return "text/plain"
 
-    def _write_data_to_buffer(self, data: list[dict], worker_id: int, product_name: str, chunk_idx: int) -> None:
+    def _write_data_to_buffer(self, data: list[dict], worker_id: int, chunk_idx: int) -> None:
         """Writes data to the current buffer file in TXT format."""
         try:
-            buffer_file = self._get_buffer_file(worker_id, product_name, chunk_idx)
+            buffer_file = self._get_buffer_file(worker_id, chunk_idx)
             with buffer_file.open("a", encoding=self.encoding) as txtfile:
                 for record in data:
                     # Format each record as "name: item"
