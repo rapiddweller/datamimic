@@ -280,8 +280,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
         exporter_state_key = f"product_{stmt_full_name}_{self.get_file_extension()}"
         state_storage = exporter_state_manager.get_storage(exporter_state_key)
-        global_counter = state_storage.global_counter
-        current_counter = state_storage.current_counter
+
         # chunk_size = state_storage.chunk_size
         # global_counter, current_counter, chunk_index, chunk_size = exporter_state_manager.load_exporter_state(exporter_state_key)
 
@@ -292,8 +291,14 @@ class UnifiedBufferedExporter(Exporter, ABC):
         total_data = len(data)
         # logger.debug(f"Storing {total_data} records for PID {worker_id}, initial count {current_counter}")
 
+        global_counter = state_storage.global_counter
+        current_counter = state_storage.current_counter
+
         # Write data in batches
         while idx < total_data:
+            global_counter = state_storage.global_counter
+            current_counter = state_storage.current_counter
+
             space_left = self._chunk_size - current_counter if self._chunk_size else total_data - idx
             current_batch_size = min(batch_size, space_left)
             batch = data[idx: idx + current_batch_size]

@@ -21,7 +21,7 @@ class GenIterContext(Context):
         self._current_name = current_name
         self._current_product: dict = {}
         self._current_variables: dict = {}
-        self._namespace: dict = {}
+        # self._namespace: dict = {}
         self._worker_id = None
 
     @property
@@ -66,6 +66,3 @@ class GenIterContext(Context):
         :return:
         """
         dict_nested_update(self.current_product, key_path, value)
-
-    def get_namespace(self):
-        return self._namespace

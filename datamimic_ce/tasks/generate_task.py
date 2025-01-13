@@ -378,18 +378,24 @@ class GenerateTask(CommonSubTask):
 
             # Serialize context for Ray multiprocessing
             copied_context = copy.deepcopy(context)
-            current_processed_setup_context = copied_context
-            while current_processed_setup_context != copied_context.root:
-                if not isinstance(current_processed_setup_context, SetupContext):
-                    current_processed_setup_context = current_processed_setup_context.parent
-                    continue
+            # current_processed_setup_context = copied_context
+            # while current_processed_setup_context != copied_context.root:
+            #     if not isinstance(current_processed_setup_context, SetupContext):
+            #         current_processed_setup_context = current_processed_setup_context.parent
+            #         continue
 
-                namespace_functions = {k: v for k, v in current_processed_setup_context.namespace.items() if callable(v)}
-                for func in namespace_functions:
-                    current_processed_setup_context.namespace.pop(func)
-                current_processed_setup_context.namespace_functions = dill.dumps(namespace_functions)
+                # namespace_functions = {k: v for k, v in current_processed_setup_context.namespace.items() if callable(v)}
+                # for func in namespace_functions:
+                #     current_processed_setup_context.namespace.pop(func)
+                # current_processed_setup_context.namespace_functions = dill.dumps(namespace_functions)
+                #
+                # current_processed_setup_context.generators = dill.dumps(current_processed_setup_context.generators)
 
-                current_processed_setup_context.generators = dill.dumps(current_processed_setup_context.generators)
+            ns_funcs = {k: v for k, v in copied_context.root.namespace.items() if callable(v)}
+            for func in ns_funcs:
+                copied_context.root.namespace.pop(func)
+            copied_context.root.namespace_functions = dill.dumps(ns_funcs)
+            copied_context.root.generators = dill.dumps(copied_context.root.generators)
 
             # Execute generate task using Ray
             futures = []
@@ -439,14 +445,22 @@ class GenerateTask(CommonSubTask):
     @staticmethod
     def finalize_temp_files_chunks(context: SetupContext, stmt: GenerateStatement):
         num_workers = GenerateTask.determine_num_workers(context, stmt)
-        for exporter_str in stmt.targets:
-            # Ignore exporters with operation
-            if "." in exporter_str:
-                continue
-            exporter = context.root.class_factory_util.get_exporter_util().get_exporter_by_name(context, exporter_str, stmt.name, {})
+
+        exporters_with_op, exporters_without_op = context.root.class_factory_util.get_exporter_util().create_exporter_list(context, stmt, list(stmt.targets))
+        exporter_list = exporters_with_op + exporters_without_op
+        for exporter in exporter_list:
             if hasattr(exporter, "finalize_chunks"):
                 for worker_id in range(1, num_workers + 1):
                     exporter.finalize_chunks(worker_id)
+
+        # for exporter_str in stmt.targets:
+        #     # Ignore exporters with operation
+        #     if "." in exporter_str:
+        #         continue
+        #     exporter = context.root.class_factory_util.get_exporter_util().get_exporter_by_name(context, exporter_str, stmt.name, {})
+        #     if hasattr(exporter, "finalize_chunks"):
+        #         for worker_id in range(1, num_workers + 1):
+        #             exporter.finalize_chunks(worker_id)
 
         for sub_stmt in stmt.sub_statements:
             if isinstance(sub_stmt, GenerateStatement):
@@ -558,14 +572,16 @@ class GenerateWorker:
     def generate_by_chunk(context: SetupContext | GenIterContext, stmt: GenerateStatement, worker_id: int, chunk_start: int,
                           chunk_end: int, page_size: int) -> dict:
         # Deserialize multiprocessing arguments
-        current_ctx = context
-        while current_ctx != current_ctx.root:
-            if not isinstance(current_ctx, SetupContext):
-                current_ctx = current_ctx.parent
-                continue
-
-            current_ctx.namespace_functions = dill.loads(current_ctx.namespace_functions)
-            current_ctx.generators = dill.loads(current_ctx.generators)
+        # current_ctx = context
+        # while current_ctx != current_ctx.root:
+        #     if not isinstance(current_ctx, SetupContext):
+        #         current_ctx = current_ctx.parent
+        #         continue
+        #
+        #     current_ctx.namespace_functions = dill.loads(current_ctx.namespace_functions)
+        #     current_ctx.generators = dill.loads(current_ctx.generators)
+        context.root.namespace.update(dill.loads(context.root.namespace_functions))
+        context.root.generators = dill.loads(context.root.generators)
 
         # Determine chunk data range, like (0, 1000), (1000, 2000), etc.
         index_chunk = [(i, min(i + page_size, chunk_end)) for i in range(chunk_start, chunk_end, page_size)]
@@ -592,9 +608,12 @@ class GenerateWorker:
                 for key, value in result_dict.items():
                     result[key] = result.get(key, []) + value
 
+        has_memstore_exporter = any(
+            [("." not in exporter_str) and ("(" not in exporter_str) and context.root.memstore_manager.contain(exporter_str) for exporter_str in stmt.targets]
+        )
 
         # Return results if inner gen_stmt
-        if isinstance(context, GenIterContext) or context.root.test_mode:
+        if isinstance(context, GenIterContext) or context.root.test_mode or has_memstore_exporter:
             return result
 
         return {}
