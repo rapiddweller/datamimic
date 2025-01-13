@@ -8,7 +8,6 @@ from bson import ObjectId
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.logger import logger
-from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -29,19 +28,17 @@ class JsonExporter(UnifiedBufferedExporter):
     """
 
     def __init__(
-        self,
-        setup_context: SetupContext,
-        product_name: str,
-        # page_info: MultiprocessingPageInfo,
-        chunk_size: int | None,
-        use_ndjson: bool | None,
-        encoding: str | None,
+            self,
+            setup_context: SetupContext,
+            product_name: str,
+            # page_info: MultiprocessingPageInfo,
+            chunk_size: int | None,
+            use_ndjson: bool | None,
+            encoding: str | None,
     ):
         self.use_ndjson = use_ndjson
         self._task_id = setup_context.task_id
-        super().__init__(
-            "json", setup_context, product_name, chunk_size=chunk_size, encoding=encoding
-        )
+        super().__init__("json", setup_context, product_name, chunk_size=chunk_size, encoding=encoding)
 
         logger.info(f"JsonExporter initialized with chunk size {chunk_size} and NDJSON format: {use_ndjson}")
 

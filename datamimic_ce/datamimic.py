@@ -43,7 +43,7 @@ class DataMimic:
         self._platform_props = platform_props
         self._platform_configs = platform_configs
         self._test_mode = test_mode
-        self._test_result_storage = TestResultExporter() if test_mode else None
+        self._test_result_storage = TestResultExporter()
 
         # Initialize logging
         log_system_info()

@@ -43,7 +43,7 @@ class Memstore(Exporter):
             )
         except KeyError as e:
             logger.error(f"Data naming '{product_type}' is empty in memstore: {e}")
-            raise KeyError(f"Data naming '{product_type}' is empty in memstore: {e}")
+            raise KeyError(f"Data naming '{product_type}' is empty in memstore") from e
 
     def get_data_len_by_type(self, entity_name: str) -> int:
         """

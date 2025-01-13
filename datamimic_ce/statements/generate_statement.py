@@ -138,7 +138,7 @@ class GenerateStatement(CompositeStatement):
         return self._bucket
 
     @property
-    def num_process(self) -> int:
+    def num_process(self) -> int | None:
         return self._num_process
 
     def contain_mongodb_upsert(self, setup_context: SetupContext) -> bool:

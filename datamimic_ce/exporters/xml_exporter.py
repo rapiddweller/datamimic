@@ -15,7 +15,6 @@ import xmltodict
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.logger import logger
-from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 
 
 class ExporterError(Exception):
@@ -31,13 +30,13 @@ class XMLExporter(UnifiedBufferedExporter):
     """
 
     def __init__(
-        self,
-        setup_context: SetupContext,
-        product_name: str,
-        chunk_size: int | None,
-        root_element: str | None,
-        item_element: str | None,
-        encoding: str | None,
+            self,
+            setup_context: SetupContext,
+            product_name: str,
+            chunk_size: int | None,
+            root_element: str | None,
+            item_element: str | None,
+            encoding: str | None,
     ):
         """
         Initializes the XMLExporter.
@@ -160,6 +159,7 @@ class XMLExporter(UnifiedBufferedExporter):
             logger.debug(f"Finalized XML file: {buffer_file}")
         except Exception as e:
             import traceback
+
             traceback.print_exc()
             logger.error(f"Error finalizing buffer file: {e}")
             raise ExporterError(f"Error finalizing buffer file: {e}") from e
@@ -180,7 +180,7 @@ class XMLExporter(UnifiedBufferedExporter):
             end_index = xml_content.find(end_tag)
             if start_index != -1 and end_index != -1:
                 # Extract content between <item> and </item>
-                item_content = xml_content[start_index + len(start_tag) : end_index]
+                item_content = xml_content[start_index + len(start_tag): end_index]
                 try:
                     with buffer_file.open("w", encoding=self.encoding) as xmlfile:
                         xmlfile.write(item_content)

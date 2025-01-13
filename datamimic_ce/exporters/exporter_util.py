@@ -37,7 +37,6 @@ from datamimic_ce.exporters.txt_exporter import TXTExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
-from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 
 
 def custom_serializer(obj) -> str:
@@ -60,9 +59,9 @@ def custom_serializer(obj) -> str:
 class ExporterUtil:
     @staticmethod
     def create_exporter_list(
-        setup_context: SetupContext,
-        stmt: GenerateStatement,
-        targets: list[str],
+            setup_context: SetupContext,
+            stmt: GenerateStatement,
+            targets: list[str],
     ) -> tuple[list[tuple[Exporter, str]], list[Exporter]]:
         """
         Create list of consumers with and without operation from consumer string
@@ -193,10 +192,10 @@ class ExporterUtil:
 
     @staticmethod
     def get_exporter_by_name(
-        setup_context: SetupContext,
-        name: str,
-        product_name: str,
-        exporter_params_dict: dict,
+            setup_context: SetupContext,
+            name: str,
+            product_name: str,
+            exporter_params_dict: dict,
     ):
         """
         Consumer factory: Create consumer based on name

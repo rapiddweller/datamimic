@@ -5,36 +5,30 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
-import csv
-import json
 import math
-import multiprocessing
-import os
 import shutil
 import time
-from collections import OrderedDict
-from collections.abc import Callable
 from contextlib import contextmanager
-from pathlib import Path
 from typing import Literal
 
 import dill  # type: ignore
 import ray
-import xmltodict
 
 from datamimic_ce.clients.database_client import DatabaseClient
-from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.config import settings
-from datamimic_ce.constants.exporter_constants import EXPORTER_TEST_RESULT_EXPORTER, EXPORTER_JSON_SINGLE, EXPORTER_XML, \
-    EXPORTER_CSV, EXPORTER_TXT, EXPORTER_JSON
+from datamimic_ce.constants.exporter_constants import (
+    EXPORTER_JSON_SINGLE,
+    EXPORTER_XML,
+    EXPORTER_CSV,
+    EXPORTER_TXT,
+    EXPORTER_JSON,
+)
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_util import DataSourceUtil
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
-from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
-from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.generate_statement import GenerateStatement
@@ -43,19 +37,13 @@ from datamimic_ce.statements.setup_statement import SetupStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
-from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
-from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 
 ray.init(ignore_reinit_error=True, local_mode=settings.RUNTIME_ENVIRONMENT == "development")
 
 
-def _geniter_single_process_generate(
-        context: SetupContext | GenIterContext,
-        stmt: GenerateStatement,
-        page_start: int,
-        page_end: int,
-        worker_id: int
-    ) -> dict[str, list]:
+def generate_product_by_page_in_single_process(
+    context: SetupContext | GenIterContext, stmt: GenerateStatement, page_start: int, page_end: int, worker_id: int
+) -> dict[str, list]:
     """
     (IMPORTANT: Only to be used as multiprocessing function)
     This function is used to generate data for a single process, includes steps:
@@ -80,11 +68,11 @@ def _geniter_single_process_generate(
         # Don't use pagination for random distribution to load all data before shuffle
         load_start_idx = None
         load_end_idx = None
-        load_pagination = None
+        load_pagination: DataSourcePagination | None = None
     else:
         load_start_idx = page_start
         load_end_idx = page_end
-        load_pagination: DataSourcePagination | None = pagination
+        load_pagination = pagination
 
     # Extract converter list
     task_util_cls = root_context.class_factory_util.get_task_util_cls()
@@ -178,6 +166,7 @@ def _geniter_single_process_generate(
     product_holder[stmt.full_name] = result
     return product_holder
 
+
 @contextmanager
 def gen_timer(process: Literal["generate", "export", "process"], report_logging: bool, product_name: str):
     """
@@ -221,6 +210,7 @@ class GenerateTask(CommonSubTask):
     Task class for generating data based on the GenerateStatement.
 
     """
+
     def __init__(self, statement: GenerateStatement, class_factory_util: BaseClassFactoryUtil):
         self._statement = statement
         self._class_factory_util = class_factory_util
@@ -249,6 +239,7 @@ class GenerateTask(CommonSubTask):
             if self.statement.selector:
                 # Evaluate script selector
                 from datamimic_ce.tasks.task_util import TaskUtil
+
                 selector = TaskUtil.evaluate_selector_script(context=context, stmt=self._statement)
                 client = (
                     root_context.get_client_by_id(self.statement.source) if self.statement.source is not None else None
@@ -374,22 +365,10 @@ class GenerateTask(CommonSubTask):
             chunks = [(i * chunk_size, min((i + 1) * chunk_size, count)) for i in range(num_workers)]
 
             # Create Ray workers
-            workers = [GenerateWorker.remote() for w in range(num_workers)]
+            workers = [GenerateWorker.remote() for w in range(num_workers)]  # type: ignore[attr-defined]
 
             # Serialize context for Ray multiprocessing
             copied_context = copy.deepcopy(context)
-            # current_processed_setup_context = copied_context
-            # while current_processed_setup_context != copied_context.root:
-            #     if not isinstance(current_processed_setup_context, SetupContext):
-            #         current_processed_setup_context = current_processed_setup_context.parent
-            #         continue
-
-                # namespace_functions = {k: v for k, v in current_processed_setup_context.namespace.items() if callable(v)}
-                # for func in namespace_functions:
-                #     current_processed_setup_context.namespace.pop(func)
-                # current_processed_setup_context.namespace_functions = dill.dumps(namespace_functions)
-                #
-                # current_processed_setup_context.generators = dill.dumps(current_processed_setup_context.generators)
 
             ns_funcs = {k: v for k, v in copied_context.root.namespace.items() if callable(v)}
             for func in ns_funcs:
@@ -399,15 +378,21 @@ class GenerateTask(CommonSubTask):
 
             # Execute generate task using Ray
             futures = []
-            for worker_id, worker, (chunk_start, chunk_end) in zip(range(1, num_workers + 1), workers, chunks, strict=True):
+            for worker_id, worker, (chunk_start, chunk_end) in zip(
+                range(1, num_workers + 1), workers, chunks, strict=True
+            ):
                 # logger.info(f"Generating chunk {chunk_start}-{chunk_end} with page size {page_size}")
                 if isinstance(copied_context, GenIterContext):
                     worker_id = copied_context.worker_id
-                futures.append(worker.generate_by_chunk.remote(copied_context, self._statement, worker_id, chunk_start, chunk_end, page_size))
+                futures.append(
+                    worker.generate_by_chunk.remote(
+                        copied_context, self._statement, worker_id, chunk_start, chunk_end, page_size
+                    )
+                )
 
             ray_result = ray.get(futures)
             # Merge result from all workers by product name
-            merged_result = {}
+            merged_result: dict[str, list] = {}
             for result in ray_result:
                 for product_name, product_data_list in result.items():
                     merged_result[product_name] = merged_result.get(product_name, []) + product_data_list
@@ -446,21 +431,14 @@ class GenerateTask(CommonSubTask):
     def finalize_temp_files_chunks(context: SetupContext, stmt: GenerateStatement):
         num_workers = GenerateTask.determine_num_workers(context, stmt)
 
-        exporters_with_op, exporters_without_op = context.root.class_factory_util.get_exporter_util().create_exporter_list(context, stmt, list(stmt.targets))
+        exporters_with_op, exporters_without_op = (
+            context.root.class_factory_util.get_exporter_util().create_exporter_list(context, stmt, list(stmt.targets))
+        )
         exporter_list = exporters_with_op + exporters_without_op
         for exporter in exporter_list:
             if hasattr(exporter, "finalize_chunks"):
                 for worker_id in range(1, num_workers + 1):
                     exporter.finalize_chunks(worker_id)
-
-        # for exporter_str in stmt.targets:
-        #     # Ignore exporters with operation
-        #     if "." in exporter_str:
-        #         continue
-        #     exporter = context.root.class_factory_util.get_exporter_util().get_exporter_by_name(context, exporter_str, stmt.name, {})
-        #     if hasattr(exporter, "finalize_chunks"):
-        #         for worker_id in range(1, num_workers + 1):
-        #             exporter.finalize_chunks(worker_id)
 
         for sub_stmt in stmt.sub_statements:
             if isinstance(sub_stmt, GenerateStatement):
@@ -481,10 +459,10 @@ class GenerateTask(CommonSubTask):
         for exporter_str in stmt.targets:
             if exporter_str in artifact_exporters_set:
                 exporter = context.root.class_factory_util.get_exporter_util().get_exporter_by_name(
-                    context.root, exporter_str, stmt.name, {})
+                    context.root, exporter_str, stmt.name, {}
+                )
                 # for worker_id in range(1, num_workers + 1):
                 exporter.save_exported_result()
-                # exporter.upload_to_storage(bucket=self.statement.bucket or self.statement.container, name=f"{context.root.task_id}/{self.statement.name}")
 
         # Export artifact files of sub-gen_stmts
         for sub_stmt in stmt.sub_statements:
@@ -569,17 +547,15 @@ class GenerateTask(CommonSubTask):
 @ray.remote
 class GenerateWorker:
     @staticmethod
-    def generate_by_chunk(context: SetupContext | GenIterContext, stmt: GenerateStatement, worker_id: int, chunk_start: int,
-                          chunk_end: int, page_size: int) -> dict:
+    def generate_by_chunk(
+        context: SetupContext | GenIterContext,
+        stmt: GenerateStatement,
+        worker_id: int,
+        chunk_start: int,
+        chunk_end: int,
+        page_size: int,
+    ) -> dict:
         # Deserialize multiprocessing arguments
-        # current_ctx = context
-        # while current_ctx != current_ctx.root:
-        #     if not isinstance(current_ctx, SetupContext):
-        #         current_ctx = current_ctx.parent
-        #         continue
-        #
-        #     current_ctx.namespace_functions = dill.loads(current_ctx.namespace_functions)
-        #     current_ctx.generators = dill.loads(current_ctx.generators)
         context.root.namespace.update(dill.loads(context.root.namespace_functions))
         context.root.generators = dill.loads(context.root.generators)
 
@@ -595,13 +571,15 @@ class GenerateWorker:
         exporter_state_manager = ExporterStateManager(worker_id)
 
         # Generate and consume product by page
-        for page_idx, index_tuple in enumerate(index_chunk):
+        for index_tuple in index_chunk:
             page_start, page_end = index_tuple
             # Generate product
-            result_dict = _geniter_single_process_generate(context, stmt, page_start, page_end, worker_id)
+            result_dict = generate_product_by_page_in_single_process(context, stmt, page_start, page_end, worker_id)
 
             # Export product by page
-            context.root.class_factory_util.get_task_util_cls().export_product_by_page(context.root, stmt, result_dict, exporter_state_manager)
+            context.root.class_factory_util.get_task_util_cls().export_product_by_page(
+                context.root, stmt, result_dict, exporter_state_manager
+            )
 
             # Collect result for later capture
             if return_product_result:
@@ -609,7 +587,12 @@ class GenerateWorker:
                     result[key] = result.get(key, []) + value
 
         has_memstore_exporter = any(
-            [("." not in exporter_str) and ("(" not in exporter_str) and context.root.memstore_manager.contain(exporter_str) for exporter_str in stmt.targets]
+            [
+                ("." not in exporter_str)
+                and ("(" not in exporter_str)
+                and context.root.memstore_manager.contain(exporter_str)
+                for exporter_str in stmt.targets
+            ]
         )
 
         # Return results if inner gen_stmt

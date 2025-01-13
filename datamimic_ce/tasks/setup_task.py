@@ -22,7 +22,7 @@ class SetupTask:
         task_id: str,
         properties: dict | None,
         test_mode: bool,
-        test_result_storage: TestResultExporter | None,
+        test_result_storage: TestResultExporter,
         descriptor_dir: Path,
         class_factory_util: BaseClassFactoryUtil,
     ):

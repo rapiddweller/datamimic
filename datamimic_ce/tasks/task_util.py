@@ -6,14 +6,14 @@
 import csv
 import json
 import re
+from collections import OrderedDict
 from pathlib import Path
-from typing import Any, OrderedDict
+from typing import Any
 
 import xmltodict
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.constants.exporter_constants import EXPORTER_TEST_RESULT_EXPORTER
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.converter.append_converter import AppendConverter
@@ -84,16 +84,15 @@ from datamimic_ce.tasks.nested_key_task import NestedKeyTask
 from datamimic_ce.tasks.reference_task import ReferenceTask
 from datamimic_ce.tasks.task import Task
 from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
-from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 from datamimic_ce.utils.object_util import ObjectUtil
 
 
 class TaskUtil:
     @staticmethod
     def get_task_by_statement(
-        ctx: SetupContext,
-        stmt: Statement,
-        pagination: DataSourcePagination | None = None,
+            ctx: SetupContext,
+            stmt: Statement,
+            pagination: DataSourcePagination | None = None,
     ) -> Task:
         class_factory_util = ctx.class_factory_util
         if isinstance(stmt, GenerateStatement):
@@ -280,15 +279,15 @@ class TaskUtil:
 
     @staticmethod
     def gen_task_load_data_from_source(
-        context: SetupContext,
-        stmt: GenerateStatement,
-        source_str: str,
-        separator: str,
-        source_scripted: bool,
-        processed_data_count: int,
-        load_start_idx: int,
-        load_end_idx: int,
-        load_pagination: DataSourcePagination | None,
+            context: SetupContext,
+            stmt: GenerateStatement,
+            source_str: str,
+            separator: str,
+            source_scripted: bool,
+            processed_data_count: int,
+            load_start_idx: int,
+            load_end_idx: int,
+            load_pagination: DataSourcePagination | None,
     ) -> tuple[list[dict], bool]:
         """
         Generate task to load data from source
@@ -306,7 +305,7 @@ class TaskUtil:
             build_from_source = False
         # Load data from CSV
         elif source_str.endswith(".csv"):
-            source_data = TaskUtil._load_csv_file(
+            source_data = TaskUtil.load_csv_file(
                 ctx=context,
                 file_path=root_context.descriptor_dir / source_str,
                 separator=separator,
@@ -319,7 +318,7 @@ class TaskUtil:
             )
         # Load data from JSON
         elif source_str.endswith(".json"):
-            source_data = TaskUtil._load_json_file(
+            source_data = TaskUtil.load_json_file(
                 root_context.task_id,
                 root_context.descriptor_dir / source_str,
                 stmt.cyclic,
@@ -336,7 +335,7 @@ class TaskUtil:
                     logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
         # Load data from XML
         elif source_str.endswith(".xml"):
-            source_data = TaskUtil._load_xml_file(
+            source_data = TaskUtil.load_xml_file(
                 root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
             )
             # if sourceScripted then evaluate python expression in json
@@ -365,9 +364,9 @@ class TaskUtil:
                     )
                 # Init empty product for upsert MongoDB in case no record found by query
                 if (
-                    len(source_data) == 0
-                    and isinstance(stmt, GenerateStatement)
-                    and stmt.contain_mongodb_upsert(root_context)
+                        len(source_data) == 0
+                        and isinstance(stmt, GenerateStatement)
+                        and stmt.contain_mongodb_upsert(root_context)
                 ):
                     source_data = [{}]
             # Load data from RDBMS
@@ -390,10 +389,10 @@ class TaskUtil:
 
     @staticmethod
     def export_product_by_page(
-        root_context: SetupContext,
-        stmt: GenerateStatement,
-        xml_result: dict[str, list[dict]],
-        exporter_state_manager: ExporterStateManager,
+            root_context: SetupContext,
+            stmt: GenerateStatement,
+            xml_result: dict[str, list[dict]],
+            exporter_state_manager: ExporterStateManager,
     ) -> None:
         """
         Export single page of product in generate statement.
@@ -414,7 +413,7 @@ class TaskUtil:
         elif getattr(stmt, "type", False):
             json_product = (stmt.name, json_result, {"type": stmt.type})
         else:
-            json_product = (stmt.name, json_result)
+            json_product = (stmt.name, json_result)  # type: ignore[assignment]
 
         # Create a unique cache key incorporating task_id and statement details
         exporters_cache_key = stmt.full_name
@@ -462,16 +461,16 @@ class TaskUtil:
                 if isinstance(exporter, Memstore):
                     continue
                 elif isinstance(exporter, XMLExporter):
-                    exporter.consume((json_product[0], xml_result[stmt.full_name]), stmt.full_name, exporter_state_manager)
+                    exporter.consume(
+                        (json_product[0], xml_result[stmt.full_name]), stmt.full_name, exporter_state_manager
+                    )
                 elif isinstance(exporter, JsonExporter | TXTExporter | CSVExporter):
                     exporter.consume(json_product, stmt.full_name, exporter_state_manager)
                 else:
                     exporter.consume(json_product)
             except Exception as e:
-                import traceback
-                traceback.print_exc()
                 logger.error(f"Error in exporter {type(exporter).__name__}: {str(e)}")
-                raise ValueError(f"Error in exporter {type(exporter).__name__}: {str(e)}")
+                raise ValueError(f"Error in exporter {type(exporter).__name__}") from e
 
     @staticmethod
     def evaluate_selector_script(context: Context, stmt: GenerateStatement):
@@ -488,16 +487,16 @@ class TaskUtil:
         return TaskUtil.evaluate_variable_concat_prefix_suffix(context, selector, prefix=prefix, suffix=suffix)
 
     @staticmethod
-    def _load_csv_file(
-        ctx: SetupContext,
-        file_path: Path,
-        separator: str,
-        cyclic: bool | None,
-        start_idx: int,
-        end_idx: int,
-        source_scripted: bool,
-        prefix: str,
-        suffix: str,
+    def load_csv_file(
+            ctx: SetupContext,
+            file_path: Path,
+            separator: str,
+            cyclic: bool | None,
+            start_idx: int,
+            end_idx: int,
+            source_scripted: bool,
+            prefix: str,
+            suffix: str,
     ) -> list[dict]:
         """
         Load CSV content from file with skip and limit.
@@ -530,7 +529,7 @@ class TaskUtil:
             return result
 
     @staticmethod
-    def _load_json_file(task_id: str, file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
+    def load_json_file(task_id: str, file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
         """
         Load JSON content from file using skip and limit.
 
@@ -566,7 +565,7 @@ class TaskUtil:
         return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
 
     @staticmethod
-    def _load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
+    def load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
         """
         Load XML content from file using skip and limit.
 

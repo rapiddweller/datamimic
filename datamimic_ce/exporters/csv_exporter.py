@@ -10,7 +10,6 @@ from pathlib import Path
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.logger import logger
-from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 
 
 class CSVExporter(UnifiedBufferedExporter):
@@ -19,16 +18,16 @@ class CSVExporter(UnifiedBufferedExporter):
     """
 
     def __init__(
-        self,
-        setup_context: SetupContext,
-        product_name: str,
-        chunk_size: int | None,
-        fieldnames: list[str] | None,
-        delimiter: str | None,
-        quotechar: str | None,
-        quoting: int | None,
-        line_terminator: str | None,
-        encoding: str | None,
+            self,
+            setup_context: SetupContext,
+            product_name: str,
+            chunk_size: int | None,
+            fieldnames: list[str] | None,
+            delimiter: str | None,
+            quotechar: str | None,
+            quoting: int | None,
+            line_terminator: str | None,
+            encoding: str | None,
     ):
         # Remove singleton pattern and initialize instance variables
         self.fieldnames = fieldnames or []

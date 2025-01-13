@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.contexts.context import Context
-from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.utils.dict_util import dict_nested_update
 
 
@@ -22,7 +21,7 @@ class GenIterContext(Context):
         self._current_product: dict = {}
         self._current_variables: dict = {}
         # self._namespace: dict = {}
-        self._worker_id = None
+        self._worker_id: int | None = None
 
     @property
     def current_name(self) -> str:

@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+
 class ExporterStateManager:
     def __init__(self, worker_id):
         self._worker_id = worker_id
