@@ -15,7 +15,6 @@ import dill  # type: ignore
 import ray
 
 from datamimic_ce.clients.database_client import DatabaseClient
-from datamimic_ce.config import settings
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
@@ -30,8 +29,6 @@ from datamimic_ce.statements.setup_statement import SetupStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
-
-ray.init(ignore_reinit_error=True, local_mode=settings.RUNTIME_ENVIRONMENT == "development")
 
 
 def generate_product_by_page_in_single_process(
@@ -370,7 +367,7 @@ class GenerateTask(CommonSubTask):
             chunks = [(i * chunk_size, min((i + 1) * chunk_size, count)) for i in range(num_workers)]
 
             # Create Ray workers
-            workers = [GenerateWorker.remote() for w in range(num_workers)]  # type: ignore[attr-defined]
+            workers = [RayGenerateWorker.remote() for w in range(num_workers)]  # type: ignore[attr-defined]
 
             # Serialize context for Ray multiprocessing
             copied_context = copy.deepcopy(context)
@@ -380,30 +377,38 @@ class GenerateTask(CommonSubTask):
             copied_context.root.namespace_functions = dill.dumps(ns_funcs)
             copied_context.root.generators = dill.dumps(copied_context.root.generators)
 
-            # Execute generate task using Ray
-            futures = []
-            for worker_id, worker, (chunk_start, chunk_end) in zip(
-                    range(1, num_workers + 1), workers, chunks, strict=True
-            ):
-                logger.info(f"Generating chunk {chunk_start}-{chunk_end} with page size {page_size}")
-                # If inner gen_stmt, pass worker_id from outermost gen_stmt to inner gen_stmt
-                if isinstance(copied_context, GenIterContext):
-                    worker_id = copied_context.worker_id
+            # Execute generate task by page in multiprocessing
+            if isinstance(context, SetupContext):
+                # Execute generate task using Ray
+                futures = []
+                for worker_id, worker, (chunk_start, chunk_end) in zip(
+                        range(1, num_workers + 1), workers, chunks, strict=True
+                ):
+                    logger.info(f"Generating chunk {chunk_start}-{chunk_end} with page size {page_size}")
+                    # If inner gen_stmt, pass worker_id from outermost gen_stmt to inner gen_stmt
+                    if isinstance(copied_context, GenIterContext):
+                        worker_id = copied_context.worker_id
 
-                # Generate and export data by page
-                futures.append(
-                    worker.generate_and_export_data_by_chunk.remote(
-                        copied_context, self._statement, worker_id, chunk_start, chunk_end, page_size
+                    # Generate and export data by page
+                    futures.append(
+                        worker.generate_and_export_data_by_chunk.remote(
+                            copied_context, self._statement, worker_id, chunk_start, chunk_end, page_size
+                        )
                     )
-                )
 
-            # Gather result from Ray workers
-            ray_result = ray.get(futures)
-            # Merge result from all workers by product name
-            merged_result: dict[str, list] = {}
-            for result in ray_result:
-                for product_name, product_data_list in result.items():
-                    merged_result[product_name] = merged_result.get(product_name, []) + product_data_list
+                # Gather result from Ray workers
+                ray_result = ray.get(futures)
+
+                # Merge result from all workers by product name
+                merged_result: dict[str, list] = {}
+                for result in ray_result:
+                    for product_name, product_data_list in result.items():
+                        merged_result[product_name] = merged_result.get(product_name, []) + product_data_list
+            # Execute generate task by page in single process
+            else:
+                merged_result = GenerateWorker.generate_and_export_data_by_chunk(
+                    copied_context, self._statement, 1, 0, count, page_size
+                )
 
             # At the end of OUTERMOST gen_stmt:
             # - export gathered product with LAZY exporters, such as TestResultExporter, MemstoreExporter,...
@@ -550,8 +555,12 @@ class GenerateTask(CommonSubTask):
             task.execute(root_context)
 
 
-@ray.remote
 class GenerateWorker:
+    """
+    Worker class for generating data based on the GenerateStatement.
+    Use this class for single process execution to avoid Ray overhead of creating too many single Ray workers.
+    """
+
     @staticmethod
     def generate_and_export_data_by_chunk(
             context: SetupContext | GenIterContext,
@@ -562,7 +571,7 @@ class GenerateWorker:
             page_size: int,
     ) -> dict:
         """
-        Generate and export data by page in a Ray single process.
+        Generate and export data by page in a single process.
 
         :param context: SetupContext or GenIterContext instance.
         :param stmt: GenerateStatement instance.
@@ -618,3 +627,11 @@ class GenerateWorker:
             return result
 
         return {}
+
+
+@ray.remote
+class RayGenerateWorker(GenerateWorker):
+    """
+    Ray worker class for generating data based on the GenerateStatement.
+    """
+    pass

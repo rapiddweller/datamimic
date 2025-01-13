@@ -20,7 +20,6 @@ class GenIterContext(Context):
         self._current_name = current_name
         self._current_product: dict = {}
         self._current_variables: dict = {}
-        # self._namespace: dict = {}
         self._worker_id: int | None = None
 
     @property

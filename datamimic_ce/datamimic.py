@@ -9,6 +9,8 @@ import traceback
 import uuid
 from pathlib import Path
 
+import ray
+
 from datamimic_ce.config import settings
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger, setup_logger
@@ -23,13 +25,13 @@ LOG_FILE = "datamimic.log"
 
 class DataMimic:
     def __init__(
-        self,
-        descriptor_path: Path,
-        task_id: str | None = None,
-        platform_props: dict[str, str] | None = None,
-        platform_configs: dict | None = None,
-        test_mode: bool = False,
-        args: argparse.Namespace | None = None,
+            self,
+            descriptor_path: Path,
+            task_id: str | None = None,
+            platform_props: dict[str, str] | None = None,
+            platform_configs: dict | None = None,
+            test_mode: bool = False,
+            args: argparse.Namespace | None = None,
     ):
         """
         Initialize DataMimic with descriptor_path.
@@ -62,6 +64,8 @@ class DataMimic:
     def parse_and_execute(self) -> None:
         """Parse root XML descriptor file and execute."""
         try:
+            ray.init(ignore_reinit_error=False, local_mode=settings.RAY_DEBUG)
+
             root_stmt = DescriptorParser.parse(self._class_factory_util, self._descriptor_path, self._platform_props)
             setup_task = SetupTask(
                 class_factory_util=self._class_factory_util,
@@ -81,6 +85,8 @@ class DataMimic:
             logger.exception("Error in DATAMIMIC process. Error message: {err}")
             traceback.print_exc()
             raise err
+        finally:
+            ray.shutdown()
 
     def capture_test_result(self) -> dict | None:
         """Capture test result in test mode."""

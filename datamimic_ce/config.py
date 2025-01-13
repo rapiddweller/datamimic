@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     DEFAULT_LOGGER: str = "DATAMIMIC"
 
     LIB_EDITION: str = "CE"
+
+    RAY_DEBUG: bool = False
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 
 
