@@ -58,6 +58,23 @@ def custom_serializer(obj) -> str:
 
 class ExporterUtil:
     @staticmethod
+    def get_all_exporter(setup_context: SetupContext, stmt: GenerateStatement, targets: list[str]) -> list:
+        """
+        Get all exporters from target string
+
+        :param setup_context:
+        :param stmt:
+        :param targets:
+        :return:
+        """
+        exporters_with_operation, exporters_without_operation = ExporterUtil.create_exporter_list(
+            setup_context=setup_context,
+            stmt=stmt,
+            targets=targets,
+        )
+        return exporters_without_operation + exporters_with_operation
+
+    @staticmethod
     def create_exporter_list(
             setup_context: SetupContext,
             stmt: GenerateStatement,

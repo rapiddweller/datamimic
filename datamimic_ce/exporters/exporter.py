@@ -4,8 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from abc import ABC
 
-
-class Exporter(ABC):
+class Exporter:
     pass

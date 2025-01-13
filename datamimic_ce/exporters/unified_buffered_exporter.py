@@ -35,7 +35,6 @@ class UnifiedBufferedExporter(Exporter, ABC):
     Supports multiple formats (e.g., JSON, CSV, XML) and storage backends.
     """
 
-    STREAM_CHUNK_SIZE = 8 * 1024 * 1024  # 8MB streaming chunks for large files
     MAX_RETRIES = 3
     RETRY_DELAY = 0.1  # seconds
 
@@ -58,14 +57,6 @@ class UnifiedBufferedExporter(Exporter, ABC):
         self._descriptor_dir = setup_context.descriptor_dir  # Directory for storing temp files
         self._chunk_size = chunk_size  # Max entities per chunk
 
-        # Prepare temporary buffer directory
-        # self._buffer_tmp_dir = self._get_buffer_tmp_dir()
-        # self._init_buffer_directory()
-
-        # Initialize state variables
-        self._is_first_write: bool | None = None
-        # self._load_state()
-
     @property
     def encoding(self) -> str:
         return self._encoding
@@ -75,15 +66,22 @@ class UnifiedBufferedExporter(Exporter, ABC):
         return self._chunk_size
 
     def _get_buffer_tmp_dir(self, worker_id: int) -> Path:
+        """
+        Get the temporary buffer directory for the current worker.
+        """
         buffer_temp_dir = (
                 self._descriptor_dir / f"temp_result_{self._task_id}_pid_{worker_id}_exporter_"
                                        f"{self._exporter_type}_product_{self.product_name}"
         )
+        # Create directory if it doesn't exist
         pathlib.Path(buffer_temp_dir).mkdir(parents=True, exist_ok=True)
+
         return buffer_temp_dir
 
     def _get_buffer_file(self, worker_id: int, chunk_index: int) -> Path:
-        """Get the buffer file for the current chunk."""
+        """
+        Get the buffer file for the current chunk index.
+        """
         buffer_file = self._get_buffer_tmp_dir(worker_id) / Path(
             f"product_{self.product_name}_pid_{worker_id}_chunk_{chunk_index}.{self.get_file_extension()}"
         )
@@ -143,8 +141,9 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
         # Validate product structure
         data, extra = self._validate_product(product)
-        # logger.debug(f"Storing data for '{self.product_name}' with {len(data)} records")
+        logger.debug(f"Storing data for '{self.product_name}' with {len(data)} records")
 
+        # Get exporter state storage
         exporter_state_key = f"product_{stmt_full_name}_{self.get_file_extension()}"
         state_storage = exporter_state_manager.get_storage(exporter_state_key)
 
@@ -153,16 +152,15 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
         idx = 0
         total_data = len(data)
-        # logger.debug(f"Storing {total_data} records for PID {worker_id}, initial count {current_counter}")
 
+        # Load state from storage
         global_counter = state_storage.global_counter
         current_counter = state_storage.current_counter
+        logger.debug(
+            f"Storing {total_data} records for PID {exporter_state_manager.worker_id}, initial count {current_counter}")
 
         # Write data in batches
         while idx < total_data:
-            global_counter = state_storage.global_counter
-            current_counter = state_storage.current_counter
-
             space_left = self._chunk_size - current_counter if self._chunk_size else total_data - idx
             current_batch_size = min(batch_size, space_left)
             batch = data[idx: idx + current_batch_size]
@@ -173,12 +171,14 @@ class UnifiedBufferedExporter(Exporter, ABC):
             global_counter += len(batch)
 
             idx += len(batch)
+            # Finalize chunk and rotate
             if self._chunk_size and current_counter >= self._chunk_size and idx < total_data:
-                # Finalize chunk and rotate
                 # Rotate chunk only if there is more data to process
                 exporter_state_manager.rotate_chunk(exporter_state_key)
+                # Reload state from storage after rotation
+                current_counter = state_storage.current_counter
 
-        # Update metadata and save state
+        # Save state to storage
         exporter_state_manager.save_state(exporter_state_key, global_counter, current_counter)
 
     @abstractmethod

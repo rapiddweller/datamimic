@@ -74,7 +74,6 @@ class CSVExporter(UnifiedBufferedExporter):
                 for record in data:
                     writer.writerow(record)
             logger.debug(f"Wrote {len(data)} records to buffer file: {buffer_file}")
-            self._is_first_write = False
         except Exception as e:
             logger.error(f"Error writing data to buffer: {e}")
             raise

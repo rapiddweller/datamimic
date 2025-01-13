@@ -6,6 +6,10 @@
 
 
 class ExporterStateManager:
+    """
+    Manages the state of exporters for each worker.
+    """
+
     def __init__(self, worker_id):
         self._worker_id = worker_id
         self._storage_dict = {}
@@ -41,6 +45,10 @@ class ExporterStateManager:
 
 
 class ExporterStateStorage:
+    """
+    Stores the state of an exporter for a worker.
+    """
+
     def __init__(self, chunk_size: int | None):
         self._global_counter = 0
         self._current_counter = 0
