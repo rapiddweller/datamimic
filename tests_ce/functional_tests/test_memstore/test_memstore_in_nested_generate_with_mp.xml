@@ -1,0 +1,25 @@
+<setup multiprocessing="True" numProcess="2">
+    <memstore id="mem"/>
+    <generate name="wrapping" count="2">
+        <variable name="id" type="string" generator="IncrementGenerator"/>
+
+        <generate name="data_1" count="10"  target="mem">
+            <variable name="data_id" type="string" generator="IncrementGenerator"/>
+            <variable name="company" entity="Company" dataset="DE"/>
+            <key name="id" script="id + '_' + data_1.data_id"/>
+            <key name="name" script="data_1.company.short_name"/>
+        </generate>
+
+        <generate name="wrapping_2" count="1">
+            <generate name="data_2" count="10"  target="mem">
+                <variable name="data_id" type="string" generator="IncrementGenerator"/>
+                <variable name="random_no" generator="IntegerGenerator"/>
+                <key name="id" script="id + '_' + wrapping_2.data_2.data_id"/>
+                <key name="number" script="wrapping_2.data_2.random_no"/>
+            </generate>
+        </generate>
+    </generate>
+
+    <generate name="iterate_1" type="data_1" source="mem" target="" distribution="ordered"/>
+    <generate name="iterate_2" type="data_2" source="mem" target="" distribution="ordered"/>
+</setup>
