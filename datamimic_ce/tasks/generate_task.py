@@ -361,34 +361,30 @@ class GenerateTask(CommonSubTask):
             # Determine number of Ray workers for multiprocessing
             num_workers = self.determine_num_workers(context, self.statement)
 
-            # Determine chunk data indices based on chunk size and required data count
-            # then populate to workers, such as (0, 1000), (1000, 2000), etc.
-            chunk_size = math.ceil(count / num_workers)
-            chunks = [(i * chunk_size, min((i + 1) * chunk_size, count)) for i in range(num_workers)]
-
-            # Create Ray workers
-            workers = [RayGenerateWorker.remote() for w in range(num_workers)]  # type: ignore[attr-defined]
-
-            # Serialize context for Ray multiprocessing
-            copied_context = copy.deepcopy(context)
-            ns_funcs = {k: v for k, v in copied_context.root.namespace.items() if callable(v)}
-            for func in ns_funcs:
-                copied_context.root.namespace.pop(func)
-            copied_context.root.namespace_functions = dill.dumps(ns_funcs)
-            copied_context.root.generators = dill.dumps(copied_context.root.generators)
-
             # Execute generate task by page in multiprocessing
-            if isinstance(context, SetupContext):
+            if isinstance(context, SetupContext) and num_workers > 1:
+                # Serialize context for Ray multiprocessing
+                copied_context = copy.deepcopy(context)
+                ns_funcs = {k: v for k, v in copied_context.root.namespace.items() if callable(v)}
+                for func in ns_funcs:
+                    copied_context.root.namespace.pop(func)
+                copied_context.root.namespace_functions = dill.dumps(ns_funcs)
+                copied_context.root.generators = dill.dumps(copied_context.root.generators)
+
+                # Determine chunk data indices based on chunk size and required data count
+                # then populate to workers, such as (0, 1000), (1000, 2000), etc.
+                chunk_size = math.ceil(count / num_workers)
+                chunks = [(i * chunk_size, min((i + 1) * chunk_size, count)) for i in range(num_workers)]
+
+                # Create Ray workers
+                workers = [RayGenerateWorker.remote() for w in range(num_workers)]  # type: ignore[attr-defined]
+
                 # Execute generate task using Ray
                 futures = []
                 for worker_id, worker, (chunk_start, chunk_end) in zip(
                         range(1, num_workers + 1), workers, chunks, strict=True
                 ):
                     logger.info(f"Generating chunk {chunk_start}-{chunk_end} with page size {page_size}")
-                    # If inner gen_stmt, pass worker_id from outermost gen_stmt to inner gen_stmt
-                    if isinstance(copied_context, GenIterContext):
-                        worker_id = copied_context.worker_id
-
                     # Generate and export data by page
                     futures.append(
                         worker.generate_and_export_data_by_chunk.remote(
@@ -406,8 +402,10 @@ class GenerateTask(CommonSubTask):
                         merged_result[product_name] = merged_result.get(product_name, []) + product_data_list
             # Execute generate task by page in single process
             else:
+                # If inner gen_stmt, pass worker_id from outermost gen_stmt to inner gen_stmt
+                worker_id = context.worker_id if isinstance(context, GenIterContext) else 1
                 merged_result = GenerateWorker.generate_and_export_data_by_chunk(
-                    copied_context, self._statement, 1, 0, count, page_size
+                    context, self._statement, worker_id, 0, count, page_size
                 )
 
             # At the end of OUTERMOST gen_stmt:
@@ -580,9 +578,6 @@ class GenerateWorker:
         :param chunk_end: End index of chunk.
         :param page_size: Size of each page.
         """
-        # Deserialize multiprocessing arguments
-        context.root.namespace.update(dill.loads(context.root.namespace_functions))
-        context.root.generators = dill.loads(context.root.generators)
 
         # Determine chunk data range, like (0, 1000), (1000, 2000), etc.
         index_chunk = [(i, min(i + page_size, chunk_end)) for i in range(chunk_start, chunk_end, page_size)]
@@ -634,4 +629,19 @@ class RayGenerateWorker(GenerateWorker):
     """
     Ray worker class for generating data based on the GenerateStatement.
     """
-    pass
+
+    @staticmethod
+    def generate_and_export_data_by_chunk(
+            context: SetupContext | GenIterContext,
+            stmt: GenerateStatement,
+            worker_id: int,
+            chunk_start: int,
+            chunk_end: int,
+            page_size: int,
+    ) -> dict:
+        # Deserialize multiprocessing arguments
+        context.root.namespace.update(dill.loads(context.root.namespace_functions))
+        context.root.generators = dill.loads(context.root.generators)
+
+        return GenerateWorker.generate_and_export_data_by_chunk(context, stmt, worker_id, chunk_start, chunk_end,
+                                                                page_size)

@@ -22,6 +22,8 @@ from datamimic_ce.utils.system_util import log_memory_info
 
 LOG_FILE = "datamimic.log"
 
+ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG)
+
 
 class DataMimic:
     def __init__(
@@ -64,8 +66,6 @@ class DataMimic:
     def parse_and_execute(self) -> None:
         """Parse root XML descriptor file and execute."""
         try:
-            ray.init(ignore_reinit_error=False, local_mode=settings.RAY_DEBUG)
-
             root_stmt = DescriptorParser.parse(self._class_factory_util, self._descriptor_path, self._platform_props)
             setup_task = SetupTask(
                 class_factory_util=self._class_factory_util,
@@ -85,8 +85,8 @@ class DataMimic:
             logger.exception("Error in DATAMIMIC process. Error message: {err}")
             traceback.print_exc()
             raise err
-        finally:
-            ray.shutdown()
+        # finally:
+        # ray.shutdown()
 
     def capture_test_result(self) -> dict | None:
         """Capture test result in test mode."""
