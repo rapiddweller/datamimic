@@ -591,6 +591,27 @@ class GenerateWorker:
         # Initialize ARTIFACT exporter state manager for each worker
         exporter_state_manager = ExporterStateManager(worker_id)
 
+        # Create and cache exporters for each worker
+        exporters_set = stmt.targets.copy()
+        root_context = context.root
+        
+        # Create exporters with operations
+        (
+            consumers_with_operation,
+            consumers_without_operation,
+        ) = root_context.class_factory_util.get_exporter_util().create_exporter_list(
+            setup_context=root_context,
+            stmt=stmt,
+            targets=list(exporters_set),
+        )
+
+        # Cache the exporters
+        root_context.task_exporters[stmt.full_name] = {
+            "with_operation": consumers_with_operation,
+            "without_operation": consumers_without_operation,
+            "page_count": 0,  # Track number of pages processed
+        }
+
         # Generate and consume product by page
         for index_tuple in index_chunk:
             page_start, page_end = index_tuple

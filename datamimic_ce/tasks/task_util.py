@@ -418,28 +418,6 @@ class TaskUtil:
         # Create a unique cache key incorporating task_id and statement details
         exporters_cache_key = stmt.full_name
 
-        # Get or create exporters
-        if exporters_cache_key not in root_context.task_exporters:
-            # Create the exporter set once
-            exporters_set = stmt.targets.copy()
-
-            # Create exporters with operations
-            (
-                consumers_with_operation,
-                consumers_without_operation,
-            ) = root_context.class_factory_util.get_exporter_util().create_exporter_list(
-                setup_context=root_context,
-                stmt=stmt,
-                targets=list(exporters_set),
-            )
-
-            # Cache the exporters
-            root_context.task_exporters[exporters_cache_key] = {
-                "with_operation": consumers_with_operation,
-                "without_operation": consumers_without_operation,
-                "page_count": 0,  # Track number of pages processed
-            }
-
         # Get cached exporters
         exporters = root_context.task_exporters[exporters_cache_key]
         exporters["page_count"] += 1
@@ -469,6 +447,8 @@ class TaskUtil:
                 else:
                     exporter.consume(json_product)
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 logger.error(f"Error in exporter {type(exporter).__name__}: {str(e)}")
                 raise ValueError(f"Error in exporter {type(exporter).__name__}") from e
 
