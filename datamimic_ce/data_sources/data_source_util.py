@@ -38,6 +38,10 @@ class DataSourceUtil:
         if isinstance(stmt, ReferenceStatement):
             return
 
+        # Check if prop source is available
+        if not hasattr(stmt, "source") and not hasattr(stmt, "script"):
+            return
+
         root_ctx = ctx.root
         source_id: str | None = stmt.full_name
         ds_len: int = 0
@@ -51,10 +55,9 @@ class DataSourceUtil:
                 return
         # Check length of data source
         else:
-            # 1: Check if prop source is available
-            if not hasattr(stmt, "source") or stmt.source is None:
-                return
             source_str = stmt.source
+            if source_str is None:
+                return
             # Try to evaluate script as source string
             # Ignore to check scripted source if eval failed in pre-execute task
             if source_str.startswith("{") and source_str.endswith("}"):
