@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeList>
+   <Annotation>
+   </Annotation>
+   <Identification>
+      <ShortName>typveranstaltungreisegewerbe</ShortName>
+      <LongName>Veranstaltungstyp Reisegewerbe</LongName>
+      <Version>1</Version>
+      <CanonicalUri>urn:xoev-de:xgewerbeordnung:codeliste:typveranstaltungreisegewerbe</CanonicalUri>
+      <CanonicalVersionUri>urn:xoev-de:xgewerbeordnung:codeliste:typveranstaltungreisegewerbe_1</CanonicalVersionUri>
+      <Agency>
+         <LongName>Betreiber XGewerbeordnung (KoSIT und d-NRW im Auftrag des Bundesministeriums für Wirtschaft und Klimaschutz)</LongName>
+      </Agency>
+   </Identification>
+   <ColumnSet>
+      <Column Id="Code" Use="required">
+         <ShortName>Code</ShortName>
+         <LongName>Code</LongName>
+         <Data Type="string"/>
+      </Column>
+      <Column Id="Beschreibung" Use="optional">
+         <ShortName>Beschreibung</ShortName>
+         <LongName>Beschreibung</LongName>
+         <Data Type="string"/>
+      </Column>
+      <Key Id="CodeKey">
+         <Annotation>
+            <AppInfo>
+            </AppInfo>
+         </Annotation>
+         <ShortName>CodeKey</ShortName>
+         <ColumnRef Ref="Code"/>
+      </Key>
+   </ColumnSet>
+   <SimpleCodeList>
+      <Row>
+         <Value ColumnRef="Code">
+            <SimpleValue>01</SimpleValue>
+         </Value>
+         <Value ColumnRef="Beschreibung">
+            <SimpleValue>Messe oder Ausstellung</SimpleValue>
+         </Value>
+      </Row>
+      <Row>
+         <Value ColumnRef="Code">
+            <SimpleValue>02</SimpleValue>
+         </Value>
+         <Value ColumnRef="Beschreibung">
+            <SimpleValue>Markt</SimpleValue>
+         </Value>
+      </Row>
+      <Row>
+         <Value ColumnRef="Code">
+            <SimpleValue>03</SimpleValue>
+         </Value>
+         <Value ColumnRef="Beschreibung">
+            <SimpleValue>Öffentliche Veranstaltung</SimpleValue>
+         </Value>
+      </Row>
+      <Row>
+         <Value ColumnRef="Code">
+            <SimpleValue>04</SimpleValue>
+         </Value>
+         <Value ColumnRef="Beschreibung">
+            <SimpleValue>Großveranstaltung</SimpleValue>
+         </Value>
+      </Row>
+      <Row>
+         <Value ColumnRef="Code">
+            <SimpleValue>05</SimpleValue>
+         </Value>
+         <Value ColumnRef="Beschreibung">
+            <SimpleValue>Sportfest oder Sportveranstaltungen</SimpleValue>
+         </Value>
+      </Row>
+      <Row>
+         <Value ColumnRef="Code">
+            <SimpleValue>06</SimpleValue>
+         </Value>
+         <Value ColumnRef="Beschreibung">
+            <SimpleValue>Großdemonstration</SimpleValue>
+         </Value>
+      </Row>
+      <Row>
+         <Value ColumnRef="Code">
+            <SimpleValue>07</SimpleValue>
+         </Value>
+         <Value ColumnRef="Beschreibung">
+            <SimpleValue>Sonstige</SimpleValue>
+         </Value>
+      </Row>
+   </SimpleCodeList>
+</CodeList>

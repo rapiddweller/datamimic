@@ -1,0 +1,81 @@
+<setup defaultSeparator="|">
+    <!-- This example show how to create xml from beginning and export it -->
+    <generate name="Veranstaltungstyp" count="1" target="XML">
+        <nestedKey name="gc:CodeList" type="dict">
+            <element name="xmlns:gc" constant="http://docs.oasis-open.org/codelist/ns/genericode/1.0/"/>
+            <element name="xmlns:xoev-cl-4" constant="http://xoev.de/schemata/genericode/4"/>
+            <element name="xmlns:xsi" constant="http://www.w3.org/2001/XMLSchema-instance"/>
+
+            <nestedKey name="Annotation" type="dict">
+                <nestedKey name="Description" type="dict">
+                    <key name="xoev-cl-4:shortName" constant="Veranstaltungstyp Reisegewerbe"/>
+                    <key name="xoev-cl-4:codelistDescription" constant="Veranstaltungstyp eines Reisegewerbes" />
+                    <key name="xoev-cl-4:agencyShortName" constant="XGewerbeordnung" />
+                    <key name="xoev-cl-4:validFrom" constant="2025-11-01" />
+                    <key name="xoev-cl-4:versionHandbook" constant="1.2" />
+                </nestedKey>
+            </nestedKey>
+
+            <nestedKey name="Identification" type="dict">
+                <key name="ShortName" constant="typveranstaltungreisegewerbe"/>
+                <key name="LongName" constant="Veranstaltungstyp Reisegewerbe"/>
+                <key name="Version" constant="1"/>
+                <key name="CanonicalUri" constant="urn:xoev-de:xgewerbeordnung:codeliste:typveranstaltungreisegewerbe"/>
+                <key name="CanonicalVersionUri" constant="urn:xoev-de:xgewerbeordnung:codeliste:typveranstaltungreisegewerbe_1"/>
+                <nestedKey name="Agency" type="dict">
+                   <key name="LongName" constant="Betreiber XGewerbeordnung (KoSIT und d-NRW im Auftrag des Bundesministeriums für Wirtschaft und Klimaschutz)"/>
+                </nestedKey>
+            </nestedKey>
+
+            <nestedKey name="ColumnSet" type="dict">
+                <nestedKey name="Column" type="list" count="2">
+                    <variable name="column_var" source="data/veranstaltungstyp_column_data.ent.csv" distribution="ordered"/>
+
+                    <!--
+                        Only use escape colon at the first variable name have colon
+                        Example: gc\:CodeList.ColumnSet
+                        DO NOT NEED to use for after variable name
+                        Example: first_var.second_var.colon:var
+                    -->
+                    <element name="Id" script="gc\:CodeList.ColumnSet.Column.column_var.Id"/>
+                    <element name="Use" script="gc\:CodeList.ColumnSet.Column.column_var.Use"/>
+                    <key name="ShortName" script="gc\:CodeList.ColumnSet.Column.column_var.ShortName"/>
+                    <key name="LongName" script="gc\:CodeList.ColumnSet.Column.column_var.LongName"/>
+                    <key name="data" script="None">
+                        <element name="Type" constant="string"/>
+                    </key>
+                </nestedKey>
+                <nestedKey name="Key" type="dict">
+                    <element name="Id" constant="CodeKey"/>
+                    <nestedKey name="Annotation" type="dict">
+                        <nestedKey name="AppInfo" type="dict">
+                            <key name="xoev-cl-4:recommendedKeyColumn" script="None"/>
+                        </nestedKey>
+                    </nestedKey>
+                    <key name="ShortName" constant="CodeKey"/>
+                    <key name="ColumnRef" script="None">
+                        <element name="Ref" constant="Code"/>
+                    </key>
+                </nestedKey>
+            </nestedKey>
+
+            <nestedKey name="SimpleCodeList" type="dict">
+                <nestedKey name="Row" count="7" type="list">
+                    <variable name="row_var" source="data/veranstaltungstyp_row_data.ent.csv" distribution="ordered"/>
+                    <nestedKey name="value" type="list" count="2">
+                        <variable name="id" generator="IncrementGenerator"/>
+                        <element name="ColumnRef" constant="Code"
+                                 condition="gc\:CodeList.SimpleCodeList.Row.value.id % 2 == 1"/>
+                        <key name="SimpleValue" script="gc\:CodeList.SimpleCodeList.Row.row_var.Code"
+                             condition="gc\:CodeList.SimpleCodeList.Row.value.id % 2 == 1"/>
+
+                        <element name="ColumnRef" constant="Beschreibung"
+                                 condition="gc\:CodeList.SimpleCodeList.Row.value.id % 2 == 0"/>
+                        <key name="SimpleValue" script="gc\:CodeList.SimpleCodeList.Row.row_var.Beschreibung"
+                             condition="gc\:CodeList.SimpleCodeList.Row.value.id % 2 == 0"/>
+                    </nestedKey>
+                </nestedKey>
+            </nestedKey>
+        </nestedKey>
+    </generate>
+</setup>

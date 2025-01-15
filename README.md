@@ -25,11 +25,13 @@ Welcome to **DATAMIMIC**, the Model-Driven and AI-powered platform that revoluti
 ### Core Features 🔵
 
 #### 🧠 Model-Driven Generation
+
 - Create sophisticated data models for consistent test data generation
 - Define complex relationships between entities
 - Support for nested and hierarchical data structures
 
 #### 📊 Data Types & Integration
+
 - **Basic Data Types Support**
   - All standard primitive types
   - Complex data structures
@@ -40,12 +42,14 @@ Welcome to **DATAMIMIC**, the Model-Driven and AI-powered platform that revoluti
   - Basic import/export functionality
 
 #### 🛡️ Data Privacy & Compliance
+
 - GDPR-compliant data anonymization
 - Basic pseudonymization capabilities
 - Data masking for sensitive information
 - Configurable privacy rules
 
 #### ⚡ Core Capabilities
+
 - **High Performance Engine**
   - Optimized for large datasets
   - Parallel processing support
@@ -64,7 +68,7 @@ Welcome to **DATAMIMIC**, the Model-Driven and AI-powered platform that revoluti
 ### Enterprise Features 🟣
 
 #### 🧠 AI-Powered Generation
-> Advanced AI capabilities for realistic data creation
+
 - **GAN-based Synthesis**
   - Realistic data patterns
   - Learning from existing datasets
@@ -79,7 +83,7 @@ Welcome to **DATAMIMIC**, the Model-Driven and AI-powered platform that revoluti
   - Model optimization
 
 #### 🔗 Advanced Integrations
-> Enterprise-grade system integration capabilities
+
 - **Streaming Support**
   - Kafka integration
   - Real-time data generation
@@ -94,7 +98,7 @@ Welcome to **DATAMIMIC**, the Model-Driven and AI-powered platform that revoluti
   - Legacy systems
 
 #### 🛡️ Enhanced Privacy Features
-> Advanced data protection and compliance
+
 - **Advanced Anonymization**
   - Context-aware masking
   - Reversible anonymization
@@ -109,7 +113,7 @@ Welcome to **DATAMIMIC**, the Model-Driven and AI-powered platform that revoluti
   - Security audit trails
 
 #### 📈 Advanced Data Validation
-> Comprehensive data quality assurance
+
 - **Validation Framework**
   - Custom rule engines
   - Complex validation logic
@@ -140,7 +144,7 @@ Traditional test data generation can be time-consuming and may compromise data p
 
 The simplest way to get started with DATAMIMIC is through pip:
 
-```bash 
+```bash
 pip install datamimic-ce
 ```
 
@@ -205,10 +209,11 @@ For contributors and developers who want to work with the source code:
     ```bash
     datamimic run datamimic.xml
     ```
-   
+
 4. Access the generated data in the `output` directory.
 
     **json export:**
+
     ```json
    [
    {"id": 1, "first_name": "Mary", "last_name": "Mcgowan", "gender": "female", "birth_date": "1946-05-15T00:00:00", "email": "Mcgowan@Mary.de", "ce_user": false, "ee_user": true, "datamimic_lover": "DEFINITELY"},
@@ -222,6 +227,7 @@ For contributors and developers who want to work with the source code:
     ```
 
     **csv export:**
+
     ```csv
     id|first_name|last_name|gender|birth_date|email|ce_user|ee_user|datamimic_lover
     1|Mary|Mcgowan|female|1946-05-15 00:00:00|Mcgowan@Mary.de|False|True|DEFINITELY
@@ -232,7 +238,6 @@ For contributors and developers who want to work with the source code:
     ...
     100|Jason|Davis|male|1941-07-05 00:00:00|Davis@Jason.de|True|False|DEFINITELY
     ```
-
 
 ### Advanced Features
 
@@ -266,6 +271,7 @@ datamimic run ./demo-model/datamimic.xml
 ```
 
 Key demos include:
+
 - Basic entity generation
 - Complex relationships
 - Database integration
@@ -293,12 +299,14 @@ We ❤️ contributions! Here's how you can help:
 Open Source Freedom for Everyone
 
 #### ✨ Key Benefits
+
 - **🔓 MIT License**: Maximum freedom for innovation
 - **💼 Commercial Ready**: Use freely in commercial projects
 - **🔄 Modification Rights**: Full source code access and modification rights
 - **🌍 No Restrictions**: Deploy anywhere, anytime
 
 #### 🎁 What's Included
+
 - **📦 Core Features**
   - Model-driven data generation
   - Basic data types & integrations
@@ -311,6 +319,7 @@ Open Source Freedom for Everyone
   - Regular updates
 
 #### 💫 Perfect For
+
 - Individual developers
 - Startups & small teams
 - Open source projects
@@ -324,12 +333,14 @@ Open Source Freedom for Everyone
 Professional Power for Business Success
 
 #### 🚀 Premium Benefits
+
 - **📋 Commercial License**: Enterprise-grade flexibility
 - **🔐 Advanced Features**: Full suite of professional tools
 - **🎯 Priority Support**: Direct access to expert team
 - **🛠️ Custom Solutions**: Tailored to your needs
 
 #### 💎 Premium Features
+
 - **🤖 AI Capabilities**
   - GAN-based synthesis
   - LLM integration
@@ -346,6 +357,7 @@ Professional Power for Business Success
   - Audit trails
 
 #### 🎯 Ideal For
+
 - Large enterprises
 - Financial institutions
 - Healthcare organizations
@@ -353,9 +365,11 @@ Professional Power for Business Success
 - High-compliance industries
 
 #### 📞 Get Started
+>
 > Ready to unlock the full potential of DATAMIMIC?
 
 **Contact Our Team:**
+
 - 📧 Email: [sales@rapiddweller.com](mailto:sales@rapiddweller.com)
 - 🌐 Visit: [datamimic.io/enterprise](https://datamimic.io)
 
