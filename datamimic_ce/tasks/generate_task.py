@@ -74,16 +74,14 @@ def generate_product_by_page_in_single_process(
     ]
 
     # 2: Load data source from file, database, memory, Kafka, etc.
-    source_str = stmt.source
     source_scripted = (
         stmt.source_script if stmt.source_script is not None else bool(root_context.default_source_scripted)
     )
     separator = stmt.separator or root_context.default_separator
 
-    source_data, build_from_source = context.root.class_factory_util.get_task_util_cls().gen_task_load_data_from_source(
+    source_data, build_from_source = context.root.class_factory_util.get_task_util_cls().gen_task_load_data_from_source_or_script(
         context,
         stmt,
-        source_str,
         separator,
         source_scripted,
         processed_data_count,
@@ -222,7 +220,7 @@ class GenerateTask(CommonSubTask):
         root_context: SetupContext = context.root
 
         # Scan statements to check data source length (and cyclic)
-        self._scan_data_source(root_context, self._statement)
+        self._scan_data_source(context, self._statement)
 
         # Get count from statement
         count = self._statement.get_int_count(context)
@@ -287,7 +285,7 @@ class GenerateTask(CommonSubTask):
         return default_page_size
 
     @staticmethod
-    def _scan_data_source(ctx: SetupContext, statement: Statement) -> None:
+    def _scan_data_source(ctx: SetupContext | GenIterContext, statement: Statement) -> None:
         """
         Scan data source and set data source length.
 
@@ -296,7 +294,7 @@ class GenerateTask(CommonSubTask):
         :return: None
         """
         # 1. Scan statement
-        ctx.class_factory_util.get_datasource_util_cls().set_data_source_length(ctx, statement)
+        ctx.root.class_factory_util.get_datasource_util_cls().set_data_source_length(ctx, statement)
         # 2. Scan sub-statement
         if isinstance(statement, CompositeStatement):
             for child_stmt in statement.sub_statements:
@@ -594,7 +592,7 @@ class GenerateWorker:
         # Create and cache exporters for each worker
         exporters_set = stmt.targets.copy()
         root_context = context.root
-        
+
         # Create exporters with operations
         (
             consumers_with_operation,
