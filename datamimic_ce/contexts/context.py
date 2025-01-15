@@ -188,11 +188,11 @@ class Context(ABC):  # noqa: B024
                         )
                     else:
                         return result
-                except Exception as e:
+                except Exception as err:
                     # decode ':' character
                     expr = expr.replace(colon_replacement, ":")
                     raise ValueError(f"Failed while evaluate '{expr}': "
-                                     f"'{expr}' have undefined item or wrong structure") from e
+                                     f"'{expr}' have undefined item or wrong structure") from err
             else:
                 raise ValueError(f"Failed while evaluate '{expr}': "
                                  f"'{expr}' have undefined item or wrong structure") from e
