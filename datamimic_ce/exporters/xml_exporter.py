@@ -8,9 +8,9 @@
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-from lxml import etree # type: ignore
 
 import xmltodict
+from lxml import etree  # type: ignore
 
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter

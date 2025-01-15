@@ -5,10 +5,10 @@
 # For questions and support, contact: info@rapiddweller.com
 import os
 import shutil
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
-import xml.etree.ElementTree as ET
 
 
 class TestXmlFunctional:

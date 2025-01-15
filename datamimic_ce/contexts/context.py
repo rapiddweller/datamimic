@@ -183,16 +183,19 @@ class Context(ABC):  # noqa: B024
                         )
                     elif type(result) in SPECIAL_FUNCTION:
                         raise ValueError(
-                            f"'{expr}' is {type(result).__name__} function, not a valid type (string, integer, float,...)"
+                            f"'{expr}' is {type(result).__name__} "
+                            f"function, not a valid type (string, integer, float,...)"
                         )
                     else:
                         return result
                 except Exception as e:
                     # decode ':' character
                     expr = expr.replace(colon_replacement, ":")
-                    raise ValueError(f"Failed while evaluate '{expr}': '{expr}' have undefined item or wrong structure") from e
+                    raise ValueError(f"Failed while evaluate '{expr}': "
+                                     f"'{expr}' have undefined item or wrong structure") from e
             else:
-                raise ValueError(f"Failed while evaluate '{expr}': '{expr}' have undefined item or wrong structure")
+                raise ValueError(f"Failed while evaluate '{expr}': "
+                                 f"'{expr}' have undefined item or wrong structure") from e
         except Exception as e:
             raise ValueError(f"Failed while evaluate '{expr}': {str(e)}") from e
 

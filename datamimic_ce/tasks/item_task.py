@@ -7,9 +7,10 @@
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.statements.item_statement import ItemStatement
+from datamimic_ce.tasks.element_task import ElementTask
 from datamimic_ce.tasks.task import Task
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
-from datamimic_ce.tasks.element_task import ElementTask
+
 
 class ItemTask(Task):
     def __init__(
