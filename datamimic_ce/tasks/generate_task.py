@@ -221,7 +221,9 @@ class GenerateTask(CommonSubTask):
         root_context: SetupContext = context.root
 
         # Scan statements to check data source length (and cyclic)
-        self._scan_data_source(root_context, self._statement)
+        # Only scan on outermost gen_stmt
+        if context == root_context:
+            self._scan_data_source(root_context, self._statement)
 
         # Get count from statement
         count = self._statement.get_int_count(context)
