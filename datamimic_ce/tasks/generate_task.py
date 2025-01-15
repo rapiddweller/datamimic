@@ -377,7 +377,7 @@ class GenerateTask(CommonSubTask):
                 chunks = [(i * chunk_size, min((i + 1) * chunk_size, count)) for i in range(num_workers)]
 
                 # Create Ray workers
-                workers = [RayGenerateWorker.options(enable_task_events=False) for _ in
+                workers = [RayGenerateWorker.remote() for _ in
                            range(num_workers)]  # type: ignore[attr-defined]
 
                 # Execute generate task using Ray
@@ -646,7 +646,7 @@ class GenerateWorker:
         return {}
 
 
-@ray.remote
+@ray.remote(enable_task_events=False)
 class RayGenerateWorker(GenerateWorker):
     """
     Ray worker class for generating data based on the GenerateStatement.
