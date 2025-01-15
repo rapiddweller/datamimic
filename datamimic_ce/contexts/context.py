@@ -180,11 +180,11 @@ class Context(ABC):  # noqa: B024
                     elif callable(result) or isinstance(result, types.ModuleType):
                         raise ValueError(
                             f"'{expr}' is an callable function, not a valid type (string, integer, float,...)"
-                        ) from e
+                        )
                     elif type(result) in SPECIAL_FUNCTION:
                         raise ValueError(
                             f"'{expr}' is {type(result).__name__} function, not a valid type (string, integer, float,...)"
-                        ) from e
+                        )
                     else:
                         return result
                 except Exception as e:
@@ -192,7 +192,7 @@ class Context(ABC):  # noqa: B024
                     expr = expr.replace(colon_replacement, ":")
                     raise ValueError(f"Failed while evaluate '{expr}': '{expr}' have undefined item or wrong structure") from e
             else:
-                raise ValueError(f"Failed while evaluate '{expr}': '{expr}' have undefined item or wrong structure") from e
+                raise ValueError(f"Failed while evaluate '{expr}': '{expr}' have undefined item or wrong structure")
         except Exception as e:
             raise ValueError(f"Failed while evaluate '{expr}': {str(e)}") from e
 
