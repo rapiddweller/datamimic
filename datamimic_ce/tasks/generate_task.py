@@ -377,7 +377,8 @@ class GenerateTask(CommonSubTask):
                 chunks = [(i * chunk_size, min((i + 1) * chunk_size, count)) for i in range(num_workers)]
 
                 # Create Ray workers
-                workers = [RayGenerateWorker.remote() for w in range(num_workers)]  # type: ignore[attr-defined]
+                workers = [RayGenerateWorker.options(enable_task_events=False) for _ in
+                           range(num_workers)]  # type: ignore[attr-defined]
 
                 # Execute generate task using Ray
                 futures = []
@@ -594,7 +595,7 @@ class GenerateWorker:
         # Create and cache exporters for each worker
         exporters_set = stmt.targets.copy()
         root_context = context.root
-        
+
         # Create exporters with operations
         (
             consumers_with_operation,
