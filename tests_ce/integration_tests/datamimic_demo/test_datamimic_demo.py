@@ -80,3 +80,7 @@ class TestDatamimicDemo:
     def test_demo_selector(self) -> None:
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="demo-selector/datamimic.xml")
         test_engine.test_with_timer()
+
+    def test_gewerbeverordnung_xml(self) -> None:
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="gewerbeverordnung-xml/datamimic.xml")
+        test_engine.test_with_timer()

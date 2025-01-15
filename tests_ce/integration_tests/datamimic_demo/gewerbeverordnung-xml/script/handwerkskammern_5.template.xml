@@ -1,0 +1,1063 @@
+<list>
+    <item>
+        <gc:CodeList xmlns:gc="http://docs.oasis-open.org/codelist/ns/genericode/1.0/"
+           xmlns:xoev-cl-1_0="http://xoev.de/schemata/genericode/1_0"
+           xmlns:xoev-cl-2="http://xoev.de/schemata/genericode/2">
+           <Annotation>
+              <Description>
+                 <!-- Metadaten entsprechend XÖV-Handbuch 2.0 -->
+                 <xoev-cl-1_0:beschreibung>Enthält die Schlüssel aller Handwerkskammern</xoev-cl-1_0:beschreibung>
+                 <xoev-cl-1_0:datumgueltigkeitab>2018-05-01</xoev-cl-1_0:datumgueltigkeitab>
+                 <!-- Metadaten entsprechend XÖV-Handbuch 2.1 -->
+                 <xoev-cl-2:nameKurz>Handwerkskammern</xoev-cl-2:nameKurz>
+                 <xoev-cl-2:herausgebernameKurz>XUnternehmen</xoev-cl-2:herausgebernameKurz>
+                 <xoev-cl-2:beschreibung-codeliste>Enthält die Schlüssel aller Handwerkskammern</xoev-cl-2:beschreibung-codeliste>
+                 <xoev-cl-2:datumGueltigkeitAb>2018-05-01</xoev-cl-2:datumGueltigkeitAb>
+                 <xoev-cl-2:versionXOEVHandbuch>2.1</xoev-cl-2:versionXOEVHandbuch>
+                 <xoev-cl-2:aenderungZurVorversion>Diese Version entspricht  urn:xoev-de:xgewerbeanzeige:codeliste:handwerkskammern_5.</xoev-cl-2:aenderungZurVorversion>
+              </Description>
+           </Annotation>
+           <Identification>
+              <ShortName>Handwerkskammern</ShortName>
+              <LongName>Handwerkskammern</LongName>
+              <Version>5</Version>
+              <CanonicalUri>urn:xoev-de:xunternehmen:codeliste:handwerkskammern</CanonicalUri>
+              <CanonicalVersionUri>urn:xoev-de:xunternehmen:codeliste:handwerkskammern_5</CanonicalVersionUri>
+              <Agency>
+                 <ShortName>XUnternehmen</ShortName>
+                 <LongName>Betreiber XUnternehmen (KoSIT und d-NRW) im Auftrag des Bundesministeriums für Wirtschaft und Energie</LongName>
+              </Agency>
+           </Identification>
+           <ColumnSet>
+              <Column Id="Code" Use="required">
+                 <ShortName>Code</ShortName>
+                 <Data Type="string"/>
+              </Column>
+              <Column Id="Handwerkskammer" Use="required">
+                 <ShortName>Handwerkskammer</ShortName>
+                 <Data Type="string"/>
+              </Column>
+              <Column Id="Sitz" Use="required">
+                 <ShortName>Sitz</ShortName>
+                 <Data Type="string"/>
+              </Column>
+              <Column Id="PLZ" Use="required">
+                 <ShortName>PLZ</ShortName>
+                 <Data Type="string"/>
+              </Column>
+              <Column Id="PostfachPLZ" Use="optional">
+                 <ShortName>PostfachPLZ</ShortName>
+                 <Data Type="string"/>
+              </Column>
+              <Column Id="Land" Use="optional">
+                 <ShortName>Land</ShortName>
+                 <Data Type="string"/>
+              </Column>
+              <Key Id="CodeKey">
+                 <Annotation>
+                    <AppInfo>
+                       <xoev-cl-1_0:xoev-code>Code</xoev-cl-1_0:xoev-code>
+                       <xoev-cl-2:xoev-code>Code</xoev-cl-2:xoev-code>
+                    </AppInfo>
+                 </Annotation>
+                 <ShortName>Code</ShortName>
+                 <ColumnRef Ref="Code"/>
+              </Key>
+           </ColumnSet>
+           <SimpleCodeList>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00001</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Chemnitz</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Chemnitz</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>09116</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Sachsen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00002</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Dresden</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Dresden</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>01219</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Sachsen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00003</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer zu Leipzig</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Leipzig</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>04103</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Sachsen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00004</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Erfurt</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Erfurt</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>99084</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>99005</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Thüringen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00005</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer für Ostthüringen</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Gera</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>07545</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>07502</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Thüringen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00006</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Südthüringen</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Suhl</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>98527</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Thüringen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00007</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Cottbus</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Cottbus</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>03046</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>03005</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Brandenburg</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00008</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Frankfurt/Oder - Region Ostbrandenburg</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Frankfurt/Oder</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>15230</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Brandenburg</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00009</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Potsdam</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Potsdam</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>14467</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Brandenburg</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00011</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Flensburg</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Flensburg</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>24937</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>24907</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Schleswig-Holstein</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00012</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Lübeck</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Lübeck</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>23552</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>23547</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Schleswig-Holstein</SimpleValue>
+                 </Value>
+              </Row>
+
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00015</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Halle (Saale)</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Halle (Saale)</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>06110</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>06017</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Sachsen-Anhalt</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00016</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Magdeburg</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Magdeburg</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>39112</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>39007</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Sachsen-Anhalt</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00018</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Ostmecklenburg-Vorpommern</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Rostock</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>18055</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Mecklenburg-Vorpommern</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00019</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Schwerin</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Schwerin</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>19053</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Mecklenburg-Vorpommern</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00021</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer für Ostfriesland</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Aurich</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>26603</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Niedersachsen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00023</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Hannover</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Hannover</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>30175</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>30025</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Niedersachsen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00024</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Hildesheim-Südniedersachsen</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Hildesheim</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>31134</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>31106</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Niedersachsen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00025</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Braunschweig-Lüneburg-Stade</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Braunschweig</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>38100</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Niedersachsen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00026</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Oldenburg</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Oldenburg</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>26122</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Niedersachsen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00027</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Osnabrück-Emsland-Grafschaft Bentheim</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Osnabrück</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>49088</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Niedersachsen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00031</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Düsseldorf</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Düsseldorf</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>40221</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>40018</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Nordrhein-Westfalen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00032</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer zu Köln</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Köln</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>50667</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Nordrhein-Westfalen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00033</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Aachen</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Aachen</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>52062</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Nordrhein-Westfalen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00034</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Münster</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Münster</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>48151</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>48019</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Nordrhein-Westfalen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00035</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Ostwestfalen-Lippe zu Bielefeld</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Bielefeld</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>33602</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>33513</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Nordrhein-Westfalen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00037</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Dortmund</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Dortmund</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>44135</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Nordrhein-Westfalen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00038</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Südwestfalen</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Arnsberg</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>59821</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>59802</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Nordrhein-Westfalen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00043</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Kassel</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Kassel</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>34117</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>34016</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Hessen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00044</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Wiesbaden</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Wiesbaden</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>65185</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>65019</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Hessen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00045</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Frankfurt-Rhein-Main</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Frankfurt/Main</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>60325</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Hessen</SimpleValue>
+                 </Value>
+              </Row>
+
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00051</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer der Pfalz</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Kaiserslautern</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>67655</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>67614</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Rheinland-Pfalz</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00052</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Koblenz</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Koblenz</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>56068</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>56009</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Rheinland-Pfalz</SimpleValue>
+                 </Value>
+
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00053</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Rheinhessen</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Mainz</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>55116</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Rheinland-Pfalz</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00054</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Trier</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Trier</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>54292</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Rheinland-Pfalz</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00061</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Freiburg</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Freiburg</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>79098</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Baden-Württemberg</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00062</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Heilbronn-Franken</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Heilbronn</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>74072</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>74009</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Baden-Württemberg</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00063</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Karlsruhe</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Karlsruhe</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>76133</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Baden-Württemberg</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00064</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Konstanz</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Konstanz</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>78462</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>78407</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Baden-Württemberg</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00065</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Mannheim-Rhein-Neckar-Odenwald</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Mannheim</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>68159</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>68058</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Baden-Württemberg</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00066</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Reutlingen</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Reutlingen</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>72762</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>72707</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Baden-Württemberg</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00067</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Region Stuttgart</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Stuttgart</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>70191</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>70017</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Baden-Württemberg</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00068</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Ulm</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Ulm</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>89073</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>89013</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Baden-Württemberg</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00071</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer für Schwaben</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Augsburg</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>86152</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>86147</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Bayern</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00072</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer für Oberfranken</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Bayreuth</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>95448</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Bayern</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00074</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer für München und Oberbayern</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>München</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>80333</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Bayern</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00075</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer für Mittelfranken</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Nürnberg</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>90489</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>90119</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Bayern</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00076</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Niederbayern-Oberpfalz</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Passau</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>94032</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>94006</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Bayern</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00078</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer für Unterfranken</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Würzburg</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>97070</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Bayern</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00081</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer des Saarlandes</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Saarbrücken</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>66117</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>66013</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Saarland</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00091</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Berlin</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Berlin</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>10961</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>10923</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Berlin</SimpleValue>
+                 </Value>
+              </Row>
+
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00092</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Bremen</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Bremen</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>28195</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PostfachPLZ">
+                    <SimpleValue>28051</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Bremen</SimpleValue>
+                 </Value>
+              </Row>
+              <Row>
+                 <Value ColumnRef="Code">
+                    <SimpleValue>00093</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Handwerkskammer">
+                    <SimpleValue>Handwerkskammer Hamburg</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Sitz">
+                    <SimpleValue>Hamburg</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="PLZ">
+                    <SimpleValue>20355</SimpleValue>
+                 </Value>
+                 <Value ColumnRef="Land">
+                    <SimpleValue>Hamburg</SimpleValue>
+                 </Value>
+              </Row>
+           </SimpleCodeList>
+        </gc:CodeList>
+    </item>
+</list>
