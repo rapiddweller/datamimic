@@ -404,7 +404,7 @@ class TaskUtil:
         :return: None
         """
         # If product is in XML format, convert it to JSON
-        json_result = [GenerateTask.convert_xml_dict_to_json_dict(product) for product in xml_result[stmt.full_name]]
+        json_result = [TaskUtil.convert_xml_dict_to_json_dict(product) for product in xml_result[stmt.full_name]]
 
         # Wrap product key and value into a tuple
         # for iterate database may have key, value, and other statement attribute info
@@ -582,3 +582,26 @@ class TaskUtil:
                 else None
             )
             return DataSourceUtil.get_cyclic_data_list(data=items, cyclic=cyclic, pagination=pagination)
+
+    @staticmethod
+    def convert_xml_dict_to_json_dict(xml_dict: dict):
+        """
+        Convert XML dict with #text and @attribute to pure JSON dict.
+
+        :param xml_dict: XML dictionary.
+        :return: JSON dictionary.
+        """
+        if "#text" in xml_dict:
+            return xml_dict["#text"]
+        res = {}
+        for key, value in xml_dict.items():
+            if not key.startswith("@"):
+                if isinstance(value, dict):
+                    res[key] = TaskUtil.convert_xml_dict_to_json_dict(value)
+                elif isinstance(value, list):
+                    res[key] = [
+                        TaskUtil.convert_xml_dict_to_json_dict(v) if isinstance(v, dict) else v for v in value
+                    ]
+                else:
+                    res[key] = value
+        return res
