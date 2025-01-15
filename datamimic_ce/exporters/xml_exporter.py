@@ -196,7 +196,7 @@ class XMLExporter(UnifiedBufferedExporter):
     def _is_single_item(self, buffer_file: Path) -> bool:
         """Check if the root element contains exactly one 'item' with one child."""
         try:
-            parser = etree.XMLParser(recover=True)
+            parser = etree.XMLParser(recover=True, no_network=True)
             tree = etree.parse(buffer_file, parser)
             root = tree.getroot()
 
