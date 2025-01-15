@@ -1,0 +1,3 @@
+<setup>
+    <generate name="template_1" source="data/template_1.xml" target="ConsoleExporter"/>
+</setup>

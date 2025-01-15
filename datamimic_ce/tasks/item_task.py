@@ -7,6 +7,7 @@
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.statements.item_statement import ItemStatement
+from datamimic_ce.tasks.element_task import ElementTask
 from datamimic_ce.tasks.task import Task
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
@@ -51,7 +52,10 @@ class ItemTask(Task):
                 ctx = GenIterContext(parent_context, "temp_item_name")
                 # Create sub-context for each item generation
                 # ItemTask generate product and apend to ctx.current_product
-                sub_task.execute(ctx)
-                # Add sub-element of item to result dict
-                result.update(ctx.current_product)
+                if isinstance(sub_task, ElementTask):
+                    result.update(sub_task.generate_xml_attribute(ctx))
+                else:
+                    sub_task.execute(ctx)
+                    # Add sub-element of item to result dict
+                    result.update(ctx.current_product)
             parent_context.add_current_product_field("temp_item_name", result)
