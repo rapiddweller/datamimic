@@ -9,6 +9,7 @@ import subprocess
 import time
 
 import pytest
+import ray
 
 from datamimic_ce.config import settings
 from datamimic_ce.logger import logger
@@ -50,3 +51,10 @@ def mysql_services():
         raise e
     except Exception as e:
         raise e
+
+
+@pytest.fixture(scope="session")
+def ray_session():
+    ray.init()
+    yield None
+    ray.shutdown()

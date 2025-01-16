@@ -379,11 +379,12 @@ class GenerateTask(CommonSubTask):
 
                 # Execute generate task using Ray
                 futures = [
-                    generate_and_export_data_by_chunk_mp.options(enable_task_events=False).remote(copied_context,
-                                                                                                  self._statement,
-                                                                                                  worker_id,
-                                                                                                  chunk_start,
-                                                                                                  chunk_end, page_size)
+                    RayGenerateWorker.generate_and_export_data_by_chunk_mp.options(enable_task_events=False).remote(
+                        copied_context,
+                        self._statement,
+                        worker_id,
+                        chunk_start,
+                        chunk_end, page_size)
                     for
                     worker_id, (chunk_start, chunk_end) in enumerate(chunks, 1)]
                 # Gather result from Ray workers
@@ -398,7 +399,7 @@ class GenerateTask(CommonSubTask):
             else:
                 # If inner gen_stmt, pass worker_id from outermost gen_stmt to inner gen_stmt
                 worker_id = context.worker_id if isinstance(context, GenIterContext) else 1
-                merged_result = generate_and_export_data_by_chunk(
+                merged_result = GenerateWorker.generate_and_export_data_by_chunk(
                     context, self._statement, worker_id, 0, count, page_size
                 )
 
@@ -491,106 +492,118 @@ class GenerateTask(CommonSubTask):
             task.pre_execute(context)
 
 
-def generate_and_export_data_by_chunk(
-        context: SetupContext | GenIterContext,
-        stmt: GenerateStatement,
-        worker_id: int,
-        chunk_start: int,
-        chunk_end: int,
-        page_size: int,
-) -> dict:
+class GenerateWorker:
     """
-    Generate and export data by page in a single process.
-
-    :param context: SetupContext or GenIterContext instance.
-    :param stmt: GenerateStatement instance.
-    :param worker_id: Worker ID.
-    :param chunk_start: Start index of chunk.
-    :param chunk_end: End index of chunk.
-    :param page_size: Size of each page.
+    Worker class for generating and exporting data by page in single process.
     """
 
-    # Determine chunk data range, like (0, 1000), (1000, 2000), etc.
-    index_chunk = [(i, min(i + page_size, chunk_end)) for i in range(chunk_start, chunk_end, page_size)]
+    @staticmethod
+    def generate_and_export_data_by_chunk(
+            context: SetupContext | GenIterContext,
+            stmt: GenerateStatement,
+            worker_id: int,
+            chunk_start: int,
+            chunk_end: int,
+            page_size: int,
+    ) -> dict:
+        """
+        Generate and export data by page in a single process.
 
-    # Check if product result should be returned for test mode or memstore exporter
-    return_product_result = context.root.test_mode or any(
-        [context.root.memstore_manager.contain(exporter_str) for exporter_str in stmt.targets]
-    )
-    result: dict = {}
+        :param context: SetupContext or GenIterContext instance.
+        :param stmt: GenerateStatement instance.
+        :param worker_id: Worker ID.
+        :param chunk_start: Start index of chunk.
+        :param chunk_end: End index of chunk.
+        :param page_size: Size of each page.
+        """
 
-    # Initialize ARTIFACT exporter state manager for each worker
-    exporter_state_manager = ExporterStateManager(worker_id)
+        # Determine chunk data range, like (0, 1000), (1000, 2000), etc.
+        index_chunk = [(i, min(i + page_size, chunk_end)) for i in range(chunk_start, chunk_end, page_size)]
 
-    # Create and cache exporters for each worker
-    exporters_set = stmt.targets.copy()
-    root_context = context.root
+        # Check if product result should be returned for test mode or memstore exporter
+        return_product_result = context.root.test_mode or any(
+            [context.root.memstore_manager.contain(exporter_str) for exporter_str in stmt.targets]
+        )
+        result: dict = {}
 
-    # Create exporters with operations
-    (
-        consumers_with_operation,
-        consumers_without_operation,
-    ) = root_context.class_factory_util.get_exporter_util().create_exporter_list(
-        setup_context=root_context,
-        stmt=stmt,
-        targets=list(exporters_set),
-    )
+        # Initialize ARTIFACT exporter state manager for each worker
+        exporter_state_manager = ExporterStateManager(worker_id)
 
-    # Cache the exporters
-    root_context.task_exporters[stmt.full_name] = {
-        "with_operation": consumers_with_operation,
-        "without_operation": consumers_without_operation,
-        "page_count": 0,  # Track number of pages processed
-    }
+        # Create and cache exporters for each worker
+        exporters_set = stmt.targets.copy()
+        root_context = context.root
 
-    # Generate and consume product by page
-    for index_tuple in index_chunk:
-        page_start, page_end = index_tuple
-        # Generate product
-        result_dict = generate_product_by_page_in_single_process(context, stmt, page_start, page_end, worker_id)
-
-        # Export product by page
-        context.root.class_factory_util.get_task_util_cls().export_product_by_page(
-            context.root, stmt, result_dict, exporter_state_manager
+        # Create exporters with operations
+        (
+            consumers_with_operation,
+            consumers_without_operation,
+        ) = root_context.class_factory_util.get_exporter_util().create_exporter_list(
+            setup_context=root_context,
+            stmt=stmt,
+            targets=list(exporters_set),
         )
 
-        # Collect result for later capturing
-        if return_product_result:
-            for key, value in result_dict.items():
-                result[key] = result.get(key, []) + value
+        # Cache the exporters
+        root_context.task_exporters[stmt.full_name] = {
+            "with_operation": consumers_with_operation,
+            "without_operation": consumers_without_operation,
+            "page_count": 0,  # Track number of pages processed
+        }
 
-    # Check if product result should be returned for test mode or memstore exporter
-    has_memstore_exporter = any(
-        [
-            ("." not in exporter_str)
-            and ("(" not in exporter_str)
-            and context.root.memstore_manager.contain(exporter_str)
-            for exporter_str in stmt.targets
-        ]
-    )
+        # Generate and consume product by page
+        for index_tuple in index_chunk:
+            page_start, page_end = index_tuple
+            # Generate product
+            result_dict = generate_product_by_page_in_single_process(context, stmt, page_start, page_end, worker_id)
 
-    # Return results if inner gen_stmt or test mode or memstore exporter
-    if isinstance(context, GenIterContext) or context.root.test_mode or has_memstore_exporter:
-        return result
+            # Export product by page
+            context.root.class_factory_util.get_task_util_cls().export_product_by_page(
+                context.root, stmt, result_dict, exporter_state_manager
+            )
 
-    return {}
+            # Collect result for later capturing
+            if return_product_result:
+                for key, value in result_dict.items():
+                    result[key] = result.get(key, []) + value
+
+        # Check if product result should be returned for test mode or memstore exporter
+        has_memstore_exporter = any(
+            [
+                ("." not in exporter_str)
+                and ("(" not in exporter_str)
+                and context.root.memstore_manager.contain(exporter_str)
+                for exporter_str in stmt.targets
+            ]
+        )
+
+        # Return results if inner gen_stmt or test mode or memstore exporter
+        if isinstance(context, GenIterContext) or context.root.test_mode or has_memstore_exporter:
+            return result
+
+        return {}
 
 
-@ray.remote
-def generate_and_export_data_by_chunk_mp(
-        context: SetupContext | GenIterContext,
-        stmt: GenerateStatement,
-        worker_id: int,
-        chunk_start: int,
-        chunk_end: int,
-        page_size: int,
-) -> dict:
+class RayGenerateWorker(GenerateWorker):
     """
-    Ray remote function to generate and export data by page in multiprocessing.
+    Worker class for generating and exporting data by page in multiprocessing using Ray.
     """
-    # Deserialize multiprocessing arguments
-    context.root.namespace.update(dill.loads(context.root.namespace_functions))
-    context.root.generators = dill.loads(context.root.generators)
 
-    return generate_and_export_data_by_chunk(context, stmt, worker_id, chunk_start, chunk_end,
-                                             page_size)
+    @staticmethod
+    @ray.remote
+    def generate_and_export_data_by_chunk_mp(
+            context: SetupContext | GenIterContext,
+            stmt: GenerateStatement,
+            worker_id: int,
+            chunk_start: int,
+            chunk_end: int,
+            page_size: int,
+    ) -> dict:
+        """
+        Ray remote function to generate and export data by page in multiprocessing.
+        """
+        # Deserialize multiprocessing arguments
+        context.root.namespace.update(dill.loads(context.root.namespace_functions))
+        context.root.generators = dill.loads(context.root.generators)
+
+        return RayGenerateWorker.generate_and_export_data_by_chunk(context, stmt, worker_id, chunk_start, chunk_end,
+                                                                   page_size)
