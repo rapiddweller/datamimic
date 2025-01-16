@@ -10,7 +10,7 @@ from pathlib import Path
 from datamimic_ce.data_mimic_test import DataMimicTest
 
 
-class TestDataIteration:
+class TestSeparator:
     _test_dir = Path(__file__).resolve().parent
 
     def test_simple_csv(self):

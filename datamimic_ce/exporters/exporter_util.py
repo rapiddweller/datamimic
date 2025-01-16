@@ -37,7 +37,6 @@ from datamimic_ce.exporters.txt_exporter import TXTExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
-from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 
 
 def custom_serializer(obj) -> str:
@@ -59,11 +58,27 @@ def custom_serializer(obj) -> str:
 
 class ExporterUtil:
     @staticmethod
+    def get_all_exporter(setup_context: SetupContext, stmt: GenerateStatement, targets: list[str]) -> list:
+        """
+        Get all exporters from target string
+
+        :param setup_context:
+        :param stmt:
+        :param targets:
+        :return:
+        """
+        exporters_with_operation, exporters_without_operation = ExporterUtil.create_exporter_list(
+            setup_context=setup_context,
+            stmt=stmt,
+            targets=targets,
+        )
+        return exporters_without_operation + exporters_with_operation
+
+    @staticmethod
     def create_exporter_list(
-        setup_context: SetupContext,
-        stmt: GenerateStatement,
-        targets: list[str],
-        page_info: MultiprocessingPageInfo,
+            setup_context: SetupContext,
+            stmt: GenerateStatement,
+            targets: list[str],
     ) -> tuple[list[tuple[Exporter, str]], list[Exporter]]:
         """
         Create list of consumers with and without operation from consumer string
@@ -76,10 +91,8 @@ class ExporterUtil:
         consumers_with_operation = []
         consumers_without_operation = []
 
-        exporter_str_list = list(targets)
-
-        # Join the list back into a string
-        target_str = ",".join(exporter_str_list)
+        # Join the targets list into a single string
+        target_str = ",".join(list(targets))
 
         # Parse the target string using the parse_function_string function
         try:
@@ -103,7 +116,6 @@ class ExporterUtil:
                     setup_context=setup_context,
                     name=exporter_name,
                     product_name=stmt.name,
-                    page_info=page_info,
                     exporter_params_dict=params,
                 )
                 if consumer is not None:
@@ -197,17 +209,19 @@ class ExporterUtil:
 
     @staticmethod
     def get_exporter_by_name(
-        setup_context: SetupContext,
-        name: str,
-        product_name: str,
-        page_info: MultiprocessingPageInfo,
-        exporter_params_dict: dict,
+            setup_context: SetupContext,
+            name: str,
+            product_name: str,
+            exporter_params_dict: dict,
     ):
         """
         Consumer factory: Create consumer based on name
 
         :param setup_context:
         :param name:
+        :param product_name:
+        :param exporter_params_dict:
+        :param worker_id:
         :return:
         """
         if name is None or name == "":
@@ -234,12 +248,11 @@ class ExporterUtil:
         elif name == EXPORTER_LOG_EXPORTER:
             return LogExporter()
         elif name == EXPORTER_JSON:
-            return JsonExporter(setup_context, product_name, page_info, chunk_size, use_ndjson, encoding)
+            return JsonExporter(setup_context, product_name, chunk_size, use_ndjson, encoding)
         elif name == EXPORTER_CSV:
             return CSVExporter(
                 setup_context,
                 product_name,
-                page_info,
                 chunk_size,
                 fieldnames,
                 delimiter,
@@ -249,9 +262,9 @@ class ExporterUtil:
                 encoding,
             )
         elif name == EXPORTER_XML:
-            return XMLExporter(setup_context, product_name, page_info, chunk_size, root_element, item_element, encoding)
+            return XMLExporter(setup_context, product_name, chunk_size, root_element, item_element, encoding)
         elif name == EXPORTER_TXT:
-            return TXTExporter(setup_context, product_name, page_info, chunk_size, delimiter, line_terminator, encoding)
+            return TXTExporter(setup_context, product_name, chunk_size, delimiter, line_terminator, encoding)
         elif name == EXPORTER_TEST_RESULT_EXPORTER:
             return setup_context.test_result_exporter
         elif name in setup_context.clients:

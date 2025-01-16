@@ -3,13 +3,13 @@
     <generate name="data_source" count="100" target="mem">
         <key name="counter" type="int" generator="IncrementGenerator"/>
     </generate>
-    <generate name="check" target="ConsoleExporter" multiprocessing="1" count="1">
+    <generate name="check" target="ConsoleExporter" multiprocessing="1" count="2">
         <nestedKey name="nested_key" source="mem" type="data_source"/>
         <nestedKey name="cyclic_nested_key" source="mem" type="data_source" cyclic="True"
                    count="120"/>
 
     </generate>
-    <generate name="ordered_check" target="ConsoleExporter" multiprocessing="1" count="1">
+    <generate name="ordered_check" target="ConsoleExporter" multiprocessing="1" count="2">
         <nestedKey name="nested_key" source="mem" type="data_source" distribution="ordered"/>
         <nestedKey name="cyclic_nested_key" source="mem" type="data_source" distribution="ordered" cyclic="True"
                    count="120"/>

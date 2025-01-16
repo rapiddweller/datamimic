@@ -1,4 +1,4 @@
-<setup multiprocessing="True">
+<setup multiprocessing="True" numProcess="2">
 
     <!-- With xml_single_item multiprocessing True or False only effect exporter name -->
     <!-- 'generate' name is part of export xml file name (in this example is xml_single_item_pid_0.xml) -->

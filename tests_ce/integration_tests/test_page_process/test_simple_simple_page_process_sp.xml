@@ -1,5 +1,5 @@
 <setup multiprocessing="False">
-    <generate name="customer" count="10000" target="" pageSize="100">
+    <generate name="customer" count="100" target="" pageSize="100">
         <!--        <variable name="person" entity="Person"/>-->
         <key name="cid" generator="IncrementGenerator"/>
         <!--        <key name="bool" type="bool"/>-->

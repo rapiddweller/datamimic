@@ -9,6 +9,8 @@ import traceback
 import uuid
 from pathlib import Path
 
+import ray
+
 from datamimic_ce.config import settings
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger, setup_logger
@@ -20,16 +22,18 @@ from datamimic_ce.utils.system_util import log_memory_info
 
 LOG_FILE = "datamimic.log"
 
+ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False)
+
 
 class DataMimic:
     def __init__(
-        self,
-        descriptor_path: Path,
-        task_id: str | None = None,
-        platform_props: dict[str, str] | None = None,
-        platform_configs: dict | None = None,
-        test_mode: bool = False,
-        args: argparse.Namespace | None = None,
+            self,
+            descriptor_path: Path,
+            task_id: str | None = None,
+            platform_props: dict[str, str] | None = None,
+            platform_configs: dict | None = None,
+            test_mode: bool = False,
+            args: argparse.Namespace | None = None,
     ):
         """
         Initialize DataMimic with descriptor_path.
@@ -43,7 +47,7 @@ class DataMimic:
         self._platform_props = platform_props
         self._platform_configs = platform_configs
         self._test_mode = test_mode
-        self._test_result_storage = TestResultExporter() if test_mode else None
+        self._test_result_storage = TestResultExporter()
 
         # Initialize logging
         log_system_info()
@@ -81,6 +85,8 @@ class DataMimic:
             logger.exception("Error in DATAMIMIC process. Error message: {err}")
             traceback.print_exc()
             raise err
+        # finally:
+        # ray.shutdown()
 
     def capture_test_result(self) -> dict | None:
         """Capture test result in test mode."""
