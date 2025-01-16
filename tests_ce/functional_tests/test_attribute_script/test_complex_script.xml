@@ -1,0 +1,34 @@
+<setup>
+    <generate name="univers" source="data/univers.json" target="">
+    <!-- Generate for the first galaxy, and add a condition to check for the galaxy ID -->
+    <generate name="planets" script="universe.galaxies[1]" target="JSON, ConsoleExporter">
+        <key name="counter" type="int" generator="IncrementGenerator"/>
+    </generate>
+
+    <!-- Generate starSystems for the first galaxy, with condition on system ID -->
+    <generate name="starSystems" script="universe.galaxies[0].starSystems" target="JSON, ConsoleExporter">
+        <key name="validSystem" type="bool" condition="universe.galaxies[0].starSystems[0].id == 101" />
+    </generate>
+
+    <!-- Complex generation for planets based on conditions -->
+    <generate name="planetsFromAndromeda" script="universe.galaxies[0].starSystems[0].planets" target="JSON, ConsoleExporter">
+        <key name="planetType" type="string" condition="universe.galaxies[0].starSystems[0].planets[0].type == 'terrestrial'" />
+        <key name="inhabitantCount" type="int" condition="universe.galaxies[0].starSystems[0].planets[0].inhabitants[0].population &lt; 1000000" />
+    </generate>
+
+    <!-- Complex condition to select star systems with id less than 200 -->
+    <generate name="starSystemsFiltered" script="universe.galaxies[1].starSystems" target="JSON, ConsoleExporter">
+        <key name="isValid" type="bool" condition="universe.galaxies[1].starSystems[0].id &lt; 200" />
+    </generate>
+
+    <!-- Generate planets for starSystems where id is greater than 100 -->
+    <generate name="planetsFromValidSystems" script="universe.galaxies[0].starSystems[0].planets" target="JSON, ConsoleExporter">
+        <key name="planetName" type="string" condition="universe.galaxies[0].starSystems[0].planets[0].name != 'Mars'" />
+    </generate>
+
+</generate>
+
+
+
+</setup>
+

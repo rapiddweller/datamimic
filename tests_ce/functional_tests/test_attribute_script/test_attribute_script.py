@@ -18,3 +18,9 @@ class TestAttributeScript:
         engine.test_with_timer()
 
         result = engine.capture_result()
+
+    def test_complex_script(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_complex_script.xml", capture_test_result=True)
+        engine.test_with_timer()
+
+        result = engine.capture_result()
