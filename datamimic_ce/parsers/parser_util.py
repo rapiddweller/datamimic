@@ -124,7 +124,7 @@ class ParserUtil:
                 EL_INCLUDE,
             },
             EL_INCLUDE: {EL_SETUP},
-            EL_ITEM: {EL_KEY, EL_NESTED_KEY, EL_LIST, EL_ARRAY},
+            EL_ITEM: {EL_KEY, EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ELEMENT},
             EL_KEY: {EL_ELEMENT},
             EL_LIST: {EL_ITEM},
             EL_IF: None,
