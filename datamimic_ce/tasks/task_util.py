@@ -570,7 +570,7 @@ class TaskUtil:
                 items = data
 
             # Convert single item to list if needed
-            if isinstance(items, OrderedDict):
+            if isinstance(items, OrderedDict | dict):
                 items = [items]
             elif not isinstance(items, list):
                 items = []
