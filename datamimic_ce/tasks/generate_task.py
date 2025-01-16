@@ -78,16 +78,17 @@ def generate_product_by_page_in_single_process(
     )
     separator = stmt.separator or root_context.default_separator
 
-    source_data, build_from_source = context.root.class_factory_util.get_task_util_cls().gen_task_load_data_from_source_or_script(
-        context,
-        stmt,
-        separator,
-        source_scripted,
-        processed_data_count,
-        load_start_idx,
-        load_end_idx,
-        load_pagination,
-    )
+    source_data, build_from_source = (
+        context.root.class_factory_util.get_task_util_cls().gen_task_load_data_from_source_or_script(
+            context,
+            stmt,
+            separator,
+            source_scripted,
+            processed_data_count,
+            load_start_idx,
+            load_end_idx,
+            load_pagination,
+        ))
 
     # Shuffle source data if distribution is random
     if is_random_distribution:
@@ -209,7 +210,7 @@ class GenerateTask(CommonSubTask):
     def statement(self) -> GenerateStatement:
         return self._statement
 
-    def _determine_count(self, context: Context) -> int:
+    def _determine_count(self, context: SetupContext | GenIterContext) -> int:
         """
         Determine the count of records to generate.
 

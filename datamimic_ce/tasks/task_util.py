@@ -301,11 +301,12 @@ class TaskUtil:
         prefix = stmt.variable_prefix or setup_ctx.default_variable_prefix
         suffix = stmt.variable_suffix or setup_ctx.default_variable_suffix
 
-        if source_str is None and stmt.script is None:
-            build_from_source = False
-        elif stmt.script is not None:
-            # Evaluate script in source
-            source_data = context.evaluate_python_expression(stmt.script)
+        if source_str is None:
+            if stmt.script is None:
+                build_from_source = False
+            else:
+                # Evaluate script in source
+                source_data = context.evaluate_python_expression(stmt.script)
         # Load data from CSV
         elif source_str.endswith(".csv"):
             source_data = TaskUtil.load_csv_file(
