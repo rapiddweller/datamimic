@@ -19,8 +19,12 @@ class TestAttributeScript:
 
         result = engine.capture_result()
 
-    def test_complex_script(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_complex_script.xml", capture_test_result=True)
+    def test_attribute_script_with_condition(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_attribute_script_with_condition.xml",
+                               capture_test_result=True)
         engine.test_with_timer()
 
-        result = engine.capture_result()
+    def test_attribute_script_with_nestedkey(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_attribute_script_with_nestedkey.xml",
+                               capture_test_result=True)
+        engine.test_with_timer()

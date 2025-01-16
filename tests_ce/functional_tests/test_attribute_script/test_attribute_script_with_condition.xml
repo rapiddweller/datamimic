@@ -11,7 +11,7 @@
     </generate>
 
     <!-- Complex generation for planets based on conditions -->
-    <generate name="planetsFromAndromeda" script="universe.galaxies[0].starSystems[0].planets" target="JSON, ConsoleExporter">
+    <generate name="planetsFromAndromeda" script="universe.galaxies[0].starSystems[0].planets" target="CSV, ConsoleExporter">
         <key name="planetType" type="string" condition="universe.galaxies[0].starSystems[0].planets[0].type == 'terrestrial'" />
         <key name="inhabitantCount" type="int" condition="universe.galaxies[0].starSystems[0].planets[0].inhabitants[0].population &lt; 1000000" />
     </generate>
