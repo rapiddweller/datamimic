@@ -1,0 +1,103 @@
+<setup defaultSeparator="|">
+    <!-- This example show how to create xml from beginning and export it -->
+    <generate name="XGewerbeordnung" count="1" target="XML">
+        <nestedKey name="gc:CodeList" type="dict">
+            <element name="xmlns:gc" constant="http://docs.oasis-open.org/codelist/ns/genericode/1.0/"/>
+            <element name="xmlns:xoev-cl" constant="http://xoev.de/schemata/genericode/1_0"/>
+            <element name="xmlns:xoev-cl-3" constant="http://xoev.de/schemata/genericode/3"/>
+
+            <nestedKey name="Annotation" type="dict">
+                <nestedKey name="Description" type="dict">
+                    <key name="xoev-cl-3:nameKurz" constant="XGewerbeordnung Schematron Fehlercodes"/>
+                    <key name="xoev-cl-3:beschreibung-codeliste" constant="XGewerbeordnung Schematron Fehlercodes" />
+                    <key name="xoev-cl-3:herausgebernameKurz" constant="XGewerbeordnung" />
+                    <key name="xoev-cl-3:datumGueltigkeitAb" constant="2024-11-01" />
+                    <key name="xoev-cl-3:versionCodelistenHandbuch" constant="1.0" />
+                </nestedKey>
+            </nestedKey>
+
+            <nestedKey name="Identification" type="dict">
+                <key name="ShortName" constant="schematron-fehlercodes"/>
+                <key name="LongName" constant="XGewerbeordnung Schematron Fehlercodes"/>
+                <key name="Version" constant="1.3"/>
+                <key name="CanonicalUri" constant="urn:xoev-de:xgewerbeordnung:codeliste:schematron-fehlercodes"/>
+                <key name="CanonicalVersionUri" constant="urn:xoev-de:xgewerbeordnung:codeliste:schematron-fehlercodes_1.3"/>
+                <nestedKey name="Agency" type="dict">
+                   <key name="LongName" constant="Betreiber XGewerbeordnung (KoSIT und d-NRW im Auftrag des Bundesministeriums für Wirtschaft und Energie)"/>
+                </nestedKey>
+            </nestedKey>
+
+            <nestedKey name="ColumnSet" type="dict">
+                <nestedKey name="Column" type="list" count="2">
+                    <variable name="column_var" source="data/xgewerbeordnung_column_data.ent.csv" distribution="ordered"/>
+
+                    <element name="Id" script="gc\:CodeList.ColumnSet.Column.column_var.Id"/>
+                    <element name="Use" script="gc\:CodeList.ColumnSet.Column.column_var.Use"/>
+                    <key name="ShortName" script="gc\:CodeList.ColumnSet.Column.column_var.ShortName"/>
+                    <key name="Data" script="None">
+                        <element name="Type" constant="string"/>
+                    </key>
+                </nestedKey>
+                <nestedKey name="Key" type="dict">
+                    <element name="Id" constant="CodeKey"/>
+                    <nestedKey name="Annotation" type="dict">
+                        <nestedKey name="AppInfo" type="dict">
+                            <key name="xoev-cl:xoev-code" script="None"/>
+                            <key name="xoev-cl-3:xoev-code" script="None"/>
+                        </nestedKey>
+                    </nestedKey>
+                    <key name="ShortName" constant="CodeKey"/>
+                    <key name="ColumnRef" script="None">
+                        <element name="Ref" constant="Code"/>
+                    </key>
+                </nestedKey>
+            </nestedKey>
+
+            <nestedKey name="SimpleCodeList" type="dict">
+                <element name="xmlns:xs" constant="http://www.w3.org/2001/XMLSchema"/>
+                <element name="xmlns:rf" constant="urn:xoev-de:xunternehmen:standard:basismodul:rechtsform_1.1"/>
+                <element name="xmlns:bk" constant="http://www.xgewerbeordnung.de/spezifikation/baukasten/1.3"/>
+                <element name="xmlns:ename" constant="urn:xoev-de:xunternehmen:standard:basismodul:eingetragenername_1.1"/>
+                <element name="xmlns:bdt" constant="urn:xoev-de:xunternehmen:standard:basismodul:basisdatentypen_1.1"/>
+                <element name="xmlns:wt" constant="urn:xoev-de:xunternehmen:standard:basismodul:wirtschaftlichetaetigkeit_1.1"/>
+                <element name="xmlns:np" constant="urn:xoev-de:xunternehmen:standard:basismodul:natuerlicheperson_1.1"/>
+                <element name="xmlns:adr" constant="urn:xoev-de:xunternehmen:standard:basismodul:adressen_1.1"/>
+                <element name="xmlns:eintr" constant="urn:xoev-de:xunternehmen:standard:basismodul:eintragung_1.1"/>
+                <element name="xmlns:kom" constant="urn:xoev-de:xunternehmen:standard:basismodul:kommunikation_1.1"/>
+                <element name="xmlns:bn-g2g" constant="http://xoev.de/schemata/basisnachricht/g2g/1_0"/>
+                <element name="xmlns:antr" constant="urn:xoev-de:xunternehmen:standard:basismodul:antraege-anzeigen_1.1"/>
+                <element name="xmlns:erl" constant="http://www.xgewerbeordnung.de/spezifikation/erl/1.3"/>
+                <element name="xmlns:dat" constant="urn:xoev-de:xunternehmen:standard:basismodul:datumsangaben_1.1"/>
+                <element name="xmlns:jp" constant="urn:xoev-de:xunternehmen:standard:basismodul:juristischeperson_1.1"/>
+                <element name="xmlns:gv" constant="urn:xoev-de:xunternehmen:standard:basismodul:gesetzlichervertreter_1.1"/>
+                <element name="xmlns:rpg" constant="urn:xoev-de:xunternehmen:standard:basismodul:rechtsfaehigepersonengesellschaft_1.1"/>
+                <element name="xmlns:ges" constant="urn:xoev-de:xunternehmen:standard:basismodul:gesellschafter_1.1"/>
+                <element name="xmlns:xga" constant="http://www.xgewerbeordnung.de/spezifikation/xga/1.3"/>
+                <element name="xmlns:bn-beh" constant="http://xoev.de/schemata/basisnachricht/behoerde/1_0"/>
+                <element name="xmlns:spv" constant="urn:xoev-de:xunternehmen:standard:basismodul:sonstigepersonenvereinigung_1.1"/>
+                <element name="xmlns:dinspec91379" constant="urn:xoev-de:kosit:xoev:datentyp:din-spec-91379_2019-03"/>
+                <element name="xmlns:bn-kom" constant="http://xoev.de/schemata/basisnachricht/kommunikation/1_0"/>
+                <element name="xmlns:xoev-code" constant="http://xoev.de/schemata/code/1_0"/>
+                <element name="xmlns:bn-uq-g2g" constant="http://xoev.de/schemata/basisnachricht/unqualified/g2g/1_0"/>
+                <element name="xmlns:nachr" constant="urn:xoev-de:xunternehmen:standard:basismodul:nachrichtenstruktur_1.1"/>
+                <element name="xmlns:sitze" constant="urn:xoev-de:xunternehmen:standard:basismodul:sitze_1.1"/>
+
+                <nestedKey name="Row" count="756" type="list">
+                    <variable name="row_var" source="data/xgewerbeordnung_row_data.ent.csv" distribution="ordered"/>
+                    <nestedKey name="value" type="list" count="2">
+                        <variable name="id" generator="IncrementGenerator"/>
+                        <element name="ColumnRef" constant="Code"
+                                 condition="gc\:CodeList.SimpleCodeList.Row.value.id % 2 == 1"/>
+                        <key name="SimpleValue" script="gc\:CodeList.SimpleCodeList.Row.row_var.Code"
+                             condition="gc\:CodeList.SimpleCodeList.Row.value.id % 2 == 1"/>
+
+                        <element name="ColumnRef" constant="Text"
+                                 condition="gc\:CodeList.SimpleCodeList.Row.value.id % 2 == 0"/>
+                        <key name="SimpleValue" script="gc\:CodeList.SimpleCodeList.Row.row_var.Text"
+                             condition="gc\:CodeList.SimpleCodeList.Row.value.id % 2 == 0"/>
+                    </nestedKey>
+                </nestedKey>
+            </nestedKey>
+        </nestedKey>
+    </generate>
+</setup>

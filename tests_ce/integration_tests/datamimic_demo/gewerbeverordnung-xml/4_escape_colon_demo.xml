@@ -1,0 +1,44 @@
+<setup defaultSeparator="|">
+    <!--
+        Colon Escaping Rules in Variable Names:
+
+        1. First Variable with Colon:
+           - MUST use escape sequence \:
+           Example: gc\:CodeList
+
+        2. All Other Variables with Colons:
+           - DO NOT escape the colon
+           - Just use normal :
+           Example: first_var.second:var.third:var
+
+        Examples:
+
+        # When gc:CodeList is the FIRST variable:
+        <element name="Id" script="gc\:CodeList.ColumnSet.id_value"/>
+
+        # When gc:CodeList comes AFTER another variable:
+        <element name="Id" script="container.gc:CodeList.ColumnSet.id_value"/>
+    -->
+
+    <generate name="colon_demo" count="1" target="XML">
+        <nestedKey name="gc:CodeList" type="dict">
+            <nestedKey name="ColumnSet" type="dict">
+                <variable name="id_value" type="int"/>
+                <key name="Column" type="string">
+                    <element name="Id" script="gc\:CodeList.ColumnSet.id_value"/>
+                </key>
+            </nestedKey>
+        </nestedKey>
+
+        <nestedKey name="container" type="dict">
+            <nestedKey name="gc:CodeList" type="dict">
+                <nestedKey name="ColumnSet" type="dict">
+                    <variable name="id_value" type="int"/>
+                    <key name="Column" type="string">
+                        <element name="Id" script="container.gc:CodeList.ColumnSet.id_value"/>
+                    </key>
+                </nestedKey>
+            </nestedKey>
+        </nestedKey>
+    </generate>
+</setup>

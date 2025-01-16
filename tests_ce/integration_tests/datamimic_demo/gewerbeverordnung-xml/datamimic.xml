@@ -1,0 +1,13 @@
+<setup multiprocessing="False" defaultDataset="US" defaultLocale="en" defaultSeparator=";">
+  <!--
+    Datamimic Gewerbeverordung XML Demo
+    ======================================
+    Datamimic Gewerbeverordung XML Demo is a
+    Datamimic project that demonstrates create XML file base on Gewerbeverordung XML.
+    -->
+  <include uri="1_veranstaltungstyp.xml"/>
+  <include uri="2_xgewerbeordnung_schematron.xml"/>
+  <include uri="3_handwerkskammern.xml"/>
+  <include uri="4_escape_colon_demo.xml"/>
+  <include uri="5_antwortstatus_model.xml"/>
+</setup>

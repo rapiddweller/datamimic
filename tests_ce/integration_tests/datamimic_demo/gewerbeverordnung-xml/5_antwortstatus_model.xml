@@ -1,0 +1,97 @@
+<setup multiprocessing="True" numProcess="2" defaultSeparator="|" >
+  <generate name="Antwortstatus_1" count="1" target="XML">
+    <nestedKey name="gc:CodeList" type="dict">
+      <element name="xmlns:gc" constant="http://docs.oasis-open.org/codelist/ns/genericode/1.0/"/>
+      <element name="xmlns:xsi" constant="http://www.w3.org/2001/XMLSchema-instance"/>
+      <element name="xmlns:xoev-cl-3" constant="http://xoev.de/schemata/genericode/3"/>
+
+      <nestedKey name="Annotation" type="dict">
+        <nestedKey name="Description" type="dict">
+          <key name="xoev-cl-3:nameKurz" type="string" constant="Antwortstatus"/>
+          <key name="xoev-cl-3:beschreibung-codeliste" type="string"
+               constant="Enthält den Antwortstatus für eine Übergabenachricht"/>
+          <key name="xoev-cl-3:herausgebernameKurz" type="string" constant="XGewerbeordnung"/>
+          <key name="xoev-cl-3:datumGueltigkeitAb" type="string" constant="2022-05-01"/>
+          <key name="xoev-cl-3:versionCodelistenHandbuch" type="string" constant="1.0"/>
+        </nestedKey>
+      </nestedKey>
+
+      <nestedKey name="Identification" type="dict">
+        <key name="ShortName" type="string" constant="antwortstatus"/>
+        <key name="LongName" type="string" constant="Antwortstatus"/>
+        <key name="Version" type="int" constant="1"/>
+        <key name="CanonicalUri" type="string" constant="urn:xoev-de:xgewerbeordnung:codeliste:antwortstatus"/>
+        <key name="CanonicalVersionUri" type="string"
+             constant="urn:xoev-de:xgewerbeordnung:codeliste:antwortstatus_1"/>
+        <nestedKey name="Agency" type="dict">
+          <key name="LongName" type="string"
+               constant="Betreiber XGewerbeordnung (KoSIT und d-NRW im Auftrag des Bundesministeriums für Wirtschaft und Energie)"/>
+        </nestedKey>
+      </nestedKey>
+
+      <nestedKey name="ColumnSet" type="dict">
+        <list name="Column">
+          <item>
+            <element name="Id" constant="Code"/>
+            <element name="Use" constant="required"/>
+            <key name="ShortName" type="string" constant="Code"/>
+            <key name="LongName" script="None"/>
+            <key name="Data" script="None">
+              <element name="Type" constant="string"/>
+            </key>
+          </item>
+          <item>
+            <element name="Id" constant="Text"/>
+            <element name="Use" constant="required"/>
+            <key name="ShortName" type="string" constant="Text"/>
+            <key name="LongName" script="None"/>
+            <key name="Data" script="None">
+              <element name="Type" constant="string"/>
+            </key>
+          </item>
+        </list>
+        <nestedKey name="Key" type="dict">
+          <element name="Id" constant="CodeKey"/>
+          <nestedKey name="Annotation" type="dict">
+            <nestedKey name="AppInfo" type="dict">
+              <key name="xoev-cl-3:empfohleneCodeSpalte" type="string" constant=""/>
+            </nestedKey>
+          </nestedKey>
+          <key name="ShortName" type="string" constant="CodeKey"/>
+          <key name="ColumnRef" script="None">
+            <element name="Ref" constant="Code"/>
+          </key>
+        </nestedKey>
+      </nestedKey>
+
+      <nestedKey name="SimpleCodeList" type="dict">
+        <list name="Row">
+          <item>
+            <list name="Value">
+              <item>
+                <element name="ColumnRef" constant="Code"/>
+                <key name="SimpleValue" constant="01"/>
+              </item>
+              <item>
+                <element name="ColumnRef" constant="Text"/>
+                <key name="SimpleValue" constant="Gewerbetreibender gefunden"/>
+              </item>
+            </list>
+          </item>
+          <item>
+            <list name="Value">
+              <item>
+                <element name="ColumnRef" constant="Code"/>
+                <key name="SimpleValue" constant="02"/>
+              </item>
+              <item>
+                <element name="ColumnRef" constant="Text"/>
+                <key name="SimpleValue" constant="Gewerbetreibender nicht gefunden"/>
+              </item>
+            </list>
+          </item>
+        </list>
+      </nestedKey>
+    </nestedKey>
+  </generate>
+</setup>

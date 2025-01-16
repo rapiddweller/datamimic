@@ -5,12 +5,12 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import xmltodict
+from lxml import etree
 
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
@@ -196,13 +196,14 @@ class XMLExporter(UnifiedBufferedExporter):
     def _is_single_item(self, buffer_file: Path) -> bool:
         """Check if the root element contains exactly one 'item' with one child."""
         try:
-            tree = ET.parse(buffer_file)
+            parser = etree.XMLParser(resolve_entities=False, no_network=True, recover=True)
+            tree = etree.parse(buffer_file, parser)
             root = tree.getroot()
 
             items = [child for child in root if child.tag == "item"]
             is_single_item = len(items) == 1 and len(items[0]) == 1
             return is_single_item
-        except ET.ParseError as e:
+        except etree.ParseError as e:
             logger.error(f"Error parsing XML file: {e}")
             raise ExporterError(f"Error parsing XML file: {e}") from e
         except Exception as e:

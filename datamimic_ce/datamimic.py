@@ -22,7 +22,7 @@ from datamimic_ce.utils.system_util import log_memory_info
 
 LOG_FILE = "datamimic.log"
 
-ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG)
+ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False)
 
 
 class DataMimic:

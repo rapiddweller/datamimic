@@ -1,0 +1,24 @@
+<setup multiprocessing="True" numProcess="2" defaultSeparator="|">
+    <!-- This example show how to use template source -->
+    <generate name="Handwerkskammern" source="script/handwerkskammern_5.template.xml" target="XML">
+        <nestedKey name="gc:CodeList">
+            <!-- Change SimpleCodeList data of Handwerkskammern_5 by veranstaltungstyp_row_data -->
+            <nestedKey name="SimpleCodeList" type="dict">
+                <nestedKey name="Row" count="7" type="list">
+                    <variable name="row_var" source="data/veranstaltungstyp_row_data.ent.csv" distribution="ordered"/>
+                    <nestedKey name="value" type="list" count="2">
+                        <variable name="id" generator="IncrementGenerator"/>
+                        <element name="ColumnRef" constant="Code"
+                                 condition="gc\:CodeList.SimpleCodeList.Row.value.id == 1"/>
+                        <key name="SimpleValue" script="gc\:CodeList.SimpleCodeList.Row.row_var.Code"
+                             condition="gc\:CodeList.SimpleCodeList.Row.value.id % 2 == 1"/>
+                        <element name="ColumnRef" constant="Beschreibung"
+                                 condition="gc\:CodeList.SimpleCodeList.Row.value.id == 2"/>
+                        <key name="SimpleValue" script="gc\:CodeList.SimpleCodeList.Row.row_var.Beschreibung"
+                             condition="gc\:CodeList.SimpleCodeList.Row.value.id % 2 == 0"/>
+                    </nestedKey>
+                </nestedKey>
+            </nestedKey>
+        </nestedKey>
+    </generate>
+</setup>

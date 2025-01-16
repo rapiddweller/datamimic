@@ -1,4 +1,4 @@
-<setup defaultSeparator="|" multiprocessing="1">
+<setup defaultSeparator="|" multiprocessing="1" numProcess="2">
     <include uri="conf/base.properties"/>
     <memstore id="mem"/>
 

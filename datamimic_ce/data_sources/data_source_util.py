@@ -46,6 +46,10 @@ class DataSourceUtil:
         source_id: str | None = stmt.full_name
         ds_len: int = 0
 
+        # Check if data source length is already set
+        if root_ctx.data_source_len.get(source_id, None) is not None:
+            return
+
         # Check length of script data
         if isinstance(stmt, GenerateStatement) and stmt.script is not None:
             try:
