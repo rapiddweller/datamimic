@@ -523,13 +523,27 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
 
-  trigger_ee_dev:
-    if: github.ref == 'refs/heads/development'
+  create_merge_request_datamimic_ee:
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04
     needs: [ publish_dev ]
     steps:
-      - name: trigger EE development pipelines
-        run: curl -X POST --fail -F token=$EE_TOKEN -F ref=development https://gitlab.dwellerlab.com/api/v4/projects/214/trigger/pipeline;
+      - name: Create GitLab Merge Request for datamimic-ee
+        run: |
+          # Extract version from GitHub tag
+          VERSION=${GITHUB_REF#refs/tags/}
+          
+          # Create merge request for datamimic ee using GitLab API
+          curl --request POST \
+            --header "PRIVATE-TOKEN: $EE_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data '{
+              "source_branch": "development",
+              "target_branch": "main",
+              "title": "Update to datamimic-ce version '"$VERSION"'",
+              "description": "Automated merge request triggered by new datamimic-ce release '"$VERSION"'"
+            }' \
+            "https://gitlab.dwellerlab.com/api/v4/projects/214/merge_requests"
         env:
           EE_TOKEN: ${{ secrets.EE_TOKEN }}
         shell: bash
