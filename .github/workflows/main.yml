@@ -21,16 +21,24 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          
       - name: Export latest tag
         run: |
-          export RD_PROJECT_LATEST_TAG=${GITHUB_REF#refs/*/}
-          echo "RD_PROJECT_LATEST_TAG=$RD_PROJECT_LATEST_TAG"
-          echo "RD_PROJECT_LATEST_TAG=$RD_PROJECT_LATEST_TAG" >> build.env
+          # Get the last tag and ensure it's a version number
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          if [[ ! $LATEST_TAG =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Latest tag $LATEST_TAG is not in version format (x.y.z)"
+            exit 1
+          fi
+          echo "RD_PROJECT_LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          echo "RD_PROJECT_LATEST_TAG=$LATEST_TAG" >> build.env
+          
       - name: Export lib version without patch
         run: |
           export LIB_VERSION_WITHOUT_PATCH=$(echo "$RD_PROJECT_LATEST_TAG" | sed 's/\.[^.]*$//')
-          echo "LIB_VERSION_WITHOUT_PATCH=$LIB_VERSION_WITHOUT_PATCH"
+          echo "LIB_VERSION_WITHOUT_PATCH=$LIB_VERSION_WITHOUT_PATCH" >> $GITHUB_ENV
           echo "LIB_VERSION_WITHOUT_PATCH=$LIB_VERSION_WITHOUT_PATCH" >> build.env
+          
       - name: Upload build.env
         uses: actions/upload-artifact@v4
         with:
@@ -522,7 +530,7 @@ jobs:
           repository-url: https://upload.pypi.org/legacy/
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-
+  
   create_merge_request_datamimic_ee:
     # if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04
@@ -538,10 +546,24 @@ jobs:
   
       - name: Create update branch and merge request
         run: |
-          # Extract version and create branch name
-          UPDATE_BRANCH="update-to-${RD_PROJECT_LATEST_TAG}"
+          # Validate version format
+          if [[ ! $RD_PROJECT_LATEST_TAG =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Invalid version format: $RD_PROJECT_LATEST_TAG"
+            exit 1
+          fi
           
+          # Create safe branch name
+          UPDATE_BRANCH="update-to-version-${RD_PROJECT_LATEST_TAG}"
           echo "Creating branch ${UPDATE_BRANCH}..."
+          
+          # Test GitLab API access first
+          echo "Testing GitLab API access..."
+          curl --fail --silent --show-error \
+            --header "PRIVATE-TOKEN: ${EE_TOKEN}" \
+            "https://gitlab.dwellerlab.com/api/v4/projects/214" || {
+              echo "Error: Failed to access GitLab API. Please check the EE_TOKEN and GitLab URL"
+              exit 1
+            }
           
           # Create new branch with error checking
           BRANCH_RESPONSE=$(curl --fail --silent --show-error \
@@ -588,4 +610,4 @@ jobs:
         env:
           EE_TOKEN: ${{ secrets.EE_TOKEN }}
         shell: bash
-
+  
