@@ -589,7 +589,7 @@ jobs:
             --data @- << EOF
           {
             "source_branch": "${UPDATE_BRANCH}",
-            "target_branch": "main",
+            "target_branch": "development",
             "title": "Update to datamimic-ce version ${RD_PROJECT_LATEST_TAG}",
             "description": "Automated merge request triggered by new datamimic-ce release ${RD_PROJECT_LATEST_TAG}",
             "remove_source_branch": true,
