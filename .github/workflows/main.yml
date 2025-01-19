@@ -532,9 +532,9 @@ jobs:
           password: ${{ secrets.PYPI_API_TOKEN }}
   
   create_merge_request_datamimic_ee:
-    # if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04
-    needs: [setup]
+    needs: [release]
     steps:
       - name: Download build.env
         uses: actions/download-artifact@v4
