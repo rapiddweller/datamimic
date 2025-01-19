@@ -538,30 +538,53 @@ jobs:
   
       - name: Create update branch and merge request
         run: |
-          # Create new branch for the update
+          # Extract version and create branch name
           UPDATE_BRANCH="update-to-${RD_PROJECT_LATEST_TAG}"
           
-          # Create new branch from development
-          curl --request POST \
-            --header "PRIVATE-TOKEN: $EE_TOKEN" \
-            --header "Content-Type: application/json" \
-            "https://gitlab.dwellerlab.com/api/v4/projects/214/repository/branches?branch=${UPDATE_BRANCH}&ref=development"
+          echo "Creating branch ${UPDATE_BRANCH}..."
           
-          # Create merge request using the new branch
-          curl --request POST \
-            --header "PRIVATE-TOKEN: $EE_TOKEN" \
+          # Create new branch with error checking
+          BRANCH_RESPONSE=$(curl --fail --silent --show-error \
+            --header "PRIVATE-TOKEN: ${EE_TOKEN}" \
+            --request POST \
+            "https://gitlab.dwellerlab.com/api/v4/projects/214/repository/branches" \
+            --data "branch=${UPDATE_BRANCH}&ref=development")
+          
+          if [ $? -ne 0 ]; then
+            echo "Failed to create branch. Response:"
+            echo "${BRANCH_RESPONSE}"
+            exit 1
+          fi
+          
+          echo "Creating merge request..."
+          
+          # Create merge request with error checking
+          MR_RESPONSE=$(curl --fail --silent --show-error \
+            --header "PRIVATE-TOKEN: ${EE_TOKEN}" \
             --header "Content-Type: application/json" \
-            --data '{
-              "source_branch": "'"${UPDATE_BRANCH}"'",
-              "target_branch": "main",
-              "title": "Update to datamimic-ce version '"${RD_PROJECT_LATEST_TAG}"'",
-              "description": "Automated merge request triggered by new datamimic-ce release '"${RD_PROJECT_LATEST_TAG}"'",
-              "remove_source_branch": true,
-              "squash": true,
-              "labels": "automated-update",
-              "merge_when_pipeline_succeeds": true
-            }' \
-            "https://gitlab.dwellerlab.com/api/v4/projects/214/merge_requests"
+            --request POST \
+            "https://gitlab.dwellerlab.com/api/v4/projects/214/merge_requests" \
+            --data @- << EOF
+          {
+            "source_branch": "${UPDATE_BRANCH}",
+            "target_branch": "main",
+            "title": "Update to datamimic-ce version ${RD_PROJECT_LATEST_TAG}",
+            "description": "Automated merge request triggered by new datamimic-ce release ${RD_PROJECT_LATEST_TAG}",
+            "remove_source_branch": true,
+            "squash": true,
+            "labels": "automated-update",
+            "merge_when_pipeline_succeeds": true
+          }
+          EOF
+          )
+          
+          if [ $? -ne 0 ]; then
+            echo "Failed to create merge request. Response:"
+            echo "${MR_RESPONSE}"
+            exit 1
+          fi
+          
+          echo "Successfully created merge request"
         env:
           EE_TOKEN: ${{ secrets.EE_TOKEN }}
         shell: bash
