@@ -19,6 +19,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_NAME,
     ATTR_NUM_PROCESS,
     ATTR_PAGE_SIZE,
+    ATTR_SCRIPT,
     ATTR_SELECTOR,
     ATTR_SEPARATOR,
     ATTR_SOURCE,
@@ -55,6 +56,7 @@ class GenerateModel(BaseModel):
     converter: str | None = None
     bucket: str | None = Field(None, alias=ATTR_BUCKET)
     num_process: int | None = Field(None, alias=ATTR_NUM_PROCESS)
+    script: str | None = Field(None, alias=ATTR_SCRIPT)
 
     @model_validator(mode="before")
     @classmethod
@@ -82,12 +84,13 @@ class GenerateModel(BaseModel):
                 ATTR_VARIABLE_SUFFIX,
                 ATTR_CONVERTER,
                 ATTR_NUM_PROCESS,
+                ATTR_SCRIPT
             },
         )
 
     @model_validator(mode="before")
     @classmethod
-    def validate_count_and_source(cls, values: dict):
+    def validate_count_and_source_and_script(cls, values: dict):
         return ModelUtil.check_exist_count(values=values)
 
     @model_validator(mode="before")

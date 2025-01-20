@@ -1,0 +1,50 @@
+[
+  {
+    "userProfile": {
+      "users": [
+        {
+          "id": 12345,
+          "name": "Jane Doe",
+          "age": 30,
+          "location": "Los Angeles, CA",
+          "membership": "premium",
+          "workouts": [
+            {
+              "date": "2025-01-18",
+              "type": "Running",
+              "duration": 45,
+              "caloriesBurned": 500
+            },
+            {
+              "date": "2025-01-19",
+              "type": "Strength Training",
+              "duration": 60,
+              "caloriesBurned": 350
+            }
+          ]
+        },
+        {
+          "id": 67890,
+          "name": "John Smith",
+          "age": 25,
+          "location": "New York, NY",
+          "membership": "standard",
+          "workouts": [
+            {
+              "date": "2025-01-15",
+              "type": "Cycling",
+              "duration": 60,
+              "caloriesBurned": 600
+            },
+            {
+              "date": "2025-01-17",
+              "type": "HIIT",
+              "duration": 30,
+              "caloriesBurned": 400
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

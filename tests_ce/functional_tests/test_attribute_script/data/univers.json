@@ -1,0 +1,87 @@
+[
+  {
+    "universe": {
+      "galaxies": [
+        {
+          "id": 1,
+          "name": "Andromeda",
+          "starSystems": [
+            {
+              "id": 101,
+              "name": "Alpha Centauri",
+              "planets": [
+                {
+                  "planetId": "AC-01",
+                  "name": "Proxima b",
+                  "type": "terrestrial",
+                  "inhabitants": [
+                    {
+                      "species": "Humanoids",
+                      "population": 500000
+                    },
+                    {
+                      "species": "Androids",
+                      "population": 10000
+                    }
+                  ]
+                },
+                {
+                  "planetId": "AC-02",
+                  "name": "Proxima c",
+                  "type": "gas giant",
+                  "inhabitants": []
+                }
+              ]
+            },
+            {
+              "id": 102,
+              "name": "Sirius",
+              "planets": [
+                {
+                  "planetId": "SR-01",
+                  "name": "Sirius A1",
+                  "type": "terrestrial",
+                  "inhabitants": [
+                    {
+                      "species": "Avians",
+                      "population": 12000
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "Milky Way",
+          "starSystems": [
+            {
+              "id": 201,
+              "name": "Solar System",
+              "planets": [
+                {
+                  "planetId": "SS-01",
+                  "name": "Earth",
+                  "type": "terrestrial",
+                  "inhabitants": [
+                    {
+                      "species": "Humans",
+                      "population": 8000000000
+                    }
+                  ]
+                },
+                {
+                  "planetId": "SS-02",
+                  "name": "Mars",
+                  "type": "terrestrial",
+                  "inhabitants": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+]
