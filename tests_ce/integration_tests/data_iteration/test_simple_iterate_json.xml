@@ -1,4 +1,4 @@
-<setup numProcess="2">
+<setup numProcess="4">
     <generate name="product" source="data/people.json" count="100000" target="" cyclic="True">
         <key name="addition" values="'Bob','Frank','Phil'"/>
         <key name="name" values="'Bob','Frank','Phil'"/>

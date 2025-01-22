@@ -5,9 +5,12 @@
 # For questions and support, contact: info@rapiddweller.com
 import argparse
 import logging
+import os
 import traceback
 import uuid
 from pathlib import Path
+
+os.environ["RAY_DEDUP_LOGS"] = "0"
 
 import ray
 
@@ -22,7 +25,8 @@ from datamimic_ce.utils.system_util import log_memory_info
 
 LOG_FILE = "datamimic.log"
 
-ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False)
+ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False,
+         logging_format="%(asctime)s - %(levelname)s - %(funcName)s - PID 1 - %(message)s")
 
 
 class DataMimic:

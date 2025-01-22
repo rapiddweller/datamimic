@@ -3,12 +3,14 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-
-
+import os
 import subprocess
 import time
 
 import pytest
+
+os.environ["RAY_DEDUP_LOGS"] = "0"
+
 import ray
 
 from datamimic_ce.config import settings

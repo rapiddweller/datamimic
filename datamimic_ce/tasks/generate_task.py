@@ -206,6 +206,7 @@ class GenerateTask(CommonSubTask):
                     # then populate to workers, such as (0, 1000), (1000, 2000), etc.
                     chunk_size = math.ceil(count / num_workers)
                     chunks = [(i * chunk_size, min((i + 1) * chunk_size, count)) for i in range(num_workers)]
+                    logger.info(f"Generating data by page in {num_workers} workers with chunks {chunks}")
 
                     # Execute generate task using Ray
                     from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
