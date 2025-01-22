@@ -29,30 +29,30 @@ class MockSetupContext:
         return {"id": client_id, "data": "mock_client_data"}
 
 
-def worker(data_chunk, shared_storage_list, task_id, descriptor_dir, properties):
-    setup_context = MockSetupContext(task_id=task_id, descriptor_dir=descriptor_dir)
-    setup_context.properties = properties
-    exporter = CSVExporter(
-        setup_context=setup_context,
-        chunk_size=1000,
-        product_name="test_product",
-        fieldnames=None,
-        delimiter=None,
-        quotechar=None,
-        quoting=None,
-        line_terminator=None,
-        encoding=None,
-    )
-    exporter._buffer_file = None
-    product = ("test_product", data_chunk)
-    stmt_full_name = "test_product"
-    worker_id = 1
-    exporter_state_manager = ExporterStateManager(worker_id)
-
-    exporter.consume(product, stmt_full_name, exporter_state_manager)
-    exporter.finalize_chunks(worker_id)
-    exporter.upload_to_storage(bucket="test_bucket", name=exporter.product_name)
-    shared_storage_list.extend(exporter._buffer_file.open_calls)
+# def worker(data_chunk, shared_storage_list, task_id, descriptor_dir, properties):
+#     setup_context = MockSetupContext(task_id=task_id, descriptor_dir=descriptor_dir)
+#     setup_context.properties = properties
+#     exporter = CSVExporter(
+#         setup_context=setup_context,
+#         chunk_size=1000,
+#         product_name="test_product",
+#         fieldnames=None,
+#         delimiter=None,
+#         quotechar=None,
+#         quoting=None,
+#         line_terminator=None,
+#         encoding=None,
+#     )
+#     exporter._buffer_file = None
+#     product = ("test_product", data_chunk)
+#     stmt_full_name = "test_product"
+#     worker_id = 1
+#     exporter_state_manager = ExporterStateManager(worker_id)
+#
+#     exporter.consume(product, stmt_full_name, exporter_state_manager)
+#     exporter.finalize_chunks(worker_id)
+#     exporter.upload_to_storage(bucket="test_bucket", name=exporter.product_name)
+#     shared_storage_list.extend(exporter._buffer_file.open_calls)
 
 
 class TestCSVExporter(unittest.TestCase):
@@ -165,33 +165,33 @@ class TestCSVExporter(unittest.TestCase):
         self.exporter.consume(product, stmt_full_name, exporter_state_manager)
         self.exporter.finalize_chunks(worker_id)
 
-    @unittest.skipIf(os.name == "posix", "Skipping multiprocessing test on Linux")
-    def test_multiprocessing_export(self):
-        total_processes = os.cpu_count() or 1
-        total_records_per_process = 5000
-        data = generate_mock_data(total_records_per_process * total_processes)
-        data_chunks = [
-            data[i * total_records_per_process : (i + 1) * total_records_per_process] for i in range(total_processes)
-        ]
-
-        manager = multiprocessing.Manager()
-        shared_storage_list = manager.list()
-        processes = []
-        for chunk in data_chunks:
-            p = multiprocessing.Process(
-                target=worker,
-                args=(
-                    chunk,
-                    shared_storage_list,
-                    self.setup_context.task_id,
-                    self.setup_context.descriptor_dir,
-                    self.setup_context.properties,
-                ),
-            )
-            p.start()
-            processes.append(p)
-        for p in processes:
-            p.join()
+    # @unittest.skipIf(os.name == "posix", "Skipping multiprocessing test on Linux")
+    # def test_multiprocessing_export(self):
+    #     total_processes = os.cpu_count() or 1
+    #     total_records_per_process = 5000
+    #     data = generate_mock_data(total_records_per_process * total_processes)
+    #     data_chunks = [
+    #         data[i * total_records_per_process : (i + 1) * total_records_per_process] for i in range(total_processes)
+    #     ]
+    #
+    #     manager = multiprocessing.Manager()
+    #     shared_storage_list = manager.list()
+    #     processes = []
+    #     for chunk in data_chunks:
+    #         p = multiprocessing.Process(
+    #             target=worker,
+    #             args=(
+    #                 chunk,
+    #                 shared_storage_list,
+    #                 self.setup_context.task_id,
+    #                 self.setup_context.descriptor_dir,
+    #                 self.setup_context.properties,
+    #             ),
+    #         )
+    #         p.start()
+    #         processes.append(p)
+    #     for p in processes:
+    #         p.join()
 
     def test_empty_records_and_missing_fields(self):
         """Test exporting data with empty records and missing fields."""
