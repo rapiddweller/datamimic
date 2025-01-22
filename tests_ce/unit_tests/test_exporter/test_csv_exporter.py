@@ -45,8 +45,12 @@ def worker(data_chunk, shared_storage_list, task_id, descriptor_dir, properties)
     )
     exporter._buffer_file = None
     product = ("test_product", data_chunk)
-    exporter.consume(product)
-    exporter.finalize_chunks()
+    stmt_full_name = "test_product"
+    worker_id = 1
+    exporter_state_manager = ExporterStateManager(worker_id)
+
+    exporter.consume(product, stmt_full_name, exporter_state_manager)
+    exporter.finalize_chunks(worker_id)
     exporter.upload_to_storage(bucket="test_bucket", name=exporter.product_name)
     shared_storage_list.extend(exporter._buffer_file.open_calls)
 
