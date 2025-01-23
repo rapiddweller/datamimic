@@ -79,14 +79,13 @@ class GenerateWorker:
             page_info = f"{page_index + 1}/{len(index_chunk)}"
             logger.info(f"Worker {worker_id} processing page {page_info}")
             page_start, page_end = page_tuple
-            with gen_timer("generate", root_context.report_logging, stmt.full_name, worker_id,
-                           page_info) as timer_result:
+            with gen_timer("generate", root_context.report_logging, stmt.full_name) as timer_result:
                 timer_result["records_count"] = page_end - page_start
                 # Generate product
                 result_dict = GenerateWorker._generate_product_by_page_in_single_process(context, stmt, page_start,
                                                                                          page_end, worker_id)
 
-            with gen_timer("export", root_context.report_logging, stmt.full_name, worker_id, page_info) as timer_result:
+            with gen_timer("export", root_context.report_logging, stmt.full_name) as timer_result:
                 timer_result["records_count"] = page_end - page_start
                 # Export product by page
                 context.root.class_factory_util.get_task_util_cls().export_product_by_page(

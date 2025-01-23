@@ -29,8 +29,7 @@ def log_system_info():
 
 
 @contextmanager
-def gen_timer(process: Literal["generate", "export", "process"], report_logging: bool, product_name: str,
-              worker_id: int | None = None, page_info: str | None = None):
+def gen_timer(process: Literal["generate", "export", "process"], report_logging: bool, product_name: str):
     """
     Timer for generate and export process.
 
@@ -54,9 +53,9 @@ def gen_timer(process: Literal["generate", "export", "process"], report_logging:
         # timer_result["elapsed_time"] = elapsed_time
         match process:
             case "generate":
-                process_name = f"Worker {worker_id} page {page_info}: Generating"
+                process_name = "Generating"
             case "export":
-                process_name = f"Worker {worker_id} page {page_info}: Exporting"
+                process_name = "Exporting"
             case _:
                 process_name = "Generating and exporting"
         logger.info(

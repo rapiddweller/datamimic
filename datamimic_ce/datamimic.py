@@ -44,7 +44,7 @@ class DataMimic:
         """
         # Set up logger
         log_level = getattr(logging, args.log_level.upper(), logging.INFO) if args else logging.INFO
-        setup_logger(logger_name=settings.DEFAULT_LOGGER, task_id=task_id, level=log_level)
+        setup_logger(logger_name=settings.DEFAULT_LOGGER, worker_name="MAIN", level=log_level)
 
         self._task_id = task_id or uuid.uuid4().hex
         self._descriptor_path = descriptor_path

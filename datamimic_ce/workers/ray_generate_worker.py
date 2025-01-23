@@ -35,7 +35,7 @@ class RayGenerateWorker(GenerateWorker):
         Ray remote function to generate and export data by page in multiprocessing.
         """
         loglevel = os.getenv("LOG_LEVEL", "INFO")
-        setup_logger(logger_name=settings.DEFAULT_LOGGER, task_id=context.root.task_id, level=loglevel)
+        setup_logger(logger_name=settings.DEFAULT_LOGGER, worker_name=f"WORK-{worker_id}", level=loglevel)
 
         # Deserialize multiprocessing arguments
         context.root.namespace.update(dill.loads(context.root.namespace_functions))
