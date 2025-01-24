@@ -18,7 +18,7 @@ class TestExporter:
         base_folder = self._test_dir / "output"
         folder_name = f"{task_id}_{export_type}_{product_name}"
         folder_path = base_folder / folder_name
-        file_name = f"product_{product_name}_chunk_0.{export_type}"
+        file_name = f"product_{product_name}_pid_1_chunk_0.{export_type}"
         file_path = folder_path / file_name
         return folder_path, file_path
 

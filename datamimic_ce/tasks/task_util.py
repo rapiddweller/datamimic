@@ -3,13 +3,17 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-
+import csv
+import json
 import re
+from collections import OrderedDict
+from pathlib import Path
 from typing import Any
+
+import xmltodict
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.constants.exporter_constants import EXPORTER_TEST_RESULT_EXPORTER
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.converter.append_converter import AppendConverter
@@ -26,9 +30,12 @@ from datamimic_ce.converter.remove_none_or_empty_element_converter import Remove
 from datamimic_ce.converter.timestamp2date_converter import Timestamp2DateConverter
 from datamimic_ce.converter.upper_case_converter import UpperCaseConverter
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.data_sources.data_source_util import DataSourceUtil
 from datamimic_ce.enums.converter_enums import ConverterEnum
 from datamimic_ce.exporters.csv_exporter import CSVExporter
+from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.json_exporter import JsonExporter
+from datamimic_ce.exporters.memstore import Memstore
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.exporters.txt_exporter import TXTExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
@@ -64,11 +71,6 @@ from datamimic_ce.tasks.else_task import ElseTask
 from datamimic_ce.tasks.execute_task import ExecuteTask
 from datamimic_ce.tasks.generate_task import (
     GenerateTask,
-    _evaluate_selector_script,
-    _load_csv_file,
-    _load_json_file,
-    _load_xml_file,
-    _pre_consume_product,
 )
 from datamimic_ce.tasks.generator_task import GeneratorTask
 from datamimic_ce.tasks.if_task import IfTask
@@ -81,16 +83,16 @@ from datamimic_ce.tasks.mongodb_task import MongoDBTask
 from datamimic_ce.tasks.nested_key_task import NestedKeyTask
 from datamimic_ce.tasks.reference_task import ReferenceTask
 from datamimic_ce.tasks.task import Task
-from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
+from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
 from datamimic_ce.utils.object_util import ObjectUtil
 
 
 class TaskUtil:
     @staticmethod
     def get_task_by_statement(
-        ctx: SetupContext,
-        stmt: Statement,
-        pagination: DataSourcePagination | None = None,
+            ctx: SetupContext,
+            stmt: Statement,
+            pagination: DataSourcePagination | None = None,
     ) -> Task:
         class_factory_util = ctx.class_factory_util
         if isinstance(stmt, GenerateStatement):
@@ -277,15 +279,15 @@ class TaskUtil:
 
     @staticmethod
     def gen_task_load_data_from_source(
-        context: SetupContext,
-        stmt: GenerateStatement,
-        source_str: str,
-        separator: str,
-        source_scripted: bool,
-        processed_data_count: int,
-        load_start_idx: int,
-        load_end_idx: int,
-        load_pagination: DataSourcePagination | None,
+            context: SetupContext,
+            stmt: GenerateStatement,
+            source_str: str,
+            separator: str,
+            source_scripted: bool,
+            processed_data_count: int,
+            load_start_idx: int,
+            load_end_idx: int,
+            load_pagination: DataSourcePagination | None,
     ) -> tuple[list[dict], bool]:
         """
         Generate task to load data from source
@@ -303,7 +305,7 @@ class TaskUtil:
             build_from_source = False
         # Load data from CSV
         elif source_str.endswith(".csv"):
-            source_data = _load_csv_file(
+            source_data = TaskUtil.load_csv_file(
                 ctx=context,
                 file_path=root_context.descriptor_dir / source_str,
                 separator=separator,
@@ -316,7 +318,7 @@ class TaskUtil:
             )
         # Load data from JSON
         elif source_str.endswith(".json"):
-            source_data = _load_json_file(
+            source_data = TaskUtil.load_json_file(
                 root_context.task_id,
                 root_context.descriptor_dir / source_str,
                 stmt.cyclic,
@@ -333,7 +335,7 @@ class TaskUtil:
                     logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
         # Load data from XML
         elif source_str.endswith(".xml"):
-            source_data = _load_xml_file(
+            source_data = TaskUtil.load_xml_file(
                 root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
             )
             # if sourceScripted then evaluate python expression in json
@@ -352,7 +354,7 @@ class TaskUtil:
             # Load data from MongoDB
             if isinstance(client, MongoDBClient):
                 if stmt.selector:
-                    selector = _evaluate_selector_script(context, stmt)
+                    selector = TaskUtil.evaluate_selector_script(context, stmt)
                     source_data = client.get_by_page_with_query(query=selector, pagination=load_pagination)
                 elif stmt.type:
                     source_data = client.get_by_page_with_type(collection_name=stmt.type, pagination=load_pagination)
@@ -362,15 +364,15 @@ class TaskUtil:
                     )
                 # Init empty product for upsert MongoDB in case no record found by query
                 if (
-                    len(source_data) == 0
-                    and isinstance(stmt, GenerateStatement)
-                    and stmt.contain_mongodb_upsert(root_context)
+                        len(source_data) == 0
+                        and isinstance(stmt, GenerateStatement)
+                        and stmt.contain_mongodb_upsert(root_context)
                 ):
                     source_data = [{}]
             # Load data from RDBMS
             elif isinstance(client, RdbmsClient):
                 if stmt.selector:
-                    selector = _evaluate_selector_script(context, stmt)
+                    selector = TaskUtil.evaluate_selector_script(context, stmt)
                     source_data = client.get_by_page_with_query(original_query=selector, pagination=load_pagination)
                 else:
                     source_data = client.get_by_page_with_type(
@@ -386,85 +388,220 @@ class TaskUtil:
         return return_source_data, build_from_source
 
     @staticmethod
-    def consume_product_by_page(
-        root_context: SetupContext,
-        stmt: GenerateStatement,
-        xml_result: list,
-        page_info: MultiprocessingPageInfo,
+    def export_product_by_page(
+            root_context: SetupContext,
+            stmt: GenerateStatement,
+            xml_result: dict[str, list[dict]],
+            exporter_state_manager: ExporterStateManager,
     ) -> None:
         """
-        Consume single list of product in generate statement.
+        Export single page of product in generate statement.
 
         :param root_context: SetupContext instance.
         :param stmt: GenerateStatement instance.
-        :param xml_result: List of generated product data.
-        :param page_info: Tuple containing page information.
+        :param xml_result: Dictionary of product data.
+        :param exporter_state_manager: ExporterStateManager instance.
         :return: None
         """
-        # Convert XML result into JSON result
-        json_result = [GenerateTask.convert_xml_dict_to_json_dict(res) for res in xml_result]
+        # If product is in XML format, convert it to JSON
+        json_result = [TaskUtil.convert_xml_dict_to_json_dict(product) for product in xml_result[stmt.full_name]]
 
         # Wrap product key and value into a tuple
         # for iterate database may have key, value, and other statement attribute info
-        json_product = _pre_consume_product(stmt, json_result)
-
-        # Create exporters cache in root context if it doesn't exist
-        if not hasattr(root_context, "_task_exporters"):
-            # Using task_id to namespace the cache
-            root_context.task_exporters = {}
+        if getattr(stmt, "selector", False):
+            json_product = (stmt.name, json_result, {"selector": stmt.selector})
+        elif getattr(stmt, "type", False):
+            json_product = (stmt.name, json_result, {"type": stmt.type})
+        else:
+            json_product = (stmt.name, json_result)  # type: ignore[assignment]
 
         # Create a unique cache key incorporating task_id and statement details
-        cache_key = f"{root_context.task_id}_{stmt.name}_{stmt.storage_id}_{stmt}"
-
-        # Get or create exporters
-        if cache_key not in root_context.task_exporters:
-            # Create the consumer set once
-            consumer_set = stmt.targets.copy()
-            # consumer_set.add(EXPORTER_PREVIEW) deactivating preview exporter for multi-process
-            if root_context.test_mode and not root_context.use_mp:
-                consumer_set.add(EXPORTER_TEST_RESULT_EXPORTER)
-
-            # Create exporters with operations
-            (
-                consumers_with_operation,
-                consumers_without_operation,
-            ) = root_context.class_factory_util.get_exporter_util().create_exporter_list(
-                setup_context=root_context,
-                stmt=stmt,
-                targets=list(consumer_set),
-                page_info=page_info,
-            )
-
-            # Cache the exporters
-            root_context.task_exporters[cache_key] = {
-                "with_operation": consumers_with_operation,
-                "without_operation": consumers_without_operation,
-                "page_count": 0,  # Track number of pages processed
-            }
+        exporters_cache_key = stmt.full_name
 
         # Get cached exporters
-        exporters = root_context.task_exporters[cache_key]
+        exporters = root_context.task_exporters[exporters_cache_key]
         exporters["page_count"] += 1
 
         # Use cached exporters
-        # Run consumers with operations first
-        for consumer, operation in exporters["with_operation"]:
-            if isinstance(consumer, MongoDBExporter) and operation == "upsert":
-                json_product = consumer.upsert(product=json_product)
-            elif hasattr(consumer, operation):
-                getattr(consumer, operation)(json_product)
+        # Run exporters with operations first
+        for exporter, operation in exporters["with_operation"]:
+            if isinstance(exporter, MongoDBExporter) and operation == "upsert":
+                json_product = exporter.upsert(product=json_product)
+            elif hasattr(exporter, operation):
+                getattr(exporter, operation)(json_product)
             else:
-                raise ValueError(f"Consumer does not support operation: {consumer}.{operation}")
+                raise ValueError(f"Exporter does not support operation: {exporter}.{operation}")
 
-        # Run consumers without operations
-        for consumer in exporters["without_operation"]:
+        # Run exporters without operations
+        for exporter in exporters["without_operation"]:
             try:
-                if isinstance(consumer, XMLExporter):
-                    consumer.consume((json_product[0], xml_result))
-                elif isinstance(consumer, JsonExporter | TXTExporter | CSVExporter):
-                    consumer.consume(json_product)
+                # Skip lazy exporters
+                if isinstance(exporter, Memstore):
+                    continue
+                elif isinstance(exporter, XMLExporter):
+                    exporter.consume(
+                        (json_product[0], xml_result[stmt.full_name]), stmt.full_name, exporter_state_manager
+                    )
+                elif isinstance(exporter, JsonExporter | TXTExporter | CSVExporter):
+                    exporter.consume(json_product, stmt.full_name, exporter_state_manager)
                 else:
-                    consumer.consume(json_product)
+                    exporter.consume(json_product)
             except Exception as e:
-                logger.error(f"Error in consumer {type(consumer).__name__}: {str(e)}")
-                raise
+                import traceback
+                traceback.print_exc()
+                logger.error(f"Error in exporter {type(exporter).__name__}: {str(e)}")
+                raise ValueError(f"Error in exporter {type(exporter).__name__}") from e
+
+    @staticmethod
+    def evaluate_selector_script(context: Context, stmt: GenerateStatement):
+        """
+        Evaluate script selector.
+
+        :param context: Context instance.
+        :param stmt: GenerateStatement instance.
+        :return: Evaluated selector.
+        """
+        selector = stmt.selector or ""
+        prefix = stmt.variable_prefix or context.root.default_variable_prefix
+        suffix = stmt.variable_suffix or context.root.default_variable_suffix
+        return TaskUtil.evaluate_variable_concat_prefix_suffix(context, selector, prefix=prefix, suffix=suffix)
+
+    @staticmethod
+    def load_csv_file(
+            ctx: SetupContext,
+            file_path: Path,
+            separator: str,
+            cyclic: bool | None,
+            start_idx: int,
+            end_idx: int,
+            source_scripted: bool,
+            prefix: str,
+            suffix: str,
+    ) -> list[dict]:
+        """
+        Load CSV content from file with skip and limit.
+
+        :param file_path: Path to the CSV file.
+        :param separator: CSV delimiter.
+        :param cyclic: Whether to cycle through data.
+        :param start_idx: Starting index.
+        :param end_idx: Ending index.
+        :return: List of dictionaries representing CSV rows.
+        """
+        cyclic = cyclic if cyclic is not None else False
+
+        with file_path.open(newline="") as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=separator)
+            pagination = (
+                DataSourcePagination(start_idx, end_idx - start_idx)
+                if (start_idx is not None and end_idx is not None)
+                else None
+            )
+            result = DataSourceUtil.get_cyclic_data_list(data=list(reader), cyclic=cyclic, pagination=pagination)
+
+            # if sourceScripted then evaluate python expression in csv
+            if source_scripted:
+                evaluated_result = TaskUtil.evaluate_file_script_template(
+                    ctx=ctx, datas=result, prefix=prefix, suffix=suffix
+                )
+                return evaluated_result if isinstance(evaluated_result, list) else [evaluated_result]
+
+            return result
+
+    @staticmethod
+    def load_json_file(task_id: str, file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
+        """
+        Load JSON content from file using skip and limit.
+
+        :param file_path: Path to the JSON file.
+        :param cyclic: Whether to cycle through data.
+        :param start_idx: Starting index.
+        :param end_idx: Ending index.
+        :return: List of dictionaries representing JSON objects.
+        """
+        cyclic = cyclic if cyclic is not None else False
+
+        # Try to load JSON data from InMemoryCache
+        in_mem_cache = InMemoryCache()
+        # Add task_id to cache_key for testing lib without platform
+        cache_key = str(file_path) if task_id in str(file_path) else f"{task_id}_{str(file_path)}"
+        cache_data = in_mem_cache.get(cache_key)
+        if cache_data:
+            data = json.loads(cache_data)
+        else:
+            # Read the JSON data from a file and store it in redis
+            with file_path.open("r") as file:
+                data = json.load(file)
+            # Store data in redis for 24 hours
+            in_mem_cache.set(str(file_path), json.dumps(data))
+
+        if not isinstance(data, list):
+            raise ValueError(f"JSON file '{file_path.name}' must contain a list of objects")
+        pagination = (
+            DataSourcePagination(start_idx, end_idx - start_idx)
+            if (start_idx is not None and end_idx is not None)
+            else None
+        )
+        return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
+
+    @staticmethod
+    def load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
+        """
+        Load XML content from file using skip and limit.
+
+        :param file_path: Path to the XML file.
+        :param cyclic: Whether to cycle through data.
+        :param start_idx: Starting index.
+        :param end_idx: Ending index.
+        :return: List of dictionaries representing XML items.
+        """
+        cyclic = cyclic if cyclic is not None else False
+        # Read the XML data from a file
+        with file_path.open("r") as file:
+            data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")
+            # Handle the case where data might be None
+            if data is None:
+                return []
+
+            # Extract items from list structure if present
+            if isinstance(data, dict) and data.get("list") and data.get("list", {}).get("item"):
+                items = data["list"]["item"]
+            else:
+                items = data
+
+            # Convert single item to list if needed
+            if isinstance(items, OrderedDict | dict):
+                items = [items]
+            elif not isinstance(items, list):
+                items = []
+
+            # Apply pagination if needed
+            pagination = (
+                DataSourcePagination(start_idx, end_idx - start_idx)
+                if (start_idx is not None and end_idx is not None)
+                else None
+            )
+            return DataSourceUtil.get_cyclic_data_list(data=items, cyclic=cyclic, pagination=pagination)
+
+    @staticmethod
+    def convert_xml_dict_to_json_dict(xml_dict: dict):
+        """
+        Convert XML dict with #text and @attribute to pure JSON dict.
+
+        :param xml_dict: XML dictionary.
+        :return: JSON dictionary.
+        """
+        if "#text" in xml_dict:
+            return xml_dict["#text"]
+        res = {}
+        for key, value in xml_dict.items():
+            if not key.startswith("@"):
+                if isinstance(value, dict):
+                    res[key] = TaskUtil.convert_xml_dict_to_json_dict(value)
+                elif isinstance(value, list):
+                    res[key] = [
+                        TaskUtil.convert_xml_dict_to_json_dict(v) if isinstance(v, dict) else v for v in value
+                    ]
+                else:
+                    res[key] = value
+        return res

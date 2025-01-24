@@ -19,7 +19,6 @@ from pathlib import Path
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.logger import logger
-from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 
 
 class TXTExporter(UnifiedBufferedExporter):
@@ -29,14 +28,13 @@ class TXTExporter(UnifiedBufferedExporter):
     """
 
     def __init__(
-        self,
-        setup_context: SetupContext,
-        product_name: str,
-        page_info: MultiprocessingPageInfo,
-        chunk_size: int | None,
-        separator: str | None,
-        line_terminator: str | None,
-        encoding: str | None,
+            self,
+            setup_context: SetupContext,
+            product_name: str,
+            chunk_size: int | None,
+            separator: str | None,
+            line_terminator: str | None,
+            encoding: str | None,
     ):
         """
         Initializes the TXTExporter.
@@ -54,9 +52,7 @@ class TXTExporter(UnifiedBufferedExporter):
 
         # Pass encoding via kwargs to the base class
 
-        super().__init__(
-            "txt", setup_context, product_name, chunk_size=chunk_size, page_info=page_info, encoding=encoding
-        )
+        super().__init__("txt", setup_context, product_name, chunk_size=chunk_size, encoding=encoding)
         logger.info(
             f"TXTExporter initialized with chunk size {chunk_size}, separator '{self.separator}', "
             f"encoding '{self.encoding}', line terminator '{self.line_terminator}'"
@@ -70,10 +66,10 @@ class TXTExporter(UnifiedBufferedExporter):
         """Returns the MIME type for the data content."""
         return "text/plain"
 
-    def _write_data_to_buffer(self, data: list[dict]) -> None:
+    def _write_data_to_buffer(self, data: list[dict], worker_id: int, chunk_idx: int) -> None:
         """Writes data to the current buffer file in TXT format."""
         try:
-            buffer_file = self._get_buffer_file()
+            buffer_file = self._get_buffer_file(worker_id, chunk_idx)
             with buffer_file.open("a", encoding=self.encoding) as txtfile:
                 for record in data:
                     # Format each record as "name: item"

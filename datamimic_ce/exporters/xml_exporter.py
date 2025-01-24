@@ -15,7 +15,6 @@ from lxml import etree
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.logger import logger
-from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 
 
 class ExporterError(Exception):
@@ -31,14 +30,13 @@ class XMLExporter(UnifiedBufferedExporter):
     """
 
     def __init__(
-        self,
-        setup_context: SetupContext,
-        product_name: str,
-        page_info: MultiprocessingPageInfo,
-        chunk_size: int | None,
-        root_element: str | None,
-        item_element: str | None,
-        encoding: str | None,
+            self,
+            setup_context: SetupContext,
+            product_name: str,
+            chunk_size: int | None,
+            root_element: str | None,
+            item_element: str | None,
+            encoding: str | None,
     ):
         """
         Initializes the XMLExporter.
@@ -58,7 +56,6 @@ class XMLExporter(UnifiedBufferedExporter):
             setup_context=setup_context,
             product_name=product_name,
             chunk_size=chunk_size,
-            page_info=page_info,
             encoding=encoding,
         )
         logger.info(
@@ -74,7 +71,7 @@ class XMLExporter(UnifiedBufferedExporter):
         """Returns the MIME type for the data content."""
         return "application/xml"
 
-    def _write_data_to_buffer(self, data: list[dict[str, Any]]) -> None:
+    def _write_data_to_buffer(self, data: list[dict[str, Any]], worker_id: int, chunk_idx: int) -> None:
         """
         Writes data to the current buffer file in XML format.
 
@@ -95,7 +92,7 @@ class XMLExporter(UnifiedBufferedExporter):
                 )
                 items_xml += item_xml + "\n"  # Add newline for readability
 
-            buffer_file = self._get_buffer_file()
+            buffer_file = self._get_buffer_file(worker_id, chunk_idx)
 
             if buffer_file is None:
                 return
@@ -161,6 +158,9 @@ class XMLExporter(UnifiedBufferedExporter):
                     xmlfile.write(f"</{self.root_element}>")
             logger.debug(f"Finalized XML file: {buffer_file}")
         except Exception as e:
+            import traceback
+
+            traceback.print_exc()
             logger.error(f"Error finalizing buffer file: {e}")
             raise ExporterError(f"Error finalizing buffer file: {e}") from e
 
@@ -180,7 +180,7 @@ class XMLExporter(UnifiedBufferedExporter):
             end_index = xml_content.find(end_tag)
             if start_index != -1 and end_index != -1:
                 # Extract content between <item> and </item>
-                item_content = xml_content[start_index + len(start_tag) : end_index]
+                item_content = xml_content[start_index + len(start_tag): end_index]
                 try:
                     with buffer_file.open("w", encoding=self.encoding) as xmlfile:
                         xmlfile.write(item_content)

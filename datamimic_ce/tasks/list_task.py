@@ -4,7 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.statements.list_statement import ListStatement
@@ -14,10 +13,10 @@ from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 class ListTask(Task):
     def __init__(
-        self,
-        ctx: SetupContext,
-        statement: ListStatement,
-        class_factory_util: BaseClassFactoryUtil,
+            self,
+            ctx: SetupContext,
+            statement: ListStatement,
+            class_factory_util: BaseClassFactoryUtil,
     ):
         self._statement = statement
         # Not apply pagination for sub-statement
@@ -31,7 +30,7 @@ class ListTask(Task):
     def statement(self) -> ListStatement:
         return self._statement
 
-    def execute(self, parent_context: GenIterContext | Context):
+    def execute(self, parent_context: GenIterContext):
         """
         Generate data for element "list"
         :param parent_context:
@@ -53,5 +52,4 @@ class ListTask(Task):
             value.append(ctx.current_product.get("temp_item_name"))
         for converter in self._converter_list:
             value = converter.convert(value)
-        if isinstance(parent_context, GenIterContext):
-            parent_context.add_current_product_field(self._statement.name, value)
+        parent_context.add_current_product_field(self._statement.name, value)
