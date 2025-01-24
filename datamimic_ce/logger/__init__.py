@@ -21,7 +21,8 @@ def setup_logger(logger_name: str, worker_name: str, level=logging.INFO):
     # TODO: check if ray support this configuration with PR https://github.com/ray-project/ray/pull/48742
     if worker_name == "MAIN":
         formatter = logging.Formatter(
-            f"(main_process pid=%(process)d) %(asctime)s | %(levelname)-5s | %(name)-9s | {worker_name}    | %(message)s",
+            f"(main_process pid=%(process)d) %(asctime)s | %(levelname)-5s | %(name)-9s | {worker_name}    |"
+            f" %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S,%f"[:-3],
         )
     else:

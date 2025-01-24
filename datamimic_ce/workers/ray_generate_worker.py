@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 import os
 
-import dill
+import dill  # type: ignore
 import ray
 
 from datamimic_ce.config import settings

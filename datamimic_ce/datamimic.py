@@ -25,8 +25,7 @@ from datamimic_ce.utils.system_util import log_memory_info
 
 LOG_FILE = "datamimic.log"
 
-ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False,
-         logging_format="%(asctime)s - %(levelname)s - %(funcName)s - PID 1 - %(message)s")
+ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False)
 
 
 class DataMimic:
