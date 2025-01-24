@@ -10,6 +10,7 @@ import traceback
 import uuid
 from pathlib import Path
 
+# Avoid deduplication of logs in Ray, MUST be set before importing ray
 os.environ["RAY_DEDUP_LOGS"] = "0"
 
 import ray
@@ -88,8 +89,6 @@ class DataMimic:
             logger.exception("Error in DATAMIMIC process. Error message: {err}")
             traceback.print_exc()
             raise err
-        # finally:
-        # ray.shutdown()
 
     def capture_test_result(self) -> dict | None:
         """Capture test result in test mode."""
