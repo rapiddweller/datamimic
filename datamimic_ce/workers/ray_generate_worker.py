@@ -23,7 +23,7 @@ class RayGenerateWorker(GenerateWorker):
 
     @staticmethod
     @ray.remote
-    def generate_and_export_data_by_chunk_mp(
+    def ray_process(
             context: SetupContext | GenIterContext,
             stmt: GenerateStatement,
             worker_id: int,

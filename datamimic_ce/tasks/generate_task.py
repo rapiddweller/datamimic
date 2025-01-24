@@ -211,7 +211,7 @@ class GenerateTask(CommonSubTask):
                     # Execute generate task using Ray
                     from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
                     futures = [
-                        RayGenerateWorker.generate_and_export_data_by_chunk_mp.options(enable_task_events=False).remote(
+                        RayGenerateWorker.ray_process.options(enable_task_events=False).remote(
                             copied_context,
                             self._statement,
                             worker_id,
