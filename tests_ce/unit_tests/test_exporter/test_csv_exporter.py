@@ -8,51 +8,7 @@ from pathlib import Path
 
 from datamimic_ce.exporters.csv_exporter import CSVExporter
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
-
-
-def generate_mock_data(total_records=3000, title="Mock Title", year=2020):
-    """Generate mock data for testing."""
-    return [{"id": f"movie_{i + 1}", "title": f"{title} {i + 1}", "year": year} for i in range(total_records)]
-
-
-class MockSetupContext:
-    def __init__(self, task_id, descriptor_dir):
-        self.task_id = task_id
-        self.descriptor_dir = descriptor_dir
-        self.default_encoding = "utf-8"
-        self.default_separator = ","
-        self.default_line_separator = "\n"
-        self.use_mp = False
-
-    def get_client_by_id(self, client_id):
-        # Return a dummy client or data, replace MagicMock dependency
-        return {"id": client_id, "data": "mock_client_data"}
-
-
-# def worker(data_chunk, shared_storage_list, task_id, descriptor_dir, properties):
-#     setup_context = MockSetupContext(task_id=task_id, descriptor_dir=descriptor_dir)
-#     setup_context.properties = properties
-#     exporter = CSVExporter(
-#         setup_context=setup_context,
-#         chunk_size=1000,
-#         product_name="test_product",
-#         fieldnames=None,
-#         delimiter=None,
-#         quotechar=None,
-#         quoting=None,
-#         line_terminator=None,
-#         encoding=None,
-#     )
-#     exporter._buffer_file = None
-#     product = ("test_product", data_chunk)
-#     stmt_full_name = "test_product"
-#     worker_id = 1
-#     exporter_state_manager = ExporterStateManager(worker_id)
-#
-#     exporter.consume(product, stmt_full_name, exporter_state_manager)
-#     exporter.finalize_chunks(worker_id)
-#     exporter.upload_to_storage(bucket="test_bucket", name=exporter.product_name)
-#     shared_storage_list.extend(exporter._buffer_file.open_calls)
+from tests_ce.unit_tests.test_exporter.exporter_test_util import generate_mock_data, MockSetupContext
 
 
 class TestCSVExporter(unittest.TestCase):
