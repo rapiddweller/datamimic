@@ -8,7 +8,7 @@ on:
       - '[0-9]+.[0-9]+.[0-9]+'
   pull_request:
     branches:
-      - development
+      - "*"
 
 env:
   RUNTIME_ENVIRONMENT: production
@@ -21,16 +21,24 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          
       - name: Export latest tag
         run: |
-          export RD_PROJECT_LATEST_TAG=${GITHUB_REF#refs/*/}
-          echo "RD_PROJECT_LATEST_TAG=$RD_PROJECT_LATEST_TAG"
-          echo "RD_PROJECT_LATEST_TAG=$RD_PROJECT_LATEST_TAG" >> build.env
+          # Get the last tag and ensure it's a version number
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          if [[ ! $LATEST_TAG =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Latest tag $LATEST_TAG is not in version format (x.y.z)"
+            exit 1
+          fi
+          echo "RD_PROJECT_LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          echo "RD_PROJECT_LATEST_TAG=$LATEST_TAG" >> build.env
+          
       - name: Export lib version without patch
         run: |
           export LIB_VERSION_WITHOUT_PATCH=$(echo "$RD_PROJECT_LATEST_TAG" | sed 's/\.[^.]*$//')
-          echo "LIB_VERSION_WITHOUT_PATCH=$LIB_VERSION_WITHOUT_PATCH"
+          echo "LIB_VERSION_WITHOUT_PATCH=$LIB_VERSION_WITHOUT_PATCH" >> $GITHUB_ENV
           echo "LIB_VERSION_WITHOUT_PATCH=$LIB_VERSION_WITHOUT_PATCH" >> build.env
+          
       - name: Upload build.env
         uses: actions/upload-artifact@v4
         with:
@@ -522,15 +530,84 @@ jobs:
           repository-url: https://upload.pypi.org/legacy/
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-
-  trigger_ee_dev:
-    if: github.ref == 'refs/heads/development'
+  
+  create_merge_request_datamimic_ee:
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04
-    needs: [ publish_dev ]
+    needs: [release]
     steps:
-      - name: trigger EE development pipelines
-        run: curl -X POST --fail -F token=$EE_TOKEN -F ref=development https://gitlab.dwellerlab.com/api/v4/projects/214/trigger/pipeline;
+      - name: Download build.env
+        uses: actions/download-artifact@v4
+        with:
+          name: setup
+  
+      - name: Load environment variables
+        run: cat build.env >> $GITHUB_ENV
+  
+      - name: Create update branch and merge request
+        run: |
+          # Validate version format
+          if [[ ! $RD_PROJECT_LATEST_TAG =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Invalid version format: $RD_PROJECT_LATEST_TAG"
+            exit 1
+          fi
+          
+          # Create safe branch name
+          UPDATE_BRANCH="update-to-version-${RD_PROJECT_LATEST_TAG}"
+          echo "Creating branch ${UPDATE_BRANCH}..."
+          
+          # Test GitLab API access first
+          echo "Testing GitLab API access..."
+          curl --fail --silent --show-error \
+            --header "PRIVATE-TOKEN: ${EE_TOKEN}" \
+            "https://gitlab.dwellerlab.com/api/v4/projects/214" || {
+              echo "Error: Failed to access GitLab API. Please check the EE_TOKEN and GitLab URL"
+              exit 1
+            }
+          
+          # Create new branch with error checking
+          BRANCH_RESPONSE=$(curl --fail --silent --show-error \
+            --header "PRIVATE-TOKEN: ${EE_TOKEN}" \
+            --request POST \
+            "https://gitlab.dwellerlab.com/api/v4/projects/214/repository/branches" \
+            --data "branch=${UPDATE_BRANCH}&ref=development")
+          
+          if [ $? -ne 0 ]; then
+            echo "Failed to create branch. Response:"
+            echo "${BRANCH_RESPONSE}"
+            exit 1
+          fi
+          
+          echo "Creating merge request..."
+          
+          # Create merge request with error checking
+          MR_RESPONSE=$(curl --fail --silent --show-error \
+            --header "PRIVATE-TOKEN: ${EE_TOKEN}" \
+            --header "Content-Type: application/json" \
+            --request POST \
+            "https://gitlab.dwellerlab.com/api/v4/projects/214/merge_requests" \
+            --data @- << EOF
+          {
+            "source_branch": "${UPDATE_BRANCH}",
+            "target_branch": "development",
+            "title": "Update to datamimic-ce version ${RD_PROJECT_LATEST_TAG}",
+            "description": "Automated merge request triggered by new datamimic-ce release ${RD_PROJECT_LATEST_TAG}",
+            "remove_source_branch": true,
+            "squash": true,
+            "labels": "automated-update",
+            "merge_when_pipeline_succeeds": true
+          }
+          EOF
+          )
+          
+          if [ $? -ne 0 ]; then
+            echo "Failed to create merge request. Response:"
+            echo "${MR_RESPONSE}"
+            exit 1
+          fi
+          
+          echo "Successfully created merge request"
         env:
           EE_TOKEN: ${{ secrets.EE_TOKEN }}
         shell: bash
-
+  

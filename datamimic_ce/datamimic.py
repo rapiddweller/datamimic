@@ -5,9 +5,13 @@
 # For questions and support, contact: info@rapiddweller.com
 import argparse
 import logging
+import os
 import traceback
 import uuid
 from pathlib import Path
+
+# Avoid deduplication of logs in Ray, MUST be set before importing ray
+os.environ["RAY_DEDUP_LOGS"] = "0"
 
 import ray
 
@@ -21,6 +25,8 @@ from datamimic_ce.utils.logging_util import log_system_info
 from datamimic_ce.utils.system_util import log_memory_info
 
 LOG_FILE = "datamimic.log"
+
+ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False)
 
 
 class DataMimic:
@@ -38,7 +44,7 @@ class DataMimic:
         """
         # Set up logger
         log_level = getattr(logging, args.log_level.upper(), logging.INFO) if args else logging.INFO
-        setup_logger(logger_name=settings.DEFAULT_LOGGER, task_id=task_id, level=log_level)
+        setup_logger(logger_name=settings.DEFAULT_LOGGER, worker_name="MAIN", level=log_level)
 
         self._task_id = task_id or uuid.uuid4().hex
         self._descriptor_path = descriptor_path
@@ -64,8 +70,6 @@ class DataMimic:
     def parse_and_execute(self) -> None:
         """Parse root XML descriptor file and execute."""
         try:
-            ray.init(ignore_reinit_error=False, local_mode=settings.RAY_DEBUG)
-
             root_stmt = DescriptorParser.parse(self._class_factory_util, self._descriptor_path, self._platform_props)
             setup_task = SetupTask(
                 class_factory_util=self._class_factory_util,
@@ -85,8 +89,6 @@ class DataMimic:
             logger.exception("Error in DATAMIMIC process. Error message: {err}")
             traceback.print_exc()
             raise err
-        finally:
-            ray.shutdown()
 
     def capture_test_result(self) -> dict | None:
         """Capture test result in test mode."""

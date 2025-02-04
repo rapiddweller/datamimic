@@ -11,7 +11,7 @@
         <key name="name" type="string"/>
     </generate>
     <generate name="seq-gen" type="sequence_table_generator" count="10" target="sourceDB, ConsoleExporter"
-              multiprocessing="1">
+              multiprocessing="1" numProcess="2">
         <variable name="stop_id" generator="IncrementGenerator(1,5)"/>
         <key name="id" database="sourceDB" generator="SequenceTableGenerator"/>
         <key name="name" type="string"/>

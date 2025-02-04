@@ -404,7 +404,7 @@ class TaskUtil:
         :return: None
         """
         # If product is in XML format, convert it to JSON
-        json_result = [GenerateTask.convert_xml_dict_to_json_dict(product) for product in xml_result[stmt.full_name]]
+        json_result = [TaskUtil.convert_xml_dict_to_json_dict(product) for product in xml_result[stmt.full_name]]
 
         # Wrap product key and value into a tuple
         # for iterate database may have key, value, and other statement attribute info
@@ -417,28 +417,6 @@ class TaskUtil:
 
         # Create a unique cache key incorporating task_id and statement details
         exporters_cache_key = stmt.full_name
-
-        # Get or create exporters
-        if exporters_cache_key not in root_context.task_exporters:
-            # Create the exporter set once
-            exporters_set = stmt.targets.copy()
-
-            # Create exporters with operations
-            (
-                consumers_with_operation,
-                consumers_without_operation,
-            ) = root_context.class_factory_util.get_exporter_util().create_exporter_list(
-                setup_context=root_context,
-                stmt=stmt,
-                targets=list(exporters_set),
-            )
-
-            # Cache the exporters
-            root_context.task_exporters[exporters_cache_key] = {
-                "with_operation": consumers_with_operation,
-                "without_operation": consumers_without_operation,
-                "page_count": 0,  # Track number of pages processed
-            }
 
         # Get cached exporters
         exporters = root_context.task_exporters[exporters_cache_key]
@@ -469,6 +447,8 @@ class TaskUtil:
                 else:
                     exporter.consume(json_product)
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 logger.error(f"Error in exporter {type(exporter).__name__}: {str(e)}")
                 raise ValueError(f"Error in exporter {type(exporter).__name__}") from e
 
@@ -590,7 +570,7 @@ class TaskUtil:
                 items = data
 
             # Convert single item to list if needed
-            if isinstance(items, OrderedDict):
+            if isinstance(items, OrderedDict | dict):
                 items = [items]
             elif not isinstance(items, list):
                 items = []
@@ -602,3 +582,26 @@ class TaskUtil:
                 else None
             )
             return DataSourceUtil.get_cyclic_data_list(data=items, cyclic=cyclic, pagination=pagination)
+
+    @staticmethod
+    def convert_xml_dict_to_json_dict(xml_dict: dict):
+        """
+        Convert XML dict with #text and @attribute to pure JSON dict.
+
+        :param xml_dict: XML dictionary.
+        :return: JSON dictionary.
+        """
+        if "#text" in xml_dict:
+            return xml_dict["#text"]
+        res = {}
+        for key, value in xml_dict.items():
+            if not key.startswith("@"):
+                if isinstance(value, dict):
+                    res[key] = TaskUtil.convert_xml_dict_to_json_dict(value)
+                elif isinstance(value, list):
+                    res[key] = [
+                        TaskUtil.convert_xml_dict_to_json_dict(v) if isinstance(v, dict) else v for v in value
+                    ]
+                else:
+                    res[key] = value
+        return res
