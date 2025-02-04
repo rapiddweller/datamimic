@@ -100,6 +100,8 @@ class ExporterUtil:
         except ValueError as e:
             raise ValueError(f"Error parsing target string: {e}") from e
 
+        exporter_util = setup_context.class_factory_util.get_exporter_util()
+
         # Now loop over the parsed functions and create exporters
         for target in parsed_targets:
             exporter_name = target["function_name"]
@@ -108,14 +110,14 @@ class ExporterUtil:
             if "." in exporter_name:
                 consumer_name, operation = exporter_name.split(".", 1)
                 client = setup_context.get_client_by_id(consumer_name)
-                consumer = ExporterUtil._create_exporter_from_client(client, consumer_name)
+                consumer = exporter_util.create_exporter_from_client(client, consumer_name)
                 consumers_with_operation.append((consumer, operation))
             # Handle consumer without operation
             else:
-                consumer = ExporterUtil.get_exporter_by_name(
+                consumer = exporter_util.get_exporter_by_name(
                     setup_context=setup_context,
                     name=exporter_name,
-                    product_name=stmt.name,
+                    gen_stmt=stmt,
                     exporter_params_dict=params,
                 )
                 if consumer is not None:
@@ -211,7 +213,7 @@ class ExporterUtil:
     def get_exporter_by_name(
             setup_context: SetupContext,
             name: str,
-            product_name: str,
+            gen_stmt: GenerateStatement,
             exporter_params_dict: dict,
     ):
         """
@@ -219,11 +221,12 @@ class ExporterUtil:
 
         :param setup_context:
         :param name:
-        :param product_name:
+        :param gen_stmt:
         :param exporter_params_dict:
-        :param worker_id:
         :return:
         """
+        product_name = gen_stmt.name
+
         if name is None or name == "":
             return None
 
@@ -271,7 +274,7 @@ class ExporterUtil:
             # 1. get client from context
             client = setup_context.get_client_by_id(name)
             # 2. create consumer from client
-            return ExporterUtil._create_exporter_from_client(client, name)
+            return ExporterUtil.create_exporter_from_client(client, name)
         elif setup_context.memstore_manager.contain(name):
             return setup_context.memstore_manager.get_memstore(name)
         else:
@@ -285,7 +288,7 @@ class ExporterUtil:
             )
 
     @staticmethod
-    def _create_exporter_from_client(client: Client, client_name: str):
+    def create_exporter_from_client(client: Client, client_name: str):
         if isinstance(client, MongoDBClient):
             return MongoDBExporter(client)
         elif isinstance(client, RdbmsClient):
