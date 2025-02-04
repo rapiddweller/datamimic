@@ -300,6 +300,8 @@ class GenerateTask(CommonSubTask):
         for exporter in exporters_list:
             if hasattr(exporter, "save_exported_result"):
                 exporter.save_exported_result()
+            if hasattr(exporter, "upload_to_storage"):
+                exporter.upload_to_storage(stmt.bucket)
 
         # Export artifact files of sub-gen_stmts
         for sub_stmt in stmt.sub_statements:
