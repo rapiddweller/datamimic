@@ -45,7 +45,7 @@ class GenerateWorker:
         index_chunk = [(i, min(i + page_size, chunk_end)) for i in range(chunk_start, chunk_end, page_size)]
 
         # Check if product result should be returned for test mode or memstore exporter
-        return_product_result = context.root.test_mode or any(
+        return_product_result = isinstance(context, GenIterContext) or context.root.test_mode or any(
             [context.root.memstore_manager.contain(exporter_str) for exporter_str in stmt.targets]
         )
         result: dict = {}
@@ -97,21 +97,7 @@ class GenerateWorker:
                 for key, value in result_dict.items():
                     result[key] = result.get(key, []) + value
 
-        # Check if product result should be returned for test mode or memstore exporter
-        has_memstore_exporter = any(
-            [
-                ("." not in exporter_str)
-                and ("(" not in exporter_str)
-                and context.root.memstore_manager.contain(exporter_str)
-                for exporter_str in stmt.targets
-            ]
-        )
-
-        # Return results if inner gen_stmt or test mode or memstore exporter
-        if isinstance(context, GenIterContext) or context.root.test_mode or has_memstore_exporter:
-            return result
-
-        return {}
+        return result
 
     @staticmethod
     def _generate_product_by_page_in_single_process(

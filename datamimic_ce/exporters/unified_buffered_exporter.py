@@ -202,8 +202,10 @@ class UnifiedBufferedExporter(Exporter, ABC):
             raise ExportError(f"Failed to finalize chunks: {e}") from e
 
     def save_exported_result(self) -> None:
-        """Copy all temporary files to the final destination.
-        If destination already exists, creates a versioned directory."""
+        """
+        Copy all temporary files to the final destination.
+        If destination already exists, creates a versioned directory.
+        """
         logger.info(f"Saving exported result for product {self.product_name}")
 
         base_dir_path = self._descriptor_dir / "output"

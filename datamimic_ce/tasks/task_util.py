@@ -432,8 +432,17 @@ class TaskUtil:
             else:
                 raise ValueError(f"Exporter does not support operation: {exporter}.{operation}")
 
+        task_util_cls = root_context.class_factory_util.get_task_util_cls()
+
+        task_util_cls.exporter_without_operation(json_product, xml_result, stmt, exporters["without_operation"],
+                                                 exporter_state_manager)
+
+    @staticmethod
+    def exporter_without_operation(json_product: tuple, xml_result: dict,
+                                   stmt: GenerateStatement, exporters_without_operation: list,
+                                   exporter_state_manager: ExporterStateManager):
         # Run exporters without operations
-        for exporter in exporters["without_operation"]:
+        for exporter in exporters_without_operation:
             try:
                 # Skip lazy exporters
                 if isinstance(exporter, Memstore):
@@ -447,8 +456,8 @@ class TaskUtil:
                 else:
                     exporter.consume(json_product)
             except Exception as e:
-                import traceback
-                traceback.print_exc()
+                # import traceback
+                # traceback.print_exc()
                 logger.error(f"Error in exporter {type(exporter).__name__}: {str(e)}")
                 raise ValueError(f"Error in exporter {type(exporter).__name__}") from e
 
