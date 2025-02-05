@@ -240,17 +240,14 @@ class GenerateTask(CommonSubTask):
                 # - export gathered product with LAZY exporters, such as TestResultExporter, MemstoreExporter,...
                 # - gather and upload ARTIFACT exporters, such as TXT, JSON,... then clean temp directory
                 if isinstance(context, SetupContext):
-                    # Determine lazy exporters
-                    lazy_exporters = []
+                    # Lazily export gathered product with lazy exporters
+                    # Export TestResultExporter if in test mode
                     if context.test_mode:
-                        lazy_exporters.append(context.root.test_result_exporter)
-                    for exporter_str in self.statement.targets:
-                        if context.memstore_manager.contain(exporter_str):
-                            lazy_exporters.append(context.memstore_manager.get_memstore(exporter_str))
-                    # Export gathered product with lazy exporters
-                    for exporter in lazy_exporters:
+                        test_result_exporter = context.root.test_result_exporter
                         for product_name, product_records in merged_result.items():
-                            exporter.consume((product_name, product_records))
+                            test_result_exporter.consume((product_name, product_records))
+                    # Export memstore exporters
+                    self.export_memstore(context, self.statement, merged_result)
 
                     # # Finalize chunks files (writing end of file)
                     self.finalize_temp_files_chunks(context, self.statement)
@@ -265,6 +262,19 @@ class GenerateTask(CommonSubTask):
                 if isinstance(context, SetupContext):
                     for temp_dir in context.descriptor_dir.glob(f"temp_result_{context.task_id}*"):
                         shutil.rmtree(temp_dir)
+
+    @staticmethod
+    def export_memstore(setup_context: SetupContext, current_stmt: GenerateStatement, merged_result: dict[str, list]):
+        for current_exporter_str in current_stmt.targets:
+            if setup_context.memstore_manager.contain(current_exporter_str):
+                setup_context.memstore_manager.get_memstore(current_exporter_str).consume(
+                    (current_stmt.name, merged_result[current_stmt.full_name])
+                )
+                # Export to memstore only once
+                break
+        for sub_stmt in current_stmt.sub_statements:
+            if isinstance(sub_stmt, GenerateStatement):
+                GenerateTask.export_memstore(setup_context, sub_stmt, merged_result)
 
     @staticmethod
     def finalize_temp_files_chunks(context: SetupContext, stmt: GenerateStatement):

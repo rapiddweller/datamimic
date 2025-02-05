@@ -45,9 +45,11 @@ class GenerateWorker:
         index_chunk = [(i, min(i + page_size, chunk_end)) for i in range(chunk_start, chunk_end, page_size)]
 
         # Check if product result should be returned for test mode or memstore exporter
-        return_product_result = isinstance(context, GenIterContext) or context.root.test_mode or any(
-            [context.root.memstore_manager.contain(exporter_str) for exporter_str in stmt.targets]
-        )
+        # return_product_result = context.root.test_mode or any(
+        #     [context.root.memstore_manager.contain(exporter_str) for exporter_str in stmt.targets]
+        # )
+        return_product_keys = GenerateWorker._get_statement_full_name_having_mem_exporter(context, stmt)
+
         result: dict = {}
 
         # Initialize ARTIFACT exporter state manager for each worker
@@ -92,11 +94,31 @@ class GenerateWorker:
                     context.root, stmt, result_dict, exporter_state_manager
                 )
 
-            # Collect result for later capturing
-            if return_product_result:
-                for key, value in result_dict.items():
-                    result[key] = result.get(key, []) + value
+            if context.root.test_mode:
+                return_product_keys = list(result_dict.keys())
 
+            # Collect result for later capturing
+            for key in return_product_keys:
+                result[key] = result.get(key, []) + result_dict.get(key, [])
+
+        return result
+
+    @staticmethod
+    def _get_statement_full_name_having_mem_exporter(
+            context: GenIterContext | SetupContext,
+            stmt: GenerateStatement) -> list[str]:
+        """
+        Get full name of statement having memstore exporter.
+
+        :param stmt: GenerateStatement instance.
+        :return: List of full name of statement having memstore exporter.
+        """
+        result = []
+        if any([context.root.memstore_manager.contain(exporter_str) for exporter_str in stmt.targets]):
+            result.append(stmt.full_name)
+        for child_stmt in stmt.sub_statements:
+            if isinstance(child_stmt, GenerateStatement):
+                result += GenerateWorker._get_statement_full_name_having_mem_exporter(context, child_stmt)
         return result
 
     @staticmethod
