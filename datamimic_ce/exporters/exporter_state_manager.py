@@ -18,9 +18,6 @@ class ExporterStateManager:
     def worker_id(self):
         return self._worker_id
 
-    # def add_storage(self, key: str, chunk_size: int):
-    #     self._storage_dict[key] = ExporterStateStorage(chunk_size)
-
     def get_storage(self, key: str):
         if key not in self._storage_dict:
             self._storage_dict[key] = ExporterStateStorage(None)
