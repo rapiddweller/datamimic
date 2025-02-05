@@ -44,10 +44,6 @@ class GenerateWorker:
         # Determine chunk data range, like (0, 1000), (1000, 2000), etc.
         index_chunk = [(i, min(i + page_size, chunk_end)) for i in range(chunk_start, chunk_end, page_size)]
 
-        # Check if product result should be returned for test mode or memstore exporter
-        return_product_result = isinstance(context, GenIterContext) or context.root.test_mode or any(
-            [context.root.memstore_manager.contain(exporter_str) for exporter_str in stmt.targets]
-        )
         result: dict = {}
 
         # Initialize ARTIFACT exporter state manager for each worker
@@ -92,10 +88,10 @@ class GenerateWorker:
                     context.root, stmt, result_dict, exporter_state_manager
                 )
 
+            # TODO: improve by select only necessary keys
             # Collect result for later capturing
-            if return_product_result:
-                for key, value in result_dict.items():
-                    result[key] = result.get(key, []) + value
+            for key in result_dict:
+                result[key] = result.get(key, []) + result_dict.get(key, [])
 
         return result
 
