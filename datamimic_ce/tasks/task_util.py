@@ -434,13 +434,14 @@ class TaskUtil:
 
         task_util_cls = root_context.class_factory_util.get_task_util_cls()
 
-        task_util_cls.exporter_without_operation(json_product, xml_result, stmt, exporters["without_operation"],
-                                                 exporter_state_manager)
+        task_util_cls.exporter_without_operation(root_context.task_id, json_product, xml_result, stmt,
+                                                 exporters["without_operation"],
+                                                 exporter_state_manager, exporters["page_count"] == 1)
 
     @staticmethod
-    def exporter_without_operation(json_product: tuple, xml_result: dict,
+    def exporter_without_operation(task_id: str, json_product: tuple, xml_result: dict,
                                    stmt: GenerateStatement, exporters_without_operation: list,
-                                   exporter_state_manager: ExporterStateManager):
+                                   exporter_state_manager: ExporterStateManager, first_page: bool):
         # Run exporters without operations
         for exporter in exporters_without_operation:
             try:
