@@ -339,9 +339,9 @@ jobs:
           DB_CONNECTION: "mssql"
           ACCEPT_EULA: Y,
           SA_PASSWORD: P@ssword123!
-        ports:
-          - 1433:1433
-        options: --health-cmd "sqlcmd -S localhost -U sa -P P@ssword123 -Q 'SELECT 1'" --health-interval 10s --health-timeout 5s --health-retries 5
+#        ports:
+#          - 1433:1433
+#        options: --health-cmd "sqlcmd -S localhost -U sa -P P@ssword123 -Q 'SELECT 1'" --health-interval 10s --health-timeout 5s --health-retries 5
       oracle:
         image: oracleinanutshell/oracle-xe-11g
         env:
