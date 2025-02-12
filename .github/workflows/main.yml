@@ -338,13 +338,15 @@ jobs:
           DB_PORT: "1433"
           DB_CONNECTION: "mssql"
           ACCEPT_EULA: Y,
-          SA_PASSWORD: P@ssword123!
+          SA_PASSWORD: P@ssword123
 #        ports:
 #          - 1433:1433
 #        options: --health-cmd "sqlcmd -S localhost -U sa -P P@ssword123 -Q 'SELECT 1'" --health-interval 10s --health-timeout 5s --health-retries 5
       oracle:
         image: oracleinanutshell/oracle-xe-11g
         env:
+          ORACLE_ALLOW_REMOTE: 'true'
+          ORACLE_ENABLE_XDB: 'true'
           ORACLE_PASSWORD: rootpassword
           ORACLE_DATABASE: rddb
           APP_USER: rdadm
