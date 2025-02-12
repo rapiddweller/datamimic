@@ -207,24 +207,24 @@ jobs:
     runs-on: ubuntu-22.04
     needs: install_dependencies
     container: python:3.11-slim-buster
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_USER: datamimic
-          POSTGRES_PASSWORD: datamimic
-          POSTGRES_DB: rd-datamimic
-        ports:
-          - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-      mongo:
-        image: mongo:4.4
-        env:
-          MONGO_INITDB_ROOT_USERNAME: datamimic
-          MONGO_INITDB_ROOT_PASSWORD: datamimic
-        ports:
-          - 27017:27017
-        options: --health-cmd "mongo --eval 'db.stats().ok'" --health-interval 10s --health-timeout 5s --health-retries 5
+#    services:
+#      postgres:
+#        image: postgres:13
+#        env:
+#          POSTGRES_USER: datamimic
+#          POSTGRES_PASSWORD: datamimic
+#          POSTGRES_DB: rd-datamimic
+#        ports:
+#          - 5432:5432
+#        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+#      mongo:
+#        image: mongo:4.4
+#        env:
+#          MONGO_INITDB_ROOT_USERNAME: datamimic
+#          MONGO_INITDB_ROOT_PASSWORD: datamimic
+#        ports:
+#          - 27017:27017
+#        options: --health-cmd "mongo --eval 'db.stats().ok'" --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Setup git
         run: |
@@ -255,24 +255,24 @@ jobs:
   integration_test:
     runs-on: ubuntu-22.04
     needs: install_dependencies
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_USER: datamimic
-          POSTGRES_PASSWORD: datamimic
-          POSTGRES_DB: rd-datamimic
-        ports:
-          - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-      mongo:
-        image: mongo:4.4
-        env:
-          MONGO_INITDB_ROOT_USERNAME: datamimic
-          MONGO_INITDB_ROOT_PASSWORD: datamimic
-        ports:
-          - 27017:27017
-        options: --health-cmd "mongo --eval 'db.stats().ok'" --health-interval 10s --health-timeout 5s --health-retries 5
+#    services:
+#      postgres:
+#        image: postgres:13
+#        env:
+#          POSTGRES_USER: datamimic
+#          POSTGRES_PASSWORD: datamimic
+#          POSTGRES_DB: rd-datamimic
+#        ports:
+#          - 5432:5432
+#        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+#      mongo:
+#        image: mongo:4.4
+#        env:
+#          MONGO_INITDB_ROOT_USERNAME: datamimic
+#          MONGO_INITDB_ROOT_PASSWORD: datamimic
+#        ports:
+#          - 27017:27017
+#        options: --health-cmd "mongo --eval 'db.stats().ok'" --health-interval 10s --health-timeout 5s --health-retries 5
     container: python:3.11-slim-buster
     steps:
       - name: Setup git
@@ -350,7 +350,7 @@ jobs:
 
   sonarcloud_analysis:
     runs-on: ubuntu-22.04
-    needs: [ unit_test, functional_test, integration_test ]
+    needs: [ unit_test, functional_test, integration_test, external_service_test ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -386,7 +386,7 @@ jobs:
     name: E2E Test on ${{ matrix.os }} ${{ matrix.arch }}
     if: github.ref == 'refs/heads/development' || startsWith(github.ref, 'refs/tags/')
     runs-on: ${{ matrix.os }}
-    needs: [ build, unit_test, functional_test, integration_test ]
+    needs: [ build, unit_test, functional_test, integration_test, external_service_test ]
     strategy:
       matrix:
         os: [ ubuntu-22.04, macos-latest, windows-latest ]
