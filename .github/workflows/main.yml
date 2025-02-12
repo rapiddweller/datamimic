@@ -326,7 +326,7 @@ jobs:
       - name: Setup git
         run: |
           apt-get update
-          apt-get install -y git libodbc2
+          apt-get install -y git unixodbc-dev
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
         uses: actions/checkout@v4
