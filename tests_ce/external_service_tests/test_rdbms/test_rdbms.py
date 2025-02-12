@@ -42,7 +42,7 @@ class TestRdbms:
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_mssql.xml")
         test_engine.test_with_timer()
 
-    # @pytest.mark.skip(reason="This test should be move to another job")
+    @pytest.mark.skip(reason="Need to reconfigure the oracle connection")
     def test_oracle(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_oracle.xml")
         test_engine.test_with_timer()

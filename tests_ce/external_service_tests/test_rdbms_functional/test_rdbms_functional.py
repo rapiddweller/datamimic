@@ -8,6 +8,8 @@
 from datetime import datetime
 from pathlib import Path
 
+import pytest
+
 from datamimic_ce.data_mimic_test import DataMimicTest
 
 
@@ -76,7 +78,7 @@ class TestRdbmsFunctional:
         cross_collection = result["cross_collection"]
         assert len(cross_collection) == 10
 
-    # @pytest.mark.skip(reason="This test should be move to another job")
+    @pytest.mark.skip(reason="Need to reconfigure the oracle connection")
     def test_oracle_functional(self):
         try:
             engine = DataMimicTest(test_dir=self._test_dir, filename="more_oracle_test.xml", capture_test_result=True)
