@@ -300,6 +300,54 @@ jobs:
           name: coverage-integration
           path: coverage.xml
 
+  external_service_test:
+    runs-on: ubuntu-22.04
+    needs: install_dependencies
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: datamimic
+          POSTGRES_PASSWORD: datamimic
+          POSTGRES_DB: rd-datamimic
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      mongo:
+        image: mongo:4.4
+        env:
+          MONGO_INITDB_ROOT_USERNAME: datamimic
+          MONGO_INITDB_ROOT_PASSWORD: datamimic
+        ports:
+          - 27017:27017
+        options: --health-cmd "mongo --eval 'db.stats().ok'" --health-interval 10s --health-timeout 5s --health-retries 5
+    container: python:3.11-slim-buster
+    steps:
+      - name: Setup git
+        run: |
+          apt-get update
+          apt-get install -y git unixodbc-dev
+          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - name: Load venv cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+      - name: Run external service tests with coverage
+        run: |
+          . .venv/bin/activate
+          uv run pytest tests_ce/external_service_tests/ --cov=. --cov-report=xml
+        shell: bash
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-integration
+          path: coverage.xml
+
   sonarcloud_analysis:
     runs-on: ubuntu-22.04
     needs: [ unit_test, functional_test, integration_test ]
