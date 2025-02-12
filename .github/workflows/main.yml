@@ -321,6 +321,33 @@ jobs:
         ports:
           - 27017:27017
         options: --health-cmd "mongo --eval 'db.stats().ok'" --health-interval 10s --health-timeout 5s --health-retries 5
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_USER: rduser
+          MYSQL_PASSWORD: rdpassword
+          MYSQL_DATABASE: rddb
+        ports:
+          - 3306:3306
+        options: --health-cmd "mysqladmin ping -h localhost" --health-interval 10s --health-timeout 5s --health-retries 5
+      mssql:
+        image: mcr.microsoft.com/mssql/server
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: P@ssword123
+        ports:
+          - 1433:1433
+        options: --health-cmd "sqlcmd -S localhost -U sa -P P@ssword123 -Q 'SELECT 1'" --health-interval 10s --health-timeout 5s --health-retries 5
+      oracle:
+        image: oracleinanutshell/oracle-xe-11g
+        env:
+          ORACLE_PASSWORD: rootpassword
+          ORACLE_DATABASE: rddb
+          APP_USER: rdadm
+          APP_USER_PASSWORD: rdpassword
+        ports:
+          - 1521:1521
     container: python:3.11-slim-buster
     steps:
       - name: Setup git
