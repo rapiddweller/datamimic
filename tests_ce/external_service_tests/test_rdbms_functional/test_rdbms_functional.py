@@ -16,7 +16,6 @@ from datamimic_ce.data_mimic_test import DataMimicTest
 class TestRdbmsFunctional:
     _test_dir = Path(__file__).resolve().parent
 
-    # @pytest.mark.skip(reason="MSSQL on testing server is not available Apr 8 2024")
     def test_mssql_functional(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="more_mssql_test.xml", capture_test_result=True)
         engine.test_with_timer()
@@ -37,7 +36,6 @@ class TestRdbmsFunctional:
         cross_collection = result["cross_collection"]
         assert len(cross_collection) == 10
 
-    # @pytest.mark.skip(reason="This test should be move to another job or only run on local machine")
     def test_mysql_functional(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="more_mysql_test.xml", capture_test_result=True)
         engine.test_with_timer()

@@ -207,24 +207,6 @@ jobs:
     runs-on: ubuntu-22.04
     needs: install_dependencies
     container: python:3.11-slim-buster
-#    services:
-#      postgres:
-#        image: postgres:13
-#        env:
-#          POSTGRES_USER: datamimic
-#          POSTGRES_PASSWORD: datamimic
-#          POSTGRES_DB: rd-datamimic
-#        ports:
-#          - 5432:5432
-#        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-#      mongo:
-#        image: mongo:4.4
-#        env:
-#          MONGO_INITDB_ROOT_USERNAME: datamimic
-#          MONGO_INITDB_ROOT_PASSWORD: datamimic
-#        ports:
-#          - 27017:27017
-#        options: --health-cmd "mongo --eval 'db.stats().ok'" --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Setup git
         run: |
@@ -255,24 +237,6 @@ jobs:
   integration_test:
     runs-on: ubuntu-22.04
     needs: install_dependencies
-#    services:
-#      postgres:
-#        image: postgres:13
-#        env:
-#          POSTGRES_USER: datamimic
-#          POSTGRES_PASSWORD: datamimic
-#          POSTGRES_DB: rd-datamimic
-#        ports:
-#          - 5432:5432
-#        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-#      mongo:
-#        image: mongo:4.4
-#        env:
-#          MONGO_INITDB_ROOT_USERNAME: datamimic
-#          MONGO_INITDB_ROOT_PASSWORD: datamimic
-#        ports:
-#          - 27017:27017
-#        options: --health-cmd "mongo --eval 'db.stats().ok'" --health-interval 10s --health-timeout 5s --health-retries 5
     container: python:3.11-slim-buster
     steps:
       - name: Setup git
@@ -381,7 +345,7 @@ jobs:
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-integration
+          name: coverage-external-service
           path: coverage.xml
 
   sonarcloud_analysis:
