@@ -535,6 +535,7 @@ jobs:
           rm -rf dist/coverage-functional
           rm -rf dist/coverage-integration
           rm -rf dist/coverage-unit
+          rm -rf dist/coverage-external-service
 
       - name: List Contents of dist Directory
         run: ls -R dist
@@ -570,6 +571,7 @@ jobs:
           rm -rf dist/coverage-functional
           rm -rf dist/coverage-integration
           rm -rf dist/coverage-unit
+          rm -rf dist/coverage-external-service
 
       - name: List Contents of dist Directory
         run: ls -R dist
