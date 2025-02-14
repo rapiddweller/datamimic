@@ -16,7 +16,12 @@
       name="ml_train_CUSTOMER"
       source="source"
       table="CUSTOMER"
-      mode="persist"
-      persistLocation="minio://generators/CUSTOMER"
       maxTrainingTime="60"/>
+
+    <!-- Generate synthetic CUSTOMER records using the ML generator -->
+<!--    <generate name="CUSTOMER" count="100" target="db" generator="ml_train_CUSTOMER">-->
+        <!-- Additional keys override or post-process the ML-generated columns -->
+<!--        <key name="tc_creation" generator="DateTimeGenerator"/>-->
+<!--        <key name="email" script="'info@' + company.short_name.replace(' ', '-') + str(tc_creation) + '.de'" converter="LowerCase"/>-->
+<!--    </generate>-->
 </setup>

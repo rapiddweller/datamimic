@@ -22,9 +22,9 @@ class MLTrainModel(BaseModel):
     name: str
     source: str
     table: str
-    mode: str
-    persistLocation: str
-    maxTrainingTime: str
+    mode: str | None = None
+    persistLocation: str | None = None
+    maxTrainingTime: str | None = None
 
     @model_validator(mode="before")
     @classmethod

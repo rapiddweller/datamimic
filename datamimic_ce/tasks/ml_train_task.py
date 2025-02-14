@@ -3,11 +3,12 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
+import os
+
 import pandas as pd
+from datamimic_ce.contexts.setup_context import SetupContext
 
 from datamimic_ce.clients.rdbms_client import RdbmsClient
-
-from datamimic_ce.contexts.context import Context
 from datamimic_ce.statements.ml_train_statement import MLTrainStatement
 from datamimic_ce.tasks.task import Task
 from mostlyai.sdk import MostlyAI
@@ -16,8 +17,13 @@ from mostlyai.sdk import MostlyAI
 class MLTrainTask(Task):
     def __init__(self, statement: MLTrainStatement):
         self._statement = statement
+        self._ml_dir = None
 
-    def execute(self, ctx: Context):
+    @property
+    def statement(self) -> MLTrainStatement:
+        return self._statement
+
+    def execute(self, ctx: SetupContext):
         mostly = MostlyAI(local=True)
         # TODO: get data here
         # Retrieving values from an RDBMS data source
@@ -29,7 +35,7 @@ class MLTrainTask(Task):
             raise ValueError(f"No data found for reference {self._statement.name}")
 
         df_data = pd.DataFrame(dataset)
-
+        max_training_time = self.get_float_train_time()
         config = {
             "name": self._statement.name,
             "tables": [
@@ -37,19 +43,36 @@ class MLTrainTask(Task):
                  "data": df_data,
                  "tabular_model_configuration": {
                      "value_protection": False,
-                     # "max_training_time": self._statement.get_float_train_time(ctx)
-                     "max_training_time": 1
-                 }
+                     "max_training_time": max_training_time
+                    }
                  }
             ],
         }
 
-        # configure a generator, but don't yet start the training thereof
+        # configure a generator and save to file
         g = mostly.train(config=config, start=True, wait=True)
-        df_samples = mostly.probe(g, size=1_000)
-        print(df_samples)
         # TODO: write trained model to some where
+        export_dir = ctx.descriptor_dir / f"generators"
+        if not os.path.exists(export_dir):
+            os.makedirs(export_dir)
+        self._ml_dir = g.export_to_file(export_dir)
 
-    @property
-    def statement(self) -> MLTrainStatement:
-        return self._statement
+    def get_float_train_time(self):
+        if self._statement.maxTrainingTime:
+            try:
+                float_value = float(self._statement.maxTrainingTime)
+                return float_value
+            except ValueError or TypeError:
+                return None
+        else:
+            return None
+
+    def __del__(self):
+        """
+        Deletes trained model when object is garbage collected.
+        """
+        try:
+            if os.path.exists(self._ml_dir):
+                os.remove(self._ml_dir)
+        except Exception as e:
+            print(f"Error deleting file {self._ml_dir}")
