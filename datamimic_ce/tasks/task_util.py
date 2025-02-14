@@ -56,6 +56,7 @@ from datamimic_ce.statements.item_statement import ItemStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.list_statement import ListStatement
 from datamimic_ce.statements.memstore_statement import MemstoreStatement
+from datamimic_ce.statements.ml_train_statement import MLTrainStatement
 from datamimic_ce.statements.mongodb_statement import MongoDBStatement
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
@@ -79,6 +80,7 @@ from datamimic_ce.tasks.item_task import ItemTask
 from datamimic_ce.tasks.key_task import KeyTask
 from datamimic_ce.tasks.list_task import ListTask
 from datamimic_ce.tasks.memstore_task import MemstoreTask
+from datamimic_ce.tasks.ml_train_task import MLTrainTask
 from datamimic_ce.tasks.mongodb_task import MongoDBTask
 from datamimic_ce.tasks.nested_key_task import NestedKeyTask
 from datamimic_ce.tasks.reference_task import ReferenceTask
@@ -137,6 +139,8 @@ class TaskUtil:
             return ElementTask(ctx, stmt)
         elif isinstance(stmt, GeneratorStatement):
             return GeneratorTask(stmt)
+        elif isinstance(stmt, MLTrainStatement):
+            return MLTrainTask(stmt)
         else:
             raise ValueError(f"Cannot created task for statement {stmt.__class__.__name__}")
 

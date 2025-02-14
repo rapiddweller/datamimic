@@ -34,6 +34,7 @@ from datamimic_ce.constants.element_constants import (
     EL_REFERENCE,
     EL_SETUP,
     EL_VARIABLE,
+    EL_ML_TRAIN,
 )
 from datamimic_ce.logger import logger
 from datamimic_ce.parsers.array_parser import ArrayParser
@@ -52,6 +53,7 @@ from datamimic_ce.parsers.item_parser import ItemParser
 from datamimic_ce.parsers.key_parser import KeyParser
 from datamimic_ce.parsers.list_parser import ListParser
 from datamimic_ce.parsers.memstore_parser import MemstoreParser
+from datamimic_ce.parsers.ml_train_parser import MLTrainParser
 from datamimic_ce.parsers.nested_key_parser import NestedKeyParser
 from datamimic_ce.parsers.reference_parser import ReferenceParser
 from datamimic_ce.parsers.variable_parser import VariableParser
@@ -98,6 +100,7 @@ class ParserUtil:
                 EL_ECHO,
                 EL_VARIABLE,
                 EL_GENERATOR,
+                EL_ML_TRAIN,
             },
             EL_NESTED_KEY: {
                 EL_KEY,
@@ -189,6 +192,8 @@ class ParserUtil:
             return ElementParser(class_factory_util, element=element, properties=properties)
         elif tag == EL_GENERATOR:
             return GeneratorParser(class_factory_util, element=element, properties=properties)
+        elif tag == EL_ML_TRAIN:
+            return MLTrainParser(class_factory_util, element=element, properties=properties)
         else:
             raise ValueError(f"Cannot get parser for element <{tag}>")
 

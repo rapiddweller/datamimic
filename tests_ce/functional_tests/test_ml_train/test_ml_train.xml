@@ -1,0 +1,22 @@
+<setup>
+    <database id="source" system="source" environment="environment"/>
+    <execute uri="script/source.scr.sql" target="source"/>
+
+    <generate name="CUSTOMER" count="10" target="source">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="tc_creation_src" constant="BEN"/>
+        <key name="tc_creation" generator="DateTimeGenerator"/>
+        <key name="no" generator="IncrementGenerator"/>
+        <key name="active" type="bool" constant="False"/>
+        <variable name="company" entity="Company" dataset="DE" locale="de_DE"/>
+        <key name="name" script="company.short_name"/>
+    </generate>
+
+    <ml-train
+      name="ml_train_CUSTOMER"
+      source="source"
+      table="CUSTOMER"
+      mode="persist"
+      persistLocation="minio://generators/CUSTOMER"
+      maxTrainingTime="60"/>
+</setup>
