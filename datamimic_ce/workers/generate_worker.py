@@ -8,7 +8,7 @@ import copy
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_util import DataSourceUtil
+from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
@@ -113,6 +113,10 @@ class GenerateWorker:
                 for key in result_dict:
                     result[key] = result.get(key, []) + result_dict.get(key, [])
 
+        # Log DataSourceRegistry statistics
+        if isinstance(context, SetupContext):
+            context.class_factory_util.get_datasource_registry().log_cache_info()
+
         return result
 
     @staticmethod
@@ -173,7 +177,6 @@ class GenerateWorker:
                 stmt.source,
                 separator,
                 source_scripted,
-                processed_data_count,
                 load_start_idx,
                 load_end_idx,
                 load_pagination,
@@ -184,7 +187,7 @@ class GenerateWorker:
         if is_random_distribution:
             seed = root_context.get_distribution_seed()
             # Use original pagination for shuffling
-            source_data = DataSourceUtil.get_shuffled_data_with_cyclic(source_data, pagination, stmt.cyclic, seed)
+            source_data = DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination, stmt.cyclic, seed)
 
         # Store temp result
         product_holder: dict[str, list] = {}
