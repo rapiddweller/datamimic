@@ -49,10 +49,10 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
         return ParserUtil
 
     @staticmethod
-    def get_datasource_util_cls():
-        from datamimic_ce.data_sources.data_source_util import DataSourceUtil
+    def get_datasource_registry():
+        from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 
-        return DataSourceUtil
+        return DataSourceRegistry()
 
     @staticmethod
     def get_setup_logger_func():
