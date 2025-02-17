@@ -11,6 +11,7 @@ from datamimic_ce.utils.file_util import FileUtil
 
 class IncludeStatement(Statement):
     def __init__(self, model: IncludeModel):
+        super().__init__(None, None)
         self._uri = model.uri
 
     @property

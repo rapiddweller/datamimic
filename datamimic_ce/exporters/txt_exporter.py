@@ -28,13 +28,13 @@ class TXTExporter(UnifiedBufferedExporter):
     """
 
     def __init__(
-            self,
-            setup_context: SetupContext,
-            product_name: str,
-            chunk_size: int | None,
-            separator: str | None,
-            line_terminator: str | None,
-            encoding: str | None,
+        self,
+        setup_context: SetupContext,
+        product_name: str,
+        chunk_size: int | None,
+        separator: str | None,
+        line_terminator: str | None,
+        encoding: str | None,
     ):
         """
         Initializes the TXTExporter.

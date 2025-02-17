@@ -24,12 +24,12 @@ class RayGenerateWorker(GenerateWorker):
     @staticmethod
     @ray.remote
     def ray_process(
-            context: SetupContext | GenIterContext,
-            stmt: GenerateStatement,
-            worker_id: int,
-            chunk_start: int,
-            chunk_end: int,
-            page_size: int,
+        context: SetupContext | GenIterContext,
+        stmt: GenerateStatement,
+        worker_id: int,
+        chunk_start: int,
+        chunk_end: int,
+        page_size: int,
     ) -> dict:
         """
         Ray remote function to generate and export data by page in multiprocessing.
@@ -41,5 +41,6 @@ class RayGenerateWorker(GenerateWorker):
         context.root.namespace.update(dill.loads(context.root.namespace_functions))
         context.root.generators = dill.loads(context.root.generators)
 
-        return RayGenerateWorker.generate_and_export_data_by_chunk(context, stmt, worker_id, chunk_start, chunk_end,
-                                                                   page_size)
+        return RayGenerateWorker.generate_and_export_data_by_chunk(
+            context, stmt, worker_id, chunk_start, chunk_end, page_size
+        )

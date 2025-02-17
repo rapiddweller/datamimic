@@ -15,9 +15,11 @@ from pathlib import Path
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
+from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.logger import logger
+from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
@@ -25,7 +27,7 @@ from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
 
 class DataSourceUtil:
     @staticmethod
-    def set_data_source_length(ctx: SetupContext, stmt: Statement) -> None:
+    def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) -> None:
         """
         Calculate length of data source then save into context
         :param ctx:
@@ -35,107 +37,127 @@ class DataSourceUtil:
         # TODO: consider to paginate source of element "reference"
         if isinstance(stmt, ReferenceStatement):
             return
-        # 1: Check if prop source is available
-        if not hasattr(stmt, "source") or stmt.source is None:
-            return
-        if hasattr(stmt, "source"):
-            source_str = stmt.source
+
+        root_ctx = ctx.root
         source_id: str | None = stmt.full_name
         ds_len: int = 0
-        # Try to evaluate script as source string
-        # Ignore to check scripted source if eval failed in pre-execute task
-        if source_str.startswith("{") and source_str.endswith("}"):
-            try:
-                source_str = eval(source_str[1:-1])
-            except:  # noqa: E722
-                return
 
-        # 2: Get source info from ctx client (e.g. checking if it is SQL, MongoDB or CSV source)
-
-        # Check if source is data source file or database collection/table
-        # 2.1: Check if datasource is csv file
-        if source_str.endswith(".csv"):
-            ds_len = DataSourceUtil._count_lines_in_csv(ctx.descriptor_dir / source_str)
-        # 2.2: Check if datasource is json file
-        elif source_str.endswith(".json"):
-            ds_len = DataSourceUtil._count_object_in_json(ctx.task_id, ctx.descriptor_dir / source_str)
-        # 2.3: Check if datasource is xml file
-        elif source_str.endswith(".xml"):
-            ds_len = len(list(ET.parse(ctx.descriptor_dir / source_str).getroot()))
-        # 2.4: Check if datasource is memstore
-        elif ctx.memstore_manager.contain(source_str) and hasattr(stmt, "type"):
-            ds_len = ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(stmt.type or stmt.name)
-        elif ctx.get_client_by_id(source_str) is not None:
-            client = ctx.get_client_by_id(source_str)
-            if client is None:
-                raise ValueError(f"Client '{source_str}' could not be found in your context, please check your script")
-            # handle database collection/table as data source
-            from datamimic_ce.clients.rdbms_client import RdbmsClient
-
-            if isinstance(client, RdbmsClient) and hasattr(stmt, "selector"):
-                if stmt.selector is not None:
-                    try:
-                        ds_len = client.count_query_length(query=stmt.selector)
-                    except ProgrammingError:
-                        logger.error(
-                            f"Cannot get length of database source '{source_str}' with selector '{stmt.selector}'"
-                        )
-                        return
-                    except OperationalError:
-                        logger.error(
-                            f"Cannot get length of database source '{source_str}' with selector '{stmt.selector}'"
-                        )
-                        return
-                elif hasattr(stmt, "iteration_selector") and stmt.iteration_selector is not None:
-                    try:
-                        ds_len = client.count_query_length(query=stmt.iteration_selector)
-                    except ProgrammingError:
-                        logger.error(
-                            f"Cannot get length of database source '{source_str}' "
-                            f"with iterationSelector '{stmt.iteration_selector}'"
-                        )
-                        return
-                    except OperationalError:
-                        logger.error(
-                            f"Cannot get length of database source '{source_str}' "
-                            f"with iterationSelector '{stmt.iteration_selector}'"
-                        )
-                        return
-                elif hasattr(stmt, "type") and stmt.type is not None:
-                    ds_len = client.count_table_length(table_name=str(stmt.type) or str(stmt.name))
-
-            elif isinstance(client, MongoDBClient) and hasattr(stmt, "selector") and hasattr(stmt, "type"):
-                if stmt.selector is not None:
-                    try:
-                        ds_len = client.count_query_length(stmt.selector)
-                    except ValueError:
-                        return
-                elif stmt.type is not None:
-                    try:
-                        ds_len = client.count(collection_name=stmt.type)
-                    except ValueError:
-                        return
-                elif hasattr(stmt, "iteration_selector") and stmt.iteration_selector is not None:
-                    try:
-                        ds_len = client.count_query_length(query=stmt.iteration_selector)
-                    except ValueError:
-                        logger.error(
-                            f"Cannot get length of database source '{source_str}' "
-                            f"with iterationSelector '{stmt.iteration_selector}'"
-                        )
-                        return
-                else:
-                    raise ValueError(
-                        "MongoDB source requires at least attribute 'type', 'selector' or 'iterationSelector'"
-                    )
-            else:
-                raise ValueError(f"Cannot determine type of client '{source_id}.{source_str}'")
-        else:
-            logger.warning(f"Data source '{source_str}' is not supported for length calculation")
+        # Check if data source length is already set
+        if root_ctx.data_source_len.get(source_id, None) is not None:
             return
 
+        # Check length of script data
+        if isinstance(stmt, GenerateStatement) and stmt.script is not None:
+            try:
+                ds_len = len(ctx.evaluate_python_expression(stmt.script))
+            except Exception as e:
+                logger.debug(f"Cannot get length of script data before generating data: {e}")
+                return
+        # Check length of data source
+        else:
+            # Check if prop source is available
+            if hasattr(stmt, "source"):
+                source_str = stmt.source
+                if source_str is None:
+                    return
+            else:
+                return
+            # Try to evaluate script as source string
+            # Ignore to check scripted source if eval failed in pre-execute task
+            if source_str.startswith("{") and source_str.endswith("}"):
+                try:
+                    source_str = eval(source_str[1:-1])
+                except:  # noqa: E722
+                    return
+
+            # 2: Get source info from ctx client (e.g. checking if it is SQL, MongoDB or CSV source)
+
+            # Check if source is data source file or database collection/table
+            # 2.1: Check if datasource is csv file
+            if source_str.endswith(".csv"):
+                ds_len = DataSourceUtil._count_lines_in_csv(root_ctx.descriptor_dir / source_str)
+            # 2.2: Check if datasource is json file
+            elif source_str.endswith(".json"):
+                ds_len = DataSourceUtil._count_object_in_json(root_ctx.task_id, root_ctx.descriptor_dir / source_str)
+            # 2.3: Check if datasource is xml file
+            elif source_str.endswith(".xml"):
+                ds_len = len(list(ET.parse(root_ctx.descriptor_dir / source_str).getroot()))
+            # 2.4: Check if datasource is memstore
+            elif root_ctx.memstore_manager.contain(source_str) and hasattr(stmt, "type"):
+                ds_len = root_ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(stmt.type or stmt.name)
+            elif root_ctx.get_client_by_id(source_str) is not None:
+                client = root_ctx.get_client_by_id(source_str)
+                if client is None:
+                    raise ValueError(
+                        f"Client '{source_str}' could not be found in your context, please check your script"
+                    )
+                # handle database collection/table as data source
+                from datamimic_ce.clients.rdbms_client import RdbmsClient
+
+                if isinstance(client, RdbmsClient) and hasattr(stmt, "selector"):
+                    if stmt.selector is not None:
+                        try:
+                            ds_len = client.count_query_length(query=stmt.selector)
+                        except ProgrammingError:
+                            logger.error(
+                                f"Cannot get length of database source '{source_str}' with selector '{stmt.selector}'"
+                            )
+                            return
+                        except OperationalError:
+                            logger.error(
+                                f"Cannot get length of database source '{source_str}' with selector '{stmt.selector}'"
+                            )
+                            return
+                    elif hasattr(stmt, "iteration_selector") and stmt.iteration_selector is not None:
+                        try:
+                            ds_len = client.count_query_length(query=stmt.iteration_selector)
+                        except ProgrammingError:
+                            logger.error(
+                                f"Cannot get length of database source '{source_str}' "
+                                f"with iterationSelector '{stmt.iteration_selector}'"
+                            )
+                            return
+                        except OperationalError:
+                            logger.error(
+                                f"Cannot get length of database source '{source_str}' "
+                                f"with iterationSelector '{stmt.iteration_selector}'"
+                            )
+                            return
+                    elif hasattr(stmt, "type") and stmt.type is not None:
+                        ds_len = client.count_table_length(table_name=str(stmt.type) or str(stmt.name))
+
+                elif isinstance(client, MongoDBClient) and hasattr(stmt, "selector") and hasattr(stmt, "type"):
+                    if stmt.selector is not None:
+                        try:
+                            ds_len = client.count_query_length(stmt.selector)
+                        except ValueError:
+                            return
+                    elif stmt.type is not None:
+                        try:
+                            ds_len = client.count(collection_name=stmt.type)
+                        except ValueError:
+                            return
+                    elif hasattr(stmt, "iteration_selector") and stmt.iteration_selector is not None:
+                        try:
+                            ds_len = client.count_query_length(query=stmt.iteration_selector)
+                        except ValueError:
+                            logger.error(
+                                f"Cannot get length of database source '{source_str}' "
+                                f"with iterationSelector '{stmt.iteration_selector}'"
+                            )
+                            return
+                    else:
+                        raise ValueError(
+                            "MongoDB source requires at least attribute 'type', 'selector' or 'iterationSelector'"
+                        )
+                else:
+                    raise ValueError(f"Cannot determine type of client '{source_id}.{source_str}'")
+            else:
+                logger.warning(f"Data source '{source_str}' is not supported for length calculation")
+                return
+
         # 3: Set length of data source
-        ctx.data_source_len[source_id] = ds_len
+        root_ctx.data_source_len[source_id] = ds_len
 
     @staticmethod
     def _count_lines_in_csv(file_path: Path) -> int:
@@ -192,7 +214,7 @@ class DataSourceUtil:
 
     @staticmethod
     def get_cyclic_data_iterator(
-        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None = False
+            data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None = False
     ) -> Iterator | None:
         """
         Get cyclic iterator from iterable data source
@@ -212,7 +234,7 @@ class DataSourceUtil:
 
     @staticmethod
     def get_shuffled_data_with_cyclic(
-        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None, seed: int
+            data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None, seed: int
     ) -> list:
         """
         Get shuffled data from iterable data source
@@ -256,4 +278,4 @@ class DataSourceUtil:
             current_seed += 1
 
         start_idx_cap = start_idx % source_len
-        return res[start_idx_cap : start_idx_cap + end_idx - start_idx]
+        return res[start_idx_cap: start_idx_cap + end_idx - start_idx]

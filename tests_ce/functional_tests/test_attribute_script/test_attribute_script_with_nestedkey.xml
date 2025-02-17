@@ -1,0 +1,18 @@
+<setup>
+    <generate name="library" source="data/library.json" target="JSON, ConsoleExporter">
+        <generate name="books" script="library.books" target="XML, ConsoleExporter">
+            <nestedKey name="year_publisher" type="dict">
+                <key name="is_after_2022" type="bool" condition="library.books[0].publisher.year &gt; 2022"/>
+                <key name="is_toronto" type="bool" condition="library.books[1].publisher.location == 'Toronto'"/>
+            </nestedKey>
+        </generate>
+
+        <generate name="genre_book" script="library.books" target="CSV, ConsoleExporter">
+            <nestedKey name="genre_sci" type="list" count="4">
+                <key name="book_id" type="string" script="library.books[0].id + 2"
+                     condition="library.books[0].genre == 'Science Fiction'"/>
+            </nestedKey>
+        </generate>
+
+    </generate>
+</setup>

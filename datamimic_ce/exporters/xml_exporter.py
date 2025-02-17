@@ -30,13 +30,13 @@ class XMLExporter(UnifiedBufferedExporter):
     """
 
     def __init__(
-            self,
-            setup_context: SetupContext,
-            product_name: str,
-            chunk_size: int | None,
-            root_element: str | None,
-            item_element: str | None,
-            encoding: str | None,
+        self,
+        setup_context: SetupContext,
+        product_name: str,
+        chunk_size: int | None,
+        root_element: str | None,
+        item_element: str | None,
+        encoding: str | None,
     ):
         """
         Initializes the XMLExporter.
@@ -180,7 +180,7 @@ class XMLExporter(UnifiedBufferedExporter):
             end_index = xml_content.find(end_tag)
             if start_index != -1 and end_index != -1:
                 # Extract content between <item> and </item>
-                item_content = xml_content[start_index + len(start_tag): end_index]
+                item_content = xml_content[start_index + len(start_tag) : end_index]
                 try:
                     with buffer_file.open("w", encoding=self.encoding) as xmlfile:
                         xmlfile.write(item_content)

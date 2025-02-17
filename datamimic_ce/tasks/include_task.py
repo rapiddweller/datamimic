@@ -76,7 +76,6 @@ class IncludeTask(CommonSubTask):
         """
         root_ctx = ctx.root
         if uri.endswith(".xml"):
-
             # Parse and execute descriptor file
             sub_geniter_stmt = DescriptorParser.parse(
                 root_ctx.class_factory_util,

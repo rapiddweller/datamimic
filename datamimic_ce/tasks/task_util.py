@@ -278,13 +278,11 @@ class TaskUtil:
         )
 
     @staticmethod
-    def gen_task_load_data_from_source(
+    def gen_task_load_data_from_source_or_script(
             context: SetupContext,
             stmt: GenerateStatement,
-            source_str: str,
             separator: str,
             source_scripted: bool,
-            processed_data_count: int,
             load_start_idx: int,
             load_end_idx: int,
             load_pagination: DataSourcePagination | None,
@@ -295,6 +293,7 @@ class TaskUtil:
         build_from_source = True
         root_context = context.root
         source_data: dict | list = []
+        source_str = stmt.source
 
         # get prefix and suffix
         setup_ctx = context.root if not isinstance(context, SetupContext) else context
@@ -302,7 +301,11 @@ class TaskUtil:
         suffix = stmt.variable_suffix or setup_ctx.default_variable_suffix
 
         if source_str is None:
-            build_from_source = False
+            if stmt.script is None:
+                build_from_source = False
+            else:
+                # Evaluate script in source
+                source_data = context.evaluate_python_expression(stmt.script)
         # Load data from CSV
         elif source_str.endswith(".csv"):
             source_data = TaskUtil.load_csv_file(
@@ -434,14 +437,26 @@ class TaskUtil:
 
         task_util_cls = root_context.class_factory_util.get_task_util_cls()
 
-        task_util_cls.exporter_without_operation(root_context.task_id, json_product, xml_result, stmt,
-                                                 exporters["without_operation"],
-                                                 exporter_state_manager, exporters["page_count"] == 1)
+        task_util_cls.exporter_without_operation(
+            root_context.task_id,
+            json_product,
+            xml_result,
+            stmt,
+            exporters["without_operation"],
+            exporter_state_manager,
+            exporters["page_count"] == 1,
+        )
 
     @staticmethod
-    def exporter_without_operation(task_id: str, json_product: tuple, xml_result: dict,
-                                   stmt: GenerateStatement, exporters_without_operation: list,
-                                   exporter_state_manager: ExporterStateManager, first_page: bool):
+    def exporter_without_operation(
+            task_id: str,
+            json_product: tuple,
+            xml_result: dict,
+            stmt: GenerateStatement,
+            exporters_without_operation: list,
+            exporter_state_manager: ExporterStateManager,
+            first_page: bool,
+    ):
         # Run exporters without operations
         for exporter in exporters_without_operation:
             try:
@@ -609,9 +624,7 @@ class TaskUtil:
                 if isinstance(value, dict):
                     res[key] = TaskUtil.convert_xml_dict_to_json_dict(value)
                 elif isinstance(value, list):
-                    res[key] = [
-                        TaskUtil.convert_xml_dict_to_json_dict(v) if isinstance(v, dict) else v for v in value
-                    ]
+                    res[key] = [TaskUtil.convert_xml_dict_to_json_dict(v) if isinstance(v, dict) else v for v in value]
                 else:
                     res[key] = value
         return res

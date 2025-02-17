@@ -78,8 +78,9 @@ class GenerateWorker:
             with gen_timer("generate", root_context.report_logging, stmt.full_name) as timer_result:
                 timer_result["records_count"] = page_end - page_start
                 # Generate product
-                result_dict = GenerateWorker._generate_product_by_page_in_single_process(context, stmt, page_start,
-                                                                                         page_end, worker_id)
+                result_dict = GenerateWorker._generate_product_by_page_in_single_process(
+                    context, stmt, page_start, page_end, worker_id
+                )
 
             with gen_timer("export", root_context.report_logging, stmt.full_name) as timer_result:
                 timer_result["records_count"] = page_end - page_start
@@ -136,25 +137,22 @@ class GenerateWorker:
 
         # 1: Build sub-tasks in GenIterStatement
         tasks = [
-            task_util_cls.get_task_by_statement(root_context, child_stmt, pagination) for child_stmt in
-            stmt.sub_statements
+            task_util_cls.get_task_by_statement(root_context, child_stmt, pagination)
+            for child_stmt in stmt.sub_statements
         ]
 
         # 2: Load data source from file, database, memory, Kafka, etc.
-        source_str = stmt.source
         source_scripted = (
             stmt.source_script if stmt.source_script is not None else bool(root_context.default_source_scripted)
         )
         separator = stmt.separator or root_context.default_separator
 
         source_data, build_from_source = (
-            context.root.class_factory_util.get_task_util_cls().gen_task_load_data_from_source(
+            context.root.class_factory_util.get_task_util_cls().gen_task_load_data_from_source_or_script(
                 context,
                 stmt,
-                source_str,
                 separator,
                 source_scripted,
-                processed_data_count,
                 load_start_idx,
                 load_end_idx,
                 load_pagination,
