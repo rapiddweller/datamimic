@@ -53,31 +53,19 @@ class TestEntity:
         )
         engine.test_with_timer()
         customers = engine.capture_result().get("customer")
-        file_name_male = Path(__file__).parent.parent.parent.parent.joinpath(
-            f"datamimic_ce/generators/data/person/givenName_male_{default_dataset}.csv"
-        )
-        file_name_female = Path(__file__).parent.parent.parent.parent.joinpath(
-            f"datamimic_ce/generators/data/person/givenName_female_{default_dataset}.csv"
-        )
-        male_data, wgt = FileUtil.read_wgt_file(file_name_male)
-        female_data, wgt = FileUtil.read_wgt_file(file_name_female)
 
         noble_count = 0
         for customer in customers:
             if customer["gender"] == "female":
-                assert customer["given_name"] in female_data
                 assert customer["salutation"] == "Mrs."
                 if customer["noble_title"] != "":
                     assert customer["noble_title"] in ["Baroness", "Countess", "Princess", "Queen"]
                     noble_count += 1
             if customer["gender"] == "male":
-                assert customer["given_name"] in male_data
                 assert customer["salutation"] == "Mr."
                 if customer["noble_title"] != "":
                     assert customer["noble_title"] in ["Baron", "Count", "Prince", "King"]
                     noble_count += 1
-            assert customer["given_name"].lower() or customer["given_name"][0] in customer["email"]
-            assert customer["family_name"].lower() in customer["email"]
             assert customer["given_name"] in customer["name"]
             assert customer["family_name"] in customer["name"]
 

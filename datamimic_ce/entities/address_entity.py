@@ -4,191 +4,387 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.entities.city_entity import CityEntity
-from datamimic_ce.entities.entity_util import EntityUtil
-from datamimic_ce.generators.company_name_generator import CompanyNameGenerator
-from datamimic_ce.generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.generators.street_name_generator import StreetNameGenerator
+
+from mimesis import Address
+from mimesis.enums import CountryCode
+from mimesis.locales import Locale
 
 
 class AddressEntity:
-    """
-    Represents an address entity with various attributes.
+    """Generate address data using Mimesis.
 
-    This class provides methods to generate and access address-related data.
+    This class uses Mimesis to generate realistic address data with support for multiple locales.
+
+    Supported short codes:
+    - US: English (US)
+    - GB: English (UK)
+    - CN: Chinese
+    - BR: Portuguese (Brazil)
+    - DE: German
+
+    Full Mimesis locales are also supported, including but not limited to:
+    - English: 'en', 'en-au', 'en-ca', 'en-gb'
+    - European: 'de', 'fr', 'it', 'es', 'pt', 'nl'
+    - Asian: 'zh', 'ja', 'ko'
+    - Russian: 'ru'
+    - Turkish: 'tr'
+    - And many more...
+
+    For a complete list of supported locales, refer to Mimesis documentation:
+    https://mimesis.name/en/latest/api.html#locales
+
+    Available Properties:
+    - Basic Address: street, house_number, city, state, postal_code/zip_code
+    - Location: country, country_code, coordinates, continent, latitude, longitude
+    - Contact: office_phone, private_phone, mobile_phone, fax
+    - Organization: organization
+    - Region Info: area, state_abbr, federal_subject, prefecture, province, region
+    - Codes: calling_code/isd_code, iata_code, icao_code
+    - Full Address: formatted_address
     """
 
-    def __init__(self, class_factory_util, dataset: str = "US"):
-        """
-        Initialize the AddressEntity.
+    # Internal mapping of short codes to Mimesis locales
+    _SHORT_CODES = {
+        "US": "en",
+        "GB": "en-gb",
+        "CN": "zh",
+        "BR": "pt-br",
+        "DE": "de",
+    }
+
+    def __init__(self, class_factory_util, locale: str = "en", dataset: str | None = None):
+        """Initialize the AddressEntity.
 
         Args:
-            class_factory_util: The class factory utility.
-            dataset (str): The dataset to be used. Defaults to "US".
+            class_factory_util: The class factory utility instance
+            locale: Locale code - can be either a short code (e.g. 'US', 'GB') or Mimesis locale (e.g. 'en', 'de')
+            dataset: Legacy parameter for backward compatibility
         """
-        self._street_name_gen = StreetNameGenerator(dataset=dataset)
-        self._city_entity = CityEntity(class_factory_util, dataset=dataset)
-        self._phone_number_generator = PhoneNumberGenerator(dataset=dataset)
-        self._company_name_generator = CompanyNameGenerator()
+        # Convert short codes to Mimesis locales
+        # First try the short code mapping
+        mimesis_locale = self._SHORT_CODES.get(locale.upper())
+        if not mimesis_locale:
+            # If not a short code, handle potential underscore format (e.g., 'de_DE' -> 'de')
+            mimesis_locale = locale.lower().split("_")[0]
+            # For backwards compatibility, map some common codes
+            if mimesis_locale == "en":
+                mimesis_locale = "en"  # Default English
+            elif mimesis_locale == "de":
+                mimesis_locale = "de"  # German
+            elif mimesis_locale == "fr":
+                mimesis_locale = "fr"  # French
+            # Add more mappings as needed
 
-        data_generation_util = class_factory_util.get_data_generation_util()
+        self._locale = mimesis_locale
 
-        generator_fn_dict = {
-            "organization": lambda: self._company_name_generator.generate(),
-            "office_phone": lambda: self._phone_number_generator.generate(),
-            "private_phone": lambda: self._phone_number_generator.generate(),
-            "mobile_phone": lambda: self._phone_number_generator.generate(),
-            "fax": lambda: self._phone_number_generator.generate(),
-            "street": lambda: self._street_name_gen.generate(),
-            "house_number": lambda: str(data_generation_util.rnd_int(1, 9999)),
-            "city_entity": lambda: self._city_entity,
-        }
-        self._field_generator = EntityUtil.create_field_generator_dict(generator_fn_dict)
+        # Initialize Mimesis generator
+        self._address = Address(Locale(self._locale))
 
-    @property
-    def street(self):
-        """
-        Get the street name.
+        # Initialize cached values
+        self._cached_street: str | None = None
+        self._cached_house_number: str | None = None
+        self._cached_city: str | None = None
+        self._cached_state: str | None = None
+        self._cached_postal_code: str | None = None
+        self._cached_country: str | None = None
+        self._cached_country_code: str | None = None
+        self._cached_office_phone: str | None = None
+        self._cached_private_phone: str | None = None
+        self._cached_mobile_phone: str | None = None
+        self._cached_fax: str | None = None
+        self._cached_organization: str | None = None
+        self._cached_coordinates: dict[str, str | float] | None = None
+        # New cached values
+        self._cached_state_abbr: str | None = None
+        self._cached_continent: str | None = None
+        self._cached_calling_code: str | None = None
+        self._cached_iata_code: str | None = None
+        self._cached_icao_code: str | None = None
+        self._cached_formatted_address: str | None = None
+        self._cached_latitude: float | None = None
+        self._cached_longitude: float | None = None
 
-        Returns:
-            str: The street name.
-        """
-        return self._field_generator["street"].get()
+    def _generate_street(self) -> str:
+        """Generate a street name."""
+        if self._cached_street is None:
+            self._cached_street = self._address.street_name()
+        return self._cached_street
 
-    @property
-    def house_number(self):
-        """
-        Get the house number.
+    def _generate_house_number(self) -> str:
+        """Generate a house number."""
+        if self._cached_house_number is None:
+            self._cached_house_number = self._address.street_number()
+        return self._cached_house_number
 
-        Returns:
-            str: The house number.
-        """
-        return self._field_generator["house_number"].get()
+    def _generate_city(self) -> str:
+        """Generate a city name."""
+        if self._cached_city is None:
+            self._cached_city = self._address.city()
+        return self._cached_city
 
-    @property
-    def city(self):
-        """
-        Get the city name.
+    def _generate_state(self) -> str:
+        """Generate a state name."""
+        if self._cached_state is None:
+            self._cached_state = self._address.state()
+        return self._cached_state
 
-        Returns:
-            str: The city name.
-        """
-        return self._field_generator["city_entity"].get().name
+    def _generate_postal_code(self) -> str:
+        """Generate a postal code."""
+        if self._cached_postal_code is None:
+            self._cached_postal_code = self._address.postal_code()
+        return self._cached_postal_code
 
-    @property
-    def state(self):
-        """
-        Get the state name.
+    def _generate_country(self) -> str:
+        """Generate a country name."""
+        if self._cached_country is None:
+            self._cached_country = self._address.country()
+        return self._cached_country
 
-        Returns:
-            str: The state name.
-        """
-        return self._field_generator["city_entity"].get().state
+    def _generate_country_code(self) -> str:
+        """Generate a country code."""
+        if self._cached_country_code is None:
+            self._cached_country_code = self._address.country_code(code=CountryCode.A2)
+        return self._cached_country_code
 
-    @property
-    def area(self):
-        """
-        Get the area code.
-
-        Returns:
-            str: The area code.
-        """
-        return self._field_generator["city_entity"].get().area_code
-
-    @property
-    def country(self):
-        """
-        Get the country name.
-
-        Returns:
-            str: The country name.
-        """
-        return self._field_generator["city_entity"].get().country
-
-    @property
-    def country_code(self):
-        """
-        Get the country code.
-
-        Returns:
-            str: The country code.
-        """
-        return self._field_generator["city_entity"].get().country_code
-
-    @property
-    def zip_code(self):
-        """
-        Get the zip code.
+    def _generate_phone(self) -> str:
+        """Generate a phone number with area code.
 
         Returns:
-            str: The zip code.
+            A phone number in the format: (+XXX) XXX-XXX-XXXX
         """
-        return self._field_generator["city_entity"].get().postal_code
+        # Format: (+XXX) XXX-XXX-XXXX
+        calling_code = str(abs(int(self._address.calling_code().strip("+")))).zfill(3)[:3]  # Ensure exactly 3 digits
+        area = str(self._address.random.randint(100, 999))  # Always 3 digits
+        local_1 = str(self._address.random.randint(100, 999))  # Always 3 digits
+        local_2 = str(self._address.random.randint(1000, 9999))  # Always 4 digits
+        return f"(+{calling_code}) {area}-{local_1}-{local_2}"
+
+    def _generate_organization(self) -> str:
+        """Generate an organization name."""
+        if self._cached_organization is None:
+            # Use city name plus a common business suffix
+            suffixes = ["Inc.", "Ltd.", "LLC", "Corp.", "Group", "Holdings"]
+            city = self._generate_city()
+            suffix = self._address.random.choice(suffixes)
+            self._cached_organization = f"{city} {suffix}"
+        return self._cached_organization
+
+    def _generate_coordinates(self) -> dict[str, str | float]:
+        """Generate geographical coordinates."""
+        if self._cached_coordinates is None:
+            self._cached_coordinates = self._address.coordinates()
+        return self._cached_coordinates
+
+    def _generate_state_abbr(self) -> str:
+        """Generate a state abbreviation."""
+        if self._cached_state_abbr is None:
+            self._cached_state_abbr = self._address.state(abbr=True)
+        return self._cached_state_abbr
+
+    def _generate_continent(self) -> str:
+        """Generate a continent name."""
+        if self._cached_continent is None:
+            self._cached_continent = self._address.continent()
+        return self._cached_continent
+
+    def _generate_calling_code(self) -> str:
+        """Generate a calling code."""
+        if self._cached_calling_code is None:
+            self._cached_calling_code = self._address.calling_code()
+        return self._cached_calling_code
+
+    def _generate_iata_code(self) -> str:
+        """Generate an IATA airport code."""
+        if self._cached_iata_code is None:
+            self._cached_iata_code = self._address.iata_code()
+        return self._cached_iata_code
+
+    def _generate_icao_code(self) -> str:
+        """Generate an ICAO airport code."""
+        if self._cached_icao_code is None:
+            self._cached_icao_code = self._address.icao_code()
+        return self._cached_icao_code
+
+    def _generate_formatted_address(self) -> str:
+        """Generate a formatted full address."""
+        if self._cached_formatted_address is None:
+            self._cached_formatted_address = self._address.address()
+        return self._cached_formatted_address
+
+    def reset(self) -> None:
+        """Reset all cached values."""
+        self._cached_street = None
+        self._cached_house_number = None
+        self._cached_city = None
+        self._cached_state = None
+        self._cached_postal_code = None
+        self._cached_country = None
+        self._cached_country_code = None
+        self._cached_office_phone = None
+        self._cached_private_phone = None
+        self._cached_mobile_phone = None
+        self._cached_fax = None
+        self._cached_organization = None
+        self._cached_coordinates = None
+        self._cached_state_abbr = None
+        self._cached_continent = None
+        self._cached_calling_code = None
+        self._cached_iata_code = None
+        self._cached_icao_code = None
+        self._cached_formatted_address = None
+        self._cached_latitude = None
+        self._cached_longitude = None
 
     @property
-    def postal_code(self):
-        """
-        Get the postal code.
-
-        Returns:
-            str: The postal code.
-        """
-        return self._field_generator["city_entity"].get().postal_code
+    def street(self) -> str:
+        """Get the street name."""
+        return self._generate_street()
 
     @property
-    def office_phone(self):
-        """
-        Get the office phone number.
-
-        Returns:
-            str: The office phone number.
-        """
-        return self._field_generator["office_phone"].get()
+    def house_number(self) -> str:
+        """Get the house number."""
+        return self._generate_house_number()
 
     @property
-    def private_phone(self):
-        """
-        Get the private phone number.
-
-        Returns:
-            str: The private phone number.
-        """
-        return self._field_generator["private_phone"].get()
+    def city(self) -> str:
+        """Get the city name."""
+        return self._generate_city()
 
     @property
-    def mobile_phone(self):
-        """
-        Get the mobile phone number.
-
-        Returns:
-            str: The mobile phone number.
-        """
-        return self._field_generator["mobile_phone"].get()
+    def state(self) -> str:
+        """Get the state name."""
+        return self._generate_state()
 
     @property
-    def fax(self):
-        """
-        Get the fax number.
-
-        Returns:
-            str: The fax number.
-        """
-        return self._field_generator["fax"].get()
+    def postal_code(self) -> str:
+        """Get the postal code."""
+        return self._generate_postal_code()
 
     @property
-    def organization(self):
-        """
-        Get the organization name.
+    def zip_code(self) -> str:
+        """Get the zip code (alias for postal_code)."""
+        return self.postal_code
 
-        Returns:
-            str: The organization name.
-        """
-        return self._field_generator["organization"].get()
+    @property
+    def country(self) -> str:
+        """Get the country name."""
+        return self._generate_country()
 
-    def reset(self):
-        """
-        Reset the field generators and city entity.
-        """
-        for key in self._field_generator:
-            self._field_generator[key].reset()
-        self._city_entity.reset()
+    @property
+    def country_code(self) -> str:
+        """Get the country code."""
+        return self._generate_country_code()
+
+    @property
+    def office_phone(self) -> str:
+        """Get the office phone number."""
+        if self._cached_office_phone is None:
+            self._cached_office_phone = self._generate_phone()
+        return self._cached_office_phone
+
+    @property
+    def private_phone(self) -> str:
+        """Get the private phone number."""
+        if self._cached_private_phone is None:
+            self._cached_private_phone = self._generate_phone()
+        return self._cached_private_phone
+
+    @property
+    def mobile_phone(self) -> str:
+        """Get the mobile phone number."""
+        if self._cached_mobile_phone is None:
+            self._cached_mobile_phone = self._generate_phone()
+        return self._cached_mobile_phone
+
+    @property
+    def fax(self) -> str:
+        """Get the fax number."""
+        if self._cached_fax is None:
+            self._cached_fax = self._generate_phone()
+        return self._cached_fax
+
+    @property
+    def organization(self) -> str:
+        """Get the organization name."""
+        return self._generate_organization()
+
+    @property
+    def coordinates(self) -> dict[str, str | float]:
+        """Get the coordinates."""
+        return self._generate_coordinates()
+
+    @property
+    def latitude(self) -> float:
+        """Get the latitude."""
+        coords = self._generate_coordinates()
+        return float(coords["latitude"])
+
+    @property
+    def longitude(self) -> float:
+        """Get the longitude."""
+        coords = self._generate_coordinates()
+        return float(coords["longitude"])
+
+    @property
+    def state_abbr(self) -> str:
+        """Get the state abbreviation (e.g., 'CA' for California)."""
+        return self._generate_state_abbr()
+
+    @property
+    def continent(self) -> str:
+        """Get the continent name."""
+        return self._generate_continent()
+
+    @property
+    def calling_code(self) -> str:
+        """Get the country calling code (e.g., '+1' for USA)."""
+        return self._generate_calling_code()
+
+    @property
+    def isd_code(self) -> str:
+        """Get the ISD code (alias for calling_code)."""
+        return self.calling_code
+
+    @property
+    def iata_code(self) -> str:
+        """Get an IATA airport code (e.g., 'LAX' for Los Angeles)."""
+        return self._generate_iata_code()
+
+    @property
+    def icao_code(self) -> str:
+        """Get an ICAO airport code (e.g., 'KLAX' for Los Angeles)."""
+        return self._generate_icao_code()
+
+    @property
+    def formatted_address(self) -> str:
+        """Get a complete formatted address according to locale format."""
+        return self._generate_formatted_address()
+
+    @property
+    def federal_subject(self) -> str:
+        """Get the federal subject (alias for state, used in some countries like Russia)."""
+        return self.state
+
+    @property
+    def prefecture(self) -> str:
+        """Get the prefecture (alias for state, used in some countries like Japan)."""
+        return self.state
+
+    @property
+    def province(self) -> str:
+        """Get the province (alias for state, used in many countries)."""
+        return self.state
+
+    @property
+    def region(self) -> str:
+        """Get the region (alias for state, used in many countries)."""
+        return self.state
+
+    @property
+    def area(self) -> str:
+        """Get the area code (derived from phone number)."""
+        # Extract area code from phone number if possible
+        phone = self.office_phone
+        if "(" in phone and ")" in phone:
+            return phone[phone.find("(") + 1 : phone.find(")")]
+        return ""

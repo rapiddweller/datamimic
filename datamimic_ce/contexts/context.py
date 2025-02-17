@@ -191,11 +191,19 @@ class Context(ABC):  # noqa: B024
                 except Exception as err:
                     # decode ':' character
                     expr = expr.replace(colon_replacement, ":")
-                    raise ValueError(f"Failed while evaluate '{expr}': "
-                                     f"'{expr}' have undefined item or wrong structure") from err
+                    raise ValueError(
+                        f"Evaluation error for expression '{expr}': "
+                        "The expression may contain undefined items, improper structure, "
+                        "or case-sensitive issues (e.g., using 'true' instead of 'True'). "
+                        "Please double-check that all parameters and type notations are correct and supported."
+                    ) from err
             else:
-                raise ValueError(f"Failed while evaluate '{expr}': "
-                                 f"'{expr}' have undefined item or wrong structure") from e
+                raise ValueError(
+                    f"Evaluation error for expression '{expr}': "
+                    "The expression may contain undefined elements, formatting errors, "
+                    "or unsupported parameter names. Ensure that boolean values and all parameter names "
+                    "(e.g., 'True' vs 'true') adhere to the required formats."
+                ) from e
         except Exception as e:
             raise ValueError(f"Failed while evaluate '{expr}': {str(e)}") from e
 

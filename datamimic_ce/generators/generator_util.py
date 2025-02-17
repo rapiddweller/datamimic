@@ -15,11 +15,22 @@ from datamimic_ce.data_sources.data_source_pagination import DataSourcePaginatio
 from datamimic_ce.generators.academic_title_generator import AcademicTitleGenerator
 from datamimic_ce.generators.birthdate_generator import BirthdateGenerator
 from datamimic_ce.generators.boolean_generator import BooleanGenerator
+from datamimic_ce.generators.business_generators import (
+    CreditCardGenerator,
+    CurrencyGenerator,
+    JobTitleGenerator,
+)
 from datamimic_ce.generators.cnpj_generator import CNPJGenerator
+from datamimic_ce.generators.color_generators import ColorGenerator
 from datamimic_ce.generators.company_name_generator import CompanyNameGenerator
 from datamimic_ce.generators.cpf_generator import CPFGenerator
 from datamimic_ce.generators.data_faker_generator import DataFakerGenerator
 from datamimic_ce.generators.department_name_generator import DepartmentNameGenerator
+from datamimic_ce.generators.document_generators import (
+    FilePathGenerator,
+    ISBNGenerator,
+    MIMETypeGenerator,
+)
 from datamimic_ce.generators.domain_generator import DomainGenerator
 from datamimic_ce.generators.ean_generator import EANGenerator
 from datamimic_ce.generators.email_address_generator import EmailAddressGenerator
@@ -27,18 +38,42 @@ from datamimic_ce.generators.family_name_generator import FamilyNameGenerator
 from datamimic_ce.generators.float_generator import FloatGenerator
 from datamimic_ce.generators.gender_generator import GenderGenerator
 from datamimic_ce.generators.given_name_generator import GivenNameGenerator
+from datamimic_ce.generators.healthcare_generators import (
+    AllergyGenerator,
+    DiagnosisGenerator,
+    ImmunizationGenerator,
+    LabResultGenerator,
+    MedicalAppointmentGenerator,
+    MedicalProcedureGenerator,
+    MedicationGenerator,
+    PatientHistoryGenerator,
+    SymptomGenerator,
+    VitalSignsGenerator,
+)
 from datamimic_ce.generators.increment_generator import IncrementGenerator
 from datamimic_ce.generators.nobility_title_generator import NobilityTitleGenerator
 from datamimic_ce.generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.generators.science_generators import (
+    ChemicalFormulaGenerator,
+    NucleotideSequenceGenerator,
+    PhysicalConstantGenerator,
+    ScientificUnitGenerator,
+)
 from datamimic_ce.generators.sector_generator import SectorGenerator
+from datamimic_ce.generators.security_generators import (
+    HashGenerator,
+    MnemonicPhraseGenerator,
+    PasswordGenerator,
+    TokenGenerator,
+    UUIDGenerator,
+)
 from datamimic_ce.generators.sequence_table_generator import SequenceTableGenerator
 from datamimic_ce.generators.ssn_generator import SSNGenerator
 from datamimic_ce.generators.street_name_generator import StreetNameGenerator
+from datamimic_ce.generators.text_generators import ParagraphGenerator
 from datamimic_ce.generators.url_generator import UrlGenerator
-from datamimic_ce.generators.uuid_generator import UUIDGenerator
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.statement import Statement
-from datamimic_ce.utils.string_util import StringUtil
 
 
 class GeneratorUtil:
@@ -54,38 +89,76 @@ class GeneratorUtil:
             context (Context): The context in which the generators are used.
         """
         cls_factory_util = context.root.class_factory_util
-        # IMPORTANT: (Recommend) Only define generator existed in XML model
-        # Should not define sub-generators (such as FamilyName, GivenName, Gender,...) here
-        # because it may make users confused which ways to get FamilyName correctly
+        # Define all available generators
         self._class_dict = {
-            "CNPJGenerator": CNPJGenerator,
-            "CPFGenerator": CPFGenerator,
+            # Basic Generators
             "IncrementGenerator": IncrementGenerator,
             "DateTimeGenerator": cls_factory_util.get_datetime_generator(),
-            "DepartmentNameGenerator": DepartmentNameGenerator,
-            "BirthdateGenerator": BirthdateGenerator,
-            "EmailAddressGenerator": EmailAddressGenerator,
-            "DomainGenerator": DomainGenerator,
-            "EANGenerator": EANGenerator,
-            "SectorGenerator": SectorGenerator,
-            "UUIDGenerator": UUIDGenerator,
-            "BooleanGenerator": BooleanGenerator,
-            "PhoneNumberGenerator": PhoneNumberGenerator,
             "IntegerGenerator": cls_factory_util.get_integer_generator(),
             "StringGenerator": cls_factory_util.get_string_generator(),
             "FloatGenerator": FloatGenerator,
-            "SSNGenerator": SSNGenerator,
+            "BooleanGenerator": BooleanGenerator,
             "DataFakerGenerator": DataFakerGenerator,
-            "AcademicTitleGenerator": AcademicTitleGenerator,
-            "CompanyNameGenerator": CompanyNameGenerator,
-            "FamilyNameGenerator": FamilyNameGenerator,
+            # Identity and Personal Information
+            "SSNGenerator": SSNGenerator,
+            "CNPJGenerator": CNPJGenerator,
+            "CPFGenerator": CPFGenerator,
+            "EANGenerator": EANGenerator,
             "GenderGenerator": GenderGenerator,
+            "BirthdateGenerator": BirthdateGenerator,
+            "PhoneNumberGenerator": PhoneNumberGenerator,
+            # Names and Titles
+            "FamilyNameGenerator": FamilyNameGenerator,
             "GivenNameGenerator": GivenNameGenerator,
-            "StreetNameGenerator": StreetNameGenerator,
-            "UrlGenerator": UrlGenerator,
-            "SequenceTableGenerator": SequenceTableGenerator,
+            "AcademicTitleGenerator": AcademicTitleGenerator,
             "NobilityTitleGenerator": NobilityTitleGenerator,
+            # Business and Organization
+            "CompanyNameGenerator": CompanyNameGenerator,
+            "DepartmentNameGenerator": DepartmentNameGenerator,
+            "SectorGenerator": SectorGenerator,
+            "JobTitleGenerator": JobTitleGenerator,
+            "CreditCardGenerator": CreditCardGenerator,
+            "CurrencyGenerator": CurrencyGenerator,
+            # Internet and Web
+            "EmailAddressGenerator": EmailAddressGenerator,
+            "DomainGenerator": DomainGenerator,
+            "UrlGenerator": UrlGenerator,
+            # Location
+            "StreetNameGenerator": StreetNameGenerator,
+            # Document and File
+            "ISBNGenerator": ISBNGenerator,
+            "FilePathGenerator": FilePathGenerator,
+            "MIMETypeGenerator": MIMETypeGenerator,
+            # Security
+            "UUIDGenerator": UUIDGenerator,
+            "HashGenerator": HashGenerator,
+            "TokenGenerator": TokenGenerator,
+            "MnemonicPhraseGenerator": MnemonicPhraseGenerator,
+            "PasswordGenerator": PasswordGenerator,
+            # Text and Content
+            "ParagraphGenerator": ParagraphGenerator,
+            # Visual and Design
+            "ColorGenerator": ColorGenerator,
+            # Science
+            "ChemicalFormulaGenerator": ChemicalFormulaGenerator,
+            "NucleotideSequenceGenerator": NucleotideSequenceGenerator,
+            "PhysicalConstantGenerator": PhysicalConstantGenerator,
+            "ScientificUnitGenerator": ScientificUnitGenerator,
+            # Healthcare
+            "AllergyGenerator": AllergyGenerator,
+            "DiagnosisGenerator": DiagnosisGenerator,
+            "ImmunizationGenerator": ImmunizationGenerator,
+            "LabResultGenerator": LabResultGenerator,
+            "MedicalAppointmentGenerator": MedicalAppointmentGenerator,
+            "MedicalProcedureGenerator": MedicalProcedureGenerator,
+            "MedicationGenerator": MedicationGenerator,
+            "PatientHistoryGenerator": PatientHistoryGenerator,
+            "SymptomGenerator": SymptomGenerator,
+            "VitalSignsGenerator": VitalSignsGenerator,
+            # Special
+            "SequenceTableGenerator": SequenceTableGenerator,
         }
+
         self._generator_with_count = (
             "DomainGenerator",
             "EmailAddressGenerator",
@@ -98,6 +171,104 @@ class GeneratorUtil:
             "BirthdateGenerator",
         )
         self._context = context
+
+    def get_supported_generators(self) -> dict[str, list[str]]:
+        """
+        Get a dictionary of all supported generators organized by category.
+
+        Returns:
+            Dict[str, List[str]]: Dictionary with categories as keys and lists of generator names as values
+        """
+        return {
+            "Basic": [
+                "IncrementGenerator",
+                "DateTimeGenerator",
+                "IntegerGenerator",
+                "StringGenerator",
+                "FloatGenerator",
+                "BooleanGenerator",
+                "DataFakerGenerator",
+            ],
+            "Identity and Personal": [
+                "SSNGenerator",
+                "CNPJGenerator",
+                "CPFGenerator",
+                "EANGenerator",
+                "GenderGenerator",
+                "BirthdateGenerator",
+                "PhoneNumberGenerator",
+            ],
+            "Names and Titles": [
+                "FamilyNameGenerator",
+                "GivenNameGenerator",
+                "AcademicTitleGenerator",
+                "NobilityTitleGenerator",
+            ],
+            "Business": [
+                "CompanyNameGenerator",
+                "DepartmentNameGenerator",
+                "SectorGenerator",
+                "JobTitleGenerator",
+                "CreditCardGenerator",
+                "CurrencyGenerator",
+            ],
+            "Internet": [
+                "EmailAddressGenerator",
+                "DomainGenerator",
+                "UrlGenerator",
+            ],
+            "Location": [
+                "StreetNameGenerator",
+            ],
+            "Document": [
+                "ISBNGenerator",
+                "FilePathGenerator",
+                "MIMETypeGenerator",
+            ],
+            "Security": [
+                "UUIDGenerator",
+                "HashGenerator",
+                "TokenGenerator",
+                "MnemonicPhraseGenerator",
+                "PasswordGenerator",
+            ],
+            "Text": [
+                "ParagraphGenerator",
+            ],
+            "Visual": [
+                "ColorGenerator",
+            ],
+            "Science": [
+                "ChemicalFormulaGenerator",
+                "NucleotideSequenceGenerator",
+                "PhysicalConstantGenerator",
+                "ScientificUnitGenerator",
+            ],
+            "Healthcare": [
+                "AllergyGenerator",
+                "DiagnosisGenerator",
+                "ImmunizationGenerator",
+                "LabResultGenerator",
+                "MedicalAppointmentGenerator",
+                "MedicalProcedureGenerator",
+                "MedicationGenerator",
+                "PatientHistoryGenerator",
+                "SymptomGenerator",
+                "VitalSignsGenerator",
+            ],
+            "Special": [
+                "SequenceTableGenerator",
+            ],
+        }
+
+    def get_all_generator_names(self) -> list[str]:
+        """
+        Get a flat list of all supported generator names.
+
+        Returns:
+            List[str]: List of all generator names
+        """
+        return sorted(self._class_dict.keys())
 
     def create_generator(
         self,
@@ -129,8 +300,69 @@ class GeneratorUtil:
             if generator_from_ctx is not None:
                 return generator_from_ctx
 
-            # Get classname from constructor string
-            class_name = StringUtil.get_class_name_from_constructor_string(generator_str)
+            # Parse generator string into type and parameters
+            if "(" in generator_str:
+                class_name, params_str = generator_str[:-1].split("(", 1)
+                params: dict[str, str | bool | int | float] = {}
+
+                # Special handling for DataFakerGenerator with positional argument
+                if class_name == "DataFakerGenerator" and "'" in params_str:
+                    # Extract the method name (first positional argument)
+                    method = params_str.split(",")[0].strip("' ")
+                    params["method"] = method
+
+                    # Parse remaining parameters if any
+                    if "," in params_str:
+                        remaining_params = params_str[params_str.find(",") + 1 :].strip()
+                        if remaining_params:
+                            for param in remaining_params.split(","):
+                                if "=" not in param:
+                                    continue
+                                key, value = param.split("=", 1)
+                                key = key.strip()
+                                value = value.strip()
+
+                                # Handle string values
+                                if value.startswith("'") and value.endswith("'"):
+                                    value = value[1:-1]
+                                # Handle boolean values
+                                elif value.lower() in ("true", "false"):
+                                    value = str(value.lower() == "true")
+                                # Handle numeric values
+                                elif value.isdigit():
+                                    value = str(int(value))
+                                elif value.replace(".", "").isdigit():
+                                    value = str(float(value))
+
+                                params[key] = value
+                else:
+                    # Normal parameter parsing for other generators
+                    if params_str:
+                        for param in params_str.split(","):
+                            if "=" not in param:
+                                continue
+                            key, value = param.split("=", 1)
+                            key = key.strip()
+                            value = value.strip()
+
+                            # Handle string values
+                            if value.startswith("'") and value.endswith("'"):
+                                value = value[1:-1]
+                            # Handle boolean values
+                            elif value.lower() in ("true", "false"):
+                                value = str(value.lower() == "true")
+                            # Handle numeric values
+                            elif value.isdigit():
+                                value = str(int(value))
+                            elif value.replace(".", "").isdigit():
+                                value = str(float(value))
+
+                            params[key] = value
+            else:
+                class_name = generator_str
+                params = {}
+
+            # Get generator class
             cls = self._class_dict.get(class_name)
             if cls is None:
                 if isinstance(self._context, SetupContext):
@@ -158,8 +390,8 @@ class GeneratorUtil:
                 local_ns = copy.deepcopy(self._class_dict)
                 if class_name in self._generator_with_count or class_name in self._generator_with_class_factory_util:
                     class_name, args_str = generator_str[:-1].split("(")
-                    args = args_str.split(",")
-                    args = [arg.strip() for arg in args]
+                    # Filtering out empty arguments to avoid extra commas
+                    args = [arg.strip() for arg in args_str.split(",") if arg.strip()]
 
                     if class_name in self._generator_with_count:
                         args.append(f"generated_count={generated_count}")
