@@ -19,6 +19,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_NAME,
     ATTR_NUM_PROCESS,
     ATTR_PAGE_SIZE,
+    ATTR_SCRIPT,
     ATTR_SELECTOR,
     ATTR_SEPARATOR,
     ATTR_SOURCE,
@@ -28,7 +29,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_TARGET,
     ATTR_TYPE,
     ATTR_VARIABLE_PREFIX,
-    ATTR_VARIABLE_SUFFIX, ATTR_SCRIPT,
+    ATTR_VARIABLE_SUFFIX,
 )
 from datamimic_ce.model.model_util import ModelUtil
 
@@ -83,7 +84,7 @@ class GenerateModel(BaseModel):
                 ATTR_VARIABLE_SUFFIX,
                 ATTR_CONVERTER,
                 ATTR_NUM_PROCESS,
-                ATTR_SCRIPT
+                ATTR_SCRIPT,
             },
         )
 

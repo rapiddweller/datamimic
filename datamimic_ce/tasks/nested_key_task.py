@@ -23,10 +23,10 @@ from datamimic_ce.utils.file_util import FileUtil
 
 class NestedKeyTask(Task):
     def __init__(
-            self,
-            ctx: SetupContext,
-            statement: NestedKeyStatement,
-            class_factory_util: BaseClassFactoryUtil,
+        self,
+        ctx: SetupContext,
+        statement: NestedKeyStatement,
+        class_factory_util: BaseClassFactoryUtil,
     ):
         self._statement = statement
         self._default_value = statement.default_value

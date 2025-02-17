@@ -39,7 +39,7 @@ class GenerateTask(CommonSubTask):
     def statement(self) -> GenerateStatement:
         return self._statement
 
-    def _determine_count(self, context: Context) -> int:
+    def _determine_count(self, context: SetupContext | GenIterContext) -> int:
         """
         Determine the count of records to generate.
 
@@ -115,7 +115,7 @@ class GenerateTask(CommonSubTask):
         return default_page_size
 
     @staticmethod
-    def _scan_data_source(ctx: SetupContext, statement: Statement) -> None:
+    def _scan_data_source(ctx: SetupContext | GenIterContext, statement: Statement) -> None:
         """
         Scan data source and set data source length.
 
@@ -209,15 +209,13 @@ class GenerateTask(CommonSubTask):
 
                     # Execute generate task using Ray
                     from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
+
                     futures = [
                         RayGenerateWorker.ray_process.options(enable_task_events=False).remote(
-                            copied_context,
-                            self._statement,
-                            worker_id,
-                            chunk_start,
-                            chunk_end, page_size)
-                        for
-                        worker_id, (chunk_start, chunk_end) in enumerate(chunks, 1)]
+                            copied_context, self._statement, worker_id, chunk_start, chunk_end, page_size
+                        )
+                        for worker_id, (chunk_start, chunk_end) in enumerate(chunks, 1)
+                    ]
                     # Gather result from Ray workers
                     ray_result = ray.get(futures)
 
@@ -231,6 +229,7 @@ class GenerateTask(CommonSubTask):
                     # If inner gen_stmt, pass worker_id from outermost gen_stmt to inner gen_stmt
                     worker_id = context.worker_id if isinstance(context, GenIterContext) else 1
                     from datamimic_ce.workers.generate_worker import GenerateWorker
+
                     merged_result = GenerateWorker.generate_and_export_data_by_chunk(
                         context, self._statement, worker_id, 0, count, page_size
                     )
@@ -284,8 +283,9 @@ class GenerateTask(CommonSubTask):
         num_workers = GenerateTask._determine_num_workers(context, stmt)
 
         # Get ARTIFACT exporters from statement
-        exporter_list = context.root.class_factory_util.get_exporter_util().get_all_exporter(context, stmt,
-                                                                                             list(stmt.targets))
+        exporter_list = context.root.class_factory_util.get_exporter_util().get_all_exporter(
+            context, stmt, list(stmt.targets)
+        )
         # Finalize chunks files (writing end of file)
         for exporter in exporter_list:
             if hasattr(exporter, "finalize_chunks"):
@@ -302,8 +302,8 @@ class GenerateTask(CommonSubTask):
         """
         Export artifact files to storage (Execute on outermost gen_stmt)
         """
-        exporters_list = (
-            context.root.class_factory_util.get_exporter_util().get_all_exporter(context, stmt, list(stmt.targets))
+        exporters_list = context.root.class_factory_util.get_exporter_util().get_all_exporter(
+            context, stmt, list(stmt.targets)
         )
         # Export artifact files of current statement
         for exporter in exporters_list:

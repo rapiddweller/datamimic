@@ -305,8 +305,7 @@ class RdbmsClient(DatabaseClient):
             result = self.get(pagination_query)
         else:
             pagination_query = (
-                f"SELECT * FROM ({original_query}) AS original_query "
-                f"LIMIT {pagination.limit} OFFSET {pagination.skip}"
+                f"SELECT * FROM ({original_query}) AS original_query LIMIT {pagination.limit} OFFSET {pagination.skip}"
             )
             result = self.get(pagination_query)
 
@@ -406,8 +405,7 @@ class RdbmsClient(DatabaseClient):
                 # Check if sequence exists in the specified schema
                 schema = self._credential.db_schema or "public"
                 check_query = text(
-                    "SELECT EXISTS (SELECT 1 FROM pg_sequences "
-                    "WHERE schemaname = :schema AND sequencename = :seq_name)"
+                    "SELECT EXISTS (SELECT 1 FROM pg_sequences WHERE schemaname = :schema AND sequencename = :seq_name)"
                 )
                 exists = connection.execute(check_query, {"schema": schema, "seq_name": sequence_name}).scalar()
 

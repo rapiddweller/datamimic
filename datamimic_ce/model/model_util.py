@@ -58,7 +58,7 @@ class ModelUtil:
 
     @staticmethod
     def _check_valid_additional_attributes(
-            values: dict, main_attributes: tuple, additional_attributes: list[str]
+        values: dict, main_attributes: tuple, additional_attributes: list[str]
     ) -> dict:
         """
         Check if valid additional attributes are defined with main attribute

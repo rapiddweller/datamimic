@@ -13,10 +13,10 @@ from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 class ListTask(Task):
     def __init__(
-            self,
-            ctx: SetupContext,
-            statement: ListStatement,
-            class_factory_util: BaseClassFactoryUtil,
+        self,
+        ctx: SetupContext,
+        statement: ListStatement,
+        class_factory_util: BaseClassFactoryUtil,
     ):
         self._statement = statement
         # Not apply pagination for sub-statement

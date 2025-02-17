@@ -75,21 +75,22 @@ class DataSourceUtil:
             # Check if source is data source file or database collection/table
             # 2.1: Check if datasource is csv file
             if source_str.endswith(".csv"):
-                ds_len = DataSourceUtil._count_lines_in_csv(ctx.descriptor_dir / source_str)
+                ds_len = DataSourceUtil._count_lines_in_csv(root_ctx.descriptor_dir / source_str)
             # 2.2: Check if datasource is json file
             elif source_str.endswith(".json"):
-                ds_len = DataSourceUtil._count_object_in_json(ctx.task_id, ctx.descriptor_dir / source_str)
+                ds_len = DataSourceUtil._count_object_in_json(root_ctx.task_id, root_ctx.descriptor_dir / source_str)
             # 2.3: Check if datasource is xml file
             elif source_str.endswith(".xml"):
-                ds_len = len(list(ET.parse(ctx.descriptor_dir / source_str).getroot()))
+                ds_len = len(list(ET.parse(root_ctx.descriptor_dir / source_str).getroot()))
             # 2.4: Check if datasource is memstore
-            elif ctx.memstore_manager.contain(source_str) and hasattr(stmt, "type"):
-                ds_len = ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(stmt.type or stmt.name)
-            elif ctx.get_client_by_id(source_str) is not None:
-                client = ctx.get_client_by_id(source_str)
+            elif root_ctx.memstore_manager.contain(source_str) and hasattr(stmt, "type"):
+                ds_len = root_ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(stmt.type or stmt.name)
+            elif root_ctx.get_client_by_id(source_str) is not None:
+                client = root_ctx.get_client_by_id(source_str)
                 if client is None:
                     raise ValueError(
-                        f"Client '{source_str}' could not be found in your context, please check your script")
+                        f"Client '{source_str}' could not be found in your context, please check your script"
+                    )
                 # handle database collection/table as data source
                 from datamimic_ce.clients.rdbms_client import RdbmsClient
 
