@@ -8,6 +8,7 @@ import datetime
 from pathlib import Path
 
 from mimesis import Datetime, Gender, Person
+from mimesis.locales import Locale
 
 
 def calculate_age(birthdate: datetime.datetime) -> int:
@@ -99,7 +100,19 @@ class PersonEntity:
             academic_title_quota: Proportion of persons with academic titles
         """
         # Convert short codes to Mimesis locales
-        mimesis_locale = self._SHORT_CODES.get(locale.upper(), locale.lower())
+        # First try the short code mapping
+        mimesis_locale = self._SHORT_CODES.get(locale.upper())
+        if not mimesis_locale:
+            # If not a short code, handle potential underscore format (e.g., 'de_DE' -> 'de')
+            mimesis_locale = locale.lower().split("_")[0]
+            # For backwards compatibility, map some common codes
+            if mimesis_locale == "en":
+                mimesis_locale = "en"  # Default English
+            elif mimesis_locale == "de":
+                mimesis_locale = "de"  # German
+            elif mimesis_locale == "fr":
+                mimesis_locale = "fr"  # French
+            # Add more mappings as needed
 
         self._locale = mimesis_locale
         self._min_age = min_age
@@ -110,7 +123,7 @@ class PersonEntity:
         self._academic_title_quota = academic_title_quota
 
         # Initialize Mimesis generators
-        self._person = Person(self._locale)
+        self._person = Person(Locale(self._locale))
         self._datetime = Datetime()
 
         # Initialize cached values

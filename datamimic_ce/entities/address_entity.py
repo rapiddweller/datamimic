@@ -61,7 +61,20 @@ class AddressEntity:
             dataset: Legacy parameter for backward compatibility
         """
         # Convert short codes to Mimesis locales
-        mimesis_locale = self._SHORT_CODES.get(locale.upper(), locale.lower())
+        # First try the short code mapping
+        mimesis_locale = self._SHORT_CODES.get(locale.upper())
+        if not mimesis_locale:
+            # If not a short code, handle potential underscore format (e.g., 'de_DE' -> 'de')
+            mimesis_locale = locale.lower().split("_")[0]
+            # For backwards compatibility, map some common codes
+            if mimesis_locale == "en":
+                mimesis_locale = "en"  # Default English
+            elif mimesis_locale == "de":
+                mimesis_locale = "de"  # German
+            elif mimesis_locale == "fr":
+                mimesis_locale = "fr"  # French
+            # Add more mappings as needed
+
         self._locale = mimesis_locale
 
         # Initialize Mimesis generator
@@ -134,12 +147,16 @@ class AddressEntity:
         return self._cached_country_code
 
     def _generate_phone(self) -> str:
-        """Generate a phone number with area code."""
+        """Generate a phone number with area code.
+
+        Returns:
+            A phone number in the format: (+XXX) XXX-XXX-XXXX
+        """
         # Format: (+XXX) XXX-XXX-XXXX
-        calling_code = self._address.calling_code().strip("+")  # Remove any existing + sign
-        area = str(self._address.random.randint(100, 999))
-        local_1 = str(self._address.random.randint(100, 999))
-        local_2 = str(self._address.random.randint(1000, 9999))
+        calling_code = str(abs(int(self._address.calling_code().strip("+")))).zfill(3)[:3]  # Ensure exactly 3 digits
+        area = str(self._address.random.randint(100, 999))  # Always 3 digits
+        local_1 = str(self._address.random.randint(100, 999))  # Always 3 digits
+        local_2 = str(self._address.random.randint(1000, 9999))  # Always 4 digits
         return f"(+{calling_code}) {area}-{local_1}-{local_2}"
 
     def _generate_organization(self) -> str:
