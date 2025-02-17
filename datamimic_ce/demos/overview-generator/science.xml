@@ -1,0 +1,30 @@
+<setup>
+    <echo>Running Science Generators</echo>
+
+    <!-- DNA/RNA Sequences -->
+    <generate name="nucleotide_sequences" count="10">
+        <key name="dna_sequence" generator="NucleotideSequenceGenerator(sequence_type='DNA', length=50)" />
+        <key name="rna_sequence" generator="NucleotideSequenceGenerator(sequence_type='RNA', length=30)" />
+    </generate>
+
+    <!-- Chemical Formulas -->
+    <generate name="chemical_formulas" count="10">
+        <key name="simple_molecule" generator="ChemicalFormulaGenerator(complexity=1)" />
+        <key name="complex_molecule" generator="ChemicalFormulaGenerator(complexity=3)" />
+    </generate>
+
+    <!-- Scientific Units -->
+    <generate name="scientific_units" count="10">
+        <key name="length_unit" generator="ScientificUnitGenerator(unit_type='length')" />
+        <key name="mass_unit" generator="ScientificUnitGenerator(unit_type='mass')" />
+        <key name="time_unit" generator="ScientificUnitGenerator(unit_type='time')" />
+        <key name="temperature_unit" generator="ScientificUnitGenerator(unit_type='temperature')" />
+    </generate>
+
+    <!-- Physical Constants -->
+    <generate name="physical_constants" count="10">
+        <key name="constant" generator="PhysicalConstantGenerator()" />
+        <key name="constant_details" generator="PhysicalConstantGenerator(include_unit=True, include_value=True)" />
+    </generate>
+
+</setup> 

@@ -1,0 +1,25 @@
+<setup>
+    <echo>Running Document Generators</echo>
+
+    <!-- ISBN Numbers -->
+    <generate name="isbn_numbers" count="10">
+        <key name="isbn13" generator="ISBNGenerator(isbn_13=True)" />
+        <key name="isbn10" generator="ISBNGenerator(isbn_13=False)" />
+    </generate>
+
+    <!-- File Paths -->
+    <generate name="file_paths" count="10">
+        <key name="unix_text_file" generator="FilePathGenerator(file_type='text', platform='unix')" />
+        <key name="windows_image" generator="FilePathGenerator(file_type='image', platform='windows')" />
+        <key name="deep_path" generator="FilePathGenerator(depth=4, platform='unix')" />
+    </generate>
+
+    <!-- MIME Types -->
+    <generate name="mime_types" count="10">
+        <key name="application" generator="MIMETypeGenerator(category='application')" />
+        <key name="image" generator="MIMETypeGenerator(category='image')" />
+        <key name="text" generator="MIMETypeGenerator(category='text')" />
+        <key name="video" generator="MIMETypeGenerator(category='video')" />
+    </generate>
+
+</setup> 

@@ -1,0 +1,19 @@
+<setup>
+    <echo>Running Internet Generators</echo>
+
+    <!-- URLs -->
+    <generate name="url_info" count="10">
+        <key name="url" generator="UrlGenerator()" />
+    </generate>
+
+    <!-- Phone Numbers -->
+    <generate name="contact_info" count="10">
+        <key name="phone" generator="PhoneNumberGenerator()" />
+    </generate>
+
+    <!-- Street Names -->
+    <generate name="location_info" count="10">
+        <key name="street" generator="StreetNameGenerator()" />
+    </generate>
+
+</setup> 
