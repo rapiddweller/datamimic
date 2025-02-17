@@ -83,7 +83,7 @@ class PersonEntity:
         other_gender_quota: float = 0.02,
         noble_quota: float = 0.001,
         academic_title_quota: float = 0.5,
-        dataset: str = None,  # only for our own datasets (not for Mimesis)
+        dataset: str | None = None,  # only for our own datasets (not for Mimesis)
     ):
         """Initialize the PersonEntity.
 
@@ -114,24 +114,24 @@ class PersonEntity:
         self._datetime = Datetime()
 
         # Initialize cached values
-        self._cached_gender = None
-        self._cached_birthdate = None
-        self._cached_given_name = None
-        self._cached_family_name = None
-        self._cached_email = None
-        self._cached_academic_title = None
-        self._cached_nobility_title = None
-        self._cached_username = None
-        self._cached_password = None
-        self._cached_phone = None
-        self._cached_height = None
-        self._cached_weight = None
-        self._cached_blood_type = None
-        self._cached_occupation = None
-        self._cached_nationality = None
-        self._cached_university = None
-        self._cached_language = None
-        self._cached_academic_degree = None
+        self._cached_gender: str | None = None
+        self._cached_birthdate: datetime.datetime | None = None
+        self._cached_given_name: str | None = None
+        self._cached_family_name: str | None = None
+        self._cached_email: str | None = None
+        self._cached_academic_title: str | None = None
+        self._cached_nobility_title: str | None = None
+        self._cached_username: str | None = None
+        self._cached_password: str | None = None
+        self._cached_phone: str | None = None
+        self._cached_height: float | None = None
+        self._cached_weight: int | None = None
+        self._cached_blood_type: str | None = None
+        self._cached_occupation: str | None = None
+        self._cached_nationality: str | None = None
+        self._cached_university: str | None = None
+        self._cached_language: str | None = None
+        self._cached_academic_degree: str | None = None
 
     def _generate_gender(self) -> str:
         """Generate gender based on configured quotas."""

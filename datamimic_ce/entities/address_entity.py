@@ -4,8 +4,10 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+
 from mimesis import Address
 from mimesis.enums import CountryCode
+from mimesis.locales import Locale
 
 
 class AddressEntity:
@@ -50,7 +52,7 @@ class AddressEntity:
         "DE": "de",
     }
 
-    def __init__(self, class_factory_util, locale: str = "en", dataset: str = None):
+    def __init__(self, class_factory_util, locale: str = "en", dataset: str | None = None):
         """Initialize the AddressEntity.
 
         Args:
@@ -63,31 +65,31 @@ class AddressEntity:
         self._locale = mimesis_locale
 
         # Initialize Mimesis generator
-        self._address = Address(self._locale)
+        self._address = Address(Locale(self._locale))
 
         # Initialize cached values
-        self._cached_street = None
-        self._cached_house_number = None
-        self._cached_city = None
-        self._cached_state = None
-        self._cached_postal_code = None
-        self._cached_country = None
-        self._cached_country_code = None
-        self._cached_office_phone = None
-        self._cached_private_phone = None
-        self._cached_mobile_phone = None
-        self._cached_fax = None
-        self._cached_organization = None
-        self._cached_coordinates = None
+        self._cached_street: str | None = None
+        self._cached_house_number: str | None = None
+        self._cached_city: str | None = None
+        self._cached_state: str | None = None
+        self._cached_postal_code: str | None = None
+        self._cached_country: str | None = None
+        self._cached_country_code: str | None = None
+        self._cached_office_phone: str | None = None
+        self._cached_private_phone: str | None = None
+        self._cached_mobile_phone: str | None = None
+        self._cached_fax: str | None = None
+        self._cached_organization: str | None = None
+        self._cached_coordinates: dict[str, str | float] | None = None
         # New cached values
-        self._cached_state_abbr = None
-        self._cached_continent = None
-        self._cached_calling_code = None
-        self._cached_iata_code = None
-        self._cached_icao_code = None
-        self._cached_formatted_address = None
-        self._cached_latitude = None
-        self._cached_longitude = None
+        self._cached_state_abbr: str | None = None
+        self._cached_continent: str | None = None
+        self._cached_calling_code: str | None = None
+        self._cached_iata_code: str | None = None
+        self._cached_icao_code: str | None = None
+        self._cached_formatted_address: str | None = None
+        self._cached_latitude: float | None = None
+        self._cached_longitude: float | None = None
 
     def _generate_street(self) -> str:
         """Generate a street name."""
@@ -150,7 +152,7 @@ class AddressEntity:
             self._cached_organization = f"{city} {suffix}"
         return self._cached_organization
 
-    def _generate_coordinates(self) -> dict:
+    def _generate_coordinates(self) -> dict[str, str | float]:
         """Generate geographical coordinates."""
         if self._cached_coordinates is None:
             self._cached_coordinates = self._address.coordinates()
@@ -290,32 +292,21 @@ class AddressEntity:
         return self._generate_organization()
 
     @property
-    def coordinates(self) -> dict:
-        """Get the geographical coordinates.
-
-        Returns:
-            dict: Dictionary containing 'latitude' and 'longitude' keys with their respective values.
-        """
-        coords = self._generate_coordinates()
-        if self._cached_latitude is None:
-            self._cached_latitude = coords["latitude"]
-        if self._cached_longitude is None:
-            self._cached_longitude = coords["longitude"]
-        return coords
+    def coordinates(self) -> dict[str, str | float]:
+        """Get the coordinates."""
+        return self._generate_coordinates()
 
     @property
     def latitude(self) -> float:
-        """Get the latitude coordinate."""
-        if self._cached_latitude is None:
-            self.coordinates  # This will set both cached lat and long
-        return self._cached_latitude
+        """Get the latitude."""
+        coords = self._generate_coordinates()
+        return float(coords["latitude"])
 
     @property
     def longitude(self) -> float:
-        """Get the longitude coordinate."""
-        if self._cached_longitude is None:
-            self.coordinates  # This will set both cached lat and long
-        return self._cached_longitude
+        """Get the longitude."""
+        coords = self._generate_coordinates()
+        return float(coords["longitude"])
 
     @property
     def state_abbr(self) -> str:
