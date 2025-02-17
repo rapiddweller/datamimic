@@ -148,7 +148,7 @@ class GenerateWorker:
         separator = stmt.separator or root_context.default_separator
 
         source_data, build_from_source = (
-            context.root.class_factory_util.get_task_util_cls().gen_task_load_data_from_source(
+            context.root.class_factory_util.get_task_util_cls().gen_task_load_data_from_source_or_script(
                 context,
                 stmt,
                 source_str,

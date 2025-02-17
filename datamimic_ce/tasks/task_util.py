@@ -278,7 +278,7 @@ class TaskUtil:
         )
 
     @staticmethod
-    def gen_task_load_data_from_source(
+    def gen_task_load_data_from_source_or_script(
             context: SetupContext,
             stmt: GenerateStatement,
             source_str: str,
@@ -295,6 +295,7 @@ class TaskUtil:
         build_from_source = True
         root_context = context.root
         source_data: dict | list = []
+        source_str = stmt.source
 
         # get prefix and suffix
         setup_ctx = context.root if not isinstance(context, SetupContext) else context
@@ -302,7 +303,11 @@ class TaskUtil:
         suffix = stmt.variable_suffix or setup_ctx.default_variable_suffix
 
         if source_str is None:
-            build_from_source = False
+            if stmt.script is None:
+                build_from_source = False
+            else:
+                # Evaluate script in source
+                source_data = context.evaluate_python_expression(stmt.script)
         # Load data from CSV
         elif source_str.endswith(".csv"):
             source_data = TaskUtil.load_csv_file(

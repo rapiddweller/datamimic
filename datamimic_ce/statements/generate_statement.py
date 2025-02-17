@@ -39,6 +39,7 @@ class GenerateStatement(CompositeStatement):
         self._converter = model.converter
         self._bucket = model.bucket
         self._num_process = model.num_process
+        self._script = model.script
 
     @property
     def name(self) -> str:
@@ -140,6 +141,10 @@ class GenerateStatement(CompositeStatement):
     @property
     def num_process(self) -> int | None:
         return self._num_process
+
+    @property
+    def script(self) -> str | None:
+        return self._script
 
     def contain_mongodb_upsert(self, setup_context: SetupContext) -> bool:
         """
