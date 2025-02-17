@@ -447,14 +447,23 @@ class MedicalAppointmentGenerator(Generator):
 
 
 class SymptomGenerator(Generator):
-    """Generate a list of common symptoms for a given disease category."""
+    """Generate a list of common symptoms for a given disease category.
+
+    Args:
+        disease_category (str): Optional disease category (
+            'respiratory', 'cardiac', 'neurological',
+            'gastrointestinal', or 'general'
+        )
+        number_of_symptoms (int): Number of symptoms to generate
+    """
 
     def __init__(self, disease_category: str | None = None, number_of_symptoms: int = 3):
         """
         Initialize SymptomGenerator.
 
         Args:
-            disease_category (str): Optional disease category ('respiratory', 'cardiac', 'neurological', 'gastrointestinal', or 'general')
+            disease_category (str): Optional disease category ('respiratory', 'cardiac', 'neurological',
+            'gastrointestinal', or 'general')
             number_of_symptoms (int): Number of symptoms to generate
         """
         self._disease_category = disease_category
@@ -481,7 +490,11 @@ class SymptomGenerator(Generator):
 
 
 class PatientHistoryGenerator(Generator):
-    """Generate a synthetic patient history record including diagnosis, allergies, medications, lab results, immunizations, and upcoming appointments."""
+    """Generate a synthetic patient history record.
+
+    Includes diagnosis, allergies, medications, lab results,
+    immunizations, and upcoming appointments.
+    """
 
     def __init__(
         self, include_allergies: bool = True, include_immunizations: bool = True, include_appointments: bool = True

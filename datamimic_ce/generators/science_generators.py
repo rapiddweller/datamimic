@@ -108,8 +108,8 @@ class ScientificUnitGenerator(Generator):
         if unit_type:
             try:
                 self._unit_type = UnitType[unit_type.upper()]
-            except KeyError:
-                raise ValueError(f"Invalid unit type: {unit_type}")
+            except KeyError as err:
+                raise ValueError(f"Invalid unit type: {unit_type}") from err
         else:
             self._unit_type = UnitType.LENGTH  # Set a default value instead of None
 
