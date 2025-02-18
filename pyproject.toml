@@ -22,7 +22,7 @@ dependencies = [
     "dill==0.3.9", # import dill - Used for pickling
     "faker==33.3.1", # from faker import Faker - Used for generating fake data
     "mysql-connector-python==8.3.0", # import mysql.connector - Used for MySQL database connections
-    "numpy==2.2.2", # import numpy as np - Used for numerical operations
+    "numpy>=1.26.3,<2", # import numpy as np - Used for numerical operations
     "oracledb==2.5.1", # import oracledb - Used for Oracle database connections
     "psycopg2-binary==2.9.10", # import psycopg2 - Used for PostgreSQL database connections
     "pydantic==2.10.5", # from pydantic import BaseModel - Used for data validation
