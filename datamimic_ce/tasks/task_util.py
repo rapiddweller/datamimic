@@ -295,7 +295,6 @@ class TaskUtil:
         build_from_source = True
         root_context = context.root
         source_data: dict | list = []
-        source_str = stmt.source
 
         # get prefix and suffix
         setup_ctx = context.root if not isinstance(context, SetupContext) else context
