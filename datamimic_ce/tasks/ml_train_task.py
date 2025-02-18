@@ -20,6 +20,7 @@ class MLTrainTask(Task):
         self._statement = statement
         self._ml_dir = None
         self._ml_export_name = statement.persistLocation or statement.name
+        self._mode = statement.mode
 
     @property
     def statement(self) -> MLTrainStatement:
@@ -36,44 +37,44 @@ class MLTrainTask(Task):
             raise ValueError(f"No data found for reference {self._statement.name}")
 
         df_data = pd.DataFrame(dataset)
-        max_training_time = self.get_float_train_time()
+        tabular_model_configuration = self._get_tabular_model_configuration()
         config = {
             "name": self._statement.name,
-            "tables": [
-                {"name": self._statement.table,
-                 "data": df_data,
-                 "tabular_model_configuration": {
-                     "value_protection": False,
-                     "max_training_time": max_training_time
-                    }
-                 }
-            ],
+            "tables": [{
+                "name": self._statement.table,
+                "data": df_data,
+                "tabular_model_configuration": tabular_model_configuration
+            }],
         }
 
-        # configure a generator and save to file
+        # train model and save file in generators folder
         g = mostly.train(config=config, start=True, wait=True)
-        # TODO: write trained model to some where
         export_dir = ctx.descriptor_dir / f"generators"
         if not os.path.exists(export_dir):
             os.makedirs(export_dir)
         self._ml_dir = g.export_to_file(f"{export_dir}/{self._ml_export_name}.zip")
 
-    def get_float_train_time(self):
+    def _get_tabular_model_configuration(self) -> dict:
+        tabular_model_configuration = {"value_protection": False}
+        max_training_time = None
         if self._statement.maxTrainingTime:
             try:
                 float_value = float(self._statement.maxTrainingTime)
-                return float_value
+                max_training_time = float_value
             except ValueError or TypeError:
-                return None
-        else:
-            return None
+                max_training_time = None
+
+        if max_training_time:
+            tabular_model_configuration["max_training_time"] = max_training_time
+        return tabular_model_configuration
 
     def __del__(self):
         """
         Deletes trained model when object is garbage collected.
         """
-        try:
-            if os.path.exists(self._ml_dir):
-                os.remove(self._ml_dir)
-        except Exception as e:
-            print(f"Error deleting file {self._ml_dir}")
+        if self._mode != "persist":
+            try:
+                if os.path.exists(self._ml_dir):
+                    os.remove(self._ml_dir)
+            except Exception as e:
+                print(f"Error deleting file {self._ml_dir}")

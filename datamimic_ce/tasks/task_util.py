@@ -295,11 +295,12 @@ class TaskUtil:
             load_start_idx: int,
             load_end_idx: int,
             load_pagination: DataSourcePagination | None,
-    ) -> tuple[list[dict], bool]:
+    ) -> tuple[list[dict], bool, str]:
         """
         Generate task to load data from source
         """
         build_from_source = True
+        source_type = None
         root_context = context.root
         source_data: dict | list = []
 
@@ -312,6 +313,7 @@ class TaskUtil:
             build_from_source = False
         # Load data from CSV
         elif source_str.endswith(".csv"):
+            source_type = "csv"
             source_data = TaskUtil.load_csv_file(
                 ctx=context,
                 file_path=root_context.descriptor_dir / source_str,
@@ -325,6 +327,7 @@ class TaskUtil:
             )
         # Load data from JSON
         elif source_str.endswith(".json"):
+            source_type = "json"
             source_data = TaskUtil.load_json_file(
                 root_context.task_id,
                 root_context.descriptor_dir / source_str,
@@ -342,6 +345,7 @@ class TaskUtil:
                     logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
         # Load data from XML
         elif source_str.endswith(".xml"):
+            source_type = "xml"
             source_data = TaskUtil.load_xml_file(
                 root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
             )
@@ -352,6 +356,7 @@ class TaskUtil:
                 )
         # Load data from in-memory memstore
         elif root_context.memstore_manager.contain(source_str):
+            source_type = "memstore"
             source_data = root_context.memstore_manager.get_memstore(source_str).get_data_by_type(
                 stmt.type or stmt.name, load_pagination, stmt.cyclic
             )
@@ -360,6 +365,7 @@ class TaskUtil:
             client = root_context.clients.get(source_str)
             # Load data from MongoDB
             if isinstance(client, MongoDBClient):
+                source_type = "mongodb"
                 if stmt.selector:
                     selector = TaskUtil.evaluate_selector_script(context, stmt)
                     source_data = client.get_by_page_with_query(query=selector, pagination=load_pagination)
@@ -378,6 +384,7 @@ class TaskUtil:
                     source_data = [{}]
             # Load data from RDBMS
             elif isinstance(client, RdbmsClient):
+                source_type = "rdbms"
                 if stmt.selector:
                     selector = TaskUtil.evaluate_selector_script(context, stmt)
                     source_data = client.get_by_page_with_query(original_query=selector, pagination=load_pagination)
@@ -389,6 +396,7 @@ class TaskUtil:
             else:
                 raise ValueError(f"Cannot load data from client: {type(client).__name__}")
         elif TaskUtil.is_ml_model(context.descriptor_dir / f"generators/{source_str}.zip"):
+            source_type = "ml_model"
             # Load model of trained Mostly AI, and generate data
             export_dir = context.descriptor_dir / f"generators/{source_str}.zip"
             mostly = MostlyAI(local=True)
@@ -399,7 +407,7 @@ class TaskUtil:
             raise ValueError(f"cannot find data source {source_str} for iterate task")
 
         return_source_data = source_data if isinstance(source_data, list) else [source_data]
-        return return_source_data, build_from_source
+        return return_source_data, build_from_source, source_type
 
     @staticmethod
     def export_product_by_page(

@@ -19,3 +19,6 @@ class TestML:
         )
         test_engine.test_with_timer()
         result = test_engine.capture_result()
+
+        new_customer = result["NEW_CUSTOMER"]
+        assert len(new_customer) == 100

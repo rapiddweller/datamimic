@@ -40,6 +40,7 @@ dependencies = [
     "exrex>=0.12.0",                      # import exrex - Used for generating random strings
     "ray>=2.40.0",                        # import ray - Used for parallel processing
     "lxml>=5.3.0",                        # import lxml - Used for XML Tree
+    "mostlyai[local]>=4.1.3",             # import mostlyai local - Used for ml-train
 ]
 
 [tool.setuptools_scm]
@@ -75,6 +76,7 @@ dev-dependencies = [
     "types-psutil>=6.0.0",
     "types-xmltodict>=0.13.0",
     "types-lxml>=5.3.0",
+    "mostlyai[local]>=4.1.3",
 ]
 
 [tool.mypy]

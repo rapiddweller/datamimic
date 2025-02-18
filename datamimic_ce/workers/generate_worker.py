@@ -147,7 +147,7 @@ class GenerateWorker:
         )
         separator = stmt.separator or root_context.default_separator
 
-        source_data, build_from_source = (
+        source_data, build_from_source, source_type = (
             context.root.class_factory_util.get_task_util_cls().gen_task_load_data_from_source(
                 context,
                 stmt,
@@ -161,8 +161,8 @@ class GenerateWorker:
             )
         )
 
-        # Shuffle source data if distribution is random
-        if is_random_distribution:
+        # Shuffle source data if distribution is random and source not ml trained model
+        if is_random_distribution and source_type != "ml_model":
             seed = root_context.get_distribution_seed()
             # Use original pagination for shuffling
             source_data = DataSourceUtil.get_shuffled_data_with_cyclic(source_data, pagination, stmt.cyclic, seed)
