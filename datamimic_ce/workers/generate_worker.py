@@ -84,7 +84,7 @@ class GenerateWorker:
             ):
                 has_memstore_exporter = True
                 break
-            current_gen_stmt = current_gen_stmt.parent_stmt
+            current_gen_stmt = current_gen_stmt.parent_stmt  # type: ignore[assignment]
 
         return_product_result = isinstance(context, GenIterContext) or context.root.test_mode or has_memstore_exporter
 
