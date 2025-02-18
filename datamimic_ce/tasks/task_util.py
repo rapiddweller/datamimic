@@ -475,7 +475,7 @@ class TaskUtil:
                 # import traceback
                 # traceback.print_exc()
                 logger.error(f"Error in exporter {type(exporter).__name__}: {str(e)}")
-                raise ValueError(f"Error in exporter {type(exporter).__name__}") from e
+                raise ValueError(f"Error in exporter {type(exporter).__name__}: {e}") from e
 
     @staticmethod
     def evaluate_selector_script(context: Context, stmt: GenerateStatement):

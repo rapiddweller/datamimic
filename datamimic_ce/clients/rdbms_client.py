@@ -313,11 +313,11 @@ class RdbmsClient(DatabaseClient):
         return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
 
     def get_random_rows_by_column(
-        self,
-        table_name: str,
-        column_name: str,
-        pagination: DataSourcePagination | None,
-        unique: bool,
+            self,
+            table_name: str,
+            column_name: str,
+            pagination: DataSourcePagination | None,
+            unique: bool,
     ) -> list:
         """
         Get column data for reference
@@ -368,6 +368,14 @@ class RdbmsClient(DatabaseClient):
 
         if not data_list:
             return
+
+        for idx, data in enumerate(data_list):
+            for key, value in data.items():
+                if key != "my_id" and value is None:
+                    # pass
+                    data[key] = sqlalchemy.null()
+
+            data_list[idx] = data
 
         with engine.begin() as connection:
             try:
