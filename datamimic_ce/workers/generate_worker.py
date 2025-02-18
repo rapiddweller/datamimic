@@ -70,6 +70,24 @@ class GenerateWorker:
             "page_count": 0,  # Track number of pages processed
         }
 
+        # Check if product result should be returned for test mode or memstore exporter
+        has_memstore_exporter = False
+        current_gen_stmt = stmt
+        while isinstance(current_gen_stmt, GenerateStatement):
+            if any(
+                    [
+                        ("." not in exporter_str)
+                        and ("(" not in exporter_str)
+                        and context.root.memstore_manager.contain(exporter_str)
+                        for exporter_str in stmt.targets
+                    ]
+            ):
+                has_memstore_exporter = True
+                break
+            current_gen_stmt = current_gen_stmt.parent_stmt
+
+        return_product_result = isinstance(context, GenIterContext) or context.root.test_mode or has_memstore_exporter
+
         # Generate and consume product by page
         for page_index, page_tuple in enumerate(index_chunk):
             page_info = f"{page_index + 1}/{len(index_chunk)}"
@@ -91,8 +109,9 @@ class GenerateWorker:
 
             # TODO: improve by select only necessary keys
             # Collect result for later capturing
-            for key in result_dict:
-                result[key] = result.get(key, []) + result_dict.get(key, [])
+            if return_product_result:
+                for key in result_dict:
+                    result[key] = result.get(key, []) + result_dict.get(key, [])
 
         return result
 
