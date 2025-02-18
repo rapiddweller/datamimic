@@ -170,8 +170,10 @@ class GenerateWorker:
             context.root.class_factory_util.get_task_util_cls().gen_task_load_data_from_source_or_script(
                 context,
                 stmt,
+                stmt.source,
                 separator,
                 source_scripted,
+                processed_data_count,
                 load_start_idx,
                 load_end_idx,
                 load_pagination,

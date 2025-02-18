@@ -281,8 +281,10 @@ class TaskUtil:
     def gen_task_load_data_from_source_or_script(
             context: SetupContext,
             stmt: GenerateStatement,
+            source_str: str,  # DO NOT remove this parameter, used on EE as well
             separator: str,
             source_scripted: bool,
+            processed_data_count: int,  # DO NOT remove this parameter, used on EE as well
             load_start_idx: int,
             load_end_idx: int,
             load_pagination: DataSourcePagination | None,
@@ -293,7 +295,6 @@ class TaskUtil:
         build_from_source = True
         root_context = context.root
         source_data: dict | list = []
-        source_str = stmt.source
 
         # get prefix and suffix
         setup_ctx = context.root if not isinstance(context, SetupContext) else context
@@ -475,7 +476,7 @@ class TaskUtil:
                 # import traceback
                 # traceback.print_exc()
                 logger.error(f"Error in exporter {type(exporter).__name__}: {str(e)}")
-                raise ValueError(f"Error in exporter {type(exporter).__name__}") from e
+                raise ValueError(f"Error in exporter {type(exporter).__name__}: {e}") from e
 
     @staticmethod
     def evaluate_selector_script(context: Context, stmt: GenerateStatement):
