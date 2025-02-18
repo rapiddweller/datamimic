@@ -1,8 +1,8 @@
-<setup>
-    <database id="source" system="source" environment="environment"/>
-    <execute uri="script/source.scr.sql" target="source"/>
+<setup multiprocessing="1" numProcess="2">
+    <database id="sourcedb" system="source" environment="environment"/>
+    <execute uri="script/source.scr.sql" target="sourcedb"/>
 
-    <generate name="CUSTOMER" count="10" target="source">
+    <generate name="CUSTOMER" count="100" target="sourcedb">
         <key name="id" generator="IncrementGenerator"/>
         <key name="tc_creation_src" constant="BEN"/>
         <key name="tc_creation" generator="DateTimeGenerator"/>
@@ -14,14 +14,15 @@
 
     <ml-train
       name="ml_train_CUSTOMER"
-      source="source"
+      source="sourcedb"
       table="CUSTOMER"
+      persistLocation="USERGen"
       maxTrainingTime="60"/>
 
     <!-- Generate synthetic CUSTOMER records using the ML generator -->
-<!--    <generate name="CUSTOMER" count="100" target="db" generator="ml_train_CUSTOMER">-->
+    <generate name="CUSTOMER" count="100" source="USERGen" target="ConsoleExporter" >
         <!-- Additional keys override or post-process the ML-generated columns -->
-<!--        <key name="tc_creation" generator="DateTimeGenerator"/>-->
+        <key name="tc_creation" generator="DateTimeGenerator"/>
 <!--        <key name="email" script="'info@' + company.short_name.replace(' ', '-') + str(tc_creation) + '.de'" converter="LowerCase"/>-->
-<!--    </generate>-->
+    </generate>
 </setup>

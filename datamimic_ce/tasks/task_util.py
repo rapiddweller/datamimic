@@ -12,6 +12,9 @@ from typing import Any
 
 import xmltodict
 
+from mostlyai.sdk import MostlyAI
+from mostlyai.sdk.domain import Generator
+
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.contexts.context import Context
@@ -385,6 +388,13 @@ class TaskUtil:
                     )
             else:
                 raise ValueError(f"Cannot load data from client: {type(client).__name__}")
+        elif TaskUtil.is_ml_model(context.descriptor_dir / f"generators/{source_str}.zip"):
+            # Load model of trained Mostly AI, and generate data
+            export_dir = context.descriptor_dir / f"generators/{source_str}.zip"
+            mostly = MostlyAI(local=True)
+            g = mostly.generators.import_from_file(export_dir)
+            sd_data = mostly.generate(g, size=processed_data_count)
+            source_data = sd_data.data().to_dict("records")
         else:
             raise ValueError(f"cannot find data source {source_str} for iterate task")
 
@@ -619,3 +629,14 @@ class TaskUtil:
                 else:
                     res[key] = value
         return res
+
+    @staticmethod
+    def is_ml_model(source_str):
+        """
+        check if ml model is exist
+        """
+        ml_file = Path(source_str)
+        if ml_file.is_file():
+            return True
+        else:
+            return False

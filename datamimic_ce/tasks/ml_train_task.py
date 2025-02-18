@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 import os
+import shutil
 
 import pandas as pd
 from datamimic_ce.contexts.setup_context import SetupContext
@@ -18,6 +19,7 @@ class MLTrainTask(Task):
     def __init__(self, statement: MLTrainStatement):
         self._statement = statement
         self._ml_dir = None
+        self._ml_export_name = statement.persistLocation or statement.name
 
     @property
     def statement(self) -> MLTrainStatement:
@@ -25,7 +27,6 @@ class MLTrainTask(Task):
 
     def execute(self, ctx: SetupContext):
         mostly = MostlyAI(local=True)
-        # TODO: get data here
         # Retrieving values from an RDBMS data source
         client = ctx.root.clients.get(self.statement.source)
         if not isinstance(client, RdbmsClient):
@@ -55,7 +56,7 @@ class MLTrainTask(Task):
         export_dir = ctx.descriptor_dir / f"generators"
         if not os.path.exists(export_dir):
             os.makedirs(export_dir)
-        self._ml_dir = g.export_to_file(export_dir)
+        self._ml_dir = g.export_to_file(f"{export_dir}/{self._ml_export_name}.zip")
 
     def get_float_train_time(self):
         if self._statement.maxTrainingTime:
