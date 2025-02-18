@@ -1,0 +1,19 @@
+<setup>
+    <echo>Running Text and Visual Generators</echo>
+
+    <!-- Text Content -->
+    <generate name="text_content" count="10">
+        <key name="default_paragraph" generator="ParagraphGenerator()" />
+        <key name="fixed_length" generator="ParagraphGenerator(length=100)" />
+        <key name="word_count" generator="ParagraphGenerator(word_count=20)" />
+        <key name="localized" generator="ParagraphGenerator(locale='de')" />
+    </generate>
+
+    <!-- Colors -->
+    <generate name="colors" count="10">
+        <key name="hex_color" generator="ColorGenerator(format_type='hex')" />
+        <key name="rgb_color" generator="ColorGenerator(format_type='rgb')" />
+        <key name="color_name" generator="ColorGenerator(format_type='name')" />
+    </generate>
+
+</setup> 

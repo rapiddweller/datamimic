@@ -76,9 +76,9 @@ class ExporterUtil:
 
     @staticmethod
     def create_exporter_list(
-            setup_context: SetupContext,
-            stmt: GenerateStatement,
-            targets: list[str],
+        setup_context: SetupContext,
+        stmt: GenerateStatement,
+        targets: list[str],
     ) -> tuple[list[tuple[Exporter, str]], list[Exporter]]:
         """
         Create list of consumers with and without operation from consumer string
@@ -211,10 +211,10 @@ class ExporterUtil:
 
     @staticmethod
     def get_exporter_by_name(
-            setup_context: SetupContext,
-            name: str,
-            gen_stmt: GenerateStatement,
-            exporter_params_dict: dict,
+        setup_context: SetupContext,
+        name: str,
+        gen_stmt: GenerateStatement,
+        exporter_params_dict: dict,
     ):
         """
         Consumer factory: Create consumer based on name

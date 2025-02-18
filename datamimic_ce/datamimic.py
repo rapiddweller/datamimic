@@ -31,13 +31,13 @@ ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashbo
 
 class DataMimic:
     def __init__(
-            self,
-            descriptor_path: Path,
-            task_id: str | None = None,
-            platform_props: dict[str, str] | None = None,
-            platform_configs: dict | None = None,
-            test_mode: bool = False,
-            args: argparse.Namespace | None = None,
+        self,
+        descriptor_path: Path,
+        task_id: str | None = None,
+        platform_props: dict[str, str] | None = None,
+        platform_configs: dict | None = None,
+        test_mode: bool = False,
+        args: argparse.Namespace | None = None,
     ):
         """
         Initialize DataMimic with descriptor_path.

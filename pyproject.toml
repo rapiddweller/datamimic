@@ -19,28 +19,30 @@ keywords = [
 urls = { Homepage = "https://datamimic.io" }
 requires-python = ">=3.10"
 dependencies = [
-    "dill==0.3.9",                        # import dill - Used for pickling
-    "faker==33.3.1",                      # from faker import Faker - Used for generating fake data
-    "numpy==2.2.2",                       # import numpy as np - Used for numerical operations
-    "oracledb==2.5.1",                    # import oracledb - Used for Oracle database connections
-    "psycopg2-binary==2.9.10",            # import psycopg2 - Used for PostgreSQL database connections
-    "pydantic==2.10.5",                   # from pydantic import BaseModel - Used for data validation
-    "pydantic-settings==2.7.1",           # from pydantic_settings import BaseSettings - Used for settings management
-    "pydantic[email]",                    # from pydantic import EmailStr - Used for email validation
-    "pymongo==4.10.1",                    # import pymongo - Used for MongoDB connections
-    "pyodbc==5.2.0",                      # import pyodbc - Used for ODBC connections
-    "python-dotenv==1.0.1",               # from dotenv import load_dotenv
-    "requests==2.32.3",                   # import requests - Used for making HTTP requests
-    "sqlalchemy==2.0.37",                 # from sqlalchemy import create_engine
-    "xmltodict==0.14.2",                  # import xmltodict - Used for parsing XML data to Python dictionaries
-    "pandas==2.2.3",                      # import pandas as pd - Used for data manipulation
-    "toml>=0.10.2",                       # import toml
-    "typer>=0.12.5",                      # import typer
-    "psutil>=6.1.0",                      # import psutil
-    "exrex>=0.12.0",                      # import exrex - Used for generating random strings
-    "ray>=2.40.0",                        # import ray - Used for parallel processing
-    "lxml>=5.3.0",                        # import lxml - Used for XML Tree
-    "mostlyai[local]>=4.1.3",             # import mostlyai local - Used for ml-train
+    "dill==0.3.9", # import dill - Used for pickling
+    "faker==33.3.1", # from faker import Faker - Used for generating fake data
+    "mysql-connector-python==8.3.0", # import mysql.connector - Used for MySQL database connections
+    "numpy==2.2.2", # import numpy as np - Used for numerical operations
+    "oracledb==2.5.1", # import oracledb - Used for Oracle database connections
+    "psycopg2-binary==2.9.10", # import psycopg2 - Used for PostgreSQL database connections
+    "pydantic==2.10.5", # from pydantic import BaseModel - Used for data validation
+    "pydantic-settings==2.7.1", # from pydantic_settings import BaseSettings - Used for settings management
+    "pydantic[email]", # from pydantic import EmailStr - Used for email validation
+    "pymongo==4.10.1", # import pymongo - Used for MongoDB connections
+    "pyodbc==5.2.0", # import pyodbc - Used for ODBC connections
+    "python-dotenv==1.0.1", # from dotenv import load_dotenv
+    "requests==2.32.3", # import requests - Used for making HTTP requests
+    "sqlalchemy==2.0.37", # from sqlalchemy import create_engine
+    "xmltodict==0.14.2", # import xmltodict - Used for parsing XML data to Python dictionaries
+    "pandas==2.2.3", # import pandas as pd - Used for data manipulation
+    "toml>=0.10.2", # import toml
+    "typer>=0.12.5", # import typer
+    "psutil>=6.1.0", # import psutil
+    "exrex>=0.12.0", # import exrex - Used for generating random strings
+    "ray>=2.40.0", # import ray - Used for parallel processing
+    "lxml>=5.3.0", # import lxml - Used for XML Tree
+    "mimesis>=18.0.0", # import mimesis - Used for generating fake data
+    "mostlyai[local]>=4.1.3", # import mostlyai local - Used for ml-train
 ]
 
 [tool.setuptools_scm]
@@ -105,8 +107,6 @@ select = [
 
 [tool.pytest.ini_options]
 markers = ["run: Custom marker for running specific tests"]  # Custom markers for pytest
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
 
 [tool.pytest]
 parallel = true  # Enable parallel test execution

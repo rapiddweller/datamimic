@@ -146,9 +146,7 @@ class KeyVariableTask(Task):
                         else ctx.evaluate_python_expression(self._statement.default_value)
                     )
                 else:
-                    raise ValueError(
-                        f"Failed when execute script of element " f"'{self._statement.name}': {str(e)}"
-                    ) from e
+                    raise ValueError(f"Failed when execute script of element '{self._statement.name}': {str(e)}") from e
             # Throw error if <key> evaluated script get not simple data type
             if (
                 self._element_tag == "key"
@@ -158,7 +156,7 @@ class KeyVariableTask(Task):
             ):
                 raise ValueError(
                     f"<key> '{self._statement.name}' expects simple data type, "
-                    f"but get invalid value '{value}' with type '{type(value).__name__ }'"
+                    f"but get invalid value '{value}' with type '{type(value).__name__}'"
                 )
         elif self._mode == self._CONSTANT_MODE:
             value = self._statement.constant

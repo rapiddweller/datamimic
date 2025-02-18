@@ -45,14 +45,14 @@ class ModelUtil:
     @staticmethod
     def check_exist_count(values: dict) -> dict:
         """
-        Check if 'count' is defined in case 'source' is not defined
+        Check if 'count' is defined in case 'source' and 'script' are not defined
         :param values:
         :return:
         """
-        if ATTR_SOURCE not in values and ATTR_COUNT not in values:
+        if all(attr not in values for attr in [ATTR_SOURCE, ATTR_SCRIPT, ATTR_COUNT]):
             raise ValueError(
                 f"Missing attribute '{ATTR_COUNT}' ('{ATTR_COUNT}' might be optional "
-                f"in case '{ATTR_SOURCE} is defined')"
+                f"in case '{ATTR_SOURCE} and {ATTR_SCRIPT} are not defined')"
             )
         return values
 

@@ -39,12 +39,12 @@ class UnifiedBufferedExporter(Exporter, ABC):
     RETRY_DELAY = 0.1  # seconds
 
     def __init__(
-            self,
-            exporter_type: str,
-            setup_context: SetupContext,
-            product_name: str,
-            chunk_size: int | None,
-            encoding: str | None,
+        self,
+        exporter_type: str,
+        setup_context: SetupContext,
+        product_name: str,
+        chunk_size: int | None,
+        encoding: str | None,
     ):
         if chunk_size is not None and chunk_size <= 0:
             raise ValueError("Chunk size must be a positive integer or None for unlimited size.")
@@ -70,8 +70,8 @@ class UnifiedBufferedExporter(Exporter, ABC):
         Get the temporary buffer directory for the current worker.
         """
         buffer_temp_dir = (
-                self._descriptor_dir / f"temp_result_{self._task_id}_pid_{worker_id}_exporter_"
-                                       f"{self._exporter_type}_product_{self.product_name}"
+            self._descriptor_dir / f"temp_result_{self._task_id}_pid_{worker_id}_exporter_"
+            f"{self._exporter_type}_product_{self.product_name}"
         )
         # Create directory if it doesn't exist
         pathlib.Path(buffer_temp_dir).mkdir(parents=True, exist_ok=True)
@@ -157,13 +157,14 @@ class UnifiedBufferedExporter(Exporter, ABC):
         global_counter = state_storage.global_counter
         current_counter = state_storage.current_counter
         logger.debug(
-            f"Storing {total_data} records for PID {exporter_state_manager.worker_id}, initial count {current_counter}")
+            f"Storing {total_data} records for PID {exporter_state_manager.worker_id}, initial count {current_counter}"
+        )
 
         # Write data in batches
         while idx < total_data:
             space_left = self._chunk_size - current_counter if self._chunk_size else total_data - idx
             current_batch_size = min(batch_size, space_left)
-            batch = data[idx: idx + current_batch_size]
+            batch = data[idx : idx + current_batch_size]
 
             self._write_batch_with_retry(batch, exporter_state_manager.worker_id, state_storage.chunk_index)
 

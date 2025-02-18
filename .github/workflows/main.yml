@@ -207,24 +207,6 @@ jobs:
     runs-on: ubuntu-22.04
     needs: install_dependencies
     container: python:3.11-slim-buster
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_USER: datamimic
-          POSTGRES_PASSWORD: datamimic
-          POSTGRES_DB: rd-datamimic
-        ports:
-          - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-      mongo:
-        image: mongo:4.4
-        env:
-          MONGO_INITDB_ROOT_USERNAME: datamimic
-          MONGO_INITDB_ROOT_PASSWORD: datamimic
-        ports:
-          - 27017:27017
-        options: --health-cmd "mongo --eval 'db.stats().ok'" --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Setup git
         run: |
@@ -255,24 +237,6 @@ jobs:
   integration_test:
     runs-on: ubuntu-22.04
     needs: install_dependencies
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_USER: datamimic
-          POSTGRES_PASSWORD: datamimic
-          POSTGRES_DB: rd-datamimic
-        ports:
-          - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-      mongo:
-        image: mongo:4.4
-        env:
-          MONGO_INITDB_ROOT_USERNAME: datamimic
-          MONGO_INITDB_ROOT_PASSWORD: datamimic
-        ports:
-          - 27017:27017
-        options: --health-cmd "mongo --eval 'db.stats().ok'" --health-interval 10s --health-timeout 5s --health-retries 5
     container: python:3.11-slim-buster
     steps:
       - name: Setup git
@@ -300,9 +264,93 @@ jobs:
           name: coverage-integration
           path: coverage.xml
 
+  external_service_test:
+    runs-on: ubuntu-22.04
+    needs: install_dependencies
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: datamimic
+          POSTGRES_PASSWORD: datamimic
+          POSTGRES_DB: rd-datamimic
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      mongo:
+        image: mongo:4.4
+        env:
+          MONGO_INITDB_ROOT_USERNAME: datamimic
+          MONGO_INITDB_ROOT_PASSWORD: datamimic
+        ports:
+          - 27017:27017
+        options: --health-cmd "mongo --eval 'db.stats().ok'" --health-interval 10s --health-timeout 5s --health-retries 5
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_USER: rduser
+          MYSQL_PASSWORD: rdpassword
+          MYSQL_DATABASE: rddb
+        ports:
+          - 3306:3306
+        options: --health-cmd "mysqladmin ping -h localhost" --health-interval 10s --health-timeout 5s --health-retries 5
+      mssql:
+        image: mcr.microsoft.com/mssql/server
+        env:
+          DB_HOST: "mssql"
+          DB_PORT: "1433"
+          DB_CONNECTION: "mssql"
+          ACCEPT_EULA: Y,
+          SA_PASSWORD: P@ssword123
+#        ports:
+#          - 1433:1433
+#        options: --health-cmd "sqlcmd -S localhost -U sa -P P@ssword123 -Q 'SELECT 1'" --health-interval 10s --health-timeout 5s --health-retries 5
+      oracle:
+        image: oracleinanutshell/oracle-xe-11g
+        env:
+          ORACLE_ALLOW_REMOTE: 'true'
+          ORACLE_ENABLE_XDB: 'true'
+          ORACLE_PASSWORD: rootpassword
+          ORACLE_DATABASE: rddb
+          APP_USER: rdadm
+          APP_USER_PASSWORD: rdpassword
+        ports:
+          - 1521:1521
+    container: python:3.11-slim-buster
+    steps:
+      - name: Setup git
+        run: |
+          apt-get update
+          apt-get install -y git curl 
+          git config --global --add safe.directory $(realpath .)
+          curl https://packages.microsoft.com/keys/microsoft.asc | tee /etc/apt/trusted.gpg.d/microsoft.asc
+          curl https://packages.microsoft.com/config/debian/10/prod.list | tee /etc/apt/sources.list.d/mssql-release.list
+          apt-get update
+          ACCEPT_EULA=Y apt-get install -y msodbcsql17
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - name: Load venv cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+      - name: Run external service tests with coverage
+        run: |
+          . .venv/bin/activate
+          uv run pytest tests_ce/external_service_tests/ --cov=. --cov-report=xml
+        shell: bash
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-external-service
+          path: coverage.xml
+
   sonarcloud_analysis:
     runs-on: ubuntu-22.04
-    needs: [ unit_test, functional_test, integration_test ]
+    needs: [ unit_test, functional_test, integration_test, external_service_test ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -317,9 +365,11 @@ jobs:
           mv coverage-reports/coverage-functional/coverage.xml coverage-reports/coverage-functional.xml
           mv coverage-reports/coverage-integration/coverage.xml coverage-reports/coverage-integration.xml
           mv coverage-reports/coverage-unit/coverage.xml coverage-reports/coverage-unit.xml
+          mv coverage-reports/coverage-external-service/coverage.xml coverage-reports/coverage-external-service.xml
           rm -rf coverage-reports/coverage-functional
           rm -rf coverage-reports/coverage-integration
           rm -rf coverage-reports/coverage-unit
+          rm -rf coverage-reports/coverage-external-service
           rm -rf coverage-reports/artifact
           rm -rf coverage-reports/setup
 
@@ -338,7 +388,7 @@ jobs:
     name: E2E Test on ${{ matrix.os }} ${{ matrix.arch }}
     if: github.ref == 'refs/heads/development' || startsWith(github.ref, 'refs/tags/')
     runs-on: ${{ matrix.os }}
-    needs: [ build, unit_test, functional_test, integration_test ]
+    needs: [ build, unit_test, functional_test, integration_test, external_service_test ]
     strategy:
       matrix:
         os: [ ubuntu-22.04, macos-latest, windows-latest ]
@@ -485,6 +535,7 @@ jobs:
           rm -rf dist/coverage-functional
           rm -rf dist/coverage-integration
           rm -rf dist/coverage-unit
+          rm -rf dist/coverage-external-service
 
       - name: List Contents of dist Directory
         run: ls -R dist
@@ -520,6 +571,7 @@ jobs:
           rm -rf dist/coverage-functional
           rm -rf dist/coverage-integration
           rm -rf dist/coverage-unit
+          rm -rf dist/coverage-external-service
 
       - name: List Contents of dist Directory
         run: ls -R dist

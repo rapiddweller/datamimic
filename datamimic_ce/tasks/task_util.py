@@ -285,13 +285,13 @@ class TaskUtil:
         )
 
     @staticmethod
-    def gen_task_load_data_from_source(
+    def gen_task_load_data_from_source_or_script(
             context: SetupContext,
             stmt: GenerateStatement,
-            source_str: str,
+            source_str: str,  # DO NOT remove this parameter, used on EE as well
             separator: str,
             source_scripted: bool,
-            processed_data_count: int,
+            processed_data_count: int,  # DO NOT remove this parameter, used on EE as well
             load_start_idx: int,
             load_end_idx: int,
             load_pagination: DataSourcePagination | None,
@@ -310,7 +310,11 @@ class TaskUtil:
         suffix = stmt.variable_suffix or setup_ctx.default_variable_suffix
 
         if source_str is None:
-            build_from_source = False
+            if stmt.script is None:
+                build_from_source = False
+            else:
+                # Evaluate script in source
+                source_data = context.evaluate_python_expression(stmt.script)
         # Load data from CSV
         elif source_str.endswith(".csv"):
             source_type = "csv"
@@ -456,14 +460,26 @@ class TaskUtil:
 
         task_util_cls = root_context.class_factory_util.get_task_util_cls()
 
-        task_util_cls.exporter_without_operation(root_context.task_id, json_product, xml_result, stmt,
-                                                 exporters["without_operation"],
-                                                 exporter_state_manager, exporters["page_count"] == 1)
+        task_util_cls.exporter_without_operation(
+            root_context.task_id,
+            json_product,
+            xml_result,
+            stmt,
+            exporters["without_operation"],
+            exporter_state_manager,
+            exporters["page_count"] == 1,
+        )
 
     @staticmethod
-    def exporter_without_operation(task_id: str, json_product: tuple, xml_result: dict,
-                                   stmt: GenerateStatement, exporters_without_operation: list,
-                                   exporter_state_manager: ExporterStateManager, first_page: bool):
+    def exporter_without_operation(
+            task_id: str,
+            json_product: tuple,
+            xml_result: dict,
+            stmt: GenerateStatement,
+            exporters_without_operation: list,
+            exporter_state_manager: ExporterStateManager,
+            first_page: bool,
+    ):
         # Run exporters without operations
         for exporter in exporters_without_operation:
             try:
@@ -482,7 +498,7 @@ class TaskUtil:
                 # import traceback
                 # traceback.print_exc()
                 logger.error(f"Error in exporter {type(exporter).__name__}: {str(e)}")
-                raise ValueError(f"Error in exporter {type(exporter).__name__}") from e
+                raise ValueError(f"Error in exporter {type(exporter).__name__}: {e}") from e
 
     @staticmethod
     def evaluate_selector_script(context: Context, stmt: GenerateStatement):
@@ -631,9 +647,7 @@ class TaskUtil:
                 if isinstance(value, dict):
                     res[key] = TaskUtil.convert_xml_dict_to_json_dict(value)
                 elif isinstance(value, list):
-                    res[key] = [
-                        TaskUtil.convert_xml_dict_to_json_dict(v) if isinstance(v, dict) else v for v in value
-                    ]
+                    res[key] = [TaskUtil.convert_xml_dict_to_json_dict(v) if isinstance(v, dict) else v for v in value]
                 else:
                     res[key] = value
         return res
