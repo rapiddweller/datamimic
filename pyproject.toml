@@ -19,7 +19,7 @@ keywords = [
 urls = { Homepage = "https://datamimic.io" }
 requires-python = ">=3.10"
 dependencies = [
-    "dill==0.3.9", # import dill - Used for pickling
+    "dill>=0.3.0,<0.3.9,", # import dill - Used for pickling
     "faker==33.3.1", # from faker import Faker - Used for generating fake data
     "mysql-connector-python==8.3.0", # import mysql.connector - Used for MySQL database connections
     "numpy>=1.26.3,<2", # import numpy as np - Used for numerical operations
