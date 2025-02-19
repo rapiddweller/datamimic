@@ -56,7 +56,7 @@ class MLTrainTask(Task):
         self._ml_dir = g.export_to_file(f"{export_dir}/{self._ml_export_name}.zip")
 
     def _get_tabular_model_configuration(self) -> dict:
-        tabular_model_configuration = {"value_protection": False}
+        tabular_model_configuration: dict[str, bool | float | str] = {"value_protection": False}
         max_training_time: float | None = None
         if self._statement.maxTrainingTime:
             try:
