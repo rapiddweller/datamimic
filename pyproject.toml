@@ -84,6 +84,10 @@ dev-dependencies = [
 [tool.mypy]
 python_version = "3.11"
 
+[[tool.mypy.overrides]]
+module = "mostlyai.*"
+ignore_missing_imports = true
+
 [tool.ruff]
 line-length = 120                  # Maximum line length
 target-version = "py311"          # Target Python version for linting

@@ -1,14 +1,11 @@
 import tempfile
 import unittest
 import uuid
-from unittest.mock import MagicMock
 from pathlib import Path
-from datamimic_ce.contexts.setup_context import SetupContext
+
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.txt_exporter import TXTExporter
-from unittest.mock import mock_open, patch
-
-from tests_ce.unit_tests.test_exporter.exporter_test_util import generate_mock_data, MockSetupContext
+from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContext, generate_mock_data
 
 
 class TestTXTExporter(unittest.TestCase):
@@ -76,7 +73,7 @@ class TestTXTExporter(unittest.TestCase):
 
         self.assertEqual(actual_write_calls, len(data))
         # Verify TXT content
-        for record, out in zip(data, out_data):
+        for record, out in zip(data, out_data, strict=False):
             expected_line = f"test_product: {record}"
             self.assertEqual(out, expected_line)
 
@@ -119,7 +116,7 @@ class TestTXTExporter(unittest.TestCase):
 
             self.assertEqual(actual_write_calls, len(data))
             # Verify TXT content
-            for record, out in zip(data, out_data):
+            for record, out in zip(data, out_data, strict=False):
                 expected_line = f"test_product: {record}"
                 self.assertEqual(out, expected_line)
 
@@ -239,7 +236,7 @@ class TestTXTExporter(unittest.TestCase):
 
         self.assertEqual(actual_write_calls, len(data))
         # Verify TXT content
-        for record, out in zip(data, out_data):
+        for record, out in zip(data, out_data, strict=False):
             expected_line = f"test_product: {record}"
             self.assertEqual(out, expected_line)
 
@@ -359,7 +356,7 @@ class TestTXTExporter(unittest.TestCase):
                     lines.pop()
                 self.assertEqual(len(lines), 5)
                 # Verify TXT content
-                for record, line in zip(data, lines):
+                for record, line in zip(data, lines, strict=False):
                     expected_line = f"test_product: {record}"
                     self.assertEqual(line, expected_line)
 

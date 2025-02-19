@@ -2,11 +2,11 @@ import unittest
 
 from datamimic_ce.generators.science_generators import (
     ChemicalFormulaGenerator,
+    MetricPrefix,
     NucleotideSequenceGenerator,
+    PhysicalConstantGenerator,
     ScientificUnitGenerator,
     UnitType,
-    MetricPrefix,
-    PhysicalConstantGenerator,
 )
 
 

@@ -29,12 +29,12 @@ from datamimic_ce.constants.element_constants import (
     EL_KEY,
     EL_LIST,
     EL_MEMSTORE,
+    EL_ML_TRAIN,
     EL_MONGODB,
     EL_NESTED_KEY,
     EL_REFERENCE,
     EL_SETUP,
     EL_VARIABLE,
-    EL_ML_TRAIN,
 )
 from datamimic_ce.logger import logger
 from datamimic_ce.parsers.array_parser import ArrayParser

@@ -23,12 +23,12 @@ class GenerateWorker:
 
     @staticmethod
     def generate_and_export_data_by_chunk(
-            context: SetupContext | GenIterContext,
-            stmt: GenerateStatement,
-            worker_id: int,
-            chunk_start: int,
-            chunk_end: int,
-            page_size: int,
+        context: SetupContext | GenIterContext,
+        stmt: GenerateStatement,
+        worker_id: int,
+        chunk_start: int,
+        chunk_end: int,
+        page_size: int,
     ) -> dict:
         """
         Generate and export data by page in a single process.
@@ -75,12 +75,12 @@ class GenerateWorker:
         current_gen_stmt = stmt
         while isinstance(current_gen_stmt, GenerateStatement):
             if any(
-                    [
-                        ("." not in exporter_str)
-                        and ("(" not in exporter_str)
-                        and context.root.memstore_manager.contain(exporter_str)
-                        for exporter_str in stmt.targets
-                    ]
+                [
+                    ("." not in exporter_str)
+                    and ("(" not in exporter_str)
+                    and context.root.memstore_manager.contain(exporter_str)
+                    for exporter_str in stmt.targets
+                ]
             ):
                 has_memstore_exporter = True
                 break
@@ -117,8 +117,7 @@ class GenerateWorker:
 
     @staticmethod
     def _generate_product_by_page_in_single_process(
-            context: SetupContext | GenIterContext, stmt: GenerateStatement, page_start: int, page_end: int,
-            worker_id: int
+        context: SetupContext | GenIterContext, stmt: GenerateStatement, page_start: int, page_end: int, worker_id: int
     ) -> dict[str, list]:
         """
         (IMPORTANT: Only to be used as Ray multiprocessing function)

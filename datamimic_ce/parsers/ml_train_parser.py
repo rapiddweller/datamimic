@@ -6,11 +6,11 @@
 
 from xml.etree.ElementTree import Element
 
+from datamimic_ce.constants.element_constants import EL_ML_TRAIN
 from datamimic_ce.model.ml_train_model import MLTrainModel
 from datamimic_ce.parsers.statement_parser import StatementParser
 from datamimic_ce.statements.ml_train_statement import MLTrainStatement
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
-from datamimic_ce.constants.element_constants import EL_ML_TRAIN
 
 
 class MLTrainParser(StatementParser):

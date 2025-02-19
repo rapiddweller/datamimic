@@ -19,7 +19,7 @@ class MLTrainStatement(Statement):
         self._maxTrainingTime = model.maxTrainingTime
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         return self._name
 
     @property
@@ -31,13 +31,13 @@ class MLTrainStatement(Statement):
         return self._table
 
     @property
-    def mode(self) -> str:
+    def mode(self) -> str | None:
         return self._mode
 
     @property
-    def persistLocation(self) -> str:
+    def persistLocation(self) -> str | None:
         return self._persistLocation
 
     @property
-    def maxTrainingTime(self) -> str:
+    def maxTrainingTime(self) -> str | None:
         return self._maxTrainingTime

@@ -214,7 +214,7 @@ class DataSourceUtil:
 
     @staticmethod
     def get_cyclic_data_iterator(
-            data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None = False
+        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None = False
     ) -> Iterator | None:
         """
         Get cyclic iterator from iterable data source
@@ -234,7 +234,7 @@ class DataSourceUtil:
 
     @staticmethod
     def get_shuffled_data_with_cyclic(
-            data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None, seed: int
+        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None, seed: int
     ) -> list:
         """
         Get shuffled data from iterable data source
@@ -278,4 +278,4 @@ class DataSourceUtil:
             current_seed += 1
 
         start_idx_cap = start_idx % source_len
-        return res[start_idx_cap: start_idx_cap + end_idx - start_idx]
+        return res[start_idx_cap : start_idx_cap + end_idx - start_idx]

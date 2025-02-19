@@ -6,7 +6,7 @@ from pathlib import Path
 
 from datamimic_ce.exporters.csv_exporter import CSVExporter
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
-from tests_ce.unit_tests.test_exporter.exporter_test_util import generate_mock_data, MockSetupContext
+from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContext, generate_mock_data
 
 
 class TestCSVExporter(unittest.TestCase):

@@ -1,7 +1,5 @@
 import json
 import math
-import multiprocessing
-import os
 import tempfile
 import unittest
 import uuid
@@ -9,7 +7,7 @@ from pathlib import Path
 
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.json_exporter import JsonExporter
-from tests_ce.unit_tests.test_exporter.exporter_test_util import generate_mock_data, MockSetupContext
+from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContext, generate_mock_data
 
 
 class TestJsonExporter(unittest.TestCase):
@@ -277,7 +275,7 @@ class TestJsonExporter(unittest.TestCase):
             self.exporter.consume(product, stmt_full_name, exporter_state_manager)
             self.exporter.finalize_chunks(worker_id)
             assert True
-        except Exception as e:
+        except Exception:
             assert False
 
     def test_unlimited_chunk_size(self):
