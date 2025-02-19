@@ -3,8 +3,9 @@
     <execute uri="script/backup.sql" target="postgres"/>
     <generate name="none_as_null" target="ConsoleExporter, postgres" count="5">
         <key name="my_id" type="int" generator="IncrementGenerator"/>
-        <key name="data_value_json" script="None"/>
-<!--        <key name="data_value_text" script="None"/>-->
+        <key name="data_null" script="None"/>
+        <key name="data_none" script="None"/>
+        <key name="data_text" script="None"/>
     </generate>
     <generate name="check_result" type="none_as_null" source="postgres" target="ConsoleExporter"/>
 </setup>
