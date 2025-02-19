@@ -27,11 +27,13 @@ class RdbmsClient(DatabaseClient):
         self._engine = None
         self._task_id = task_id
 
-        # Remove unnecessary parameters from the credential
+        # Prepare sqlalchemy engine kwargs, also remove datamimic-specific kwargs
         self._engine_kwargs = credential.get_credentials()
+        # Remove datamimic-specific kwargs
         not_engine_kwargs = ["dbms", "database", "host", "port", "user", "password", "db_schema", "id", "environment",
                              "system", "none_as_null_col"]
         self._engine_kwargs = {k: v for k, v in self._engine_kwargs.items() if k not in not_engine_kwargs}
+        # Set default values for some kwargs
         self._engine_kwargs["echo"] = self._engine_kwargs.get("echo", False)
         self._engine_kwargs["pool_size"] = self._engine_kwargs.get("pool_size", 20)
         self._engine_kwargs["max_overflow"] = self._engine_kwargs.get("max_overflow", 30)
@@ -147,14 +149,15 @@ class RdbmsClient(DatabaseClient):
     def _apply_global_json_config(self, data_list: list[dict]) -> list[dict]:
         """
         Apply global JSON configuration to the given data list.
-        If the 'none_as_null' configuration from the credential is enabled,
+        If the 'none_as_null_col' configuration from the credential is enabled,
         converts any None value to a SQLAlchemy NULL value.
 
         :param data_list: List of dictionaries representing rows to be processed.
         :return: The transformed data list.
         """
-        # Directly check the credential's configuration (defaults to False if not set)
+        # Get the list of columns where None values should be converted to NULL
         none_as_null_col = [col.strip() for col in getattr(self._credential, "none_as_null_col", "").split(",")]
+        # Convert None values to SQLAlchemy NULL
         if len(none_as_null_col) > 0:
             for idx, data_dict in enumerate(data_list):
                 for col in none_as_null_col:
