@@ -403,8 +403,9 @@ class TaskUtil:
             export_dir = context.descriptor_dir / f"generators/{source_str}.zip"
             mostly = MostlyAI(local=True)
             g = mostly.generators.import_from_file(export_dir)
-            sd_data = mostly.generate(g, size=processed_data_count)
-            source_data = sd_data.data().to_dict("records")
+            # use mostly.probe to generate data because it's faster than mostly.generate
+            sd_data = mostly.probe(g, size=processed_data_count)
+            source_data = sd_data.to_dict("records")
         else:
             raise ValueError(f"cannot find data source {source_str} for iterate task")
 

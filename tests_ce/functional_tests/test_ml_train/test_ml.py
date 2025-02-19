@@ -21,4 +21,4 @@ class TestML:
         result = test_engine.capture_result()
 
         new_customer = result["NEW_CUSTOMER"]
-        assert len(new_customer) == 100
+        assert len(new_customer) == 10000
