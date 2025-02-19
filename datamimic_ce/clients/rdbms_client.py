@@ -27,6 +27,19 @@ class RdbmsClient(DatabaseClient):
         self._engine = None
         self._task_id = task_id
 
+        # Prepare sqlalchemy engine kwargs, also remove datamimic-specific kwargs
+        self._engine_kwargs = credential.get_credentials()
+        # Remove datamimic-specific kwargs
+        not_engine_kwargs = ["dbms", "database", "host", "port", "user", "password", "db_schema", "id", "environment",
+                             "system", "none_as_null_col"]
+        self._engine_kwargs = {k: v for k, v in self._engine_kwargs.items() if k not in not_engine_kwargs}
+        # Set default values for some kwargs
+        self._engine_kwargs["echo"] = self._engine_kwargs.get("echo", False)
+        self._engine_kwargs["pool_size"] = self._engine_kwargs.get("pool_size", 20)
+        self._engine_kwargs["max_overflow"] = self._engine_kwargs.get("max_overflow", 30)
+        self._engine_kwargs["pool_timeout"] = self._engine_kwargs.get("pool_timeout", 30)
+        self._engine_kwargs["pool_pre_ping"] = self._engine_kwargs.get("pool_pre_ping", True)
+
     @property
     def engine(self):
         return self._engine
@@ -59,7 +72,7 @@ class RdbmsClient(DatabaseClient):
             :return: SQLAlchemy engine for SQLite
             """
             logger.info(f"Using SQLite database at {file_path}")
-            return sqlalchemy.create_engine(f"sqlite:///{file_path}", echo=False)
+            return sqlalchemy.create_engine(f"sqlite:///{file_path}", **self._engine_kwargs)
 
         def create_sqlalchemy_engine(driver, user, password, host, port, db):
             """
@@ -75,10 +88,7 @@ class RdbmsClient(DatabaseClient):
             return sqlalchemy.create_engine(
                 f"{driver}://{user}:{password}@{host}:{port}/{db}",
                 poolclass=QueuePool,
-                pool_size=20,  # Increase from default 5
-                max_overflow=30,  # Increase from default 10
-                pool_timeout=30,  # Increase timeout
-                pool_pre_ping=True,  # Enable connection health
+                **self._engine_kwargs,
             )
 
         # Match the DBMS type and create the appropriate SQLAlchemy engine
@@ -135,6 +145,25 @@ class RdbmsClient(DatabaseClient):
         metadata.reflect(bind=engine, schema=self._credential.db_schema)
 
         return metadata
+
+    def _apply_global_json_config(self, data_list: list[dict]) -> list[dict]:
+        """
+        Apply global JSON configuration to the given data list.
+        If the 'none_as_null_col' configuration from the credential is enabled,
+        converts any None value to a SQLAlchemy NULL value.
+
+        :param data_list: List of dictionaries representing rows to be processed.
+        :return: The transformed data list.
+        """
+        # Get the list of columns where None values should be converted to NULL
+        none_as_null_col = [col.strip() for col in getattr(self._credential, "none_as_null_col", "").split(",")]
+        # Convert None values to SQLAlchemy NULL
+        if len(none_as_null_col) > 0:
+            for idx, data_dict in enumerate(data_list):
+                for col in none_as_null_col:
+                    if data_dict.get(col) is None:
+                        data_list[idx][col] = sqlalchemy.null()
+        return data_list
 
     def get(self, query: str) -> list:
         """
@@ -313,11 +342,11 @@ class RdbmsClient(DatabaseClient):
         return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
 
     def get_random_rows_by_column(
-        self,
-        table_name: str,
-        column_name: str,
-        pagination: DataSourcePagination | None,
-        unique: bool,
+            self,
+            table_name: str,
+            column_name: str,
+            pagination: DataSourcePagination | None,
+            unique: bool,
     ) -> list:
         """
         Get column data for reference
@@ -368,6 +397,8 @@ class RdbmsClient(DatabaseClient):
 
         if not data_list:
             return
+
+        data_list = self._apply_global_json_config(data_list)
 
         with engine.begin() as connection:
             try:
