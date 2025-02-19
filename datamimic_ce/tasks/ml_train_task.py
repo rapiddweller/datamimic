@@ -18,7 +18,7 @@ class MLTrainTask(Task):
     def __init__(self, statement: MLTrainStatement):
         self._statement = statement
         self._ml_dir = None
-        self._ml_export_name = statement.persistLocation or statement.name
+        self._ml_export_name = statement.name
         self._mode = statement.mode
 
     @property

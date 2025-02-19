@@ -23,7 +23,6 @@ class MLTrainModel(BaseModel):
     source: str
     table: str
     mode: str | None = None
-    persistLocation: str | None = None
     maxTrainingTime: str | None = None
 
     @model_validator(mode="before")
@@ -36,7 +35,6 @@ class MLTrainModel(BaseModel):
                 ATTR_SOURCE,
                 ATTR_TABLE,
                 ATTR_MODE,
-                ATTR_PERSISTLOCATION,
                 ATTR_MAXTRAININGTIME,
             },
         )
@@ -45,16 +43,6 @@ class MLTrainModel(BaseModel):
     @classmethod
     def validate_additional_source_attributes(cls, values: dict):
         return ModelUtil.check_valid_additional_source_attributes(values=values)
-
-    @model_validator(mode="before")
-    @classmethod
-    def validate_generator_mode_of_source(cls, values: dict):
-        """
-        Validate at most "type" or "selector" can be defined with "source"
-        :param value:
-        :return:
-        """
-        return ModelUtil.check_generation_mode_of_source(values)
 
     @field_validator("name")
     @classmethod

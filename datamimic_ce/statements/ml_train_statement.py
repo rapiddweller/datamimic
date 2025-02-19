@@ -15,7 +15,6 @@ class MLTrainStatement(Statement):
         self._source = model.source
         self._table = model.table
         self._mode = model.mode
-        self._persistLocation = model.persistLocation
         self._maxTrainingTime = model.maxTrainingTime
 
     @property
@@ -33,10 +32,6 @@ class MLTrainStatement(Statement):
     @property
     def mode(self) -> str | None:
         return self._mode
-
-    @property
-    def persistLocation(self) -> str | None:
-        return self._persistLocation
 
     @property
     def maxTrainingTime(self) -> str | None:
