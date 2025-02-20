@@ -12,7 +12,7 @@ from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_util import DataSourceUtil
+from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.tasks.element_task import ElementTask
@@ -154,7 +154,7 @@ class NestedKeyTask(Task):
                 pass
 
                 seed = parent_context.root.get_distribution_seed()
-                result = DataSourceUtil.get_shuffled_data_with_cyclic(result, None, self._statement.cyclic, seed)
+                result = DataSourceRegistry.get_shuffled_data_with_cyclic(result, None, self._statement.cyclic, seed)
         else:
             raise ValueError(f"Cannot load original data for <nestedKey> '{self._statement.name}'")
 
@@ -324,7 +324,7 @@ class NestedKeyTask(Task):
         nestedkey_len = value_len if count is None else count if self._statement.cyclic else min(count, value_len)
 
         # Init original data of nestedkey
-        iterate_value = DataSourceUtil.get_cyclic_data_list(
+        iterate_value = DataSourceRegistry.get_cyclic_data_list(
             data=value,
             pagination=DataSourcePagination(0, nestedkey_len),
             cyclic=self._statement.cyclic,

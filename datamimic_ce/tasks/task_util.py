@@ -3,14 +3,8 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-import csv
-import json
 import re
-from collections import OrderedDict
-from pathlib import Path
 from typing import Any
-
-import xmltodict
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
@@ -30,7 +24,6 @@ from datamimic_ce.converter.remove_none_or_empty_element_converter import Remove
 from datamimic_ce.converter.timestamp2date_converter import Timestamp2DateConverter
 from datamimic_ce.converter.upper_case_converter import UpperCaseConverter
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_util import DataSourceUtil
 from datamimic_ce.enums.converter_enums import ConverterEnum
 from datamimic_ce.exporters.csv_exporter import CSVExporter
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
@@ -83,7 +76,6 @@ from datamimic_ce.tasks.mongodb_task import MongoDBTask
 from datamimic_ce.tasks.nested_key_task import NestedKeyTask
 from datamimic_ce.tasks.reference_task import ReferenceTask
 from datamimic_ce.tasks.task import Task
-from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
 from datamimic_ce.utils.object_util import ObjectUtil
 
 
@@ -301,6 +293,8 @@ class TaskUtil:
         prefix = stmt.variable_prefix or setup_ctx.default_variable_prefix
         suffix = stmt.variable_suffix or setup_ctx.default_variable_suffix
 
+        data_source_registry = root_context.class_factory_util.get_datasource_registry()
+
         if source_str is None:
             if stmt.script is None:
                 build_from_source = False
@@ -309,7 +303,7 @@ class TaskUtil:
                 source_data = context.evaluate_python_expression(stmt.script)
         # Load data from CSV
         elif source_str.endswith(".csv"):
-            source_data = TaskUtil.load_csv_file(
+            source_data = data_source_registry.load_csv_file(
                 ctx=context,
                 file_path=root_context.descriptor_dir / source_str,
                 separator=separator,
@@ -322,7 +316,7 @@ class TaskUtil:
             )
         # Load data from JSON
         elif source_str.endswith(".json"):
-            source_data = TaskUtil.load_json_file(
+            source_data = data_source_registry.load_json_file(
                 root_context.task_id,
                 root_context.descriptor_dir / source_str,
                 stmt.cyclic,
@@ -339,7 +333,7 @@ class TaskUtil:
                     logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
         # Load data from XML
         elif source_str.endswith(".xml"):
-            source_data = TaskUtil.load_xml_file(
+            source_data = data_source_registry.load_xml_file(
                 root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
             )
             # if sourceScripted then evaluate python expression in json
@@ -491,123 +485,6 @@ class TaskUtil:
         prefix = stmt.variable_prefix or context.root.default_variable_prefix
         suffix = stmt.variable_suffix or context.root.default_variable_suffix
         return TaskUtil.evaluate_variable_concat_prefix_suffix(context, selector, prefix=prefix, suffix=suffix)
-
-    @staticmethod
-    def load_csv_file(
-            ctx: SetupContext,
-            file_path: Path,
-            separator: str,
-            cyclic: bool | None,
-            start_idx: int,
-            end_idx: int,
-            source_scripted: bool,
-            prefix: str,
-            suffix: str,
-    ) -> list[dict]:
-        """
-        Load CSV content from file with skip and limit.
-
-        :param file_path: Path to the CSV file.
-        :param separator: CSV delimiter.
-        :param cyclic: Whether to cycle through data.
-        :param start_idx: Starting index.
-        :param end_idx: Ending index.
-        :return: List of dictionaries representing CSV rows.
-        """
-        cyclic = cyclic if cyclic is not None else False
-
-        with file_path.open(newline="") as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=separator)
-            pagination = (
-                DataSourcePagination(start_idx, end_idx - start_idx)
-                if (start_idx is not None and end_idx is not None)
-                else None
-            )
-            result = DataSourceUtil.get_cyclic_data_list(data=list(reader), cyclic=cyclic, pagination=pagination)
-
-            # if sourceScripted then evaluate python expression in csv
-            if source_scripted:
-                evaluated_result = TaskUtil.evaluate_file_script_template(
-                    ctx=ctx, datas=result, prefix=prefix, suffix=suffix
-                )
-                return evaluated_result if isinstance(evaluated_result, list) else [evaluated_result]
-
-            return result
-
-    @staticmethod
-    def load_json_file(task_id: str, file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
-        """
-        Load JSON content from file using skip and limit.
-
-        :param file_path: Path to the JSON file.
-        :param cyclic: Whether to cycle through data.
-        :param start_idx: Starting index.
-        :param end_idx: Ending index.
-        :return: List of dictionaries representing JSON objects.
-        """
-        cyclic = cyclic if cyclic is not None else False
-
-        # Try to load JSON data from InMemoryCache
-        in_mem_cache = InMemoryCache()
-        # Add task_id to cache_key for testing lib without platform
-        cache_key = str(file_path) if task_id in str(file_path) else f"{task_id}_{str(file_path)}"
-        cache_data = in_mem_cache.get(cache_key)
-        if cache_data:
-            data = json.loads(cache_data)
-        else:
-            # Read the JSON data from a file and store it in redis
-            with file_path.open("r") as file:
-                data = json.load(file)
-            # Store data in redis for 24 hours
-            in_mem_cache.set(str(file_path), json.dumps(data))
-
-        if not isinstance(data, list):
-            raise ValueError(f"JSON file '{file_path.name}' must contain a list of objects")
-        pagination = (
-            DataSourcePagination(start_idx, end_idx - start_idx)
-            if (start_idx is not None and end_idx is not None)
-            else None
-        )
-        return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
-
-    @staticmethod
-    def load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
-        """
-        Load XML content from file using skip and limit.
-
-        :param file_path: Path to the XML file.
-        :param cyclic: Whether to cycle through data.
-        :param start_idx: Starting index.
-        :param end_idx: Ending index.
-        :return: List of dictionaries representing XML items.
-        """
-        cyclic = cyclic if cyclic is not None else False
-        # Read the XML data from a file
-        with file_path.open("r") as file:
-            data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")
-            # Handle the case where data might be None
-            if data is None:
-                return []
-
-            # Extract items from list structure if present
-            if isinstance(data, dict) and data.get("list") and data.get("list", {}).get("item"):
-                items = data["list"]["item"]
-            else:
-                items = data
-
-            # Convert single item to list if needed
-            if isinstance(items, OrderedDict | dict):
-                items = [items]
-            elif not isinstance(items, list):
-                items = []
-
-            # Apply pagination if needed
-            pagination = (
-                DataSourcePagination(start_idx, end_idx - start_idx)
-                if (start_idx is not None and end_idx is not None)
-                else None
-            )
-            return DataSourceUtil.get_cyclic_data_list(data=items, cyclic=cyclic, pagination=pagination)
 
     @staticmethod
     def convert_xml_dict_to_json_dict(xml_dict: dict):

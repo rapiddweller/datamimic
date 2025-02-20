@@ -124,7 +124,7 @@ class GenerateTask(CommonSubTask):
         :return: None
         """
         # 1. Scan statement
-        ctx.root.class_factory_util.get_datasource_util_cls().set_data_source_length(ctx, statement)
+        ctx.root.class_factory_util.get_datasource_registry().set_data_source_length(ctx, statement)
         # 2. Scan sub-statement
         if isinstance(statement, CompositeStatement):
             for child_stmt in statement.sub_statements:

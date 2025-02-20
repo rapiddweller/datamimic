@@ -22,7 +22,7 @@ from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_util import DataSourceUtil
+from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntityDataSource
 from datamimic_ce.entities.address_entity import AddressEntity
 from datamimic_ce.entities.bank_account_entity import BankAccountEntity
@@ -49,10 +49,10 @@ class VariableTask(KeyVariableTask):
     _LAZY_ITERATOR_MODE: Final = "lazy_iterator"
 
     def __init__(
-        self,
-        ctx: SetupContext,
-        statement: VariableStatement,
-        pagination: DataSourcePagination | None,
+            self,
+            ctx: SetupContext,
+            statement: VariableStatement,
+            pagination: DataSourcePagination | None,
     ):
         super().__init__(ctx, statement, pagination)
         self._source_script = (
@@ -115,7 +115,7 @@ class VariableTask(KeyVariableTask):
                         self._mode = self._RANDOM_DISTRIBUTION_MODE
                         selected_data = client.get_by_page_with_query(selector)
                         self._random_items_iterator = iter(
-                            DataSourceUtil.get_shuffled_data_with_cyclic(
+                            DataSourceRegistry.get_shuffled_data_with_cyclic(
                                 selected_data, pagination, statement.cyclic, seed
                             )
                         )
@@ -146,11 +146,12 @@ class VariableTask(KeyVariableTask):
                     )
                     if is_random_distribution:
                         self._random_items_iterator = iter(
-                            DataSourceUtil.get_shuffled_data_with_cyclic(file_data, pagination, statement.cyclic, seed)
+                            DataSourceRegistry.get_shuffled_data_with_cyclic(file_data, pagination, statement.cyclic,
+                                                                             seed)
                         )
                         self._mode = self._RANDOM_DISTRIBUTION_MODE
                     else:
-                        self._iterator = DataSourceUtil.get_cyclic_data_iterator(
+                        self._iterator = DataSourceRegistry.get_cyclic_data_iterator(
                             data=file_data,
                             cyclic=statement.cyclic,
                             pagination=pagination,
@@ -191,7 +192,7 @@ class VariableTask(KeyVariableTask):
                         if is_random_distribution:
                             self._random_items_iterator = (
                                 iter(
-                                    DataSourceUtil.get_shuffled_data_with_cyclic(
+                                    DataSourceRegistry.get_shuffled_data_with_cyclic(
                                         file_data, pagination, statement.cyclic, seed
                                     )
                                 )
@@ -301,7 +302,7 @@ class VariableTask(KeyVariableTask):
             file_data = ctx.evaluate_python_expression(self._statement.source)
             if is_random_distribution:
                 self._random_items_iterator = iter(
-                    DataSourceUtil.get_shuffled_data_with_cyclic(
+                    DataSourceRegistry.get_shuffled_data_with_cyclic(
                         file_data,
                         self._pagination,
                         self.statement.cyclic,
@@ -313,7 +314,7 @@ class VariableTask(KeyVariableTask):
                     raise StopIteration("No more random items to iterate for statement: " + self._statement.name)
                 value = next(self._random_items_iterator)
             else:
-                self._iterator = DataSourceUtil.get_cyclic_data_iterator(
+                self._iterator = DataSourceRegistry.get_cyclic_data_iterator(
                     data=file_data,
                     cyclic=self.statement.cyclic,
                     pagination=self._pagination,

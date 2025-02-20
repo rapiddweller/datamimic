@@ -87,7 +87,7 @@ class TestGenerateTask:
         # Setup class factory utility
         context.class_factory_util = MagicMock(spec=BaseClassFactoryUtil)
         datasource_util = MagicMock()
-        context.class_factory_util.get_datasource_util_cls.return_value = datasource_util
+        context.class_factory_util.get_datasource_registry.return_value = datasource_util
 
         # Setup exporter utility
         exporter_util = MagicMock()
@@ -282,7 +282,7 @@ class TestGenerateTask:
 
     def test_scan_data_source(self, generate_task, mock_context):
         """Test _scan_data_source method."""
-        datasource_util = mock_context.class_factory_util.get_datasource_util_cls.return_value
+        datasource_util = mock_context.class_factory_util.get_datasource_registry.return_value
 
         GenerateTask._scan_data_source(mock_context, generate_task.statement)
 

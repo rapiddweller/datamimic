@@ -36,12 +36,12 @@ class DatabaseClient(Client):
         """
         # Get whole queried data if data count or data limit exceed data len
         if (pagination is None) or (
-            cyclic and (pagination.limit > data_len or pagination.skip + pagination.limit > data_len)
+                cyclic and (pagination.limit > data_len or pagination.skip + pagination.limit > data_len)
         ):
             data = self.get(query)
-            from datamimic_ce.data_sources.data_source_util import DataSourceUtil
+            from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 
-            return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
+            return DataSourceRegistry.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
         else:
             return self.get_by_page_with_query(query, pagination)
 

@@ -5,13 +5,15 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
+import csv
 import itertools
 import json
 import random
-import xml.etree.ElementTree as ET
+from collections import OrderedDict
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 
+import xmltodict
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
@@ -22,12 +24,90 @@ from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.statement import Statement
-from datamimic_ce.utils.in_memory_cache_util import InMemoryCache
 
 
-class DataSourceUtil:
-    @staticmethod
-    def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) -> None:
+class DataSourceRegistry:
+    # Singleton instance
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        # Use OrderedDict and capacity to limit the cache size
+        self._source_cache = OrderedDict()
+        # TODO: Consider to make capacity configurable
+        self._cache = 10
+        self._cache_hit = 0
+        self._cache_miss = 0
+
+    def log_cache_info(self):
+        """
+        Log cache hit rate information
+        """
+        hit_rate = 0 if (self._cache_hit + self._cache_miss == 0) else self._cache_hit / (
+                self._cache_hit + self._cache_miss)
+        logger.info(
+            f"DataSourceRegistry cache hit: {self._cache_hit}, cache miss: {self._cache_miss}. "
+            f"Hit rate: {hit_rate * 100:.2f}%"
+        )
+
+    def _get_source(self, key: str, csv_separator: str = ",") -> list[dict]:
+        """
+        Get source data from cache or load from file
+        """
+        logger.debug(f"Get source {key} from cache")
+        # Check if source is already in cache
+        if key not in self._source_cache:
+            self._cache_miss += 1
+            self._load_source(key, csv_separator)
+        else:
+            self._cache_hit += 1
+        # Move source to the end of the cache, mark as recently used
+        self._source_cache.move_to_end(key)
+
+        return self._source_cache[key]
+
+    def _load_source(self, key: str, separator: str):
+        """
+        Load source data from file and put into cache
+        """
+        logger.debug(f"Load source {key} from file")
+        # Load source data from file
+        if key.endswith(".csv"):
+            with open(key, newline='') as csvfile:
+                reader = csv.DictReader(csvfile, delimiter=separator)
+                data = [row for row in reader]
+        elif key.endswith(".json"):
+            with open(key) as file:
+                data = json.load(file)
+        elif key.endswith(".xml"):
+            with open(key) as file:
+                data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")  # type: ignore[assignment]
+        else:
+            raise ValueError(f"Data source '{key}' is not supported is not handled by DataSourceRegistry")
+
+        # Put source data into cache
+        self._put_source(key, data)
+
+    def _put_source(self, key, value):
+        """
+        Put source data into cache, remove the least recently used if cache is full
+        """
+        logger.debug(f"Put source {key} into cache")
+        # Check if source is already in cache
+        if key in self._source_cache:
+            self._source_cache.move_to_end(key)  # Mark as recently used
+        # Check if cache is full
+        elif len(self._source_cache) >= self._cache:
+            self._source_cache.popitem(last=False)  # Remove the least recently used
+
+        # Put source data into cache
+        self._source_cache[key] = value
+
+    def set_data_source_length(self, ctx: SetupContext | GenIterContext, stmt: Statement) -> None:
         """
         Calculate length of data source then save into context
         :param ctx:
@@ -74,14 +154,8 @@ class DataSourceUtil:
 
             # Check if source is data source file or database collection/table
             # 2.1: Check if datasource is csv file
-            if source_str.endswith(".csv"):
-                ds_len = DataSourceUtil._count_lines_in_csv(root_ctx.descriptor_dir / source_str)
-            # 2.2: Check if datasource is json file
-            elif source_str.endswith(".json"):
-                ds_len = DataSourceUtil._count_object_in_json(root_ctx.task_id, root_ctx.descriptor_dir / source_str)
-            # 2.3: Check if datasource is xml file
-            elif source_str.endswith(".xml"):
-                ds_len = len(list(ET.parse(root_ctx.descriptor_dir / source_str).getroot()))
+            if source_str.endswith(".csv") or source_str.endswith(".json") or source_str.endswith(".xml"):
+                ds_len = len(self._get_source(str(root_ctx.descriptor_dir / source_str)))
             # 2.4: Check if datasource is memstore
             elif root_ctx.memstore_manager.contain(source_str) and hasattr(stmt, "type"):
                 ds_len = root_ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(stmt.type or stmt.name)
@@ -89,8 +163,7 @@ class DataSourceUtil:
                 client = root_ctx.get_client_by_id(source_str)
                 if client is None:
                     raise ValueError(
-                        f"Client '{source_str}' could not be found in your context, please check your script"
-                    )
+                        f"Client '{source_str}' could not be found in your context, please check your script")
                 # handle database collection/table as data source
                 from datamimic_ce.clients.rdbms_client import RdbmsClient
 
@@ -158,41 +231,6 @@ class DataSourceUtil:
 
         # 3: Set length of data source
         root_ctx.data_source_len[source_id] = ds_len
-
-    @staticmethod
-    def _count_lines_in_csv(file_path: Path) -> int:
-        """
-        Count number of rows in csv file
-        :param file_path:
-        :return:
-        """
-        with file_path.open("r") as csvfile:
-            line_count = sum(1 for _ in csvfile)
-        return line_count
-
-    @staticmethod
-    def _count_object_in_json(task_id: str, file_path: Path) -> int:
-        """
-        Count number of objects in json file
-        :param file_path:
-        :return:
-        """
-        # Try to load JSON data from InMemoryCache
-        in_mem_cache = InMemoryCache()
-        # Add task_id to redis_key for testing lib without platform
-        in_mem_cache_key = str(file_path) if task_id in str(file_path) else f"{task_id}_{str(file_path)}"
-        in_mem_cache_data = in_mem_cache.get(in_mem_cache_key)
-        if in_mem_cache_data:
-            data = json.loads(in_mem_cache_data)
-        else:
-            # Read the JSON data from a file and store it in redis
-            with file_path.open("r") as file:
-                data = json.load(file)
-            # Store data in redis for 24 hours
-            in_mem_cache.set(str(file_path), json.dumps(data))
-
-        # Get the length of the JSON content
-        return len(data)
 
     @staticmethod
     def get_cyclic_data_list(data: Iterable, pagination: DataSourcePagination | None, cyclic: bool = False) -> list:
@@ -279,3 +317,109 @@ class DataSourceUtil:
 
         start_idx_cap = start_idx % source_len
         return res[start_idx_cap: start_idx_cap + end_idx - start_idx]
+
+    def load_csv_file(
+            self,
+            ctx: SetupContext,
+            file_path: Path,
+            separator: str,
+            cyclic: bool | None,
+            start_idx: int,
+            end_idx: int,
+            source_scripted: bool,
+            prefix: str,
+            suffix: str,
+    ) -> list[dict]:
+        """
+        Load CSV content from file with skip and limit.
+
+        :param ctx: SetupContext
+        :param file_path: Path to the CSV file.
+        :param separator: CSV delimiter.
+        :param cyclic: Whether to cycle through data.
+        :param start_idx: Starting index.
+        :param end_idx: Ending index.
+        :return: List of dictionaries representing CSV rows.
+        """
+        cyclic = cyclic if cyclic is not None else False
+
+        file_data = self._get_source(str(file_path), separator)
+        pagination = (
+            DataSourcePagination(start_idx, end_idx - start_idx)
+            if (start_idx is not None and end_idx is not None)
+            else None
+        )
+        result = DataSourceRegistry.get_cyclic_data_list(data=file_data, cyclic=cyclic, pagination=pagination)
+
+        # if sourceScripted then evaluate python expression in csv
+        if source_scripted:
+            from datamimic_ce.tasks.task_util import TaskUtil
+            evaluated_result = TaskUtil.evaluate_file_script_template(
+                ctx=ctx, datas=result, prefix=prefix, suffix=suffix
+            )
+            return evaluated_result if isinstance(evaluated_result, list) else [evaluated_result]
+
+        return result
+
+    def load_json_file(self, task_id: str, file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[
+        dict]:
+        """
+        Load JSON content from file using skip and limit.
+
+        :param file_path: Path to the JSON file.
+        :param cyclic: Whether to cycle through data.
+        :param start_idx: Starting index.
+        :param end_idx: Ending index.
+        :return: List of dictionaries representing JSON objects.
+        """
+        cyclic = cyclic if cyclic is not None else False
+
+        file_data = self._get_source(str(file_path))
+
+        # Validate the JSON data
+        if not isinstance(file_data, list):
+            raise ValueError(f"JSON file '{file_path.name}' must contain a list of objects")
+        pagination = (
+            DataSourcePagination(start_idx, end_idx - start_idx)
+            if (start_idx is not None and end_idx is not None)
+            else None
+        )
+        return DataSourceRegistry.get_cyclic_data_list(data=file_data, cyclic=cyclic, pagination=pagination)
+
+    def load_xml_file(self, file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
+        """
+        Load XML content from file using skip and limit.
+
+        :param file_path: Path to the XML file.
+        :param cyclic: Whether to cycle through data.
+        :param start_idx: Starting index.
+        :param end_idx: Ending index.
+        :return: List of dictionaries representing XML items.
+        """
+        cyclic = cyclic if cyclic is not None else False
+        # Read the XML data from a file
+        # file_data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")
+        file_data = self._get_source(str(file_path))
+        # Handle the case where data might be None
+        if file_data is None:
+            return []
+
+        # Extract items from list structure if present
+        if isinstance(file_data, dict) and file_data.get("list") and file_data.get("list", {}).get("item"):
+            items = file_data["list"]["item"]
+        else:
+            items = file_data
+
+        # Convert single item to list if needed
+        if isinstance(items, dict):
+            items = [items]
+        elif not isinstance(items, list):
+            items = []
+
+        # Apply pagination if needed
+        pagination = (
+            DataSourcePagination(start_idx, end_idx - start_idx)
+            if (start_idx is not None and end_idx is not None)
+            else None
+        )
+        return self.get_cyclic_data_list(data=items, cyclic=cyclic, pagination=pagination)
