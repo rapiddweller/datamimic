@@ -62,7 +62,7 @@ class DataSourceRegistry:
         self._source_cache.move_to_end(key)  # Mark as recently used
         return self._source_cache[key]
 
-    def _load_source(self, key: str, separator: str) -> None:
+    def _load_source(self, key: str, separator: str):
         logger.debug(f"Load source {key} from file")
         if key.endswith(".csv"):
             with open(key, newline='') as csvfile:
@@ -73,7 +73,7 @@ class DataSourceRegistry:
                 data = json.load(file)
         elif key.endswith(".xml"):
             with open(key) as file:
-                data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")
+                data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")  # type: ignore[assignment]
         else:
             raise ValueError(f"Data source '{key}' is not supported is not handled by DataSourceRegistry")
         self._put_source(key, data)
@@ -135,13 +135,6 @@ class DataSourceRegistry:
             # 2.1: Check if datasource is csv file
             if source_str.endswith(".csv") or source_str.endswith(".json") or source_str.endswith(".xml"):
                 ds_len = len(self._get_source(str(root_ctx.descriptor_dir / source_str)))
-                # ds_len = self._count_lines_in_csv(ctx.descriptor_dir / source_str)
-            # 2.2: Check if datasource is json file
-            # elif source_str.endswith(".json"):
-            #     ds_len = self._count_object_in_json(ctx.task_id, ctx.descriptor_dir / source_str)
-            # 2.3: Check if datasource is xml file
-            # elif source_str.endswith(".xml"):
-            #     ds_len = len(list(ET.parse(ctx.descriptor_dir / source_str).getroot()))
             # 2.4: Check if datasource is memstore
             elif root_ctx.memstore_manager.contain(source_str) and hasattr(stmt, "type"):
                 ds_len = root_ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(stmt.type or stmt.name)
@@ -217,42 +210,6 @@ class DataSourceRegistry:
 
         # 3: Set length of data source
         root_ctx.data_source_len[source_id] = ds_len
-
-    # def _count_lines_in_csv(self, file_path: Path) -> int:
-    #     """
-    #     Count number of rows in csv file
-    #     :param file_path:
-    #     :return:
-    #     """
-    #     csv_file = self._get_source(str(file_path))
-    #     return len(csv_file)
-    # with file_path.open("r") as csvfile:
-    #     line_count = sum(1 for _ in csvfile)
-    # return line_count
-
-    # @staticmethod
-    # def _count_object_in_json(task_id: str, file_path: Path) -> int:
-    #     """
-    #     Count number of objects in json file
-    #     :param file_path:
-    #     :return:
-    #     """
-    #     # Try to load JSON data from InMemoryCache
-    #     in_mem_cache = InMemoryCache()
-    #     # Add task_id to redis_key for testing lib without platform
-    #     in_mem_cache_key = str(file_path) if task_id in str(file_path) else f"{task_id}_{str(file_path)}"
-    #     in_mem_cache_data = in_mem_cache.get(in_mem_cache_key)
-    #     if in_mem_cache_data:
-    #         data = json.loads(in_mem_cache_data)
-    #     else:
-    #         # Read the JSON data from a file and store it in redis
-    #         with file_path.open("r") as file:
-    #             data = json.load(file)
-    #         # Store data in redis for 24 hours
-    #         in_mem_cache.set(str(file_path), json.dumps(data))
-    #
-    #     # Get the length of the JSON content
-    #     return len(data)
 
     @staticmethod
     def get_cyclic_data_list(data: Iterable, pagination: DataSourcePagination | None, cyclic: bool = False) -> list:
