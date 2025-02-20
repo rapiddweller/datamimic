@@ -12,13 +12,14 @@
         <key name="name" script="company.short_name"/>
     </generate>
 
-    <ml-train name="CUSTOMERGen"
+    <ml-train name="customer_mem_gen"
               source="mem"
               type="CUSTOMER"
+              mode="persist"
               maxTrainingTime="5"/>
 
     <!-- Generate synthetic CUSTOMER records using the ML generator -->
-    <generate name="NEW_CUSTOMER" count="10000" pageSize="1000" source="CUSTOMERGen" target="CSV">
+    <generate name="NEW_CUSTOMER" count="10000" pageSize="1000" source="customer_mem_gen" target="CSV">
         <key name="id" generator="IncrementGenerator"/>
     </generate>
 </setup>

@@ -109,7 +109,6 @@ class MLTrainTask(Task):
             source_data = pd.DataFrame(database_data)
         return source_data
 
-
     def __del__(self):
         """
         Deletes trained model when object is garbage collected.
