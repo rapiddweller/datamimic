@@ -33,10 +33,10 @@ class DataSourceRegistry:
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            # Use OrderedDict and capacity to limit the cache size
         return cls._instance
 
     def __init__(self):
+        # Use OrderedDict and capacity to limit the cache size
         self._source_cache = OrderedDict()
         # TODO: Consider to make capacity configurable
         self._cache = 10
@@ -44,6 +44,9 @@ class DataSourceRegistry:
         self._cache_miss = 0
 
     def log_cache_info(self):
+        """
+        Log cache hit rate information
+        """
         hit_rate = 0 if (self._cache_hit + self._cache_miss == 0) else self._cache_hit / (
                 self._cache_hit + self._cache_miss)
         logger.info(
@@ -52,17 +55,27 @@ class DataSourceRegistry:
         )
 
     def _get_source(self, key: str, csv_separator: str = ",") -> list[dict]:
+        """
+        Get source data from cache or load from file
+        """
         logger.debug(f"Get source {key} from cache")
+        # Check if source is already in cache
         if key not in self._source_cache:
             self._cache_miss += 1
             self._load_source(key, csv_separator)
         else:
             self._cache_hit += 1
-        self._source_cache.move_to_end(key)  # Mark as recently used
+        # Move source to the end of the cache, mark as recently used
+        self._source_cache.move_to_end(key)
+
         return self._source_cache[key]
 
     def _load_source(self, key: str, separator: str):
+        """
+        Load source data from file and put into cache
+        """
         logger.debug(f"Load source {key} from file")
+        # Load source data from file
         if key.endswith(".csv"):
             with open(key, newline='') as csvfile:
                 reader = csv.DictReader(csvfile, delimiter=separator)
@@ -75,14 +88,23 @@ class DataSourceRegistry:
                 data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")  # type: ignore[assignment]
         else:
             raise ValueError(f"Data source '{key}' is not supported is not handled by DataSourceRegistry")
+
+        # Put source data into cache
         self._put_source(key, data)
 
     def _put_source(self, key, value):
+        """
+        Put source data into cache, remove the least recently used if cache is full
+        """
         logger.debug(f"Put source {key} into cache")
+        # Check if source is already in cache
         if key in self._source_cache:
             self._source_cache.move_to_end(key)  # Mark as recently used
+        # Check if cache is full
         elif len(self._source_cache) >= self._cache:
             self._source_cache.popitem(last=False)  # Remove the least recently used
+
+        # Put source data into cache
         self._source_cache[key] = value
 
     def set_data_source_length(self, ctx: SetupContext | GenIterContext, stmt: Statement) -> None:
