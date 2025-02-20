@@ -6,6 +6,8 @@
 import re
 from typing import Any
 
+from datamimic_ce.clients.mongodb_client import MongoDBClient
+from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.converter.append_converter import AppendConverter
@@ -291,6 +293,8 @@ class TaskUtil:
         prefix = stmt.variable_prefix or setup_ctx.default_variable_prefix
         suffix = stmt.variable_suffix or setup_ctx.default_variable_suffix
 
+        data_source_registry = root_context.class_factory_util.get_datasource_registry()
+
         if source_str is None:
             if stmt.script is None:
                 build_from_source = False
@@ -299,7 +303,7 @@ class TaskUtil:
                 source_data = context.evaluate_python_expression(stmt.script)
         # Load data from CSV
         elif source_str.endswith(".csv"):
-            source_data = TaskUtil.load_csv_file(
+            source_data = data_source_registry.load_csv_file(
                 ctx=context,
                 file_path=root_context.descriptor_dir / source_str,
                 separator=separator,
@@ -312,7 +316,7 @@ class TaskUtil:
             )
         # Load data from JSON
         elif source_str.endswith(".json"):
-            source_data = TaskUtil.load_json_file(
+            source_data = data_source_registry.load_json_file(
                 root_context.task_id,
                 root_context.descriptor_dir / source_str,
                 stmt.cyclic,
@@ -329,7 +333,7 @@ class TaskUtil:
                     logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
         # Load data from XML
         elif source_str.endswith(".xml"):
-            source_data = TaskUtil.load_xml_file(
+            source_data = data_source_registry.load_xml_file(
                 root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
             )
             # if sourceScripted then evaluate python expression in json

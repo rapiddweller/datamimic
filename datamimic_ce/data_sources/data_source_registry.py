@@ -45,7 +45,8 @@ class DataSourceRegistry:
     def log_cache_info(self):
         # logger.info("something")
         logger.info(
-            f"DataSourceRegistry cache hit: {self._cache_hit}, cache miss: {self._cache_miss}. Hit rate: {self._cache_hit / (self._cache_hit + self._cache_miss) * 100:.2f}%"
+            f"DataSourceRegistry cache hit: {self._cache_hit}, cache miss: {self._cache_miss}. /"
+            f"Hit rate: {self._cache_hit / (self._cache_hit + self._cache_miss) * 100:.2f}%"
         )
 
     def _get_source(self, key: str, csv_separator: str = ",") -> list[dict]:
@@ -65,11 +66,11 @@ class DataSourceRegistry:
                 reader = csv.DictReader(csvfile, separator)
                 data = [row for row in reader]
         elif key.endswith(".json"):
-            with open(key, "r") as file:
+            with open(key) as file:
                 data = json.load(file)
         elif key.endswith(".xml"):
-            with open(key, "r") as file:
-                data = xmltodict.parse(r.read(), attr_prefix="@", cdata_key="#text")
+            with open(key) as file:
+                data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")
         else:
             raise ValueError(f"Data source '{key}' is not supported is not handled by DataSourceRegistry")
         self._put_source(key, data)
