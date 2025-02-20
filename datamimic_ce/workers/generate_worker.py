@@ -70,23 +70,15 @@ class GenerateWorker:
             "page_count": 0,  # Track number of pages processed
         }
 
-        # Check if product result should be returned for test mode or memstore exporter
-        has_memstore_exporter = False
-        current_gen_stmt = stmt
-        while isinstance(current_gen_stmt, GenerateStatement):
-            if any(
-                    [
-                        ("." not in exporter_str)
-                        and ("(" not in exporter_str)
-                        and context.root.memstore_manager.contain(exporter_str)
-                        for exporter_str in stmt.targets
-                    ]
-            ):
-                has_memstore_exporter = True
-                break
-            current_gen_stmt = current_gen_stmt.parent_stmt  # type: ignore[assignment]
-
-        return_product_result = isinstance(context, GenIterContext) or context.root.test_mode or has_memstore_exporter
+        # Determine if memstore exporter is available
+        has_memstore_exporter = any(
+            [
+                ("." not in exporter_str)
+                and ("(" not in exporter_str)
+                and context.root.memstore_manager.contain(exporter_str)
+                for exporter_str in stmt.targets
+            ]
+        )
 
         # Generate and consume product by page
         for page_index, page_tuple in enumerate(index_chunk):
@@ -107,11 +99,15 @@ class GenerateWorker:
                     context.root, stmt, result_dict, exporter_state_manager
                 )
 
-            # TODO: improve by select only necessary keys
+            # Determine list of keys to be returned
+            return_keys_set = set(result_dict.keys())
+            # Do not return current statement if not in test mode and memstore exporter is not available
+            if not context.root.test_mode and not has_memstore_exporter:
+                return_keys_set.remove(stmt.full_name)
+
             # Collect result for later capturing
-            if return_product_result:
-                for key in result_dict:
-                    result[key] = result.get(key, []) + result_dict.get(key, [])
+            for key in list(return_keys_set):
+                result[key] = result.get(key, []) + result_dict.get(key, [])
 
         # Log DataSourceRegistry statistics
         if isinstance(context, SetupContext):
