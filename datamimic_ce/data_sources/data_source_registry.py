@@ -45,10 +45,11 @@ class DataSourceRegistry:
         self._cache_miss = 0
 
     def log_cache_info(self):
-        # logger.info("something")
+        hit_rate = 0 if (self._cache_hit + self._cache_miss == 0) else self._cache_hit / (
+                    self._cache_hit + self._cache_miss)
         logger.info(
             f"DataSourceRegistry cache hit: {self._cache_hit}, cache miss: {self._cache_miss}. /"
-            f"Hit rate: {self._cache_hit / (self._cache_hit + self._cache_miss) * 100:.2f}%"
+            f"Hit rate: {hit_rate * 100:.2f}%"
         )
 
     def _get_source(self, key: str, csv_separator: str = ",") -> list[dict]:
