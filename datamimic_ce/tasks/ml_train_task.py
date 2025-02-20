@@ -3,17 +3,13 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-import csv
-import json
 import os
-from collections import OrderedDict
 
 import pandas as pd
 import xmltodict
-
-from datamimic_ce.clients.mongodb_client import MongoDBClient
 from mostlyai.sdk import MostlyAI
 
+from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.statements.ml_train_statement import MLTrainStatement
@@ -100,9 +96,9 @@ class MLTrainTask(Task):
         elif root_ctx.clients.get(source_str) is not None:
             client = root_ctx.clients.get(source_str)
             database_data = []
-            if isinstance(client, MongoDBClient):
+            if isinstance(client, MongoDBClient) and source_type:
                 database_data = client.get_by_page_with_type(collection_name=source_type)
-            elif isinstance(client, RdbmsClient):
+            elif isinstance(client, RdbmsClient) and source_type:
                 database_data = client.get_by_page_with_type(table_name=source_type)
             else:
                 raise ValueError(f"Cannot load data from client: {type(client).__name__}")

@@ -27,7 +27,7 @@ class MLTrainStatement(Statement):
         return self._source
 
     @property
-    def type(self) -> str:
+    def type(self) -> str | None:
         return self._type
 
     @property
