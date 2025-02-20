@@ -19,7 +19,7 @@ from datamimic_ce.model.model_util import ModelUtil
 class MLTrainModel(BaseModel):
     name: str
     source: str
-    type: str
+    type: str | None = None
     mode: str | None = None
     maxTrainingTime: str | None = None
     separator: str | None = None

@@ -37,3 +37,18 @@ class TestML:
         folder_path = self._test_dir.joinpath("output")
         if os.path.exists(folder_path):
             shutil.rmtree(folder_path)
+
+    def test_ml_train_csv(self):
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_ml_train_csv.xml", capture_test_result=True
+        )
+        test_engine.test_with_timer()
+        result = test_engine.capture_result()
+
+        new_customer = result["NEW_CUSTOMER"]
+        assert len(new_customer) == 10000
+
+        # delete result folder
+        folder_path = self._test_dir.joinpath("output")
+        if os.path.exists(folder_path):
+            shutil.rmtree(folder_path)

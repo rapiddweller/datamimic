@@ -33,17 +33,16 @@ class MLTrainTask(Task):
 
     def execute(self, ctx: SetupContext):
         mostly = MostlyAI(local=True)
-        dataset = self._get_data_from_source(ctx)
-        if not dataset:
+        df_data = self._get_data_from_source(ctx)
+        if df_data is None or df_data.empty:
             raise ValueError(f"No data found for reference {self._statement.name}")
 
-        df_data = pd.DataFrame(dataset)
         tabular_model_configuration = self._get_tabular_model_configuration()
         config = {
             "name": self._statement.name,
             "tables": [
                 {
-                    "name": self._statement.type,
+                    "name": self._statement.type or self._statement.name,
                     "data": df_data,
                     "tabular_model_configuration": tabular_model_configuration,
                 }
@@ -74,36 +73,42 @@ class MLTrainTask(Task):
         return tabular_model_configuration
 
     def _get_data_from_source(self, ctx: SetupContext):
+        """
+
+        """
         root_ctx = ctx.root
         source_type = self.statement.type or self.statement.mode
         source_str = self.statement.source
         file_path = root_ctx.descriptor_dir / source_str
         separator = self.statement.separator or root_ctx.default_separator
         source_data = None
+
         # TODO: accept data from all kind of source
         if source_str.endswith(".csv"):
-            with file_path.open(newline="") as csvfile:
-                source_data = csv.DictReader(csvfile, delimiter=separator)
+            source_data = pd.read_csv(file_path, delimiter=separator)
         elif source_str.endswith(".json"):
-            with file_path.open("r") as file:
-                source_data = json.load(file)
+            source_data = pd.read_json(file_path)
         elif source_str.endswith(".xml"):
+            # TODO: need to do this
             with file_path.open("r") as file:
                 source_data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")
         elif root_ctx.memstore_manager.contain(source_str):
-            source_data = root_ctx.memstore_manager.get_memstore(source_str).get_data_by_type(
+            mem_data = root_ctx.memstore_manager.get_memstore(source_str).get_data_by_type(
                 product_type=source_type, pagination=None, cyclic=False
             )
+            source_data = pd.DataFrame(mem_data)
         elif root_ctx.clients.get(source_str) is not None:
             client = root_ctx.clients.get(source_str)
+            database_data = []
             if isinstance(client, MongoDBClient):
-                source_data = client.get_by_page_with_type(collection_name=source_type)
+                database_data = client.get_by_page_with_type(collection_name=source_type)
             elif isinstance(client, RdbmsClient):
-                source_data = client.get_by_page_with_type(table_name=source_type)
+                database_data = client.get_by_page_with_type(table_name=source_type)
             else:
                 raise ValueError(f"Cannot load data from client: {type(client).__name__}")
-
+            source_data = pd.DataFrame(database_data)
         return source_data
+
 
     def __del__(self):
         """
