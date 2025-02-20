@@ -102,7 +102,8 @@ class GenerateWorker:
             # Determine list of keys to be returned
             return_keys_set = set(result_dict.keys())
             # Do not return current statement if not in test mode and memstore exporter is not available
-            if not context.root.test_mode and not has_memstore_exporter:
+            # TODO: Currently always return inner generate_stmt keys for using as variable, need to improve
+            if isinstance(context, SetupContext) and not context.root.test_mode and not has_memstore_exporter:
                 return_keys_set.remove(stmt.full_name)
 
             # Collect result for later capturing
