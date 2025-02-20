@@ -17,7 +17,6 @@ import xmltodict
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
-from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
@@ -56,7 +55,7 @@ class DataSourceRegistry:
         logger.debug(f"Get source {key} from cache")
         if key not in self._source_cache:
             self._cache_miss += 1
-            key, self._load_source(key, csv_separator)
+            self._load_source(key, csv_separator)
         else:
             self._cache_hit += 1
         self._source_cache.move_to_end(key)  # Mark as recently used
@@ -296,117 +295,6 @@ class DataSourceRegistry:
 
         start_idx_cap = start_idx % source_len
         return res[start_idx_cap: start_idx_cap + end_idx - start_idx]
-
-    def gen_task_load_data_from_source(
-            self,
-            context: SetupContext,
-            stmt: GenerateStatement,
-            source_str: str,
-            separator: str,
-            source_scripted: bool,
-            load_start_idx: int,
-            load_end_idx: int,
-            load_pagination: DataSourcePagination | None,
-    ) -> tuple[list[dict], bool]:
-        """
-        Generate task to load data from source
-        """
-        from datamimic_ce.tasks.task_util import TaskUtil
-
-        build_from_source = True
-        root_context = context.root
-        source_data: dict | list = []
-
-        # get prefix and suffix
-        setup_ctx = context.root if not isinstance(context, SetupContext) else context
-        prefix = stmt.variable_prefix or setup_ctx.default_variable_prefix
-        suffix = stmt.variable_suffix or setup_ctx.default_variable_suffix
-
-        if source_str is None:
-            build_from_source = False
-        # Load data from CSV
-        elif source_str.endswith(".csv"):
-            source_data = self.load_csv_file(
-                ctx=context,
-                file_path=root_context.descriptor_dir / source_str,
-                separator=separator,
-                cyclic=stmt.cyclic,
-                start_idx=load_start_idx,
-                end_idx=load_end_idx,
-                source_scripted=source_scripted,
-                prefix=prefix,
-                suffix=suffix,
-            )
-        # Load data from JSON
-        elif source_str.endswith(".json"):
-            source_data = self.load_json_file(
-                root_context.task_id,
-                root_context.descriptor_dir / source_str,
-                stmt.cyclic,
-                load_start_idx,
-                load_end_idx,
-            )
-            # if sourceScripted then evaluate python expression in json
-            if source_scripted:
-                try:
-                    source_data = TaskUtil.evaluate_file_script_template(
-                        ctx=context, datas=source_data, prefix=prefix, suffix=suffix
-                    )
-                except Exception as e:
-                    logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
-        # Load data from XML
-        elif source_str.endswith(".xml"):
-            source_data = self.load_xml_file(
-                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
-            )
-            # if sourceScripted then evaluate python expression in json
-            if source_scripted:
-                source_data = TaskUtil.evaluate_file_script_template(
-                    ctx=context, datas=source_data, prefix=prefix, suffix=suffix
-                )
-        # Load data from in-memory memstore
-        elif root_context.memstore_manager.contain(source_str):
-            source_data = root_context.memstore_manager.get_memstore(source_str).get_data_by_type(
-                stmt.type or stmt.name, load_pagination, stmt.cyclic
-            )
-        # Load data from client (MongoDB, RDBMS,...)
-        elif root_context.clients.get(source_str) is not None:
-            client = root_context.clients.get(source_str)
-            # Load data from MongoDB
-            if isinstance(client, MongoDBClient):
-                if stmt.selector:
-                    selector = TaskUtil.evaluate_selector_script(context, stmt)
-                    source_data = client.get_by_page_with_query(query=selector, pagination=load_pagination)
-                elif stmt.type:
-                    source_data = client.get_by_page_with_type(collection_name=stmt.type, pagination=load_pagination)
-                else:
-                    raise ValueError(
-                        "MongoDB source requires at least attribute 'type', 'selector' or 'iterationSelector'"
-                    )
-                # Init empty product for upsert MongoDB in case no record found by query
-                if (
-                        len(source_data) == 0
-                        and isinstance(stmt, GenerateStatement)
-                        and stmt.contain_mongodb_upsert(root_context)
-                ):
-                    source_data = [{}]
-            # Load data from RDBMS
-            elif isinstance(client, RdbmsClient):
-                if stmt.selector:
-                    selector = TaskUtil.evaluate_selector_script(context, stmt)
-                    source_data = client.get_by_page_with_query(original_query=selector, pagination=load_pagination)
-                else:
-                    source_data = client.get_by_page_with_type(
-                        table_name=stmt.type or stmt.name,
-                        pagination=load_pagination,
-                    )
-            else:
-                raise ValueError(f"Cannot load data from client: {type(client).__name__}")
-        else:
-            raise ValueError(f"cannot find data source {source_str} for iterate task")
-
-        return_source_data = source_data if isinstance(source_data, list) else [source_data]
-        return return_source_data, build_from_source
 
     def load_csv_file(
             self,
