@@ -3,17 +3,15 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-
-
 from pydantic import BaseModel, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import (
     ATTR_MAXTRAININGTIME,
     ATTR_MODE,
     ATTR_NAME,
-    ATTR_PERSISTLOCATION,
+    ATTR_SEPARATOR,
     ATTR_SOURCE,
-    ATTR_TABLE,
+    ATTR_TYPE,
 )
 from datamimic_ce.model.model_util import ModelUtil
 
@@ -21,9 +19,10 @@ from datamimic_ce.model.model_util import ModelUtil
 class MLTrainModel(BaseModel):
     name: str
     source: str
-    table: str
+    type: str
     mode: str | None = None
     maxTrainingTime: str | None = None
+    separator: str | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -33,9 +32,10 @@ class MLTrainModel(BaseModel):
             valid_attributes={
                 ATTR_NAME,
                 ATTR_SOURCE,
-                ATTR_TABLE,
+                ATTR_TYPE,
                 ATTR_MODE,
                 ATTR_MAXTRAININGTIME,
+                ATTR_SEPARATOR,
             },
         )
 

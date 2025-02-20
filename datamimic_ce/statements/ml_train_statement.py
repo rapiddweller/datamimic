@@ -13,9 +13,10 @@ class MLTrainStatement(Statement):
     def __init__(self, model: MLTrainModel):
         self._name = model.name
         self._source = model.source
-        self._table = model.table
+        self._type = model.type
         self._mode = model.mode
         self._maxTrainingTime = model.maxTrainingTime
+        self._separator = model.separator
 
     @property
     def name(self) -> str | None:
@@ -26,8 +27,8 @@ class MLTrainStatement(Statement):
         return self._source
 
     @property
-    def table(self) -> str:
-        return self._table
+    def type(self) -> str:
+        return self._type
 
     @property
     def mode(self) -> str | None:
@@ -36,3 +37,7 @@ class MLTrainStatement(Statement):
     @property
     def maxTrainingTime(self) -> str | None:
         return self._maxTrainingTime
+
+    @property
+    def separator(self) -> str | None:
+        return self._separator

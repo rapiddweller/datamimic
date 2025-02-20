@@ -3,9 +3,15 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
+import csv
+import json
 import os
+from collections import OrderedDict
 
 import pandas as pd
+import xmltodict
+
+from datamimic_ce.clients.mongodb_client import MongoDBClient
 from mostlyai.sdk import MostlyAI
 
 from datamimic_ce.clients.rdbms_client import RdbmsClient
@@ -27,11 +33,7 @@ class MLTrainTask(Task):
 
     def execute(self, ctx: SetupContext):
         mostly = MostlyAI(local=True)
-        # Retrieving values from an RDBMS data source
-        client = ctx.root.clients.get(self.statement.source)
-        if not isinstance(client, RdbmsClient):
-            raise ValueError("Reference task currently only supports RDBMS data sources")
-        dataset = client.get_by_page_with_type(table_name=self._statement.table)
+        dataset = self._get_data_from_source(ctx)
         if not dataset:
             raise ValueError(f"No data found for reference {self._statement.name}")
 
@@ -41,7 +43,7 @@ class MLTrainTask(Task):
             "name": self._statement.name,
             "tables": [
                 {
-                    "name": self._statement.table,
+                    "name": self._statement.type,
                     "data": df_data,
                     "tabular_model_configuration": tabular_model_configuration,
                 }
@@ -70,6 +72,38 @@ class MLTrainTask(Task):
         if max_training_time is not None:
             tabular_model_configuration["max_training_time"] = max_training_time
         return tabular_model_configuration
+
+    def _get_data_from_source(self, ctx: SetupContext):
+        root_ctx = ctx.root
+        source_type = self.statement.type or self.statement.mode
+        source_str = self.statement.source
+        file_path = root_ctx.descriptor_dir / source_str
+        separator = self.statement.separator or root_ctx.default_separator
+        source_data = None
+        # TODO: accept data from all kind of source
+        if source_str.endswith(".csv"):
+            with file_path.open(newline="") as csvfile:
+                source_data = csv.DictReader(csvfile, delimiter=separator)
+        elif source_str.endswith(".json"):
+            with file_path.open("r") as file:
+                source_data = json.load(file)
+        elif source_str.endswith(".xml"):
+            with file_path.open("r") as file:
+                source_data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")
+        elif root_ctx.memstore_manager.contain(source_str):
+            source_data = root_ctx.memstore_manager.get_memstore(source_str).get_data_by_type(
+                product_type=source_type, pagination=None, cyclic=False
+            )
+        elif root_ctx.clients.get(source_str) is not None:
+            client = root_ctx.clients.get(source_str)
+            if isinstance(client, MongoDBClient):
+                source_data = client.get_by_page_with_type(collection_name=source_type)
+            elif isinstance(client, RdbmsClient):
+                source_data = client.get_by_page_with_type(table_name=source_type)
+            else:
+                raise ValueError(f"Cannot load data from client: {type(client).__name__}")
+
+        return source_data
 
     def __del__(self):
         """

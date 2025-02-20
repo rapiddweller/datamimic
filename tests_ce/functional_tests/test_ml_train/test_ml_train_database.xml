@@ -14,12 +14,13 @@
     </generate>
 
     <ml-train name="CUSTOMERGen"
-              table="CUSTOMER" source="sourcedb"
+              source="sourcedb"
+              type="CUSTOMER"
               mode="persist"
               maxTrainingTime="5"/>
 
     <!-- Generate synthetic CUSTOMER records using the ML generator -->
-    <generate name="NEW_CUSTOMER" count="10000" source="CUSTOMERGen" target="ConsoleExporter" >
+    <generate name="NEW_CUSTOMER" count="5000" pageSize="1000" source="CUSTOMERGen" target="ConsoleExporter" >
         <key name="id" generator="IncrementGenerator"/>
     </generate>
 </setup>
