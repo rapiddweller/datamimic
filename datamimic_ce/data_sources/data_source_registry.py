@@ -46,9 +46,9 @@ class DataSourceRegistry:
 
     def log_cache_info(self):
         hit_rate = 0 if (self._cache_hit + self._cache_miss == 0) else self._cache_hit / (
-                    self._cache_hit + self._cache_miss)
+                self._cache_hit + self._cache_miss)
         logger.info(
-            f"DataSourceRegistry cache hit: {self._cache_hit}, cache miss: {self._cache_miss}. /"
+            f"DataSourceRegistry cache hit: {self._cache_hit}, cache miss: {self._cache_miss}. "
             f"Hit rate: {hit_rate * 100:.2f}%"
         )
 
@@ -66,7 +66,7 @@ class DataSourceRegistry:
         logger.debug(f"Load source {key} from file")
         if key.endswith(".csv"):
             with open(key, newline='') as csvfile:
-                reader = csv.DictReader(csvfile, separator)
+                reader = csv.DictReader(csvfile, delimiter=separator)
                 data = [row for row in reader]
         elif key.endswith(".json"):
             with open(key) as file:
