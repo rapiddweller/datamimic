@@ -20,7 +20,7 @@ class MockClassFactoryUtil(BaseClassFactoryUtil):
     def get_data_generation_util(self):
         return MagicMock()
 
-    def get_datasource_util_cls(self):
+    def get_datasource_registry(self):
         return MagicMock()
 
     def get_datetime_generator(self):
@@ -252,7 +252,7 @@ class TestAddressEntity(TestCase):
         area = entity.area
 
         # Area should be the part between parentheses
-        expected_area = phone[phone.find("(") + 1 : phone.find(")")]
+        expected_area = phone[phone.find("(") + 1: phone.find(")")]
         self.assertEqual(area, expected_area)
 
     def test_state_aliases(self):

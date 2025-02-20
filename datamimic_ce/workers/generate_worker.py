@@ -177,6 +177,7 @@ class GenerateWorker:
                 stmt.source,
                 separator,
                 source_scripted,
+                processed_data_count,
                 load_start_idx,
                 load_end_idx,
                 load_pagination,

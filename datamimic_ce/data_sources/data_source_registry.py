@@ -35,12 +35,14 @@ class DataSourceRegistry:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             # Use OrderedDict and capacity to limit the cache size
-            cls._instance._source_cache = OrderedDict()
-            # TODO: Consider to make capacity configurable
-            cls._instance._cache = 10
-            cls._instance._cache_hit = 0
-            cls._instance._cache_miss = 0
         return cls._instance
+
+    def __init__(self):
+        self._source_cache = OrderedDict()
+        # TODO: Consider to make capacity configurable
+        self._cache = 10
+        self._cache_hit = 0
+        self._cache_miss = 0
 
     def log_cache_info(self):
         # logger.info("something")

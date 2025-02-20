@@ -87,7 +87,7 @@ class TestGenerateTask:
         # Setup class factory utility
         context.class_factory_util = MagicMock(spec=BaseClassFactoryUtil)
         datasource_util = MagicMock()
-        context.class_factory_util.get_datasource_util_cls.return_value = datasource_util
+        context.class_factory_util.get_datasource_registry.return_value = datasource_util
 
         # Setup exporter utility
         exporter_util = MagicMock()
