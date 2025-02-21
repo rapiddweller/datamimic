@@ -6,11 +6,9 @@
 
 import copy
 import math
-import multiprocessing
 import shutil
 
 import dill  # type: ignore
-import ray
 
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.contexts.context import Context
@@ -211,13 +209,16 @@ class GenerateTask(CommonSubTask):
                     # Determine multiprocessing platform and process data in parallel
                     mp_platform = self._statement.mp_platform or "multiprocessing"
                     if mp_platform == "multiprocessing":
-                        merged_result = self.multiprocessing_mp_process(copied_context, chunks, page_size)
+                        from datamimic_ce.workers.multiprocessing_generate_worker import MultiprocessingGenerateWorker
+                        mp_worker = MultiprocessingGenerateWorker()
                     elif mp_platform == "ray":
-                        merged_result = self.ray_mp_process(copied_context, chunks, page_size)
+                        from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
+                        mp_worker = RayGenerateWorker()
                     else:
                         raise ValueError(
                             f"Multiprocessing platform '{mp_platform}' of <generate> '{self.statement.full_name}' "
                             f"is not supported")
+                    merged_result = mp_worker.mp_process(copied_context, self._statement, chunks, page_size)
 
                 # Execute generate task by page in single process
                 else:
@@ -329,57 +330,3 @@ class GenerateTask(CommonSubTask):
         ]
         for task in pre_tasks:
             task.pre_execute(context)
-
-    def ray_mp_process(self, copied_context: SetupContext | GenIterContext, chunks: list[tuple[int, int]],
-                       page_size: int) -> dict[str, list]:
-        """
-        Ray multiprocessing process for generating, exporting data by page, and merging result.
-        """
-        # Execute generate task using Ray
-        from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
-
-        futures = [
-            RayGenerateWorker.ray_process.options(enable_task_events=False).remote(
-                copied_context, self._statement, worker_id, chunk_start, chunk_end, page_size
-            )
-            for worker_id, (chunk_start, chunk_end) in enumerate(chunks, 1)
-        ]
-        # Gather result from Ray workers
-        ray_result = ray.get(futures)
-
-        # Merge result from all workers by product name
-        merged_result: dict[str, list] = {}
-        for result in ray_result:
-            for product_name, product_data_list in result.items():
-                merged_result[product_name] = merged_result.get(product_name, []) + product_data_list
-
-        return merged_result
-
-    def multiprocessing_mp_process(self, copied_context: SetupContext | GenIterContext, chunks: list[tuple[int, int]],
-                                   page_size: int) -> dict[str, list]:
-        """
-        Multiprocessing process for generating, exporting data by page, and merging result.
-        """
-        with multiprocessing.Pool(processes=len(chunks)) as pool:
-            mp_result = pool.map(
-                mp_wrapper,
-                [(copied_context, self._statement, worker_id, chunk_start, chunk_end, page_size) for
-                 worker_id, (chunk_start, chunk_end) in enumerate(chunks, 1)]
-            )
-
-        # Merge result from all workers by product name
-        merged_result: dict[str, list] = {}
-        for result in mp_result:
-            for product_name, product_data_list in result.items():
-                merged_result[product_name] = merged_result.get(product_name, []) + product_data_list
-
-        return merged_result
-
-
-def mp_wrapper(args):
-    """
-    Wrapper function for multiprocessing.
-    """
-    from datamimic_ce.workers.generate_worker import GenerateWorker
-    context, stmt, worker_id, chunk_start, chunk_end, page_size = args
-    return GenerateWorker.generate_and_export_data_by_chunk(context, stmt, worker_id, chunk_start, chunk_end, page_size)
