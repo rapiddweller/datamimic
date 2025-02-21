@@ -82,9 +82,9 @@ from datamimic_ce.utils.object_util import ObjectUtil
 class TaskUtil:
     @staticmethod
     def get_task_by_statement(
-            ctx: SetupContext,
-            stmt: Statement,
-            pagination: DataSourcePagination | None = None,
+        ctx: SetupContext,
+        stmt: Statement,
+        pagination: DataSourcePagination | None = None,
     ) -> Task:
         class_factory_util = ctx.class_factory_util
         if isinstance(stmt, GenerateStatement):
@@ -271,15 +271,15 @@ class TaskUtil:
 
     @staticmethod
     def gen_task_load_data_from_source_or_script(
-            context: SetupContext,
-            stmt: GenerateStatement,
-            source_str: str,  # DO NOT remove this parameter, used on EE as well
-            separator: str,
-            source_scripted: bool,
-            processed_data_count: int,  # DO NOT remove this parameter, used on EE as well
-            load_start_idx: int,
-            load_end_idx: int,
-            load_pagination: DataSourcePagination | None,
+        context: SetupContext,
+        stmt: GenerateStatement,
+        source_str: str,  # DO NOT remove this parameter, used on EE as well
+        separator: str,
+        source_scripted: bool,
+        processed_data_count: int,  # DO NOT remove this parameter, used on EE as well
+        load_start_idx: int,
+        load_end_idx: int,
+        load_pagination: DataSourcePagination | None,
     ) -> tuple[list[dict], bool]:
         """
         Generate task to load data from source
@@ -362,9 +362,9 @@ class TaskUtil:
                     )
                 # Init empty product for upsert MongoDB in case no record found by query
                 if (
-                        len(source_data) == 0
-                        and isinstance(stmt, GenerateStatement)
-                        and stmt.contain_mongodb_upsert(root_context)
+                    len(source_data) == 0
+                    and isinstance(stmt, GenerateStatement)
+                    and stmt.contain_mongodb_upsert(root_context)
                 ):
                     source_data = [{}]
             # Load data from RDBMS
@@ -387,10 +387,10 @@ class TaskUtil:
 
     @staticmethod
     def export_product_by_page(
-            root_context: SetupContext,
-            stmt: GenerateStatement,
-            xml_result: dict[str, list[dict]],
-            exporter_state_manager: ExporterStateManager,
+        root_context: SetupContext,
+        stmt: GenerateStatement,
+        xml_result: dict[str, list[dict]],
+        exporter_state_manager: ExporterStateManager,
     ) -> None:
         """
         Export single page of product in generate statement.
@@ -444,13 +444,13 @@ class TaskUtil:
 
     @staticmethod
     def exporter_without_operation(
-            task_id: str,
-            json_product: tuple,
-            xml_result: dict,
-            stmt: GenerateStatement,
-            exporters_without_operation: list,
-            exporter_state_manager: ExporterStateManager,
-            first_page: bool,
+        task_id: str,
+        json_product: tuple,
+        xml_result: dict,
+        stmt: GenerateStatement,
+        exporters_without_operation: list,
+        exporter_state_manager: ExporterStateManager,
+        first_page: bool,
     ):
         # Run exporters without operations
         for exporter in exporters_without_operation:
