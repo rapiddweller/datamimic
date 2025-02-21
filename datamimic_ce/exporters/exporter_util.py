@@ -10,6 +10,7 @@ import re
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any
 
 from datamimic_ce.clients.client import Client
 from datamimic_ce.clients.mongodb_client import MongoDBClient
@@ -38,73 +39,72 @@ from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
 
 
-def custom_serializer(obj) -> str:
+def custom_serializer(obj: Any) -> Any:
     """
     Custom serializer for JSON dump that supports a wide range of types.
     """
     # Datetime and date objects
-    if isinstance(obj, (datetime, date)):
+    if isinstance(obj, datetime | date):
         return obj.isoformat()
-    
+
     # If object supports pyarrow-like conversion
     if hasattr(obj, "as_py") and callable(obj.as_py):
         return obj.as_py()
-    
+
     # UUID objects
     if isinstance(obj, uuid.UUID):
         return str(obj)
-    
+
     # MongoDB ObjectId (if available)
     try:
         from bson import ObjectId
+
         if isinstance(obj, ObjectId):
             return str(obj)
     except ImportError:
         pass
-    
+
     # pandas Timestamp objects (if available)
     try:
         import pandas as pd
+
         if isinstance(obj, pd.Timestamp):
             return obj.isoformat()
     except ImportError:
         pass
-    
+
     # Decimal objects
     if isinstance(obj, Decimal):
         return str(obj)
-    
+
     # NumPy scalar types
     try:
         import numpy as np
+
         if isinstance(obj, np.generic):
             return obj.item()
     except ImportError:
         pass
-    
+
     # Convert sets and frozensets to lists (JSON serializable)
-    if isinstance(obj, (set, frozenset)):
+    if isinstance(obj, set | frozenset):
         return list(obj)
-    
+
     # Handle bytes: try UTF-8, fallback to base64 encoding
     if isinstance(obj, bytes):
         try:
             return obj.decode("utf-8")
         except UnicodeDecodeError:
             return base64.b64encode(obj).decode("ascii")
-    
+
     # Log and fallback
-    logger.error(
-        "Unhandled type in custom_serializer: %s, value: %s",
-        type(obj),
-        repr(obj)
-    )
     try:
         return str(obj)
     except Exception as e:
         raise TypeError(
             f"Failed when serializing exporting data: Object {obj} of type {type(obj)} is not JSON serializable"
         ) from e
+
 
 class ExporterUtil:
     @staticmethod
