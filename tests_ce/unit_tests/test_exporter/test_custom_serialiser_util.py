@@ -1,202 +1,120 @@
-
-
+import base64
 import unittest
+import uuid
+from datetime import date, datetime
+from decimal import Decimal
 
-from datamimic_ce.exporters.exporter_util import ExporterUtil
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
+
+try:
+    from bson import ObjectId
+except ImportError:
+    ObjectId = None
+
+# Import the custom_serializer function from the module
+from datamimic_ce.exporters.exporter_util import custom_serializer
 
 
-class TestExporterUtil(unittest.TestCase):
-    def test_single_function_without_params(self):
-        # Test single function without parameters (dotted name)
-        result = ExporterUtil.parse_function_string("mongodb.delete")
-        expected = [{"function_name": "mongodb.delete", "params": None}]
-        self.assertEqual(result, expected)
+class DummyAsPy:
+    """
+    Dummy class that simulates a pyarrow-like object by providing an as_py method.
+    """
+    def as_py(self):
+        return {"key": "value"}
 
-    def test_single_function_simple_name(self):
-        # Test single simple function name without parameters
-        result = ExporterUtil.parse_function_string("CSV")
-        expected = [{"function_name": "CSV", "params": None}]
-        self.assertEqual(result, expected)
 
-    def test_multiple_functions_without_params(self):
-        # Test multiple functions without parameters
-        result = ExporterUtil.parse_function_string("CSV, JSON")
-        expected = [
-            {"function_name": "CSV", "params": None},
-            {"function_name": "JSON", "params": None},
-        ]
-        self.assertEqual(result, expected)
+class BrokenStr:
+    """
+    Dummy class that simulates a broken __str__ method.
+    """
+    def __str__(self):
+        raise Exception("Cannot convert object to string")
 
-    def test_function_with_single_param(self):
-        # Test function with a single keyword parameter
-        result = ExporterUtil.parse_function_string("JSON(chunk_size=2)")
-        expected = [{"function_name": "JSON", "params": {"chunk_size": 2}}]
-        self.assertEqual(result, expected)
 
-    def test_function_with_multiple_params(self):
-        # Test function with multiple parameters
-        result = ExporterUtil.parse_function_string("mongodb.upsert(data={'key': 'value'}, overwrite=True)")
-        expected = [
-            {
-                "function_name": "mongodb.upsert",
-                "params": {"data": {"key": "value"}, "overwrite": True},
-            }
-        ]
-        self.assertEqual(result, expected)
+class TestCustomSerializer(unittest.TestCase):
+    def test_datetime_and_date(self):
+        """Test serialization for datetime and date objects."""
+        dt = datetime(2023, 10, 5, 12, 34, 56)
+        d = date(2023, 10, 5)
+        self.assertEqual(custom_serializer(dt), dt.isoformat())
+        self.assertEqual(custom_serializer(d), d.isoformat())
 
-    def test_mixed_functions_with_and_without_params(self):
-        # Test multiple functions, some with parameters and some without
-        result = ExporterUtil.parse_function_string("mongodb.update, CSV, JSON(chunk_size=2)")
-        expected = [
-            {"function_name": "mongodb.update", "params": None},
-            {"function_name": "CSV", "params": None},
-            {"function_name": "JSON", "params": {"chunk_size": 2}},
-        ]
-        self.assertEqual(result, expected)
+    def test_pyarrow_like_object(self):
+        """Test object with as_py method is correctly serialized using its as_py output."""
+        dummy = DummyAsPy()
+        self.assertEqual(custom_serializer(dummy), {"key": "value"})
 
-    def test_mongodb_delete_with_complex_param(self):
-        # Test complex nested parameter
-        result = ExporterUtil.parse_function_string("mongodb.delete(criteria={'age': {'$gt': 18}})")
-        expected = [
-            {
-                "function_name": "mongodb.delete",
-                "params": {"criteria": {"age": {"$gt": 18}}},
-            }
-        ]
-        self.assertEqual(result, expected)
+    def test_uuid_object(self):
+        """Test serialization for UUID objects."""
+        uid = uuid.uuid4()
+        self.assertEqual(custom_serializer(uid), str(uid))
 
-    def test_dotted_names_without_params(self):
-        # Test multiple dotted names without parameters
-        result = ExporterUtil.parse_function_string("mongodb.find, SQL.load")
-        expected = [
-            {"function_name": "mongodb.find", "params": None},
-            {"function_name": "SQL.load", "params": None},
-        ]
-        self.assertEqual(result, expected)
+    @unittest.skipUnless(ObjectId is not None, "bson module is not available")
+    def test_mongodb_objectid(self):
+        """Test that a MongoDB ObjectId is serialized to its string representation."""
+        oid = ObjectId("507f191e810c19729de860ea")
+        self.assertEqual(custom_serializer(oid), str(oid))
 
-    def test_function_with_nested_dictionary_param(self):
-        # Test function with nested dictionary parameters
-        result = ExporterUtil.parse_function_string(
-            "mongodb.upsert(document={'id': 1, 'data': {'key': 'value', 'status': 'active'}})"
-        )
-        expected = [
-            {
-                "function_name": "mongodb.upsert",
-                "params": {"document": {"id": 1, "data": {"key": "value", "status": "active"}}},
-            }
-        ]
-        self.assertEqual(result, expected)
+    @unittest.skipUnless(pd is not None, "pandas is not available")
+    def test_pandas_timestamp(self):
+        """Test serialization for pandas Timestamp objects."""
+        ts = pd.Timestamp("2023-10-05T12:34:56")
+        self.assertEqual(custom_serializer(ts), ts.isoformat())
 
-    def test_unsupported_expression_lambda(self):
-        # Test unsupported lambda expression
-        with self.assertRaises(ValueError):
-            ExporterUtil.parse_function_string("lambda x: x + 1")
+    def test_decimal_object(self):
+        """Test serialization for Decimal objects."""
+        dec = Decimal("123.456")
+        self.assertEqual(custom_serializer(dec), str(dec))
 
-    def test_unsupported_expression_arithmetic(self):
-        # Test unsupported arithmetic expression
-        with self.assertRaises(ValueError):
-            ExporterUtil.parse_function_string("1 + 2")
+    @unittest.skipUnless(np is not None, "numpy is not available")
+    def test_numpy_scalar(self):
+        """Test serialization for NumPy scalar types."""
+        np_int = np.int64(42)
+        np_float = np.float64(3.14)
+        self.assertEqual(custom_serializer(np_int), np_int.item())
+        self.assertEqual(custom_serializer(np_float), np_float.item())
 
-    def test_empty_string(self):
-        # Test empty string input
-        result = ExporterUtil.parse_function_string("")
-        expected = []
-        self.assertEqual(result, expected)
+    def test_sets_and_frozensets(self):
+        """Test that sets and frozensets are converted to lists."""
+        s = {1, 2, 3}
+        fs = frozenset({4, 5, 6})
+        # Compare as sets because the order of list conversion is not guaranteed.
+        self.assertEqual(set(custom_serializer(s)), s)
+        self.assertEqual(set(custom_serializer(fs)), set(fs))
 
-    def test_spaces_and_commas_only(self):
-        # Test spaces and commas only, should return empty
-        result = ExporterUtil.parse_function_string(" , , ")
-        expected = []
-        self.assertEqual(result, expected)
+    def test_bytes_utf8(self):
+        """Test that bytes decodable as UTF-8 are properly converted to strings."""
+        b_string = b"hello world"
+        self.assertEqual(custom_serializer(b_string), "hello world")
 
-    def test_function_with_non_literal_param(self):
-        # Test function with a non-literal parameter (unsupported)
-        with self.assertRaises(ValueError):
-            ExporterUtil.parse_function_string("JSON(chunk_size=my_variable)")
+    def test_bytes_non_utf8(self):
+        """Test that bytes not decodable as UTF-8 are encoded in base64."""
+        # b'\xff' is typically invalid in UTF-8.
+        non_utf8 = b'\xff'
+        expected = base64.b64encode(non_utf8).decode("ascii")
+        self.assertEqual(custom_serializer(non_utf8), expected)
 
-    def test_function_with_mixed_types(self):
-        # Test function with mixed types in parameters
-        result = ExporterUtil.parse_function_string("JSON(chunk_size=2, enabled=True, name='sample')")
-        expected = [
-            {
-                "function_name": "JSON",
-                "params": {"chunk_size": 2, "enabled": True, "name": "sample"},
-            }
-        ]
-        self.assertEqual(result, expected)
+    def test_fallback_to_str(self):
+        """Test that simple types fallback to str conversion."""
+        num = 123
+        self.assertEqual(custom_serializer(num), str(num))
 
-    def test_large_nested_data_structure(self):
-        # Test function with a large and complex nested data structure
-        result = ExporterUtil.parse_function_string(
-            "mongodb.upsert(data={'key': {'subkey': [1, 2, {'deepkey': 'deepvalue'}]}})"
-        )
-        expected = [
-            {
-                "function_name": "mongodb.upsert",
-                "params": {"data": {"key": {"subkey": [1, 2, {"deepkey": "deepvalue"}]}}},
-            }
-        ]
-        self.assertEqual(result, expected)
-
-    def test_check_path_format_file(self):
-        # Test valid file path
-        path = "valid/file/path.txt"
-        assert ExporterUtil.check_path_format(path) == "file"
-
-    def test_check_path_format_directory(self):
-        # Test valid directory path
-        path = "valid/directory/path"
-        assert ExporterUtil.check_path_format(path) == "directory"
-
-    def test_check_path_format_invalid_ending_dot(self):
-        # Test invalid path ending with a dot
-        path = "invalid/path/ending/with/dot."
-        with self.assertRaises(ValueError):
-            ExporterUtil.check_path_format(path)
-
-    def test_check_path_format_invalid_characters(self):
-        # Test invalid path with special characters
-        path = "invalid/path/with/special*chars"
-        with self.assertRaises(ValueError):
-            ExporterUtil.check_path_format(path)
-
-    def test_check_path_format_empty_string(self):
-        # Test empty string path
-        path = ""
-        with self.assertRaises(ValueError):
-            ExporterUtil.check_path_format(path)
-
-    def test_check_path_format_only_dots(self):
-        # Test path with only dots
-        path = "..."
-        with self.assertRaises(ValueError):
-            ExporterUtil.check_path_format(path)
-
-    def test_check_path_format_only_slashes(self):
-        # Test path with only slashes
-        path = "///"
-        with self.assertRaises(ValueError):
-            ExporterUtil.check_path_format(path)
-
-    def test_check_path_format_file_with_multiple_dots(self):
-        # Test valid file path with multiple dots
-        path = "valid/file/path.with.multiple.dots.txt"
-        assert ExporterUtil.check_path_format(path) == "file"
-
-    def test_check_path_format_directory_with_dashes_underscores(self):
-        # Test valid directory path with dashes and underscores
-        path = "valid-directory/with_underscores"
-        assert ExporterUtil.check_path_format(path) == "directory"
-
-    def test_check_path_format_file_with_numbers(self):
-        # Test valid file path with numbers
-        path = "valid/file/path123.txt"
-        assert ExporterUtil.check_path_format(path) == "file"
-
-    def test_check_path_format_directory_with_numbers(self):
-        # Test valid directory path with numbers
-        path = "valid/directory123"
-        assert ExporterUtil.check_path_format(path) == "directory"
+    def test_broken_str(self):
+        """
+        Test that an object which fails __str__ conversion raises a TypeError with the proper message.
+        """
+        broken = BrokenStr()
+        with self.assertRaises(TypeError) as ctx:
+            custom_serializer(broken)
+        self.assertIn("Failed when serializing exporting data", str(ctx.exception))
 
 
 if __name__ == "__main__":

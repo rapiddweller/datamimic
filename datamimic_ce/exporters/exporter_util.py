@@ -103,7 +103,7 @@ def custom_serializer(obj: Any) -> Any:
         return str(obj)
     except Exception as e:
         raise TypeError(
-            f"Failed when serializing exporting data: Object {obj} of type {type(obj)} is not JSON serializable"
+            f"Failed when serializing exporting data: Object {repr(obj)} of type {type(obj)} is not JSON serializable"
         ) from e
 
 
