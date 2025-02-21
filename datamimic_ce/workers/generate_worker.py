@@ -4,13 +4,17 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 import copy
+import os
 
+import dill  # type: ignore[import-untyped]
+
+from datamimic_ce.config import settings
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
-from datamimic_ce.logger import logger
+from datamimic_ce.logger import logger, setup_logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.tasks.generate_task import GenerateTask
 from datamimic_ce.utils.logging_util import gen_timer
@@ -247,3 +251,15 @@ class GenerateWorker:
         # 4. Return product for later export
         product_holder[stmt.full_name] = result
         return product_holder
+
+    @staticmethod
+    def mp_preprocess(context: SetupContext | GenIterContext, worker_id: int):
+        """
+        Preprocess function for multiprocessing worker. Deserialize namespace functions and generators.
+        """
+        loglevel = os.getenv("LOG_LEVEL", "INFO")
+        setup_logger(logger_name=settings.DEFAULT_LOGGER, worker_name=f"WORK-{worker_id}", level=loglevel)
+
+        # Deserialize multiprocessing arguments
+        context.root.namespace.update(dill.loads(context.root.namespace_functions))
+        context.root.generators = dill.loads(context.root.generators)

@@ -13,8 +13,6 @@ from pathlib import Path
 # Avoid deduplication of logs in Ray, MUST be set before importing ray
 os.environ["RAY_DEDUP_LOGS"] = "0"
 
-import ray
-
 from datamimic_ce.config import settings
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger, setup_logger
@@ -25,8 +23,6 @@ from datamimic_ce.utils.logging_util import log_system_info
 from datamimic_ce.utils.system_util import log_memory_info
 
 LOG_FILE = "datamimic.log"
-
-ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False)
 
 
 class DataMimic:

@@ -15,6 +15,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_CYCLIC,
     ATTR_DISTRIBUTION,
     ATTR_EXPORT_URI,
+    ATTR_MP_PLATFORM,
     ATTR_MULTIPROCESSING,
     ATTR_NAME,
     ATTR_NUM_PROCESS,
@@ -57,6 +58,7 @@ class GenerateModel(BaseModel):
     bucket: str | None = Field(None, alias=ATTR_BUCKET)
     num_process: int | None = Field(None, alias=ATTR_NUM_PROCESS)
     script: str | None = Field(None, alias=ATTR_SCRIPT)
+    mp_platform: str | None = Field(None, alias=ATTR_MP_PLATFORM)
 
     @model_validator(mode="before")
     @classmethod
@@ -85,6 +87,7 @@ class GenerateModel(BaseModel):
                 ATTR_CONVERTER,
                 ATTR_NUM_PROCESS,
                 ATTR_SCRIPT,
+                ATTR_MP_PLATFORM,
             },
         )
 
