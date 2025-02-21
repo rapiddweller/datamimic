@@ -5,8 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 import multiprocessing
 
-import dill  # type: ignore
-
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.statements.generate_statement import GenerateStatement
@@ -18,17 +16,23 @@ class MultiprocessingGenerateWorker(GenerateWorker):
     Worker class for generating and exporting data by page in multiprocessing using multiprocessing.
     """
 
-    def mp_process(self, copied_context: SetupContext | GenIterContext, statement: GenerateStatement,
-                   chunks: list[tuple[int, int]],
-                   page_size: int) -> dict[str, list]:
+    def mp_process(
+        self,
+        copied_context: SetupContext | GenIterContext,
+        statement: GenerateStatement,
+        chunks: list[tuple[int, int]],
+        page_size: int,
+    ) -> dict[str, list]:
         """
         Multiprocessing process for generating, exporting data by page, and merging result.
         """
         with multiprocessing.Pool(processes=len(chunks)) as pool:
             mp_result = pool.map(
                 self.mp_wrapper,
-                [(copied_context, statement, worker_id, chunk_start, chunk_end, page_size) for
-                 worker_id, (chunk_start, chunk_end) in enumerate(chunks, 1)]
+                [
+                    (copied_context, statement, worker_id, chunk_start, chunk_end, page_size)
+                    for worker_id, (chunk_start, chunk_end) in enumerate(chunks, 1)
+                ],
             )
 
         # Merge result from all workers by product name
@@ -52,5 +56,6 @@ class MultiprocessingGenerateWorker(GenerateWorker):
         # Preprocess serializable objects
         GenerateWorker.mp_preprocess(context, worker_id)
 
-        return GenerateWorker.generate_and_export_data_by_chunk(context, stmt, worker_id, chunk_start, chunk_end,
-                                                                page_size)
+        return GenerateWorker.generate_and_export_data_by_chunk(
+            context, stmt, worker_id, chunk_start, chunk_end, page_size
+        )

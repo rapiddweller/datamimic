@@ -15,6 +15,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_CYCLIC,
     ATTR_DISTRIBUTION,
     ATTR_EXPORT_URI,
+    ATTR_MP_PLATFORM,
     ATTR_MULTIPROCESSING,
     ATTR_NAME,
     ATTR_NUM_PROCESS,
@@ -29,7 +30,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_TARGET,
     ATTR_TYPE,
     ATTR_VARIABLE_PREFIX,
-    ATTR_VARIABLE_SUFFIX, ATTR_MP_PLATFORM,
+    ATTR_VARIABLE_SUFFIX,
 )
 from datamimic_ce.model.model_util import ModelUtil
 

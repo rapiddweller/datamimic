@@ -4,7 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import dill  # type: ignore
 import ray
 
 from datamimic_ce.contexts.geniter_context import GenIterContext
@@ -18,9 +17,13 @@ class RayGenerateWorker(GenerateWorker):
     Worker class for generating and exporting data by page in multiprocessing using Ray.
     """
 
-    def mp_process(self, copied_context: SetupContext | GenIterContext, statement: GenerateStatement,
-                   chunks: list[tuple[int, int]],
-                   page_size: int) -> dict[str, list]:
+    def mp_process(
+        self,
+        copied_context: SetupContext | GenIterContext,
+        statement: GenerateStatement,
+        chunks: list[tuple[int, int]],
+        page_size: int,
+    ) -> dict[str, list]:
         """
         Ray multiprocessing process for generating, exporting data by page, and merging result.
         """
@@ -45,12 +48,12 @@ class RayGenerateWorker(GenerateWorker):
     @staticmethod
     @ray.remote
     def ray_process(
-            context: SetupContext | GenIterContext,
-            stmt: GenerateStatement,
-            worker_id: int,
-            chunk_start: int,
-            chunk_end: int,
-            page_size: int,
+        context: SetupContext | GenIterContext,
+        stmt: GenerateStatement,
+        worker_id: int,
+        chunk_start: int,
+        chunk_end: int,
+        page_size: int,
     ) -> dict:
         """
         Ray remote function to generate and export data by page in multiprocessing.

@@ -9,8 +9,10 @@ import math
 import shutil
 
 import dill  # type: ignore
+import ray
 
 from datamimic_ce.clients.database_client import DatabaseClient
+from datamimic_ce.config import settings
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
@@ -173,6 +175,8 @@ class GenerateTask(CommonSubTask):
         """
         with gen_timer("process", context.root.report_logging, self.statement.full_name) as timer_result:
             try:
+                is_ray_initialized = False
+
                 # Pre-execute sub-tasks before generating any data
                 self.pre_execute(context)
 
@@ -210,14 +214,19 @@ class GenerateTask(CommonSubTask):
                     mp_platform = self._statement.mp_platform or "multiprocessing"
                     if mp_platform == "multiprocessing":
                         from datamimic_ce.workers.multiprocessing_generate_worker import MultiprocessingGenerateWorker
+
                         mp_worker = MultiprocessingGenerateWorker()
                     elif mp_platform == "ray":
                         from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
-                        mp_worker = RayGenerateWorker()
+
+                        mp_worker = RayGenerateWorker()  # type: ignore[assignment]
+                        ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False)
+                        is_ray_initialized = True
                     else:
                         raise ValueError(
                             f"Multiprocessing platform '{mp_platform}' of <generate> '{self.statement.full_name}' "
-                            f"is not supported")
+                            f"is not supported"
+                        )
                     merged_result = mp_worker.mp_process(copied_context, self._statement, chunks, page_size)
 
                 # Execute generate task by page in single process
@@ -256,6 +265,8 @@ class GenerateTask(CommonSubTask):
                 if isinstance(context, SetupContext):
                     for temp_dir in context.descriptor_dir.glob(f"temp_result_{context.task_id}*"):
                         shutil.rmtree(temp_dir)
+                if is_ray_initialized:
+                    ray.shutdown()
 
     @staticmethod
     def export_memstore(setup_context: SetupContext, current_stmt: GenerateStatement, merged_result: dict[str, list]):
