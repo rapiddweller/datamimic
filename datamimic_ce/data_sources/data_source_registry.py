@@ -47,8 +47,9 @@ class DataSourceRegistry:
         """
         Log cache hit rate information
         """
-        hit_rate = 0 if (self._cache_hit + self._cache_miss == 0) else self._cache_hit / (
-                self._cache_hit + self._cache_miss)
+        hit_rate = (
+            0 if (self._cache_hit + self._cache_miss == 0) else self._cache_hit / (self._cache_hit + self._cache_miss)
+        )
         logger.info(
             f"DataSourceRegistry cache hit: {self._cache_hit}, cache miss: {self._cache_miss}. "
             f"Hit rate: {hit_rate * 100:.2f}%"
@@ -77,7 +78,7 @@ class DataSourceRegistry:
         logger.debug(f"Load source {key} from file")
         # Load source data from file
         if key.endswith(".csv"):
-            with open(key, newline='') as csvfile:
+            with open(key, newline="") as csvfile:
                 reader = csv.DictReader(csvfile, delimiter=separator)
                 data = [row for row in reader]
         elif key.endswith(".json"):
@@ -163,7 +164,8 @@ class DataSourceRegistry:
                 client = root_ctx.get_client_by_id(source_str)
                 if client is None:
                     raise ValueError(
-                        f"Client '{source_str}' could not be found in your context, please check your script")
+                        f"Client '{source_str}' could not be found in your context, please check your script"
+                    )
                 # handle database collection/table as data source
                 from datamimic_ce.clients.rdbms_client import RdbmsClient
 
@@ -252,7 +254,7 @@ class DataSourceRegistry:
 
     @staticmethod
     def get_cyclic_data_iterator(
-            data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None = False
+        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None = False
     ) -> Iterator | None:
         """
         Get cyclic iterator from iterable data source
@@ -272,7 +274,7 @@ class DataSourceRegistry:
 
     @staticmethod
     def get_shuffled_data_with_cyclic(
-            data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None, seed: int
+        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None, seed: int
     ) -> list:
         """
         Get shuffled data from iterable data source
@@ -316,19 +318,19 @@ class DataSourceRegistry:
             current_seed += 1
 
         start_idx_cap = start_idx % source_len
-        return res[start_idx_cap: start_idx_cap + end_idx - start_idx]
+        return res[start_idx_cap : start_idx_cap + end_idx - start_idx]
 
     def load_csv_file(
-            self,
-            ctx: SetupContext,
-            file_path: Path,
-            separator: str,
-            cyclic: bool | None,
-            start_idx: int,
-            end_idx: int,
-            source_scripted: bool,
-            prefix: str,
-            suffix: str,
+        self,
+        ctx: SetupContext,
+        file_path: Path,
+        separator: str,
+        cyclic: bool | None,
+        start_idx: int,
+        end_idx: int,
+        source_scripted: bool,
+        prefix: str,
+        suffix: str,
     ) -> list[dict]:
         """
         Load CSV content from file with skip and limit.
@@ -354,6 +356,7 @@ class DataSourceRegistry:
         # if sourceScripted then evaluate python expression in csv
         if source_scripted:
             from datamimic_ce.tasks.task_util import TaskUtil
+
             evaluated_result = TaskUtil.evaluate_file_script_template(
                 ctx=ctx, datas=result, prefix=prefix, suffix=suffix
             )
@@ -361,8 +364,9 @@ class DataSourceRegistry:
 
         return result
 
-    def load_json_file(self, task_id: str, file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[
-        dict]:
+    def load_json_file(
+        self, task_id: str, file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int
+    ) -> list[dict]:
         """
         Load JSON content from file using skip and limit.
 

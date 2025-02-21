@@ -30,8 +30,19 @@ class RdbmsClient(DatabaseClient):
         # Prepare sqlalchemy engine kwargs, also remove datamimic-specific kwargs
         self._engine_kwargs = credential.get_credentials()
         # Remove datamimic-specific kwargs
-        not_engine_kwargs = ["dbms", "database", "host", "port", "user", "password", "db_schema", "id", "environment",
-                             "system", "none_as_null_col"]
+        not_engine_kwargs = [
+            "dbms",
+            "database",
+            "host",
+            "port",
+            "user",
+            "password",
+            "db_schema",
+            "id",
+            "environment",
+            "system",
+            "none_as_null_col",
+        ]
         self._engine_kwargs = {k: v for k, v in self._engine_kwargs.items() if k not in not_engine_kwargs}
         # Set default values for some kwargs
         self._engine_kwargs["echo"] = self._engine_kwargs.get("echo", False)
@@ -342,11 +353,11 @@ class RdbmsClient(DatabaseClient):
         return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
 
     def get_random_rows_by_column(
-            self,
-            table_name: str,
-            column_name: str,
-            pagination: DataSourcePagination | None,
-            unique: bool,
+        self,
+        table_name: str,
+        column_name: str,
+        pagination: DataSourcePagination | None,
+        unique: bool,
     ) -> list:
         """
         Get column data for reference

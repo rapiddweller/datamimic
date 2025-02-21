@@ -49,10 +49,10 @@ class VariableTask(KeyVariableTask):
     _LAZY_ITERATOR_MODE: Final = "lazy_iterator"
 
     def __init__(
-            self,
-            ctx: SetupContext,
-            statement: VariableStatement,
-            pagination: DataSourcePagination | None,
+        self,
+        ctx: SetupContext,
+        statement: VariableStatement,
+        pagination: DataSourcePagination | None,
     ):
         super().__init__(ctx, statement, pagination)
         self._source_script = (
@@ -146,8 +146,9 @@ class VariableTask(KeyVariableTask):
                     )
                     if is_random_distribution:
                         self._random_items_iterator = iter(
-                            DataSourceRegistry.get_shuffled_data_with_cyclic(file_data, pagination, statement.cyclic,
-                                                                             seed)
+                            DataSourceRegistry.get_shuffled_data_with_cyclic(
+                                file_data, pagination, statement.cyclic, seed
+                            )
                         )
                         self._mode = self._RANDOM_DISTRIBUTION_MODE
                     else:
