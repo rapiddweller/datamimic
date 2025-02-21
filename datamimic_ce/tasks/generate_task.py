@@ -175,6 +175,7 @@ class GenerateTask(CommonSubTask):
         """
         with gen_timer("process", context.root.report_logging, self.statement.full_name) as timer_result:
             try:
+                # Mark Ray initialization status for shutdown at the end of execution
                 is_ray_initialized = False
 
                 # Pre-execute sub-tasks before generating any data
@@ -220,6 +221,7 @@ class GenerateTask(CommonSubTask):
                         from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
 
                         mp_worker = RayGenerateWorker()  # type: ignore[assignment]
+                        # Initialize Ray
                         ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False)
                         is_ray_initialized = True
                     else:
@@ -227,6 +229,7 @@ class GenerateTask(CommonSubTask):
                             f"Multiprocessing platform '{mp_platform}' of <generate> '{self.statement.full_name}' "
                             f"is not supported"
                         )
+                    # Execute generate task by page in multiprocessing using Ray or multiprocessing
                     merged_result = mp_worker.mp_process(copied_context, self._statement, chunks, page_size)
 
                 # Execute generate task by page in single process
@@ -265,6 +268,7 @@ class GenerateTask(CommonSubTask):
                 if isinstance(context, SetupContext):
                     for temp_dir in context.descriptor_dir.glob(f"temp_result_{context.task_id}*"):
                         shutil.rmtree(temp_dir)
+                # Shutdown Ray if initialized
                 if is_ray_initialized:
                     ray.shutdown()
 
