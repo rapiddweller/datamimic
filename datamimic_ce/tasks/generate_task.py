@@ -6,6 +6,7 @@
 
 import copy
 import math
+import multiprocessing
 import shutil
 
 import dill  # type: ignore
@@ -207,23 +208,17 @@ class GenerateTask(CommonSubTask):
                     chunks = [(i * chunk_size, min((i + 1) * chunk_size, count)) for i in range(num_workers)]
                     logger.info(f"Generating data by page in {num_workers} workers with chunks {chunks}")
 
-                    # Execute generate task using Ray
-                    from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
+                    # Determine multiprocessing platform and process data in parallel
+                    mp_platform = self._statement.mp_platform or "multiprocessing"
+                    if mp_platform == "multiprocessing":
+                        merged_result = self.multiprocessing_mp_process(copied_context, chunks, page_size)
+                    elif mp_platform == "ray":
+                        merged_result = self.ray_mp_process(copied_context, chunks, page_size)
+                    else:
+                        raise ValueError(
+                            f"Multiprocessing platform '{mp_platform}' of <generate> '{self.statement.full_name}' "
+                            f"is not supported")
 
-                    futures = [
-                        RayGenerateWorker.ray_process.options(enable_task_events=False).remote(
-                            copied_context, self._statement, worker_id, chunk_start, chunk_end, page_size
-                        )
-                        for worker_id, (chunk_start, chunk_end) in enumerate(chunks, 1)
-                    ]
-                    # Gather result from Ray workers
-                    ray_result = ray.get(futures)
-
-                    # Merge result from all workers by product name
-                    merged_result: dict[str, list] = {}
-                    for result in ray_result:
-                        for product_name, product_data_list in result.items():
-                            merged_result[product_name] = merged_result.get(product_name, []) + product_data_list
                 # Execute generate task by page in single process
                 else:
                     # If inner gen_stmt, pass worker_id from outermost gen_stmt to inner gen_stmt
@@ -334,3 +329,57 @@ class GenerateTask(CommonSubTask):
         ]
         for task in pre_tasks:
             task.pre_execute(context)
+
+    def ray_mp_process(self, copied_context: SetupContext | GenIterContext, chunks: list[tuple[int, int]],
+                       page_size: int) -> dict[str, list]:
+        """
+        Ray multiprocessing process for generating, exporting data by page, and merging result.
+        """
+        # Execute generate task using Ray
+        from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
+
+        futures = [
+            RayGenerateWorker.ray_process.options(enable_task_events=False).remote(
+                copied_context, self._statement, worker_id, chunk_start, chunk_end, page_size
+            )
+            for worker_id, (chunk_start, chunk_end) in enumerate(chunks, 1)
+        ]
+        # Gather result from Ray workers
+        ray_result = ray.get(futures)
+
+        # Merge result from all workers by product name
+        merged_result: dict[str, list] = {}
+        for result in ray_result:
+            for product_name, product_data_list in result.items():
+                merged_result[product_name] = merged_result.get(product_name, []) + product_data_list
+
+        return merged_result
+
+    def multiprocessing_mp_process(self, copied_context: SetupContext | GenIterContext, chunks: list[tuple[int, int]],
+                                   page_size: int) -> dict[str, list]:
+        """
+        Multiprocessing process for generating, exporting data by page, and merging result.
+        """
+        with multiprocessing.Pool(processes=len(chunks)) as pool:
+            mp_result = pool.map(
+                mp_wrapper,
+                [(copied_context, self._statement, worker_id, chunk_start, chunk_end, page_size) for
+                 worker_id, (chunk_start, chunk_end) in enumerate(chunks, 1)]
+            )
+
+        # Merge result from all workers by product name
+        merged_result: dict[str, list] = {}
+        for result in mp_result:
+            for product_name, product_data_list in result.items():
+                merged_result[product_name] = merged_result.get(product_name, []) + product_data_list
+
+        return merged_result
+
+
+def mp_wrapper(args):
+    """
+    Wrapper function for multiprocessing.
+    """
+    from datamimic_ce.workers.generate_worker import GenerateWorker
+    context, stmt, worker_id, chunk_start, chunk_end, page_size = args
+    return GenerateWorker.generate_and_export_data_by_chunk(context, stmt, worker_id, chunk_start, chunk_end, page_size)

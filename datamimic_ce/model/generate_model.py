@@ -29,7 +29,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_TARGET,
     ATTR_TYPE,
     ATTR_VARIABLE_PREFIX,
-    ATTR_VARIABLE_SUFFIX,
+    ATTR_VARIABLE_SUFFIX, ATTR_MP_PLATFORM,
 )
 from datamimic_ce.model.model_util import ModelUtil
 
@@ -57,6 +57,7 @@ class GenerateModel(BaseModel):
     bucket: str | None = Field(None, alias=ATTR_BUCKET)
     num_process: int | None = Field(None, alias=ATTR_NUM_PROCESS)
     script: str | None = Field(None, alias=ATTR_SCRIPT)
+    mp_platform: str | None = Field(None, alias=ATTR_MP_PLATFORM)
 
     @model_validator(mode="before")
     @classmethod
@@ -85,6 +86,7 @@ class GenerateModel(BaseModel):
                 ATTR_CONVERTER,
                 ATTR_NUM_PROCESS,
                 ATTR_SCRIPT,
+                ATTR_MP_PLATFORM,
             },
         )
 
