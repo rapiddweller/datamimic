@@ -1,0 +1,42 @@
+    <setup>
+        <!-- Standard supports for Faker Library of Python-->
+        <!-- Optional arguments can be passed to further customized the output  -->
+        <!-- https://faker.readthedocs.io/en/master/providers.html -->
+        <generate name="standard_faker_providers" count="10"  >
+            <key name="no" generator="IncrementGenerator" />
+            <key name="address" generator="DataFakerGenerator('address')" />
+            <key name="building_number" generator="DataFakerGenerator('building_number')" />
+            <key name="license_plate" generator="DataFakerGenerator('license_plate')" />
+            <key name="vin" generator="DataFakerGenerator('vin')" />
+            <key name="bank_swift_code" generator="DataFakerGenerator('swift', length=8)" />
+            <key name="bank_country" generator="DataFakerGenerator('bank_country')" />
+            <key name="bar_code_ean" generator="DataFakerGenerator('ean', length=13)" />
+            <key name="color_name" generator="DataFakerGenerator('color_name')" />
+            <key name="color_hex" generator="DataFakerGenerator('color', hue='red')" />
+            <key name="color_rgb" generator="DataFakerGenerator('color', hue='red', color_format='rgb')" />
+            <key name="color_hsl" generator="DataFakerGenerator('color', hue='red', color_format='hsl')" />
+            <key name="credit_card_number" generator="DataFakerGenerator('credit_card_number', card_type='amex')" />
+            <key name="credit_card_provider" generator="DataFakerGenerator('credit_card_provider')" />
+            <key name="emoji" generator="DataFakerGenerator('emoji')" />
+            <key name="file_extension" generator="DataFakerGenerator('file_extension')" />
+            <key name="image_file_extension" generator="DataFakerGenerator('file_extension', category='image')" />
+            <key name="file_name" generator="DataFakerGenerator('file_name')" />
+            <key name="file_path" generator="DataFakerGenerator('file_path')" />
+            <key name="geo_coordinate" generator="DataFakerGenerator('coordinate')" />
+            <key name="geo_latitude" generator="DataFakerGenerator('latitude')" />
+            <key name="geo_longitude" generator="DataFakerGenerator('longitude')" />
+            <key name="internet_ip4" generator="DataFakerGenerator('ipv4')" />
+            <key name="isbn10" generator="DataFakerGenerator('isbn10')" />
+            <key name="isbn13" generator="DataFakerGenerator('isbn13')" />
+            <key name="job" generator="DataFakerGenerator('job')" />
+            <key name="misc_sha256" generator="DataFakerGenerator('sha256')" />
+            <key name="passport_number" generator="DataFakerGenerator('passport_number')" />
+            <key name="sbn9" generator="DataFakerGenerator('sbn9')" />
+            <key name="ssn" generator="DataFakerGenerator('ssn')" />
+            <key name="user_agent" generator="DataFakerGenerator('user_agent')" />
+            <key name="user_agent_chrome" generator="DataFakerGenerator('chrome')" />
+            <key name="random_int" generator="DataFakerGenerator('random_int',min=1, max=10)" />
+            <key name="cryptocurrency_name" generator="DataFakerGenerator('cryptocurrency_name')" />
+            <key name="cryptocurrency_code" generator="DataFakerGenerator('cryptocurrency_code')" />
+        </generate>
+    </setup>

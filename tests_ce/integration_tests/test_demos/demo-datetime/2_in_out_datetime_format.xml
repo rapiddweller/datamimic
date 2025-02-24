@@ -1,0 +1,17 @@
+<setup>
+
+    <!--
+    inDateFormat is used for input string -> result is datetime value
+    outDateFormat is used for input datetime -> result is string value
+    When both inDateFormat and outDateFormat are used, the input is a string value -> result is datetime value
+     -->
+    <generate name="InOutDatetimeFormat" count="10" >
+        <key name="datetime_with_in" constant="2021-02-01 12:08:04.376188" inDateFormat="%Y-%m-%d %H:%M:%S.%f"/>
+        <key name="datetime_with_out" generator="DateTimeGenerator" outDateFormat="%d.%m.%Y %H:%M:%S.%f"/>
+        <key name="date_with_in_out" constant="2022-02-01" inDateFormat="%Y-%m-%d" outDateFormat="%d.%m.%Y"/>
+        <key name="day_out" generator="DateTimeGenerator" outDateFormat="%d"/>
+        <key name="month_out" generator="DateTimeGenerator" outDateFormat="%m"/>
+        <key name="year_out" generator="DateTimeGenerator" outDateFormat="%Y"/>
+        <key name="time_out" generator="DateTimeGenerator" outDateFormat="%H:%M:%S"/>
+    </generate>
+</setup>

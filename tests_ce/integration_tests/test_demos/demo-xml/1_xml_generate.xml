@@ -1,0 +1,70 @@
+<setup>
+
+<!--    name value of 'generate' tag will become XML elements;-->
+<!--    name value of 'key' tag will become XML elements, and generated value will become text content;-->
+<!--    name of 'element' tag will become attributes, and generated value will become attribute value;-->
+    <!--  generate simple XML with key -->
+    <generate name="generate_xml" count="10" target="XML">
+        <variable name="person" entity="Person"/>
+        <key name="author" script="None">
+            <element name="name" script="person.name"/>
+            <element name="gender" script="person.gender"/>
+            <element name="birthdate" script="person.birthdate"/>
+        </key>
+    </generate>
+
+<!--    name value of 'nestedKey' tag will become XML elements;-->
+<!--    name value of 'key' tag will become XML elements, and generated value will become text content;-->
+<!--    name of 'element' tag will become attributes, and generated value will become attribute value;-->
+    <!--  generate simple XML with part -->
+    <variable name="part_count" constant="1"/>
+    <generate name="part_list" count="{part_count}" target="XML">
+        <nestedKey name="book" type="list" count="10">
+            <element name="title" values="'Book 1', 'Book 2', 'Book 3', 'Book 4'"/>
+            <element name="language" values="'de', 'en'"/>
+            <element name="pages" generator="IntegerGenerator(min=100,max=800)"/>
+            <element name="release_date" generator="DateTimeGenerator(min='2020-1-1', max='2023-12-31', input_format='%Y-%m-%d')"/>
+        </nestedKey>
+    </generate>
+
+    <generate name="part_dict" count="{part_count}" target="XML">
+        <nestedKey name="book" type="dict">
+            <key name="title" values="'Book 1', 'Book 2', 'Book 3', 'Book 4'">
+                <element name="language" values="'de', 'en'"/>
+            </key>
+            <key name="pages" generator="IntegerGenerator(min=100,max=800)"/>
+            <key name="release_date" generator="DateTimeGenerator(min='2020-1-1', max='2023-12-31', input_format='%Y-%m-%d')"/>
+        </nestedKey>
+        <nestedKey name="magazine" type="dict">
+            <key name="title" values="'Magazine #1', 'Magazine #2', 'Magazine #3', 'Magazine #4'"/>
+            <key name="language" values="'de', 'en'"/>
+            <key name="pages" generator="IntegerGenerator(min=30,max=70)"/>
+        </nestedKey>
+    </generate>
+
+<!--    name value of 'array' tag will become XML elements, and generated value will become text content;-->
+    <!--  generate simple XML with array -->
+    <generate name="array_xml" count="10" target="XML">
+        <array name="random_string" type="string" count="10"/>
+        <array name="random_number" type="int" count="10"/>
+    </generate>
+
+<!--    name value of 'list' tag will become XML elements, which cover each item;-->
+    <!--  generate simple XML with list -->
+    <generate name="list_xml" count="10" target="XML">
+        <list name="detail">
+            <item>
+                <key name="number" type="int" constant="2"/>
+            </item>
+            <item>
+                <key name="text" type="string"/>
+            </item>
+            <item>
+                <nestedKey name="employees" type="list" count="10">
+                    <key name="code" type="string"/>
+                    <key name="age" values="25, 30, 28, 45"/>
+                </nestedKey>
+            </item>
+        </list>
+    </generate>
+</setup>

@@ -1,0 +1,30 @@
+<setup multiprocessing="True">
+
+    <!--
+    Custom Converter Example for Finance Companies
+    =============================================
+    This setup demonstrates the generation of financial data with custom converters for anonymizing and formatting.
+    Multiprocessing is enabled to improve performance by utilizing multiple CPU cores.
+    -->
+
+    <!-- The generate tag defines a data generation process -->
+    <generate name="financialDataExample" count="{global_count}">
+
+        <!-- Define a key 'customer_id' with an integer type, using an IncrementGenerator -->
+        <key name="customer_id" type="int" generator="IncrementGenerator"/>
+
+        <!-- Define keys with predefined generators for various types of random data -->
+        <key name="customer_name" generator="RandomNameGenerator()"/>
+        <key name="email" generator="RandomEmailGenerator()"/>
+        <key name="transaction_amount" type="float" generator="RandomFloatGenerator(min=1.0, max=10000.0)"/>
+        <key name="transaction_type" generator="RandomTransactionTypeGenerator()"/>
+
+        <!-- Define keys with custom converters for transforming the data -->
+        <key name="anonymized_name" script="customer_name" converter="AnonymizeNameConverter()"/>
+        <key name="masked_email" script="email" converter="MaskEmailConverter()"/>
+        <key name="formatted_amount" script="transaction_amount" converter="CurrencyFormatterConverter()"/>
+        <key name="standardized_transaction_type" script="transaction_type" converter="TransactionTypeConverter()"/>
+
+    </generate>
+
+</setup>

@@ -1,0 +1,8 @@
+<setup>
+
+	<echo>Running EANGenerator</echo>
+	<generate name="EAN" count="10" >
+		<key name="value" generator="EANGenerator"/>
+	</generate>
+
+</setup>

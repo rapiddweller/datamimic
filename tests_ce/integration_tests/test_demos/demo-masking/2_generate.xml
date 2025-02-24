@@ -1,0 +1,34 @@
+<setup>
+    <!--  Update  the 'name' column by appending _mask to each value-->
+    <generate name="CUSTOMER" source="source" type="CUSTOMER" target="target">
+        <key name="name" script="name+'_mask'" />
+    </generate>
+
+    <!--  Apply DATAMIMIC converters to mask email addresses or dates -->
+    <generate source="source" name="USER" target="target">
+        <key name="full_name" script="full_name + '_mask'" />
+        <!-- Use the default mask converter to mask into '*' (default char) -->
+        <key name="email" script="email" converter="Mask" />
+       <!-- Optionally pass a character you prefer to the Mask converter -->
+        <key name="tc_creation_src" converter="Mask('!')" script="tc_creation_src" />
+    </generate>
+
+    <!--  Instead of obfuscating records from database, anonymize the CSV 'persons' -->
+    <generate name="ObfuscateCSV" type="ObfuscateCSV" source="data/persons.ent.csv" target="CSV">
+        <variable name="addr" entity="Address" />
+        <!-- Cut the length of string from the start -->
+        <key name="familyName" script="familyName" converter="CutLength(3)" />
+        <key name="givenName" script="givenName" converter="Mask" />
+        <key name="alias" script="alias" converter="Append('_demo')" />
+        <key name="street" script="addr.street" />
+        <key name="city" script="addr.city" />
+        <key name="country" constant="US" />
+        <key name="accountNo" script="accountNo" converter="Hash('sha256', 'hex')" />
+        <key name="ssn" script="ssn" converter="MiddleMask(2,3)" />
+        <key name="creditCardNo" script="creditCardNo" converter="Hash('sha1', 'base64')" />
+        <key name="secret1" script="secret1" converter="Hash('md5', 'hex')" />
+        <key name="secret2" script="secret2" converter="Hash('md5', 'base64')" />
+        <key name="secret3" script="secret3" converter="Hash('sha1','hex')" />
+        <key name="secret4" script="secret4" converter="Hash('sha1', 'base64')" />
+    </generate>
+</setup>

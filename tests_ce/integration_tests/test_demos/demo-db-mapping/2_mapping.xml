@@ -1,0 +1,32 @@
+<setup multiprocessing="False">
+
+    <!-- The generate tag defines a data generation process -->
+    <generate name="transaction_record" count="{global_count}">
+
+        <!-- Define a key 'transaction_id' with an integer type, using an IncrementGenerator -->
+        <key name="transaction_id" type="int" generator="IncrementGenerator"/>
+        <key name="customer_id" type="int" generator="IncrementGenerator"/>
+        <key name="city" type="string" values="'Hillton','Bryanttown','Cisnerosfort','Lauriemouth'"/>
+        <key name="transaction_type" type="string" values="'Deposit','Withdrawal','Transfer','Payment'"/>
+        <key name="transaction_amount" type="float" values="100.0, 200.0, 300.0, 400.0"/>
+        <key name="currency" type="string" values="'USD','EUR','GBP','JPY'" converter="CurrencySymbolConverter"/>
+        <key name="status" type="string" values="'Completed','Pending','Failed'" converter="TransactionTypeConverter"/>
+
+        <nestedKey name="transaction_details" type="list" count="10">
+            <!-- Define a key 'sub_transaction_id' with an integer type, using an IncrementGenerator -->
+            <key name="sub_transaction_id" type="int" generator="IncrementGenerator"/>
+
+            <variable name="mapping_result" script="create_mapping_cmd(city)" converter="CustomBusinessMappingConverter"/>
+            <key name="account_id" script="transaction_details.mapping_result.idTop"/>
+            <key name="branch_id" script="transaction_details.mapping_result.idSub"/>
+
+            <!-- Additional keys related to sub-transactions in banking -->
+            <key name="sub_transaction_type" type="string" values="'Fee','Interest','Principal'"/>
+            <key name="sub_transaction_amount" type="float" values="10.0, 20.0, 30.0, 40.0"/>
+            <key name="sub_transaction_currency" type="string" values="'USD','EUR','GBP','JPY'" converter="CurrencySymbolConverter"/>
+            <key name="sub_transaction_status" type="string" values="'Completed','Pending','Failed'"  converter="TransactionTypeConverter"/>
+        </nestedKey>
+
+    </generate>
+
+</setup>

@@ -1,0 +1,21 @@
+<list>
+    <item>
+        <title language="en">Introduction to Programming</title>
+        <author nationality="US">John Smith</author>
+        <publishedDate format="yyyy-mm-dd">2022-01-01</publishedDate>
+        <tags>
+            <category>programming</category>
+            <nation>us</nation>
+        </tags>
+    </item>
+    <item>
+        <title language="en">Data Science Essentials</title>
+        <author nationality="UK">Jane Doe</author>
+        <publishedDate format="yyyy-mm-dd">2021-08-15</publishedDate>
+    </item>
+    <item>
+        <title language="en">Web Development Basics</title>
+        <author nationality="CA">Michael Johnson</author>
+        <publishedDate format="yyyy-mm-dd">2023-03-20</publishedDate>
+    </item>
+</list>

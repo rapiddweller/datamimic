@@ -1,0 +1,29 @@
+<setup multiprocessing="True">
+
+    <!--
+    Custom Generator Example with Multiprocessing
+    =============================================
+    This setup demonstrates the generation of various custom keys using custom generators.
+    Multiprocessing is enabled to improve performance by utilizing multiple CPU cores.
+    -->
+
+    <!-- The generate tag defines a data generation process -->
+    <generate name="customGeneratorExample" count="{global_count}">
+
+        <!-- Define a key 'id' with an integer type, using an IncrementGenerator -->
+        <key name="id" type="int" generator="IncrementGenerator"/>
+
+        <!-- Define keys with custom generators for various types of random data -->
+        <key name="hexColor" generator="RandomHexColorGenerator()"/>
+        <key name="ipAddress" generator="RandomIPAddressGenerator()"/>
+        <key name="uuid" generator="RandomUUIDGenerator()"/>
+        <key name="macAddress" generator="RandomMACAddressGenerator()"/>
+        <key name="isbn" generator="RandomISBNGenerator()"/>
+        <key name="coordinates" generator="RandomCoordinatesGenerator()"/>
+        <key name="licensePlate" generator="RandomLicensePlateGenerator()"/>
+        <key name="password" generator="RandomPasswordGenerator(length=16)"/>
+        <key name="movieTitle" generator="RandomMovieTitleGenerator()"/>
+        <key name="userAgent" generator="RandomUserAgentGenerator()"/>
+    </generate>
+
+</setup>

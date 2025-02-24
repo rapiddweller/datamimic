@@ -1,0 +1,6 @@
+<setup>
+    <execute uri="script/setup.scr.sql" target="mapping"/>
+
+    <generate name="BUSINESS_MAPPING" source="data/business_mapping.ent.csv" count="1000" target="mapping"/>
+
+</setup>
