@@ -506,3 +506,11 @@ class TaskUtil:
                 else:
                     res[key] = value
         return res
+
+    @staticmethod
+    def is_source_ml_model(stmt: GenerateStatement):
+        """
+        check if source is model train by ml-train or not
+        """
+        # Always False in CE cause this is an EE feature
+        return False
