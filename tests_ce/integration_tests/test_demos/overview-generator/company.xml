@@ -1,0 +1,24 @@
+<setup>
+
+	<echo>Running Company Entity</echo>
+	<generate name="Company" count="10" >
+		<variable name="genobject" entity="Company" />
+		<key name="city" script="genobject.city" />
+		<key name="city_name" script="genobject.city" />
+		<key name="country" script="genobject.country" />
+		<key name="country_code" script="genobject.country_code" />
+		<key name="email" script="genobject.email" />
+		<key name="fax" script="genobject.fax" />
+		<key name="full_name" script="genobject.full_name" />
+		<key name="house_number" script="genobject.house_number" />
+		<key name="id" script="genobject.id" />
+		<key name="sector" script="genobject.sector" />
+		<key name="short_name" script="genobject.short_name" />
+		<key name="office_phone" script="genobject.office_phone" />
+		<key name="zip_code" script="genobject.zip_code" />
+		<key name="state" script="genobject.state" />
+		<key name="street" script="genobject.street" />
+		<key name="url" script="genobject.url" />
+	</generate>
+
+</setup>

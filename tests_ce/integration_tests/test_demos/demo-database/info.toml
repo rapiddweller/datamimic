@@ -1,0 +1,6 @@
+title = "Basic Database"
+description = "Showcases the connection and read/write operations to one or many database(s)."
+icon = "database"
+tags = ["#database", "#connection"]
+projectName = "demo-database"
+id = "demo-database"

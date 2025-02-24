@@ -1,0 +1,17 @@
+<setup>
+
+    <!--
+
+    Postprocess
+    ======================================
+    DATAMIMIC simple postprocess demo showcases the postprocessing
+    of entities with converters or handy inline scripts.
+
+    -->
+    <!-- setup memstore -->
+    <memstore id="mem"/>
+
+    <!-- Include Datamimic scripts -->
+    <include uri="1_prepare.xml"/>
+    <include uri="2_generate.xml"/>
+</setup>

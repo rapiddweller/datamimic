@@ -1,0 +1,25 @@
+<setup>
+
+    <!--
+
+    General Converter Demo
+    ======================================
+    DATAMIMIC ships with a broad variety of high performant converters for operations on
+    entities either synthetically generated or loaded from a source system.
+
+    Converters are mostly used for the post-processing of entities which is ranging from simple string
+    modifications (e.g. Cast, Cut, Substring), over replacements (e.g. Regex) to Hash operations
+    (e.g. JavaHash, SHA256Hash) but not limited to it.
+
+    This demo showcases converters in typical customer scenarios.
+
+    We are there to extend existing converters or create custom converters for your use-cases.
+    Please get in touch via team@rapiddweller.com.
+
+    -->
+
+	<include uri="common.xml" />
+	<include uri="hash.xml" />
+	<include uri="remove_none_or_empty_element.xml" />
+
+</setup>

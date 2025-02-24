@@ -1,0 +1,22 @@
+<setup>
+    <!--
+    Selector Demo
+    ======================================
+    DATAMIMIC Selector Demo demonstrates how to use selector.
+    selector is attribute of generate and variable tag.
+    selector must use with database source.
+    selector structure of generate and variable is the same.
+    ATTENTION: THIS DEMO REQUIRED POSTGRES DATABASE AND MONGODB DATABASE properly configured.
+    -->
+
+    <database id="database" system="postgres"/>
+    <execute uri="script/backup.scr.sql" target="database"/>
+
+    <mongodb id="mongodb"/>
+
+    <include uri="1_simple_sql_selector.xml" />
+    <include uri="2_dynamic_sql_selector.xml" />
+    <include uri="3_simple_mongodb_selector.xml"/>
+    <include uri="4_dynamic_mongodb_selector.xml"/>
+    <include uri="5_advance_config.xml" />
+</setup>

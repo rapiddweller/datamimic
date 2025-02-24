@@ -1,0 +1,8 @@
+<setup>
+
+	<echo>Running SSNGenerator</echo>
+	<generate name="SSN" count="10" >
+		<key name="value" generator="SSNGenerator"/>
+	</generate>
+
+</setup>

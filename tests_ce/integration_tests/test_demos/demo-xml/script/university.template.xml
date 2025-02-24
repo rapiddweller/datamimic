@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<list>
+    <item>
+        <students>
+            <student id="1">
+                <name>
+                    <first>John</first>
+                    <last>Doe</last>
+                </name>
+                <age>20</age>
+                <grade letter="A">Excellent</grade>
+                <contact>
+                    <email>john.doe@example.com</email>
+                    <phone type="mobile">123-456-7890</phone>
+                </contact>
+            </student>
+            <student id="2">
+                <name>
+                    <first>Jane</first>
+                    <last>Smith</last>
+                </name>
+                <age>22</age>
+                <grade letter="B">Good</grade>
+                <contact>
+                    <email>jane.smith@example.com</email>
+                    <phone type="home">987-654-3210</phone>
+                </contact>
+            </student>
+        </students>
+    </item>
+</list>
+

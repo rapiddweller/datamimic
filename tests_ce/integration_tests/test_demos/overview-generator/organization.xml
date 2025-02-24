@@ -1,0 +1,19 @@
+<setup>
+
+	<echo>Running CompanyNameGenerator</echo>
+	<generate name="CompanyName" count="10" >
+		<variable entity="Company" name="company"/>
+        <key name="name" script="company.short_name"/>
+	</generate>
+
+	<echo>Running DepartmentNameGenerator</echo>
+	<generate name="DepartmentName" count="10" >
+		<key name="value" generator="DepartmentNameGenerator"/>
+	</generate>
+
+	<echo>Running SectorGenerator</echo>
+	<generate name="Sector" count="10" >
+		<key name="value" generator="SectorGenerator"/>
+	</generate>
+
+</setup>

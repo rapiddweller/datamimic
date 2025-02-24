@@ -1,0 +1,13 @@
+<setup>
+    <!--  Get template from book.template.xml and replace data  -->
+    <!--  Element <item> from book.template.xml will be rename to <book>  -->
+    <generate name="book" source="script/book.template.xml" target="XML">
+        <!--  Text content of <author> will be replaced by random text  -->
+        <key name="author" type="string"/>
+        <!--  Add element <additionalTag>  -->
+        <key name="additionalTag" constant="extra">
+            <element name="new_key" constant="new_key_value"/>
+        </key>
+    </generate>
+
+</setup>

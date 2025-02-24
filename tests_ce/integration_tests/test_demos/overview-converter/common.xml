@@ -1,0 +1,27 @@
+<setup>
+    <generate name="LowerCaseConverter" count="10">
+        <key name="converter" constant="LowerCase" />
+        <key name="value" constant="Example text with CamelCase to convert" />
+        <key name="value_converted" script="value" converter="LowerCase" />
+    </generate>
+
+    <generate name="UpperCaseConverter" count="10">
+        <key name="converter" constant="UpperCase" />
+        <key name="value" constant="Example text with CamelCase to convert" />
+        <key name="value_converted" script="value" converter="UpperCase" />
+    </generate>
+
+    <!-- Default masking by * -->
+    <generate name="HashConverter1" count="10">
+        <key name="converter" constant="Mask,default" />
+        <key name="value" constant="Example text with CamelCase to convert" />
+        <key name="value_converted" script="value" converter="Mask" />
+    </generate>
+
+    <!-- Configure the mask char by converter="Mask('#')"-->
+    <generate name="HashConverter2" count="10">
+        <key name="converter" constant="Mask, with custom Mask Char" />
+        <key name="value" constant="Example text with CamelCase to convert" />
+        <key name="value_converted" script="value" converter="Mask('#')" />
+    </generate>
+</setup>

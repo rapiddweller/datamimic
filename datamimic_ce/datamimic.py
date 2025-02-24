@@ -27,13 +27,13 @@ LOG_FILE = "datamimic.log"
 
 class DataMimic:
     def __init__(
-        self,
-        descriptor_path: Path,
-        task_id: str | None = None,
-        platform_props: dict[str, str] | None = None,
-        platform_configs: dict | None = None,
-        test_mode: bool = False,
-        args: argparse.Namespace | None = None,
+            self,
+            descriptor_path: Path,
+            task_id: str | None = None,
+            platform_props: dict[str, str] | None = None,
+            platform_configs: dict | None = None,
+            test_mode: bool = False,
+            args: argparse.Namespace | None = None,
     ):
         """
         Initialize DataMimic with descriptor_path.
@@ -82,7 +82,7 @@ class DataMimic:
             logger.error(f"Value error: {e}")
             raise e
         except Exception as err:
-            logger.exception("Error in DATAMIMIC process. Error message: {err}")
+            logger.exception(f"Error in DATAMIMIC process. Error message: {err}")
             traceback.print_exc()
             raise err
 

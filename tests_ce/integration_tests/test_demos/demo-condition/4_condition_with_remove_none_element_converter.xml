@@ -1,0 +1,48 @@
+<setup>
+     <generate name="big_group" count="1">
+        <generate name="group" count="10" target="ConsoleExporter">
+            <variable name="type" values="'NS','NN','SS'"/>
+            <variable name="var" values="1,2,3"/>
+
+            <!-- With RemoveNoneOrEmptyElement in list -->
+            <!-- if condition False without defaultValue, key/item will be removed -->
+            <!-- e.g. group: {'permission_list': []} -->
+            <list name="permission_list" converter="RemoveNoneOrEmptyElement">
+                <item>
+                    <key name="permission_type" type="string" script="group.type"  condition="group.type != 'NS'"/>
+                </item>
+                <item condition="group.var == 1">
+                    <key name="permission_var" type="string" script="group.var"/>
+                </item>
+            </list>
+
+            <!-- Without RemoveNoneOrEmptyElement -->
+            <!-- if all `key` condition False, `item` will {}  -->
+            <!-- e.g. 'not_remove_permission_list': [{}] -->
+            <list name="not_remove_permission_list">
+                <item>
+                    <key name="permission_type" type="string" script="group.type" condition="group.type != 'NS'"/>
+                </item>
+            </list>
+
+            <!-- if `item` condition False, `item` will None  -->
+            <!-- e.g. 'not_remove_permission_var': [None] -->
+            <list name="not_remove_permission_var">
+                <item condition="group.var == 1">
+                    <key name="permission_var" type="string" script="group.var"/>
+                </item>
+            </list>
+
+            <!-- if RemoveNoneOrEmptyElement converter in key, key will be removed when condition False -->
+            <!-- leaving empyt item {} -->
+            <!-- e.g. 'remove_in_key': [{}] -->
+            <list name="remove_in_key">
+                <item>
+                    <key name="permission_var" type="string"
+                         script="group.var" condition="group.var == 1"
+                         converter="RemoveNoneOrEmptyElement"/>
+                </item>
+            </list>
+        </generate>
+     </generate>
+</setup>

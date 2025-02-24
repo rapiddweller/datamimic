@@ -1,0 +1,32 @@
+<setup>
+
+	<echo>Running BankGenerator</echo>
+	<generate name="Bank" count="10" >
+		<variable name="genobject" entity="Bank"/>
+		<key name="bank_code" script="genobject.bank_code"/>
+		<key name="bic" script="genobject.bic"/>
+		<key name="bin" script="genobject.bin"/>
+		<key name="name" script="genobject.name"/>
+	</generate>
+
+	<echo>Running BankAccountGenerator</echo>
+	<generate name="BankAccount" count="10" >
+		<variable name="genobject" entity="BankAccount"/>
+		<key name="account_number" script="genobject.account_number"/>
+		<key name="bank_code" script="genobject.bank_code"/>
+		<key name="bank_name" script="genobject.bank_name"/>
+		<key name="bic" script="genobject.bic"/>
+		<key name="iban" script="genobject.iban"/>
+	</generate>
+
+	<echo>Running CreditCardNumberGenerator</echo>
+	<generate name="CreditCardNumber" count="10" >
+		<variable name="genobject" entity="CreditCard"/>
+		<key name="credit_card_number" script="genobject.credit_card_number"/>
+		<key name="card_holder" script="genobject.card_holder"/>
+		<key name="cvc_number" script="genobject.cvc_number"/>
+		<key name="expiration_date" script="genobject.expiration_date"/>
+		<key name="credit_card_provider" script="genobject.credit_card_provider"/>
+	</generate>
+
+</setup>

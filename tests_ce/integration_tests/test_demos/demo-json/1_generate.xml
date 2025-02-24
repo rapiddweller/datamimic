@@ -1,0 +1,47 @@
+<setup>
+    <generate name="data" count="10">
+        <key name="name" type="string" constant="Alice"/>
+        <nestedKey name="notes" type="list" count="10">
+            <key name="car" type="string" constant="Audi A3"/>
+            <key name="pet" type="string" constant="Dog"/>
+            <key name="hobby" type="string" constant="Skiing"/>
+            <key name="friend" type="string" constant="Bob"/>
+            <key name="family" type="string" constant="Dad"/>
+            <key name="work" type="string" constant="Google"/>
+        </nestedKey>
+        <nestedKey name="cars" type="list" minCount="0" maxCount="10">
+            <key name="name" type="string" constant="Audi A3"/>
+            <key name="color" type="string" constant="black"/>
+            <key name="notes" type="string" constant=""/>
+            <nestedKey name="newSubElementFromEnt" type="list" source="data/person.ent.csv">
+                <nestedKey name="newSubSubElementFromEnt" type="list" source="data/person.ent.csv"/>
+                <key name="active" source="data/active.wgt.csv"/>
+            </nestedKey>
+        </nestedKey>
+        <nestedKey name="pets" type="list" count="10">
+            <key name="name" type="string" constant="Dog"/>
+            <key name="notes" type="string" constant=""/>
+        </nestedKey>
+        <nestedKey name="hobbies" type="list" count="10">
+            <key name="name" type="string" constant="Skiing"/>
+            <key name="notes" type="string" constant=""/>
+        </nestedKey>
+        <nestedKey name="friends" type="list" count="10">
+            <key name="name" type="string" constant="Bob"/>
+            <key name="notes" type="string" constant=""/>
+        </nestedKey>
+        <nestedKey name="family" type="list" count="10">
+            <key name="name" type="string" constant="Dad"/>
+            <key name="notes" type="string" constant=""/>
+        </nestedKey>
+        <nestedKey name="work" type="list" count="10">
+            <key name="name" type="string" constant="Google"/>
+            <key name="notes" type="string" constant=""/>
+        </nestedKey>
+        <nestedKey name="newElementFromEnt" type="list" source="data/person.ent.csv">
+            <nestedKey name="newSubElementFromEnt" type="list" source="data/person.ent.csv">
+                <nestedKey name="newSubSubElementFromEnt" type="list" source="data/person.ent.csv"/>
+            </nestedKey>
+        </nestedKey>
+    </generate>
+</setup>
