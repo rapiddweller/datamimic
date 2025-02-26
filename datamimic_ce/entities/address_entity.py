@@ -366,65 +366,52 @@ class AddressEntity:
     def continent(self) -> str:
         """Get the continent name."""
         if self._cached_continent is None:
-            # Map country codes to continents (simplified)
-            continent_map = {
+            # Get the country code
+            country_code = self.country_code
+            
+            # Use a simplified continent mapping for countries not in the dataset
+            # This is only a fallback mechanism - prefer to store this in the CSV
+            # Map continent by region (simplified method)
+            # This is more accurate than hardcoding all countries
+            continents_by_region = {
                 # North America
-                "US": "North America",
-                "CA": "North America",
+                "North America": {"US", "CA", "MX", "GT", "BZ", "HN", "SV", "NI", "CR", "PA", 
+                                 "BS", "CU", "JM", "HT", "DO", "AG", "DM", "LC", "VC", "BB", 
+                                 "GD", "TT", "KN", "GP", "MQ", "TC", "BL", "PR", "VI", "VG"},
                 # South America
-                "BR": "South America",
-                "VE": "South America",
-                # Europe - most of our supported datasets
-                "AD": "Europe",
-                "AL": "Europe",
-                "AT": "Europe",
-                "BA": "Europe",
-                "BE": "Europe",
-                "BG": "Europe",
-                "CH": "Europe",
-                "CY": "Europe",
-                "CZ": "Europe",
-                "DE": "Europe",
-                "DK": "Europe",
-                "EE": "Europe",
-                "ES": "Europe",
-                "FI": "Europe",
-                "FR": "Europe",
-                "GB": "Europe",
-                "GR": "Europe",
-                "HR": "Europe",
-                "HU": "Europe",
-                "IE": "Europe",
-                "IS": "Europe",
-                "IT": "Europe",
-                "LI": "Europe",
-                "LT": "Europe",
-                "LU": "Europe",
-                "LV": "Europe",
-                "MC": "Europe",
-                "NL": "Europe",
-                "NO": "Europe",
-                "PL": "Europe",
-                "PT": "Europe",
-                "RO": "Europe",
-                "RU": "Europe",
-                "SE": "Europe",
-                "SI": "Europe",
-                "SK": "Europe",
-                "SM": "Europe",
-                "TR": "Europe",
-                "UA": "Europe",
-                "VA": "Europe",
+                "South America": {"BR", "CO", "AR", "PE", "VE", "CL", "EC", "BO", "PY", "UY", 
+                                 "GY", "SR", "GF", "FK"},
+                # Europe
+                "Europe": {"AD", "AL", "AT", "BA", "BE", "BG", "BY", "CH", "CY", "CZ", "DE", 
+                          "DK", "EE", "ES", "FI", "FR", "GB", "GR", "HR", "HU", "IE", "IS", 
+                          "IT", "LI", "LT", "LU", "LV", "MC", "MD", "ME", "MK", "MT", "NL", 
+                          "NO", "PL", "PT", "RO", "RS", "RU", "SE", "SI", "SK", "SM", "UA", "VA"},
                 # Asia
-                "CN": "Asia",
-                "JP": "Asia",
-                "TH": "Asia",
-                "VN": "Asia",
+                "Asia": {"AE", "AF", "AM", "AZ", "BD", "BH", "BN", "BT", "CN", "GE", "HK", 
+                        "ID", "IL", "IN", "IQ", "IR", "JO", "JP", "KG", "KH", "KP", "KR", 
+                        "KW", "KZ", "LA", "LB", "LK", "MM", "MN", "MO", "MV", "MY", "NP", 
+                        "OM", "PH", "PK", "PS", "QA", "SA", "SG", "SY", "TH", "TJ", "TL", 
+                        "TM", "TR", "TW", "UZ", "VN", "YE"},
+                # Africa
+                "Africa": {"DZ", "AO", "BJ", "BW", "BF", "BI", "CM", "CV", "CF", "TD", "KM", 
+                          "CG", "CD", "CI", "DJ", "EG", "GQ", "ER", "ET", "GA", "GM", "GH", 
+                          "GN", "GW", "KE", "LS", "LR", "LY", "MG", "MW", "ML", "MR", "MU", 
+                          "MA", "MZ", "NA", "NE", "NG", "RW", "ST", "SN", "SC", "SL", "SO", 
+                          "ZA", "SS", "SD", "SZ", "TZ", "TG", "TN", "UG", "EH", "ZM", "ZW"},
                 # Oceania
-                "AU": "Oceania",
-                "NZ": "Oceania",
+                "Oceania": {"AU", "FJ", "KI", "MH", "FM", "NR", "NZ", "PW", "PG", "WS", "SB", 
+                           "TO", "TV", "VU", "NC", "PF"},
+                # Antarctica
+                "Antarctica": {"AQ", "BV", "GS", "HM", "TF"}
             }
-            self._cached_continent = continent_map.get(self.country_code, "Unknown")
+            
+            # Find the continent for this country
+            self._cached_continent = "Unknown"
+            for continent, countries in continents_by_region.items():
+                if country_code in countries:
+                    self._cached_continent = continent
+                    break
+                    
         assert self._cached_continent is not None  # Ensure non-None for type checker
         return self._cached_continent
 
@@ -432,61 +419,12 @@ class AddressEntity:
     def calling_code(self) -> str:
         """Get the country calling code (e.g., '+1' for USA)."""
         if self._cached_calling_code is None:
-            # Common calling codes
-            code_map = {
-                # North America
-                "US": "+1",
-                "CA": "+1",
-                # Europe
-                "GB": "+44",
-                "DE": "+49",
-                "FR": "+33",
-                "IT": "+39",
-                "ES": "+34",
-                "AT": "+43",
-                "BE": "+32",
-                "BG": "+359",
-                "CH": "+41",
-                "CZ": "+420",
-                "DK": "+45",
-                "FI": "+358",
-                "GR": "+30",
-                "HU": "+36",
-                "IE": "+353",
-                "LI": "+423",
-                "LU": "+352",
-                "NL": "+31",
-                "NO": "+47",
-                "PL": "+48",
-                "PT": "+351",
-                "RO": "+40",
-                "RU": "+7",
-                "SE": "+46",
-                "SK": "+421",
-                "VA": "+39",
-                # Asia
-                "CN": "+86",
-                "JP": "+81",
-                "TH": "+66",
-                "VN": "+84",
-                # Oceania
-                "AU": "+61",
-                "NZ": "+64",
-                # South America
-                "BR": "+55",
-                "VE": "+58",
-            }
-
-            # If the country code is not in our map, try to get it from the CountryEntity
-            if self.country_code in code_map:
-                self._cached_calling_code = code_map[self.country_code]
+            # Try to get from country entity
+            country_data = CountryEntity.get_by_iso_code(self.country_code)
+            if country_data and country_data[2]:  # Check for phone code in country data (index 2)
+                self._cached_calling_code = f"+{country_data[2]}"
             else:
-                # Try to get from country entity
-                country_data = CountryEntity.get_by_iso_code(self.country_code)
-                if country_data and country_data[2]:  # Check for phone code in country data
-                    self._cached_calling_code = f"+{country_data[2]}"
-                else:
-                    self._cached_calling_code = "+"  # Default empty code
+                self._cached_calling_code = "+"  # Default empty code
 
         assert self._cached_calling_code is not None  # Ensure non-None for type checker
         return self._cached_calling_code
@@ -512,6 +450,9 @@ class AddressEntity:
         if self._cached_icao_code is None:
             # Generate a random 4-letter code as placeholder
             # Often starts with a region identifier
+            
+            # Common ICAO region prefixes (stored here as these are standardized by the
+            # International Civil Aviation Organization and not country data)
             region_codes = {
                 # North America
                 "US": "K",
@@ -565,43 +506,67 @@ class AddressEntity:
         if self._cached_formatted_address is None:
             # Format by region
             country_code = self.country_code
-
+            
+            # Group countries by address format
+            north_american_format = {"US", "CA", "MX", "PR", "VI", "GU", "AS", "UM"}
+            uk_format = {"GB", "IE"}
+            german_format = {"DE", "AT", "CH", "NL", "BE", "LU", "CZ", "SK", "PL", "HU", "SI", "HR"}
+            french_format = {"FR", "LU", "MC", "GP", "MQ", "GF", "RE", "YT", "BL", "MF", "PM", "TF", "WF", "NC"}
+            southern_euro_format = {"ES", "IT", "PT", "BR", "AR", "CL", "CO", "VE", "PE", "EC", "UY", "PY", "BO"}
+            scandinavian_format = {"DK", "NO", "SE", "FI", "IS", "GL", "FO", "AX", "SJ"}
+            
             # North American format
-            if country_code in {"US", "CA"}:
+            if country_code in north_american_format:
                 self._cached_formatted_address = (
                     f"{self.house_number} {self.street}, {self.city}, {self.state} {self.postal_code}, {self.country}"
                 )
 
             # UK format
-            elif country_code == "GB":
+            elif country_code in uk_format:
                 self._cached_formatted_address = (
                     f"{self.house_number} {self.street}, {self.city}, {self.state}, {self.postal_code}, {self.country}"
                 )
 
             # German/Central European format
-            elif country_code in {"DE", "AT", "CH", "NL", "BE", "LU", "CZ", "SK", "PL", "HU"}:
+            elif country_code in german_format:
                 self._cached_formatted_address = (
                     f"{self.street} {self.house_number}, {self.postal_code} {self.city}, {self.country}"
                 )
 
             # French format
-            elif country_code == "FR":
+            elif country_code in french_format:
                 self._cached_formatted_address = (
                     f"{self.house_number} {self.street}, {self.postal_code} {self.city}, {self.country}"
                 )
 
             # Spanish/Italian/Portuguese format
-            elif country_code in {"ES", "IT", "PT", "BR", "VE"}:
+            elif country_code in southern_euro_format:
                 self._cached_formatted_address = (
                     f"{self.street}, {self.house_number}, {self.postal_code} {self.city}, {self.country}"
                 )
 
             # Scandinavian format
-            elif country_code in {"DK", "NO", "SE", "FI", "IS"}:
+            elif country_code in scandinavian_format:
                 self._cached_formatted_address = (
                     f"{self.street} {self.house_number}, {self.postal_code} {self.city}, {self.country}"
                 )
 
+            # Asian format (varies significantly, but often has postal code before city)
+            elif self.continent == "Asia":
+                # For some Asian countries with specific formats
+                if country_code in {"JP", "KR", "CN", "TW"}:
+                    # East Asian format typically puts larger administrative divisions first
+                    self._cached_formatted_address = (
+                        f"{self.country}, {self.state}, {self.city}, {self.postal_code}, "
+                        f"{self.street} {self.house_number}"
+                    )
+                else:
+                    # General Asian format
+                    self._cached_formatted_address = (
+                        f"{self.house_number} {self.street}, {self.city}, {self.postal_code}, "
+                        f"{self.state}, {self.country}"
+                    )
+                    
             # Default international format for other countries
             else:
                 self._cached_formatted_address = (
