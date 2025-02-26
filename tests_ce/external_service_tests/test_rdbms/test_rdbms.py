@@ -32,10 +32,18 @@ class TestRdbms:
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_postgresql_stage.xml")
         test_engine.test_with_timer()
 
+    @pytest.mark.skipif(
+        settings.RUNTIME_ENVIRONMENT == "development",
+        reason="This test can only test with stage postgres credential",
+    )
     def test_mysql(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_mysql.xml")
         test_engine.test_with_timer()
 
+    @pytest.mark.skipif(
+        settings.RUNTIME_ENVIRONMENT == "development",
+        reason="This test can only test with stage postgres credential",
+    )
     def test_mssql(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_mssql.xml")
         test_engine.test_with_timer()

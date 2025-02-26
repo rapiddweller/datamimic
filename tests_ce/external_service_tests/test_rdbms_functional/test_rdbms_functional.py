@@ -10,12 +10,17 @@ from pathlib import Path
 
 import pytest
 
+from datamimic_ce.config import settings
 from datamimic_ce.data_mimic_test import DataMimicTest
 
 
 class TestRdbmsFunctional:
     _test_dir = Path(__file__).resolve().parent
 
+    @pytest.mark.skipif(
+        settings.RUNTIME_ENVIRONMENT == "development",
+        reason="This test can only test with stage postgres credential",
+    )
     def test_mssql_functional(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="more_mssql_test.xml", capture_test_result=True)
         engine.test_with_timer()
@@ -36,6 +41,10 @@ class TestRdbmsFunctional:
         cross_collection = result["cross_collection"]
         assert len(cross_collection) == 10
 
+    @pytest.mark.skipif(
+        settings.RUNTIME_ENVIRONMENT == "development",
+        reason="This test can only test with stage postgres credential",
+    )
     def test_mysql_functional(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="more_mysql_test.xml", capture_test_result=True)
         engine.test_with_timer()
