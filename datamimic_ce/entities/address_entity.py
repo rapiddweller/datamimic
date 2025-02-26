@@ -172,13 +172,13 @@ class AddressEntity:
         self._field_generator = EntityUtil.create_field_generator_dict(generator_fn_dict)
 
         # Initialize cached values for properties not directly from generators
-        self._cached_formatted_address = None
-        self._cached_latitude = None
-        self._cached_longitude = None
-        self._cached_continent = None
-        self._cached_iata_code = None
-        self._cached_icao_code = None
-        self._cached_calling_code = None
+        self._cached_formatted_address: str | None = None
+        self._cached_latitude: float | None = None
+        self._cached_longitude: float | None = None
+        self._cached_continent: str | None = None
+        self._cached_iata_code: str | None = None
+        self._cached_icao_code: str | None = None
+        self._cached_calling_code: str | None = None
 
         # Keep track of the current city row for optimization
         self._current_city_row = None
@@ -343,6 +343,7 @@ class AddressEntity:
         """Get the latitude."""
         if self._cached_latitude is None:
             self._cached_latitude = self.coordinates["latitude"]
+        assert self._cached_latitude is not None  # Ensure non-None for type checker
         return self._cached_latitude
 
     @property
@@ -350,6 +351,7 @@ class AddressEntity:
         """Get the longitude."""
         if self._cached_longitude is None:
             self._cached_longitude = self.coordinates["longitude"]
+        assert self._cached_longitude is not None  # Ensure non-None for type checker
         return self._cached_longitude
 
     @property
@@ -423,6 +425,7 @@ class AddressEntity:
                 "NZ": "Oceania",
             }
             self._cached_continent = continent_map.get(self.country_code, "Unknown")
+        assert self._cached_continent is not None  # Ensure non-None for type checker
         return self._cached_continent
 
     @property
@@ -485,6 +488,7 @@ class AddressEntity:
                 else:
                     self._cached_calling_code = "+"  # Default empty code
 
+        assert self._cached_calling_code is not None  # Ensure non-None for type checker
         return self._cached_calling_code
 
     @property
@@ -499,6 +503,7 @@ class AddressEntity:
             # Generate a random 3-letter code as placeholder
             letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             self._cached_iata_code = "".join(self._data_generation_util.rnd_choice(letters) for _ in range(3))
+        assert self._cached_iata_code is not None  # Ensure non-None for type checker
         return self._cached_iata_code
 
     @property
@@ -551,6 +556,7 @@ class AddressEntity:
             self._cached_icao_code = prefix + "".join(
                 self._data_generation_util.rnd_choice(letters) for _ in range(remaining_length)
             )
+        assert self._cached_icao_code is not None  # Ensure non-None for type checker
         return self._cached_icao_code
 
     @property
@@ -602,6 +608,7 @@ class AddressEntity:
                     f"{self.house_number} {self.street}, {self.postal_code} {self.city}, {self.state}, {self.country}"
                 )
 
+        assert self._cached_formatted_address is not None  # Ensure non-None for type checker
         return self._cached_formatted_address
 
     @property

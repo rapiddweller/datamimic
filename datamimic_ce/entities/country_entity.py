@@ -66,7 +66,7 @@ class CountryEntity:
 
         return cls._country_data_cache
 
-    def _get_country_row(self) -> tuple[Any, ...]:
+    def _get_country_row(self) -> tuple[Any, ...] | None:
         """
         Get the selected country row.
 
@@ -97,54 +97,59 @@ class CountryEntity:
         return None
 
     @property
-    def iso_code(self) -> str:
+    def iso_code(self) -> str | None:
         """
         Get the ISO code of the country.
 
         Returns:
             str: The ISO code of the country.
         """
-        return self._get_country_row()[0]
+        country_row = self._get_country_row()
+        return country_row[0] if country_row else None
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """
         Get the name of the country.
 
         Returns:
             str: The name of the country.
         """
-        return self._get_country_row()[4]
+        country_row = self._get_country_row()
+        return country_row[4] if country_row else None
 
     @property
-    def default_language_locale(self) -> str:
+    def default_language_locale(self) -> str | None:
         """
         Get the default language locale of the country.
 
         Returns:
             str: The default language locale of the country.
         """
-        return self._get_country_row()[1]
+        country_row = self._get_country_row()
+        return country_row[1] if country_row else None
 
     @property
-    def phone_code(self) -> str:
+    def phone_code(self) -> str | None:
         """
         Get the phone code of the country.
 
         Returns:
             str: The phone code of the country.
         """
-        return self._get_country_row()[2]
+        country_row = self._get_country_row()
+        return country_row[2] if country_row else None
 
     @property
-    def population(self) -> int:
+    def population(self) -> int | None:
         """
         Get the population of the country.
 
         Returns:
             int: The population of the country.
         """
-        return int(self._get_country_row()[5])
+        country_row = self._get_country_row()
+        return int(country_row[5]) if country_row else None
 
     def reset(self) -> None:
         """
