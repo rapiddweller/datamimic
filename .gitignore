@@ -78,3 +78,5 @@ test_artifacts/
 /.run/
 /tests_ce/db/
 **/output/
+.coverage.*
+.coverage
