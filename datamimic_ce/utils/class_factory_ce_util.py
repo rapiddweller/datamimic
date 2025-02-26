@@ -15,6 +15,9 @@ from datamimic_ce.utils.data_generation_ce_util import DataGenerationCEUtil
 
 
 class ClassFactoryCEUtil(BaseClassFactoryUtil):
+    # Singleton instance of DataGenerationCEUtil
+    _data_generation_util_instance = None
+
     def __init__(self):
         pass
 
@@ -26,7 +29,16 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
 
     @staticmethod
     def get_data_generation_util():
-        return DataGenerationCEUtil
+        """
+        Get an instance of the data generation utility.
+
+        Returns:
+            An instance of DataGenerationCEUtil.
+        """
+        # Use the singleton pattern to ensure we only create one instance
+        if ClassFactoryCEUtil._data_generation_util_instance is None:
+            ClassFactoryCEUtil._data_generation_util_instance = DataGenerationCEUtil()
+        return ClassFactoryCEUtil._data_generation_util_instance
 
     @staticmethod
     def get_datetime_generator():
