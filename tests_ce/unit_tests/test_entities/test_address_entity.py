@@ -65,6 +65,34 @@ class MockClassFactoryUtil(BaseClassFactoryUtil):
 
     def get_task_util_cls(self):
         return MagicMock()
+        
+    def get_city_entity(self, country_code):
+        # Create a mock CityEntity
+        mock_city_entity = MagicMock()
+        mock_city_entity._country = "United States"
+        mock_city_entity._city_header_dict = {
+            "name": 0,
+            "state.id": 1,
+            "postalCode": 2,
+            "areaCode": None  # Intentionally None for test coverage
+        }
+        
+        # Mock getting a city row
+        def mock_get_city_row():
+            return ["New York", "NY", "10001"]
+        
+        # Configure CityEntity's field generator
+        city_row_gen = MagicMock()
+        city_row_gen.get.side_effect = mock_get_city_row
+        city_row_gen.reset.return_value = None
+        mock_city_entity._field_generator = {"city_row": city_row_gen}
+        
+        return mock_city_entity
+        
+    def get_name_entity(self, locale):
+        # Create a mock NameEntity
+        mock_name_entity = MagicMock()
+        return mock_name_entity
 
 
 class TestAddressEntity(TestCase):
@@ -157,28 +185,7 @@ class TestAddressEntity(TestCase):
         self.default_entity._company_name_generator.generate = lambda: "Test Company"
         self.default_entity._phone_number_generator.generate = lambda: "+1 (555) 123-4567"
         
-        # Mock CityEntity to provide deterministic data
-        mock_city_entity = self.default_entity._city_entity
-        mock_city_entity._country = "United States"
-        mock_city_entity._city_header_dict = {
-            "name": 0,
-            "state.id": 1,
-            "postalCode": 2,
-            "areaCode": None  # Intentionally None for test coverage
-        }
-        
-        # Mock getting a city row
-        def mock_get_city_row():
-            return ["New York", "NY", "10001"]
-        
-        # Configure CityEntity's field generator
-        city_row_gen = MagicMock()
-        city_row_gen.get.side_effect = mock_get_city_row
-        city_row_gen.reset.return_value = None
-        mock_city_entity._field_generator = {"city_row": city_row_gen}
-        
-        # Replace the city entity with our mocked one
-        self.default_entity._current_city_entity = mock_city_entity
+        # No need to manually create a city entity - it's now created through the MockClassFactoryUtil
         
         # Directly mock the coordinates field generator to return consistent values
         coordinates_gen = MagicMock()
@@ -187,11 +194,11 @@ class TestAddressEntity(TestCase):
         self.default_entity._field_generator["coordinates"] = coordinates_gen
         
         # Pre-set cached values to avoid generating them with mocks
-        self.default_entity._cached_iata_code = "JFK"
-        self.default_entity._cached_icao_code = "KJFK"
-        self.default_entity._cached_continent = "North America"
-        self.default_entity._cached_calling_code = "+1"
-        self.default_entity._cached_formatted_address = "1 Main Street, New York, NY 10001, United States"
+        self.default_entity._cached_iata_code = "JFK" if hasattr(self.default_entity, "_cached_iata_code") else None
+        self.default_entity._cached_icao_code = "KJFK" if hasattr(self.default_entity, "_cached_icao_code") else None
+        self.default_entity._cached_continent = "North America" if hasattr(self.default_entity, "_cached_continent") else None
+        self.default_entity._cached_calling_code = "+1" if hasattr(self.default_entity, "_cached_calling_code") else None
+        self.default_entity._cached_formatted_address = "1 Main Street, New York, NY 10001, United States" if hasattr(self.default_entity, "_cached_formatted_address") else None
 
     def test_initialization_with_defaults(self):
         """Test AddressEntity initialization with default values."""
