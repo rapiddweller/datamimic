@@ -227,3 +227,32 @@ class DataGenerationCEUtil(BaseDataGenerationUtil):
             return random_datetime
         except Exception as e:
             return f"Error occurred while getting random datetime: {str(e)}"
+
+    @staticmethod
+    def rnd_float(min_val: float, max_val: float) -> float:
+        """
+        Generate a random float within the specified range.
+
+        Args:
+            min_val: The minimum value in the range (inclusive)
+            max_val: The maximum value in the range (inclusive)
+
+        Returns:
+            A randomly generated float within the specified range
+        """
+        return min_val + random.random() * (max_val - min_val)
+
+    @staticmethod
+    def rnd_choice(sequence):
+        """
+        Choose a random element from a sequence.
+
+        Args:
+            sequence: The sequence to choose from
+
+        Returns:
+            A randomly chosen element from the sequence
+        """
+        if not sequence:
+            raise ValueError("Cannot choose from an empty sequence")
+        return random.choice(sequence)
