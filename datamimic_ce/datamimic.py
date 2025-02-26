@@ -111,9 +111,10 @@ class DataMimic:
             self._validate_xml_model(root_stmt)
         return root_stmt
 
-    def parse_and_execute(self, root_stmt: SetupStatement) -> None:
+    def parse_and_execute(self) -> None:
         """Parse root XML descriptor file and execute."""
         try:
+            root_stmt = self.parse_descriptor()
             setup_task = SetupTask(
                 class_factory_util=self._class_factory_util,
                 setup_stmt=root_stmt,

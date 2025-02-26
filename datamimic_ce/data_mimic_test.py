@@ -38,7 +38,7 @@ class DataMimicTest:
         start_time = time.time()
 
         # Use default string instead of UUID4 for testing if not able get task_id from celery request
-        self._engine.parse_and_execute(self._engine.parse_descriptor())
+        self._engine.parse_and_execute()
 
         # Get the current time after the code execution
         end_time = time.time()
