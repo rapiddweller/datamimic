@@ -201,7 +201,8 @@ def run(
 
     # Execute the process
     try:
-        engine.parse_and_execute()
+        root_stmt = engine.parse_descriptor()
+        engine.parse_and_execute(root_stmt)
     finally:
         # Switch back to the original directory
         os.chdir(original_directory)

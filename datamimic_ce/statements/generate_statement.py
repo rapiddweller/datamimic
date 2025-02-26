@@ -58,6 +58,10 @@ class GenerateStatement(CompositeStatement):
     def count(self):
         return self._count
 
+    @count.setter
+    def count(self, value):
+        self._count = value
+
     def get_int_count(self, ctx: Context):
         """
         Get count as int value of GenerateStatement
@@ -94,6 +98,10 @@ class GenerateStatement(CompositeStatement):
     @property
     def targets(self) -> set[str]:
         return self._targets
+
+    @targets.setter
+    def targets(self, value: set[str]):
+        self._targets = value
 
     @property
     def page_size(self) -> int | None:

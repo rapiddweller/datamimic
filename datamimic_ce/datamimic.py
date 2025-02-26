@@ -10,6 +10,10 @@ import traceback
 import uuid
 from pathlib import Path
 
+from datamimic_ce.factory.factory_config import FactoryConfig
+from datamimic_ce.statements.generate_statement import GenerateStatement
+from datamimic_ce.statements.setup_statement import SetupStatement
+
 # Avoid deduplication of logs in Ray, MUST be set before importing ray
 os.environ["RAY_DEDUP_LOGS"] = "0"
 
@@ -33,6 +37,7 @@ class DataMimic:
         platform_props: dict[str, str] | None = None,
         platform_configs: dict | None = None,
         test_mode: bool = False,
+        factory_config: FactoryConfig | None = None,
         args: argparse.Namespace | None = None,
     ):
         """
@@ -47,6 +52,7 @@ class DataMimic:
         self._platform_props = platform_props
         self._platform_configs = platform_configs
         self._test_mode = test_mode
+        self._factory_config = factory_config
         self._test_result_storage = TestResultExporter()
 
         # Initialize logging
@@ -63,10 +69,51 @@ class DataMimic:
             logger.error(f"Invalid descriptor file path: {self._descriptor_path}")
             raise ValueError(f"Invalid file path: {self._descriptor_path}")
 
-    def parse_and_execute(self) -> None:
+    def _validate_xml_model(self, root_stmt: SetupStatement) -> None:
+        # Validate root number of processes
+        if root_stmt.num_process is not None and root_stmt.num_process > 1:
+            logger.warning("Multiple processes are not supported in factory mode")
+
+        # Validate entity name
+        def _get_stmt_by_entity_name(stmt: GenerateStatement):
+            if stmt.name == self._factory_config.entity_name:
+                return stmt
+            for sub_stmt in stmt.sub_statements:
+                if isinstance(sub_stmt, GenerateStatement):
+                    return _get_stmt_by_entity_name(sub_stmt)
+            return None
+
+        entity_stmt = None
+        for stmt in root_stmt.sub_statements:
+            if isinstance(stmt, GenerateStatement):
+                entity_stmt = _get_stmt_by_entity_name(stmt)
+                if entity_stmt:
+                    break
+        if not entity_stmt:
+            logger.error(f"Entity name '{self._factory_config.entity_name}' not found in the XML model")
+            raise ValueError(f"Entity name '{self._factory_config.entity_name}' not found in the XML model")
+
+        # Validate count
+        if entity_stmt.count is not None:
+            logger.warning("Count is not supported in factory mode")
+            entity_stmt.count = str(self._factory_config.count)
+
+        # Validate targets
+        if len(entity_stmt.targets) > 1:
+            logger.warning("Targets are not supported in factory mode")
+            entity_stmt.targets = set()    
+
+
+    def parse_descriptor(self) -> SetupStatement:
+        """Parse root XML descriptor file."""
+        root_stmt = DescriptorParser.parse(self._class_factory_util, self._descriptor_path, self._platform_props)
+        if self._factory_config is not None:
+            self._validate_xml_model(root_stmt)
+        return root_stmt
+
+    def parse_and_execute(self, root_stmt: SetupStatement) -> None:
         """Parse root XML descriptor file and execute."""
         try:
-            root_stmt = DescriptorParser.parse(self._class_factory_util, self._descriptor_path, self._platform_props)
             setup_task = SetupTask(
                 class_factory_util=self._class_factory_util,
                 setup_stmt=root_stmt,

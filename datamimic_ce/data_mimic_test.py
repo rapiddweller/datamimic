@@ -10,11 +10,12 @@ import uuid
 from pathlib import Path
 
 from datamimic_ce.datamimic import DataMimic
+from datamimic_ce.factory.factory_config import FactoryConfig
 from datamimic_ce.logger import logger
 
 
 class DataMimicTest:
-    def __init__(self, test_dir: Path, filename: str, capture_test_result: bool = False):
+    def __init__(self, test_dir: Path, filename: str, capture_test_result: bool = False, factory_config: FactoryConfig | None = None):
         test_file_path = test_dir / filename
         self._capture_test_result = capture_test_result
         self._task_id = str(uuid.uuid4())
@@ -22,6 +23,7 @@ class DataMimicTest:
             descriptor_path=test_file_path,
             task_id=self._task_id,
             test_mode=capture_test_result,
+            factory_config=factory_config,
         )
 
     @property
@@ -36,7 +38,7 @@ class DataMimicTest:
         start_time = time.time()
 
         # Use default string instead of UUID4 for testing if not able get task_id from celery request
-        self._engine.parse_and_execute()
+        self._engine.parse_and_execute(self._engine.parse_descriptor())
 
         # Get the current time after the code execution
         end_time = time.time()
