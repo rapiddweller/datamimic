@@ -16,32 +16,65 @@ class DataMimicTestFactory:
 
 
     def create(self, custom_data: dict | None = None):
+        """
+        Create a single entity
+        :param custom_data: Custom data to be added to the entity
+        :return: Created entity
+        """
+        # Create factory config
         factory_config = FactoryConfig(self._entity_name, count=1, custom_data=custom_data)
+
+        # Create test engine with factory config
         test_engine = DataMimicTest(
             self._xml_path.parent,
             self._xml_path.name,
             capture_test_result=True,
             factory_config=factory_config,
         )
+
+        # Execute test
         test_engine.test_with_timer()
+
+        # Capture result
         result = test_engine.capture_result().get(self._entity_name)
         assert len(result) == 1  # Only one entity is generated
+
+        # Update custom data if provided
         if custom_data is not None:
             result[0].update(custom_data)
+
+        # Return the created entity
         return result[0]
 
     def create_batch(self, count: int, custom_data: dict | None = None):
+        """
+        Create a batch of entities
+        :param count: Number of entities to create
+        :param custom_data: Custom data to be added to the entities
+        :return: List of created entities
+        """
+        # Create factory config
         factory_config = FactoryConfig(self._entity_name, count=count, custom_data=custom_data)
+
+        # Create test engine with factory config
         test_engine = DataMimicTest(
             self._xml_path.parent,
             self._xml_path.name,
             capture_test_result=True,
             factory_config=factory_config,
         )
+
+        # Execute test
         test_engine.test_with_timer()
+
+        # Capture result
         result = test_engine.capture_result().get(self._entity_name)
         assert len(result) == count  # Only one entity is generated
+
+        # Update custom data if provided
         if custom_data is not None:
             for entity in result:
                 entity.update(custom_data)
+
+        # Return the created entities
         return result
