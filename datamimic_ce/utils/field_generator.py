@@ -9,20 +9,20 @@ from typing import Any, TypeVar
 
 from datamimic_ce.entities.entity_util import FieldGenerator
 
-T = TypeVar('T')  # Define a type variable for generic typing
+T = TypeVar("T")  # Define a type variable for generic typing
 
 
 class DictFieldGenerator(FieldGenerator[dict[str, Any]]):
     """
     A specialized FieldGenerator for generating dictionary field values.
-    
+
     This class extends the base FieldGenerator to work specifically with dictionary values.
     """
-    
+
     def __init__(self, generator_fn: Callable[..., dict[str, Any]]):
         """
         Initialize the DictFieldGenerator with a generator function.
-        
+
         Args:
             generator_fn: A function that generates dictionary values when called
         """
@@ -32,15 +32,15 @@ class DictFieldGenerator(FieldGenerator[dict[str, Any]]):
 class StringFieldGenerator(FieldGenerator[str]):
     """
     A specialized FieldGenerator for generating string field values.
-    
+
     This class extends the base FieldGenerator to work specifically with string values.
     """
-    
+
     def __init__(self, generator_fn: Callable[..., str]):
         """
         Initialize the StringFieldGenerator with a generator function.
-        
+
         Args:
             generator_fn: A function that generates string values when called
         """
-        super().__init__(generator_fn) 
+        super().__init__(generator_fn)

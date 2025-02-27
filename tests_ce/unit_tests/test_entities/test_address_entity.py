@@ -510,31 +510,40 @@ class TestAddressEntity(TestCase):
         """Test that area codes are properly extracted."""
         entity = self.default_entity
         
-        # Test with a mock city that has an area code
-        original_header_dict = entity._city_entity._city_header_dict.copy()
-        original_city_row = entity._get_city_row()
+        # Store the original city entity so we can restore it later
+        original_city = entity._city_entity
+        
+        # Create a mock city entity with proper area_code property
+        mock_city = MagicMock()
+        mock_city.area_code = "212"  # NYC area code
+        mock_city.state = "Test State"
+        
+        # Replace the city entity with our mock
+        entity._city_entity = mock_city
+        
+        # Reset property cache
+        entity._property_cache.clear()
         
         try:
-            # Update the mock to include an area code
-            entity._city_entity._city_header_dict["areaCode"] = 3
-            
-            # Create a new city row with an area code
-            city_row_with_area = list(original_city_row) + ["212"]  # NYC area code
-            
-            # Configure city entity to return the new row
-            entity._current_city_row = city_row_with_area
-            
-            # Test area code extraction
+            # Test that area code is correctly extracted from city entity
             self.assertEqual(entity.area, "212", "Area code should be correctly extracted")
             
-            # Test with no area code index
-            entity._city_entity._city_header_dict["areaCode"] = None
-            self.assertEqual(entity.area, "", "Should return empty string when area code is not available")
+            # Test fallback to state when area_code is not available
+            # Remove area_code attribute
+            delattr(mock_city, "area_code")
+            
+            # Reset property cache to force recalculation
+            entity._property_cache.clear()
+            
+            # Should fallback to state
+            self.assertEqual(entity.area, "Test State", "Should fallback to state when area code is not available")
             
         finally:
-            # Restore original values
-            entity._city_entity._city_header_dict = original_header_dict
-            entity._current_city_row = original_city_row
+            # Restore original city entity
+            entity._city_entity = original_city
+            
+            # Reset property cache
+            entity._property_cache.clear()
 
     def test_edge_cases_invalid_inputs(self):
         """Test edge cases and handling of invalid inputs."""

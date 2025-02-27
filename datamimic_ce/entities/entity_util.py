@@ -7,7 +7,7 @@
 from collections.abc import Callable
 from typing import Any, Generic, TypeVar
 
-T = TypeVar('T')  # Define a type variable for generic typing
+T = TypeVar("T")  # Define a type variable for generic typing
 
 
 class FieldGenerator(Generic[T]):
@@ -25,10 +25,10 @@ class FieldGenerator(Generic[T]):
             generator_fn: A function that generates field values when called
         """
         self._generator_fn = generator_fn
-        self._cached_value = None
+        self._cached_value: T | None = None
         self._cached = False
 
-    def get(self, *args, **kwargs) -> T:
+    def get(self, *args, **kwargs) -> T | None:
         """
         Get the generated value, either from cache or by calling the generator function.
 
@@ -42,7 +42,7 @@ class FieldGenerator(Generic[T]):
         if not self._cached:
             self._cached_value = self._generator_fn(*args, **kwargs)
             self._cached = True
-        return self._cached_value
+        return self._cached_value  # Return the cached value, which might be None
 
     def reset(self):
         """
@@ -51,7 +51,7 @@ class FieldGenerator(Generic[T]):
         self._cached = False
         self._cached_value = None
 
-    def force_regenerate(self, *args, **kwargs) -> T:
+    def force_regenerate(self, *args, **kwargs) -> T | None:
         """
         Force regeneration of the value even if it's cached.
 
@@ -88,36 +88,34 @@ class EntityUtil:
         for key, generator_fn in generator_fn_dict.items():
             field_generator_dict[key] = FieldGenerator(generator_fn)
         return field_generator_dict
-        
+
     @staticmethod
     def batch_generate_fields(
-        field_generators: dict[str, FieldGenerator], 
-        field_names: list[str], 
-        count: int = 100
+        field_generators: dict[str, FieldGenerator], field_names: list[str], count: int = 100
     ) -> list[dict[str, Any]]:
         """
         Generate a batch of field values efficiently.
-        
+
         This method generates multiple sets of fields in one go, which is more
         efficient than generating them one by one.
-        
+
         Args:
             field_generators: Dictionary of field generators
             field_names: List of field names to generate
             count: Number of sets to generate
-            
+
         Returns:
             List of dictionaries containing generated field values
         """
         results = []
-        
+
         for _ in range(count):
             # Generate a new set of field values
             field_values = {}
             for field_name in field_names:
                 if field_name in field_generators:
                     field_values[field_name] = field_generators[field_name].force_regenerate()
-            
+
             results.append(field_values)
-            
+
         return results

@@ -1,0 +1,35 @@
+<setup multiprocessing="0">
+    <generate name="transaction" count="10" target="ConsoleExporter">
+        <variable name="transaction" entity="Transaction" />
+        <key name="transaction_id" script="transaction.transaction_id" />
+        <key name="transaction_id1" script="transaction.transaction_id" />
+        <key name="amount" script="transaction.amount" />
+        <key name="amount1" script="transaction.amount" />
+        <key name="timestamp" script="transaction.timestamp" />
+        <key name="timestamp1" script="transaction.timestamp" />
+        <key name="type" script="transaction.type" />
+        <key name="type1" script="transaction.type" />
+        <key name="status" script="transaction.status" />
+        <key name="status1" script="transaction.status" />
+        <key name="currency" script="transaction.currency" />
+        <key name="currency1" script="transaction.currency" />
+        <key name="description" script="transaction.description" />
+        <key name="description1" script="transaction.description" />
+        <key name="reference_id" script="transaction.reference_id" />
+        <key name="reference_id1" script="transaction.reference_id" />
+        <key name="fee" script="transaction.fee" />
+        <key name="fee1" script="transaction.fee" />
+
+        <variable name="transaction1" entity="Transaction" />
+        <key name="transaction_id2" script="transaction1.transaction_id" />
+        <key name="transaction_id3" script="transaction1.transaction_id" />
+        <key name="amount2" script="transaction1.amount" />
+        <key name="amount3" script="transaction1.amount" />
+        <key name="type2" script="transaction1.type" />
+        <key name="type3" script="transaction1.type" />
+        <key name="status2" script="transaction1.status" />
+        <key name="status3" script="transaction1.status" />
+        <key name="currency2" script="transaction1.currency" />
+        <key name="currency3" script="transaction1.currency" />
+    </generate>
+</setup> 

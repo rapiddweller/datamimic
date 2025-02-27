@@ -1,0 +1,49 @@
+<setup multiprocessing="0">
+    <generate name="order" count="10" target="ConsoleExporter">
+        <variable name="order" entity="Order" />
+        <key name="order_id" script="order.order_id" />
+        <key name="order_id1" script="order.order_id" />
+        <key name="user_id" script="order.user_id" />
+        <key name="user_id1" script="order.user_id" />
+        <key name="product_list" script="order.product_list" />
+        <key name="product_list1" script="order.product_list" />
+        <key name="total_amount" script="order.total_amount" />
+        <key name="total_amount1" script="order.total_amount" />
+        <key name="date" script="order.date" />
+        <key name="date1" script="order.date" />
+        <key name="status" script="order.status" />
+        <key name="status1" script="order.status" />
+        <key name="payment_method" script="order.payment_method" />
+        <key name="payment_method1" script="order.payment_method" />
+        <key name="shipping_method" script="order.shipping_method" />
+        <key name="shipping_method1" script="order.shipping_method" />
+        <key name="shipping_address" script="order.shipping_address" />
+        <key name="shipping_address1" script="order.shipping_address" />
+        <key name="billing_address" script="order.billing_address" />
+        <key name="billing_address1" script="order.billing_address" />
+        <key name="currency" script="order.currency" />
+        <key name="currency1" script="order.currency" />
+        <key name="tax_amount" script="order.tax_amount" />
+        <key name="tax_amount1" script="order.tax_amount" />
+        <key name="shipping_amount" script="order.shipping_amount" />
+        <key name="shipping_amount1" script="order.shipping_amount" />
+        <key name="discount_amount" script="order.discount_amount" />
+        <key name="discount_amount1" script="order.discount_amount" />
+        <key name="coupon_code" script="order.coupon_code" />
+        <key name="coupon_code1" script="order.coupon_code" />
+        <key name="notes" script="order.notes" />
+        <key name="notes1" script="order.notes" />
+
+        <variable name="order1" entity="Order" />
+        <key name="order_id2" script="order1.order_id" />
+        <key name="order_id3" script="order1.order_id" />
+        <key name="user_id2" script="order1.user_id" />
+        <key name="user_id3" script="order1.user_id" />
+        <key name="total_amount2" script="order1.total_amount" />
+        <key name="total_amount3" script="order1.total_amount" />
+        <key name="date2" script="order1.date" />
+        <key name="date3" script="order1.date" />
+        <key name="status2" script="order1.status" />
+        <key name="status3" script="order1.status" />
+    </generate>
+</setup> 

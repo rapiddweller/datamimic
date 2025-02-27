@@ -1,0 +1,51 @@
+<setup multiprocessing="0">
+    <generate name="invoice" count="10" target="ConsoleExporter">
+        <variable name="invoice" entity="Invoice" />
+        <key name="invoice_id" script="invoice.invoice_id" />
+        <key name="invoice_id1" script="invoice.invoice_id" />
+        <key name="order_id" script="invoice.order_id" />
+        <key name="order_id1" script="invoice.order_id" />
+        <key name="customer_id" script="invoice.customer_id" />
+        <key name="customer_id1" script="invoice.customer_id" />
+        <key name="date" script="invoice.date" />
+        <key name="date1" script="invoice.date" />
+        <key name="due_date" script="invoice.due_date" />
+        <key name="due_date1" script="invoice.due_date" />
+        <key name="amount" script="invoice.amount" />
+        <key name="amount1" script="invoice.amount" />
+        <key name="status" script="invoice.status" />
+        <key name="status1" script="invoice.status" />
+        <key name="payment_terms" script="invoice.payment_terms" />
+        <key name="payment_terms1" script="invoice.payment_terms" />
+        <key name="currency" script="invoice.currency" />
+        <key name="currency1" script="invoice.currency" />
+        <key name="tax_amount" script="invoice.tax_amount" />
+        <key name="tax_amount1" script="invoice.tax_amount" />
+        <key name="discount_amount" script="invoice.discount_amount" />
+        <key name="discount_amount1" script="invoice.discount_amount" />
+        <key name="shipping_amount" script="invoice.shipping_amount" />
+        <key name="shipping_amount1" script="invoice.shipping_amount" />
+        <key name="subtotal" script="invoice.subtotal" />
+        <key name="subtotal1" script="invoice.subtotal" />
+        <key name="total" script="invoice.total" />
+        <key name="total1" script="invoice.total" />
+        <key name="notes" script="invoice.notes" />
+        <key name="notes1" script="invoice.notes" />
+        <key name="payment_method" script="invoice.payment_method" />
+        <key name="payment_method1" script="invoice.payment_method" />
+        <key name="billing_address" script="invoice.billing_address" />
+        <key name="billing_address1" script="invoice.billing_address" />
+
+        <variable name="invoice1" entity="Invoice" />
+        <key name="invoice_id2" script="invoice1.invoice_id" />
+        <key name="invoice_id3" script="invoice1.invoice_id" />
+        <key name="order_id2" script="invoice1.order_id" />
+        <key name="order_id3" script="invoice1.order_id" />
+        <key name="amount2" script="invoice1.amount" />
+        <key name="amount3" script="invoice1.amount" />
+        <key name="status2" script="invoice1.status" />
+        <key name="status3" script="invoice1.status" />
+        <key name="total2" script="invoice1.total" />
+        <key name="total3" script="invoice1.total" />
+    </generate>
+</setup> 
