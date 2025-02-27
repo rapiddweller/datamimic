@@ -4,6 +4,9 @@
 **/**/.DS_STORE
 .DS_STORE
 
+# VSCode
+.vscode
+
 # Virtual environment
 .venv
 venv
