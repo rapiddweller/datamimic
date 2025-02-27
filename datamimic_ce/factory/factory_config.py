@@ -6,10 +6,10 @@
 
 
 class FactoryConfig:
-    def __init__(self, entity_name: str, count: int, fixed_data: dict):
+    def __init__(self, entity_name: str, count: int, custom_data: dict):
         self._entity_name = entity_name
         self._count = count
-        self._fixed_data = fixed_data
+        self._custom_data = custom_data
 
     @property
     def entity_name(self):
@@ -20,5 +20,5 @@ class FactoryConfig:
         return self._count
 
     @property
-    def fixed_data(self):
-        return self._fixed_data
+    def custom_data(self):
+        return self._custom_data

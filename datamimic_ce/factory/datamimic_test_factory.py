@@ -20,18 +20,21 @@ class DataMimicTestFactory:
         self._entity_name = entity_name
 
 
-    def create(self):
-        factory_config = FactoryConfig(self._entity_name, count=1, fixed_data={})
+    def create(self, custom_data: dict = {}):
+        factory_config = FactoryConfig(self._entity_name, count=1, custom_data=custom_data)
         test_engine = DataMimicTest(self._xml_path.parent, self._xml_path.name, capture_test_result=True, factory_config=factory_config)
         test_engine.test_with_timer()
         result = test_engine.capture_result().get(self._entity_name)
         assert len(result) == 1  # Only one entity is generated
+        result[0].update(custom_data)
         return result[0]
 
-    def create_batch(self, count: int):
-        factory_config = FactoryConfig(self._entity_name, count=count, fixed_data={})
+    def create_batch(self, count: int, custom_data: dict = {}):
+        factory_config = FactoryConfig(self._entity_name, count=count, custom_data=custom_data)
         test_engine = DataMimicTest(self._xml_path.parent, self._xml_path.name, capture_test_result=True, factory_config=factory_config)
         test_engine.test_with_timer()
         result = test_engine.capture_result().get(self._entity_name)
         assert len(result) == count  # Only one entity is generated
+        for entity in result:
+            entity.update(custom_data)
         return result

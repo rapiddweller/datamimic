@@ -348,9 +348,39 @@ jobs:
           name: coverage-external-service
           path: coverage.xml
 
+  factory_test:
+    runs-on: ubuntu-22.04
+    needs: install_dependencies
+    container: python:3.11-slim-buster
+    steps:
+      - name: Setup git
+        run: |
+          apt-get update
+          apt-get install -y git
+          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - name: Load venv cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+      - name: Run factory tests
+        run: |
+          . .venv/bin/activate
+          uv run pytest tests_ce/factory_test/
+        shell: bash
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-factory
+          path: coverage.xml  
+
   sonarcloud_analysis:
     runs-on: ubuntu-22.04
-    needs: [ unit_test, functional_test, integration_test, external_service_test ]
+    needs: [ unit_test, functional_test, integration_test, external_service_test, factory_test ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -366,10 +396,12 @@ jobs:
           mv coverage-reports/coverage-integration/coverage.xml coverage-reports/coverage-integration.xml
           mv coverage-reports/coverage-unit/coverage.xml coverage-reports/coverage-unit.xml
           mv coverage-reports/coverage-external-service/coverage.xml coverage-reports/coverage-external-service.xml
+          mv coverage-reports/coverage-factory/coverage.xml coverage-reports/coverage-factory.xml
           rm -rf coverage-reports/coverage-functional
           rm -rf coverage-reports/coverage-integration
           rm -rf coverage-reports/coverage-unit
           rm -rf coverage-reports/coverage-external-service
+          rm -rf coverage-reports/coverage-factory
           rm -rf coverage-reports/artifact
           rm -rf coverage-reports/setup
 
@@ -536,6 +568,7 @@ jobs:
           rm -rf dist/coverage-integration
           rm -rf dist/coverage-unit
           rm -rf dist/coverage-external-service
+          rm -rf dist/coverage-factory
 
       - name: List Contents of dist Directory
         run: ls -R dist
@@ -572,7 +605,7 @@ jobs:
           rm -rf dist/coverage-integration
           rm -rf dist/coverage-unit
           rm -rf dist/coverage-external-service
-
+          rm -rf dist/coverage-factory
       - name: List Contents of dist Directory
         run: ls -R dist
 
