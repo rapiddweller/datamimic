@@ -69,6 +69,26 @@ class DataMimic:
             logger.error(f"Invalid descriptor file path: {self._descriptor_path}")
             raise ValueError(f"Invalid file path: {self._descriptor_path}")
 
+    @staticmethod
+    def _get_stmt_by_entity_name(stmt, factory_config: FactoryConfig):
+        """
+        Get entity statement by entity name
+        :param stmt: Statement to search
+        :return: Found entity statement
+        """
+        # Check if statement is a GenerateStatement
+        if not isinstance(stmt, GenerateStatement):
+            return None
+        # Check if entity name matches
+        if stmt.name == factory_config.entity_name:
+            return stmt
+        # Recursively search through sub-statements
+        for sub_stmt in stmt.sub_statements:
+            result = DataMimic._get_stmt_by_entity_name(sub_stmt, factory_config)
+            if result:
+                return result
+        return None
+    
     def _validate_xml_model(self, root_stmt: SetupStatement, factory_config: FactoryConfig) -> None:
         """
         Validate XML model for factory mode
@@ -79,30 +99,11 @@ class DataMimic:
         if root_stmt.num_process is not None and root_stmt.num_process > 1:
             logger.warning("Multiple processes are not supported in factory mode")
 
-        # Validate entity name
-        def _get_stmt_by_entity_name(stmt):
-            """
-            Get entity statement by entity name
-            :param stmt: Statement to search
-            :return: Found entity statement
-            """
-            # Check if statement is a GenerateStatement
-            if not isinstance(stmt, GenerateStatement):
-                return None
-            # Check if entity name matches
-            if stmt.name == factory_config.entity_name:
-                return stmt
-            # Recursively search through sub-statements
-            for sub_stmt in stmt.sub_statements:
-                result = _get_stmt_by_entity_name(sub_stmt)
-                if result:
-                    return result
-            return None
 
         # Get entity statement by entity name
         entity_stmt = None
         for stmt in root_stmt.sub_statements:
-            entity_stmt = _get_stmt_by_entity_name(stmt)
+            entity_stmt = DataMimic._get_stmt_by_entity_name(stmt, factory_config)
             if entity_stmt:
                 break
 
