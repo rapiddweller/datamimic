@@ -6,7 +6,7 @@
 
 
 class FactoryConfig:
-    def __init__(self, entity_name: str, count: int, custom_data: dict):
+    def __init__(self, entity_name: str, count: int, custom_data: dict | None = None):
         self._entity_name = entity_name
         self._count = count
         self._custom_data = custom_data

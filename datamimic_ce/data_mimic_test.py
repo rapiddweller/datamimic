@@ -15,7 +15,13 @@ from datamimic_ce.logger import logger
 
 
 class DataMimicTest:
-    def __init__(self, test_dir: Path, filename: str, capture_test_result: bool = False, factory_config: FactoryConfig | None = None):
+    def __init__(
+        self,
+        test_dir: Path,
+        filename: str,
+        capture_test_result: bool = False,
+        factory_config: FactoryConfig | None = None,
+    ):
         test_file_path = test_dir / filename
         self._capture_test_result = capture_test_result
         self._task_id = str(uuid.uuid4())

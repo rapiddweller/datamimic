@@ -69,14 +69,14 @@ class DataMimic:
             logger.error(f"Invalid descriptor file path: {self._descriptor_path}")
             raise ValueError(f"Invalid file path: {self._descriptor_path}")
 
-    def _validate_xml_model(self, root_stmt: SetupStatement) -> None:
+    def _validate_xml_model(self, root_stmt: SetupStatement, factory_config: FactoryConfig) -> None:
         # Validate root number of processes
         if root_stmt.num_process is not None and root_stmt.num_process > 1:
             logger.warning("Multiple processes are not supported in factory mode")
 
         # Validate entity name
         def _get_stmt_by_entity_name(stmt: GenerateStatement):
-            if stmt.name == self._factory_config.entity_name:
+            if stmt.name == factory_config.entity_name:
                 return stmt
             for sub_stmt in stmt.sub_statements:
                 if isinstance(sub_stmt, GenerateStatement):
@@ -90,13 +90,13 @@ class DataMimic:
                 if entity_stmt:
                     break
         if not entity_stmt:
-            logger.error(f"Entity name '{self._factory_config.entity_name}' not found in the XML model")
-            raise ValueError(f"Entity name '{self._factory_config.entity_name}' not found in the XML model")
+            logger.error(f"Entity name '{factory_config.entity_name}' not found in the XML model")
+            raise ValueError(f"Entity name '{factory_config.entity_name}' not found in the XML model")
 
         # Validate count
         if entity_stmt.count is not None:
             logger.warning("Count is not supported in factory mode")
-            entity_stmt.count = str(self._factory_config.count)
+            entity_stmt.count = str(factory_config.count)
 
         # Validate targets
         if len(entity_stmt.targets) > 1:
@@ -108,7 +108,7 @@ class DataMimic:
         """Parse root XML descriptor file."""
         root_stmt = DescriptorParser.parse(self._class_factory_util, self._descriptor_path, self._platform_props)
         if self._factory_config is not None:
-            self._validate_xml_model(root_stmt)
+            self._validate_xml_model(root_stmt, self._factory_config)
         return root_stmt
 
     def parse_and_execute(self) -> None:
