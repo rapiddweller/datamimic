@@ -29,8 +29,6 @@
         <key name="color1" script="product.color" />
         <key name="rating" script="product.rating" />
         <key name="rating1" script="product.rating" />
-        <key name="tags" script="product.tags" />
-        <key name="tags1" script="product.tags" />
 
         <variable name="product1" entity="Product" />
         <key name="product_id2" script="product1.product_id" />

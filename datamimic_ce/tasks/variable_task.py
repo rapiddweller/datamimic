@@ -263,6 +263,24 @@ class VariableTask(KeyVariableTask):
             return BankAccountEntity(cls_factory_util, locale=locale, dataset=dataset)
         if entity_class_name == "Country":
             return CountryEntity(cls_factory_util)
+        if entity_class_name == "transaction":
+            return cls_factory_util.get_transaction_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Transaction":
+            return cls_factory_util.get_transaction_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "DigitalWallet":
+            return cls_factory_util.get_digital_wallet_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "UserAccount":
+            return cls_factory_util.get_user_account_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "CRM":
+            return cls_factory_util.get_crm_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Invoice":
+            return cls_factory_util.get_invoice_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Order":
+            return cls_factory_util.get_order_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Payment":
+            return cls_factory_util.get_payment_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Product":
+            return cls_factory_util.get_product_entity(locale=locale, dataset=dataset, **kwargs)
         else:
             raise ValueError(f"Entity {entity_name} is not supported.")
 

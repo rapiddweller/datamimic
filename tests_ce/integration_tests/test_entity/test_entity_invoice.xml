@@ -33,8 +33,6 @@
         <key name="notes1" script="invoice.notes" />
         <key name="payment_method" script="invoice.payment_method" />
         <key name="payment_method1" script="invoice.payment_method" />
-        <key name="billing_address" script="invoice.billing_address" />
-        <key name="billing_address1" script="invoice.billing_address" />
 
         <variable name="invoice1" entity="Invoice" />
         <key name="invoice_id2" script="invoice1.invoice_id" />

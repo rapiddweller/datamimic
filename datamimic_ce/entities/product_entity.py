@@ -401,13 +401,13 @@ class ProductEntity(Entity):
 
         price_points = [
             round(random.uniform(min_price, max_price), 2),  # Regular price
-            round(random.uniform(max(min_price, 1.0), max(100, min_price)), 99) / 100,  # $X.99 price
-            round(random.uniform(max(min_price, 100), max(1000, min_price)), 95) / 100,  # $X.95 price
+            round(random.uniform(max(min_price, 1.0), min(max_price, 100)), 99) / 100,  # $X.99 price
+            round(random.uniform(max(min_price, 100), min(max_price, 1000)), 95) / 100,  # $X.95 price
             round(random.uniform(max(min_price, 1000), max_price), 0),  # Whole dollar price for expensive items
         ]
 
         price = random.choice(price_points)
-        return max(min_price, price)  # Ensure price is at least min_price
+        return max(min_price, min(price, max_price))  # Ensure price is between min_price and max_price
 
     def _generate_brand(self) -> str:
         """Generate a random product brand."""

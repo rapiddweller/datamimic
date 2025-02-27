@@ -41,10 +41,9 @@
         <variable name="transaction" entity="Transaction" />
         <key name="transaction_id" script="transaction.transaction_id" />
         <key name="transaction_amount" script="transaction.amount" />
-        <key name="transaction_timestamp" script="transaction.timestamp" />
+        <key name="transaction_timestamp" script="transaction.date + ' ' + transaction.time" />
         <key name="transaction_type" script="transaction.type" />
         <key name="transaction_status" script="transaction.status" />
-        <key name="transaction_reference_id" script="transaction.reference_id" />
 
         <!-- Relationships (simulated) -->
         <key name="order_for_product" script="order.order_id + ' for ' + product.product_id" />

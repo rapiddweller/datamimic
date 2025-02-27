@@ -5,8 +5,6 @@
         <key name="order_id1" script="order.order_id" />
         <key name="user_id" script="order.user_id" />
         <key name="user_id1" script="order.user_id" />
-        <key name="product_list" script="order.product_list" />
-        <key name="product_list1" script="order.product_list" />
         <key name="total_amount" script="order.total_amount" />
         <key name="total_amount1" script="order.total_amount" />
         <key name="date" script="order.date" />
@@ -17,10 +15,6 @@
         <key name="payment_method1" script="order.payment_method" />
         <key name="shipping_method" script="order.shipping_method" />
         <key name="shipping_method1" script="order.shipping_method" />
-        <key name="shipping_address" script="order.shipping_address" />
-        <key name="shipping_address1" script="order.shipping_address" />
-        <key name="billing_address" script="order.billing_address" />
-        <key name="billing_address1" script="order.billing_address" />
         <key name="currency" script="order.currency" />
         <key name="currency1" script="order.currency" />
         <key name="tax_amount" script="order.tax_amount" />

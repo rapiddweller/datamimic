@@ -102,45 +102,58 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
         )
 
     @staticmethod
-    def get_product_entity(locale="en", min_price=0.99, max_price=9999.99, **kwargs):
+    def get_digital_wallet_entity(locale="en", dataset=None, **kwargs):
         """
-        Create and return a ProductEntity instance.
+        Create and return a DigitalWalletEntity instance.
 
         Args:
             locale: The locale to use for localization
-            min_price: Minimum product price
-            max_price: Maximum product price
-            **kwargs: Additional parameters to pass to the ProductEntity constructor
+            dataset: Optional dataset name
+            **kwargs: Additional parameters to pass to the DigitalWalletEntity constructor
 
         Returns:
-            A ProductEntity instance
+            A DigitalWalletEntity instance
         """
-        from datamimic_ce.entities.product_entity import ProductEntity
+        from datamimic_ce.entities.digital_wallet_entity import DigitalWalletEntity
 
-        return ProductEntity(ClassFactoryCEUtil(), locale=locale, min_price=min_price, max_price=max_price, **kwargs)
+        return DigitalWalletEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
 
     @staticmethod
-    def get_order_entity(locale="en", min_products=1, max_products=10, **kwargs):
+    def get_user_account_entity(locale="en", dataset=None, **kwargs):
         """
-        Create and return an OrderEntity instance.
+        Create and return a UserAccountEntity instance.
 
         Args:
             locale: The locale to use for localization
-            min_products: Minimum number of products in an order
-            max_products: Maximum number of products in an order
-            **kwargs: Additional parameters to pass to the OrderEntity constructor
+            dataset: Optional dataset name
+            **kwargs: Additional parameters to pass to the UserAccountEntity constructor
 
         Returns:
-            An OrderEntity instance
+            A UserAccountEntity instance
         """
-        from datamimic_ce.entities.order_entity import OrderEntity
+        from datamimic_ce.entities.user_account_entity import UserAccountEntity
 
-        return OrderEntity(
-            ClassFactoryCEUtil(), locale=locale, min_products=min_products, max_products=max_products, **kwargs
-        )
+        return UserAccountEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
 
     @staticmethod
-    def get_invoice_entity(locale="en", min_amount=10.00, max_amount=10000.00, **kwargs):
+    def get_crm_entity(locale="en", dataset=None, **kwargs):
+        """
+        Create and return a CRMEntity instance.
+
+        Args:
+            locale: The locale to use for localization
+            dataset: Optional dataset name
+            **kwargs: Additional parameters to pass to the CRMEntity constructor
+
+        Returns:
+            A CRMEntity instance
+        """
+        from datamimic_ce.entities.crm_entity import CRMEntity
+
+        return CRMEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
+
+    @staticmethod
+    def get_invoice_entity(locale="en", min_amount=10.00, max_amount=10000.00, dataset=None, **kwargs):
         """
         Create and return an InvoiceEntity instance.
 
@@ -148,6 +161,7 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
             locale: The locale to use for localization
             min_amount: Minimum invoice amount
             max_amount: Maximum invoice amount
+            dataset: Optional dataset name
             **kwargs: Additional parameters to pass to the InvoiceEntity constructor
 
         Returns:
@@ -156,7 +170,45 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
         from datamimic_ce.entities.invoice_entity import InvoiceEntity
 
         return InvoiceEntity(
-            ClassFactoryCEUtil(), locale=locale, min_amount=min_amount, max_amount=max_amount, **kwargs
+            ClassFactoryCEUtil(), locale=locale, min_amount=min_amount, max_amount=max_amount, dataset=dataset, **kwargs
+        )
+
+    @staticmethod
+    def get_order_entity(locale="en", dataset=None, **kwargs):
+        """
+        Create and return an OrderEntity instance.
+
+        Args:
+            locale: The locale to use for localization
+            dataset: Optional dataset name
+            **kwargs: Additional parameters to pass to the OrderEntity constructor
+
+        Returns:
+            An OrderEntity instance
+        """
+        from datamimic_ce.entities.order_entity import OrderEntity
+
+        return OrderEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
+
+    @staticmethod
+    def get_product_entity(locale="en", min_price=0.99, max_price=9999.99, dataset=None, **kwargs):
+        """
+        Create and return a ProductEntity instance.
+
+        Args:
+            locale: The locale to use for localization
+            min_price: Minimum product price
+            max_price: Maximum product price
+            dataset: Optional dataset name
+            **kwargs: Additional parameters to pass to the ProductEntity constructor
+
+        Returns:
+            A ProductEntity instance
+        """
+        from datamimic_ce.entities.product_entity import ProductEntity
+
+        return ProductEntity(
+            ClassFactoryCEUtil(), locale=locale, min_price=min_price, max_price=max_price, dataset=dataset, **kwargs
         )
 
     @staticmethod
