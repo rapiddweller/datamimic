@@ -142,7 +142,11 @@ class GenerateWorker:
         # Determined page of data source to load
         # If distribution is random, load all data before shuffle, which means no pagination (or, pagination=None)
         # If distribution is not random, load data by pagination
-        is_random_distribution = stmt.distribution in ("random", None)
+        if context.root.class_factory_util.get_task_util_cls().is_source_ml_model(stmt):
+            # if source data is from ml-train model, distribution is False
+            is_random_distribution = False
+        else:
+            is_random_distribution = stmt.distribution in ("random", None)
         if is_random_distribution:
             # Use task_id as seed for random distribution
             # Don't use pagination for random distribution to load all data before shuffle
