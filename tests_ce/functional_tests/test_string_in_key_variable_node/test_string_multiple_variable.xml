@@ -1,5 +1,5 @@
 <setup>
-    <generate name="test_string_multiple_variable" count="3" target="ConsoleExporter">
+    <generate name="test_string_multiple_variable" count="3" target="ConsoleExporter" mpPlatform="ray">
         <variable name="student" constant="'classA'"/>
         <variable name="class_student" variablePrefix="@{"
                   variableSuffix="}" string="find: @{student}"/>

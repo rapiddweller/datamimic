@@ -1,0 +1,6 @@
+title = "Condition Demo"
+description = "Showcases how to use condition tag with if, else-if, else; and condition attribute of key, nestedKey"
+icon = "json"
+tags = ["#condtion", "#if", "#else-if", "#else",]
+projectName = "demo-condition"
+id = "demo-condition"

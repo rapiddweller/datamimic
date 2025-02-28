@@ -1,0 +1,19 @@
+<setup>
+
+<!--
+
+    General Scripting Demo
+    ======================================
+    DATAMIMIC General Scripting Demo showcases the capabilities of python usage in models.
+    This also includes the usage of variables, functions and the evaluation in
+    source and template files.
+    -->
+
+    <include uri="conf/base.properties"/>
+    <memstore id="mem"/>
+
+    <!--  Use <execute\> to load scripts into the global context  -->
+    <execute uri="script/lib.scr.py"/>
+
+    <include uri="1_generate.xml"/>
+</setup>

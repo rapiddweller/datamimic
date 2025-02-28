@@ -1,0 +1,42 @@
+<setup>
+    <generate name="person" source="script/abc.json" count="10" cyclic="true" target="JSON">
+        <nestedKey name="notes" type="dict"/>
+        <key
+                name="timestamp"
+                generator="DateTimeGenerator"
+        />
+        <nestedKey name="cars" type="list" count="10">
+            <key name="id" type="int" generator="IncrementGenerator"/>
+        </nestedKey>
+        <nestedKey name="friends" type="list" source="data/person.ent.csv">
+            <nestedKey name="newSubElementFromEnt" type="list" source="data/person.ent.csv">
+                <nestedKey name="newSubSubElementFromEnt" type="list" source="data/person.ent.csv"/>
+                <key name="active" source="data/active.wgt.csv"/>
+            </nestedKey>
+        </nestedKey>
+        <nestedKey name="pets" type="list" count="10">
+            <key name="id" type="int" generator="IncrementGenerator"/>
+            <key name="name" generator="EmailAddressGenerator"/>
+        </nestedKey>
+        <nestedKey name="hobbies" type="list" source="data/person.ent.csv"/>
+        <nestedKey name="family" type="list" count="10">
+            <key name="id" type="int" generator="IncrementGenerator"/>
+            <key name="age" generator="IntegerGenerator(min=1,max=100)"/>
+        </nestedKey>
+        <nestedKey name="work" type="list" count="10">
+            <key name="id" type="int" generator="IncrementGenerator"/>
+            <nestedKey name="newSubElement" type="list" count="10">
+                <key name="id" type="int" generator="IncrementGenerator"/>
+            </nestedKey>
+        </nestedKey>
+        <nestedKey name="newElement" type="list" count="10">
+            <key name="id" type="int" generator="IncrementGenerator"/>
+            <key name="name" generator="EmailAddressGenerator"/>
+        </nestedKey>
+        <nestedKey name="newElementFromEnt" type="list" source="data/person.ent.csv">
+            <nestedKey name="newSubElementFromEnt" type="list" source="data/person.ent.csv">
+                <nestedKey name="newSubSubElementFromEnt" type="list" source="data/person.ent.csv"/>
+            </nestedKey>
+        </nestedKey>
+    </generate>
+</setup>

@@ -1,0 +1,58 @@
+<setup>
+  <!-- clear mongo_dynamic database -->
+  <generate name="delete" source="mongodb" selector="find: 'mongo_dynamic', filter: {}" target="mongodb.delete" />
+
+  <!--  generate begin data  -->
+  <generate name="mongo_dynamic" target="mongodb" count="10">
+    <key name="user_id" generator="IncrementGenerator" />
+    <key name="user_name" values="'Bob', 'Frank', 'Phil'" />
+  </generate>
+
+  <variable name="filter_var" constant="Bob" />
+  <variable name="collection_var" constant="mongo_dynamic" />
+
+  <!--  selector can be used in both <generate> and <variable> -->
+  <generate
+    name="filter_Bob"
+    source="mongodb"
+    selector="find : '__collection_var__',
+              filter : {'user_name': '__filter_var__'}"
+  >
+  </generate>
+
+  <generate
+    name="filter_non_Bob"
+    source="mongodb"
+    selector="find: 'mongo_dynamic',
+                        filter: {'user_name': {'$ne': '__filter_var__'}},
+                        projection: {'user_name': 1}"
+  >
+  </generate>
+
+  <generate name="dynamic_variable" count="10">
+    <variable
+      name="bob"
+      source="mongodb"
+      selector="find : '__collection_var__',
+                        filter : {'user_name': '__filter_var__'}"
+    />
+    <key name="user" script="bob.user_name" />
+  </generate>
+
+  <!--  iterationSelector can ONLY be used in <variable> -->
+  <generate name="dynamic_variable_iterationSelector" count="1">
+    <variable name="filter_Bob" constant="Bob" />
+    <variable
+      name="user"
+      source="mongodb"
+      iterationSelector="find : '__collection_var__',
+                                      filter : {'user_name': '__filter_Bob__'}"
+    />
+    <key name="Bob_1st_id" script="user[0].get('user_id')" defaultValue="None" />
+    <key name="Bob_1st_name" script="user[0].get('user_name')" defaultValue="None" />
+    <nestedKey name="Bobs_list" script="user" />
+  </generate>
+
+  <!--  clear data  -->
+  <generate name="clear_db" source="mongodb" selector="find: 'mongo_dynamic', filter: {}" target="mongodb.delete" />
+</setup>

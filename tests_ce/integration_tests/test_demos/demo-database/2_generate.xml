@@ -1,0 +1,23 @@
+<setup>
+    <generate name="CUSTOMER" count="10" target="db">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="tc_creation_src" constant="DATAMIMIC"/>
+        <key name="tc_creation" generator="DateTimeGenerator"/>
+        <key name="no" generator="IncrementGenerator"/>
+        <variable name="company" entity="Company" dataset="DE" locale="de_DE"/>
+        <key name="name" script="company.short_name"/>
+    </generate>
+    <generate name="USER" count="100" target="db">
+        <variable name="person" entity="Person" dataset="DE" locale="de_DE"/>
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="tc_creation_src" constant="DATAMIMIC"/>
+        <key name="tc_creation" generator="DateTimeGenerator(random=True)"/>
+        <key name="full_name" script="person.name"/>
+        <key name="email" script="person.given_name + person.family_name + '@my-' +  str(id) + '.com'"  converter="LowerCase"/>
+        <key name="active" source="data/active.wgt.csv"/>
+        <key name="superuser" type="bool" values="False,True"/>
+        <key name="hashed_password" generator="StringGenerator(max_len=20)"/>
+        <key name="language" values="'german','english','vietnamese'"/>
+        <reference name="customer_id" source="db" sourceType="CUSTOMER" sourceKey="id"/>
+    </generate>
+</setup>

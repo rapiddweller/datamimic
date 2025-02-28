@@ -1,0 +1,3 @@
+<setup>
+    <execute uri="script/setup.scr.sql" target="db"/>
+</setup>

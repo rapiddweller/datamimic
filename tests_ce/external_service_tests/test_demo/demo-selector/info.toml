@@ -1,0 +1,6 @@
+title = "Selector"
+description = "Showcases how to use selector in database."
+icon = "database"
+tags = ["#database", "#selector", "#mongodb", "#SQL"]
+projectName = "demo-selector"
+id = "demo-selector"

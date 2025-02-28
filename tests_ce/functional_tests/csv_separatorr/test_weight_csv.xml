@@ -3,7 +3,7 @@
         <key name="id" generator="IncrementGenerator"/>
         <key name="active" source="data/active.wgt.csv" separator=","/>
     </generate>
-    <generate name="product2" count="10" target="ConsoleExporter">
+    <generate name="product2" count="10" target="ConsoleExporter" mpPlatform="ray">
         <key name="id" generator="IncrementGenerator"/>
         <key name="active" source="data/active_2.wgt.csv"/>
     </generate>

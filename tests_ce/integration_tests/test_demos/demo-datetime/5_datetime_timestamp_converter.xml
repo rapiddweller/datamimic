@@ -1,0 +1,12 @@
+<setup>
+    <generate name="Package" count="10">
+        <variable name="datetime_generated" generator="DateTimeGenerator(random=True)" />
+        <variable name="timestamp_generated" script="datetime_generated" converter="Date2Timestamp"/>
+        <generate name="TimestampConverter" count="50" >
+            <key name="origin_date" script="datetime_generated"/>
+            <key name="origin_timestamp" script="timestamp_generated"/>
+            <key name="days_to_add" generator="IncrementGenerator(start=0)"/>
+            <key name="days_series" script="timestamp_generated + 86400*TimestampConverter.days_to_add" converter="Timestamp2Date"/>
+        </generate>
+    </generate>
+</setup>

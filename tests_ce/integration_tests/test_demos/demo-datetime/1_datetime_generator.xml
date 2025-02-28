@@ -1,0 +1,12 @@
+<setup>
+<!--  Using DateTimeGenerator will get datetime data-->
+  <generate name="date_time_generator" count="10" >
+    <key name="current_datetime" generator="DateTimeGenerator"/>
+    <key name="random_datetime" generator="DateTimeGenerator(random=True)"/>
+    <key name="input_datetime" generator="DateTimeGenerator(value='2022-08-12', input_format='%Y-%m-%d')"/>
+    <key name="datetime_generator_2010"
+               generator="DateTimeGenerator(min='2010-08-01', max='2010-08-31', input_format='%Y-%m-%d')" />
+    <key name="datetime_generator_2055"
+               generator="DateTimeGenerator(min='2055-02-01 0:0:0', max='2056-07-31 0:0:0')" />
+  </generate>
+</setup>

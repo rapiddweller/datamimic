@@ -1,0 +1,6 @@
+title = "Basic Postprocess"
+description = "Showcases the postprocessing of entities with datamimic converters or handy inline scripts."
+icon = "table"
+tags = ["#converter", "#script"]
+projectName = "demo-postprocess"
+id = "demo-postprocess"

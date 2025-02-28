@@ -1,0 +1,6 @@
+title = "Watermark"
+description = "Showcases how to create mark in the database of your last data generation."
+icon = "droplet"
+tags = ["#database", "#watermark"]
+projectName = "demo-watermark"
+id = "demo-watermark"

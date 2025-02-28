@@ -1,0 +1,42 @@
+<setup>
+    <generate name="bike" count="10">
+        <key name="id" type="int" generator="IncrementGenerator"/>
+        <key name="year" type="int" values="1970, 2023"/>
+        <!-- If 'condition' True then 'nestedKey' will count and generate, otherwise it will not generate at all -->
+        <nestedKey name="condition_true" type="dict" condition="True">
+            <key name="serial" type="int" condition="id % 2 == 1"/>
+            <key name="count" type="int" generator="IncrementGenerator"/>
+        </nestedKey>
+        <!-- If 'condition' Fasle but have 'defaultValue', 'nestedKey' will get that value as output -->
+        <nestedKey name="condition_false" type="dict" condition="False" defaultValue="None">
+            <key name="serial" type="int" condition="id % 2 == 1"/>
+        </nestedKey>
+
+        <nestedKey name="condition_2023" type="dict" condition="year == 2023" defaultValue="2023">
+            <key name="serial" type="int"/>
+        </nestedKey>
+        <nestedKey name="condition_false_non_default" type="dict" condition="year == 1970">
+            <key name="serial" type="int"/>
+        </nestedKey>
+        <!-- If name is the same, the later one will overwrite the previous one -->
+        <nestedKey name="same_name" type="dict" condition="True">
+          <key name="age" type="int" constant="30" />
+        </nestedKey>
+        <nestedKey name="same_name" type="dict" condition="True">
+          <key name="age" type="int" constant="35" />
+        </nestedKey>
+
+        <condition>
+            <if condition="True">
+                <nestedKey name="if_true" type="dict">
+                    <key name="id" type="int"/>
+                </nestedKey>
+            </if>
+            <else-if condition="False">
+                <nestedKey name="if_false" type="dict">
+                    <key name="id" type="int"/>
+                </nestedKey>
+            </else-if>
+        </condition>
+    </generate>
+</setup>

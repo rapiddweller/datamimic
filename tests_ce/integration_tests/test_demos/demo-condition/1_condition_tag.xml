@@ -1,0 +1,31 @@
+<setup>
+    <generate name="condition" count="10">
+        <key name="id" generator="IncrementGenerator"/>
+        <!-- 'condition' is needed when work with multiple condition -->
+        <!-- 'condition' contain if, else-if, and else. Only one tag if and else. -->
+        <condition>
+            <!-- if always the first subtag -->
+            <!-- when id = 1, if_true will generate -->
+            <if condition="id == 1">
+                <echo>Condition met: id is 1</echo>
+                <key name="if_true" constant="1"/>
+            </if>
+            <!-- if the first condition false, check the next one -->
+            <else-if condition="id == 3">
+                <echo>Condition met: id is 3</echo>
+                <key name="else_if_3_true" constant="3"/>
+            </else-if>
+            <else-if condition="id == 4">
+                <echo>Condition met: id is 4</echo>
+                <key name="else_if_4_true" constant="4"/>
+            </else-if>
+            <!-- else always the last tag of condition sub tags -->
+            <!-- if all condition false, else tag will execute -->
+            <else>
+                <echo>Condition not met, proceeding with default values</echo>
+                <key name="else_true" constant="else_value"/>
+            </else>
+        </condition>
+    </generate>
+
+</setup>

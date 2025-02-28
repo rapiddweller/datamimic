@@ -1,0 +1,15 @@
+<setup>
+    <execute uri="script/py_script.scr.py"/>
+    <generate name="Customerlist" source="data/customer.ent.csv">
+        <variable name="random_time" generator="DateTimeGenerator(random=True)" />
+        <generate name="DateTimeSeries" count="10">
+            <key name="customer" script="name"/>
+            <key name="datetime_sequence_id" generator="IncrementGenerator" />
+            <key name="datetime_sequence_timeutil" script="random_time" />
+            <key name="datetime_sequence_day" script="random_time.day" />
+            <!-- add day to random_time each iteration with execution of python script -->
+            <variable name="days_var" type="int" generator="IncrementGenerator"/>
+            <key name="series_offset_days" script="add_days(current_date=random_time, days=DateTimeSeries.days_var)" />
+        </generate>
+    </generate>
+</setup>

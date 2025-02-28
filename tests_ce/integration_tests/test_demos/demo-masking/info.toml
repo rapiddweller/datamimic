@@ -1,0 +1,6 @@
+title = "Basic Masking"
+description = "Obfuscation from different data sources (e.g. database| csv). Built-in generators and converters."
+icon = "mask"
+tags = ["#mask", "#iterate"]
+projectName = "demo-masking"
+id = "demo-masking"

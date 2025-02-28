@@ -1,0 +1,28 @@
+<setup>
+
+    <!--
+
+    Database Masking Scenarios
+    ======================================
+    Learn about obfuscation from different data sources (e.g. database|csv)
+    and how easy the built-in generators and converters can be used
+    to solve multiple use-cases with just a single line of code.
+
+    -->
+
+	<database id="source" />
+	<database id="target" />
+
+	<!-- Load config properties| setup databases and memstore -->
+	<include uri="conf/base.properties" />
+	<memstore id="mem" />
+
+	<!-- Include DATAMIMIC models -->
+	<include uri="1_prepare.xml" />
+	<include uri="2_generate.xml" />
+
+	<!-- Include examples for obfuscating data of identifiable natural persons -->
+	<include uri="3-1-anon-person-constant.xml" />
+	<include uri="3-2-anon-person-hash.xml" />
+
+</setup>

@@ -12,6 +12,7 @@ import dill  # type: ignore
 import ray
 
 from datamimic_ce.clients.database_client import DatabaseClient
+from datamimic_ce.config import settings
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
@@ -174,6 +175,9 @@ class GenerateTask(CommonSubTask):
         """
         with gen_timer("process", context.root.report_logging, self.statement.full_name) as timer_result:
             try:
+                # Mark Ray initialization status for shutdown at the end of execution
+                is_ray_initialized = False
+
                 # Pre-execute sub-tasks before generating any data
                 self.pre_execute(context)
 
@@ -207,23 +211,27 @@ class GenerateTask(CommonSubTask):
                     chunks = [(i * chunk_size, min((i + 1) * chunk_size, count)) for i in range(num_workers)]
                     logger.info(f"Generating data by page in {num_workers} workers with chunks {chunks}")
 
-                    # Execute generate task using Ray
-                    from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
+                    # Determine multiprocessing platform and process data in parallel
+                    mp_platform = self._statement.mp_platform or "multiprocessing"
+                    if mp_platform == "multiprocessing":
+                        from datamimic_ce.workers.multiprocessing_generate_worker import MultiprocessingGenerateWorker
 
-                    futures = [
-                        RayGenerateWorker.ray_process.options(enable_task_events=False).remote(
-                            copied_context, self._statement, worker_id, chunk_start, chunk_end, page_size
+                        mp_worker = MultiprocessingGenerateWorker()
+                    elif mp_platform == "ray":
+                        from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
+
+                        mp_worker = RayGenerateWorker()  # type: ignore[assignment]
+                        # Initialize Ray
+                        ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False)
+                        is_ray_initialized = True
+                    else:
+                        raise ValueError(
+                            f"Multiprocessing platform '{mp_platform}' of <generate> '{self.statement.full_name}' "
+                            f"is not supported"
                         )
-                        for worker_id, (chunk_start, chunk_end) in enumerate(chunks, 1)
-                    ]
-                    # Gather result from Ray workers
-                    ray_result = ray.get(futures)
+                    # Execute generate task by page in multiprocessing using Ray or multiprocessing
+                    merged_result = mp_worker.mp_process(copied_context, self._statement, chunks, page_size)
 
-                    # Merge result from all workers by product name
-                    merged_result: dict[str, list] = {}
-                    for result in ray_result:
-                        for product_name, product_data_list in result.items():
-                            merged_result[product_name] = merged_result.get(product_name, []) + product_data_list
                 # Execute generate task by page in single process
                 else:
                     # If inner gen_stmt, pass worker_id from outermost gen_stmt to inner gen_stmt
@@ -260,6 +268,9 @@ class GenerateTask(CommonSubTask):
                 if isinstance(context, SetupContext):
                     for temp_dir in context.descriptor_dir.glob(f"temp_result_{context.task_id}*"):
                         shutil.rmtree(temp_dir)
+                # Shutdown Ray if initialized
+                if is_ray_initialized:
+                    ray.shutdown()
 
     @staticmethod
     def export_memstore(setup_context: SetupContext, current_stmt: GenerateStatement, merged_result: dict[str, list]):
