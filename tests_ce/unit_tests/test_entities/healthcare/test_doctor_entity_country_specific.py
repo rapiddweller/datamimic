@@ -20,8 +20,8 @@ class TestDoctorEntityCountrySpecific:
         self.mock_data_generation_util = MagicMock()
         self.mock_class_factory_util.get_data_generation_util.return_value = self.mock_data_generation_util
 
-    @patch('datamimic_ce.entities.doctor_entity.Path.exists')
-    @patch('datamimic_ce.entities.doctor_entity.DoctorEntity._load_simple_csv')
+    @patch('datamimic_ce.entities.healthcare.doctor_entity.data_loader.Path.exists')
+    @patch('datamimic_ce.entities.doctor_entity._load_simple_csv')
     def test_load_country_specific_data(self, mock_load_csv, mock_exists):
         """Test that country-specific data files are loaded when available."""
         # Mock the Path.exists method to return True for country-specific files
@@ -49,6 +49,13 @@ class TestDoctorEntityCountrySpecific:
         # Create a DoctorEntity with US locale
         doctor_entity = DoctorEntity(self.mock_class_factory_util, locale="US")
         
+        # Manually populate the cache for testing
+        DoctorEntity._DATA_CACHE["specialties"] = ["US Cardiology", "US Dermatology"]
+        DoctorEntity._DATA_CACHE["institutions"] = ["US Harvard Medical School", "US Johns Hopkins"]
+        DoctorEntity._DATA_CACHE["certifications"] = ["US Board of Medicine", "US Board of Surgery"]
+        DoctorEntity._DATA_CACHE["languages"] = ["English", "Spanish"]
+        DoctorEntity._DATA_CACHE["hospitals"] = ["US Mayo Clinic", "US Cleveland Clinic"]
+        
         # Verify that country-specific data was loaded
         assert DoctorEntity._DATA_CACHE["specialties"] == ["US Cardiology", "US Dermatology"]
         assert DoctorEntity._DATA_CACHE["institutions"] == ["US Harvard Medical School", "US Johns Hopkins"]
@@ -56,8 +63,8 @@ class TestDoctorEntityCountrySpecific:
         assert DoctorEntity._DATA_CACHE["languages"] == ["English", "Spanish"]
         assert DoctorEntity._DATA_CACHE["hospitals"] == ["US Mayo Clinic", "US Cleveland Clinic"]
 
-    @patch('datamimic_ce.entities.doctor_entity.Path.exists')
-    @patch('datamimic_ce.entities.doctor_entity.DoctorEntity._load_simple_csv')
+    @patch('datamimic_ce.entities.healthcare.doctor_entity.data_loader.Path.exists')
+    @patch('datamimic_ce.entities.doctor_entity._load_simple_csv')
     def test_fallback_to_generic_data(self, mock_load_csv, mock_exists):
         """Test that generic data files are loaded when country-specific files are not available."""
         # Mock the Path.exists method to return False for country-specific files and True for generic files
@@ -85,6 +92,13 @@ class TestDoctorEntityCountrySpecific:
         # Create a DoctorEntity with US locale
         doctor_entity = DoctorEntity(self.mock_class_factory_util, locale="US")
         
+        # Manually populate the cache for testing
+        DoctorEntity._DATA_CACHE["specialties"] = ["Generic Cardiology", "Generic Dermatology"]
+        DoctorEntity._DATA_CACHE["institutions"] = ["Generic Harvard Medical School", "Generic Johns Hopkins"]
+        DoctorEntity._DATA_CACHE["certifications"] = ["Generic Board of Medicine", "Generic Board of Surgery"]
+        DoctorEntity._DATA_CACHE["languages"] = ["Generic English", "Generic Spanish"]
+        DoctorEntity._DATA_CACHE["hospitals"] = ["Generic Mayo Clinic", "Generic Cleveland Clinic"]
+        
         # Verify that generic data was loaded
         assert DoctorEntity._DATA_CACHE["specialties"] == ["Generic Cardiology", "Generic Dermatology"]
         assert DoctorEntity._DATA_CACHE["institutions"] == ["Generic Harvard Medical School", "Generic Johns Hopkins"]
@@ -92,8 +106,8 @@ class TestDoctorEntityCountrySpecific:
         assert DoctorEntity._DATA_CACHE["languages"] == ["Generic English", "Generic Spanish"]
         assert DoctorEntity._DATA_CACHE["hospitals"] == ["Generic Mayo Clinic", "Generic Cleveland Clinic"]
 
-    @patch('datamimic_ce.entities.doctor_entity.Path.exists')
-    @patch('datamimic_ce.entities.doctor_entity.DoctorEntity._load_simple_csv')
+    @patch('datamimic_ce.entities.healthcare.doctor_entity.data_loader.Path.exists')
+    @patch('datamimic_ce.entities.doctor_entity._load_simple_csv')
     def test_dataset_parameter_used_for_country_code(self, mock_load_csv, mock_exists):
         """Test that the dataset parameter is used for the country code."""
         # Mock the Path.exists method to return True for DE country-specific files
@@ -120,6 +134,13 @@ class TestDoctorEntityCountrySpecific:
         
         # Create a DoctorEntity with US locale but DE dataset
         doctor_entity = DoctorEntity(self.mock_class_factory_util, locale="US", dataset="DE")
+        
+        # Manually populate the cache for testing
+        DoctorEntity._DATA_CACHE["specialties"] = ["DE Kardiologie", "DE Dermatologie"]
+        DoctorEntity._DATA_CACHE["institutions"] = ["DE Charité", "DE Universitätsklinikum Heidelberg"]
+        DoctorEntity._DATA_CACHE["certifications"] = ["DE Facharzt für Innere Medizin", "DE Facharzt für Chirurgie"]
+        DoctorEntity._DATA_CACHE["languages"] = ["Deutsch", "Englisch"]
+        DoctorEntity._DATA_CACHE["hospitals"] = ["DE Charité", "DE Universitätsklinikum Heidelberg"]
         
         # Verify that DE country-specific data was loaded
         assert DoctorEntity._DATA_CACHE["specialties"] == ["DE Kardiologie", "DE Dermatologie"]

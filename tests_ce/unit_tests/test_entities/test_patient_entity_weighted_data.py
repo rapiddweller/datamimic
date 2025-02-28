@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 # Import the PatientEntity class
-from datamimic_ce.entities.patient_entity import PatientEntity
+from datamimic_ce.entities.healthcare.patient_entity import PatientEntity
 
 
 class TestPatientEntityWeightedData:

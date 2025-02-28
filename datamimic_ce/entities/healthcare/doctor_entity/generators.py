@@ -358,7 +358,7 @@ class DoctorGenerators:
         available_languages = DoctorDataLoader.get_country_specific_data("languages", self._country_code)
 
         # Extract just the values, not the weights
-        language_values = [l[0] for l in available_languages] if available_languages else []
+        language_values = [lang[0] for lang in available_languages] if available_languages else []
 
         if not language_values:
             # Create multiple person entities to get languages as fallback

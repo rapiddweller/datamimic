@@ -148,7 +148,6 @@ class MedicalDeviceEntity(Entity):
             data_dir = current_file.parent.parent / "data" / "medical"
 
             # Define categories of data to load with headers
-            header_categories: dict[str, str] = {}
 
             # Define categories of data to load without headers (simple lists)
             simple_categories = {

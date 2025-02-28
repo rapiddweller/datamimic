@@ -10,7 +10,7 @@ import string
 from typing import Any
 
 from datamimic_ce.entities.healthcare.lab_test_entity.data_loader import LabTestDataLoader
-from datamimic_ce.entities.healthcare.lab_test_entity.utils import LabTestUtils
+from datamimic_ce.entities.healthcare.lab_test_entity.utils import LabTestUtils, PropertyCache
 
 
 class LabTestGenerators:
@@ -20,19 +20,16 @@ class LabTestGenerators:
         """Initialize the generators.
 
         Args:
-            locale: The locale to use for generating data.
-            dataset: The dataset to use for generating data.
+            locale: The locale to use for generating data
+            dataset: The dataset to use (e.g., country code)
         """
         self._locale = locale
-        self._dataset = dataset
-
-        # Optional parameters that can be set externally
+        self._dataset = dataset if dataset else "US"  # Default to US if no dataset is provided
+        self._property_cache = PropertyCache()
+        self._class_factory_util = None
         self._test_type: str | None = None
         self._status: str | None = None
         self._specimen_type: str | None = None
-
-        # Initialize class_factory_util as None (will be set if needed)
-        self._class_factory_util = None
 
     def set_test_type(self, test_type: str) -> None:
         """Set the test type.
@@ -119,15 +116,15 @@ class LabTestGenerators:
         return result_date.strftime("%Y-%m-%d")
 
     def generate_status(self) -> str:
-        """Generate a status."""
+        """Generate a test status."""
         if self._status:
             return self._status
 
-        # Get country-specific statuses
+        # Get country-specific test statuses
         statuses = LabTestDataLoader.get_country_specific_data("test_statuses", self._dataset)
 
         if not statuses:
-            # Fallback to default status if no statuses are available
+            # Fallback to default statuses if no statuses are available
             return "Completed"
 
         return LabTestUtils.weighted_choice(statuses)
@@ -141,7 +138,7 @@ class LabTestGenerators:
         specimen_types = LabTestDataLoader.get_country_specific_data("specimen_types", self._dataset)
 
         if not specimen_types:
-            # Fallback to default specimen type if no specimen types are available
+            # Fallback to default specimen types if no specimen types are available
             return "Blood"
 
         return LabTestUtils.weighted_choice(specimen_types)
@@ -169,7 +166,7 @@ class LabTestGenerators:
         Returns:
             A list of result dictionaries.
         """
-        # Get components for the test type from the country-specific CSV files
+        # Get the components for this test type
         components = LabTestDataLoader.get_test_components(test_type, self._dataset)
 
         # If no components are found, use a default set
@@ -301,13 +298,9 @@ class LabTestGenerators:
         # Get country-specific lab names
         lab_names = LabTestDataLoader.get_country_specific_data("lab_names", self._dataset)
 
-        # If no data is available, try to get generic lab names
         if not lab_names:
-            lab_names = LabTestDataLoader.get_country_specific_data("lab_names", "US")
-
-        # If still no data, use a minimal fallback that's not hardcoded
-        if not lab_names:
-            return f"Laboratory {random.randint(1, 100)}"
+            # Fallback to default lab names if no lab names are available
+            return "Central Laboratory"
 
         return LabTestUtils.weighted_choice(lab_names)
 

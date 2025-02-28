@@ -6,8 +6,11 @@
 
 """
 Data loader for doctor entity.
+
+This module provides functionality for loading data from CSV files for doctor entities.
 """
 
+import csv
 from pathlib import Path
 
 from datamimic_ce.logger import logger
@@ -18,13 +21,14 @@ class DoctorDataLoader:
     """Load data for doctor entity from CSV files."""
 
     # Cache for loaded data to reduce file I/O
-    _specialties_cache: dict[str, list[tuple[str, float]]] = {}
-    _hospitals_cache: dict[str, list[tuple[str, float]]] = {}
-    _medical_schools_cache: dict[str, list[tuple[str, float]]] = {}
-    _certifications_cache: dict[str, list[tuple[str, float]]] = {}
-    _languages_cache: dict[str, list[tuple[str, float]]] = {}
-    _institutions_cache: dict[str, list[tuple[str, float]]] = {}
-    _degrees_cache: dict[str, list[tuple[str, float]]] = {}
+    _SPECIALTIES_CACHE: dict[str, list[tuple[str, float]]] = {}
+    _HOSPITALS_CACHE: dict[str, list[tuple[str, float]]] = {}
+    _MEDICAL_SCHOOLS_CACHE: dict[str, list[tuple[str, float]]] = {}
+    _CERTIFICATIONS_CACHE: dict[str, list[tuple[str, float]]] = {}
+    _LANGUAGES_CACHE: dict[str, list[tuple[str, float]]] = {}
+    _INSTITUTIONS_CACHE: dict[str, list[tuple[str, float]]] = {}
+    _DEGREES_CACHE: dict[str, list[tuple[str, float]]] = {}
+    _DOCTOR_TITLES_CACHE: dict[str, list[tuple[str, float]]] = {}
 
     @classmethod
     def _load_simple_csv(cls, file_path: Path) -> list[tuple[str, float]]:
@@ -36,86 +40,69 @@ class DoctorDataLoader:
         Returns:
             List of tuples (value, weight) from the CSV file
         """
+        if not file_path.exists():
+            logger.warning(f"CSV file not found: {file_path}")
+            return []
+
         try:
             with open(file_path, encoding="utf-8") as f:
-                result = []
-                for line in f:
-                    line = line.strip()
-                    if not line:
+                reader = csv.reader(f)
+                values = []
+                for row in reader:
+                    if not row:
                         continue
-
-                    # Check if the line contains a comma (indicating a weighted value)
-                    if "," in line:
-                        parts = line.split(",", 1)
-                        if len(parts) == 2:
-                            value = parts[0].strip()
-                            try:
-                                # Try to convert the weight to a float
-                                weight = float(parts[1].strip())
-                                result.append((value, weight))
-                                continue
-                            except ValueError:
-                                # If weight is not a number, treat the whole line as a single value
-                                pass
-
-                    # If no comma or invalid weight, add the line as a single value with weight 1.0
-                    result.append((line, 1.0))
-
-                return result
+                    if len(row) >= 2:
+                        try:
+                            weight = float(row[1])
+                            values.append((row[0], weight))
+                        except (ValueError, IndexError):
+                            # If weight is not a valid number, use default weight of 1.0
+                            values.append((row[0], 1.0))
+                    else:
+                        # If no weight is provided, use default weight of 1.0
+                        values.append((row[0], 1.0))
+                return values
         except Exception as e:
-            logger.error(f"Error loading simple CSV file {file_path}: {e}")
+            logger.error(f"Error loading CSV file {file_path}: {e}")
             return []
 
     @classmethod
-    def get_country_specific_data(cls, data_type: str, country_code: str | None = None) -> list[tuple[str, float]]:
+    def get_country_specific_data(cls, data_type: str, country_code: str = "US") -> list[tuple[str, float]]:
         """Get country-specific data from CSV files.
 
         Args:
             data_type: Type of data to retrieve (e.g., "specialties", "hospitals")
-            country_code: Country code (default: None, which will use "US")
+            country_code: Country code (default: "US")
 
         Returns:
             List of tuples (value, weight) from the CSV file
         """
-        # Use US as default country code if none provided
-        if not country_code:
-            country_code = "US"
-
-        # Create a cache key based on data type and country code
+        # Get the appropriate cache for the data type
+        cache = cls._get_cache_for_data_type(data_type)
         cache_key = f"{data_type}_{country_code}"
 
         # Check if data is already in cache
-        cache_dict = cls._get_cache_for_data_type(data_type)
-        if cache_key in cache_dict:
-            return cache_dict[cache_key]
+        if cache_key in cache:
+            return cache[cache_key]
 
         # Get the file path for the country-specific data
         file_path = DataPathUtil.get_country_specific_data_file_path("medical", data_type, country_code)
 
-        # If country-specific file doesn't exist, try US as fallback
-        if not DataPathUtil.file_exists(file_path) and country_code != "US":
-            fallback_file_path = DataPathUtil.get_country_specific_data_file_path("medical", data_type, "US")
-            if DataPathUtil.file_exists(fallback_file_path):
-                logger.info(f"Using US fallback for {data_type} data as {country_code} not available")
-                file_path = fallback_file_path
+        # Load the data from the CSV file
+        data = cls._load_simple_csv(file_path)
 
-        # If still no file, try without country code
-        if not DataPathUtil.file_exists(file_path):
-            # Try to find a generic file (without country code)
-            generic_file_path = DataPathUtil.get_data_file_path("medical", f"{data_type}.csv")
-            if DataPathUtil.file_exists(generic_file_path):
-                logger.warning(f"Using generic data for {data_type} - consider creating country-specific file")
-                file_path = generic_file_path
+        # If no data was found, try to load the default (US) data
+        if not data and country_code != "US":
+            file_path = DataPathUtil.get_country_specific_data_file_path("medical", data_type, "US")
+            data = cls._load_simple_csv(file_path)
 
-        # If file exists, load it and cache the result
-        if DataPathUtil.file_exists(file_path):
-            result = cls._load_simple_csv(file_path)
-            cache_dict[cache_key] = result
-            return result
+        # If still no data, use default values
+        if not data:
+            data = cls._get_default_values(data_type)
 
-        # If no file found, return default values
-        logger.warning(f"No data file found for {data_type} with country code {country_code}")
-        return cls._get_default_values(data_type)
+        # Cache the data for future use
+        cache[cache_key] = data
+        return data
 
     @classmethod
     def _get_cache_for_data_type(cls, data_type: str) -> dict[str, list[tuple[str, float]]]:
@@ -128,22 +115,26 @@ class DoctorDataLoader:
             The cache dictionary for the data type
         """
         if data_type == "specialties":
-            return cls._specialties_cache
+            return cls._SPECIALTIES_CACHE
         elif data_type == "hospitals":
-            return cls._hospitals_cache
+            return cls._HOSPITALS_CACHE
         elif data_type == "medical_schools":
-            return cls._medical_schools_cache
+            return cls._MEDICAL_SCHOOLS_CACHE
         elif data_type == "certifications":
-            return cls._certifications_cache
+            return cls._CERTIFICATIONS_CACHE
         elif data_type == "languages":
-            return cls._languages_cache
+            return cls._LANGUAGES_CACHE
         elif data_type == "institutions":
-            return cls._institutions_cache
+            return cls._INSTITUTIONS_CACHE
         elif data_type == "degrees":
-            return cls._degrees_cache
+            return cls._DEGREES_CACHE
+        elif data_type == "doctor_titles":
+            return cls._DOCTOR_TITLES_CACHE
         else:
-            # For unknown data types, create a new cache
-            return {}
+            # For unknown data types, create a new cache entry
+            logger.warning(f"Unknown data type: {data_type}, creating new cache entry")
+            setattr(cls, f"_{data_type.upper()}_CACHE", {})
+            return getattr(cls, f"_{data_type.upper()}_CACHE")
 
     @classmethod
     def _get_default_values(cls, data_type: str) -> list[tuple[str, float]]:
@@ -156,18 +147,103 @@ class DoctorDataLoader:
             A list of default values with weights
         """
         if data_type == "specialties":
-            return [("Family Medicine", 10.0), ("Internal Medicine", 8.0), ("Pediatrics", 6.0)]
+            return [
+                ("Family Medicine", 10),
+                ("Internal Medicine", 8),
+                ("Pediatrics", 6),
+                ("Cardiology", 5),
+                ("Neurology", 5),
+                ("Oncology", 5),
+                ("Orthopedics", 5),
+                ("Psychiatry", 5),
+                ("Dermatology", 4),
+                ("Emergency Medicine", 4),
+            ]
         elif data_type == "hospitals":
-            return [("General Hospital", 10.0), ("University Medical Center", 8.0), ("Community Hospital", 6.0)]
+            return [
+                ("General Hospital", 10),
+                ("University Medical Center", 8),
+                ("Community Hospital", 6),
+                ("Regional Medical Center", 5),
+                ("Memorial Hospital", 5),
+                ("Children's Hospital", 4),
+                ("Veterans Hospital", 3),
+            ]
         elif data_type == "medical_schools":
-            return [("University Medical School", 10.0), ("State Medical College", 8.0)]
+            return [
+                ("Harvard Medical School", 10),
+                ("Johns Hopkins School of Medicine", 9),
+                ("Stanford University School of Medicine", 8),
+                ("University of California, San Francisco", 7),
+                ("Mayo Clinic Alix School of Medicine", 6),
+                ("University of Pennsylvania Perelman School of Medicine", 5),
+                ("Columbia University Vagelos College of Physicians and Surgeons", 5),
+                ("University of California, Los Angeles", 4),
+                ("Washington University School of Medicine", 4),
+                ("Yale School of Medicine", 4),
+            ]
         elif data_type == "certifications":
-            return [("Board Certified", 10.0), ("Advanced Cardiac Life Support", 8.0)]
+            return [
+                ("Board Certified", 10),
+                ("Advanced Cardiac Life Support", 8),
+                ("Basic Life Support", 8),
+                ("Pediatric Advanced Life Support", 6),
+                ("Advanced Trauma Life Support", 6),
+                ("Neonatal Resuscitation Program", 5),
+                ("Certified Diabetes Educator", 4),
+                ("Certified Wound Specialist", 3),
+                ("Certified Stroke Rehabilitation Specialist", 3),
+                ("Pain Management Certification", 3),
+            ]
         elif data_type == "languages":
-            return [("English", 10.0), ("Spanish", 5.0), ("French", 3.0)]
+            return [
+                ("English", 10),
+                ("Spanish", 5),
+                ("French", 3),
+                ("German", 2),
+                ("Mandarin", 2),
+                ("Arabic", 2),
+                ("Russian", 1),
+                ("Portuguese", 1),
+                ("Italian", 1),
+                ("Japanese", 1),
+            ]
         elif data_type == "institutions":
-            return [("Medical University", 10.0), ("State University", 8.0)]
+            return [
+                ("Mayo Clinic", 10),
+                ("Cleveland Clinic", 9),
+                ("Massachusetts General Hospital", 8),
+                ("Johns Hopkins Hospital", 8),
+                ("UCLA Medical Center", 7),
+                ("New York-Presbyterian Hospital", 7),
+                ("UCSF Medical Center", 6),
+                ("Stanford Health Care", 6),
+                ("Cedars-Sinai Medical Center", 5),
+                ("Northwestern Memorial Hospital", 5),
+            ]
         elif data_type == "degrees":
-            return [("MD", 10.0), ("DO", 8.0), ("MBBS", 6.0), ("PhD", 4.0)]
+            return [
+                ("MD", 10),
+                ("DO", 8),
+                ("MBBS", 6),
+                ("PhD", 4),
+                ("MPH", 3),
+                ("MS", 3),
+                ("MBA", 2),
+                ("PA", 2),
+                ("NP", 2),
+                ("RN", 1),
+            ]
+        elif data_type == "doctor_titles":
+            return [
+                ("Dr.", 10),
+                ("Professor", 5),
+                ("Associate Professor", 4),
+                ("Assistant Professor", 3),
+                ("Chief", 2),
+                ("Director", 2),
+                ("Head", 1),
+            ]
         else:
-            return [("Default", 1.0)]
+            logger.warning(f"No default values for data type: {data_type}")
+            return []

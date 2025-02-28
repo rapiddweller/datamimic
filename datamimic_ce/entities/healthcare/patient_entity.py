@@ -334,14 +334,40 @@ class PatientEntity(Entity):
         return random.choice(blood_types)
 
     def _generate_contact_number(self) -> str:
-        """Generate a contact number."""
+        """Generate a contact number.
+
+        Returns:
+            A contact number in the format (XXX) XXX-XXXX.
+        """
         # Use the person entity's phone number if it has one
         if hasattr(self._person_entity, "phone") and self._person_entity.phone:
-            return self._person_entity.phone
+            # Format the phone number to match the expected format
+            phone = self._person_entity.phone
+            if phone.startswith("+"):
+                # Extract the digits from the phone number
+                digits = ''.join(filter(str.isdigit, phone))
+                if len(digits) >= 10:
+                    # Format as (XXX) XXX-XXXX
+                    area_code = digits[-10:-7]
+                    prefix = digits[-7:-4]
+                    line_number = digits[-4:]
+                    return f"({area_code}) {prefix}-{line_number}"
+            return phone
 
         # Fallback to the address entity's phone number
         if hasattr(self._address_entity, "private_phone") and self._address_entity.private_phone:
-            return self._address_entity.private_phone
+            # Format the phone number to match the expected format
+            phone = self._address_entity.private_phone
+            if phone.startswith("+"):
+                # Extract the digits from the phone number
+                digits = ''.join(filter(str.isdigit, phone))
+                if len(digits) >= 10:
+                    # Format as (XXX) XXX-XXXX
+                    area_code = digits[-10:-7]
+                    prefix = digits[-7:-4]
+                    line_number = digits[-4:]
+                    return f"({area_code}) {prefix}-{line_number}"
+            return phone
 
         # Last resort fallback
         area_code = random.randint(100, 999)
@@ -393,7 +419,11 @@ class PatientEntity(Entity):
     def _generate_insurance_policy_number(self) -> str:
         """Generate an insurance policy number."""
         letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        return f"{random.choice(letters)}{random.randint(100000, 999999)}{random.choice(letters)}{random.randint(1000, 9999)}"
+        first_letter = random.choice(letters)
+        number_part = random.randint(100000, 999999)
+        second_letter = random.choice(letters)
+        last_part = random.randint(1000, 9999)
+        return f"{first_letter}{number_part}{second_letter}{last_part}"
 
     def _generate_emergency_contact(self) -> dict[str, str]:
         """Generate emergency contact information."""

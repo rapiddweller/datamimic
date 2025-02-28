@@ -7,7 +7,7 @@
 import unittest
 from datetime import datetime
 
-from datamimic_ce.entities.medical_record_entity import MedicalRecordEntity
+from datamimic_ce.entities.healthcare.medical_record_entity import MedicalRecordEntity
 from datamimic_ce.utils.class_factory_ce_util import ClassFactoryCEUtil
 
 

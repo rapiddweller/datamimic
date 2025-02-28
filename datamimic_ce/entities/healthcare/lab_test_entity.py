@@ -195,7 +195,7 @@ class LabTestEntity(LabTestEntityImpl):
         lab_names = self._DATA_CACHE.get("lab_names", [])
         if lab_names:
             # If we have lab names, use them to generate more realistic addresses
-            lab_name = self._weighted_choice(lab_names)
+            self._weighted_choice(lab_names)
 
             # Get country-specific data if available
             streets = self._DATA_CACHE.get(

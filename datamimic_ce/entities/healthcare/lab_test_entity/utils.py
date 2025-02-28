@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import random
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Any, TypeVar
 
 T = TypeVar("T")
@@ -15,11 +15,11 @@ class LabTestUtils:
     """Utility functions for lab test entity."""
 
     @staticmethod
-    def weighted_choice(values: list[str | tuple[str, float]]) -> str:
+    def weighted_choice(values: Sequence[str | tuple[str, float]]) -> str:
         """Choose a value from a list based on weights.
 
         Args:
-            values: List of values, potentially with weights
+            values: Sequence of values, potentially with weights
 
         Returns:
             A chosen value

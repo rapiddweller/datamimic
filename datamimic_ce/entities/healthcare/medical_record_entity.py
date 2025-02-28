@@ -267,7 +267,10 @@ class MedicalRecordEntity(Entity):
             return [
                 {
                     "code": "99213",
-                    "description": "Office or other outpatient visit for the evaluation and management of an established patient",
+                    "description": (
+                        "Office or other outpatient visit for the evaluation and management "
+                        "of an established patient"
+                    ),
                     "date": self.date,
                 }
             ]
@@ -536,7 +539,6 @@ class MedicalRecordEntity(Entity):
     def _generate_plan(self) -> str:
         """Generate a plan."""
         # Generate a plan based on the diagnoses, procedures, and medications
-        diagnoses = self.diagnosis
         procedures = self.procedures
         medications = self.medications
 
