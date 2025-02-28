@@ -6,6 +6,7 @@
 
 import datetime
 import random
+import string
 from typing import Any
 
 from datamimic_ce.entities.healthcare.lab_test_entity.data_loader import LabTestDataLoader
@@ -29,6 +30,9 @@ class LabTestGenerators:
         self._test_type: str | None = None
         self._status: str | None = None
         self._specimen_type: str | None = None
+
+        # Initialize class_factory_util as None (will be set if needed)
+        self._class_factory_util = None
 
     def set_test_type(self, test_type: str) -> None:
         """Set the test type.
@@ -297,133 +301,115 @@ class LabTestGenerators:
         # Get country-specific lab names
         lab_names = LabTestDataLoader.get_country_specific_data("lab_names", self._dataset)
 
+        # If no data is available, try to get generic lab names
         if not lab_names:
-            # Fallback to default lab name if no lab names are available
-            return "Quest Diagnostics"
+            lab_names = LabTestDataLoader.get_country_specific_data("lab_names", "US")
+
+        # If still no data, use a minimal fallback that's not hardcoded
+        if not lab_names:
+            return f"Laboratory {random.randint(1, 100)}"
 
         return LabTestUtils.weighted_choice(lab_names)
 
     def generate_lab_address(self) -> dict[str, str]:
         """Generate a lab address."""
-        # This would ideally be loaded from country-specific CSV files as well
-        # For now, we'll use a simple approach based on the country code
+        # Get country-specific data
+        cities = LabTestDataLoader.get_country_specific_data("cities", self._dataset)
+        states = LabTestDataLoader.get_country_specific_data("states", self._dataset)
 
-        if self._dataset == "DE":
-            return {
-                "street": f"Laborstraße {random.randint(1, 100)}",
-                "city": random.choice(["Berlin", "München", "Hamburg", "Köln", "Frankfurt"]),
-                "state": random.choice(["Berlin", "Bayern", "Hamburg", "Nordrhein-Westfalen", "Hessen"]),
-                "zip_code": f"{random.randint(10000, 99999)}",
-                "country": "Deutschland",
-            }
-        else:  # Default to US
-            return {
-                "street": f"{random.randint(100, 999)} Medical Center Dr",
-                "city": random.choice(["Boston", "New York", "Chicago", "Los Angeles", "Houston"]),
-                "state": random.choice(["MA", "NY", "IL", "CA", "TX"]),
-                "zip_code": f"{random.randint(10000, 99999)}",
-                "country": "USA",
-            }
+        # If no data is available, try to get US data
+        if not cities:
+            cities = LabTestDataLoader.get_country_specific_data("cities", "US")
+        if not states:
+            states = LabTestDataLoader.get_country_specific_data("states", "US")
+
+        # Generate street number
+        street_number = str(random.randint(100, 9999))
+
+        # Get street names from data files if available
+        street_names = LabTestDataLoader.get_country_specific_data("street_names", self._dataset)
+        if not street_names:
+            street_names = LabTestDataLoader.get_country_specific_data("street_names", "US")
+
+        # Get street types from data files if available
+        street_types = LabTestDataLoader.get_country_specific_data("street_types", self._dataset)
+        if not street_types:
+            street_types = LabTestDataLoader.get_country_specific_data("street_types", "US")
+
+        # Generate street
+        if street_names and street_types:
+            street_name = LabTestUtils.weighted_choice(street_names)
+            street_type = LabTestUtils.weighted_choice(street_types)
+            street = f"{street_number} {street_name} {street_type}"
+        else:
+            # Minimal fallback without hardcoded values
+            street = f"Street {street_number}"
+
+        # Generate zip code
+        zip_code = "".join(random.choices(string.digits, k=5))
+
+        # Get country from dataset or default to US
+        country = self._dataset.upper() if self._dataset else "US"
+
+        # Use minimal fallbacks that aren't hardcoded if data is missing
+        city = LabTestUtils.weighted_choice(cities) if cities else f"City {random.randint(1, 100)}"
+        state = LabTestUtils.weighted_choice(states) if states else f"State {random.randint(1, 50)}"
+
+        return {
+            "street": street,
+            "city": city,
+            "state": state,
+            "zip_code": zip_code,
+            "country": country,
+        }
 
     def generate_ordering_provider(self) -> str:
         """Generate an ordering provider name."""
-        # This would ideally be loaded from country-specific CSV files as well
-        # For now, we'll use a simple approach based on the country code
+        # Get country-specific first and last names
+        first_names = LabTestDataLoader.get_country_specific_data("first_names", self._dataset)
+        last_names = LabTestDataLoader.get_country_specific_data("last_names", self._dataset)
 
-        if self._dataset == "DE":
-            first_names = [
-                "Thomas",
-                "Michael",
-                "Andreas",
-                "Stefan",
-                "Klaus",
-                "Anna",
-                "Sabine",
-                "Claudia",
-                "Susanne",
-                "Petra",
-            ]
-            last_names = [
-                "Müller",
-                "Schmidt",
-                "Schneider",
-                "Fischer",
-                "Weber",
-                "Meyer",
-                "Wagner",
-                "Becker",
-                "Schulz",
-                "Hoffmann",
-            ]
-            credentials = ["Dr. med.", "Prof. Dr. med.", "Dr. med. habil."]
-        else:  # Default to US
-            first_names = [
-                "James",
-                "John",
-                "Robert",
-                "Michael",
-                "William",
-                "Mary",
-                "Patricia",
-                "Jennifer",
-                "Linda",
-                "Elizabeth",
-            ]
-            last_names = [
-                "Smith",
-                "Johnson",
-                "Williams",
-                "Jones",
-                "Brown",
-                "Davis",
-                "Miller",
-                "Wilson",
-                "Moore",
-                "Taylor",
-            ]
-            credentials = ["MD", "DO", "NP", "PA", "MBBS"]
+        # If no data is available, try to get US data
+        if not first_names:
+            first_names = LabTestDataLoader.get_country_specific_data("first_names", "US")
+        if not last_names:
+            last_names = LabTestDataLoader.get_country_specific_data("last_names", "US")
 
-        first_name = random.choice(first_names)
-        last_name = random.choice(last_names)
-        credential = random.choice(credentials)
+        # Get titles from data files if available
+        titles = LabTestDataLoader.get_country_specific_data("doctor_titles", self._dataset)
+        if not titles:
+            titles = LabTestDataLoader.get_country_specific_data("doctor_titles", "US")
 
-        if self._dataset == "DE":
-            return f"{credential} {first_name} {last_name}"
-        else:
-            return f"Dr. {first_name} {last_name}, {credential}"
+        # Use minimal fallbacks that aren't hardcoded if data is missing
+        first_name = LabTestUtils.weighted_choice(first_names) if first_names else f"FirstName{random.randint(1, 100)}"
+        last_name = LabTestUtils.weighted_choice(last_names) if last_names else f"LastName{random.randint(1, 100)}"
+        title = LabTestUtils.weighted_choice(titles) if titles else "Dr."
+
+        # Format the provider name with the title
+        return f"{title} {first_name} {last_name}"
 
     def generate_notes(self) -> str:
         """Generate notes for the lab test."""
-        # This would ideally be loaded from country-specific CSV files as well
-        # For now, we'll use a simple approach based on the country code
+        # Get notes templates from data files if available
+        note_templates = LabTestDataLoader.get_country_specific_data("note_templates", self._dataset)
+        if not note_templates:
+            note_templates = LabTestDataLoader.get_country_specific_data("note_templates", "US")
 
-        if self._dataset == "DE":
-            notes_options = [
-                "Probe gemäß Standardprotokoll verarbeitet.",
-                "Ergebnisse vom leitenden Labortechniker verifiziert.",
-                "Nüchternstatus des Patienten bestätigt.",
-                "Probenqualität ausgezeichnet.",
-                "Probe in geeignetem Behälter erhalten.",
-                "Probe innerhalb des empfohlenen Zeitrahmens verarbeitet.",
-                "Keine Hämolyse beobachtet.",
-                "Leichte Hämolyse festgestellt, kann Ergebnisse beeinflussen.",
-                "Probe bei Raumtemperatur erhalten.",
-                "Probe wie erforderlich auf Eis erhalten.",
-                "",  # Empty notes option
-            ]
-        else:  # Default to US
-            notes_options = [
-                "Sample processed according to standard protocol.",
-                "Results verified by senior lab technician.",
-                "Patient fasting status confirmed.",
-                "Sample quality excellent.",
-                "Sample received in appropriate container.",
-                "Sample processed within recommended timeframe.",
-                "No hemolysis observed.",
-                "Slight hemolysis noted, may affect results.",
-                "Sample received at room temperature.",
-                "Sample received on ice as required.",
-                "",  # Empty notes option
-            ]
+        # If no templates are available, use a minimal fallback that's not hardcoded
+        if not note_templates:
+            return f"Lab test completed on {datetime.datetime.now().strftime('%Y-%m-%d')}."
 
-        return random.choice(notes_options)
+        # Randomly select 1-3 notes
+        num_notes = min(random.randint(1, 3), len(note_templates))
+        selected_notes = random.sample([note[0] for note in note_templates], num_notes)
+
+        # Join the notes
+        return " ".join(selected_notes)
+
+    def set_class_factory_util(self, class_factory_util: Any) -> None:
+        """Set the class factory utility.
+
+        Args:
+            class_factory_util: The class factory utility to use.
+        """
+        self._class_factory_util = class_factory_util

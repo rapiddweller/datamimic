@@ -143,7 +143,9 @@ class DoctorEntity(Entity):
         self._property_cache.clear()
 
         # Re-initialize generators to ensure fresh data
-        self._generators = DoctorGenerators(self._locale, self._dataset, self._class_factory_util)
+        # Ensure locale is a string to satisfy type checker
+        locale = self._locale if self._locale is not None else "en"
+        self._generators = DoctorGenerators(locale, self._dataset, self._class_factory_util)
         self._country_code = self._generators._country_code
 
     @property

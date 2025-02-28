@@ -2,13 +2,13 @@
     <echo>Running Healthcare Generators</echo>
 
     <!-- Basic Medical Information -->
-    <generate name="diagnoses" count="10">
+    <generate name="diagnoses" count="10" target="CSV">
         <key name="general_diagnosis" generator="DiagnosisGenerator()" />
         <key name="cardiac_diagnosis" generator="DiagnosisGenerator(category='cardiac')" />
     </generate>
 
     <!-- Vital Signs -->
-    <generate name="vital_signs" count="10">
+    <generate name="vital_signs" count="10" target="CSV">
         <key name="vitals" generator="VitalSignsGenerator(vital_type='bp')" />
         <key name="temperature" generator="VitalSignsGenerator(vital_type='temp')" />
         <key name="pulse" generator="VitalSignsGenerator(vital_type='pulse')" />
@@ -16,38 +16,176 @@
     </generate>
 
     <!-- Medications -->
-    <generate name="medications" count="10">
+    <generate name="medications" count="10" target="CSV">
         <key name="current_medications" generator="MedicationGenerator()" />
         <key name="cardiac_medications" generator="MedicationGenerator(category='cardiac')" />
     </generate>
 
     <!-- Lab Results -->
-    <generate name="lab_results" count="10">
+    <generate name="lab_results" count="10" target="CSV">
         <key name="cbc" generator="LabResultGenerator(test_type='cbc')" />
         <key name="metabolic" generator="LabResultGenerator(test_type='metabolic')" />
     </generate>
 
     <!-- Procedures -->
-    <generate name="procedures" count="10">
+    <generate name="procedures" count="10" target="CSV">
         <key name="general_procedure" generator="MedicalProcedureGenerator()" />
         <key name="surgical_procedure" generator="MedicalProcedureGenerator(category='surgical')" />
     </generate>
 
     <!-- Health Information -->
-    <generate name="health_info" count="10">
+    <generate name="health_info" count="10" target="CSV">
         <key name="allergies" generator="AllergyGenerator(include_reaction=True)" />
-        <key name="immunizations" generator="ImmunizationGenerator(include_date=True, include_booster=True)" />
-        <key name="symptoms" generator="SymptomGenerator(disease_category='general', number_of_symptoms=3)" />
+        <key name="immunizations"
+            generator="ImmunizationGenerator(include_date=True, include_booster=True)" />
+        <key name="symptoms"
+            generator="SymptomGenerator(disease_category='general', number_of_symptoms=3)" />
     </generate>
 
     <!-- Appointments -->
-    <generate name="appointments" count="10">
+    <generate name="appointments" count="10" target="CSV">
         <key name="next_appointment" generator="MedicalAppointmentGenerator(include_time=True)" />
     </generate>
 
     <!-- Patient History -->
-    <generate name="history" count="10">
-        <key name="patient_history" generator="PatientHistoryGenerator(include_allergies=True, include_immunizations=True)" />
+    <generate name="history" count="10" target="CSV">
+        <key name="patient_history"
+            generator="PatientHistoryGenerator(include_allergies=True, include_immunizations=True)" />
+    </generate>
+
+    <!-- Healthcare Entities -->
+    <echo>Running Healthcare Entities</echo>
+
+    <!-- Lab Test Entity -->
+    <echo>Running LabTestEntity</echo>
+    <generate name="lab_tests" count="10" target="CSV">
+        <variable name="lab_test" entity="LabTest" />
+        <key name="test_id" script="lab_test.test_id" />
+        <key name="patient_id" script="lab_test.patient_id" />
+        <key name="test_name" script="lab_test.test_name" />
+        <key name="test_date" script="lab_test.test_date" />
+        <key name="result_date" script="lab_test.result_date" />
+        <variable name="lab_address" script="lab_test.lab_address" />
+        <key name="street" script="lab_address.street" />
+        <key name="city" script="lab_address.city" />
+        <key name="state" script="lab_address.state" />
+        <key name="zip_code" script="lab_address.zip_code" />
+        <key name="country" script="lab_address.country" />
+        <key name="ordering_provider" script="lab_test.ordering_provider" />
+        <key name="test_status" script="lab_test.status" />
+        <key name="performing_lab" script="lab_test.performing_lab" />
+        <key name="specimen_type" script="lab_test.specimen_type" />
+    </generate>
+
+    <!-- US Lab Test Entity -->
+    <echo>Running US LabTestEntity</echo>
+    <generate name="us_lab_tests" count="5">
+        <variable name="lab_test" entity="LabTest" locale="en_US" />
+        <key name="test_id" script="lab_test.test_id" />
+        <key name="patient_id" script="lab_test.patient_id" />
+        <key name="test_name" script="lab_test.test_name" />
+        <key name="test_date" script="lab_test.test_date" />
+        <key name="result_date" script="lab_test.result_date" />
+        <variable name="lab_address" script="lab_test.lab_address" />
+        <key name="street" script="lab_address.street" />
+        <key name="city" script="lab_address.city" />
+        <key name="state" script="lab_address.state" />
+        <key name="zip_code" script="lab_address.zip_code" />
+        <key name="country" script="lab_address.country" />
+        <key name="ordering_provider" script="lab_test.ordering_provider" />
+        <key name="test_status" script="lab_test.status" />
+    </generate>
+
+    <!-- German Lab Test Entity -->
+    <echo>Running German LabTestEntity</echo>
+    <generate name="de_lab_tests" count="5">
+        <variable name="lab_test" entity="LabTest" locale="de_DE" />
+        <key name="test_id" script="lab_test.test_id" />
+        <key name="patient_id" script="lab_test.patient_id" />
+        <key name="test_name" script="lab_test.test_name" />
+        <key name="test_date" script="lab_test.test_date" />
+        <key name="result_date" script="lab_test.result_date" />
+        <variable name="lab_address" script="lab_test.lab_address" />
+        <key name="street" script="lab_address.street" />
+        <key name="city" script="lab_address.city" />
+        <key name="state" script="lab_address.state" />
+        <key name="zip_code" script="lab_address.zip_code" />
+        <key name="country" script="lab_address.country" />
+        <key name="ordering_provider" script="lab_test.ordering_provider" />
+        <key name="test_status" script="lab_test.status" />
+    </generate>
+
+    <!-- Patient Entity -->
+    <echo>Running PatientEntity</echo>
+    <generate name="patients" count="10" target="CSV">
+        <variable name="patient" entity="Patient" />
+        <key name="patient_id" script="patient.patient_id" />
+        <key name="first_name" script="patient.first_name" />
+        <key name="last_name" script="patient.last_name" />
+        <key name="date_of_birth" script="patient.date_of_birth" />
+        <key name="gender" script="patient.gender" />
+        <key name="blood_type" script="patient.blood_type" />
+        <variable name="address" script="patient.address" />
+        <key name="street" script="address.street" />
+        <key name="city" script="address.city" />
+        <key name="state" script="address.state" />
+        <key name="zip_code" script="address.zip_code" />
+        <key name="country" script="address.country" />
+        <key name="contact_number" script="patient.contact_number" />
+        <key name="email" script="patient.email" />
+        <key name="insurance_provider" script="patient.insurance_provider" />
+    </generate>
+
+    <!-- Doctor Entity -->
+    <echo>Running DoctorEntity</echo>
+    <generate name="doctors" count="10" target="CSV">
+        <variable name="doctor" entity="Doctor" />
+        <key name="doctor_id" script="doctor.doctor_id" />
+        <key name="first_name" script="doctor.first_name" />
+        <key name="last_name" script="doctor.last_name" />
+        <key name="specialty" script="doctor.specialty" />
+        <key name="license_number" script="doctor.license_number" />
+        <key name="hospital" script="doctor.hospital_affiliation" />
+        <key name="email" script="doctor.email" />
+        <key name="contact_number" script="doctor.contact_number" />
+        <variable name="office_address" script="doctor.office_address" />
+        <key name="street" script="office_address.street" />
+        <key name="city" script="office_address.city" />
+        <key name="state" script="office_address.state" />
+        <key name="zip_code" script="office_address.zip_code" />
+        <key name="country" script="office_address.country" />
+    </generate>
+
+    <!-- Medical Record Entity -->
+    <echo>Running MedicalRecordEntity</echo>
+    <generate name="medical_records" count="10" target="CSV">
+        <variable name="record" entity="MedicalRecord" />
+        <key name="record_id" script="record.record_id" />
+        <key name="patient_id" script="record.patient_id" />
+        <key name="doctor_id" script="record.doctor_id" />
+        <nestedKey name="diagnosis" script="record.diagnosis" />
+    </generate>
+
+    <!-- Clinical Trial Entity -->
+    <echo>Running ClinicalTrialEntity</echo>
+    <generate name="clinical_trials" count="10" target="CSV">
+        <variable name="trial" entity="ClinicalTrial" />
+        <key name="trial_id" script="trial.trial_id" />
+        <key name="title" script="trial.title" />
+        <key name="description" script="trial.description" />
+        <key name="phase" script="trial.phase" />
+        <key name="start_date" script="trial.start_date" />
+        <key name="end_date" script="trial.end_date" />
+        <key name="status" script="trial.status" />
+    </generate>
+
+    <!-- Medical Device Entity -->
+    <echo>Running MedicalDeviceEntity</echo>
+    <generate name="medical_devices" count="10" target="CSV">
+        <variable name="device" entity="MedicalDevice" />
+        <key name="device_id" script="device.device_id" />
+        <key name="manufacturer" script="device.manufacturer" />
+        <key name="serial_number" script="device.serial_number" />
     </generate>
 
 </setup> 

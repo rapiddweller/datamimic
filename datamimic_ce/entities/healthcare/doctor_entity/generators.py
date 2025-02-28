@@ -10,6 +10,7 @@ Generator functions for the doctor entity package.
 
 import datetime
 import random
+import re
 from typing import Any
 
 from datamimic_ce.entities.address_entity import AddressEntity
@@ -40,7 +41,9 @@ class DoctorGenerators:
         self._person_entity = PersonEntity(class_factory_util, locale=locale, dataset=dataset)
 
         # Create address entity for address generation
-        self._address_entity = AddressEntity(class_factory_util, dataset=dataset, locale=locale)
+        # Convert None to empty string for dataset to satisfy type checker
+        address_dataset = dataset if dataset is not None else ""
+        self._address_entity = AddressEntity(class_factory_util, dataset=address_dataset, locale=locale)
 
     def _determine_country_code(self, dataset: str | None, locale: str) -> str:
         """Determine the country code to use based on dataset and locale.
@@ -54,7 +57,7 @@ class DoctorGenerators:
         """
         # If dataset is provided, prioritize it
         if dataset and len(dataset) == 2:
-            return dataset.upper()
+            return dataset.lower()  # Ensure lowercase for consistency
 
         # Try to extract country code from locale
         if locale:
@@ -62,34 +65,34 @@ class DoctorGenerators:
             if "_" in locale and len(locale.split("_")) > 1:
                 country_part = locale.split("_")[1]
                 if len(country_part) == 2:
-                    return country_part.upper()
+                    return country_part.lower()
             elif "-" in locale and len(locale.split("-")) > 1:
                 country_part = locale.split("-")[1]
                 if len(country_part) == 2:
-                    return country_part.upper()
+                    return country_part.lower()
 
             # Direct matching for 2-letter codes
             if len(locale) == 2:
-                return locale.upper()
+                return locale.lower()
 
             # Map common language codes to countries
             language_code = locale.split("_")[0].split("-")[0].lower()
             language_map = {
-                "en": "US",
-                "de": "DE",
-                "fr": "FR",
-                "es": "ES",
-                "it": "IT",
-                "pt": "BR",
-                "ru": "RU",
-                "zh": "CN",
-                "ja": "JP",
+                "en": "us",
+                "de": "de",
+                "fr": "fr",
+                "es": "es",
+                "it": "it",
+                "pt": "br",
+                "ru": "ru",
+                "zh": "cn",
+                "ja": "jp",
             }
             if language_code in language_map:
                 return language_map[language_code]
 
         # Default to US if no matching country code is found
-        return "US"
+        return "us"
 
     def generate_doctor_id(self) -> str:
         """Generate a unique doctor ID."""
@@ -108,8 +111,15 @@ class DoctorGenerators:
         specialties = DoctorDataLoader.get_country_specific_data("specialties", self._country_code)
 
         if not specialties:
-            # Fallback to default specialty if no specialties are available
-            return "Family Medicine"
+            # Create a new person entity to get a random occupation as fallback
+            fallback_person = PersonEntity(self._class_factory_util, locale=self._locale, dataset=self._dataset)
+            occupation = fallback_person.occupation
+
+            # If occupation is empty, use a generic medical specialty
+            if not occupation:
+                return "General Medicine"
+
+            return f"Medical {occupation}"
 
         # Choose a specialty based on weights
         specialty_values = [s[0] for s in specialties]
@@ -130,6 +140,19 @@ class DoctorGenerators:
 
     def generate_contact_number(self) -> str:
         """Generate a contact number."""
+        # Use the person entity's phone if it has one and it matches the expected format
+        if hasattr(self._person_entity, "phone") and self._person_entity.phone:
+            # Check if it already matches the expected format
+            if re.match(r"\(\d{3}\) \d{3}-\d{4}", self._person_entity.phone):
+                return self._person_entity.phone
+
+            # Try to extract digits and reformat
+            digits = re.sub(r"\D", "", self._person_entity.phone)
+            if len(digits) >= 10:
+                # Use the last 10 digits
+                last_10 = digits[-10:]
+                return f"({last_10[:3]}) {last_10[3:6]}-{last_10[6:]}"
+
         # Generate a US-formatted phone number in the format (XXX) XXX-XXXX
         area_code = random.randint(100, 999)
         prefix = random.randint(100, 999)
@@ -158,8 +181,17 @@ class DoctorGenerators:
         hospitals = DoctorDataLoader.get_country_specific_data("hospitals", self._country_code)
 
         if not hospitals:
-            # Fallback to default hospital if no hospitals are available
-            return "General Hospital"
+            # Create a new address entity to get a random location name as fallback
+            # Convert None to empty string for dataset to satisfy type checker
+            address_dataset = self._dataset if self._dataset is not None else ""
+            fallback_address = AddressEntity(self._class_factory_util, dataset=address_dataset, locale=self._locale)
+            city = fallback_address.city
+
+            # If city is empty, use a generic hospital name
+            if not city:
+                return "Regional Medical Center"
+
+            return f"{city} Medical Center"
 
         # Choose a hospital based on weights
         hospital_values = [h[0] for h in hospitals]
@@ -168,12 +200,17 @@ class DoctorGenerators:
 
     def generate_office_address(self) -> dict[str, str]:
         """Generate an office address using AddressEntity."""
+        # Create a new address entity to ensure we get a fresh address
+        # Convert None to empty string for dataset to satisfy type checker
+        address_dataset = self._dataset if self._dataset is not None else ""
+        office_address = AddressEntity(self._class_factory_util, dataset=address_dataset, locale=self._locale)
+
         return {
-            "street": f"{self._address_entity.street} {self._address_entity.house_number}",
-            "city": self._address_entity.city,
-            "state": self._address_entity.state,
-            "zip_code": self._address_entity.postal_code,
-            "country": self._address_entity.country,
+            "street": f"{office_address.street} {office_address.house_number}",
+            "city": office_address.city,
+            "state": office_address.state,
+            "zip_code": office_address.postal_code,
+            "country": office_address.country,
         }
 
     def generate_education(self) -> list[dict[str, str]]:
@@ -187,12 +224,32 @@ class DoctorGenerators:
         degree_values = [d[0] for d in degrees] if degrees else []
 
         if not institution_values:
-            # Fallback to default institutions if none are available
-            institution_values = ["Medical University", "State University Medical School", "National Medical College"]
+            # Create multiple person entities to get university names as fallback
+            fallback_institutions = []
+            for _ in range(3):
+                person = PersonEntity(self._class_factory_util, locale=self._locale, dataset=self._dataset)
+                if person.university and person.university not in fallback_institutions:
+                    fallback_institutions.append(person.university)
+
+            # If we couldn't get any universities, use generic names
+            if not fallback_institutions:
+                fallback_institutions = ["University Medical School"]
+
+            institution_values = fallback_institutions
 
         if not degree_values:
-            # Fallback to default degrees if none are available
-            degree_values = ["MD", "DO", "MBBS", "PhD"]
+            # Create multiple person entities to get academic degrees as fallback
+            fallback_degrees = []
+            for _ in range(3):
+                person = PersonEntity(self._class_factory_util, locale=self._locale, dataset=self._dataset)
+                if person.academic_degree and person.academic_degree not in fallback_degrees:
+                    fallback_degrees.append(person.academic_degree)
+
+            # If we couldn't get any degrees, use generic medical degrees
+            if not fallback_degrees:
+                fallback_degrees = ["MD"]
+
+            degree_values = fallback_degrees
 
         # Generate 1-3 education entries
         education_count = random.randint(1, 3)
@@ -208,14 +265,28 @@ class DoctorGenerators:
             # Calculate graduation year (medical school, then residency, etc.)
             grad_year = base_year - (education_count - i - 1) * 2 - random.randint(0, 3)
 
+            # Get honors from a person entity if available
+            honors = ""
+            if random.random() < 0.3:
+                person = PersonEntity(self._class_factory_util, locale=self._locale, dataset=self._dataset)
+                if hasattr(person, "academic_title") and person.academic_title:
+                    honors = person.academic_title
+                else:
+                    honors_options = [
+                        "Cum Laude",
+                        "Magna Cum Laude",
+                        "Summa Cum Laude",
+                        "With Honors",
+                        "With Distinction",
+                    ]
+                    honors = random.choice(honors_options)
+
             education.append(
                 {
                     "institution": institution,
                     "degree": degree,
                     "year": str(grad_year),
-                    "honors": random.choice(["", "Cum Laude", "Magna Cum Laude", "Summa Cum Laude"])
-                    if random.random() < 0.3
-                    else "",
+                    "honors": honors,
                 }
             )
 
@@ -229,14 +300,18 @@ class DoctorGenerators:
         certification_values = [c[0] for c in certifications_data] if certifications_data else []
 
         if not certification_values:
-            # Fallback to default certifications if none are available
-            certification_values = [
-                "Board Certified in Internal Medicine",
-                "Board Certified in Family Medicine",
-                "Advanced Cardiac Life Support (ACLS)",
-                "Basic Life Support (BLS)",
-                "Pediatric Advanced Life Support (PALS)",
+            # Use specialty to generate a relevant certification as fallback
+            specialty = self.generate_specialty()
+            certification_values = [f"Board Certified in {specialty}"]
+
+            # Add some generic medical certifications
+            generic_certifications = [
+                "Advanced Life Support",
+                "Basic Life Support",
+                "Medical Ethics Certification",
+                "Clinical Research Certification",
             ]
+            certification_values.extend(generic_certifications)
 
         # Determine how many certifications to generate (1-3)
         num_certifications = random.randint(1, 3)
@@ -286,13 +361,19 @@ class DoctorGenerators:
         language_values = [l[0] for l in available_languages] if available_languages else []
 
         if not language_values:
-            # Fallback to default languages if none are available
-            language_values = ["English", "Spanish", "French", "German", "Mandarin"]
+            # Create multiple person entities to get languages as fallback
+            fallback_languages = []
+            for _ in range(5):
+                person = PersonEntity(self._class_factory_util, locale=self._locale, dataset=self._dataset)
+                if person.language and person.language not in fallback_languages and person.language not in languages:
+                    fallback_languages.append(person.language)
+
+            language_values = fallback_languages
 
         # Add 0-2 more languages from the available list
         additional_languages_count = random.randint(0, 2)
 
-        if additional_languages_count > 0:
+        if additional_languages_count > 0 and language_values:
             # Filter out already selected languages
             remaining_languages = [lang for lang in language_values if lang not in languages]
 
@@ -303,9 +384,18 @@ class DoctorGenerators:
                     languages.append(language)
                     remaining_languages.remove(language)
 
-        # Ensure we have at least one language
+        # Ensure we have at least one language based on locale/country code
         if not languages:
-            languages.append("English")  # Default to English if no languages are available
+            if self._country_code == "de":
+                languages.append("German")
+            elif self._country_code == "fr":
+                languages.append("French")
+            elif self._country_code == "es":
+                languages.append("Spanish")
+            elif self._country_code == "it":
+                languages.append("Italian")
+            else:
+                languages.append("English")
 
         return languages
 
