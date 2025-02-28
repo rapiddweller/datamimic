@@ -1,0 +1,21 @@
+# DATAMIMIC
+# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
+
+
+from datamimic_ce.model.model_util import ModelUtil
+from pydantic import BaseModel, Field, field_validator
+
+from datamimic_ce.constants.attribute_constants import ATTR_IF, ATTR_THEN
+
+
+class RuleModel(BaseModel):
+    if_rule: str = Field(None, alias=ATTR_IF)
+    then_rule: str = Field(None, alias=ATTR_THEN)
+
+    @field_validator("if", "then")
+    @classmethod
+    def validate_name(cls, value):
+        return ModelUtil.check_not_empty(value=value)
