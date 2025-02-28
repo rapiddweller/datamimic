@@ -212,6 +212,107 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
         )
 
     @staticmethod
+    def get_patient_entity(locale="en", dataset=None, **kwargs):
+        """Get a PatientEntity instance.
+
+        Args:
+            locale: The locale to use for generating data.
+            dataset: The dataset to use for generating data.
+            **kwargs: Additional keyword arguments to pass to the PatientEntity constructor.
+
+        Returns:
+            A PatientEntity instance.
+        """
+        from datamimic_ce.entities.patient_entity import PatientEntity
+
+        return PatientEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
+
+    @staticmethod
+    def get_doctor_entity(locale="en", dataset=None, **kwargs):
+        """
+        Create and return a DoctorEntity instance.
+
+        Args:
+            locale: The locale to use for localization
+            dataset: Optional dataset name
+            **kwargs: Additional parameters to pass to the DoctorEntity constructor
+
+        Returns:
+            A DoctorEntity instance
+        """
+        from datamimic_ce.entities.healthcare.doctor_entity import DoctorEntity
+
+        return DoctorEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
+
+    @staticmethod
+    def get_medical_record_entity(locale="en", dataset=None, **kwargs):
+        """
+        Create and return a MedicalRecordEntity instance.
+
+        Args:
+            locale: The locale to use for localization
+            dataset: Optional dataset name
+            **kwargs: Additional parameters to pass to the MedicalRecordEntity constructor
+
+        Returns:
+            A MedicalRecordEntity instance
+        """
+        from datamimic_ce.entities.medical_record_entity import MedicalRecordEntity
+
+        return MedicalRecordEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
+
+    @staticmethod
+    def get_medical_device_entity(locale="en", dataset=None, **kwargs):
+        """
+        Create and return a MedicalDeviceEntity instance.
+
+        Args:
+            locale: The locale to use for localization
+            dataset: Optional dataset name
+            **kwargs: Additional parameters to pass to the MedicalDeviceEntity constructor
+
+        Returns:
+            A MedicalDeviceEntity instance
+        """
+        from datamimic_ce.entities.medical_device_entity import MedicalDeviceEntity
+
+        return MedicalDeviceEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
+
+    @staticmethod
+    def get_lab_test_entity(locale="en", dataset=None, **kwargs):
+        """
+        Create and return a LabTestEntity instance.
+
+        Args:
+            locale: The locale to use for localization
+            dataset: Optional dataset name
+            **kwargs: Additional parameters to pass to the LabTestEntity constructor
+
+        Returns:
+            A LabTestEntity instance
+        """
+        from datamimic_ce.entities.healthcare.lab_test_entity import LabTestEntity
+
+        return LabTestEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
+
+    @staticmethod
+    def get_clinical_trial_entity(locale="en", dataset=None, **kwargs):
+        """
+        Create and return a ClinicalTrialEntity instance.
+
+        Args:
+            locale: The locale to use for localization
+            dataset: Optional dataset name
+            **kwargs: Additional parameters to pass to the ClinicalTrialEntity constructor
+
+        Returns:
+            A ClinicalTrialEntity instance
+        """
+        from datamimic_ce.entities.clinical_trial_entity import ClinicalTrialEntity
+
+        return ClinicalTrialEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
+
+    @staticmethod
     def get_data_generation_util():
         """
         Get an instance of the data generation utility.

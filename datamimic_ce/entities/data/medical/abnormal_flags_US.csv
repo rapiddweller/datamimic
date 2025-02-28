@@ -1,0 +1,10 @@
+High,10
+Low,10
+Critical High,5
+Critical Low,5
+Abnormal,8
+Out of Range,7
+Panic Value,3
+Borderline,6
+Inconclusive,4
+Requires Confirmation,5 

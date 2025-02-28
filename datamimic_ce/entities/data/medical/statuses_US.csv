@@ -1,0 +1,21 @@
+status,weight
+Completed,200
+Final,180
+Signed,150
+In Progress,120
+Pending,100
+Preliminary,80
+Scheduled,70
+Rescheduled,50
+Waiting,40
+Reviewed,40
+Amended,30
+Addended,20
+Corrected,20
+No Show,15
+Draft,10
+Cancelled,10
+Archived,5
+Deleted,5
+Locked,5
+Unlocked,5 

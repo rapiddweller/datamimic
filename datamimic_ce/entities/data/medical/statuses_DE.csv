@@ -1,0 +1,21 @@
+status,weight
+Abgeschlossen,200
+Endgültig,180
+Unterschrieben,150
+In Bearbeitung,120
+Ausstehend,100
+Vorläufig,80
+Geplant,70
+Umgeplant,50
+Wartend,40
+Überprüft,40
+Geändert,30
+Ergänzt,20
+Korrigiert,20
+Nicht erschienen,15
+Entwurf,10
+Storniert,10
+Archiviert,5
+Gelöscht,5
+Gesperrt,5
+Entsperrt,5 

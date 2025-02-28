@@ -1,0 +1,46 @@
+condition,weight
+Hypertension,200
+Type 2 Diabetes,180
+Hyperlipidemia,170
+Obesity,160
+Coronary Artery Disease,150
+Asthma,140
+COPD,130
+Arthritis,120
+Depression,110
+Anxiety,100
+Hypothyroidism,90
+Gastroesophageal Reflux Disease,85
+Chronic Kidney Disease,80
+Atrial Fibrillation,75
+Heart Failure,70
+Osteoporosis,65
+Migraine,60
+Sleep Apnea,55
+Cancer,50
+Stroke,45
+Alzheimer's Disease,40
+Parkinson's Disease,35
+Multiple Sclerosis,30
+HIV/AIDS,25
+Hepatitis C,20
+Crohn's Disease,15
+Ulcerative Colitis,15
+Fibromyalgia,10
+Chronic Fatigue Syndrome,10
+Lupus,10
+Rheumatoid Arthritis,10
+Psoriasis,10
+Eczema,10
+Allergic Rhinitis,10
+Glaucoma,10
+Macular Degeneration,10
+Cataracts,10
+Hearing Loss,10
+Epilepsy,10
+Bipolar Disorder,10
+Schizophrenia,10
+Post-Traumatic Stress Disorder,10
+Substance Use Disorder,10
+Anemia,10
+Gout,10 
