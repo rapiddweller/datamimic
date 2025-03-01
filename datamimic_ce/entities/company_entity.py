@@ -6,40 +6,95 @@
 
 import random
 from collections.abc import Callable
-from pathlib import Path
 from typing import cast
 
 import numpy as np
 
 from datamimic_ce.entities.address_entity import AddressEntity
+from datamimic_ce.entities.base_data_loader import BaseDataLoader
 from datamimic_ce.entities.entity import Entity
 from datamimic_ce.entities.entity_util import FieldGenerator
 from datamimic_ce.generators.company_name_generator import CompanyNameGenerator
 from datamimic_ce.generators.email_address_generator import EmailAddressGenerator
 from datamimic_ce.generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.logger import logger
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
-from datamimic_ce.utils.file_util import FileUtil
+
+
+class CompanyDataLoader(BaseDataLoader):
+    """Data loader for company entity data."""
+
+    # Cache for company data
+    _SECTOR_CACHE: dict[str, list[tuple[str, float]]] = {}
+    _LEGAL_FORM_CACHE: dict[str, list[tuple[str, float]]] = {}
+    _DEPARTMENT_CACHE: dict[str, list[tuple[str, float]]] = {}
+
+    @classmethod
+    def _get_cache_for_data_type(cls, data_type: str) -> dict[str, list[tuple[str, float]]]:
+        """Get the appropriate cache for the data type.
+
+        Args:
+            data_type: Type of data to retrieve
+
+        Returns:
+            The appropriate cache dictionary
+        """
+        if data_type == "sector":
+            return cls._SECTOR_CACHE
+        elif data_type == "legalForm":
+            return cls._LEGAL_FORM_CACHE
+        elif data_type == "department":
+            return cls._DEPARTMENT_CACHE
+        else:
+            # Create a new cache if it doesn't exist
+            cache_name = f"_{data_type.upper()}_CACHE"
+            if not hasattr(cls, cache_name):
+                logger.warning(f"Cache not found for data type: {data_type}, creating new cache")
+                setattr(cls, cache_name, {})
+            return getattr(cls, cache_name)
+
+    @classmethod
+    def _get_default_values(cls, data_type: str) -> list[tuple[str, float]]:
+        """Get default values for a data type.
+
+        Args:
+            data_type: Type of data to retrieve
+
+        Returns:
+            List of tuples containing default values and weights
+        """
+        if data_type == "sector":
+            return [("Technology", 1.0), ("Services", 1.0), ("Consulting", 1.0)]
+        elif data_type == "legalForm":
+            return [("Inc.", 1.0), ("LLC", 1.0), ("Ltd.", 1.0)]
+        elif data_type == "department":
+            return [("Sales", 1.0), ("Marketing", 1.0), ("IT", 1.0), ("HR", 1.0)]
+        else:
+            return []
 
 
 def full_name_gen(
-    short_name: str,
-    sector: str,
-    legal_values: list,
-    legal_wgt: list,
+    short_name: str | None,
+    sector: str | None,
+    legal_values: list[str] | None,
+    legal_wgt: list[float] | None,
 ) -> str:
     """Generate the full name of the company.
 
     Args:
-        short_name (str): The short name of the company.
-        sector (str): The sector in which the company operates.
-        legal_values (list): List of legal forms.
-        legal_wgt (list): Weights for the legal forms.
+        short_name (str | None): The short name of the company.
+        sector (str | None): The sector in which the company operates.
+        legal_values (list[str] | None): List of legal forms.
+        legal_wgt (list[float] | None): Weights for the legal forms.
 
     Returns:
         str: The full name of the company.
 
     """
-    legal_form = random.choices(legal_values, legal_wgt, k=1)[0] if legal_values is not None else None
+    legal_form = None
+    if legal_values is not None and legal_wgt is not None and len(legal_values) > 0:
+        legal_form = random.choices(legal_values, legal_wgt, k=1)[0]
+        
     builder = [""] if short_name is None else [short_name]
     if sector is not None:
         builder.append(" " + sector)
@@ -106,13 +161,27 @@ class CompanyEntity(Entity):
         """
         super().__init__(locale, dataset)
         self._dataset = dataset
-        # Load file data
-        self._sector = FileUtil.read_csv_having_single_column(
-            Path(__file__).parent / f"data/organization/sector_{self._locale}.csv",
+        
+        # Load sector data using country code (dataset)
+        sector_data = CompanyDataLoader.get_country_specific_data(
+            data_type="sector",
+            country_code=self._dataset,
+            domain_path="organization"
         )
-        self._legal_values, self._legal_wgt = FileUtil.read_wgt_file(
-            Path(__file__).parent / f"data/organization/legalForm_{self._dataset}.csv",
+        self._sector = [item[0] for item in sector_data]  # Extract just the values, not the weights
+        
+        # Load legal form data
+        legal_form_data = CompanyDataLoader.get_country_specific_data(
+            data_type="legalForm",
+            country_code=self._dataset,
+            domain_path="organization"
         )
+        
+        if legal_form_data:
+            self._legal_values: list[str] | None = [item[0] for item in legal_form_data]
+            self._legal_wgt: list[float] | None = [item[1] for item in legal_form_data]
+        else:
+            self._legal_values, self._legal_wgt = None, None
 
         # Address builder is used to determine company location
         self._address_entity = AddressEntity(
@@ -135,7 +204,7 @@ class CompanyEntity(Entity):
             "state": lambda: self._address_entity.state,
             "zip_code": lambda: self._address_entity.zip_code,
             "house_number": lambda: self._address_entity.house_number,
-            "sector": lambda: random.choice(self._sector) if self._sector is not None else None,
+            "sector": lambda: random.choice(self._sector) if self._sector is not None and len(self._sector) > 0 else None,
             "full_name": lambda short_name, sector: full_name_gen(
                 short_name,
                 sector,
@@ -240,6 +309,8 @@ class CompanyEntity(Entity):
             str: The sector in which the company operates.
 
         """
+        if self._sector is None or len(self._sector) == 0:
+            return None
         return self._field_generator["sector"].get()
 
     @property

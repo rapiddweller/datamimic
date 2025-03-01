@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from datamimic_ce.entities.entity import Entity
+from datamimic_ce.entities.healthcare.clinical_trial_entity.data_loader import ClinicalTrialDataLoader
 from datamimic_ce.utils.class_factory_ce_util import ClassFactoryCEUtil
 
 
@@ -28,8 +29,8 @@ class ClinicalTrialEntity(Entity):
     outcomes, and results.
     """
 
-    # Class constants for valid phases and statuses
-    PHASES = [
+    # Fallback constants for phases and statuses if data loading fails
+    _FALLBACK_PHASES = [
         "Phase 1",
         "Phase 2",
         "Phase 3",
@@ -40,7 +41,7 @@ class ClinicalTrialEntity(Entity):
         "Early Phase 1",
     ]
 
-    STATUSES = [
+    _FALLBACK_STATUSES = [
         "Not yet recruiting",
         "Recruiting",
         "Enrolling by invitation",
@@ -63,10 +64,65 @@ class ClinicalTrialEntity(Entity):
         """
         super().__init__(locale, dataset)
         self._class_factory_util = class_factory_util
-        self._property_cache = {}
+        self._property_cache: dict[str, Any] = {}
+        
+        # Use dataset if provided, otherwise use locale
+        self._country_code = dataset if dataset is not None else self._convert_locale_to_country_code(locale)
+        
+        # Initialize data loader
+        self._data_loader = ClinicalTrialDataLoader()
+        
+        # Load phases and statuses
+        self._phases = self._load_data_values("phases")
+        self._statuses = self._load_data_values("statuses")
 
         # Initialize field generators
         self._reset_generators()
+        
+    def _convert_locale_to_country_code(self, locale: str) -> str:
+        """Convert locale to country code.
+        
+        Args:
+            locale: The locale string (e.g., 'en', 'de')
+            
+        Returns:
+            The corresponding country code (e.g., 'US', 'DE')
+        """
+        locale_to_country = {
+            "en": "US",
+            "de": "DE",
+            # Add more mappings as needed
+        }
+        return locale_to_country.get(locale, "US")
+        
+    def _load_data_values(self, data_type: str) -> list[str]:
+        """Load data values from the data loader.
+        
+        Args:
+            data_type: The type of data to load
+            
+        Returns:
+            A list of values
+        """
+        try:
+            # Get data from the data loader
+            data = self._data_loader.get_data(data_type, self._country_code)
+            # Extract just the values, not the weights
+            values = [item[0] for item in data] if data else []
+            # If we got an empty list, fall back to defaults
+            if not values:
+                if data_type == "phases":
+                    return self._FALLBACK_PHASES
+                elif data_type == "statuses":
+                    return self._FALLBACK_STATUSES
+            return values
+        except Exception:
+            # Return fallback values if loading fails
+            if data_type == "phases":
+                return self._FALLBACK_PHASES
+            elif data_type == "statuses":
+                return self._FALLBACK_STATUSES
+            return []
 
     def _reset_generators(self):
         """Reset all generators used by this entity."""
@@ -137,7 +193,7 @@ class ClinicalTrialEntity(Entity):
         Returns:
             A string representing the trial phase
         """
-        return random.choice(self.PHASES)
+        return random.choice(self._phases)
 
     def _generate_status(self) -> str:
         """
@@ -146,7 +202,7 @@ class ClinicalTrialEntity(Entity):
         Returns:
             A string representing the trial status
         """
-        return random.choice(self.STATUSES)
+        return random.choice(self._statuses)
 
     def _generate_start_date(self) -> str:
         """
@@ -820,7 +876,13 @@ class ClinicalTrialEntity(Entity):
     def enrollment_target(self) -> int:
         """Get the trial enrollment target."""
         if "enrollment_target" not in self._property_cache:
-            self._property_cache["enrollment_target"] = self._generators["enrollment_target"]()
+            # Directly call the generation method to ensure we get a value between 10 and 1000
+            self._property_cache["enrollment_target"] = self._generate_enrollment_target()
+        
+        # Ensure the value is at least 10 (failsafe)
+        if self._property_cache["enrollment_target"] <= 0:
+            self._property_cache["enrollment_target"] = random.randint(10, 1000)
+            
         return self._property_cache["enrollment_target"]
 
     @property
@@ -891,6 +953,8 @@ class ClinicalTrialEntity(Entity):
         """
         batch = []
         for _ in range(batch_size):
-            entity = ClinicalTrialEntity(self._class_factory_util, self._locale, self._dataset)
+            # Use explicit type for locale to satisfy mypy
+            locale = self._locale if self._locale is not None else "en"
+            entity = ClinicalTrialEntity(self._class_factory_util, locale, self._dataset)
             batch.append(entity.to_dict())
         return batch

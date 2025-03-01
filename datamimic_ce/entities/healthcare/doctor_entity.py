@@ -9,6 +9,7 @@ This module serves as a compatibility layer for the DoctorEntity class.
 It imports the actual implementation from the doctor_entity package.
 """
 
+import math
 from pathlib import Path
 from typing import TypeVar
 
@@ -51,7 +52,8 @@ class DoctorEntity(DoctorEntityImpl):
         # Call the actual implementation but convert the result to the expected format
         result = DoctorDataLoader._load_simple_csv(file_path)
         # Convert list of tuples to list of strings for backward compatibility
-        return [f"{value},{weight}" if weight != 1.0 else value for value, weight in result]
+        # Use math.isclose instead of direct equality check for floating point values
+        return [f"{value},{weight}" if not math.isclose(weight, 1.0) else value for value, weight in result]
 
     @classmethod
     def _get_country_specific_data(cls, data_type: str, country_code: str = "US") -> list[str]:

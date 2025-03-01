@@ -201,10 +201,8 @@ class LabTestGenerators:
                     else:
                         value = random.choice(["Negative", "Trace", "1+", "2+", "3+"])
                 else:
-                    if self._dataset == "DE":
-                        value = random.choice(["Normal", "Abnormal", "Grenzwertig"])
-                    else:
-                        value = random.choice(["Normal", "Abnormal", "Borderline"])
+                    flag = "Abnormal"
+                    value = random.choice(["1+", "2+", "3+"])
 
             # Determine if the value is abnormal
             is_abnormal = random.random() < 0.2  # 20% chance of abnormal result
@@ -246,12 +244,8 @@ class LabTestGenerators:
                         value = f"{random.uniform(50.1, 70.0):.1f}"
                 elif "Negative" in reference_range or "Negativ" in reference_range:
                     # For qualitative results that should be negative
-                    if self._dataset == "DE":
-                        flag = "Abnormal"
-                        value = random.choice(["1+", "2+", "3+"])
-                    else:
-                        flag = "Abnormal"
-                        value = random.choice(["1+", "2+", "3+"])
+                    flag = "Abnormal"
+                    value = random.choice(["1+", "2+", "3+"])
                 else:
                     # For other types of results
                     flag = "Abnormal"
