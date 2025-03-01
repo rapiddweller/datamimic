@@ -16,7 +16,6 @@ from pathlib import Path
 from datamimic_ce.entities.healthcare.lab_test_entity.core import LabTestEntity as LabTestEntityImpl
 from datamimic_ce.entities.healthcare.lab_test_entity.data_loader import LabTestDataLoader
 from datamimic_ce.entities.healthcare.lab_test_entity.utils import LabTestUtils
-from datamimic_ce.logger import logger
 
 
 # For backward compatibility
@@ -168,169 +167,36 @@ class LabTestEntity(LabTestEntityImpl):
 
     def _generate_lab_address(self) -> dict[str, str]:
         """Generate a lab address."""
-        # Use AddressEntity if available
-        if self._class_factory_util:
-            try:
-                from datamimic_ce.entities.address_entity import AddressEntity
+        # Always use AddressEntity
+        from datamimic_ce.entities.address_entity import AddressEntity
 
-                # Create an address entity with the same locale/country code
-                address_entity = AddressEntity(
-                    self._class_factory_util, locale=self._locale, country_code=self._country_code
-                )
+        # Create an address entity with the same locale/country code
+        address_entity = AddressEntity(
+            self._class_factory_util, locale=self._locale, country_code=self._country_code
+        )
 
-                # Return a dictionary with the address components
-                return {
-                    "street": f"{address_entity.house_number} {address_entity.street}",
-                    "city": address_entity.city,
-                    "state": address_entity.state,
-                    "zip_code": address_entity.postal_code,
-                    "country": address_entity.country,
-                }
-            except (ImportError, AttributeError) as e:
-                logger.warning(f"Failed to use AddressEntity for lab address: {e}")
-                # Fall through to the fallback method
-
-        # Fallback to static generation if AddressEntity is not available
-        # Get lab names from data cache or use fallback
-        lab_names = self._DATA_CACHE.get("lab_names", [])
-        if lab_names:
-            # If we have lab names, use them to generate more realistic addresses
-            self._weighted_choice(lab_names)
-
-            # Get country-specific data if available
-            streets = self._DATA_CACHE.get(
-                "street_names",
-                ["Medical Center Dr", "Laboratory Ave", "Healthcare Blvd", "Diagnostic Way", "Clinical Path"],
-            )
-
-            cities = self._DATA_CACHE.get(
-                "cities",
-                [
-                    "Boston",
-                    "New York",
-                    "Chicago",
-                    "Los Angeles",
-                    "Houston",
-                    "Philadelphia",
-                    "Phoenix",
-                    "San Antonio",
-                    "San Diego",
-                    "Dallas",
-                ],
-            )
-
-            states = self._DATA_CACHE.get("states", ["MA", "NY", "IL", "CA", "TX", "PA", "AZ", "TX", "CA", "TX"])
-
-            # Generate a random address
-            street_name = self._weighted_choice(streets) if streets else "Medical Center Dr"
-            city = self._weighted_choice(cities) if cities else "Boston"
-            state = self._weighted_choice(states) if states else "MA"
-
-            # Use the lab name in the street address for more realism
-            return {
-                "street": f"{random.randint(100, 9999)} {street_name}",
-                "city": city,
-                "state": state,
-                "zip_code": f"{random.randint(10000, 99999)}",
-                "country": "USA" if self._country_code == "US" else self._country_code,
-            }
-        else:
-            # Simple fallback with generic values
-            return {
-                "street": f"{random.randint(100, 9999)} Medical Center Dr",
-                "city": "Boston",
-                "state": "MA",
-                "zip_code": f"{random.randint(10000, 99999)}",
-                "country": "USA" if self._country_code == "US" else self._country_code,
-            }
+        # Return a dictionary with the address components
+        return {
+            "street": f"{address_entity.house_number} {address_entity.street}",
+            "city": address_entity.city,
+            "state": address_entity.state,
+            "zip_code": address_entity.postal_code,
+            "country": address_entity.country,
+        }
 
     def _generate_ordering_provider(self) -> str:
         """Generate an ordering provider name."""
-        # Use PersonEntity if available
-        if self._class_factory_util:
-            try:
-                from datamimic_ce.entities.person_entity import PersonEntity
+        # Always use PersonEntity
+        from datamimic_ce.entities.person_entity import PersonEntity
 
-                # Create a person entity with the same locale/country code
-                person_entity = PersonEntity(self._class_factory_util, locale=self._locale, dataset=self._dataset)
+        # Create a person entity with the same locale/country code
+        person_entity = PersonEntity(self._class_factory_util, locale=self._locale, dataset=self._dataset)
 
-                # Generate a doctor name with credentials
-                first_name = person_entity.given_name
-                last_name = person_entity.family_name
-
-                credentials = ["MD", "DO", "NP", "PA", "MBBS"]
-                credential = random.choice(credentials)
-
-                return f"Dr. {first_name} {last_name}, {credential}"
-            except (ImportError, AttributeError) as e:
-                logger.warning(f"Failed to use PersonEntity for ordering provider: {e}")
-                # Fall through to the fallback method
-
-        # Fallback to data-driven generation if PersonEntity is not available
-        # Get provider names from data cache or use fallback
-        provider_names = self._DATA_CACHE.get("provider_names", [])
-        if provider_names:
-            # If we have provider names, use them directly
-            return self._weighted_choice(provider_names)
-
-        # Final fallback to static generation
-        # Get first and last names from data cache or use fallback
-        first_names = self._DATA_CACHE.get(
-            "first_names",
-            [
-                "James",
-                "John",
-                "Robert",
-                "Michael",
-                "William",
-                "David",
-                "Richard",
-                "Joseph",
-                "Thomas",
-                "Charles",
-                "Mary",
-                "Patricia",
-                "Jennifer",
-                "Linda",
-                "Elizabeth",
-                "Barbara",
-                "Susan",
-                "Jessica",
-                "Sarah",
-                "Karen",
-            ],
-        )
-
-        last_names = self._DATA_CACHE.get(
-            "last_names",
-            [
-                "Smith",
-                "Johnson",
-                "Williams",
-                "Jones",
-                "Brown",
-                "Davis",
-                "Miller",
-                "Wilson",
-                "Moore",
-                "Taylor",
-                "Anderson",
-                "Thomas",
-                "Jackson",
-                "White",
-                "Harris",
-                "Martin",
-                "Thompson",
-                "Garcia",
-                "Martinez",
-                "Robinson",
-            ],
-        )
+        # Generate a doctor name with credentials
+        first_name = person_entity.given_name
+        last_name = person_entity.family_name
 
         credentials = ["MD", "DO", "NP", "PA", "MBBS"]
-
-        first_name = self._weighted_choice(first_names) if first_names else "John"
-        last_name = self._weighted_choice(last_names) if last_names else "Smith"
         credential = random.choice(credentials)
 
         return f"Dr. {first_name} {last_name}, {credential}"

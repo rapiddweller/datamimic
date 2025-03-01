@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import calendar
 import datetime
 from pathlib import Path
 from unittest import TestCase
@@ -118,23 +119,69 @@ class TestPersonEntity(TestCase):
     def test_calculate_age(self):
         """Test age calculation function."""
         today = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Helper function to safely create dates
+        def safe_date_replace(dt, **kwargs):
+            """Safely replace date components handling month/day combinations safely."""
+            year = kwargs.get('year', dt.year)
+            month = kwargs.get('month', dt.month)
+            
+            # If trying to set a specific day
+            if 'day' in kwargs:
+                day = kwargs['day']
+                # Get the last day of the target month to avoid "day out of range" errors
+                _, last_day = calendar.monthrange(year, month)
+                # Use the minimum of requested day and last day of month
+                day = min(day, last_day)
+            else:
+                day = dt.day
+                # If keeping the same day but changing month, ensure day is valid for new month
+                _, last_day = calendar.monthrange(year, month)
+                day = min(day, last_day)
+            
+            return dt.replace(year=year, month=month, day=day, 
+                             hour=kwargs.get('hour', dt.hour),
+                             minute=kwargs.get('minute', dt.minute),
+                             second=kwargs.get('second', dt.second),
+                             microsecond=kwargs.get('microsecond', dt.microsecond))
+        
         test_cases = [
-            (today.replace(year=today.year - 20), 20),  # Exactly 20 years
-            (today.replace(year=today.year - 30, month=1, day=1), 30),  # Start of year
-            (today.replace(year=today.year - 25, month=today.month, day=today.day), 25),  # Same month and day
-            (
-                today.replace(year=today.year - 25, month=today.month - 1 if today.month > 1 else 12, day=today.day),
-                25,
-            ),  # Month before
-            (
-                today.replace(year=today.year - 25, month=today.month + 1 if today.month < 12 else 1, day=today.day),
-                24,
-            ),  # Month after
+            (safe_date_replace(today, year=today.year - 20), 20),  # Exactly 20 years
+            (safe_date_replace(today, year=today.year - 30, month=1, day=1), 30),  # Start of year
+            (safe_date_replace(today, year=today.year - 25), 25),  # Same month and day
+            
+            # Month before
+            (safe_date_replace(
+                today, 
+                year=today.year - 25, 
+                month=today.month - 1 if today.month > 1 else 12
+            ), 25),
+            
+            # Month after
+            (safe_date_replace(
+                today, 
+                year=today.year - 25, 
+                month=today.month + 1 if today.month < 12 else 1
+            ), 24),
+            
             (today, 0),  # Born today
-            # Edge cases
-            (today.replace(year=today.year - 1, month=today.month, day=today.day + 1), 0),  # Day before birthday
-            (today.replace(year=today.year - 1, month=today.month, day=today.day - 1), 1),  # Day after birthday
+            
+            # Edge cases - using safe date handling
+            # Day before birthday
+            (safe_date_replace(
+                today, 
+                year=today.year - 1,
+                day=min(today.day + 1, calendar.monthrange(today.year - 1, today.month)[1])
+            ), 0),
+            
+            # Day after birthday
+            (safe_date_replace(
+                today, 
+                year=today.year - 1, 
+                day=max(1, today.day - 1)
+            ), 1),
         ]
+        
         for birth_date, expected_age in test_cases:
             with self.subTest(birth_date=birth_date):
                 actual_age = calculate_age(birth_date)

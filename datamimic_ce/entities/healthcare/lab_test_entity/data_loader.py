@@ -130,6 +130,11 @@ class LabTestDataLoader:
             return cls._ABNORMAL_FLAGS_CACHE
         elif data_type == "specimen_types":
             return cls._SPECIMEN_TYPES_CACHE
+        elif data_type == "note_templates":
+            # Add a dedicated cache for note templates
+            if not hasattr(cls, "_NOTE_TEMPLATES_CACHE"):
+                cls._NOTE_TEMPLATES_CACHE = {}
+            return cls._NOTE_TEMPLATES_CACHE
         else:
             # For unknown data types, create a new cache entry
             logger.warning(f"Unknown data type: {data_type}, creating new cache entry")

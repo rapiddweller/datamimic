@@ -42,6 +42,10 @@ class LabTestEntity(Entity):
 
         # Initialize generators
         self._generators = LabTestGenerators(locale, dataset)
+        
+        # Set the class factory utility in the generators
+        if self._class_factory_util:
+            self._generators.set_class_factory_util(self._class_factory_util)
 
         # Set optional parameters in generators
         if self._test_type:

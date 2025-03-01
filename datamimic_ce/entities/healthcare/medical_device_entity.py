@@ -6,6 +6,7 @@
 
 import datetime
 import random
+import string
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, TypeVar, cast
@@ -270,13 +271,18 @@ class MedicalDeviceEntity(Entity):
         return f"{prefix}-{numbers}{suffix}"
 
     def _generate_serial_number(self) -> str:
-        """Generate a serial number."""
-        # Format: Manufacturer prefix + year + sequential number
-        manufacturer_prefix = self.manufacturer[:3].upper()
-        year = str(datetime.datetime.now().year)[2:]  # Last 2 digits of current year
-        sequential_number = "".join(random.choices("0123456789", k=6))
-
-        return f"{manufacturer_prefix}{year}{sequential_number}"
+        """Generate a serial number.
+        
+        Returns:
+            A serial number in the format of 3 uppercase letters followed by 8 digits.
+        """
+        # Generate 3 uppercase letters
+        letters = ''.join(random.choices(string.ascii_uppercase, k=3))
+        
+        # Generate 8 digits
+        digits = ''.join(random.choices(string.digits, k=8))
+        
+        return f"{letters}{digits}"
 
     def _generate_manufacture_date(self) -> str:
         """Generate a manufacture date."""
