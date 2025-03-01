@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 # Import the DoctorEntity class from the compatibility module
 from datamimic_ce.entities.doctor_entity import DoctorEntity, _load_simple_csv
+from datamimic_ce.entities.healthcare.doctor_entity.data_loader import DoctorDataLoader
 
 
 class TestDoctorEntityWeightedData:
@@ -54,7 +55,7 @@ class TestDoctorEntityWeightedData:
                 os.remove(temp_path)
 
     @patch('datamimic_ce.entities.healthcare.doctor_entity.data_loader.Path.exists')
-    @patch('datamimic_ce.entities.doctor_entity._load_simple_csv')
+    @patch('datamimic_ce.entities.healthcare.doctor_entity.data_loader.DoctorDataLoader._load_simple_csv')
     def test_weighted_specialty_distribution(self, mock_load_csv, mock_exists):
         """Test that weighted specialties are distributed according to their weights."""
         # Mock the Path.exists method to return True for DE country-specific files
@@ -71,32 +72,40 @@ class TestDoctorEntityWeightedData:
             if "specialties_DE" in str(path) or "specialties" in str(path):
                 # Use a simpler dataset with more distinct weights to reduce randomness issues
                 # Increase the weight of Kardiologie to ensure it appears in the results
-                return ["Allgemeinmedizin"] * 300 + ["Innere Medizin"] * 200 + ["Chirurgie"] * 100 + ["Orthopädie"] * 50 + ["Kardiologie"] * 50
+                return [("Allgemeinmedizin", 300), ("Innere Medizin", 200), ("Chirurgie", 100), ("Orthopädie", 50), ("Kardiologie", 50)]
             elif "hospitals_DE" in str(path) or "hospitals" in str(path):
                 # Simulate the weighted data from hospitals_DE.csv
-                return ["Charité Berlin"] * 150 + ["Universitätsklinikum Heidelberg"] * 120 + ["Universitätsklinikum München"] * 100
+                return [("Charité Berlin", 150), ("Universitätsklinikum Heidelberg", 120), ("Universitätsklinikum München", 100)]
             elif "institutions_DE" in str(path) or "institutions" in str(path):
                 # Simulate the weighted data from institutions_DE.csv
-                return ["Universität Berlin"] * 150 + ["Universität Heidelberg"] * 120 + ["Universität München"] * 100
+                return [("Universität Berlin", 150), ("Universität Heidelberg", 120), ("Universität München", 100)]
             elif "certifications_DE" in str(path) or "certifications" in str(path):
                 # Simulate the weighted data from certifications_DE.csv
-                return ["Facharzt für Allgemeinmedizin"] * 150 + ["Facharzt für Innere Medizin"] * 120 + ["Facharzt für Chirurgie"] * 100
+                return [("Facharzt für Allgemeinmedizin", 150), ("Facharzt für Innere Medizin", 120), ("Facharzt für Chirurgie", 100)]
             elif "languages_DE" in str(path) or "languages" in str(path):
                 # Simulate the weighted data from languages_DE.csv
-                return ["Deutsch"] * 200 + ["Englisch"] * 150 + ["Französisch"] * 50
+                return [("Deutsch", 200), ("Englisch", 150), ("Französisch", 50)]
             return []
         
         mock_load_csv.side_effect = mock_load_csv_side_effect
+        
+        # Clear the data cache to ensure our mocked data is used
+        DoctorEntity._DATA_CACHE = {}
+        DoctorDataLoader._SPECIALTIES_CACHE = {}
+        DoctorDataLoader._HOSPITALS_CACHE = {}
+        DoctorDataLoader._INSTITUTIONS_CACHE = {}
+        DoctorDataLoader._CERTIFICATIONS_CACHE = {}
+        DoctorDataLoader._LANGUAGES_CACHE = {}
         
         # Create a DoctorEntity with DE dataset
         doctor_entity = DoctorEntity(self.mock_class_factory_util, dataset="DE")
         
         # Generate a larger batch of doctors to test the distribution
         # Increasing the batch size to ensure all specialties appear
-        doctors = doctor_entity.generate_batch(200)
+        doctors = doctor_entity.generate_batch(500)
         
         # Verify that doctors were generated
-        assert len(doctors) == 200, "Expected 200 doctors to be generated"
+        assert len(doctors) == 500, "Expected 500 doctors to be generated"
         
         # Check that the doctor data contains the expected fields
         expected_fields = ["doctor_id", "first_name", "last_name", "specialty", "license_number"]
