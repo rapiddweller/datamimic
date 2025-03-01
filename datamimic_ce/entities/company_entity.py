@@ -63,14 +63,12 @@ class CompanyDataLoader(BaseDataLoader):
         Returns:
             List of tuples containing default values and weights
         """
-        if data_type == "sector":
-            return [("Technology", 1.0), ("Services", 1.0), ("Consulting", 1.0)]
-        elif data_type == "legalForm":
-            return [("Inc.", 1.0), ("LLC", 1.0), ("Ltd.", 1.0)]
-        elif data_type == "department":
-            return [("Sales", 1.0), ("Marketing", 1.0), ("IT", 1.0), ("HR", 1.0)]
-        else:
-            return []
+        default_values = {
+            "sector": [("Technology", 1.0), ("Services", 1.0), ("Consulting", 1.0)],
+            "legalForm": [("Inc.", 1.0), ("LLC", 1.0), ("Ltd.", 1.0)],
+            "department": [("Sales", 1.0), ("Marketing", 1.0), ("IT", 1.0), ("HR", 1.0)]
+        }
+        return default_values.get(data_type, [])
 
 
 def full_name_gen(
