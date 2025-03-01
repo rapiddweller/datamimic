@@ -10,106 +10,38 @@ Data loader for lab test entity.
 This module provides functionality for loading data from CSV files for lab test entities.
 """
 
-import csv
 from pathlib import Path
 
-from datamimic_ce.logger import logger
-from datamimic_ce.utils.data_path_util import DataPathUtil
+from datamimic_ce.entities.base_data_loader import BaseDataLoader
 
 
-class LabTestDataLoader:
-    """Data loader for lab test entity data."""
+class LabTestDataLoader(BaseDataLoader):
+    """Load data for lab test entity from CSV files."""
 
-    # Module-level cache for data to reduce file I/O
-    _DATA_CACHE: dict[str, list[tuple[str, float]]] = {}
-
-    # Module-level cache for component data
-    _COMPONENT_CACHE: dict[str, list[dict[str, str]]] = {}
-
-    # Module-level cache for dictionary data
-    _DICT_CACHE: dict[str, dict[str, str]] = {}
-
-    # Specific caches for different data types
-    _TEST_TYPES_CACHE: dict[str, list[tuple[str, float]]] = {}
-    _LAB_NAMES_CACHE: dict[str, list[tuple[str, float]]] = {}
-    _TEST_STATUSES_CACHE: dict[str, list[tuple[str, float]]] = {}
-    _ABNORMAL_FLAGS_CACHE: dict[str, list[tuple[str, float]]] = {}
+    # Cache for loaded data to reduce file I/O
+    _LAB_TESTS_CACHE: dict[str, list[tuple[str, float]]] = {}
+    _LAB_TEST_UNITS_CACHE: dict[str, list[tuple[str, float]]] = {}
     _SPECIMEN_TYPES_CACHE: dict[str, list[tuple[str, float]]] = {}
-    _NOTE_TEMPLATES_CACHE: dict[str, list[tuple[str, float]]] = {}
+    _COLLECTION_METHODS_CACHE: dict[str, list[tuple[str, float]]] = {}
+    _LAB_TEST_STATUSES_CACHE: dict[str, list[tuple[str, float]]] = {}
+    _LAB_NAMES_CACHE: dict[str, list[tuple[str, float]]] = {}
+    _TEST_COMPONENTS_CACHE: dict[str, dict[str, list[dict[str, str]]]] = {}
 
-    @classmethod
-    def _load_simple_csv(cls, file_path: Path) -> list[tuple[str, float]]:
-        """Load a simple CSV file and return a list of values with weights.
+    def __init__(self) -> None:
+        """Initialize a new LabTestDataLoader."""
+        self._domain_path = "medical/lab_tests"
 
-        Args:
-            file_path: Path to the CSV file
-
-        Returns:
-            List of tuples containing (value, weight)
-        """
-        if not file_path.exists():
-            logger.warning(f"CSV file not found: {file_path}")
-            return []
-
-        try:
-            with open(file_path, encoding="utf-8") as f:
-                reader = csv.reader(f)
-                values = []
-                for row in reader:
-                    if not row:
-                        continue
-                    if len(row) >= 2:
-                        try:
-                            weight = float(row[1])
-                            values.append((row[0], weight))
-                        except (ValueError, IndexError):
-                            # If weight is not a valid number, use default weight of 1.0
-                            values.append((row[0], 1.0))
-                    else:
-                        # If no weight is provided, use default weight of 1.0
-                        values.append((row[0], 1.0))
-                return values
-        except Exception as e:
-            logger.error(f"Error loading CSV file {file_path}: {e}")
-            return []
-
-    @classmethod
-    def get_country_specific_data(cls, data_type: str, country_code: str = "US") -> list[tuple[str, float]]:
-        """Get country-specific data from CSV files.
+    def get_data(self, data_type: str, country_code: str = "US") -> list[tuple[str, float]]:
+        """Get data for a specific type and country code.
 
         Args:
-            data_type: The type of data to get (e.g., "test_types", "lab_names")
-            country_code: The country code to use (e.g., "US", "DE")
+            data_type: The type of data to retrieve
+            country_code: The country code to use
 
         Returns:
-            A list of tuples containing (value, weight)
+            A list of tuples containing values and weights
         """
-        # Get the appropriate cache for the data type
-        cache = cls._get_cache_for_data_type(data_type)
-        cache_key = f"{data_type}_{country_code}"
-
-        # Check if the data is already in the cache
-        if cache_key in cache:
-            return cache[cache_key]
-
-        # Get the file path for the country-specific data
-        file_path = DataPathUtil.get_country_specific_data_file_path("medical", data_type, country_code)
-
-        # Load the data from the CSV file
-        data = cls._load_simple_csv(file_path)
-
-        # If no data was found, try to load the default (US) data
-        if not data and country_code != "US":
-            file_path = DataPathUtil.get_country_specific_data_file_path("medical", data_type, "US")
-            data = cls._load_simple_csv(file_path)
-
-        # If still no data, use default values
-        if not data:
-            data = cls._get_default_values(data_type)
-
-        # Cache the data for future use
-        cache[cache_key] = data
-        return data
+        return self.get_country_specific_data(data_type, country_code, self._domain_path)
 
     @classmethod
     def _get_cache_for_data_type(cls, data_type: str) -> dict[str, list[tuple[str, float]]]:
@@ -121,144 +53,132 @@ class LabTestDataLoader:
         Returns:
             The cache dictionary for the data type
         """
-        if data_type == "test_types":
-            return cls._TEST_TYPES_CACHE
-        elif data_type == "lab_names":
-            return cls._LAB_NAMES_CACHE
-        elif data_type == "test_statuses":
-            return cls._TEST_STATUSES_CACHE
-        elif data_type == "abnormal_flags":
-            return cls._ABNORMAL_FLAGS_CACHE
+        if data_type == "lab_tests":
+            return cls._LAB_TESTS_CACHE
+        elif data_type == "lab_test_units":
+            return cls._LAB_TEST_UNITS_CACHE
         elif data_type == "specimen_types":
             return cls._SPECIMEN_TYPES_CACHE
-        elif data_type == "note_templates":
-            return cls._NOTE_TEMPLATES_CACHE
+        elif data_type == "collection_methods":
+            return cls._COLLECTION_METHODS_CACHE
+        elif data_type == "lab_test_statuses":
+            return cls._LAB_TEST_STATUSES_CACHE
+        elif data_type == "lab_names":
+            return cls._LAB_NAMES_CACHE
         else:
-            # For unknown data types, create a new cache entry
-            logger.warning(f"Unknown data type: {data_type}, creating new cache entry")
-            setattr(cls, f"_{data_type.upper()}_CACHE", {})
-            return getattr(cls, f"_{data_type.upper()}_CACHE")
+            # Use the BaseDataLoader implementation to create a new cache if needed
+            return super()._get_cache_for_data_type(data_type)
 
     @classmethod
-    def _get_default_values(cls, data_type: str) -> list[tuple[str, float]]:
+    def _get_default_values(cls, data_type: str, country_code: str = "US") -> list[tuple[str, float]]:
         """Get default values for a data type when no file is found.
 
         Args:
             data_type: The type of data
+            country_code: The country code to use for country-specific defaults
 
         Returns:
             A list of default values with weights
         """
-        if data_type == "test_types":
-            return [
-                ("Complete Blood Count", 10),
-                ("Basic Metabolic Panel", 8),
-                ("Comprehensive Metabolic Panel", 8),
-                ("Lipid Panel", 7),
-                ("Liver Function Tests", 6),
-                ("Thyroid Function Tests", 6),
-                ("Hemoglobin A1C", 5),
-                ("Urinalysis", 5),
-                ("Coagulation Panel", 4),
-                ("Vitamin D", 3),
-            ]
-        elif data_type == "lab_names":
-            return [
-                ("Quest Diagnostics", 10),
-                ("LabCorp", 10),
-                ("Mayo Clinic Laboratories", 8),
-                ("ARUP Laboratories", 7),
-                ("BioReference Laboratories", 6),
-                ("Sonic Healthcare", 5),
-                ("Cleveland Clinic Laboratories", 5),
-                ("Myriad Genetics", 4),
-                ("Exact Sciences", 3),
-                ("Guardant Health", 2),
-            ]
-        elif data_type == "test_statuses":
-            return [
-                ("Completed", 10),
-                ("Pending", 5),
-                ("In Progress", 5),
-                ("Canceled", 2),
-                ("Rejected", 1),
-            ]
-        elif data_type == "abnormal_flags":
-            return [
-                ("Normal", 10),
-                ("High", 5),
-                ("Low", 5),
-                ("Critical High", 2),
-                ("Critical Low", 2),
-            ]
-        elif data_type == "specimen_types":
-            return [
-                ("Blood", 10),
-                ("Serum", 8),
-                ("Plasma", 8),
-                ("Urine", 7),
-                ("Cerebrospinal Fluid", 3),
-                ("Sputum", 3),
-                ("Stool", 3),
-                ("Tissue", 2),
-                ("Swab", 2),
-                ("Bone Marrow", 1),
-            ]
-        else:
-            logger.warning(f"No default values for data type: {data_type}")
-            return []
+        # Dictionary of default values for US data types
+        default_values = {
+            "lab_tests": [
+                ("Complete Blood Count (CBC)", 10.0),
+                ("Basic Metabolic Panel (BMP)", 10.0),
+                ("Comprehensive Metabolic Panel (CMP)", 8.0),
+                ("Lipid Panel", 8.0),
+                ("Liver Function Tests", 7.0),
+                ("Thyroid Function Tests", 7.0),
+                ("Hemoglobin A1C", 6.0),
+                ("Urinalysis", 6.0),
+                ("Prothrombin Time", 5.0),
+                ("C-Reactive Protein", 5.0),
+            ],
+            "lab_test_units": [
+                ("mg/dL", 10.0),
+                ("g/dL", 8.0),
+                ("mmol/L", 8.0),
+                ("mEq/L", 7.0),
+                ("μmol/L", 6.0),
+                ("ng/mL", 5.0),
+                ("pg/mL", 5.0),
+                ("IU/L", 5.0),
+                ("U/L", 5.0),
+                ("%", 5.0),
+            ],
+            "specimen_types": [
+                ("Blood", 10.0),
+                ("Urine", 8.0),
+                ("Serum", 7.0),
+                ("Plasma", 7.0),
+                ("Cerebrospinal Fluid", 5.0),
+                ("Saliva", 4.0),
+                ("Stool", 4.0),
+                ("Tissue", 3.0),
+                ("Sputum", 3.0),
+                ("Swab", 2.0),
+            ],
+            "collection_methods": [
+                ("Venipuncture", 10.0),
+                ("Fingerstick", 8.0),
+                ("Clean Catch", 7.0),
+                ("Catheterization", 6.0),
+                ("Swab", 5.0),
+                ("Aspiration", 4.0),
+                ("Biopsy", 3.0),
+                ("Brushing", 2.0),
+                ("Washing", 2.0),
+                ("Scraping", 1.0),
+            ],
+            "lab_test_statuses": [
+                ("Completed", 10.0),
+                ("Pending", 8.0),
+                ("Processing", 7.0),
+                ("Specimen Received", 5.0),
+                ("Awaiting Specimen", 5.0),
+                ("Rejected", 3.0),
+                ("Canceled", 2.0),
+            ],
+        }
 
-    @classmethod
-    def get_test_component_mapping(cls, country_code: str = "US") -> dict[str, str]:
-        """Get the mapping of test types to component files.
+        # Country-specific values
+        country_specific_values = {
+            "DE": {
+                "lab_names": [
+                    ("Synlab", 10.0),
+                    ("Labor Berlin", 9.0),
+                    ("Amedes", 8.0),
+                    ("Sonic Healthcare Germany", 7.0),
+                    ("Bioscientia", 6.0),
+                    ("Labor Dr. Wisplinghoff", 5.0),
+                    ("MVZ Labor Diagnostik Karlsruhe", 4.0),
+                    ("Labor 28", 3.0),
+                    ("Medizinisches Labor Bremen", 2.0),
+                    ("Labor Lademannbogen", 1.0),
+                ],
+            },
+            "US": {
+                "lab_names": [
+                    ("Quest Diagnostics", 10.0),
+                    ("LabCorp", 9.0),
+                    ("Mayo Clinic Laboratories", 8.0),
+                    ("ARUP Laboratories", 7.0),
+                    ("BioReference Laboratories", 6.0),
+                    ("Sonic Healthcare", 5.0),
+                    ("Medical Diagnostic Laboratories", 4.0),
+                    ("Clinical Reference Laboratory", 3.0),
+                    ("Spectra Laboratories", 2.0),
+                    ("Eurofins", 1.0),
+                ],
+            },
+        }
 
-        Args:
-            country_code: The country code to use (e.g., "US", "DE")
+        # Check if this is a lab_names request with a country-specific value
+        if data_type == "lab_names" and country_code in country_specific_values:
+            return country_specific_values[country_code].get("lab_names", [])
 
-        Returns:
-            A dictionary mapping test types to component file names
-        """
-        # Create a cache key that includes the country code
-        cache_key = f"test_components_mapping_{country_code}"
-
-        # Check if the mapping is already in the cache
-        if cache_key not in cls._DICT_CACHE:
-            # If not, load it from the CSV file using DataPathUtil
-            file_path = DataPathUtil.get_country_specific_data_file_path("medical", "test_components", country_code)
-
-            if DataPathUtil.file_exists(file_path):
-                # Load the mapping from the CSV file
-                component_mapping: dict[str, str] = {}
-                with open(file_path, encoding="utf-8") as f:
-                    reader = csv.reader(f)
-                    for row in reader:
-                        if len(row) >= 2:
-                            test_type = row[0]
-                            component_file = row[1]
-                            component_mapping[test_type] = component_file
-                # Store the mapping in the dictionary cache
-                cls._DICT_CACHE[cache_key] = component_mapping
-            else:
-                # If the file doesn't exist and country code is not US, try US
-                if country_code != "US":
-                    file_path = DataPathUtil.get_country_specific_data_file_path("medical", "test_components", "US")
-                    if DataPathUtil.file_exists(file_path):
-                        us_mapping: dict[str, str] = {}
-                        with open(file_path, encoding="utf-8") as f:
-                            reader = csv.reader(f)
-                            for row in reader:
-                                if len(row) >= 2:
-                                    test_type = row[0]
-                                    component_file = row[1]
-                                    us_mapping[test_type] = component_file
-                        cls._DICT_CACHE[cache_key] = us_mapping
-                    else:
-                        cls._DICT_CACHE[cache_key] = {}
-                else:
-                    # If the file doesn't exist, return an empty dictionary
-                    cls._DICT_CACHE[cache_key] = {}
-
-        return cls._DICT_CACHE[cache_key]
+        # Return the default values for the data type or an empty list if not found
+        return default_values.get(data_type, [])
 
     @classmethod
     def get_test_components(cls, test_type: str, country_code: str = "US") -> list[dict[str, str]]:
@@ -266,79 +186,136 @@ class LabTestDataLoader:
 
         Args:
             test_type: The test type to get components for
-            country_code: The country code to use (e.g., "US", "DE")
+            country_code: The country code to use
 
         Returns:
-            A list of component dictionaries
+            A list of component dictionaries with component name and unit
         """
-        # Get the mapping of test types to component files
-        test_component_mapping = cls.get_test_component_mapping(country_code)
+        # Check if we have this test type in the cache
+        if test_type not in cls._TEST_COMPONENTS_CACHE:
+            cls._TEST_COMPONENTS_CACHE[test_type] = {}
 
-        # If the test type is not in the mapping, try to find a default
-        component_file = test_component_mapping.get(test_type)
-        if not component_file:
-            # Try to find a default component file for the test type
-            # For example, if the test type contains "Blood", use blood test components
-            if "Blood" in test_type or "Blut" in test_type:
-                component_file = f"blood_test_components_{country_code}.csv"
-            elif "Urin" in test_type or "Urinalysis" in test_type:
-                component_file = f"urinalysis_components_{country_code}.csv"
+        # Check if we have this country code in the cache for this test type
+        if country_code not in cls._TEST_COMPONENTS_CACHE[test_type]:
+            # Define default components for common test types
+            if test_type == "Complete Blood Count (CBC)" or test_type == "Blutbild":
+                cls._TEST_COMPONENTS_CACHE[test_type][country_code] = [
+                    {"component": "White Blood Cell Count (WBC)", "unit": "10^3/μL", "reference_range": "4.5-11.0"},
+                    {"component": "Red Blood Cell Count (RBC)", "unit": "10^6/μL", "reference_range": "4.5-5.9"},
+                    {"component": "Hemoglobin (Hgb)", "unit": "g/dL", "reference_range": "13.5-17.5"},
+                    {"component": "Hematocrit (Hct)", "unit": "%", "reference_range": "41-53"},
+                    {"component": "Mean Corpuscular Volume (MCV)", "unit": "fL", "reference_range": "80-100"},
+                    {"component": "Platelet Count", "unit": "10^3/μL", "reference_range": "150-450"},
+                ]
+            elif test_type == "Basic Metabolic Panel (BMP)" or test_type == "Elektrolyte":
+                cls._TEST_COMPONENTS_CACHE[test_type][country_code] = [
+                    {"component": "Sodium", "unit": "mmol/L", "reference_range": "135-145"},
+                    {"component": "Potassium", "unit": "mmol/L", "reference_range": "3.5-5.0"},
+                    {"component": "Chloride", "unit": "mmol/L", "reference_range": "98-107"},
+                    {"component": "Carbon Dioxide", "unit": "mmol/L", "reference_range": "23-29"},
+                    {"component": "Blood Urea Nitrogen (BUN)", "unit": "mg/dL", "reference_range": "7-20"},
+                    {"component": "Creatinine", "unit": "mg/dL", "reference_range": "0.6-1.2"},
+                    {"component": "Glucose", "unit": "mg/dL", "reference_range": "70-99"},
+                ]
+            elif test_type == "Comprehensive Metabolic Panel (CMP)" or test_type == "Leberfunktionstest":
+                cls._TEST_COMPONENTS_CACHE[test_type][country_code] = [
+                    {"component": "Albumin", "unit": "g/dL", "reference_range": "3.4-5.4"},
+                    {"component": "Alkaline Phosphatase", "unit": "U/L", "reference_range": "44-147"},
+                    {"component": "ALT (SGPT)", "unit": "U/L", "reference_range": "7-56"},
+                    {"component": "AST (SGOT)", "unit": "U/L", "reference_range": "5-40"},
+                    {"component": "Bilirubin, Total", "unit": "mg/dL", "reference_range": "0.1-1.2"},
+                    {"component": "Calcium", "unit": "mg/dL", "reference_range": "8.5-10.5"},
+                    {"component": "Protein, Total", "unit": "g/dL", "reference_range": "6.0-8.3"},
+                ]
+            elif test_type == "Lipid Panel" or test_type == "Lipidprofil":
+                cls._TEST_COMPONENTS_CACHE[test_type][country_code] = [
+                    {"component": "Cholesterol, Total", "unit": "mg/dL", "reference_range": "<200"},
+                    {"component": "Triglycerides", "unit": "mg/dL", "reference_range": "<150"},
+                    {"component": "HDL Cholesterol", "unit": "mg/dL", "reference_range": ">40"},
+                    {"component": "LDL Cholesterol (calculated)", "unit": "mg/dL", "reference_range": "<100"},
+                    {"component": "Cholesterol/HDL Ratio", "unit": "", "reference_range": "<5.0"},
+                ]
+            elif test_type == "Thyroid Stimulating Hormone (TSH)" or test_type == "Schilddrüsenfunktionstest":
+                cls._TEST_COMPONENTS_CACHE[test_type][country_code] = [
+                    {"component": "TSH", "unit": "mIU/L", "reference_range": "0.4-4.0"},
+                    {"component": "Free T4", "unit": "ng/dL", "reference_range": "0.8-1.8"},
+                    {"component": "Free T3", "unit": "pg/mL", "reference_range": "2.3-4.2"},
+                ]
             else:
-                # Default to blood test components if no match is found
-                component_file = f"blood_test_components_{country_code}.csv"
+                # Default to an empty list for unknown test types
+                cls._TEST_COMPONENTS_CACHE[test_type][country_code] = []
 
-        # Create a cache key for the components
-        cache_key = f"components_{component_file}"
-
-        # Check if the components are already in the cache
-        if cache_key not in cls._COMPONENT_CACHE:
-            # If not, load them from the CSV file using DataPathUtil
-            components_dir = DataPathUtil.get_subdirectory_path("medical", "components")
-            file_path = components_dir / component_file
-
-            if DataPathUtil.file_exists(file_path):
-                # Load the components from the CSV file
-                components = []
-                with open(file_path, encoding="utf-8") as f:
-                    reader = csv.reader(f)
-                    for row in reader:
-                        if len(row) >= 3:
-                            component = {"component": row[0], "unit": row[1], "reference_range": row[2]}
-                            components.append(component)
-                cls._COMPONENT_CACHE[cache_key] = components
-            else:
-                # If the file doesn't exist, try with US country code
-                if country_code != "US":
-                    us_component_file = component_file.replace(f"_{country_code}.csv", "_US.csv")
-                    us_file_path = components_dir / us_component_file
-                    if DataPathUtil.file_exists(us_file_path):
-                        components = []
-                        with open(us_file_path, encoding="utf-8") as f:
-                            reader = csv.reader(f)
-                            for row in reader:
-                                if len(row) >= 3:
-                                    component = {"component": row[0], "unit": row[1], "reference_range": row[2]}
-                                    components.append(component)
-                        cls._COMPONENT_CACHE[cache_key] = components
-                    else:
-                        cls._COMPONENT_CACHE[cache_key] = cls._get_default_components()
-                else:
-                    # If the file doesn't exist, return default components
-                    cls._COMPONENT_CACHE[cache_key] = cls._get_default_components()
-
-        return cls._COMPONENT_CACHE[cache_key]
+        return cls._TEST_COMPONENTS_CACHE[test_type][country_code]
 
     @classmethod
-    def _get_default_components(cls) -> list[dict[str, str]]:
-        """Get default components when no component file is found.
+    def get_country_specific_data(
+        cls,
+        data_type: str,
+        country_code: str = "US",
+        domain_path: str = "",
+        cache_dict: dict[str, list[tuple[str, float]]] | None = None,
+    ) -> list[tuple[str, float]]:
+        """Get country-specific data from CSV files.
+
+        This method tries to load data in the following order:
+        1. Country-specific file (e.g., "specimen_types_US.csv")
+        2. Generic file (e.g., "specimen_types.csv")
+        3. Default values from _get_default_values
+
+        Args:
+            data_type: Type of data to retrieve (e.g., "labs", "providers")
+            country_code: Country code (default: "US")
+            domain_path: Optional subdirectory path
+            cache_dict: Optional cache dictionary to use instead of the default (default: None)
 
         Returns:
-            A list of default component dictionaries
+            List of tuples (value, weight) from the data file
         """
-        return [
-            {"component": "Hemoglobin", "unit": "g/dL", "reference_range": "13.5-17.5"},
-            {"component": "Hematocrit", "unit": "%", "reference_range": "41-53"},
-            {"component": "White Blood Cell Count", "unit": "K/uL", "reference_range": "4.5-11.0"},
-            {"component": "Platelet Count", "unit": "K/uL", "reference_range": "150-450"},
-            {"component": "Red Blood Cell Count", "unit": "M/uL", "reference_range": "4.5-5.9"},
-        ]
+        # Get the cache for this data type
+        cache = cache_dict if cache_dict is not None else cls._get_cache_for_data_type(data_type)
+
+        # Check if data is already cached for this country code
+        if country_code in cache:
+            return cache[country_code]
+
+        # Get the base path for data files
+        base_path = cls._get_base_path(domain_path)
+
+        # Try loading the country-specific file first
+        country_specific_path = base_path / f"{data_type}_{country_code}.csv"
+        if Path.exists(country_specific_path):
+            data = cls._load_simple_csv(country_specific_path)
+            cache[country_code] = data
+            return data
+
+        # If country-specific file doesn't exist, try loading the generic file
+        generic_path = base_path / f"{data_type}.csv"
+        if Path.exists(generic_path):
+            data = cls._load_simple_csv(generic_path)
+            cache[country_code] = data
+            return data
+
+        # If no file exists, use default values
+        default_values = cls._get_default_values(data_type, country_code)
+        cache[country_code] = default_values
+        return default_values
+
+    @classmethod
+    def _get_base_path(cls, domain_path: str = "") -> Path:
+        """Get the base path for lab test entity data files.
+
+        Args:
+            domain_path: Optional subdirectory within the data directory (default: "")
+
+        Returns:
+            Path: The base path for data files
+        """
+        # Import here to avoid circular imports
+        from datamimic_ce.utils.data_path_util import DataPathUtil
+
+        if domain_path:
+            # If a specific domain path is provided, use it
+            return DataPathUtil.get_base_data_dir() / domain_path
+        else:
+            # Default to medical directory
+            return DataPathUtil.get_base_data_dir() / "medical"

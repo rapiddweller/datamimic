@@ -65,7 +65,18 @@ class MockClassFactoryUtil(BaseClassFactoryUtil):
 
     def get_task_util_cls(self):
         return MagicMock()
-        
+
+    @staticmethod
+    def create_person_entity(locale=None, dataset=None, **kwargs):
+        """Mock implementation of create_person_entity method."""
+        mock_person = MagicMock()
+        mock_person.first_name = "John"
+        mock_person.last_name = "Doe"
+        mock_person.gender = "male"
+        mock_person.email = "john.doe@example.com"
+        mock_person.phone_number = "+1234567890"
+        return mock_person
+
     def get_city_entity(self, country_code):
         # Create a mock CityEntity
         mock_city_entity = MagicMock()

@@ -9,5 +9,5 @@ from abc import ABC
 
 class Entity(ABC):  # noqa: B024
     def __init__(self, locale: str | None, dataset: str | None):
-        self._locale = None if locale is None else locale.split("_")[0]
+        self._locale = locale  # Preserve the full locale string
         self._dataset = dataset

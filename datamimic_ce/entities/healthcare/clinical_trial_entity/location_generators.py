@@ -11,6 +11,7 @@ This module provides functions for generating location data for clinical trials.
 """
 
 import random
+from typing import Any
 
 from datamimic_ce.logger import logger
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
@@ -18,7 +19,7 @@ from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 def generate_single_location(
     country_code: str = "US", class_factory_util: BaseClassFactoryUtil | None = None
-) -> dict[str, str]:
+) -> dict[str, Any]:
     """Generate a single location for a clinical trial.
 
     Args:
@@ -38,13 +39,18 @@ def generate_single_location(
 
             # Return a dictionary with the location details
             facility_options = ["University", "Hospital", "Medical Center", "Clinic", "Research Institute"]
-            return {
-                "facility": f"{random.choice(facility_options)} of {address_entity.city}",
-                "city": address_entity.city,
-                "state": address_entity.state,
-                "zip_code": address_entity.postal_code,
-                "country": address_entity.country,
-            }
+            facility = f"{random.choice(facility_options)} of {address_entity.city}"
+
+            # Format address as a string
+            address = (
+                f"{address_entity.city}, {address_entity.state} {address_entity.postal_code}, {address_entity.country}"
+            )
+
+            # Generate random contact info
+            phone = f"+1-{random.randint(200, 999)}-{random.randint(100, 999)}-{random.randint(1000, 9999)}"
+            email = f"contact@{facility.lower().replace(' ', '')}.org".replace(",", "").replace(".", "-")
+
+            return {"name": facility, "address": address, "contact": {"phone": phone, "email": email}}
         except (ImportError, AttributeError) as e:
             logger.warning(f"Failed to use AddressEntity for location: {e}")
             # Fall through to the fallback method
@@ -77,13 +83,17 @@ def generate_single_location(
         ]
         city_index = random.randint(0, len(cities) - 1)
         facility_options = ["University", "Hospital", "Medical Center", "Clinic", "Research Institute"]
-        return {
-            "facility": f"{random.choice(facility_options)} of {cities[city_index]}",
-            "city": cities[city_index],
-            "state": states[city_index],
-            "zip_code": f"{random.randint(10000, 99999)}",
-            "country": "United States",
-        }
+        facility = f"{random.choice(facility_options)} of {cities[city_index]}"
+
+        # Format address
+        zip_code = f"{random.randint(10000, 99999)}"
+        address = f"{cities[city_index]}, {states[city_index]} {zip_code}, United States"
+
+        # Generate random contact info
+        phone = f"+1-{random.randint(200, 999)}-{random.randint(100, 999)}-{random.randint(1000, 9999)}"
+        email = f"contact@{facility.lower().replace(' ', '')}.org".replace(",", "").replace(".", "-")
+
+        return {"name": facility, "address": address, "contact": {"phone": phone, "email": email}}
     elif country_code == "DE":
         cities = [
             "Berlin",
@@ -117,29 +127,39 @@ def generate_single_location(
             "Klinik",
             "Forschungsinstitut",
         ]
-        return {
-            "facility": f"{random.choice(facility_options)} {cities[city_index]}",
-            "city": cities[city_index],
-            "state": states[city_index],
-            "zip_code": f"{random.randint(10000, 99999)}",
-            "country": "Germany",
-        }
+        facility = f"{random.choice(facility_options)} {cities[city_index]}"
+
+        # Format address
+        zip_code = f"{random.randint(10000, 99999)}"
+        address = f"{cities[city_index]}, {states[city_index]} {zip_code}, Germany"
+
+        # Generate random contact info
+        phone = f"+49-{random.randint(100, 999)}-{random.randint(1000000, 9999999)}"
+        email = f"kontakt@{facility.lower().replace(' ', '')}.de".replace(",", "").replace(".", "-")
+
+        return {"name": facility, "address": address, "contact": {"phone": phone, "email": email}}
     else:
         # Generic location for other countries
-        return {
-            "facility": f"Medical Center {random.randint(1, 100)}",
-            "city": f"City {random.randint(1, 100)}",
-            "state": f"State {random.randint(1, 50)}",
-            "zip_code": f"{random.randint(10000, 99999)}",
-            "country": country_code,
-        }
+        facility = f"Medical Center {random.randint(1, 100)}"
+        city = f"City {random.randint(1, 100)}"
+        state = f"State {random.randint(1, 50)}"
+        zip_code = f"{random.randint(10000, 99999)}"
+
+        # Format address
+        address = f"{city}, {state} {zip_code}, {country_code}"
+
+        # Generate random contact info
+        phone = f"+xx-{random.randint(100, 999)}-{random.randint(100, 999)}-{random.randint(1000, 9999)}"
+        email = f"contact@{facility.lower().replace(' ', '')}.com".replace(",", "").replace(".", "-")
+
+        return {"name": facility, "address": address, "contact": {"phone": phone, "email": email}}
 
 
 def generate_locations(
     num_locations: int = 1,
     country_codes: list[str] | None = None,
     class_factory_util: BaseClassFactoryUtil | None = None,
-) -> list[dict[str, str]]:
+) -> list[dict[str, Any]]:
     """Generate multiple locations for a clinical trial.
 
     Args:

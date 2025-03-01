@@ -54,7 +54,7 @@ class TestDoctorEntityWeightedData:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
 
-    @patch('datamimic_ce.entities.healthcare.doctor_entity.data_loader.Path.exists')
+    @patch('pathlib.Path.exists')
     @patch('datamimic_ce.entities.healthcare.doctor_entity.data_loader.DoctorDataLoader._load_simple_csv')
     def test_weighted_specialty_distribution(self, mock_load_csv, mock_exists):
         """Test that weighted specialties are distributed according to their weights."""

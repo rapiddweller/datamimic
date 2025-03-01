@@ -44,11 +44,11 @@ from datamimic_ce.entities.healthcare.clinical_trial_entity.study_generators imp
     generate_study_type,
     generate_title,
 )
-from datamimic_ce.entities.healthcare.clinical_trial_entity.utils import PropertyCache
+from datamimic_ce.entities.healthcare.healthcare_entity import HealthcareEntity
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
-class ClinicalTrialEntity:
+class ClinicalTrialEntity(HealthcareEntity):
     """
     Entity representing a clinical trial.
 
@@ -98,41 +98,36 @@ class ClinicalTrialEntity:
             country_code: Country code for location-specific data
             dataset: Optional dataset name for consistent data generation
         """
-        self._class_factory_util = class_factory_util
-        self._locale = locale
-        self._country_code = country_code
-        self._dataset = dataset
+        super().__init__(class_factory_util, locale, country_code, dataset)
 
-        # Initialize data loader
+    def _initialize_data_loader(self) -> None:
+        """Initialize the data loader for this entity."""
         self._data_loader = ClinicalTrialDataLoader()
-
-        # Initialize property cache
-        self._property_cache = PropertyCache()
 
     @property
     def trial_id(self) -> str:
         """Get the trial ID."""
-        return self._property_cache.get_or_create("trial_id", lambda: self.nct_id)
+        return self.get_cached_property("trial_id", lambda: self.nct_id)
 
     @property
     def nct_id(self) -> str:
         """Get the NCT ID."""
-        return self._property_cache.get_or_create("nct_id", lambda: generate_nct_id())
+        return self.get_cached_property("nct_id", lambda: generate_nct_id())
 
     @property
     def irb_number(self) -> str:
         """Get the IRB number."""
-        return self._property_cache.get_or_create("irb_number", lambda: generate_irb_number())
+        return self.get_cached_property("irb_number", lambda: generate_irb_number())
 
     @property
     def protocol_id(self) -> str:
         """Get the protocol ID."""
-        return self._property_cache.get_or_create("protocol_id", lambda: generate_protocol_id())
+        return self.get_cached_property("protocol_id", lambda: generate_protocol_id())
 
     @property
     def eudract_number(self) -> str | None:
         """Get the EudraCT number."""
-        return self._property_cache.get_or_create(
+        return self.get_cached_property(
             "eudract_number",
             lambda: generate_eudract_number(),
         )
@@ -140,47 +135,39 @@ class ClinicalTrialEntity:
     @property
     def phase(self) -> str:
         """Get the trial phase."""
-        return self._property_cache.get_or_create(
-            "phase", lambda: generate_phase(self._data_loader, self._country_code)
-        )
+        return self.get_cached_property("phase", lambda: generate_phase(self._data_loader, self._country_code))
 
     @property
     def status(self) -> str:
         """Get the trial status."""
-        return self._property_cache.get_or_create(
-            "status", lambda: generate_status(self._data_loader, self._country_code)
-        )
+        return self.get_cached_property("status", lambda: generate_status(self._data_loader, self._country_code))
 
     @property
     def sponsor(self) -> str:
         """Get the trial sponsor."""
-        return self._property_cache.get_or_create(
-            "sponsor", lambda: generate_sponsor(self._data_loader, self._country_code)
-        )
+        return self.get_cached_property("sponsor", lambda: generate_sponsor(self._data_loader, self._country_code))
 
     @property
     def condition(self) -> str:
         """Get the trial condition."""
-        return self._property_cache.get_or_create(
-            "condition", lambda: generate_condition(self._data_loader, self._country_code)
-        )
+        return self.get_cached_property("condition", lambda: generate_condition(self._data_loader, self._country_code))
 
     @property
     def conditions(self) -> list[str]:
         """Get the trial conditions as a list."""
-        return self._property_cache.get_or_create("conditions", lambda: [self.condition])
+        return self.get_cached_property("conditions", lambda: [self.condition])
 
     @property
     def intervention_type(self) -> str:
         """Get the intervention type."""
-        return self._property_cache.get_or_create(
+        return self.get_cached_property(
             "intervention_type", lambda: generate_intervention_type(self._data_loader, self._country_code)
         )
 
     @property
     def intervention_name(self) -> str:
         """Get the intervention name."""
-        return self._property_cache.get_or_create(
+        return self.get_cached_property(
             "intervention_name",
             lambda: generate_intervention_name(self.intervention_type, self.condition),
         )
@@ -188,7 +175,7 @@ class ClinicalTrialEntity:
     @property
     def interventions(self) -> list[dict[str, str]]:
         """Get the trial interventions as a list of dictionaries."""
-        return self._property_cache.get_or_create(
+        return self.get_cached_property(
             "interventions",
             lambda: [
                 {
@@ -202,17 +189,17 @@ class ClinicalTrialEntity:
     @property
     def study_design(self) -> dict[str, str]:
         """Get the study design."""
-        return self._property_cache.get_or_create("study_design", lambda: generate_study_design())
+        return self.get_cached_property("study_design", lambda: generate_study_design())
 
     @property
     def study_type(self) -> str:
         """Get the study type."""
-        return self._property_cache.get_or_create("study_type", lambda: generate_study_type())
+        return self.get_cached_property("study_type", lambda: generate_study_type())
 
     @property
     def title(self) -> str:
         """Get the trial title."""
-        return self._property_cache.get_or_create(
+        return self.get_cached_property(
             "title",
             lambda: generate_title(self.condition, self.intervention_type, self.intervention_name, self.phase),
         )
@@ -220,12 +207,12 @@ class ClinicalTrialEntity:
     @property
     def description(self) -> str:
         """Get the trial description."""
-        return self._property_cache.get_or_create("description", lambda: self.brief_summary)
+        return self.get_cached_property("description", lambda: self.brief_summary)
 
     @property
     def brief_summary(self) -> str:
         """Get the brief summary."""
-        return self._property_cache.get_or_create(
+        return self.get_cached_property(
             "brief_summary",
             lambda: generate_brief_summary(self.condition, self.intervention_type, self.intervention_name, self.phase),
         )
@@ -233,7 +220,7 @@ class ClinicalTrialEntity:
     @property
     def dates(self) -> dict[str, datetime | None]:
         """Get the trial dates."""
-        return self._property_cache.get_or_create("dates", lambda: generate_date_range(self.status))
+        return self.get_cached_property("dates", lambda: generate_date_range(self.status))
 
     @property
     def start_date(self) -> str:
@@ -249,374 +236,315 @@ class ClinicalTrialEntity:
         dates = self.dates
         if dates["end_date"]:
             return dates["end_date"].strftime("%Y-%m-%d")
-
-        # If no end date in the implementation, generate one based on start date
-        start_date = datetime.strptime(self.start_date, "%Y-%m-%d")
-        days_to_add = random.randint(180, 1095)  # 6 months to 3 years
-        return (start_date + timedelta(days=days_to_add)).strftime("%Y-%m-%d")
+        return (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d")
 
     @property
     def enrollment(self) -> int:
         """Get the enrollment count."""
-        return self._property_cache.get_or_create(
+        return self.get_cached_property(
             "enrollment",
-            lambda: generate_enrollment_count(self.status, self.phase),
+            lambda: generate_enrollment_count(
+                self.status,
+                self.phase,
+            ),
         )
 
     @property
     def enrollment_target(self) -> int:
-        """Get the enrollment target."""
-        return self._property_cache.get_or_create("enrollment_target", lambda: max(1, self.enrollment))
+        """Get the target enrollment."""
+        return self.get_cached_property("enrollment_target", lambda: self.enrollment)
 
     @property
     def current_enrollment(self) -> int:
         """Get the current enrollment."""
-        target = self.enrollment_target
-        status = self.status
-
-        if status == "Not yet recruiting":
-            return 0
-        elif status == "Completed" or status == "Terminated":
-            # For completed trials, enrollment might be slightly less than target
-            return random.randint(int(target * 0.8), target)
-        else:
-            # For ongoing trials, enrollment is between 0 and target
-            return random.randint(0, target)
+        return self.get_cached_property(
+            "current_enrollment",
+            lambda: (
+                self.enrollment
+                if self.status in ["Completed", "Active, not recruiting", "Terminated", "Unknown status"]
+                else max(1, int(self.enrollment * random.uniform(0.1, 0.9)))
+                if self.status in ["Recruiting", "Enrolling by invitation"]
+                else 0
+            ),
+        )
 
     @property
     def eligibility_criteria(self) -> dict[str, list[str]]:
         """Get the eligibility criteria."""
-        raw_criteria = self._property_cache.get_or_create(
-            "raw_eligibility_criteria",
-            lambda: generate_eligibility_criteria(self.condition, self._data_loader, self._country_code),
+        return self.get_cached_property(
+            "eligibility_criteria",
+            lambda: generate_eligibility_criteria(
+                self.condition,
+                self._data_loader,
+                self._country_code,
+            ),
         )
-
-        # Rename keys to match test expectations
-        return {"inclusion": raw_criteria["inclusion_criteria"], "exclusion": raw_criteria["exclusion_criteria"]}
 
     @property
     def age_range(self) -> dict[str, int | None]:
         """Get the age range."""
-        return self._property_cache.get_or_create(
-            "age_range", lambda: generate_age_range(self.condition, self._data_loader)
-        )
+        return self.get_cached_property("age_range", lambda: generate_age_range())
 
     @property
     def gender(self) -> str:
         """Get the gender eligibility."""
-        return self._property_cache.get_or_create(
-            "gender", lambda: generate_gender_eligibility(self.condition, self._data_loader)
-        )
+        return self.get_cached_property("gender", lambda: generate_gender_eligibility())
 
     @property
     def locations(self) -> list[dict[str, Any]]:
         """Get the trial locations."""
-        raw_locations = self._property_cache.get_or_create(
-            "raw_locations",
-            lambda: generate_locations(
-                determine_num_locations(self.phase, self.status),
+
+        def _generate_locations() -> list[dict[str, Any]]:
+            # Determine the number of locations based on the phase and status
+            num_locations = determine_num_locations(self.phase, self.status)
+
+            # Generate the locations
+            return generate_locations(
+                num_locations,
                 [self._country_code],
                 self._class_factory_util,
-            ),
-        )
+            )
 
-        # Ensure locations have the expected keys
-        for loc in raw_locations:
-            if "zip_code" in loc and "zip" not in loc:
-                loc["zip"] = loc["zip_code"]
-            # Add name key if it doesn't exist (set to same value as facility)
-            if "name" not in loc and "facility" in loc:
-                loc["name"] = loc["facility"]
-            # Add address key if it doesn't exist
-            if "address" not in loc:
-                address_parts = []
-                if "city" in loc:
-                    address_parts.append(loc["city"])
-                if "state" in loc:
-                    address_parts.append(loc["state"])
-                if "country" in loc:
-                    address_parts.append(loc["country"])
-                loc["address"] = ", ".join(address_parts)
-            # Add contact key if it doesn't exist
-            if "contact" not in loc:
-                # Generate a random contact person
-                first_names = ["John", "Jane", "Michael", "Sarah", "David", "Lisa", "Robert", "Emily"]
-                last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Wilson"]
-                titles = ["Dr.", "Prof.", "Mr.", "Ms.", "Mrs."]
-
-                title = random.choice(titles)
-                first_name = random.choice(first_names)
-                last_name = random.choice(last_names)
-
-                phone = f"+1-{random.randint(200, 999)}-{random.randint(100, 999)}-{random.randint(1000, 9999)}"
-                email = (
-                    f"{first_name.lower()}.{last_name.lower()}@"
-                    f"{loc.get('facility', 'example').lower().replace(' ', '')}.com"
-                )
-
-                loc["contact"] = {"name": f"{title} {first_name} {last_name}", "phone": phone, "email": email}
-
-        return raw_locations
+        return self.get_cached_property("locations", _generate_locations)
 
     @property
     def lead_investigator(self) -> str:
         """Get the lead investigator."""
-        return self._property_cache.get_or_create("lead_investigator", lambda: self._generate_lead_investigator())
+        return self.get_cached_property("lead_investigator", self._generate_lead_investigator)
 
     def _generate_lead_investigator(self) -> str:
         """Generate a lead investigator name."""
-        first_names = [
-            "James",
-            "John",
-            "Robert",
-            "Michael",
-            "William",
-            "David",
-            "Richard",
-            "Joseph",
-            "Thomas",
-            "Charles",
-            "Mary",
-            "Patricia",
-            "Jennifer",
-            "Linda",
-            "Elizabeth",
-            "Barbara",
-            "Susan",
-            "Jessica",
-            "Sarah",
-            "Karen",
-        ]
-        last_names = [
-            "Smith",
-            "Johnson",
-            "Williams",
-            "Jones",
-            "Brown",
-            "Davis",
-            "Miller",
-            "Wilson",
-            "Moore",
-            "Taylor",
-            "Anderson",
-            "Thomas",
-            "Jackson",
-            "White",
-            "Harris",
-            "Martin",
-            "Thompson",
-            "Garcia",
-            "Martinez",
-            "Robinson",
-        ]
-        titles = ["Dr.", "Prof.", "Assoc. Prof."]
+        # Use person entity to generate a name if available, otherwise use a simple approach
+        if self._class_factory_util:
+            person_entity = self._class_factory_util.create_person_entity(self._locale, self._dataset)
+            # 75% chance of a male investigator (reflecting current demographic realities)
+            gender = "M" if random.random() < 0.75 else "F"
+            investigator_name = f"Dr. {person_entity.first_name(gender)} {person_entity.last_name()}"
+            return investigator_name
+        else:
+            # Fallback to a basic implementation if no factory is available
+            first_names_male = ["James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas"]
+            first_names_female = ["Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Susan", "Jessica", "Sarah"]
+            last_names = [
+                "Smith",
+                "Johnson",
+                "Williams",
+                "Jones",
+                "Brown",
+                "Davis",
+                "Miller",
+                "Wilson",
+                "Moore",
+                "Taylor",
+            ]
 
-        title = random.choice(titles)
-        first_name = random.choice(first_names)
-        last_name = random.choice(last_names)
+            # 75% chance of a male investigator
+            if random.random() < 0.75:
+                first_name = random.choice(first_names_male)
+            else:
+                first_name = random.choice(first_names_female)
 
-        return f"{title} {first_name} {last_name}"
+            last_name = random.choice(last_names)
+            return f"Dr. {first_name} {last_name}"
 
     @property
     def primary_outcomes(self) -> list[dict[str, str]]:
         """Get the primary outcomes."""
-        return self._property_cache.get_or_create("primary_outcomes", lambda: self._generate_primary_outcomes())
+        return self.get_cached_property("primary_outcomes", self._generate_primary_outcomes)
 
     def _generate_primary_outcomes(self) -> list[dict[str, str]]:
-        """Generate primary outcomes."""
-        outcome_measures = [
-            "Overall Survival",
-            "Progression-Free Survival",
-            "Disease-Free Survival",
-            "Objective Response Rate",
-            "Complete Response Rate",
-            "Partial Response Rate",
-            "Time to Progression",
-            "Duration of Response",
-            "Quality of Life Score",
-            "Adverse Event Rate",
-            "Serious Adverse Event Rate",
-            "Treatment Discontinuation Rate",
-            "Change in Biomarker Levels",
-            "Change in Tumor Size",
-            "Change in Symptom Score",
-        ]
+        """Generate primary outcomes for the trial."""
+        # Common outcome templates based on intervention type and condition
+        outcome_templates = {
+            "Drug": [
+                "Change in {condition} symptoms from baseline to week {week}",
+                "Reduction in {condition} severity as measured by {scale}",
+                "Time to {condition} resolution after treatment initiation",
+                "Number of patients achieving complete remission of {condition}",
+                "Change in biomarker levels associated with {condition}",
+            ],
+            "Device": [
+                "Efficacy of {device} in treating {condition} compared to standard care",
+                "Safety profile of {device} for {condition} management",
+                "Patient-reported outcomes after {device} intervention for {condition}",
+                "Functional improvement in {condition} after {device} use",
+                "Rate of adverse events associated with {device} for {condition}",
+            ],
+            "Behavioral": [
+                "Improvement in {condition} symptoms following {intervention} program",
+                "Adherence to {intervention} protocol for {condition} management",
+                "Quality of life changes after completion of {intervention} for {condition}",
+                "Sustained behavior change {weeks} weeks after {intervention} for {condition}",
+                "Reduction in {condition}-related disability after {intervention}",
+            ],
+        }
 
-        time_frames = [
-            "12 weeks",
-            "24 weeks",
-            "36 weeks",
-            "48 weeks",
-            "1 year",
-            "18 months",
-            "2 years",
-            "3 years",
-            "5 years",
-        ]
+        # Get templates for the intervention type, or use a generic set
+        templates = outcome_templates.get(
+            self.intervention_type, ["Efficacy of {intervention} for treating {condition}"]
+        )
 
-        # Generate 1-3 primary outcomes
+        # Number of primary outcomes (usually 1-3)
         num_outcomes = random.randint(1, 3)
+        selected_templates = random.sample(templates, min(num_outcomes, len(templates)))
+
         outcomes = []
+        for template in selected_templates:
+            # Format the template with trial-specific information
+            outcome_text = template.format(
+                condition=self.condition.lower(),
+                intervention=self.intervention_name,
+                device=self.intervention_name,
+                scale=random.choice(
+                    ["standard clinical assessment", "patient-reported outcome measures", "validated scale"]
+                ),
+                week=random.choice([4, 8, 12, 24, 48]),
+                weeks=random.choice([4, 8, 12, 24, 48]),
+            )
 
-        for _ in range(num_outcomes):
-            measure = random.choice(outcome_measures)
-            time_frame = random.choice(time_frames)
+            # Add a time frame
+            time_frame = f"{random.choice([4, 8, 12, 24, 48])} weeks"
 
-            outcome = {
-                "measure": measure,
-                "time_frame": time_frame,
-                "description": f"Assessment of {measure.lower()} at {time_frame} after treatment initiation",
-            }
+            # Add a description
+            description = f"This outcome measures the effectiveness of {self.intervention_name} for {self.condition} over {time_frame}."
 
-            outcomes.append(outcome)
+            outcomes.append({"measure": outcome_text, "time_frame": time_frame, "description": description})
 
         return outcomes
 
     @property
     def secondary_outcomes(self) -> list[dict[str, str]]:
         """Get the secondary outcomes."""
-        return self._property_cache.get_or_create("secondary_outcomes", lambda: self._generate_secondary_outcomes())
+        return self.get_cached_property("secondary_outcomes", self._generate_secondary_outcomes)
 
     def _generate_secondary_outcomes(self) -> list[dict[str, str]]:
-        """Generate secondary outcomes."""
-        outcome_measures = [
-            "Safety Profile",
-            "Tolerability Assessment",
-            "Pharmacokinetic Parameters",
-            "Pharmacodynamic Effects",
-            "Patient-Reported Outcomes",
-            "Health-Related Quality of Life",
-            "Functional Status",
-            "Biomarker Changes",
-            "Imaging Response",
-            "Cost-Effectiveness",
-            "Resource Utilization",
-            "Treatment Adherence",
-            "Patient Satisfaction",
-            "Caregiver Burden",
-            "Long-term Follow-up",
+        """Generate secondary outcomes for the trial."""
+        # Common secondary outcome templates
+        outcome_templates = [
+            "Safety and tolerability of {intervention} in patients with {condition}",
+            "Patient-reported quality of life changes after {intervention} for {condition}",
+            "Healthcare resource utilization associated with {intervention} for {condition}",
+            "Long-term efficacy of {intervention} for {condition} at {month}-month follow-up",
+            "Rate of {condition} recurrence after completion of {intervention}",
+            "Change in concomitant medication use during {intervention} for {condition}",
+            "Caregiver burden assessment during {intervention} for {condition}",
+            "Correlation between biomarker changes and clinical improvement in {condition}",
+            "Time to hospital discharge after initiation of {intervention} for {condition}",
+            "Cost-effectiveness of {intervention} compared to standard of care for {condition}",
         ]
 
-        time_frames = [
-            "4 weeks",
-            "8 weeks",
-            "12 weeks",
-            "24 weeks",
-            "36 weeks",
-            "48 weeks",
-            "1 year",
-            "18 months",
-            "2 years",
-        ]
+        # Number of secondary outcomes (usually 2-5)
+        num_outcomes = random.randint(2, 5)
+        selected_templates = random.sample(outcome_templates, min(num_outcomes, len(outcome_templates)))
 
-        # Generate 0-5 secondary outcomes
-        num_outcomes = random.randint(0, 5)
         outcomes = []
+        for template in selected_templates:
+            # Format the template with trial-specific information
+            outcome_text = template.format(
+                condition=self.condition.lower(),
+                intervention=self.intervention_name,
+                month=random.choice([3, 6, 12, 24, 36]),
+            )
 
-        for _ in range(num_outcomes):
-            measure = random.choice(outcome_measures)
-            time_frame = random.choice(time_frames)
+            # Add a time frame
+            time_frame = f"{random.choice([3, 6, 12, 24, 36])} months"
 
-            outcome = {
-                "measure": measure,
-                "time_frame": time_frame,
-                "description": f"Evaluation of {measure.lower()} at {time_frame} after treatment initiation",
-            }
+            # Add a description
+            description = f"This secondary outcome assesses additional effects of {self.intervention_name} for {self.condition} over {time_frame}."
 
-            outcomes.append(outcome)
+            outcomes.append({"measure": outcome_text, "time_frame": time_frame, "description": description})
 
         return outcomes
 
     @property
     def results_summary(self) -> str:
         """Get the results summary."""
-        return self._property_cache.get_or_create("results_summary", lambda: self._generate_results_summary())
+        return self.get_cached_property("results_summary", self._generate_results_summary)
 
     def _generate_results_summary(self) -> str:
-        """Generate a results summary."""
-        status = self.status
+        """Generate a summary of the trial results."""
+        # Only completed trials have results
+        if self.status != "Completed":
+            return "Results not yet available."
 
-        if status != "Completed":
-            return ""
-
-        positive_results = [
-            "The study met its primary endpoint with statistical significance.",
-            "Results showed a significant improvement in the treatment group compared to control.",
-            "The intervention demonstrated efficacy with an acceptable safety profile.",
-            "Positive outcomes were observed across all predefined endpoints.",
-            "The trial showed promising results that warrant further investigation.",
+        # Templates for different outcomes
+        positive_templates = [
+            "The trial demonstrated significant improvement in patients receiving {intervention} compared to control group.",
+            "Treatment with {intervention} showed statistically significant benefits for patients with {condition}.",
+            "{intervention} was associated with a {percent}% reduction in {condition} symptoms compared to baseline.",
+            "Patients in the {intervention} group showed improved outcomes on primary measures compared to standard care.",
+            "The study met its primary endpoint, showing efficacy of {intervention} for {condition}.",
         ]
 
-        negative_results = [
-            "The study did not meet its primary endpoint.",
-            "No significant difference was observed between treatment and control groups.",
-            "The intervention failed to demonstrate the expected clinical benefit.",
-            "Results did not support the continued development of this approach.",
-            "The trial was terminated early due to lack of efficacy.",
+        negative_templates = [
+            "The trial did not meet its primary endpoint of improved outcomes with {intervention}.",
+            "No statistically significant difference was observed between {intervention} and control groups.",
+            "{intervention} failed to demonstrate superior efficacy compared to existing treatments for {condition}.",
+            "The study showed limited clinical benefit of {intervention} in patients with {condition}.",
+            "Results did not support the hypothesis that {intervention} would improve outcomes in {condition}.",
         ]
 
-        mixed_results = [
-            "The study showed mixed results with some endpoints met and others not reached.",
-            "While some patients showed benefit, the overall population did not meet significance.",
-            "The intervention showed activity but with a higher than expected adverse event profile.",
-            "Results varied across different subgroups of patients.",
-            "The trial demonstrated some positive signals that require confirmation in larger studies.",
+        mixed_templates = [
+            "While {intervention} showed promise in secondary endpoints, it did not meet the primary outcome measures.",
+            "{intervention} demonstrated benefit in a subset of patients with {condition}, but not in the overall population.",
+            "The trial showed modest improvements with {intervention}, but further studies are needed to confirm efficacy.",
+            "Some measures improved with {intervention}, but others showed no significant difference from control.",
+            "{intervention} was well-tolerated but showed only marginal clinical improvement for {condition}.",
         ]
 
-        result_type = random.choice(["positive", "negative", "mixed"])
+        # Randomly determine the outcome, weighted toward positive results
+        outcome_type = random.choices(["positive", "negative", "mixed"], weights=[0.5, 0.2, 0.3], k=1)[0]
 
-        if result_type == "positive":
-            summary = random.choice(positive_results)
-        elif result_type == "negative":
-            summary = random.choice(negative_results)
+        if outcome_type == "positive":
+            template = random.choice(positive_templates)
+        elif outcome_type == "negative":
+            template = random.choice(negative_templates)
         else:
-            summary = random.choice(mixed_results)
+            template = random.choice(mixed_templates)
 
-        return summary
+        # Format the template with trial-specific information
+        result = template.format(
+            intervention=self.intervention_name,
+            condition=self.condition.lower(),
+            percent=random.randint(20, 75),
+        )
 
-    def reset(self) -> None:
-        """Reset all cached properties."""
-        self._property_cache.clear()
+        # Add some details about safety
+        safety_templates = [
+            " The safety profile was consistent with previous studies.",
+            " No unexpected safety concerns were identified.",
+            " Adverse events were generally mild to moderate in severity, ",
+            f" with {random.randint(1, 10)}% of patients experiencing serious adverse events.",
+            " The intervention was well-tolerated by most participants.",
+            f" Discontinuation rate due to adverse events was {random.randint(1, 15)}%.",
+        ]
+
+        result += random.choice(safety_templates)
+
+        # Add a conclusion
+        conclusion_templates = [
+            " These results support further development of this intervention.",
+            " The findings suggest this approach may benefit selected patients.",
+            " Additional studies are planned to further evaluate efficacy and safety.",
+            " Results will be used to inform future clinical practice.",
+            " The data provide valuable insights for future research directions.",
+        ]
+
+        result += random.choice(conclusion_templates)
+
+        return result
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Convert the clinical trial entity to a dictionary.
+        """Convert the clinical trial entity to a dictionary.
 
         Returns:
-            A dictionary representation of the clinical trial
+            A dictionary containing all properties of the clinical trial entity
         """
-        # Create the dates dictionary
-        dates_dict = {}
-        if hasattr(self, "dates") and isinstance(self.dates, dict):
-            # Convert datetime objects to strings
-            start_date = self.dates.get("start_date")
-            primary_completion_date = self.dates.get("primary_completion_date")
-            end_date = self.dates.get("end_date")
-
-            dates_dict = {
-                "start_date": start_date.strftime("%Y-%m-%d") if start_date else None,
-                "primary_completion_date": (
-                    primary_completion_date.strftime("%Y-%m-%d") if primary_completion_date else None
-                ),
-                "end_date": end_date.strftime("%Y-%m-%d") if end_date else None,
-            }
-        else:
-            # Fallback to using the start_date and end_date properties
-            dates_dict = {"start_date": self.start_date, "primary_completion_date": None, "end_date": self.end_date}
-
-        # Get eligibility criteria and ensure it has both new and old keys for backward compatibility
-        eligibility = self.eligibility_criteria
-        eligibility_with_compat = {
-            **eligibility,  # Include the new keys (inclusion, exclusion)
-            "inclusion_criteria": eligibility["inclusion"],  # Add old key for backward compatibility
-            "exclusion_criteria": eligibility["exclusion"],  # Add old key for backward compatibility
-        }
-
         return {
             "trial_id": self.trial_id,
             "nct_id": self.nct_id,
-            "protocol_id": self.protocol_id,
             "irb_number": self.irb_number,
+            "protocol_id": self.protocol_id,
             "eudract_number": self.eudract_number,
             "title": self.title,
             "description": self.description,
@@ -625,7 +553,6 @@ class ClinicalTrialEntity:
             "status": self.status,
             "start_date": self.start_date,
             "end_date": self.end_date,
-            "dates": dates_dict,
             "sponsor": self.sponsor,
             "lead_investigator": self.lead_investigator,
             "condition": self.condition,
@@ -635,49 +562,13 @@ class ClinicalTrialEntity:
             "interventions": self.interventions,
             "study_design": self.study_design,
             "study_type": self.study_type,
-            "eligibility_criteria": eligibility_with_compat,
-            "gender": self.gender,
+            "eligibility_criteria": self.eligibility_criteria,
             "age_range": self.age_range,
-            "locations": self.locations,
-            "enrollment": self.enrollment,
+            "gender": self.gender,
             "enrollment_target": self.enrollment_target,
             "current_enrollment": self.current_enrollment,
+            "locations": self.locations,
             "primary_outcomes": self.primary_outcomes,
             "secondary_outcomes": self.secondary_outcomes,
             "results_summary": self.results_summary,
         }
-
-    @classmethod
-    def generate_batch(
-        cls,
-        count: int,
-        class_factory_util: BaseClassFactoryUtil | None = None,
-        locale: str = "en",
-        country_code: str = "US",
-        dataset: str | None = None,
-    ) -> list[dict[str, Any]]:
-        """
-        Generate a batch of clinical trial entities.
-
-        Args:
-            count: Number of entities to generate
-            class_factory_util: Optional class factory utility
-            locale: Locale for generating data
-            country_code: Country code for location-specific data
-            dataset: Optional dataset name
-
-        Returns:
-            A list of dictionaries, each representing a clinical trial
-        """
-        trials = []
-
-        for _ in range(count):
-            trial = cls(
-                class_factory_util=class_factory_util,
-                locale=locale,
-                country_code=country_code,
-                dataset=dataset,
-            )
-            trials.append(trial.to_dict())
-
-        return trials

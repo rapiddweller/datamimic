@@ -3,6 +3,8 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
+import random
+
 from datamimic_ce.config import settings
 from datamimic_ce.exporters.exporter_util import ExporterUtil
 from datamimic_ce.generators.datetime_generator import DateTimeGenerator
@@ -361,10 +363,38 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
 
     @staticmethod
     def get_app_settings():
+        """Get application settings."""
+        return settings
+
+    @staticmethod
+    def create_person_entity(locale="en", dataset=None, **kwargs):
         """
-        Abstract method to get the app settings.
+        Create and return a simple person entity for basic person name generation.
+
+        Args:
+            locale: The locale to use for localization
+            dataset: Optional dataset name
+            **kwargs: Additional parameters
 
         Returns:
-            The app settings.
+            A simple person entity with first_name and last_name methods
         """
-        return settings
+
+        class SimplePersonEntity:
+            def __init__(self):
+                self.first_names_male = ["James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph"]
+                self.first_names_female = ["Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Susan", "Jessica"]
+                self.last_names = ["Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson"]
+
+            def first_name(self, gender=None):
+                """Generate a first name based on gender."""
+                if gender and gender.upper() == "F":
+                    return random.choice(self.first_names_female)
+                else:
+                    return random.choice(self.first_names_male)
+
+            def last_name(self):
+                """Generate a last name."""
+                return random.choice(self.last_names)
+
+        return SimplePersonEntity()

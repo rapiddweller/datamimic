@@ -10,14 +10,10 @@ Data loader for doctor entity.
 This module provides functionality for loading data from CSV files for doctor entities.
 """
 
-import csv
-from pathlib import Path
-
-from datamimic_ce.logger import logger
-from datamimic_ce.utils.data_path_util import DataPathUtil
+from datamimic_ce.entities.base_data_loader import BaseDataLoader
 
 
-class DoctorDataLoader:
+class DoctorDataLoader(BaseDataLoader):
     """Load data for doctor entity from CSV files."""
 
     # Cache for loaded data to reduce file I/O
@@ -30,79 +26,21 @@ class DoctorDataLoader:
     _DEGREES_CACHE: dict[str, list[tuple[str, float]]] = {}
     _DOCTOR_TITLES_CACHE: dict[str, list[tuple[str, float]]] = {}
 
-    @classmethod
-    def _load_simple_csv(cls, file_path: Path) -> list[tuple[str, float]]:
-        """Load a simple CSV file and return a list of values with weights.
+    def __init__(self) -> None:
+        """Initialize a new DoctorDataLoader."""
+        self._domain_path = "medical"
+
+    def get_data(self, data_type: str, country_code: str = "US") -> list[tuple[str, float]]:
+        """Get data for a specific type and country code.
 
         Args:
-            file_path: Path to the CSV file
+            data_type: The type of data to retrieve
+            country_code: The country code to use
 
         Returns:
-            List of tuples (value, weight) from the CSV file
+            A list of tuples containing values and weights
         """
-        if not file_path.exists():
-            logger.warning(f"CSV file not found: {file_path}")
-            return []
-
-        try:
-            with open(file_path, encoding="utf-8") as f:
-                reader = csv.reader(f)
-                values = []
-                for row in reader:
-                    if not row:
-                        continue
-                    if len(row) >= 2:
-                        try:
-                            weight = float(row[1])
-                            values.append((row[0], weight))
-                        except (ValueError, IndexError):
-                            # If weight is not a valid number, use default weight of 1.0
-                            values.append((row[0], 1.0))
-                    else:
-                        # If no weight is provided, use default weight of 1.0
-                        values.append((row[0], 1.0))
-                return values
-        except Exception as e:
-            logger.error(f"Error loading CSV file {file_path}: {e}")
-            return []
-
-    @classmethod
-    def get_country_specific_data(cls, data_type: str, country_code: str = "US") -> list[tuple[str, float]]:
-        """Get country-specific data from CSV files.
-
-        Args:
-            data_type: Type of data to retrieve (e.g., "specialties", "hospitals")
-            country_code: Country code (default: "US")
-
-        Returns:
-            List of tuples (value, weight) from the CSV file
-        """
-        # Get the appropriate cache for the data type
-        cache = cls._get_cache_for_data_type(data_type)
-        cache_key = f"{data_type}_{country_code}"
-
-        # Check if data is already in cache
-        if cache_key in cache:
-            return cache[cache_key]
-
-        # Get the file path for the country-specific data
-        file_path = DataPathUtil.get_country_specific_data_file_path("medical", data_type, country_code)
-
-        # Load the data from the CSV file
-        data = cls._load_simple_csv(file_path)
-
-        # If no data was found, try to load the default (US) data
-        if not data and country_code != "US":
-            file_path = DataPathUtil.get_country_specific_data_file_path("medical", data_type, "US")
-            data = cls._load_simple_csv(file_path)
-
-        # If still no data, use default values
-        if not data:
-            data = cls._get_default_values(data_type)
-
-        # Cache the data for future use
-        cache[cache_key] = data
-        return data
+        return self.get_country_specific_data(data_type, country_code, self._domain_path)
 
     @classmethod
     def _get_cache_for_data_type(cls, data_type: str) -> dict[str, list[tuple[str, float]]]:
@@ -114,27 +52,18 @@ class DoctorDataLoader:
         Returns:
             The cache dictionary for the data type
         """
-        if data_type == "specialties":
-            return cls._SPECIALTIES_CACHE
-        elif data_type == "hospitals":
-            return cls._HOSPITALS_CACHE
-        elif data_type == "medical_schools":
-            return cls._MEDICAL_SCHOOLS_CACHE
-        elif data_type == "certifications":
-            return cls._CERTIFICATIONS_CACHE
-        elif data_type == "languages":
-            return cls._LANGUAGES_CACHE
-        elif data_type == "institutions":
-            return cls._INSTITUTIONS_CACHE
-        elif data_type == "degrees":
-            return cls._DEGREES_CACHE
-        elif data_type == "doctor_titles":
-            return cls._DOCTOR_TITLES_CACHE
-        else:
-            # For unknown data types, create a new cache entry
-            logger.warning(f"Unknown data type: {data_type}, creating new cache entry")
-            setattr(cls, f"_{data_type.upper()}_CACHE", {})
-            return getattr(cls, f"_{data_type.upper()}_CACHE")
+        cache_dict = {
+            "specialties": cls._SPECIALTIES_CACHE,
+            "hospitals": cls._HOSPITALS_CACHE,
+            "medical_schools": cls._MEDICAL_SCHOOLS_CACHE,
+            "certifications": cls._CERTIFICATIONS_CACHE,
+            "languages": cls._LANGUAGES_CACHE,
+            "institutions": cls._INSTITUTIONS_CACHE,
+            "degrees": cls._DEGREES_CACHE,
+            "doctor_titles": cls._DOCTOR_TITLES_CACHE,
+        }
+
+        return cache_dict.get(data_type, super()._get_cache_for_data_type(data_type))
 
     @classmethod
     def _get_default_values(cls, data_type: str) -> list[tuple[str, float]]:
@@ -146,104 +75,97 @@ class DoctorDataLoader:
         Returns:
             A list of default values with weights
         """
-        if data_type == "specialties":
-            return [
-                ("Family Medicine", 10),
-                ("Internal Medicine", 8),
-                ("Pediatrics", 6),
-                ("Cardiology", 5),
-                ("Neurology", 5),
-                ("Oncology", 5),
-                ("Orthopedics", 5),
-                ("Psychiatry", 5),
-                ("Dermatology", 4),
-                ("Emergency Medicine", 4),
-            ]
-        elif data_type == "hospitals":
-            return [
-                ("General Hospital", 10),
-                ("University Medical Center", 8),
-                ("Community Hospital", 6),
-                ("Regional Medical Center", 5),
-                ("Memorial Hospital", 5),
-                ("Children's Hospital", 4),
-                ("Veterans Hospital", 3),
-            ]
-        elif data_type == "medical_schools":
-            return [
-                ("Harvard Medical School", 10),
-                ("Johns Hopkins School of Medicine", 9),
-                ("Stanford University School of Medicine", 8),
-                ("University of California, San Francisco", 7),
-                ("Mayo Clinic Alix School of Medicine", 6),
-                ("University of Pennsylvania Perelman School of Medicine", 5),
-                ("Columbia University Vagelos College of Physicians and Surgeons", 5),
-                ("University of California, Los Angeles", 4),
-                ("Washington University School of Medicine", 4),
-                ("Yale School of Medicine", 4),
-            ]
-        elif data_type == "certifications":
-            return [
-                ("Board Certified", 10),
-                ("Advanced Cardiac Life Support", 8),
-                ("Basic Life Support", 8),
-                ("Pediatric Advanced Life Support", 6),
-                ("Advanced Trauma Life Support", 6),
-                ("Neonatal Resuscitation Program", 5),
-                ("Certified Diabetes Educator", 4),
-                ("Certified Wound Specialist", 3),
-                ("Certified Stroke Rehabilitation Specialist", 3),
-                ("Pain Management Certification", 3),
-            ]
-        elif data_type == "languages":
-            return [
-                ("English", 10),
-                ("Spanish", 5),
-                ("French", 3),
-                ("German", 2),
-                ("Mandarin", 2),
-                ("Arabic", 2),
-                ("Russian", 1),
-                ("Portuguese", 1),
-                ("Italian", 1),
-                ("Japanese", 1),
-            ]
-        elif data_type == "institutions":
-            return [
-                ("Mayo Clinic", 10),
-                ("Cleveland Clinic", 9),
-                ("Massachusetts General Hospital", 8),
-                ("Johns Hopkins Hospital", 8),
-                ("UCLA Medical Center", 7),
-                ("New York-Presbyterian Hospital", 7),
-                ("UCSF Medical Center", 6),
-                ("Stanford Health Care", 6),
-                ("Cedars-Sinai Medical Center", 5),
-                ("Northwestern Memorial Hospital", 5),
-            ]
-        elif data_type == "degrees":
-            return [
-                ("MD", 10),
-                ("DO", 8),
-                ("MBBS", 6),
-                ("PhD", 4),
-                ("MPH", 3),
-                ("MS", 3),
-                ("MBA", 2),
-                ("PA", 2),
-                ("NP", 2),
-                ("RN", 1),
-            ]
-        elif data_type == "doctor_titles":
-            return [
-                ("Dr.", 10),
-                ("Professor", 5),
-                ("Associate Professor", 4),
-                ("Assistant Professor", 3),
-                ("Chief", 2),
-                ("Director", 2),
-                ("Head", 1),
-            ]
-        else:
-            logger.warning(f"No default values for data type: {data_type}")
-            return []
+        default_values = {
+            "specialties": [
+                ("Family Medicine", 10.0),
+                ("Internal Medicine", 8.0),
+                ("Pediatrics", 6.0),
+                ("Cardiology", 5.0),
+                ("Neurology", 5.0),
+                ("Oncology", 5.0),
+                ("Orthopedics", 5.0),
+                ("Psychiatry", 5.0),
+                ("Dermatology", 4.0),
+                ("Emergency Medicine", 4.0),
+            ],
+            "hospitals": [
+                ("General Hospital", 10.0),
+                ("University Medical Center", 8.0),
+                ("Community Hospital", 6.0),
+                ("Regional Medical Center", 5.0),
+                ("Memorial Hospital", 5.0),
+                ("Children's Hospital", 4.0),
+                ("Veterans Hospital", 3.0),
+            ],
+            "medical_schools": [
+                ("Harvard Medical School", 10.0),
+                ("Johns Hopkins School of Medicine", 9.0),
+                ("Stanford University School of Medicine", 8.0),
+                ("University of California, San Francisco", 7.0),
+                ("Mayo Clinic Alix School of Medicine", 6.0),
+                ("University of Pennsylvania Perelman School of Medicine", 5.0),
+                ("Columbia University Vagelos College of Physicians and Surgeons", 5.0),
+                ("University of California, Los Angeles", 4.0),
+                ("Washington University School of Medicine", 4.0),
+                ("Yale School of Medicine", 4.0),
+            ],
+            "certifications": [
+                ("Board Certified", 10.0),
+                ("Advanced Cardiac Life Support", 8.0),
+                ("Basic Life Support", 8.0),
+                ("Pediatric Advanced Life Support", 6.0),
+                ("Advanced Trauma Life Support", 6.0),
+                ("Neonatal Resuscitation Program", 5.0),
+                ("Certified Diabetes Educator", 4.0),
+                ("Certified Wound Specialist", 3.0),
+                ("Certified Stroke Rehabilitation Specialist", 3.0),
+                ("Pain Management Certification", 3.0),
+            ],
+            "languages": [
+                ("English", 10.0),
+                ("Spanish", 5.0),
+                ("French", 3.0),
+                ("German", 2.0),
+                ("Mandarin", 2.0),
+                ("Arabic", 2.0),
+                ("Russian", 1.0),
+                ("Portuguese", 1.0),
+                ("Italian", 1.0),
+                ("Japanese", 1.0),
+            ],
+            "institutions": [
+                ("Mayo Clinic", 10.0),
+                ("Cleveland Clinic", 9.0),
+                ("Massachusetts General Hospital", 8.0),
+                ("Johns Hopkins Hospital", 8.0),
+                ("UCLA Medical Center", 7.0),
+                ("New York-Presbyterian Hospital", 7.0),
+                ("UCSF Medical Center", 6.0),
+                ("Stanford Health Care", 6.0),
+                ("Cedars-Sinai Medical Center", 5.0),
+                ("Northwestern Memorial Hospital", 5.0),
+            ],
+            "degrees": [
+                ("MD", 10.0),
+                ("DO", 8.0),
+                ("MBBS", 6.0),
+                ("PhD", 4.0),
+                ("MPH", 3.0),
+                ("MS", 3.0),
+                ("MBA", 2.0),
+                ("PA", 2.0),
+                ("NP", 2.0),
+                ("RN", 1.0),
+            ],
+            "doctor_titles": [
+                ("Dr.", 10.0),
+                ("Professor", 5.0),
+                ("Associate Professor", 4.0),
+                ("Assistant Professor", 3.0),
+                ("Chief", 2.0),
+                ("Director", 2.0),
+                ("Head", 1.0),
+            ],
+        }
+
+        return default_values.get(data_type, [])

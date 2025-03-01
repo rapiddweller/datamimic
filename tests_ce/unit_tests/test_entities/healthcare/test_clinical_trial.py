@@ -34,6 +34,26 @@ class MockClassFactory:
     def get_entity_cache(self):
         """Get entity cache."""
         return None
+        
+    def create_person_entity(self, locale=None, dataset=None, **kwargs):
+        """Create a simple person entity for testing.
+        
+        Args:
+            locale: The locale (not used in this mock)
+            dataset: The dataset (not used in this mock)
+            **kwargs: Additional parameters (not used in this mock)
+            
+        Returns:
+            A simple mock person with first_name and last_name methods
+        """
+        class MockPerson:
+            def first_name(self, gender=None):
+                return "John" if gender == "M" else "Jane"
+                
+            def last_name(self):
+                return "Doe"
+                
+        return MockPerson()
 
 
 def print_trial_details(trial: dict[str, Any]) -> None:
@@ -53,11 +73,10 @@ def print_trial_details(trial: dict[str, Any]) -> None:
     print(f"Intervention: {trial['intervention_name']} ({trial['intervention_type']})")
     
     print("\nDates:")
-    print(f"  Start Date: {trial['dates']['start_date']}")
-    print(f"  Primary Completion Date: {trial['dates']['primary_completion_date']}")
-    print(f"  End Date: {trial['dates']['end_date']}")
+    print(f"  Start Date: {trial['start_date']}")
+    print(f"  End Date: {trial['end_date']}")
     
-    print(f"\nEnrollment: {trial['enrollment']} participants")
+    print(f"\nEnrollment: {trial.get('enrollment_target', 'N/A')} participants")
     print(f"Gender: {trial['gender']}")
     print(f"Age Range: {trial['age_range']['min']} to {trial['age_range']['max'] if trial['age_range']['max'] else 'No upper limit'} years")
     
@@ -67,15 +86,17 @@ def print_trial_details(trial: dict[str, Any]) -> None:
     
     print("\nEligibility Criteria:")
     print("  Inclusion Criteria:")
-    for criterion in trial['eligibility_criteria']['inclusion_criteria']:
+    for criterion in trial['eligibility_criteria'].get('inclusion', []):
         print(f"    - {criterion}")
     print("  Exclusion Criteria:")
-    for criterion in trial['eligibility_criteria']['exclusion_criteria']:
+    for criterion in trial['eligibility_criteria'].get('exclusion', []):
         print(f"    - {criterion}")
     
     print("\nLocations:")
     for location in trial['locations']:
-        print(f"  - {location['facility']}, {location['city']}, {location['state']}, {location['country']}")
+        print(f"  - {location['name']}, {location['address']}")
+        if 'contact' in location:
+            print(f"    Contact: {location['contact'].get('phone', 'N/A')}, {location['contact'].get('email', 'N/A')}")
     
     print("\nBrief Summary:")
     print(f"  {trial['brief_summary']}")

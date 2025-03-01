@@ -47,6 +47,13 @@ class MockClassFactoryUtil(BaseClassFactoryUtil):
     def get_task_util_cls(self):
         return MagicMock()
 
+    @staticmethod
+    def create_person_entity(locale=None, dataset=None, **kwargs):
+        """Mock implementation of create_person_entity method."""
+        # For the person entity test, we'll return an actual PersonEntity instance
+        # since this test file is specifically testing PersonEntity functionality
+        return PersonEntity(locale=locale, dataset=dataset, **kwargs)
+
 
 class TestPersonEntity(TestCase):
     """Test suite for PersonEntity class."""

@@ -131,8 +131,8 @@ def generate_eligibility_criteria(
             exclusion_criteria.append(f"History of allergic reactions to treatments for {condition}")
 
     return {
-        "inclusion_criteria": inclusion_criteria,
-        "exclusion_criteria": exclusion_criteria,
+        "inclusion": inclusion_criteria,
+        "exclusion": exclusion_criteria,
     }
 
 
