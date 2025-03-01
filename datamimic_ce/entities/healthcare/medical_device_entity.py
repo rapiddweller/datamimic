@@ -272,16 +272,16 @@ class MedicalDeviceEntity(Entity):
 
     def _generate_serial_number(self) -> str:
         """Generate a serial number.
-        
+
         Returns:
             A serial number in the format of 3 uppercase letters followed by 8 digits.
         """
         # Generate 3 uppercase letters
-        letters = ''.join(random.choices(string.ascii_uppercase, k=3))
-        
+        letters = "".join(random.choices(string.ascii_uppercase, k=3))
+
         # Generate 8 digits
-        digits = ''.join(random.choices(string.digits, k=8))
-        
+        digits = "".join(random.choices(string.digits, k=8))
+
         return f"{letters}{digits}"
 
     def _generate_manufacture_date(self) -> str:

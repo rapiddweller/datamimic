@@ -4,10 +4,11 @@ It imports the actual implementation from the healthcare.doctor_entity module.
 """
 
 import csv
+import inspect
 from pathlib import Path
+from typing import Any, ClassVar
 
-from datamimic_ce.entities.healthcare.doctor_entity import DoctorEntity
-from datamimic_ce.entities.healthcare.doctor_entity.data_loader import DoctorDataLoader
+from datamimic_ce.entities.healthcare.doctor_entity import DoctorEntity as OriginalDoctorEntity
 from datamimic_ce.logger import logger
 
 
@@ -38,32 +39,38 @@ def _load_simple_csv(file_path: Path) -> list:
         logger.error(f"Error loading CSV file {file_path}: {e}")
         return []
 
-# Add class-level DATA_CACHE for tests
-DoctorEntity._DATA_CACHE = {}
 
-# Monkey patch the DoctorEntity.__init__ method to populate the DATA_CACHE
-original_init = DoctorEntity.__init__
+# Create a subclass with the DATA_CACHE attribute
+class DoctorEntityWithCache(OriginalDoctorEntity):
+    """DoctorEntity with additional class cache for compatibility."""
 
-def patched_init(self, class_factory_util, locale="en", dataset=None):
-    original_init(self, class_factory_util, locale, dataset)
-    
-    # For test compatibility, populate the DATA_CACHE with the values from the generators
-    # This is needed because the actual implementation uses DoctorDataLoader instead of direct cache
-    if hasattr(self, '_generators'):
-        # Get the country code from the generators
-        country_code = self._generators._country_code
-        
-        # Populate the cache with mock data if it's being used in tests
-        # Check if we're being called from a test with mocked _load_simple_csv
-        import inspect
-        stack = inspect.stack()
-        is_test = any('test_' in frame.function for frame in stack)
-        
-        if is_test:
-            # Don't do anything, let the test populate the cache
-            pass
+    _DATA_CACHE: ClassVar[dict[str, Any]] = {}
 
-DoctorEntity.__init__ = patched_init
+    def __init__(self, class_factory_util, locale="en", dataset=None):
+        """Initialize the DoctorEntity with cache support.
+
+        Args:
+            class_factory_util: The class factory utility.
+            locale: The locale to use for generating data.
+            dataset: The dataset to use for generating data.
+        """
+        super().__init__(class_factory_util, locale, dataset)
+
+        # For test compatibility, populate the DATA_CACHE with the values from the generators
+        # This is needed because the actual implementation uses DoctorDataLoader instead of direct cache
+        if hasattr(self, "_generators"):
+            # Populate the cache with mock data if it's being used in tests
+            # Check if we're being called from a test with mocked _load_simple_csv
+            stack = inspect.stack()
+            is_test = any("test_" in frame.function for frame in stack)
+
+            if is_test:
+                # Don't do anything, let the test populate the cache
+                pass
+
+
+# Replace the original DoctorEntity with our enhanced version
+DoctorEntity = DoctorEntityWithCache
 
 # Re-export the DoctorEntity class
-__all__ = ["DoctorEntity"] 
+__all__ = ["DoctorEntity"]

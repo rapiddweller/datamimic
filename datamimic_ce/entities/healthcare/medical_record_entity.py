@@ -168,7 +168,28 @@ class MedicalRecordEntity(Entity):
             The cached or newly generated property value.
         """
         if property_name not in self._property_cache:
-            self._property_cache[property_name] = generator_func()
+            value = generator_func()
+            # Ensure we don't cache None values for properties with specific return types
+            if value is None:
+                # Use type annotations to determine default values
+                if property_name in [
+                    "record_id",
+                    "patient_id",
+                    "doctor_id",
+                    "date",
+                    "visit_type",
+                    "chief_complaint",
+                    "assessment",
+                    "plan",
+                    "notes",
+                ]:
+                    self._property_cache[property_name] = ""  # Default empty string for string properties
+                elif property_name in ["vital_signs", "follow_up"]:
+                    self._property_cache[property_name] = {}  # Default empty dict for dict properties
+                elif property_name in ["diagnosis", "procedures", "medications", "lab_results", "allergies"]:
+                    self._property_cache[property_name] = []  # Default empty list for list properties
+            else:
+                self._property_cache[property_name] = value
         return self._property_cache[property_name]
 
     def _generate_record_id(self) -> str:
@@ -268,8 +289,7 @@ class MedicalRecordEntity(Entity):
                 {
                     "code": "99213",
                     "description": (
-                        "Office or other outpatient visit for the evaluation and management "
-                        "of an established patient"
+                        "Office or other outpatient visit for the evaluation and management of an established patient"
                     ),
                     "date": self.date,
                 }
@@ -657,82 +677,84 @@ class MedicalRecordEntity(Entity):
     @property
     def record_id(self) -> str:
         """Get the record ID."""
-        return self._get_cached_property("record_id", lambda: self._field_generators["record_id"].get())
+        return self._get_cached_property("record_id", lambda: str(self._field_generators["record_id"].get() or ""))
 
     @property
     def patient_id(self) -> str:
         """Get the patient ID."""
-        return self._get_cached_property("patient_id", lambda: self._field_generators["patient_id"].get())
+        return self._get_cached_property("patient_id", lambda: str(self._field_generators["patient_id"].get() or ""))
 
     @property
     def doctor_id(self) -> str:
         """Get the doctor ID."""
-        return self._get_cached_property("doctor_id", lambda: self._field_generators["doctor_id"].get())
+        return self._get_cached_property("doctor_id", lambda: str(self._field_generators["doctor_id"].get() or ""))
 
     @property
     def date(self) -> str:
         """Get the record date."""
-        return self._get_cached_property("date", lambda: self._field_generators["date"].get())
+        return self._get_cached_property("date", lambda: str(self._field_generators["date"].get() or ""))
 
     @property
     def visit_type(self) -> str:
         """Get the visit type."""
-        return self._get_cached_property("visit_type", lambda: self._field_generators["visit_type"].get())
+        return self._get_cached_property("visit_type", lambda: str(self._field_generators["visit_type"].get() or ""))
 
     @property
     def chief_complaint(self) -> str:
         """Get the chief complaint."""
-        return self._get_cached_property("chief_complaint", lambda: self._field_generators["chief_complaint"].get())
+        return self._get_cached_property(
+            "chief_complaint", lambda: str(self._field_generators["chief_complaint"].get() or "")
+        )
 
     @property
     def vital_signs(self) -> dict[str, Any]:
         """Get the vital signs."""
-        return self._get_cached_property("vital_signs", lambda: self._field_generators["vital_signs"].get())
+        return self._get_cached_property("vital_signs", lambda: dict(self._field_generators["vital_signs"].get() or {}))
 
     @property
     def diagnosis(self) -> list[dict[str, str]]:
         """Get the diagnoses."""
-        return self._get_cached_property("diagnosis", lambda: self._field_generators["diagnosis"].get())
+        return self._get_cached_property("diagnosis", lambda: list(self._field_generators["diagnosis"].get() or []))
 
     @property
     def procedures(self) -> list[dict[str, str]]:
         """Get the procedures."""
-        return self._get_cached_property("procedures", lambda: self._field_generators["procedures"].get())
+        return self._get_cached_property("procedures", lambda: list(self._field_generators["procedures"].get() or []))
 
     @property
     def medications(self) -> list[dict[str, str]]:
         """Get the medications."""
-        return self._get_cached_property("medications", lambda: self._field_generators["medications"].get())
+        return self._get_cached_property("medications", lambda: list(self._field_generators["medications"].get() or []))
 
     @property
     def lab_results(self) -> list[dict[str, str]]:
         """Get the lab results."""
-        return self._get_cached_property("lab_results", lambda: self._field_generators["lab_results"].get())
+        return self._get_cached_property("lab_results", lambda: list(self._field_generators["lab_results"].get() or []))
 
     @property
     def allergies(self) -> list[dict[str, str]]:
         """Get the allergies."""
-        return self._get_cached_property("allergies", lambda: self._field_generators["allergies"].get())
+        return self._get_cached_property("allergies", lambda: list(self._field_generators["allergies"].get() or []))
 
     @property
     def assessment(self) -> str:
         """Get the assessment."""
-        return self._get_cached_property("assessment", lambda: self._field_generators["assessment"].get())
+        return self._get_cached_property("assessment", lambda: str(self._field_generators["assessment"].get() or ""))
 
     @property
     def plan(self) -> str:
         """Get the plan."""
-        return self._get_cached_property("plan", lambda: self._field_generators["plan"].get())
+        return self._get_cached_property("plan", lambda: str(self._field_generators["plan"].get() or ""))
 
     @property
     def follow_up(self) -> dict[str, str]:
         """Get the follow-up information."""
-        return self._get_cached_property("follow_up", lambda: self._field_generators["follow_up"].get())
+        return self._get_cached_property("follow_up", lambda: dict(self._field_generators["follow_up"].get() or {}))
 
     @property
     def notes(self) -> str:
         """Get the additional notes."""
-        return self._get_cached_property("notes", lambda: self._field_generators["notes"].get())
+        return self._get_cached_property("notes", lambda: str(self._field_generators["notes"].get() or ""))
 
     @property
     def patient_name(self) -> str:

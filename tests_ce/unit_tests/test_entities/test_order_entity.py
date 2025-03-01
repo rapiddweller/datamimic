@@ -148,12 +148,44 @@ class TestOrderEntity(unittest.TestCase):
 
     def test_shipping_amount_generation(self):
         """Test shipping amount generation."""
-        # Mock the total_amount to ensure consistent test results
-        with patch.object(OrderEntity, 'total_amount', return_value=100.0):
-            shipping_amount = self.order_entity.shipping_amount
-            self.assertIsInstance(shipping_amount, float)
-            self.assertGreaterEqual(shipping_amount, 0.0)
-            self.assertLessEqual(shipping_amount, 50.0)
+        # Define shipping methods and their expected cost ranges
+        shipping_methods_and_costs = {
+            "STANDARD": (5.0, 10.0),
+            "EXPRESS": (15.0, 25.0),
+            "OVERNIGHT": (25.0, 50.0),
+            "TWO_DAY": (12.0, 20.0),
+            "INTERNATIONAL": (30.0, 100.0),
+            "LOCAL_PICKUP": (0.0, 0.0),
+            "STORE_PICKUP": (0.0, 0.0),
+            "FREIGHT": (50.0, 200.0),
+            "DIGITAL_DELIVERY": (0.0, 0.0),
+        }
+
+        # Test each shipping method
+        for method, (min_cost, max_cost) in shipping_methods_and_costs.items():
+            # Create a simple test to verify the shipping costs for each method
+            # We'll directly test the _generate_shipping_amount method with a mocked shipping_method
+            
+            # Create a new instance for this test to avoid side effects
+            order = OrderEntity(self.class_factory_util)
+            
+            # Mock the shipping_method property
+            shipping_method_property = property(lambda self: method)
+            
+            # Apply the mock using a context manager
+            with patch.object(OrderEntity, 'shipping_method', shipping_method_property):
+                # Run the test multiple times to ensure consistency
+                for _ in range(5):
+                    # Generate shipping amount
+                    shipping_amount = order._generate_shipping_amount()
+                    
+                    # Verify shipping amount is a float
+                    self.assertIsInstance(shipping_amount, float)
+                    
+                    # Verify shipping amount is within expected range
+                    self.assertGreaterEqual(shipping_amount, min_cost)
+                    self.assertLessEqual(shipping_amount, max_cost, 
+                                        f"Shipping amount {shipping_amount} for method {method} exceeds max {max_cost}")
 
     def test_discount_amount_generation(self):
         """Test discount amount generation."""

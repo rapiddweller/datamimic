@@ -35,6 +35,7 @@ class LabTestDataLoader:
     _TEST_STATUSES_CACHE: dict[str, list[tuple[str, float]]] = {}
     _ABNORMAL_FLAGS_CACHE: dict[str, list[tuple[str, float]]] = {}
     _SPECIMEN_TYPES_CACHE: dict[str, list[tuple[str, float]]] = {}
+    _NOTE_TEMPLATES_CACHE: dict[str, list[tuple[str, float]]] = {}
 
     @classmethod
     def _load_simple_csv(cls, file_path: Path) -> list[tuple[str, float]]:
@@ -131,9 +132,6 @@ class LabTestDataLoader:
         elif data_type == "specimen_types":
             return cls._SPECIMEN_TYPES_CACHE
         elif data_type == "note_templates":
-            # Add a dedicated cache for note templates
-            if not hasattr(cls, "_NOTE_TEMPLATES_CACHE"):
-                cls._NOTE_TEMPLATES_CACHE = {}
             return cls._NOTE_TEMPLATES_CACHE
         else:
             # For unknown data types, create a new cache entry

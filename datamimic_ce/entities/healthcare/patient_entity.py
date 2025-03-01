@@ -61,7 +61,7 @@ class PatientEntity(Entity):
         self._person_entity = PersonEntity(class_factory_util, locale=locale, dataset=dataset)
 
         # Create address entity for address generation
-        self._address_entity = AddressEntity(class_factory_util, dataset=dataset, locale=locale)
+        self._address_entity = AddressEntity(class_factory_util, dataset=dataset or "", locale=locale)
 
         # Load data from CSV files
         self._load_data(self._country_code)
@@ -331,7 +331,11 @@ class PatientEntity(Entity):
 
         # Fallback to our cached data
         blood_types = self._DATA_CACHE.get("blood_types", ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"])
-        return random.choice(blood_types)
+
+        # Ensure we're using consistent hyphen characters
+        blood_type = random.choice(blood_types)
+        # Replace Unicode minus sign with hyphen if present
+        return blood_type.replace("−", "-")
 
     def _generate_contact_number(self) -> str:
         """Generate a contact number.
@@ -345,7 +349,7 @@ class PatientEntity(Entity):
             phone = self._person_entity.phone
             if phone.startswith("+"):
                 # Extract the digits from the phone number
-                digits = ''.join(filter(str.isdigit, phone))
+                digits = "".join(filter(str.isdigit, phone))
                 if len(digits) >= 10:
                     # Format as (XXX) XXX-XXXX
                     area_code = digits[-10:-7]
@@ -360,7 +364,7 @@ class PatientEntity(Entity):
             phone = self._address_entity.private_phone
             if phone.startswith("+"):
                 # Extract the digits from the phone number
-                digits = ''.join(filter(str.isdigit, phone))
+                digits = "".join(filter(str.isdigit, phone))
                 if len(digits) >= 10:
                     # Format as (XXX) XXX-XXXX
                     area_code = digits[-10:-7]
@@ -370,9 +374,9 @@ class PatientEntity(Entity):
             return phone
 
         # Last resort fallback
-        area_code = random.randint(100, 999)
-        prefix = random.randint(100, 999)
-        line_number = random.randint(1000, 9999)
+        area_code = str(random.randint(100, 999))
+        prefix = str(random.randint(100, 999))
+        line_number = str(random.randint(1000, 9999))
         return f"({area_code}) {prefix}-{line_number}"
 
     def _generate_email(self) -> str:
@@ -428,7 +432,7 @@ class PatientEntity(Entity):
     def _generate_emergency_contact(self) -> dict[str, str]:
         """Generate emergency contact information."""
         # Create a new person for the emergency contact
-        emergency_person = PersonEntity(self._class_factory_util, locale=self._locale, dataset=self._dataset)
+        emergency_person = PersonEntity(self._class_factory_util, locale=self._locale or "en", dataset=self._dataset)
 
         # Get relationships from cache
         relationships = self._DATA_CACHE.get("emergency_relationships", [])

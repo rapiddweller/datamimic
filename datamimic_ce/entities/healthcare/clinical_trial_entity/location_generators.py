@@ -37,9 +37,7 @@ def generate_single_location(
             address_entity = AddressEntity(class_factory_util, country_code=country_code)
 
             # Return a dictionary with the location details
-            facility_options = [
-                'University', 'Hospital', 'Medical Center', 'Clinic', 'Research Institute'
-            ]
+            facility_options = ["University", "Hospital", "Medical Center", "Clinic", "Research Institute"]
             return {
                 "facility": f"{random.choice(facility_options)} of {address_entity.city}",
                 "city": address_entity.city,
@@ -54,16 +52,31 @@ def generate_single_location(
     # Fallback to static generation if AddressEntity is not available
     if country_code == "US":
         cities = [
-            "Boston", "New York", "Chicago", "Los Angeles", "Houston",
-            "Philadelphia", "Phoenix", "San Antonio", "San Diego", "Dallas",
+            "Boston",
+            "New York",
+            "Chicago",
+            "Los Angeles",
+            "Houston",
+            "Philadelphia",
+            "Phoenix",
+            "San Antonio",
+            "San Diego",
+            "Dallas",
         ]
         states = [
-            "MA", "NY", "IL", "CA", "TX", "PA", "AZ", "TX", "CA", "TX",
+            "MA",
+            "NY",
+            "IL",
+            "CA",
+            "TX",
+            "PA",
+            "AZ",
+            "TX",
+            "CA",
+            "TX",
         ]
         city_index = random.randint(0, len(cities) - 1)
-        facility_options = [
-            'University', 'Hospital', 'Medical Center', 'Clinic', 'Research Institute'
-        ]
+        facility_options = ["University", "Hospital", "Medical Center", "Clinic", "Research Institute"]
         return {
             "facility": f"{random.choice(facility_options)} of {cities[city_index]}",
             "city": cities[city_index],
@@ -73,17 +86,36 @@ def generate_single_location(
         }
     elif country_code == "DE":
         cities = [
-            "Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt",
-            "Stuttgart", "Düsseldorf", "Leipzig", "Dortmund", "Essen",
+            "Berlin",
+            "Hamburg",
+            "Munich",
+            "Cologne",
+            "Frankfurt",
+            "Stuttgart",
+            "Düsseldorf",
+            "Leipzig",
+            "Dortmund",
+            "Essen",
         ]
         states = [
-            "Berlin", "Hamburg", "Bavaria", "North Rhine-Westphalia", "Hesse",
-            "Baden-Württemberg", "North Rhine-Westphalia", "Saxony", "North Rhine-Westphalia", "North Rhine-Westphalia",
+            "Berlin",
+            "Hamburg",
+            "Bavaria",
+            "North Rhine-Westphalia",
+            "Hesse",
+            "Baden-Württemberg",
+            "North Rhine-Westphalia",
+            "Saxony",
+            "North Rhine-Westphalia",
+            "North Rhine-Westphalia",
         ]
         city_index = random.randint(0, len(cities) - 1)
         facility_options = [
-            'Universitätsklinikum', 'Krankenhaus', 'Medizinisches Zentrum',
-            'Klinik', 'Forschungsinstitut'
+            "Universitätsklinikum",
+            "Krankenhaus",
+            "Medizinisches Zentrum",
+            "Klinik",
+            "Forschungsinstitut",
         ]
         return {
             "facility": f"{random.choice(facility_options)} {cities[city_index]}",

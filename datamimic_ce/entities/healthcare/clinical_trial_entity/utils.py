@@ -45,18 +45,18 @@ class PropertyCache:
 
     def get_or_create(self, key: str, creator_func: Callable[[], Any]) -> Any:
         """Get a value from the cache or create it if not present.
-        
+
         Args:
             key: The key to retrieve
             creator_func: Function to call to create the value if not in cache
-            
+
         Returns:
             The cached value or the newly created value
         """
         cached_value = self.get(key)
         if cached_value is not None:
             return cached_value
-            
+
         value = creator_func()
         self.set(key, value)
         return value
@@ -116,5 +116,5 @@ def generate_trial_id() -> str:
         A string in the format "NCT" followed by 8 digits
     """
     # Generate a random 8-digit number
-    digits = ''.join(random.choices(string.digits, k=8))
+    digits = "".join(random.choices(string.digits, k=8))
     return f"NCT{digits}"

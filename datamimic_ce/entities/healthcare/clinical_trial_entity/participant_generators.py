@@ -66,9 +66,7 @@ def generate_enrollment_count(status: str, phase: str) -> int:
 
 
 def generate_eligibility_criteria(
-    condition: str | None = None,
-    data_loader: ClinicalTrialDataLoader | None = None,
-    country_code: str = "US"
+    condition: str | None = None, data_loader: ClinicalTrialDataLoader | None = None, country_code: str = "US"
 ) -> dict[str, list[str]]:
     """Generate eligibility criteria for a clinical trial.
 
@@ -139,8 +137,7 @@ def generate_eligibility_criteria(
 
 
 def generate_age_range(
-    condition: str | None = None, 
-    data_loader: ClinicalTrialDataLoader | None = None
+    condition: str | None = None, data_loader: ClinicalTrialDataLoader | None = None
 ) -> dict[str, int | None]:
     """Generate a realistic age range for clinical trial participants.
 
@@ -187,14 +184,13 @@ def generate_age_range(
     age_range_options = [age_range for age_range, _ in age_ranges]
     weights = [weight for _, weight in age_ranges]
     selected_range = cast(dict[str, int | None], random.choices(age_range_options, weights=weights, k=1)[0])
-    
+
     # Ensure we're returning a dict[str, int | None]
     return selected_range
 
 
 def generate_gender_eligibility(
-    condition: str | None = None, 
-    data_loader: ClinicalTrialDataLoader | None = None
+    condition: str | None = None, data_loader: ClinicalTrialDataLoader | None = None
 ) -> str:
     """Generate gender eligibility for a clinical trial.
 
@@ -216,11 +212,7 @@ def generate_gender_eligibility(
             # Fall through to the default options
 
     # Define possible gender eligibility options
-    gender_options = [
-        ("All", 80),
-        ("Male", 10),
-        ("Female", 10)
-    ]
-    
+    gender_options = [("All", 80), ("Male", 10), ("Female", 10)]
+
     # Return a weighted choice
     return weighted_choice(gender_options)

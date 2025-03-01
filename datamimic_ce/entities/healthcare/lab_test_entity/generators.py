@@ -311,7 +311,7 @@ class LabTestGenerators:
             "city": "Test City",
             "state": "Test State",
             "zip_code": "12345",
-            "country": self._dataset if self._dataset else "US"
+            "country": self._dataset if self._dataset else "US",
         }
 
     def generate_ordering_provider(self) -> str:

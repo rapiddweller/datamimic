@@ -223,7 +223,7 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
         Returns:
             A PatientEntity instance.
         """
-        from datamimic_ce.entities.healthcare.patient_entity import PatientEntity
+        from datamimic_ce.entities.patient_entity import PatientEntity
 
         return PatientEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
 
@@ -240,7 +240,7 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
         Returns:
             A DoctorEntity instance
         """
-        from datamimic_ce.entities.healthcare.doctor_entity import DoctorEntity
+        from datamimic_ce.entities.doctor_entity import DoctorEntity
 
         return DoctorEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
 
@@ -291,9 +291,9 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
         Returns:
             A LabTestEntity instance
         """
-        from datamimic_ce.entities.healthcare.lab_test_entity import LabTestEntity
+        from datamimic_ce.entities.lab_entity import LabEntity
 
-        return LabTestEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
+        return LabEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
 
     @staticmethod
     def get_clinical_trial_entity(locale="en", dataset=None, **kwargs):

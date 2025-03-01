@@ -77,7 +77,7 @@ class PropertyCache:
 
     def __init__(self):
         """Initialize an empty property cache."""
-        self._cache: dict[str, Any] = {}
+        self._cache: dict[str, Any] = {}  # type: ignore
 
     def get(self, property_name: str, generator_func: Callable[[], T]) -> T:
         """Get a cached property or generate and cache it if not present.

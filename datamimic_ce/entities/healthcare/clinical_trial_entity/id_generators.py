@@ -50,10 +50,10 @@ def generate_protocol_id(sponsor_prefix: str | None = None) -> str:
     # If a sponsor prefix is provided, use it
     if sponsor_prefix:
         # Clean the prefix to use only alphanumeric characters
-        prefix = ''.join(c for c in sponsor_prefix if c.isalnum())[:3].upper()
+        prefix = "".join(c for c in sponsor_prefix if c.isalnum())[:3].upper()
     else:
         # Generate a random 3-letter prefix
-        prefix = ''.join(random.choices(string.ascii_uppercase, k=3))
+        prefix = "".join(random.choices(string.ascii_uppercase, k=3))
 
     # Generate a random protocol ID in the format "PREFIX-NNNN"
     number = random.randint(1000, 9999)

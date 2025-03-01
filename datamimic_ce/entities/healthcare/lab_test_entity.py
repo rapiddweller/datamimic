@@ -171,9 +171,7 @@ class LabTestEntity(LabTestEntityImpl):
         from datamimic_ce.entities.address_entity import AddressEntity
 
         # Create an address entity with the same locale/country code
-        address_entity = AddressEntity(
-            self._class_factory_util, locale=self._locale, country_code=self._country_code
-        )
+        address_entity = AddressEntity(self._class_factory_util, locale=self._locale, country_code=self._country_code)
 
         # Return a dictionary with the address components
         return {
