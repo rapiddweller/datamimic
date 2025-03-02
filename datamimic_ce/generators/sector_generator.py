@@ -6,7 +6,7 @@
 
 import random
 
-from datamimic_ce.entities.company_entity import CompanyDataLoader
+from datamimic_ce.domains.common.data_loaders.company_loader import CompanyLoader
 from datamimic_ce.generators.generator import Generator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 
@@ -47,7 +47,7 @@ class SectorGenerator(Generator):
             List of sector values.
         """
         # Get sector data from CompanyDataLoader
-        sector_data = CompanyDataLoader.get_country_specific_data(
+        sector_data = CompanyLoader.get_country_specific_data(
             data_type="sector",
             country_code=country_code,
             domain_path="organization"

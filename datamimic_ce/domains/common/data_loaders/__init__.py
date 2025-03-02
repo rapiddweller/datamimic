@@ -12,6 +12,7 @@ This package provides data loaders for common domain entities.
 
 from datamimic_ce.domains.common.data_loaders.address_loader import AddressDataLoader
 from datamimic_ce.domains.common.data_loaders.city_loader import CityDataLoader
+from datamimic_ce.domains.common.data_loaders.company_loader import CompanyLoader
 from datamimic_ce.domains.common.data_loaders.country_loader import CountryDataLoader
 from datamimic_ce.domains.common.data_loaders.phone_number_loader import PhoneNumberDataLoader
 
@@ -20,4 +21,5 @@ __all__ = [
     "CityDataLoader",
     "CountryDataLoader",
     "AddressDataLoader",
+    "CompanyLoader",
 ]

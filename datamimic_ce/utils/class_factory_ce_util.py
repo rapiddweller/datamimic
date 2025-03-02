@@ -32,17 +32,16 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
     @staticmethod
     def get_city_entity(country_code):
         """
-        Create and return a CityEntity instance for the given country_code.
+        Create and return a City entity instance for the given country_code.
 
         Args:
             country_code: The country code to use as dataset.
 
         Returns:
-            A CityEntity instance configured with the specified country_code.
+            A City entity instance from the domain model.
         """
-        from datamimic_ce.entities.city_entity import CityEntity
-
-        return CityEntity(ClassFactoryCEUtil(), dataset=country_code)
+        from datamimic_ce.domains.common.models.city import City
+        return City(dataset=country_code)
 
     @staticmethod
     def get_name_entity(locale):
@@ -178,107 +177,118 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
     @staticmethod
     def get_order_entity(locale="en", dataset=None, **kwargs):
         """
-        Create and return an OrderEntity instance.
+        Create and return an Order entity instance.
 
         Args:
             locale: The locale to use for localization
             dataset: Optional dataset name
-            **kwargs: Additional parameters to pass to the OrderEntity constructor
+            **kwargs: Additional parameters to pass to the Order constructor
 
         Returns:
-            An OrderEntity instance
+            An Order entity instance from the domain model.
         """
-        from datamimic_ce.entities.order_entity import OrderEntity
-
-        return OrderEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
+        from datamimic_ce.domains.ecommerce.models.order import Order
+        return Order(locale=locale, dataset=dataset, **kwargs)
 
     @staticmethod
     def get_product_entity(locale="en", min_price=0.99, max_price=9999.99, dataset=None, **kwargs):
         """
-        Create and return a ProductEntity instance.
+        Create and return a Product entity instance.
 
         Args:
             locale: The locale to use for localization
             min_price: Minimum product price
             max_price: Maximum product price
             dataset: Optional dataset name
-            **kwargs: Additional parameters to pass to the ProductEntity constructor
+            **kwargs: Additional parameters to pass to the Product constructor
 
         Returns:
-            A ProductEntity instance
+            A Product entity instance from the domain model.
         """
-        from datamimic_ce.entities.product_entity import ProductEntity
-
-        return ProductEntity(
-            ClassFactoryCEUtil(), locale=locale, min_price=min_price, max_price=max_price, dataset=dataset, **kwargs
+        from datamimic_ce.domains.ecommerce.models.product import Product
+        return Product(
+            locale=locale, min_price=min_price, max_price=max_price, dataset=dataset, **kwargs
         )
 
     @staticmethod
     def get_patient_entity(locale="en", dataset=None, **kwargs):
-        """Get a PatientEntity instance.
+        """Get a Patient entity instance.
 
         Args:
             locale: The locale to use for generating data.
             dataset: The dataset to use for generating data.
-            **kwargs: Additional keyword arguments to pass to the PatientEntity constructor.
+            **kwargs: Additional keyword arguments to pass to the Patient constructor.
 
         Returns:
-            A PatientEntity instance.
+            A Patient entity instance from the domain model.
         """
-        from datamimic_ce.entities.patient_entity import PatientEntity
-
-        return PatientEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
+        from datamimic_ce.domains.healthcare.models.patient import Patient
+        return Patient(locale=locale, dataset=dataset, **kwargs)
 
     @staticmethod
     def get_doctor_entity(locale="en", dataset=None, **kwargs):
         """
-        Create and return a DoctorEntity instance.
+        Create and return a Doctor entity instance.
 
         Args:
             locale: The locale to use for localization
             dataset: Optional dataset name
-            **kwargs: Additional parameters to pass to the DoctorEntity constructor
+            **kwargs: Additional parameters to pass to the Doctor constructor
 
         Returns:
-            A DoctorEntity instance
+            A Doctor entity instance from the domain model.
         """
-        from datamimic_ce.entities.doctor_entity import DoctorEntity
-
-        return DoctorEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
+        from datamimic_ce.domains.healthcare.models.doctor import Doctor
+        return Doctor(locale=locale, dataset=dataset, **kwargs)
 
     @staticmethod
     def get_medical_record_entity(locale="en", dataset=None, **kwargs):
         """
-        Create and return a MedicalRecordEntity instance.
+        Create and return a MedicalRecord entity instance.
 
         Args:
             locale: The locale to use for localization
             dataset: Optional dataset name
-            **kwargs: Additional parameters to pass to the MedicalRecordEntity constructor
+            **kwargs: Additional parameters to pass to the MedicalRecord constructor
 
         Returns:
-            A MedicalRecordEntity instance
+            A MedicalRecord entity instance from the domain model.
         """
-        from datamimic_ce.entities.healthcare.medical_record_entity import MedicalRecordEntity
+        from datamimic_ce.domains.healthcare.models.medical_record import MedicalRecord
+        return MedicalRecord(locale=locale, dataset=dataset, **kwargs)
+            
+    @staticmethod
+    def get_company_entity(locale="en", dataset=None, count=1, **kwargs):
+        """
+        Create and return a Company entity instance.
 
-        return MedicalRecordEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
+        Args:
+            locale: The locale to use for localization
+            dataset: Optional dataset name (country code)
+            count: Number of companies to generate
+            **kwargs: Additional parameters to pass to the Company constructor
+
+        Returns:
+            A Company entity instance from the domain model.
+        """
+        from datamimic_ce.domains.common.models.company import Company
+        return Company(dataset=dataset, count=count, **kwargs)
 
     @staticmethod
     def get_medical_device_entity(locale="en", dataset=None, **kwargs):
         """
-        Create and return a MedicalDeviceEntity instance.
+        Create and return a MedicalDevice entity instance.
 
         Args:
             locale: The locale to use for localization
             dataset: Optional dataset name
-            **kwargs: Additional parameters to pass to the MedicalDeviceEntity constructor
+            **kwargs: Additional parameters to pass to the MedicalDevice constructor
 
         Returns:
-            A MedicalDeviceEntity instance
+            A MedicalDevice entity instance from the domain model.
         """
-        from datamimic_ce.entities.healthcare.medical_device_entity import MedicalDeviceEntity
-
-        return MedicalDeviceEntity(ClassFactoryCEUtil(), locale=locale, dataset=dataset, **kwargs)
+        from datamimic_ce.domains.healthcare.models.medical_device import MedicalDevice
+        return MedicalDevice(locale=locale, dataset=dataset, **kwargs)
 
     @staticmethod
     def get_lab_test_entity(locale="en", dataset=None, **kwargs):

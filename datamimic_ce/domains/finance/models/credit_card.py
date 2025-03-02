@@ -57,9 +57,7 @@ class CreditCard(BaseModel):
         now = datetime.now()
         if self.expiration_year < now.year:
             return True
-        if self.expiration_year == now.year and self.expiration_month < now.month:
-            return True
-        return False
+        return bool(self.expiration_year == now.year and self.expiration_month < now.month)
     
     @property
     def masked_card_number(self) -> str:
