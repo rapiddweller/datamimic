@@ -63,12 +63,9 @@ class CompanyDataLoader(BaseDataLoader):
         Returns:
             List of tuples containing default values and weights
         """
-        default_values = {
-            "sector": [("Technology", 1.0), ("Services", 1.0), ("Consulting", 1.0)],
-            "legalForm": [("Inc.", 1.0), ("LLC", 1.0), ("Ltd.", 1.0)],
-            "department": [("Sales", 1.0), ("Marketing", 1.0), ("IT", 1.0), ("HR", 1.0)]
-        }
-        return default_values.get(data_type, [])
+        # Return an empty list to force the use of data files
+        # No hardcoded fallbacks
+        return []
 
 
 def full_name_gen(
@@ -92,7 +89,7 @@ def full_name_gen(
     legal_form = None
     if legal_values is not None and legal_wgt is not None and len(legal_values) > 0:
         legal_form = random.choices(legal_values, legal_wgt, k=1)[0]
-        
+
     builder = [""] if short_name is None else [short_name]
     if sector is not None:
         builder.append(" " + sector)
@@ -159,22 +156,18 @@ class CompanyEntity(Entity):
         """
         super().__init__(locale, dataset)
         self._dataset = dataset
-        
+
         # Load sector data using country code (dataset)
         sector_data = CompanyDataLoader.get_country_specific_data(
-            data_type="sector",
-            country_code=self._dataset,
-            domain_path="organization"
+            data_type="sector", country_code=self._dataset, domain_path="organization"
         )
         self._sector = [item[0] for item in sector_data]  # Extract just the values, not the weights
-        
+
         # Load legal form data
         legal_form_data = CompanyDataLoader.get_country_specific_data(
-            data_type="legalForm",
-            country_code=self._dataset,
-            domain_path="organization"
+            data_type="legalForm", country_code=self._dataset, domain_path="organization"
         )
-        
+
         if legal_form_data:
             self._legal_values: list[str] | None = [item[0] for item in legal_form_data]
             self._legal_wgt: list[float] | None = [item[1] for item in legal_form_data]
@@ -202,7 +195,9 @@ class CompanyEntity(Entity):
             "state": lambda: self._address_entity.state,
             "zip_code": lambda: self._address_entity.zip_code,
             "house_number": lambda: self._address_entity.house_number,
-            "sector": lambda: random.choice(self._sector) if self._sector is not None and len(self._sector) > 0 else None,
+            "sector": lambda: random.choice(self._sector)
+            if self._sector is not None and len(self._sector) > 0
+            else None,
             "full_name": lambda short_name, sector: full_name_gen(
                 short_name,
                 sector,

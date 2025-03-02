@@ -148,8 +148,6 @@ class MedicalDeviceEntity(Entity):
             current_file = Path(__file__)
             data_dir = current_file.parent.parent / "data" / "medical"
 
-            # Define categories of data to load with headers
-
             # Define categories of data to load without headers (simple lists)
             simple_categories = {
                 "device_types": "device_types",
@@ -178,6 +176,11 @@ class MedicalDeviceEntity(Entity):
                 if generic_path.exists():
                     logger.warning(f"Using generic data for {file_prefix} - consider creating country-specific file")
                     cls._DATA_CACHE[cache_key] = cls._load_simple_csv(generic_path)
+                    continue
+
+                # Log error if no data file is found
+                logger.error(f"No {file_prefix} data file found for {country_code}. Please create a data file.")
+                cls._DATA_CACHE[cache_key] = []
 
     @staticmethod
     def _load_simple_csv(file_path: Path) -> list[str]:
@@ -245,8 +248,8 @@ class MedicalDeviceEntity(Entity):
 
         device_types = self._DATA_CACHE.get("device_types", [])
         if not device_types:
-            logger.warning("No device types found in data cache, using emergency default")
-            return "Ventilator"
+            logger.error("No device types found in data cache. Please create a data file.")
+            return "Unknown Device Type"
         return random.choice(device_types)
 
     def _generate_manufacturer(self) -> str:
@@ -256,8 +259,8 @@ class MedicalDeviceEntity(Entity):
 
         manufacturers = self._DATA_CACHE.get("manufacturers", [])
         if not manufacturers:
-            logger.warning("No manufacturers found in data cache, using emergency default")
-            return "Medical Device Company"
+            logger.error("No manufacturers found in data cache. Please create a data file.")
+            return "Unknown Manufacturer"
         return random.choice(manufacturers)
 
     def _generate_model_number(self) -> str:
@@ -332,8 +335,8 @@ class MedicalDeviceEntity(Entity):
 
         statuses = self._DATA_CACHE.get("statuses", [])
         if not statuses:
-            logger.warning("No statuses found in data cache, using emergency default")
-            return "Active"
+            logger.error("No statuses found in data cache. Please create a data file.")
+            return "Unknown Status"
         return random.choice(statuses)
 
     def _generate_location(self) -> str:
@@ -343,8 +346,8 @@ class MedicalDeviceEntity(Entity):
 
         locations = self._DATA_CACHE.get("locations", [])
         if not locations:
-            logger.warning("No locations found in data cache, using emergency default")
-            return "Hospital"
+            logger.error("No locations found in data cache. Please create a data file.")
+            return "Unknown Location"
         return random.choice(locations)
 
     def _generate_assigned_to(self) -> str:
@@ -357,10 +360,9 @@ class MedicalDeviceEntity(Entity):
         if hasattr(self, "_person_entity"):
             return f"{self._person_entity.given_name} {self._person_entity.family_name}"
 
-        # Fallback if person entity is not available
-        first_names = ["John", "Jane", "Michael", "Sarah", "David", "Emily", "Robert", "Lisa"]
-        last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia"]
-        return f"{random.choice(first_names)} {random.choice(last_names)}"
+        # Log error if person entity is not available
+        logger.error("Person entity not available for generating assigned_to value.")
+        return "Unknown Person"
 
     def _generate_specifications(self) -> dict[str, str]:
         """Generate specifications."""
@@ -447,31 +449,46 @@ class MedicalDeviceEntity(Entity):
                 self._person_entity.reset()
                 user = f"{self._person_entity.given_name} {self._person_entity.family_name}"
             else:
-                first_names = ["John", "Jane", "Michael", "Sarah", "David", "Emily", "Robert", "Lisa"]
-                last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia"]
-                user = f"{random.choice(first_names)} {random.choice(last_names)}"
+                logger.error("Person entity not available for generating usage log user.")
+                user = "Unknown User"
 
-            # Generate action
-            actions = [
-                "Powered On",
-                "Powered Off",
-                "Calibrated",
-                "Used in Procedure",
-                "Settings Changed",
-                "Alarm Triggered",
-            ]
+            # Load actions from data file or use minimal set if not available
+            actions_key = "device_actions"
+            actions = self._DATA_CACHE.get(actions_key, [])
+            if not actions:
+                logger.error("No device actions found in data cache. Using minimal set.")
+                actions = [
+                    "Powered On",
+                    "Powered Off",
+                    "Calibrated",
+                    "Used in Procedure",
+                    "Settings Changed",
+                    "Alarm Triggered",
+                ]
             action = random.choice(actions)
 
             # Generate details
             details = ""
             if action == "Used in Procedure":
-                procedures = ["Surgery", "Diagnosis", "Monitoring", "Treatment", "Therapy"]
+                procedures_key = "procedures"
+                procedures = self._DATA_CACHE.get(procedures_key, [])
+                if not procedures:
+                    logger.error("No procedures found in data cache. Using minimal set.")
+                    procedures = ["Surgery", "Diagnosis", "Monitoring", "Treatment", "Therapy"]
                 details = f"Used in {random.choice(procedures)} procedure"
             elif action == "Settings Changed":
-                settings = ["Volume", "Pressure", "Flow Rate", "Temperature", "Alarm Thresholds"]
+                settings_key = "settings"
+                settings = self._DATA_CACHE.get(settings_key, [])
+                if not settings:
+                    logger.error("No settings found in data cache. Using minimal set.")
+                    settings = ["Volume", "Pressure", "Flow Rate", "Temperature", "Alarm Thresholds"]
                 details = f"Changed {random.choice(settings)} settings"
             elif action == "Alarm Triggered":
-                alarms = ["Low Battery", "High Pressure", "Low Pressure", "Occlusion", "Air-in-Line", "Door Open"]
+                alarms_key = "alarms"
+                alarms = self._DATA_CACHE.get(alarms_key, [])
+                if not alarms:
+                    logger.error("No alarms found in data cache. Using minimal set.")
+                    alarms = ["Low Battery", "High Pressure", "Low Pressure", "Occlusion", "Air-in-Line", "Door Open"]
                 details = f"{random.choice(alarms)} alarm triggered"
 
             logs.append(
@@ -519,37 +536,44 @@ class MedicalDeviceEntity(Entity):
                 self._person_entity.reset()
                 technician = f"{self._person_entity.given_name} {self._person_entity.family_name}"
             else:
-                first_names = ["John", "Jane", "Michael", "Sarah", "David", "Emily", "Robert", "Lisa"]
-                last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia"]
-                technician = f"{random.choice(first_names)} {random.choice(last_names)}"
+                logger.error("Person entity not available for generating maintenance technician.")
+                technician = "Unknown Technician"
 
-            # Generate actions
-            maintenance_actions = [
-                "Routine Inspection",
-                "Calibration",
-                "Software Update",
-                "Hardware Repair",
-                "Parts Replacement",
-                "Cleaning",
-                "Battery Replacement",
-                "Preventive Maintenance",
-            ]
+            # Load maintenance actions from data file or use minimal set if not available
+            actions_key = "maintenance_actions"
+            maintenance_actions = self._DATA_CACHE.get(actions_key, [])
+            if not maintenance_actions:
+                logger.error("No maintenance actions found in data cache. Using minimal set.")
+                maintenance_actions = [
+                    "Routine Inspection",
+                    "Calibration",
+                    "Software Update",
+                    "Hardware Repair",
+                    "Parts Replacement",
+                    "Cleaning",
+                    "Battery Replacement",
+                    "Preventive Maintenance",
+                ]
 
             # Select 1-3 actions
             num_actions = random.randint(1, 3)
             actions = random.sample(maintenance_actions, min(num_actions, len(maintenance_actions)))
 
-            # Generate notes
-            notes_options = [
-                "Device functioning properly",
-                "Minor issues found and resolved",
-                "Recommended for replacement within next year",
-                "Software updated to latest version",
-                "Calibration within acceptable range",
-                "Parts showing signs of wear",
-                "No issues found",
-                "Scheduled for follow-up maintenance",
-            ]
+            # Load notes options from data file or use minimal set if not available
+            notes_key = "maintenance_notes"
+            notes_options = self._DATA_CACHE.get(notes_key, [])
+            if not notes_options:
+                logger.error("No maintenance notes found in data cache. Using minimal set.")
+                notes_options = [
+                    "Device functioning properly",
+                    "Minor issues found and resolved",
+                    "Recommended for replacement within next year",
+                    "Software updated to latest version",
+                    "Calibration within acceptable range",
+                    "Parts showing signs of wear",
+                    "No issues found",
+                    "Scheduled for follow-up maintenance",
+                ]
             notes = random.choice(notes_options)
 
             records.append(

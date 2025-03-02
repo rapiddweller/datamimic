@@ -1,0 +1,24 @@
+visit_type,weight
+Routineuntersuchung,200
+Nachuntersuchung,180
+Notfallversorgung,160
+Notaufnahme,140
+Facharztberatung,150
+Impfung,120
+Körperliche Untersuchung,170
+Präventivmedizin,130
+Diagnostische Tests,110
+Telemedizin,100
+Chirurgische Beratung,90
+Präoperative Beurteilung,80
+Postoperative Nachsorge,85
+Psychische Gesundheit,95
+Pädiatrie,130
+Geriatrie,70
+Geburtshilfe,75
+Gynäkologie,80
+Dermatologie,60
+Augenheilkunde,55
+Zahnmedizin,50
+Rehabilitation,65
+Ernährungsberatung,40 

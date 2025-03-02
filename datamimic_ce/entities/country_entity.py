@@ -21,7 +21,7 @@ class CountryEntity:
     """
 
     # File path is constant for all instances
-    _COUNTRY_FILE_PATH = Path(__file__).parent.joinpath("data/country.csv")
+    _COUNTRY_FILE_PATH = Path(__file__).parent.parent.joinpath("data/common/country.csv")
 
     # Cache for country data to avoid reloading
     _country_data_cache: list[tuple[Any, ...]] = []

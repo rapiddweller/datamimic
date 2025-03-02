@@ -1,8 +1,0 @@
-<setup>
-
-	<echo>Running Domain Generator</echo>
-	<generate name="Domain Generator" count="10" >
-		<key name="value" generator="DomainGenerator" />
-	</generate>
-
-</setup>

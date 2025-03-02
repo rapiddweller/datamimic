@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup>
+    <!-- Medical Record Entity -->
+    <echo>Running MedicalRecordEntity</echo>
+    <generate name="medical_records" count="10" target="CSV">
+        <variable name="record" entity="MedicalRecord" />
+        <key name="record_id" script="record.record_id" />
+        <key name="patient_id" script="record.patient_id" />
+        <key name="doctor_id" script="record.doctor_id" />
+        <key name="date" script="record.date" />
+        <key name="visit_type" script="record.visit_type" />
+        <key name="chief_complaint" script="record.chief_complaint" />
+        <nestedKey name="vital_signs" script="record.vital_signs" />
+        <nestedKey name="diagnosis" script="record.diagnosis" />
+        <nestedKey name="procedures" script="record.procedures" />
+        <nestedKey name="medications" script="record.medications" />
+        <nestedKey name="lab_results" script="record.lab_results" />
+        <nestedKey name="allergies" script="record.allergies" />
+        <nestedKey name="assessment" script="record.assessment" />
+        <nestedKey name="plan" script="record.plan" />
+        <nestedKey name="follow_up" script="record.follow_up" />
+        <nestedKey name="notes" script="record.notes" />
+        <key name="patient_name" script="record.patient_name" />
+        <key name="doctor_name" script="record.doctor_name" />
+    </generate>
+</setup> 

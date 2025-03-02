@@ -71,114 +71,18 @@ class LabTestDataLoader(BaseDataLoader):
 
     @classmethod
     def _get_default_values(cls, data_type: str, country_code: str = "US") -> list[tuple[str, float]]:
-        """Get default values for a data type when no file is found.
+        """Get default values for a data type.
 
         Args:
-            data_type: The type of data
-            country_code: The country code to use for country-specific defaults
+            data_type: Type of data to retrieve
+            country_code: Country code to use for default values
 
         Returns:
-            A list of default values with weights
+            List of tuples containing default values and weights
         """
-        # Dictionary of default values for US data types
-        default_values = {
-            "lab_tests": [
-                ("Complete Blood Count (CBC)", 10.0),
-                ("Basic Metabolic Panel (BMP)", 10.0),
-                ("Comprehensive Metabolic Panel (CMP)", 8.0),
-                ("Lipid Panel", 8.0),
-                ("Liver Function Tests", 7.0),
-                ("Thyroid Function Tests", 7.0),
-                ("Hemoglobin A1C", 6.0),
-                ("Urinalysis", 6.0),
-                ("Prothrombin Time", 5.0),
-                ("C-Reactive Protein", 5.0),
-            ],
-            "lab_test_units": [
-                ("mg/dL", 10.0),
-                ("g/dL", 8.0),
-                ("mmol/L", 8.0),
-                ("mEq/L", 7.0),
-                ("μmol/L", 6.0),
-                ("ng/mL", 5.0),
-                ("pg/mL", 5.0),
-                ("IU/L", 5.0),
-                ("U/L", 5.0),
-                ("%", 5.0),
-            ],
-            "specimen_types": [
-                ("Blood", 10.0),
-                ("Urine", 8.0),
-                ("Serum", 7.0),
-                ("Plasma", 7.0),
-                ("Cerebrospinal Fluid", 5.0),
-                ("Saliva", 4.0),
-                ("Stool", 4.0),
-                ("Tissue", 3.0),
-                ("Sputum", 3.0),
-                ("Swab", 2.0),
-            ],
-            "collection_methods": [
-                ("Venipuncture", 10.0),
-                ("Fingerstick", 8.0),
-                ("Clean Catch", 7.0),
-                ("Catheterization", 6.0),
-                ("Swab", 5.0),
-                ("Aspiration", 4.0),
-                ("Biopsy", 3.0),
-                ("Brushing", 2.0),
-                ("Washing", 2.0),
-                ("Scraping", 1.0),
-            ],
-            "lab_test_statuses": [
-                ("Completed", 10.0),
-                ("Pending", 8.0),
-                ("Processing", 7.0),
-                ("Specimen Received", 5.0),
-                ("Awaiting Specimen", 5.0),
-                ("Rejected", 3.0),
-                ("Canceled", 2.0),
-            ],
-        }
-
-        # Country-specific values
-        country_specific_values = {
-            "DE": {
-                "lab_names": [
-                    ("Synlab", 10.0),
-                    ("Labor Berlin", 9.0),
-                    ("Amedes", 8.0),
-                    ("Sonic Healthcare Germany", 7.0),
-                    ("Bioscientia", 6.0),
-                    ("Labor Dr. Wisplinghoff", 5.0),
-                    ("MVZ Labor Diagnostik Karlsruhe", 4.0),
-                    ("Labor 28", 3.0),
-                    ("Medizinisches Labor Bremen", 2.0),
-                    ("Labor Lademannbogen", 1.0),
-                ],
-            },
-            "US": {
-                "lab_names": [
-                    ("Quest Diagnostics", 10.0),
-                    ("LabCorp", 9.0),
-                    ("Mayo Clinic Laboratories", 8.0),
-                    ("ARUP Laboratories", 7.0),
-                    ("BioReference Laboratories", 6.0),
-                    ("Sonic Healthcare", 5.0),
-                    ("Medical Diagnostic Laboratories", 4.0),
-                    ("Clinical Reference Laboratory", 3.0),
-                    ("Spectra Laboratories", 2.0),
-                    ("Eurofins", 1.0),
-                ],
-            },
-        }
-
-        # Check if this is a lab_names request with a country-specific value
-        if data_type == "lab_names" and country_code in country_specific_values:
-            return country_specific_values[country_code].get("lab_names", [])
-
-        # Return the default values for the data type or an empty list if not found
-        return default_values.get(data_type, [])
+        # Return an empty list to force the use of data files
+        # No hardcoded fallbacks
+        return []
 
     @classmethod
     def get_test_components(cls, test_type: str, country_code: str = "US") -> list[dict[str, str]]:

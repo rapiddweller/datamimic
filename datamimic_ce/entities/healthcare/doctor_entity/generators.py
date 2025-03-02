@@ -111,9 +111,8 @@ class DoctorGenerators:
         specialties = DoctorDataLoader.get_country_specific_data("specialties", self._country_code)
 
         if not specialties:
-            # Create a new person entity to get a random occupation as fallback
-            fallback_person = PersonEntity(self._class_factory_util, locale=self._locale, dataset=self._dataset)
-            occupation = fallback_person.occupation
+            # Use the person entity's occupation as fallback
+            occupation = self._person_entity.occupation
 
             # If occupation is empty, use a generic medical specialty
             if not occupation:
@@ -140,14 +139,27 @@ class DoctorGenerators:
 
     def generate_contact_number(self) -> str:
         """Generate a contact number."""
-        # Use the person entity's phone if it has one and it matches the expected format
+        # Use the person entity's phone if it has one
         if hasattr(self._person_entity, "phone") and self._person_entity.phone:
+            phone = self._person_entity.phone
+
             # Check if it already matches the expected format
-            if re.match(r"\(\d{3}\) \d{3}-\d{4}", self._person_entity.phone):
-                return self._person_entity.phone
+            if re.match(r"\(\d{3}\) \d{3}-\d{4}", phone):
+                return phone
 
             # Try to extract digits and reformat
-            digits = re.sub(r"\D", "", self._person_entity.phone)
+            digits = re.sub(r"\D", "", phone)
+            if len(digits) >= 10:
+                # Use the last 10 digits
+                last_10 = digits[-10:]
+                return f"({last_10[:3]}) {last_10[3:6]}-{last_10[6:]}"
+
+        # Fallback to the address entity's phone number
+        if hasattr(self._address_entity, "private_phone") and self._address_entity.private_phone:
+            phone = self._address_entity.private_phone
+
+            # Try to extract digits and reformat
+            digits = re.sub(r"\D", "", phone)
             if len(digits) >= 10:
                 # Use the last 10 digits
                 last_10 = digits[-10:]
@@ -181,11 +193,8 @@ class DoctorGenerators:
         hospitals = DoctorDataLoader.get_country_specific_data("hospitals", self._country_code)
 
         if not hospitals:
-            # Create a new address entity to get a random location name as fallback
-            # Convert None to empty string for dataset to satisfy type checker
-            address_dataset = self._dataset if self._dataset is not None else ""
-            fallback_address = AddressEntity(self._class_factory_util, dataset=address_dataset, locale=self._locale)
-            city = fallback_address.city
+            # Use the address entity's city for a location-based hospital name
+            city = self._address_entity.city
 
             # If city is empty, use a generic hospital name
             if not city:
@@ -200,17 +209,13 @@ class DoctorGenerators:
 
     def generate_office_address(self) -> dict[str, str]:
         """Generate an office address using AddressEntity."""
-        # Create a new address entity to ensure we get a fresh address
-        # Convert None to empty string for dataset to satisfy type checker
-        address_dataset = self._dataset if self._dataset is not None else ""
-        office_address = AddressEntity(self._class_factory_util, dataset=address_dataset, locale=self._locale)
-
+        # Use the existing address entity instead of creating a new one
         return {
-            "street": f"{office_address.street} {office_address.house_number}",
-            "city": office_address.city,
-            "state": office_address.state,
-            "zip_code": office_address.postal_code,
-            "country": office_address.country,
+            "street": f"{self._address_entity.street} {self._address_entity.house_number}",
+            "city": self._address_entity.city,
+            "state": self._address_entity.state,
+            "zip_code": self._address_entity.postal_code,
+            "country": self._address_entity.country,
         }
 
     def generate_education(self) -> list[dict[str, str]]:

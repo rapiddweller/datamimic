@@ -11,6 +11,7 @@ This module provides functions for generating study-related data for clinical tr
 """
 
 import random
+import string
 
 from datamimic_ce.entities.healthcare.clinical_trial_entity.data_loader import ClinicalTrialDataLoader
 from datamimic_ce.entities.healthcare.clinical_trial_entity.utils import weighted_choice
@@ -35,18 +36,11 @@ def generate_phase(data_loader: ClinicalTrialDataLoader | None = None, country_c
                 return weighted_choice(phases)
         except Exception as e:
             logger.warning(f"Failed to use data loader for phases: {e}")
-            # Fall through to the default phases
 
-    # Default phases with weights
-    default_phases = (
-        ("Phase 1", 20),
-        ("Phase 2", 30),
-        ("Phase 3", 30),
-        ("Phase 4", 10),
-        ("Early Phase 1", 5),
-        ("Not Applicable", 5),
-    )
-    return weighted_choice(default_phases)
+    # Log error if no data is available
+    logger.error(f"No phases found for {country_code}. Please create a data file.")
+    # Return a safe default
+    return "Phase 2"
 
 
 def generate_status(data_loader: ClinicalTrialDataLoader | None = None, country_code: str = "US") -> str:
@@ -67,20 +61,11 @@ def generate_status(data_loader: ClinicalTrialDataLoader | None = None, country_
                 return weighted_choice(statuses)
         except Exception as e:
             logger.warning(f"Failed to use data loader for statuses: {e}")
-            # Fall through to the default statuses
 
-    # Default statuses with weights
-    default_statuses = (
-        ("Recruiting", 30),
-        ("Active, not recruiting", 20),
-        ("Completed", 25),
-        ("Not yet recruiting", 10),
-        ("Terminated", 5),
-        ("Withdrawn", 3),
-        ("Suspended", 2),
-        ("Unknown status", 5),
-    )
-    return weighted_choice(default_statuses)
+    # Log error if no data is available
+    logger.error(f"No statuses found for {country_code}. Please create a data file.")
+    # Return a safe default
+    return "Recruiting"
 
 
 def generate_sponsor(data_loader: ClinicalTrialDataLoader | None = None, country_code: str = "US") -> str:
@@ -101,22 +86,11 @@ def generate_sponsor(data_loader: ClinicalTrialDataLoader | None = None, country
                 return weighted_choice(sponsors)
         except Exception as e:
             logger.warning(f"Failed to use data loader for sponsors: {e}")
-            # Fall through to the default sponsors
 
-    # Default sponsors with weights
-    default_sponsors = (
-        ("National Institutes of Health", 15),
-        ("Pfizer", 10),
-        ("Novartis", 10),
-        ("Merck", 10),
-        ("GlaxoSmithKline", 10),
-        ("AstraZeneca", 10),
-        ("Roche", 10),
-        ("Johnson & Johnson", 10),
-        ("Sanofi", 10),
-        ("Eli Lilly and Company", 5),
-    )
-    return weighted_choice(default_sponsors)
+    # Log error if no data is available
+    logger.error(f"No sponsors found for {country_code}. Please create a data file.")
+    # Return a safe default
+    return "Unknown Sponsor"
 
 
 def generate_condition(data_loader: ClinicalTrialDataLoader | None = None, country_code: str = "US") -> str:
@@ -137,29 +111,11 @@ def generate_condition(data_loader: ClinicalTrialDataLoader | None = None, count
                 return weighted_choice(conditions)
         except Exception as e:
             logger.warning(f"Failed to use data loader for conditions: {e}")
-            # Fall through to the default conditions
 
-    # Default conditions with weights
-    default_conditions = (
-        ("Diabetes", 10),
-        ("Hypertension", 10),
-        ("Cancer", 10),
-        ("Alzheimer's Disease", 5),
-        ("Parkinson's Disease", 5),
-        ("Multiple Sclerosis", 5),
-        ("Rheumatoid Arthritis", 5),
-        ("Asthma", 5),
-        ("COPD", 5),
-        ("Depression", 5),
-        ("Anxiety", 5),
-        ("Schizophrenia", 5),
-        ("Bipolar Disorder", 5),
-        ("HIV/AIDS", 5),
-        ("Hepatitis", 5),
-        ("Tuberculosis", 5),
-        ("Malaria", 5),
-    )
-    return weighted_choice(default_conditions)
+    # Log error if no data is available
+    logger.error(f"No medical conditions found for {country_code}. Please create a data file.")
+    # Return a safe default
+    return "Unspecified Condition"
 
 
 def generate_intervention_type(data_loader: ClinicalTrialDataLoader | None = None, country_code: str = "US") -> str:
@@ -180,20 +136,11 @@ def generate_intervention_type(data_loader: ClinicalTrialDataLoader | None = Non
                 return weighted_choice(intervention_types)
         except Exception as e:
             logger.warning(f"Failed to use data loader for intervention types: {e}")
-            # Fall through to the default intervention types
 
-    # Default intervention types with weights
-    default_intervention_types = (
-        ("Drug", 40),
-        ("Device", 15),
-        ("Biological", 10),
-        ("Procedure", 10),
-        ("Radiation", 5),
-        ("Behavioral", 10),
-        ("Genetic", 5),
-        ("Dietary Supplement", 5),
-    )
-    return weighted_choice(default_intervention_types)
+    # Log error if no data is available
+    logger.error(f"No intervention types found for {country_code}. Please create a data file.")
+    # Return a safe default
+    return "Drug"
 
 
 def generate_intervention_name(intervention_type: str, condition: str) -> str:
@@ -209,495 +156,499 @@ def generate_intervention_name(intervention_type: str, condition: str) -> str:
     # Generate a name based on the intervention type
     if intervention_type.lower() == "drug":
         # Generate a drug name
-        prefixes = [
-            "Ab",
-            "Ac",
-            "Ad",
-            "Al",
-            "Am",
-            "An",
-            "Ar",
-            "As",
-            "At",
-            "Ax",
-            "Az",
-            "Bi",
-            "Bo",
-            "Bu",
-            "Ca",
-            "Ce",
-            "Ci",
-            "Co",
-            "Cr",
-            "Cu",
-            "Cy",
-            "Da",
-            "De",
-            "Di",
-            "Do",
-            "Dr",
-            "Du",
-            "Ec",
-            "Ed",
-            "Ef",
-            "El",
-            "Em",
-            "En",
-            "Ep",
-            "Er",
-            "Es",
-            "Et",
-            "Ev",
-            "Ex",
-            "Fa",
-            "Fe",
-            "Fi",
-            "Fl",
-            "Fo",
-            "Fu",
-            "Ga",
-            "Ge",
-            "Gi",
-            "Gl",
-            "Go",
-            "Gr",
-            "Gu",
-            "Ha",
-            "He",
-            "Hi",
-            "Ho",
-            "Hu",
-            "Hy",
-            "Ib",
-            "Ic",
-            "Id",
-            "Il",
-            "Im",
-            "In",
-            "Io",
-            "Ip",
-            "Ir",
-            "Is",
-            "It",
-            "Iv",
-            "Ja",
-            "Je",
-            "Ji",
-            "Jo",
-            "Ju",
-            "Ka",
-            "Ke",
-            "Ki",
-            "Kl",
-            "Ko",
-            "Kr",
-            "Ku",
-            "La",
-            "Le",
-            "Li",
-            "Lo",
-            "Lu",
-            "Ly",
-            "Ma",
-            "Me",
-            "Mi",
-            "Mo",
-            "Mu",
-            "My",
-            "Na",
-            "Ne",
-            "Ni",
-            "No",
-            "Nu",
-            "Ny",
-            "Ob",
-            "Oc",
-            "Od",
-            "Of",
-            "Ol",
-            "Om",
-            "On",
-            "Op",
-            "Or",
-            "Os",
-            "Ov",
-            "Ox",
-            "Pa",
-            "Pe",
-            "Ph",
-            "Pi",
-            "Pl",
-            "Po",
-            "Pr",
-            "Ps",
-            "Pu",
-            "Qu",
-            "Ra",
-            "Re",
-            "Rh",
-            "Ri",
-            "Ro",
-            "Ru",
-            "Sa",
-            "Sc",
-            "Se",
-            "Sh",
-            "Si",
-            "Sl",
-            "So",
-            "Sp",
-            "St",
-            "Su",
-            "Sy",
-            "Ta",
-            "Te",
-            "Th",
-            "Ti",
-            "To",
-            "Tr",
-            "Tu",
-            "Ty",
-            "Ul",
-            "Um",
-            "Un",
-            "Up",
-            "Ur",
-            "Us",
-            "Ut",
-            "Va",
-            "Ve",
-            "Vi",
-            "Vo",
-            "Vu",
-            "Wa",
-            "We",
-            "Wi",
-            "Wo",
-            "Xa",
-            "Xe",
-            "Xi",
-            "Xy",
-            "Ya",
-            "Ye",
-            "Yi",
-            "Yo",
-            "Yu",
-            "Za",
-            "Ze",
-            "Zi",
-            "Zo",
-            "Zu",
-        ]
-        suffixes = [
-            "bam",
-            "ban",
-            "bar",
-            "ben",
-            "bin",
-            "bon",
-            "cam",
-            "can",
-            "car",
-            "cen",
-            "cin",
-            "cir",
-            "com",
-            "con",
-            "cor",
-            "dam",
-            "dan",
-            "dar",
-            "den",
-            "din",
-            "dir",
-            "dom",
-            "don",
-            "dor",
-            "fam",
-            "fan",
-            "far",
-            "fen",
-            "fin",
-            "fir",
-            "gam",
-            "gan",
-            "gar",
-            "gen",
-            "gin",
-            "gir",
-            "ham",
-            "han",
-            "har",
-            "hen",
-            "hin",
-            "hir",
-            "jam",
-            "jan",
-            "jar",
-            "jen",
-            "jin",
-            "jir",
-            "kam",
-            "kan",
-            "kar",
-            "ken",
-            "kin",
-            "kir",
-            "lam",
-            "lan",
-            "lar",
-            "len",
-            "lin",
-            "lir",
-            "mab",
-            "mac",
-            "man",
-            "mar",
-            "men",
-            "min",
-            "mir",
-            "nam",
-            "nan",
-            "nar",
-            "nem",
-            "nin",
-            "nir",
-            "pam",
-            "pan",
-            "par",
-            "pen",
-            "pin",
-            "pir",
-            "ram",
-            "ran",
-            "rar",
-            "rem",
-            "rin",
-            "rir",
-            "sam",
-            "san",
-            "sar",
-            "sem",
-            "sin",
-            "sir",
-            "tam",
-            "tan",
-            "tar",
-            "tem",
-            "tin",
-            "tir",
-            "vam",
-            "van",
-            "var",
-            "ven",
-            "vin",
-            "vir",
-            "xam",
-            "xan",
-            "xar",
-            "xen",
-            "xin",
-            "xir",
-            "zam",
-            "zan",
-            "zar",
-            "zen",
-            "zin",
-            "zir",
-        ]
-
-        prefix = random.choice(prefixes)
-        suffix = random.choice(suffixes)
-
-        return f"{prefix}{suffix}"
-
-    elif intervention_type.lower() == "behavioral":
-        # Generate a behavioral intervention name
-        adjectives = [
-            "Cognitive",
-            "Behavioral",
-            "Mindfulness",
-            "Stress",
-            "Relaxation",
-            "Coping",
-            "Emotional",
-            "Social",
-            "Physical",
-            "Dietary",
-        ]
-        nouns = [
-            "Therapy",
-            "Intervention",
-            "Training",
-            "Education",
-            "Counseling",
-            "Management",
-            "Modification",
-            "Support",
-            "Program",
-            "Treatment",
-        ]
-
-        adjective = random.choice(adjectives)
-        noun = random.choice(nouns)
-
-        return f"{adjective} {noun} for {condition}"
-
+        return generate_drug_name(condition)
     elif intervention_type.lower() == "device":
         # Generate a device name
-        prefixes = ["Med", "Bio", "Tech", "Health", "Care", "Life", "Smart", "Vital", "Neuro", "Cardio"]
-        suffixes = [
-            "Scan",
-            "Monitor",
-            "Device",
-            "System",
-            "Tracker",
-            "Sensor",
-            "Meter",
-            "Tester",
-            "Analyzer",
-            "Assistant",
-        ]
-
-        prefix = random.choice(prefixes)
-        suffix = random.choice(suffixes)
-
-        return f"{prefix}{suffix}"
-
-    elif intervention_type.lower() == "procedure":
-        # Generate a procedure name
-        adjectives = [
-            "Minimally Invasive",
-            "Robotic",
-            "Laparoscopic",
-            "Endoscopic",
-            "Percutaneous",
-            "Transcatheter",
-            "Image-Guided",
-            "Ultrasound-Guided",
-            "Laser-Assisted",
-            "Computer-Assisted",
-        ]
-        nouns = [
-            "Surgery",
-            "Procedure",
-            "Intervention",
-            "Technique",
-            "Approach",
-            "Method",
-            "Treatment",
-            "Therapy",
-            "Operation",
-            "Resection",
-        ]
-
-        adjective = random.choice(adjectives)
-        noun = random.choice(nouns)
-
-        return f"{adjective} {noun} for {condition}"
-
-    elif intervention_type.lower() == "diagnostic test":
-        # Generate a diagnostic test name
-        prefixes = [
-            "Rapid",
-            "Advanced",
-            "Comprehensive",
-            "Precision",
-            "Next-Generation",
-            "High-Sensitivity",
-            "Automated",
-            "Digital",
-            "Molecular",
-            "Genetic",
-        ]
-        nouns = [
-            "Test",
-            "Assay",
-            "Panel",
-            "Screen",
-            "Scan",
-            "Analysis",
-            "Assessment",
-            "Evaluation",
-            "Examination",
-            "Diagnostic",
-        ]
-
-        prefix = random.choice(prefixes)
-        noun = random.choice(nouns)
-
-        return f"{prefix} {noun} for {condition}"
-
-    elif intervention_type.lower() == "biological":
-        # Generate a biological intervention name
-        prefixes = ["Mono", "Poly", "Multi", "Omni", "Uni", "Bi", "Tri", "Quad", "Penta", "Hexa"]
-        roots = [
-            "clonal",
-            "valent",
-            "specific",
-            "genic",
-            "cellular",
-            "molecular",
-            "peptide",
-            "protein",
-            "antibody",
-            "immune",
-        ]
-
-        prefix = random.choice(prefixes)
-        root = random.choice(roots)
-
-        return f"{prefix}{root} Therapy"
-
-    elif intervention_type.lower() == "dietary supplement":
-        # Generate a dietary supplement name
-        prefixes = ["Vita", "Nutri", "Opti", "Mega", "Ultra", "Super", "Pro", "Bio", "Eco", "Natur"]
-        suffixes = ["min", "max", "plus", "complex", "blend", "formula", "boost", "support", "health", "life"]
-
-        prefix = random.choice(prefixes)
-        suffix = random.choice(suffixes)
-
-        return f"{prefix}{suffix}"
-
+        return generate_device_name(condition)
+    elif intervention_type.lower() == "behavioral":
+        # Generate a behavioral intervention name
+        return generate_behavioral_name(condition)
     else:
-        # Generic intervention name
-        return f"Intervention for {condition}"
+        # Generate a generic intervention name
+        return f"{condition.title()} {intervention_type} Therapy"
+
+
+def generate_drug_name(condition: str) -> str:
+    """Generate a realistic drug name.
+
+    Args:
+        condition: The medical condition being treated
+
+    Returns:
+        A string representing the drug name
+    """
+    # Generate a drug name with common prefixes and suffixes
+    prefixes = [
+        "Ab",
+        "Ac",
+        "Ad",
+        "Al",
+        "Am",
+        "An",
+        "Ar",
+        "Az",
+        "Bi",
+        "Ca",
+        "Ce",
+        "Ci",
+        "Co",
+        "Cy",
+        "Da",
+        "De",
+        "Di",
+        "Do",
+        "Du",
+        "El",
+        "En",
+        "Ep",
+        "Eq",
+        "Es",
+        "Ev",
+        "Ex",
+        "Fe",
+        "Fi",
+        "Fl",
+        "Fo",
+        "Ga",
+        "Ge",
+        "Gl",
+        "Ha",
+        "He",
+        "Hy",
+        "Im",
+        "In",
+        "Ir",
+        "Ja",
+        "Ju",
+        "Ka",
+        "Ke",
+        "Ki",
+        "La",
+        "Le",
+        "Li",
+        "Lo",
+        "Lu",
+        "Ly",
+        "Ma",
+        "Me",
+        "Mi",
+        "Mo",
+        "My",
+        "Na",
+        "Ne",
+        "No",
+        "Nu",
+        "Ny",
+        "Ob",
+        "Oc",
+        "Od",
+        "Of",
+        "Ol",
+        "Om",
+        "On",
+        "Op",
+        "Or",
+        "Os",
+        "Ov",
+        "Ox",
+        "Pa",
+        "Pe",
+        "Ph",
+        "Pi",
+        "Pl",
+        "Po",
+        "Pr",
+        "Ps",
+        "Qu",
+        "Ra",
+        "Re",
+        "Rh",
+        "Ri",
+        "Ro",
+        "Ru",
+        "Sa",
+        "Sc",
+        "Se",
+        "Si",
+        "So",
+        "Sp",
+        "St",
+        "Su",
+        "Sy",
+        "Ta",
+        "Te",
+        "Th",
+        "Ti",
+        "To",
+        "Tr",
+        "Tu",
+        "Ty",
+        "Un",
+        "Up",
+        "Ur",
+        "Va",
+        "Ve",
+        "Vi",
+        "Vo",
+        "Wa",
+        "We",
+        "Xa",
+        "Xe",
+        "Xi",
+        "Xy",
+        "Ya",
+        "Ye",
+        "Yo",
+        "Za",
+        "Ze",
+        "Zi",
+        "Zo",
+        "Zu",
+    ]
+
+    suffixes = [
+        "ban",
+        "bax",
+        "cef",
+        "cin",
+        "dex",
+        "dine",
+        "dol",
+        "dryl",
+        "fen",
+        "formin",
+        "glip",
+        "kine",
+        "lol",
+        "mab",
+        "micin",
+        "mide",
+        "mine",
+        "mune",
+        "mycin",
+        "nac",
+        "nal",
+        "nex",
+        "nide",
+        "nine",
+        "nium",
+        "nix",
+        "nol",
+        "pam",
+        "parin",
+        "phil",
+        "phos",
+        "pril",
+        "profen",
+        "relin",
+        "ride",
+        "rine",
+        "sartan",
+        "semide",
+        "sin",
+        "statin",
+        "sulfa",
+        "tant",
+        "taxel",
+        "tidine",
+        "tocin",
+        "toin",
+        "trel",
+        "tropin",
+        "vastatin",
+        "vir",
+        "vudine",
+        "xacin",
+        "xamine",
+        "xane",
+        "xetine",
+        "xicam",
+        "xifene",
+        "xime",
+        "xine",
+        "xolol",
+        "zepam",
+        "zide",
+        "zine",
+        "zole",
+        "zolid",
+        "zone",
+        "zosin",
+    ]
+
+    # Generate a random drug name
+    prefix = random.choice(prefixes)
+    suffix = random.choice(suffixes)
+
+    # Add a middle part based on the condition (take first 3 letters)
+    if condition and len(condition) >= 3:
+        middle = condition[:3].lower()
+    else:
+        # Random 2-3 letter middle if no condition or condition is too short
+        middle = "".join(random.choices(string.ascii_lowercase, k=random.randint(2, 3)))
+
+    return f"{prefix}{middle}{suffix}"
+
+
+def generate_device_name(condition: str) -> str:
+    """Generate a realistic medical device name.
+
+    Args:
+        condition: The medical condition being treated
+
+    Returns:
+        A string representing the device name
+    """
+    # Generate a device name
+    prefixes = [
+        "Accu",
+        "Adva",
+        "Aero",
+        "Bio",
+        "Cardio",
+        "Cere",
+        "Cryo",
+        "Derm",
+        "Dia",
+        "Digi",
+        "Endo",
+        "Ergo",
+        "Flex",
+        "Gastro",
+        "Geno",
+        "Gyro",
+        "Hemo",
+        "Hydro",
+        "Immuno",
+        "Infra",
+        "Inno",
+        "Kine",
+        "Lase",
+        "Lumi",
+        "Magna",
+        "Medi",
+        "Micro",
+        "Multi",
+        "Nano",
+        "Neuro",
+        "Omni",
+        "Opti",
+        "Ortho",
+        "Oxy",
+        "Pedi",
+        "Phono",
+        "Physio",
+        "Pneumo",
+        "Poly",
+        "Pulmo",
+        "Quant",
+        "Radio",
+        "Regen",
+        "Rheo",
+        "Sono",
+        "Spec",
+        "Stim",
+        "Surg",
+        "Techno",
+        "Thermo",
+        "Trans",
+        "Ultra",
+        "Uni",
+        "Vaso",
+        "Venti",
+        "Vibra",
+        "Vita",
+        "Volu",
+        "Wave",
+        "Xeno",
+        "Zeno",
+    ]
+
+    suffixes = [
+        "Aide",
+        "Assist",
+        "Care",
+        "Cath",
+        "Corder",
+        "Core",
+        "Derm",
+        "Device",
+        "Dial",
+        "Doc",
+        "Dyne",
+        "Flex",
+        "Flow",
+        "Form",
+        "Fusion",
+        "Gen",
+        "Graph",
+        "Guard",
+        "Guide",
+        "Jet",
+        "Lens",
+        "Life",
+        "Line",
+        "Link",
+        "Lith",
+        "Logic",
+        "Lux",
+        "Lyte",
+        "Mate",
+        "Matrix",
+        "Max",
+        "Meter",
+        "Monitor",
+        "Net",
+        "Pace",
+        "Path",
+        "Probe",
+        "Pulse",
+        "Pump",
+        "Scan",
+        "Scope",
+        "Screen",
+        "Sense",
+        "Sentry",
+        "Stent",
+        "Stim",
+        "Support",
+        "Sure",
+        "System",
+        "Tech",
+        "Tek",
+        "Therm",
+        "Tone",
+        "Track",
+        "Trak",
+        "Tron",
+        "Valve",
+        "Vent",
+        "View",
+        "Vision",
+        "Wave",
+        "Wire",
+        "X",
+        "Zen",
+    ]
+
+    # Generate a random device name
+    prefix = random.choice(prefixes)
+    suffix = random.choice(suffixes)
+
+    # Add a condition-specific part if available
+    if condition:
+        # Take first 4 letters of condition and capitalize
+        condition_part = condition[:4].title()
+        return f"{prefix}{condition_part}{suffix}"
+    else:
+        return f"{prefix}{suffix}"
+
+
+def generate_behavioral_name(condition: str) -> str:
+    """Generate a realistic behavioral intervention name.
+
+    Args:
+        condition: The medical condition being treated
+
+    Returns:
+        A string representing the behavioral intervention name
+    """
+    # Generate a behavioral intervention name
+    prefixes = [
+        "Adaptive",
+        "Advanced",
+        "Behavioral",
+        "Cognitive",
+        "Comprehensive",
+        "Enhanced",
+        "Focused",
+        "Guided",
+        "Holistic",
+        "Integrated",
+        "Intensive",
+        "Interactive",
+        "Mindful",
+        "Motivational",
+        "Personalized",
+        "Positive",
+        "Progressive",
+        "Psychosocial",
+        "Structured",
+        "Supportive",
+        "Systematic",
+        "Therapeutic",
+    ]
+
+    middle_terms = [
+        "Acceptance",
+        "Activation",
+        "Adaptation",
+        "Adherence",
+        "Adjustment",
+        "Awareness",
+        "Coping",
+        "Counseling",
+        "Education",
+        "Engagement",
+        "Enhancement",
+        "Exposure",
+        "Lifestyle",
+        "Management",
+        "Modification",
+        "Processing",
+        "Reduction",
+        "Regulation",
+        "Rehabilitation",
+        "Relaxation",
+        "Restructuring",
+        "Skills",
+        "Support",
+        "Therapy",
+        "Training",
+    ]
+
+    # Generate a random behavioral intervention name
+    prefix = random.choice(prefixes)
+    middle = random.choice(middle_terms)
+
+    # Add condition-specific part
+    if condition:
+        return f"{prefix} {middle} for {condition}"
+    else:
+        return f"{prefix} {middle} Intervention"
 
 
 def generate_study_design() -> dict[str, str]:
     """Generate a study design for a clinical trial.
 
     Returns:
-        A dictionary containing study design details
+        A dictionary containing study design elements
     """
-    # Define possible values for each aspect of the study design
-    allocation_options = ["Randomized", "Non-Randomized", "N/A"]
-    intervention_model_options = [
-        "Parallel Assignment",
-        "Crossover Assignment",
-        "Factorial Assignment",
-        "Sequential Assignment",
-        "Single Group Assignment",
-    ]
-    primary_purpose_options = [
-        "Treatment",
-        "Prevention",
-        "Diagnostic",
-        "Supportive Care",
-        "Screening",
-        "Health Services Research",
-        "Basic Science",
-        "Device Feasibility",
-    ]
-    masking_options = ["None (Open Label)", "Single", "Double", "Triple", "Quadruple"]
+    # Study design elements
+    allocation = random.choice(["Randomized", "Non-Randomized", "N/A"])
+    intervention_model = random.choice(
+        [
+            "Parallel Assignment",
+            "Crossover Assignment",
+            "Factorial Assignment",
+            "Sequential Assignment",
+            "Single Group Assignment",
+        ]
+    )
+    primary_purpose = random.choice(
+        [
+            "Treatment",
+            "Prevention",
+            "Diagnostic",
+            "Supportive Care",
+            "Screening",
+            "Health Services Research",
+            "Basic Science",
+            "Device Feasibility",
+        ]
+    )
+    masking = random.choice(["None (Open Label)", "Single", "Double", "Triple", "Quadruple"])
 
-    # Choose random values for each aspect
-    allocation = random.choice(allocation_options)
-    intervention_model = random.choice(intervention_model_options)
-    primary_purpose = random.choice(primary_purpose_options)
-    masking = random.choice(masking_options)
-
-    # Return the study design as a dictionary
     return {
         "allocation": allocation,
         "intervention_model": intervention_model,
@@ -712,12 +663,12 @@ def generate_study_type() -> str:
     Returns:
         A string representing the study type
     """
-    # Define possible study types with weights
-    study_types = (
+    # Study types with weights
+    study_types = [
         ("Interventional", 70),
         ("Observational", 25),
         ("Expanded Access", 5),
-    )
+    ]
     return weighted_choice(study_types)
 
 
@@ -733,17 +684,32 @@ def generate_title(condition: str, intervention_type: str, intervention_name: st
     Returns:
         A string representing the title
     """
-    # Define possible title templates
+    # Title templates
     templates = [
-        f"A {phase} Study of {intervention_name} for {condition}",
-        f"{phase} Clinical Trial of {intervention_name} in Patients With {condition}",
-        f"Efficacy and Safety of {intervention_name} in {condition}: A {phase} Study",
-        f"{intervention_name} for the Treatment of {condition}: A {phase} Clinical Trial",
-        f"A {phase}, Randomized Study of {intervention_name} in {condition}",
+        "A {phase} Study of {intervention_name} for the Treatment of {condition}",
+        "Efficacy and Safety of {intervention_name} in Patients With {condition}: A {phase} Trial",
+        "{phase} Clinical Trial of {intervention_name} in {condition}",
+        "{intervention_name} for {condition}: A {phase}, Randomized Controlled Trial",
+        "Evaluation of {intervention_name} in the Management of {condition} ({phase})",
+        "A {phase} Study to Evaluate {intervention_name} in Subjects With {condition}",
+        "{phase} Assessment of {intervention_name} for {condition} Treatment",
+        "Safety and Efficacy of {intervention_name} in {condition}: A {phase} Study",
+        "{intervention_type} Intervention With {intervention_name} for {condition}: {phase} Trial",
+        "A Randomized {phase} Trial of {intervention_name} Versus Standard of Care for {condition}",
     ]
 
     # Choose a random template
-    return random.choice(templates)
+    template = random.choice(templates)
+
+    # Format the template
+    title = template.format(
+        phase=phase,
+        intervention_type=intervention_type,
+        intervention_name=intervention_name,
+        condition=condition,
+    )
+
+    return title
 
 
 def generate_brief_summary(condition: str, intervention_type: str, intervention_name: str, phase: str) -> str:
@@ -758,43 +724,47 @@ def generate_brief_summary(condition: str, intervention_type: str, intervention_
     Returns:
         A string representing the brief summary
     """
-    # Define possible summary templates
+    # Summary templates
     templates = [
-        f"This {phase} clinical trial aims to evaluate the safety and efficacy of {intervention_name} "
-        f"for the treatment of {condition}. The study will assess clinical outcomes and adverse events "
-        f"in patients receiving the intervention.",
-        f"The purpose of this {phase} study is to determine if {intervention_name} is effective in treating "
-        f"{condition}. The trial will evaluate the safety profile and therapeutic benefits of the intervention "
-        f"in eligible participants.",
-        f"This research study is designed to test the effectiveness of {intervention_name} in patients with "
-        f"{condition}. As a {phase} trial, it will focus on {get_phase_focus(phase)} in a controlled clinical setting.",
-        f"A {phase} clinical investigation of {intervention_name} for patients diagnosed with {condition}. "
-        f"The study aims to assess {get_phase_focus(phase)} through a structured protocol with appropriate endpoints.",
-        f"This clinical trial will investigate the use of {intervention_name} as a potential treatment for "
-        f"{condition}. The {phase} study will evaluate {get_phase_focus(phase)} according to established "
-        f"clinical guidelines.",
+        "This {phase} clinical trial aims to evaluate the safety and efficacy of {intervention_name} "
+        "for the treatment of {condition}. The study will assess clinical outcomes, adverse events, "
+        "and patient-reported measures to determine the potential benefits of this {intervention_type} intervention.",
+        "A {phase} study investigating {intervention_name}, a novel {intervention_type} for {condition}. "
+        "The trial will evaluate whether {intervention_name} improves symptoms and quality of life "
+        "compared to standard treatment approaches.",
+        "This research study is designed to test the effectiveness of {intervention_name} in treating "
+        "{condition}. As a {phase} trial, it will focus on {focus_area} in patients receiving this "
+        "{intervention_type} intervention.",
+        "The purpose of this {phase} clinical trial is to determine if {intervention_name} is safe and "
+        "effective for individuals with {condition}. The study will involve multiple assessments to "
+        "evaluate the {intervention_type}'s impact on disease progression and symptom management.",
+        "A {phase}, randomized controlled trial evaluating {intervention_name} for {condition}. "
+        "This study aims to assess whether this {intervention_type} intervention can provide meaningful "
+        "clinical benefits with an acceptable safety profile.",
     ]
 
     # Choose a random template
-    return random.choice(templates)
+    template = random.choice(templates)
 
-
-def get_phase_focus(phase: str) -> str:
-    """Get the focus of a clinical trial based on its phase.
-
-    Args:
-        phase: The phase of the trial
-
-    Returns:
-        A string describing the focus of the phase
-    """
+    # Determine focus area based on phase
     if phase == "Phase 1" or phase == "Early Phase 1":
-        return "safety, tolerability, and pharmacokinetics"
+        focus_area = "safety and dosing"
     elif phase == "Phase 2":
-        return "efficacy and side effects"
+        focus_area = "preliminary efficacy and side effects"
     elif phase == "Phase 3":
-        return "efficacy in a larger population and monitoring of adverse reactions"
+        focus_area = "confirming effectiveness and monitoring adverse reactions"
     elif phase == "Phase 4":
-        return "long-term safety and effectiveness in the general population"
+        focus_area = "long-term safety and additional uses"
     else:
-        return "clinical outcomes and safety"
+        focus_area = "safety and effectiveness"
+
+    # Format the template
+    summary = template.format(
+        phase=phase,
+        intervention_type=intervention_type.lower(),
+        intervention_name=intervention_name,
+        condition=condition,
+        focus_area=focus_area,
+    )
+
+    return summary

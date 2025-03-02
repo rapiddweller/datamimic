@@ -1,0 +1,92 @@
+<setup>
+    <!-- Lab Test Entity -->
+    <echo>Running LabTestEntity</echo>
+    <generate name="lab_tests" count="10" target="CSV">
+        <variable name="test" entity="LabTest" />
+        <key name="test_id" script="test.test_id" />
+        <key name="patient_id" script="test.patient_id" />
+        <key name="doctor_id" script="test.doctor_id" />
+        <key name="test_type" script="test.test_type" />
+        <key name="test_name" script="test.test_name" />
+        <key name="test_date" script="test.test_date" />
+        <key name="result_date" script="test.result_date" />
+        <key name="specimen_type" script="test.specimen_type" />
+        <key name="specimen_collection_date" script="test.specimen_collection_date" />
+        <key name="test_status" script="test.test_status" />
+        <key name="test_result" script="test.test_result" />
+        <key name="result_value" script="test.result_value" />
+        <key name="units" script="test.units" />
+        <key name="reference_range" script="test.reference_range" />
+        <key name="abnormal_flag" script="test.abnormal_flag" />
+        <key name="lab_name" script="test.lab_name" />
+        <key name="lab_address" script="test.lab_address" />
+        <key name="ordering_doctor" script="test.ordering_doctor" />
+        <key name="analysis_method" script="test.analysis_method" />
+        <key name="notes" script="test.notes" />
+        <key name="patient_name" script="test.patient_name" />
+        <key name="doctor_name" script="test.doctor_name" />
+    </generate>
+
+    <!-- US Lab Test Entity -->
+    <echo>Running USLabTestEntity</echo>
+    <generate name="us_lab_tests" count="5" target="CSV">
+        <variable name="test" entity="USLabTest" />
+        <key name="test_id" script="test.test_id" />
+        <key name="patient_id" script="test.patient_id" />
+        <key name="doctor_id" script="test.doctor_id" />
+        <key name="test_type" script="test.test_type" />
+        <key name="test_name" script="test.test_name" />
+        <key name="test_date" script="test.test_date" />
+        <key name="result_date" script="test.result_date" />
+        <key name="specimen_type" script="test.specimen_type" />
+        <key name="specimen_collection_date" script="test.specimen_collection_date" />
+        <key name="test_status" script="test.test_status" />
+        <key name="test_result" script="test.test_result" />
+        <key name="result_value" script="test.result_value" />
+        <key name="units" script="test.units" />
+        <key name="reference_range" script="test.reference_range" />
+        <key name="abnormal_flag" script="test.abnormal_flag" />
+        <key name="lab_name" script="test.lab_name" />
+        <key name="lab_address" script="test.lab_address" />
+        <key name="ordering_doctor" script="test.ordering_doctor" />
+        <key name="analysis_method" script="test.analysis_method" />
+        <key name="notes" script="test.notes" />
+        <key name="patient_name" script="test.patient_name" />
+        <key name="doctor_name" script="test.doctor_name" />
+        <key name="clia_number" script="test.clia_number" />
+        <key name="cpt_code" script="test.cpt_code" />
+        <key name="insurance_provider" script="test.insurance_provider" />
+        <key name="insurance_claim_number" script="test.insurance_claim_number" />
+    </generate>
+
+    <!-- German Lab Test Entity -->
+    <echo>Running GermanLabTestEntity</echo>
+    <generate name="german_lab_tests" count="5" target="CSV">
+        <variable name="test" entity="GermanLabTest" />
+        <key name="test_id" script="test.test_id" />
+        <key name="patient_id" script="test.patient_id" />
+        <key name="doctor_id" script="test.doctor_id" />
+        <key name="test_type" script="test.test_type" />
+        <key name="test_name" script="test.test_name" />
+        <key name="test_date" script="test.test_date" />
+        <key name="result_date" script="test.result_date" />
+        <key name="specimen_type" script="test.specimen_type" />
+        <key name="specimen_collection_date" script="test.specimen_collection_date" />
+        <key name="test_status" script="test.test_status" />
+        <key name="test_result" script="test.test_result" />
+        <key name="result_value" script="test.result_value" />
+        <key name="units" script="test.units" />
+        <key name="reference_range" script="test.reference_range" />
+        <key name="abnormal_flag" script="test.abnormal_flag" />
+        <key name="lab_name" script="test.lab_name" />
+        <key name="lab_address" script="test.lab_address" />
+        <key name="ordering_doctor" script="test.ordering_doctor" />
+        <key name="analysis_method" script="test.analysis_method" />
+        <key name="notes" script="test.notes" />
+        <key name="patient_name" script="test.patient_name" />
+        <key name="doctor_name" script="test.doctor_name" />
+        <key name="krankenversicherungsnummer" script="test.krankenversicherungsnummer" />
+        <key name="versicherungstraeger" script="test.versicherungstraeger" />
+        <key name="einsendegrund" script="test.einsendegrund" />
+    </generate>
+</setup> 

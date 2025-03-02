@@ -31,6 +31,7 @@ from datamimic_ce.entities.healthcare.clinical_trial_entity.participant_generato
     generate_eligibility_criteria,
     generate_enrollment_count,
     generate_gender_eligibility,
+    generate_participant_demographics,
 )
 from datamimic_ce.entities.healthcare.clinical_trial_entity.study_generators import (
     generate_brief_summary,
@@ -44,7 +45,9 @@ from datamimic_ce.entities.healthcare.clinical_trial_entity.study_generators imp
     generate_study_type,
     generate_title,
 )
+from datamimic_ce.entities.healthcare.doctor_entity import DoctorEntity
 from datamimic_ce.entities.healthcare.healthcare_entity import HealthcareEntity
+from datamimic_ce.logger import logger
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
@@ -283,12 +286,14 @@ class ClinicalTrialEntity(HealthcareEntity):
     @property
     def age_range(self) -> dict[str, int | None]:
         """Get the age range."""
-        return self.get_cached_property("age_range", lambda: generate_age_range())
+        return self.get_cached_property("age_range", lambda: generate_age_range(self.condition, self._data_loader))
 
     @property
     def gender(self) -> str:
         """Get the gender eligibility."""
-        return self.get_cached_property("gender", lambda: generate_gender_eligibility())
+        return self.get_cached_property(
+            "gender", lambda: generate_gender_eligibility(self.condition, self._data_loader)
+        )
 
     @property
     def locations(self) -> list[dict[str, Any]]:
@@ -313,39 +318,34 @@ class ClinicalTrialEntity(HealthcareEntity):
         return self.get_cached_property("lead_investigator", self._generate_lead_investigator)
 
     def _generate_lead_investigator(self) -> str:
-        """Generate a lead investigator name."""
-        # Use person entity to generate a name if available, otherwise use a simple approach
+        """Generate a lead investigator name using DoctorEntity."""
+        # Use DoctorEntity to generate a doctor name if available
         if self._class_factory_util:
-            person_entity = self._class_factory_util.create_person_entity(self._locale, self._dataset)
-            # 75% chance of a male investigator (reflecting current demographic realities)
-            gender = "M" if random.random() < 0.75 else "F"
-            investigator_name = f"Dr. {person_entity.first_name(gender)} {person_entity.last_name()}"
-            return investigator_name
-        else:
-            # Fallback to a basic implementation if no factory is available
-            first_names_male = ["James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas"]
-            first_names_female = ["Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Susan", "Jessica", "Sarah"]
-            last_names = [
-                "Smith",
-                "Johnson",
-                "Williams",
-                "Jones",
-                "Brown",
-                "Davis",
-                "Miller",
-                "Wilson",
-                "Moore",
-                "Taylor",
-            ]
+            try:
+                doctor = DoctorEntity(self._class_factory_util, dataset=self._country_code)
+                return f"Dr. {doctor.first_name} {doctor.last_name}"
+            except Exception as e:
+                logger.error(f"Failed to generate lead investigator using DoctorEntity: {e}")
 
-            # 75% chance of a male investigator
-            if random.random() < 0.75:
-                first_name = random.choice(first_names_male)
-            else:
-                first_name = random.choice(first_names_female)
+        # Log error if we can't generate a lead investigator
+        logger.error("Could not generate lead investigator. Please ensure DoctorEntity is properly configured.")
+        return "Unknown Investigator"
 
-            last_name = random.choice(last_names)
-            return f"Dr. {first_name} {last_name}"
+    @property
+    def participants(self) -> list[dict[str, Any]]:
+        """Get the trial participants."""
+        return self.get_cached_property("participants", self._generate_participants)
+
+    def _generate_participants(self) -> list[dict[str, Any]]:
+        """Generate participant data for the trial."""
+        # Only generate participants for trials that have enrollment
+        if self.current_enrollment == 0:
+            return []
+
+        # Generate participants based on the current enrollment
+        return generate_participant_demographics(
+            self.current_enrollment, self.age_range, self.gender, self._class_factory_util, self._country_code
+        )
 
     @property
     def primary_outcomes(self) -> list[dict[str, str]]:
@@ -568,6 +568,7 @@ class ClinicalTrialEntity(HealthcareEntity):
             "enrollment_target": self.enrollment_target,
             "current_enrollment": self.current_enrollment,
             "locations": self.locations,
+            "participants": self.participants,
             "primary_outcomes": self.primary_outcomes,
             "secondary_outcomes": self.secondary_outcomes,
             "results_summary": self.results_summary,

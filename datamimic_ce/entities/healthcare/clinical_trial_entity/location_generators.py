@@ -13,6 +13,8 @@ This module provides functions for generating location data for clinical trials.
 import random
 from typing import Any
 
+from datamimic_ce.entities.address_entity import AddressEntity
+from datamimic_ce.entities.healthcare.clinical_trial_entity.data_loader import ClinicalTrialDataLoader
 from datamimic_ce.logger import logger
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
@@ -29,130 +31,58 @@ def generate_single_location(
     Returns:
         A dictionary containing location details
     """
-    # Try to use AddressEntity if available
-    if class_factory_util:
-        try:
-            from datamimic_ce.entities.address_entity import AddressEntity
+    # Check if class_factory_util is provided
+    if not class_factory_util:
+        logger.error("No class_factory_util provided for location generation. Cannot create location.")
+        return {"name": "", "address": "", "contact": {"phone": "", "email": ""}}
 
-            # Create an address entity with the specified country code
-            address_entity = AddressEntity(class_factory_util, country_code=country_code)
+    try:
+        # Create an address entity with the specified country code
+        address_entity = AddressEntity(class_factory_util, country_code=country_code)
 
-            # Return a dictionary with the location details
-            facility_options = ["University", "Hospital", "Medical Center", "Clinic", "Research Institute"]
-            facility = f"{random.choice(facility_options)} of {address_entity.city}"
+        # Get facility types from data loader
+        data_loader = ClinicalTrialDataLoader()
+        facility_options = data_loader.get_country_specific_data("facility_types", country_code)
 
-            # Format address as a string
-            address = (
-                f"{address_entity.city}, {address_entity.state} {address_entity.postal_code}, {address_entity.country}"
-            )
+        # If no facility types are found in data files, use a minimal set
+        if not facility_options:
+            logger.warning(f"No facility types found for {country_code}. Please create a data file.")
+            if country_code == "DE":
+                facility_type = "Medizinisches Zentrum"
+            else:
+                facility_type = "Medical Center"
+        else:
+            # Choose a facility type based on weights
+            from datamimic_ce.entities.healthcare.clinical_trial_entity.utils import weighted_choice
 
-            # Generate random contact info
-            phone = f"+1-{random.randint(200, 999)}-{random.randint(100, 999)}-{random.randint(1000, 9999)}"
-            email = f"contact@{facility.lower().replace(' ', '')}.org".replace(",", "").replace(".", "-")
+            facility_type = weighted_choice(facility_options)
 
-            return {"name": facility, "address": address, "contact": {"phone": phone, "email": email}}
-        except (ImportError, AttributeError) as e:
-            logger.warning(f"Failed to use AddressEntity for location: {e}")
-            # Fall through to the fallback method
+        # Create facility name using address city
+        facility = f"{facility_type} {address_entity.city}"
 
-    # Fallback to static generation if AddressEntity is not available
-    if country_code == "US":
-        cities = [
-            "Boston",
-            "New York",
-            "Chicago",
-            "Los Angeles",
-            "Houston",
-            "Philadelphia",
-            "Phoenix",
-            "San Antonio",
-            "San Diego",
-            "Dallas",
-        ]
-        states = [
-            "MA",
-            "NY",
-            "IL",
-            "CA",
-            "TX",
-            "PA",
-            "AZ",
-            "TX",
-            "CA",
-            "TX",
-        ]
-        city_index = random.randint(0, len(cities) - 1)
-        facility_options = ["University", "Hospital", "Medical Center", "Clinic", "Research Institute"]
-        facility = f"{random.choice(facility_options)} of {cities[city_index]}"
+        # Format address as a string
+        address = (
+            f"{address_entity.city}, {address_entity.state} {address_entity.postal_code}, {address_entity.country}"
+        )
 
-        # Format address
-        zip_code = f"{random.randint(10000, 99999)}"
-        address = f"{cities[city_index]}, {states[city_index]} {zip_code}, United States"
+        # Generate contact info based on facility name
+        if country_code == "DE":
+            email_domain = "de"
+            phone_prefix = "+49"
+        else:
+            email_domain = "org"
+            phone_prefix = "+1"
 
-        # Generate random contact info
-        phone = f"+1-{random.randint(200, 999)}-{random.randint(100, 999)}-{random.randint(1000, 9999)}"
-        email = f"contact@{facility.lower().replace(' ', '')}.org".replace(",", "").replace(".", "-")
+        # Generate phone number
+        phone = f"{phone_prefix}-{random.randint(100, 999)}-{random.randint(100, 999)}-{random.randint(1000, 9999)}"
+
+        # Generate email
+        email = f"contact@{facility.lower().replace(' ', '')}.{email_domain}".replace(",", "").replace(".", "-")
 
         return {"name": facility, "address": address, "contact": {"phone": phone, "email": email}}
-    elif country_code == "DE":
-        cities = [
-            "Berlin",
-            "Hamburg",
-            "Munich",
-            "Cologne",
-            "Frankfurt",
-            "Stuttgart",
-            "Düsseldorf",
-            "Leipzig",
-            "Dortmund",
-            "Essen",
-        ]
-        states = [
-            "Berlin",
-            "Hamburg",
-            "Bavaria",
-            "North Rhine-Westphalia",
-            "Hesse",
-            "Baden-Württemberg",
-            "North Rhine-Westphalia",
-            "Saxony",
-            "North Rhine-Westphalia",
-            "North Rhine-Westphalia",
-        ]
-        city_index = random.randint(0, len(cities) - 1)
-        facility_options = [
-            "Universitätsklinikum",
-            "Krankenhaus",
-            "Medizinisches Zentrum",
-            "Klinik",
-            "Forschungsinstitut",
-        ]
-        facility = f"{random.choice(facility_options)} {cities[city_index]}"
-
-        # Format address
-        zip_code = f"{random.randint(10000, 99999)}"
-        address = f"{cities[city_index]}, {states[city_index]} {zip_code}, Germany"
-
-        # Generate random contact info
-        phone = f"+49-{random.randint(100, 999)}-{random.randint(1000000, 9999999)}"
-        email = f"kontakt@{facility.lower().replace(' ', '')}.de".replace(",", "").replace(".", "-")
-
-        return {"name": facility, "address": address, "contact": {"phone": phone, "email": email}}
-    else:
-        # Generic location for other countries
-        facility = f"Medical Center {random.randint(1, 100)}"
-        city = f"City {random.randint(1, 100)}"
-        state = f"State {random.randint(1, 50)}"
-        zip_code = f"{random.randint(10000, 99999)}"
-
-        # Format address
-        address = f"{city}, {state} {zip_code}, {country_code}"
-
-        # Generate random contact info
-        phone = f"+xx-{random.randint(100, 999)}-{random.randint(100, 999)}-{random.randint(1000, 9999)}"
-        email = f"contact@{facility.lower().replace(' ', '')}.com".replace(",", "").replace(".", "-")
-
-        return {"name": facility, "address": address, "contact": {"phone": phone, "email": email}}
+    except Exception as e:
+        logger.error(f"Failed to generate location: {e}")
+        return {"name": "", "address": "", "contact": {"phone": "", "email": ""}}
 
 
 def generate_locations(

@@ -8,12 +8,25 @@ import datetime
 import random
 from typing import Any
 
+from datamimic_ce.entities.address_entity import AddressEntity
 from datamimic_ce.entities.healthcare.lab_test_entity.data_loader import LabTestDataLoader
 from datamimic_ce.entities.healthcare.lab_test_entity.utils import LabTestUtils, PropertyCache
+from datamimic_ce.entities.person_entity import PersonEntity
+from datamimic_ce.logger import logger
 
 
 class LabTestGenerators:
     """Field generators for lab test entity."""
+
+    # Constants for ID prefixes and formats
+    LAB_TEST_ID_PREFIX = "LAB-"
+    PATIENT_ID_PREFIX = "P-"
+    DOCTOR_ID_PREFIX = "DR-"
+    ID_MIN = 10000000
+    ID_MAX = 99999999
+
+    # Constants for date formats
+    DATE_FORMAT = "%Y-%m-%d"
 
     def __init__(self, locale: str, dataset: str | None = None):
         """Initialize the generators.
@@ -29,6 +42,9 @@ class LabTestGenerators:
         self._test_type: str | None = None
         self._status: str | None = None
         self._specimen_type: str | None = None
+        self._person_entity = None
+        self._address_entity = None
+        self._doctor_entity = None
 
     def set_test_type(self, test_type: str) -> None:
         """Set the test type.
@@ -54,17 +70,42 @@ class LabTestGenerators:
         """
         self._specimen_type = specimen_type
 
+    def _initialize_entities(self) -> None:
+        """Initialize the person and address entities if they haven't been initialized yet.
+
+        This method ensures that the necessary entities are created only once and
+        only when they are needed. It handles the case when class_factory_util is None.
+        """
+        if self._class_factory_util is None:
+            return
+
+        if self._person_entity is None:
+            self._person_entity = PersonEntity(self._class_factory_util, locale=self._locale, dataset=self._dataset)
+
+        if self._address_entity is None:
+            # Convert None to empty string for dataset to satisfy type checker
+            address_dataset = self._dataset if self._dataset is not None else ""
+            self._address_entity = AddressEntity(self._class_factory_util, dataset=address_dataset, locale=self._locale)
+
     def generate_test_id(self) -> str:
         """Generate a unique test ID."""
-        return f"LAB-{random.randint(10000000, 99999999)}"
+        return f"{self.LAB_TEST_ID_PREFIX}{random.randint(self.ID_MIN, self.ID_MAX)}"
 
     def generate_patient_id(self) -> str:
-        """Generate a patient ID."""
-        return f"P-{random.randint(10000000, 99999999)}"
+        """Generate a patient ID.
+
+        This method generates a patient ID in the same format as PatientEntity.
+        """
+        # Format consistent with PatientEntity._generate_patient_id
+        return f"{self.PATIENT_ID_PREFIX}{random.randint(self.ID_MIN, self.ID_MAX)}"
 
     def generate_doctor_id(self) -> str:
-        """Generate a doctor ID."""
-        return f"DR-{random.randint(10000000, 99999999)}"
+        """Generate a doctor ID.
+
+        This method generates a doctor ID in the same format as DoctorGenerators.
+        """
+        # Format consistent with DoctorGenerators.generate_doctor_id
+        return f"{self.DOCTOR_ID_PREFIX}{random.randint(self.ID_MIN, self.ID_MAX)}"
 
     def generate_test_type(self) -> str:
         """Generate a test type."""
@@ -75,8 +116,9 @@ class LabTestGenerators:
         test_types = LabTestDataLoader.get_country_specific_data("test_types", self._dataset)
 
         if not test_types:
-            # Fallback to default test types if no test types are available
-            return "Complete Blood Count (CBC)"
+            # Log error if no test types are available
+            logger.error(f"No test types found for {self._dataset}. Please create a data file.")
+            return "Unknown Test Type"
 
         return LabTestUtils.weighted_choice(test_types)
 
@@ -89,16 +131,25 @@ class LabTestGenerators:
         Returns:
             The generated test name.
         """
-        # For now, we'll use a simple approach - in a real implementation,
-        # this would also be loaded from country-specific CSV files
-        return f"{test_type} - Standard Panel"
+        # Get country-specific test name templates
+        test_name_templates = LabTestDataLoader.get_country_specific_data("test_name_templates", self._dataset)
+
+        if test_name_templates:
+            # Choose a template based on weights
+            template = LabTestUtils.weighted_choice(test_name_templates)
+            # Replace placeholder with test type
+            return template.replace("{test_type}", test_type)
+
+        # Log error if no templates are available
+        logger.error(f"No test name templates found for {self._dataset}. Please create a data file.")
+        return f"{test_type} Panel"
 
     def generate_test_date(self) -> str:
         """Generate a test date."""
         # Generate a date within the last 30 days
         days_ago = random.randint(0, 30)
         test_date = datetime.datetime.now() - datetime.timedelta(days=days_ago)
-        return test_date.strftime("%Y-%m-%d")
+        return test_date.strftime(self.DATE_FORMAT)
 
     def generate_result_date(self, test_date: str) -> str:
         """Generate a result date after the test date.
@@ -123,8 +174,9 @@ class LabTestGenerators:
         statuses = LabTestDataLoader.get_country_specific_data("test_statuses", self._dataset)
 
         if not statuses:
-            # Fallback to default statuses if no statuses are available
-            return "Completed"
+            # Log error if no statuses are available
+            logger.error(f"No test statuses found for {self._dataset}. Please create a data file.")
+            return "Unknown Status"
 
         return LabTestUtils.weighted_choice(statuses)
 
@@ -137,8 +189,9 @@ class LabTestGenerators:
         specimen_types = LabTestDataLoader.get_country_specific_data("specimen_types", self._dataset)
 
         if not specimen_types:
-            # Fallback to default specimen types if no specimen types are available
-            return "Blood"
+            # Log error if no specimen types are available
+            logger.error(f"No specimen types found for {self._dataset}. Please create a data file.")
+            return "Unknown Specimen"
 
         return LabTestUtils.weighted_choice(specimen_types)
 
@@ -168,10 +221,10 @@ class LabTestGenerators:
         # Get the components for this test type
         components = LabTestDataLoader.get_test_components(test_type, self._dataset)
 
-        # If no components are found, use a default set
+        # If no components are found, log an error
         if not components:
-            # Default to an empty list if no components are found
-            components = []
+            logger.error(f"No test components found for {test_type} in {self._dataset}. Please create a data file.")
+            return []
 
         # Generate results for each component
         results = []
@@ -292,44 +345,146 @@ class LabTestGenerators:
         lab_names = LabTestDataLoader.get_country_specific_data("lab_names", self._dataset)
 
         if not lab_names:
-            # Fallback to default lab names if no lab names are available
-            return "Central Laboratory"
+            # Use the address entity to generate a lab name
+            self._initialize_entities()
+            if self._address_entity:
+                city = self._address_entity.city
+                return f"{city} Medical Laboratory"
+
+            # Log error if no lab names are available and no address entity
+            logger.error(f"No lab names found for {self._dataset}. Please create a data file.")
+            return "Unknown Laboratory"
 
         return LabTestUtils.weighted_choice(lab_names)
 
     def generate_lab_address(self) -> dict[str, str]:
-        """Generate a lab address."""
-        # Mock implementation for testing
+        """Generate a lab address using AddressEntity."""
+        self._initialize_entities()
+
+        if self._address_entity:
+            return {
+                "street": f"{self._address_entity.street} {self._address_entity.house_number}",
+                "city": self._address_entity.city,
+                "state": self._address_entity.state,
+                "zip_code": self._address_entity.postal_code,
+                "country": self._address_entity.country,
+            }
+
+        # Log error if address entity is not available
+        logger.error("Address entity not available. Please ensure AddressEntity is properly configured.")
+        return self._generate_minimal_address()
+
+    def _generate_minimal_address(self) -> dict[str, str]:
+        """Generate a minimal address when AddressEntity is not available.
+
+        Returns:
+            A dictionary containing minimal address components.
+        """
+        # Get country-specific data if available
+        streets = LabTestDataLoader.get_country_specific_data("streets", self._dataset)
+        cities = LabTestDataLoader.get_country_specific_data("cities", self._dataset)
+        states = LabTestDataLoader.get_country_specific_data("states", self._dataset)
+
+        # Log errors if data is not available
+        if not streets:
+            logger.error(f"No streets found for {self._dataset}. Please create a data file.")
+        if not cities:
+            logger.error(f"No cities found for {self._dataset}. Please create a data file.")
+        if not states:
+            logger.error(f"No states found for {self._dataset}. Please create a data file.")
+
+        # Use the data if available, otherwise use empty strings
+        street = LabTestUtils.weighted_choice(streets) if streets else ""
+        city = LabTestUtils.weighted_choice(cities) if cities else ""
+        state = LabTestUtils.weighted_choice(states) if states else ""
+
+        # Generate a house number and zip code
+        house_number = str(random.randint(1, 999))
+        zip_code = str(random.randint(10000, 99999))
+
         return {
-            "street": "123 Test Street",
-            "city": "Test City",
-            "state": "Test State",
-            "zip_code": "12345",
+            "street": f"{house_number} {street}",
+            "city": city,
+            "state": state,
+            "zip_code": zip_code,
             "country": self._dataset if self._dataset else "US",
         }
 
     def generate_ordering_provider(self) -> str:
-        """Generate an ordering provider name."""
-        # Mock implementation for testing
-        return "Dr. Test Doctor"
+        """Generate an ordering provider name using PersonEntity."""
+        self._initialize_entities()
+
+        if self._person_entity:
+            # Create a doctor name with appropriate title
+            title = self._get_doctor_title_for_locale(self._locale)
+            return f"{title} {self._person_entity.given_name} {self._person_entity.family_name}"
+
+        # Log error if person entity is not available
+        logger.error("Person entity not available. Please ensure PersonEntity is properly configured.")
+        return "Unknown Provider"
+
+    def _get_doctor_title_for_locale(self, locale: str) -> str:
+        """Get the appropriate doctor title for the given locale.
+
+        Args:
+            locale: The locale to get the title for.
+
+        Returns:
+            The appropriate doctor title for the locale.
+        """
+        # Map of locales to doctor titles
+        locale_title_map = {
+            "de": "Dr. med.",
+            "fr": "Dr.",
+            "es": "Dr.",
+            "it": "Dott.",
+            "nl": "Dr.",
+            "pt": "Dr.",
+            "ru": "Д-р",
+            "ja": "医師",
+            "zh": "医生",
+        }
+
+        # Extract language code from locale if it contains country code
+        language_code = locale.split("_")[0].split("-")[0].lower() if locale else ""
+
+        # Return the title for the locale if available, otherwise default to "Dr."
+        return locale_title_map.get(language_code, "Dr.")
 
     def generate_notes(self) -> str:
         """Generate notes for the lab test."""
+        self._initialize_entities()
+
         # Get notes templates from data files if available
         note_templates = LabTestDataLoader.get_country_specific_data("note_templates", self._dataset)
         if not note_templates:
             note_templates = LabTestDataLoader.get_country_specific_data("note_templates", "US")
 
-        # If no templates are available, use a minimal fallback that's not hardcoded
+        # If no templates are available, log an error
         if not note_templates:
-            return f"Lab test completed on {datetime.datetime.now().strftime('%Y-%m-%d')}."
+            logger.error(f"No note templates found for {self._dataset}. Please create a data file.")
+            current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+            return f"Lab test completed on {current_date}."
 
         # Randomly select 1-3 notes
         num_notes = min(random.randint(1, 3), len(note_templates))
-        selected_notes = random.sample([note[0] for note in note_templates], num_notes)
+        selected_templates = random.sample([note[0] for note in note_templates], num_notes)
 
-        # Join the notes
-        return " ".join(selected_notes)
+        # Replace placeholders in templates if person entity is available
+        if self._person_entity:
+            doctor_name = f"Dr. {self._person_entity.family_name}"
+            current_date = datetime.datetime.now().strftime("%Y-%m-%d")
+
+            processed_notes = []
+            for template in selected_templates:
+                note = template.replace("{doctor}", doctor_name)
+                note = note.replace("{date}", current_date)
+                processed_notes.append(note)
+
+            return " ".join(processed_notes)
+
+        # Join the notes without replacements if no person entity
+        return " ".join(selected_templates)
 
     def set_class_factory_util(self, class_factory_util: Any) -> None:
         """Set the class factory utility.
@@ -338,3 +493,4 @@ class LabTestGenerators:
             class_factory_util: The class factory utility to use.
         """
         self._class_factory_util = class_factory_util
+        self._initialize_entities()

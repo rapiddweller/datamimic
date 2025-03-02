@@ -1,0 +1,31 @@
+name,street,city,state,zip_code,weight
+Synlab,Moosacher Str. 88,München,Bayern,80809,200
+Labor Berlin,Sylter Str. 2,Berlin,Berlin,13353,190
+Amedes,Haferweg 36,Hamburg,Hamburg,22769,180
+Sonic Healthcare Germany,Mecklenburgische Str. 28,Berlin,Berlin,14197,170
+Bioscientia,Konrad-Adenauer-Str. 17,Ingelheim,Rheinland-Pfalz,55218,160
+Labor Limbach,Im Breitspiel 15,Heidelberg,Baden-Württemberg,69126,150
+MVZ Labor Dr. Limbach,Im Breitspiel 16,Heidelberg,Baden-Württemberg,69126,140
+Labor Dr. Wisplinghoff,Classen-Kappelmann-Str. 24,Köln,Nordrhein-Westfalen,50931,130
+Labor Dr. Kramer,Lauenburger Str. 67,Hamburg,Hamburg,21502,120
+Labor Lademannbogen,Lademannbogen 61-63,Hamburg,Hamburg,22339,110
+Labor Dr. von Froreich,Großer Burstah 31,Hamburg,Hamburg,20457,100
+Labor Dr. Fenner,Bergstraße 14,Hamburg,Hamburg,20095,90
+Labor Dr. Heidrich,Hummelsbütteler Steindamm 19,Hamburg,Hamburg,22851,80
+Labor Dr. Krause,Windmühlenweg 43,Kiel,Schleswig-Holstein,24106,70
+Labor Dr. Staber,Mönckebergstraße 10,Hamburg,Hamburg,20095,60
+Labor Dr. Enzenauer,Marktplatz 17,Osnabrück,Niedersachsen,49074,50
+Labor Dr. Quade,Königstraße 20,Hannover,Niedersachsen,30175,40
+Labor Dr. Müller,Friedrichstraße 147,Berlin,Berlin,10117,30
+Labor Dr. Schumacher,Potsdamer Platz 1,Berlin,Berlin,10785,20
+Labor Dr. Thiele,Kurfürstendamm 216,Berlin,Berlin,10719,10
+Roche Diagnostics Deutschland,Sandhofer Straße 116,Mannheim,Baden-Württemberg,68305,10
+Siemens Healthineers Deutschland,Henkestraße 127,Erlangen,Bayern,91052,10
+Abbott Deutschland,Max-Planck-Ring 2,Wiesbaden,Hessen,65205,10
+Qiagen Deutschland,Qiagen Straße 1,Hilden,Nordrhein-Westfalen,40724,10
+Becton Dickinson Deutschland,Tullastraße 8-12,Heidelberg,Baden-Württemberg,69126,10
+Bio-Rad Laboratories Deutschland,Heidemannstraße 164,München,Bayern,80939,10
+Thermo Fisher Scientific Deutschland,Im Steingrund 4-6,Dreieich,Hessen,63303,10
+Hologic Deutschland,Liebknechtstraße 5,Wiesbaden,Hessen,65187,10
+Danaher Deutschland,Stuttgarter Straße 139,Freiburg,Baden-Württemberg,79108,10
+PerkinElmer Deutschland,Ferdinand-Porsche-Ring 17,Rodgau,Hessen,63110,10 

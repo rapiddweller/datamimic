@@ -4,19 +4,21 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import csv
 import random
-from pathlib import Path
 
+from datamimic_ce.domains.common.data_loaders.phone_number_loader import PhoneNumberDataLoader
 from datamimic_ce.generators.generator import Generator
-from datamimic_ce.logger import logger
 
 
 class PhoneNumberGenerator(Generator):
     """
-    Generator a random Phone Number
+    Generator for random phone numbers.
+
+    This class generates random phone numbers based on country and area codes
+    loaded from data files through the PhoneNumberDataLoader.
+
     Attributes:
-        dataset:  Country ISO code (e.g. "US")
+        dataset: Country ISO code (e.g. "US")
         area_code: phone area code
         is_mobile: True if generate mobile number
     """
@@ -27,55 +29,43 @@ class PhoneNumberGenerator(Generator):
         area_code: str | None = None,
         is_mobile: bool = False,
     ):
-        self._dataset = (dataset or "US").upper()
-        prefix_path = Path(__file__).parent.parent
-        country_file_path = prefix_path.joinpath("entities/data/country.csv")
-        try:
-            with open(f"{country_file_path}") as file:
-                country_reader = csv.reader(file, delimiter=",")
-                country_codes = {}
-                for country_reader_row in country_reader:
-                    country_codes[country_reader_row[0]] = country_reader_row[2]
-            self._country_codes = country_codes
-        except FileNotFoundError as err:
-            raise FileNotFoundError(f"File not found: {country_file_path}") from err
+        """Initialize the PhoneNumberGenerator.
 
-        # use later when generate
+        Args:
+            dataset: Country ISO code (e.g. "US")
+            area_code: Specific area code to use (optional)
+            is_mobile: Whether to generate a mobile number
+        """
+        self._dataset = (dataset or "US").upper()
         self._is_mobile = is_mobile
 
+        # Initialize data loader
+        self._data_loader = PhoneNumberDataLoader(country_code=self._dataset)
+
+        # Load country codes
+        self._country_codes = self._data_loader.load_country_codes()
+
+        # Set area code data
         if not is_mobile:
             if area_code:
                 self._area_data = [area_code]
             else:
-                prefix_path = Path(__file__).parent.parent
-                city_file_name = f"entities/data/city/city_{dataset}.csv"
-                city_file_path = prefix_path.joinpath(city_file_name)
+                # Load area codes from data loader
+                area_codes = self._data_loader.load_area_codes()
+                # Only get max 100 data
+                self._area_data = random.sample(area_codes, 100) if len(area_codes) > 100 else area_codes
 
-                try:
-                    with open(f"{city_file_path}") as file:
-                        city_reader = csv.DictReader(file, delimiter=";")
-                        area_codes = []
-                        for city_reader_row in city_reader:
-                            area_codes.append(city_reader_row["areaCode"])
-                    # only get max 100 data
-                    self._area_data = random.sample(area_codes, 100) if len(area_codes) > 100 else area_codes
-
-                except FileNotFoundError:
-                    # Load US datasets
-                    logger.warning(f"Not support dataset: {dataset}, dataset change to 'US'")
-                    city_file_path = prefix_path.joinpath("entities/data/city/city_US.csv")
-
-                    with open(f"{city_file_path}") as file:
-                        city_reader = csv.DictReader(file, delimiter=";")
-                        area_codes = []
-                        for city_reader_row in city_reader:
-                            area_codes.append(city_reader_row["areaCode"])
-                    # only get max 100 data
-                    self._area_data = random.sample(area_codes, 100) if len(area_codes) > 100 else area_codes
+                # If we had to fall back to US data, update the dataset
+                if self._dataset != "US" and not any(area_codes):
                     self._dataset = "US"
 
     def generate(self) -> str:
-        country_code = self._country_codes[self._dataset]
+        """Generate a random phone number.
+
+        Returns:
+            A formatted phone number string
+        """
+        country_code = self._country_codes.get(self._dataset, "0")
         if country_code is None or country_code.strip() == "":
             country_code = "0"
 

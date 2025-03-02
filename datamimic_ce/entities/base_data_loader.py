@@ -98,9 +98,13 @@ class BaseDataLoader:
             file_path = DataPathUtil.get_country_specific_data_file_path(domain_path, data_type, "US")
             data = cls._load_simple_csv(file_path)
 
-        # If still no data, use default values
+        # If still no data, log an error - no fallback to default values
         if not data:
-            data = cls._get_default_values(data_type)
+            logger.error(
+                f"No data file found for {data_type} with country code {country_code}. Please create a data file."
+            )
+            # Return empty list instead of using default values
+            data = []
 
         # Cache the data for future use
         cache[cache_key] = data
@@ -137,10 +141,8 @@ class BaseDataLoader:
         Returns:
             List of tuples containing default values and weights
         """
-        # This method should be implemented by each subclass
-        logger.warning(
-            f"No default values defined for data type: {data_type}. Override _get_default_values in subclass."
-        )
+        # Log an error and return an empty list - no hardcoded fallbacks
+        logger.error(f"No data file found for {data_type}. Please create a data file.")
         return []
 
     @staticmethod

@@ -24,7 +24,6 @@ class PatientEntity(Entity):
     """Generate patient data.
 
     This class generates realistic patient data including patient IDs,
-    names, dates of birth, gender, blood type, contact information,
     medical history, allergies, and medications.
 
     It uses PersonEntity for generating personal information and
@@ -70,14 +69,6 @@ class PatientEntity(Entity):
         self._field_generators = EntityUtil.create_field_generator_dict(
             {
                 "patient_id": self._generate_patient_id,
-                "first_name": self._generate_first_name,
-                "last_name": self._generate_last_name,
-                "date_of_birth": self._generate_date_of_birth,
-                "gender": self._generate_gender,
-                "blood_type": self._generate_blood_type,
-                "contact_number": self._generate_contact_number,
-                "email": self._generate_email,
-                "address": self._generate_address,
                 "insurance_provider": self._generate_insurance_provider,
                 "insurance_policy_number": self._generate_insurance_policy_number,
                 "emergency_contact": self._generate_emergency_contact,
@@ -160,8 +151,6 @@ class PatientEntity(Entity):
 
             # Define categories of data to load without headers (simple lists)
             simple_categories = {
-                "genders": "genders",
-                "blood_types": "blood_types",
                 "insurance_providers": "insurance_providers",
                 "emergency_relationships": "emergency_relationships",
                 "statuses": "statuses",
@@ -290,134 +279,13 @@ class PatientEntity(Entity):
         """Generate a unique patient ID."""
         return f"P-{random.randint(10000000, 99999999)}"
 
-    def _generate_first_name(self) -> str:
-        """Generate a first name using PersonEntity."""
-        return self._person_entity.given_name
-
-    def _generate_last_name(self) -> str:
-        """Generate a last name using PersonEntity."""
-        return self._person_entity.family_name
-
-    def _generate_date_of_birth(self) -> str:
-        """Generate a date of birth."""
-        # Use the person entity's birthdate if it has one
-        if hasattr(self._person_entity, "birthdate"):
-            return self._person_entity.birthdate.strftime("%Y-%m-%d")
-
-        # Fallback to a random date
-        days_ago = random.randint(365, 36500)  # 1 to 100 years
-        birth_date = datetime.now() - timedelta(days=days_ago)
-        return birth_date.strftime("%Y-%m-%d")
-
-    def _generate_gender(self) -> str:
-        """Generate a gender."""
-        # Use the person entity's gender if possible
-        if hasattr(self._person_entity, "gender"):
-            person_gender = self._person_entity.gender
-            # Map mimesis genders to our format
-            gender_mapping = {"female": "Female", "male": "Male", "other": "Other"}
-            if person_gender in gender_mapping:
-                return gender_mapping[person_gender]
-
-        # Fallback to our cached data
-        genders = self._DATA_CACHE.get("genders", ["Male", "Female", "Other", "Unknown"])
-        return random.choice(genders)
-
-    def _generate_blood_type(self) -> str:
-        """Generate a blood type."""
-        # Use the person entity's blood type if it has one
-        if hasattr(self._person_entity, "blood_type") and self._person_entity.blood_type:
-            return self._person_entity.blood_type
-
-        # Fallback to our cached data
-        blood_types = self._DATA_CACHE.get("blood_types", ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"])
-
-        # Ensure we're using consistent hyphen characters
-        blood_type = random.choice(blood_types)
-        # Replace Unicode minus sign with hyphen if present
-        return blood_type.replace("−", "-")
-
-    def _generate_contact_number(self) -> str:
-        """Generate a contact number.
-
-        Returns:
-            A contact number in the format (XXX) XXX-XXXX.
-        """
-        # Use the person entity's phone number if it has one
-        if hasattr(self._person_entity, "phone") and self._person_entity.phone:
-            # Format the phone number to match the expected format
-            phone = self._person_entity.phone
-            if phone.startswith("+"):
-                # Extract the digits from the phone number
-                digits = "".join(filter(str.isdigit, phone))
-                if len(digits) >= 10:
-                    # Format as (XXX) XXX-XXXX
-                    area_code = digits[-10:-7]
-                    prefix = digits[-7:-4]
-                    line_number = digits[-4:]
-                    return f"({area_code}) {prefix}-{line_number}"
-            return phone
-
-        # Fallback to the address entity's phone number
-        if hasattr(self._address_entity, "private_phone") and self._address_entity.private_phone:
-            # Format the phone number to match the expected format
-            phone = self._address_entity.private_phone
-            if phone.startswith("+"):
-                # Extract the digits from the phone number
-                digits = "".join(filter(str.isdigit, phone))
-                if len(digits) >= 10:
-                    # Format as (XXX) XXX-XXXX
-                    area_code = digits[-10:-7]
-                    prefix = digits[-7:-4]
-                    line_number = digits[-4:]
-                    return f"({area_code}) {prefix}-{line_number}"
-            return phone
-
-        # Last resort fallback
-        area_code = str(random.randint(100, 999))
-        prefix = str(random.randint(100, 999))
-        line_number = str(random.randint(1000, 9999))
-        return f"({area_code}) {prefix}-{line_number}"
-
-    def _generate_email(self) -> str:
-        """Generate an email address."""
-        # Use the person entity's email if it has one
-        if hasattr(self._person_entity, "email") and self._person_entity.email:
-            return self._person_entity.email
-
-        # Fallback to generating our own
-        first_name = self.first_name.lower().replace(" ", "")
-        last_name = self.last_name.lower().replace(" ", "")
-        random_num = random.randint(1, 9999)
-        domains = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com"]
-        domain = random.choice(domains)
-
-        formats = [
-            f"{first_name}.{last_name}@{domain}",
-            f"{first_name}{last_name}@{domain}",
-            f"{first_name}{random_num}@{domain}",
-            f"{first_name[0]}{last_name}@{domain}",
-        ]
-
-        return random.choice(formats)
-
-    def _generate_address(self) -> dict[str, str]:
-        """Generate an address using AddressEntity."""
-        return {
-            "street": f"{self._address_entity.street} {self._address_entity.house_number}",
-            "city": self._address_entity.city,
-            "state": self._address_entity.state,
-            "zip_code": self._address_entity.postal_code,
-            "country": self._address_entity.country,
-        }
-
     def _generate_insurance_provider(self) -> str:
         """Generate an insurance provider."""
         providers = self._DATA_CACHE.get("insurance_providers", [])
         if not providers:
-            # Emergency fallback - should be handled properly by CSV files
-            logger.warning("No insurance providers found in data cache, using emergency default list")
-            return "Insurance Provider"
+            # No fallback - return empty string if data files are not available
+            logger.error("No insurance providers found in data cache. Please create a data file.")
+            return ""
         return random.choice(providers)
 
     def _generate_insurance_policy_number(self) -> str:
@@ -437,16 +305,28 @@ class PatientEntity(Entity):
         # Get relationships from cache
         relationships = self._DATA_CACHE.get("emergency_relationships", [])
         if not relationships:
-            # Emergency fallback - should be handled properly by CSV files
-            logger.warning("No emergency relationships found in data cache, using emergency default")
-            relationship = "Family Member"
+            # No fallback - return empty string if data files are not available
+            logger.error("No emergency relationships found in data cache. Please create a data file.")
+            relationship = ""
         else:
             relationship = random.choice(relationships)
+
+        # Format the emergency contact's phone number
+        emergency_phone = emergency_person.phone
+        digits = "".join(filter(str.isdigit, emergency_phone))
+        if len(digits) >= 10:
+            # Format as (XXX) XXX-XXXX
+            area_code = digits[-10:-7]
+            prefix = digits[-7:-4]
+            line_number = digits[-4:]
+            formatted_phone = f"({area_code}) {prefix}-{line_number}"
+        else:
+            formatted_phone = emergency_phone
 
         return {
             "name": f"{emergency_person.given_name} {emergency_person.family_name}",
             "relationship": relationship,
-            "phone": emergency_person.phone if hasattr(emergency_person, "phone") else self._generate_contact_number(),
+            "phone": formatted_phone,
         }
 
     def _generate_medical_history(self) -> list[dict[str, str]]:
@@ -462,8 +342,8 @@ class PatientEntity(Entity):
         statuses = self._DATA_CACHE.get("statuses", [])
 
         if not medical_conditions:
-            # Emergency fallback - should be handled properly by CSV files
-            logger.warning("No medical conditions found in data cache, using emergency default")
+            # No fallback - return empty list if data files are not available
+            logger.error("No medical conditions found in data cache. Please create a data file.")
             return []
 
         # Use data from CSV
@@ -484,7 +364,9 @@ class PatientEntity(Entity):
             elif statuses:
                 status = random.choice(statuses)
             else:
-                status = "Active"  # Emergency fallback
+                # No fallback - use empty string if data files are not available
+                logger.error("No statuses found in data cache. Please create a data file.")
+                status = ""
 
             history.append(
                 {
@@ -508,8 +390,8 @@ class PatientEntity(Entity):
         allergies_data = self._DATA_CACHE.get("allergies", [])
 
         if not allergies_data:
-            # Emergency fallback - should be handled properly by CSV files
-            logger.warning("No allergies found in data cache, using emergency default")
+            # No fallback - return empty list if data files are not available
+            logger.error("No allergies found in data cache. Please create a data file.")
             return []
 
         # Use data from CSV
@@ -539,8 +421,8 @@ class PatientEntity(Entity):
         medications_data = self._DATA_CACHE.get("medications", [])
 
         if not medications_data:
-            # Emergency fallback - should be handled properly by CSV files
-            logger.warning("No medications found in data cache, using emergency default")
+            # No fallback - return empty list if data files are not available
+            logger.error("No medications found in data cache. Please create a data file.")
             return []
 
         # Use data from CSV
@@ -588,59 +470,62 @@ class PatientEntity(Entity):
 
     @property
     def first_name(self) -> str:
-        """Get the first name."""
-        value = self._field_generators["first_name"].get()
-        assert value is not None, "first_name should not be None"
-        return value
+        """Get the first name from the person entity."""
+        return self._person_entity.given_name
 
     @property
     def last_name(self) -> str:
-        """Get the last name."""
-        value = self._field_generators["last_name"].get()
-        assert value is not None, "last_name should not be None"
-        return value
+        """Get the last name from the person entity."""
+        return self._person_entity.family_name
 
     @property
     def date_of_birth(self) -> str:
-        """Get the date of birth."""
-        value = self._field_generators["date_of_birth"].get()
-        assert value is not None, "date_of_birth should not be None"
-        return value
+        """Get the date of birth from the person entity."""
+        return self._person_entity.birthdate.strftime("%Y-%m-%d")
 
     @property
     def gender(self) -> str:
-        """Get the gender."""
-        value = self._field_generators["gender"].get()
-        assert value is not None, "gender should not be None"
-        return value
+        """Get the gender from the person entity."""
+        person_gender = self._person_entity.gender
+        gender_mapping = {"female": "Female", "male": "Male", "other": "Other"}
+        return gender_mapping.get(person_gender, person_gender)
 
     @property
     def blood_type(self) -> str:
-        """Get the blood type."""
-        value = self._field_generators["blood_type"].get()
-        assert value is not None, "blood_type should not be None"
-        return value
+        """Get the blood type from the person entity."""
+        blood_type = self._person_entity.blood_type
+        # Ensure we're using consistent hyphen characters
+        return blood_type.replace("−", "-")
 
     @property
     def contact_number(self) -> str:
-        """Get the contact number."""
-        value = self._field_generators["contact_number"].get()
-        assert value is not None, "contact_number should not be None"
-        return value
+        """Get the contact number from the person entity."""
+        phone = self._person_entity.phone
+        # Format the phone number to match the expected format
+        digits = "".join(filter(str.isdigit, phone))
+        if len(digits) >= 10:
+            # Format as (XXX) XXX-XXXX
+            area_code = digits[-10:-7]
+            prefix = digits[-7:-4]
+            line_number = digits[-4:]
+            return f"({area_code}) {prefix}-{line_number}"
+        return phone
 
     @property
     def email(self) -> str:
-        """Get the email address."""
-        value = self._field_generators["email"].get()
-        assert value is not None, "email should not be None"
-        return value
+        """Get the email address from the person entity."""
+        return self._person_entity.email
 
     @property
     def address(self) -> dict[str, str]:
-        """Get the address."""
-        value = self._field_generators["address"].get()
-        assert value is not None, "address should not be None"
-        return value
+        """Get the address from the address entity."""
+        return {
+            "street": f"{self._address_entity.street} {self._address_entity.house_number}",
+            "city": self._address_entity.city,
+            "state": self._address_entity.state,
+            "zip_code": self._address_entity.postal_code,
+            "country": self._address_entity.country,
+        }
 
     @property
     def insurance_provider(self) -> str:
@@ -717,16 +602,9 @@ class PatientEntity(Entity):
         Returns:
             A list of dictionaries containing generated patient data.
         """
+        # For batch generation, we need to include all fields
         field_names = [
             "patient_id",
-            "first_name",
-            "last_name",
-            "date_of_birth",
-            "gender",
-            "blood_type",
-            "contact_number",
-            "email",
-            "address",
             "insurance_provider",
             "insurance_policy_number",
             "emergency_contact",
@@ -735,4 +613,45 @@ class PatientEntity(Entity):
             "medications",
         ]
 
-        return EntityUtil.batch_generate_fields(self._field_generators, field_names, count)
+        # Generate the batch for our specific fields
+        batch = EntityUtil.batch_generate_fields(self._field_generators, field_names, count)
+
+        # For each record, add the fields from person and address entities
+        for i in range(count):
+            # Reset entities for each record
+            self._person_entity.reset()
+            self._address_entity.reset()
+
+            # Add person entity fields
+            batch[i]["first_name"] = self._person_entity.given_name
+            batch[i]["last_name"] = self._person_entity.family_name
+            batch[i]["date_of_birth"] = self._person_entity.birthdate.strftime("%Y-%m-%d")
+
+            person_gender = self._person_entity.gender
+            gender_mapping = {"female": "Female", "male": "Male", "other": "Other"}
+            batch[i]["gender"] = gender_mapping.get(person_gender, person_gender)
+
+            batch[i]["blood_type"] = self._person_entity.blood_type.replace("−", "-")
+
+            phone = self._person_entity.phone
+            digits = "".join(filter(str.isdigit, phone))
+            if len(digits) >= 10:
+                area_code = digits[-10:-7]
+                prefix = digits[-7:-4]
+                line_number = digits[-4:]
+                batch[i]["contact_number"] = f"({area_code}) {prefix}-{line_number}"
+            else:
+                batch[i]["contact_number"] = phone
+
+            batch[i]["email"] = self._person_entity.email
+
+            # Add address entity fields
+            batch[i]["address"] = {
+                "street": f"{self._address_entity.street} {self._address_entity.house_number}",
+                "city": self._address_entity.city,
+                "state": self._address_entity.state,
+                "zip_code": self._address_entity.postal_code,
+                "country": self._address_entity.country,
+            }
+
+        return batch

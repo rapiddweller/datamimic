@@ -1,0 +1,38 @@
+specimen_type,weight
+Blood,200
+Serum,180
+Plasma,170
+Urine,190
+Stool,120
+Cerebrospinal Fluid (CSF),80
+Sputum,100
+Throat Swab,150
+Nasal Swab,140
+Nasopharyngeal Swab,130
+Wound Swab,110
+Tissue Biopsy,90
+Bone Marrow,70
+Synovial Fluid,60
+Pleural Fluid,50
+Peritoneal Fluid,40
+Pericardial Fluid,30
+Amniotic Fluid,50
+Saliva,160
+Hair,40
+Nails,30
+Skin Scraping,40
+Bronchial Washing,60
+Bronchial Brushing,50
+Bronchoalveolar Lavage (BAL),70
+Gastric Fluid,40
+Bile,30
+Seminal Fluid,20
+Vaginal Swab,80
+Cervical Swab,90
+Endocervical Swab,80
+Rectal Swab,70
+Ear Swab,60
+Eye Swab,50
+Abscess Fluid,40
+Dialysis Fluid,30
+Dried Blood Spot,50 

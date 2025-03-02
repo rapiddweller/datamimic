@@ -98,9 +98,9 @@ class CityEntity:
             return
 
         # Prepare data file path
-        prefix_path = Path(__file__).parent
-        city_file_path = prefix_path.joinpath(f"data/city/city_{self._dataset}.csv")
-        state_file_path = prefix_path.joinpath(f"data/state/state_{self._dataset}.csv")
+        prefix_path = Path(__file__).parent.parent
+        city_file_path = prefix_path.joinpath(f"data/common/city/city_{self._dataset}.csv")
+        state_file_path = prefix_path.joinpath(f"data/common/state/state_{self._dataset}.csv")
 
         # Try to load the requested dataset
         try:
@@ -129,8 +129,8 @@ class CityEntity:
             fallback_tried = False
             for fallback in self._REGIONAL_FALLBACKS.get(self._dataset, ()):
                 try:
-                    fallback_city_path = prefix_path.joinpath(f"data/city/city_{fallback}.csv")
-                    fallback_state_path = prefix_path.joinpath(f"data/state/state_{fallback}.csv")
+                    fallback_city_path = prefix_path.joinpath(f"data/common/city/city_{fallback}.csv")
+                    fallback_state_path = prefix_path.joinpath(f"data/common/state/state_{fallback}.csv")
 
                     # Check if files exist
                     if not fallback_city_path.exists() or not fallback_state_path.exists():
@@ -169,13 +169,13 @@ class CityEntity:
                 self._dataset = self._DEFAULT_DATASET
 
                 # Load US city data
-                us_city_path = prefix_path.joinpath("data/city/city_US.csv")
+                us_city_path = prefix_path.joinpath("data/common/city/city_US.csv")
                 self._city_header_dict, self._city_data = FileUtil.read_csv_to_dict_of_tuples_with_header(
                     us_city_path, delimiter=";"
                 )
 
                 # Load US state data
-                us_state_path = prefix_path.joinpath("data/state/state_US.csv")
+                us_state_path = prefix_path.joinpath("data/common/state/state_US.csv")
                 state_headers, state_data = FileUtil.read_csv_to_dict_of_tuples_with_header(us_state_path)
 
                 # Build state dictionary
@@ -194,7 +194,7 @@ class CityEntity:
 
         # Load country data (only if we don't have it cached)
         if self._dataset not in self._COUNTRY_NAME_CACHE:
-            country_path = prefix_path.joinpath("data/country.csv")
+            country_path = prefix_path.joinpath("data/common/country.csv")
             country_df = FileUtil.read_csv_to_list_of_tuples_without_header(country_path, delimiter=",")
 
             self._country = ""

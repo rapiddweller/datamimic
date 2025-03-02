@@ -1,0 +1,20 @@
+Aktiv,200
+Inaktiv,50
+Wartung,30
+Reparatur,25
+Kalibrierung,20
+Ausgemustert,15
+Zurückgerufen,10
+Installation ausstehend,20
+Im Transit,15
+Reserviert,25
+Außer Betrieb,30
+Verliehen,15
+Geleast,20
+Stillgelegt,10
+In Prüfung,15
+Unter Quarantäne,10
+Entsorgung ausstehend,5
+Genehmigung ausstehend,15
+Verifizierung ausstehend,10
+Inspektion ausstehend,15 
