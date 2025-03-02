@@ -1,0 +1,11 @@
+type,code,description,weight
+Auto Insurance,AUTO,Provides financial protection in case of vehicle accidents or damage,0.25
+Homeowners Insurance,HOME,Covers damage to a home and its contents,0.18
+Life Insurance,LIFE,Provides financial benefit to dependents after policyholder's death,0.15
+Health Insurance,HLTH,Covers medical expenses for illnesses and injuries,0.12
+Renters Insurance,RENT,Covers personal property for people renting homes or apartments,0.08
+Business Insurance,BUSI,Provides protection for business operations and assets,0.07
+Motorcycle Insurance,MOTO,Specialized insurance for motorcycle owners,0.05
+Boat Insurance,BOAT,Covers watercraft and related liabilities,0.04
+Pet Insurance,PET,Covers veterinary costs for pets,0.03
+Travel Insurance,TRVL,Covers expenses related to travel issues and emergencies,0.03

@@ -1,0 +1,11 @@
+type,code,description,weight
+Kfz-Versicherung,AUTO,Absicherung gegen finanzielle Risiken bei Autounfällen oder Schäden,0.25
+Wohngebäudeversicherung,HOME,Absicherung von Schäden an Wohngebäuden,0.18
+Lebensversicherung,LIFE,Finanzielle Absicherung für Hinterbliebene nach dem Tod des Versicherten,0.15
+Krankenversicherung,HLTH,Deckung medizinischer Kosten bei Krankheiten und Verletzungen,0.12
+Hausratversicherung,HHALT,Schutz für persönliches Eigentum in einer Wohnung,0.08
+Haftpflichtversicherung,HAFT,Absicherung gegen Schadensersatzansprüche Dritter,0.07
+Berufsunfähigkeitsversicherung,BERUF,Absicherung bei Berufsunfähigkeit,0.05
+Rechtsschutzversicherung,RECHT,Finanzielle Absicherung für Rechtskosten,0.04
+Unfallversicherung,UNFALL,Absicherung bei Unfällen mit bleibenden Schäden,0.03
+Reiseversicherung,REISE,Versicherungsschutz für Reisezwischenfälle und Notfälle,0.03

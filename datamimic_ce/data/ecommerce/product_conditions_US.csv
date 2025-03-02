@@ -1,0 +1,6 @@
+condition,weight
+NEW,0.8
+USED,0.1
+REFURBISHED,0.05
+OPEN_BOX,0.03
+DAMAGED,0.02

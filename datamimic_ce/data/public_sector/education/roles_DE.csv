@@ -1,0 +1,14 @@
+role,code,description,level,weight
+Schulleiter/in,SL,Leitung der Schule und Verantwortung für den gesamten Schulbetrieb,5,0.03
+Stellvertretende/r Schulleiter/in,SSL,Unterstützung der Schulleitung und Vertretung bei Abwesenheit,4,0.05
+Fachbereichsleiter/in,FBL,Leitung eines bestimmten Fachbereichs wie Mathematik oder Deutsch,3,0.07
+Lehrer/in,L,Lehrkraft für bestimmte Fächer,2,0.50
+Beratungslehrer/in,BL,Lehrkraft mit zusätzlicher Qualifikation zur Beratung von Schülern und Eltern,2,0.10
+Schulpsychologe/in,SPSY,Fachkraft für psychologische Betreuung und Beratung,3,0.04
+Bibliotheksleiter/in,BIBL,Leitung der Schulbibliothek und Unterstützung bei Recherchen,2,0.03
+Schulsekretär/in,SEKR,Verwaltungsfachkraft für den Schulbetrieb,1,0.05
+Hausmeister/in,HM,Verantwortlich für Instandhaltung und Pflege der Schulgebäude,1,0.04
+Sozialarbeiter/in,SOAR,Fachkraft für soziale Betreuung und Beratung von Schülern,2,0.03
+Schulassistent/in,SASS,Unterstützung der Lehrkräfte im Unterricht,1,0.03
+Schulkrankenschwester/Schulkrankenpfleger,SKP,Medizinische Betreuung von Schülern (selten in Deutschland),2,0.01
+Schülerpraktikant/in,SPRA,Schüler/Studenten in temporärer Ausbildungssituation,1,0.02

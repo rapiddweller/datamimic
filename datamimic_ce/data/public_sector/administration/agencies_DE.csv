@@ -1,0 +1,22 @@
+name,agency_id,level,department,address,city,state,phone,website,weight
+Bundesministerium für Gesundheit,BMG,Bund,Gesundheit,"Rochusstraße 1, 53123 Bonn","Bonn","Nordrhein-Westfalen","0228-99441-0","www.bundesgesundheitsministerium.de",0.10
+Bundesministerium für Bildung und Forschung,BMBF,Bund,Bildung,"Kapelle-Ufer 1, 10117 Berlin","Berlin","Berlin","030-18057-0","www.bmbf.de",0.09
+Bundesministerium für Arbeit und Soziales,BMAS,Bund,Soziales,"Wilhelmstraße 49, 10117 Berlin","Berlin","Berlin","030-18527-0","www.bmas.de",0.08
+Bundesministerium für Verkehr und digitale Infrastruktur,BMVI,Bund,Verkehr,"Invalidenstraße 44, 10115 Berlin","Berlin","Berlin","030-18300-0","www.bmvi.de",0.07
+Bundeszentralamt für Steuern,BZSt,Bund,Finanzen,"An der Küppe 1, 53225 Bonn","Bonn","Nordrhein-Westfalen","0228-406-0","www.bzst.de",0.07
+Bayerisches Staatsministerium für Unterricht und Kultus,StMUK,Land,Bildung,"Salvatorstraße 2, 80333 München","München","Bayern","089-2186-0","www.km.bayern.de",0.06
+Ministerium für Schule und Bildung des Landes Nordrhein-Westfalen,MSB,Land,Bildung,"Völklinger Straße 49, 40221 Düsseldorf","Düsseldorf","Nordrhein-Westfalen","0211-5867-40","www.schulministerium.nrw.de",0.05
+Niedersächsisches Ministerium für Wirtschaft, Arbeit, Verkehr und Digitalisierung,MW,Land,Wirtschaft,"Friedrichswall 1, 30159 Hannover","Hannover","Niedersachsen","0511-120-0","www.mw.niedersachsen.de",0.05
+Sächsisches Staatsministerium für Soziales und Gesellschaftlichen Zusammenhalt,SMS,Land,Soziales,"Albertstraße 10, 01097 Dresden","Dresden","Sachsen","0351-564-0","www.sms.sachsen.de",0.04
+Hessisches Ministerium für Umwelt, Klimaschutz, Landwirtschaft und Verbraucherschutz,HMUKLV,Land,Umwelt,"Mainzer Straße 80, 65189 Wiesbaden","Wiesbaden","Hessen","0611-815-0","www.umwelt.hessen.de",0.04
+Bezirksamt Mitte von Berlin,BA_MITTE,Kommune,Verwaltung,"Mathilde-Jacob-Platz 1, 10551 Berlin","Berlin","Berlin","030-9018-0","www.berlin.de/ba-mitte",0.04
+Landeshauptstadt München, Kreisverwaltungsreferat,KVR,Kommune,Verwaltung,"Ruppertstraße 19, 80466 München","München","Bayern","089-233-0","www.muenchen.de/kvr",0.04
+Landratsamt München,LRA_M,Landkreis,Verwaltung,"Mariahilfplatz 17, 81541 München","München","Bayern","089-6221-0","www.landkreis-muenchen.de",0.03
+Stadtverwaltung Köln, Amt für öffentliche Ordnung,KOELN_AOO,Kommune,Ordnung,"Willy-Brandt-Platz 3, 50679 Köln","Köln","Nordrhein-Westfalen","0221-221-0","www.stadt-koeln.de",0.03
+Behörde für Inneres und Sport, Hamburg,BIS_HH,Land,Inneres,"Johanniswall 4, 20095 Hamburg","Hamburg","Hamburg","040-428280","www.hamburg.de/innenbehoerde",0.03
+Umweltbundesamt,UBA,Bund,Umwelt,"Wörlitzer Platz 1, 06844 Dessau-Roßlau","Dessau-Roßlau","Sachsen-Anhalt","0340-2103-0","www.umweltbundesamt.de",0.03
+Bundesnetzagentur,BNetzA,Bund,Wirtschaft,"Tulpenfeld 4, 53113 Bonn","Bonn","Nordrhein-Westfalen","0228-14-0","www.bundesnetzagentur.de",0.03
+Regierungspräsidium Darmstadt,RP_DA,Bezirk,Regierung,"Luisenplatz 2, 64283 Darmstadt","Darmstadt","Hessen","06151-12-0","www.rp-darmstadt.hessen.de",0.03
+Bundesamt für Migration und Flüchtlinge,BAMF,Bund,Migration,"Frankenstraße 210, 90461 Nürnberg","Nürnberg","Bayern","0911-943-0","www.bamf.de",0.03
+Landesverwaltungsamt Sachsen-Anhalt,LVwA,Land,Verwaltung,"Ernst-Kamieth-Straße 2, 06112 Halle (Saale)","Halle (Saale)","Sachsen-Anhalt","0345-514-0","www.lvwa.sachsen-anhalt.de",0.03
+Bezirksregierung Düsseldorf,BezReg_D,Bezirk,Regierung,"Cecilienallee 2, 40474 Düsseldorf","Düsseldorf","Nordrhein-Westfalen","0211-475-0","www.brd.nrw.de",0.03
