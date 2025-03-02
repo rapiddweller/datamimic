@@ -1,0 +1,47 @@
+<setup multiprocessing="0">
+    <generate name="product" count="10" target="ConsoleExporter">
+        <variable name="product" entity="Product" />
+        <key name="product_id" script="product.product_id" />
+        <key name="product_id1" script="product.product_id" />
+        <key name="name" script="product.name" />
+        <key name="name1" script="product.name" />
+        <key name="description" script="product.description" />
+        <key name="description1" script="product.description" />
+        <key name="price" script="product.price" />
+        <key name="price1" script="product.price" />
+        <key name="category" script="product.category" />
+        <key name="category1" script="product.category" />
+        <key name="brand" script="product.brand" />
+        <key name="brand1" script="product.brand" />
+        <key name="sku" script="product.sku" />
+        <key name="sku1" script="product.sku" />
+        <key name="condition" script="product.condition" />
+        <key name="condition1" script="product.condition" />
+        <key name="availability" script="product.availability" />
+        <key name="availability1" script="product.availability" />
+        <key name="currency" script="product.currency" />
+        <key name="currency1" script="product.currency" />
+        <key name="weight" script="product.weight" />
+        <key name="weight1" script="product.weight" />
+        <key name="dimensions" script="product.dimensions" />
+        <key name="dimensions1" script="product.dimensions" />
+        <key name="color" script="product.color" />
+        <key name="color1" script="product.color" />
+        <key name="rating" script="product.rating" />
+        <key name="rating1" script="product.rating" />
+
+        <variable name="product1" entity="Product" />
+        <key name="product_id2" script="product1.product_id" />
+        <key name="product_id3" script="product1.product_id" />
+        <key name="name2" script="product1.name" />
+        <key name="name3" script="product1.name" />
+        <key name="price2" script="product1.price" />
+        <key name="price3" script="product1.price" />
+        <key name="category2" script="product1.category" />
+        <key name="category3" script="product1.category" />
+        <key name="brand2" script="product1.brand" />
+        <key name="brand3" script="product1.brand" />
+        <key name="sku2" script="product1.sku" />
+        <key name="sku3" script="product1.sku" />
+    </generate>
+</setup> 

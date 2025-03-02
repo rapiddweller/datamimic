@@ -1,0 +1,20 @@
+Active,200
+Inactive,50
+Maintenance,30
+Repair,25
+Calibration,20
+Retired,15
+Recalled,10
+Pending Installation,20
+In Transit,15
+Reserved,25
+Out of Service,30
+Loaned,15
+Leased,20
+Decommissioned,10
+Under Evaluation,15
+Quarantined,10
+Pending Disposal,5
+Pending Approval,15
+Pending Verification,10
+Pending Inspection,15 

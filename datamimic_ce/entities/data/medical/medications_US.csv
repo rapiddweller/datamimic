@@ -1,0 +1,54 @@
+name,dosage,frequency,route,weight
+Lisinopril,10 mg,Once daily,Oral,200
+Atorvastatin,20 mg,Once daily,Oral,190
+Levothyroxine,50 mcg,Once daily,Oral,180
+Metformin,500 mg,Twice daily,Oral,170
+Amlodipine,5 mg,Once daily,Oral,160
+Metoprolol,25 mg,Twice daily,Oral,150
+Omeprazole,20 mg,Once daily,Oral,140
+Simvastatin,20 mg,Once daily,Oral,130
+Losartan,50 mg,Once daily,Oral,120
+Albuterol,90 mcg,As needed,Inhalation,110
+Gabapentin,300 mg,Three times daily,Oral,100
+Hydrochlorothiazide,25 mg,Once daily,Oral,95
+Sertraline,50 mg,Once daily,Oral,90
+Acetaminophen,500 mg,Every 6 hours,Oral,85
+Ibuprofen,400 mg,Every 6 hours,Oral,80
+Furosemide,20 mg,Once daily,Oral,75
+Fluticasone,100 mcg,Twice daily,Inhalation,70
+Escitalopram,10 mg,Once daily,Oral,65
+Montelukast,10 mg,Once daily,Oral,60
+Pantoprazole,40 mg,Once daily,Oral,55
+Prednisone,10 mg,Once daily,Oral,50
+Citalopram,20 mg,Once daily,Oral,45
+Fluoxetine,20 mg,Once daily,Oral,40
+Amoxicillin,500 mg,Three times daily,Oral,35
+Rosuvastatin,10 mg,Once daily,Oral,30
+Bupropion,150 mg,Once daily,Oral,25
+Duloxetine,30 mg,Once daily,Oral,20
+Carvedilol,6.25 mg,Twice daily,Oral,15
+Tramadol,50 mg,Every 6 hours,Oral,10
+Meloxicam,7.5 mg,Once daily,Oral,10
+Venlafaxine,75 mg,Once daily,Oral,10
+Trazodone,50 mg,At bedtime,Oral,10
+Cyclobenzaprine,10 mg,Three times daily,Oral,10
+Azithromycin,250 mg,Once daily,Oral,10
+Pravastatin,20 mg,Once daily,Oral,10
+Warfarin,5 mg,Once daily,Oral,10
+Clonazepam,0.5 mg,Twice daily,Oral,10
+Clopidogrel,75 mg,Once daily,Oral,10
+Tamsulosin,0.4 mg,Once daily,Oral,10
+Glipizide,5 mg,Once daily,Oral,10
+Lorazepam,0.5 mg,Twice daily,Oral,10
+Alprazolam,0.25 mg,Three times daily,Oral,10
+Hydrocodone/Acetaminophen,5/325 mg,Every 6 hours,Oral,10
+Insulin Glargine,10 units,Once daily,Subcutaneous,10
+Insulin Lispro,4 units,Before meals,Subcutaneous,10
+Aspirin,81 mg,Once daily,Oral,10
+Cetirizine,10 mg,Once daily,Oral,10
+Loratadine,10 mg,Once daily,Oral,10
+Ranitidine,150 mg,Twice daily,Oral,10
+Famotidine,20 mg,Twice daily,Oral,10
+Apixaban,10 mg,Once daily,Oral,10
+Rivaroxaban,10 mg,Once daily,Oral,10
+Propranolol,20 mg,Once daily,Oral,10 

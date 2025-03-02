@@ -1,0 +1,63 @@
+<setup multiprocessing="0">
+    <generate name="ecommerce" count="10" target="ConsoleExporter">
+        <!-- Product Entity -->
+        <variable name="product" entity="Product" />
+        <key name="product_id" script="product.product_id" />
+        <key name="product_name" script="product.name" />
+        <key name="product_description" script="product.description" />
+        <key name="product_price" script="product.price" />
+        <key name="product_category" script="product.category" />
+        <key name="product_brand" script="product.brand" />
+        <key name="product_sku" script="product.sku" />
+        <key name="product_condition" script="product.condition" />
+        <key name="product_availability" script="product.availability" />
+
+        <!-- Order Entity -->
+        <variable name="order" entity="Order" />
+        <key name="order_id" script="order.order_id" />
+        <key name="order_user_id" script="order.user_id" />
+        <key name="order_total" script="order.total_amount" />
+        <key name="order_date" script="order.date" />
+        <key name="order_status" script="order.status" />
+        <key name="order_payment_method" script="order.payment_method" />
+        <key name="order_shipping_method" script="order.shipping_method" />
+
+        <!-- Invoice Entity -->
+        <variable name="invoice" entity="Invoice" />
+        <key name="invoice_id" script="invoice.invoice_id" />
+        <key name="invoice_order_id" script="invoice.order_id" />
+        <key name="invoice_customer_id" script="invoice.customer_id" />
+        <key name="invoice_date" script="invoice.date" />
+        <key name="invoice_due_date" script="invoice.due_date" />
+        <key name="invoice_amount" script="invoice.amount" />
+        <key name="invoice_status" script="invoice.status" />
+        <key name="invoice_payment_terms" script="invoice.payment_terms" />
+
+        <!-- Payment Entity -->
+        <variable name="payment" entity="Payment" />
+        <key name="payment_id" script="payment.payment_id" />
+        <key name="payment_method" script="payment.method" />
+        <key name="payment_status" script="payment.status" />
+        <key name="payment_amount" script="payment.amount" />
+        <key name="payment_timestamp" script="payment.timestamp" />
+        <key name="payment_processor" script="payment.processor" />
+        <key name="payment_invoice_id" script="payment.invoice_id" />
+
+        <!-- Transaction Entity -->
+        <variable name="transaction" entity="Transaction" />
+        <key name="transaction_id" script="transaction.transaction_id" />
+        <key name="transaction_amount" script="transaction.amount" />
+        <key name="transaction_timestamp" script="transaction.timestamp" />
+        <key name="transaction_type" script="transaction.type" />
+        <key name="transaction_status" script="transaction.status" />
+        <key name="transaction_currency" script="transaction.currency" />
+        <key name="transaction_description" script="transaction.description" />
+
+        <!-- Relationships (simulated) -->
+        <key name="order_for_product" script="order.order_id + ' for ' + product.product_id" />
+        <key name="invoice_for_order" script="invoice.invoice_id + ' for ' + order.order_id" />
+        <key name="payment_for_invoice" script="payment.payment_id + ' for ' + invoice.invoice_id" />
+        <key name="transaction_for_payment"
+            script="transaction.transaction_id + ' for ' + payment.payment_id" />
+    </generate>
+</setup> 

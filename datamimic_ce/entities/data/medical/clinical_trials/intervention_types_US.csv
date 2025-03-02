@@ -1,0 +1,11 @@
+Drug, 200
+Device, 120
+Biological, 100
+Procedure, 90
+Radiation, 70
+Behavioral, 80
+Genetic, 60
+Dietary Supplement, 50
+Diagnostic Test, 40
+Combination Product, 30
+Other, 20 

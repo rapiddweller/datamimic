@@ -1,0 +1,62 @@
+code,description,weight
+1-440,Entnahme einer Blutprobe aus einer peripheren Vene,200
+1-424,Punktion zur Entnahme von Korperflussigkeit,190
+3-600,Laboruntersuchung von Blut: Umfassendes Stoffwechselprofil,180
+3-604,Laboruntersuchung von Blut: Lipidprofil,170
+3-612,Laboruntersuchung von Blut: Vitamin B12,100
+3-615,Laboruntersuchung von Blut: Ostradiol,90
+3-620,Laboruntersuchung von Blut: Glukose,160
+3-625,Laboruntersuchung von Blut: Glykiertes Hamoglobin (HbA1c),150
+3-630,Laboruntersuchung von Blut: Prostata-spezifisches Antigen (PSA),120
+3-635,Laboruntersuchung von Blut: Thyreoidea-stimulierendes Hormon (TSH),140
+3-640,Laboruntersuchung von Blut: Komplettes Blutbild mit Differenzierung,195
+3-645,Laboruntersuchung von Blut: Prothrombinzeit,130
+3-650,Laboruntersuchung von Blut: Syphilis-Test,80
+3-655,Laboruntersuchung von Blut: Helicobacter-pylori-Antikorper,70
+3-660,Laboruntersuchung von Blut: HIV-1/HIV-2-Antikorper,110
+3-700,Mikrobiologische Untersuchung von Urin: Quantitative Bakterienkultur,140
+3-705,Mikrobiologische Untersuchung: Streptokokken-Gruppe-A-Antigen-Nachweis,100
+5-452,Zytopathologische Untersuchung: Gebarmutterhals oder Vagina,130
+5-460,Pathologische Untersuchung: Makroskopische und mikroskopische Untersuchung,120
+5-480,Impfung: Verabreichung,150
+5-485,Impfung: Tetanus-Toxoid,110
+5-490,Impfung: Masern-Mumps-Roteln-Impfstoff (MMR),120
+5-495,Impfung: Tetanus-Diphtherie-azellularer Pertussis-Impfstoff (Tdap),130
+5-500,Impfung: Pneumokokken-Polysaccharid-Impfstoff,100
+5-505,Impfung: Hepatitis-B-Impfstoff,90
+1-210,Augenarztliche Untersuchung: Neuer Patient, mittlerer Aufwand,80
+1-215,Augenarztliche Untersuchung: Bekannter Patient, mittlerer Aufwand,70
+1-220,Augenarztliche Untersuchung: Bekannter Patient, umfassend,80
+1-225,Gesichtsfelduntersuchung: Einseitig oder beidseitig, begrenzt,60
+1-230,Audiometrie: Reintonaudiometrie, nur Luftleitung,50
+1-300,Elektrokardiogramm: Routine mit Interpretation und Bericht,140
+1-305,Elektrokardiogramm: Nur Interpretation und Bericht,120
+1-310,Echokardiographie: Vollstandig,110
+1-315,Duplexsonographie: Extrakranielle Arterien, vollstandig, beidseitig,90
+1-320,Nicht-invasive physiologische Untersuchung: Arterien der oberen oder unteren Extremitaten,80
+1-325,Duplexsonographie: Venen der Extremitaten, vollstandig, beidseitig,70
+1-330,Spirometrie: Einschliesslich grafischer Aufzeichnung,100
+1-335,Bronchodilatationstest mit Spirometrie,90
+1-340,Atemfluss-Volumen-Schleife,80
+1-345,Plethysmographie zur Bestimmung der Lungenvolumina,70
+1-350,Nicht-invasive Ohr- oder Pulsoximetrie zur Sauerstoffsattigung,130
+1-400,Perkutane Tests mit Allergenen: Soforttyp-Reaktion,60
+1-405,Professionelle Dienstleistungen fur Allergen-Immuntherapie: Einzelinjektion,50
+1-410,Polysomnographie: 4 oder mehr Parameter,80
+1-415,Nadel-Elektromyographie: 1 Extremitat mit oder ohne zugehorige paraspinale Bereiche,70
+1-420,Motorische Nervenleitungsstudien,60
+8-010,Intravenose Infusion: Hydratation, initial 31 Minuten bis 1 Stunde,90
+8-015,Intravenose Infusion: Fur Therapie, Prophylaxe oder Diagnose, initial bis zu 1 Stunde,80
+8-020,Therapeutische, prophylaktische oder diagnostische Injektion: Subkutan oder intramuskular,100
+8-025,Therapeutische, prophylaktische oder diagnostische Injektion: Intravenoser Push, einzeln oder initial,90
+8-030,Therapeutische Ubungen,110
+8-035,Manuelle Therapietechniken,100
+8-040,Therapeutische Aktivitaten: Direkter Patientenkontakt durch Anbieter,90
+8-045,Chiropraktische Manipulation der Wirbelsaule: 1-2 Regionen,80
+8-050,Chiropraktische Manipulation der Wirbelsaule: 3-4 Regionen,70
+1-500,Arztbesuch: Ambulant, neuer Patient, detailliert,160
+1-505,Arztbesuch: Ambulant, bekannter Patient, detailliert,170
+1-510,Arztbesuch: Ambulant, bekannter Patient, mittlerer Aufwand,150
+1-515,Erstversorgung im Krankenhaus: Hohe Komplexitat,140
+1-520,Folgeversorgung im Krankenhaus: Mittlere Komplexitat,130
+1-525,Notaufnahmebesuch: Mittlere Komplexitat,120 

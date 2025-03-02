@@ -263,6 +263,36 @@ class VariableTask(KeyVariableTask):
             return BankAccountEntity(cls_factory_util, locale=locale, dataset=dataset)
         if entity_class_name == "Country":
             return CountryEntity(cls_factory_util)
+        if entity_class_name == "transaction":
+            return cls_factory_util.get_transaction_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Transaction":
+            return cls_factory_util.get_transaction_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "DigitalWallet":
+            return cls_factory_util.get_digital_wallet_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "UserAccount":
+            return cls_factory_util.get_user_account_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "CRM":
+            return cls_factory_util.get_crm_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Invoice":
+            return cls_factory_util.get_invoice_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Order":
+            return cls_factory_util.get_order_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Payment":
+            return cls_factory_util.get_payment_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Product":
+            return cls_factory_util.get_product_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Patient":
+            return cls_factory_util.get_patient_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Doctor":
+            return cls_factory_util.get_doctor_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "MedicalRecord":
+            return cls_factory_util.get_medical_record_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "MedicalDevice":
+            return cls_factory_util.get_medical_device_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "LabTest":
+            return cls_factory_util.get_lab_test_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "ClinicalTrial":
+            return cls_factory_util.get_clinical_trial_entity(locale=locale, dataset=dataset, **kwargs)
         else:
             raise ValueError(f"Entity {entity_name} is not supported.")
 

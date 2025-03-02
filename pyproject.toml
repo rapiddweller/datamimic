@@ -103,6 +103,12 @@ select = [
     "I",
 ]
 
+# Per-file ignores for specific linting rules
+[tool.ruff.lint.per-file-ignores]
+"datamimic_ce/entities/base_data_loader.py" = ["E501"]  # Ignore line length in base_data_loader.py
+"datamimic_ce/entities/healthcare/clinical_trial_entity/core.py" = ["E501"]  # Ignore line length in clinical_trial_entity/core.py
+"datamimic_ce/entities/company_entity.py" = ["E501"]  # Ignore line length in company_entity.py
+
 [tool.pytest.ini_options]
 markers = ["run: Custom marker for running specific tests"]  # Custom markers for pytest
 

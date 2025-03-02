@@ -1,0 +1,21 @@
+allergen,severity,reaction,weight
+Penicillin,Moderate,Rash,120
+Sulfa Drugs,Moderate,Hives,100
+Aspirin,Mild,Itching,90
+NSAIDs,Moderate,Swelling,80
+Latex,Severe,Rash,70
+Peanuts,Severe,Anaphylaxis,60
+Tree Nuts,Severe,Anaphylaxis,50
+Shellfish,Severe,Anaphylaxis,60
+Eggs,Moderate,Hives,40
+Milk,Mild,Digestive Issues,50
+Wheat,Moderate,Digestive Issues,30
+Soy,Mild,Rash,40
+Fish,Severe,Anaphylaxis,30
+Sesame,Moderate,Hives,20
+Amoxicillin,Moderate,Rash,80
+Codeine,Moderate,Nausea,60
+Morphine,Moderate,Nausea,50
+Iodine,Moderate,Rash,40
+Contrast Dye,Moderate,Rash,30
+Bee Stings,Severe,Anaphylaxis,40 

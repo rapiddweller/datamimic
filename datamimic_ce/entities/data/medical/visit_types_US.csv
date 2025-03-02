@@ -1,0 +1,24 @@
+visit_type,weight
+Regular Checkup,200
+Follow-up,180
+Urgent Care,160
+Emergency,140
+Specialist Consultation,150
+Vaccination,120
+Physical Examination,170
+Preventive Care,130
+Diagnostic Testing,110
+Telemedicine,100
+Surgical Consultation,90
+Pre-operative Assessment,80
+Post-operative Follow-up,85
+Mental Health,95
+Pediatric,130
+Geriatric,70
+Obstetric,75
+Gynecological,80
+Dermatological,60
+Ophthalmological,55
+Dental,50
+Rehabilitation,65
+Nutritional Counseling,40 

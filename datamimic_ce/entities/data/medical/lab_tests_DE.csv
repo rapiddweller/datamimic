@@ -1,0 +1,83 @@
+test_name,unit,reference_range,weight
+Blutbild (Differentialblutbild),N/A,Siehe einzelne Komponenten,200
+Hämoglobin,g/dL,Männer: 13.5-17.5; Frauen: 12.0-15.5,180
+Hämatokrit,%,Männer: 41-50; Frauen: 36-44,170
+Leukozyten,10^9/L,4.5-11.0,190
+Erythrozyten,10^12/L,Männer: 4.5-5.9; Frauen: 4.0-5.2,170
+Thrombozyten,10^9/L,150-450,160
+Mittleres Erythrozytenvolumen (MCV),fL,80-100,120
+Mittleres Korpuskuläres Hämoglobin (MCH),pg,27-33,110
+Mittlere Korpuskuläre Hämoglobinkonzentration (MCHC),g/dL,32-36,100
+Erythrozytenverteilungsbreite (RDW),%,11.5-14.5,90
+Neutrophile Granulozyten,%,40-60,140
+Lymphozyten,%,20-40,130
+Monozyten,%,2-8,120
+Eosinophile Granulozyten,%,1-4,110
+Basophile Granulozyten,%,0.5-1,100
+Klinische Chemie,N/A,Siehe einzelne Komponenten,190
+Glukose,mg/dL,70-99,180
+Harnstoff-Stickstoff (BUN),mg/dL,7-20,170
+Kreatinin,mg/dL,Männer: 0.7-1.3; Frauen: 0.6-1.1,180
+Natrium,mmol/L,136-145,170
+Kalium,mmol/L,3.5-5.1,170
+Chlorid,mmol/L,98-107,150
+Kohlendioxid (CO2),mmol/L,23-29,150
+Calcium,mg/dL,8.5-10.2,160
+Gesamtprotein,g/dL,6.0-8.3,140
+Albumin,g/dL,3.5-5.0,150
+Globulin,g/dL,2.0-3.5,130
+Albumin/Globulin-Verhältnis,Verhältnis,1.2-2.2,120
+Gesamtbilirubin,mg/dL,0.1-1.2,150
+Direktes Bilirubin,mg/dL,0.0-0.3,140
+Alkalische Phosphatase (AP),U/L,44-147,150
+Alanin-Aminotransferase (ALT),U/L,7-55,160
+Aspartat-Aminotransferase (AST),U/L,8-48,160
+Lipidprofil,N/A,Siehe einzelne Komponenten,180
+Gesamtcholesterin,mg/dL,<200,170
+Triglyceride,mg/dL,<150,160
+High-Density-Lipoprotein (HDL),mg/dL,>40,170
+Low-Density-Lipoprotein (LDL),mg/dL,<100,170
+Schilddrüsenfunktionstests,N/A,Siehe einzelne Komponenten,150
+Thyreoidea-stimulierendes Hormon (TSH),mIU/L,0.4-4.0,160
+Freies Thyroxin (fT4),ng/dL,0.8-1.8,150
+Freies Triiodthyronin (fT3),pg/mL,2.3-4.2,140
+Hämoglobin A1C,%,<5.7,170
+Vitamin D (25-Hydroxyvitamin D),ng/mL,30-100,140
+Vitamin B12,pg/mL,200-900,130
+Folsäure,ng/mL,>5.4,120
+Ferritin,ng/mL,Männer: 30-400; Frauen: 15-150,130
+Eisen,ug/dL,Männer: 65-175; Frauen: 50-170,120
+Totale Eisenbindungskapazität (TEBK),ug/dL,250-450,110
+Transferrinsättigung,%,20-50,100
+C-reaktives Protein (CRP),mg/L,<10,140
+Blutsenkungsgeschwindigkeit (BSG),mm/h,Männer: 0-15; Frauen: 0-20,130
+Prostata-spezifisches Antigen (PSA),ng/mL,<4.0,140
+Urinanalyse,N/A,Siehe einzelne Komponenten,160
+Urin-pH,N/A,4.5-8.0,140
+Urin-spezifisches Gewicht,N/A,1.005-1.030,130
+Urin-Glukose,N/A,Negativ,150
+Urin-Protein,N/A,Negativ,150
+Urin-Ketone,N/A,Negativ,140
+Urin-Blut,N/A,Negativ,150
+Urin-Nitrit,N/A,Negativ,140
+Urin-Leukozytenesterase,N/A,Negativ,140
+Urin-Leukozyten,/HPF,0-5,130
+Urin-Erythrozyten,/HPF,0-2,130
+Urin-Bakterien,N/A,Keine,120
+Urin-Epithelzellen,/HPF,Wenige,110
+Urin-Zylinder,/LPF,Keine,100
+Urin-Kristalle,N/A,Keine,90
+Prothrombinzeit (PT),Sekunden,11-13.5,130
+International Normalized Ratio (INR),Verhältnis,0.8-1.1,140
+Partielle Thromboplastinzeit (PTT),Sekunden,25-35,130
+Troponin I,ng/mL,<0.04,150
+Troponin T,ng/mL,<0.01,150
+B-Typ natriuretisches Peptid (BNP),pg/mL,<100,140
+N-terminales pro-BNP (NT-proBNP),pg/mL,<125,130
+Kreatinkinase (CK),U/L,Männer: 39-308; Frauen: 26-192,120
+Laktatdehydrogenase (LDH),U/L,140-280,110
+Amylase,U/L,30-110,100
+Lipase,U/L,10-73,100
+Harnsäure,mg/dL,Männer: 3.7-8.0; Frauen: 2.7-7.3,110
+Magnesium,mg/dL,1.7-2.2,100
+Phosphor,mg/dL,2.5-4.5,90 
