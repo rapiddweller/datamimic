@@ -9,6 +9,7 @@ from datamimic_ce.statements.statement import Statement
 
 class RuleStatement(Statement):
     def __init__(self, model: RuleModel):
+        super().__init__(None, None)
         self._if_rule = model.if_rule
         self._then_rule = model.then_rule
 

@@ -12,10 +12,10 @@ from datamimic_ce.constants.attribute_constants import ATTR_IF, ATTR_THEN
 
 
 class RuleModel(BaseModel):
-    if_rule: str = Field(None, alias=ATTR_IF)
-    then_rule: str = Field(None, alias=ATTR_THEN)
+    if_rule: str = Field(alias=ATTR_IF)
+    then_rule: str = Field(alias=ATTR_THEN)
 
-    @field_validator("if", "then")
-    @classmethod
-    def validate_name(cls, value):
-        return ModelUtil.check_not_empty(value=value)
+    # @field_validator("if_rule", "then_rule")
+    # @classmethod
+    # def validate_name(cls, value):
+    #     return ModelUtil.check_not_empty(value=value)
