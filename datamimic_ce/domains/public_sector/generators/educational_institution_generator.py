@@ -10,9 +10,9 @@ Educational institution generator utilities.
 This module provides utility functions for generating educational institution data.
 """
 
-import random
 import datetime
-from typing import TypeVar, List, Dict, Any
+import random
+from typing import TypeVar
 
 T = TypeVar("T")  # Define a type variable for generic typing
 
@@ -62,7 +62,7 @@ def generate_institution_name(institution_type: str, level: str, city: str, stat
     """
     # Name formats
     name_formats = []
-    
+
     if "University" in institution_type:
         name_formats = [
             f"{city} University",
@@ -86,23 +86,23 @@ def generate_institution_name(institution_type: str, level: str, city: str, stat
                 f"{city} Primary School",
                 f"{city} Academy",
                 f"Washington Elementary School of {city}",
-                f"Lincoln Elementary School",
+                "Lincoln Elementary School",
             ]
         elif "Middle" in level:
             name_formats = [
                 f"{city} Middle School",
                 f"{city} Intermediate School",
                 f"{city} Junior High School",
-                f"Jefferson Middle School",
-                f"Roosevelt Middle School",
+                "Jefferson Middle School",
+                "Roosevelt Middle School",
             ]
         elif "High" in level:
             name_formats = [
                 f"{city} High School",
                 f"{city} Senior High School",
                 f"{state} High School",
-                f"Kennedy High School",
-                f"Roosevelt High School",
+                "Kennedy High School",
+                "Roosevelt High School",
             ]
         else:
             name_formats = [
@@ -112,7 +112,7 @@ def generate_institution_name(institution_type: str, level: str, city: str, stat
                 f"{state} Academy",
                 f"Central School of {city}",
             ]
-    
+
     if not name_formats:
         name_formats = [
             f"{city} Education Center",
@@ -121,7 +121,7 @@ def generate_institution_name(institution_type: str, level: str, city: str, stat
             f"{state} Institute",
             f"Central Institute of {city}",
         ]
-    
+
     return random.choice(name_formats)
 
 
@@ -145,7 +145,7 @@ def generate_institution_type() -> str:
         "Vocational School",
         "Special Education School",
     ]
-    
+
     return random.choice(types)
 
 
@@ -169,7 +169,7 @@ def generate_education_level(institution_type: str) -> str:
             levels = ["Elementary", "Middle School", "High School", "K-12"]
     else:
         levels = ["Elementary", "Middle School", "High School", "Higher Education", "Vocational Education"]
-    
+
     return random.choice(levels)
 
 
@@ -185,7 +185,7 @@ def generate_founding_year(institution_type: str) -> int:
     current_year = datetime.datetime.now().year
     min_age = 5  # Minimum age for a school
     max_age = 200  # Maximum age for a school (oldest universities)
-    
+
     # Adjust based on institution type - universities tend to be older
     if "University" in institution_type:
         min_age = 20
@@ -193,7 +193,7 @@ def generate_founding_year(institution_type: str) -> int:
     elif "College" in institution_type:
         min_age = 15
         max_age = 150
-    
+
     return current_year - random.randint(min_age, max_age)
 
 
@@ -236,7 +236,7 @@ def generate_staff_count(student_count: int) -> int:
     """
     # Make staff count proportional to student count
     student_to_staff_ratio = random.uniform(10, 25)  # Average student-to-staff ratio
-    
+
     return max(5, int(student_count / student_to_staff_ratio))
 
 
@@ -252,8 +252,8 @@ def generate_institution_website(name: str, institution_type: str) -> str:
     """
     # Simplified name for URL
     url_name = name.lower().replace(" ", "")
-    url_name = ''.join(c for c in url_name if c.isalnum())
-    
+    url_name = "".join(c for c in url_name if c.isalnum())
+
     # Determine domain extension based on type
     if "University" in institution_type or "College" in institution_type:
         domain = ".edu"
@@ -261,7 +261,7 @@ def generate_institution_website(name: str, institution_type: str) -> str:
         domain = ".k12.us"
     else:
         domain = ".org"
-    
+
     return f"https://www.{url_name}{domain}"
 
 
@@ -276,11 +276,11 @@ def generate_institution_email(website: str) -> str:
     """
     # Extract domain from website
     domain = website.replace("https://www.", "")
-    
+
     return f"info@{domain}"
 
 
-def generate_educational_programs(level: str, count: int = None) -> List[str]:
+def generate_educational_programs(level: str, count: int = None) -> list[str]:
     """Generate a list of educational programs based on education level.
 
     Args:
@@ -303,7 +303,7 @@ def generate_educational_programs(level: str, count: int = None) -> List[str]:
         "Gifted and Talented Program",
         "After-School Programs",
     ]
-    
+
     middle_school_programs = [
         "Language Arts",
         "Mathematics",
@@ -316,7 +316,7 @@ def generate_educational_programs(level: str, count: int = None) -> List[str]:
         "Health Education",
         "Career Exploration",
     ]
-    
+
     high_school_programs = [
         "English/Literature",
         "Mathematics",
@@ -335,7 +335,7 @@ def generate_educational_programs(level: str, count: int = None) -> List[str]:
         "Physical Education",
         "Sports Teams",
     ]
-    
+
     higher_education_programs = [
         "Business Administration",
         "Computer Science",
@@ -358,7 +358,7 @@ def generate_educational_programs(level: str, count: int = None) -> List[str]:
         "Economics",
         "Political Science",
     ]
-    
+
     vocational_programs = [
         "Automotive Technology",
         "Construction Trades",
@@ -376,7 +376,7 @@ def generate_educational_programs(level: str, count: int = None) -> List[str]:
         "Aviation Technology",
         "Agriculture Technology",
     ]
-    
+
     # Select appropriate programs based on level
     if "Elementary" in level:
         all_programs = elementary_programs
@@ -391,17 +391,17 @@ def generate_educational_programs(level: str, count: int = None) -> List[str]:
     else:
         # Mix of programs
         all_programs = elementary_programs + middle_school_programs + high_school_programs
-    
+
     # Choose a subset of programs
     if count is None:
         count = random.randint(3, min(10, len(all_programs)))
     else:
         count = min(count, len(all_programs))
-        
+
     return random.sample(all_programs, count)
 
 
-def generate_accreditations(institution_type: str, level: str, count: int = None) -> List[str]:
+def generate_accreditations(institution_type: str, level: str, count: int = None) -> list[str]:
     """Generate a list of accreditations based on institution type and level.
 
     Args:
@@ -423,7 +423,7 @@ def generate_accreditations(institution_type: str, level: str, count: int = None
         "New England Association of Schools and Colleges (NEASC)",
         "Southern Association of Colleges and Schools (SACS)",
     ]
-    
+
     higher_ed_accreditations = [
         "Higher Learning Commission (HLC)",
         "Middle States Commission on Higher Education (MSCHE)",
@@ -436,7 +436,7 @@ def generate_accreditations(institution_type: str, level: str, count: int = None
         "Commission on Collegiate Nursing Education (CCNE)",
         "Council for the Accreditation of Educator Preparation (CAEP)",
     ]
-    
+
     vocational_accreditations = [
         "Council on Occupational Education (COE)",
         "Accrediting Commission of Career Schools and Colleges (ACCSC)",
@@ -444,7 +444,7 @@ def generate_accreditations(institution_type: str, level: str, count: int = None
         "Accrediting Bureau of Health Education Schools (ABHES)",
         "Distance Education Accrediting Commission (DEAC)",
     ]
-    
+
     # Select appropriate accreditations based on institution type and level
     if "University" in institution_type or "College" in institution_type:
         accreditation_list = higher_ed_accreditations
@@ -452,17 +452,17 @@ def generate_accreditations(institution_type: str, level: str, count: int = None
         accreditation_list = vocational_accreditations
     else:
         accreditation_list = k12_accreditations
-    
+
     # Choose a subset of accreditations
     if count is None:
         count = random.randint(1, min(3, len(accreditation_list)))
     else:
         count = min(count, len(accreditation_list))
-        
+
     return random.sample(accreditation_list, count)
 
 
-def generate_facilities(institution_type: str, level: str, count: int = None) -> List[str]:
+def generate_facilities(institution_type: str, level: str, count: int = None) -> list[str]:
     """Generate a list of facilities based on institution type and level.
 
     Args:
@@ -485,7 +485,7 @@ def generate_facilities(institution_type: str, level: str, count: int = None) ->
         "Sports Fields",
         "Parking",
     ]
-    
+
     # Specialized facilities by institution type
     k12_facilities = [
         "Playground",
@@ -496,7 +496,7 @@ def generate_facilities(institution_type: str, level: str, count: int = None) ->
         "Health Office",
         "Special Education Classrooms",
     ]
-    
+
     higher_ed_facilities = [
         "Research Labs",
         "Lecture Halls",
@@ -514,7 +514,7 @@ def generate_facilities(institution_type: str, level: str, count: int = None) ->
         "International Student Center",
         "Graduate Student Center",
     ]
-    
+
     vocational_facilities = [
         "Workshops",
         "Training Laboratories",
@@ -527,21 +527,21 @@ def generate_facilities(institution_type: str, level: str, count: int = None) ->
         "Electrical Lab",
         "IT Training Center",
     ]
-    
+
     # Combine appropriate facilities based on institution type
     all_facilities = common_facilities.copy()
-    
+
     if "University" in institution_type or "College" in institution_type:
         all_facilities.extend(higher_ed_facilities)
     elif "Vocational" in institution_type or "Technical" in institution_type:
         all_facilities.extend(vocational_facilities)
     else:
         all_facilities.extend(k12_facilities)
-    
+
     # Choose a subset of facilities
     if count is None:
         count = random.randint(5, min(15, len(all_facilities)))
     else:
         count = min(count, len(all_facilities))
-        
+
     return random.sample(all_facilities, count)

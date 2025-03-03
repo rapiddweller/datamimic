@@ -13,8 +13,8 @@ from datamimic_ce.clients.database_client import Client
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.converter.converter import Converter
 from datamimic_ce.converter.custom_converter import CustomConverter
+from datamimic_ce.core.interfaces import Generator
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
-from datamimic_ce.generators.generator import Generator
 from datamimic_ce.logger import logger
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
 from datamimic_ce.statements.setup_statement import SetupStatement

@@ -12,7 +12,7 @@ This module provides a service for working with PoliceOfficer entities.
 
 import json
 import os
-from typing import Any, ClassVar, List, Dict, Optional
+from typing import Any, ClassVar
 
 from datamimic_ce.core.interfaces import Service
 from datamimic_ce.domains.public_sector.models.police_officer import PoliceOfficer
@@ -166,7 +166,7 @@ class PoliceOfficerService(Service):
             dataset=self._dataset,
         )
 
-    def get_officers_by_rank(self, rank: str, count: int = 10) -> List[Dict[str, Any]]:
+    def get_officers_by_rank(self, rank: str, count: int = 10) -> list[dict[str, Any]]:
         """Get police officers with a specific rank.
 
         Args:
@@ -179,14 +179,14 @@ class PoliceOfficerService(Service):
         result = []
         attempts = 0
         max_attempts = count * 5  # Try at most 5 times per requested officer
-        
+
         while len(result) < count and attempts < max_attempts:
             officer = self.get_officer()
             if officer.rank.lower() == rank.lower():
                 result.append(officer.to_dict())
             officer.reset()
             attempts += 1
-            
+
         # If we couldn't find enough officers with the exact rank, force the rank for the remaining
         if len(result) < count:
             remaining = count - len(result)
@@ -196,10 +196,10 @@ class PoliceOfficerService(Service):
                 officer_dict["rank"] = rank
                 result.append(officer_dict)
                 officer.reset()
-                
+
         return result
 
-    def get_officers_by_department(self, department: str, count: int = 10) -> List[Dict[str, Any]]:
+    def get_officers_by_department(self, department: str, count: int = 10) -> list[dict[str, Any]]:
         """Get police officers from a specific department.
 
         Args:
@@ -212,14 +212,14 @@ class PoliceOfficerService(Service):
         result = []
         attempts = 0
         max_attempts = count * 5  # Try at most 5 times per requested officer
-        
+
         while len(result) < count and attempts < max_attempts:
             officer = self.get_officer()
             if department.lower() in officer.department.lower():
                 result.append(officer.to_dict())
             officer.reset()
             attempts += 1
-            
+
         # If we couldn't find enough officers with the exact department, force the department for the remaining
         if len(result) < count:
             remaining = count - len(result)
@@ -229,10 +229,10 @@ class PoliceOfficerService(Service):
                 officer_dict["department"] = department
                 result.append(officer_dict)
                 officer.reset()
-                
+
         return result
 
-    def get_officers_by_unit(self, unit: str, count: int = 10) -> List[Dict[str, Any]]:
+    def get_officers_by_unit(self, unit: str, count: int = 10) -> list[dict[str, Any]]:
         """Get police officers from a specific unit.
 
         Args:
@@ -245,14 +245,14 @@ class PoliceOfficerService(Service):
         result = []
         attempts = 0
         max_attempts = count * 5  # Try at most 5 times per requested officer
-        
+
         while len(result) < count and attempts < max_attempts:
             officer = self.get_officer()
             if unit.lower() == officer.unit.lower():
                 result.append(officer.to_dict())
             officer.reset()
             attempts += 1
-            
+
         # If we couldn't find enough officers with the exact unit, force the unit for the remaining
         if len(result) < count:
             remaining = count - len(result)
@@ -262,5 +262,5 @@ class PoliceOfficerService(Service):
                 officer_dict["unit"] = unit
                 result.append(officer_dict)
                 officer.reset()
-                
+
         return result

@@ -341,13 +341,13 @@ class PoliceOfficer(BaseEntity):
             A police rank.
         """
         import random
-        
+
         ranks = PoliceDataLoader.load_ranks(self._country_code)
         if not ranks:
             # Default ranks if no data is available
             default_ranks = ["Officer", "Sergeant", "Lieutenant", "Captain", "Chief"]
             return random.choice(default_ranks)
-            
+
         return ranks[random.randint(0, len(ranks) - 1)].get("rank", "Officer")
 
     def _generate_department(self) -> str:
@@ -357,18 +357,17 @@ class PoliceOfficer(BaseEntity):
             A police department name.
         """
         import random
-        
+
         departments = PoliceDataLoader.load_departments(self._country_code)
         if not departments:
             # Default departments if no data is available
             city_or_county = self._address_entity.city
-            default_departments = [
-                f"{city_or_county} Police Department", 
-                f"{city_or_county} County Sheriff's Office"
-            ]
+            default_departments = [f"{city_or_county} Police Department", f"{city_or_county} County Sheriff's Office"]
             return random.choice(default_departments)
-            
-        return departments[random.randint(0, len(departments) - 1)].get("name", f"{self._address_entity.city} Police Department")
+
+        return departments[random.randint(0, len(departments) - 1)].get(
+            "name", f"{self._address_entity.city} Police Department"
+        )
 
     def _generate_unit(self) -> str:
         """Generate a police unit name.
@@ -448,7 +447,7 @@ class PoliceOfficer(BaseEntity):
             "Crime Scene Investigation",
             "Motorcycle Patrol",
         ]
-        
+
         num_certifications = random.randint(1, 4)
         return random.sample(all_certifications, num_certifications)
 
@@ -461,14 +460,25 @@ class PoliceOfficer(BaseEntity):
         import random
 
         languages = ["English"]
-        
+
         # Chance to add additional languages
-        additional_languages = ["Spanish", "French", "German", "Chinese", "Arabic", "Russian", "Japanese", "Korean", "Portuguese", "Italian"]
+        additional_languages = [
+            "Spanish",
+            "French",
+            "German",
+            "Chinese",
+            "Arabic",
+            "Russian",
+            "Japanese",
+            "Korean",
+            "Portuguese",
+            "Italian",
+        ]
         num_additional = random.randint(0, 2)
-        
+
         if num_additional > 0:
             languages.extend(random.sample(additional_languages, num_additional))
-            
+
         return languages
 
     def _generate_shift(self) -> str:
@@ -489,15 +499,15 @@ class PoliceOfficer(BaseEntity):
             An email address.
         """
         import random
-        
+
         # Generate department-based email
         department = self.department.lower()
-        
+
         # Simplify department name for email domain
         domain = department.replace(" police department", "pd")
         domain = domain.replace(" county sheriff's office", "sheriff")
         domain = domain.replace(" ", "")
-        
+
         # Create email formats
         email_formats = [
             f"{self.first_name.lower()}.{self.last_name.lower()}@{domain}.gov",
@@ -505,7 +515,7 @@ class PoliceOfficer(BaseEntity):
             f"{self.badge_number}@{domain}.gov",
             f"{self.last_name.lower()}.{self.badge_number}@{domain}.gov",
         ]
-        
+
         return random.choice(email_formats)
 
     def _generate_phone(self) -> str:

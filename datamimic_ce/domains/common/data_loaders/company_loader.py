@@ -10,7 +10,7 @@ from datamimic_ce.logger import logger
 
 class CompanyLoader(BaseDataLoader):
     """Data loader for company entity data.
-    
+
     Handles loading and caching of company-related data such as sectors,
     legal forms, and departments from data files.
     """
@@ -68,9 +68,7 @@ class CompanyLoader(BaseDataLoader):
         Returns:
             List of tuples containing sectors and their weights
         """
-        return cls.get_country_specific_data(
-            data_type="sector", country_code=country_code, domain_path="organization"
-        )
+        return cls.get_country_specific_data(data_type="sector", country_code=country_code, domain_path="organization")
 
     @classmethod
     def get_legal_forms(cls, country_code: str) -> list[tuple[str, float]]:

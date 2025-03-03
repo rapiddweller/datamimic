@@ -7,7 +7,7 @@
 import random
 from pathlib import Path
 
-from datamimic_ce.generators.generator import Generator
+from datamimic_ce.core.interfaces import Generator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 

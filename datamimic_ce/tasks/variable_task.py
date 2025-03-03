@@ -234,16 +234,13 @@ class VariableTask(KeyVariableTask):
         entity_class_name, kwargs = StringUtil.parse_constructor_string(entity_name)
         if isinstance(ctx, SetupContext) and hasattr(ctx, "class_factory_util"):
             cls_factory_util = ctx.class_factory_util
-        
+
         # Check if entity_class_name contains dots indicating a domain path
         if "." in entity_class_name:
             # For domain paths like "common.models.Company"
             # Create instance directly using the class factory util
             return cls_factory_util.create_instance(
-                f"datamimic_ce.domains.{entity_class_name}",
-                dataset=dataset,
-                count=count,
-                **kwargs
+                f"datamimic_ce.domains.{entity_class_name}", dataset=dataset, count=count, **kwargs
             )
         else:
             # For simple names like "Company", use the entity mapping
@@ -255,7 +252,6 @@ class VariableTask(KeyVariableTask):
                 "Address": "common.models.address.Address",
                 "City": "common.models.city.City",
                 "Country": "common.models.country.Country",
-                
                 # Finance domain entities
                 "CreditCard": "finance.models.credit_card.CreditCard",
                 "Bank": "finance.models.bank.Bank",
@@ -264,13 +260,11 @@ class VariableTask(KeyVariableTask):
                 "Invoice": "finance.models.invoice.Invoice",
                 "Transaction": "finance.models.transaction.Transaction",
                 "DigitalWallet": "finance.models.digital_wallet.DigitalWallet",
-                
                 # Ecommerce domain entities
                 "Product": "ecommerce.models.product.Product",
                 "Order": "ecommerce.models.order.Order",
                 "UserAccount": "ecommerce.models.user_account.UserAccount",
                 "CRM": "ecommerce.models.crm.CRM",
-                
                 # Healthcare domain entities
                 "Patient": "healthcare.models.patient.Patient",
                 "Doctor": "healthcare.models.doctor.Doctor",
@@ -280,31 +274,26 @@ class VariableTask(KeyVariableTask):
                 "MedicalProcedure": "healthcare.models.medical_procedure.MedicalProcedure",
                 "LabTest": "healthcare.models.lab_test.LabTest",
                 "ClinicalTrial": "healthcare.models.clinical_trial.ClinicalTrial",
-                
                 # Insurance domain entities (new domain)
                 "InsuranceCompany": "insurance.models.insurance_company.InsuranceCompany",
                 "InsurancePolicy": "insurance.models.insurance_policy.InsurancePolicy",
                 "InsuranceProduct": "insurance.models.insurance_product.InsuranceProduct",
-                
                 # Public Sector domain entities (new domain)
                 "AdministrationOffice": "public_sector.models.administration_office.AdministrationOffice",
                 "EducationalInstitution": "public_sector.models.educational_institution.EducationalInstitution",
-                "PoliceOfficer": "public_sector.models.police_officer.PoliceOfficer"
+                "PoliceOfficer": "public_sector.models.police_officer.PoliceOfficer",
             }
-            
+
             # Use the mapping to create the entity
             if entity_class_name in entity_mappings:
                 domain_entity_path = entity_mappings[entity_class_name]
                 return cls_factory_util.create_instance(
-                    f"datamimic_ce.domains.{domain_entity_path}",
-                    dataset=dataset,
-                    count=count,
-                    **kwargs
+                    f"datamimic_ce.domains.{domain_entity_path}", dataset=dataset, count=count, **kwargs
                 )
             else:
                 # If no mapping exists, entity is not supported
                 raise ValueError(f"Entity '{entity_name}' is not supported in the domain architecture.")
-            
+
         # No more fallback to legacy entities - fully committed to domain-based architecture
 
     def execute(self, ctx: Context) -> None:

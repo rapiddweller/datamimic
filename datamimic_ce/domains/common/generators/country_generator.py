@@ -5,9 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+from datamimic_ce.core.interfaces import Generator
 from datamimic_ce.domains.common.data_loaders.country_loader import CountryDataLoader
 from datamimic_ce.domains.common.models.country import Country
-from datamimic_ce.generators.generator import Generator
 
 
 class CountryGenerator(Generator):

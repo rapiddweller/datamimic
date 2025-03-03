@@ -1,4 +1,4 @@
-from datamimic_ce.generators.generator import Generator
+from datamimic_ce.core.interfaces import Generator
 
 
 class RandomHexColorGenerator(Generator):

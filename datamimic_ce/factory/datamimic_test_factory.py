@@ -14,7 +14,6 @@ class DataMimicTestFactory:
         self._xml_path = xml_path
         self._entity_name = entity_name
 
-
     def create(self, custom_data: dict | None = None):
         """
         Create a single entity

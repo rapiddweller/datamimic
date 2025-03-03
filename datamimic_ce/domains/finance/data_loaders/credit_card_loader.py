@@ -12,7 +12,7 @@ loading reference data from CSV files for credit card types and other informatio
 """
 
 from pathlib import Path
-from typing import Any, ClassVar, Dict, List, Optional, Tuple, cast
+from typing import Any, ClassVar
 
 from datamimic_ce.core.base_data_loader import BaseDataLoader
 from datamimic_ce.utils.data_path_util import DataPathUtil
@@ -27,11 +27,11 @@ class CreditCardLoader(BaseDataLoader):
     """
 
     # Cache for loaded data
-    _CARD_TYPES_CACHE: ClassVar[Dict[str, List[Dict[str, Any]]]] = {}
-    _CARD_TYPES_BY_WEIGHT_CACHE: ClassVar[Dict[str, List[Tuple[Dict[str, Any], float]]]] = {}
+    _CARD_TYPES_CACHE: ClassVar[dict[str, list[dict[str, Any]]]] = {}
+    _CARD_TYPES_BY_WEIGHT_CACHE: ClassVar[dict[str, list[tuple[dict[str, Any], float]]]] = {}
 
     @classmethod
-    def _get_file_path_for_data_type(cls, data_type: str, dataset: Optional[str] = None) -> str:
+    def _get_file_path_for_data_type(cls, data_type: str, dataset: str | None = None) -> str:
         """Get the file path for the specified data type.
 
         Args:
@@ -45,7 +45,7 @@ class CreditCardLoader(BaseDataLoader):
         file_map = {
             "card_types": "finance/credit_card/card_types",
         }
-        
+
         # Handle regular data types
         if data_type in file_map:
             base_name = file_map[data_type]
@@ -60,11 +60,11 @@ class CreditCardLoader(BaseDataLoader):
                     return file_path
                 # Fallback to generic file without country code
                 return f"{base_name}.csv"
-        
+
         return ""
 
     @classmethod
-    def load_card_types(cls, dataset: Optional[str] = None) -> List[Dict[str, Any]]:
+    def load_card_types(cls, dataset: str | None = None) -> list[dict[str, Any]]:
         """Load credit card type data for the specified dataset.
 
         Args:
@@ -75,39 +75,39 @@ class CreditCardLoader(BaseDataLoader):
         """
         # Use 'global' as the default dataset key
         dataset_key = dataset or "global"
-        
+
         # Check if the data is already cached
         if dataset_key in cls._CARD_TYPES_CACHE:
             return cls._CARD_TYPES_CACHE[dataset_key]
-        
+
         # Get the file path
         file_path = cls._get_file_path_for_data_type("card_types", dataset)
-        
+
         # If file path is empty, return default data
         if not file_path:
             default_data = cls._get_default_card_types(dataset)
             cls._CARD_TYPES_CACHE[dataset_key] = default_data
             return default_data
-        
+
         try:
             # Get the data file path using DataPathUtil
             data_file_path = DataPathUtil.get_data_file_path(file_path)
-            
+
             if not Path(data_file_path).exists():
                 # If file doesn't exist, return default data
                 default_data = cls._get_default_card_types(dataset)
                 cls._CARD_TYPES_CACHE[dataset_key] = default_data
                 return default_data
-            
+
             # Load data from CSV
             header_dict, data = FileUtil.read_csv_to_dict_of_tuples_with_header(data_file_path)
-            
+
             result = []
-            
+
             # Process each row
             for row in data:
                 card_type = {}
-                
+
                 # Extract all fields from the row
                 for key, idx in header_dict.items():
                     if key != "weight":  # Skip the weight field
@@ -124,18 +124,18 @@ class CreditCardLoader(BaseDataLoader):
                                 card_type[key] = 16 if key == "length" else 3
                         else:
                             card_type[key] = row[idx]
-                
+
                 # Add the card type to the result
                 result.append(card_type)
-            
+
             # Cache the data
             cls._CARD_TYPES_CACHE[dataset_key] = result
-            
+
             # Also load as weighted data
             cls._load_card_types_by_weight(dataset)
-            
+
             return result
-        
+
         except Exception as e:
             print(f"Error loading card type data: {e}")
             default_data = cls._get_default_card_types(dataset)
@@ -143,7 +143,7 @@ class CreditCardLoader(BaseDataLoader):
             return default_data
 
     @classmethod
-    def _load_card_types_by_weight(cls, dataset: Optional[str] = None) -> List[Tuple[Dict[str, Any], float]]:
+    def _load_card_types_by_weight(cls, dataset: str | None = None) -> list[tuple[dict[str, Any], float]]:
         """Load card type data with weights for the specified dataset.
 
         Args:
@@ -154,47 +154,47 @@ class CreditCardLoader(BaseDataLoader):
         """
         # Use 'global' as the default dataset key
         dataset_key = dataset or "global"
-        
+
         # Check if the data is already cached
         if dataset_key in cls._CARD_TYPES_BY_WEIGHT_CACHE:
             return cls._CARD_TYPES_BY_WEIGHT_CACHE[dataset_key]
-        
+
         # Get the file path
         file_path = cls._get_file_path_for_data_type("card_types", dataset)
-        
+
         # If file path is empty, return default data
         if not file_path:
             default_data = cls._get_default_card_types_by_weight(dataset)
             cls._CARD_TYPES_BY_WEIGHT_CACHE[dataset_key] = default_data
             return default_data
-        
+
         try:
             # Get the data file path using DataPathUtil
             data_file_path = DataPathUtil.get_data_file_path(file_path)
-            
+
             if not Path(data_file_path).exists():
                 # If file doesn't exist, return default data
                 default_data = cls._get_default_card_types_by_weight(dataset)
                 cls._CARD_TYPES_BY_WEIGHT_CACHE[dataset_key] = default_data
                 return default_data
-            
+
             # Load data from CSV
             header_dict, data = FileUtil.read_csv_to_dict_of_tuples_with_header(data_file_path)
-            
+
             # Skip if weight column doesn't exist
             if "weight" not in header_dict:
                 default_data = cls._get_default_card_types_by_weight(dataset)
                 cls._CARD_TYPES_BY_WEIGHT_CACHE[dataset_key] = default_data
                 return default_data
-            
+
             weight_idx = header_dict["weight"]
-            
+
             result = []
-            
+
             # Process each row
             for row in data:
                 card_type = {}
-                
+
                 # Extract all fields from the row
                 for key, idx in header_dict.items():
                     if key != "weight":  # Skip the weight field
@@ -211,21 +211,21 @@ class CreditCardLoader(BaseDataLoader):
                                 card_type[key] = 16 if key == "length" else 3
                         else:
                             card_type[key] = row[idx]
-                
+
                 # Get the weight
                 try:
                     weight = float(row[weight_idx])
                 except (ValueError, TypeError):
                     weight = 1.0
-                
+
                 # Add the card type and weight to the result
                 result.append((card_type, weight))
-            
+
             # Cache the data
             cls._CARD_TYPES_BY_WEIGHT_CACHE[dataset_key] = result
-            
+
             return result
-        
+
         except Exception as e:
             print(f"Error loading card type data with weights: {e}")
             default_data = cls._get_default_card_types_by_weight(dataset)
@@ -233,7 +233,7 @@ class CreditCardLoader(BaseDataLoader):
             return default_data
 
     @classmethod
-    def _get_default_card_types(cls, dataset: Optional[str] = None) -> List[Dict[str, Any]]:
+    def _get_default_card_types(cls, dataset: str | None = None) -> list[dict[str, Any]]:
         """Get default card type data for the specified dataset.
 
         Args:
@@ -258,7 +258,7 @@ class CreditCardLoader(BaseDataLoader):
             ]
 
     @classmethod
-    def _get_default_card_types_by_weight(cls, dataset: Optional[str] = None) -> List[Tuple[Dict[str, Any], float]]:
+    def _get_default_card_types_by_weight(cls, dataset: str | None = None) -> list[tuple[dict[str, Any], float]]:
         """Get default card type data with weights for the specified dataset.
 
         Args:

@@ -1,4 +1,4 @@
-# DataMimic Development Guidelines
+# DATAMIMIC Development Guidelines
 
 ## Build & Test Commands
 - Format code: `uv run ruff format datamimic_ce`

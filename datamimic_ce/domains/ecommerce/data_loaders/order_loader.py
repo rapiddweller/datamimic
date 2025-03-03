@@ -12,7 +12,7 @@ loading reference data from CSV files for order statuses, payment methods, etc.
 """
 
 from pathlib import Path
-from typing import Any, ClassVar, Dict, List, Optional, Tuple, cast
+from typing import Any, ClassVar, cast
 
 from datamimic_ce.core.base_data_loader import BaseDataLoader
 from datamimic_ce.utils.data_path_util import DataPathUtil
@@ -27,13 +27,13 @@ class OrderDataLoader(BaseDataLoader):
     """
 
     # Cache for loaded data
-    _ORDER_STATUSES_CACHE: ClassVar[Dict[str, List[Tuple[str, float]]]] = {}
-    _PAYMENT_METHODS_CACHE: ClassVar[Dict[str, List[Tuple[str, float]]]] = {}
-    _SHIPPING_METHODS_CACHE: ClassVar[Dict[str, List[Tuple[str, float]]]] = {}
-    _SHIPPING_COSTS_CACHE: ClassVar[Dict[str, Dict[str, Tuple[float, float]]]] = {}
+    _ORDER_STATUSES_CACHE: ClassVar[dict[str, list[tuple[str, float]]]] = {}
+    _PAYMENT_METHODS_CACHE: ClassVar[dict[str, list[tuple[str, float]]]] = {}
+    _SHIPPING_METHODS_CACHE: ClassVar[dict[str, list[tuple[str, float]]]] = {}
+    _SHIPPING_COSTS_CACHE: ClassVar[dict[str, dict[str, tuple[float, float]]]] = {}
 
     @classmethod
-    def _get_cache_for_data_type(cls, data_type: str) -> Dict[str, Any]:
+    def _get_cache_for_data_type(cls, data_type: str) -> dict[str, Any]:
         """Get the appropriate cache dictionary for the data type.
 
         Args:
@@ -48,11 +48,11 @@ class OrderDataLoader(BaseDataLoader):
             "shipping_methods": cls._SHIPPING_METHODS_CACHE,
             "shipping_costs": cls._SHIPPING_COSTS_CACHE,
         }
-        
+
         return cache_map.get(data_type, {})
 
     @classmethod
-    def _get_file_path_for_data_type(cls, data_type: str, dataset: Optional[str] = None) -> str:
+    def _get_file_path_for_data_type(cls, data_type: str, dataset: str | None = None) -> str:
         """Get the file path for the specified data type.
 
         Args:
@@ -68,7 +68,7 @@ class OrderDataLoader(BaseDataLoader):
             "payment_methods": "payment_methods",
             "shipping_methods": "shipping_methods",
         }
-        
+
         # Handle regular data types
         if data_type in file_map:
             base_name = file_map[data_type]
@@ -83,11 +83,11 @@ class OrderDataLoader(BaseDataLoader):
                     return file_path
                 # Fallback to generic file without country code
                 return f"ecommerce/{base_name}.csv"
-        
+
         return ""
 
     @classmethod
-    def load_data(cls, data_type: str, dataset: Optional[str] = None) -> List[Tuple[str, float]]:
+    def load_data(cls, data_type: str, dataset: str | None = None) -> list[tuple[str, float]]:
         """Load data for the specified type and dataset.
 
         Args:
@@ -99,43 +99,43 @@ class OrderDataLoader(BaseDataLoader):
         """
         # Use 'global' as the default dataset key
         dataset_key = dataset or "global"
-        
+
         # Check if the data is already cached
         cache = cls._get_cache_for_data_type(data_type)
         if dataset_key in cache:
-            return cast(List[Tuple[str, float]], cache[dataset_key])
-        
+            return cast(list[tuple[str, float]], cache[dataset_key])
+
         # Get the file path
         file_path = cls._get_file_path_for_data_type(data_type, dataset)
-        
+
         # If file path is empty, return default data
         if not file_path:
             default_data = cls._get_default_values(data_type)
             cache[dataset_key] = default_data
             return default_data
-        
+
         try:
             # Get the data file path using DataPathUtil
             data_file_path = DataPathUtil.get_data_file_path(file_path)
-            
+
             if not Path(data_file_path).exists():
                 # If file doesn't exist, return default data
                 default_data = cls._get_default_values(data_type)
                 cache[dataset_key] = default_data
                 return default_data
-            
+
             # Load data from CSV
             data = cls._load_csv_data(data_file_path)
-            
+
             # Cache the data
             cache[dataset_key] = data
-            
+
             # If this is shipping methods, also load the shipping costs
             if data_type == "shipping_methods":
                 cls._load_shipping_costs(data_file_path, dataset_key)
-            
+
             return data
-        
+
         except Exception as e:
             print(f"Error loading {data_type} data: {e}")
             default_data = cls._get_default_values(data_type)
@@ -143,7 +143,7 @@ class OrderDataLoader(BaseDataLoader):
             return default_data
 
     @classmethod
-    def _load_csv_data(cls, file_path: str) -> List[Tuple[str, float]]:
+    def _load_csv_data(cls, file_path: str) -> list[tuple[str, float]]:
         """Load weighted data from a CSV file.
 
         Args:
@@ -155,22 +155,22 @@ class OrderDataLoader(BaseDataLoader):
         try:
             # Load the CSV file
             header_dict, data = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path)
-            
+
             result = []
-            
+
             # Process each row
             for row in data:
                 # Get the value and weight columns
                 value = None
                 weight = 1.0
-                
+
                 # Find the first column that's not 'weight' or related to costs
                 for key in header_dict.keys():
                     if key.lower() not in ["weight", "min_cost", "max_cost"]:
                         value_idx = header_dict[key]
                         value = row[value_idx]
                         break
-                
+
                 # Get the weight if it exists
                 if "weight" in header_dict:
                     weight_idx = header_dict["weight"]
@@ -178,12 +178,12 @@ class OrderDataLoader(BaseDataLoader):
                         weight = float(row[weight_idx])
                     except (ValueError, TypeError):
                         weight = 1.0
-                
+
                 if value is not None:
                     result.append((value, weight))
-            
+
             return result
-        
+
         except Exception as e:
             print(f"Error loading CSV data from {file_path}: {e}")
             return []
@@ -199,26 +199,26 @@ class OrderDataLoader(BaseDataLoader):
         try:
             # Load the CSV file
             header_dict, data = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path)
-            
+
             # Skip if min_cost or max_cost columns don't exist
             if "min_cost" not in header_dict or "max_cost" not in header_dict:
                 return
-            
+
             # Get the method column index
             method_idx = None
             for key in header_dict.keys():
                 if key.lower() not in ["weight", "min_cost", "max_cost"]:
                     method_idx = header_dict[key]
                     break
-            
+
             if method_idx is None:
                 return
-            
+
             min_cost_idx = header_dict["min_cost"]
             max_cost_idx = header_dict["max_cost"]
-            
+
             costs = {}
-            
+
             # Process each row
             for row in data:
                 method = row[method_idx]
@@ -228,15 +228,15 @@ class OrderDataLoader(BaseDataLoader):
                     costs[method] = (min_cost, max_cost)
                 except (ValueError, TypeError):
                     costs[method] = (5.0, 15.0)  # Default values
-            
+
             # Cache the costs
             cls._SHIPPING_COSTS_CACHE[dataset_key] = costs
-        
+
         except Exception as e:
             print(f"Error loading shipping costs from {file_path}: {e}")
 
     @classmethod
-    def _get_default_values(cls, data_type: str) -> List[Tuple[str, float]]:
+    def _get_default_values(cls, data_type: str) -> list[tuple[str, float]]:
         """Get default values for the specified data type.
 
         Args:
@@ -270,7 +270,7 @@ class OrderDataLoader(BaseDataLoader):
                 ("LOCAL_PICKUP", 0.1),
             ],
         }
-        
+
         # Also set default shipping costs
         if data_type == "shipping_methods":
             cls._SHIPPING_COSTS_CACHE["global"] = {
@@ -281,11 +281,11 @@ class OrderDataLoader(BaseDataLoader):
                 "INTERNATIONAL": (30.0, 100.0),
                 "LOCAL_PICKUP": (0.0, 0.0),
             }
-        
+
         return defaults.get(data_type, [])
 
     @classmethod
-    def get_order_statuses(cls, dataset: Optional[str] = None) -> List[Tuple[str, float]]:
+    def get_order_statuses(cls, dataset: str | None = None) -> list[tuple[str, float]]:
         """Get order statuses with weights.
 
         Args:
@@ -297,7 +297,7 @@ class OrderDataLoader(BaseDataLoader):
         return cls.load_data("order_statuses", dataset)
 
     @classmethod
-    def get_payment_methods(cls, dataset: Optional[str] = None) -> List[Tuple[str, float]]:
+    def get_payment_methods(cls, dataset: str | None = None) -> list[tuple[str, float]]:
         """Get payment methods with weights.
 
         Args:
@@ -309,7 +309,7 @@ class OrderDataLoader(BaseDataLoader):
         return cls.load_data("payment_methods", dataset)
 
     @classmethod
-    def get_shipping_methods(cls, dataset: Optional[str] = None) -> List[Tuple[str, float]]:
+    def get_shipping_methods(cls, dataset: str | None = None) -> list[tuple[str, float]]:
         """Get shipping methods with weights.
 
         Args:
@@ -321,7 +321,7 @@ class OrderDataLoader(BaseDataLoader):
         return cls.load_data("shipping_methods", dataset)
 
     @classmethod
-    def get_shipping_cost_range(cls, shipping_method: str, dataset: Optional[str] = None) -> Tuple[float, float]:
+    def get_shipping_cost_range(cls, shipping_method: str, dataset: str | None = None) -> tuple[float, float]:
         """Get the min and max shipping cost for a specific shipping method.
 
         Args:
@@ -333,10 +333,10 @@ class OrderDataLoader(BaseDataLoader):
         """
         # Load shipping methods data to ensure shipping costs are loaded
         cls.load_data("shipping_methods", dataset)
-        
+
         # Get the shipping costs
         dataset_key = dataset or "global"
         costs = cls._SHIPPING_COSTS_CACHE.get(dataset_key, {})
-        
+
         # Return the cost range for the specified method, or default values
         return costs.get(shipping_method, (5.0, 15.0))

@@ -41,6 +41,7 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
             A City entity instance from the domain model.
         """
         from datamimic_ce.domains.common.models.city import City
+
         return City(dataset=country_code)
 
     @staticmethod
@@ -188,6 +189,7 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
             An Order entity instance from the domain model.
         """
         from datamimic_ce.domains.ecommerce.models.order import Order
+
         return Order(locale=locale, dataset=dataset, **kwargs)
 
     @staticmethod
@@ -206,9 +208,8 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
             A Product entity instance from the domain model.
         """
         from datamimic_ce.domains.ecommerce.models.product import Product
-        return Product(
-            locale=locale, min_price=min_price, max_price=max_price, dataset=dataset, **kwargs
-        )
+
+        return Product(locale=locale, min_price=min_price, max_price=max_price, dataset=dataset, **kwargs)
 
     @staticmethod
     def get_patient_entity(locale="en", dataset=None, **kwargs):
@@ -223,6 +224,7 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
             A Patient entity instance from the domain model.
         """
         from datamimic_ce.domains.healthcare.models.patient import Patient
+
         return Patient(locale=locale, dataset=dataset, **kwargs)
 
     @staticmethod
@@ -239,6 +241,7 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
             A Doctor entity instance from the domain model.
         """
         from datamimic_ce.domains.healthcare.models.doctor import Doctor
+
         return Doctor(locale=locale, dataset=dataset, **kwargs)
 
     @staticmethod
@@ -255,8 +258,9 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
             A MedicalRecord entity instance from the domain model.
         """
         from datamimic_ce.domains.healthcare.models.medical_record import MedicalRecord
+
         return MedicalRecord(locale=locale, dataset=dataset, **kwargs)
-            
+
     @staticmethod
     def get_company_entity(locale="en", dataset=None, count=1, **kwargs):
         """
@@ -272,6 +276,7 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
             A Company entity instance from the domain model.
         """
         from datamimic_ce.domains.common.models.company import Company
+
         return Company(dataset=dataset, count=count, **kwargs)
 
     @staticmethod
@@ -288,6 +293,7 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
             A MedicalDevice entity instance from the domain model.
         """
         from datamimic_ce.domains.healthcare.models.medical_device import MedicalDevice
+
         return MedicalDevice(locale=locale, dataset=dataset, **kwargs)
 
     @staticmethod

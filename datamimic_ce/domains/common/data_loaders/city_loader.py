@@ -92,7 +92,9 @@ class CityDataLoader(BaseDataLoader):
         if city_file_path.exists():
             try:
                 # Load city data
-                city_header_dict, city_data = FileUtil.read_csv_to_dict_of_tuples_with_header(city_file_path, delimiter=";")
+                city_header_dict, city_data = FileUtil.read_csv_to_dict_of_tuples_with_header(
+                    city_file_path, delimiter=";"
+                )
 
                 # Cache the data
                 self._data_cache[cache_key] = (city_header_dict, city_data)
@@ -137,9 +139,7 @@ class CityDataLoader(BaseDataLoader):
 
         # Load US city data
         us_city_path = base_path / f"city_{self._DEFAULT_DATASET}.csv"
-        city_header_dict, city_data = FileUtil.read_csv_to_dict_of_tuples_with_header(
-            us_city_path, delimiter=";"
-        )
+        city_header_dict, city_data = FileUtil.read_csv_to_dict_of_tuples_with_header(us_city_path, delimiter=";")
 
         # Cache the data
         self._data_cache[cache_key] = (city_header_dict, city_data)
@@ -249,7 +249,9 @@ class CityDataLoader(BaseDataLoader):
             "state": state_dict.get(city_row[city_header_dict.get("state.id")] or "", ""),
             "language": city_row[city_header_dict.get("language")] if "language" in city_header_dict else None,
             "population": city_row[city_header_dict.get("population")],
-            "name_extension": city_row[city_header_dict.get("nameExtension")] if "nameExtension" in city_header_dict else "",
+            "name_extension": city_row[city_header_dict.get("nameExtension")]
+            if "nameExtension" in city_header_dict
+            else "",
             "country": country_name,
             "country_code": self._current_dataset,
         }

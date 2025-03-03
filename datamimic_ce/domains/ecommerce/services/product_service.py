@@ -11,7 +11,7 @@ This module provides business logic services for e-commerce product data.
 """
 
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
 
@@ -29,7 +29,7 @@ class ProductService:
         locale: str = "en",
         min_price: float = 0.99,
         max_price: float = 9999.99,
-        dataset: Optional[str] = None,
+        dataset: str | None = None,
     ):
         """Initialize the ProductService.
 
@@ -48,7 +48,7 @@ class ProductService:
             dataset=dataset,
         )
 
-    def create_product(self) -> Dict[str, Any]:
+    def create_product(self) -> dict[str, Any]:
         """Create a single product.
 
         Returns:
@@ -59,11 +59,11 @@ class ProductService:
     def create_products(
         self,
         count: int = 100,
-        category: Optional[str] = None,
-        condition: Optional[str] = None,
-        min_price: Optional[float] = None,
-        max_price: Optional[float] = None,
-    ) -> List[Dict[str, Any]]:
+        category: str | None = None,
+        condition: str | None = None,
+        min_price: float | None = None,
+        max_price: float | None = None,
+    ) -> list[dict[str, Any]]:
         """Create multiple products.
 
         Args:
@@ -84,7 +84,7 @@ class ProductService:
             max_price=max_price,
         )
 
-    def get_product_categories(self) -> List[str]:
+    def get_product_categories(self) -> list[str]:
         """Get a list of available product categories.
 
         Returns:
@@ -92,9 +92,7 @@ class ProductService:
         """
         return self._generator.get_available_categories()
 
-    def filter_products_by_category(
-        self, products: List[Dict[str, Any]], category: str
-    ) -> List[Dict[str, Any]]:
+    def filter_products_by_category(self, products: list[dict[str, Any]], category: str) -> list[dict[str, Any]]:
         """Filter products by category.
 
         Args:
@@ -107,8 +105,8 @@ class ProductService:
         return [product for product in products if product["category"] == category]
 
     def filter_products_by_price_range(
-        self, products: List[Dict[str, Any]], min_price: float, max_price: float
-    ) -> List[Dict[str, Any]]:
+        self, products: list[dict[str, Any]], min_price: float, max_price: float
+    ) -> list[dict[str, Any]]:
         """Filter products by price range.
 
         Args:
@@ -119,12 +117,9 @@ class ProductService:
         Returns:
             Filtered list of products
         """
-        return [
-            product for product in products
-            if min_price <= product["price"] <= max_price
-        ]
+        return [product for product in products if min_price <= product["price"] <= max_price]
 
-    def format_products_for_csv(self, products: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def format_products_for_csv(self, products: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Format products for CSV export.
 
         This flattens nested structures and converts complex types to strings for CSV export.
@@ -136,7 +131,7 @@ class ProductService:
             List of flattened product dictionaries suitable for CSV export
         """
         formatted_products = []
-        
+
         for product in products:
             flat_product = {}
             for key, value in product.items():
@@ -145,12 +140,12 @@ class ProductService:
                 else:
                     flat_product[key] = value
             formatted_products.append(flat_product)
-        
+
         return formatted_products
 
     def format_products_for_database(
-        self, products: List[Dict[str, Any]], format_type: str = "sql"
-    ) -> List[Dict[str, Any]]:
+        self, products: list[dict[str, Any]], format_type: str = "sql"
+    ) -> list[dict[str, Any]]:
         """Format products for database export.
 
         Args:
@@ -161,7 +156,7 @@ class ProductService:
             List of product dictionaries formatted for database export
         """
         formatted_products = []
-        
+
         for product in products:
             if format_type.lower() == "sql":
                 # For SQL databases, flatten nested structures
@@ -175,5 +170,5 @@ class ProductService:
             else:
                 # For NoSQL databases, keep the structure as is
                 formatted_products.append(product)
-        
+
         return formatted_products

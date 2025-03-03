@@ -12,7 +12,7 @@ serving as a foundation for police, education, and administration data loaders.
 """
 
 from pathlib import Path
-from typing import Any, ClassVar, Dict, List, Optional, Tuple, cast
+from typing import Any
 
 from datamimic_ce.core.base_data_loader import BaseDataLoader
 from datamimic_ce.utils.data_path_util import DataPathUtil
@@ -26,7 +26,7 @@ class PublicSectorDataLoader(BaseDataLoader):
     """
 
     @classmethod
-    def _get_file_path(cls, base_path: str, data_type: str, dataset: Optional[str] = None) -> str:
+    def _get_file_path(cls, base_path: str, data_type: str, dataset: str | None = None) -> str:
         """Get the file path for the specified data type.
 
         Args:
@@ -48,11 +48,11 @@ class PublicSectorDataLoader(BaseDataLoader):
                 return file_path
             # Fallback to generic file without country code
             file_path = f"{base_path}/{data_type}.csv"
-        
+
         return file_path
 
     @classmethod
-    def _load_data(cls, file_path: str) -> List[Dict[str, Any]]:
+    def _load_data(cls, file_path: str) -> list[dict[str, Any]]:
         """Load data from a CSV file.
 
         Args:
@@ -63,35 +63,35 @@ class PublicSectorDataLoader(BaseDataLoader):
         """
         try:
             data_file_path = DataPathUtil.get_data_file_path(file_path)
-            
+
             if not Path(data_file_path).exists():
                 return []
-            
+
             # Load data from CSV
             header_dict, data = FileUtil.read_csv_to_dict_of_tuples_with_header(data_file_path)
-            
+
             result = []
-            
+
             # Process each row
             for row in data:
                 item = {}
-                
+
                 # Extract all fields from the row, except weight
                 for key, idx in header_dict.items():
                     if key != "weight":  # Skip the weight field
                         item[key] = row[idx]
-                
+
                 # Add the item to the result
                 result.append(item)
-            
+
             return result
-        
+
         except Exception as e:
             print(f"Error loading data from {file_path}: {e}")
             return []
 
     @classmethod
-    def _load_data_with_weight(cls, file_path: str) -> List[Tuple[Dict[str, Any], float]]:
+    def _load_data_with_weight(cls, file_path: str) -> list[tuple[dict[str, Any], float]]:
         """Load data with weights from a CSV file.
 
         Args:
@@ -102,44 +102,44 @@ class PublicSectorDataLoader(BaseDataLoader):
         """
         try:
             data_file_path = DataPathUtil.get_data_file_path(file_path)
-            
+
             if not Path(data_file_path).exists():
                 return []
-            
+
             # Load data from CSV
             header_dict, data = FileUtil.read_csv_to_dict_of_tuples_with_header(data_file_path)
-            
+
             # Skip if weight column doesn't exist
             if "weight" not in header_dict:
                 # Create data with equal weights
                 items = cls._load_data(file_path)
                 weight = 1.0 / len(items) if items else 0.0
                 return [(item, weight) for item in items]
-            
+
             weight_idx = header_dict["weight"]
-            
+
             result = []
-            
+
             # Process each row
             for row in data:
                 item = {}
-                
+
                 # Extract all fields from the row, except weight
                 for key, idx in header_dict.items():
                     if key != "weight":  # Skip the weight field
                         item[key] = row[idx]
-                
+
                 # Get the weight
                 try:
                     weight = float(row[weight_idx])
                 except (ValueError, TypeError):
                     weight = 1.0
-                
+
                 # Add the item and weight to the result
                 result.append((item, weight))
-            
+
             return result
-        
+
         except Exception as e:
             print(f"Error loading data with weights from {file_path}: {e}")
             return []

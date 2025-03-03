@@ -5,9 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+from datamimic_ce.core.interfaces import Generator
 from datamimic_ce.domains.common.data_loaders.city_loader import CityDataLoader
 from datamimic_ce.domains.common.models.city import City
-from datamimic_ce.generators.generator import Generator
 
 
 class CityGenerator(Generator):

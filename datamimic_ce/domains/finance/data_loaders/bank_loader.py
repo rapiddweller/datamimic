@@ -12,7 +12,7 @@ loading reference data from CSV files for bank information.
 """
 
 from pathlib import Path
-from typing import Any, ClassVar, Dict, List, Optional, Tuple, cast
+from typing import Any, ClassVar
 
 from datamimic_ce.core.base_data_loader import BaseDataLoader
 from datamimic_ce.utils.data_path_util import DataPathUtil
@@ -26,12 +26,12 @@ class BankDataLoader(BaseDataLoader):
     """
 
     # Cache for loaded data
-    _BANKS_CACHE: ClassVar[Dict[str, List[Dict[str, Any]]]] = {}
-    _BANKS_BY_WEIGHT_CACHE: ClassVar[Dict[str, List[Tuple[Dict[str, Any], float]]]] = {}
-    _ACCOUNT_TYPES_CACHE: ClassVar[Dict[str, List[Tuple[str, float]]]] = {}
+    _BANKS_CACHE: ClassVar[dict[str, list[dict[str, Any]]]] = {}
+    _BANKS_BY_WEIGHT_CACHE: ClassVar[dict[str, list[tuple[dict[str, Any], float]]]] = {}
+    _ACCOUNT_TYPES_CACHE: ClassVar[dict[str, list[tuple[str, float]]]] = {}
 
     @classmethod
-    def _get_file_path_for_data_type(cls, data_type: str, dataset: Optional[str] = None) -> str:
+    def _get_file_path_for_data_type(cls, data_type: str, dataset: str | None = None) -> str:
         """Get the file path for the specified data type.
 
         Args:
@@ -46,7 +46,7 @@ class BankDataLoader(BaseDataLoader):
             "banks": "finance/bank/banks",
             "account_types": "finance/account_types",
         }
-        
+
         # Handle regular data types
         if data_type in file_map:
             base_name = file_map[data_type]
@@ -61,11 +61,11 @@ class BankDataLoader(BaseDataLoader):
                     return file_path
                 # Fallback to generic file without country code
                 return f"{base_name}.csv"
-        
+
         return ""
 
     @classmethod
-    def load_banks(cls, dataset: Optional[str] = None) -> List[Dict[str, Any]]:
+    def load_banks(cls, dataset: str | None = None) -> list[dict[str, Any]]:
         """Load bank data for the specified dataset.
 
         Args:
@@ -76,55 +76,55 @@ class BankDataLoader(BaseDataLoader):
         """
         # Use 'global' as the default dataset key
         dataset_key = dataset or "global"
-        
+
         # Check if the data is already cached
         if dataset_key in cls._BANKS_CACHE:
             return cls._BANKS_CACHE[dataset_key]
-        
+
         # Get the file path
         file_path = cls._get_file_path_for_data_type("banks", dataset)
-        
+
         # If file path is empty, return default data
         if not file_path:
             default_data = cls._get_default_banks(dataset)
             cls._BANKS_CACHE[dataset_key] = default_data
             return default_data
-        
+
         try:
             # Get the data file path using DataPathUtil
             data_file_path = DataPathUtil.get_data_file_path(file_path)
-            
+
             if not Path(data_file_path).exists():
                 # If file doesn't exist, return default data
                 default_data = cls._get_default_banks(dataset)
                 cls._BANKS_CACHE[dataset_key] = default_data
                 return default_data
-            
+
             # Load data from CSV
             header_dict, data = FileUtil.read_csv_to_dict_of_tuples_with_header(data_file_path)
-            
+
             result = []
-            
+
             # Process each row
             for row in data:
                 bank = {}
-                
+
                 # Extract all fields from the row
                 for key, idx in header_dict.items():
                     if key != "weight":  # Skip the weight field
                         bank[key] = row[idx]
-                
+
                 # Add the bank to the result
                 result.append(bank)
-            
+
             # Cache the data
             cls._BANKS_CACHE[dataset_key] = result
-            
+
             # Also load as weighted data
             cls._load_banks_by_weight(dataset)
-            
+
             return result
-        
+
         except Exception as e:
             print(f"Error loading bank data: {e}")
             default_data = cls._get_default_banks(dataset)
@@ -132,7 +132,7 @@ class BankDataLoader(BaseDataLoader):
             return default_data
 
     @classmethod
-    def _load_banks_by_weight(cls, dataset: Optional[str] = None) -> List[Tuple[Dict[str, Any], float]]:
+    def _load_banks_by_weight(cls, dataset: str | None = None) -> list[tuple[dict[str, Any], float]]:
         """Load bank data with weights for the specified dataset.
 
         Args:
@@ -143,66 +143,66 @@ class BankDataLoader(BaseDataLoader):
         """
         # Use 'global' as the default dataset key
         dataset_key = dataset or "global"
-        
+
         # Check if the data is already cached
         if dataset_key in cls._BANKS_BY_WEIGHT_CACHE:
             return cls._BANKS_BY_WEIGHT_CACHE[dataset_key]
-        
+
         # Get the file path
         file_path = cls._get_file_path_for_data_type("banks", dataset)
-        
+
         # If file path is empty, return default data
         if not file_path:
             default_data = cls._get_default_banks_by_weight(dataset)
             cls._BANKS_BY_WEIGHT_CACHE[dataset_key] = default_data
             return default_data
-        
+
         try:
             # Get the data file path using DataPathUtil
             data_file_path = DataPathUtil.get_data_file_path(file_path)
-            
+
             if not Path(data_file_path).exists():
                 # If file doesn't exist, return default data
                 default_data = cls._get_default_banks_by_weight(dataset)
                 cls._BANKS_BY_WEIGHT_CACHE[dataset_key] = default_data
                 return default_data
-            
+
             # Load data from CSV
             header_dict, data = FileUtil.read_csv_to_dict_of_tuples_with_header(data_file_path)
-            
+
             # Skip if weight column doesn't exist
             if "weight" not in header_dict:
                 default_data = cls._get_default_banks_by_weight(dataset)
                 cls._BANKS_BY_WEIGHT_CACHE[dataset_key] = default_data
                 return default_data
-            
+
             weight_idx = header_dict["weight"]
-            
+
             result = []
-            
+
             # Process each row
             for row in data:
                 bank = {}
-                
+
                 # Extract all fields from the row
                 for key, idx in header_dict.items():
                     if key != "weight":  # Skip the weight field
                         bank[key] = row[idx]
-                
+
                 # Get the weight
                 try:
                     weight = float(row[weight_idx])
                 except (ValueError, TypeError):
                     weight = 1.0
-                
+
                 # Add the bank and weight to the result
                 result.append((bank, weight))
-            
+
             # Cache the data
             cls._BANKS_BY_WEIGHT_CACHE[dataset_key] = result
-            
+
             return result
-        
+
         except Exception as e:
             print(f"Error loading bank data with weights: {e}")
             default_data = cls._get_default_banks_by_weight(dataset)
@@ -210,7 +210,7 @@ class BankDataLoader(BaseDataLoader):
             return default_data
 
     @classmethod
-    def _get_default_banks(cls, dataset: Optional[str] = None) -> List[Dict[str, Any]]:
+    def _get_default_banks(cls, dataset: str | None = None) -> list[dict[str, Any]]:
         """Get default bank data for the specified dataset.
 
         Args:
@@ -235,7 +235,7 @@ class BankDataLoader(BaseDataLoader):
             ]
 
     @classmethod
-    def _get_default_banks_by_weight(cls, dataset: Optional[str] = None) -> List[Tuple[Dict[str, Any], float]]:
+    def _get_default_banks_by_weight(cls, dataset: str | None = None) -> list[tuple[dict[str, Any], float]]:
         """Get default bank data with weights for the specified dataset.
 
         Args:
@@ -260,7 +260,7 @@ class BankDataLoader(BaseDataLoader):
             ]
 
     @classmethod
-    def load_account_types(cls, dataset: Optional[str] = None) -> List[Tuple[str, float]]:
+    def load_account_types(cls, dataset: str | None = None) -> list[tuple[str, float]]:
         """Load account types with weights.
 
         Args:
@@ -271,48 +271,48 @@ class BankDataLoader(BaseDataLoader):
         """
         # Use 'global' as the default dataset key
         dataset_key = dataset or "global"
-        
+
         # Check if the data is already cached
         if dataset_key in cls._ACCOUNT_TYPES_CACHE:
             return cls._ACCOUNT_TYPES_CACHE[dataset_key]
-        
+
         # Get the file path
         file_path = cls._get_file_path_for_data_type("account_types", dataset)
-        
+
         # If file path is empty, return default data
         if not file_path:
             default_data = cls._get_default_account_types(dataset)
             cls._ACCOUNT_TYPES_CACHE[dataset_key] = default_data
             return default_data
-        
+
         try:
             # Get the data file path using DataPathUtil
             data_file_path = DataPathUtil.get_data_file_path(file_path)
-            
+
             if not Path(data_file_path).exists():
                 # If file doesn't exist, return default data
                 default_data = cls._get_default_account_types(dataset)
                 cls._ACCOUNT_TYPES_CACHE[dataset_key] = default_data
                 return default_data
-            
+
             # Load data from CSV
             header_dict, data = FileUtil.read_csv_to_dict_of_tuples_with_header(data_file_path)
-            
+
             result = []
-            
+
             # Process each row
             for row in data:
                 # Get the type and weight columns
                 type_val = None
                 weight = 1.0
-                
+
                 # Find the type column
                 for key in header_dict.keys():
                     if key.lower() != "weight":
                         type_idx = header_dict[key]
                         type_val = row[type_idx]
                         break
-                
+
                 # Get the weight if it exists
                 if "weight" in header_dict:
                     weight_idx = header_dict["weight"]
@@ -320,15 +320,15 @@ class BankDataLoader(BaseDataLoader):
                         weight = float(row[weight_idx])
                     except (ValueError, TypeError):
                         weight = 1.0
-                
+
                 if type_val is not None:
                     result.append((type_val, weight))
-            
+
             # Cache the data
             cls._ACCOUNT_TYPES_CACHE[dataset_key] = result
-            
+
             return result
-        
+
         except Exception as e:
             print(f"Error loading account types: {e}")
             default_data = cls._get_default_account_types(dataset)
@@ -336,7 +336,7 @@ class BankDataLoader(BaseDataLoader):
             return default_data
 
     @classmethod
-    def _get_default_account_types(cls, dataset: Optional[str] = None) -> List[Tuple[str, float]]:
+    def _get_default_account_types(cls, dataset: str | None = None) -> list[tuple[str, float]]:
         """Get default account types with weights for the specified dataset.
 
         Args:

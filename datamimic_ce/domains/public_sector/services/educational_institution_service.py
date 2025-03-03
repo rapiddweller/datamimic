@@ -12,7 +12,7 @@ This module provides a service for working with EducationalInstitution entities.
 
 import json
 import os
-from typing import Any, ClassVar, List, Dict, Optional
+from typing import Any, ClassVar
 
 from datamimic_ce.core.interfaces import Service
 from datamimic_ce.domains.public_sector.models.educational_institution import EducationalInstitution
@@ -117,7 +117,9 @@ class EducationalInstitutionService(Service):
         )
         return institution.generate_batch(count)
 
-    def export_institutions(self, count: int = 100, output_path: str = "educational_institutions.json", format: str = "json") -> str:
+    def export_institutions(
+        self, count: int = 100, output_path: str = "educational_institutions.json", format: str = "json"
+    ) -> str:
         """Generate and export educational institution entities to a file.
 
         Args:
@@ -166,7 +168,7 @@ class EducationalInstitutionService(Service):
             dataset=self._dataset,
         )
 
-    def get_institutions_by_type(self, institution_type: str, count: int = 10) -> List[Dict[str, Any]]:
+    def get_institutions_by_type(self, institution_type: str, count: int = 10) -> list[dict[str, Any]]:
         """Get educational institutions of a specific type.
 
         Args:
@@ -179,14 +181,14 @@ class EducationalInstitutionService(Service):
         result = []
         attempts = 0
         max_attempts = count * 5  # Try at most 5 times per requested institution
-        
+
         while len(result) < count and attempts < max_attempts:
             institution = self.get_institution()
             if institution_type.lower() in institution.type.lower():
                 result.append(institution.to_dict())
             institution.reset()
             attempts += 1
-            
+
         # If we couldn't find enough institutions with the exact type, force the type for the remaining
         if len(result) < count:
             remaining = count - len(result)
@@ -196,10 +198,10 @@ class EducationalInstitutionService(Service):
                 institution_dict["type"] = institution_type
                 result.append(institution_dict)
                 institution.reset()
-                
+
         return result
 
-    def get_institutions_by_level(self, level: str, count: int = 10) -> List[Dict[str, Any]]:
+    def get_institutions_by_level(self, level: str, count: int = 10) -> list[dict[str, Any]]:
         """Get educational institutions of a specific level.
 
         Args:
@@ -212,14 +214,14 @@ class EducationalInstitutionService(Service):
         result = []
         attempts = 0
         max_attempts = count * 5  # Try at most 5 times per requested institution
-        
+
         while len(result) < count and attempts < max_attempts:
             institution = self.get_institution()
             if level.lower() in institution.level.lower():
                 result.append(institution.to_dict())
             institution.reset()
             attempts += 1
-            
+
         # If we couldn't find enough institutions with the exact level, force the level for the remaining
         if len(result) < count:
             remaining = count - len(result)
@@ -229,10 +231,12 @@ class EducationalInstitutionService(Service):
                 institution_dict["level"] = level
                 result.append(institution_dict)
                 institution.reset()
-                
+
         return result
-    
-    def get_institutions_by_student_count_range(self, min_count: int, max_count: int, count: int = 10) -> List[Dict[str, Any]]:
+
+    def get_institutions_by_student_count_range(
+        self, min_count: int, max_count: int, count: int = 10
+    ) -> list[dict[str, Any]]:
         """Get educational institutions within a specific student count range.
 
         Args:
@@ -246,17 +250,17 @@ class EducationalInstitutionService(Service):
         result = []
         attempts = 0
         max_attempts = count * 10  # Try at most 10 times per requested institution
-        
+
         while len(result) < count and attempts < max_attempts:
             institution = self.get_institution()
             if min_count <= institution.student_count <= max_count:
                 result.append(institution.to_dict())
             institution.reset()
             attempts += 1
-            
+
         return result
-    
-    def get_universities(self, count: int = 10) -> List[Dict[str, Any]]:
+
+    def get_universities(self, count: int = 10) -> list[dict[str, Any]]:
         """Get university institutions.
 
         Args:
@@ -266,8 +270,8 @@ class EducationalInstitutionService(Service):
             A list of university institutions
         """
         return self.get_institutions_by_type("University", count)
-    
-    def get_colleges(self, count: int = 10) -> List[Dict[str, Any]]:
+
+    def get_colleges(self, count: int = 10) -> list[dict[str, Any]]:
         """Get college institutions.
 
         Args:
@@ -277,8 +281,8 @@ class EducationalInstitutionService(Service):
             A list of college institutions
         """
         return self.get_institutions_by_type("College", count)
-    
-    def get_k12_schools(self, count: int = 10) -> List[Dict[str, Any]]:
+
+    def get_k12_schools(self, count: int = 10) -> list[dict[str, Any]]:
         """Get K-12 school institutions.
 
         Args:

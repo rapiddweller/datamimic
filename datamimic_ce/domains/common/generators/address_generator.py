@@ -5,9 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+from datamimic_ce.core.interfaces import Generator
 from datamimic_ce.domains.common.data_loaders.address_loader import AddressDataLoader
 from datamimic_ce.domains.common.models.address import Address
-from datamimic_ce.generators.generator import Generator
 
 
 class AddressGenerator(Generator):

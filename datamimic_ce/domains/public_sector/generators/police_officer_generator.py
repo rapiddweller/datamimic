@@ -10,9 +10,9 @@ Police officer generator utilities.
 This module provides utility functions for generating police officer data.
 """
 
-import random
 import datetime
-from typing import TypeVar, List, Dict, Any
+import random
+from typing import TypeVar
 
 T = TypeVar("T")  # Define a type variable for generic typing
 
@@ -111,7 +111,7 @@ def calculate_years_of_service(hire_date: str) -> int:
     return (current_date - hire_date_obj).days // 365
 
 
-def generate_police_certifications(count: int = None) -> List[str]:
+def generate_police_certifications(count: int = None) -> list[str]:
     """Generate a list of police certifications.
 
     Args:
@@ -137,10 +137,10 @@ def generate_police_certifications(count: int = None) -> List[str]:
         "Crime Scene Investigation",
         "Motorcycle Patrol",
     ]
-    
+
     if count is None:
         count = random.randint(1, 4)
-        
+
     return random.sample(all_certifications, min(count, len(all_certifications)))
 
 
@@ -171,7 +171,7 @@ def generate_police_email(first_name: str, last_name: str, badge_number: str, de
     domain = domain.replace(" police department", "pd")
     domain = domain.replace(" county sheriff's office", "sheriff")
     domain = domain.replace(" ", "")
-    
+
     # Create email formats
     email_formats = [
         f"{first_name.lower()}.{last_name.lower()}@{domain}.gov",
@@ -179,11 +179,11 @@ def generate_police_email(first_name: str, last_name: str, badge_number: str, de
         f"{badge_number}@{domain}.gov",
         f"{last_name.lower()}.{badge_number}@{domain}.gov",
     ]
-    
+
     return random.choice(email_formats)
 
 
-def generate_languages(include_english: bool = True) -> List[str]:
+def generate_languages(include_english: bool = True) -> list[str]:
     """Generate a list of languages.
 
     Args:
@@ -193,12 +193,23 @@ def generate_languages(include_english: bool = True) -> List[str]:
         A list of languages
     """
     languages = ["English"] if include_english else []
-    
+
     # Chance to add additional languages
-    additional_languages = ["Spanish", "French", "German", "Chinese", "Arabic", "Russian", "Japanese", "Korean", "Portuguese", "Italian"]
+    additional_languages = [
+        "Spanish",
+        "French",
+        "German",
+        "Chinese",
+        "Arabic",
+        "Russian",
+        "Japanese",
+        "Korean",
+        "Portuguese",
+        "Italian",
+    ]
     num_additional = random.randint(0, 2)
-    
+
     if num_additional > 0:
         languages.extend(random.sample(additional_languages, num_additional))
-        
+
     return languages

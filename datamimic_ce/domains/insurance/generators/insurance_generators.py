@@ -12,33 +12,30 @@ This module provides generator classes for insurance-related data.
 
 import json
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
-from datamimic_ce.domains.insurance.models.insurance_policy import InsurancePolicy
-from datamimic_ce.domains.insurance.models.insurance_product import InsuranceProduct
+from datamimic_ce.core.interfaces import Generator
 from datamimic_ce.domains.insurance.services.insurance_company_service import InsuranceCompanyService
 from datamimic_ce.domains.insurance.services.insurance_policy_service import InsurancePolicyService
 from datamimic_ce.domains.insurance.services.insurance_product_service import InsuranceProductService
-from datamimic_ce.generators.generator import Generator
 
 
 class InsuranceCompanyGenerator(Generator):
     """Generator for insurance company data."""
-    
+
     def __init__(self, dataset: str = "US", **kwargs):
         """Initialize the insurance company generator.
-        
+
         Args:
             dataset: The country code to use for data generation
             **kwargs: Additional arguments to pass to the generator
         """
         super().__init__(**kwargs)
         self.service = InsuranceCompanyService(dataset=dataset)
-    
-    def generate(self) -> Dict[str, Any]:
+
+    def generate(self) -> dict[str, Any]:
         """Generate an insurance company.
-        
+
         Returns:
             A dictionary containing insurance company data
         """
@@ -48,10 +45,10 @@ class InsuranceCompanyGenerator(Generator):
 
 class InsuranceProductGenerator(Generator):
     """Generator for insurance product data."""
-    
+
     def __init__(self, dataset: str = "US", include_coverages: bool = True, **kwargs):
         """Initialize the insurance product generator.
-        
+
         Args:
             dataset: The country code to use for data generation
             include_coverages: Whether to include coverages in the generated products
@@ -60,10 +57,10 @@ class InsuranceProductGenerator(Generator):
         super().__init__(**kwargs)
         self.service = InsuranceProductService(dataset=dataset)
         self.include_coverages = include_coverages
-    
-    def generate(self) -> Dict[str, Any]:
+
+    def generate(self) -> dict[str, Any]:
         """Generate an insurance product.
-        
+
         Returns:
             A dictionary containing insurance product data
         """
@@ -73,20 +70,20 @@ class InsuranceProductGenerator(Generator):
 
 class InsurancePolicyGenerator(Generator):
     """Generator for insurance policy data."""
-    
+
     def __init__(self, dataset: str = "US", **kwargs):
         """Initialize the insurance policy generator.
-        
+
         Args:
             dataset: The country code to use for data generation
             **kwargs: Additional arguments to pass to the generator
         """
         super().__init__(**kwargs)
         self.service = InsurancePolicyService(dataset=dataset)
-    
-    def generate(self) -> Dict[str, Any]:
+
+    def generate(self) -> dict[str, Any]:
         """Generate an insurance policy.
-        
+
         Returns:
             A dictionary containing insurance policy data
         """
@@ -97,7 +94,7 @@ class InsurancePolicyGenerator(Generator):
 
 class InsuranceDataGenerator(Generator):
     """Generator for comprehensive insurance data including companies, products, and policies."""
-    
+
     def __init__(
         self,
         dataset: str = "US",
@@ -107,10 +104,10 @@ class InsuranceDataGenerator(Generator):
         num_companies: int = 1,
         num_products: int = 1,
         num_policies: int = 1,
-        **kwargs
+        **kwargs,
     ):
         """Initialize the insurance data generator.
-        
+
         Args:
             dataset: The country code to use for data generation
             include_companies: Whether to include companies in the generated data
@@ -132,10 +129,10 @@ class InsuranceDataGenerator(Generator):
         self.company_service = InsuranceCompanyService(dataset=dataset)
         self.product_service = InsuranceProductService(dataset=dataset)
         self.policy_service = InsurancePolicyService(dataset=dataset)
-    
-    def generate(self) -> Dict[str, Any]:
+
+    def generate(self) -> dict[str, Any]:
         """Generate comprehensive insurance data.
-        
+
         Returns:
             A dictionary containing insurance data including companies, products, and policies
         """
@@ -143,7 +140,7 @@ class InsuranceDataGenerator(Generator):
             "id": str(uuid.uuid4()),
             "dataset": self.dataset,
         }
-        
+
         # Generate companies if requested
         if self.include_companies:
             companies = self.company_service.generate_insurance_companies(count=self.num_companies)
@@ -152,18 +149,16 @@ class InsuranceDataGenerator(Generator):
             company = companies[0] if companies else None
         else:
             company = None
-        
+
         # Generate products if requested
         if self.include_products:
-            products = self.product_service.generate_insurance_products(
-                count=self.num_products, include_coverages=True
-            )
+            products = self.product_service.generate_insurance_products(count=self.num_products, include_coverages=True)
             result["products"] = [json.loads(product.json()) for product in products]
             # Use the first product for policies if available
             product = products[0] if products else None
         else:
             product = None
-        
+
         # Generate policies if requested
         if self.include_policies:
             policies = []
@@ -175,5 +170,5 @@ class InsuranceDataGenerator(Generator):
                 )
                 policies.append(policy)
             result["policies"] = [json.loads(policy.json()) for policy in policies]
-        
+
         return result

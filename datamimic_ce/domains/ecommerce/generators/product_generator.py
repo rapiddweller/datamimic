@@ -10,7 +10,7 @@ Product generator module.
 This module provides a generator for e-commerce product data.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from datamimic_ce.domains.ecommerce.data_loaders.product_loader import ProductDataLoader
 from datamimic_ce.domains.ecommerce.models.product import Product
@@ -29,7 +29,7 @@ class ProductGenerator:
         locale: str = "en",
         min_price: float = 0.99,
         max_price: float = 9999.99,
-        dataset: Optional[str] = None,
+        dataset: str | None = None,
     ):
         """Initialize the ProductGenerator.
 
@@ -45,7 +45,7 @@ class ProductGenerator:
         self._min_price = min_price
         self._max_price = max_price
         self._dataset = dataset
-        
+
         # Create the product model for generating data
         self._product = Product(
             class_factory_util=class_factory_util,
@@ -55,7 +55,7 @@ class ProductGenerator:
             dataset=dataset,
         )
 
-    def generate_product(self) -> Dict[str, Any]:
+    def generate_product(self) -> dict[str, Any]:
         """Generate a single product.
 
         Returns:
@@ -69,11 +69,11 @@ class ProductGenerator:
     def generate_products(
         self,
         count: int = 100,
-        category: Optional[str] = None,
-        condition: Optional[str] = None,
-        min_price: Optional[float] = None,
-        max_price: Optional[float] = None,
-    ) -> List[Dict[str, Any]]:
+        category: str | None = None,
+        condition: str | None = None,
+        min_price: float | None = None,
+        max_price: float | None = None,
+    ) -> list[dict[str, Any]]:
         """Generate multiple products.
 
         Args:
@@ -87,32 +87,32 @@ class ProductGenerator:
             A list of dictionaries containing product data
         """
         products = []
-        
+
         # Use the batch generation method
         batch = self._product.generate_batch(count)
-        
+
         # Apply filters if specified
         for product in batch:
             # Category filter
             if category and product["category"] != category:
                 continue
-                
+
             # Condition filter
             if condition and product["condition"] != condition:
                 continue
-                
+
             # Price filters
             if min_price is not None and product["price"] < min_price:
                 continue
-                
+
             if max_price is not None and product["price"] > max_price:
                 continue
-                
+
             products.append(product)
-        
+
         return products
 
-    def get_available_categories(self) -> List[str]:
+    def get_available_categories(self) -> list[str]:
         """Get a list of available product categories.
 
         Returns:
@@ -121,7 +121,7 @@ class ProductGenerator:
         categories = ProductDataLoader.get_product_categories(self._dataset)
         return [category for category, _ in categories]
 
-    def get_available_brands(self) -> List[str]:
+    def get_available_brands(self) -> list[str]:
         """Get a list of available product brands.
 
         Returns:
@@ -130,7 +130,7 @@ class ProductGenerator:
         brands = ProductDataLoader.get_product_brands(self._dataset)
         return [brand for brand, _ in brands]
 
-    def get_available_conditions(self) -> List[str]:
+    def get_available_conditions(self) -> list[str]:
         """Get a list of available product conditions.
 
         Returns:
@@ -139,7 +139,7 @@ class ProductGenerator:
         conditions = ProductDataLoader.get_product_conditions(self._dataset)
         return [condition for condition, _ in conditions]
 
-    def get_available_currencies(self) -> List[str]:
+    def get_available_currencies(self) -> list[str]:
         """Get a list of available currencies.
 
         Returns:

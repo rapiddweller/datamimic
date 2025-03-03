@@ -11,7 +11,7 @@ This module provides data loading functionality for police-related data,
 loading reference data from CSV files for police departments and ranks.
 """
 
-from typing import Any, ClassVar, Dict, List, Optional, Tuple
+from typing import Any, ClassVar
 
 from datamimic_ce.domains.public_sector.data_loaders.public_sector_loader import PublicSectorDataLoader
 
@@ -23,13 +23,13 @@ class PoliceDataLoader(PublicSectorDataLoader):
     """
 
     # Cache for loaded data
-    _DEPARTMENTS_CACHE: ClassVar[Dict[str, List[Dict[str, Any]]]] = {}
-    _DEPARTMENTS_BY_WEIGHT_CACHE: ClassVar[Dict[str, List[Tuple[Dict[str, Any], float]]]] = {}
-    _RANKS_CACHE: ClassVar[Dict[str, List[Dict[str, Any]]]] = {}
-    _RANKS_BY_WEIGHT_CACHE: ClassVar[Dict[str, List[Tuple[Dict[str, Any], float]]]] = {}
-    
+    _DEPARTMENTS_CACHE: ClassVar[dict[str, list[dict[str, Any]]]] = {}
+    _DEPARTMENTS_BY_WEIGHT_CACHE: ClassVar[dict[str, list[tuple[dict[str, Any], float]]]] = {}
+    _RANKS_CACHE: ClassVar[dict[str, list[dict[str, Any]]]] = {}
+    _RANKS_BY_WEIGHT_CACHE: ClassVar[dict[str, list[tuple[dict[str, Any], float]]]] = {}
+
     @classmethod
-    def load_departments(cls, dataset: Optional[str] = None) -> List[Dict[str, Any]]:
+    def load_departments(cls, dataset: str | None = None) -> list[dict[str, Any]]:
         """Load police department data for the specified dataset.
 
         Args:
@@ -40,27 +40,27 @@ class PoliceDataLoader(PublicSectorDataLoader):
         """
         # Use 'global' as the default dataset key
         dataset_key = dataset or "global"
-        
+
         # Check if the data is already cached
         if dataset_key in cls._DEPARTMENTS_CACHE:
             return cls._DEPARTMENTS_CACHE[dataset_key]
-        
+
         # Get the file path
         file_path = cls._get_file_path("public_sector/police", "departments", dataset)
-        
+
         # Load the data
         departments = cls._load_data(file_path)
-        
+
         # Cache the data
         cls._DEPARTMENTS_CACHE[dataset_key] = departments
-        
+
         # Also load with weights
         cls._load_departments_by_weight(dataset)
-        
+
         return departments
-    
+
     @classmethod
-    def _load_departments_by_weight(cls, dataset: Optional[str] = None) -> List[Tuple[Dict[str, Any], float]]:
+    def _load_departments_by_weight(cls, dataset: str | None = None) -> list[tuple[dict[str, Any], float]]:
         """Load police department data with weights for the specified dataset.
 
         Args:
@@ -71,24 +71,24 @@ class PoliceDataLoader(PublicSectorDataLoader):
         """
         # Use 'global' as the default dataset key
         dataset_key = dataset or "global"
-        
+
         # Check if the data is already cached
         if dataset_key in cls._DEPARTMENTS_BY_WEIGHT_CACHE:
             return cls._DEPARTMENTS_BY_WEIGHT_CACHE[dataset_key]
-        
+
         # Get the file path
         file_path = cls._get_file_path("public_sector/police", "departments", dataset)
-        
+
         # Load the data with weights
         departments_by_weight = cls._load_data_with_weight(file_path)
-        
+
         # Cache the data
         cls._DEPARTMENTS_BY_WEIGHT_CACHE[dataset_key] = departments_by_weight
-        
+
         return departments_by_weight
-    
+
     @classmethod
-    def load_ranks(cls, dataset: Optional[str] = None) -> List[Dict[str, Any]]:
+    def load_ranks(cls, dataset: str | None = None) -> list[dict[str, Any]]:
         """Load police rank data for the specified dataset.
 
         Args:
@@ -99,27 +99,27 @@ class PoliceDataLoader(PublicSectorDataLoader):
         """
         # Use 'global' as the default dataset key
         dataset_key = dataset or "global"
-        
+
         # Check if the data is already cached
         if dataset_key in cls._RANKS_CACHE:
             return cls._RANKS_CACHE[dataset_key]
-        
+
         # Get the file path
         file_path = cls._get_file_path("public_sector/police", "ranks", dataset)
-        
+
         # Load the data
         ranks = cls._load_data(file_path)
-        
+
         # Cache the data
         cls._RANKS_CACHE[dataset_key] = ranks
-        
+
         # Also load with weights
         cls._load_ranks_by_weight(dataset)
-        
+
         return ranks
-    
+
     @classmethod
-    def _load_ranks_by_weight(cls, dataset: Optional[str] = None) -> List[Tuple[Dict[str, Any], float]]:
+    def _load_ranks_by_weight(cls, dataset: str | None = None) -> list[tuple[dict[str, Any], float]]:
         """Load police rank data with weights for the specified dataset.
 
         Args:
@@ -130,18 +130,18 @@ class PoliceDataLoader(PublicSectorDataLoader):
         """
         # Use 'global' as the default dataset key
         dataset_key = dataset or "global"
-        
+
         # Check if the data is already cached
         if dataset_key in cls._RANKS_BY_WEIGHT_CACHE:
             return cls._RANKS_BY_WEIGHT_CACHE[dataset_key]
-        
+
         # Get the file path
         file_path = cls._get_file_path("public_sector/police", "ranks", dataset)
-        
+
         # Load the data with weights
         ranks_by_weight = cls._load_data_with_weight(file_path)
-        
+
         # Cache the data
         cls._RANKS_BY_WEIGHT_CACHE[dataset_key] = ranks_by_weight
-        
+
         return ranks_by_weight

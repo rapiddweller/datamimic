@@ -6,10 +6,11 @@
 
 import random
 
+from datamimic_ce.core.interfaces import Generator
 from datamimic_ce.domains.common.data_loaders.phone_number_loader import PhoneNumberDataLoader
 
 
-class PhoneNumberGenerator:
+class PhoneNumberGenerator(Generator):
     """
     Generator for random phone numbers.
 

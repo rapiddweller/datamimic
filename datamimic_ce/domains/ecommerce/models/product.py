@@ -11,15 +11,13 @@ This module provides a model for representing an e-commerce product.
 """
 
 import random
-import uuid
-from typing import Any, ClassVar, Dict, List, Optional, cast
+from typing import Any, ClassVar
 
 from datamimic_ce.core.base_entity import BaseEntity
 from datamimic_ce.core.property_cache import property_cache
 from datamimic_ce.domains.ecommerce.data_loaders.product_loader import ProductDataLoader
 from datamimic_ce.domains.ecommerce.utils.random_utils import (
     generate_id,
-    get_property_values_by_category,
     price_with_strategy,
     weighted_choice,
 )
@@ -33,7 +31,7 @@ class Product(BaseEntity):
     """
 
     # Category-specific features for product descriptions
-    _FEATURES_BY_CATEGORY: ClassVar[Dict[str, List[str]]] = {
+    _FEATURES_BY_CATEGORY: ClassVar[dict[str, list[str]]] = {
         "ELECTRONICS": [
             "High performance",
             "Energy efficient",
@@ -217,7 +215,7 @@ class Product(BaseEntity):
     }
 
     # General benefits for product descriptions
-    _BENEFITS: ClassVar[List[str]] = [
+    _BENEFITS: ClassVar[list[str]] = [
         "Perfect for everyday use.",
         "Ideal for gifts and special occasions.",
         "Designed with customer satisfaction in mind.",
@@ -231,7 +229,7 @@ class Product(BaseEntity):
     ]
 
     # Product colors
-    _COLORS: ClassVar[List[str]] = [
+    _COLORS: ClassVar[list[str]] = [
         "Red",
         "Blue",
         "Green",
@@ -260,7 +258,7 @@ class Product(BaseEntity):
         locale: str = "en",
         min_price: float = 0.99,
         max_price: float = 9999.99,
-        dataset: Optional[str] = None,
+        dataset: str | None = None,
     ):
         """Initialize the Product model.
 
@@ -338,11 +336,11 @@ class Product(BaseEntity):
         if self._name is None:
             # Get the category and adjective
             category = self.category
-            
+
             # Get adjectives and choose one
             adjectives = ProductDataLoader.get_product_adjectives(self._dataset)
             adjective = weighted_choice(adjectives)
-            
+
             # Get product nouns for this category
             product_nouns = ProductDataLoader.get_product_nouns(category, self._dataset)
             if not product_nouns:
@@ -350,10 +348,10 @@ class Product(BaseEntity):
                 noun = "Product"
             else:
                 noun = weighted_choice(product_nouns)
-            
+
             # Use the brand
             brand = self.brand
-            
+
             # Different name patterns
             patterns = [
                 f"{brand} {adjective} {noun}",
@@ -361,9 +359,9 @@ class Product(BaseEntity):
                 f"{brand} {noun}",
                 f"{adjective} {brand} {noun}",
             ]
-            
+
             self._name = random.choice(patterns)
-        
+
         return self._name
 
     @property
@@ -376,20 +374,22 @@ class Product(BaseEntity):
         if self._description is None:
             name = self.name
             category = self.category
-            
+
             # Get category features
             category_features = self._FEATURES_BY_CATEGORY.get(category, ["High quality", "Versatile", "Durable"])
             selected_features = random.sample(category_features, min(len(category_features), random.randint(2, 3)))
-            
+
             # Create description
             description = f"{name} - {', '.join(selected_features)}. "
-            description += f"This premium {category.lower().replace('_', ' ')} product offers exceptional quality and value. "
-            
+            description += (
+                f"This premium {category.lower().replace('_', ' ')} product offers exceptional quality and value. "
+            )
+
             # Add random benefit
             description += random.choice(self._BENEFITS)
-            
+
             self._description = description
-        
+
         return self._description
 
     @property
@@ -415,9 +415,9 @@ class Product(BaseEntity):
             brand_code = self.brand[:3].upper()
             category_code = self.category[:3].upper()
             random_code = "".join(random.choices("0123456789", k=6))
-            
+
             self._sku = f"{brand_code}-{category_code}-{random_code}"
-        
+
         return self._sku
 
     @property
@@ -466,7 +466,7 @@ class Product(BaseEntity):
         if self._weight is None:
             # Generate weight based on category
             category = self.category
-            
+
             # Define weight ranges by category
             weight_ranges = {
                 "ELECTRONICS": (0.1, 20.0),
@@ -485,10 +485,10 @@ class Product(BaseEntity):
                 "JEWELRY": (0.01, 0.5),
                 "FURNITURE": (1.0, 100.0),
             }
-            
+
             min_weight, max_weight = weight_ranges.get(category, (0.1, 50.0))
             self._weight = round(random.uniform(min_weight, max_weight), 2)
-        
+
         return self._weight
 
     @property
@@ -501,7 +501,7 @@ class Product(BaseEntity):
         if self._dimensions is None:
             # Generate dimensions based on category
             category = self.category
-            
+
             # Define dimension ranges by category (min/max for length, width, height)
             dimension_ranges = {
                 "ELECTRONICS": ((5, 100), (5, 80), (1, 30)),
@@ -520,15 +520,15 @@ class Product(BaseEntity):
                 "JEWELRY": ((1, 15), (1, 15), (1, 5)),
                 "FURNITURE": ((30, 200), (30, 150), (30, 100)),
             }
-            
+
             length_range, width_range, height_range = dimension_ranges.get(category, ((1, 200), (1, 200), (1, 200)))
-            
+
             length = round(random.uniform(length_range[0], length_range[1]), 1)
             width = round(random.uniform(width_range[0], width_range[1]), 1)
             height = round(random.uniform(height_range[0], height_range[1]), 1)
-            
+
             self._dimensions = f"{length} x {width} x {height} cm"
-        
+
         return self._dimensions
 
     @property
@@ -553,36 +553,36 @@ class Product(BaseEntity):
             # Weight the ratings to make higher ratings more common
             weights = [0.05, 0.1, 0.2, 0.3, 0.35]  # Probabilities for 1-5 stars
             rating = float(random.choices([1, 2, 3, 4, 5], weights=weights, k=1)[0])
-            
+
             # Add decimal precision for half-star ratings
             if random.random() < 0.5:
                 rating -= 0.5
-            
+
             self._rating = max(1.0, rating)  # Ensure minimum rating of 1.0
-        
+
         return self._rating
 
     @property_cache
-    def tags(self) -> List[str]:
+    def tags(self) -> list[str]:
         """Get the product tags.
 
         Returns:
             A list of relevant tags for the product
         """
         category = self.category
-        
+
         # Base tags from category
         base_tags = [category.lower().replace("_", " ")]
-        
+
         # Add brand as a tag
         brand_tag = self.brand.lower()
         base_tags.append(brand_tag)
-        
+
         # Add condition as a tag if not NEW
         condition = self.condition
         if condition != "NEW":
             base_tags.append(condition.lower())
-        
+
         # Additional tags based on category
         category_tags = {
             "ELECTRONICS": ["tech", "gadget", "digital", "electronic", "device", "smart"],
@@ -601,21 +601,21 @@ class Product(BaseEntity):
             "JEWELRY": ["accessory", "ornament", "decoration", "adornment", "precious", "gem"],
             "FURNITURE": ["furnishing", "interior", "home", "decor", "living", "room"],
         }
-        
+
         # Select 2-4 random tags from the category
         selected_category_tags = random.sample(
             category_tags.get(category, ["product", "item", "goods"]),
             min(len(category_tags.get(category, [])), random.randint(2, 4)),
         )
-        
+
         # Combine all tags
         all_tags = base_tags + selected_category_tags
-        
+
         # Add a popular/trending tag occasionally
         if random.random() < 0.2:
             trending_tags = ["bestseller", "trending", "popular", "new arrival", "limited edition", "sale"]
             all_tags.append(random.choice(trending_tags))
-        
+
         return all_tags
 
     def reset(self) -> None:
@@ -637,7 +637,7 @@ class Product(BaseEntity):
         if hasattr(self.tags, "reset_cache"):
             self.tags.reset_cache(self)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the product to a dictionary.
 
         Returns:
