@@ -1,0 +1,242 @@
+[
+    {
+        "firstname": "Charlie",
+        "lastname": "Brown",
+        "age": 61,
+        "city": "New York",
+        "credit_score": 707,
+        "risk_profile": "Low"
+    },
+    {
+        "firstname": "Emma",
+        "lastname": "Jones",
+        "age": 48,
+        "city": "San Jose",
+        "credit_score": 712,
+        "risk_profile": "High"
+    },
+    {
+        "firstname": "Jane",
+        "lastname": "Williams",
+        "age": 28,
+        "city": "Philadelphia",
+        "credit_score": 387,
+        "risk_profile": "High"
+    },
+    {
+        "firstname": "Emma",
+        "lastname": "Garcia",
+        "age": 63,
+        "city": "Philadelphia",
+        "credit_score": 535,
+        "risk_profile": "Low"
+    },
+    {
+        "firstname": "John",
+        "lastname": "Johnson",
+        "age": 58,
+        "city": "Los Angeles",
+        "credit_score": 656,
+        "risk_profile": "Low"
+    },
+    {
+        "firstname": "Alice",
+        "lastname": "Johnson",
+        "age": 60,
+        "city": "San Diego",
+        "credit_score": 485,
+        "risk_profile": "Low"
+    },
+    {
+        "firstname": "Jane",
+        "lastname": "Smith",
+        "age": 31,
+        "city": "Los Angeles",
+        "credit_score": 631,
+        "risk_profile": "Low"
+    },
+    {
+        "firstname": "Grace",
+        "lastname": "Garcia",
+        "age": 24,
+        "city": "Phoenix",
+        "credit_score": 157,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "Frank",
+        "lastname": "Garcia",
+        "age": 18,
+        "city": "Dallas",
+        "credit_score": 471,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "John",
+        "lastname": "Taylor",
+        "age": 29,
+        "city": "Philadelphia",
+        "credit_score": 985,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "Emma",
+        "lastname": "Jones",
+        "age": 68,
+        "city": "Houston",
+        "credit_score": 488,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "Bob",
+        "lastname": "Smith",
+        "age": 52,
+        "city": "Dallas",
+        "credit_score": 252,
+        "risk_profile": "Low"
+    },
+    {
+        "firstname": "Jane",
+        "lastname": "Brown",
+        "age": 67,
+        "city": "Dallas",
+        "credit_score": 562,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "David",
+        "lastname": "Brown",
+        "age": 21,
+        "city": "Philadelphia",
+        "credit_score": 612,
+        "risk_profile": "High"
+    },
+    {
+        "firstname": "Jane",
+        "lastname": "Brown",
+        "age": 70,
+        "city": "Phoenix",
+        "credit_score": 918,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "Hannah",
+        "lastname": "Davis",
+        "age": 26,
+        "city": "Philadelphia",
+        "credit_score": 767,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "Bob",
+        "lastname": "Johnson",
+        "age": 38,
+        "city": "San Antonio",
+        "credit_score": 431,
+        "risk_profile": "High"
+    },
+    {
+        "firstname": "John",
+        "lastname": "Johnson",
+        "age": 48,
+        "city": "Los Angeles",
+        "credit_score": 155,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "John",
+        "lastname": "Davis",
+        "age": 29,
+        "city": "San Jose",
+        "credit_score": 496,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "John",
+        "lastname": "Johnson",
+        "age": 29,
+        "city": "Los Angeles",
+        "credit_score": 586,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "Bob",
+        "lastname": "Williams",
+        "age": 53,
+        "city": "Los Angeles",
+        "credit_score": 810,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "Jane",
+        "lastname": "Miller",
+        "age": 46,
+        "city": "Dallas",
+        "credit_score": 704,
+        "risk_profile": "High"
+    },
+    {
+        "firstname": "Charlie",
+        "lastname": "Garcia",
+        "age": 67,
+        "city": "Phoenix",
+        "credit_score": 487,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "Hannah",
+        "lastname": "Jones",
+        "age": 57,
+        "city": "Phoenix",
+        "credit_score": 120,
+        "risk_profile": "High"
+    },
+    {
+        "firstname": "Grace",
+        "lastname": "Smith",
+        "age": 33,
+        "city": "New York",
+        "credit_score": 308,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "Grace",
+        "lastname": "Miller",
+        "age": 34,
+        "city": "San Antonio",
+        "credit_score": 151,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "Emma",
+        "lastname": "Johnson",
+        "age": 48,
+        "city": "San Jose",
+        "credit_score": 420,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "Frank",
+        "lastname": "Garcia",
+        "age": 67,
+        "city": "New York",
+        "credit_score": 150,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "Alice",
+        "lastname": "Davis",
+        "age": 37,
+        "city": "Phoenix",
+        "credit_score": 268,
+        "risk_profile": "Medium"
+    },
+    {
+        "firstname": "Charlie",
+        "lastname": "Brown",
+        "age": 56,
+        "city": "Houston",
+        "credit_score": 157,
+        "risk_profile": "Medium"
+    }
+]

@@ -134,9 +134,9 @@ class TaskUtil:
         elif isinstance(stmt, GeneratorStatement):
             return GeneratorTask(stmt)
         elif isinstance(stmt, ConstraintsStatement):
-            return ConstraintsTask(stmt)
+            return ConstraintsTask(stmt, class_factory_util)
         elif isinstance(stmt, RuleStatement):
-            return RuleTask(stmt)
+            return RuleTask(stmt, class_factory_util)
         else:
             raise ValueError(f"Cannot created task for statement {stmt.__class__.__name__}")
 

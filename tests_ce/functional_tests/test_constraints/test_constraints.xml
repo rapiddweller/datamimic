@@ -1,6 +1,6 @@
-<setup  multiprocessing="1" numProcess="2">
+<setup  multiprocessing="0" numProcess="1">
     <generate name="synthetic_customers" count="100" pageSize="50"
-              source="data/person_data.ent.csv" target="ConsoleExporter">
+              source="script/person_data.json" target="ConsoleExporter">
         <key name="id" generator="IncrementGenerator"/>
         <constraints>
           <rule if="credit_score &lt; 600" then="risk_profile == 'High'"/>
