@@ -17,7 +17,7 @@ from typing import Any, ClassVar, List, Dict, Optional
 from datamimic_ce.core.interfaces import Service
 from datamimic_ce.domains.public_sector.models.police_officer import PoliceOfficer
 from datamimic_ce.logger import logger
-from datamimic_ce.utils.class_factory_util import ClassFactoryUtil
+from datamimic_ce.utils.domain_class_util import DomainClassUtil
 
 
 class PoliceOfficerService(Service):
@@ -55,7 +55,7 @@ class PoliceOfficerService(Service):
         """
         self._locale = locale
         self._dataset = dataset
-        self._class_factory_util = ClassFactoryUtil()
+        self._class_factory_util = DomainClassUtil()
 
     def execute(self, *args, **kwargs) -> Any:
         """Execute the service operation.

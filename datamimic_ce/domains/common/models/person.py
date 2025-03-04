@@ -105,15 +105,14 @@ class Person(BaseEntity):
         "India",
     ]
 
-    def __init__(self, class_factory_util=None, locale: str = "en", dataset: str | None = None):
+    def __init__(self, locale: str = "en", dataset: str | None = None):
         """Initialize the Person model.
 
         Args:
-            class_factory_util: A utility for creating class instances.
             locale: The locale to use for generating data.
             dataset: The dataset to use for generating data.
         """
-        super().__init__(class_factory_util, locale, dataset)
+        super().__init__(locale, dataset)
         self._first_name = None
         self._last_name = None
         self._age = None

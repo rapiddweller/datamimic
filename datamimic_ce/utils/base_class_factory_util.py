@@ -115,18 +115,3 @@ class BaseClassFactoryUtil(ABC):
         Returns:
             The application settings.
         """
-
-    @staticmethod
-    @abstractmethod
-    def create_person_entity(locale=None, dataset=None, **kwargs):
-        """
-        Abstract method to create a person entity.
-
-        Args:
-            locale: The locale to use for the person entity.
-            dataset: The dataset to use for the person entity.
-            **kwargs: Additional keyword arguments to pass to the person entity.
-
-        Returns:
-            A person entity object.
-        """

@@ -16,7 +16,7 @@ from datamimic_ce.core.interfaces import DataLoader, Generator, Repository, Serv
 from datamimic_ce.core.property_cache import PropertyCache, property_cache
 
 # Import ClassFactoryUtil directly from utils to avoid circular imports
-from datamimic_ce.utils.class_factory_util import ClassFactoryUtil
+from datamimic_ce.utils.domain_class_util import DomainClassUtil
 
 __all__ = [
     "BaseEntity",
@@ -27,5 +27,5 @@ __all__ = [
     "Service",
     "PropertyCache",
     "property_cache",
-    "ClassFactoryUtil",
+    "DomainClassUtil",
 ]

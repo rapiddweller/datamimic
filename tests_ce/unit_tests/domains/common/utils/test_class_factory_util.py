@@ -8,7 +8,7 @@ import unittest
 from abc import ABC, abstractmethod
 from unittest.mock import MagicMock, patch
 
-from datamimic_ce.domains.common.utils.class_factory_util import (
+from datamimic_ce.domains.common.utils.class_util import (
     create_dynamic_class,
     create_instance,
     create_instance_by_name,

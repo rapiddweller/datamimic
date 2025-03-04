@@ -21,7 +21,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from datamimic_ce.domains.healthcare import Doctor, DoctorService
-from datamimic_ce.utils.class_factory_util import ClassFactoryUtil
+from datamimic_ce.utils.domain_class_util import DomainClassUtil
 
 
 def generate_single_doctor(locale="en", dataset=None):
@@ -32,7 +32,7 @@ def generate_single_doctor(locale="en", dataset=None):
         dataset: The dataset to use
     """
     # Create a class factory utility
-    class_factory_util = ClassFactoryUtil()
+    class_factory_util = DomainClassUtil()
 
     # Create a doctor entity
     doctor = Doctor(

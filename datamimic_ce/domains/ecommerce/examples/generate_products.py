@@ -19,12 +19,12 @@ sys.path.insert(0, str(Path(__file__).parents[3]))
 
 from datamimic_ce.domains.ecommerce.models.product import Product
 from datamimic_ce.domains.ecommerce.services.product_service import ProductService
-from datamimic_ce.utils.class_factory_util import ClassFactoryUtil
+from datamimic_ce.utils.domain_class_util import DomainClassUtil
 
 
 def main():
     """Generate sample product data and print it to the console."""
-    class_factory_util = ClassFactoryUtil()
+    class_factory_util = DomainClassUtil()
     
     # Method 1: Using the Product model directly with US dataset
     print("Method 1: Using the Product model directly (US dataset)")

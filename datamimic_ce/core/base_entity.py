@@ -27,15 +27,13 @@ class BaseEntity(ABC):
     # Class-level cache for shared data
     _DATA_CACHE: ClassVar[dict[str, Any]] = {}
 
-    def __init__(self, class_factory_util=None, locale: str = "en", dataset: str | None = None):
+    def __init__(self, locale: str = "en", dataset: str | None = None):
         """Initialize the base entity.
 
         Args:
-            class_factory_util: A utility for creating class instances.
             locale: The locale to use for generating data.
             dataset: The dataset to use for generating data.
         """
-        self._class_factory_util = class_factory_util
         self._locale = locale  # Preserve the full locale string
         self._dataset = dataset
 

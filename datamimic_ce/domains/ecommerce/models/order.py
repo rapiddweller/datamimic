@@ -32,7 +32,6 @@ class Order(BaseEntity):
 
     def __init__(
         self,
-        class_factory_util=None,
         locale: str = "en",
         min_products: int = 1,
         max_products: int = 10,
@@ -45,7 +44,6 @@ class Order(BaseEntity):
         """Initialize the Order model.
 
         Args:
-            class_factory_util: A utility for creating class instances
             locale: Locale code for localization
             min_products: Minimum number of products in an order
             max_products: Maximum number of products in an order
@@ -55,7 +53,7 @@ class Order(BaseEntity):
             end_date: End date for order dates (defaults to now)
             dataset: Optional dataset code (country code)
         """
-        super().__init__(class_factory_util, locale, dataset)
+        super().__init__(locale, dataset)
         self._min_products = min_products
         self._max_products = max_products
         self._min_product_price = min_product_price
@@ -73,7 +71,6 @@ class Order(BaseEntity):
         
         # Initialize product model for generating product data
         self._product_model = Product(
-            class_factory_util=class_factory_util,
             locale=locale,
             min_price=min_product_price,
             max_price=max_product_price,
