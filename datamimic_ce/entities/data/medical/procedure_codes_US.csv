@@ -1,0 +1,61 @@
+code,description,weight
+36415,Collection of venous blood by venipuncture,200
+80053,Comprehensive metabolic panel,190
+80061,Lipid panel,180
+82607,Vitamin B-12 (Cyanocobalamin) assay,100
+82670,Estradiol assay,90
+82947,Glucose; quantitative,170
+83036,Hemoglobin; glycosylated (A1C),160
+84153,Prostate specific antigen (PSA); total,120
+84443,Thyroid stimulating hormone (TSH),150
+85025,Complete blood count (CBC) with differential,195
+85610,Prothrombin time,130
+86592,Syphilis test non-treponemal antibody; qualitative,80
+86677,Helicobacter pylori antibody,70
+86703,HIV-1/HIV-2 antibody,110
+87086,Culture bacterial urine quantitative,140
+87430,Streptococcus group A antigen detection,100
+88142,Cytopathology cervical or vaginal,130
+88305,Surgical pathology gross and microscopic examination,120
+90471,Immunization administration,150
+90703,Tetanus toxoid immunization,110
+90707,Measles mumps and rubella vaccine (MMR),120
+90715,Tetanus diphtheria acellular pertussis vaccine (Tdap),130
+90732,Pneumococcal polysaccharide vaccine,100
+90746,Hepatitis B vaccine,90
+92002,Ophthalmological services new patient intermediate,80
+92012,Ophthalmological services established patient intermediate,70
+92014,Ophthalmological services established patient comprehensive,80
+92081,Visual field examination unilateral or bilateral limited,60
+92551,Pure tone audiometry threshold air only,50
+93000,Electrocardiogram routine with interpretation and report,140
+93010,Electrocardiogram routine interpretation and report only,120
+93306,Echocardiography complete,110
+93880,Duplex scan of extracranial arteries complete bilateral,90
+93922,Non-invasive physiologic studies of upper or lower extremity arteries,80
+93970,Duplex scan of extremity veins complete bilateral,70
+94010,Spirometry including graphic record,100
+94060,Bronchodilation responsiveness spirometry,90
+94375,Respiratory flow volume loop,80
+94726,Plethysmography for determination of lung volumes,70
+94760,Noninvasive ear or pulse oximetry for oxygen saturation,130
+95004,Percutaneous tests with allergenic extracts immediate type reaction,60
+95115,Professional services for allergen immunotherapy single injection,50
+95810,Polysomnography 4 or more parameters,80
+95860,Needle electromyography 1 extremity with or without related paraspinal areas,70
+95900,Motor nerve conduction studies,60
+96360,Intravenous infusion hydration initial 31 minutes to 1 hour,90
+96365,Intravenous infusion for therapy prophylaxis or diagnosis initial up to 1 hour,80
+96372,Therapeutic prophylactic or diagnostic injection subcutaneous or intramuscular,100
+96374,Therapeutic prophylactic or diagnostic injection intravenous push single or initial substance/drug,90
+97110,Therapeutic exercises,110
+97140,Manual therapy techniques,100
+97530,Therapeutic activities direct patient contact by provider,90
+98940,Chiropractic manipulation of the spine 1-2 regions,80
+98941,Chiropractic manipulation of the spine 3-4 regions,70
+99203,Office or other outpatient visit new patient detailed,160
+99213,Office or other outpatient visit established patient detailed,170
+99214,Office or other outpatient visit established patient moderate,150
+99223,Initial hospital care high complexity,140
+99232,Subsequent hospital care moderate complexity,130
+99283,Emergency department visit moderate complexity,120 

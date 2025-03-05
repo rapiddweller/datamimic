@@ -1,0 +1,39 @@
+<setup multiprocessing="0">
+    <generate name="payment" count="10" target="ConsoleExporter">
+        <variable name="payment" entity="Payment" />
+        <key name="payment_id" script="payment.payment_id" />
+        <key name="payment_id1" script="payment.payment_id" />
+        <key name="method" script="payment.method" />
+        <key name="method1" script="payment.method" />
+        <key name="status" script="payment.status" />
+        <key name="status1" script="payment.status" />
+        <key name="amount" script="payment.amount" />
+        <key name="amount1" script="payment.amount" />
+        <key name="timestamp" script="payment.timestamp" />
+        <key name="timestamp1" script="payment.timestamp" />
+        <key name="currency" script="payment.currency" />
+        <key name="currency1" script="payment.currency" />
+        <key name="processor" script="payment.processor" />
+        <key name="processor1" script="payment.processor" />
+        <key name="invoice_id" script="payment.invoice_id" />
+        <key name="invoice_id1" script="payment.invoice_id" />
+        <key name="customer_id" script="payment.customer_id" />
+        <key name="customer_id1" script="payment.customer_id" />
+        <key name="description" script="payment.description" />
+        <key name="description1" script="payment.description" />
+        <key name="fee" script="payment.fee" />
+        <key name="fee1" script="payment.fee" />
+
+        <variable name="payment1" entity="Payment" />
+        <key name="payment_id2" script="payment1.payment_id" />
+        <key name="payment_id3" script="payment1.payment_id" />
+        <key name="method2" script="payment1.method" />
+        <key name="method3" script="payment1.method" />
+        <key name="status2" script="payment1.status" />
+        <key name="status3" script="payment1.status" />
+        <key name="amount2" script="payment1.amount" />
+        <key name="amount3" script="payment1.amount" />
+        <key name="processor2" script="payment1.processor" />
+        <key name="processor3" script="payment1.processor" />
+    </generate>
+</setup> 

@@ -109,7 +109,7 @@ def demo_list():
     """List all available demo XML files."""
     demo_path = files("datamimic_ce").joinpath("demos")
     console = Console()
-    toml_path: Path  # Placeholder for the toml file path
+    toml_path: Path  # type: ignore
     table = Table(show_header=True, header_style="bold magenta")
     table.add_column("Name")
     table.add_column("Description")

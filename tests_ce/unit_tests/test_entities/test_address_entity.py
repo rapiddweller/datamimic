@@ -66,6 +66,45 @@ class MockClassFactoryUtil(BaseClassFactoryUtil):
     def get_task_util_cls(self):
         return MagicMock()
 
+    @staticmethod
+    def create_person_entity(locale=None, dataset=None, **kwargs):
+        """Mock implementation of create_person_entity method."""
+        mock_person = MagicMock()
+        mock_person.first_name = "John"
+        mock_person.last_name = "Doe"
+        mock_person.gender = "male"
+        mock_person.email = "john.doe@example.com"
+        mock_person.phone_number = "+1234567890"
+        return mock_person
+
+    def get_city_entity(self, country_code):
+        # Create a mock CityEntity
+        mock_city_entity = MagicMock()
+        mock_city_entity._country = "United States"
+        mock_city_entity._city_header_dict = {
+            "name": 0,
+            "state.id": 1,
+            "postalCode": 2,
+            "areaCode": None  # Intentionally None for test coverage
+        }
+        
+        # Mock getting a city row
+        def mock_get_city_row():
+            return ["New York", "NY", "10001"]
+        
+        # Configure CityEntity's field generator
+        city_row_gen = MagicMock()
+        city_row_gen.get.side_effect = mock_get_city_row
+        city_row_gen.reset.return_value = None
+        mock_city_entity._field_generator = {"city_row": city_row_gen}
+        
+        return mock_city_entity
+        
+    def get_name_entity(self, locale):
+        # Create a mock NameEntity
+        mock_name_entity = MagicMock()
+        return mock_name_entity
+
 
 class TestAddressEntity(TestCase):
     """Test suite for AddressEntity class."""
@@ -157,28 +196,7 @@ class TestAddressEntity(TestCase):
         self.default_entity._company_name_generator.generate = lambda: "Test Company"
         self.default_entity._phone_number_generator.generate = lambda: "+1 (555) 123-4567"
         
-        # Mock CityEntity to provide deterministic data
-        mock_city_entity = self.default_entity._city_entity
-        mock_city_entity._country = "United States"
-        mock_city_entity._city_header_dict = {
-            "name": 0,
-            "state.id": 1,
-            "postalCode": 2,
-            "areaCode": None  # Intentionally None for test coverage
-        }
-        
-        # Mock getting a city row
-        def mock_get_city_row():
-            return ["New York", "NY", "10001"]
-        
-        # Configure CityEntity's field generator
-        city_row_gen = MagicMock()
-        city_row_gen.get.side_effect = mock_get_city_row
-        city_row_gen.reset.return_value = None
-        mock_city_entity._field_generator = {"city_row": city_row_gen}
-        
-        # Replace the city entity with our mocked one
-        self.default_entity._current_city_entity = mock_city_entity
+        # No need to manually create a city entity - it's now created through the MockClassFactoryUtil
         
         # Directly mock the coordinates field generator to return consistent values
         coordinates_gen = MagicMock()
@@ -187,11 +205,11 @@ class TestAddressEntity(TestCase):
         self.default_entity._field_generator["coordinates"] = coordinates_gen
         
         # Pre-set cached values to avoid generating them with mocks
-        self.default_entity._cached_iata_code = "JFK"
-        self.default_entity._cached_icao_code = "KJFK"
-        self.default_entity._cached_continent = "North America"
-        self.default_entity._cached_calling_code = "+1"
-        self.default_entity._cached_formatted_address = "1 Main Street, New York, NY 10001, United States"
+        self.default_entity._cached_iata_code = "JFK" if hasattr(self.default_entity, "_cached_iata_code") else None
+        self.default_entity._cached_icao_code = "KJFK" if hasattr(self.default_entity, "_cached_icao_code") else None
+        self.default_entity._cached_continent = "North America" if hasattr(self.default_entity, "_cached_continent") else None
+        self.default_entity._cached_calling_code = "+1" if hasattr(self.default_entity, "_cached_calling_code") else None
+        self.default_entity._cached_formatted_address = "1 Main Street, New York, NY 10001, United States" if hasattr(self.default_entity, "_cached_formatted_address") else None
 
     def test_initialization_with_defaults(self):
         """Test AddressEntity initialization with default values."""
@@ -503,31 +521,40 @@ class TestAddressEntity(TestCase):
         """Test that area codes are properly extracted."""
         entity = self.default_entity
         
-        # Test with a mock city that has an area code
-        original_header_dict = entity._city_entity._city_header_dict.copy()
-        original_city_row = entity._get_city_row()
+        # Store the original city entity so we can restore it later
+        original_city = entity._city_entity
+        
+        # Create a mock city entity with proper area_code property
+        mock_city = MagicMock()
+        mock_city.area_code = "212"  # NYC area code
+        mock_city.state = "Test State"
+        
+        # Replace the city entity with our mock
+        entity._city_entity = mock_city
+        
+        # Reset property cache
+        entity._property_cache.clear()
         
         try:
-            # Update the mock to include an area code
-            entity._city_entity._city_header_dict["areaCode"] = 3
-            
-            # Create a new city row with an area code
-            city_row_with_area = list(original_city_row) + ["212"]  # NYC area code
-            
-            # Configure city entity to return the new row
-            entity._current_city_row = city_row_with_area
-            
-            # Test area code extraction
+            # Test that area code is correctly extracted from city entity
             self.assertEqual(entity.area, "212", "Area code should be correctly extracted")
             
-            # Test with no area code index
-            entity._city_entity._city_header_dict["areaCode"] = None
-            self.assertEqual(entity.area, "", "Should return empty string when area code is not available")
+            # Test fallback to state when area_code is not available
+            # Remove area_code attribute
+            delattr(mock_city, "area_code")
+            
+            # Reset property cache to force recalculation
+            entity._property_cache.clear()
+            
+            # Should fallback to state
+            self.assertEqual(entity.area, "Test State", "Should fallback to state when area code is not available")
             
         finally:
-            # Restore original values
-            entity._city_entity._city_header_dict = original_header_dict
-            entity._current_city_row = original_city_row
+            # Restore original city entity
+            entity._city_entity = original_city
+            
+            # Reset property cache
+            entity._property_cache.clear()
 
     def test_edge_cases_invalid_inputs(self):
         """Test edge cases and handling of invalid inputs."""

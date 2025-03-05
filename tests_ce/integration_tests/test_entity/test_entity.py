@@ -8,7 +8,6 @@
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.utils.file_util import FileUtil
 
 
 class TestEntity:
@@ -73,3 +72,43 @@ class TestEntity:
         default_noble_quota = 0.005
         noble_ratio = noble_count / len(customers)
         assert default_noble_quota * 0.8 < noble_ratio < default_noble_quota * 1.2
+
+    def test_entity_product(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_product.xml")
+        engine.test_with_timer()
+
+    def test_entity_order(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_order.xml")
+        engine.test_with_timer()
+
+    def test_entity_invoice(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_invoice.xml")
+        engine.test_with_timer()
+
+    def test_entity_payment(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_payment.xml")
+        engine.test_with_timer()
+
+    def test_entity_transaction(self):
+        """Test the TransactionEntity."""
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_transaction.xml")
+        engine.test_with_timer()
+
+    def test_entity_e_commerce(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_e_commerce.xml")
+        engine.test_with_timer()
+
+    def test_entity_user_account(self):
+        """Test the UserAccountEntity."""
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_user_account.xml")
+        engine.test_with_timer()
+
+    def test_entity_crm(self):
+        """Test the CRMEntity."""
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_crm.xml")
+        engine.test_with_timer()
+
+    def test_entity_digital_wallet(self):
+        """Test the DigitalWalletEntity."""
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_digital_wallet.xml")
+        engine.test_with_timer()

@@ -1,0 +1,39 @@
+<setup multiprocessing="0">
+    <generate name="user_accounts" count="10" target="ConsoleExporter">
+        <!-- UserAccount Entity -->
+        <variable name="user" entity="UserAccount" />
+        <key name="user_id" script="user.user_id" />
+        <key name="username" script="user.username" />
+        <key name="email" script="user.email" />
+        <key name="password_hash" script="user.password_hash" />
+        <key name="registration_date" script="user.registration_date" />
+        <key name="last_login" script="user.last_login" />
+        <key name="account_status" script="user.account_status" />
+        <key name="role" script="user.role" />
+        <key name="preferences" script="user.preferences" />
+
+        <!-- Generate multiple users with different roles -->
+        <variable name="admin_user" entity="UserAccount" />
+        <key name="admin_id" script="admin_user.user_id" />
+        <key name="admin_username" script="admin_user.username" />
+        <key name="admin_email" script="admin_user.email" />
+        <key name="admin_role" script="'ADMIN'" />
+
+        <variable name="moderator_user" entity="UserAccount" />
+        <key name="moderator_id" script="moderator_user.user_id" />
+        <key name="moderator_username" script="moderator_user.username" />
+        <key name="moderator_email" script="moderator_user.email" />
+        <key name="moderator_role" script="'MODERATOR'" />
+
+        <variable name="guest_user" entity="UserAccount" />
+        <key name="guest_id" script="guest_user.user_id" />
+        <key name="guest_username" script="guest_user.username" />
+        <key name="guest_email" script="guest_user.email" />
+        <key name="guest_role" script="'GUEST'" />
+
+        <!-- Relationships (simulated) -->
+        <key name="admin_manages_user" script="admin_user.user_id + ' manages ' + user.user_id" />
+        <key name="moderator_moderates_user"
+            script="moderator_user.user_id + ' moderates ' + user.user_id" />
+    </generate>
+</setup> 

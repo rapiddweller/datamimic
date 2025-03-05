@@ -1,0 +1,46 @@
+code,description,type,weight
+I10,Essential (primary) hypertension,ICD-10,200
+E11.9,Type 2 diabetes mellitus without complications,ICD-10,180
+J44.9,Chronic obstructive pulmonary disease unspecified,ICD-10,130
+J45.909,Unspecified asthma uncomplicated,ICD-10,140
+M54.5,Low back pain,ICD-10,190
+F41.9,Anxiety disorder unspecified,ICD-10,100
+F32.9,Major depressive disorder single episode unspecified,ICD-10,110
+K21.9,Gastro-esophageal reflux disease without esophagitis,ICD-10,85
+M19.90,Unspecified osteoarthritis unspecified site,ICD-10,120
+E78.5,Hyperlipidemia unspecified,ICD-10,170
+E66.9,Obesity unspecified,ICD-10,160
+I25.10,Atherosclerotic heart disease of native coronary artery without angina pectoris,ICD-10,150
+N18.9,Chronic kidney disease unspecified,ICD-10,80
+I48.91,Unspecified atrial fibrillation,ICD-10,75
+I50.9,Heart failure unspecified,ICD-10,70
+M81.0,Age-related osteoporosis without current pathological fracture,ICD-10,65
+G43.909,Migraine unspecified not intractable without status migrainosus,ICD-10,60
+G47.33,Obstructive sleep apnea (adult) (pediatric),ICD-10,55
+C80.1,Malignant (primary) neoplasm unspecified,ICD-10,50
+I63.9,Cerebral infarction unspecified,ICD-10,45
+G30.9,Alzheimer's disease unspecified,ICD-10,40
+G20,Parkinson's disease,ICD-10,35
+G35,Multiple sclerosis,ICD-10,30
+B20,Human immunodeficiency virus [HIV] disease,ICD-10,25
+B18.2,Chronic viral hepatitis C,ICD-10,20
+K50.90,Crohn's disease unspecified without complications,ICD-10,15
+K51.90,Ulcerative colitis unspecified without complications,ICD-10,15
+M79.7,Fibromyalgia,ICD-10,10
+R53.82,Chronic fatigue syndrome,ICD-10,10
+M32.9,Systemic lupus erythematosus unspecified,ICD-10,10
+M06.9,Rheumatoid arthritis unspecified,ICD-10,10
+L40.9,Psoriasis unspecified,ICD-10,10
+L20.9,Atopic dermatitis unspecified,ICD-10,10
+J30.9,Allergic rhinitis unspecified,ICD-10,10
+H40.9,Unspecified glaucoma,ICD-10,10
+H35.30,Unspecified macular degeneration,ICD-10,10
+H26.9,Unspecified cataract,ICD-10,10
+H90.5,Unspecified sensorineural hearing loss,ICD-10,10
+G40.909,Epilepsy unspecified not intractable without status epilepticus,ICD-10,10
+F31.9,Bipolar disorder unspecified,ICD-10,10
+F20.9,Schizophrenia unspecified,ICD-10,10
+F43.10,Post-traumatic stress disorder unspecified,ICD-10,10
+F10.20,Alcohol dependence uncomplicated,ICD-10,10
+D64.9,Anemia unspecified,ICD-10,10
+M10.9,Gout unspecified,ICD-10,10 
