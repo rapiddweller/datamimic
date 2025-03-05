@@ -6,16 +6,12 @@
 import copy
 import itertools
 
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-
 from datamimic_ce.contexts.context import SAFE_GLOBALS
-
-from datamimic_ce.statements.rule_statement import RuleStatement
-
 from datamimic_ce.contexts.geniter_context import GenIterContext
-from datamimic_ce.tasks.task import Task
-
+from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.statements.constraints_statement import ConstraintsStatement
+from datamimic_ce.statements.rule_statement import RuleStatement
+from datamimic_ce.tasks.task import Task
 
 
 class ConstraintsTask(Task):
@@ -29,7 +25,7 @@ class ConstraintsTask(Task):
     def execute(self, parent_context: GenIterContext, source_data):
         pass
 
-    def filter(self, source_data, pagination: DataSourcePagination | None, cyclic: bool = False) -> list:
+    def filter(self, source_data, pagination: DataSourcePagination | None, cyclic: bool | None = False) -> list:
         filter_data = list(source_data)
         # If source is empty, return empty list
         if len(filter_data) == 0:

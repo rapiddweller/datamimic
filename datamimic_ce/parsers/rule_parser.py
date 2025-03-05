@@ -6,13 +6,11 @@
 from pathlib import Path
 from xml.etree.ElementTree import Element
 
+from datamimic_ce.constants.element_constants import EL_RULE
 from datamimic_ce.model.rule_model import RuleModel
+from datamimic_ce.parsers.statement_parser import StatementParser
 from datamimic_ce.statements.rule_statement import RuleStatement
 from datamimic_ce.statements.statement import Statement
-
-from datamimic_ce.parsers.statement_parser import StatementParser
-
-from datamimic_ce.constants.element_constants import EL_RULE
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 

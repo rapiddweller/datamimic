@@ -5,8 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.model.model_util import ModelUtil
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 from datamimic_ce.constants.attribute_constants import ATTR_IF, ATTR_THEN
 

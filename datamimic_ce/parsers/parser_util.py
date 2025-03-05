@@ -15,6 +15,7 @@ from datamimic_ce.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID
 from datamimic_ce.constants.element_constants import (
     EL_ARRAY,
     EL_CONDITION,
+    EL_CONSTRAINTS,
     EL_DATABASE,
     EL_ECHO,
     EL_ELEMENT,
@@ -32,8 +33,9 @@ from datamimic_ce.constants.element_constants import (
     EL_MONGODB,
     EL_NESTED_KEY,
     EL_REFERENCE,
+    EL_RULE,
     EL_SETUP,
-    EL_VARIABLE, EL_CONSTRAINTS, EL_RULE,
+    EL_VARIABLE,
 )
 from datamimic_ce.logger import logger
 from datamimic_ce.parsers.array_parser import ArrayParser

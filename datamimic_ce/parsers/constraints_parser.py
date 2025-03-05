@@ -8,12 +8,11 @@
 from pathlib import Path
 from xml.etree.ElementTree import Element
 
+from datamimic_ce.constants.element_constants import EL_CONSTRAINTS
 from datamimic_ce.parsers.statement_parser import StatementParser
 from datamimic_ce.statements.composite_statement import CompositeStatement
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
-
-from datamimic_ce.constants.element_constants import EL_CONSTRAINTS
 from datamimic_ce.statements.constraints_statement import ConstraintsStatement
+from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
 class ConstraintsParser(StatementParser):
