@@ -1,0 +1,11 @@
+<setup>
+    <echo>Preparing source</echo>
+    <!-- prepare source system - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <execute uri="script/source.scr.sql" target="source"/>
+
+    <!-- prepare config system - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <execute uri="script/config.scr.sql" target="config"/>
+
+    <!-- prepare target system - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <execute uri="script/target.scr.sql" target="target"/>
+</setup>

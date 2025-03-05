@@ -8,7 +8,7 @@
     -->
 
     <!-- The generate tag defines a data generation process -->
-    <generate name="customGeneratorGlobalImportExample" count="{global_count}">
+    <generate name="customGeneratorGlobalImportExample" count="{global_count}" numProcess="1">
 
         <!-- Define a key 'id' with an integer type, using an IncrementGenerator -->
         <key name="id" type="int" generator="IncrementGenerator"/>

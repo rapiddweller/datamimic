@@ -144,6 +144,66 @@ class Context(ABC):  # noqa: B024
                 return result
         except TypeError as e:
             raise ValueError(f"Failed while evaluate '{expr}': '{expr}' have undefined item or wrong structure") from e
+        except SyntaxError as e:
+            # special case with expr have ':' (example xml tag: 'gc:CodeList')
+            if ":" in expr:
+                # encode ':' character
+                colon_replacement = "__"
+                expr = expr.replace(r"\:", "__")
+
+                def process_after_dot(match):
+                    # After the first dot, replace all : with __
+                    part_after_dot = match.group(1)
+                    return "." + re.sub(r"[:]", "__", part_after_dot)
+
+                # Find the first dot and apply the transformation
+                expr = re.sub(r"\.(.*)", process_after_dot, expr)
+
+                def recursion_data_dict(recursion_dict):
+                    updated_dict = {}
+                    for recursion_key, recursion_value in recursion_dict.items():
+                        if isinstance(recursion_value, dict):
+                            recursion_value = recursion_data_dict(recursion_value)
+                        if isinstance(recursion_value, DotableDict):
+                            recursion_value = DotableDict(recursion_data_dict(recursion_value.to_dict()))
+                        updated_dict[recursion_key.replace(":", colon_replacement)] = recursion_value
+                    return updated_dict
+
+                updated_data_dict = recursion_data_dict(data_dict)
+                try:
+                    result = eval(expr, SAFE_GLOBALS, updated_data_dict)
+                    if isinstance(result, DotableDict):
+                        return result.to_dict()
+                    elif isinstance(result, list):
+                        return [ele.to_dict() if isinstance(ele, DotableDict) else ele for ele in result]
+                    # check result is not function, class or module
+                    elif callable(result) or isinstance(result, types.ModuleType):
+                        raise ValueError(
+                            f"'{expr}' is an callable function, not a valid type (string, integer, float,...)"
+                        )
+                    elif type(result) in SPECIAL_FUNCTION:
+                        raise ValueError(
+                            f"'{expr}' is {type(result).__name__} "
+                            f"function, not a valid type (string, integer, float,...)"
+                        )
+                    else:
+                        return result
+                except Exception as err:
+                    # decode ':' character
+                    expr = expr.replace(colon_replacement, ":")
+                    raise ValueError(
+                        f"Evaluation error for expression '{expr}': "
+                        "The expression may contain undefined items, improper structure, "
+                        "or case-sensitive issues (e.g., using 'true' instead of 'True'). "
+                        "Please double-check that all parameters and type notations are correct and supported."
+                    ) from err
+            else:
+                raise ValueError(
+                    f"Evaluation error for expression '{expr}': "
+                    "The expression may contain undefined elements, formatting errors, "
+                    "or unsupported parameter names. Ensure that boolean values and all parameter names "
+                    "(e.g., 'True' vs 'true') adhere to the required formats."
+                ) from e
         except Exception as e:
             raise ValueError(f"Failed while evaluate '{expr}': {str(e)}") from e
 

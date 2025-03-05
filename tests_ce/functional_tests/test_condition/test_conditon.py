@@ -100,7 +100,7 @@ class TestCondition(TestCase):
             assert c_2["lucky_2"] is not None
             assert isinstance(c_2["lucky_2"], str)
 
-        container_3 = result["container_3"]
+        container_3 = result["sup_3|container_3"]
         assert len(container_3) == 3 * 2
         for c_3 in container_3:
             assert c_3["lucky_3"] is not None

@@ -32,7 +32,7 @@ class SetupContext(Context):
         memstore_manager: MemstoreManager,
         task_id: str,
         test_mode: bool,
-        test_result_exporter: TestResultExporter | None,
+        test_result_exporter: TestResultExporter,
         default_separator: str,
         default_locale: str,
         default_dataset: str,
@@ -291,7 +291,7 @@ class SetupContext(Context):
         return self._test_mode
 
     @property
-    def test_result_exporter(self) -> TestResultExporter | None:
+    def test_result_exporter(self) -> TestResultExporter:
         return self._test_result_exporter
 
     @property

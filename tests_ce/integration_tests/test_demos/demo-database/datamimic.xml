@@ -1,0 +1,26 @@
+<setup>
+
+    <!--
+
+    Database Scenario
+    ======================================
+    DATAMIMIC Database demo showcases the connection and
+    read/write operations to one or many database(s).
+
+    Databases are created in Settings > Environments.
+    These databases need to be linked  using the <database> node.
+
+    -->
+
+    <!-- Define database test (created in Environments)
+    'id' is a unique identifier for the usage in DATAMIMIC models
+    'system' corresponds to the environment name -->
+    <database id="db"/>
+
+    <!-- Run database setup scripts to create schema and tables -->
+    <include uri="1_prepare.xml"/>
+
+    <!-- Generate data into the prepared database and to the Preview consumer -->
+    <include uri="2_generate.xml"/>
+
+</setup>

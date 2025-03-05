@@ -22,7 +22,7 @@ from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_util import DataSourceUtil
+from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntityDataSource
 from datamimic_ce.entities.address_entity import AddressEntity
 from datamimic_ce.entities.bank_account_entity import BankAccountEntity
@@ -115,7 +115,7 @@ class VariableTask(KeyVariableTask):
                         self._mode = self._RANDOM_DISTRIBUTION_MODE
                         selected_data = client.get_by_page_with_query(selector)
                         self._random_items_iterator = iter(
-                            DataSourceUtil.get_shuffled_data_with_cyclic(
+                            DataSourceRegistry.get_shuffled_data_with_cyclic(
                                 selected_data, pagination, statement.cyclic, seed
                             )
                         )
@@ -146,11 +146,13 @@ class VariableTask(KeyVariableTask):
                     )
                     if is_random_distribution:
                         self._random_items_iterator = iter(
-                            DataSourceUtil.get_shuffled_data_with_cyclic(file_data, pagination, statement.cyclic, seed)
+                            DataSourceRegistry.get_shuffled_data_with_cyclic(
+                                file_data, pagination, statement.cyclic, seed
+                            )
                         )
                         self._mode = self._RANDOM_DISTRIBUTION_MODE
                     else:
-                        self._iterator = DataSourceUtil.get_cyclic_data_iterator(
+                        self._iterator = DataSourceRegistry.get_cyclic_data_iterator(
                             data=file_data,
                             cyclic=statement.cyclic,
                             pagination=pagination,
@@ -191,7 +193,7 @@ class VariableTask(KeyVariableTask):
                         if is_random_distribution:
                             self._random_items_iterator = (
                                 iter(
-                                    DataSourceUtil.get_shuffled_data_with_cyclic(
+                                    DataSourceRegistry.get_shuffled_data_with_cyclic(
                                         file_data, pagination, statement.cyclic, seed
                                     )
                                 )
@@ -261,6 +263,36 @@ class VariableTask(KeyVariableTask):
             return BankAccountEntity(cls_factory_util, locale=locale, dataset=dataset)
         if entity_class_name == "Country":
             return CountryEntity(cls_factory_util)
+        if entity_class_name == "transaction":
+            return cls_factory_util.get_transaction_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Transaction":
+            return cls_factory_util.get_transaction_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "DigitalWallet":
+            return cls_factory_util.get_digital_wallet_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "UserAccount":
+            return cls_factory_util.get_user_account_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "CRM":
+            return cls_factory_util.get_crm_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Invoice":
+            return cls_factory_util.get_invoice_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Order":
+            return cls_factory_util.get_order_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Payment":
+            return cls_factory_util.get_payment_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Product":
+            return cls_factory_util.get_product_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Patient":
+            return cls_factory_util.get_patient_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "Doctor":
+            return cls_factory_util.get_doctor_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "MedicalRecord":
+            return cls_factory_util.get_medical_record_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "MedicalDevice":
+            return cls_factory_util.get_medical_device_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "LabTest":
+            return cls_factory_util.get_lab_test_entity(locale=locale, dataset=dataset, **kwargs)
+        if entity_class_name == "ClinicalTrial":
+            return cls_factory_util.get_clinical_trial_entity(locale=locale, dataset=dataset, **kwargs)
         else:
             raise ValueError(f"Entity {entity_name} is not supported.")
 
@@ -301,7 +333,7 @@ class VariableTask(KeyVariableTask):
             file_data = ctx.evaluate_python_expression(self._statement.source)
             if is_random_distribution:
                 self._random_items_iterator = iter(
-                    DataSourceUtil.get_shuffled_data_with_cyclic(
+                    DataSourceRegistry.get_shuffled_data_with_cyclic(
                         file_data,
                         self._pagination,
                         self.statement.cyclic,
@@ -313,7 +345,7 @@ class VariableTask(KeyVariableTask):
                     raise StopIteration("No more random items to iterate for statement: " + self._statement.name)
                 value = next(self._random_items_iterator)
             else:
-                self._iterator = DataSourceUtil.get_cyclic_data_iterator(
+                self._iterator = DataSourceRegistry.get_cyclic_data_iterator(
                     data=file_data,
                     cyclic=self.statement.cyclic,
                     pagination=self._pagination,

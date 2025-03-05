@@ -1,0 +1,21 @@
+<setup>
+
+	<echo>Running PersonEntity</echo>
+	<generate name="Person" count="10" >
+		<variable name="genobject" entity="Person" />
+		<key name="academic_title" script="genobject.academic_title" />
+		<key name="age" script="genobject.age" />
+		<key name="birth_date" script="genobject.birthdate" />
+		<key name="given_name" script="genobject.given_name" />
+		<key name="family_name" script="genobject.family_name" />
+		<key name="email" script="genobject.email" />
+		<key name="gender" script="genobject.gender" />
+		<key name="salutation" script="genobject.salutation" />
+	</generate>
+
+	<echo>Running EmailAddressGenerator</echo>
+	<generate name="EmailAddress" count="10" >
+		<key name="value" generator="EmailAddressGenerator" />
+	</generate>
+
+</setup>

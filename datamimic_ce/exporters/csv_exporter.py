@@ -10,7 +10,6 @@ from pathlib import Path
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.logger import logger
-from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 
 
 class CSVExporter(UnifiedBufferedExporter):
@@ -22,7 +21,6 @@ class CSVExporter(UnifiedBufferedExporter):
         self,
         setup_context: SetupContext,
         product_name: str,
-        page_info: MultiprocessingPageInfo,
         chunk_size: int | None,
         fieldnames: list[str] | None,
         delimiter: str | None,
@@ -46,7 +44,6 @@ class CSVExporter(UnifiedBufferedExporter):
             setup_context=setup_context,
             product_name=product_name,
             chunk_size=chunk_size,
-            page_info=page_info,
             encoding=encoding,
         )
         logger.info(
@@ -54,10 +51,10 @@ class CSVExporter(UnifiedBufferedExporter):
             f"encoding '{self._encoding}', delimiter '{self.delimiter}'"
         )
 
-    def _write_data_to_buffer(self, data: list[dict]) -> None:
+    def _write_data_to_buffer(self, data: list[dict], worker_id: int, chunk_idx: int) -> None:
         """Writes data to the current buffer file in CSV format."""
         try:
-            buffer_file = self._get_buffer_file()
+            buffer_file = self._get_buffer_file(worker_id, chunk_idx)
             if buffer_file is None:
                 return
             write_header = not buffer_file.exists()
@@ -77,7 +74,6 @@ class CSVExporter(UnifiedBufferedExporter):
                 for record in data:
                     writer.writerow(record)
             logger.debug(f"Wrote {len(data)} records to buffer file: {buffer_file}")
-            self._is_first_write = False
         except Exception as e:
             logger.error(f"Error writing data to buffer: {e}")
             raise

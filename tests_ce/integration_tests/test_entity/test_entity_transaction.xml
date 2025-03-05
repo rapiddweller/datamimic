@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup multiprocessing="0">
+    <generate name="transactions" count="10" target="ConsoleExporter">
+        <!-- Transaction 1 -->
+        <variable name="transaction" entity="Transaction" />
+        <key name="transaction_id" script="transaction.transaction_id" />
+        <key name="date" script="transaction.date" />
+        <key name="time" script="transaction.time" />
+        <key name="type" script="transaction.type" />
+        <key name="amount" script="transaction.amount" />
+        <key name="currency" script="transaction.currency" />
+        <key name="status" script="transaction.status" />
+        <key name="source" script="transaction.source" />
+        <key name="destination" script="transaction.destination" />
+        <key name="description" script="transaction.description" />
+
+        <!-- Transaction 2 -->
+        <variable name="transaction2" entity="Transaction" />
+        <key name="transaction_id2" script="transaction2.transaction_id" />
+        <key name="date2" script="transaction2.date" />
+        <key name="time2" script="transaction2.time" />
+        <key name="type2" script="transaction2.type" />
+        <key name="amount2" script="transaction2.amount" />
+        <key name="currency2" script="transaction2.currency" />
+        <key name="status2" script="transaction2.status" />
+        <key name="source2" script="transaction2.source" />
+        <key name="destination2" script="transaction2.destination" />
+        <key name="description2" script="transaction2.description" />
+    </generate>
+</setup> 

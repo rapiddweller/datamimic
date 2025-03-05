@@ -3,6 +3,7 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
+import copy
 
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
@@ -75,14 +76,24 @@ class IncludeTask(CommonSubTask):
         """
         root_ctx = ctx.root
         if uri.endswith(".xml"):
-            from datamimic_ce.tasks.generate_task import GenerateTask
-
             # Parse and execute descriptor file
             sub_geniter_stmt = DescriptorParser.parse(
                 root_ctx.class_factory_util,
                 root_ctx.descriptor_dir / uri,
                 root_ctx.properties,
             )
-            GenerateTask.execute_include(setup_stmt=sub_geniter_stmt, parent_context=ctx)
+            # Use copy of parent_context as child_context
+            copied_root_context = copy.deepcopy(root_ctx)
+
+            # Update root_context with attributes defined in sub-setup statement
+            copied_root_context.update_with_stmt(sub_geniter_stmt)
+            # Update root_context with parent_context variables and current_product
+            copied_root_context.global_variables.update(ctx.current_variables)
+            copied_root_context.global_variables.update(ctx.current_product)
+
+            task_util_cls = copied_root_context.class_factory_util.get_task_util_cls()
+            for stmt in sub_geniter_stmt.sub_statements:
+                task = task_util_cls.get_task_by_statement(copied_root_context, stmt)
+                task.execute(copied_root_context)
         else:
             raise ValueError(f"Unsupported include file type: {uri} inside <generate>. Only .xml is supported")

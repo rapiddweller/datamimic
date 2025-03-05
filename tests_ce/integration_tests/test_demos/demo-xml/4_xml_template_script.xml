@@ -1,0 +1,22 @@
+<setup>
+    <generate name="book_script" count="10" target="XML">
+        <nestedKey name="part" type="dict">
+            <key name="author" type="string"/>
+            <key name="additionalTag" constant="extra">
+                <element name="new_key" constant="new_key_value"/>
+            </key>
+            <!--            Copy simple key-->
+            <key name="copy_author" script="part.author"/>
+            <!--            Copy xml key text only-->
+            <key name="copy_additionalTag" script="part.additionalTag.get('#text')"/>
+            <!--            Copy xml attribute-->
+            <key name="copy_additionalTag2" constant="abc">
+                <element name="copy_new_key" script="part.additionalTag.get('@new_key')"/>
+            </key>
+            <!--            Copy whole xml element-->
+            <key name="copy_additionalTag3" script="part.additionalTag"/>
+
+        </nestedKey>
+    </generate>
+
+</setup>

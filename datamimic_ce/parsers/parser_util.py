@@ -124,7 +124,7 @@ class ParserUtil:
                 EL_INCLUDE,
             },
             EL_INCLUDE: {EL_SETUP},
-            EL_ITEM: {EL_KEY, EL_NESTED_KEY, EL_LIST, EL_ARRAY},
+            EL_ITEM: {EL_KEY, EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ELEMENT},
             EL_KEY: {EL_ELEMENT},
             EL_LIST: {EL_ITEM},
             EL_IF: None,
@@ -343,6 +343,29 @@ class ParserUtil:
                 conf_props.update(env_props_from_env_file)
         except FileNotFoundError:
             logger.info(f"Environment file not found {str(descriptor_dir / f'conf/{environment}.env.properties')}")
+            # Try to look for the file in the current directory
+            try:
+                env_props_from_env_file = FileUtil.parse_properties(Path(f"{environment}.env.properties"))
+                # Update env props from env file
+                conf_props.update(env_props_from_env_file)
+                logger.info(f"Environment file found in current directory: {environment}.env.properties")
+            except FileNotFoundError:
+                logger.info(f"Environment file not found in current directory: {environment}.env.properties")
+                # Try to look for the file in the user's home directory under datamimic folder
+                try:
+                    import os
+
+                    home_dir = os.path.expanduser("~")
+                    env_props_from_env_file = FileUtil.parse_properties(
+                        Path(home_dir) / "datamimic" / f"{environment}.env.properties"
+                    )
+                    # Update env props from env file
+                    conf_props.update(env_props_from_env_file)
+                    logger.info(f"Environment file found in home directory: ~/datamimic/{environment}.env.properties")
+                except FileNotFoundError:
+                    logger.info(
+                        f"Environment file not found in home directory: ~/datamimic/{environment}.env.properties"
+                    )
 
         credentials = copy.deepcopy(descriptor_attr)
 

@@ -1,5 +1,5 @@
 <setup defaultSeparator="|">
     <generate name="product1" source="data/products.ent.csv" separator="," target="ConsoleExporter"
-              distribution="ordered"/>
+              distribution="ordered" mpPlatform="ray"/>
     <generate name="product2" source="data/products_2.ent.csv" target="ConsoleExporter" distribution="ordered"/>
 </setup>

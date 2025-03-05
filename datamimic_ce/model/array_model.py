@@ -54,8 +54,7 @@ class ArrayModel(BaseModel):
                 )
             elif ATTR_TYPE not in key_set:
                 raise ValueError(
-                    f"{ATTR_COUNT} and {ATTR_TYPE} are required when {ATTR_SCRIPT} not defined, "
-                    f"but missing {ATTR_TYPE}"
+                    f"{ATTR_COUNT} and {ATTR_TYPE} are required when {ATTR_SCRIPT} not defined, but missing {ATTR_TYPE}"
                 )
             return values
 

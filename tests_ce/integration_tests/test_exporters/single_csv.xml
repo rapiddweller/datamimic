@@ -10,7 +10,7 @@
         <key name="title" constant="Prisoners"/>
         <key name="year" constant="2013"/>
     </generate>
-    <generate name="special2" source="script/template_xyz.json"
+    <!-- <generate name="special2" source="script/template_xyz.json"
               sourceScripted="True"
               count="1600"
               cyclic="True"
@@ -72,6 +72,6 @@
             <key name="title4" constant="Prisoners"/>
             <key name="year" constant="2013"/>
         </generate>
-    </generate>
+    </generate> -->
 </setup>
 

@@ -39,6 +39,8 @@ class GenerateStatement(CompositeStatement):
         self._converter = model.converter
         self._bucket = model.bucket
         self._num_process = model.num_process
+        self._script = model.script
+        self._mp_platform = model.mp_platform
 
     @property
     def name(self) -> str:
@@ -55,6 +57,10 @@ class GenerateStatement(CompositeStatement):
     @property
     def count(self):
         return self._count
+
+    @count.setter
+    def count(self, value):
+        self._count = value
 
     def get_int_count(self, ctx: Context):
         """
@@ -92,6 +98,10 @@ class GenerateStatement(CompositeStatement):
     @property
     def targets(self) -> set[str]:
         return self._targets
+
+    @targets.setter
+    def targets(self, value: set[str]):
+        self._targets = value
 
     @property
     def page_size(self) -> int | None:
@@ -140,6 +150,14 @@ class GenerateStatement(CompositeStatement):
     @property
     def num_process(self) -> int | None:
         return self._num_process
+
+    @property
+    def script(self) -> str | None:
+        return self._script
+
+    @property
+    def mp_platform(self) -> str | None:
+        return self._mp_platform
 
     def contain_mongodb_upsert(self, setup_context: SetupContext) -> bool:
         """

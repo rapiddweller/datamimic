@@ -1,0 +1,23 @@
+<setup>
+
+    <!--
+    DB Mapping Demo
+    ======================================
+    This DATAMIMIC DB Mapping demo showcases complex mapping scenarios using a custom converter.
+    -->
+
+    <include uri="conf/base.properties"/>
+    <memstore id="mem"/>
+
+    <database id="mapping"/>
+
+    <!-- Run database setup scripts to create schema and tables -->
+    <include uri="1_prepare.xml"/>
+
+    <!-- Load scripts into the global context using <execute> -->
+    <execute uri="script/lib_glob.scr.py"/>
+
+    <!-- Include the model using multiprocessing with custom generators, which use local imports -->
+    <include uri="2_mapping.xml"/>
+
+</setup>

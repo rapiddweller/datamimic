@@ -1,0 +1,4 @@
+<setup>
+    <!--Iterate through the source file 'car.ent.csv' and write the entities into target 'mem'. -->
+    <generate name="CARS" source="data/car.ent.csv" target="mem"/>
+</setup>

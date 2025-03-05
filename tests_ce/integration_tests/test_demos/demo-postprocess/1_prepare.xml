@@ -1,0 +1,3 @@
+<setup>
+    <generate name="TX" source="data/tx.ent.csv" target="mem"/>
+</setup>

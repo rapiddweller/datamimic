@@ -1,0 +1,306 @@
+<setup>
+    <!-- 1. Update active status of all customers with age between 25 and 40 -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'age': {'$gte': 25, '$lte': 40}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!--   2. Update active status of all female customers with selector 'A' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'gender': 'female', 'selector': 'A'}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 3. Update active status of all male customers with selector 'C', using dynamic variable -->
+    <variable name="C_holder" constant="C" />
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'gender': 'male', 'selector': '__C_holder__'}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 4. Update active status of all customers with active status set to false -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'active': 'false'}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 5. Update active status of all customers with odd age -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'age': {'$mod': [2, 1]}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 6. Update active status of all customers with even age -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'age': {'$mod': [2, 0]}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 7. Update active status of all customers with selector 'D' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'selector': 'D'}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 8. Update active status of all customers with selector 'E' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'selector': 'E'}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 9. Update active status of all customers with age less than 30 -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'age': {'$lt': 30}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 10. Update active status of all customers with age greater than 50 -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'age': {'$gt': 50}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 11. Update active status of all customers with age less than 35 and selector 'A' or 'B' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'$or': [{'selector': 'A'}, {'selector': 'B'}], 'age': {'$lt':
+  35}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 12. Update active status of all customers with odd age and selector 'B' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'age': {'$mod': [2, 1]}, 'selector': 'B'}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 13. Update active status of all customers with even age and selector 'C' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'age': {'$mod': [2, 0]}, 'selector': 'C'}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 14. Update active status of all customers with age between 35 and 45 and selector 'D' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'age': {'$gte': 35, '$lte': 45}, 'selector': 'D'}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 15. Update active status of all customers with age between 20 and 25 and selector 'E' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'age': {'$gte': 20, '$lte': 25}, 'selector': 'E'}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 16. Update active status of all customers with age greater than 60 and selector 'B' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'age': {'$gt': 60}, 'selector': 'B'}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 17. Update active status of all customers with age less than 20 and selector 'C' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'age': {'$lt': 20}, 'selector': 'C'}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 18. Update active status of all customers with age greater than 30 and selector 'D' or 'E' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'$or': [{'selector': 'D'}, {'selector': 'E'}], 'age': {'$gt':30}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 19. Update active status of all customers with age less than or equal to 50 and selector
+    'A'
+    or 'B' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'$or': [{'selector': 'A'}, {'selector': 'B'}], 'age': {'$lte':50}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 20. Update active status of all customers with age greater than or equal to 30 and less
+    than
+    or equal to 40 and selector 'C' or 'D' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'$or': [{'selector': 'C'}, {'selector': 'D'}], 'age': {'$gte': 30, '$lte': 40}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 21. Update active status of all customers with age less than 25 and selector 'E' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'selector': 'E', 'age': {'$lt': 25}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 22. Update active status of all female customers with age greater than or equal to 40
+    and selector 'A' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'gender': 'female', 'selector': 'A', 'age': {'$gte': 40}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 23. Update active status of all male customers with age less than or equal to 30 and
+    selector
+    'B' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'gender': 'male', 'selector': 'B', 'age': {'$lte': 30}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 24. Update active status of all customers with age greater than or equal to 50 and
+    selector 'C' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'selector': 'C', 'age': {'$gte': 50}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 25. Update active status of all customers with age less than or equal to 25 and
+    selector 'D' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'selector': 'D', 'age': {'$lte': 25}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 26. Update active status of all customers with age greater than 45 and selector
+    'E' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'selector': 'E', 'age': {'$gt': 45}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 27. Update active status of all customers with age less than 30 and selector 'A' or
+    'B' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'$or': [{'selector': 'A'}, {'selector': 'B'}], 'age': {'$lt': 30}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 28. Update active status of all customers with age between 20 and 50 and selector 'C'
+    or 'D' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'$or': [{'selector': 'C'}, {'selector': 'D'}], 'age': {'$gte':20, '$lte': 50}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+
+    <!-- 29. Update active status of all customers with age greater than 55 and selector
+    'E' -->
+    <generate
+        name="CUSTOMER"
+        source="mongodb"
+        selector="find : 'CUSTOMER', filter : {'selector': 'E', 'age': {'$gt': 55}}"
+        target="mongodb.update"
+    >
+        <key name="active" constant="true" />
+    </generate>
+</setup>

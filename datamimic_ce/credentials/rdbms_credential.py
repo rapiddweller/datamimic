@@ -26,15 +26,7 @@ class RdbmsCredential(Credential, BaseModel):
     model_config = ConfigDict(extra="allow")
 
     def get_credentials(self):
-        return {
-            "dbms": self.dbms,
-            "host": self.host,
-            "port": self.port,
-            "user": self.user,
-            "password": self.password,
-            "database": self.database,
-            "db_schema": self.db_schema,
-        }
+        return BaseModel.model_dump(self)
 
     def check_credentials(self):
         if not self.dbms:

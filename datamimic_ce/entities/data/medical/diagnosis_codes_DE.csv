@@ -1,0 +1,46 @@
+code,description,type,weight
+I10,Essentielle (primäre) Hypertonie,ICD-10-GM,200
+E11.9,Diabetes mellitus Typ 2 ohne Komplikationen,ICD-10-GM,180
+J44.9,Chronische obstruktive Lungenkrankheit nicht näher bezeichnet,ICD-10-GM,130
+J45.9,Asthma bronchiale nicht näher bezeichnet,ICD-10-GM,140
+M54.5,Kreuzschmerz,ICD-10-GM,190
+F41.9,Angststörung nicht näher bezeichnet,ICD-10-GM,100
+F32.9,Depressive Episode nicht näher bezeichnet,ICD-10-GM,110
+K21.9,Gastroösophageale Refluxkrankheit ohne Ösophagitis,ICD-10-GM,85
+M19.9,Arthrose nicht näher bezeichnet,ICD-10-GM,120
+E78.5,Hyperlipidämie nicht näher bezeichnet,ICD-10-GM,170
+E66.9,Adipositas nicht näher bezeichnet,ICD-10-GM,160
+I25.10,Atherosklerotische Herzkrankheit der nativen Koronararterie ohne Angina pectoris,ICD-10-GM,150
+N18.9,Chronische Nierenkrankheit nicht näher bezeichnet,ICD-10-GM,80
+I48.9,Vorhofflimmern und Vorhofflattern nicht näher bezeichnet,ICD-10-GM,75
+I50.9,Herzinsuffizienz nicht näher bezeichnet,ICD-10-GM,70
+M81.0,Postmenopausale Osteoporose ohne pathologische Fraktur,ICD-10-GM,65
+G43.9,Migräne nicht näher bezeichnet,ICD-10-GM,60
+G47.3,Schlafapnoe,ICD-10-GM,55
+C80.9,Bösartige Neubildung nicht näher bezeichneter Lokalisation,ICD-10-GM,50
+I63.9,Hirninfarkt nicht näher bezeichnet,ICD-10-GM,45
+G30.9,Alzheimer-Krankheit nicht näher bezeichnet,ICD-10-GM,40
+G20,Primäres Parkinson-Syndrom,ICD-10-GM,35
+G35,Multiple Sklerose,ICD-10-GM,30
+B20,Infektiöse und parasitäre Krankheiten infolge HIV-Krankheit,ICD-10-GM,25
+B18.2,Chronische Virushepatitis C,ICD-10-GM,20
+K50.9,Crohn-Krankheit nicht näher bezeichnet,ICD-10-GM,15
+K51.9,Colitis ulcerosa nicht näher bezeichnet,ICD-10-GM,15
+M79.7,Fibromyalgie,ICD-10-GM,10
+R53,Unwohlsein und Ermüdung,ICD-10-GM,10
+M32.9,Systemischer Lupus erythematodes nicht näher bezeichnet,ICD-10-GM,10
+M06.9,Chronische Polyarthritis nicht näher bezeichnet,ICD-10-GM,10
+L40.9,Psoriasis nicht näher bezeichnet,ICD-10-GM,10
+L20.9,Atopisches [endogenes] Ekzem nicht näher bezeichnet,ICD-10-GM,10
+J30.4,Allergische Rhinopathie nicht näher bezeichnet,ICD-10-GM,10
+H40.9,Glaukom nicht näher bezeichnet,ICD-10-GM,10
+H35.3,Degeneration der Makula und des hinteren Poles,ICD-10-GM,10
+H26.9,Katarakt nicht näher bezeichnet,ICD-10-GM,10
+H90.5,Hörverlust durch Schallempfindungsstörung nicht näher bezeichnet,ICD-10-GM,10
+G40.9,Epilepsie nicht näher bezeichnet,ICD-10-GM,10
+F31.9,Bipolare affektive Störung nicht näher bezeichnet,ICD-10-GM,10
+F20.9,Schizophrenie nicht näher bezeichnet,ICD-10-GM,10
+F43.1,Posttraumatische Belastungsstörung,ICD-10-GM,10
+F10.2,Psychische und Verhaltensstörungen durch Alkohol: Abhängigkeitssyndrom,ICD-10-GM,10
+D64.9,Anämie nicht näher bezeichnet,ICD-10-GM,10
+M10.9,Gicht nicht näher bezeichnet,ICD-10-GM,10 

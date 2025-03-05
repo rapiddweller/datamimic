@@ -1,0 +1,15 @@
+<setup>
+
+    <!--
+
+    JSON Demo
+    ======================================
+    JSON Demo is a DATAMIMIC project that demonstrates the use of the JSON platform.
+
+    -->
+
+    <memstore id="mem"/>
+
+    <include uri="1_generate.xml"/>
+    <include uri="2_template.xml"/>
+</setup>

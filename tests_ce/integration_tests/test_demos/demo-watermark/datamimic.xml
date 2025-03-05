@@ -1,0 +1,18 @@
+<setup>
+
+    <!--
+
+    Watermark Demo
+    ======================================
+    Watermark Demo is a DATAMIMIC project that demonstrates the use of setting watermark values in the database.
+    -->
+
+    <database id="source"/>
+	<database id="config"/>
+	<database id="target"/>
+    <!-- Run database setup scripts to create schema and tables -->
+    <include uri="1_prepare.xml"/>
+
+    <!-- Generate data into the prepared database and to the Preview consumer -->
+    <include uri="2_watermark.xml"/>
+</setup>

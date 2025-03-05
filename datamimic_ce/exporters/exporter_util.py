@@ -3,14 +3,15 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
+
 import ast
+import base64
 import json
 import re
+import uuid
 from datetime import date, datetime
 from decimal import Decimal
-
-import numpy
-from bson import ObjectId
+from typing import Any
 
 from datamimic_ce.clients.client import Client
 from datamimic_ce.clients.mongodb_client import MongoDBClient
@@ -37,33 +38,98 @@ from datamimic_ce.exporters.txt_exporter import TXTExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
-from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 
 
-def custom_serializer(obj) -> str:
+def custom_serializer(obj: Any) -> Any:
     """
-    Custom serializer for json dump
+    Custom serializer for JSON dump that supports a wide range of types.
     """
-    if isinstance(obj, datetime):
+    # Datetime and date objects
+    if isinstance(obj, datetime | date):
         return obj.isoformat()
-    if isinstance(obj, date):
-        return obj.isoformat()
-    elif isinstance(obj, ObjectId):
+
+    # If object supports pyarrow-like conversion
+    if hasattr(obj, "as_py") and callable(obj.as_py):
+        return obj.as_py()
+
+    # UUID objects
+    if isinstance(obj, uuid.UUID):
         return str(obj)
-    elif isinstance(obj, numpy.int64):
-        return str(numpy.int64)
-    elif isinstance(obj, bool | numpy.bool_ | Decimal | set):
+
+    # MongoDB ObjectId (if available)
+    try:
+        from bson import ObjectId
+
+        if isinstance(obj, ObjectId):
+            return str(obj)
+    except ImportError:
+        pass
+
+    # pandas Timestamp objects (if available)
+    try:
+        import pandas as pd
+
+        if isinstance(obj, pd.Timestamp):
+            return obj.isoformat()
+    except ImportError:
+        pass
+
+    # Decimal objects
+    if isinstance(obj, Decimal):
         return str(obj)
-    raise TypeError(f"Failed when serializing exporting data: Object of type {type(obj)} is not JSON serializable")
+
+    # NumPy scalar types
+    try:
+        import numpy as np
+
+        if isinstance(obj, np.generic):
+            return obj.item()
+    except ImportError:
+        pass
+
+    # Convert sets and frozensets to lists (JSON serializable)
+    if isinstance(obj, set | frozenset):
+        return list(obj)
+
+    # Handle bytes: try UTF-8, fallback to base64 encoding
+    if isinstance(obj, bytes):
+        try:
+            return obj.decode("utf-8")
+        except UnicodeDecodeError:
+            return base64.b64encode(obj).decode("ascii")
+
+    # Log and fallback
+    try:
+        return str(obj)
+    except Exception as e:
+        raise TypeError(
+            f"Failed when serializing exporting data: Object {repr(obj)} of type {type(obj)} is not JSON serializable"
+        ) from e
 
 
 class ExporterUtil:
+    @staticmethod
+    def get_all_exporter(setup_context: SetupContext, stmt: GenerateStatement, targets: list[str]) -> list:
+        """
+        Get all exporters from target string
+
+        :param setup_context:
+        :param stmt:
+        :param targets:
+        :return:
+        """
+        exporters_with_operation, exporters_without_operation = ExporterUtil.create_exporter_list(
+            setup_context=setup_context,
+            stmt=stmt,
+            targets=targets,
+        )
+        return exporters_without_operation + exporters_with_operation
+
     @staticmethod
     def create_exporter_list(
         setup_context: SetupContext,
         stmt: GenerateStatement,
         targets: list[str],
-        page_info: MultiprocessingPageInfo,
     ) -> tuple[list[tuple[Exporter, str]], list[Exporter]]:
         """
         Create list of consumers with and without operation from consumer string
@@ -76,16 +142,16 @@ class ExporterUtil:
         consumers_with_operation = []
         consumers_without_operation = []
 
-        exporter_str_list = list(targets)
-
-        # Join the list back into a string
-        target_str = ",".join(exporter_str_list)
+        # Join the targets list into a single string
+        target_str = ",".join(list(targets))
 
         # Parse the target string using the parse_function_string function
         try:
             parsed_targets = ExporterUtil.parse_function_string(target_str)
         except ValueError as e:
             raise ValueError(f"Error parsing target string: {e}") from e
+
+        exporter_util = setup_context.class_factory_util.get_exporter_util()
 
         # Now loop over the parsed functions and create exporters
         for target in parsed_targets:
@@ -95,15 +161,14 @@ class ExporterUtil:
             if "." in exporter_name:
                 consumer_name, operation = exporter_name.split(".", 1)
                 client = setup_context.get_client_by_id(consumer_name)
-                consumer = ExporterUtil._create_exporter_from_client(client, consumer_name)
+                consumer = exporter_util.create_exporter_from_client(client, consumer_name)
                 consumers_with_operation.append((consumer, operation))
             # Handle consumer without operation
             else:
-                consumer = ExporterUtil.get_exporter_by_name(
+                consumer = exporter_util.get_exporter_by_name(
                     setup_context=setup_context,
                     name=exporter_name,
-                    product_name=stmt.name,
-                    page_info=page_info,
+                    gen_stmt=stmt,
                     exporter_params_dict=params,
                 )
                 if consumer is not None:
@@ -199,8 +264,7 @@ class ExporterUtil:
     def get_exporter_by_name(
         setup_context: SetupContext,
         name: str,
-        product_name: str,
-        page_info: MultiprocessingPageInfo,
+        gen_stmt: GenerateStatement,
         exporter_params_dict: dict,
     ):
         """
@@ -208,8 +272,12 @@ class ExporterUtil:
 
         :param setup_context:
         :param name:
+        :param gen_stmt:
+        :param exporter_params_dict:
         :return:
         """
+        product_name = gen_stmt.name
+
         if name is None or name == "":
             return None
 
@@ -234,12 +302,11 @@ class ExporterUtil:
         elif name == EXPORTER_LOG_EXPORTER:
             return LogExporter()
         elif name == EXPORTER_JSON:
-            return JsonExporter(setup_context, product_name, page_info, chunk_size, use_ndjson, encoding)
+            return JsonExporter(setup_context, product_name, chunk_size, use_ndjson, encoding)
         elif name == EXPORTER_CSV:
             return CSVExporter(
                 setup_context,
                 product_name,
-                page_info,
                 chunk_size,
                 fieldnames,
                 delimiter,
@@ -249,16 +316,16 @@ class ExporterUtil:
                 encoding,
             )
         elif name == EXPORTER_XML:
-            return XMLExporter(setup_context, product_name, page_info, chunk_size, root_element, item_element, encoding)
+            return XMLExporter(setup_context, product_name, chunk_size, root_element, item_element, encoding)
         elif name == EXPORTER_TXT:
-            return TXTExporter(setup_context, product_name, page_info, chunk_size, delimiter, line_terminator, encoding)
+            return TXTExporter(setup_context, product_name, chunk_size, delimiter, line_terminator, encoding)
         elif name == EXPORTER_TEST_RESULT_EXPORTER:
             return setup_context.test_result_exporter
         elif name in setup_context.clients:
             # 1. get client from context
             client = setup_context.get_client_by_id(name)
             # 2. create consumer from client
-            return ExporterUtil._create_exporter_from_client(client, name)
+            return ExporterUtil.create_exporter_from_client(client, name)
         elif setup_context.memstore_manager.contain(name):
             return setup_context.memstore_manager.get_memstore(name)
         else:
@@ -272,7 +339,7 @@ class ExporterUtil:
             )
 
     @staticmethod
-    def _create_exporter_from_client(client: Client, client_name: str):
+    def create_exporter_from_client(client: Client, client_name: str):
         if isinstance(client, MongoDBClient):
             return MongoDBExporter(client)
         elif isinstance(client, RdbmsClient):

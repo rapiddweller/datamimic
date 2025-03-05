@@ -1,0 +1,67 @@
+complaint,weight
+Fever,180
+Headache,200
+Chest pain,170
+Abdominal pain,190
+Shortness of breath,160
+Cough,150
+Fatigue,140
+Nausea,130
+Vomiting,120
+Diarrhea,110
+Back pain,190
+Joint pain,170
+Dizziness,150
+Rash,140
+Sore throat,130
+Ear pain,120
+Eye pain,110
+Blurred vision,100
+Numbness,90
+Tingling,80
+Swelling,100
+Weakness,110
+Difficulty breathing,160
+Palpitations,120
+High blood pressure,150
+Low blood pressure,100
+Anxiety,140
+Depression,130
+Insomnia,120
+Weight loss,110
+Weight gain,100
+Loss of appetite,90
+Excessive thirst,80
+Frequent urination,90
+Blood in urine,130
+Blood in stool,140
+Constipation,110
+Muscle pain,120
+Neck pain,130
+Shoulder pain,120
+Knee pain,130
+Hip pain,110
+Ankle pain,100
+Wrist pain,90
+Elbow pain,80
+Memory problems,70
+Confusion,80
+Seizures,100
+Tremors,70
+Allergic reaction,120
+Itching,100
+Burning sensation,90
+Difficulty swallowing,80
+Hoarseness,70
+Nasal congestion,90
+Runny nose,80
+Sneezing,70
+Wheezing,100
+Bruising,80
+Bleeding,120
+Wound,110
+Injury,130
+Burn,100
+Fracture,140
+Sprain,120
+Strain,110 

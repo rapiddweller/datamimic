@@ -1,0 +1,33 @@
+<setup multiprocessing="0">
+    <generate name="user_account" count="10" target="ConsoleExporter">
+        <variable name="user_account" entity="UserAccount" />
+        <key name="user_id" script="user_account.user_id" />
+        <key name="user_id1" script="user_account.user_id" />
+        <key name="username" script="user_account.username" />
+        <key name="username1" script="user_account.username" />
+        <key name="email" script="user_account.email" />
+        <key name="email1" script="user_account.email" />
+        <key name="password_hash" script="user_account.password_hash" />
+        <key name="password_hash1" script="user_account.password_hash" />
+        <key name="registration_date" script="user_account.registration_date" />
+        <key name="registration_date1" script="user_account.registration_date" />
+        <key name="last_login" script="user_account.last_login" />
+        <key name="last_login1" script="user_account.last_login" />
+        <key name="account_status" script="user_account.account_status" />
+        <key name="account_status1" script="user_account.account_status" />
+        <key name="role" script="user_account.role" />
+        <key name="role1" script="user_account.role" />
+
+        <variable name="user_account1" entity="UserAccount" />
+        <key name="user_id2" script="user_account1.user_id" />
+        <key name="user_id3" script="user_account1.user_id" />
+        <key name="username2" script="user_account1.username" />
+        <key name="username3" script="user_account1.username" />
+        <key name="email2" script="user_account1.email" />
+        <key name="email3" script="user_account1.email" />
+        <key name="account_status2" script="user_account1.account_status" />
+        <key name="account_status3" script="user_account1.account_status" />
+        <key name="role2" script="user_account1.role" />
+        <key name="role3" script="user_account1.role" />
+    </generate>
+</setup> 

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup multiprocessing="0">
+    <generate name="transactions" count="10" target="ConsoleExporter">
+        <!-- Standard transactions -->
+        <variable name="standard_transactions">
+            <key name="transaction_id" entity="Transaction" />
+            <key name="date" entity="Transaction" />
+            <key name="time" entity="Transaction" />
+            <key name="type" entity="Transaction" />
+            <key name="amount" entity="Transaction" />
+            <key name="currency" entity="Transaction" />
+            <key name="status" entity="Transaction" />
+            <key name="source" entity="Transaction" />
+            <key name="destination" entity="Transaction" />
+            <key name="description" entity="Transaction" />
+        </variable>
+
+        <!-- Payment transactions -->
+        <variable name="payment_transactions">
+            <key name="transaction_id" entity="Transaction" transaction_type="PAYMENT"
+                min_amount="10.00" max_amount="500.00" currency="USD" />
+            <key name="date" entity="Transaction" transaction_type="PAYMENT" min_amount="10.00"
+                max_amount="500.00" currency="USD" />
+            <key name="time" entity="Transaction" transaction_type="PAYMENT" min_amount="10.00"
+                max_amount="500.00" currency="USD" />
+            <key name="type" entity="Transaction" transaction_type="PAYMENT" min_amount="10.00"
+                max_amount="500.00" currency="USD" />
+            <key name="amount" entity="Transaction" transaction_type="PAYMENT" min_amount="10.00"
+                max_amount="500.00" currency="USD" />
+            <key name="currency" entity="Transaction" transaction_type="PAYMENT" min_amount="10.00"
+                max_amount="500.00" currency="USD" />
+            <key name="status" entity="Transaction" transaction_type="PAYMENT" min_amount="10.00"
+                max_amount="500.00" currency="USD" />
+            <key name="source" entity="Transaction" transaction_type="PAYMENT" min_amount="10.00"
+                max_amount="500.00" currency="USD" />
+            <key name="destination" entity="Transaction" transaction_type="PAYMENT"
+                min_amount="10.00" max_amount="500.00" currency="USD" />
+            <key name="description" entity="Transaction" transaction_type="PAYMENT"
+                min_amount="10.00" max_amount="500.00" currency="USD" />
+        </variable>
+
+        <!-- Withdrawal transactions -->
+        <variable name="withdrawal_transactions">
+            <key name="transaction_id" entity="Transaction" transaction_type="WITHDRAWAL"
+                min_amount="50.00" max_amount="1000.00" currency="EUR" />
+            <key name="date" entity="Transaction" transaction_type="WITHDRAWAL" min_amount="50.00"
+                max_amount="1000.00" currency="EUR" />
+            <key name="time" entity="Transaction" transaction_type="WITHDRAWAL" min_amount="50.00"
+                max_amount="1000.00" currency="EUR" />
+            <key name="type" entity="Transaction" transaction_type="WITHDRAWAL" min_amount="50.00"
+                max_amount="1000.00" currency="EUR" />
+            <key name="amount" entity="Transaction" transaction_type="WITHDRAWAL" min_amount="50.00"
+                max_amount="1000.00" currency="EUR" />
+            <key name="currency" entity="Transaction" transaction_type="WITHDRAWAL"
+                min_amount="50.00" max_amount="1000.00" currency="EUR" />
+            <key name="status" entity="Transaction" transaction_type="WITHDRAWAL" min_amount="50.00"
+                max_amount="1000.00" currency="EUR" />
+            <key name="source" entity="Transaction" transaction_type="WITHDRAWAL" min_amount="50.00"
+                max_amount="1000.00" currency="EUR" />
+            <key name="destination" entity="Transaction" transaction_type="WITHDRAWAL"
+                min_amount="50.00" max_amount="1000.00" currency="EUR" />
+            <key name="description" entity="Transaction" transaction_type="WITHDRAWAL"
+                min_amount="50.00" max_amount="1000.00" currency="EUR" />
+        </variable>
+
+        <!-- Crypto transactions -->
+        <variable name="crypto_transactions">
+            <key name="transaction_id" entity="Transaction" transaction_type="EXCHANGE"
+                min_amount="0.001" max_amount="5.0" currency="BTC" />
+            <key name="date" entity="Transaction" transaction_type="EXCHANGE" min_amount="0.001"
+                max_amount="5.0" currency="BTC" />
+            <key name="time" entity="Transaction" transaction_type="EXCHANGE" min_amount="0.001"
+                max_amount="5.0" currency="BTC" />
+            <key name="type" entity="Transaction" transaction_type="EXCHANGE" min_amount="0.001"
+                max_amount="5.0" currency="BTC" />
+            <key name="amount" entity="Transaction" transaction_type="EXCHANGE" min_amount="0.001"
+                max_amount="5.0" currency="BTC" />
+            <key name="currency" entity="Transaction" transaction_type="EXCHANGE" min_amount="0.001"
+                max_amount="5.0" currency="BTC" />
+            <key name="status" entity="Transaction" transaction_type="EXCHANGE" min_amount="0.001"
+                max_amount="5.0" currency="BTC" />
+            <key name="source" entity="Transaction" transaction_type="EXCHANGE" min_amount="0.001"
+                max_amount="5.0" currency="BTC" />
+            <key name="destination" entity="Transaction" transaction_type="EXCHANGE"
+                min_amount="0.001" max_amount="5.0" currency="BTC" />
+            <key name="description" entity="Transaction" transaction_type="EXCHANGE"
+                min_amount="0.001" max_amount="5.0" currency="BTC" />
+        </variable>
+
+        <!-- Integration with digital wallets -->
+        <variable name="wallet_id">
+            <key name="wallet_id" entity="DigitalWallet" />
+        </variable>
+        <variable name="wallet_transactions">
+            <key name="transaction_id" entity="Transaction" transaction_type="TRANSFER" />
+            <key name="date" entity="Transaction" transaction_type="TRANSFER" />
+            <key name="time" entity="Transaction" transaction_type="TRANSFER" />
+            <key name="type" entity="Transaction" transaction_type="TRANSFER" />
+            <key name="amount" entity="Transaction" transaction_type="TRANSFER" />
+            <key name="currency" entity="Transaction" transaction_type="TRANSFER" />
+            <key name="status" entity="Transaction" transaction_type="TRANSFER" />
+            <key name="source" script="wallet_id" />
+            <key name="destination" entity="Transaction" transaction_type="TRANSFER" />
+            <key name="description" entity="Transaction" transaction_type="TRANSFER" />
+        </variable>
+    </generate>
+</setup> 

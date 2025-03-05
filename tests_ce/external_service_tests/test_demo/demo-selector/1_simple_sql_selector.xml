@@ -1,0 +1,16 @@
+<setup>
+  <!-- input SQL query into selector -->
+  <generate name="generate_selector" source="database" selector="SELECT * FROM public.db_postgres_demo" />
+
+  <generate name="variable_selector" count="10">
+    <key name="my_id" generator="IncrementGenerator" />
+    <variable
+      name="user"
+      source="database"
+      selector="SELECT id, name FROM public.db_postgres_demo"
+      distribution="ordered"
+    />
+    <key name="user_id" script="user.id" defaultValue="None" />
+    <key name="user_name" script="user.name" defaultValue="None" />
+  </generate>
+</setup>
