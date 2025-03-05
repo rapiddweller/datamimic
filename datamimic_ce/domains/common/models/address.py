@@ -42,77 +42,77 @@ class Address(BaseModel):
     fax: str | None = Field(None, description="A fax number")
 
     # Private attributes for internal use
-    _property_cache: dict[str, Any] = PrivateAttr(default_factory=dict)
+    # _property_cache: dict[str, Any] = PrivateAttr(default_factory=dict)
 
     # Cache attributes for property_cache decorator
-    _formatted_address_cache: str | None = PrivateAttr(default=None)
-    _coordinates_cache: dict[str, float] | None = PrivateAttr(default=None)
+    # _formatted_address_cache: str | None = PrivateAttr(default=None)
+    # _coordinates_cache: dict[str, float] | None = PrivateAttr(default=None)
 
-    @classmethod
-    def create(cls, data: dict[str, Any]) -> "Address":
-        """
-        Create an Address instance from a dictionary of data.
+    # @classmethod
+    # def create(cls, data: dict[str, Any]) -> "Address":
+    #     """
+    #     Create an Address instance from a dictionary of data.
 
-        Args:
-            data: Dictionary containing address data
+    #     Args:
+    #         data: Dictionary containing address data
 
-        Returns:
-            A new Address instance
-        """
-        return cls(**data)
+    #     Returns:
+    #         A new Address instance
+    #     """
+    #     return cls(**data)
 
-    @property
-    @property_cache
-    def formatted_address(self) -> str:
-        """
-        Get the formatted address according to local conventions.
+    # @property
+    # @property_cache
+    # def formatted_address(self) -> str:
+    #     """
+    #     Get the formatted address according to local conventions.
 
-        Returns:
-            The formatted address as a string
-        """
-        # North American format (US, CA)
-        if self.country_code in ["US", "CA"]:
-            return f"{self.house_number} {self.street}\n{self.city}, {self.state} {self.postal_code}\n{self.country}"
+    #     Returns:
+    #         The formatted address as a string
+    #     """
+    #     # North American format (US, CA)
+    #     if self.country_code in ["US", "CA"]:
+    #         return f"{self.house_number} {self.street}\n{self.city}, {self.state} {self.postal_code}\n{self.country}"
 
-        # UK format
-        elif self.country_code in ["GB", "IE"]:
-            return f"{self.house_number} {self.street}\n{self.city}\n{self.state}\n{self.postal_code}\n{self.country}"
+    #     # UK format
+    #     elif self.country_code in ["GB", "IE"]:
+    #         return f"{self.house_number} {self.street}\n{self.city}\n{self.state}\n{self.postal_code}\n{self.country}"
 
-        # German/Central European format
-        elif self.country_code in ["DE", "AT", "CH", "NL", "BE", "LU", "CZ", "SK", "PL", "HU", "SI", "HR"]:
-            return f"{self.street} {self.house_number}\n{self.postal_code} {self.city}\n{self.state}\n{self.country}"
+    #     # German/Central European format
+    #     elif self.country_code in ["DE", "AT", "CH", "NL", "BE", "LU", "CZ", "SK", "PL", "HU", "SI", "HR"]:
+    #         return f"{self.street} {self.house_number}\n{self.postal_code} {self.city}\n{self.state}\n{self.country}"
 
-        # French format
-        elif self.country_code in ["FR", "MC"]:
-            return f"{self.house_number} {self.street}\n{self.postal_code} {self.city}\n{self.state}\n{self.country}"
+    #     # French format
+    #     elif self.country_code in ["FR", "MC"]:
+    #         return f"{self.house_number} {self.street}\n{self.postal_code} {self.city}\n{self.state}\n{self.country}"
 
-        # Default format
-        else:
-            return f"{self.house_number} {self.street}\n{self.city}, {self.state} {self.postal_code}\n{self.country}"
+    #     # Default format
+    #     else:
+    #         return f"{self.house_number} {self.street}\n{self.city}, {self.state} {self.postal_code}\n{self.country}"
 
-    @property
-    @property_cache
-    def coordinates(self) -> dict[str, float]:
-        """
-        Get the coordinates as a dictionary.
+    # @property
+    # @property_cache
+    # def coordinates(self) -> dict[str, float]:
+    #     """
+    #     Get the coordinates as a dictionary.
 
-        Returns:
-            A dictionary with latitude and longitude
-        """
-        return {
-            "latitude": self.latitude if self.latitude is not None else 0.0,
-            "longitude": self.longitude if self.longitude is not None else 0.0,
-        }
+    #     Returns:
+    #         A dictionary with latitude and longitude
+    #     """
+    #     return {
+    #         "latitude": self.latitude if self.latitude is not None else 0.0,
+    #         "longitude": self.longitude if self.longitude is not None else 0.0,
+    #     }
 
-    @property
-    def zip_code(self) -> str:
-        """
-        Alias for postal_code.
+    # @property
+    # def zip_code(self) -> str:
+    #     """
+    #     Alias for postal_code.
 
-        Returns:
-            The postal code
-        """
-        return self.postal_code
+    #     Returns:
+    #         The postal code
+    #     """
+    #     return self.postal_code
 
     def to_dict(self) -> dict[str, Any]:
         """
@@ -123,10 +123,10 @@ class Address(BaseModel):
         """
         return self.model_dump(exclude={"_property_cache"})
 
-    def reset(self) -> None:
-        """
-        Reset all cached properties.
-        """
-        self._property_cache = {}
-        self._formatted_address_cache = None
-        self._coordinates_cache = None
+    # def reset(self) -> None:
+    #     """
+    #     Reset all cached properties.
+    #     """
+    #     self._property_cache = {}
+    #     self._formatted_address_cache = None
+    #     self._coordinates_cache = None
