@@ -7,12 +7,11 @@
 from pathlib import Path
 from typing import Any
 
-from datamimic_ce.core.base_data_loader import BaseDataLoader
 from datamimic_ce.logger import logger
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class CityDataLoader(BaseDataLoader):
+class CityDataLoader:
     """Data loader for city data.
 
     This class is responsible for loading city and state data from CSV files.

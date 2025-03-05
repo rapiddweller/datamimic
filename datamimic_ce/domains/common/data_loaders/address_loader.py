@@ -6,16 +6,15 @@
 
 import random
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
-from datamimic_ce.core.base_data_loader import BaseDataLoader
 from datamimic_ce.domains.common.data_loaders.city_loader import CityDataLoader
 from datamimic_ce.domains.common.data_loaders.country_loader import CountryDataLoader
 from datamimic_ce.logger import logger
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class AddressDataLoader(BaseDataLoader):
+class AddressDataLoader:
     """Data loader for address data.
 
     This class is responsible for loading address data from CSV files.
@@ -55,23 +54,23 @@ class AddressDataLoader(BaseDataLoader):
     _DEFAULT_DATASET = "US"
 
     # Module-level cache to avoid repeated file I/O
-    _STREET_DATA_CACHE: dict[str, list[str]] = {}
-    _HOUSE_NUMBER_CACHE: dict[str, list[str]] = {}
-    _CONTINENT_CACHE: dict[str, str] = {}
+    _STREET_DATA_CACHE: ClassVar[dict[str, list[str]]] = {}
+    _HOUSE_NUMBER_CACHE: ClassVar[dict[str, list[str]]] = {}
+    _CONTINENT_CACHE: ClassVar[dict[str, str]] = {}
 
-    def __init__(self, country_code: str = "US"):
+    def __init__(self, country_code: str = _DEFAULT_DATASET):
         """Initialize the AddressDataLoader.
 
         Args:
             country_code: The country code to use for loading data.
         """
         super().__init__()
-        self.country_code = country_code.upper()
-        self._data_cache: dict[str, Any] = {}
-        self._current_dataset = self.country_code
+        self._country_code = country_code.upper()
+        # self._data_cache: dict[str, Any] = {}
+        # self._current_dataset = self._country_code
 
         # Initialize related data loaders
-        self._city_loader = CityDataLoader(country_code=self.country_code)
+        self._city_loader = CityDataLoader(country_code=self._country_code)
         self._country_loader = CountryDataLoader()
 
     def load_street_data(self) -> list[str]:
@@ -80,20 +79,14 @@ class AddressDataLoader(BaseDataLoader):
         Returns:
             A list of street names.
         """
-        cache_key = f"street_data_{self.country_code}"
 
         # Check if we already have this dataset in cache
-        if cache_key in self._data_cache:
-            return self._data_cache[cache_key]
-
-        # Check if we already have this dataset in class cache
-        if self.country_code in self._STREET_DATA_CACHE:
-            self._data_cache[cache_key] = self._STREET_DATA_CACHE[self.country_code]
-            return self._data_cache[cache_key]
+        if self._country_code in self._STREET_DATA_CACHE:
+            return self._STREET_DATA_CACHE[self._country_code]
 
         # Prepare data file path
         base_path = self._get_base_path_address()
-        street_file_path = base_path / f"street_{self.country_code}.csv"
+        street_file_path = base_path / f"street_{self._country_code}.csv"
 
         # Try to load the requested dataset
         if street_file_path.exists():
@@ -106,18 +99,16 @@ class AddressDataLoader(BaseDataLoader):
                     street_data = [item[0] for item in street_data]
 
                 # Cache the data
-                self._data_cache[cache_key] = street_data
-                self._STREET_DATA_CACHE[self.country_code] = street_data
-                self._current_dataset = self.country_code
+                self._STREET_DATA_CACHE[self._country_code] = street_data
 
                 return street_data
             except Exception as e:
-                logger.warning(f"Error loading dataset '{self.country_code}': {e}")
+                logger.warning(f"Error loading dataset '{self._country_code}': {e}")
         else:
-            logger.warning(f"Street dataset '{self.country_code}' not found")
+            logger.warning(f"Street dataset '{self._country_code}' not found")
 
         # Try regional fallbacks
-        for fallback in self._REGIONAL_FALLBACKS.get(self.country_code, ()):
+        for fallback in self._REGIONAL_FALLBACKS.get(self._country_code, ()):
             fallback_street_path = base_path / f"street_{fallback}.csv"
 
             # Check if file exists
@@ -125,7 +116,7 @@ class AddressDataLoader(BaseDataLoader):
                 continue
 
             try:
-                logger.info(f"Using regional fallback '{fallback}' for street dataset '{self.country_code}'")
+                logger.info(f"Using regional fallback '{fallback}' for street dataset '{self._country_code}'")
 
                 # Load street data from fallback
                 street_data = FileUtil.read_csv_to_list_of_tuples_without_header(fallback_street_path, delimiter=";")
@@ -135,18 +126,16 @@ class AddressDataLoader(BaseDataLoader):
                     street_data = [item[0] for item in street_data]
 
                 # Cache the data
-                self._data_cache[cache_key] = street_data
-                self._STREET_DATA_CACHE[self.country_code] = street_data
-                self._current_dataset = fallback
+                self._STREET_DATA_CACHE[self._country_code] = street_data
 
                 return street_data
             except Exception as e:
                 logger.warning(f"Error loading fallback {fallback}: {e}")
                 continue
 
-        # If no fallbacks worked, use US as last resort
-        logger.warning(f"No fallbacks found for '{self.country_code}', using default dataset 'US'")
-        self._current_dataset = self._DEFAULT_DATASET
+        # If no fallbacks worked, use US as last result
+        logger.warning(f"No fallbacks found for '{self._country_code}', using default dataset 'US'")
+        self._country_code = self._DEFAULT_DATASET
 
         # Load US street data
         us_street_path = base_path / f"street_{self._DEFAULT_DATASET}.csv"
@@ -158,8 +147,7 @@ class AddressDataLoader(BaseDataLoader):
                 street_data = [item[0] for item in street_data]
 
             # Cache the data
-            self._data_cache[cache_key] = street_data
-            self._STREET_DATA_CACHE[self.country_code] = street_data
+            self._STREET_DATA_CACHE[self._country_code] = street_data
 
             return street_data
         except Exception as e:
@@ -172,31 +160,24 @@ class AddressDataLoader(BaseDataLoader):
         Returns:
             A list of house numbers.
         """
-        cache_key = f"house_number_{self.country_code}"
-
         # Check if we already have this dataset in cache
-        if cache_key in self._data_cache:
-            return self._data_cache[cache_key]
-
-        # Check if we already have this dataset in class cache
-        if self.country_code in self._HOUSE_NUMBER_CACHE:
-            self._data_cache[cache_key] = self._HOUSE_NUMBER_CACHE[self.country_code]
-            return self._data_cache[cache_key]
+        if self._country_code in self._HOUSE_NUMBER_CACHE:
+            return self._HOUSE_NUMBER_CACHE[self._country_code]
 
         # Generate house numbers based on country format
         house_numbers = []
 
         # North American format (mostly numeric)
-        if self.country_code in ["US", "CA"]:
+        if self._country_code in ["US", "CA"]:
             house_numbers = [str(i) for i in range(1, 10000, 2)]  # Odd numbers up to 9999
 
         # European format (can include letters)
-        elif self.country_code in ["DE", "FR", "GB", "IT", "ES"]:
+        elif self._country_code in ["DE", "FR", "GB", "IT", "ES"]:
             # Basic numbers
             house_numbers = [str(i) for i in range(1, 200)]
 
             # Add some with letters for certain countries
-            if self.country_code in ["GB", "NL"]:
+            if self._country_code in ["GB", "NL"]:
                 for i in range(1, 50):
                     house_numbers.append(f"{i}A")
                     house_numbers.append(f"{i}B")
@@ -206,8 +187,7 @@ class AddressDataLoader(BaseDataLoader):
             house_numbers = [str(i) for i in range(1, 200)]
 
         # Cache the data
-        self._data_cache[cache_key] = house_numbers
-        self._HOUSE_NUMBER_CACHE[self.country_code] = house_numbers
+        self._HOUSE_NUMBER_CACHE[self._country_code] = house_numbers
 
         return house_numbers
 
@@ -311,12 +291,12 @@ class AddressDataLoader(BaseDataLoader):
         city_data = self._city_loader.get_random_city()
 
         # Get country data
-        country_data = self._country_loader.get_country_by_iso_code(self.country_code)
+        country_data = self._country_loader.get_country_by_iso_code(self._country_code)
         if not country_data:
             country_data = self._country_loader.get_country_by_iso_code("US")
 
         # Get continent
-        continent = self.get_continent_for_country(self.country_code)
+        continent = self.get_continent_for_country(self._country_code)
 
         # Generate random coordinates (simplified)
         latitude = random.uniform(-90, 90)
@@ -330,7 +310,7 @@ class AddressDataLoader(BaseDataLoader):
             "state": city_data["state"],
             "postal_code": city_data["postal_code"],
             "country": country_data["name"] if country_data else "United States",
-            "country_code": self.country_code,
+            "country_code": self._country_code,
             "continent": continent,
             "latitude": latitude,
             "longitude": longitude,
@@ -356,20 +336,20 @@ class AddressDataLoader(BaseDataLoader):
         Returns:
             A phone number string.
         """
-        if self.country_code == "US":
+        if self._country_code == "US":
             area_code = random.randint(200, 999)
             prefix = random.randint(200, 999)
             line = random.randint(1000, 9999)
             return f"+1 ({area_code}) {prefix}-{line}"
-        elif self.country_code == "GB":
+        elif self._country_code == "GB":
             area_code = random.randint(1000, 9999)
             number = random.randint(100000, 999999)
             return f"+44 {area_code} {number}"
-        elif self.country_code == "DE":
+        elif self._country_code == "DE":
             area_code = random.randint(10, 999)
             number = random.randint(1000000, 9999999)
             return f"+49 {area_code} {number}"
-        elif self.country_code == "FR":
+        elif self._country_code == "FR":
             part1 = random.randint(10, 99)
             part2 = random.randint(10, 99)
             part3 = random.randint(10, 99)
@@ -388,20 +368,20 @@ class AddressDataLoader(BaseDataLoader):
         Returns:
             A mobile phone number string.
         """
-        if self.country_code == "US":
+        if self._country_code == "US":
             area_code = random.randint(200, 999)
             prefix = random.randint(200, 999)
             line = random.randint(1000, 9999)
             return f"+1 ({area_code}) {prefix}-{line}"
-        elif self.country_code == "GB":
+        elif self._country_code == "GB":
             prefix = random.choice(["7700", "7800", "7900"])
             number = random.randint(100000, 999999)
             return f"+44 {prefix} {number}"
-        elif self.country_code == "DE":
+        elif self._country_code == "DE":
             prefix = random.choice(["151", "152", "157", "160", "170", "171", "175"])
             number = random.randint(1000000, 9999999)
             return f"+49 {prefix} {number}"
-        elif self.country_code == "FR":
+        elif self._country_code == "FR":
             prefix = "6"
             part1 = random.randint(10, 99)
             part2 = random.randint(10, 99)

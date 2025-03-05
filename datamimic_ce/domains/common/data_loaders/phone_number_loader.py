@@ -7,11 +7,10 @@
 import csv
 from pathlib import Path
 
-from datamimic_ce.core.base_data_loader import BaseDataLoader
 from datamimic_ce.logger import logger
 
 
-class PhoneNumberDataLoader(BaseDataLoader):
+class PhoneNumberDataLoader:
     """Data loader for phone number data.
 
     This class is responsible for loading country codes and area codes for phone number generation.

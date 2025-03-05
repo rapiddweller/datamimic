@@ -4,11 +4,10 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.core.base_data_loader import BaseDataLoader
 from datamimic_ce.logger import logger
 
 
-class CompanyLoader(BaseDataLoader):
+class CompanyLoader:
     """Data loader for company entity data.
     
     Handles loading and caching of company-related data such as sectors,
