@@ -246,9 +246,9 @@ class ParserUtil:
                     | GeneratorParser,
                 ):
                     stmt = parser.parse()
-                elif isinstance(parser, KeyParser | ConstraintsParser | RuleParser):
+                elif isinstance(parser, KeyParser | RuleParser):
                     stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
-                elif isinstance(parser, ConditionParser):
+                elif isinstance(parser, ConditionParser | ConstraintsParser):
                     stmt = parser.parse(
                         descriptor_dir=descriptor_dir, parent_stmt=cast(CompositeStatement, parent_stmt)
                     )

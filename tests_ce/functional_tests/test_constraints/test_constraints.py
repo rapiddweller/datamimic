@@ -4,11 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-
 from pathlib import Path
 from unittest import TestCase
-
-import pytest
 
 from datamimic_ce.data_mimic_test import DataMimicTest
 

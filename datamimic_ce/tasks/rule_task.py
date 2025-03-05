@@ -5,31 +5,20 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.contexts.geniter_context import GenIterContext
-from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.statements.item_statement import ItemStatement
-from datamimic_ce.tasks.element_task import ElementTask
+from datamimic_ce.statements.rule_statement import RuleStatement
 from datamimic_ce.tasks.task import Task
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
 class RuleTask(Task):
     def __init__(
         self,
-        ctx: SetupContext,
-        statement: ItemStatement,
-        class_factory_util: BaseClassFactoryUtil,
+        statement: RuleStatement,
     ):
         self._statement = statement
-        self._class_factory_util = class_factory_util
 
     @property
-    def statement(self) -> ItemStatement:
+    def statement(self) -> RuleStatement:
         return self._statement
 
     def execute(self, parent_context: GenIterContext):
-        """
-        Change datas base on condition in element "rule"
-        :param parent_context:
-        :return:
-        """
         pass

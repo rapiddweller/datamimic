@@ -11,7 +11,6 @@ from datamimic_ce.data_sources.data_source_pagination import DataSourcePaginatio
 from datamimic_ce.contexts.context import SAFE_GLOBALS
 
 from datamimic_ce.statements.rule_statement import RuleStatement
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.tasks.task import Task
@@ -20,9 +19,8 @@ from datamimic_ce.statements.constraints_statement import ConstraintsStatement
 
 
 class ConstraintsTask(Task):
-    def __init__(self, statement: ConstraintsStatement, class_factory_util: BaseClassFactoryUtil):
+    def __init__(self, statement: ConstraintsStatement):
         self._statement = statement
-        self._class_factory_util = class_factory_util
 
     @property
     def statement(self) -> ConstraintsStatement:
