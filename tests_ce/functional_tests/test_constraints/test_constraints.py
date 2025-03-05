@@ -19,8 +19,10 @@ class TestConstraints(TestCase):
         result = engine.capture_result()
 
         synthetic_customers = result["synthetic_customers"]
-        assert len(synthetic_customers) == 100
+        assert len(synthetic_customers) == 10000
         for ele in synthetic_customers:
+            assert isinstance(ele["id"], int)
+            assert ele["id"] in range(1, 10001)
             if ele["credit_score"] < 600:
                 assert ele["risk_profile"] == 'High'
             elif 600 <= ele["credit_score"] < 750:
@@ -41,12 +43,15 @@ class TestConstraints(TestCase):
                    if 600 <= customer["credit_score"] < 750)
         assert any(customer["risk_profile"] != 'Low' for customer in original_customers
                    if customer["credit_score"] >= 750)
+        assert all(customer["id"] is not None for customer in original_customers)
 
         # filtered generate
         constraints_customers = result["constraints_customers"]
         assert len(constraints_customers) < 100
 
         for ele in constraints_customers:
+            assert isinstance(ele["id"], int)
+            assert ele["id"] in range(1, 101)
             if ele["credit_score"] < 600:
                 assert ele["risk_profile"] == 'High'
             elif 600 <= ele["credit_score"] < 750:
@@ -62,6 +67,8 @@ class TestConstraints(TestCase):
         synthetic_customers = result["synthetic_customers"]
         assert len(synthetic_customers) == 100
         for ele in synthetic_customers:
+            assert isinstance(ele["id"], int)
+            assert ele["id"] in range(1, 101)
             if ele["credit_score"] < 600:
                 assert ele["risk_profile"] == 'High'
             elif 600 <= ele["credit_score"] < 750:
@@ -77,6 +84,8 @@ class TestConstraints(TestCase):
         synthetic_customers = result["synthetic_customers"]
         assert len(synthetic_customers) == 100
         for ele in synthetic_customers:
+            assert isinstance(ele["id"], int)
+            assert ele["id"] in range(1, 101)
             if ele["credit_score"] < 600:
                 assert ele["risk_profile"] == 'High'
             elif 600 <= ele["credit_score"] < 750:

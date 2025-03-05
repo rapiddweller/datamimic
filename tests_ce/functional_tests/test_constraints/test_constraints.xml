@@ -1,6 +1,6 @@
 <setup  multiprocessing="1" numProcess="2">
-    <generate name="synthetic_customers" count="100" pageSize="50"
-              source="script/person_data.json" cyclic="True" target="ConsoleExporter">
+    <generate name="synthetic_customers" count="10000" pageSize="1000"
+              source="script/person_data.json" cyclic="True">
         <key name="id" generator="IncrementGenerator"/>
         <constraints>
           <rule if="credit_score &lt; 600" then="risk_profile == 'High'"/>
