@@ -193,7 +193,7 @@ class GenerateWorker:
         # filter source_data with constraints-rule task when specify
         for task in tasks:
             if isinstance(task, ConstraintsTask):
-                source_data = task.filter(source_data)
+                source_data = task.filter(source_data, pagination, stmt.cyclic)
 
         # Shuffle source data if distribution is random
         if is_random_distribution:

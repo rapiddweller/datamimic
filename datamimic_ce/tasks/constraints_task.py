@@ -3,6 +3,11 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
+import copy
+import itertools
+
+from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+
 from datamimic_ce.contexts.context import SAFE_GLOBALS
 
 from datamimic_ce.statements.rule_statement import RuleStatement
@@ -26,15 +31,35 @@ class ConstraintsTask(Task):
     def execute(self, parent_context: GenIterContext, source_data):
         pass
 
-    def filter(self, source_data):
-        for i in range(len(source_data) - 1, -1, -1):  # Iterate from last to first
-            data_dict = source_data[i]
+    def filter(self, source_data, pagination: DataSourcePagination | None, cyclic: bool = False) -> list:
+        filter_data = list(source_data)
+        # If source is empty, return empty list
+        if len(filter_data) == 0:
+            return []
+
+        for i in range(len(filter_data) - 1, -1, -1):  # Iterate from last to first
+            data_dict = filter_data[i]
             for child_stmt in self.statement.sub_statements:
                 if isinstance(child_stmt, RuleStatement):
                     if_condition = eval(child_stmt.if_rule, SAFE_GLOBALS, data_dict)
                     if isinstance(if_condition, bool) and if_condition:
                         else_condition = eval(child_stmt.then_rule, SAFE_GLOBALS, data_dict)
                         if isinstance(else_condition, bool) and else_condition is False:
-                            del source_data[i]
+                            del filter_data[i]
                             break
-        return source_data
+        # If filtered data is empty, return empty list
+        if len(filter_data) == 0:
+            return []
+
+        if pagination is None:
+            start_idx = 0
+            end_idx = len(filter_data)
+        else:
+            start_idx = pagination.skip
+            end_idx = pagination.skip + pagination.limit
+        # Get cyclic data from filtered data source
+        if cyclic:
+            iterator = itertools.cycle(filter_data)
+            return [copy.deepcopy(ele) for ele in itertools.islice(iterator, start_idx, end_idx)]
+        else:
+            return list(itertools.islice(filter_data, start_idx, end_idx))
