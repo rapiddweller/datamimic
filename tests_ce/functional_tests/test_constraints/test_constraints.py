@@ -31,7 +31,9 @@ class TestConstraints(TestCase):
                 assert ele["risk_profile"] == 'Low'
 
     def test_constraints_non_cyclic(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_constraints_non_cyclic.xml", capture_test_result=True)
+        engine = DataMimicTest(test_dir=self._test_dir,
+                               filename="test_constraints_non_cyclic.xml",
+                               capture_test_result=True)
         engine.test_with_timer()
         result = engine.capture_result()
 
@@ -60,7 +62,9 @@ class TestConstraints(TestCase):
                 assert ele["risk_profile"] == 'Low'
 
     def test_constraints_order_distribution(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_constraints_order_distribution.xml", capture_test_result=True)
+        engine = DataMimicTest(test_dir=self._test_dir,
+                               filename="test_constraints_order_distribution.xml",
+                               capture_test_result=True)
         engine.test_with_timer()
         result = engine.capture_result()
 
@@ -77,7 +81,9 @@ class TestConstraints(TestCase):
                 assert ele["risk_profile"] == 'Low'
 
     def test_constraints_single_processing(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_constraints_single_processing.xml", capture_test_result=True)
+        engine = DataMimicTest(test_dir=self._test_dir,
+                               filename="test_constraints_single_processing.xml",
+                               capture_test_result=True)
         engine.test_with_timer()
         result = engine.capture_result()
 
@@ -92,3 +98,18 @@ class TestConstraints(TestCase):
                 assert ele["risk_profile"] == 'Medium'
             else:
                 assert ele["risk_profile"] == 'Low'
+
+    def test_constraints_with_mem(self):
+        engine = DataMimicTest(test_dir=self._test_dir,
+                               filename="test_constraints_with_mem.xml",
+                               capture_test_result=True)
+        engine.test_with_timer()
+        result = engine.capture_result()
+
+        generate_selector = result["generate_selector"]
+        assert len(generate_selector) == 50
+        assert any(patient["total_bill_amount"] < 150 for patient in generate_selector)
+
+        constraint_patient = result["constraint_patient"]
+        assert len(constraint_patient) == 25
+        assert all(patient["total_bill_amount"] > 150 for patient in constraint_patient)

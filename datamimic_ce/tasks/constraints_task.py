@@ -39,7 +39,7 @@ class ConstraintsTask(Task):
                     if isinstance(if_condition, bool) and if_condition:
                         else_condition = eval(child_stmt.then_rule, SAFE_GLOBALS, data_dict)
                         if isinstance(else_condition, bool) and else_condition is False:
-                            del filter_data[i]
+                            del filter_data[i]  # remove data that not meet then_rule
                             break
         # If filtered data is empty, return empty list
         if len(filter_data) == 0:
