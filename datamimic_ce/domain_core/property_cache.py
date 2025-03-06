@@ -75,14 +75,14 @@ def property_cache(func: Callable) -> Callable:
     Returns:
         A wrapped function that caches the result
     """
-    cache_name = func.__name__ + "_cache"
+    cache_name = func.__name__ 
 
     @functools.wraps(func)
-    def wrapper(self, *args, **kwargs):
-        if not hasattr(self, cache_name) or getattr(self, cache_name) is None:
+    def wrapper(self):
+        if self.field_cache.get(cache_name) is None:
             # Generate a new value and store it in the cache
-            value = func(self, *args, **kwargs)
-            setattr(self, cache_name, value)
-        return getattr(self, cache_name)
+            value = func(self)
+            self.field_cache[cache_name] = value
+        return self.field_cache[cache_name]
 
     return wrapper

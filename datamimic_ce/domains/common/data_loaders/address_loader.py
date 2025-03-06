@@ -72,6 +72,14 @@ class AddressDataLoader:
         self._country_loader = CountryDataLoader()
 
     @property
+    def country_code(self) -> str:
+        """Get the country code.
+
+        Returns:
+            The country code.
+        """
+        return self._country_code
+    @property
     def city_loader(self) -> CityDataLoader:
         """Get the city data loader.
 
