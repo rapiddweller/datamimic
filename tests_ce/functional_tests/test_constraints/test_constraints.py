@@ -113,3 +113,11 @@ class TestConstraints(TestCase):
         constraint_patient = result["constraint_patient"]
         assert len(constraint_patient) == 25
         assert all(patient["total_bill_amount"] > 150 for patient in constraint_patient)
+
+    def test_two_constraints(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_two_constraints.xml", capture_test_result=True)
+        try:
+            engine.test_with_timer()
+            assert False
+        except SyntaxError as e:
+            assert "Only once <constraints> allow in per <generate>" in e.msg
