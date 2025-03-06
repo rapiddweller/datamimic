@@ -8,13 +8,14 @@ import random
 from pathlib import Path
 from typing import Any, ClassVar
 
+from datamimic_ce.domain_core.base_data_loader import BaseDataLoader
 from datamimic_ce.domains.common.data_loaders.city_loader import CityDataLoader
 from datamimic_ce.domains.common.data_loaders.country_loader import CountryDataLoader
 from datamimic_ce.logger import logger
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class AddressDataLoader:
+class AddressDataLoader(BaseDataLoader):
     """Data loader for address data.
 
     This class is responsible for loading address data from CSV files.
@@ -54,9 +55,12 @@ class AddressDataLoader:
     _DEFAULT_DATASET = "US"
 
     # Module-level cache to avoid repeated file I/O
-    _STREET_DATA_CACHE: ClassVar[dict[str, list[str]]] = {}
-    _HOUSE_NUMBER_CACHE: ClassVar[dict[str, list[str]]] = {}
-    _CONTINENT_CACHE: ClassVar[dict[str, str]] = {}
+    BaseDataLoader._LOADED_DATA_CACHE["street"] = {}
+    _STREET_DATA_CACHE = BaseDataLoader._LOADED_DATA_CACHE["street"]
+    BaseDataLoader._LOADED_DATA_CACHE["house_number"] = {}
+    _HOUSE_NUMBER_CACHE = BaseDataLoader._LOADED_DATA_CACHE["house_number"]
+    BaseDataLoader._LOADED_DATA_CACHE["continent"] = {}
+    _CONTINENT_CACHE = BaseDataLoader._LOADED_DATA_CACHE["continent"]
 
     def __init__(self, country_code: str = _DEFAULT_DATASET):
         """Initialize the AddressDataLoader.

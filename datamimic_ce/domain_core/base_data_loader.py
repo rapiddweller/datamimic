@@ -19,11 +19,15 @@
 # from datamimic_ce.utils.data_path_util import DataPathUtil
 
 
-# class BaseDataLoader(ABC):
+from abc import ABC
+from typing import Any, ClassVar
+
+
+class BaseDataLoader(ABC):
+    _LOADED_DATA_CACHE: ClassVar[dict[str, Any]] = {}
 #     """Base class for loading data from CSV files for all entities."""
 
 #     # Subclasses should define their own caches with this pattern
-#     # _CACHES: ClassVar[dict[str, dict[str, list[tuple[str, float]]]]] = {}
 
 #     @staticmethod
 #     def _load_simple_csv(file_path: Path) -> list[tuple[str, float]]:
