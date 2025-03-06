@@ -6,7 +6,7 @@
 import copy
 import itertools
 
-from datamimic_ce.contexts.context import SAFE_GLOBALS
+from datamimic_ce.contexts.context import SAFE_GLOBALS, DotableDict
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.statements.constraints_statement import ConstraintsStatement
@@ -32,7 +32,12 @@ class ConstraintsTask(Task):
             return []
 
         for i in range(len(filter_data) - 1, -1, -1):  # Iterate from last to first
-            data_dict = filter_data[i]
+            data_dict = copy.deepcopy(filter_data[i])
+
+            for key, value in data_dict.items():
+                if isinstance(value, dict):
+                    data_dict[key] = DotableDict(value)
+
             for child_stmt in self.statement.sub_statements:
                 if isinstance(child_stmt, RuleStatement):
                     if_condition = eval(child_stmt.if_rule, SAFE_GLOBALS, data_dict)

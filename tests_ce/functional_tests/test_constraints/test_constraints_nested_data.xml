@@ -1,0 +1,16 @@
+<setup  multiprocessing="1" numProcess="2">
+    <generate name="synthetic_customers" count="10000" pageSize="50"
+              source="script/person_nested_data.json"
+              cyclic="True" distribution="ordered"
+              target="ConsoleExporter">
+        <key name="id" generator="IncrementGenerator"/>
+        <constraints>
+          <rule if="financial_info.credit_score &lt; 600"
+                then="financial_info.risk_profile == 'High'"/>
+          <rule if="financial_info.credit_score &gt;= 600 and financial_info.credit_score &lt; 750"
+                then="financial_info.risk_profile == 'Medium'"/>
+          <rule if="financial_info.credit_score &gt;= 750"
+                then="financial_info.risk_profile == 'Low'"/>
+        </constraints>
+    </generate>
+</setup>
