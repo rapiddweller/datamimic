@@ -22,10 +22,7 @@ class ConstraintsTask(Task):
     def statement(self) -> ConstraintsStatement:
         return self._statement
 
-    def execute(self, parent_context: GenIterContext, source_data):
-        pass
-
-    def filter(self, source_data, pagination: DataSourcePagination | None, cyclic: bool | None = False) -> list:
+    def execute(self, source_data, pagination: DataSourcePagination | None, cyclic: bool | None = False) -> list:
         filter_data = list(source_data)
         # If source is empty, return empty list
         if len(filter_data) == 0:

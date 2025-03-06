@@ -190,10 +190,10 @@ class GenerateWorker:
             )
         )
 
-        # filter source_data with constraints-rule task when specify
+        # execute ConstraintsTask to filter source_data with its rules
         for task in tasks:
             if isinstance(task, ConstraintsTask):
-                source_data = task.filter(source_data, pagination, stmt.cyclic)
+                source_data = task.execute(source_data, pagination, stmt.cyclic)
 
         # Shuffle source data if distribution is random
         if is_random_distribution:
@@ -234,7 +234,7 @@ class GenerateWorker:
                                 # Store temp product in context for later evaluate
                                 inner_generate_key = key.split("|", 1)[-1].strip()
                                 ctx.current_variables[inner_generate_key] = value
-                    # ConstraintsTask and RuleTask don't need to execute
+                    # Do not execute ConstraintsTask and RuleTask
                     elif isinstance(task, ConstraintsTask | RuleTask):
                         pass
                     else:
