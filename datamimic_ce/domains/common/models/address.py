@@ -5,41 +5,62 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from typing import Any
-
+import random
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
-from datamimic_ce.domain_core import property_cache
+from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.common.data_loaders.address_loader import AddressDataLoader
 
 
-class Address(BaseModel):
+class Address:
     """
     Represents an address with various components.
 
     This class provides access to address data including street, house number, city,
     state, postal code, country, and more.
     """
+    def __init__(self, data_loader: AddressDataLoader):
+        self.data_loader = data_loader
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    # Basic address components
-    street: str = Field(description="The street name")
-    house_number: str = Field(description="The house or building number")
-    city: str = Field(description="The city name")
-    state: str = Field(description="The state, province, or administrative region")
-    postal_code: str = Field(description="The postal or zip code")
-    country: str = Field(description="The country name")
-    country_code: str = Field(description="The ISO country code")
+    # # Basic address components
+    # street: str = Field(description="The street name")
+    # house_number: str = Field(description="The house or building number")
+    # city: str = Field(description="The city name")
+    # state: str = Field(description="The state, province, or administrative region")
+    # postal_code: str = Field(description="The postal or zip code")
+    # country: str = Field(description="The country name")
+    # country_code: str = Field(description="The ISO country code")
 
-    # Optional components
-    continent: str | None = Field(None, description="The continent name")
-    latitude: float | None = Field(None, description="The latitude coordinate")
-    longitude: float | None = Field(None, description="The longitude coordinate")
-    organization: str | None = Field(None, description="The organization or company name")
+    # # Optional components
+    # continent: str | None = Field(None, description="The continent name")
+    # latitude: float | None = Field(None, description="The latitude coordinate")
+    # longitude: float | None = Field(None, description="The longitude coordinate")
+    # organization: str | None = Field(None, description="The organization or company name")
 
-    # Contact information
-    phone: str | None = Field(None, description="A phone number")
-    mobile_phone: str | None = Field(None, description="A mobile phone number")
-    fax: str | None = Field(None, description="A fax number")
+    # # Contact information
+    # phone: str | None = Field(None, description="A phone number")
+    # mobile_phone: str | None = Field(None, description="A mobile phone number")
+    # fax: str | None = Field(None, description="A fax number")
+
+    @property
+    @property_cache
+    def street(self) -> str:
+        street_data = self.data_loader.load_street_data()
+        return random.choice(street_data) if street_data else "Main Street"
+    
+    @property
+    @property_cache
+    def house_number(self) -> str:
+        house_number_data = self.data_loader.load_house_numbers()
+        return random.choice(house_number_data) if house_number_data else "123"
+    
+    # @property
+    # @property_cache
+    # def city(self) -> str:
+    #     city_data = self.data_loader.city_loader.get_random_city()
+    #     return random.choice(city_data) if city_data else "New York"
+    
 
     # Private attributes for internal use
     # _property_cache: dict[str, Any] = PrivateAttr(default_factory=dict)
@@ -114,14 +135,14 @@ class Address(BaseModel):
     #     """
     #     return self.postal_code
 
-    def to_dict(self) -> dict[str, Any]:
-        """
-        Convert the address to a dictionary.
+    # def to_dict(self) -> dict[str, Any]:
+    #     """
+    #     Convert the address to a dictionary.
 
-        Returns:
-            A dictionary representation of the address
-        """
-        return self.model_dump(exclude={"_property_cache"})
+    #     Returns:
+    #         A dictionary representation of the address
+    #     """
+    #     return self.model_dump(exclude={"_property_cache"})
 
     # def reset(self) -> None:
     #     """

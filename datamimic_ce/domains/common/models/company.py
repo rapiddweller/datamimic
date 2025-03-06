@@ -7,14 +7,12 @@
 import random
 from typing import Optional, List, Dict, Any, cast
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import PropertyCache
 from datamimic_ce.domains.common.data_loaders.company_loader import CompanyLoader
 from datamimic_ce.domains.common.generators.company_generator import CompanyGenerator
 from datamimic_ce.domains.common.models.address import Address
 
 
-class Company(BaseEntity):
+class Company:
     """Company entity model representing a business organization.
     
     Provides methods and properties to generate and access company-related

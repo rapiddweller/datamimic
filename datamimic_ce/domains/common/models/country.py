@@ -8,7 +8,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
-from datamimic_ce.core.property_cache import property_cache
+from datamimic_ce.domain_core.property_cache import property_cache
+
 
 
 class Country(BaseModel):

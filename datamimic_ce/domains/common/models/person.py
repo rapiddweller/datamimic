@@ -13,15 +13,14 @@ This module provides a model for representing a person.
 import random
 from typing import Any
 
-from datamimic_ce.core.base_entity import BaseEntity
-from datamimic_ce.core.property_cache import property_cache
+from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.utils.random_utils import (
     random_element_with_exclusions,
     random_int_in_range,
 )
 
 
-class Person(BaseEntity):
+class Person:
     """Model for representing a person.
 
     This class provides a model for representing a person with common attributes
