@@ -3,10 +3,10 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-from datamimic_ce.model.model_util import ModelUtil
 from pydantic import BaseModel, Field, field_validator
 
 from datamimic_ce.constants.attribute_constants import ATTR_IF, ATTR_THEN
+from datamimic_ce.model.model_util import ModelUtil
 
 
 class RuleModel(BaseModel):
