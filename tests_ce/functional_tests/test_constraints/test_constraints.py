@@ -142,3 +142,21 @@ class TestConstraints(TestCase):
                 assert ele["risk_profile"] == 'Medium'
             else:
                 assert ele["risk_profile"] == 'Low'
+
+    def test_constraints_if_rule_empty(self):
+        engine = DataMimicTest(test_dir=self._test_dir,
+                               filename="test_constraints_if_rule_empty.xml")
+        try:
+            engine.test_with_timer()
+            assert False
+        except ValueError as e:
+            assert "if: Value error, must be not empty" in str(e)
+
+    def test_constraints_then_rule_empty(self):
+        engine = DataMimicTest(test_dir=self._test_dir,
+                               filename="test_constraints_then_rule_empty.xml")
+        try:
+            engine.test_with_timer()
+            assert False
+        except ValueError as e:
+            assert "then: Value error, must be not empty" in str(e)

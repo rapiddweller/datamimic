@@ -1,0 +1,9 @@
+<setup  multiprocessing="1" numProcess="2">
+    <generate name="synthetic_customers" count="10000" pageSize="1000"
+              source="script/person_data.json" cyclic="True">
+        <key name="id" generator="IncrementGenerator"/>
+        <constraints>
+          <rule if="" then="risk_profile == 'High'"/>
+        </constraints>
+    </generate>
+</setup>
