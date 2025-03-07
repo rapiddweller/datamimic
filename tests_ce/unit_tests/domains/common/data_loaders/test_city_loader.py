@@ -17,11 +17,11 @@ class TestCityDataLoader:
         """Test initialization of the CityDataLoader."""
         # Default initialization
         loader = CityDataLoader()
-        assert loader.country_code == "US"
+        assert loader._country_code == "US"
 
         # Custom country code
         loader = CityDataLoader(country_code="fr")
-        assert loader.country_code == "FR"
+        assert loader._country_code == "FR"
 
     @mock.patch("datamimic_ce.domains.common.data_loaders.city_loader.Path.exists")
     @mock.patch("datamimic_ce.utils.file_util.FileUtil.read_csv_to_dict_of_tuples_with_header")
@@ -40,7 +40,7 @@ class TestCityDataLoader:
 
         # Load city data
         loader = CityDataLoader()
-        header_dict, city_data = loader.load_city_data()
+        header_dict, city_data = loader._load_city_data()
 
         # Check that the data was loaded correctly
         assert header_dict == mock_header_dict
@@ -54,7 +54,7 @@ class TestCityDataLoader:
 
         # Test caching
         mock_read_csv.reset_mock()
-        header_dict, city_data = loader.load_city_data()
+        header_dict, city_data = loader._load_city_data()
         mock_read_csv.assert_not_called()
 
     @mock.patch("datamimic_ce.domains.common.data_loaders.city_loader.Path.exists")
@@ -74,7 +74,7 @@ class TestCityDataLoader:
 
         # Load city data with fallback
         loader = CityDataLoader(country_code="XYZ")  # Non-existent country code
-        header_dict, city_data = loader.load_city_data()
+        header_dict, city_data = loader._load_city_data()
 
         # Check that the data was loaded correctly
         assert header_dict == mock_header_dict
@@ -115,7 +115,7 @@ class TestCityDataLoader:
 
         # Load city data first to set _current_dataset
         loader = CityDataLoader()
-        loader.load_city_data()
+        loader._load_city_data()
 
         # Reset the mock to clear the call count
         mock_read_csv.reset_mock()
@@ -194,7 +194,7 @@ class TestCityDataLoader:
 
         # Get city by index
         loader = CityDataLoader()
-        city = loader.get_city_by_index(0)
+        city = loader._get_city_by_index(0)
 
         # Check that the city was loaded correctly
         assert city["name"] == "New York"
@@ -209,12 +209,12 @@ class TestCityDataLoader:
         assert city["country_code"] == "US"
 
         # Test with a different index
-        city = loader.get_city_by_index(1)
+        city = loader._get_city_by_index(1)
         assert city["name"] == "Los Angeles"
         assert city["state"] == "California"
 
         # Test with an invalid index
-        city = loader.get_city_by_index(999)
+        city = loader._get_city_by_index(999)
         assert city["name"] == "New York"  # Should default to index 0
 
     @mock.patch("datamimic_ce.domains.common.data_loaders.city_loader.CityDataLoader.load_city_data")

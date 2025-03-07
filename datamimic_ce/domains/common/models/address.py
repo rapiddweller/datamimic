@@ -12,6 +12,7 @@ from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domains.common.data_loaders.address_loader import AddressDataLoader
 from datamimic_ce.generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.generators.street_name_generator import StreetNameGenerator
 
 
 class Address(BaseEntity):
@@ -23,20 +24,20 @@ class Address(BaseEntity):
     """
     def __init__(self, data_loader: AddressDataLoader):
         super().__init__()
+        # IMPORTANT: Avoid init generator in __init__ method, because it will be called multiple times
+        # Should define generator within dataloader instead
         self._data_loader = data_loader
-        self._phone_number_generator = PhoneNumberGenerator()
+        
 
     @property
     @property_cache
     def street(self) -> str:
-        street_data = self._data_loader.load_street_data()
-        return random.choice(street_data) if street_data else "Main Street"
+        return self._data_loader.generate_street_name()
     
     @property
     @property_cache
     def house_number(self) -> str:
-        house_number_data = self._data_loader.load_house_numbers()
-        return random.choice(house_number_data) if house_number_data else "123"
+        return self._data_loader.generate_house_number()
     
     #TODO: rework city data loader
     # @property
@@ -78,17 +79,17 @@ class Address(BaseEntity):
     @property
     @property_cache
     def phone(self) -> str:
-        return self._phone_number_generator.generate()
+        return self._data_loader.phone_number_generator.generate()
     
     @property
     @property_cache
     def mobile_phone(self) -> str:
-        return self._phone_number_generator.generate()
+        return self._data_loader.phone_number_generator.generate()
     
     @property
     @property_cache
     def fax(self) -> str:
-        return self._phone_number_generator.generate()
+        return self._data_loader.phone_number_generator.generate()
 
     def to_dict(self) -> dict[str, Any]:
         return {

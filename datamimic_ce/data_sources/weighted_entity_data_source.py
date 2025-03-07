@@ -44,9 +44,8 @@ class WeightedEntityDataSource(Generator):
     """
 
     def __init__(self, file_path: Path, separator: str, weight_column_name: str | None = None):
-        file_store = FileContentStorage()
         weight_column = weight_column_name or "weight"
-        self._weights, self._data_dict_list = file_store.load_file_with_custom_func(
+        self._weights, self._data_dict_list = FileContentStorage.load_file_with_custom_func(
             str(file_path),
             lambda: FileUtil.read_csv_having_weight_column(file_path, weight_column, separator),
         )

@@ -28,15 +28,14 @@ class StreetNameGenerator(Generator):
         file_path = prefix_path.joinpath(file_name)
 
         # Load file data
-        file_content_storage = FileContentStorage()
         try:
-            self._values, self._wgt = file_content_storage.load_file_with_custom_func(
+            self._values, self._wgt = FileContentStorage.load_file_with_custom_func(
                 str(file_path), lambda: FileUtil.read_wgt_file(file_path)
             )
         except FileNotFoundError:
             logger.warning(f"No such file or directory: 'street_{street_code}.csv'. Change to street_US datas")
             file_path = prefix_path.joinpath("data/address/street/street_US.csv")
-            self._values, self._wgt = file_content_storage.load_file_with_custom_func(
+            self._values, self._wgt = FileContentStorage.load_file_with_custom_func(
                 str(file_path), lambda: FileUtil.read_wgt_file(file_path)
             )
 

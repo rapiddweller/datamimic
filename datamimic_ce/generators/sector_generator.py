@@ -25,16 +25,10 @@ class SectorGenerator(Generator):
         # Ensure country_code is never None by defaulting to "US"
         country_code = locale if locale is not None else (dataset if dataset is not None else "US")
         
-        # Use the CompanyDataLoader to load sector data
-        file_content_storage = FileContentStorage()
-        
-        # Define a key for caching
-        cache_key = f"sector_{country_code}"
-        
         # Use the file content storage to cache the data
-        self._sector_data_load = file_content_storage.load_file_with_custom_func(
-            cache_key,
-            lambda: self._load_sector_data(country_code)
+        self._sector_data_load = FileContentStorage.load_file_with_custom_func(
+            cache_key=f"sector_{country_code}",
+            read_func=lambda: self._load_sector_data(country_code)
         )
 
     def _load_sector_data(self, country_code: str) -> list[str]:

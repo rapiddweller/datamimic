@@ -5,43 +5,46 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.logger import logger
+from datamimic_ce.domain_core.base_data_loader import BaseDataLoader
 
-
-class CompanyLoader:
+class CompanyLoader(BaseDataLoader):
     """Data loader for company entity data.
     
     Handles loading and caching of company-related data such as sectors,
     legal forms, and departments from data files.
     """
 
-    # Cache for company data
-    _SECTOR_CACHE: dict[str, list[tuple[str, float]]] = {}
-    _LEGAL_FORM_CACHE: dict[str, list[tuple[str, float]]] = {}
-    _DEPARTMENT_CACHE: dict[str, list[tuple[str, float]]] = {}
+    # Cache for company data    
+    BaseDataLoader._LOADED_DATA_CACHE["sector"] = {}    
+    _SECTOR_CACHE = BaseDataLoader._LOADED_DATA_CACHE["sector"]
+    BaseDataLoader._LOADED_DATA_CACHE["legalForm"] = {}
+    _LEGAL_FORM_CACHE = BaseDataLoader._LOADED_DATA_CACHE["legalForm"]
+    BaseDataLoader._LOADED_DATA_CACHE["department"] = {}
+    _DEPARTMENT_CACHE = BaseDataLoader._LOADED_DATA_CACHE["department"]
 
-    @classmethod
-    def _get_cache_for_data_type(cls, data_type: str) -> dict[str, list[tuple[str, float]]]:
-        """Get the appropriate cache for the data type.
+    # @classmethod
+    # def _get_cache_for_data_type(cls, data_type: str) -> dict[str, list[tuple[str, float]]]:
+    #     """Get the appropriate cache for the data type.
 
-        Args:
-            data_type: Type of data to retrieve
+    #     Args:
+    #         data_type: Type of data to retrieve
 
-        Returns:
-            The appropriate cache dictionary
-        """
-        if data_type == "sector":
-            return cls._SECTOR_CACHE
-        elif data_type == "legalForm":
-            return cls._LEGAL_FORM_CACHE
-        elif data_type == "department":
-            return cls._DEPARTMENT_CACHE
-        else:
-            # Create a new cache if it doesn't exist
-            cache_name = f"_{data_type.upper()}_CACHE"
-            if not hasattr(cls, cache_name):
-                logger.warning(f"Cache not found for data type: {data_type}, creating new cache")
-                setattr(cls, cache_name, {})
-            return getattr(cls, cache_name)
+    #     Returns:
+    #         The appropriate cache dictionary
+    #     """
+    #     if data_type == "sector":
+    #         return cls._SECTOR_CACHE
+    #     elif data_type == "legalForm":
+    #         return cls._LEGAL_FORM_CACHE
+    #     elif data_type == "department":
+    #         return cls._DEPARTMENT_CACHE
+    #     else:
+    #         # Create a new cache if it doesn't exist
+    #         cache_name = f"_{data_type.upper()}_CACHE"
+    #         if not hasattr(cls, cache_name):
+    #             logger.warning(f"Cache not found for data type: {data_type}, creating new cache")
+    #             setattr(cls, cache_name, {})
+    #         return getattr(cls, cache_name)
 
     @classmethod
     def _get_default_values(cls, data_type: str) -> list[tuple[str, float]]:

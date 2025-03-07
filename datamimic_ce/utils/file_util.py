@@ -105,14 +105,18 @@ class FileUtil:
         :param encoding: encoding of the CSV file
         :return: a tuple containing a dictionary of headers and a list of tuples with string datas
         """
-        header_dict = {}
-        with file_path.open("r", newline="", encoding=encoding) as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=delimiter)
-            header = next(csvreader)  # Store the header
-            for idx, column in enumerate(header):
-                header_dict[column] = idx
-            data = [tuple(row) for row in csvreader]
-        return header_dict, data
+        try:
+            header_dict = {}
+            with file_path.open("r", newline="", encoding=encoding) as csvfile:
+                csvreader = csv.reader(csvfile, delimiter=delimiter)
+                header = next(csvreader)  # Store the header
+                for idx, column in enumerate(header):
+                    header_dict[column] = idx
+                data = [tuple(row) for row in csvreader]
+            return header_dict, data
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"CSV file not found: {file_path}") from e
+
 
     @staticmethod
     def read_csv_to_dict_of_tuples_without_header_and_fill_missing_value(
@@ -144,10 +148,13 @@ class FileUtil:
         :param encoding: encoding of the CSV file
         :return: a list of tuples containing the string data
         """
-        with file_path.open("r", newline="", encoding=encoding) as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=delimiter)
-            data = [tuple(row) for row in csvreader]
-        return data
+        try:
+            with file_path.open("r", newline="", encoding=encoding) as csvfile:
+                csvreader = csv.reader(csvfile, delimiter=delimiter)
+                data = [tuple(row) for row in csvreader]
+            return data
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"CSV file not found: {file_path}") from e
 
     @staticmethod
     def read_csv_having_single_column(file_path: Path, delimiter: str = ",", encoding="utf-8") -> list:

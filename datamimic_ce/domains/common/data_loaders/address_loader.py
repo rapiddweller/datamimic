@@ -5,14 +5,13 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import random
-from pathlib import Path
-from typing import Any, ClassVar
 
+from datamimic_ce import logger
 from datamimic_ce.domain_core.base_data_loader import BaseDataLoader
 from datamimic_ce.domains.common.data_loaders.city_loader import CityDataLoader
 from datamimic_ce.domains.common.data_loaders.country_loader import CountryDataLoader
-from datamimic_ce.logger import logger
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.generators.street_name_generator import StreetNameGenerator
 
 
 class AddressDataLoader(BaseDataLoader):
@@ -21,46 +20,8 @@ class AddressDataLoader(BaseDataLoader):
     This class is responsible for loading address data from CSV files.
     It provides methods to load street names, house numbers, and other address components.
     """
-
-    # Regional fallbacks for countries
-    _REGIONAL_FALLBACKS: dict[str, tuple[str, ...]] = {
-        # Western Europe fallbacks
-        "DE": ("AT", "CH", "LU"),  # German-speaking
-        "FR": ("BE", "CH", "LU", "MC"),  # French-speaking
-        "IT": ("CH", "SM", "VA"),  # Italian-speaking
-        "NL": ("BE", "LU"),  # Dutch-speaking
-        # Nordic fallbacks
-        "SE": ("NO", "DK", "FI"),  # Scandinavian
-        "NO": ("SE", "DK", "FI"),
-        "DK": ("NO", "SE", "DE"),
-        "FI": ("SE", "EE"),
-        # Eastern Europe fallbacks
-        "PL": ("CZ", "SK", "DE"),
-        "CZ": ("SK", "PL", "AT"),
-        "SK": ("CZ", "PL", "HU"),
-        "HU": ("SK", "RO", "AT"),
-        # Balkan fallbacks
-        "BA": ("HR", "RS", "SI"),  # Bosnia fallbacks
-        "HR": ("SI", "BA", "AT"),
-        "RS": ("BA", "BG", "RO"),
-        # English-speaking fallbacks
-        "US": ("CA", "GB", "AU"),
-        "GB": ("IE", "US", "CA"),
-        "CA": ("US", "GB"),
-        "AU": ("NZ", "GB", "US"),
-        "NZ": ("AU", "GB", "US"),
-    }
-
     # Default dataset if none available
     _DEFAULT_DATASET = "US"
-
-    # Module-level cache to avoid repeated file I/O
-    BaseDataLoader._LOADED_DATA_CACHE["street"] = {}
-    _STREET_DATA_CACHE = BaseDataLoader._LOADED_DATA_CACHE["street"]
-    BaseDataLoader._LOADED_DATA_CACHE["house_number"] = {}
-    _HOUSE_NUMBER_CACHE = BaseDataLoader._LOADED_DATA_CACHE["house_number"]
-    BaseDataLoader._LOADED_DATA_CACHE["continent"] = {}
-    _CONTINENT_CACHE = BaseDataLoader._LOADED_DATA_CACHE["continent"]
 
     def __init__(self, country_code: str = _DEFAULT_DATASET):
         """Initialize the AddressDataLoader.
@@ -74,7 +35,18 @@ class AddressDataLoader(BaseDataLoader):
         # Initialize related data loaders
         self._city_loader = CityDataLoader(country_code=self._country_code)
         self._country_loader = CountryDataLoader()
+        self._phone_number_generator = PhoneNumberGenerator()
+        self._current_street_name_generator = None
 
+    @property   
+    def phone_number_generator(self) -> PhoneNumberGenerator:
+        """Get the phone number generator.
+
+        Returns:
+            The phone number generator.
+        """
+        return self._phone_number_generator
+    
     @property
     def country_code(self) -> str:
         """Get the country code.
@@ -101,132 +73,53 @@ class AddressDataLoader(BaseDataLoader):
         """
         return self._country_loader
     
-    @staticmethod
-    def _get_base_path_address() -> Path:
-        """Get the base path for address data.
+    def generate_street_name(self) -> str:
+        """Generate a street name.
 
         Returns:
-            The base path for address data.
+            A street name.
         """
-        return Path(__file__).parent.parent.parent.parent / "data" / "common" / "address"
-
-    def load_street_data(self) -> list[str]:
-        """Load street data from CSV file.
-
-        Returns:
-            A list of street names.
-        """
-
-        # Check if we already have this dataset in cache
-        if self._country_code in self._STREET_DATA_CACHE:
-            return self._STREET_DATA_CACHE[self._country_code]
-
-        # Prepare data file path
-        base_path = self._get_base_path_address()
-        street_file_path = base_path / f"street_{self._country_code}.csv"
-
-        # Try to load the requested dataset
-        if street_file_path.exists():
-            try:
-                # Load street data
-                street_data = FileUtil.read_csv_to_list_of_tuples_without_header(street_file_path, delimiter=";")
-
-                # Flatten the list if it's a list of tuples
-                if street_data and isinstance(street_data[0], tuple):
-                    street_data = [item[0] for item in street_data]
-
-                # Cache the data
-                self._STREET_DATA_CACHE[self._country_code] = street_data
-
-                return street_data
-            except Exception as e:
-                logger.warning(f"Error loading dataset '{self._country_code}': {e}")
-        else:
+        try:
+            self._current_street_name_generator = StreetNameGenerator(dataset=self._country_code)
+            return self._current_street_name_generator.generate()
+        except FileNotFoundError:
             logger.warning(f"Street dataset '{self._country_code}' not found")
 
-        # Try regional fallbacks
+        logger.warning(f"No street dataset found for '{self._country_code}', using regional fallbacks")
         for fallback in self._REGIONAL_FALLBACKS.get(self._country_code, ()):
-            fallback_street_path = base_path / f"street_{fallback}.csv"
-
-            # Check if file exists
-            if not fallback_street_path.exists():
-                continue
-
             try:
-                logger.info(f"Using regional fallback '{fallback}' for street dataset '{self._country_code}'")
-
-                # Load street data from fallback
-                street_data = FileUtil.read_csv_to_list_of_tuples_without_header(fallback_street_path, delimiter=";")
-
-                # Flatten the list if it's a list of tuples
-                if street_data and isinstance(street_data[0], tuple):
-                    street_data = [item[0] for item in street_data]
-
-                # Cache the data
-                self._STREET_DATA_CACHE[self._country_code] = street_data
-
-                return street_data
-            except Exception as e:
-                logger.warning(f"Error loading fallback {fallback}: {e}")
+                self._current_street_name_generator = StreetNameGenerator(dataset=fallback)
+                return self._current_street_name_generator.generate()
+            except FileNotFoundError:
                 continue
 
-        # If no fallbacks worked, use US as last result
-        logger.warning(f"No fallbacks found for '{self._country_code}', using default dataset 'US'")
+        logger.warning(f"No street dataset found for '{self._country_code}', using default dataset 'US'")
         self._country_code = self._DEFAULT_DATASET
+        self._current_street_name_generator = StreetNameGenerator(dataset=self._DEFAULT_DATASET)
+        return self._current_street_name_generator.generate()
 
-        # Load US street data
-        us_street_path = base_path / f"street_{self._DEFAULT_DATASET}.csv"
-        try:
-            street_data = FileUtil.read_csv_to_list_of_tuples_without_header(us_street_path, delimiter=";")
-
-            # Flatten the list if it's a list of tuples
-            if street_data and isinstance(street_data[0], tuple):
-                street_data = [item[0] for item in street_data]
-
-            # Cache the data
-            self._STREET_DATA_CACHE[self._country_code] = street_data
-
-            return street_data
-        except Exception as e:
-            logger.error(f"Error loading default street dataset: {e}")
-            return []
-
-    def load_house_numbers(self) -> list[str]:
-        """Load house number data.
+    def generate_house_number(self) -> str:
+        """Generate a house number.
 
         Returns:
-            A list of house numbers.
+            A house number.
         """
-        # Check if we already have this dataset in cache
-        if self._country_code in self._HOUSE_NUMBER_CACHE:
-            return self._HOUSE_NUMBER_CACHE[self._country_code]
-
-        # Generate house numbers based on country format
-        house_numbers = []
-
         # North American format (mostly numeric)
         if self._country_code in ["US", "CA"]:
-            house_numbers = [str(i) for i in range(1, 10000, 2)]  # Odd numbers up to 9999
+            house_number = str(random.randint(1, 9999))
 
         # European format (can include letters)
         elif self._country_code in ["DE", "FR", "GB", "IT", "ES"]:
-            # Basic numbers
-            house_numbers = [str(i) for i in range(1, 200)]
+            house_number = str(random.randint(1, 9999))
 
-            # Add some with letters for certain countries
+            # Add some with letters for certain countries randomly
             if self._country_code in ["GB", "NL"]:
-                for i in range(1, 50):
-                    house_numbers.append(f"{i}A")
-                    house_numbers.append(f"{i}B")
+                if random.random() < 0.2:
+                    house_number = f"{house_number}A"
+                elif random.random() < 0.3:
+                    house_number = f"{house_number}B"
 
-        # Default format
-        else:
-            house_numbers = [str(i) for i in range(1, 200)]
-
-        # Cache the data
-        self._HOUSE_NUMBER_CACHE[self._country_code] = house_numbers
-
-        return house_numbers
+        return house_number
 
     def get_continent_for_country(self, country_code: str) -> str:
         """Get the continent for a country code.
@@ -237,10 +130,6 @@ class AddressDataLoader(BaseDataLoader):
         Returns:
             The continent name.
         """
-        # Check cache first
-        if country_code in self._CONTINENT_CACHE:
-            return self._CONTINENT_CACHE[country_code]
-
         # Continent mapping
         continent_mapping = {
             # North America
@@ -303,11 +192,4 @@ class AddressDataLoader(BaseDataLoader):
             "NZ": "Oceania",
         }
 
-        continent = continent_mapping.get(country_code, "Unknown")
-
-        # Cache the result
-        self._CONTINENT_CACHE[country_code] = continent
-
-        return continent
-
-    
+        return continent_mapping.get(country_code, "Unknown")

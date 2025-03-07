@@ -92,14 +92,14 @@ class City(BaseEntity):
         """
         return self.city_data["state_id"]
 
-    @property
-    @property_cache
-    def state(self) -> str:
-        """Get the state of the city.
+    # @property
+    # @property_cache
+    # def state(self) -> str:
+    #     """Get the state of the city.
 
-        Returns:
-            The state of the city.
-        """
+    #     Returns:
+    #         The state of the city.
+    #     """
         return self.city_data["state"]
 
     @property
@@ -164,7 +164,7 @@ class City(BaseEntity):
             "postal_code": self.postal_code,
             "area_code": self.area_code,
             "state_id": self.state_id,
-            "state": self.state,
+            # "state": self.state,
             "language": self.language,
             "population": self.population,
             "name_extension": self.name_extension,
