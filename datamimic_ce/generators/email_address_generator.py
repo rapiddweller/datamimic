@@ -22,20 +22,19 @@ class EmailAddressGenerator(Generator):
     def __init__(
         self,
         dataset: str,
-        generated_count: int,
         given_name: str | None = None,
         family_name: str | None = None,
     ):
         self._given_name = given_name
         self._given_name_generator = (
-            GivenNameGenerator(dataset=dataset, generated_count=generated_count) if given_name is None else None
+            GivenNameGenerator(dataset=dataset) if given_name is None else None
         )
         self._family_name = family_name
         self._family_name_generator = (
-            FamilyNameGenerator(dataset=dataset, generated_count=generated_count) if family_name is None else None
+            FamilyNameGenerator(dataset=dataset) if family_name is None else None
         )
         self._company_name: str | None = None
-        self._domain_generator = DomainGenerator(generated_count=generated_count)
+        self._domain_generator = DomainGenerator()
 
     def generate(self) -> str:
         """

@@ -13,6 +13,7 @@ This module provides a model for representing a person.
 import random
 from typing import Any
 
+from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.utils.random_utils import (
     random_element_with_exclusions,
@@ -20,107 +21,96 @@ from datamimic_ce.domains.common.utils.random_utils import (
 )
 
 
-class Person:
+class Person(BaseEntity):
     """Model for representing a person.
 
     This class provides a model for representing a person with common attributes
     such as name, age, gender, etc.
     """
 
-    # Sample data for generating person attributes
-    FIRST_NAMES_MALE = [
-        "James",
-        "John",
-        "Robert",
-        "Michael",
-        "William",
-        "David",
-        "Richard",
-        "Joseph",
-        "Thomas",
-        "Charles",
-    ]
-    FIRST_NAMES_FEMALE = [
-        "Mary",
-        "Patricia",
-        "Jennifer",
-        "Linda",
-        "Elizabeth",
-        "Barbara",
-        "Susan",
-        "Jessica",
-        "Sarah",
-        "Karen",
-    ]
-    LAST_NAMES = ["Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor"]
-    GENDERS = ["male", "female", "other"]
-    EMAIL_DOMAINS = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "example.com"]
-    PHONE_FORMATS = ["###-###-####", "(###) ###-####", "###.###.####"]
-    STREET_TYPES = ["St", "Ave", "Blvd", "Rd", "Ln", "Dr", "Way", "Pl", "Ct"]
-    CITIES = [
-        "New York",
-        "Los Angeles",
-        "Chicago",
-        "Houston",
-        "Phoenix",
-        "Philadelphia",
-        "San Antonio",
-        "San Diego",
-        "Dallas",
-        "San Jose",
-    ]
-    STATES = [
-        "AL",
-        "AK",
-        "AZ",
-        "AR",
-        "CA",
-        "CO",
-        "CT",
-        "DE",
-        "FL",
-        "GA",
-        "HI",
-        "ID",
-        "IL",
-        "IN",
-        "IA",
-        "KS",
-        "KY",
-        "LA",
-        "ME",
-        "MD",
-    ]
-    COUNTRIES = [
-        "United States",
-        "Canada",
-        "United Kingdom",
-        "Australia",
-        "Germany",
-        "France",
-        "Japan",
-        "China",
-        "Brazil",
-        "India",
-    ]
+    # # Sample data for generating person attributes
+    # FIRST_NAMES_MALE = [
+    #     "James",
+    #     "John",
+    #     "Robert",
+    #     "Michael",
+    #     "William",
+    #     "David",
+    #     "Richard",
+    #     "Joseph",
+    #     "Thomas",
+    #     "Charles",
+    # ]
+    # FIRST_NAMES_FEMALE = [
+    #     "Mary",
+    #     "Patricia",
+    #     "Jennifer",
+    #     "Linda",
+    #     "Elizabeth",
+    #     "Barbara",
+    #     "Susan",
+    #     "Jessica",
+    #     "Sarah",
+    #     "Karen",
+    # ]
+    # LAST_NAMES = ["Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor"]
+    # GENDERS = ["male", "female", "other"]
+    # EMAIL_DOMAINS = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "example.com"]
+    # PHONE_FORMATS = ["###-###-####", "(###) ###-####", "###.###.####"]
+    # STREET_TYPES = ["St", "Ave", "Blvd", "Rd", "Ln", "Dr", "Way", "Pl", "Ct"]
+    # CITIES = [
+    #     "New York",
+    #     "Los Angeles",
+    #     "Chicago",
+    #     "Houston",
+    #     "Phoenix",
+    #     "Philadelphia",
+    #     "San Antonio",
+    #     "San Diego",
+    #     "Dallas",
+    #     "San Jose",
+    # ]
+    # STATES = [
+    #     "AL",
+    #     "AK",
+    #     "AZ",
+    #     "AR",
+    #     "CA",
+    #     "CO",
+    #     "CT",
+    #     "DE",
+    #     "FL",
+    #     "GA",
+    #     "HI",
+    #     "ID",
+    #     "IL",
+    #     "IN",
+    #     "IA",
+    #     "KS",
+    #     "KY",
+    #     "LA",
+    #     "ME",
+    #     "MD",
+    # ]
+    # COUNTRIES = [
+    #     "United States",
+    #     "Canada",
+    #     "United Kingdom",
+    #     "Australia",
+    #     "Germany",
+    #     "France",
+    #     "Japan",
+    #     "China",
+    #     "Brazil",
+    #     "India",
+    # ]
 
-    def __init__(self, locale: str = "en", dataset: str | None = None):
-        """Initialize the Person model.
-
-        Args:
-            locale: The locale to use for generating data.
-            dataset: The dataset to use for generating data.
-        """
-        super().__init__(locale, dataset)
-        self._first_name = None
-        self._last_name = None
-        self._age = None
-        self._gender = None
-        self._email = None
-        self._phone = None
-        self._address = None
-
+    def __init__(self, data_loader: PersonDataLoader):
+        super().__init__()
+        self._data_loader = data_loader
+        
     @property
+    @property_cache
     def gender(self) -> str:
         """Get the gender of the person.
 

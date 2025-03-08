@@ -14,7 +14,7 @@ from datamimic_ce.utils.file_util import FileUtil
 
 
 class DomainGenerator(Generator):
-    def __init__(self, generated_count: int):
+    def __init__(self):
         """
         Generate random domains.
         """
@@ -24,8 +24,8 @@ class DomainGenerator(Generator):
         tld_path = prefix_path.joinpath("data/net/tld.csv")
 
         # Load file data
-        self._web_iter = iter(FileUtil.select_records_from_wgt_file(web_path, count=generated_count))
-        self._tld_iter = iter(FileUtil.select_records_from_wgt_file(tld_path, count=generated_count))
+        self._web_dataset = FileUtil.read_wgt_file(web_path)
+        self._tld_dataset = FileUtil.read_wgt_file(tld_path)
 
         self._company_name: str | None = None
         self._company_name_generator = CompanyNameGenerator()
@@ -38,10 +38,10 @@ class DomainGenerator(Generator):
         random_mode = random.choices([0, 1, 2], k=1)[0]
         # web domain generate
         if random_mode == 0:
-            res = next(self._web_iter)
+            res = random.choices(self._web_dataset[0], self._web_dataset[1], k=1)[0]
         # random domain generate
         elif random_mode == 1:
-            tld = next(self._tld_iter)
+            tld = random.choices(self._tld_dataset[0], self._tld_dataset[1], k=1)[0]
             random_name = "".join(random.choices(string.ascii_lowercase, k=random.randint(4, 12)))
             res = f"{random_name}.{tld}"
         # company domain generate

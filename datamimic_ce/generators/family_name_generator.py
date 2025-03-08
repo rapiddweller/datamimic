@@ -16,7 +16,7 @@ class FamilyNameGenerator(Generator):
     Generate random family name
     """
 
-    def __init__(self, dataset: str, generated_count: int):
+    def __init__(self, dataset: str):
         # check valid input dataset
         if len(dataset) != 2:
             raise ValueError(f"Invalid dataset: {dataset}")
@@ -26,12 +26,11 @@ class FamilyNameGenerator(Generator):
             values, wgt = FileUtil.read_mutil_column_wgt_file(
                 file_path,
             )
+
+            first_column = [row[0] for row in values]
+            self._dataset = first_column, wgt
         except Exception as err:
             raise ValueError(f"Not support dataset: {dataset}") from err
-
-        first_column = [row[0] for row in values]
-        data = random.choices(first_column, wgt, k=generated_count)
-        self._iter = iter(data)
 
     def generate(self) -> str:
         """
@@ -39,4 +38,4 @@ class FamilyNameGenerator(Generator):
         Returns:
             Optional[str]: Returns a string if successful, otherwise returns None.
         """
-        return next(self._iter)
+        return random.choices(self._dataset[0], self._dataset[1], k=1)[0]

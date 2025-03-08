@@ -19,13 +19,13 @@ class CountryDataLoader:
     """
 
     # Module-level cache to avoid repeated file I/O
-    _COUNTRY_DATA_CACHE: list[tuple[Any, ...]] = []
-    _COUNTRY_CODE_INDEX: dict[str, int] = {}
+    # _COUNTRY_DATA_CACHE: list[tuple[Any, ...]] = []
+    # _COUNTRY_CODE_INDEX: dict[str, int] = {}
 
     def __init__(self):
         """Initialize the CountryDataLoader."""
         super().__init__()
-        self._data_cache: dict[str, Any] = {}
+        
 
     def load_country_data(self) -> list[tuple[Any, ...]]:
         """Load country data from CSV file.
@@ -65,34 +65,34 @@ class CountryDataLoader:
             logger.error(f"Error loading country data: {e}")
             return []
 
-    def get_country_by_iso_code(self, iso_code: str) -> dict[str, Any] | None:
-        """Get a country by ISO code.
+    # def get_country_by_iso_code(self, iso_code: str) -> dict[str, Any] | None:
+    #     """Get a country by ISO code.
 
-        Args:
-            iso_code: The ISO code of the country to get.
+    #     Args:
+    #         iso_code: The ISO code of the country to get.
 
-        Returns:
-            A dictionary containing the country data, or None if not found.
-        """
-        # Load country data
-        country_data = self.load_country_data()
+    #     Returns:
+    #         A dictionary containing the country data, or None if not found.
+    #     """
+    #     # Load country data
+    #     country_data = self.load_country_data()
 
-        # Get country index
-        index = self._COUNTRY_CODE_INDEX.get(iso_code.upper())
-        if index is None:
-            return None
+    #     # Get country index
+    #     index = self._COUNTRY_CODE_INDEX.get(iso_code.upper())
+    #     if index is None:
+    #         return None
 
-        # Get country row
-        country_row = country_data[index]
+    #     # Get country row
+    #     country_row = country_data[index]
 
-        # Build country dictionary
-        return {
-            "iso_code": country_row[0],
-            "default_language_locale": country_row[1],
-            "phone_code": country_row[2],
-            "name": country_row[3],
-            "population": country_row[4],
-        }
+    #     # Build country dictionary
+    #     return {
+    #         "iso_code": country_row[0],
+    #         "default_language_locale": country_row[1],
+    #         "phone_code": country_row[2],
+    #         "name": country_row[3],
+    #         "population": country_row[4],
+    #     }
 
     def get_random_country(self) -> dict[str, Any]:
         """Get a random country.
@@ -120,38 +120,38 @@ class CountryDataLoader:
             "population": country_row[4],
         }
 
-    def get_countries_batch(self, count: int = 10) -> list[dict[str, Any]]:
-        """Get a batch of countries.
+    # def get_countries_batch(self, count: int = 10) -> list[dict[str, Any]]:
+    #     """Get a batch of countries.
 
-        Args:
-            count: The number of countries to get.
+    #     Args:
+    #         count: The number of countries to get.
 
-        Returns:
-            A list of dictionaries containing country data.
-        """
-        import random
+    #     Returns:
+    #         A list of dictionaries containing country data.
+    #     """
+    #     import random
 
-        # Load country data
-        country_data = self.load_country_data()
+    #     # Load country data
+    #     country_data = self.load_country_data()
 
-        # Get random indices
-        random_indices = random.sample(range(len(country_data)), min(count, len(country_data)))
+    #     # Get random indices
+    #     random_indices = random.sample(range(len(country_data)), min(count, len(country_data)))
 
-        # Get countries
-        countries = []
-        for index in random_indices:
-            country_row = country_data[index]
-            countries.append(
-                {
-                    "iso_code": country_row[0],
-                    "default_language_locale": country_row[1],
-                    "phone_code": country_row[2],
-                    "name": country_row[3],
-                    "population": country_row[4],
-                }
-            )
+    #     # Get countries
+    #     countries = []
+    #     for index in random_indices:
+    #         country_row = country_data[index]
+    #         countries.append(
+    #             {
+    #                 "iso_code": country_row[0],
+    #                 "default_language_locale": country_row[1],
+    #                 "phone_code": country_row[2],
+    #                 "name": country_row[3],
+    #                 "population": country_row[4],
+    #             }
+    #         )
 
-        return countries
+    #     return countries
 
     def _get_base_path_country(self) -> Path:
         """Get the base path for country data.
