@@ -15,8 +15,8 @@ import random
 import uuid
 from typing import Any, Dict, List, Optional, Tuple, cast
 
-from datamimic_ce.core.base_entity import BaseEntity
-from datamimic_ce.core.property_cache import property_cache
+from datamimic_ce.domain_core.base_entity import BaseEntity
+from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.ecommerce.data_loaders.order_loader import OrderDataLoader
 from datamimic_ce.domains.ecommerce.data_loaders.product_loader import ProductDataLoader
 from datamimic_ce.domains.ecommerce.models.product import Product

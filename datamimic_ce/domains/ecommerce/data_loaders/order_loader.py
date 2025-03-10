@@ -14,7 +14,7 @@ loading reference data from CSV files for order statuses, payment methods, etc.
 from pathlib import Path
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, cast
 
-from datamimic_ce.core.base_data_loader import BaseDataLoader
+from datamimic_ce.domain_core.base_data_loader import BaseDataLoader
 from datamimic_ce.utils.data_path_util import DataPathUtil
 from datamimic_ce.utils.file_util import FileUtil
 
