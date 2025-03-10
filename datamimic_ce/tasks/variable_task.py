@@ -250,46 +250,46 @@ class VariableTask(KeyVariableTask):
             # Complete mapping of all entities across domains
             entity_mappings = {
                 # Common domain entities
-                "Company": "common.models.company.Company",
-                "Person": "common.models.person.Person",
+                # "Company": "common.models.company.Company",
+                # "Person": "common.models.person.Person",
                 "Address": "common.models.address.Address",
                 "City": "common.models.city.City",
-                "Country": "common.models.country.Country",
+                # "Country": "common.models.country.Country",
                 
                 # Finance domain entities
-                "CreditCard": "finance.models.credit_card.CreditCard",
-                "Bank": "finance.models.bank.Bank",
-                "BankAccount": "finance.models.bank_account.BankAccount",
-                "Payment": "finance.models.payment.Payment",
-                "Invoice": "finance.models.invoice.Invoice",
-                "Transaction": "finance.models.transaction.Transaction",
-                "DigitalWallet": "finance.models.digital_wallet.DigitalWallet",
+                # "CreditCard": "finance.models.credit_card.CreditCard",
+                # "Bank": "finance.models.bank.Bank",
+                # "BankAccount": "finance.models.bank_account.BankAccount",
+                # "Payment": "finance.models.payment.Payment",
+                # "Invoice": "finance.models.invoice.Invoice",
+                # "Transaction": "finance.models.transaction.Transaction",
+                # "DigitalWallet": "finance.models.digital_wallet.DigitalWallet",
                 
                 # Ecommerce domain entities
-                "Product": "ecommerce.models.product.Product",
-                "Order": "ecommerce.models.order.Order",
-                "UserAccount": "ecommerce.models.user_account.UserAccount",
-                "CRM": "ecommerce.models.crm.CRM",
+                # "Product": "ecommerce.models.product.Product",
+                # "Order": "ecommerce.models.order.Order",
+                # "UserAccount": "ecommerce.models.user_account.UserAccount",
+                # "CRM": "ecommerce.models.crm.CRM",
                 
                 # Healthcare domain entities
-                "Patient": "healthcare.models.patient.Patient",
-                "Doctor": "healthcare.models.doctor.Doctor",
-                "Hospital": "healthcare.models.hospital.Hospital",
-                "MedicalDevice": "healthcare.models.medical_device.MedicalDevice",
-                "MedicalRecord": "healthcare.models.medical_record.MedicalRecord",
-                "MedicalProcedure": "healthcare.models.medical_procedure.MedicalProcedure",
-                "LabTest": "healthcare.models.lab_test.LabTest",
-                "ClinicalTrial": "healthcare.models.clinical_trial.ClinicalTrial",
+                # "Patient": "healthcare.models.patient.Patient",
+                # "Doctor": "healthcare.models.doctor.Doctor",
+                # "Hospital": "healthcare.models.hospital.Hospital",
+                # "MedicalDevice": "healthcare.models.medical_device.MedicalDevice",
+                # "MedicalRecord": "healthcare.models.medical_record.MedicalRecord",
+                # "MedicalProcedure": "healthcare.models.medical_procedure.MedicalProcedure",
+                # "LabTest": "healthcare.models.lab_test.LabTest",
+                # "ClinicalTrial": "healthcare.models.clinical_trial.ClinicalTrial",
                 
                 # Insurance domain entities (new domain)
-                "InsuranceCompany": "insurance.models.insurance_company.InsuranceCompany",
-                "InsurancePolicy": "insurance.models.insurance_policy.InsurancePolicy",
-                "InsuranceProduct": "insurance.models.insurance_product.InsuranceProduct",
+                # "InsuranceCompany": "insurance.models.insurance_company.InsuranceCompany",
+                # "InsurancePolicy": "insurance.models.insurance_policy.InsurancePolicy",
+                # "InsuranceProduct": "insurance.models.insurance_product.InsuranceProduct",
                 
                 # Public Sector domain entities (new domain)
-                "AdministrationOffice": "public_sector.models.administration_office.AdministrationOffice",
-                "EducationalInstitution": "public_sector.models.educational_institution.EducationalInstitution",
-                "PoliceOfficer": "public_sector.models.police_officer.PoliceOfficer"
+                # "AdministrationOffice": "public_sector.models.administration_office.AdministrationOffice",
+                # "EducationalInstitution": "public_sector.models.educational_institution.EducationalInstitution",
+                # "PoliceOfficer": "public_sector.models.police_officer.PoliceOfficer"
             }
             
             # Use the mapping to create the entity

@@ -6,7 +6,8 @@
 
 import random
 
-from datamimic_ce.domains.common.data_loaders.phone_number_loader import PhoneNumberDataLoader
+from datamimic_ce.domains.common.generators.country_generator import CountryGenerator
+from datamimic_ce.domains.common.generators.city_generator import CityGenerator
 from datamimic_ce.generators.generator import Generator
 
 
@@ -39,25 +40,16 @@ class PhoneNumberGenerator(Generator):
         self._dataset = (dataset or "US").upper()
         self._is_mobile = is_mobile
 
-        # Initialize data loader
-        self._data_loader = PhoneNumberDataLoader(country_code=self._dataset)
+        country_generator = CountryGenerator()
+        country_data = country_generator.get_country_by_iso_code(self._dataset)
+        self._country_code = country_data[2]
 
-        # Load country codes
-        self._country_codes = self._data_loader.load_country_codes()
-
-        # Set area code data
-        if not is_mobile:
-            if area_code:
-                self._area_data = [area_code]
-            else:
-                # Load area codes from data loader
-                area_codes = self._data_loader.load_area_codes()
-                # Only get max 100 data
-                self._area_data = random.sample(area_codes, 100) if len(area_codes) > 100 else area_codes
-
-                # If we had to fall back to US data, update the dataset
-                if self._dataset != "US" and not any(area_codes):
-                    self._dataset = "US"
+        self._is_mobile = is_mobile
+        self._area_code = area_code
+        if area_code is not None:
+            self._area_code = area_code
+        else:
+            self._city_generator = CityGenerator(country_code=self._dataset)
 
     def generate(self) -> str:
         """Generate a random phone number.
@@ -65,16 +57,15 @@ class PhoneNumberGenerator(Generator):
         Returns:
             A formatted phone number string
         """
-        country_code = self._country_codes.get(self._dataset, "0")
-        if country_code is None or country_code.strip() == "":
-            country_code = "0"
-
-        if self._is_mobile:
-            area_code = str(random.randint(100, 999))
+        if self._area_code is not None:
+            area_code = self._area_code
         else:
-            area_code = "0" if not self._area_data else random.choice(self._area_data)
+            if self._is_mobile:
+                area_code = str(random.randint(100, 999))
+            else:
+                area_code = self._city_generator.get_random_city()["area_code"]
 
         local_number_length = 10 - len(area_code)
         local_number = "".join(random.choices("0123456789", k=local_number_length))
 
-        return f"+{country_code}-{area_code}-{local_number}"
+        return f"+{self._country_code}-{area_code}-{local_number}"

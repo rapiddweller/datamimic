@@ -5,13 +5,11 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import random
-from typing import Optional, List, Dict, Any, cast
+from typing import Optional, Dict, Any
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
-from datamimic_ce.domains.common.data_loaders.company_loader import CompanyLoader
 from datamimic_ce.domains.common.generators.company_generator import CompanyGenerator
-from datamimic_ce.domains.common.models.address import Address
 
 
 class Company(BaseEntity):
@@ -21,7 +19,7 @@ class Company(BaseEntity):
     information such as name, address, contact details, etc.
     """
 
-    def __init__(self, data_loader: CompanyLoader):
+    def __init__(self, company_generator: CompanyGenerator):
         """Initialize a company entity.
         
         Args:
@@ -30,7 +28,7 @@ class Company(BaseEntity):
             address: Optional pre-defined address for the company
         """
         super().__init__()
-        self._data_loader = data_loader
+        self._company_generator = company_generator
         
         # # Load sector data
         # sector_data = CompanyLoader.get_sectors(country_code=self.dataset)
@@ -61,7 +59,7 @@ class Company(BaseEntity):
         Returns:
             The short name of the company
         """
-        return self._data_loader.company_name_generator.generate()
+        return self._company_generator.company_name_generator.generate()
     
     
     @property
@@ -72,7 +70,7 @@ class Company(BaseEntity):
         Returns:
             The sector in which the company operates
         """
-        return self._data_loader.generate_sector()
+        return self._company_generator.generate_sector()
     
     # @property
     # def full_name(self) -> str:
@@ -99,7 +97,7 @@ class Company(BaseEntity):
         Returns:
             The email address of the company
         """
-        return self._data_loader.email_address_generator.generate_with_company_name(self.short_name)
+        return self._company_generator.email_address_generator.generate_with_company_name(self.short_name)
     
     @property
     @property_cache
@@ -121,7 +119,7 @@ class Company(BaseEntity):
         Returns:
             The phone number of the company
         """
-        return self._data_loader.phone_number_generator.generate()
+        return self._company_generator.phone_number_generator.generate()
     
     @property
     @property_cache
@@ -131,7 +129,7 @@ class Company(BaseEntity):
         Returns:
             The office phone number of the company
         """
-        return self._data_loader.phone_number_generator.generate()
+        return self._company_generator.phone_number_generator.generate()
     
     @property
     @property_cache
@@ -141,7 +139,7 @@ class Company(BaseEntity):
         Returns:
             The fax number of the company
         """
-        return self._data_loader.phone_number_generator.generate()
+        return self._company_generator.phone_number_generator.generate()
     
     # TODO: Add related address generator
     # Address-related properties

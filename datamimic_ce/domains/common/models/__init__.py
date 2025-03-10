@@ -12,7 +12,6 @@ This package provides models for common domain entities.
 
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.common.models.city import City
-from datamimic_ce.domains.common.models.company import Company
 from datamimic_ce.domains.common.models.country import Country
 from datamimic_ce.domains.common.models.person import Person
 
@@ -21,5 +20,4 @@ __all__ = [
     "City",
     "Country",
     "Address",
-    "Company",
 ]
