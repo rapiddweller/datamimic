@@ -18,23 +18,7 @@ class Country(BaseEntity):
     This class provides access to country data including ISO code, name, language,
     phone code, and population.
     """
-
-    # model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    # iso_code: str = Field(description="The ISO code of the country")
-    # name: str = Field(description="The name of the country")
-    # default_language_locale: str = Field(description="The default language locale of the country")
-    # phone_code: str = Field(description="The phone code of the country")
-    # population: str = Field(description="The population of the country")
-
-    # # Private attributes for internal use
-    # _property_cache: dict[str, Any] = PrivateAttr(default_factory=dict)
-
-    # # Cache attributes for property_cache decorator
-    # _population_int_cache: int | None = PrivateAttr(default=None)
-
     def __init__(self, country_generator: CountryGenerator):
-        super().__init__()
         self._country_generator = country_generator
 
     @property

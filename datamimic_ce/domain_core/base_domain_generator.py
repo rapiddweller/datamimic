@@ -12,6 +12,7 @@ class BaseDomainGenerator(ABC):
     """
     Base class for all domain generators.
     """
+    # Class cache for loaded data from files
     _LOADED_DATA_CACHE: ClassVar[dict[str, Any]] = {}
 
     # Regional fallbacks for countries

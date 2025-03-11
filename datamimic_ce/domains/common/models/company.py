@@ -15,19 +15,16 @@ from datamimic_ce.domains.common.models.address import Address
 class Company(BaseEntity):
     """Company entity model representing a business organization.
     
-    Provides methods and properties to generate and access company-related
-    information such as name, address, contact details, etc.
+    This class provides access to company data including name, sector, email, URL, phone number,
+    office phone number, fax, address, and more.
     """
 
     def __init__(self, company_generator: CompanyGenerator):
         """Initialize a company entity.
         
         Args:
-            dataset: Country code for country-specific generation
-            count: Number of companies to generate
-            address: Optional pre-defined address for the company
+            company_generator: Company generator instance
         """
-        super().__init__()
         self._company_generator = company_generator
 
     @property

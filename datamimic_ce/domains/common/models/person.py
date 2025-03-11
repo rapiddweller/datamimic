@@ -26,7 +26,6 @@ class Person(BaseEntity):
     such as name, age, gender, etc.
     """
     def __init__(self, person_generator: PersonGenerator):
-        super().__init__()
         self._person_generator = person_generator
         
     @property

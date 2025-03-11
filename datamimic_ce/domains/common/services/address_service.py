@@ -4,5 +4,9 @@ from datamimic_ce.domains.common.generators.address_generator import AddressGene
 from datamimic_ce.domains.common.models.address import Address
 
 class AddressService(BaseDomainService[Address]):
+    """Service for managing address data.
+
+    This class provides methods for creating, retrieving, and managing address data.
+    """
     def __init__(self):
         super().__init__(AddressGenerator(), Address)
