@@ -6,12 +6,18 @@
 
 
 
-from datamimic_ce.domains.common.data_loaders.company_loader import CompanyLoader
-from datamimic_ce.domains.common.models.company import Company
-from datamimic_ce.generators.domain_generator import DomainGenerator
+from pathlib import Path
+import random
+from datamimic_ce.logger import logger
+from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.generators.company_name_generator import CompanyNameGenerator
+from datamimic_ce.generators.email_address_generator import EmailAddressGenerator
+from datamimic_ce.generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.utils.file_content_storage import FileContentStorage
+from datamimic_ce.utils.file_util import FileUtil
 
 
-class CompanyGenerator(DomainGenerator[Company]):
+class CompanyGenerator(BaseDomainGenerator):
     """Generator for company-related attributes.
     
     Provides methods to generate company-related attributes such as
@@ -19,6 +25,49 @@ class CompanyGenerator(DomainGenerator[Company]):
     """
     
     def __init__(self, country_code: str = "US"):
-        super().__init__(CompanyLoader(country_code=country_code), Company)
         self._country_code = country_code
-        
+        self._company_name_generator = CompanyNameGenerator()
+        self._email_address_generator = EmailAddressGenerator(dataset=country_code)
+        self._phone_number_generator = PhoneNumberGenerator(dataset=country_code)
+
+    @property
+    def company_name_generator(self) -> CompanyNameGenerator:
+        """Get the company name generator.
+
+        Returns:
+            The company generator.
+        """
+        return self._company_name_generator
+    
+    @property
+    def email_address_generator(self) -> EmailAddressGenerator:
+        """Get the email address generator.
+
+        Returns:
+            The email address generator.
+        """
+        return self._email_address_generator
+    
+    @property
+    def phone_number_generator(self) -> PhoneNumberGenerator:
+        """Get the phone number generator.
+
+        Returns:
+            The phone number generator.
+        """
+        return self._phone_number_generator
+    
+    def generate_sector(self) -> str:
+        """Generate a sector.
+
+        Returns:
+            The sector.
+        """
+        cache_key = f"sector_{self._country_code}"
+        if cache_key not in self._LOADED_DATA_CACHE:
+            logger.debug("CACHE MISS: Loading sector data from file")
+            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "organization" / f"sector_{self._country_code}.csv"
+            sector_df = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=";"))
+            sector_list = [row[0] for row in sector_df]
+            self._LOADED_DATA_CACHE[cache_key] = sector_list
+        return random.choice(self._LOADED_DATA_CACHE[cache_key])

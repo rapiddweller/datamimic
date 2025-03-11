@@ -6,11 +6,10 @@
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
-from datamimic_ce.domains.common.data_loaders.city_loader import CityDataLoader
+from datamimic_ce.domains.common.generators.city_generator import CityGenerator
 
 
 class City(BaseEntity):
@@ -38,9 +37,9 @@ class City(BaseEntity):
     # _location_string_cache: str | None = PrivateAttr(default=None)
     # _population_int_cache: int | None = PrivateAttr(default=None)
 
-    def __init__(self, data_loader: CityDataLoader):
+    def __init__(self, city_generator: CityGenerator):
         super().__init__()
-        self._data_loader = data_loader
+        self._city_generator = city_generator
 
     @property
     @property_cache
@@ -49,8 +48,8 @@ class City(BaseEntity):
 
         Returns:
             The city data.
-        """
-        return self._data_loader.get_random_city()
+        """ 
+        return self._city_generator.get_random_city()
     
     @property
     @property_cache
@@ -92,14 +91,14 @@ class City(BaseEntity):
         """
         return self.city_data["state_id"]
 
-    # @property
-    # @property_cache
-    # def state(self) -> str:
-    #     """Get the state of the city.
+    @property
+    @property_cache
+    def state(self) -> str:
+        """Get the state of the city.
 
-    #     Returns:
-    #         The state of the city.
-    #     """
+        Returns:
+            The state of the city.
+        """
         return self.city_data["state"]
 
     @property
@@ -164,7 +163,7 @@ class City(BaseEntity):
             "postal_code": self.postal_code,
             "area_code": self.area_code,
             "state_id": self.state_id,
-            # "state": self.state,
+            "state": self.state,
             "language": self.language,
             "population": self.population,
             "name_extension": self.name_extension,

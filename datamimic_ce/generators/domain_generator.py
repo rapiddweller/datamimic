@@ -47,7 +47,7 @@ class DomainGenerator(Generator):
         # company domain generate
         else:
             company_name = self._company_name or self._company_name_generator.generate().lower()
-            tld = next(self._tld_iter)
+            tld = random.choices(self._tld_dataset[0], self._tld_dataset[1], k=1)[0]
             res = f"{company_name}.{tld}"
 
         return res

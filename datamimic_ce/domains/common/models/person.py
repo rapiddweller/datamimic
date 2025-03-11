@@ -15,10 +15,8 @@ from typing import Any
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
-from datamimic_ce.domains.common.utils.random_utils import (
-    random_element_with_exclusions,
-    random_int_in_range,
-)
+from datamimic_ce.domains.common.generators.person_generator import PersonGenerator 
+from datamimic_ce.domains.common.models.address import Address
 
 
 class Person(BaseEntity):
@@ -105,9 +103,9 @@ class Person(BaseEntity):
     #     "India",
     # ]
 
-    def __init__(self, data_loader: PersonDataLoader):
+    def __init__(self, person_generator: PersonGenerator):
         super().__init__()
-        self._data_loader = data_loader
+        self._person_generator = person_generator
         
     @property
     @property_cache
@@ -117,39 +115,30 @@ class Person(BaseEntity):
         Returns:
             The gender of the person.
         """
-        if self._gender is None:
-            self._gender = random_element_with_exclusions(self.GENDERS, [])
-        return self._gender
+        return self._person_generator.gender_generator.generate()
 
     @property
+    @property_cache
     def first_name(self) -> str:
         """Get the first name of the person.
 
         Returns:
             The first name of the person.
         """
-        if self._first_name is None:
-            if self.gender == "male":
-                self._first_name = random.choice(self.FIRST_NAMES_MALE)
-            elif self.gender == "female":
-                self._first_name = random.choice(self.FIRST_NAMES_FEMALE)
-            else:
-                # For "other" gender, choose from all names
-                self._first_name = random.choice(self.FIRST_NAMES_MALE + self.FIRST_NAMES_FEMALE)
-        return self._first_name
+        return self._person_generator.given_name_generator.generate()
 
     @property
+    @property_cache
     def last_name(self) -> str:
         """Get the last name of the person.
 
         Returns:
             The last name of the person.
         """
-        if self._last_name is None:
-            self._last_name = random.choice(self.LAST_NAMES)
-        return self._last_name
+        return self._person_generator.family_name_generator.generate()
 
     @property
+    @property_cache
     def full_name(self) -> str:
         """Get the full name of the person.
 
@@ -159,84 +148,44 @@ class Person(BaseEntity):
         return f"{self.first_name} {self.last_name}"
 
     @property
+    @property_cache
     def age(self) -> int:
         """Get the age of the person.
 
         Returns:
             The age of the person.
         """
-        if self._age is None:
-            self._age = random_int_in_range(18, 90)
-        return self._age
+        return random.randint(0, 100)
 
     @property
+    @property_cache
     def email(self) -> str:
         """Get the email of the person.
 
         Returns:
             The email of the person.
         """
-        if self._email is None:
-            # Create an email based on first and last name
-            first_initial = self.first_name[0].lower()
-            last_name = self.last_name.lower()
-            domain = random.choice(self.EMAIL_DOMAINS)
-
-            # Add a random number to ensure uniqueness
-            random_num = random.randint(1, 999)
-
-            # 50% chance to use first initial + last name format
-            if random.random() < 0.5:
-                self._email = f"{first_initial}{last_name}{random_num}@{domain}"
-            else:
-                self._email = f"{last_name}.{first_initial}{random_num}@{domain}"
-        return self._email
-
+        return self._person_generator.email_generator.generate_with_name(self.first_name, self.last_name)
+    
     @property
+    @property_cache
     def phone(self) -> str:
         """Get the phone number of the person.
 
         Returns:
             The phone number of the person.
         """
-        if self._phone is None:
-            # Choose a random phone format and replace # with random digits
-            phone_format = random.choice(self.PHONE_FORMATS)
-            self._phone = ""
-            for char in phone_format:
-                if char == "#":
-                    self._phone += str(random.randint(0, 9))
-                else:
-                    self._phone += char
-        return self._phone
+        return self._person_generator.phone_generator.generate()
 
+    @property
     @property_cache
-    def address(self) -> dict[str, str]:
+    def address(self) -> Address:
         """Get the address of the person.
 
         Returns:
             The address of the person as a dictionary.
         """
-        # Generate a random street number
-        street_number = random.randint(1, 9999)
-
-        # Generate a random street name
-        street_name = random.choice(self.LAST_NAMES)
-        street_type = random.choice(self.STREET_TYPES)
-
-        # Generate a random city, state, zip code, and country
-        city = random.choice(self.CITIES)
-        state = random.choice(self.STATES)
-        zip_code = f"{random.randint(10000, 99999)}"
-        country = random.choice(self.COUNTRIES)
-
-        return {
-            "street": f"{street_number} {street_name} {street_type}",
-            "city": city,
-            "state": state,
-            "zip_code": zip_code,
-            "country": country,
-        }
+        return Address(self._person_generator.address_generator)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert the person to a dictionary.
@@ -255,13 +204,3 @@ class Person(BaseEntity):
             "address": self.address,
         }
 
-    def reset(self) -> None:
-        """Reset the person's attributes."""
-        self._first_name = None
-        self._last_name = None
-        self._age = None
-        self._gender = None
-        self._email = None
-        self._phone = None
-        if hasattr(self.address, "reset_cache"):
-            self.address.reset_cache(self)

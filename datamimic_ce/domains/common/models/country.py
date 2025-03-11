@@ -6,12 +6,10 @@
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
-from datamimic_ce.domains.common.data_loaders.country_loader import CountryDataLoader
-
+from datamimic_ce.domains.common.generators.country_generator import CountryGenerator
 
 class Country(BaseEntity):
     """
@@ -35,9 +33,9 @@ class Country(BaseEntity):
     # # Cache attributes for property_cache decorator
     # _population_int_cache: int | None = PrivateAttr(default=None)
 
-    def __init__(self, data_loader: CountryDataLoader):
+    def __init__(self, country_generator: CountryGenerator):
         super().__init__()
-        self._data_loader = data_loader
+        self._country_generator = country_generator
 
     @property
     @property_cache
@@ -47,7 +45,7 @@ class Country(BaseEntity):
         Returns:
             The ISO code of the country
         """
-        return self._data_loader.get_random_country()["iso_code"]
+        return self._country_generator.get_random_country()["iso_code"]
     
     @property
     @property_cache
@@ -57,7 +55,7 @@ class Country(BaseEntity):
         Returns:
             The country data
         """
-        return self._data_loader.get_random_country()
+        return self._country_generator.get_random_country()
     
     @property
     @property_cache
@@ -67,7 +65,7 @@ class Country(BaseEntity):
         Returns:
             The name of the country
         """
-        return self._data_loader.get_random_country()["name"]
+        return self._country_generator.get_random_country()["name"]
     
     @property
     @property_cache
@@ -77,7 +75,7 @@ class Country(BaseEntity):
         Returns:
             The default language locale of the country
         """
-        return self._data_loader.get_random_country()["default_language_locale"]    
+        return self._country_generator.get_random_country()["default_language_locale"]    
     
     @property
     @property_cache
@@ -87,7 +85,7 @@ class Country(BaseEntity):
         Returns:
             The phone code of the country
         """
-        return self._data_loader.get_random_country()["phone_code"]
+        return self._country_generator.get_random_country()["phone_code"]
     
     @property
     @property_cache
@@ -97,7 +95,7 @@ class Country(BaseEntity):
         Returns:
             The population of the country       
         """
-        return self._data_loader.get_random_country()["population"]
+        return self._country_generator.get_random_country()["population"]
     
     def to_dict(self) -> dict[str, Any]:
         """Convert the country to a dictionary.

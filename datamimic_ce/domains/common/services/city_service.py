@@ -8,113 +8,115 @@ import uuid
 
 from datamimic_ce.domains.common.generators.city_generator import CityGenerator
 from datamimic_ce.domains.common.models.city import City
+from datamimic_ce.domain_core.base_domain_service import BaseDomainService
 
-
-class CityService:
+class CityService(BaseDomainService[City]):
     """Service for managing city data.
 
     This class provides methods for creating, retrieving, and managing city data.
     """
-
     def __init__(self):
-        """Initialize the CityService."""
-        self._cities: dict[str, City] = {}
-        self._generators: dict[str, CityGenerator] = {}
-        self._default_country_code = "US"
+        super().__init__(CityGenerator(), City)
 
-    def create_city(self, country_code: str | None = None) -> City:
-        """Create a new city.
+    # def __init__(self):
+    #     """Initialize the CityService."""
+    #     self._cities: dict[str, City] = {}
+    #     self._generators: dict[str, CityGenerator] = {}
+    #     self._default_country_code = "US"
 
-        Args:
-            country_code: The country code to use for generating the city.
+    # def create_city(self, country_code: str | None = None) -> City:
+    #     """Create a new city.
 
-        Returns:
-            A new City object.
-        """
-        country_code = country_code.upper() if country_code else self._default_country_code
+    #     Args:
+    #         country_code: The country code to use for generating the city.
 
-        # Get or create generator for the country code
-        generator = self._get_generator(country_code)
+    #     Returns:
+    #         A new City object.
+    #     """
+    #     country_code = country_code.upper() if country_code else self._default_country_code
 
-        # Generate a new city
-        city = generator.generate()
+    #     # Get or create generator for the country code
+    #     generator = self._get_generator(country_code)
 
-        # Store the city with a unique ID
-        city_id = f"city-{uuid.uuid4()}"
-        self._cities[city_id] = city
+    #     # Generate a new city
+    #     city = generator.generate()
 
-        return city
+    #     # Store the city with a unique ID
+    #     city_id = f"city-{uuid.uuid4()}"
+    #     self._cities[city_id] = city
 
-    def create_cities_batch(self, count: int = 10, country_code: str | None = None) -> list[City]:
-        """Create a batch of cities.
+    #     return city
 
-        Args:
-            count: The number of cities to create.
-            country_code: The country code to use for generating the cities.
+    # def create_cities_batch(self, count: int = 10, country_code: str | None = None) -> list[City]:
+    #     """Create a batch of cities.
 
-        Returns:
-            A list of City objects.
-        """
-        country_code = country_code.upper() if country_code else self._default_country_code
+    #     Args:
+    #         count: The number of cities to create.
+    #         country_code: The country code to use for generating the cities.
 
-        # Get or create generator for the country code
-        generator = self._get_generator(country_code)
+    #     Returns:
+    #         A list of City objects.
+    #     """
+    #     country_code = country_code.upper() if country_code else self._default_country_code
 
-        # Generate a batch of cities
-        cities = generator.generate_batch(count)
+    #     # Get or create generator for the country code
+    #     generator = self._get_generator(country_code)
 
-        # Store the cities with unique IDs
-        for city in cities:
-            city_id = f"city-{uuid.uuid4()}"
-            self._cities[city_id] = city
+    #     # Generate a batch of cities
+    #     cities = generator.generate_batch(count)
 
-        return cities
+    #     # Store the cities with unique IDs
+    #     for city in cities:
+    #         city_id = f"city-{uuid.uuid4()}"
+    #         self._cities[city_id] = city
 
-    def get_city(self, city_id: str) -> City:
-        """Get a city by ID.
+    #     return cities
 
-        Args:
-            city_id: The ID of the city to get.
+    # def get_city(self, city_id: str) -> City:
+    #     """Get a city by ID.
 
-        Returns:
-            The City object.
+    #     Args:
+    #         city_id: The ID of the city to get.
 
-        Raises:
-            KeyError: If the city ID is not found.
-        """
-        if city_id not in self._cities:
-            raise KeyError(f"City with ID '{city_id}' not found")
-        return self._cities[city_id]
+    #     Returns:
+    #         The City object.
 
-    def get_all_cities(self) -> list[City]:
-        """Get all cities.
+    #     Raises:
+    #         KeyError: If the city ID is not found.
+    #     """
+    #     if city_id not in self._cities:
+    #         raise KeyError(f"City with ID '{city_id}' not found")
+    #     return self._cities[city_id]
 
-        Returns:
-            A list of all City objects.
-        """
-        return list(self._cities.values())
+    # def get_all_cities(self) -> list[City]:
+    #     """Get all cities.
 
-    def clear_cities(self) -> None:
-        """Clear all cities."""
-        self._cities.clear()
+    #     Returns:
+    #         A list of all City objects.
+    #     """
+    #     return list(self._cities.values())
 
-    def set_default_country_code(self, country_code: str) -> None:
-        """Set the default country code for generating cities.
+    # def clear_cities(self) -> None:
+    #     """Clear all cities."""
+    #     self._cities.clear()
 
-        Args:
-            country_code: The country code to use.
-        """
-        self._default_country_code = country_code.upper()
+    # def set_default_country_code(self, country_code: str) -> None:
+    #     """Set the default country code for generating cities.
 
-    def _get_generator(self, country_code: str) -> CityGenerator:
-        """Get or create a generator for the specified country code.
+    #     Args:
+    #         country_code: The country code to use.
+    #     """
+    #     self._default_country_code = country_code.upper()
 
-        Args:
-            country_code: The country code to use.
+    # def _get_generator(self, country_code: str) -> CityGenerator:
+    #     """Get or create a generator for the specified country code.
 
-        Returns:
-            A CityGenerator for the specified country code.
-        """
-        if country_code not in self._generators:
-            self._generators[country_code] = CityGenerator(country_code=country_code)
-        return self._generators[country_code]
+    #     Args:
+    #         country_code: The country code to use.
+
+    #     Returns:
+    #         A CityGenerator for the specified country code.
+    #     """
+    #     if country_code not in self._generators:
+    #         self._generators[country_code] = CityGenerator(country_code=country_code)
+    #     return self._generators[country_code]

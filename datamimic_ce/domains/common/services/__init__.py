@@ -11,11 +11,9 @@ This package provides services for common domain entities.
 """
 
 from datamimic_ce.domains.common.services.city_service import CityService
-from datamimic_ce.domains.common.services.company_service import CompanyService
 from datamimic_ce.domains.common.services.country_service import CountryService
 
 __all__ = [
     "CityService",
     "CountryService",
-    "CompanyService",
 ]
