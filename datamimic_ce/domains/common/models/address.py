@@ -47,6 +47,11 @@ class Address(BaseEntity):
     
     @property
     @property_cache
+    def area(self) -> str:
+        return self.city_data["area_code"]
+    
+    @property
+    @property_cache
     def state(self) -> str:
         return self.city_data["state"]
     
@@ -54,6 +59,11 @@ class Address(BaseEntity):
     @property_cache
     def postal_code(self) -> str:
         return self.city_data["postal_code"]
+    
+    @property
+    @property_cache
+    def zip_code(self) -> str:
+        return self.postal_code
     
     @property
     @property_cache
@@ -78,6 +88,16 @@ class Address(BaseEntity):
     @property
     @property_cache
     def mobile_phone(self) -> str:
+        return self._address_generator.phone_number_generator.generate()
+    
+    @property
+    @property_cache
+    def office_phone(self) -> str:
+        return self._address_generator.phone_number_generator.generate()
+    
+    @property
+    @property_cache
+    def private_phone(self) -> str:
         return self._address_generator.phone_number_generator.generate()
     
     @property
