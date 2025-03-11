@@ -6,7 +6,6 @@
 
 import random
 
-from datamimic_ce.domains.common.data_loaders.company_loader import CompanyLoader
 from datamimic_ce.generators.generator import Generator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 
@@ -24,7 +23,7 @@ class SectorGenerator(Generator):
         # Use locale parameter if provided, otherwise use dataset
         # Ensure country_code is never None by defaulting to "US"
         country_code = locale if locale is not None else (dataset if dataset is not None else "US")
-        
+
         # Use the file content storage to cache the data
         self._sector_data_load = FileContentStorage.load_file_with_custom_func(
             cache_key=f"sector_{country_code}",
@@ -46,7 +45,7 @@ class SectorGenerator(Generator):
             country_code=country_code,
             domain_path="organization"
         )
-        
+
         # Extract just the values, not the weights
         return [item[0] for item in sector_data]
 
