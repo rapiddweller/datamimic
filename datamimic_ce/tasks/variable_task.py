@@ -27,6 +27,7 @@ from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntity
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
 from datamimic_ce.tasks.task_util import TaskUtil
+from datamimic_ce.utils.domain_class_util import DomainClassUtil
 from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.string_util import StringUtil
 
@@ -201,7 +202,7 @@ class VariableTask(KeyVariableTask):
             locale = statement.locale or ctx.default_locale
             dataset = statement.dataset or ctx.default_dataset
             try:
-                self._entity = self._get_entity(
+                self._entity_generator = self._get_entity_generator(
                     ctx,
                     entity_name=statement.entity,
                     locale=locale,
@@ -230,19 +231,15 @@ class VariableTask(KeyVariableTask):
         return self._statement
 
     @staticmethod
-    def _get_entity(ctx: Context, entity_name: str, locale: str, dataset: str, count: int):
+    def _get_entity_generator(ctx: Context, entity_name: str, locale: str, dataset: str, count: int):
         entity_class_name, kwargs = StringUtil.parse_constructor_string(entity_name)
-        if isinstance(ctx, SetupContext) and hasattr(ctx, "class_factory_util"):
-            cls_factory_util = ctx.class_factory_util
         
         # Check if entity_class_name contains dots indicating a domain path
         if "." in entity_class_name:
             # For domain paths like "common.models.Company"
             # Create instance directly using the class factory util
-            return cls_factory_util.create_instance(
+            return DomainClassUtil.create_instance(
                 f"datamimic_ce.domains.{entity_class_name}",
-                dataset=dataset,
-                count=count,
                 **kwargs
             )
         else:
@@ -250,11 +247,11 @@ class VariableTask(KeyVariableTask):
             # Complete mapping of all entities across domains
             entity_mappings = {
                 # Common domain entities
-                # "Company": "common.models.company.Company",
-                # "Person": "common.models.person.Person",
-                "Address": "common.models.address.Address",
-                "City": "common.models.city.City",
-                # "Country": "common.models.country.Country",
+                "Company": "common.services.CompanyService",
+                "Person": "common.services.PersonService",
+                "Address": "common.services.AddressService",
+                "City": "common.services.CityService",
+                "Country": "common.services.CountryService",
                 
                 # Finance domain entities
                 # "CreditCard": "finance.models.credit_card.CreditCard",
@@ -295,10 +292,8 @@ class VariableTask(KeyVariableTask):
             # Use the mapping to create the entity
             if entity_class_name in entity_mappings:
                 domain_entity_path = entity_mappings[entity_class_name]
-                return cls_factory_util.create_instance(
+                return DomainClassUtil.create_instance(
                     f"datamimic_ce.domains.{domain_entity_path}",
-                    dataset=dataset,
-                    count=count,
                     **kwargs
                 )
             else:
@@ -316,8 +311,7 @@ class VariableTask(KeyVariableTask):
         if self._mode == self._ITERATOR_MODE:
             value = next(self._iterator) if self._iterator is not None else None
         elif self._mode == self._ENTITY_MODE:
-            self._entity.reset()
-            value = self._entity
+            value = self._entity_generator.generate()
         elif self._mode == self._WEIGHTED_ENTITY_MODE:
             value = self._weighted_data_source.generate()
         elif self._mode == self._ITERATION_SELECTOR_MODE:

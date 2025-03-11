@@ -6,12 +6,13 @@
 
 
 import random
+
 from datamimic_ce import logger
+from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.city_generator import CityGenerator
 from datamimic_ce.domains.common.generators.country_generator import CountryGenerator
 from datamimic_ce.generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.generators.street_name_generator import StreetNameGenerator
-from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 
 
 class AddressGenerator(BaseDomainGenerator):
@@ -44,7 +45,7 @@ class AddressGenerator(BaseDomainGenerator):
             The country code.
         """
         return self._country_code
-    
+
     @property
     def city_generator(self) -> CityGenerator:
         """Get the city generator.
@@ -53,7 +54,7 @@ class AddressGenerator(BaseDomainGenerator):
             The city generator.
         """
         return self._city_generator
-    
+
     @property
     def country_generator(self) -> CountryGenerator:
         """Get the country generator.
@@ -62,7 +63,7 @@ class AddressGenerator(BaseDomainGenerator):
             The country generator.
         """
         return self._country_generator
-    
+
     @property
     def phone_number_generator(self) -> PhoneNumberGenerator:
         """Get the phone number generator.
@@ -72,7 +73,6 @@ class AddressGenerator(BaseDomainGenerator):
         """
         return self._phone_number_generator
 
-    
     def generate_street_name(self) -> str:
         """Generate a street name.
 
@@ -81,10 +81,10 @@ class AddressGenerator(BaseDomainGenerator):
         """
         if self._current_street_name_generator is not None:
             return self._current_street_name_generator.generate()
-        
+
         try:
-                self._current_street_name_generator = StreetNameGenerator(dataset=self._country_code)
-                return self._current_street_name_generator.generate()
+            self._current_street_name_generator = StreetNameGenerator(dataset=self._country_code)
+            return self._current_street_name_generator.generate()
         except FileNotFoundError:
             logger.warning(f"Street dataset '{self._country_code}' not found")
 
@@ -100,8 +100,7 @@ class AddressGenerator(BaseDomainGenerator):
         self._country_code = self._DEFAULT_DATASET
         self._current_street_name_generator = StreetNameGenerator(dataset=self._DEFAULT_DATASET)
         return self._current_street_name_generator.generate()
-    
-    
+
     def generate_house_number(self) -> str:
         """Generate a house number.
 
