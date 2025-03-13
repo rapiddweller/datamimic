@@ -7,7 +7,7 @@
 
 from pathlib import Path
 from typing import Any
-from datamimic_ce import logger
+from datamimic_ce.logger import logger
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator

@@ -10,6 +10,17 @@ from typing import Any
 
 
 class BaseEntity(ABC):
+    """
+    Base class for all domain entities.
+    """
+    def __init__(self):
+        # Cache for generated values
+        self._field_cache = {}
+
+    @property
+    def field_cache(self):
+        return self._field_cache
+        
     @abstractmethod
     def to_dict(self) -> dict[str, Any]:
         """Convert the entity to a dictionary."""

@@ -25,6 +25,7 @@ class Company(BaseEntity):
         Args:
             company_generator: Company generator instance
         """
+        super().__init__()
         self._company_generator = company_generator
 
     @property

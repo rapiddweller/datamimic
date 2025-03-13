@@ -26,6 +26,7 @@ class Person(BaseEntity):
     such as name, age, gender, etc.
     """
     def __init__(self, person_generator: PersonGenerator):
+        super().__init__()
         self._person_generator = person_generator
         
     @property
@@ -131,7 +132,7 @@ class Person(BaseEntity):
         """Get the nobility title of the person.
         """
         return self._person_generator.nobility_title_generator.generate()
-    
+        
     @property
     @property_cache
     def salutation(self) -> str:

@@ -23,8 +23,8 @@ class StreetNameGenerator(BaseLiteralGenerator):
         street_code = dataset.upper()[:2]
 
         # Prepare file path
-        prefix_path = Path(__file__).parent
-        file_name = f"data/address/street/street_{street_code}.csv"
+        prefix_path = Path(__file__).parent.parent.parent.parent
+        file_name = f"domain_data/common/street/street_{street_code}.csv"
         file_path = prefix_path.joinpath(file_name)
 
         # Load file data
@@ -34,7 +34,7 @@ class StreetNameGenerator(BaseLiteralGenerator):
             )
         except FileNotFoundError:
             logger.warning(f"No such file or directory: 'street_{street_code}.csv'. Change to street_US datas")
-            file_path = prefix_path.joinpath("data/address/street/street_US.csv")
+            file_path = prefix_path.joinpath("domain_data/common/street/street_US.csv")
             self._values, self._wgt = FileContentStorage.load_file_with_custom_func(
                 str(file_path), lambda: FileUtil.read_wgt_file(file_path)
             )

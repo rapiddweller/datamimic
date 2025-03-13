@@ -7,7 +7,7 @@
 
 import random
 
-from datamimic_ce import logger
+from datamimic_ce.logger import logger
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.city_generator import CityGenerator
 from datamimic_ce.domains.common.generators.country_generator import CountryGenerator
