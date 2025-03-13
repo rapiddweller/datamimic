@@ -7,7 +7,7 @@
 
 from numpy import nan
 
-from datamimic_ce.generators.academic_title_generator import AcademicTitleGenerator
+from datamimic_ce.domains.common.literal_generators.academic_title_generator import AcademicTitleGenerator
 
 
 class TestAcademicTitleGenerator:

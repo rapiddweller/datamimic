@@ -19,6 +19,7 @@ class Address(BaseEntity):
     state, postal code, country, and more.
     """
     def __init__(self, address_generator: AddressGenerator):
+        super().__init__()
         self._address_generator = address_generator
         
     @property

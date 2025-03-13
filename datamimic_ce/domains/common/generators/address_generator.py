@@ -7,12 +7,12 @@
 
 import random
 
-from datamimic_ce import logger
+from datamimic_ce.logger import logger
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.city_generator import CityGenerator
 from datamimic_ce.domains.common.generators.country_generator import CountryGenerator
-from datamimic_ce.domains.common.generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.common.generators.street_name_generator import StreetNameGenerator
+from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.common.literal_generators.street_name_generator import StreetNameGenerator
 
 
 class AddressGenerator(BaseDomainGenerator):

@@ -7,7 +7,7 @@
 
 import re
 
-from datamimic_ce.generators.data_faker_generator import DataFakerGenerator
+from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 
 
 class TestFakerGenerator:

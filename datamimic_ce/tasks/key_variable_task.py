@@ -17,8 +17,8 @@ from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.weighted_data_source import WeightedDataSource
-from datamimic_ce.generators.generator_util import GeneratorUtil
-from datamimic_ce.generators.sequence_table_generator import SequenceTableGenerator
+from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
+from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
 from datamimic_ce.statements.element_statement import ElementStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.variable_statement import VariableStatement

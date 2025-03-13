@@ -20,6 +20,7 @@ class City(BaseEntity):
     state, language, population, and country information.
     """
     def __init__(self, city_generator: CityGenerator):
+        super().__init__()
         self._city_generator = city_generator
 
     @property

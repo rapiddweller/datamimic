@@ -6,7 +6,6 @@
 
 import csv
 import json
-import random
 import shutil
 from pathlib import Path
 
@@ -194,7 +193,7 @@ class FileUtil:
                     else:
                         raise ValueError(f"Not a valid wgt file {str(file_path)}")
         except Exception as e:
-            raise ValueError("Error loading CSV file:", e) from e
+            raise ValueError(f"Error loading CSV file '{str(file_path)}':", e) from e
 
         weights_sum = sum(weights)
         weights = [weight / weights_sum for weight in weights]
@@ -267,7 +266,7 @@ class FileUtil:
             # Return the tuple of values list and weights list
             return values, weights
         except Exception as e:
-            raise ValueError("Error loading CSV file:" + str(e)) from e
+            raise ValueError(f"Error loading CSV file '{str(file_path)}':", e) from e
 
     @staticmethod
     def copy_file(source: Path, destination: Path) -> None:

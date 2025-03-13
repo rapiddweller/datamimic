@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.generators.domain_generator import DomainGenerator
+from datamimic_ce.domains.common.literal_generators.domain_generator import DomainGenerator
 
 
 def test_domain_generator():
