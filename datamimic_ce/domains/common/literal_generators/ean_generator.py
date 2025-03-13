@@ -6,11 +6,10 @@
 
 from typing import Any
 
-from datamimic_ce.core.interfaces import Generator
-from datamimic_ce.generators.data_faker_generator import DataFakerGenerator
+from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 
-
-class EANGenerator(Generator):
+class EANGenerator(BaseLiteralGenerator):
     def __init__(self, locale: str | None = "en_US") -> None:
         self._gen = DataFakerGenerator(method="ean", locale=locale)
 

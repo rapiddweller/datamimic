@@ -18,6 +18,7 @@ import os
 import random
 import re
 import statistics
+import traceback
 import types
 import uuid
 from abc import ABC
@@ -205,6 +206,7 @@ class Context(ABC):  # noqa: B024
                     "(e.g., 'True' vs 'true') adhere to the required formats."
                 ) from e
         except Exception as e:
+            traceback.print_exc()
             raise ValueError(f"Failed while evaluate '{expr}': {str(e)}") from e
 
     @staticmethod

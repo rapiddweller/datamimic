@@ -7,6 +7,7 @@
 
 import random
 
+from datamimic_ce.domains.common.literal_generators.company_name_generator import CompanyNameGenerator
 from datamimic_ce.logger import logger
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.city_generator import CityGenerator
@@ -36,6 +37,7 @@ class AddressGenerator(BaseDomainGenerator):
         self._country_generator = CountryGenerator()
         self._phone_number_generator = PhoneNumberGenerator()
         self._current_street_name_generator = None
+        self._company_name_generator = CompanyNameGenerator()
 
     @property
     def country_code(self) -> str:
@@ -72,7 +74,16 @@ class AddressGenerator(BaseDomainGenerator):
             The phone number generator.
         """
         return self._phone_number_generator
+    
+    @property
+    def company_name_generator(self) -> CompanyNameGenerator:
+        """Get the company name generator.
 
+        Returns:
+            The company name generator.
+        """
+        return self._company_name_generator
+    
     def generate_street_name(self) -> str:
         """Generate a street name.
 

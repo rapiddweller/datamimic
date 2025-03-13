@@ -9,12 +9,11 @@ import json  # Added for PatientHistoryGenerator
 import random
 from typing import cast
 
-from datamimic_ce.core.interfaces import Generator
-
+from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
 # Healthcare Generators
 
 
-class DiagnosisGenerator(Generator):
+class DiagnosisGenerator(BaseLiteralGenerator):
     """Generate ICD-10 codes and descriptions for medical diagnoses."""
 
     def __init__(self, code_only: bool = False, category: str | None = None):
