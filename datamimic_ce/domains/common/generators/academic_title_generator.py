@@ -56,9 +56,8 @@ class AcademicTitleGenerator(Generator):
 
     @staticmethod
     def _load_academy_csv(file_path: Path):
-        file_content_storage = FileContentStorage()
-        values, weights = file_content_storage.load_file_with_custom_func(
-            file_path_str=str(file_path),
+        values, weights = FileContentStorage.load_file_with_custom_func(
+            cache_key=str(file_path),
             read_func=lambda: FileUtil.read_wgt_file(file_path=file_path),
         )
 

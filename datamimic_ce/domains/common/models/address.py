@@ -6,127 +6,111 @@
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
+from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domain_core.base_entity import BaseEntity
+from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 
-from datamimic_ce.core.property_cache import property_cache
 
-
-class Address(BaseModel):
+class Address(BaseEntity):
     """
     Represents an address with various components.
 
     This class provides access to address data including street, house number, city,
     state, postal code, country, and more.
     """
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    # Basic address components
-    street: str = Field(description="The street name")
-    house_number: str = Field(description="The house or building number")
-    city: str = Field(description="The city name")
-    state: str = Field(description="The state, province, or administrative region")
-    postal_code: str = Field(description="The postal or zip code")
-    country: str = Field(description="The country name")
-    country_code: str = Field(description="The ISO country code")
-
-    # Optional components
-    continent: str | None = Field(None, description="The continent name")
-    latitude: float | None = Field(None, description="The latitude coordinate")
-    longitude: float | None = Field(None, description="The longitude coordinate")
-    organization: str | None = Field(None, description="The organization or company name")
-
-    # Contact information
-    phone: str | None = Field(None, description="A phone number")
-    mobile_phone: str | None = Field(None, description="A mobile phone number")
-    fax: str | None = Field(None, description="A fax number")
-
-    # Private attributes for internal use
-    _property_cache: dict[str, Any] = PrivateAttr(default_factory=dict)
-
-    # Cache attributes for property_cache decorator
-    _formatted_address_cache: str | None = PrivateAttr(default=None)
-    _coordinates_cache: dict[str, float] | None = PrivateAttr(default=None)
-
-    @classmethod
-    def create(cls, data: dict[str, Any]) -> "Address":
-        """
-        Create an Address instance from a dictionary of data.
-
-        Args:
-            data: Dictionary containing address data
-
-        Returns:
-            A new Address instance
-        """
-        return cls(**data)
-
+    def __init__(self, address_generator: AddressGenerator):
+        self._address_generator = address_generator
+        
     @property
     @property_cache
-    def formatted_address(self) -> str:
-        """
-        Get the formatted address according to local conventions.
-
-        Returns:
-            The formatted address as a string
-        """
-        # North American format (US, CA)
-        if self.country_code in ["US", "CA"]:
-            return f"{self.house_number} {self.street}\n{self.city}, {self.state} {self.postal_code}\n{self.country}"
-
-        # UK format
-        elif self.country_code in ["GB", "IE"]:
-            return f"{self.house_number} {self.street}\n{self.city}\n{self.state}\n{self.postal_code}\n{self.country}"
-
-        # German/Central European format
-        elif self.country_code in ["DE", "AT", "CH", "NL", "BE", "LU", "CZ", "SK", "PL", "HU", "SI", "HR"]:
-            return f"{self.street} {self.house_number}\n{self.postal_code} {self.city}\n{self.state}\n{self.country}"
-
-        # French format
-        elif self.country_code in ["FR", "MC"]:
-            return f"{self.house_number} {self.street}\n{self.postal_code} {self.city}\n{self.state}\n{self.country}"
-
-        # Default format
-        else:
-            return f"{self.house_number} {self.street}\n{self.city}, {self.state} {self.postal_code}\n{self.country}"
-
+    def street(self) -> str:
+        return self._address_generator.generate_street_name()
+    
     @property
     @property_cache
-    def coordinates(self) -> dict[str, float]:
-        """
-        Get the coordinates as a dictionary.
-
-        Returns:
-            A dictionary with latitude and longitude
-        """
-        return {
-            "latitude": self.latitude if self.latitude is not None else 0.0,
-            "longitude": self.longitude if self.longitude is not None else 0.0,
-        }
-
+    def house_number(self) -> str:
+        return self._address_generator.generate_house_number()
+    
     @property
+    @property_cache
+    def city_data(self) -> str:
+        return self._address_generator.city_generator.get_random_city()
+    
+    @property
+    @property_cache
+    def city(self) -> str:
+        return self.city_data["name"]
+    
+    @property
+    @property_cache
+    def area(self) -> str:
+        return self.city_data["area_code"]
+    
+    @property
+    @property_cache
+    def state(self) -> str:
+        return self.city_data["state"]
+    
+    @property
+    @property_cache
+    def postal_code(self) -> str:
+        return self.city_data["postal_code"]
+    
+    @property
+    @property_cache
     def zip_code(self) -> str:
-        """
-        Alias for postal_code.
-
-        Returns:
-            The postal code
-        """
         return self.postal_code
+    
+    @property
+    @property_cache
+    def country_data(self) -> str:
+        return self._address_generator.country_generator.get_country_by_iso_code(self.country_code)
+    
+    @property
+    @property_cache
+    def country(self) -> str:
+        return self.country_data[4]
+    
+    @property
+    @property_cache
+    def country_code(self) -> str:
+        return self._address_generator.country_code
+    
+    @property
+    @property_cache
+    def phone(self) -> str:
+        return self._address_generator.phone_number_generator.generate()
+    
+    @property
+    @property_cache
+    def mobile_phone(self) -> str:
+        return self._address_generator.phone_number_generator.generate()
+    
+    @property
+    @property_cache
+    def office_phone(self) -> str:
+        return self._address_generator.phone_number_generator.generate()
+    
+    @property
+    @property_cache
+    def private_phone(self) -> str:
+        return self._address_generator.phone_number_generator.generate()
+    
+    @property
+    @property_cache
+    def fax(self) -> str:
+        return self._address_generator.phone_number_generator.generate()
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Convert the address to a dictionary.
-
-        Returns:
-            A dictionary representation of the address
-        """
-        return self.model_dump(exclude={"_property_cache"})
-
-    def reset(self) -> None:
-        """
-        Reset all cached properties.
-        """
-        self._property_cache = {}
-        self._formatted_address_cache = None
-        self._coordinates_cache = None
+        return {
+            "street": self.street,
+            "house_number": self.house_number,
+            "city": self.city,
+            "state": self.state,
+            "postal_code": self.postal_code,
+            "country": self.country,
+            "country_code": self.country_code,
+            "phone": self.phone,
+            "mobile_phone": self.mobile_phone,
+            "fax": self.fax,
+        }

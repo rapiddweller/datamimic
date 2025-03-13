@@ -4,115 +4,105 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+
+
+from pathlib import Path
 import random
-
-import numpy as np
-
+from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
+from datamimic_ce.logger import logger
+from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.common.generators.company_name_generator import CompanyNameGenerator
+from datamimic_ce.domains.common.generators.email_address_generator import EmailAddressGenerator
 from datamimic_ce.domains.common.generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.generators.company_name_generator import CompanyNameGenerator
-from datamimic_ce.generators.email_address_generator import EmailAddressGenerator
+from datamimic_ce.utils.file_content_storage import FileContentStorage
+from datamimic_ce.utils.file_util import FileUtil
 
 
-class CompanyGenerator:
+class CompanyGenerator(BaseDomainGenerator):
     """Generator for company-related attributes.
 
     Provides methods to generate company-related attributes such as
     company names, emails, URLs, and other information.
     """
-
-    def __init__(self, dataset: str, count: int = 1):
-        """Initialize the company generator.
-
-        Args:
-            dataset: Country code for country-specific generation
-            count: Number of companies to generate
-        """
-        self.dataset = dataset
-        self.count = count
-        self.company_name_generator = CompanyNameGenerator()
-        self.email_generator = EmailAddressGenerator(dataset=dataset, generated_count=count)
-        self.phone_generator = PhoneNumberGenerator(dataset=dataset)
-
-    def generate_company_name(self) -> str:
-        """Generate a company name.
+    
+    def __init__(self, country_code: str = "US"):
+        self._country_code = country_code
+        self._company_name_generator = CompanyNameGenerator()
+        self._email_address_generator = EmailAddressGenerator(dataset=country_code)
+        self._phone_number_generator = PhoneNumberGenerator(dataset=country_code)
+        self._address_generator = AddressGenerator(country_code=country_code)
+        
+    @property
+    def country_code(self) -> str:
+        """Get the country code.
 
         Returns:
-            A generated company name
+            The country code.
         """
-        return self.company_name_generator.generate()
-
-    def generate_full_name(
-        self,
-        short_name: str | None,
-        sector: str | None,
-        legal_forms: list[str] | None,
-        legal_weights: list[float] | None,
-    ) -> str:
-        """Generate the full name of the company.
-
-        Args:
-            short_name: The short name of the company
-            sector: The sector in which the company operates
-            legal_forms: List of legal forms
-            legal_weights: Weights for the legal forms
+        return self._country_code
+    
+    @property
+    def company_name_generator(self) -> CompanyNameGenerator:
+        """Get the company name generator.
 
         Returns:
-            The full company name including sector and legal form
+            The company generator.
         """
-        legal_form = None
-        if legal_forms and legal_weights and len(legal_forms) > 0:
-            legal_form = random.choices(legal_forms, legal_weights, k=1)[0]
-
-        builder = [""] if short_name is None else [short_name]
-        if sector is not None:
-            builder.append(" " + sector)
-        if legal_form is not None:
-            builder.append(" " + legal_form)
-        return "".join(builder)
-
-    def generate_company_email(self, company_name: str) -> str:
-        """Generate a company email address based on company name.
-
-        Args:
-            company_name: The name of the company
+        return self._company_name_generator
+    
+    @property
+    def email_address_generator(self) -> EmailAddressGenerator:
+        """Get the email address generator.
 
         Returns:
-            A generated email address for the company
+            The email address generator.
         """
-        return self.email_generator.generate_with_company_name(company_name)
-
-    def generate_company_url(self, email: str) -> str | None:
-        """Generate a company URL from the email domain.
-
-        Args:
-            email: The company email address
+        return self._email_address_generator
+    
+    @property
+    def phone_number_generator(self) -> PhoneNumberGenerator:
+        """Get the phone number generator.
 
         Returns:
-            A generated URL or None if email is None
+            The phone number generator.
         """
-        if email is None:
-            return None
+        return self._phone_number_generator
+    
+    @property
+    def address_generator(self) -> AddressGenerator:
+        """Get the address generator.
 
-        list_of_schemes = ["http", "https"]
-        scheme = np.random.choice(list_of_schemes)
-        company_domain = email.split("@")[1]
-        return f"{scheme}://{company_domain}"
-
-    def generate_phone_number(self) -> str | None:
-        """Generate a phone number.
+        Returns:    
+            The address generator.
+        """
+        return self._address_generator
+    
+    def generate_sector(self) -> str:
+        """Generate a sector.
 
         Returns:
-            A generated phone number
+            The sector.
         """
-        return self.phone_generator.generate()
-
-    def generate_company_id(self, company_name: str) -> str:
-        """Generate a company ID based on the company name.
-
-        Args:
-            company_name: The name of the company
+        cache_key = f"sector_{self._country_code}"
+        if cache_key not in self._LOADED_DATA_CACHE:
+            logger.debug("CACHE MISS: Loading sector data from file")
+            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "organization" / f"sector_{self._country_code}.csv"
+            sector_df = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=";"))
+            sector_list = [row[0] for row in sector_df]
+            self._LOADED_DATA_CACHE[cache_key] = sector_list
+        return random.choice(self._LOADED_DATA_CACHE[cache_key])
+    
+    def get_legal_form(self) -> str:
+        """Get a legal form.
 
         Returns:
-            A generated company ID
+            The legal form.
         """
-        return company_name.lower().replace(" ", "_") if company_name is not None else None
+        cache_key = f"legal_form_{self._country_code}"
+        if cache_key not in self._LOADED_DATA_CACHE:
+            logger.debug("CACHE MISS: Loading legal form data from file")
+            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "organization" / f"legalForm_{self._country_code}.csv"
+            legal_form_df = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_wgt_file(file_path))
+            self._LOADED_DATA_CACHE[cache_key] = legal_form_df
+        legal_values, legal_wgt = self._LOADED_DATA_CACHE[cache_key]
+        return random.choices(legal_values, weights=legal_wgt, k=1)[0]

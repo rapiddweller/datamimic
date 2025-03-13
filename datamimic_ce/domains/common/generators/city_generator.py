@@ -5,74 +5,125 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.core.interfaces import Generator
-from datamimic_ce.domains.common.data_loaders.city_loader import CityDataLoader
-from datamimic_ce.domains.common.models.city import City
+from pathlib import Path
+from typing import Any, ClassVar
+from datamimic_ce.logger import logger
+from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.utils.file_content_storage import FileContentStorage
+from datamimic_ce.utils.file_util import FileUtil
 
 
-class CityGenerator(Generator):
+class CityGenerator(BaseDomainGenerator):
     """Generator for city data.
 
     This class generates random city data using the CityDataLoader.
     """
+    _DEFAULT_DATASET = "US"
+    _city_data_dataset_not_found_set: ClassVar[set[str]] = set()
+    _state_data_dataset_not_found_set: ClassVar[set[str]] = set()
 
-    def __init__(self, country_code: str = "US", data_loader: CityDataLoader = None):
+    def __init__(self, country_code: str = "US"):
         """Initialize the CityGenerator.
 
         Args:
             country_code: The country code to use for generating cities.
-            data_loader: Optional data loader to use. If not provided, a new one will be created.
         """
+        super().__init__()
         self._country_code = country_code.upper()
-        self._data_loader = data_loader if data_loader is not None else CityDataLoader(country_code=self._country_code)
-
-    @property
-    def country_code(self) -> str:
-        """Get the country code.
-
-        Returns:
-            The country code.
-        """
-        return self._country_code
-
-    def generate(self) -> City:
-        """Generate a random city.
-
-        Returns:
-            A City object.
-        """
-        city_data = self._data_loader.get_random_city()
-        return City.create(city_data)
-
-    def generate_batch(self, count: int = 10) -> list[City]:
-        """Generate a batch of cities.
+        self._processed_city_data_dataset = None
+        self._processed_state_data_dataset = None
+    
+    def _get_processed_dataset_list(self, dataset_not_found_list: set[str]) -> list[str]:
+        """Get the processed dataset list.
 
         Args:
-            count: The number of cities to generate.
+            dataset_not_found_list: The list of dataset not found.
+        """
+        processed_dataset_list = []
+        if self._country_code not in dataset_not_found_list:
+            processed_dataset_list.append(self._country_code)
+        for fallback_country_code in self._REGIONAL_FALLBACKS.get(self._country_code, ()):
+            if fallback_country_code not in processed_dataset_list and fallback_country_code not in dataset_not_found_list:
+                processed_dataset_list.append(fallback_country_code)
+        if self._DEFAULT_DATASET not in processed_dataset_list and self._DEFAULT_DATASET not in dataset_not_found_list:
+            processed_dataset_list.append(self._DEFAULT_DATASET)
+        return processed_dataset_list
+
+    def _load_city_data(self) -> tuple[dict[str, int], list[tuple]]:
+        """Load city data from CSV file.
 
         Returns:
-            A list of City objects.
+            A tuple containing the header dictionary and city data.
         """
-        cities_data = self._data_loader.get_cities_batch(count)
-        return [City.create(city_data) for city_data in cities_data]
-
-    def get_by_index(self, index: int) -> City:
-        """Get a city by index.
-
-        Args:
-            index: The index of the city to get.
+        if self._processed_city_data_dataset is None:
+            processed_dataset_list = self._get_processed_dataset_list(self._city_data_dataset_not_found_set)
+            
+            for dataset in processed_dataset_list:
+                try:
+                    file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "city" / f"city_{dataset}.csv"
+                    return_value = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=";"))
+                    self._processed_city_data_dataset = dataset
+                    return return_value
+                except FileNotFoundError as e:
+                    self._city_data_dataset_not_found_set.add(dataset)  
+                    logger.warning(f"Error loading dataset '{dataset}': {e}")
+            
+            raise ValueError(f"No city data found for '{self._country_code}'")
+                    
+        else:
+            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "city" / f"city_{self._processed_city_data_dataset}.csv"
+            return FileContentStorage.load_file_with_cache(str(file_path))
+        
+    def _load_country_name(self) -> str:
+        """Load country name from CSV file.
 
         Returns:
-            A City object.
+            The name of the country.
         """
-        city_data = self._data_loader.get_city_by_index(index)
-        return City.create(city_data)
+        cache_key = "country_name_dict"
+        if cache_key in self._LOADED_DATA_CACHE:
+            country_name_dict = self._LOADED_DATA_CACHE[cache_key]
+        else:
+            logger.debug("CACHE MISS: Loading country name data from file")
+            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "country.csv"
+            country_df = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=","))
+            country_name_dict = {row[0]: row[3] for row in country_df}
+            self._LOADED_DATA_CACHE[cache_key] = country_name_dict
+        return country_name_dict[self._country_code]
 
-    def set_country_code(self, country_code: str) -> None:
-        """Set the country code for generating cities.
+    def get_random_city(self) -> dict[str, Any]:
+        """Get a random city.
 
-        Args:
-            country_code: The country code to use.
+        Returns:
+            A dictionary containing the city data.
         """
-        self._country_code = country_code.upper()
-        self._data_loader.country_code = self._country_code
+        import random
+
+        # Load city data
+        city_header_dict, city_data = self._load_city_data()
+
+        # Get random index
+        random_index = random.randint(0, len(city_data) - 1)
+
+        # Get city row
+        city_row = city_data[random_index]
+
+        # Load state data
+        # state_dict = self._load_state_data()
+
+        # Load country name
+        country_name = self._load_country_name()
+
+        # Build city dictionary
+        return {
+            "name": city_row[city_header_dict.get("name")],
+            "postal_code": city_row[city_header_dict.get("postalCode")],
+            "area_code": city_row[city_header_dict.get("areaCode")],
+            "state_id": city_row[city_header_dict.get("state.id")],
+            "state": city_row[city_header_dict.get("state")] if "state" in city_header_dict else None,
+            "language": city_row[city_header_dict.get("language")] if "language" in city_header_dict else None,
+            "population": city_row[city_header_dict.get("population")] if "population" in city_header_dict else None,
+            "name_extension": city_row[city_header_dict.get("nameExtension")] if "nameExtension" in city_header_dict else "",
+            "country": country_name,
+            "country_code": self._country_code,
+        }

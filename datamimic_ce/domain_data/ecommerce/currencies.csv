@@ -1,0 +1,16 @@
+code,name,weight,symbol
+USD,US Dollar,1.0,$
+EUR,Euro,0.8,€
+GBP,British Pound,0.7,£
+JPY,Japanese Yen,0.6,¥
+CAD,Canadian Dollar,0.5,C$
+AUD,Australian Dollar,0.5,A$
+CHF,Swiss Franc,0.4,CHF
+CNY,Chinese Yuan,0.5,¥
+INR,Indian Rupee,0.4,₹
+BRL,Brazilian Real,0.4,R$
+MXN,Mexican Peso,0.3,Mex$
+SGD,Singapore Dollar,0.3,S$
+HKD,Hong Kong Dollar,0.3,HK$
+SEK,Swedish Krona,0.2,kr
+NOK,Norwegian Krone,0.2,kr

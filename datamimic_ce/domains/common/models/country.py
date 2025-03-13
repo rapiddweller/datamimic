@@ -6,72 +6,93 @@
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
-from datamimic_ce.core.property_cache import property_cache
+from datamimic_ce.domain_core.base_entity import BaseEntity
+from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.common.generators.country_generator import CountryGenerator
 
-
-class Country(BaseModel):
+class Country(BaseEntity):
     """
     Represents a country with various attributes.
 
     This class provides access to country data including ISO code, name, language,
     phone code, and population.
     """
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    iso_code: str = Field(description="The ISO code of the country")
-    name: str = Field(description="The name of the country")
-    default_language_locale: str = Field(description="The default language locale of the country")
-    phone_code: str = Field(description="The phone code of the country")
-    population: str = Field(description="The population of the country")
-
-    # Private attributes for internal use
-    _property_cache: dict[str, Any] = PrivateAttr(default_factory=dict)
-
-    # Cache attributes for property_cache decorator
-    _population_int_cache: int | None = PrivateAttr(default=None)
-
-    @classmethod
-    def create(cls, data: dict[str, Any]) -> "Country":
-        """
-        Create a Country instance from a dictionary of data.
-
-        Args:
-            data: Dictionary containing country data
-
-        Returns:
-            A new Country instance
-        """
-        return cls(**data)
+    def __init__(self, country_generator: CountryGenerator):
+        self._country_generator = country_generator
 
     @property
     @property_cache
-    def population_int(self) -> int:
-        """
-        Get the population as an integer.
+    def iso_code(self) -> str:
+        """Get the ISO code of the country.
 
         Returns:
-            The population as an integer
+            The ISO code of the country
         """
-        try:
-            return int(self.population)
-        except (ValueError, TypeError):
-            return 0
+        return self._country_generator.get_random_country()["iso_code"]
+    
+    @property
+    @property_cache
+    def country_data(self) -> dict[str, Any]:
+        """Get the country data.
 
-    def to_dict(self) -> dict[str, Any]:
+        Returns:
+            The country data
         """
-        Convert the country to a dictionary.
+        return self._country_generator.get_random_country()
+    
+    @property
+    @property_cache
+    def name(self) -> str:
+        """Get the name of the country.
+
+        Returns:
+            The name of the country
+        """
+        return self._country_generator.get_random_country()["name"]
+    
+    @property
+    @property_cache
+    def default_language_locale(self) -> str:
+        """Get the default language locale of the country.
+
+        Returns:
+            The default language locale of the country
+        """
+        return self._country_generator.get_random_country()["default_language_locale"]    
+    
+    @property
+    @property_cache
+    def phone_code(self) -> str:
+        """Get the phone code of the country.
+
+        Returns:
+            The phone code of the country
+        """
+        return self._country_generator.get_random_country()["phone_code"]
+    
+    @property
+    @property_cache
+    def population(self) -> str:
+        """Get the population of the country.
+
+        Returns:
+            The population of the country       
+        """
+        return self._country_generator.get_random_country()["population"]
+    
+    def to_dict(self) -> dict[str, Any]:
+        """Convert the country to a dictionary.
 
         Returns:
             A dictionary representation of the country
         """
-        return self.model_dump(exclude={"_property_cache"})
-
-    def reset(self) -> None:
-        """
-        Reset all cached properties.
-        """
-        self._property_cache = {}
-        self._population_int_cache = None
+        return {
+            "iso_code": self.iso_code,
+            "name": self.name,
+            "default_language_locale": self.default_language_locale,
+            "phone_code": self.phone_code,
+            "population": self.population,
+        }
+    
+    

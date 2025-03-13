@@ -16,7 +16,7 @@ import os
 from typing import Any
 
 from datamimic_ce.domains.healthcare.models.hospital import Hospital
-from datamimic_ce.utils.class_factory_util import ClassFactoryUtil
+from datamimic_ce.utils.domain_class_util import DomainClassUtil
 
 
 class HospitalService:
@@ -35,7 +35,7 @@ class HospitalService:
         """
         self._locale = locale
         self._dataset = dataset
-        self._class_factory_util = ClassFactoryUtil()
+        self._class_factory_util = DomainClassUtil()
         self._hospital = Hospital(
             class_factory_util=self._class_factory_util,
             locale=locale,

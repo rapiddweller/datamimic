@@ -14,7 +14,7 @@ hospitals, medical schools, certifications, and languages.
 from typing import ClassVar
 
 from datamimic_ce.core.base_data_loader import BaseDataLoader
-from datamimic_ce.core.interfaces import DataLoader
+from datamimic_ce.domain_core.interfaces import DataLoader
 
 
 class DoctorDataLoader(BaseDataLoader, DataLoader):

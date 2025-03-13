@@ -254,7 +254,6 @@ class Product(BaseEntity):
 
     def __init__(
         self,
-        class_factory_util=None,
         locale: str = "en",
         min_price: float = 0.99,
         max_price: float = 9999.99,
@@ -263,13 +262,12 @@ class Product(BaseEntity):
         """Initialize the Product model.
 
         Args:
-            class_factory_util: A utility for creating class instances
             locale: Locale code for localization
             min_price: Minimum product price
             max_price: Maximum product price
             dataset: Optional dataset code (country code)
         """
-        super().__init__(class_factory_util, locale, dataset)
+        super().__init__(locale, dataset)
         self._min_price = min_price
         self._max_price = max_price
         self._dataset = dataset

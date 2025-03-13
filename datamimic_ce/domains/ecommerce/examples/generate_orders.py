@@ -18,17 +18,17 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parents[3]))
 
 from datamimic_ce.domains.ecommerce.models.order import Order
-from datamimic_ce.utils.class_factory_util import ClassFactoryUtil
+from datamimic_ce.utils.domain_class_util import DomainClassUtil
 
 
 def main():
     """Generate sample order data and print it to the console."""
-    class_factory_util = ClassFactoryUtil()
-
+    domain_class_util = DomainClassUtil()
+    
     # Create an order for the US dataset
     print("Generating an order for the US dataset:")
     order_us = Order(
-        class_factory_util=class_factory_util,
+        domain_class_util=domain_class_util,
         dataset="US",
         min_products=2,
         max_products=5,
@@ -69,7 +69,7 @@ def main():
     end_date = datetime.datetime(2022, 12, 31)
 
     order_dated = Order(
-        class_factory_util=class_factory_util,
+        domain_class_util=domain_class_util,
         dataset="US",
         min_products=1,
         max_products=3,
@@ -87,7 +87,7 @@ def main():
     orders = []
 
     for _ in range(num_orders):
-        order = Order(class_factory_util=class_factory_util, dataset="US")
+        order = Order(domain_class_util=domain_class_util, dataset="US")
         orders.append(order.to_dict())
         order.reset()
 

@@ -6,111 +6,149 @@
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
-from datamimic_ce.core.property_cache import property_cache
+from datamimic_ce.domain_core.base_entity import BaseEntity
+from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.common.generators.city_generator import CityGenerator
 
 
-class City(BaseModel):
+class City(BaseEntity):
     """
     Represents a city with various attributes.
 
     This class provides access to city data including name, postal code, area code,
     state, language, population, and country information.
     """
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    name: str = Field(description="The name of the city")
-    postal_code: str = Field(description="The postal code of the city")
-    area_code: str = Field(description="The area code of the city")
-    state_id: str = Field(description="The ID of the state where the city is located")
-    state: str = Field(description="The name of the state where the city is located")
-    language: str | None = Field(None, description="The language spoken in the city")
-    population: str = Field(description="The population of the city")
-    name_extension: str = Field("", description="The name extension of the city")
-    country: str = Field(description="The country where the city is located")
-    country_code: str = Field(description="The country code of the city")
-
-    # Private attributes for internal use
-    _dataset: str = PrivateAttr(default="US")
-    _property_cache: dict[str, Any] = PrivateAttr(default_factory=dict)
-
-    # Cache attributes for property_cache decorator
-    _full_name_cache: str | None = PrivateAttr(default=None)
-    _location_string_cache: str | None = PrivateAttr(default=None)
-    _population_int_cache: int | None = PrivateAttr(default=None)
-
-    @classmethod
-    def create(cls, data: dict[str, Any]) -> "City":
-        """
-        Create a City instance from a dictionary of data.
-
-        Args:
-            data: Dictionary containing city data
-
-        Returns:
-            A new City instance
-        """
-        return cls(**data)
+    def __init__(self, city_generator: CityGenerator):
+        self._city_generator = city_generator
 
     @property
     @property_cache
-    def full_name(self) -> str:
-        """
-        Get the full name of the city including any extension.
+    def city_data(self) -> dict[str, Any]:
+        """Get the city data.
 
         Returns:
-            The full name of the city
+            The city data.
+        """ 
+        return self._city_generator.get_random_city()
+    
+    @property
+    @property_cache
+    def name(self) -> str:
+        """Get the name of the city.
+
+        Returns:
+            The name of the city.
         """
-        if self.name_extension:
-            return f"{self.name} {self.name_extension}"
-        return self.name
+        return self.city_data["name"]
+    
+    @property
+    @property_cache
+    def postal_code(self) -> str:
+        """Get the postal code of the city.
+
+        Returns:
+            The postal code of the city.
+        """
+        return self.city_data["postal_code"]
 
     @property
     @property_cache
-    def location_string(self) -> str:
-        """
-        Get a formatted location string for the city.
+    def area_code(self) -> str:
+        """Get the area code of the city.
 
         Returns:
-            A string in the format "City, State, Country"
+            The area code of the city.
         """
-        components = [self.name]
-        if self.state:
-            components.append(self.state)
-        if self.country:
-            components.append(self.country)
-        return ", ".join(components)
+        return self.city_data["area_code"]
 
     @property
     @property_cache
-    def population_int(self) -> int:
-        """
-        Get the population as an integer.
+    def state_id(self) -> str:
+        """Get the state ID of the city.
 
         Returns:
-            The population as an integer
+            The state ID of the city.
         """
-        try:
-            return int(self.population)
-        except (ValueError, TypeError):
-            return 0
+        return self.city_data["state_id"]
 
+    @property
+    @property_cache
+    def state(self) -> str:
+        """Get the state of the city.
+
+        Returns:
+            The state of the city.
+        """
+        return self.city_data["state"]
+
+    @property
+    @property_cache
+    def language(self) -> str | None:
+        """Get the language of the city.
+
+        Returns:
+            The language of the city.
+        """
+        return self.city_data["language"]
+    
+    @property
+    @property_cache
+    def population(self) -> str:
+        """Get the population of the city.
+
+        Returns:
+            The population of the city.
+        """
+        return self.city_data["population"]
+    
+    @property
+    @property_cache
+    def name_extension(self) -> str:
+        """Get the name extension of the city.
+
+        Returns:
+            The name extension of the city.
+        """
+        return self.city_data["name_extension"]
+
+    @property
+    @property_cache
+    def country(self) -> str:
+        """Get the country of the city.
+
+        Returns:
+            The country of the city.
+        """
+        return self.city_data["country"]
+    
+    @property
+    @property_cache
+    def country_code(self) -> str:
+        """Get the country code of the city.
+
+        Returns:
+            The country code of the city.   
+
+        """
+        return self.city_data["country_code"]
+    
     def to_dict(self) -> dict[str, Any]:
-        """
-        Convert the city to a dictionary.
+        """Convert the city to a dictionary.
 
-        Returns:
-            A dictionary representation of the city
+        Returns:    
+            A dictionary representation of the city.
         """
-        return self.model_dump(exclude={"_property_cache", "_dataset"})
-
-    def reset(self) -> None:
-        """
-        Reset all cached properties.
-        """
-        self._property_cache = {}
-        self._full_name_cache = None
-        self._location_string_cache = None
-        self._population_int_cache = None
+        return {
+            "name": self.name,
+            "postal_code": self.postal_code,
+            "area_code": self.area_code,
+            "state_id": self.state_id,
+            "state": self.state,
+            "language": self.language,
+            "population": self.population,
+            "name_extension": self.name_extension,
+            "country": self.country,
+            "country_code": self.country_code
+        }
+    

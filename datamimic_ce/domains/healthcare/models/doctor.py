@@ -12,8 +12,8 @@ This module provides the Doctor entity model for generating realistic doctor dat
 
 from typing import Any, ClassVar
 
-from datamimic_ce.core.base_entity import BaseEntity
-from datamimic_ce.core.property_cache import PropertyCache
+from datamimic_ce.domain_core.base_entity import BaseEntity
+from datamimic_ce.domain_core.property_cache import PropertyCache
 from datamimic_ce.domains.healthcare.data_loaders.doctor_loader import DoctorDataLoader
 
 

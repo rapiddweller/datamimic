@@ -17,7 +17,7 @@ class GivenNameGenerator(Generator):
     Generate random given name
     """
 
-    def __init__(self, dataset: str, generated_count: int, gender: str | None = None):
+    def __init__(self, dataset: str, gender: str | None = None):
         # check valid input dataset
         if len(dataset) != 2:
             raise ValueError(f"Invalid dataset: {dataset}")
@@ -32,30 +32,26 @@ class GivenNameGenerator(Generator):
         # Read file data
         if self._gender == "male":
             file_path = prefix_path.joinpath(file_name_male)
-            data = self._select_records(file_path, generated_count)
-            self._iter = iter(data)
+            self._dataset = self._select_records(file_path)
         elif self._gender == "female":
             file_path = prefix_path.joinpath(file_name_female)
-            data = self._select_records(file_path, generated_count)
-            self._iter = iter(data)
+            self._dataset = self._select_records(file_path)
         else:
             file_path_male = prefix_path.joinpath(file_name_male)
-            data_male = self._select_records(file_path_male, generated_count)
-            self._iter_male = iter(data_male)
+            self._dataset_male = self._select_records(file_path_male)
 
             file_path_female = prefix_path.joinpath(file_name_female)
-            data_female = self._select_records(file_path_female, generated_count)
-            self._iter_female = iter(data_female)
+            self._dataset_female = self._select_records(file_path_female)
 
-    def _select_records(self, file_path, generated_count):
+    def _select_records(self, file_path):
         try:
             values, wgt = FileUtil.read_mutil_column_wgt_file(file_path)
+
+            first_column = [row[0] for row in values]
+            return first_column, wgt
+        
         except Exception as err:
             raise ValueError(f"Not support dataset: {self._dataset}") from err
-
-        first_column = [row[0] for row in values]
-        data = random.choices(first_column, wgt, k=generated_count)
-        return iter(data)
 
     def generate(self) -> str:
         """
@@ -63,14 +59,18 @@ class GivenNameGenerator(Generator):
         Returns:
             Optional[str]: Returns a string if successful, otherwise returns None.
         """
-        if self._gender is None or self._gender == "other":
-            return next(self._iter_male) if random.choice([True, False]) else next(self._iter_female)
-        return next(self._iter)
+        return self.generate_with_gender(self._gender)
 
     def generate_with_gender(self, gender: Literal["male", "female", "other"]):
+        """
+        Generate random given name with gender
+        Returns:
+            Optional[str]: Returns a string if successful, otherwise returns None.
+        """
         if gender == "male":
-            return next(self._iter_male)
+            selected_dataset = self._dataset_male
         elif gender == "female":
-            return next(self._iter_female)
+            selected_dataset = self._dataset_female
         else:
-            return next(self._iter_male) if random.choice([True, False]) else next(self._iter_female)
+            selected_dataset = self._dataset_male if random.choice([True, False]) else self._dataset_female
+        return random.choices(selected_dataset[0], selected_dataset[1], k=1)[0]

@@ -17,7 +17,7 @@ class TestAddressDataLoader:
         """Test initialization of the AddressDataLoader."""
         # Default initialization
         loader = AddressDataLoader()
-        assert loader.country_code == "US"
+        assert loader._country_code == "US"
         assert loader._data_cache == {}
         assert loader._current_dataset == "US"
         assert loader._city_loader is not None
@@ -25,7 +25,7 @@ class TestAddressDataLoader:
 
         # Custom country code
         loader = AddressDataLoader(country_code="fr")
-        assert loader.country_code == "FR"
+        assert loader._country_code == "FR"
         assert loader._current_dataset == "FR"
 
     @mock.patch("datamimic_ce.utils.file_util.FileUtil.read_csv_to_list_of_tuples_without_header")
