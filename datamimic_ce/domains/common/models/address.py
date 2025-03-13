@@ -101,6 +101,11 @@ class Address(BaseEntity):
     @property_cache
     def fax(self) -> str:
         return self._address_generator.phone_number_generator.generate()
+    
+    @property
+    @property_cache
+    def organization(self) -> str:
+        return self._address_generator.company_name_generator.generate()
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -114,4 +119,5 @@ class Address(BaseEntity):
             "phone": self.phone,
             "mobile_phone": self.mobile_phone,
             "fax": self.fax,
+            "organization": self.organization,
         }

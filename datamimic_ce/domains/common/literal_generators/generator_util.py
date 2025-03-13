@@ -21,9 +21,11 @@ from datamimic_ce.domains.common.literal_generators.boolean_generator import Boo
 #     JobTitleGenerator,
 # )
 # from datamimic_ce.domains.common.literal_generators.cnpj_generator import CNPJGenerator
+from datamimic_ce.domains.common.literal_generators.cnpj_generator import CNPJGenerator
 from datamimic_ce.domains.common.literal_generators.color_generators import ColorGenerator
 from datamimic_ce.domains.common.literal_generators.company_name_generator import CompanyNameGenerator
 # from datamimic_ce.domains.common.literal_generators.cpf_generator import CPFGenerator
+from datamimic_ce.domains.common.literal_generators.cpf_generator import CPFGenerator
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 from datamimic_ce.domains.common.literal_generators.department_name_generator import DepartmentNameGenerator
 # from datamimic_ce.domains.common.literal_generators.document_generators import (
@@ -33,6 +35,7 @@ from datamimic_ce.domains.common.literal_generators.department_name_generator im
 # )
 from datamimic_ce.domains.common.literal_generators.domain_generator import DomainGenerator
 # from datamimic_ce.domains.common.literal_generators.ean_generator import EANGenerator
+from datamimic_ce.domains.common.literal_generators.ean_generator import EANGenerator
 from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
 from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
 from datamimic_ce.domains.common.literal_generators.float_generator import FloatGenerator
@@ -66,6 +69,9 @@ from datamimic_ce.domains.common.literal_generators.sequence_table_generator imp
 from datamimic_ce.domains.common.literal_generators.street_name_generator import StreetNameGenerator
 # from datamimic_ce.domains.common.literal_generators.text_generators import ParagraphGenerator
 # from datamimic_ce.domains.common.literal_generators.url_generator import UrlGenerator
+from datamimic_ce.domains.common.literal_generators.uuid_generator import UUIDGenerator
+from datamimic_ce.domains.common.literal_generators.ssn_generator import SSNGenerator
+from datamimic_ce.domains.healthcare.generators.healthcare_generators import DiagnosisGenerator
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.statement import Statement
 
@@ -94,10 +100,10 @@ class GeneratorUtil:
             "BooleanGenerator": BooleanGenerator,
             "DataFakerGenerator": DataFakerGenerator,
             # Identity and Personal Information
-            # "SSNGenerator": SSNGenerator,
-            # "CNPJGenerator": CNPJGenerator,
-            # "CPFGenerator": CPFGenerator,
-            # "EANGenerator": EANGenerator,
+            "SSNGenerator": SSNGenerator,
+            "CNPJGenerator": CNPJGenerator,
+            "CPFGenerator": CPFGenerator,
+            "EANGenerator": EANGenerator,
             "GenderGenerator": GenderGenerator,
             "BirthdateGenerator": BirthdateGenerator,
             "PhoneNumberGenerator": PhoneNumberGenerator,
@@ -124,7 +130,7 @@ class GeneratorUtil:
             # "FilePathGenerator": FilePathGenerator,
             # "MIMETypeGenerator": MIMETypeGenerator,
             # Security
-            # "UUIDGenerator": UUIDGenerator,
+            "UUIDGenerator": UUIDGenerator,
             # "HashGenerator": HashGenerator,
             # "TokenGenerator": TokenGenerator,
             # "MnemonicPhraseGenerator": MnemonicPhraseGenerator,
@@ -140,7 +146,7 @@ class GeneratorUtil:
             # "ScientificUnitGenerator": ScientificUnitGenerator,
             # Healthcare
             # "AllergyGenerator": AllergyGenerator,
-            # "DiagnosisGenerator": DiagnosisGenerator,
+            "DiagnosisGenerator": DiagnosisGenerator,
             # "ImmunizationGenerator": ImmunizationGenerator,
             # "LabResultGenerator": LabResultGenerator,
             # "MedicalAppointmentGenerator": MedicalAppointmentGenerator,
@@ -153,12 +159,6 @@ class GeneratorUtil:
             "SequenceTableGenerator": SequenceTableGenerator,
         }
 
-        self._generator_with_count = (
-            "DomainGenerator",
-            "EmailAddressGenerator",
-            "FamilyNameGenerator",
-            "GivenNameGenerator",
-        )
         self._generator_with_class_factory_util = (
             "IntegerGenerator",
             "StringGenerator",
@@ -382,31 +382,23 @@ class GeneratorUtil:
             # Handle other generators with constructor parameters
             if class_name != generator_str:
                 local_ns = copy.deepcopy(self._class_dict)
-                if class_name in self._generator_with_count or class_name in self._generator_with_class_factory_util:
+                if class_name in self._generator_with_class_factory_util:
                     class_name, args_str = generator_str[:-1].split("(")
                     # Filtering out empty arguments to avoid extra commas
                     args = [arg.strip() for arg in args_str.split(",") if arg.strip()]
 
-                    if class_name in self._generator_with_count:
-                        args.append(f"generated_count={generated_count}")
-                    else:
-                        args.append("class_factory_util=class_factory_util")
-                        local_ns.update({"class_factory_util": self._context.root.class_factory_util})
+                    args.append("class_factory_util=class_factory_util")
+                    local_ns.update({"class_factory_util": self._context.root.class_factory_util})
 
                     new_args_str = ", ".join(args)
                     generator_str = f"{class_name}({new_args_str})"
 
                 result = self._context.evaluate_python_expression(generator_str, local_ns)
             else:
-                # Handle simple instance initialization
-                if class_name in self._generator_with_count:
-                    if class_name == "DomainGenerator":
-                        result = cls(generated_count=generated_count)
-                    else:
-                        result = cls(
-                            dataset=self._context.root.default_dataset,
-                            generated_count=generated_count,
-                        )
+                if class_name in ["EmailAddressGenerator"]:
+                    result = cls(
+                        dataset=self._context.root.default_dataset,
+                    )
                 elif class_name in self._generator_with_class_factory_util:
                     result = cls(class_factory_util=self._context.root.class_factory_util)
                 else:

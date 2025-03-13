@@ -25,13 +25,17 @@ class SectorGenerator(BaseLiteralGenerator):
         # Ensure country_code is never None by defaulting to "US"
         country_code = locale if locale is not None else (dataset if dataset is not None else "US")
 
-        file_path = Path(__file__).parent.joinpath(f"data/organization/sector_{country_code}.csv")
+        file_path = Path(__file__).parent.parent.parent.parent.joinpath(f"domain_data/common/organization/sector_{country_code}.csv")
 
-        # Use the file content storage to cache the data
-        self._sector_data_load = FileContentStorage.load_file_with_custom_func(
-            cache_key=str(file_path),
-            read_func=lambda: FileUtil.read_mutil_column_wgt_file(file_path)
-        )
+        try:
+            # Use the file content storage to cache the data
+            self._sector_data_load = FileContentStorage.load_file_with_custom_func(
+                cache_key=str(file_path),
+                read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path)
+            )
+        except FileNotFoundError as e:
+            raise ValueError(f"Sector data does not exist for country code '{country_code}': {e}") from e
+
 
     def generate(self) -> str:
         """Generate a random sector.
@@ -39,4 +43,4 @@ class SectorGenerator(BaseLiteralGenerator):
         Returns:
             A randomly chosen sector.
         """
-        return random.choice(self._sector_data_load)
+        return random.choice(self._sector_data_load)[0]

@@ -4,11 +4,10 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.core.interfaces import Generator
-from datamimic_ce.generators.data_faker_generator import DataFakerGenerator
+from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 
-
-class CNPJGenerator(Generator):
+class CNPJGenerator(BaseLiteralGenerator):
     """
     Generates Brazilian CNPJ numbers.
     """

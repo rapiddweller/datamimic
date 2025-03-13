@@ -14,7 +14,6 @@ import json
 import uuid
 from typing import Any
 
-from datamimic_ce.core.interfaces import Generator
 from datamimic_ce.domains.insurance.services.insurance_company_service import InsuranceCompanyService
 from datamimic_ce.domains.insurance.services.insurance_policy_service import InsurancePolicyService
 from datamimic_ce.domains.insurance.services.insurance_product_service import InsuranceProductService

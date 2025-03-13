@@ -63,7 +63,10 @@ class CountryGenerator(BaseDomainGenerator):
         # Load country data
         country_data = self.load_country_data()
 
-        return country_data.get(iso_code)
+        return_value = country_data.get(iso_code)
+        if return_value is None:
+            raise ValueError(f"Country with ISO code {iso_code} not found")
+        return return_value
 
     def get_random_country(self) -> dict[str, Any]:
         """Get a random country.
