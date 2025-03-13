@@ -19,18 +19,18 @@ class BankGenerator(BaseDomainGenerator):
         cache_key = f"bank_name_{self._dataset}"
         if cache_key not in self._LOADED_DATA_CACHE:
             file_path = Path(
-                __file__).parent.parent.parent / "domain_data" / "finance" / "bank" / f"banks_{self._dataset}.csv"
+                __file__).parent.parent.parent.parent / "domain_data" / "finance" / "bank" / f"banks_{self._dataset}.csv"
             self._LOADED_DATA_CACHE[cache_key] = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path),
-                                                                                               read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(
+                                                                                               read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(
                                                                                                    file_path,
                                                                                                    delimiter=","))
-        loaded_data = self._LOADED_DATA_CACHE[cache_key]
+        header_dict, loaded_data = self._LOADED_DATA_CACHE[cache_key]
 
-        bank_data = random.choices(loaded_data, weights=[row[3] for row in loaded_data])[0]
+        wgt_idx = header_dict["weight"]
+        bank_data = random.choices(loaded_data, weights=[float(row[wgt_idx]) for row in loaded_data])[0]
 
         return {
-            "name": bank_data[0],
-            "swift_code": bank_data[1],
-            "routing_number": bank_data[2],
-            "bank_code": bank_data[3]
+            "name": bank_data[header_dict["name"]],
+            "swift_code": bank_data[header_dict["swift_code"]],
+            "routing_number": bank_data[header_dict["routing_number"]],
         }

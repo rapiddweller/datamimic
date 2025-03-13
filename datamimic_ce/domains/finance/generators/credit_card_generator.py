@@ -7,13 +7,30 @@
 from pathlib import Path
 import random
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
+from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 class CreditCardGenerator(BaseDomainGenerator):
     def __init__(self, dataset: str = "US"):
-        super().__init__(dataset=dataset)
         self._dataset = dataset
+        self._person_generator = PersonGenerator()
+        self._date_generator = DateTimeGenerator()
+        self._bank_generator = BankGenerator(dataset=dataset)
+
+    @property
+    def person_generator(self) -> PersonGenerator:
+        return self._person_generator
+    
+    @property
+    def date_generator(self) -> DateTimeGenerator:
+        return self._date_generator
+    
+    @property
+    def bank_generator(self) -> BankGenerator:
+        return self._bank_generator
         
     def generate_card_type(self) -> str:
         cache_key = f"card_types_{self.dataset}"

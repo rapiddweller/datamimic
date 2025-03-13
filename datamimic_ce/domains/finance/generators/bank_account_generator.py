@@ -8,16 +8,15 @@ from pathlib import Path
 import random
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
-from datamimic_ce.generators.data_faker_generator import DataFakerGenerator
+from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 
 
 class BankAccountGenerator(BaseDomainGenerator):
     def __init__(self, dataset: str = "US"):
-        super().__init__(dataset=dataset)
         self._dataset = dataset
         self._bank_generator = BankGenerator(dataset=dataset)
-        self._account_number_generator = DataFakerGenerator(locale=dataset, provider="bban")
+        self._account_number_generator = DataFakerGenerator("bban")
 
     @property
     def dataset(self) -> str:

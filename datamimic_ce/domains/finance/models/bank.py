@@ -9,10 +9,6 @@ from datamimic_ce.utils.data_generation_ce_util import DataGenerationCEUtil
 class Bank(BaseEntity):
     """Bank information associated with a bank account."""
 
-    # name: str = Field(..., description="The name of the bank")
-    # swift_code: str = Field(..., description="The SWIFT/BIC code of the bank")
-    # routing_number: Optional[str] = Field(None, description="The routing number (US specific)")
-
     def __init__(self, bank_generator: BankGenerator):
         super().__init__()
         self._bank_generator = bank_generator
@@ -40,7 +36,7 @@ class Bank(BaseEntity):
     @property
     @property_cache
     def bank_code(self) -> str:
-        return self.bank_data["bank_code"]
+        return self.swift_code
 
     @property
     @property_cache

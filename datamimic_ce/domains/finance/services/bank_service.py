@@ -5,9 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.domain_core.base_domain_service import BaseDomainService
-from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
-from datamimic_ce.domains.finance.models.bank_account import BankAccount
+from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
+from datamimic_ce.domains.finance.models.bank import Bank
 
-class BankAccountService(BaseDomainService[BankAccount]):
+class BankService(BaseDomainService[Bank]):
     def __init__(self):
-        super().__init__(BankAccountGenerator(), BankAccount)
+        super().__init__(BankGenerator(), Bank)

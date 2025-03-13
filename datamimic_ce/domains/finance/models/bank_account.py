@@ -17,7 +17,7 @@ import random
 from typing import Any
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
-from datamimic_ce.domains.finance.generators.credit_card_generators import BankAccountGenerator
+from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
 from datamimic_ce.domains.finance.models.bank import Bank
 
 
@@ -94,7 +94,7 @@ class BankAccount(BaseEntity):
     @property
     @property_cache
     def bank_code(self) -> str:
-        return self.bank_data.code
+        return self.bank_data.bank_code
     
     @property
     @property_cache
@@ -105,11 +105,6 @@ class BankAccount(BaseEntity):
     @property_cache
     def bin(self) -> str:
         return self.bank_data.bin
-    
-    @property
-    @property_cache
-    def iban(self) -> str:
-        return self.iban
     
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -124,5 +119,4 @@ class BankAccount(BaseEntity):
             "bank_code": self.bank_code,
             "bic": self.bic,
             "bin": self.bin,
-            "iban": self.iban
         }
