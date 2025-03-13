@@ -3,10 +3,10 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-
+from typing import Optional
 
 from datamimic_ce.domain_core.base_domain_service import BaseDomainService
-from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
+from datamimic_ce.domains.ecommerce.generators.product_generator_new import ProductGeneratorNew
 from datamimic_ce.domains.ecommerce.models.product import Product
 
 
@@ -17,5 +17,5 @@ class ProductService(BaseDomainService[Product]):
     including creating products, filtering products, and formatting outputs.
     """
 
-    def __init__(self):
-        super().__init__(ProductGenerator(), Product)
+    def __init__(self, dataset: Optional[str] = None):
+        super().__init__(ProductGeneratorNew(dataset), Product)
