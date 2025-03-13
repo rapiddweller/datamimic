@@ -13,7 +13,7 @@ from datamimic_ce.clients.database_client import Client
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.converter.converter import Converter
 from datamimic_ce.converter.custom_converter import CustomConverter
-from datamimic_ce.core.interfaces import Generator
+from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
@@ -180,7 +180,7 @@ class SetupContext(Context):
 
         # Add Generator and Converter to the namespace for evaluation
         ns = {
-            "Generator": Generator,
+            "Generator": BaseLiteralGenerator,
             "Converter": Converter,
             "CustomConverter": CustomConverter,
         }

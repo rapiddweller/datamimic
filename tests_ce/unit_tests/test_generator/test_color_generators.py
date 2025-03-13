@@ -7,7 +7,7 @@
 import re
 import unittest
 
-from datamimic_ce.generators.color_generators import ColorGenerator
+from datamimic_ce.domains.common.literal_generators.color_generators import ColorGenerator
 
 
 class TestColorGenerators(unittest.TestCase):

@@ -7,11 +7,10 @@
 import random
 from pathlib import Path
 
-from datamimic_ce.core.interfaces import Generator
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class WeightedDataSource(Generator):
+class WeightedDataSource:
     """
     Generate data from weighted data source (.wgt.csv)
     """

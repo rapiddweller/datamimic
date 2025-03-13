@@ -5,7 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.generators.sector_generator import SectorGenerator
+
+
+from datamimic_ce.domains.common.literal_generators.sector_generator import SectorGenerator
 
 
 def test_sector_generator_support_locale():

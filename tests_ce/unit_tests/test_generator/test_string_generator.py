@@ -9,7 +9,7 @@ import re
 
 import pytest
 
-from datamimic_ce.generators.string_generator import StringGenerator
+from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.utils.class_factory_ce_util import ClassFactoryCEUtil
 
 

@@ -9,11 +9,11 @@
 from pathlib import Path
 import random
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
-from datamimic_ce.logger import logger
+from datamimic_ce import logger
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
-from datamimic_ce.domains.common.generators.company_name_generator import CompanyNameGenerator
-from datamimic_ce.domains.common.generators.email_address_generator import EmailAddressGenerator
-from datamimic_ce.domains.common.generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.common.literal_generators.company_name_generator import CompanyNameGenerator
+from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
+from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 

@@ -3,13 +3,9 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-import random
 
 from datamimic_ce.config import settings
 from datamimic_ce.exporters.exporter_util import ExporterUtil
-from datamimic_ce.generators.datetime_generator import DateTimeGenerator
-from datamimic_ce.generators.integer_generator import IntegerGenerator
-from datamimic_ce.generators.string_generator import StringGenerator
 from datamimic_ce.logger import setup_logger
 from datamimic_ce.parsers.parser_util import ParserUtil
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
@@ -44,14 +40,17 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
 
     @staticmethod
     def get_datetime_generator():
+        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
         return DateTimeGenerator
 
     @staticmethod
     def get_integer_generator():
+        from datamimic_ce.domains.common.literal_generators.integer_generator import IntegerGenerator
         return IntegerGenerator
 
     @staticmethod
     def get_string_generator():
+        from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
         return StringGenerator
 
     @staticmethod
@@ -80,5 +79,3 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
     def get_app_settings():
         """Get application settings."""
         return settings
-
-    

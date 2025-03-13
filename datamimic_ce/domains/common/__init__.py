@@ -11,10 +11,9 @@ This module provides entities, data loaders, generators, and services for common
 such as address, city, company, country, crm, digital_wallet, person, and product.
 """
 
-from datamimic_ce.domains.common import generators, models, services, utils
+from datamimic_ce.domains.common import generators, models, services
 
 __all__ = [
-    "utils",
     "models",
     "generators",
     "services",

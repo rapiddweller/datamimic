@@ -9,15 +9,14 @@ from pathlib import Path
 from typing import Any
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
-from datamimic_ce.generators.academic_title_generator import AcademicTitleGenerator
-from datamimic_ce.generators.birthdate_generator import BirthdateGenerator
-from datamimic_ce.generators.email_address_generator import EmailAddressGenerator
-from datamimic_ce.generators.family_name_generator import FamilyNameGenerator
-from datamimic_ce.generators.gender_generator import GenderGenerator
-from datamimic_ce.generators.given_name_generator import GivenNameGenerator
-from datamimic_ce.generators.nobility_title_generator import NobilityTitleGenerator
-from datamimic_ce.generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.utils.class_factory_ce_util import ClassFactoryCEUtil
+from datamimic_ce.domains.common.literal_generators.academic_title_generator import AcademicTitleGenerator
+from datamimic_ce.domains.common.literal_generators.birthdate_generator import BirthdateGenerator
+from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
+from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
+from datamimic_ce.domains.common.literal_generators.gender_generator import GenderGenerator
+from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
+from datamimic_ce.domains.common.literal_generators.nobility_title_generator import NobilityTitleGenerator
+from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 class PersonGenerator(BaseDomainGenerator):
@@ -34,6 +33,7 @@ class PersonGenerator(BaseDomainGenerator):
         self._email_generator = EmailAddressGenerator(dataset=country_code)
         self._phone_generator = PhoneNumberGenerator(dataset=country_code)
         self._address_generator = AddressGenerator(country_code=country_code)
+        from datamimic_ce.utils.class_factory_ce_util import ClassFactoryCEUtil
         self._birthdate_generator = BirthdateGenerator(class_factory_util=ClassFactoryCEUtil())
         self._academic_title_generator = AcademicTitleGenerator(dataset=country_code)
         self._nobility_title_generator = NobilityTitleGenerator(dataset=country_code)

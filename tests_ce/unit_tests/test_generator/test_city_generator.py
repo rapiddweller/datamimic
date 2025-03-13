@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.entities.city_entity import CityEntity
+from datamimic_ce.domains.common.generators.city_generator import CityEntity
 from datamimic_ce.utils.class_factory_ce_util import ClassFactoryCEUtil
 
 
