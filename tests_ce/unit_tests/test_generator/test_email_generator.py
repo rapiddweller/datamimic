@@ -26,7 +26,7 @@ def test_invalid_email() -> None:
 
 
 def test_email_generator_without_name_input() -> None:
-    email_address_generator = EmailAddressGenerator(dataset="US", generated_count=1)
+    email_address_generator = EmailAddressGenerator(dataset="US")
 
     assert email_address_generator
     email = email_address_generator.generate()
@@ -35,12 +35,12 @@ def test_email_generator_without_name_input() -> None:
 
 def test_email_generator_with_name_input() -> None:
     for _ in range(10):
-        given_name = GivenNameGenerator(dataset="US", generated_count=1).generate()
+        given_name = GivenNameGenerator(dataset="US").generate()
         assert isinstance(given_name, str)
-        family_name = FamilyNameGenerator(dataset="US", generated_count=1).generate()
+        family_name = FamilyNameGenerator(dataset="US").generate()
         assert isinstance(family_name, str)
         with_name_email_generator = EmailAddressGenerator(
-            dataset="US", given_name=given_name, family_name=family_name, generated_count=1
+            dataset="US", given_name=given_name, family_name=family_name
         )
 
         email = with_name_email_generator.generate()

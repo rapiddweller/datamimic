@@ -9,7 +9,7 @@
         <key name="email" script="person.email"/>
         <key name="gender" script="person.gender"/>
         <key name="salutation" script="person.salutation"/>
-        <key name="username" script="person.username"/>
+        <key name="username" script="person.name"/>
         <key name="password" script="person.password"/>
         <key name="phone" script="person.phone"/>
         <key name="height" script="person.height"/>
@@ -33,7 +33,7 @@
         <key name="email" script="person.email"/>
         <key name="gender" script="person.gender"/>
         <key name="salutation" script="person.salutation"/>
-        <key name="username" script="person.username"/>
+        <key name="username" script="person.name"/>
         <key name="password" script="person.password"/>
         <key name="phone" script="person.phone"/>
         <key name="height" script="person.height"/>

@@ -25,16 +25,16 @@ class PersonGenerator(BaseDomainGenerator):
     Provides methods to generate person-related attributes such as
     first name, last name, email address, phone number, and address.
     """
-    def __init__(self, country_code: str = "US"):
+    def __init__(self, country_code: str = "US", min_age: int = 18, max_age: int = 65, female_quota: float = 0.5):
         self._country_code = country_code
-        self._gender_generator = GenderGenerator()
+        self._gender_generator = GenderGenerator(female_quota=female_quota)
         self._given_name_generator = GivenNameGenerator(dataset=country_code)
         self._family_name_generator = FamilyNameGenerator(dataset=country_code)
         self._email_generator = EmailAddressGenerator(dataset=country_code)
         self._phone_generator = PhoneNumberGenerator(dataset=country_code)
         self._address_generator = AddressGenerator(country_code=country_code)
         from datamimic_ce.utils.class_factory_ce_util import ClassFactoryCEUtil
-        self._birthdate_generator = BirthdateGenerator(class_factory_util=ClassFactoryCEUtil())
+        self._birthdate_generator = BirthdateGenerator(class_factory_util=ClassFactoryCEUtil(), min_age=min_age, max_age=max_age)
         self._academic_title_generator = AcademicTitleGenerator(dataset=country_code)
         self._nobility_title_generator = NobilityTitleGenerator(dataset=country_code)
 

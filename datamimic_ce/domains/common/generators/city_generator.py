@@ -119,7 +119,7 @@ class CityGenerator(BaseDomainGenerator):
             "name": city_row[city_header_dict.get("name")],
             "postal_code": city_row[city_header_dict.get("postalCode")],
             "area_code": city_row[city_header_dict.get("areaCode")],
-            "state_id": city_row[city_header_dict.get("state.id")],
+            "state_id": city_row[city_header_dict.get("state.id")] if "state.id" in city_header_dict else None,
             "state": city_row[city_header_dict.get("state")] if "state" in city_header_dict else None,
             "language": city_row[city_header_dict.get("language")] if "language" in city_header_dict else None,
             "population": city_row[city_header_dict.get("population")] if "population" in city_header_dict else None,

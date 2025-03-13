@@ -10,7 +10,7 @@ from datamimic_ce.domains.common.literal_generators.domain_generator import Doma
 
 def test_domain_generator():
     for _ in range(10):
-        domain = DomainGenerator(generated_count=1).generate()
+        domain = DomainGenerator().generate()
         assert isinstance(domain, str)
         assert " " not in domain, "Domain should not contain white spaces"
         assert domain.islower(), f"Domain need to be in lower case, got {domain}"
