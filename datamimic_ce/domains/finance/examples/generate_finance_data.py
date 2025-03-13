@@ -19,9 +19,6 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from datamimic_ce.domains.finance.generators.finance_generators import (
-    FinanceDataGenerator,
-)
 from datamimic_ce.domains.finance.services.bank_account_service import BankAccountService
 from datamimic_ce.domains.finance.services.credit_card_service import CreditCardService
 
