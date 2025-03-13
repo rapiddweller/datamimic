@@ -19,12 +19,8 @@ class Address(BaseEntity):
     state, postal code, country, and more.
     """
     def __init__(self, address_generator: AddressGenerator):
-        super().__init__()
-        # IMPORTANT: Avoid init generator in __init__ method, because it will be called multiple times
-        # Should define generator within dataloader instead
         self._address_generator = address_generator
         
-
     @property
     @property_cache
     def street(self) -> str:
@@ -47,6 +43,11 @@ class Address(BaseEntity):
     
     @property
     @property_cache
+    def area(self) -> str:
+        return self.city_data["area_code"]
+    
+    @property
+    @property_cache
     def state(self) -> str:
         return self.city_data["state"]
     
@@ -54,6 +55,11 @@ class Address(BaseEntity):
     @property_cache
     def postal_code(self) -> str:
         return self.city_data["postal_code"]
+    
+    @property
+    @property_cache
+    def zip_code(self) -> str:
+        return self.postal_code
     
     @property
     @property_cache
@@ -78,6 +84,16 @@ class Address(BaseEntity):
     @property
     @property_cache
     def mobile_phone(self) -> str:
+        return self._address_generator.phone_number_generator.generate()
+    
+    @property
+    @property_cache
+    def office_phone(self) -> str:
+        return self._address_generator.phone_number_generator.generate()
+    
+    @property
+    @property_cache
+    def private_phone(self) -> str:
         return self._address_generator.phone_number_generator.generate()
     
     @property

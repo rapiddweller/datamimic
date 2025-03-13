@@ -68,7 +68,7 @@ class TestEntity:
             assert customer["given_name"] in customer["name"]
             assert customer["family_name"] in customer["name"]
 
-        print(f"Noble's ratio: {noble_count/len(customers)}")
+        print(f"Noble's ratio: {noble_count / len(customers)}")
         default_noble_quota = 0.005
         noble_ratio = noble_count / len(customers)
         assert default_noble_quota * 0.8 < noble_ratio < default_noble_quota * 1.2

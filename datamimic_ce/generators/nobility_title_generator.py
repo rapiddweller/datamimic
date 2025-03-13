@@ -38,12 +38,12 @@ class NobilityTitleGenerator(Generator):
         female_file_path = prefix_path.joinpath(file_name_female)
 
         self._male_values, self._male_weights = FileContentStorage.load_file_with_custom_func(
-            file_path_str=str(male_file_path),
+            cache_key=str(male_file_path),
             read_func=lambda: FileUtil.read_wgt_file(file_path=male_file_path),
         )
 
         self._female_values, self._female_weights = FileContentStorage.load_file_with_custom_func(
-            file_path_str=str(female_file_path),
+            cache_key=str(female_file_path),
             read_func=lambda: FileUtil.read_wgt_file(file_path=female_file_path),
         )
 

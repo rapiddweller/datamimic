@@ -19,26 +19,7 @@ class City(BaseEntity):
     This class provides access to city data including name, postal code, area code,
     state, language, population, and country information.
     """
-
-
-    # name: str = Field(description="The name of the city")
-    # postal_code: str = Field(description="The postal code of the city")
-    # area_code: str = Field(description="The area code of the city")
-    # state_id: str = Field(description="The ID of the state where the city is located")
-    # state: str = Field(description="The name of the state where the city is located")
-    # language: str | None = Field(None, description="The language spoken in the city")
-    # population: str = Field(description="The population of the city")
-    # name_extension: str = Field("", description="The name extension of the city")
-    # country: str = Field(description="The country where the city is located")
-    # country_code: str = Field(description="The country code of the city")
-
-    # # Cache attributes for property_cache decorator
-    # _full_name_cache: str | None = PrivateAttr(default=None)
-    # _location_string_cache: str | None = PrivateAttr(default=None)
-    # _population_int_cache: int | None = PrivateAttr(default=None)
-
     def __init__(self, city_generator: CityGenerator):
-        super().__init__()
         self._city_generator = city_generator
 
     @property

@@ -10,7 +10,7 @@ Person model.
 This module provides a model for representing a person.
 """
 
-import random
+from datetime import datetime
 from typing import Any
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
@@ -25,86 +25,7 @@ class Person(BaseEntity):
     This class provides a model for representing a person with common attributes
     such as name, age, gender, etc.
     """
-
-    # # Sample data for generating person attributes
-    # FIRST_NAMES_MALE = [
-    #     "James",
-    #     "John",
-    #     "Robert",
-    #     "Michael",
-    #     "William",
-    #     "David",
-    #     "Richard",
-    #     "Joseph",
-    #     "Thomas",
-    #     "Charles",
-    # ]
-    # FIRST_NAMES_FEMALE = [
-    #     "Mary",
-    #     "Patricia",
-    #     "Jennifer",
-    #     "Linda",
-    #     "Elizabeth",
-    #     "Barbara",
-    #     "Susan",
-    #     "Jessica",
-    #     "Sarah",
-    #     "Karen",
-    # ]
-    # LAST_NAMES = ["Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor"]
-    # GENDERS = ["male", "female", "other"]
-    # EMAIL_DOMAINS = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "example.com"]
-    # PHONE_FORMATS = ["###-###-####", "(###) ###-####", "###.###.####"]
-    # STREET_TYPES = ["St", "Ave", "Blvd", "Rd", "Ln", "Dr", "Way", "Pl", "Ct"]
-    # CITIES = [
-    #     "New York",
-    #     "Los Angeles",
-    #     "Chicago",
-    #     "Houston",
-    #     "Phoenix",
-    #     "Philadelphia",
-    #     "San Antonio",
-    #     "San Diego",
-    #     "Dallas",
-    #     "San Jose",
-    # ]
-    # STATES = [
-    #     "AL",
-    #     "AK",
-    #     "AZ",
-    #     "AR",
-    #     "CA",
-    #     "CO",
-    #     "CT",
-    #     "DE",
-    #     "FL",
-    #     "GA",
-    #     "HI",
-    #     "ID",
-    #     "IL",
-    #     "IN",
-    #     "IA",
-    #     "KS",
-    #     "KY",
-    #     "LA",
-    #     "ME",
-    #     "MD",
-    # ]
-    # COUNTRIES = [
-    #     "United States",
-    #     "Canada",
-    #     "United Kingdom",
-    #     "Australia",
-    #     "Germany",
-    #     "France",
-    #     "Japan",
-    #     "China",
-    #     "Brazil",
-    #     "India",
-    # ]
-
     def __init__(self, person_generator: PersonGenerator):
-        super().__init__()
         self._person_generator = person_generator
         
     @property
@@ -119,7 +40,7 @@ class Person(BaseEntity):
 
     @property
     @property_cache
-    def first_name(self) -> str:
+    def given_name(self) -> str:
         """Get the first name of the person.
 
         Returns:
@@ -129,7 +50,7 @@ class Person(BaseEntity):
 
     @property
     @property_cache
-    def last_name(self) -> str:
+    def family_name(self) -> str:
         """Get the last name of the person.
 
         Returns:
@@ -139,13 +60,13 @@ class Person(BaseEntity):
 
     @property
     @property_cache
-    def full_name(self) -> str:
+    def name(self) -> str:
         """Get the full name of the person.
 
         Returns:
             The full name of the person.
         """
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.given_name} {self.family_name}"
 
     @property
     @property_cache
@@ -155,7 +76,7 @@ class Person(BaseEntity):
         Returns:
             The age of the person.
         """
-        return random.randint(0, 100)
+        return self._person_generator.birthdate_generator.convert_birthdate_to_age(self.birthdate)
 
     @property
     @property_cache
@@ -165,7 +86,7 @@ class Person(BaseEntity):
         Returns:
             The email of the person.
         """
-        return self._person_generator.email_generator.generate_with_name(self.first_name, self.last_name)
+        return self._person_generator.email_generator.generate_with_name(self.given_name, self.family_name)
     
     @property
     @property_cache
@@ -186,7 +107,37 @@ class Person(BaseEntity):
             The address of the person as a dictionary.
         """
         return Address(self._person_generator.address_generator)
+    
+    @property
+    @property_cache
+    def birthdate(self) -> datetime:
+        """Get the birthdate of the person.
 
+        Returns:
+            The birthdate of the person.
+        """
+        return self._person_generator.birthdate_generator.generate()
+    
+    @property
+    @property_cache
+    def academic_title(self) -> str:
+        """Get the academic title of the person.
+        """
+        return self._person_generator.academic_title_generator.generate()
+    
+    @property
+    @property_cache
+    def nobility_title(self) -> str:
+        """Get the nobility title of the person.
+        """
+        return self._person_generator.nobility_title_generator.generate()
+    
+    @property
+    @property_cache
+    def salutation(self) -> str:
+        """Get the salutation of the person.
+        """
+        return self._person_generator.load_salutation_data()[self.gender.upper()]
     def to_dict(self) -> dict[str, Any]:
         """Convert the person to a dictionary.
 
@@ -194,13 +145,15 @@ class Person(BaseEntity):
             A dictionary representation of the person.
         """
         return {
-            "first_name": self.first_name,
-            "last_name": self.last_name,
-            "full_name": self.full_name,
-            "age": self.age,
+            "birthdate": self.birthdate,
+            "given_name": self.given_name,
+            "family_name": self.family_name,
             "gender": self.gender,
+            "name": self.name,
+            "age": self.age,
             "email": self.email,
             "phone": self.phone,
-            "address": self.address,
+            "academic_title": self.academic_title,
+            "salutation": self.salutation,
+            "nobility_title": self.nobility_title,
         }
-
