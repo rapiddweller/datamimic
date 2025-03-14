@@ -59,7 +59,7 @@ class Product(BaseEntity):
         Returns:
             A product category
         """
-        return self._product_generator.load_product_data("product_categories")
+        return self._product_generator.get_product_data_by_data_type("product_categories")
 
     @property
     @property_cache
@@ -69,7 +69,7 @@ class Product(BaseEntity):
         Returns:
             A product brand
         """
-        return self._product_generator.load_product_data("product_brands")
+        return self._product_generator.get_product_data_by_data_type("product_brands")
 
     @property
     @property_cache
@@ -81,8 +81,8 @@ class Product(BaseEntity):
         """
         category = self.category
         brand = self.brand
-        adjective = self._product_generator.load_product_data("product_adjectives")
-        noun = self._product_generator.load_product_data(f"product_nouns_{category}")
+        adjective = self._product_generator.get_product_data_by_data_type("product_adjectives")
+        noun = self._product_generator.get_product_data_by_data_type(f"product_nouns_{category}")
         if not noun:
             noun = "Product"
 
@@ -113,7 +113,7 @@ class Product(BaseEntity):
             f"product offers exceptional quality and value. "
         )
         # Add random benefit
-        description += self._product_generator.load_product_data("product_benefits")
+        description += self._product_generator.get_product_data_by_data_type("product_benefits")
         return description
 
     @property
@@ -149,7 +149,7 @@ class Product(BaseEntity):
         Returns:
             A product condition (e.g., NEW, USED)
         """
-        return self._product_generator.load_product_data("product_conditions")
+        return self._product_generator.get_product_data_by_data_type("product_conditions")
 
     @property
     @property_cache
@@ -159,7 +159,7 @@ class Product(BaseEntity):
         Returns:
             A product availability status (e.g., IN_STOCK)
         """
-        return self._product_generator.load_product_data("availability")
+        return self._product_generator.get_product_data_by_data_type("availability")
 
     @property
     @property_cache
@@ -169,7 +169,7 @@ class Product(BaseEntity):
         Returns:
             A currency code (e.g., USD)
         """
-        return self._product_generator.load_product_data("currencies")
+        return self._product_generator.get_product_data_by_data_type("currencies")
 
     @property
     @property_cache
@@ -199,7 +199,7 @@ class Product(BaseEntity):
         Returns:
             A color name
         """
-        return self._product_generator.load_product_data("product_colors")
+        return self._product_generator.get_product_data_by_data_type("product_colors")
 
     @property
     @property_cache

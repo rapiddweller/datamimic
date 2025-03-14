@@ -30,12 +30,12 @@ class ProductGenerator(BaseDomainGenerator):
     def __init__(self, dataset: Optional[str] = None):
         self._dataset = dataset
 
-    def load_product_data(self, data_type: str) -> str:
+    def get_product_data_by_data_type(self, data_type: str) -> str:
         """Load data for the specified type and dataset.
         Args:
             data_type: The type of data to load
         Returns:
-            A list of tuples containing values and weights
+            Data of product base on dat type
         """
         if self._dataset:
             cache_key = f"{data_type}_{self._dataset}"
@@ -54,7 +54,7 @@ class ProductGenerator(BaseDomainGenerator):
         wgt_idx = header_dict["weight"]
         return random.choices(loaded_data, weights=[float(row[wgt_idx]) for row in loaded_data])[0][0]
 
-    def price_with_strategy(self, min_price, max_price):
+    def price_with_strategy(self, min_price, max_price) -> float:
         """Generate a price using common pricing strategies.
 
         Args:
@@ -75,21 +75,21 @@ class ProductGenerator(BaseDomainGenerator):
         price = random.choice(price_points)
         return max(min_price, min(price, max_price))  # Ensure price is between min_price and max_price
 
-    def get_random_features(self, category: str, min_feature: int = 1, max_feature: int = 1):
+    def get_random_features(self, category: str, min_feature: int = 1, max_feature: int = 1) -> list[str]:
         cache_key = "features_by_category"
         if cache_key not in self._LOADED_DATA_CACHE:
             self._load_product_json(cache_key)
         features = self._LOADED_DATA_CACHE[cache_key].get(category, ["High quality", "Versatile", "Durable"])
         return random.sample(features, min(len(features), random.randint(min_feature, max_feature)))
 
-    def get_random_weight(self, category: str):
+    def get_random_weight(self, category: str) -> float:
         cache_key = "weight_ranges_by_category"
         if cache_key not in self._LOADED_DATA_CACHE:
             self._load_product_json(cache_key)
         weights = self._LOADED_DATA_CACHE[cache_key].get(category, {"min": 0.1, "max": 50.0})
         return round(random.uniform(weights["min"], weights["max"]), 2)
 
-    def get_random_dimensions(self, category):
+    def get_random_dimensions(self, category) -> str:
         cache_key = "dimension_ranges_by_category"
         default_dimensions = {
             "length": {"min": 1, "max": 200},
@@ -106,7 +106,7 @@ class ProductGenerator(BaseDomainGenerator):
 
         return f"{length} x {width} x {height} cm"
 
-    def get_random_tags(self, category: str):
+    def get_random_tags(self, category: str) -> list[str]:
         cache_key = "tags_by_category"
         if cache_key not in self._LOADED_DATA_CACHE:
             self._load_product_json(cache_key)
