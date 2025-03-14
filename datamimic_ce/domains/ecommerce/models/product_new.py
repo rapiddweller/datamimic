@@ -9,6 +9,7 @@ Product model.
 
 This module provides a model for representing an e-commerce product.
 """
+import random
 from typing import Any, Dict, List
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
@@ -24,14 +25,21 @@ class ProductNew(BaseEntity):
     product IDs, names, descriptions, prices, categories, and other product attributes.
     """
 
-    def __init__(self, product_generator: ProductGeneratorNew):
+    def __init__(
+        self,
+        product_generator: ProductGeneratorNew,
+        min_price: float = 0.99,
+        max_price: float = 9999.99,
+    ):
+        """Initialize the Product model.
+        Args:
+            min_price: Minimum product price
+            max_price: Maximum product price
+        """
         super().__init__()
         self._product_generator = product_generator
-
-    @property
-    @property_cache
-    def product_data(self) -> Dict[str, Any]:
-        return self._product_generator.get_random_product()
+        self._min_price = min_price
+        self._max_price = max_price
 
     @property
     @property_cache
@@ -41,7 +49,7 @@ class ProductNew(BaseEntity):
         Returns:
             A unique product ID
         """
-        return self.product_data["product_id"]
+        return generate_id("PROD", 8)
 
     @property
     @property_cache
@@ -51,7 +59,7 @@ class ProductNew(BaseEntity):
         Returns:
             A product category
         """
-        return self.product_data["category"]
+        return self._product_generator.load_product_data("product_categories")
 
     @property
     @property_cache
@@ -61,7 +69,7 @@ class ProductNew(BaseEntity):
         Returns:
             A product brand
         """
-        return self.product_data["brand"]
+        return self._product_generator.load_product_data("product_brands")
 
     @property
     @property_cache
@@ -71,7 +79,20 @@ class ProductNew(BaseEntity):
         Returns:
             A product name based on category and brand
         """
-        return self.product_data["name"]
+        category = self.category
+        brand = self.brand
+        adjective = self._product_generator.load_product_data("product_adjectives")
+        noun = self._product_generator.load_product_data(f"product_nouns_{category}")
+        if not noun:
+            noun = "Product"
+
+        patterns = [
+            f"{brand} {adjective} {noun}",
+            f"{adjective} {noun} by {brand}",
+            f"{brand} {noun}",
+            f"{adjective} {brand} {noun}",
+        ]
+        return random.choice(patterns)
 
     @property
     @property_cache
@@ -81,7 +102,19 @@ class ProductNew(BaseEntity):
         Returns:
             A detailed product description
         """
-        return self.product_data["description"]
+        name = self.name
+        category = self.category
+        # Get category features
+        selected_features = self._product_generator.get_random_features(category, min_feature=2, max_feature=3)
+        # Create description
+        description = f"{name} - {', '.join(selected_features)}. "
+        description += (
+            f"This premium {category.lower().replace('_', ' ')} "
+            f"product offers exceptional quality and value. "
+        )
+        # Add random benefit
+        description += self._product_generator.load_product_data("product_benefits")
+        return description
 
     @property
     @property_cache
@@ -91,7 +124,7 @@ class ProductNew(BaseEntity):
         Returns:
             A realistic product price
         """
-        return self.product_data["price"]
+        return self._product_generator.price_with_strategy(self._min_price, self._max_price)
 
     @property
     @property_cache
@@ -101,7 +134,12 @@ class ProductNew(BaseEntity):
         Returns:
             A Stock Keeping Unit identifier
         """
-        return self.product_data["sku"]
+        # Format: BRAND-CATEGORY-RANDOM
+        brand_code = self.brand[:3].upper()
+        category_code = self.category[:3].upper()
+        random_code = "".join(random.choices("0123456789", k=6))
+
+        return f"{brand_code}-{category_code}-{random_code}"
 
     @property
     @property_cache
@@ -111,7 +149,7 @@ class ProductNew(BaseEntity):
         Returns:
             A product condition (e.g., NEW, USED)
         """
-        return self.product_data["condition"]
+        return self._product_generator.load_product_data("product_conditions")
 
     @property
     @property_cache
@@ -121,7 +159,7 @@ class ProductNew(BaseEntity):
         Returns:
             A product availability status (e.g., IN_STOCK)
         """
-        return self.product_data["availability"]
+        return self._product_generator.load_product_data("availability")
 
     @property
     @property_cache
@@ -131,7 +169,7 @@ class ProductNew(BaseEntity):
         Returns:
             A currency code (e.g., USD)
         """
-        return self.product_data["currency"]
+        return self._product_generator.load_product_data("currencies")
 
     @property
     @property_cache
@@ -141,7 +179,7 @@ class ProductNew(BaseEntity):
         Returns:
             A realistic product weight
         """
-        return self.product_data["weight"]
+        return self._product_generator.get_random_weight(self.category)
 
     @property
     @property_cache
@@ -151,7 +189,7 @@ class ProductNew(BaseEntity):
         Returns:
             Product dimensions in the format "length x width x height cm"
         """
-        return self.product_data["dimensions"]
+        return self._product_generator.get_random_dimensions(self.category)
 
     @property
     @property_cache
@@ -161,7 +199,7 @@ class ProductNew(BaseEntity):
         Returns:
             A color name
         """
-        return self.product_data["color"]
+        return self._product_generator.load_product_data("product_colors")
 
     @property
     @property_cache
@@ -171,7 +209,15 @@ class ProductNew(BaseEntity):
         Returns:
             A rating between 1.0 and 5.0
         """
-        return self.product_data["rating"]
+        # Weight the ratings to make higher ratings more common
+        weights = [0.05, 0.1, 0.2, 0.3, 0.35]  # Probabilities for 1-5 stars
+        rating = float(random.choices([1, 2, 3, 4, 5], weights=weights, k=1)[0])
+
+        # Add decimal precision for half-star ratings
+        if random.random() < 0.5:
+            rating -= 0.5
+
+        return max(1.0, rating)  # Ensure minimum rating of 1.0
 
     @property
     @property_cache
@@ -181,7 +227,31 @@ class ProductNew(BaseEntity):
         Returns:
             A list of relevant tags for the product
         """
-        return self.product_data["tags"]
+        category = self.category
+
+        # Base tags from category
+        base_tags = [category.lower().replace("_", " ")]
+
+        # Add brand as a tag
+        base_tags.append(self.brand.lower())
+
+        # Add condition as a tag if not NEW
+        condition = self.condition
+        if condition != "NEW":
+            base_tags.append(condition.lower())
+
+        # Select 2-4 random tags from the category
+        selected_category_tags = self._product_generator.get_random_tags(category)
+
+        # Combine all tags
+        all_tags = base_tags + selected_category_tags
+
+        # Add a popular/trending tag occasionally
+        if random.random() < 0.2:
+            trending_tags = ["bestseller", "trending", "popular", "new arrival", "limited edition", "sale"]
+            all_tags.append(random.choice(trending_tags))
+
+        return all_tags
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert the product to a dictionary.
