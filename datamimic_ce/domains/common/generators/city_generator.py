@@ -80,15 +80,9 @@ class CityGenerator(BaseDomainGenerator):
         Returns:
             The name of the country.
         """
-        cache_key = "country_name_dict"
-        if cache_key in self._LOADED_DATA_CACHE:
-            country_name_dict = self._LOADED_DATA_CACHE[cache_key]
-        else:
-            logger.debug("CACHE MISS: Loading country name data from file")
-            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "country.csv"
-            country_df = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=","))
-            country_name_dict = {row[0]: row[3] for row in country_df}
-            self._LOADED_DATA_CACHE[cache_key] = country_name_dict
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "country.csv"
+        country_df = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=","))
+        country_name_dict = {row[0]: row[3] for row in country_df}
         return country_name_dict[self._country_code]
 
     def get_random_city(self) -> dict[str, Any]:
