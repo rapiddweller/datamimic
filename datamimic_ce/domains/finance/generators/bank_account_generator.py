@@ -10,6 +10,7 @@ from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
+from datamimic_ce.utils.file_util import FileUtil
 
 
 class BankAccountGenerator(BaseDomainGenerator):
@@ -31,11 +32,8 @@ class BankAccountGenerator(BaseDomainGenerator):
         return self._account_number_generator
 
     def get_bank_account_types(self) -> dict:
-        cache_key = f"bank_account_types_{self.dataset}"
-        if cache_key not in self._LOADED_DATA_CACHE:
-            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "finance" / "bank" / f"account_types_{self.dataset}.csv"
-            account_types_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_file(file_path))
-            self._LOADED_DATA_CACHE[cache_key] = account_types_data
-        
-        return random.choices(self._LOADED_DATA_CACHE[cache_key], weights=[item[1] for item in self._LOADED_DATA_CACHE[cache_key]], k=1)[0][0]
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "finance" / "bank" / f"account_types_{self.dataset}.csv"
+        account_types_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_file(file_path))
+        return random.choices(account_types_data, weights=[item[1] for item in account_types_data], k=1)[0][0]
+
 

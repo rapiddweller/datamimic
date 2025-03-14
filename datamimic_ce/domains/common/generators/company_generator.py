@@ -83,14 +83,10 @@ class CompanyGenerator(BaseDomainGenerator):
         Returns:
             The sector.
         """
-        cache_key = f"sector_{self._country_code}"
-        if cache_key not in self._LOADED_DATA_CACHE:
-            logger.debug("CACHE MISS: Loading sector data from file")
-            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "organization" / f"sector_{self._country_code}.csv"
-            sector_df = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=";"))
-            sector_list = [row[0] for row in sector_df]
-            self._LOADED_DATA_CACHE[cache_key] = sector_list
-        return random.choice(self._LOADED_DATA_CACHE[cache_key])
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "organization" / f"sector_{self._country_code}.csv"
+        sector_df = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=";"))
+        sector_list = [row[0] for row in sector_df]
+        return random.choice(sector_list)
     
     def get_legal_form(self) -> str:
         """Get a legal form.
@@ -98,11 +94,7 @@ class CompanyGenerator(BaseDomainGenerator):
         Returns:
             The legal form.
         """
-        cache_key = f"legal_form_{self._country_code}"
-        if cache_key not in self._LOADED_DATA_CACHE:
-            logger.debug("CACHE MISS: Loading legal form data from file")
-            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "organization" / f"legalForm_{self._country_code}.csv"
-            legal_form_df = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_wgt_file(file_path))
-            self._LOADED_DATA_CACHE[cache_key] = legal_form_df
-        legal_values, legal_wgt = self._LOADED_DATA_CACHE[cache_key]
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "organization" / f"legalForm_{self._country_code}.csv"
+        legal_form_df = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_wgt_file(file_path))
+        legal_values, legal_wgt = legal_form_df
         return random.choices(legal_values, weights=legal_wgt, k=1)[0]

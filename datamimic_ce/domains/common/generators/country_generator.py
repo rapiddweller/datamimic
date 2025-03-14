@@ -28,12 +28,6 @@ class CountryGenerator(BaseDomainGenerator):
         Returns:
             A dictionary containing country data.
         """
-        cache_key = "country_data"
-
-        # Check if we already have this data in class cache
-        if cache_key in self._LOADED_DATA_CACHE:
-            return self._LOADED_DATA_CACHE[cache_key]
-        
         # Prepare data file path
         country_file_path = self._get_base_path_country() / "country.csv"
 
@@ -42,8 +36,6 @@ class CountryGenerator(BaseDomainGenerator):
             country_data = FileContentStorage.load_file_with_custom_func(cache_key=str(country_file_path), read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(country_file_path, delimiter=","))
 
             country_data_dict = {country[0]: country for country in country_data}
-
-            self._LOADED_DATA_CACHE[cache_key] = country_data_dict
 
             return country_data_dict
 
