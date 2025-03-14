@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <setup>
-    <echo>DataMimic Domain-Based Architecture Demo</echo>
+    <echo>DATAMIMIC Domain-Based Architecture Demo</echo>
     <echo>This demo showcases the new domain-based architecture with entities from multiple domains</echo>
     
     <!-- Generate entities from Common Domain -->

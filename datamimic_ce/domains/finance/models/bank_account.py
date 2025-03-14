@@ -10,42 +10,113 @@ Bank Account model.
 This module defines the bank account model for the finance domain.
 """
 
-from datetime import date, datetime
-from typing import List, Optional
-
-from pydantic import BaseModel, Field
 
 
-class Bank(BaseModel):
-    """Bank information associated with a bank account."""
-
-    name: str = Field(..., description="The name of the bank")
-    swift_code: str = Field(..., description="The SWIFT/BIC code of the bank")
-    routing_number: Optional[str] = Field(None, description="The routing number (US specific)")
-    
-    class Config:
-        """Pydantic model configuration."""
-        
-        frozen = True
+import datetime
+import random
+from typing import Any
+from datamimic_ce.domain_core.base_entity import BaseEntity
+from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
+from datamimic_ce.domains.finance.models.bank import Bank
 
 
-class BankAccount(BaseModel):
+
+
+class BankAccount(BaseEntity):
     """Bank account information."""
     
-    id: str = Field(..., description="Unique identifier for the bank account")
-    account_number: str = Field(..., description="The account number")
-    iban: Optional[str] = Field(None, description="International Bank Account Number")
-    account_type: str = Field(..., description="The type of account (e.g., CHECKING, SAVINGS)")
-    bank: Bank = Field(..., description="The bank associated with this account")
-    balance: float = Field(0.0, description="Current balance of the account")
-    currency: str = Field("USD", description="The currency code for the account")
-    created_date: datetime = Field(..., description="Date when the account was created")
-    last_transaction_date: Optional[datetime] = Field(None, description="Date of the last transaction")
+    def __init__(self, bank_account_generator: BankAccountGenerator):
+        super().__init__()
+        self._bank_account_generator = bank_account_generator
+
+    @property
+    @property_cache
+    def bank_data(self) -> Bank:
+        return Bank(self._bank_account_generator.bank_generator)
     
-    class Config:
-        """Pydantic model configuration."""
-        
-        json_encoders = {
-            datetime: lambda v: v.isoformat(),
-            date: lambda v: v.isoformat(),
+    @property
+    @property_cache
+    def account_number(self) -> str:
+        return self._bank_account_generator.account_number_generator.generate()
+    
+    @property
+    @property_cache
+    def iban(self) -> str:
+        def checksum(iban_temp):
+            tmp = (iban_temp[4:] + iban_temp[0:4]).upper()
+            digits = ""
+            for c in tmp:
+                if "0" <= c <= "9":
+                    digits += c
+                elif "A" <= c <= "Z":
+                    n = ord(c) - ord("A") + 10
+                    digits += str(n // 10) + str(n % 10)
+                else:
+                    return -1
+            n = int(digits)
+            return n % 97
+        template = f"{self._bank_account_generator.dataset.upper()}00{self.bank_code}{self.account_number.zfill(10)}"
+        remainer = checksum(template)
+        pp = str(98 - remainer).zfill(2)
+        return template[:2] + pp + template[4:]
+    
+    @property
+    @property_cache
+    def account_type(self) -> str:
+        return self._bank_account_generator.get_bank_account_types()
+    
+    @property
+    @property_cache
+    def balance(self) -> float:
+        return random.uniform(0, 1000000)
+    
+    @property
+    @property_cache
+    def currency(self) -> str:
+        return random.choice(self._bank_account_generator.get_currencies())
+    
+    @property
+    @property_cache
+    def created_date(self) -> datetime:
+        return datetime.now() - datetime.timedelta(days=random.randint(0, 365))
+
+    @property
+    @property_cache
+    def last_transaction_date(self) -> datetime:
+        return datetime.now() - datetime.timedelta(days=random.randint(0, 365))
+    
+    @property
+    @property_cache
+    def bank_name(self) -> str:
+        return self.bank_data.name
+    
+    @property
+    @property_cache
+    def bank_code(self) -> str:
+        return self.bank_data.bank_code
+    
+    @property
+    @property_cache
+    def bic(self) -> str:
+        return self.bank_data.bic
+    
+    @property
+    @property_cache
+    def bin(self) -> str:
+        return self.bank_data.bin
+    
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "account_number": self.account_number,
+            "iban": self.iban,
+            "account_type": self.account_type,
+            "balance": self.balance,
+            "currency": self.currency,
+            "created_date": self.created_date,
+            "last_transaction_date": self.last_transaction_date,
+            "bank_name": self.bank_name,
+            "bank_code": self.bank_code,
+            "bic": self.bic,
+            "bin": self.bin,
         }

@@ -279,18 +279,18 @@ class EducationalInstitution(BaseEntity):
             An institution name.
         """
         import random
-        
+
         # Get city or address information for naming
         city = self._address_entity.city
         state = self._address_entity.state
-        
+
         # Generate institution name based on type and level
         institution_type = self.type
         level = self.level
-        
+
         # Name formats
         name_formats = []
-        
+
         if "University" in institution_type:
             name_formats = [
                 f"{city} University",
@@ -314,23 +314,23 @@ class EducationalInstitution(BaseEntity):
                     f"{city} Primary School",
                     f"{city} Academy",
                     f"Washington Elementary School of {city}",
-                    f"Lincoln Elementary School",
+                    "Lincoln Elementary School",
                 ]
             elif "Middle" in level:
                 name_formats = [
                     f"{city} Middle School",
                     f"{city} Intermediate School",
                     f"{city} Junior High School",
-                    f"Jefferson Middle School",
-                    f"Roosevelt Middle School",
+                    "Jefferson Middle School",
+                    "Roosevelt Middle School",
                 ]
             elif "High" in level:
                 name_formats = [
                     f"{city} High School",
                     f"{city} Senior High School",
                     f"{state} High School",
-                    f"Kennedy High School",
-                    f"Roosevelt High School",
+                    "Kennedy High School",
+                    "Roosevelt High School",
                 ]
             else:
                 name_formats = [
@@ -340,7 +340,7 @@ class EducationalInstitution(BaseEntity):
                     f"{state} Academy",
                     f"Central School of {city}",
                 ]
-        
+
         if not name_formats:
             name_formats = [
                 f"{city} Education Center",
@@ -349,7 +349,7 @@ class EducationalInstitution(BaseEntity):
                 f"{state} Institute",
                 f"Central Institute of {city}",
             ]
-        
+
         return random.choice(name_formats)
 
     def _generate_type(self) -> str:
@@ -359,7 +359,7 @@ class EducationalInstitution(BaseEntity):
             An institution type.
         """
         import random
-        
+
         types = [
             "Public School",
             "Private School",
@@ -374,7 +374,7 @@ class EducationalInstitution(BaseEntity):
             "Vocational School",
             "Special Education School",
         ]
-        
+
         return random.choice(types)
 
     def _generate_level(self) -> str:
@@ -384,9 +384,9 @@ class EducationalInstitution(BaseEntity):
             An education level.
         """
         import random
-        
+
         institution_type = self.type
-        
+
         if "University" in institution_type or "College" in institution_type:
             levels = ["Higher Education", "Undergraduate", "Graduate", "Postgraduate"]
         elif "School" in institution_type:
@@ -398,7 +398,7 @@ class EducationalInstitution(BaseEntity):
                 levels = ["Elementary", "Middle School", "High School", "K-12"]
         else:
             levels = ["Elementary", "Middle School", "High School", "Higher Education", "Vocational Education"]
-        
+
         return random.choice(levels)
 
     def _generate_founding_year(self) -> int:
@@ -407,13 +407,13 @@ class EducationalInstitution(BaseEntity):
         Returns:
             A founding year.
         """
-        import random
         import datetime
-        
+        import random
+
         current_year = datetime.datetime.now().year
         min_age = 5  # Minimum age for a school
         max_age = 200  # Maximum age for a school (oldest universities)
-        
+
         # Adjust based on institution type - universities tend to be older
         if "University" in self.type:
             min_age = 20
@@ -421,7 +421,7 @@ class EducationalInstitution(BaseEntity):
         elif "College" in self.type:
             min_age = 15
             max_age = 150
-        
+
         return current_year - random.randint(min_age, max_age)
 
     def _generate_student_count(self) -> int:
@@ -431,10 +431,10 @@ class EducationalInstitution(BaseEntity):
             A student count.
         """
         import random
-        
+
         institution_type = self.type
         level = self.level
-        
+
         # Adjust student count ranges based on institution type and level
         if "University" in institution_type:
             return random.randint(5000, 40000)
@@ -459,11 +459,11 @@ class EducationalInstitution(BaseEntity):
             A staff count.
         """
         import random
-        
+
         # Make staff count proportional to student count
         student_count = self.student_count
         student_to_staff_ratio = random.uniform(10, 25)  # Average student-to-staff ratio
-        
+
         return max(5, int(student_count / student_to_staff_ratio))
 
     def _generate_website(self) -> str:
@@ -474,11 +474,11 @@ class EducationalInstitution(BaseEntity):
         """
         # Derive from name
         name = self.name.lower()
-        
+
         # Simplified name for URL
         url_name = name.replace(" ", "")
-        url_name = ''.join(c for c in url_name if c.isalnum())
-        
+        url_name = "".join(c for c in url_name if c.isalnum())
+
         # Determine domain extension based on type
         if "University" in self.type or "College" in self.type:
             domain = ".edu"
@@ -486,7 +486,7 @@ class EducationalInstitution(BaseEntity):
             domain = ".k12.us"
         else:
             domain = ".org"
-        
+
         return f"https://www.{url_name}{domain}"
 
     def _generate_email(self) -> str:
@@ -496,11 +496,11 @@ class EducationalInstitution(BaseEntity):
             An email address.
         """
         name = self.name.lower()
-        
+
         # Extract domain from website
         website = self.website
         domain = website.replace("https://www.", "")
-        
+
         return f"info@{domain}"
 
     def _generate_phone(self) -> str:
@@ -523,9 +523,9 @@ class EducationalInstitution(BaseEntity):
             A list of programs.
         """
         import random
-        
+
         level = self.level
-        
+
         # Define programs by level
         elementary_programs = [
             "Early Childhood Education",
@@ -539,7 +539,7 @@ class EducationalInstitution(BaseEntity):
             "Gifted and Talented Program",
             "After-School Programs",
         ]
-        
+
         middle_school_programs = [
             "Language Arts",
             "Mathematics",
@@ -552,7 +552,7 @@ class EducationalInstitution(BaseEntity):
             "Health Education",
             "Career Exploration",
         ]
-        
+
         high_school_programs = [
             "English/Literature",
             "Mathematics",
@@ -571,7 +571,7 @@ class EducationalInstitution(BaseEntity):
             "Physical Education",
             "Sports Teams",
         ]
-        
+
         higher_education_programs = [
             "Business Administration",
             "Computer Science",
@@ -594,7 +594,7 @@ class EducationalInstitution(BaseEntity):
             "Economics",
             "Political Science",
         ]
-        
+
         vocational_programs = [
             "Automotive Technology",
             "Construction Trades",
@@ -612,7 +612,7 @@ class EducationalInstitution(BaseEntity):
             "Aviation Technology",
             "Agriculture Technology",
         ]
-        
+
         # Select appropriate programs based on level
         if "Elementary" in level:
             all_programs = elementary_programs
@@ -627,7 +627,7 @@ class EducationalInstitution(BaseEntity):
         else:
             # Mix of programs
             all_programs = elementary_programs + middle_school_programs + high_school_programs
-        
+
         # Choose a subset of programs
         num_programs = random.randint(3, min(10, len(all_programs)))
         return random.sample(all_programs, num_programs)
@@ -639,10 +639,10 @@ class EducationalInstitution(BaseEntity):
             A list of accreditations.
         """
         import random
-        
+
         institution_type = self.type
         level = self.level
-        
+
         # Different accreditation bodies for different institution types
         k12_accreditations = [
             "Cognia (formerly AdvancED)",
@@ -654,7 +654,7 @@ class EducationalInstitution(BaseEntity):
             "New England Association of Schools and Colleges (NEASC)",
             "Southern Association of Colleges and Schools (SACS)",
         ]
-        
+
         higher_ed_accreditations = [
             "Higher Learning Commission (HLC)",
             "Middle States Commission on Higher Education (MSCHE)",
@@ -667,7 +667,7 @@ class EducationalInstitution(BaseEntity):
             "Commission on Collegiate Nursing Education (CCNE)",
             "Council for the Accreditation of Educator Preparation (CAEP)",
         ]
-        
+
         vocational_accreditations = [
             "Council on Occupational Education (COE)",
             "Accrediting Commission of Career Schools and Colleges (ACCSC)",
@@ -675,7 +675,7 @@ class EducationalInstitution(BaseEntity):
             "Accrediting Bureau of Health Education Schools (ABHES)",
             "Distance Education Accrediting Commission (DEAC)",
         ]
-        
+
         # Select appropriate accreditations based on institution type and level
         if "University" in institution_type or "College" in institution_type:
             accreditation_list = higher_ed_accreditations
@@ -683,7 +683,7 @@ class EducationalInstitution(BaseEntity):
             accreditation_list = vocational_accreditations
         else:
             accreditation_list = k12_accreditations
-        
+
         # Choose a subset of accreditations
         num_accreditations = random.randint(1, min(3, len(accreditation_list)))
         return random.sample(accreditation_list, num_accreditations)
@@ -695,10 +695,10 @@ class EducationalInstitution(BaseEntity):
             A list of facilities.
         """
         import random
-        
+
         institution_type = self.type
         level = self.level
-        
+
         # Common facilities for all institution types
         common_facilities = [
             "Library",
@@ -711,7 +711,7 @@ class EducationalInstitution(BaseEntity):
             "Sports Fields",
             "Parking",
         ]
-        
+
         # Specialized facilities by institution type
         k12_facilities = [
             "Playground",
@@ -722,7 +722,7 @@ class EducationalInstitution(BaseEntity):
             "Health Office",
             "Special Education Classrooms",
         ]
-        
+
         higher_ed_facilities = [
             "Research Labs",
             "Lecture Halls",
@@ -740,7 +740,7 @@ class EducationalInstitution(BaseEntity):
             "International Student Center",
             "Graduate Student Center",
         ]
-        
+
         vocational_facilities = [
             "Workshops",
             "Training Laboratories",
@@ -753,17 +753,17 @@ class EducationalInstitution(BaseEntity):
             "Electrical Lab",
             "IT Training Center",
         ]
-        
+
         # Combine appropriate facilities based on institution type
         all_facilities = common_facilities.copy()
-        
+
         if "University" in institution_type or "College" in institution_type:
             all_facilities.extend(higher_ed_facilities)
         elif "Vocational" in institution_type or "Technical" in institution_type:
             all_facilities.extend(vocational_facilities)
         else:
             all_facilities.extend(k12_facilities)
-        
+
         # Choose a subset of facilities
         num_facilities = random.randint(5, min(15, len(all_facilities)))
         return random.sample(all_facilities, num_facilities)

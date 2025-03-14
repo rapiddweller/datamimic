@@ -5,7 +5,8 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.generators.phone_number_generator import PhoneNumberGenerator
+import pytest
+from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 
 
 class TestPhoneNumberGenerator:
@@ -24,11 +25,9 @@ class TestPhoneNumberGenerator:
 
     def test_phone_number_generator_not_exist_dataset(self):
         # if dataset not exist -> use US dataset
-        for _ in range(10):
-            phone_number = PhoneNumberGenerator(dataset="SV").generate()
-            assert phone_number
-            assert isinstance(phone_number, str)
-            assert phone_number.startswith("+1-")
+        with pytest.raises(ValueError, match="Country with ISO code XX not found"):
+            phone_number = PhoneNumberGenerator(dataset="XX").generate()
+        
 
     def test_phone_number_generator_none_country_code(self):
         # if dataset not exist -> use US dataset
@@ -39,4 +38,4 @@ class TestPhoneNumberGenerator:
             phone_number = phone_number_generator.generate()
             assert phone_number
             assert isinstance(phone_number, str)
-            assert phone_number.startswith("+0-")
+            assert phone_number.startswith("+1-")

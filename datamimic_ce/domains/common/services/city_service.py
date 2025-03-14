@@ -13,6 +13,6 @@ class CityService(BaseDomainService[City]):
 
     This class provides methods for creating, retrieving, and managing city data.
     """
-    def __init__(self):
-        super().__init__(CityGenerator(), City)
+    def __init__(self, dataset: str = "US"):
+        super().__init__(CityGenerator(dataset), City)
 

@@ -10,9 +10,9 @@ Administration office generator utilities.
 This module provides utility functions for generating administration office data.
 """
 
-import random
 import datetime
-from typing import TypeVar, List, Dict, Any
+import random
+from typing import TypeVar
 
 T = TypeVar("T")  # Define a type variable for generic typing
 
@@ -62,7 +62,7 @@ def generate_office_name(office_type: str, jurisdiction: str, city: str, state: 
     """
     # Name formats
     name_formats = []
-    
+
     if "Municipal" in office_type or "City" in office_type:
         name_formats = [
             f"{city} City Hall",
@@ -129,7 +129,7 @@ def generate_office_name(office_type: str, jurisdiction: str, city: str, state: 
                 f"{jurisdiction} Civil Services Office",
                 f"Public Administration Center - {jurisdiction}",
             ]
-    
+
     if not name_formats:
         name_formats = [
             f"{jurisdiction} Government Office",
@@ -138,7 +138,7 @@ def generate_office_name(office_type: str, jurisdiction: str, city: str, state: 
             f"{jurisdiction} Civil Services Office",
             f"Public Administration Center - {jurisdiction}",
         ]
-    
+
     return random.choice(name_formats)
 
 
@@ -166,7 +166,7 @@ def generate_office_type() -> str:
         "Environmental Protection Agency",
         "Planning and Development Office",
     ]
-    
+
     return random.choice(types)
 
 
@@ -205,7 +205,7 @@ def generate_founding_year(office_type: str) -> int:
         A founding year
     """
     current_year = datetime.datetime.now().year
-    
+
     # Different ranges based on type
     if "Federal" in office_type:
         # Federal offices tend to be older
@@ -222,7 +222,7 @@ def generate_founding_year(office_type: str) -> int:
         # Local and specialized offices tend to be newer
         min_age = 5
         max_age = 75
-    
+
     return current_year - random.randint(min_age, max_age)
 
 
@@ -262,7 +262,7 @@ def generate_annual_budget(office_type: str, staff_count: int) -> float:
     # Budget calculation based on staff size and office type
     # Base budget per staff member (salary, benefits, overhead)
     base_per_staff = random.uniform(80000, 120000)
-    
+
     # Additional budget based on office type
     if "Federal" in office_type:
         multiplier = random.uniform(1.5, 3.0)
@@ -272,18 +272,18 @@ def generate_annual_budget(office_type: str, staff_count: int) -> float:
         multiplier = random.uniform(1.0, 1.5)
     else:
         multiplier = random.uniform(0.8, 1.2)
-    
+
     # Calculate total budget
     budget = staff_count * base_per_staff * multiplier
-    
+
     # Add some randomization
     budget *= random.uniform(0.9, 1.1)
-    
+
     # Round to nearest thousand
     return round(budget / 1000) * 1000
 
 
-def generate_hours_of_operation() -> Dict[str, str]:
+def generate_hours_of_operation() -> dict[str, str]:
     """Generate hours of operation for a government office.
 
     Returns:
@@ -292,21 +292,21 @@ def generate_hours_of_operation() -> Dict[str, str]:
     weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
     weekend = ["Saturday", "Sunday"]
     hours = {}
-    
+
     # Most government offices have standard hours on weekdays
     standard_open = random.choice(["8:00 AM", "8:30 AM", "9:00 AM"])
     standard_close = random.choice(["4:30 PM", "5:00 PM", "5:30 PM"])
-    
+
     # Set weekday hours
     for day in weekdays:
         hours[day] = f"{standard_open} - {standard_close}"
-    
+
     # Some offices have extended hours one day a week
     if random.random() < 0.3:  # 30% chance
         extended_day = random.choice(weekdays)
         extended_close = random.choice(["6:00 PM", "6:30 PM", "7:00 PM"])
         hours[extended_day] = f"{standard_open} - {extended_close}"
-    
+
     # Some offices are open on Saturday
     if random.random() < 0.2:  # 20% chance
         saturday_open = random.choice(["9:00 AM", "10:00 AM"])
@@ -314,10 +314,10 @@ def generate_hours_of_operation() -> Dict[str, str]:
         hours["Saturday"] = f"{saturday_open} - {saturday_close}"
     else:
         hours["Saturday"] = "Closed"
-    
+
     # Almost all government offices are closed on Sunday
     hours["Sunday"] = "Closed"
-    
+
     return hours
 
 
@@ -336,11 +336,11 @@ def generate_government_website(jurisdiction: str) -> str:
     url_name = url_name.replace("state of ", "")
     url_name = url_name.replace(" county", "county")
     url_name = url_name.replace(" ", "")
-    url_name = ''.join(c for c in url_name if c.isalnum())
-    
+    url_name = "".join(c for c in url_name if c.isalnum())
+
     # Determine domain extension based on jurisdiction
     domain = ".gov"  # All US government entities use .gov
-    
+
     return f"https://www.{url_name}{domain}"
 
 
@@ -356,10 +356,10 @@ def generate_government_email(website: str, office_type: str) -> str:
     """
     # Extract domain from website
     domain = website.replace("https://www.", "")
-    
+
     # Determine department from office type
     office_type = office_type.lower()
-    
+
     if "tax" in office_type:
         department = "tax"
     elif "motor" in office_type or "dmv" in office_type:
@@ -380,11 +380,11 @@ def generate_government_email(website: str, office_type: str) -> str:
         department = "planning"
     else:
         department = "info"
-    
+
     return f"{department}@{domain}"
 
 
-def generate_government_services(office_type: str, count: int = None) -> List[str]:
+def generate_government_services(office_type: str, count: int = None) -> list[str]:
     """Generate a list of government services based on office type.
 
     Args:
@@ -395,7 +395,7 @@ def generate_government_services(office_type: str, count: int = None) -> List[st
         A list of services
     """
     office_type = office_type.lower()
-    
+
     # Common government services
     common_services = [
         "General Information",
@@ -405,10 +405,10 @@ def generate_government_services(office_type: str, count: int = None) -> List[st
         "Public Inquiries",
         "Complaint Processing",
     ]
-    
+
     # Specialized services based on office type
     specialized_services = []
-    
+
     if "tax" in office_type:
         specialized_services = [
             "Tax Filing Assistance",
@@ -542,10 +542,10 @@ def generate_government_services(office_type: str, count: int = None) -> List[st
             "Federal Benefits Information",
             "Congressional Liaison Services",
         ]
-    
+
     # Choose services based on office type
     all_services = common_services + specialized_services
-    
+
     # If no specialized services were found, use these general government services
     if not specialized_services:
         general_services = [
@@ -558,17 +558,17 @@ def generate_government_services(office_type: str, count: int = None) -> List[st
             "Regulatory Compliance",
         ]
         all_services = common_services + general_services
-    
+
     # Choose a subset of services
     if count is None:
         count = random.randint(5, min(10, len(all_services)))
     else:
         count = min(count, len(all_services))
-        
+
     return random.sample(all_services, count)
 
 
-def generate_government_departments(office_type: str, count: int = None) -> List[str]:
+def generate_government_departments(office_type: str, count: int = None) -> list[str]:
     """Generate a list of government departments based on office type.
 
     Args:
@@ -579,7 +579,7 @@ def generate_government_departments(office_type: str, count: int = None) -> List
         A list of departments
     """
     office_type = office_type.lower()
-    
+
     # Common departments found in most government offices
     common_departments = [
         "Administration",
@@ -590,10 +590,10 @@ def generate_government_departments(office_type: str, count: int = None) -> List
         "Legal Affairs",
         "Customer Service",
     ]
-    
+
     # Specialized departments based on office type
     specialized_departments = []
-    
+
     if "tax" in office_type:
         specialized_departments = [
             "Tax Collection",
@@ -684,10 +684,10 @@ def generate_government_departments(office_type: str, count: int = None) -> List
             "Regional Coordination",
             "Federal-State Relations",
         ]
-    
+
     # Choose departments based on office type
     all_departments = common_departments + specialized_departments
-    
+
     # If no specialized departments were found, use these general departments
     if not specialized_departments:
         general_departments = [
@@ -700,13 +700,13 @@ def generate_government_departments(office_type: str, count: int = None) -> List
             "Policy Development",
         ]
         all_departments = common_departments + general_departments
-    
+
     # Choose a subset of departments
     if count is None:
         count = random.randint(3, min(7, len(all_departments)))
     else:
         count = min(count, len(all_departments))
-        
+
     return random.sample(all_departments, count)
 
 
@@ -720,7 +720,7 @@ def generate_leadership_position(office_type: str) -> str:
         A leadership position title
     """
     office_type = office_type.lower()
-    
+
     if "municipal" in office_type or "city" in office_type:
         return random.choice(["Mayor", "City Manager", "Deputy Mayor", "City Administrator"])
     elif "county" in office_type:

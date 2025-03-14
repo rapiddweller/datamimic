@@ -291,18 +291,18 @@ class AdministrationOffice(BaseEntity):
             An office name.
         """
         import random
-        
+
         # Get location information for naming
         city = self._address_entity.city
         state = self._address_entity.state
-        
+
         # Generate office name based on type and jurisdiction
         office_type = self.type
         jurisdiction = self.jurisdiction
-        
+
         # Name formats
         name_formats = []
-        
+
         if "Municipal" in office_type or "City" in office_type:
             name_formats = [
                 f"{city} City Hall",
@@ -369,7 +369,7 @@ class AdministrationOffice(BaseEntity):
                     f"{jurisdiction} Civil Services Office",
                     f"Public Administration Center - {jurisdiction}",
                 ]
-        
+
         if not name_formats:
             name_formats = [
                 f"{jurisdiction} Government Office",
@@ -378,7 +378,7 @@ class AdministrationOffice(BaseEntity):
                 f"{jurisdiction} Civil Services Office",
                 f"Public Administration Center - {jurisdiction}",
             ]
-        
+
         return random.choice(name_formats)
 
     def _generate_type(self) -> str:
@@ -388,7 +388,7 @@ class AdministrationOffice(BaseEntity):
             An office type.
         """
         import random
-        
+
         types = [
             "Municipal Government Office",
             "City Administration",
@@ -407,7 +407,7 @@ class AdministrationOffice(BaseEntity):
             "Environmental Protection Agency",
             "Planning and Development Office",
         ]
-        
+
         return random.choice(types)
 
     def _generate_jurisdiction(self) -> str:
@@ -417,11 +417,11 @@ class AdministrationOffice(BaseEntity):
             A jurisdiction.
         """
         import random
-        
+
         office_type = self.type
         city = self._address_entity.city
         state = self._address_entity.state
-        
+
         if "Municipal" in office_type or "City" in office_type:
             return f"City of {city}"
         elif "County" in office_type:
@@ -441,12 +441,12 @@ class AdministrationOffice(BaseEntity):
         Returns:
             A founding year.
         """
-        import random
         import datetime
-        
+        import random
+
         current_year = datetime.datetime.now().year
         office_type = self.type
-        
+
         # Different ranges based on type
         if "Federal" in office_type:
             # Federal offices tend to be older
@@ -463,7 +463,7 @@ class AdministrationOffice(BaseEntity):
             # Local and specialized offices tend to be newer
             min_age = 5
             max_age = 75
-        
+
         return current_year - random.randint(min_age, max_age)
 
     def _generate_staff_count(self) -> int:
@@ -473,9 +473,9 @@ class AdministrationOffice(BaseEntity):
             A staff count.
         """
         import random
-        
+
         office_type = self.type
-        
+
         # Staff size ranges based on office type
         if "Federal" in office_type:
             return random.randint(50, 500)
@@ -496,14 +496,14 @@ class AdministrationOffice(BaseEntity):
             An annual budget in dollars.
         """
         import random
-        
+
         office_type = self.type
         staff_count = self.staff_count
-        
+
         # Budget calculation based on staff size and office type
         # Base budget per staff member (salary, benefits, overhead)
         base_per_staff = random.uniform(80000, 120000)
-        
+
         # Additional budget based on office type
         if "Federal" in office_type:
             multiplier = random.uniform(1.5, 3.0)
@@ -513,13 +513,13 @@ class AdministrationOffice(BaseEntity):
             multiplier = random.uniform(1.0, 1.5)
         else:
             multiplier = random.uniform(0.8, 1.2)
-        
+
         # Calculate total budget
         budget = staff_count * base_per_staff * multiplier
-        
+
         # Add some randomization
         budget *= random.uniform(0.9, 1.1)
-        
+
         # Round to nearest thousand
         return round(budget / 1000) * 1000
 
@@ -530,25 +530,25 @@ class AdministrationOffice(BaseEntity):
             A dictionary mapping days to hours.
         """
         import random
-        
+
         weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
         weekend = ["Saturday", "Sunday"]
         hours = {}
-        
+
         # Most government offices have standard hours on weekdays
         standard_open = random.choice(["8:00 AM", "8:30 AM", "9:00 AM"])
         standard_close = random.choice(["4:30 PM", "5:00 PM", "5:30 PM"])
-        
+
         # Set weekday hours
         for day in weekdays:
             hours[day] = f"{standard_open} - {standard_close}"
-        
+
         # Some offices have extended hours one day a week
         if random.random() < 0.3:  # 30% chance
             extended_day = random.choice(weekdays)
             extended_close = random.choice(["6:00 PM", "6:30 PM", "7:00 PM"])
             hours[extended_day] = f"{standard_open} - {extended_close}"
-        
+
         # Some offices are open on Saturday
         if random.random() < 0.2:  # 20% chance
             saturday_open = random.choice(["9:00 AM", "10:00 AM"])
@@ -556,10 +556,10 @@ class AdministrationOffice(BaseEntity):
             hours["Saturday"] = f"{saturday_open} - {saturday_close}"
         else:
             hours["Saturday"] = "Closed"
-        
+
         # Almost all government offices are closed on Sunday
         hours["Sunday"] = "Closed"
-        
+
         return hours
 
     def _generate_website(self) -> str:
@@ -570,20 +570,20 @@ class AdministrationOffice(BaseEntity):
         """
         # Derive from jurisdiction
         jurisdiction = self.jurisdiction.lower()
-        
+
         # Clean up the jurisdiction for URL
         url_name = jurisdiction.replace("city of ", "")
         url_name = url_name.replace("state of ", "")
         url_name = url_name.replace(" county", "county")
         url_name = url_name.replace(" ", "")
-        url_name = ''.join(c for c in url_name if c.isalnum())
-        
+        url_name = "".join(c for c in url_name if c.isalnum())
+
         # Determine domain extension based on jurisdiction
         if "federal" in self.jurisdiction.lower():
             domain = ".gov"
         else:
             domain = ".gov"  # All US government entities use .gov
-        
+
         return f"https://www.{url_name}{domain}"
 
     def _generate_email(self) -> str:
@@ -595,10 +595,10 @@ class AdministrationOffice(BaseEntity):
         # Extract domain from website
         website = self.website
         domain = website.replace("https://www.", "")
-        
+
         # Determine department from office type
         office_type = self.type.lower()
-        
+
         if "tax" in office_type:
             department = "tax"
         elif "motor" in office_type or "dmv" in office_type:
@@ -619,7 +619,7 @@ class AdministrationOffice(BaseEntity):
             department = "planning"
         else:
             department = "info"
-        
+
         return f"{department}@{domain}"
 
     def _generate_phone(self) -> str:
@@ -642,9 +642,9 @@ class AdministrationOffice(BaseEntity):
             A list of services.
         """
         import random
-        
+
         office_type = self.type.lower()
-        
+
         # Common government services
         common_services = [
             "General Information",
@@ -654,10 +654,10 @@ class AdministrationOffice(BaseEntity):
             "Public Inquiries",
             "Complaint Processing",
         ]
-        
+
         # Specialized services based on office type
         specialized_services = []
-        
+
         if "tax" in office_type:
             specialized_services = [
                 "Tax Filing Assistance",
@@ -791,10 +791,10 @@ class AdministrationOffice(BaseEntity):
                 "Federal Benefits Information",
                 "Congressional Liaison Services",
             ]
-        
+
         # Choose services based on office type
         all_services = common_services + specialized_services
-        
+
         # If no specialized services were found, use these general government services
         if not specialized_services:
             general_services = [
@@ -807,7 +807,7 @@ class AdministrationOffice(BaseEntity):
                 "Regulatory Compliance",
             ]
             all_services = common_services + general_services
-        
+
         # Choose a subset of services
         num_services = random.randint(5, min(10, len(all_services)))
         return random.sample(all_services, num_services)
@@ -819,9 +819,9 @@ class AdministrationOffice(BaseEntity):
             A list of departments.
         """
         import random
-        
+
         office_type = self.type.lower()
-        
+
         # Common departments found in most government offices
         common_departments = [
             "Administration",
@@ -832,10 +832,10 @@ class AdministrationOffice(BaseEntity):
             "Legal Affairs",
             "Customer Service",
         ]
-        
+
         # Specialized departments based on office type
         specialized_departments = []
-        
+
         if "tax" in office_type:
             specialized_departments = [
                 "Tax Collection",
@@ -926,10 +926,10 @@ class AdministrationOffice(BaseEntity):
                 "Regional Coordination",
                 "Federal-State Relations",
             ]
-        
+
         # Choose departments based on office type
         all_departments = common_departments + specialized_departments
-        
+
         # If no specialized departments were found, use these general departments
         if not specialized_departments:
             general_departments = [
@@ -942,7 +942,7 @@ class AdministrationOffice(BaseEntity):
                 "Policy Development",
             ]
             all_departments = common_departments + general_departments
-        
+
         # Choose a subset of departments
         num_departments = random.randint(3, min(7, len(all_departments)))
         return random.sample(all_departments, num_departments)
@@ -954,13 +954,13 @@ class AdministrationOffice(BaseEntity):
             A dictionary mapping leadership positions to names.
         """
         import random
-        
+
         # Get a person entity for name generation
         person_entity = self._class_factory_util.get_person_entity(locale=self._locale, dataset=self._dataset)
-        
+
         office_type = self.type.lower()
         leadership = {}
-        
+
         # Generate leader titles based on office type
         if "municipal" in office_type or "city" in office_type:
             leadership["Mayor"] = f"{person_entity.first_name} {person_entity.last_name}"
@@ -996,10 +996,10 @@ class AdministrationOffice(BaseEntity):
                 leadership["Planning Director"] = f"{person_entity.first_name} {person_entity.last_name}"
             else:
                 leadership["Director"] = f"{person_entity.first_name} {person_entity.last_name}"
-        
+
         # Add administrative positions that exist in nearly all offices
         leadership["Administrative Officer"] = f"{person_entity.reset().first_name} {person_entity.last_name}"
-        
+
         # Randomly add more leadership positions
         possible_positions = [
             "Public Affairs Manager",
@@ -1010,12 +1010,12 @@ class AdministrationOffice(BaseEntity):
             "IT Director",
             "Chief of Staff",
         ]
-        
+
         # Add 1-3 additional positions
         num_additional = random.randint(1, 3)
         selected_positions = random.sample(possible_positions, num_additional)
-        
+
         for position in selected_positions:
             leadership[position] = f"{person_entity.reset().first_name} {person_entity.last_name}"
-        
+
         return leadership

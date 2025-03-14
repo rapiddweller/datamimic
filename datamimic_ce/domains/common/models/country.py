@@ -19,6 +19,7 @@ class Country(BaseEntity):
     phone code, and population.
     """
     def __init__(self, country_generator: CountryGenerator):
+        super().__init__()
         self._country_generator = country_generator
 
     @property

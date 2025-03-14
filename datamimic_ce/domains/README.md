@@ -1,6 +1,6 @@
-# DataMimic Domain Architecture
+# DATAMIMIC Domain Architecture
 
-This directory contains the domain-based implementation of DataMimic entities. Each subdirectory represents a specific business domain with its own set of entities, data loaders, and generators.
+This directory contains the domain-based implementation of DATAMIMIC entities. Each subdirectory represents a specific business domain with its own set of entities, data loaders, and generators.
 
 ## Directory Structure
 

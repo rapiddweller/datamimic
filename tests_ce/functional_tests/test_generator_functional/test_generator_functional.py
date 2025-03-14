@@ -9,7 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.generators.generator_util import GeneratorUtil
+from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -102,22 +102,22 @@ class TestDatamimicGeneratorFunctional:
         prefix = self._test_dir.parent.parent.parent
 
         titles, weights = FileUtil.read_wgt_file(
-            prefix.joinpath("datamimic_ce/generators/data/person/title.csv"), delimiter=","
+            prefix.joinpath("datamimic_ce/domain_data/common/person/title.csv"), delimiter=","
         )
         cn_titles, cn_weights = FileUtil.read_wgt_file(
-            prefix.joinpath("datamimic_ce/generators/data/person/title_CN.csv"), delimiter=","
+            prefix.joinpath("datamimic_ce/domain_data/common/person/title_CN.csv"), delimiter=","
         )
         de_titles, de_weights = FileUtil.read_wgt_file(
-            prefix.joinpath("datamimic_ce/generators/data/person/title_DE.csv"), delimiter=","
+            prefix.joinpath("datamimic_ce/domain_data/common/person/title_DE.csv"), delimiter=","
         )
         fr_titles, fr_weights = FileUtil.read_wgt_file(
-            prefix.joinpath("datamimic_ce/generators/data/person/title_FR.csv"), delimiter=","
+            prefix.joinpath("datamimic_ce/domain_data/common/person/title_FR.csv"), delimiter=","
         )
         it_titles, it_weights = FileUtil.read_wgt_file(
-            prefix.joinpath("datamimic_ce/generators/data/person/title_IT.csv"), delimiter=","
+            prefix.joinpath("datamimic_ce/domain_data/common/person/title_IT.csv"), delimiter=","
         )
         us_titles, us_weights = FileUtil.read_wgt_file(
-            prefix.joinpath("datamimic_ce/generators/data/person/title_US.csv"), delimiter=","
+            prefix.joinpath("datamimic_ce/domain_data/common/person/title_US.csv"), delimiter=","
         )
 
         for element in academic_title:

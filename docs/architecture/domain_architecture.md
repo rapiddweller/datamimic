@@ -1,4 +1,4 @@
-# DataMimic Domain Architecture
+# DATAMIMIC Domain Architecture
 
 ## Overview
 

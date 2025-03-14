@@ -11,7 +11,7 @@ from datamimic_ce.logger import logger
 
 
 def get_datamimic_lib_version(lib_name: str = "datamimic-ce") -> str | None:
-    """Get DataMimic library version."""
+    """Get DATAMIMIC library version."""
     try:
         return importlib.metadata.version(lib_name)
     except importlib.metadata.PackageNotFoundError:

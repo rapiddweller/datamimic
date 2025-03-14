@@ -11,7 +11,6 @@ This script shows how to use the E-commerce domain models to generate order data
 """
 
 import datetime
-import json
 import sys
 from pathlib import Path
 
@@ -35,7 +34,7 @@ def main():
         max_products=5,
     )
     order_data_us = order_us.to_dict()
-    
+
     # Print order details
     print(f"Order ID: {order_data_us['order_id']}")
     print(f"Date: {order_data_us['date']}")
@@ -44,12 +43,12 @@ def main():
     print(f"Shipping Method: {order_data_us['shipping_method']}")
     print(f"Currency: {order_data_us['currency']}")
     print(f"Products: {len(order_data_us['product_list'])}")
-    
+
     # Print the products in the order
     print("\nProducts in the order:")
-    for i, product in enumerate(order_data_us['product_list'], 1):
+    for i, product in enumerate(order_data_us["product_list"], 1):
         print(f"{i}. {product['name']} - {product['quantity']} x ${product['price']} = ${product['subtotal']}")
-    
+
     # Print the order totals
     print("\nOrder Totals:")
     print(f"Subtotal: ${sum(p['subtotal'] for p in order_data_us['product_list']):.2f}")
@@ -57,18 +56,18 @@ def main():
     print(f"Shipping: ${order_data_us['shipping_amount']:.2f}")
     print(f"Discount: ${order_data_us['discount_amount']:.2f}")
     print(f"Total: ${order_data_us['total_amount']:.2f}")
-    
-    if order_data_us['coupon_code']:
+
+    if order_data_us["coupon_code"]:
         print(f"Coupon Code: {order_data_us['coupon_code']}")
-    
-    if order_data_us['notes']:
+
+    if order_data_us["notes"]:
         print(f"Notes: {order_data_us['notes']}")
-    
+
     # Create an order with a specific date range
     print("\n\nGenerating an order with a specific date range:")
     start_date = datetime.datetime(2022, 1, 1)
     end_date = datetime.datetime(2022, 12, 31)
-    
+
     order_dated = Order(
         domain_class_util=domain_class_util,
         dataset="US",
@@ -78,25 +77,27 @@ def main():
         end_date=end_date,
     )
     order_data_dated = order_dated.to_dict()
-    
+
     print(f"Order ID: {order_data_dated['order_id']}")
     print(f"Date: {order_data_dated['date']} (should be in 2022)")
-    
+
     # Generate multiple orders
     print("\n\nGenerating multiple orders:")
     num_orders = 3
     orders = []
-    
+
     for _ in range(num_orders):
         order = Order(domain_class_util=domain_class_util, dataset="US")
         orders.append(order.to_dict())
         order.reset()
-    
+
     print(f"Generated {len(orders)} orders")
-    
+
     # Print order IDs and dates
     for i, order_data in enumerate(orders, 1):
-        print(f"{i}. Order {order_data['order_id']} - {order_data['date']} - {order_data['status']} - ${order_data['total_amount']:.2f}")
+        print(
+            f"{i}. Order {order_data['order_id']} - {order_data['date']} - {order_data['status']} - ${order_data['total_amount']:.2f}"
+        )
 
 
 if __name__ == "__main__":

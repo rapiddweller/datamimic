@@ -7,12 +7,11 @@
 import random
 from pathlib import Path
 
-from datamimic_ce.generators.generator import Generator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class WeightedEntityDataSource(Generator):
+class WeightedEntityDataSource:
     """
     Purpose: generate a dict of entity (header_name: row_value)
     from "entity.wgt.ent.csv" file with corresponding weight.

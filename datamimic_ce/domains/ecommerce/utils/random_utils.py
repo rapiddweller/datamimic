@@ -11,12 +11,12 @@ This module contains utility functions for generating random data for e-commerce
 """
 
 import random
-from typing import Any, List, Tuple, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 T = TypeVar("T")  # Define a type variable for generic typing
 
 
-def weighted_choice(options: List[Tuple[T, float]]) -> T:
+def weighted_choice(options: list[tuple[T, float]]) -> T:
     """Choose an item from a list of options with weights.
 
     Args:
@@ -27,8 +27,8 @@ def weighted_choice(options: List[Tuple[T, float]]) -> T:
     """
     if not options:
         raise ValueError("Cannot choose from an empty list")
-    
-    items, weights = zip(*options)
+
+    items, weights = zip(*options, strict=False)
     return cast(T, random.choices(items, weights=weights, k=1)[0])
 
 
@@ -64,16 +64,13 @@ def generate_id(prefix: str, length: int = 10) -> str:
     Returns:
         A random ID with the specified prefix
     """
-    random_part = ''.join(random.choices("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=length))
+    random_part = "".join(random.choices("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=length))
     return f"{prefix}-{random_part}"
 
 
 def get_property_values_by_category(
-    category: str,
-    properties: dict[str, dict[str, List[Any]]],
-    property_name: str,
-    default: List[Any] = []
-) -> List[Any]:
+    category: str, properties: dict[str, dict[str, list[Any]]], property_name: str, default: list[Any] = []
+) -> list[Any]:
     """Get property values for a specific category.
 
     Args:

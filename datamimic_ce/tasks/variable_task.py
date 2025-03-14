@@ -5,8 +5,10 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from collections.abc import Iterator
+import traceback
 from typing import Any, Final
 
+from datamimic_ce.logger import logger
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.constants.attribute_constants import (
     ATTR_CONSTANT,
@@ -210,10 +212,14 @@ class VariableTask(KeyVariableTask):
                     count=1 if pagination is None else pagination.limit,
                 )
             except Exception as e:
+                logger.error(f"Failed to execute <variable> '{self._statement.name}': "
+                             f"Can't create entity '{statement.entity}': {e}")
+                traceback.print_exc()
                 raise ValueError(
                     f"Failed to execute <variable> '{self._statement.name}': "
                     f"Can't create entity '{statement.entity}': {e}"
                 ) from e
+            
 
             self._mode = self._ENTITY_MODE
         else:
@@ -254,9 +260,9 @@ class VariableTask(KeyVariableTask):
                 "Country": "common.services.CountryService",
                 
                 # Finance domain entities
-                # "CreditCard": "finance.models.credit_card.CreditCard",
-                # "Bank": "finance.models.bank.Bank",
-                # "BankAccount": "finance.models.bank_account.BankAccount",
+                "CreditCard": "finance.services.CreditCardService",
+                "Bank": "finance.services.BankService",
+                "BankAccount": "finance.services.BankAccountService",
                 # "Payment": "finance.models.payment.Payment",
                 # "Invoice": "finance.models.invoice.Invoice",
                 # "Transaction": "finance.models.transaction.Transaction",
@@ -288,7 +294,7 @@ class VariableTask(KeyVariableTask):
                 # "EducationalInstitution": "public_sector.models.educational_institution.EducationalInstitution",
                 # "PoliceOfficer": "public_sector.models.police_officer.PoliceOfficer"
             }
-            
+
             # Use the mapping to create the entity
             if entity_class_name in entity_mappings:
                 domain_entity_path = entity_mappings[entity_class_name]
@@ -299,7 +305,7 @@ class VariableTask(KeyVariableTask):
             else:
                 # If no mapping exists, entity is not supported
                 raise ValueError(f"Entity '{entity_name}' is not supported in the domain architecture.")
-            
+
         # No more fallback to legacy entities - fully committed to domain-based architecture
 
     def execute(self, ctx: Context) -> None:

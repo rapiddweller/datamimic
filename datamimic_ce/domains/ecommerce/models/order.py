@@ -12,8 +12,7 @@ This module provides a model for representing an e-commerce order.
 
 import datetime
 import random
-import uuid
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
@@ -39,7 +38,7 @@ class Order(BaseEntity):
         max_product_price: float = 999.99,
         start_date: datetime.datetime | None = None,
         end_date: datetime.datetime | None = None,
-        dataset: Optional[str] = None,
+        dataset: str | None = None,
     ):
         """Initialize the Order model.
 
@@ -59,16 +58,16 @@ class Order(BaseEntity):
         self._min_product_price = min_product_price
         self._max_product_price = max_product_price
         self._dataset = dataset
-        
+
         # Set default dates if not provided
         if start_date is None:
             start_date = datetime.datetime.now() - datetime.timedelta(days=365)
         if end_date is None:
             end_date = datetime.datetime.now()
-        
+
         self._start_date = start_date
         self._end_date = end_date
-        
+
         # Initialize product model for generating product data
         self._product_model = Product(
             locale=locale,
@@ -76,7 +75,7 @@ class Order(BaseEntity):
             max_price=max_product_price,
             dataset=dataset,
         )
-        
+
         # Initialize cached properties
         self._order_id = None
         self._user_id = None
@@ -118,7 +117,7 @@ class Order(BaseEntity):
         return self._user_id
 
     @property_cache
-    def product_list(self) -> List[Dict[str, Any]]:
+    def product_list(self) -> list[dict[str, Any]]:
         """Get the list of products in the order.
 
         Returns:
@@ -126,16 +125,16 @@ class Order(BaseEntity):
         """
         num_products = random.randint(self._min_products, self._max_products)
         products = []
-        
+
         for _ in range(num_products):
             # Generate a product
             product_data = self._product_model.to_dict()
             self._product_model.reset()
-            
+
             # Extract needed fields and add quantity and subtotal
             quantity = random.randint(1, 5)
             price = product_data["price"]
-            
+
             order_product = {
                 "product_id": product_data["product_id"],
                 "name": product_data["name"],
@@ -144,9 +143,9 @@ class Order(BaseEntity):
                 "quantity": quantity,
                 "subtotal": round(price * quantity, 2),
             }
-            
+
             products.append(order_product)
-        
+
         return products
 
     @property
@@ -199,7 +198,7 @@ class Order(BaseEntity):
         return self._shipping_method
 
     @property_cache
-    def shipping_address(self) -> Dict[str, str]:
+    def shipping_address(self) -> dict[str, str]:
         """Get the shipping address.
 
         Returns:
@@ -215,7 +214,7 @@ class Order(BaseEntity):
         }
 
     @property_cache
-    def billing_address(self) -> Dict[str, str]:
+    def billing_address(self) -> dict[str, str]:
         """Get the billing address.
 
         Returns:
@@ -224,7 +223,7 @@ class Order(BaseEntity):
         # 80% chance billing address is same as shipping
         if random.random() < 0.8:
             return self.shipping_address
-        
+
         # Otherwise generate a different address
         return {
             "street": f"{random.randint(1, 9999)} Oak St",
@@ -270,9 +269,7 @@ class Order(BaseEntity):
         """
         if self._shipping_amount is None:
             # Get shipping cost range for the selected shipping method
-            min_cost, max_cost = OrderDataLoader.get_shipping_cost_range(
-                self.shipping_method, self._dataset
-            )
+            min_cost, max_cost = OrderDataLoader.get_shipping_cost_range(self.shipping_method, self._dataset)
             self._shipping_amount = round(random.uniform(min_cost, max_cost), 2)
         return self._shipping_amount
 
@@ -296,7 +293,7 @@ class Order(BaseEntity):
         return self._discount_amount
 
     @property
-    def coupon_code(self) -> Optional[str]:
+    def coupon_code(self) -> str | None:
         """Get the coupon code.
 
         Returns:
@@ -311,7 +308,7 @@ class Order(BaseEntity):
         return self._coupon_code
 
     @property
-    def notes(self) -> Optional[str]:
+    def notes(self) -> str | None:
         """Get order notes.
 
         Returns:
@@ -346,9 +343,7 @@ class Order(BaseEntity):
             # Calculate subtotal from product list
             subtotal = sum(product["subtotal"] for product in self.product_list)
             # Add tax and shipping, subtract discount
-            self._total_amount = round(
-                subtotal + self.tax_amount + self.shipping_amount - self.discount_amount, 2
-            )
+            self._total_amount = round(subtotal + self.tax_amount + self.shipping_amount - self.discount_amount, 2)
         return self._total_amount
 
     def reset(self) -> None:
@@ -373,7 +368,7 @@ class Order(BaseEntity):
         self._coupon_code = None
         self._notes = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the order to a dictionary.
 
         Returns:

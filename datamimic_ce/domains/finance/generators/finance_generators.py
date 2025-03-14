@@ -10,33 +10,30 @@ Finance data generators.
 This module provides generator classes for finance-related data.
 """
 
-import json
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from datamimic_ce.domains.finance.models.bank_account import BankAccount
-from datamimic_ce.domains.finance.models.credit_card import CreditCard
+from datamimic_ce.core.interfaces import Generator
 from datamimic_ce.domains.finance.services.bank_account_service import BankAccountService
 from datamimic_ce.domains.finance.services.credit_card_service import CreditCardService
-from datamimic_ce.generators.generator import Generator
 
 
 class BankAccountGenerator(Generator):
     """Generator for bank account data."""
-    
+
     def __init__(self, dataset: str = "US", **kwargs):
         """Initialize the bank account generator.
-        
+
         Args:
             dataset: The country code to use for data generation
             **kwargs: Additional arguments to pass to the generator
         """
         super().__init__(**kwargs)
         self.service = BankAccountService(dataset=dataset)
-    
-    def generate(self) -> Dict[str, Any]:
+
+    def generate(self) -> dict[str, Any]:
         """Generate a bank account.
-        
+
         Returns:
             A dictionary containing bank account data
         """
@@ -46,20 +43,20 @@ class BankAccountGenerator(Generator):
 
 class CreditCardGenerator(Generator):
     """Generator for credit card data."""
-    
+
     def __init__(self, dataset: str = "US", **kwargs):
         """Initialize the credit card generator.
-        
+
         Args:
             dataset: The country code to use for data generation
             **kwargs: Additional arguments to pass to the generator
         """
         super().__init__(**kwargs)
         self.service = CreditCardService(dataset=dataset)
-    
-    def generate(self) -> Dict[str, Any]:
+
+    def generate(self) -> dict[str, Any]:
         """Generate a credit card.
-        
+
         Returns:
             A dictionary containing credit card data
         """
@@ -75,7 +72,7 @@ class CreditCardGenerator(Generator):
 
 class FinanceDataGenerator(Generator):
     """Generator for comprehensive finance data including bank accounts and credit cards."""
-    
+
     def __init__(
         self,
         dataset: str = "US",
@@ -83,10 +80,10 @@ class FinanceDataGenerator(Generator):
         include_credit_cards: bool = True,
         num_bank_accounts: int = 1,
         num_credit_cards: int = 1,
-        **kwargs
+        **kwargs,
     ):
         """Initialize the finance data generator.
-        
+
         Args:
             dataset: The country code to use for data generation
             include_bank_accounts: Whether to include bank accounts in the generated data
@@ -103,10 +100,10 @@ class FinanceDataGenerator(Generator):
         self.num_credit_cards = num_credit_cards
         self.bank_account_service = BankAccountService(dataset=dataset)
         self.credit_card_service = CreditCardService(dataset=dataset)
-    
-    def generate(self) -> Dict[str, Any]:
+
+    def generate(self) -> dict[str, Any]:
         """Generate comprehensive finance data.
-        
+
         Returns:
             A dictionary containing finance data including bank accounts and credit cards
         """
@@ -114,11 +111,11 @@ class FinanceDataGenerator(Generator):
             "id": str(uuid.uuid4()),
             "dataset": self.dataset,
         }
-        
+
         if self.include_bank_accounts:
             accounts = self.bank_account_service.generate_bank_accounts(count=self.num_bank_accounts)
             result["bank_accounts"] = [account.dict() for account in accounts]
-        
+
         if self.include_credit_cards:
             cards = self.credit_card_service.generate_credit_cards(count=self.num_credit_cards)
             # Convert cards to dictionaries and add derived properties
@@ -130,5 +127,5 @@ class FinanceDataGenerator(Generator):
                 card_dict["is_expired"] = card.is_expired
                 card_dicts.append(card_dict)
             result["credit_cards"] = card_dicts
-        
+
         return result
