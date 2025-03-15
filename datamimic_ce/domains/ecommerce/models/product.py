@@ -15,7 +15,6 @@ from typing import Any, Dict, List
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
-from datamimic_ce.domains.ecommerce.utils.random_utils import generate_id
 
 
 class Product(BaseEntity):
@@ -28,18 +27,13 @@ class Product(BaseEntity):
     def __init__(
         self,
         product_generator: ProductGenerator,
-        min_price: float = 0.99,
-        max_price: float = 9999.99,
     ):
         """Initialize the Product model.
         Args:
-            min_price: Minimum product price
-            max_price: Maximum product price
+            product_generator: Product generator
         """
         super().__init__()
         self._product_generator = product_generator
-        self._min_price = min_price
-        self._max_price = max_price
 
     @property
     @property_cache
@@ -49,7 +43,7 @@ class Product(BaseEntity):
         Returns:
             A unique product ID
         """
-        return generate_id("PROD", 8)
+        return "PROD" + "".join(random.choices("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=8))
 
     @property
     @property_cache
@@ -124,7 +118,7 @@ class Product(BaseEntity):
         Returns:
             A realistic product price
         """
-        return self._product_generator.price_with_strategy(self._min_price, self._max_price)
+        return self._product_generator.price_with_strategy()
 
     @property
     @property_cache

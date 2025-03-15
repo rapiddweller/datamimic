@@ -37,24 +37,17 @@ class ProductGenerator(BaseDomainGenerator):
         Returns:
             Data of product base on dat type
         """
-        if self._dataset:
-            cache_key = f"{data_type}_{self._dataset}"
-        else:
-            cache_key = f"{data_type}"
-
-        if cache_key not in self._LOADED_DATA_CACHE:
-            file_path = (Path(__file__).parent.parent.parent
-                         .parent / "domain_data" / "ecommerce" / f"{cache_key}.csv")
-            self._LOADED_DATA_CACHE[cache_key] = FileContentStorage.load_file_with_custom_func(
-                cache_key=str(file_path),
-                read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=",")
-            )
-        header_dict, loaded_data = self._LOADED_DATA_CACHE[cache_key]
+        file_path = (Path(__file__).parent.parent.parent
+                    .parent / "domain_data" / "ecommerce" / f"{data_type}_{self._dataset}.csv")
+        header_dict, loaded_data = FileContentStorage.load_file_with_custom_func(
+            cache_key=str(file_path),
+            read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=",")
+        )
 
         wgt_idx = header_dict["weight"]
         return random.choices(loaded_data, weights=[float(row[wgt_idx]) for row in loaded_data])[0][0]
 
-    def price_with_strategy(self, min_price, max_price) -> float:
+    def price_with_strategy(self, min_price: float = 0.99, max_price: float = 999.99) -> float:
         """Generate a price using common pricing strategies.
 
         Args:
