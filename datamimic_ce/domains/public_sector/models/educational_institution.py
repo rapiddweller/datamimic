@@ -11,11 +11,12 @@ This module provides the EducationalInstitution entity model for generating
 realistic educational institution data.
 """
 
-from typing import Any, ClassVar
+import random
+from typing import Any
+import uuid
 
 from datamimic_ce.core.base_entity import BaseEntity
-from datamimic_ce.core.property_cache import PropertyCache
-from datamimic_ce.domains.public_sector.data_loaders.education_loader import EducationDataLoader
+from datamimic_ce.domain_core.property_cache import property_cache
 
 
 class EducationalInstitution(BaseEntity):
@@ -31,255 +32,31 @@ class EducationalInstitution(BaseEntity):
     falling back to generic data files if needed.
     """
 
-    # Class-level cache for shared data
-    _DATA_CACHE: ClassVar[dict[str, Any]] = {}
+    def __init__(self, educational_institution_generator: EducationalInstitutionGenerator):
+        super().__init__()
+        self.educational_institution_generator = educational_institution_generator
 
-    def __init__(
-        self,
-        class_factory_util: Any,
-        locale: str = "en",
-        dataset: str | None = None,
-    ):
-        """Initialize the EducationalInstitution entity.
-
-        Args:
-            class_factory_util: The class factory utility.
-            locale: The locale to use for generating data.
-            dataset: The dataset to use for generating data.
-        """
-        super().__init__(locale, dataset)
-        self._class_factory_util = class_factory_util
-        self._locale = locale
-        self._dataset = dataset
-        self._country_code = dataset or "US"
-
-        # Initialize data loader
-        self._data_loader = EducationDataLoader()
-
-        # Initialize address entity for address information
-        self._address_entity = self._class_factory_util.get_address_entity(locale=locale, dataset=dataset)
-
-        # Initialize field generators
-        self._initialize_generators()
-
-    def _initialize_generators(self):
-        """Initialize all field generators."""
-        # Basic information
-        self._institution_id_generator = PropertyCache(self._generate_institution_id)
-        self._name_generator = PropertyCache(self._generate_name)
-        self._type_generator = PropertyCache(self._generate_type)
-        self._level_generator = PropertyCache(self._generate_level)
-        self._founding_year_generator = PropertyCache(self._generate_founding_year)
-        self._student_count_generator = PropertyCache(self._generate_student_count)
-        self._staff_count_generator = PropertyCache(self._generate_staff_count)
-        self._website_generator = PropertyCache(self._generate_website)
-        self._email_generator = PropertyCache(self._generate_email)
-        self._phone_generator = PropertyCache(self._generate_phone)
-        self._programs_generator = PropertyCache(self._generate_programs)
-        self._accreditations_generator = PropertyCache(self._generate_accreditations)
-        self._facilities_generator = PropertyCache(self._generate_facilities)
-
-    def reset(self) -> None:
-        """Reset all field generators, causing new values to be generated on the next access."""
-        self._address_entity.reset()
-        self._institution_id_generator.reset()
-        self._name_generator.reset()
-        self._type_generator.reset()
-        self._level_generator.reset()
-        self._founding_year_generator.reset()
-        self._student_count_generator.reset()
-        self._staff_count_generator.reset()
-        self._website_generator.reset()
-        self._email_generator.reset()
-        self._phone_generator.reset()
-        self._programs_generator.reset()
-        self._accreditations_generator.reset()
-        self._facilities_generator.reset()
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert the educational institution entity to a dictionary.
-
-        Returns:
-            A dictionary containing all educational institution properties.
-        """
-        return {
-            "institution_id": self.institution_id,
-            "name": self.name,
-            "type": self.type,
-            "level": self.level,
-            "founding_year": self.founding_year,
-            "student_count": self.student_count,
-            "staff_count": self.staff_count,
-            "website": self.website,
-            "email": self.email,
-            "phone": self.phone,
-            "programs": self.programs,
-            "accreditations": self.accreditations,
-            "facilities": self.facilities,
-            "address": self.address,
-        }
-
-    def generate_batch(self, count: int = 100) -> list[dict[str, Any]]:
-        """Generate a batch of educational institution entities.
-
-        Args:
-            count: The number of educational institution entities to generate.
-
-        Returns:
-            A list of dictionaries containing the generated educational institution entities.
-        """
-        institutions = []
-        for _ in range(count):
-            institutions.append(self.to_dict())
-            self.reset()
-        return institutions
+    
 
     # Property getters
     @property
+    @property_cache
     def institution_id(self) -> str:
         """Get the institution ID.
 
         Returns:
             A unique identifier for the institution.
         """
-        return self._institution_id_generator.get()
+        return f"EDU-{uuid.uuid4().hex[:8].upper()}"
 
     @property
+    @property_cache
     def name(self) -> str:
         """Get the institution name.
 
         Returns:
             The institution name.
         """
-        return self._name_generator.get()
-
-    @property
-    def type(self) -> str:
-        """Get the institution type.
-
-        Returns:
-            The institution type.
-        """
-        return self._type_generator.get()
-
-    @property
-    def level(self) -> str:
-        """Get the education level.
-
-        Returns:
-            The education level.
-        """
-        return self._level_generator.get()
-
-    @property
-    def founding_year(self) -> int:
-        """Get the founding year.
-
-        Returns:
-            The founding year.
-        """
-        return self._founding_year_generator.get()
-
-    @property
-    def student_count(self) -> int:
-        """Get the student count.
-
-        Returns:
-            The number of students.
-        """
-        return self._student_count_generator.get()
-
-    @property
-    def staff_count(self) -> int:
-        """Get the staff count.
-
-        Returns:
-            The number of staff members.
-        """
-        return self._staff_count_generator.get()
-
-    @property
-    def website(self) -> str:
-        """Get the institution website.
-
-        Returns:
-            The institution website URL.
-        """
-        return self._website_generator.get()
-
-    @property
-    def email(self) -> str:
-        """Get the institution email address.
-
-        Returns:
-            The institution email address.
-        """
-        return self._email_generator.get()
-
-    @property
-    def phone(self) -> str:
-        """Get the institution phone number.
-
-        Returns:
-            The institution phone number.
-        """
-        return self._phone_generator.get()
-
-    @property
-    def programs(self) -> list[str]:
-        """Get the educational programs offered.
-
-        Returns:
-            A list of programs.
-        """
-        return self._programs_generator.get()
-
-    @property
-    def accreditations(self) -> list[str]:
-        """Get the institution accreditations.
-
-        Returns:
-            A list of accreditations.
-        """
-        return self._accreditations_generator.get()
-
-    @property
-    def facilities(self) -> list[str]:
-        """Get the institution facilities.
-
-        Returns:
-            A list of facilities.
-        """
-        return self._facilities_generator.get()
-
-    @property
-    def address(self) -> dict[str, Any]:
-        """Get the institution address.
-
-        Returns:
-            A dictionary containing the institution's address information.
-        """
-        return self._address_entity.to_dict()
-
-    # Generator methods
-    def _generate_institution_id(self) -> str:
-        """Generate a unique institution ID.
-
-        Returns:
-            A unique institution ID.
-        """
-        import uuid
-
-        return f"EDU-{uuid.uuid4().hex[:8].upper()}"
-
-    def _generate_name(self) -> str:
-        """Generate an institution name.
-
-        Returns:
-            An institution name.
-        """
-        import random
-
         # Get city or address information for naming
         city = self._address_entity.city
         state = self._address_entity.state
@@ -352,14 +129,14 @@ class EducationalInstitution(BaseEntity):
 
         return random.choice(name_formats)
 
-    def _generate_type(self) -> str:
-        """Generate an institution type.
+    @property
+    @property_cache
+    def type(self) -> str:
+        """Get the institution type.
 
         Returns:
-            An institution type.
+            The institution type.
         """
-        import random
-
         types = [
             "Public School",
             "Private School",
@@ -377,14 +154,14 @@ class EducationalInstitution(BaseEntity):
 
         return random.choice(types)
 
-    def _generate_level(self) -> str:
-        """Generate an education level.
+    @property
+    @property_cache
+    def level(self) -> str:
+        """Get the education level.
 
         Returns:
-            An education level.
+            The education level.
         """
-        import random
-
         institution_type = self.type
 
         if "University" in institution_type or "College" in institution_type:
@@ -401,15 +178,14 @@ class EducationalInstitution(BaseEntity):
 
         return random.choice(levels)
 
-    def _generate_founding_year(self) -> int:
-        """Generate a founding year.
+    @property
+    @property_cache
+    def founding_year(self) -> int:
+        """Get the founding year.
 
         Returns:
-            A founding year.
+            The founding year.
         """
-        import datetime
-        import random
-
         current_year = datetime.datetime.now().year
         min_age = 5  # Minimum age for a school
         max_age = 200  # Maximum age for a school (oldest universities)
@@ -424,14 +200,15 @@ class EducationalInstitution(BaseEntity):
 
         return current_year - random.randint(min_age, max_age)
 
-    def _generate_student_count(self) -> int:
-        """Generate a student count.
+
+    @property
+    @property_cache
+    def student_count(self) -> int:
+        """Get the student count.
 
         Returns:
-            A student count.
+            The number of students.
         """
-        import random
-
         institution_type = self.type
         level = self.level
 
@@ -452,25 +229,26 @@ class EducationalInstitution(BaseEntity):
         else:
             return random.randint(100, 5000)
 
-    def _generate_staff_count(self) -> int:
-        """Generate a staff count.
+    @property
+    @property_cache
+    def staff_count(self) -> int:
+        """Get the staff count.
 
         Returns:
-            A staff count.
+            The number of staff members.
         """
-        import random
-
-        # Make staff count proportional to student count
         student_count = self.student_count
         student_to_staff_ratio = random.uniform(10, 25)  # Average student-to-staff ratio
 
         return max(5, int(student_count / student_to_staff_ratio))
 
-    def _generate_website(self) -> str:
-        """Generate a website URL.
+    @property
+    @property_cache
+    def website(self) -> str:
+        """Get the institution website.
 
         Returns:
-            A website URL.
+            The institution website URL.
         """
         # Derive from name
         name = self.name.lower()
@@ -489,11 +267,13 @@ class EducationalInstitution(BaseEntity):
 
         return f"https://www.{url_name}{domain}"
 
-    def _generate_email(self) -> str:
-        """Generate an email address.
+    @property
+    @property_cache
+    def email(self) -> str:
+        """Get the institution email address.
 
         Returns:
-            An email address.
+            The institution email address.
         """
         name = self.name.lower()
 
@@ -503,27 +283,24 @@ class EducationalInstitution(BaseEntity):
 
         return f"info@{domain}"
 
-    def _generate_phone(self) -> str:
-        """Generate a phone number.
+    @property
+    @property_cache
+    def phone(self) -> str:
+        """Get the institution phone number.
 
         Returns:
-            A formatted phone number.
+            The institution phone number.
         """
-        import random
+        return self.educational_institution_generator.phone_number_generator.get()
 
-        area_code = random.randint(100, 999)
-        prefix = random.randint(100, 999)
-        line = random.randint(1000, 9999)
-        return f"({area_code}) {prefix}-{line}"
-
-    def _generate_programs(self) -> list[str]:
-        """Generate a list of educational programs.
+    @property
+    @property_cache
+    def programs(self) -> list[str]:
+        """Get the educational programs offered.
 
         Returns:
             A list of programs.
         """
-        import random
-
         level = self.level
 
         # Define programs by level
@@ -632,14 +409,15 @@ class EducationalInstitution(BaseEntity):
         num_programs = random.randint(3, min(10, len(all_programs)))
         return random.sample(all_programs, num_programs)
 
-    def _generate_accreditations(self) -> list[str]:
-        """Generate a list of accreditations.
+
+    @property
+    @property_cache
+    def accreditations(self) -> list[str]:
+        """Get the institution accreditations.
 
         Returns:
             A list of accreditations.
         """
-        import random
-
         institution_type = self.type
         level = self.level
 
@@ -688,8 +466,11 @@ class EducationalInstitution(BaseEntity):
         num_accreditations = random.randint(1, min(3, len(accreditation_list)))
         return random.sample(accreditation_list, num_accreditations)
 
-    def _generate_facilities(self) -> list[str]:
-        """Generate a list of facilities.
+
+    @property
+    @property_cache
+    def facilities(self) -> list[str]:
+        """Get the institution facilities.
 
         Returns:
             A list of facilities.
@@ -767,3 +548,37 @@ class EducationalInstitution(BaseEntity):
         # Choose a subset of facilities
         num_facilities = random.randint(5, min(15, len(all_facilities)))
         return random.sample(all_facilities, num_facilities)
+
+
+    @property
+    @property_cache 
+    def address(self) -> dict[str, Any]:
+        """Get the institution address.
+
+        Returns:
+            A dictionary containing the institution's address information.
+        """
+        return self._address_entity.to_dict()
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert the educational institution entity to a dictionary.
+
+        Returns:
+            A dictionary containing all educational institution properties.
+        """
+        return {
+            "institution_id": self.institution_id,
+            "name": self.name,
+            "type": self.type,
+            "level": self.level,
+            "founding_year": self.founding_year,
+            "student_count": self.student_count,
+            "staff_count": self.staff_count,
+            "website": self.website,
+            "email": self.email,
+            "phone": self.phone,
+            "programs": self.programs,
+            "accreditations": self.accreditations,
+            "facilities": self.facilities,
+            "address": self.address,
+        }

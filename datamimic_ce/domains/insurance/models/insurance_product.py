@@ -11,35 +11,61 @@ This module defines the insurance product model for the insurance domain.
 """
 
 
-from pydantic import BaseModel, Field
 
 
-class InsuranceCoverage(BaseModel):
-    """Insurance coverage information."""
-
-    id: str = Field(..., description="Unique identifier for the insurance coverage")
-    name: str = Field(..., description="The name of the coverage")
-    code: str = Field(..., description="The code of the coverage")
-    description: str = Field(..., description="Description of what the coverage provides")
-    min_coverage: float = Field(..., description="Minimum coverage amount")
-    max_coverage: float = Field(..., description="Maximum coverage amount, can be infinite")
-
-    class Config:
-        """Pydantic model configuration."""
-
-        frozen = True
 
 
-class InsuranceProduct(BaseModel):
+
+from typing import Any
+import uuid
+from datamimic_ce.domain_core.base_entity import BaseEntity
+from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.insurance.generators.insurance_product import InsuranceProductGenerator
+from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
+
+
+class InsuranceProduct(BaseEntity):
     """Insurance product information."""
 
-    id: str = Field(..., description="Unique identifier for the insurance product")
-    type: str = Field(..., description="The type of insurance product")
-    code: str = Field(..., description="The product code")
-    description: str = Field(..., description="Description of the insurance product")
-    coverages: list[InsuranceCoverage] = Field([], description="List of coverages included in the product")
+    def __init__(self, insurance_product_generator: InsuranceProductGenerator):
+        super().__init__()
+        self.insurance_product_generator = insurance_product_generator
 
-    class Config:
-        """Pydantic model configuration."""
+    @property
+    @property_cache
+    def id(self) -> str:
+        return str(uuid.uuid4())
 
-        frozen = True
+    @property
+    @property_cache
+    def product_data(self) -> dict[str, Any]:
+        return self.insurance_product_generator.get_random_product()
+    
+    @property
+    @property_cache
+    def type(self) -> str:
+        return self.product_data["type"]
+    
+    @property
+    @property_cache
+    def code(self) -> str:
+        return self.product_data["code"]
+    
+    @property
+    @property_cache
+    def description(self) -> str:
+        return self.product_data["description"] 
+    
+    @property
+    @property_cache
+    def coverages(self) -> list[InsuranceCoverage]:
+        return [InsuranceCoverage(self.insurance_coverage_generator) for _ in range(self.product_data["num_coverages"])]
+    
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "type": self.type,
+            "code": self.code,
+            "description": self.description,
+            "coverages": [coverage.to_dict() for coverage in self.coverages],
+        }           

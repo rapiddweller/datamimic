@@ -11,11 +11,14 @@ This module provides the AdministrationOffice entity model for generating
 realistic public administration office data.
 """
 
-from typing import Any, ClassVar
+import datetime
+import random
+from typing import Any
+import uuid
 
 from datamimic_ce.core.base_entity import BaseEntity
-from datamimic_ce.core.property_cache import PropertyCache
-from datamimic_ce.domains.public_sector.data_loaders.administration_loader import AdministrationDataLoader
+from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.common.models.address import Address
 
 
 class AdministrationOffice(BaseEntity):
@@ -30,271 +33,44 @@ class AdministrationOffice(BaseEntity):
     Data is loaded from country-specific CSV files when available,
     falling back to generic data files if needed.
     """
+    def __init__(self, administration_office_generator: AdministrationOfficeGenerator):
+        super().__init__()
+        self.administration_office_generator = administration_office_generator
 
-    # Class-level cache for shared data
-    _DATA_CACHE: ClassVar[dict[str, Any]] = {}
 
-    def __init__(
-        self,
-        class_factory_util: Any,
-        locale: str = "en",
-        dataset: str | None = None,
-    ):
-        """Initialize the AdministrationOffice entity.
-
-        Args:
-            class_factory_util: The class factory utility.
-            locale: The locale to use for generating data.
-            dataset: The dataset to use for generating data.
-        """
-        super().__init__(locale, dataset)
-        self._class_factory_util = class_factory_util
-        self._locale = locale
-        self._dataset = dataset
-        self._country_code = dataset or "US"
-
-        # Initialize data loader
-        self._data_loader = AdministrationDataLoader()
-
-        # Initialize address entity for address information
-        self._address_entity = self._class_factory_util.get_address_entity(locale=locale, dataset=dataset)
-
-        # Initialize field generators
-        self._initialize_generators()
-
-    def _initialize_generators(self):
-        """Initialize all field generators."""
-        # Basic information
-        self._office_id_generator = PropertyCache(self._generate_office_id)
-        self._name_generator = PropertyCache(self._generate_name)
-        self._type_generator = PropertyCache(self._generate_type)
-        self._jurisdiction_generator = PropertyCache(self._generate_jurisdiction)
-        self._founding_year_generator = PropertyCache(self._generate_founding_year)
-        self._staff_count_generator = PropertyCache(self._generate_staff_count)
-        self._annual_budget_generator = PropertyCache(self._generate_annual_budget)
-        self._hours_of_operation_generator = PropertyCache(self._generate_hours_of_operation)
-        self._website_generator = PropertyCache(self._generate_website)
-        self._email_generator = PropertyCache(self._generate_email)
-        self._phone_generator = PropertyCache(self._generate_phone)
-        self._services_generator = PropertyCache(self._generate_services)
-        self._departments_generator = PropertyCache(self._generate_departments)
-        self._leadership_generator = PropertyCache(self._generate_leadership)
-
-    def reset(self) -> None:
-        """Reset all field generators, causing new values to be generated on the next access."""
-        self._address_entity.reset()
-        self._office_id_generator.reset()
-        self._name_generator.reset()
-        self._type_generator.reset()
-        self._jurisdiction_generator.reset()
-        self._founding_year_generator.reset()
-        self._staff_count_generator.reset()
-        self._annual_budget_generator.reset()
-        self._hours_of_operation_generator.reset()
-        self._website_generator.reset()
-        self._email_generator.reset()
-        self._phone_generator.reset()
-        self._services_generator.reset()
-        self._departments_generator.reset()
-        self._leadership_generator.reset()
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert the administration office entity to a dictionary.
-
-        Returns:
-            A dictionary containing all administration office properties.
-        """
-        return {
-            "office_id": self.office_id,
-            "name": self.name,
-            "type": self.type,
-            "jurisdiction": self.jurisdiction,
-            "founding_year": self.founding_year,
-            "staff_count": self.staff_count,
-            "annual_budget": self.annual_budget,
-            "hours_of_operation": self.hours_of_operation,
-            "website": self.website,
-            "email": self.email,
-            "phone": self.phone,
-            "services": self.services,
-            "departments": self.departments,
-            "leadership": self.leadership,
-            "address": self.address,
-        }
-
-    def generate_batch(self, count: int = 100) -> list[dict[str, Any]]:
-        """Generate a batch of administration office entities.
-
-        Args:
-            count: The number of administration office entities to generate.
-
-        Returns:
-            A list of dictionaries containing the generated administration office entities.
-        """
-        offices = []
-        for _ in range(count):
-            offices.append(self.to_dict())
-            self.reset()
-        return offices
 
     # Property getters
     @property
+    @property_cache
     def office_id(self) -> str:
         """Get the office ID.
 
         Returns:
             A unique identifier for the office.
         """
-        return self._office_id_generator.get()
+        return f"ADM-{uuid.uuid4().hex[:8].upper()}"
 
     @property
+    @property_cache
+    def address(self) -> Address:
+        """Get the office address.
+
+        Returns:
+            The office address.
+        """
+        return Address(self.administration_office_generator.address_generator)
+    
+    @property
+    @property_cache 
     def name(self) -> str:
         """Get the office name.
 
         Returns:
             The office name.
         """
-        return self._name_generator.get()
-
-    @property
-    def type(self) -> str:
-        """Get the office type.
-
-        Returns:
-            The office type.
-        """
-        return self._type_generator.get()
-
-    @property
-    def jurisdiction(self) -> str:
-        """Get the jurisdiction.
-
-        Returns:
-            The jurisdiction.
-        """
-        return self._jurisdiction_generator.get()
-
-    @property
-    def founding_year(self) -> int:
-        """Get the founding year.
-
-        Returns:
-            The founding year.
-        """
-        return self._founding_year_generator.get()
-
-    @property
-    def staff_count(self) -> int:
-        """Get the staff count.
-
-        Returns:
-            The number of staff members.
-        """
-        return self._staff_count_generator.get()
-
-    @property
-    def annual_budget(self) -> float:
-        """Get the annual budget.
-
-        Returns:
-            The annual budget in dollars.
-        """
-        return self._annual_budget_generator.get()
-
-    @property
-    def hours_of_operation(self) -> dict[str, str]:
-        """Get the hours of operation.
-
-        Returns:
-            A dictionary mapping days to hours.
-        """
-        return self._hours_of_operation_generator.get()
-
-    @property
-    def website(self) -> str:
-        """Get the office website.
-
-        Returns:
-            The office website URL.
-        """
-        return self._website_generator.get()
-
-    @property
-    def email(self) -> str:
-        """Get the office email address.
-
-        Returns:
-            The office email address.
-        """
-        return self._email_generator.get()
-
-    @property
-    def phone(self) -> str:
-        """Get the office phone number.
-
-        Returns:
-            The office phone number.
-        """
-        return self._phone_generator.get()
-
-    @property
-    def services(self) -> list[str]:
-        """Get the services offered.
-
-        Returns:
-            A list of services.
-        """
-        return self._services_generator.get()
-
-    @property
-    def departments(self) -> list[str]:
-        """Get the departments.
-
-        Returns:
-            A list of departments.
-        """
-        return self._departments_generator.get()
-
-    @property
-    def leadership(self) -> dict[str, str]:
-        """Get the office leadership.
-
-        Returns:
-            A dictionary mapping leadership positions to names.
-        """
-        return self._leadership_generator.get()
-
-    @property
-    def address(self) -> dict[str, Any]:
-        """Get the office address.
-
-        Returns:
-            A dictionary containing the office's address information.
-        """
-        return self._address_entity.to_dict()
-
-    # Generator methods
-    def _generate_office_id(self) -> str:
-        """Generate a unique office ID.
-
-        Returns:
-            A unique office ID.
-        """
-        import uuid
-
-        return f"ADM-{uuid.uuid4().hex[:8].upper()}"
-
-    def _generate_name(self) -> str:
-        """Generate an office name.
-
-        Returns:
-            An office name.
-        """
-        import random
-
         # Get location information for naming
-        city = self._address_entity.city
-        state = self._address_entity.state
+        city = self.address.city
+        state = self.address.state
 
         # Generate office name based on type and jurisdiction
         office_type = self.type
@@ -381,14 +157,14 @@ class AdministrationOffice(BaseEntity):
 
         return random.choice(name_formats)
 
-    def _generate_type(self) -> str:
-        """Generate an office type.
+    @property
+    @property_cache
+    def type(self) -> str:
+        """Get the office type.
 
         Returns:
-            An office type.
+            The office type.
         """
-        import random
-
         types = [
             "Municipal Government Office",
             "City Administration",
@@ -410,14 +186,14 @@ class AdministrationOffice(BaseEntity):
 
         return random.choice(types)
 
-    def _generate_jurisdiction(self) -> str:
-        """Generate a jurisdiction.
+    @property
+    @property_cache
+    def jurisdiction(self) -> str:
+        """Get the jurisdiction.
 
         Returns:
-            A jurisdiction.
+            The jurisdiction.
         """
-        import random
-
         office_type = self.type
         city = self._address_entity.city
         state = self._address_entity.state
@@ -435,15 +211,14 @@ class AdministrationOffice(BaseEntity):
             jurisdictions = [f"City of {city}", f"{city} County", f"State of {state}", "Federal"]
             return random.choice(jurisdictions)
 
-    def _generate_founding_year(self) -> int:
-        """Generate a founding year.
+    @property
+    @property_cache
+    def founding_year(self) -> int:
+        """Get the founding year.
 
         Returns:
-            A founding year.
+            The founding year.
         """
-        import datetime
-        import random
-
         current_year = datetime.datetime.now().year
         office_type = self.type
 
@@ -466,14 +241,15 @@ class AdministrationOffice(BaseEntity):
 
         return current_year - random.randint(min_age, max_age)
 
-    def _generate_staff_count(self) -> int:
-        """Generate a staff count.
+
+    @property
+    @property_cache
+    def staff_count(self) -> int:
+        """Get the staff count.
 
         Returns:
-            A staff count.
+            The number of staff members.
         """
-        import random
-
         office_type = self.type
 
         # Staff size ranges based on office type
@@ -489,14 +265,14 @@ class AdministrationOffice(BaseEntity):
             # Specialized offices
             return random.randint(5, 75)
 
-    def _generate_annual_budget(self) -> float:
-        """Generate an annual budget.
+    @property
+    @property_cache
+    def annual_budget(self) -> float:
+        """Get the annual budget.
 
         Returns:
-            An annual budget in dollars.
+            The annual budget in dollars.
         """
-        import random
-
         office_type = self.type
         staff_count = self.staff_count
 
@@ -523,14 +299,14 @@ class AdministrationOffice(BaseEntity):
         # Round to nearest thousand
         return round(budget / 1000) * 1000
 
-    def _generate_hours_of_operation(self) -> dict[str, str]:
-        """Generate hours of operation.
+    @property
+    @property_cache
+    def hours_of_operation(self) -> dict[str, str]:
+        """Get the hours of operation.
 
         Returns:
             A dictionary mapping days to hours.
         """
-        import random
-
         weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
         weekend = ["Saturday", "Sunday"]
         hours = {}
@@ -562,11 +338,13 @@ class AdministrationOffice(BaseEntity):
 
         return hours
 
-    def _generate_website(self) -> str:
-        """Generate a website URL.
+    @property
+    @property_cache
+    def website(self) -> str:
+        """Get the office website.
 
         Returns:
-            A website URL.
+            The office website URL.
         """
         # Derive from jurisdiction
         jurisdiction = self.jurisdiction.lower()
@@ -586,11 +364,13 @@ class AdministrationOffice(BaseEntity):
 
         return f"https://www.{url_name}{domain}"
 
-    def _generate_email(self) -> str:
-        """Generate an email address.
+    @property
+    @property_cache
+    def email(self) -> str:
+        """Get the office email address.
 
         Returns:
-            An email address.
+            The office email address.
         """
         # Extract domain from website
         website = self.website
@@ -622,27 +402,25 @@ class AdministrationOffice(BaseEntity):
 
         return f"{department}@{domain}"
 
-    def _generate_phone(self) -> str:
-        """Generate a phone number.
+
+    @property
+    @property_cache
+    def phone(self) -> str:
+        """Get the office phone number.
 
         Returns:
-            A formatted phone number.
+            The office phone number.
         """
-        import random
+        return self.administration_office_generator.phone_number_generator.get()
 
-        area_code = random.randint(100, 999)
-        prefix = random.randint(100, 999)
-        line = random.randint(1000, 9999)
-        return f"({area_code}) {prefix}-{line}"
-
-    def _generate_services(self) -> list[str]:
-        """Generate a list of services offered.
+    @property
+    @property_cache
+    def services(self) -> list[str]:
+        """Get the services offered.
 
         Returns:
             A list of services.
         """
-        import random
-
         office_type = self.type.lower()
 
         # Common government services
@@ -812,14 +590,15 @@ class AdministrationOffice(BaseEntity):
         num_services = random.randint(5, min(10, len(all_services)))
         return random.sample(all_services, num_services)
 
-    def _generate_departments(self) -> list[str]:
-        """Generate a list of departments.
+
+    @property
+    @property_cache
+    def departments(self) -> list[str]:
+        """Get the departments.
 
         Returns:
             A list of departments.
         """
-        import random
-
         office_type = self.type.lower()
 
         # Common departments found in most government offices
@@ -947,17 +726,15 @@ class AdministrationOffice(BaseEntity):
         num_departments = random.randint(3, min(7, len(all_departments)))
         return random.sample(all_departments, num_departments)
 
-    def _generate_leadership(self) -> dict[str, str]:
-        """Generate leadership information.
+
+    @property
+    @property_cache
+    def leadership(self) -> dict[str, str]:
+        """Get the office leadership.
 
         Returns:
             A dictionary mapping leadership positions to names.
         """
-        import random
-
-        # Get a person entity for name generation
-        person_entity = self._class_factory_util.get_person_entity(locale=self._locale, dataset=self._dataset)
-
         office_type = self.type.lower()
         leadership = {}
 
@@ -1019,3 +796,28 @@ class AdministrationOffice(BaseEntity):
             leadership[position] = f"{person_entity.reset().first_name} {person_entity.last_name}"
 
         return leadership
+
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert the administration office entity to a dictionary.
+
+        Returns:
+            A dictionary containing all administration office properties.
+        """
+        return {
+            "office_id": self.office_id,
+            "name": self.name,
+            "type": self.type,
+            "jurisdiction": self.jurisdiction,
+            "founding_year": self.founding_year,
+            "staff_count": self.staff_count,
+            "annual_budget": self.annual_budget,
+            "hours_of_operation": self.hours_of_operation,
+            "website": self.website,
+            "email": self.email,
+            "phone": self.phone,
+            "services": self.services,
+            "departments": self.departments,
+            "leadership": self.leadership,
+            "address": self.address,
+        }

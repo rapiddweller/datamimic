@@ -11,21 +11,61 @@ This module defines the insurance company model for the insurance domain.
 """
 
 
-from pydantic import BaseModel, Field
+from typing import Any
+import uuid
+
+from datamimic_ce.domain_core.base_entity import BaseEntity
+from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.insurance.generators.insurance_generators import InsuranceCompanyGenerator
 
 
-class InsuranceCompany(BaseModel):
+class InsuranceCompany(BaseEntity):
     """Insurance company information."""
+    def __init__(self, insurance_company_generator: InsuranceCompanyGenerator):
+        super().__init__()
+        self.insurance_company_generator = insurance_company_generator
 
-    id: str = Field(..., description="Unique identifier for the insurance company")
-    name: str = Field(..., description="The name of the insurance company")
-    code: str = Field(..., description="The code of the insurance company")
-    founded_year: str = Field(..., description="The year the insurance company was founded")
-    headquarters: str = Field(..., description="The headquarters location of the insurance company")
-    website: str = Field(..., description="The website of the insurance company")
-    logo_url: str | None = Field(None, description="URL to the company logo")
+    @property
+    @property_cache
+    def id(self) -> str:
+        return str(uuid.uuid4())
 
-    class Config:
-        """Pydantic model configuration."""
+    @property
+    @property_cache
+    def company_data(self) -> dict[str, Any]:
+        return self.insurance_company_generator.get_random_company()
 
-        frozen = True
+    @property
+    @property_cache
+    def name(self) -> str:
+        return self.company_data["name"]
+
+    @property
+    @property_cache
+    def code(self) -> str:
+        return self.company_data["code"]
+
+    @property
+    @property_cache
+    def founded_year(self) -> str:
+        return self.company_data["founded_year"]
+
+    @property
+    @property_cache
+    def headquarters(self) -> str:
+        return self.company_data["headquarters"]
+    
+    @property
+    @property_cache
+    def website(self) -> str:
+        return self.company_data["website"]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "code": self.code,
+            "founded_year": self.founded_year,
+            "headquarters": self.headquarters,
+            "website": self.website,
+        }

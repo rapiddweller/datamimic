@@ -1,123 +1,89 @@
-# DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
-# This software is licensed under the MIT License.
-# See LICENSE file for the full text of the license.
-# For questions and support, contact: info@rapiddweller.com
-
-"""
-Insurance Policy model.
-
-This module defines the insurance policy model for the insurance domain.
-"""
-
-from datetime import date, datetime
-
-from pydantic import BaseModel, Field, validator
-
+import datetime
+from typing import Any
+import uuid
+from datamimic_ce.domain_core.base_entity import BaseEntity
+from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.insurance.generators.insurance_policy import InsurancePolicyGenerator
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
-from datamimic_ce.domains.insurance.models.insurance_product import InsuranceProduct
+from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
+from datamimic_ce.domains.insurance.models.insurance_product import InsuranceProduct            
 
 
-class PolicyHolder(BaseModel):
-    """Policy holder information."""
-
-    id: str = Field(..., description="Unique identifier for the policy holder")
-    first_name: str = Field(..., description="First name of the policy holder")
-    last_name: str = Field(..., description="Last name of the policy holder")
-    email: str = Field(..., description="Email address of the policy holder")
-    phone: str = Field(..., description="Phone number of the policy holder")
-    address: str = Field(..., description="Address of the policy holder")
-    city: str = Field(..., description="City of the policy holder")
-    state: str = Field(..., description="State/province of the policy holder")
-    postal_code: str = Field(..., description="Postal code of the policy holder")
-    country: str = Field(..., description="Country of the policy holder")
-    date_of_birth: date = Field(..., description="Date of birth of the policy holder")
-
-    class Config:
-        """Pydantic model configuration."""
-
-        frozen = True
-        json_encoders = {
-            date: lambda v: v.isoformat(),
-        }
-
-
-class PolicyCoverage(BaseModel):
-    """Policy coverage information."""
-
-    coverage_id: str = Field(..., description="Reference to the coverage definition")
-    name: str = Field(..., description="Name of the coverage")
-    code: str = Field(..., description="Code of the coverage")
-    coverage_amount: float = Field(..., description="The amount of coverage")
-    deductible: float = Field(..., description="The deductible amount")
-
-    class Config:
-        """Pydantic model configuration."""
-
-        frozen = True
-
-
-class InsurancePolicy(BaseModel):
+class InsurancePolicy(BaseEntity):
     """Insurance policy information."""
 
-    id: str = Field(..., description="Unique identifier for the insurance policy")
-    policy_number: str = Field(..., description="The policy number")
-    company: InsuranceCompany = Field(..., description="The insurance company")
-    product: InsuranceProduct = Field(..., description="The insurance product")
-    policy_holder: PolicyHolder = Field(..., description="The policy holder")
-    coverages: list[PolicyCoverage] = Field(..., description="List of coverages included in the policy")
-    premium: float = Field(..., description="The premium amount")
-    premium_frequency: str = Field(
-        "monthly", description="The frequency of premium payments (monthly, quarterly, annually)"
-    )
-    start_date: date = Field(..., description="The start date of the policy")
-    end_date: date = Field(..., description="The end date of the policy")
-    status: str = Field("active", description="The status of the policy (active, expired, cancelled)")
-    created_date: datetime = Field(..., description="The date the policy was created")
-
+    def __init__(self, insurance_policy_generator: InsurancePolicyGenerator):
+        super().__init__()
+        self.insurance_policy_generator = insurance_policy_generator
+        
     @property
-    def is_active(self) -> bool:
-        """Check if the policy is currently active.
-
-        Returns:
-            True if the policy is active, False otherwise
-        """
-        return self.status == "active" and self.start_date <= date.today() <= self.end_date
-
+    @property_cache
+    def id(self) -> str:
+        return str(uuid.uuid4())
+    
     @property
-    def total_coverage(self) -> float:
-        """Calculate the total coverage amount across all coverages.
-
-        Returns:
-            The total coverage amount
-        """
-        return sum(coverage.coverage_amount for coverage in self.coverages)
-
+    @property_cache
+    def company(self) -> InsuranceCompany:
+        return InsuranceCompany(self.insurance_policy_generator.insurance_company_generator)
+    
     @property
-    def annual_premium(self) -> float:
-        """Calculate the annual premium amount.
-
-        Returns:
-            The annual premium amount
-        """
-        if self.premium_frequency == "monthly":
-            return self.premium * 12
-        elif self.premium_frequency == "quarterly":
-            return self.premium * 4
-        else:  # annually
-            return self.premium
-
-    @validator("end_date")
-    def end_date_after_start_date(cls, v, values):
-        """Validate that the end date is after the start date."""
-        if "start_date" in values and v <= values["start_date"]:
-            raise ValueError("end_date must be after start_date")
-        return v
-
-    class Config:
-        """Pydantic model configuration."""
-
-        json_encoders = {
-            datetime: lambda v: v.isoformat(),
-            date: lambda v: v.isoformat(),
-        }
+    @property_cache
+    def product(self) -> InsuranceProduct:
+        return InsuranceProduct(self.insurance_policy_generator.insurance_product_generator)
+    
+    @property
+    @property_cache
+    def policy_holder(self) -> Person:
+        return Person(self.insurance_policy_generator.person_generator)
+    
+    @property
+    @property_cache
+    def coverages(self) -> list[InsuranceCoverage]:
+        return [InsuranceCoverage(self.insurance_policy_generator.insurance_coverage_generator) for _ in range(self.policy_data["num_coverages"])]
+    
+    @property
+    @property_cache
+    def premium(self) -> float:
+        return self.policy_data["premium"]
+    
+    @property
+    @property_cache
+    def premium_frequency(self) -> str:
+        return self.policy_data["premium_frequency"]
+    
+    @property
+    @property_cache
+    def start_date(self) -> date:
+        return self.insurance_policy_generator.datetime_generator.get_random_date()
+    
+    @property
+    @property_cache
+    def end_date(self) -> date:
+        return self.insurance_policy_generator.datetime_generator.get_random_date() 
+    
+    @property
+    @property_cache
+    def status(self) -> str:
+        return self.policy_data["status"]
+    
+    @property
+    @property_cache
+    def created_date(self) -> datetime:
+        return self.insurance_policy_generator.datetime_generator.get_random_date() 
+    
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "company": self.company.to_dict(),
+            "product": self.product.to_dict(),
+            "policy_holder": self.policy_holder.to_dict(),
+            "coverages": [coverage.to_dict() for coverage in self.coverages],
+            "premium": self.premium,
+            "premium_frequency": self.premium_frequency,
+            "start_date": self.start_date,
+            "end_date": self.end_date,
+            "status": self.status,
+            "created_date": self.created_date,
+        } 
+    
