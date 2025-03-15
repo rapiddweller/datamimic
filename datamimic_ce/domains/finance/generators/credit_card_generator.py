@@ -33,11 +33,7 @@ class CreditCardGenerator(BaseDomainGenerator):
         return self._bank_generator
         
     def generate_card_type(self) -> str:
-        cache_key = f"card_types_{self.dataset}"
-        if cache_key not in self._LOADED_DATA_CACHE:
-            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "finance" / "credit_card" / f"card_types_{self.dataset}.csv"
-            card_types_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_file(file_path))
-            self._LOADED_DATA_CACHE[cache_key] = card_types_data
-        
-        return random.choice(self._LOADED_DATA_CACHE[cache_key])
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "finance" / "credit_card" / f"card_types_{self.dataset}.csv"
+        card_types_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_file(file_path))
+        return random.choice(card_types_data)
     

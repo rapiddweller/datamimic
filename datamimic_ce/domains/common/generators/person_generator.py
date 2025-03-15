@@ -81,15 +81,9 @@ class PersonGenerator(BaseDomainGenerator):
         Returns:
             A dictionary containing salutation data.
         """
-        cache_key = f"salutation_data_{self._country_code}"
 
-        if cache_key in self._LOADED_DATA_CACHE:
-            return self._LOADED_DATA_CACHE[cache_key]
-        
         salutation_file_path = Path(__file__).parent.parent.parent.parent/"domain_data"/"common"/"person" / f"salutation_{self._country_code}.csv"
-        loaded_salutation_data = FileContentStorage.load_file_with_custom_func(cache_key=cache_key, read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(salutation_file_path, delimiter=",")[0])
-
-        self._LOADED_DATA_CACHE[cache_key] = loaded_salutation_data
+        loaded_salutation_data = FileContentStorage.load_file_with_custom_func(cache_key=str(salutation_file_path), read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(salutation_file_path, delimiter=",")[0])
 
         return loaded_salutation_data
     

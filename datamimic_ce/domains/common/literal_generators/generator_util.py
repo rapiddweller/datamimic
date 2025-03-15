@@ -65,13 +65,13 @@ from datamimic_ce.domains.common.literal_generators.sector_generator import Sect
 #     UUIDGenerator,
 # )
 from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
+from datamimic_ce.domains.common.literal_generators.ssn_generator import SSNGenerator
 # from datamimic_ce.domains.common.literal_generators.ssn_generator import SSNGenerator
 from datamimic_ce.domains.common.literal_generators.street_name_generator import StreetNameGenerator
 # from datamimic_ce.domains.common.literal_generators.text_generators import ParagraphGenerator
 # from datamimic_ce.domains.common.literal_generators.url_generator import UrlGenerator
 from datamimic_ce.domains.common.literal_generators.uuid_generator import UUIDGenerator
-from datamimic_ce.domains.common.literal_generators.ssn_generator import SSNGenerator
-from datamimic_ce.domains.healthcare.generators.healthcare_generators import DiagnosisGenerator
+# from datamimic_ce.domains.healthcare.generators.healthcare_generators import DiagnosisGenerator
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.statement import Statement
 
@@ -146,7 +146,7 @@ class GeneratorUtil:
             # "ScientificUnitGenerator": ScientificUnitGenerator,
             # Healthcare
             # "AllergyGenerator": AllergyGenerator,
-            "DiagnosisGenerator": DiagnosisGenerator,
+            # "DiagnosisGenerator": DiagnosisGenerator,
             # "ImmunizationGenerator": ImmunizationGenerator,
             # "LabResultGenerator": LabResultGenerator,
             # "MedicalAppointmentGenerator": MedicalAppointmentGenerator,
@@ -395,7 +395,7 @@ class GeneratorUtil:
 
                 result = self._context.evaluate_python_expression(generator_str, local_ns)
             else:
-                if class_name in ["EmailAddressGenerator"]:
+                if class_name in ["EmailAddressGenerator", "FamilyNameGenerator", "GivenNameGenerator"]:
                     result = cls(
                         dataset=self._context.root.default_dataset,
                     )

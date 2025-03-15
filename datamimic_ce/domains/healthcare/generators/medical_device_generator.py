@@ -4,191 +4,289 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from typing import Any
+import datetime
+from pathlib import Path
+import random
+from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
+from datamimic_ce.utils.file_content_storage import FileContentStorage
+from datamimic_ce.utils.file_util import FileUtil
 
-from datamimic_ce.domains.healthcare.models.medical_device import MedicalDevice
 
+class MedicalDeviceGenerator(BaseDomainGenerator):
+    def __init__(self, dataset: str = "US"):
+        super().__init__()
+        self._dataset = dataset
+        self._person_generator = PersonGenerator()
 
-class MedicalDeviceGenerator:
-    """Generator for medical device data.
+    @property
+    def person_generator(self) -> PersonGenerator:
+        return self._person_generator
 
-    This class provides methods to generate single or multiple medical device instances.
-    It supports customization of the generation process through various parameters.
-    """
+    def generate_device_type(self) -> str:
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / f"device_types_{self._dataset}.csv"
+        loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_weight_csv(str(file_path)))
+        return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
+    
+    def generate_manufacturer(self) -> str:
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / f"manufacturers_{self._dataset}.csv"
+        loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_weight_csv(str(file_path)))
+        return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
+    
+    def generate_device_status(self) -> str:
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / f"device_statuses_{self._dataset}.csv"
+        loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_weight_csv(str(file_path)))
+        return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
+    
+    def generate_location(self) -> str:
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / f"locations_{self._dataset}.csv"
+        loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_weight_csv(str(file_path)))
+        return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
+    
+    def generate_usage_log(self, username: str) -> list[dict[str, str]]:
+        logs = []
 
-    def __init__(self, class_factory_util=None):
-        """Initialize the MedicalDeviceGenerator.
+        # Generate between 3 and 10 usage logs
+        num_logs = random.randint(3, 10)
 
-        Args:
-            class_factory_util: The class factory utility for creating related entities.
-        """
-        self.class_factory_util = class_factory_util
+        # Start date for logs (between 1 and 2 years ago)
+        start_days_ago = random.randint(365, 730)
+        current_date = datetime.datetime.now() - datetime.timedelta(days=start_days_ago)
 
-    def generate_device(self, locale: str = "en", dataset: str | None = None, **kwargs) -> MedicalDevice:
-        """Generate a single medical device.
+        for _ in range(num_logs):
+            # Move forward in time for each log
+            days_forward = random.randint(5, 60)
+            current_date += datetime.timedelta(days=days_forward)
 
-        Args:
-            locale: The locale to use for generating data.
-            dataset: The dataset to use for generating data.
-            **kwargs: Additional keyword arguments to pass to the MedicalDevice constructor.
+            # Skip if we've gone past today
+            if current_date > datetime.datetime.now():
+                break
 
-        Returns:
-            A MedicalDevice instance.
-        """
-        return MedicalDevice(class_factory_util=self.class_factory_util, locale=locale, dataset=dataset, **kwargs)
+            # Generate a log entry
+            log_entry = {
+                "date": current_date.strftime("%Y-%m-%d"),
+                "user": username,
+                "duration_minutes": str(random.randint(15, 240)),
+                "purpose": self._generate_usage_purpose(),
+                "notes": self._generate_usage_notes(),
+            }
 
-    def generate_batch(
-        self,
-        count: int = 100,
-        locale: str = "en",
-        dataset: str | None = None,
-        device_types: list[str] | None = None,
-        manufacturers: list[str] | None = None,
-        locations: list[str] | None = None,
-        statuses: list[str] | None = None,
-        **kwargs,
-    ) -> list[dict[str, Any]]:
-        """Generate a batch of medical devices.
+            logs.append(log_entry)
 
-        Args:
-            count: The number of medical devices to generate.
-            locale: The locale to use for generating data.
-            dataset: The dataset to use for generating data.
-            device_types: Optional list of device types to choose from.
-            manufacturers: Optional list of manufacturers to choose from.
-            locations: Optional list of locations to choose from.
-            statuses: Optional list of statuses to choose from.
-            **kwargs: Additional keyword arguments to pass to the MedicalDevice constructor.
+        return logs
 
-        Returns:
-            A list of dictionaries, each representing a medical device.
-        """
-        result = []
-
-        # Create a single device instance to reuse
-        device = self.generate_device(locale=locale, dataset=dataset, **kwargs)
-
-        # Override the DATA_CACHE if custom values are provided
-        if device_types:
-            MedicalDevice._DATA_CACHE["device_types"] = device_types
-        if manufacturers:
-            MedicalDevice._DATA_CACHE["manufacturers"] = manufacturers
-        if locations:
-            MedicalDevice._DATA_CACHE["locations"] = locations
-        if statuses:
-            MedicalDevice._DATA_CACHE["statuses"] = statuses
-
-        # Generate the batch
-        for _ in range(count):
-            device.reset()
-            result.append(device.to_dict())
-
-        return result
-
-    def generate_related_devices(
-        self,
-        count: int = 3,
-        base_device: MedicalDevice | None = None,
-        locale: str = "en",
-        dataset: str | None = None,
-        same_manufacturer: bool = True,
-        same_type: bool = False,
-        **kwargs,
-    ) -> list[dict[str, Any]]:
-        """Generate a set of related medical devices.
-
-        Args:
-            count: The number of related devices to generate.
-            base_device: Optional base device to relate the new devices to.
-            locale: The locale to use for generating data.
-            dataset: The dataset to use for generating data.
-            same_manufacturer: Whether the generated devices should have the same manufacturer.
-            same_type: Whether the generated devices should have the same device type.
-            **kwargs: Additional keyword arguments to pass to the MedicalDevice constructor.
+    def _generate_usage_purpose(self) -> str:
+        """Generate a purpose for device usage.
 
         Returns:
-            A list of dictionaries, each representing a medical device.
+            A string representing a usage purpose.
         """
-        result = []
+        device_type = self.device_type.lower()
 
-        # Create a base device if not provided
-        if not base_device:
-            base_device = self.generate_device(locale=locale, dataset=dataset, **kwargs)
+        purposes = [
+            "Routine patient care",
+            "Emergency procedure",
+            "Scheduled examination",
+            "Training session",
+            "Diagnostic procedure",
+        ]
 
-        # Get the base device's manufacturer and type if needed
-        base_manufacturer = base_device.manufacturer if same_manufacturer else None
-        base_type = base_device.device_type if same_type else None
+        # Add device-specific purposes
+        if "ventilator" in device_type:
+            purposes.extend(["Respiratory support", "Post-surgical ventilation", "Critical care support"])
+        elif "mri" in device_type:
+            purposes.extend(["Brain scan", "Spinal examination", "Musculoskeletal imaging", "Abdominal scan"])
+        elif "x-ray" in device_type:
+            purposes.extend(
+                ["Chest radiograph", "Bone fracture assessment", "Foreign body detection", "Dental imaging"]
+            )
+        elif "ultrasound" in device_type:
+            purposes.extend(["Pregnancy examination", "Abdominal assessment", "Cardiac evaluation", "Vascular study"])
 
-        # Add the base device to the result
-        result.append(base_device.to_dict())
+        return random.choice(purposes)
 
-        # Generate related devices
-        for _ in range(count - 1):  # -1 because we already added the base device
-            device = self.generate_device(locale=locale, dataset=dataset, **kwargs)
-            device.reset()
-
-            # Override manufacturer if needed
-            if same_manufacturer:
-                device._property_cache["manufacturer"] = base_manufacturer
-
-            # Override device type if needed
-            if same_type:
-                device._property_cache["device_type"] = base_type
-
-            result.append(device.to_dict())
-
-        return result
-
-    def generate_device_family(
-        self,
-        family_size: int = 5,
-        locale: str = "en",
-        dataset: str | None = None,
-        device_type: str | None = None,
-        manufacturer: str | None = None,
-        **kwargs,
-    ) -> list[dict[str, Any]]:
-        """Generate a family of medical devices with sequential model numbers.
-
-        Args:
-            family_size: The number of devices in the family.
-            locale: The locale to use for generating data.
-            dataset: The dataset to use for generating data.
-            device_type: Optional device type for all devices in the family.
-            manufacturer: Optional manufacturer for all devices in the family.
-            **kwargs: Additional keyword arguments to pass to the MedicalDevice constructor.
+    def _generate_usage_notes(self) -> str:
+        """Generate notes for device usage.
 
         Returns:
-            A list of dictionaries, each representing a medical device.
+            A string representing usage notes.
         """
-        result = []
+        notes_options = [
+            "Device performed as expected.",
+            "Minor calibration issues noted.",
+            "Patient examination completed successfully.",
+            "Procedure went smoothly.",
+            "Device required restart during procedure.",
+            "Image quality excellent.",
+            "Some interference observed.",
+            "Routine usage, no issues.",
+            "Training session for new staff.",
+            "Maintenance check performed before use.",
+        ]
 
-        # Create a base device
-        base_device = self.generate_device(locale=locale, dataset=dataset, **kwargs)
+        # 20% chance of no notes
+        if random.random() < 0.2:
+            return ""
 
-        # Set the device type and manufacturer if provided
-        if device_type:
-            base_device._property_cache["device_type"] = device_type
-        if manufacturer:
-            base_device._property_cache["manufacturer"] = manufacturer
+        return random.choice(notes_options)
+    
+    def generate_maintenance_history(self) -> list[dict[str, Any]]:
+        """Generate maintenance history for the device.
 
-        # Get the base model number prefix (first 2 characters)
-        base_model_prefix = base_device.model_number[:2]
+        Returns:
+            A list of dictionaries representing maintenance history.
+        """
+        history = []
 
-        # Generate the family
-        for i in range(family_size):
-            # Create a new device for each family member
-            device = self.generate_device(locale=locale, dataset=dataset, **kwargs)
-            device.reset()
+        # Generate between 2 and 8 maintenance records
+        num_records = random.randint(2, 8)
 
-            # Set the same device type and manufacturer
-            device._property_cache["device_type"] = base_device.device_type
-            device._property_cache["manufacturer"] = base_device.manufacturer
+        # Start date for maintenance (between 1 and 3 years ago)
+        start_days_ago = random.randint(365, 1095)
+        current_date = datetime.datetime.now() - datetime.timedelta(days=start_days_ago)
 
-            # Create a sequential model number
-            sequential_number = f"{1000 + i:04d}"
-            device._property_cache["model_number"] = f"{base_model_prefix}{sequential_number}"
+        for _ in range(num_records):
+            # Move forward in time for each maintenance
+            days_forward = random.randint(30, 180)
+            current_date += datetime.timedelta(days=days_forward)
 
-            result.append(device.to_dict())
+            # Skip if we've gone past today
+            if current_date > datetime.datetime.now():
+                break
 
-        return result
+            # Generate a maintenance record
+            maintenance_record = {
+                "date": current_date.strftime("%Y-%m-%d"),
+                "technician": self._generate_technician_name(),
+                "type": self._generate_maintenance_type(),
+                "parts_replaced": self._generate_parts_replaced(),
+                "cost": self._generate_maintenance_cost(),
+                "duration_hours": round(random.uniform(0.5, 8.0), 1),
+                "result": self._generate_maintenance_result(),
+                "notes": self._generate_maintenance_notes(),
+            }
+
+            history.append(maintenance_record)
+
+        return history
+
+    def _generate_technician_name(self) -> str:
+        """Generate a technician name for maintenance history.
+
+        Returns:
+            A string representing a technician name.
+        """
+        first_names = ["Alex", "Sam", "Jordan", "Casey", "Taylor", "Morgan", "Riley", "Jamie"]
+        last_names = ["Tech", "Service", "Repair", "Maintenance", "Support", "Systems", "Engineering"]
+
+        return f"{random.choice(first_names)} {random.choice(last_names)}"
+
+    def _generate_maintenance_type(self) -> str:
+        """Generate a maintenance type.
+
+        Returns:
+            A string representing a maintenance type.
+        """
+        types = [
+            "Routine inspection",
+            "Preventive maintenance",
+            "Calibration",
+            "Software update",
+            "Hardware repair",
+            "Component replacement",
+            "Emergency repair",
+            "Safety check",
+        ]
+
+        return random.choice(types)
+
+    def _generate_parts_replaced(self) -> list[str]:
+        """Generate a list of parts replaced during maintenance.
+
+        Returns:
+            A list of strings representing parts replaced.
+        """
+        all_parts = [
+            "Power supply",
+            "Battery",
+            "Display screen",
+            "Control board",
+            "Sensor array",
+            "Cooling fan",
+            "Cable assembly",
+            "User interface panel",
+            "Memory module",
+            "Network card",
+            "Filter assembly",
+            "Pump mechanism",
+            "Valve system",
+        ]
+
+        # 40% chance of no parts replaced
+        if random.random() < 0.4:
+            return []
+
+        # Otherwise, replace 1-3 parts
+        num_parts = random.randint(1, 3)
+        return random.sample(all_parts, min(num_parts, len(all_parts)))
+
+    def _generate_maintenance_cost(self) -> float:
+        """Generate a maintenance cost.
+
+        Returns:
+            A float representing a maintenance cost.
+        """
+        # Base cost between $100 and $500
+        base_cost = random.uniform(100, 500)
+
+        # If parts were replaced, add more cost
+        if random.random() < 0.6:  # 60% chance of parts replacement
+            parts_cost = random.uniform(200, 2000)
+            return round(base_cost + parts_cost, 2)
+
+        return round(base_cost, 2)
+
+    def _generate_maintenance_result(self) -> str:
+        """Generate a maintenance result.
+
+        Returns:
+            A string representing a maintenance result.
+        """
+        results = [
+            "Completed successfully",
+            "Issues resolved",
+            "Partial repair - follow-up needed",
+            "Temporary fix applied",
+            "No issues found",
+            "Calibration completed",
+            "Software updated",
+            "Hardware replaced",
+            "Referred to manufacturer",
+        ]
+
+        return random.choice(results)
+
+    def _generate_maintenance_notes(self) -> str:
+        """Generate notes for maintenance history.
+
+        Returns:
+            A string representing maintenance notes.        
+        """
+        notes_options = [
+            "Device operating within normal parameters after service.",
+            "Recommended replacement within next 6 months.",
+            "Firmware updated to latest version.",
+            "Calibration values adjusted to meet specifications.",
+            "User reported intermittent issues that could not be replicated.",
+            "Preventive maintenance completed according to schedule.",
+            "Device showing signs of wear but still functional.",
+            "Emergency repair completed, follow-up inspection recommended.",
+            "All safety checks passed.",
+            "Maintenance performed according to manufacturer guidelines.",
+        ]
+
+        # 10% chance of no notes
+        if random.random() < 0.1:
+            return ""
+
+        return random.choice(notes_options) 
