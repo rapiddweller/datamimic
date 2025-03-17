@@ -11,7 +11,6 @@ This module provides a generator for e-commerce product data.
 """
 import random
 from pathlib import Path
-from typing import Optional
 
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -27,7 +26,7 @@ class ProductGenerator(BaseDomainGenerator):
     of products with realistic data.
     """
 
-    def __init__(self, dataset: Optional[str] = None):
+    def __init__(self, dataset: str = "US"):
         self._dataset = dataset
 
     def get_product_data_by_data_type(self, data_type: str) -> str:
@@ -38,7 +37,7 @@ class ProductGenerator(BaseDomainGenerator):
             Data of product base on dat type
         """
         file_path = (Path(__file__).parent.parent.parent
-                    .parent / "domain_data" / "ecommerce" / f"{data_type}_{self._dataset}.csv")
+                     .parent / "domain_data" / "ecommerce" / f"{data_type}_{self._dataset}.csv")
         header_dict, loaded_data = FileContentStorage.load_file_with_custom_func(
             cache_key=str(file_path),
             read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=",")
@@ -69,30 +68,20 @@ class ProductGenerator(BaseDomainGenerator):
         return max(min_price, min(price, max_price))  # Ensure price is between min_price and max_price
 
     def get_random_features(self, category: str, min_feature: int = 1, max_feature: int = 1) -> list[str]:
-        cache_key = "features_by_category"
-        if cache_key not in self._LOADED_DATA_CACHE:
-            self._load_product_json(cache_key)
-        features = self._LOADED_DATA_CACHE[cache_key].get(category, ["High quality", "Versatile", "Durable"])
+        features = self._load_product_json("features_by_category").get(category, ["High quality", "Versatile", "Durable"])
         return random.sample(features, min(len(features), random.randint(min_feature, max_feature)))
 
     def get_random_weight(self, category: str) -> float:
-        cache_key = "weight_ranges_by_category"
-        if cache_key not in self._LOADED_DATA_CACHE:
-            self._load_product_json(cache_key)
-        weights = self._LOADED_DATA_CACHE[cache_key].get(category, {"min": 0.1, "max": 50.0})
+        weights = self._load_product_json("weight_ranges_by_category").get(category, {"min": 0.1, "max": 50.0})
         return round(random.uniform(weights["min"], weights["max"]), 2)
 
     def get_random_dimensions(self, category) -> str:
-        cache_key = "dimension_ranges_by_category"
         default_dimensions = {
             "length": {"min": 1, "max": 200},
             "width": {"min": 1, "max": 200},
             "height": {"min": 1, "max": 200}
         }
-        if cache_key not in self._LOADED_DATA_CACHE:
-            self._load_product_json(cache_key)
-
-        dimensions = self._LOADED_DATA_CACHE[cache_key].get(category, default_dimensions)
+        dimensions = self._load_product_json("dimension_ranges_by_category").get(category, default_dimensions)
         length = round(random.uniform(dimensions["length"]["min"], dimensions["length"]["max"]), 1)
         width = round(random.uniform(dimensions["width"]["min"], dimensions["width"]["max"]), 1)
         height = round(random.uniform(dimensions["height"]["min"], dimensions["height"]["max"]), 1)
@@ -100,16 +89,14 @@ class ProductGenerator(BaseDomainGenerator):
         return f"{length} x {width} x {height} cm"
 
     def get_random_tags(self, category: str) -> list[str]:
-        cache_key = "tags_by_category"
-        if cache_key not in self._LOADED_DATA_CACHE:
-            self._load_product_json(cache_key)
-        tags = self._LOADED_DATA_CACHE[cache_key].get(category, ["product", "item", "goods"])
+        tags = self._load_product_json("tags_by_category").get(category, ["product", "item", "goods"])
         return random.sample(tags, min(len(tags), random.randint(2, 4)))
 
-    def _load_product_json(self, cache_key):
+    @staticmethod
+    def _load_product_json(file_name):
         file_path = (Path(__file__).parent.parent.parent
-                     .parent / "domain_data" / "ecommerce" / f"{cache_key}.json")
-        self._LOADED_DATA_CACHE[cache_key] = FileContentStorage.load_file_with_custom_func(
+                     .parent / "domain_data/ecommerce/product" / f"{file_name}.json")
+        return FileContentStorage.load_file_with_custom_func(
             cache_key=str(file_path),
             read_func=lambda: FileUtil.read_json_to_dict(file_path)
         )
