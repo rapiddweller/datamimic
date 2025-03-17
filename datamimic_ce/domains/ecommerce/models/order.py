@@ -142,7 +142,7 @@ class Order(BaseEntity):
         Returns:
             A currency code (e.g., USD)
         """
-        return self._order_generator.get_currencies_data()
+        return self._order_generator.get_currency_code()
 
     @property
     @property_cache
