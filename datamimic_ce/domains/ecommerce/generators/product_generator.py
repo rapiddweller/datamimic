@@ -36,8 +36,9 @@ class ProductGenerator(BaseDomainGenerator):
         Returns:
             Data of product base on dat type
         """
+        file_name = f"{data_type.lower()}_{self._dataset.upper()}.csv"
         file_path = (Path(__file__).parent.parent.parent
-                     .parent / "domain_data" / "ecommerce" / f"{data_type}_{self._dataset}.csv")
+                     .parent / "domain_data/ecommerce" / file_name)
         header_dict, loaded_data = FileContentStorage.load_file_with_custom_func(
             cache_key=str(file_path),
             read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=",")

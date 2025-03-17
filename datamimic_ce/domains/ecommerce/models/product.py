@@ -153,7 +153,7 @@ class Product(BaseEntity):
         Returns:
             A product availability status (e.g., IN_STOCK)
         """
-        return self._product_generator.get_product_data_by_data_type("availability")
+        return self._product_generator.get_product_data_by_data_type("product_availability")
 
     @property
     @property_cache
