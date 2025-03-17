@@ -1,4 +1,4 @@
-<setup>
+<!-- <setup>
     <!-- Healthcare Generators -->
     <echo>Running Healthcare Generators</echo>
 
@@ -54,4 +54,4 @@
             generator="PatientHistoryGenerator(include_allergies=True, include_immunizations=True)" />
     </generate>
 
-</setup>
+</setup> -->

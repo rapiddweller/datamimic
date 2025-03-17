@@ -17,11 +17,8 @@ from typing import Any
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.models.address import Address
-from datamimic_ce.domains.ecommerce.data_loaders.order_loader import OrderDataLoader
-from datamimic_ce.domains.ecommerce.data_loaders.product_loader import ProductDataLoader
 from datamimic_ce.domains.ecommerce.generators.order_generator import OrderGenerator
 from datamimic_ce.domains.ecommerce.models.product import Product
-from datamimic_ce.domains.ecommerce.utils.random_utils import weighted_choice
 
 
 class Order(BaseEntity):

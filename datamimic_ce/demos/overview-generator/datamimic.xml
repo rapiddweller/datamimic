@@ -25,12 +25,13 @@
 	<include uri="person.xml" />
 	<include uri="product.xml" />
 	<include uri="us.xml" />
-	<include uri="healthcare.xml" />
+	<!-- TODO: Implement this demo -->
+	<!-- <include uri="healthcare.xml" /> -->
+	<!-- <include uri="science.xml" /> -->
+	<!-- <include uri="business.xml" /> -->
+	<!-- <include uri="text_visual.xml" /> -->
+	<!-- <include uri="internet.xml" /> -->
+	<!-- <include uri="document.xml" /> -->
 	<include uri="security.xml" />
-	<include uri="science.xml" />
-	<include uri="business.xml" />
-	<include uri="internet.xml" />
-	<include uri="text_visual.xml" />
-	<include uri="document.xml" />
 
 </setup>
