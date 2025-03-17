@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import random
 from typing import Any
 
 from datamimic_ce.domain_core.property_cache import property_cache
@@ -25,16 +26,18 @@ class Address(BaseEntity):
     @property
     @property_cache
     def street(self) -> str:
-        return self._address_generator.generate_street_name()
+        return self._address_generator.street_name_generator.generate()
     
     @property
     @property_cache
     def house_number(self) -> str:
-        return self._address_generator.generate_house_number()
+        house_number = str(random.randint(1, 9999))
+        postfix = random.choices(["", "A", "B", "C", "bis", "ter"], weights=[0.7, 0.1, 0.1, 0.05, 0.05, 0.05])[0]
+        return f"{house_number}{postfix}"           
     
     @property
     @property_cache
-    def city_data(self) -> str:
+    def city_data(self) -> dict[str, Any]:
         return self._address_generator.city_generator.get_random_city()
     
     @property
@@ -75,7 +78,7 @@ class Address(BaseEntity):
     @property
     @property_cache
     def country_code(self) -> str:
-        return self._address_generator.country_code
+        return self._address_generator.dataset
     
     @property
     @property_cache

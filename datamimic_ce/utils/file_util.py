@@ -110,7 +110,8 @@ class FileUtil:
                 csvreader = csv.reader(csvfile, delimiter=delimiter)
                 header = next(csvreader)  # Store the header
                 for idx, column in enumerate(header):
-                    header_dict[column] = idx
+                    modified_column = column.replace("\ufeff", "")
+                    header_dict[modified_column] = idx
                 data = [tuple(row) for row in csvreader]
             return header_dict, data
         except FileNotFoundError as e:

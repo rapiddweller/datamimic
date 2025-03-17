@@ -49,7 +49,7 @@ class PhoneNumberGenerator(BaseLiteralGenerator):
             self._area_code = area_code
         else:
             from datamimic_ce.domains.common.generators import CityGenerator
-            self._city_generator = CityGenerator(country_code=self._dataset)
+            self._city_generator = CityGenerator(dataset=self._dataset)
 
     def generate(self) -> str:
         """Generate a random phone number.

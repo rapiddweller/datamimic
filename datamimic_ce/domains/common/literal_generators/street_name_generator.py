@@ -18,8 +18,8 @@ class StreetNameGenerator(BaseLiteralGenerator):
     Generate random street name
     """
 
-    def __init__(self, dataset: str = "US"):
-        self._locale = "en"
+    def __init__(self, dataset: str | None = None):
+        dataset = dataset or "US"
         street_code = dataset.upper()[:2]
 
         # Prepare file path
@@ -32,18 +32,14 @@ class StreetNameGenerator(BaseLiteralGenerator):
             self._values, self._wgt = FileContentStorage.load_file_with_custom_func(
                 str(file_path), lambda: FileUtil.read_wgt_file(file_path)
             )
-        except FileNotFoundError:
-            logger.warning(f"No such file or directory: 'street_{street_code}.csv'. Change to street_US datas")
-            file_path = prefix_path.joinpath("domain_data/common/street/street_US.csv")
-            self._values, self._wgt = FileContentStorage.load_file_with_custom_func(
-                str(file_path), lambda: FileUtil.read_wgt_file(file_path)
-            )
+        except FileNotFoundError as e:
+            logger.error(f"Street name data not found for dataset '{dataset}'")
+            raise FileNotFoundError(f"Street name data not found for dataset '{dataset}': {e}") from e
 
-    def generate(self) -> str | None:
+    def generate(self) -> str:
         """
         Generate random street name
         Returns:
             Optional[str]: Returns a string if successful, otherwise returns None.
         """
-        # return rust.rnd_locale_faker("StreetName", self._locale)
         return random.choices(self._values, self._wgt, k=1)[0]
