@@ -36,7 +36,6 @@ class Order(BaseEntity):
         """
         super().__init__()
         self._order_generator = order_generator
-        self._notes = None
 
     @property
     @property_cache
@@ -211,23 +210,23 @@ class Order(BaseEntity):
         Returns:
             Order notes if applicable, or None
         """
-        if self._notes is None:
-            # 20% chance of having notes
-            if random.random() < 0.2:
-                notes_options = [
-                    "Please leave at the front door",
-                    "Call before delivery",
-                    "Gift - please don't include receipt",
-                    "Fragile items - handle with care",
-                    "Please deliver after 5pm",
-                    "Ring doorbell upon delivery",
-                    "Contact customer before shipping",
-                    "Include gift message",
-                    "Expedite if possible",
-                    "Address has a gate code: 1234",
-                ]
-                self._notes = random.choice(notes_options)
-        return self._notes
+        # 20% chance of having notes
+        notes = None
+        if random.random() < 0.2:
+            notes_options = [
+                "Please leave at the front door",
+                "Call before delivery",
+                "Gift - please don't include receipt",
+                "Fragile items - handle with care",
+                "Please deliver after 5pm",
+                "Ring doorbell upon delivery",
+                "Contact customer before shipping",
+                "Include gift message",
+                "Expedite if possible",
+                "Address has a gate code: 1234",
+            ]
+            notes = random.choice(notes_options)
+        return notes
 
     @property
     @property_cache
