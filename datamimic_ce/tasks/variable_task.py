@@ -269,8 +269,8 @@ class VariableTask(KeyVariableTask):
                 # "DigitalWallet": "finance.models.digital_wallet.DigitalWallet",
                 
                 # Ecommerce domain entities
-                # "Product": "ecommerce.models.product.Product",
-                # "Order": "ecommerce.models.order.Order",
+                "Product": "ecommerce.services.ProductService",
+                "Order": "ecommerce.services.OrderService",
                 # "UserAccount": "ecommerce.models.user_account.UserAccount",
                 # "CRM": "ecommerce.models.crm.CRM",
                 

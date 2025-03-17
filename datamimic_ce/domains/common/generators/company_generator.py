@@ -30,7 +30,7 @@ class CompanyGenerator(BaseDomainGenerator):
         self._company_name_generator = CompanyNameGenerator()
         self._email_address_generator = EmailAddressGenerator(dataset=country_code)
         self._phone_number_generator = PhoneNumberGenerator(dataset=country_code)
-        self._address_generator = AddressGenerator(country_code=country_code)
+        self._address_generator = AddressGenerator(dataset=country_code)
         
     @property
     def country_code(self) -> str:

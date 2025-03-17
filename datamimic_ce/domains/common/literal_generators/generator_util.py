@@ -53,8 +53,10 @@ from datamimic_ce.domains.common.literal_generators.given_name_generator import 
 #     SymptomGenerator,
 #     VitalSignsGenerator,
 # )
+from datamimic_ce.domains.common.literal_generators.hash_generator import HashGenerator
 from datamimic_ce.domains.common.literal_generators.increment_generator import IncrementGenerator
 from datamimic_ce.domains.common.literal_generators.nobility_title_generator import NobilityTitleGenerator
+from datamimic_ce.domains.common.literal_generators.password_generator import PasswordGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.common.literal_generators.sector_generator import SectorGenerator
 # from datamimic_ce.domains.common.literal_generators.security_generators import (
@@ -69,7 +71,8 @@ from datamimic_ce.domains.common.literal_generators.ssn_generator import SSNGene
 # from datamimic_ce.domains.common.literal_generators.ssn_generator import SSNGenerator
 from datamimic_ce.domains.common.literal_generators.street_name_generator import StreetNameGenerator
 # from datamimic_ce.domains.common.literal_generators.text_generators import ParagraphGenerator
-# from datamimic_ce.domains.common.literal_generators.url_generator import UrlGenerator
+from datamimic_ce.domains.common.literal_generators.token_generator import TokenGenerator
+from datamimic_ce.domains.common.literal_generators.url_generator import UrlGenerator
 from datamimic_ce.domains.common.literal_generators.uuid_generator import UUIDGenerator
 # from datamimic_ce.domains.healthcare.generators.healthcare_generators import DiagnosisGenerator
 from datamimic_ce.logger import logger
@@ -122,7 +125,7 @@ class GeneratorUtil:
             # Internet and Web
             "EmailAddressGenerator": EmailAddressGenerator,
             "DomainGenerator": DomainGenerator,
-            # "UrlGenerator": UrlGenerator,
+            "UrlGenerator": UrlGenerator,
             # Location
             "StreetNameGenerator": StreetNameGenerator,
             # Document and File
@@ -131,10 +134,9 @@ class GeneratorUtil:
             # "MIMETypeGenerator": MIMETypeGenerator,
             # Security
             "UUIDGenerator": UUIDGenerator,
-            # "HashGenerator": HashGenerator,
-            # "TokenGenerator": TokenGenerator,
-            # "MnemonicPhraseGenerator": MnemonicPhraseGenerator,
-            # "PasswordGenerator": PasswordGenerator,
+            "HashGenerator": HashGenerator,
+            "TokenGenerator": TokenGenerator,
+            "PasswordGenerator": PasswordGenerator,
             # Text and Content
             # "ParagraphGenerator": ParagraphGenerator,
             # Visual and Design

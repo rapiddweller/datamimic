@@ -20,7 +20,7 @@ from datamimic_ce.domains.common.literal_generators.phone_number_generator impor
 class HospitalGenerator(BaseDomainGenerator):
     def __init__(self, dataset: str = "US") -> None:
         self._dataset = dataset
-        self._address_generator = AddressGenerator(country_code=dataset)
+        self._address_generator = AddressGenerator(dataset=dataset)
         self._phone_number_generator = PhoneNumberGenerator(country_code=dataset)
 
     @property

@@ -32,7 +32,7 @@ class PersonGenerator(BaseDomainGenerator):
         self._family_name_generator = FamilyNameGenerator(dataset=country_code)
         self._email_generator = EmailAddressGenerator(dataset=country_code)
         self._phone_generator = PhoneNumberGenerator(dataset=country_code)
-        self._address_generator = AddressGenerator(country_code=country_code)
+        self._address_generator = AddressGenerator(dataset=country_code)
         from datamimic_ce.utils.class_factory_ce_util import ClassFactoryCEUtil
         self._birthdate_generator = BirthdateGenerator(class_factory_util=ClassFactoryCEUtil(), min_age=min_age, max_age=max_age)
         self._academic_title_generator = AcademicTitleGenerator(dataset=country_code)

@@ -20,10 +20,11 @@
     </generate>
 
     <!-- Mnemonic Phrases -->
-    <generate name="mnemonics" count="10">
+    <!-- TODO: Implement this demo -->
+    <!-- <generate name="mnemonics" count="10">
         <key name="mnemonic_12" generator="MnemonicPhraseGenerator(word_count=12)" />
         <key name="mnemonic_24" generator="MnemonicPhraseGenerator(word_count=24)" />
-    </generate>
+    </generate> -->
 
     <!-- Passwords -->
     <generate name="passwords" count="10">

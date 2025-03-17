@@ -8,5 +8,5 @@ class AddressService(BaseDomainService[Address]):
 
     This class provides methods for creating, retrieving, and managing address data.
     """
-    def __init__(self):
-        super().__init__(AddressGenerator(), Address)
+    def __init__(self, dataset: str | None = None):
+        super().__init__(AddressGenerator(dataset), Address)
