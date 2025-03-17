@@ -17,11 +17,8 @@ from typing import Any
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.models.address import Address
-from datamimic_ce.domains.ecommerce.data_loaders.order_loader import OrderDataLoader
-from datamimic_ce.domains.ecommerce.data_loaders.product_loader import ProductDataLoader
 from datamimic_ce.domains.ecommerce.generators.order_generator import OrderGenerator
 from datamimic_ce.domains.ecommerce.models.product import Product
-from datamimic_ce.domains.ecommerce.utils.random_utils import weighted_choice
 
 
 class Order(BaseEntity):
@@ -39,7 +36,7 @@ class Order(BaseEntity):
         """
         super().__init__()
         self._order_generator = order_generator
-
+        self._notes = None
 
     @property
     @property_cache
@@ -71,7 +68,6 @@ class Order(BaseEntity):
         """
         return [Product(self._order_generator.product_generator) for _ in range(random.randint(1, 10))]
 
-
     @property
     @property_cache
     def date(self) -> datetime.datetime:
@@ -82,7 +78,6 @@ class Order(BaseEntity):
         """
         return datetime.datetime.now() - datetime.timedelta(days=random.randint(0, 365))
 
-
     @property
     @property_cache
     def status(self) -> str:
@@ -91,7 +86,7 @@ class Order(BaseEntity):
         Returns:
             An order status (e.g., PENDING, DELIVERED)
         """
-        return self._order_generator.get_order_statuses()
+        return self._order_generator.get_order_status()
 
     @property
     @property_cache
@@ -101,7 +96,7 @@ class Order(BaseEntity):
         Returns:
             A payment method (e.g., CREDIT_CARD, PAYPAL)
         """
-        return self._order_generator.get_payment_methods()
+        return self._order_generator.get_payment_method()
 
     @property
     @property_cache
@@ -111,7 +106,7 @@ class Order(BaseEntity):
         Returns:
             A shipping method (e.g., STANDARD, EXPRESS)
         """
-        return self._order_generator.get_shipping_methods()
+        return self._order_generator.get_shipping_method()
 
     @property
     @property_cache
@@ -147,7 +142,7 @@ class Order(BaseEntity):
         Returns:
             A currency code (e.g., USD)
         """
-        return self._order_generator.get_currencies()
+        return self._order_generator.get_currencies_data()
 
     @property
     @property_cache
@@ -158,7 +153,7 @@ class Order(BaseEntity):
             The tax amount for the order
         """
         # Calculate subtotal from product list
-        subtotal = sum(product["subtotal"] for product in self.product_list)
+        subtotal = sum(product.price for product in self.product_list)
         # Apply tax rate (5-12%)
         tax_rate = random.uniform(0.05, 0.12)
         return round(subtotal * tax_rate, 2)
@@ -172,8 +167,7 @@ class Order(BaseEntity):
             The shipping cost for the order
         """
         # Get shipping cost range for the selected shipping method
-        min_cost, max_cost = OrderDataLoader.get_shipping_cost_range(self.shipping_method, self._dataset)
-        return round(random.uniform(min_cost, max_cost), 2)
+        return self._order_generator.get_shipping_amount(self.shipping_method)
 
     @property
     @property_cache
@@ -186,7 +180,7 @@ class Order(BaseEntity):
         # 30% chance of having a discount
         if random.random() < 0.3:
             # Calculate subtotal from product list
-            subtotal = sum(product["subtotal"] for product in self.product_list)
+            subtotal = sum(product.price for product in self.product_list)
             # Apply discount rate (5-25%)
             discount_rate = random.uniform(0.05, 0.25)
             return round(subtotal * discount_rate, 2)
@@ -244,7 +238,7 @@ class Order(BaseEntity):
             The total amount for the order
         """
         # Calculate subtotal from product list
-        subtotal = sum(product["subtotal"] for product in self.product_list)
+        subtotal = sum(product.price for product in self.product_list)
         # Add tax and shipping, subtract discount
         return round(subtotal + self.tax_amount + self.shipping_amount - self.discount_amount, 2)
 
