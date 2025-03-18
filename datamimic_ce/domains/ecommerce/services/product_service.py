@@ -17,5 +17,5 @@ class ProductService(BaseDomainService[Product]):
     including creating products, filtering products, and formatting outputs.
     """
 
-    def __init__(self, dataset: str = "US"):
-        super().__init__(ProductGenerator(dataset), Product)
+    def __init__(self, dataset: str = "US", min_price: float = 0.99, max_price: float = 999.99):
+        super().__init__(ProductGenerator(dataset=dataset, min_price=min_price, max_price=max_price), Product)
