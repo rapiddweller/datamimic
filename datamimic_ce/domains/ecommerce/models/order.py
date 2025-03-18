@@ -127,9 +127,6 @@ class Order(BaseEntity):
             A billing address dictionary
         """
         # 80% chance billing address is same as shipping
-        # if random.random() < 0.8:
-            # return self.shipping_address
-
         # Otherwise generate a different address
         return self.shipping_address if random.random() < 0.8 else Address(self._order_generator.address_generator) 
 

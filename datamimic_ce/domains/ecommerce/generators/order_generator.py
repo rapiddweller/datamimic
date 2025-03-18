@@ -11,7 +11,7 @@ class OrderGenerator(BaseDomainGenerator):
     def __init__(self, dataset: str = "US"):
         self._dataset = dataset
         self._product_generator = ProductGenerator(dataset=dataset)
-        self._address_generator = AddressGenerator(country_code=dataset)
+        self._address_generator = AddressGenerator(dataset=dataset)
 
     @property
     def dataset(self) -> str:
