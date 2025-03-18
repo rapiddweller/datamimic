@@ -140,7 +140,7 @@ class Person(BaseEntity):
         """
         gender = self.gender.upper()
 
-        return self._person_generator.load_salutation_data()[gender] if gender != "OTHER" else ""
+        return self._person_generator.get_salutation_data(gender)
     
     def to_dict(self) -> dict[str, Any]:
         """Convert the person to a dictionary.

@@ -19,8 +19,8 @@ class CountryGenerator(BaseDomainGenerator):
     Provides methods to generate country-related attributes such as
     ISO code, name, default language locale, phone code, and population.
     """
-    def __init__(self, country_code: str = "US"):
-        self._country_code = country_code
+    def __init__(self):
+        pass
         
     def load_country_data(self) -> dict[str, tuple[Any, ...]]:
         """Load country data from CSV file.

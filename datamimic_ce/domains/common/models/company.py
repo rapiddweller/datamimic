@@ -56,7 +56,7 @@ class Company(BaseEntity):
         Returns:
             The sector in which the company operates
         """
-        return self._company_generator.generate_sector()
+        return self._company_generator.sector_generator.generate()
     
     @property   
     @property_cache
@@ -216,7 +216,7 @@ class Company(BaseEntity):
         Returns:
             The country code of the company
         """
-        return self._company_generator.country_code
+        return self._company_generator.dataset
     
     def to_dict(self) -> dict:
         """Convert company entity to a dictionary.

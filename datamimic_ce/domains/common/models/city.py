@@ -65,16 +65,6 @@ class City(BaseEntity):
 
     @property
     @property_cache
-    def state_id(self) -> str:
-        """Get the state ID of the city.
-
-        Returns:
-            The state ID of the city.
-        """
-        return self.city_data["state_id"]
-
-    @property
-    @property_cache
     def state(self) -> str:
         """Get the state of the city.
 
@@ -101,7 +91,10 @@ class City(BaseEntity):
         Returns:
             The population of the city.
         """
-        return self.city_data["population"]
+        population = self.city_data["population"]
+        if population is None or population == "":
+            return None
+        return int(population)
     
     @property
     @property_cache
@@ -144,7 +137,6 @@ class City(BaseEntity):
             "name": self.name,
             "postal_code": self.postal_code,
             "area_code": self.area_code,
-            "state_id": self.state_id,
             "state": self.state,
             "language": self.language,
             "population": self.population,

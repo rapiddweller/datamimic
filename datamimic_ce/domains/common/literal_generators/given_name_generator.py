@@ -17,17 +17,14 @@ class GivenNameGenerator(BaseLiteralGenerator):
     Generate random given name
     """
 
-    def __init__(self, dataset: str, gender: str | None = None):
-        # check valid input dataset
-        if len(dataset) != 2:
-            raise ValueError(f"Invalid dataset: {dataset}")
-        self._dataset = dataset
+    def __init__(self, dataset: str | None = None, gender: str | None = None):
+        self._dataset = dataset or "US"
         self._gender = gender
 
         # Prepare file path
         prefix_path = Path(__file__).parent.parent.parent.parent
-        file_name_male = f"domain_data/common/person/givenName_male_{dataset}.csv"
-        file_name_female = f"domain_data/common/person/givenName_female_{dataset}.csv"
+        file_name_male = f"domain_data/common/person/givenName_male_{self._dataset}.csv"
+        file_name_female = f"domain_data/common/person/givenName_female_{self._dataset}.csv"
 
         # Read file data
         if self._gender == "male":

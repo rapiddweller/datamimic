@@ -6,7 +6,6 @@
 
 
 from pathlib import Path
-from typing import Any
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.common.literal_generators.academic_title_generator import AcademicTitleGenerator
@@ -25,18 +24,18 @@ class PersonGenerator(BaseDomainGenerator):
     Provides methods to generate person-related attributes such as
     first name, last name, email address, phone number, and address.
     """
-    def __init__(self, country_code: str = "US", min_age: int = 18, max_age: int = 65, female_quota: float = 0.5):
-        self._country_code = country_code
+    def __init__(self, dataset: str | None = None, min_age: int = 18, max_age: int = 65, female_quota: float = 0.5):
+        self._dataset = dataset or "US"
         self._gender_generator = GenderGenerator(female_quota=female_quota)
-        self._given_name_generator = GivenNameGenerator(dataset=country_code)
-        self._family_name_generator = FamilyNameGenerator(dataset=country_code)
-        self._email_generator = EmailAddressGenerator(dataset=country_code)
-        self._phone_generator = PhoneNumberGenerator(dataset=country_code)
-        self._address_generator = AddressGenerator(dataset=country_code)
+        self._given_name_generator = GivenNameGenerator(dataset=self._dataset)
+        self._family_name_generator = FamilyNameGenerator(dataset=self._dataset)
+        self._email_generator = EmailAddressGenerator(dataset=self._dataset)
+        self._phone_generator = PhoneNumberGenerator(dataset=self._dataset)
+        self._address_generator = AddressGenerator(dataset=self._dataset)
         from datamimic_ce.utils.class_factory_ce_util import ClassFactoryCEUtil
         self._birthdate_generator = BirthdateGenerator(class_factory_util=ClassFactoryCEUtil(), min_age=min_age, max_age=max_age)
-        self._academic_title_generator = AcademicTitleGenerator(dataset=country_code)
-        self._nobility_title_generator = NobilityTitleGenerator(dataset=country_code)
+        self._academic_title_generator = AcademicTitleGenerator(dataset=self._dataset)
+        self._nobility_title_generator = NobilityTitleGenerator(dataset=self._dataset)
 
     @property   
     def gender_generator(self) -> GenderGenerator:
@@ -75,16 +74,15 @@ class PersonGenerator(BaseDomainGenerator):
         return self._nobility_title_generator
     
 
-    def load_salutation_data(self) -> dict[str, tuple[Any, ...]]:
-        """Load salutation data from CSV file.
+    def get_salutation_data(self, gender: str) -> str:
+        """Get salutation data from CSV file.
 
         Returns:
             A dictionary containing salutation data.
         """
 
-        salutation_file_path = Path(__file__).parent.parent.parent.parent/"domain_data"/"common"/"person" / f"salutation_{self._country_code}.csv"
-        loaded_salutation_data = FileContentStorage.load_file_with_custom_func(cache_key=str(salutation_file_path), read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(salutation_file_path, delimiter=",")[0])
+        salutation_file_path = Path(__file__).parent.parent.parent.parent/"domain_data"/"common"/"person" / f"salutation_{self._dataset}.csv"
+        header_dict, data = FileContentStorage.load_file_with_custom_func(cache_key=str(salutation_file_path), read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(salutation_file_path, delimiter=","))
 
-        return loaded_salutation_data
-    
+        return data[0][header_dict[gender]] if gender in header_dict else ""
     

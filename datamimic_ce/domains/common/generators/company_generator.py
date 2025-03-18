@@ -9,6 +9,7 @@
 from pathlib import Path
 import random
 from datamimic_ce.logger import logger
+from datamimic_ce.domains.common.literal_generators.sector_generator import SectorGenerator
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.literal_generators.company_name_generator import CompanyNameGenerator
@@ -25,21 +26,23 @@ class CompanyGenerator(BaseDomainGenerator):
     company names, emails, URLs, and other information.
     """
     
-    def __init__(self, country_code: str = "US"):
-        self._country_code = country_code
+    def __init__(self, dataset: str = "US"):
+        self._dataset = dataset
         self._company_name_generator = CompanyNameGenerator()
-        self._email_address_generator = EmailAddressGenerator(dataset=country_code)
-        self._phone_number_generator = PhoneNumberGenerator(dataset=country_code)
-        self._address_generator = AddressGenerator(dataset=country_code)
+        self._email_address_generator = EmailAddressGenerator(dataset=dataset)
+        self._phone_number_generator = PhoneNumberGenerator(dataset=dataset)
+        self._address_generator = AddressGenerator(dataset=dataset)
+        self._sector_generator = SectorGenerator(dataset=dataset)
+        self._legal_dataset = dataset
         
     @property
-    def country_code(self) -> str:
-        """Get the country code.
+    def dataset(self) -> str:
+        """Get the dataset.
 
         Returns:
-            The country code.
+            The dataset.
         """
-        return self._country_code
+        return self._dataset
     
     @property
     def company_name_generator(self) -> CompanyNameGenerator:
@@ -77,16 +80,14 @@ class CompanyGenerator(BaseDomainGenerator):
         """
         return self._address_generator
     
-    def generate_sector(self) -> str:
-        """Generate a sector.
+    @property
+    def sector_generator(self) -> SectorGenerator:
+        """Get the sector generator.
 
         Returns:
-            The sector.
+            The sector generator.
         """
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "organization" / f"sector_{self._country_code}.csv"
-        sector_df = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=";"))
-        sector_list = [row[0] for row in sector_df]
-        return random.choice(sector_list)
+        return self._sector_generator
     
     def get_legal_form(self) -> str:
         """Get a legal form.
@@ -94,7 +95,12 @@ class CompanyGenerator(BaseDomainGenerator):
         Returns:
             The legal form.
         """
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "organization" / f"legalForm_{self._country_code}.csv"
-        legal_form_df = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_wgt_file(file_path))
-        legal_values, legal_wgt = legal_form_df
+        try:
+            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "organization" / f"legalForm_{self._legal_dataset}.csv"
+            legal_values, legal_wgt = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_wgt_file(file_path))
+        except Exception as e:
+            logger.warning(f"Legal form data does not exist for dataset '{self._legal_dataset}', using 'US' as fallback: {e}")
+            self._legal_dataset = "US"
+            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "organization" / f"legalForm_{self._legal_dataset}.csv"
+            legal_values, legal_wgt = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_wgt_file(file_path))
         return random.choices(legal_values, weights=legal_wgt, k=1)[0]

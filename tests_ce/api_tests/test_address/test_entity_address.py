@@ -21,17 +21,17 @@ class TestEntityAddress:
         assert isinstance(address.fax, str)
         assert isinstance(address.organization, str)
 
-        assert address.street is not None
-        assert address.house_number is not None
-        assert address.city is not None
-        assert address.state is not None
-        assert address.zip_code is not None
-        assert address.country is not None
-        assert address.country_code is not None
-        assert address.phone is not None
-        assert address.mobile_phone is not None
-        assert address.fax is not None
-        assert address.organization is not None 
+        assert address.street is not None and address.street != ""
+        assert address.house_number is not None and address.house_number != ""
+        assert address.city is not None and address.city != ""
+        assert address.state is not None and address.state != ""
+        assert address.zip_code is not None and address.zip_code != ""
+        assert address.country is not None and address.country != ""
+        assert address.country_code is not None and address.country_code != ""
+        assert address.phone is not None and address.phone != ""
+        assert address.mobile_phone is not None and address.mobile_phone != ""
+        assert address.fax is not None and address.fax != ""
+        assert address.organization is not None and address.organization != ""
         
     def test_generate_single_address(self):
         address_service = AddressService()

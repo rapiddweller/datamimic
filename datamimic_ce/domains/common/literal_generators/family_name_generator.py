@@ -17,12 +17,10 @@ class FamilyNameGenerator(BaseLiteralGenerator):
     """
 
     def __init__(self, dataset: str):
-        # check valid input dataset
-        if len(dataset) != 2:
-            raise ValueError(f"Invalid dataset: {dataset}")
+        self._dataset = dataset or "US"
 
         try:
-            file_path = Path(__file__).parent.parent.parent.parent.joinpath(f"domain_data/common/person/familyName_{dataset}.csv")
+            file_path = Path(__file__).parent.parent.parent.parent.joinpath(f"domain_data/common/person/familyName_{self._dataset}.csv")
             values, wgt = FileUtil.read_mutil_column_wgt_file(
                 file_path,
             )

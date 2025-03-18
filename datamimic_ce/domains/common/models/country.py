@@ -30,7 +30,7 @@ class Country(BaseEntity):
         Returns:
             The ISO code of the country
         """
-        return self._country_generator.get_random_country()["iso_code"]
+        return self.country_data["iso_code"]
     
     @property
     @property_cache
@@ -50,7 +50,7 @@ class Country(BaseEntity):
         Returns:
             The name of the country
         """
-        return self._country_generator.get_random_country()["name"]
+        return self.country_data["name"]
     
     @property
     @property_cache
@@ -60,7 +60,7 @@ class Country(BaseEntity):
         Returns:
             The default language locale of the country
         """
-        return self._country_generator.get_random_country()["default_language_locale"]    
+        return self.country_data["default_language_locale"]    
     
     @property
     @property_cache
@@ -70,7 +70,7 @@ class Country(BaseEntity):
         Returns:
             The phone code of the country
         """
-        return self._country_generator.get_random_country()["phone_code"]
+        return self.country_data["phone_code"]
     
     @property
     @property_cache
@@ -80,7 +80,7 @@ class Country(BaseEntity):
         Returns:
             The population of the country       
         """
-        return self._country_generator.get_random_country()["population"]
+        return self.country_data["population"]
     
     def to_dict(self) -> dict[str, Any]:
         """Convert the country to a dictionary.
