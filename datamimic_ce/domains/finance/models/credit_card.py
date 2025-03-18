@@ -15,12 +15,14 @@ This module defines the credit card model for the finance domain.
 
 
 import random
+import string
 from typing import Any
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.finance.generators.credit_card_generator import CreditCardGenerator
 from datamimic_ce.domains.finance.models.bank import Bank
+from datamimic_ce.domains.finance.models.bank_account import BankAccount
 
 class CreditCard(BaseEntity):
     def __init__(self, credit_card_generator: CreditCardGenerator):
@@ -34,8 +36,13 @@ class CreditCard(BaseEntity):
     
     @property
     @property_cache
+    def bank_account_data(self) -> BankAccount:
+        return BankAccount(self._credit_card_generator.bank_account_generator)
+
+    @property
+    @property_cache
     def bank_data(self) -> Bank:
-        return Bank(self._credit_card_generator.bank_generator)
+        return self.bank_account_data.bank_data
 
     @property
     @property_cache
@@ -44,12 +51,12 @@ class CreditCard(BaseEntity):
     
     @property
     @property_cache
-    def credit_card_number(self) -> str:
-        return random.randint(1000000000000000, 9999999999999999)
+    def card_number(self) -> str:
+        return "".join(random.choices(string.digits, k=16))
     
     @property
     @property_cache
-    def credit_card_provider(self) -> str:
+    def card_provider(self) -> str:
         return self.bank_data.name
     
     @property
@@ -65,12 +72,12 @@ class CreditCard(BaseEntity):
     @property
     @property_cache
     def cvv(self) -> str:
-        return random.randint(100, 999)
+        return "".join(random.choices(string.digits, k=3))
     
     @property
     @property_cache
     def cvc_number(self) -> str:
-        return random.randint(100, 999)
+        return "".join(random.choices(string.digits, k=3))
     
     @property
     @property_cache
@@ -80,12 +87,12 @@ class CreditCard(BaseEntity):
     @property
     @property_cache
     def credit_limit(self) -> float:
-        return random.randint(1000, 999999)
+        return random.uniform(1000, 999999)
     
     @property
     @property_cache
     def current_balance(self) -> float:
-        return random.randint(100, 999999)
+        return random.uniform(100, 999999)
     
     @property
     @property_cache
@@ -115,13 +122,13 @@ class CreditCard(BaseEntity):
     @property
     @property_cache
     def iban(self) -> str:  
-        return self.bank_data.iban
+        return self.bank_account_data.iban
     
     def to_dict(self) -> dict[str, Any]:
         return {
             "card_type": self.card_type,
-            "credit_card_number": self.credit_card_number,
-            "credit_card_provider": self.credit_card_provider,
+            "card_number": self.card_number,  
+            "card_provider": self.card_provider,
             "card_holder": self.card_holder,
             "expiration_date": self.expiration_date,
             "cvv": self.cvv,

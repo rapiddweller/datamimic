@@ -12,8 +12,8 @@ from datamimic_ce.utils.file_util import FileUtil
 
 
 class BankGenerator(BaseDomainGenerator):
-    def __init__(self, dataset: str = "US"):
-        self._dataset = dataset
+    def __init__(self, dataset: str | None = None):
+        self._dataset = dataset or "US"
 
     def generate_bank_data(self) -> dict:
         file_path = Path(
@@ -29,5 +29,5 @@ class BankGenerator(BaseDomainGenerator):
         return {
             "name": bank_data[header_dict["name"]],
             "swift_code": bank_data[header_dict["swift_code"]],
-            "routing_number": bank_data[header_dict["routing_number"]],
+            "routing_number": bank_data[header_dict["routing_number"]] if "routing_number" in header_dict else ""
         }

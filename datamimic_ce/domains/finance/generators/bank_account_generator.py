@@ -14,9 +14,9 @@ from datamimic_ce.utils.file_util import FileUtil
 
 
 class BankAccountGenerator(BaseDomainGenerator):
-    def __init__(self, dataset: str = "US"):
-        self._dataset = dataset
-        self._bank_generator = BankGenerator(dataset=dataset)
+    def __init__(self, dataset: str | None = None):
+        self._dataset = dataset or "US"
+        self._bank_generator = BankGenerator(dataset=self._dataset)
         self._account_number_generator = DataFakerGenerator("bban")
 
     @property
@@ -32,8 +32,11 @@ class BankAccountGenerator(BaseDomainGenerator):
         return self._account_number_generator
 
     def get_bank_account_types(self) -> dict:
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "finance" / "bank" / f"account_types_{self.dataset}.csv"
-        account_types_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_file(file_path))
-        return random.choices(account_types_data, weights=[item[1] for item in account_types_data], k=1)[0][0]
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "finance" / f"account_types_{self.dataset}.csv"
+        account_types_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path))[1:]
+        return random.choices(account_types_data, weights=[float(item[1]) for item in account_types_data], k=1)[0][0]
 
-
+    def get_currency(self) -> str:
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "ecommerce" / "currencies.csv"
+        currency_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path))[1:]
+        return random.choices(currency_data, weights=[float(item[2]) for item in currency_data], k=1)[0][0]

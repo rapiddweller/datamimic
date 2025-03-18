@@ -9,7 +9,7 @@ import random
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
-from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
+from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -17,8 +17,8 @@ class CreditCardGenerator(BaseDomainGenerator):
     def __init__(self, dataset: str = "US"):
         self._dataset = dataset
         self._person_generator = PersonGenerator()
-        self._date_generator = DateTimeGenerator()
-        self._bank_generator = BankGenerator(dataset=dataset)
+        self._date_generator = DateTimeGenerator(random=True)
+        self._bank_account_generator = BankAccountGenerator(dataset=dataset)
 
     @property
     def person_generator(self) -> PersonGenerator:
@@ -29,11 +29,11 @@ class CreditCardGenerator(BaseDomainGenerator):
         return self._date_generator
     
     @property
-    def bank_generator(self) -> BankGenerator:
-        return self._bank_generator
+    def bank_account_generator(self) -> BankAccountGenerator:
+        return self._bank_account_generator
         
     def generate_card_type(self) -> str:
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "finance" / "credit_card" / f"card_types_{self.dataset}.csv"
-        card_types_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_file(file_path))
-        return random.choice(card_types_data)
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "finance" / "credit_card" / f"card_types_{self._dataset}.csv"
+        card_types_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path))[1:]
+        return random.choices(card_types_data, weights=[float(item[4]) for item in card_types_data], k=1)[0][0]
     

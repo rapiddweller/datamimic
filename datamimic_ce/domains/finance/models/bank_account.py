@@ -74,18 +74,18 @@ class BankAccount(BaseEntity):
     @property
     @property_cache
     def currency(self) -> str:
-        return random.choice(self._bank_account_generator.get_currencies())
+        return self._bank_account_generator.get_currency()
     
     @property
     @property_cache
     def created_date(self) -> datetime:
-        return datetime.now() - datetime.timedelta(days=random.randint(0, 365))
+        return datetime.datetime.now() - datetime.timedelta(days=random.randint(0, 365))
 
     @property
     @property_cache
     def last_transaction_date(self) -> datetime:
-        return datetime.now() - datetime.timedelta(days=random.randint(0, 365))
-    
+        return datetime.datetime.now() - random.uniform(0, 1) * (datetime.datetime.now() - self.created_date)
+
     @property
     @property_cache
     def bank_name(self) -> str:

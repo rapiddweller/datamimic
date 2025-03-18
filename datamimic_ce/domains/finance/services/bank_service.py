@@ -9,5 +9,5 @@ from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
 from datamimic_ce.domains.finance.models.bank import Bank
 
 class BankService(BaseDomainService[Bank]):
-    def __init__(self):
-        super().__init__(BankGenerator(), Bank)
+    def __init__(self, dataset: str | None = None):
+        super().__init__(BankGenerator(dataset), Bank)
