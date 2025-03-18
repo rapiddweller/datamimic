@@ -1,0 +1,28 @@
+<setup multiprocessing="0">
+    <generate name="educational_institution" count="5" target="ConsoleExporter">
+        <variable name="educational_institution" entity="EducationalInstitution" />
+        <key name="institution_id" script="educational_institution.institution_id" />
+        <key name="name" script="educational_institution.name" />
+        <key name="type" script="educational_institution.type" />
+        <key name="level" script="educational_institution.level" />
+        <key name="founding_year" script="educational_institution.founding_year" />
+        <key name="student_count" script="educational_institution.student_count" />
+        <key name="staff_count" script="educational_institution.staff_count" />
+        <key name="website" script="educational_institution.website" />
+        <key name="email" script="educational_institution.email" />
+        <key name="phone" script="educational_institution.phone" />
+        <key name="address" script="educational_institution.address" /> 
+        <variable name="educational_institution1" entity="EducationalInstitution" />    
+        <key name="institution_id1" script="educational_institution1.institution_id" />
+        <key name="name1" script="educational_institution1.name" />
+        <key name="type1" script="educational_institution1.type" />
+        <key name="level1" script="educational_institution1.level" />
+        <key name="founding_year1" script="educational_institution1.founding_year" />
+        <key name="student_count1" script="educational_institution1.student_count" />
+        <key name="staff_count1" script="educational_institution1.staff_count" />
+        <key name="website1" script="educational_institution1.website" />
+        <key name="email1" script="educational_institution1.email" />
+        <key name="phone1" script="educational_institution1.phone" />
+        <key name="address1" script="educational_institution1.address" />
+    </generate>
+</setup>

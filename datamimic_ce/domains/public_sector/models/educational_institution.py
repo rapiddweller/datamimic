@@ -11,12 +11,15 @@ This module provides the EducationalInstitution entity model for generating
 realistic educational institution data.
 """
 
+from datetime import datetime
 import random
 from typing import Any
 import uuid
 
-from datamimic_ce.core.base_entity import BaseEntity
+from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.common.models.address import Address
+from datamimic_ce.domains.public_sector.generators.educational_institution_generator import EducationalInstitutionGenerator
 
 
 class EducationalInstitution(BaseEntity):
@@ -34,7 +37,7 @@ class EducationalInstitution(BaseEntity):
 
     def __init__(self, educational_institution_generator: EducationalInstitutionGenerator):
         super().__init__()
-        self.educational_institution_generator = educational_institution_generator
+        self._educational_institution_generator = educational_institution_generator
 
     
 
@@ -58,8 +61,8 @@ class EducationalInstitution(BaseEntity):
             The institution name.
         """
         # Get city or address information for naming
-        city = self._address_entity.city
-        state = self._address_entity.state
+        city = self.address.city
+        state = self.address.state
 
         # Generate institution name based on type and level
         institution_type = self.type
@@ -186,7 +189,7 @@ class EducationalInstitution(BaseEntity):
         Returns:
             The founding year.
         """
-        current_year = datetime.datetime.now().year
+        current_year = datetime.now().year
         min_age = 5  # Minimum age for a school
         max_age = 200  # Maximum age for a school (oldest universities)
 
@@ -291,7 +294,7 @@ class EducationalInstitution(BaseEntity):
         Returns:
             The institution phone number.
         """
-        return self.educational_institution_generator.phone_number_generator.get()
+        return self._educational_institution_generator.phone_number_generator.generate()
 
     @property
     @property_cache
@@ -552,13 +555,13 @@ class EducationalInstitution(BaseEntity):
 
     @property
     @property_cache 
-    def address(self) -> dict[str, Any]:
+    def address(self) -> Address:
         """Get the institution address.
 
         Returns:
             A dictionary containing the institution's address information.
         """
-        return self._address_entity.to_dict()
+        return Address(self._educational_institution_generator.address_generator)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert the educational institution entity to a dictionary.

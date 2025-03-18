@@ -291,9 +291,9 @@ class VariableTask(KeyVariableTask):
                 "InsuranceCoverage": "insurance.services.InsuranceCoverageService",
                 
                 # Public Sector domain entities (new domain)
-                # "AdministrationOffice": "public_sector.models.administration_office.AdministrationOffice",
-                # "EducationalInstitution": "public_sector.models.educational_institution.EducationalInstitution",
-                # "PoliceOfficer": "public_sector.models.police_officer.PoliceOfficer"
+                "AdministrationOffice": "public_sector.services.AdministrationOfficeService",
+                "EducationalInstitution": "public_sector.services.EducationalInstitutionService",
+                "PoliceOfficer": "public_sector.services.PoliceOfficerService"
             }
 
             # Use the mapping to create the entity

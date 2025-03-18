@@ -10,3 +10,13 @@ Public sector domain services.
 This package contains service classes for the public sector domain including
 police officers, educational institutions, and administration offices.
 """
+
+from .administration_office_service import AdministrationOfficeService
+from .educational_institution_service import EducationalInstitutionService
+from .police_officer_service import PoliceOfficerService
+
+__all__ = [
+    "AdministrationOfficeService",
+    "EducationalInstitutionService",
+    "PoliceOfficerService"
+]

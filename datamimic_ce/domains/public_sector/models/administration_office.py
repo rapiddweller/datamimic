@@ -16,9 +16,10 @@ import random
 from typing import Any
 import uuid
 
-from datamimic_ce.core.base_entity import BaseEntity
+from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.models.address import Address
+from datamimic_ce.domains.public_sector.generators.administration_office_generator import AdministrationOfficeGenerator
 
 
 class AdministrationOffice(BaseEntity):
@@ -35,9 +36,7 @@ class AdministrationOffice(BaseEntity):
     """
     def __init__(self, administration_office_generator: AdministrationOfficeGenerator):
         super().__init__()
-        self.administration_office_generator = administration_office_generator
-
-
+        self._administration_office_generator = administration_office_generator
 
     # Property getters
     @property
@@ -58,7 +57,7 @@ class AdministrationOffice(BaseEntity):
         Returns:
             The office address.
         """
-        return Address(self.administration_office_generator.address_generator)
+        return Address(self._administration_office_generator.address_generator)
     
     @property
     @property_cache 
@@ -195,8 +194,8 @@ class AdministrationOffice(BaseEntity):
             The jurisdiction.
         """
         office_type = self.type
-        city = self._address_entity.city
-        state = self._address_entity.state
+        city = self.address.city
+        state = self.address.state
 
         if "Municipal" in office_type or "City" in office_type:
             return f"City of {city}"
@@ -411,7 +410,7 @@ class AdministrationOffice(BaseEntity):
         Returns:
             The office phone number.
         """
-        return self.administration_office_generator.phone_number_generator.get()
+        return self._administration_office_generator.phone_number_generator.generate()
 
     @property
     @property_cache
@@ -726,7 +725,6 @@ class AdministrationOffice(BaseEntity):
         num_departments = random.randint(3, min(7, len(all_departments)))
         return random.sample(all_departments, num_departments)
 
-
     @property
     @property_cache
     def leadership(self) -> dict[str, str]:
@@ -738,44 +736,49 @@ class AdministrationOffice(BaseEntity):
         office_type = self.type.lower()
         leadership = {}
 
+        fname_1 = self._administration_office_generator.given_name_generator.generate()
+        fname_2 = self._administration_office_generator.given_name_generator.generate()
+        lname_1 = self._administration_office_generator.family_name_generator.generate()
+        lname_2 = self._administration_office_generator.family_name_generator.generate()
+
         # Generate leader titles based on office type
         if "municipal" in office_type or "city" in office_type:
-            leadership["Mayor"] = f"{person_entity.first_name} {person_entity.last_name}"
-            leadership["City Manager"] = f"{person_entity.reset().first_name} {person_entity.last_name}"
+            leadership["Mayor"] = f"{fname_1} {lname_1}"
+            leadership["City Manager"] = f"{fname_2} {lname_2}"
         elif "county" in office_type:
-            leadership["County Executive"] = f"{person_entity.first_name} {person_entity.last_name}"
-            leadership["Board Chair"] = f"{person_entity.reset().first_name} {person_entity.last_name}"
+            leadership["County Executive"] = f"{fname_1} {lname_1}"
+            leadership["Board Chair"] = f"{fname_2} {lname_2}"
         elif "state" in office_type:
-            leadership["Agency Director"] = f"{person_entity.first_name} {person_entity.last_name}"
-            leadership["Deputy Director"] = f"{person_entity.reset().first_name} {person_entity.last_name}"
+            leadership["Agency Director"] = f"{fname_1} {lname_1}"
+            leadership["Deputy Director"] = f"{fname_2} {lname_2}"
         elif "federal" in office_type:
-            leadership["Director"] = f"{person_entity.first_name} {person_entity.last_name}"
-            leadership["Deputy Director"] = f"{person_entity.reset().first_name} {person_entity.last_name}"
+            leadership["Director"] = f"{fname_1} {lname_1}"
+            leadership["Deputy Director"] = f"{fname_2} {lname_2}"
         else:
             # Specialized offices
             if "tax" in office_type:
-                leadership["Tax Commissioner"] = f"{person_entity.first_name} {person_entity.last_name}"
+                leadership["Tax Commissioner"] = f"{fname_1} {lname_1}"
             elif "motor" in office_type or "dmv" in office_type:
-                leadership["DMV Administrator"] = f"{person_entity.first_name} {person_entity.last_name}"
+                leadership["DMV Administrator"] = f"{fname_1} {lname_1}"
             elif "social" in office_type or "welfare" in office_type:
-                leadership["Social Services Director"] = f"{person_entity.first_name} {person_entity.last_name}"
+                leadership["Social Services Director"] = f"{fname_1} {lname_1}"
             elif "permit" in office_type or "licens" in office_type:
-                leadership["Licensing Director"] = f"{person_entity.first_name} {person_entity.last_name}"
+                leadership["Licensing Director"] = f"{fname_1} {lname_1}"
             elif "election" in office_type:
-                leadership["Elections Supervisor"] = f"{person_entity.first_name} {person_entity.last_name}"
+                leadership["Elections Supervisor"] = f"{fname_1} {lname_1}"
             elif "health" in office_type:
-                leadership["Health Director"] = f"{person_entity.first_name} {person_entity.last_name}"
+                leadership["Health Director"] = f"{fname_1} {lname_1}"
             elif "housing" in office_type:
-                leadership["Housing Director"] = f"{person_entity.first_name} {person_entity.last_name}"
+                leadership["Housing Director"] = f"{fname_1} {lname_1}"
             elif "environment" in office_type:
-                leadership["Environmental Director"] = f"{person_entity.first_name} {person_entity.last_name}"
+                leadership["Environmental Director"] = f"{fname_1} {lname_1}"
             elif "planning" in office_type:
-                leadership["Planning Director"] = f"{person_entity.first_name} {person_entity.last_name}"
+                leadership["Planning Director"] = f"{fname_1} {lname_1}"
             else:
-                leadership["Director"] = f"{person_entity.first_name} {person_entity.last_name}"
+                leadership["Director"] = f"{fname_1} {lname_1}"
 
         # Add administrative positions that exist in nearly all offices
-        leadership["Administrative Officer"] = f"{person_entity.reset().first_name} {person_entity.last_name}"
+        leadership["Administrative Officer"] = f"{fname_2} {lname_2}"
 
         # Randomly add more leadership positions
         possible_positions = [
@@ -793,7 +796,9 @@ class AdministrationOffice(BaseEntity):
         selected_positions = random.sample(possible_positions, num_additional)
 
         for position in selected_positions:
-            leadership[position] = f"{person_entity.reset().first_name} {person_entity.last_name}"
+            fname = self._administration_office_generator.given_name_generator.generate()
+            lname = self._administration_office_generator.family_name_generator.generate()
+            leadership[position] = f"{fname} {lname}"
 
         return leadership
 

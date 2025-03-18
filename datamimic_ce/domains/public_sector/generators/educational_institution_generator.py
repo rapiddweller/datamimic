@@ -9,13 +9,13 @@ from datamimic_ce.domains.common.literal_generators.phone_number_generator impor
 class EducationalInstitutionGenerator(BaseDomainGenerator):
     """Generator for educational institution data."""
 
-    def __init__(self, dataset: str = "US"):
+    def __init__(self, dataset: str | None = None):
         """Initialize the educational institution generator.
 
         Args:
             dataset: The country code to use for data generation
         """
-        self._dataset = dataset
+        self._dataset = dataset or "US"
         self._address_generator = AddressGenerator(dataset=dataset)
         self._phone_number_generator = PhoneNumberGenerator(dataset=dataset)
         self._email_generator = EmailAddressGenerator(dataset=dataset)
@@ -23,7 +23,6 @@ class EducationalInstitutionGenerator(BaseDomainGenerator):
     @property
     def address_generator(self) -> AddressGenerator:
         return self._address_generator
-    
     
     @property   
     def phone_number_generator(self) -> PhoneNumberGenerator:

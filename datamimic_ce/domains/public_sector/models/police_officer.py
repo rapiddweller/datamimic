@@ -13,6 +13,7 @@ This module provides the PoliceOfficer entity model for generating realistic pol
 import datetime
 import random
 from typing import Any
+import uuid
  
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
@@ -38,7 +39,6 @@ class PoliceOfficer(BaseEntity):
     def __init__(self, police_officer_generator: PoliceOfficerGenerator):
         super().__init__()
         self.police_officer_generator = police_officer_generator   
-
 
 
     # Property getters
@@ -75,7 +75,7 @@ class PoliceOfficer(BaseEntity):
         Returns:
             The officer's first name.
         """
-        return self.person_data.first_name
+        return self.person_data.given_name
 
     @property
     @property_cache
@@ -85,7 +85,7 @@ class PoliceOfficer(BaseEntity):
         Returns:
             The officer's last name.
         """
-        return self.person_data.last_name
+        return self.person_data.family_name
 
     @property
     @property_cache
@@ -109,13 +109,13 @@ class PoliceOfficer(BaseEntity):
 
     @property
     @property_cache
-    def date_of_birth(self) -> str:
+    def birthdate(self) -> str:
         """Get the officer's date of birth.
 
         Returns:
             The officer's date of birth in YYYY-MM-DD format.
         """
-        return self.person_data.date_of_birth
+        return self.person_data.birthdate
 
     @property
     @property_cache
@@ -182,7 +182,7 @@ class PoliceOfficer(BaseEntity):
             The hire date in YYYY-MM-DD format.
         """
         # Calculate a reasonable hire date based on years_of_service
-        years_of_service = random.randint(1, min(30, self.age - 21))  # Assume minimum age of 21 to join
+        years_of_service = random.randint(0, min(30, self.age - 21))  # Assume minimum age of 21 to join
         current_date = datetime.datetime.now()
         hire_date = current_date - datetime.timedelta(days=years_of_service * 365)
         return hire_date.strftime("%Y-%m-%d")
@@ -279,7 +279,7 @@ class PoliceOfficer(BaseEntity):
         Returns:
             The officer's email address.
         """
-        return self.police_officer_generator.get_email()
+        return self.police_officer_generator.email_address_generator.generate()
 
     @property
     @property_cache
@@ -289,7 +289,7 @@ class PoliceOfficer(BaseEntity):
         Returns:
             The officer's phone number.
         """
-        return self.police_officer_generator.get_phone()
+        return self.police_officer_generator.phone_number_generator.generate()
 
     @property
     @property_cache
@@ -314,7 +314,7 @@ class PoliceOfficer(BaseEntity):
             "last_name": self.last_name,
             "full_name": self.full_name,
             "gender": self.gender,
-            "date_of_birth": self.date_of_birth,
+            "birthdate": self.birthdate,
             "age": self.age,
             "rank": self.rank,
             "department": self.department,

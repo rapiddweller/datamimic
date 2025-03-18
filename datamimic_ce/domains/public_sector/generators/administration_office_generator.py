@@ -14,6 +14,8 @@ from typing import TypeVar
 
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
+from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
+from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 
 T = TypeVar("T")  # Define a type variable for generic typing
@@ -29,7 +31,9 @@ class AdministrationOfficeGenerator(BaseDomainGenerator):
         """
         self._dataset = dataset
         self._address_generator = AddressGenerator(dataset=dataset)
-        self._phone_number_generator = PhoneNumberGenerator(dataset=dataset)    
+        self._phone_number_generator = PhoneNumberGenerator(dataset=dataset)   
+        self._family_name_generator = FamilyNameGenerator(dataset=dataset)
+        self._given_name_generator = GivenNameGenerator(dataset=dataset)
 
     @property
     def address_generator(self) -> AddressGenerator:
@@ -39,3 +43,10 @@ class AdministrationOfficeGenerator(BaseDomainGenerator):
     def phone_number_generator(self) -> PhoneNumberGenerator:
         return self._phone_number_generator
     
+    @property
+    def family_name_generator(self) -> FamilyNameGenerator:
+        return self._family_name_generator
+    
+    @property
+    def given_name_generator(self) -> GivenNameGenerator:
+        return self._given_name_generator

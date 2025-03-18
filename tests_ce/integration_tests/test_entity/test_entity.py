@@ -142,3 +142,15 @@ class TestEntity:
     def test_entity_insurance_company(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_insurance_company.xml")
         engine.test_with_timer()
+
+    def test_entity_police_officer(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_police_officer.xml")
+        engine.test_with_timer()
+
+    def test_entity_educational_institution(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_educational_institution.xml")
+        engine.test_with_timer()    
+
+    def test_entity_administration_office(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_administration_office.xml")
+        engine.test_with_timer()
