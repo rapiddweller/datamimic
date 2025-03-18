@@ -10,3 +10,15 @@ Insurance domain services.
 This package provides service classes for managing insurance-related entities
 such as insurance companies, products, and policies.
 """
+
+from .insurance_company_service import InsuranceCompanyService
+from .insurance_product_service import InsuranceProductService
+from .insurance_policy_service import InsurancePolicyService
+from .insurance_coverage_service import InsuranceCoverageService
+
+__all__ = [
+    "InsuranceCompanyService",
+    "InsuranceProductService",
+    "InsurancePolicyService",
+    "InsuranceCoverageService",
+]

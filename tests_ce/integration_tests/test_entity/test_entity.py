@@ -126,3 +126,19 @@ class TestEntity:
         """Test the DigitalWalletEntity."""
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_digital_wallet.xml")
         engine.test_with_timer()
+
+    def test_entity_insurance_policy(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_insurance_policy.xml")
+        engine.test_with_timer()
+
+    def test_entity_insurance_coverage(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_insurance_coverage.xml")
+        engine.test_with_timer()
+
+    def test_entity_insurance_product(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_insurance_product.xml")
+        engine.test_with_timer()
+
+    def test_entity_insurance_company(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_insurance_company.xml")
+        engine.test_with_timer()

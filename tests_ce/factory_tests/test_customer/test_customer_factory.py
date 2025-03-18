@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from tests_ce.factory_test.test_customer.customer_factory import CustomerFactory
+from tests_ce.factory_tests.test_customer.customer_factory import CustomerFactory
+
 
 
 class TestCustomerFactory:

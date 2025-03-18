@@ -1,10 +1,11 @@
 import datetime
+import random
 from typing import Any
 import uuid
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.models.person import Person
-from datamimic_ce.domains.insurance.generators.insurance_policy import InsurancePolicyGenerator
+from datamimic_ce.domains.insurance.generators.insurance_policy_generator import InsurancePolicyGenerator
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
 from datamimic_ce.domains.insurance.models.insurance_product import InsuranceProduct            
@@ -40,37 +41,37 @@ class InsurancePolicy(BaseEntity):
     @property
     @property_cache
     def coverages(self) -> list[InsuranceCoverage]:
-        return [InsuranceCoverage(self.insurance_policy_generator.insurance_coverage_generator) for _ in range(self.policy_data["num_coverages"])]
+        return [InsuranceCoverage(self.insurance_policy_generator.insurance_coverage_generator) for _ in range(random.randint(1, 3))]
     
     @property
     @property_cache
     def premium(self) -> float:
-        return self.policy_data["premium"]
+        return random.uniform(100, 1000)
     
     @property
     @property_cache
     def premium_frequency(self) -> str:
-        return self.policy_data["premium_frequency"]
+        return random.choice(["monthly", "quarterly", "yearly"])
     
     @property
     @property_cache
-    def start_date(self) -> date:
-        return self.insurance_policy_generator.datetime_generator.get_random_date()
+    def start_date(self) -> datetime.date:
+        return self.insurance_policy_generator.datetime_generator.generate_date()
     
     @property
     @property_cache
-    def end_date(self) -> date:
-        return self.insurance_policy_generator.datetime_generator.get_random_date() 
+    def end_date(self) -> datetime.date:
+        return self.insurance_policy_generator.datetime_generator.generate_date() 
     
     @property
     @property_cache
     def status(self) -> str:
-        return self.policy_data["status"]
+        return random.choice(["active", "inactive", "cancelled"])   
     
     @property
     @property_cache
     def created_date(self) -> datetime:
-        return self.insurance_policy_generator.datetime_generator.get_random_date() 
+        return self.insurance_policy_generator.datetime_generator.generate_date() 
     
     def to_dict(self) -> dict[str, Any]:
         return {

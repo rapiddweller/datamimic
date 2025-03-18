@@ -2,7 +2,7 @@
 from typing import Any
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
-from datamimic_ce.domains.insurance.generators.insurance_coverage import InsuranceCoverageGenerator
+from datamimic_ce.domains.insurance.generators.insurance_coverage_generator import InsuranceCoverageGenerator
 
 
 class InsuranceCoverage(BaseEntity):
@@ -39,12 +39,12 @@ class InsuranceCoverage(BaseEntity):
     
     @property
     @property_cache
-    def min_coverage(self) -> float:
+    def min_coverage(self) -> str:
         return self.coverage_data["min_coverage"]
     
     @property
     @property_cache
-    def max_coverage(self) -> float:
+    def max_coverage(self) -> str:
         return self.coverage_data["max_coverage"]
     
     def to_dict(self) -> dict[str, Any]:

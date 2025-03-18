@@ -1,0 +1,16 @@
+<setup multiprocessing="0">
+    <generate name="insurance_product" count="5" target="ConsoleExporter">
+        <variable name="insurance_product" entity="InsuranceProduct" />
+        <key name="id" script="insurance_product.id" />
+        <key name="type" script="insurance_product.type" />
+        <key name="code" script="insurance_product.code" />
+        <key name="description" script="insurance_product.description" />
+        <!-- <key name="coverages" script="insurance_product.coverages" /> -->
+        <variable name="insurance_product1" entity="InsuranceProduct" />    
+        <key name="id1" script="insurance_product1.id" />
+        <key name="type1" script="insurance_product1.type" />
+        <key name="code1" script="insurance_product1.code" />
+        <key name="description1" script="insurance_product1.description" />
+        <!-- <key name="coverages1" script="insurance_product1.coverages" /> -->
+    </generate>
+</setup>

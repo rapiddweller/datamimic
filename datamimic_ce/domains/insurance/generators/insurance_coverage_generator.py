@@ -9,18 +9,18 @@ from datamimic_ce.utils.file_util import FileUtil
 class InsuranceCoverageGenerator(BaseDomainGenerator):
     """Generator for insurance coverage data."""
 
-    def __init__(self, dataset: str = "US"):
+    def __init__(self, dataset: str | None = None):
         """Initialize the insurance coverage generator.
 
         Args:
             dataset: The country code to use for data generation
         """
-        self._dataset = dataset
+        self._dataset = dataset or "US"
 
     def get_random_coverage(self) -> dict[str, Any]:
-        file_path = Path(__file__).parent / "data" / f"insurance_coverages_{self._dataset}.csv"
-        loaded_data = FileContentStorage.load_file_with_custom_function(str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path))
-        coverage_data= random.choices(loaded_data, weights=[item["weight"] for item in loaded_data], k=1)[0]
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "insurance" / f"coverages_{self._dataset}.csv"
+        loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight"))
+        coverage_data= random.choices(loaded_data[1], weights=loaded_data[0], k=1)[0]
         
         return {
             "name": coverage_data["name"],

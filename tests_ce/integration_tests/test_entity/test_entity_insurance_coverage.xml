@@ -1,0 +1,18 @@
+<setup multiprocessing="0">
+    <generate name="insurance_coverage" count="5" target="ConsoleExporter">
+        <variable name="insurance_coverage" entity="InsuranceCoverage" />
+        <key name="name" script="insurance_coverage.name" />
+        <key name="code" script="insurance_coverage.code" />
+        <key name="product_code" script="insurance_coverage.product_code" />
+        <key name="description" script="insurance_coverage.description" />
+        <key name="min_coverage" script="insurance_coverage.min_coverage" />
+        <key name="max_coverage" script="insurance_coverage.max_coverage" />
+        <variable name="insurance_coverage1" entity="InsuranceCoverage" />
+        <key name="name1" script="insurance_coverage1.name" />
+        <key name="code1" script="insurance_coverage1.code" />
+        <key name="product_code1" script="insurance_coverage1.product_code" />
+        <key name="description1" script="insurance_coverage1.description" />
+        <key name="min_coverage1" script="insurance_coverage1.min_coverage" />
+        <key name="max_coverage1" script="insurance_coverage1.max_coverage" />
+    </generate>
+</setup>

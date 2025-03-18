@@ -16,14 +16,14 @@ import uuid
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
-from datamimic_ce.domains.insurance.generators.insurance_generators import InsuranceCompanyGenerator
+from datamimic_ce.domains.insurance.generators.insurance_company_generator import InsuranceCompanyGenerator
 
 
 class InsuranceCompany(BaseEntity):
     """Insurance company information."""
     def __init__(self, insurance_company_generator: InsuranceCompanyGenerator):
         super().__init__()
-        self.insurance_company_generator = insurance_company_generator
+        self._insurance_company_generator = insurance_company_generator
 
     @property
     @property_cache
@@ -33,7 +33,7 @@ class InsuranceCompany(BaseEntity):
     @property
     @property_cache
     def company_data(self) -> dict[str, Any]:
-        return self.insurance_company_generator.get_random_company()
+        return self._insurance_company_generator.get_random_company()
 
     @property
     @property_cache

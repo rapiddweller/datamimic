@@ -57,3 +57,6 @@ class DateTimeGenerator(BaseLiteralGenerator):
         else:
             result = self._result
         return result
+    
+    def generate_date(self) -> datetime.date:
+        return self.generate().date()

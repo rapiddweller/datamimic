@@ -285,9 +285,10 @@ class VariableTask(KeyVariableTask):
                 # "ClinicalTrial": "healthcare.models.clinical_trial.ClinicalTrial",
                 
                 # Insurance domain entities (new domain)
-                # "InsuranceCompany": "insurance.models.insurance_company.InsuranceCompany",
-                # "InsurancePolicy": "insurance.models.insurance_policy.InsurancePolicy",
-                # "InsuranceProduct": "insurance.models.insurance_product.InsuranceProduct",
+                "InsuranceCompany": "insurance.services.InsuranceCompanyService",
+                "InsurancePolicy": "insurance.services.InsurancePolicyService",
+                "InsuranceProduct": "insurance.services.InsuranceProductService",
+                "InsuranceCoverage": "insurance.services.InsuranceCoverageService",
                 
                 # Public Sector domain entities (new domain)
                 # "AdministrationOffice": "public_sector.models.administration_office.AdministrationOffice",

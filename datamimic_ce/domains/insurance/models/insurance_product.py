@@ -10,17 +10,12 @@ Insurance Product model.
 This module defines the insurance product model for the insurance domain.
 """
 
-
-
-
-
-
-
+import random
 from typing import Any
 import uuid
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
-from datamimic_ce.domains.insurance.generators.insurance_product import InsuranceProductGenerator
+from datamimic_ce.domains.insurance.generators.insurance_product_generator import InsuranceProductGenerator
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
 
 
@@ -29,7 +24,7 @@ class InsuranceProduct(BaseEntity):
 
     def __init__(self, insurance_product_generator: InsuranceProductGenerator):
         super().__init__()
-        self.insurance_product_generator = insurance_product_generator
+        self._insurance_product_generator = insurance_product_generator
 
     @property
     @property_cache
@@ -39,7 +34,7 @@ class InsuranceProduct(BaseEntity):
     @property
     @property_cache
     def product_data(self) -> dict[str, Any]:
-        return self.insurance_product_generator.get_random_product()
+        return self._insurance_product_generator.get_random_product()
     
     @property
     @property_cache
@@ -59,7 +54,7 @@ class InsuranceProduct(BaseEntity):
     @property
     @property_cache
     def coverages(self) -> list[InsuranceCoverage]:
-        return [InsuranceCoverage(self.insurance_coverage_generator) for _ in range(self.product_data["num_coverages"])]
+        return [InsuranceCoverage(self._insurance_product_generator.insurance_coverage_generator) for _ in range(random.randint(1, 3))]
     
     def to_dict(self) -> dict[str, Any]:
         return {
