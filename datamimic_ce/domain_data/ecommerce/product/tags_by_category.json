@@ -13,5 +13,5 @@
     "OFFICE_SUPPLIES": ["office", "business", "professional", "work", "stationery", "desk"],
     "PET_SUPPLIES": ["pet", "animal", "companion", "care", "dog", "cat"],
     "JEWELRY": ["accessory", "ornament", "decoration", "adornment", "precious", "gem"],
-    "FURNITURE": ["furnishing", "interior", "home", "decor", "living", "room"],
+    "FURNITURE": ["furnishing", "interior", "home", "decor", "living", "room"]
 }
