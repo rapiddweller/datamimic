@@ -7,6 +7,7 @@
 import datetime
 from pathlib import Path
 import random
+from typing import Any
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
@@ -14,36 +15,35 @@ from datamimic_ce.utils.file_util import FileUtil
 
 
 class MedicalDeviceGenerator(BaseDomainGenerator):
-    def __init__(self, dataset: str = "US"):
-        super().__init__()
-        self._dataset = dataset
-        self._person_generator = PersonGenerator()
+    def __init__(self, dataset: str | None = None):
+        self._dataset = dataset or "US"
+        self._person_generator = PersonGenerator(dataset=self._dataset)
 
     @property
     def person_generator(self) -> PersonGenerator:
         return self._person_generator
 
     def generate_device_type(self) -> str:
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / f"device_types_{self._dataset}.csv"
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / "medical" / f"device_types_{self._dataset}.csv"
         loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_weight_csv(str(file_path)))
         return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
     
     def generate_manufacturer(self) -> str:
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / f"manufacturers_{self._dataset}.csv"
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / "medical" / f"manufacturers_{self._dataset}.csv"
         loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_weight_csv(str(file_path)))
         return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
     
     def generate_device_status(self) -> str:
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / f"device_statuses_{self._dataset}.csv"
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / "medical" / f"device_statuses_{self._dataset}.csv"
         loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_weight_csv(str(file_path)))
         return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
     
     def generate_location(self) -> str:
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / f"locations_{self._dataset}.csv"
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / "medical" / f"locations_{self._dataset}.csv"
         loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_weight_csv(str(file_path)))
         return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
     
-    def generate_usage_log(self, username: str) -> list[dict[str, str]]:
+    def generate_usage_log(self, username: str, device_type: str) -> list[dict[str, str]]:
         logs = []
 
         # Generate between 3 and 10 usage logs
@@ -67,7 +67,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
                 "date": current_date.strftime("%Y-%m-%d"),
                 "user": username,
                 "duration_minutes": str(random.randint(15, 240)),
-                "purpose": self._generate_usage_purpose(),
+                "purpose": self._generate_usage_purpose(device_type),
                 "notes": self._generate_usage_notes(),
             }
 
@@ -75,13 +75,13 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
 
         return logs
 
-    def _generate_usage_purpose(self) -> str:
+    def _generate_usage_purpose(self, device_type: str) -> str:
         """Generate a purpose for device usage.
 
         Returns:
             A string representing a usage purpose.
         """
-        device_type = self.device_type.lower()
+        device_type = device_type.lower()
 
         purposes = [
             "Routine patient care",

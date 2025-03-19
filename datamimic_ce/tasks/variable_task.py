@@ -275,12 +275,11 @@ class VariableTask(KeyVariableTask):
                 # "CRM": "ecommerce.models.crm.CRM",
                 
                 # Healthcare domain entities
-                # "Patient": "healthcare.models.patient.Patient",
-                # "Doctor": "healthcare.models.doctor.Doctor",
-                # "Hospital": "healthcare.models.hospital.Hospital",
-                # "MedicalDevice": "healthcare.models.medical_device.MedicalDevice",
-                # "MedicalRecord": "healthcare.models.medical_record.MedicalRecord",
-                # "MedicalProcedure": "healthcare.models.medical_procedure.MedicalProcedure",
+                "Patient": "healthcare.services.PatientService",
+                "Doctor": "healthcare.services.DoctorService",
+                "Hospital": "healthcare.services.HospitalService",
+                "MedicalDevice": "healthcare.services.MedicalDeviceService",
+                "MedicalProcedure": "healthcare.services.MedicalProcedureService",
                 # "LabTest": "healthcare.models.lab_test.LabTest",
                 # "ClinicalTrial": "healthcare.models.clinical_trial.ClinicalTrial",
                 

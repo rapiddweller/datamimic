@@ -154,3 +154,27 @@ class TestEntity:
     def test_entity_administration_office(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_administration_office.xml")
         engine.test_with_timer()
+
+    def test_entity_medical_procedure(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_medical_procedure.xml")
+        engine.test_with_timer()
+
+    def test_entity_medical_device(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_medical_device.xml")
+        engine.test_with_timer()
+
+    def test_entity_hospital(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_hospital.xml")
+        engine.test_with_timer()
+
+    def test_entity_doctor(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_doctor.xml")
+        engine.test_with_timer()
+
+    def test_entity_patient(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_patient.xml")
+        engine.test_with_timer()
+        
+        
+        
+        

@@ -10,24 +10,7 @@ Healthcare domain generators.
 This module provides generators for the healthcare domain entities.
 """
 
-from datamimic_ce.domains.healthcare.generators.doctor_generator import (
-    calculate_graduation_year,
-    generate_doctor_email,
-    generate_doctor_id,
-    generate_doctor_phone,
-    generate_doctor_schedule,
-    generate_license_number,
-    generate_npi_number,
-    weighted_choice,
-)
-
+from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
 __all__ = [
-    "weighted_choice",
-    "generate_doctor_schedule",
-    "generate_doctor_email",
-    "generate_doctor_phone",
-    "generate_doctor_id",
-    "generate_npi_number",
-    "generate_license_number",
-    "calculate_graduation_year",
+    "HospitalGenerator",
 ]

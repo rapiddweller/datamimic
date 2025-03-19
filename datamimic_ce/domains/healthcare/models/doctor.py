@@ -124,7 +124,7 @@ class Doctor(BaseEntity):
 
     @property
     @property_cache
-    def date_of_birth(self) -> str:
+    def birthdate(self) -> datetime.datetime:
         """Get the doctor's date of birth.
 
         Returns:
@@ -154,18 +154,8 @@ class Doctor(BaseEntity):
 
     @property
     @property_cache
-    def hospital_data(self) -> Hospital:
+    def hospital(self) -> Hospital:
         return Hospital(self._doctor_generator.hospital_generator)
-
-    @property
-    @property_cache
-    def hospital(self) -> str:
-        """Get the hospital where the doctor works.
-
-        Returns:
-            The name of the hospital.
-        """
-        return self.hospital_data.name
 
     @property
     @property_cache
@@ -186,7 +176,7 @@ class Doctor(BaseEntity):
             The graduation year.
         """
         current_year = datetime.datetime.now().year
-        min_years_after_graduation = 5  # Minimum years after graduation
+        min_years_after_graduation = 0  # Minimum years after graduation
         max_years_after_graduation = 45  # Maximum years after graduation
 
         # Calculate graduation year based on age and years after graduation
@@ -301,7 +291,7 @@ class Doctor(BaseEntity):
             "last_name": self.last_name,
             "full_name": self.full_name,
             "gender": self.gender,
-            "date_of_birth": self.date_of_birth,
+            "birthdate": self.birthdate,
             "age": self.age,
             "specialty": self.specialty,
             "hospital": self.hospital,

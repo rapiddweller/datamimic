@@ -10,6 +10,7 @@ Patient entity model.
 This module provides the Patient entity model for generating realistic patient data.
 """
 
+import datetime
 import random
 import string
 from typing import Any
@@ -42,6 +43,7 @@ class Patient(BaseEntity):
             locale: The locale to use for generating data.
             dataset: The dataset to use for generating data.
         """
+        super().__init__()
         self._patient_generator = patient_generator
 
     @property
@@ -126,13 +128,13 @@ class Patient(BaseEntity):
 
     @property
     @property_cache
-    def date_of_birth(self) -> str:
+    def birthdate(self) -> datetime.datetime:
         """Get the patient's date of birth.
 
         Returns:
             The patient's date of birth in YYYY-MM-DD format.
         """
-        return self.person_data.date_of_birth
+        return self.person_data.birthdate   
 
     @property
     @property_cache
@@ -234,22 +236,7 @@ class Patient(BaseEntity):
         Returns:
             A list of allergies.
         """
-        allergies = self._data_loader.get_data("allergies", self._country_code)
-
-        # Determine how many allergies to generate (most people have 0-3)
-        num_allergies = random.choices([0, 1, 2, 3, 4, 5], weights=[0.5, 0.2, 0.15, 0.1, 0.03, 0.02], k=1)[0]
-
-        if num_allergies == 0:
-            return []
-
-        # Generate unique allergies
-        result = []
-        for _ in range(num_allergies):
-            allergy = random.choice(allergies)
-            if allergy not in result:
-                result.append(allergy)
-
-        return result
+        return self._patient_generator.get_allergies()
 
     @property
     @property_cache
@@ -259,33 +246,7 @@ class Patient(BaseEntity):
         Returns:
             A list of medications.
         """
-        medications = self._data_loader.get_data("medications", self._country_code)
-
-        # Determine how many medications to generate
-        # Older people tend to take more medications
-        age = self.age
-        if age < 18:
-            weights = [0.7, 0.2, 0.08, 0.02, 0.0, 0.0]
-        elif age < 40:
-            weights = [0.5, 0.3, 0.15, 0.04, 0.01, 0.0]
-        elif age < 65:
-            weights = [0.3, 0.3, 0.2, 0.1, 0.07, 0.03]
-        else:
-            weights = [0.1, 0.2, 0.3, 0.2, 0.15, 0.05]
-
-        num_medications = random.choices([0, 1, 2, 3, 4, 5], weights=weights, k=1)[0]
-
-        if num_medications == 0:
-            return []
-
-        # Generate unique medications
-        result = []
-        for _ in range(num_medications):
-            medication = random.choice(medications)
-            if medication not in result:
-                result.append(medication)
-
-        return result
+        return self._patient_generator.get_medications(self.age)
 
     @property
     @property_cache
@@ -295,33 +256,7 @@ class Patient(BaseEntity):
         Returns:
             A list of medical conditions.
         """
-        conditions = self._data_loader.get_data("conditions", self._country_code)
-
-        # Determine how many conditions to generate
-        # Older people tend to have more conditions
-        age = self.age
-        if age < 18:
-            weights = [0.8, 0.15, 0.04, 0.01, 0.0, 0.0]
-        elif age < 40:
-            weights = [0.6, 0.25, 0.1, 0.04, 0.01, 0.0]
-        elif age < 65:
-            weights = [0.4, 0.3, 0.15, 0.1, 0.04, 0.01]
-        else:
-            weights = [0.2, 0.3, 0.25, 0.15, 0.07, 0.03]
-
-        num_conditions = random.choices([0, 1, 2, 3, 4, 5], weights=weights, k=1)[0]
-
-        if num_conditions == 0:
-            return []
-
-        # Generate unique conditions
-        result = []
-        for _ in range(num_conditions):
-            condition = random.choice(conditions)
-            if condition not in result:
-                result.append(condition)
-
-        return result
+        return self._patient_generator.generate_age_appropriate_conditions(self.age)
 
     @property
     @property_cache
@@ -331,43 +266,7 @@ class Patient(BaseEntity):
         Returns:
             A dictionary containing emergency contact information.
         """
-        # Generate a name for the emergency contact
-        first_names = self._data_loader.get_data("first_names", self._country_code)
-        last_names = self._data_loader.get_data("last_names", self._country_code)
-
-        from datamimic_ce.domains.healthcare.generators.patient_generator import weighted_choice
-
-        first_name = weighted_choice(first_names)
-
-        # 50% chance the emergency contact has the same last name
-        if random.random() < 0.5:
-            last_name = self.last_name
-        else:
-            last_name = weighted_choice(last_names)
-
-        # Generate a relationship
-        relationships = [
-            "Spouse",
-            "Parent",
-            "Child",
-            "Sibling",
-            "Friend",
-            "Grandparent",
-            "Aunt",
-            "Uncle",
-            "Cousin",
-            "Partner",
-        ]
-        relationship = random.choice(relationships)
-
-        # Generate a phone number
-        area_code = random.randint(100, 999)
-        prefix = random.randint(100, 999)
-        line = random.randint(1000, 9999)
-        phone = f"({area_code}) {prefix}-{line}"
-
-        return {"name": f"{first_name} {last_name}", "relationship": relationship, "phone": phone}
-
+        return self._patient_generator.get_emergency_contact(self.last_name)        
 
     @property
     @property_cache
@@ -407,7 +306,7 @@ class Patient(BaseEntity):
             "last_name": self.last_name,
             "full_name": self.full_name,
             "gender": self.gender,
-            "date_of_birth": self.date_of_birth,
+            "birthdate": self.birthdate,
             "age": self.age,
             "blood_type": self.blood_type,
             "height_cm": self.height_cm,

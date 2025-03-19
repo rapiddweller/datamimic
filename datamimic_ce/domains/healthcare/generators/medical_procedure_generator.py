@@ -17,8 +17,8 @@ from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 class MedicalProcedureGenerator:
-    def __init__(self, dataset: str = "US"):
-        self._dataset = dataset
+    def __init__(self, dataset: str | None = None):
+        self._dataset = dataset or "US"
     def get_procedure_name(self, category: str, specialty: str, is_surgical: bool, is_diagnostic: bool) -> str:
         """Generate a procedure name based on category, specialty, and type.
 
@@ -629,6 +629,7 @@ class MedicalProcedureGenerator:
 
 
     def generate_procedure_description(
+        self,
         name: str,
         category: str,
         is_surgical: bool,
@@ -1080,14 +1081,35 @@ class MedicalProcedureGenerator:
         Returns:
             A medical specialty.
         """
-        file_path = Path(__file__).parent.parent.parent.parent / "data" / "medical_procedures.json"
-        loaded_data = FileContentStorage.load_file_with_custom_function(
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / "medical" / f"specialties_{self._dataset}.csv"
+        wgt, loaded_data = FileContentStorage.load_file_with_custom_func(
             str(file_path),
-            lambda: FileUtil.read_weight_csv(str(file_path))
+            lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
         )
         return random.choices(
-            loaded_data["specialties"],
-            weights=loaded_data["specialties_weights"],
+            loaded_data,
+            weights=wgt,
             k=1
-        )[0]
+        )[0]["specialty"]
 
+    def generate_category(self) -> str:
+        categories = [
+            "Cardiovascular",
+            "Digestive",
+            "Endocrine",
+            "Eye",
+            "Female Genital",
+            "Hemic and Lymphatic",
+            "Integumentary",
+            "Male Genital",
+            "Maternity Care and Delivery",
+            "Musculoskeletal",
+            "Nervous",
+            "Respiratory",
+            "Urinary",
+            "Radiology",
+            "Pathology and Laboratory",
+            "Medicine",
+            "Evaluation and Management",
+        ]
+        return random.choice(categories)

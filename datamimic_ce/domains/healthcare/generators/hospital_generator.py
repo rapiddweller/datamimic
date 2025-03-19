@@ -18,11 +18,19 @@ from datamimic_ce.domains.common.literal_generators.phone_number_generator impor
 
 
 class HospitalGenerator(BaseDomainGenerator):
-    def __init__(self, dataset: str = "US") -> None:
-        self._dataset = dataset
-        self._address_generator = AddressGenerator(dataset=dataset)
-        self._phone_number_generator = PhoneNumberGenerator(country_code=dataset)
+    def __init__(self, dataset: str | None = None) -> None:
+        self._dataset = dataset or "US"
+        self._address_generator = AddressGenerator(dataset=self._dataset)
+        self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset)
 
+    @property   
+    def dataset(self) -> str:
+        """Get the dataset.
+
+        Returns:
+            The dataset.
+        """
+        return self._dataset
     @property
     def address_generator(self) -> AddressGenerator:
         """Get the address generator.

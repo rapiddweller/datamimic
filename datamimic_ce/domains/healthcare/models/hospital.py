@@ -45,8 +45,8 @@ class Hospital(BaseEntity):
         Returns:
             The hospital name.
         """
-        city = self.address_data.city
-        state = self.address_data.state
+        city = self.address.city
+        state = self.address.state
 
         return self._hospital_generator.generate_hospital_name(city, state)
 
@@ -123,7 +123,7 @@ class Hospital(BaseEntity):
         Returns:
             The year the hospital was founded.
         """
-        current_year = datetime.now().year
+        current_year = datetime.datetime.now().year
 
         # Most hospitals were founded in the last 150 years
         return random.randint(current_year - 150, current_year - 5)
@@ -136,7 +136,7 @@ class Hospital(BaseEntity):
         Returns:
             A list of accreditations held by the hospital.
         """
-        return self._hospital_generator.generate_accreditation()
+        return self._hospital_generator.generate_accreditation(self.type)
 
     @property
     @property_cache
@@ -198,10 +198,10 @@ class Hospital(BaseEntity):
             name = f"hospital{self.hospital_id.lower()}"
 
         # Generate domain extension based on country
-        if self._country_code == "US":
+        if self._hospital_generator.dataset == "US":
             domain = ".org"
         else:
-            domain = f".{self._country_code.lower()}"
+            domain = f".{self._hospital_generator.dataset.lower()}"
 
         return f"https://www.{name}{domain}"
 
@@ -233,7 +233,7 @@ class Hospital(BaseEntity):
 
     @property
     @property_cache
-    def address_data(self) -> Address:
+    def address(self) -> Address:
         """Get the hospital address.
 
         Returns:

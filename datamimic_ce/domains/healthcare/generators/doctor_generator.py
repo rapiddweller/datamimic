@@ -13,7 +13,6 @@ This module provides utility functions for generating doctor data.
 from pathlib import Path
 import random
 
-import pandas as pd
 
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
 from datamimic_ce.logger import logger
@@ -24,10 +23,10 @@ from datamimic_ce.utils.file_util import FileUtil
 
 class DoctorGenerator(BaseDomainGenerator):
     """Generate doctor data."""
-    def __init__(self, country_code: str = "US"):
-        self._country_code = country_code
-        self._person_generator = PersonGenerator(country_code=country_code)
-        self._hospital_generator = HospitalGenerator(country_code=country_code)
+    def __init__(self, dataset: str | None = None):
+        self._dataset = dataset or "US"
+        self._person_generator = PersonGenerator(dataset=self._dataset, min_age=25)
+        self._hospital_generator = HospitalGenerator(dataset=self._dataset)
 
     @property
     def person_generator(self) -> PersonGenerator:
@@ -44,12 +43,12 @@ class DoctorGenerator(BaseDomainGenerator):
             A medical specialty.
         """
         try:
-            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / f"specialties_{self._country_code}.csv"
-            loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_weight_csv(str(file_path)))
-
+            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare"/ "medical" / f"specialties_{self._dataset}.csv"
+            wgt, loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight"))
+            loaded_data = [item["specialty"] for item in loaded_data]
         except FileNotFoundError as e:
-            logger.warning(f"Specialties file not found for country code {self._country_code}. Using default specialties.")
-            loaded_data = pd.DataFrame([
+            logger.warning(f"Specialties file not found for dataset {self._dataset}. Using default specialties: {e}")
+            default_data = [
                 ("Cardiology", 1.0),
                 ("Dermatology", 1.0),
                 ("Emergency Medicine", 1.0),
@@ -66,9 +65,13 @@ class DoctorGenerator(BaseDomainGenerator):
                 ("Radiology", 1.0),
                 ("Surgery", 1.0),
                 ("Urology", 1.0),
-            ])
+            ]
+            loaded_data, wgt = [], []
+            for item in default_data:
+                loaded_data.append(item[0])
+                wgt.append(float(item[1]))
         
-        return random.choices(loaded_data[0], weights=loaded_data[1])[0]
+        return random.choices(loaded_data, weights=wgt)[0]
     
     def generate_medical_school(self) -> str:
         """Generate a medical school.
@@ -97,11 +100,11 @@ class DoctorGenerator(BaseDomainGenerator):
             A list of certifications.
         """
         try:
-            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / f"certifications_{self._country_code}.csv"
-            loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_weight_csv(str(file_path)))
+            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / "medical" / f"certifications_{self._dataset}.csv"
+            wgt, loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight"))
         except FileNotFoundError as e:
-            logger.warning(f"Certifications file not found for country code {self._country_code}. Using default certifications.")
-            loaded_data = pd.DataFrame([
+            logger.warning(f"Certifications file not found for dataset {self._dataset}. Using default certifications: {e}")
+            default_data = [
                 ("Board Certified", 1.0),
                 ("American Board of Medical Specialties", 1.0),
                 ("Fellow of the American College of Physicians", 1.0),
@@ -112,5 +115,9 @@ class DoctorGenerator(BaseDomainGenerator):
                 ("American Board of Psychiatry and Neurology", 1.0),
                 ("American Board of Radiology", 1.0),
                 ("American Board of Family Medicine", 1.0),
-            ])
-        return random.choices(loaded_data[0], weights=loaded_data[1], k=random.randint(1, 3))
+            ]
+            loaded_data, wgt = [], []
+            for item in default_data:
+                loaded_data.append(item[0])
+                wgt.append(float(item[1]))
+        return random.choices(loaded_data, weights=wgt, k=random.randint(1, 3))

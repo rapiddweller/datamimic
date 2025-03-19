@@ -241,7 +241,7 @@ class MedicalDevice(BaseEntity):
         Returns:
             A list of dictionaries representing usage logs.
         """
-        return self._medical_device_generator.generate_usage_log(self.assigned_to)
+        return self._medical_device_generator.generate_usage_log(self.assigned_to, self.device_type)
 
     @property
     @property_cache
@@ -251,7 +251,7 @@ class MedicalDevice(BaseEntity):
         Returns:
             A list of dictionaries representing maintenance history.
         """
-        return self._medical_device_generator.generate_maintenance_history(self.assigned_to)
+        return self._medical_device_generator.generate_maintenance_history()
 
 
     def to_dict(self) -> dict[str, Any]:

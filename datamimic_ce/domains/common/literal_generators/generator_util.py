@@ -119,39 +119,20 @@ class GeneratorUtil:
             "CompanyNameGenerator": CompanyNameGenerator,
             "DepartmentNameGenerator": DepartmentNameGenerator,
             "SectorGenerator": SectorGenerator,
-            # "JobTitleGenerator": JobTitleGenerator,
-            # "CreditCardGenerator": CreditCardGenerator,
-            # "CurrencyGenerator": CurrencyGenerator,
             # Internet and Web
             "EmailAddressGenerator": EmailAddressGenerator,
             "DomainGenerator": DomainGenerator,
             "UrlGenerator": UrlGenerator,
             # Location
             "StreetNameGenerator": StreetNameGenerator,
-            # Document and File
-            # "ISBNGenerator": ISBNGenerator,
-            # "FilePathGenerator": FilePathGenerator,
-            # "MIMETypeGenerator": MIMETypeGenerator,
             # Security
             "UUIDGenerator": UUIDGenerator,
             "HashGenerator": HashGenerator,
             "TokenGenerator": TokenGenerator,
             "PasswordGenerator": PasswordGenerator,
-            # Text and Content
-            # "ParagraphGenerator": ParagraphGenerator,
             # Visual and Design
             "ColorGenerator": ColorGenerator,
-            # Science
-            # "ChemicalFormulaGenerator": ChemicalFormulaGenerator,
-            # "NucleotideSequenceGenerator": NucleotideSequenceGenerator,
-            # "PhysicalConstantGenerator": PhysicalConstantGenerator,
-            # "ScientificUnitGenerator": ScientificUnitGenerator,
             # Healthcare
-            # "AllergyGenerator": AllergyGenerator,
-            # "DiagnosisGenerator": DiagnosisGenerator,
-            # "ImmunizationGenerator": ImmunizationGenerator,
-            # "LabResultGenerator": LabResultGenerator,
-            # "MedicalAppointmentGenerator": MedicalAppointmentGenerator,
             # "MedicalProcedureGenerator": MedicalProcedureGenerator,
             # "MedicationGenerator": MedicationGenerator,
             # "PatientHistoryGenerator": PatientHistoryGenerator,

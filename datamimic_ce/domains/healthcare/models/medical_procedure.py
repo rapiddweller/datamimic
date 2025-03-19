@@ -30,14 +30,15 @@ class MedicalProcedure(BaseEntity):
     falling back to generic data files if needed.
     """
 
-    def __init__(self):
+    def __init__(self, medical_procedure_generator: MedicalProcedureGenerator):
         """Initialize the MedicalProcedure entity.
 
         Args:
             class_factory_util: The class factory utility.
             locale: The locale to use for generating data.
         """
-        self._medical_procedure_generator = MedicalProcedureGenerator()
+        super().__init__()
+        self._medical_procedure_generator = medical_procedure_generator
 
     @property
     @property_cache
@@ -84,7 +85,17 @@ class MedicalProcedure(BaseEntity):
         return self._medical_procedure_generator.get_procedure_name(
             self.category, self.specialty, self.is_surgical, self.is_diagnostic
         )
+    
+    @property
+    @property_cache
+    def category(self) -> str:
+        """Get the procedure category.
 
+        Returns:
+            The procedure category.
+        """
+        return self._medical_procedure_generator.generate_category()
+    
     @property
     @property_cache
     def description(self) -> str:
