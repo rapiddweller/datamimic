@@ -17,4 +17,6 @@ class PersonService(BaseDomainService[Person]):
     """
 
     def __init__(self, dataset: str | None = None, min_age: int = 18, max_age: int = 65, female_quota: float = 0.5):
-        super().__init__(PersonGenerator(dataset=dataset, min_age=min_age, max_age=max_age, female_quota=female_quota), Person)
+        super().__init__(
+            PersonGenerator(dataset=dataset, min_age=min_age, max_age=max_age, female_quota=female_quota), Person
+        )

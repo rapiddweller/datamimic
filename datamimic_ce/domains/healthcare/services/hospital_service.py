@@ -10,10 +10,9 @@ Hospital service.
 This module provides the HospitalService class for generating and managing hospital data.
 """
 
-
 from datamimic_ce.domain_core.base_domain_service import BaseDomainService
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
-from datamimic_ce.domains.healthcare.models.hospital import Hospital 
+from datamimic_ce.domains.healthcare.models.hospital import Hospital
 
 
 class HospitalService(BaseDomainService[Hospital]):

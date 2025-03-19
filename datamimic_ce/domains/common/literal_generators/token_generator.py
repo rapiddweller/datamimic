@@ -19,7 +19,7 @@ class TokenGenerator(BaseLiteralGenerator):
         if self._token_type not in ["hex", "bytes", "urlsafe"]:
             raise ValueError(f"Unsupported token type: {token_type}")
 
-    def generate(self) -> str | bytes:
+    def generate(self):
         """Generate a secure token.
 
         Returns:

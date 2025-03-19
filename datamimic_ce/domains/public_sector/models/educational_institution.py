@@ -11,15 +11,17 @@ This module provides the EducationalInstitution entity model for generating
 realistic educational institution data.
 """
 
-from datetime import datetime
 import random
-from typing import Any
 import uuid
+from datetime import datetime
+from typing import Any
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.models.address import Address
-from datamimic_ce.domains.public_sector.generators.educational_institution_generator import EducationalInstitutionGenerator
+from datamimic_ce.domains.public_sector.generators.educational_institution_generator import (
+    EducationalInstitutionGenerator,
+)
 
 
 class EducationalInstitution(BaseEntity):
@@ -38,8 +40,6 @@ class EducationalInstitution(BaseEntity):
     def __init__(self, educational_institution_generator: EducationalInstitutionGenerator):
         super().__init__()
         self._educational_institution_generator = educational_institution_generator
-
-    
 
     # Property getters
     @property
@@ -203,7 +203,6 @@ class EducationalInstitution(BaseEntity):
 
         return current_year - random.randint(min_age, max_age)
 
-
     @property
     @property_cache
     def student_count(self) -> int:
@@ -278,7 +277,6 @@ class EducationalInstitution(BaseEntity):
         Returns:
             The institution email address.
         """
-        name = self.name.lower()
 
         # Extract domain from website
         website = self.website
@@ -412,7 +410,6 @@ class EducationalInstitution(BaseEntity):
         num_programs = random.randint(3, min(10, len(all_programs)))
         return random.sample(all_programs, num_programs)
 
-
     @property
     @property_cache
     def accreditations(self) -> list[str]:
@@ -422,7 +419,6 @@ class EducationalInstitution(BaseEntity):
             A list of accreditations.
         """
         institution_type = self.type
-        level = self.level
 
         # Different accreditation bodies for different institution types
         k12_accreditations = [
@@ -469,7 +465,6 @@ class EducationalInstitution(BaseEntity):
         num_accreditations = random.randint(1, min(3, len(accreditation_list)))
         return random.sample(accreditation_list, num_accreditations)
 
-
     @property
     @property_cache
     def facilities(self) -> list[str]:
@@ -481,7 +476,6 @@ class EducationalInstitution(BaseEntity):
         import random
 
         institution_type = self.type
-        level = self.level
 
         # Common facilities for all institution types
         common_facilities = [
@@ -552,9 +546,8 @@ class EducationalInstitution(BaseEntity):
         num_facilities = random.randint(5, min(15, len(all_facilities)))
         return random.sample(all_facilities, num_facilities)
 
-
     @property
-    @property_cache 
+    @property_cache
     def address(self) -> Address:
         """Get the institution address.
 

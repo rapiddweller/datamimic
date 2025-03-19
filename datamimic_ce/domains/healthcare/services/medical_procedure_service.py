@@ -10,7 +10,6 @@ Medical Procedure service.
 This module provides the MedicalProcedureService class for generating and managing medical procedure data.
 """
 
-
 from datamimic_ce.domain_core.base_domain_service import BaseDomainService
 from datamimic_ce.domains.healthcare.generators.medical_procedure_generator import MedicalProcedureGenerator
 from datamimic_ce.domains.healthcare.models.medical_procedure import MedicalProcedure

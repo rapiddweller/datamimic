@@ -10,7 +10,6 @@ Administration office service.
 This module provides a service for working with AdministrationOffice entities.
 """
 
-
 from datamimic_ce.domain_core.base_domain_service import BaseDomainService
 from datamimic_ce.domains.public_sector.generators.administration_office_generator import AdministrationOfficeGenerator
 from datamimic_ce.domains.public_sector.models.administration_office import AdministrationOffice

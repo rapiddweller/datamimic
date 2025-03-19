@@ -23,10 +23,10 @@ class PhoneNumberGenerator(BaseLiteralGenerator):
     """
 
     def __init__(
-            self,
-            dataset: str | None = "US",
-            area_code: str | None = None,
-            is_mobile: bool = False,
+        self,
+        dataset: str | None = "US",
+        area_code: str | None = None,
+        is_mobile: bool = False,
     ):
         """Initialize the PhoneNumberGenerator.
 
@@ -39,6 +39,7 @@ class PhoneNumberGenerator(BaseLiteralGenerator):
         self._is_mobile = is_mobile
 
         from datamimic_ce.domains.common.generators import CountryGenerator
+
         country_generator = CountryGenerator()
         country_data = country_generator.get_country_by_iso_code(self._dataset)
         self._country_code = country_data[2]
@@ -49,6 +50,7 @@ class PhoneNumberGenerator(BaseLiteralGenerator):
             self._area_code = area_code
         else:
             from datamimic_ce.domains.common.generators import CityGenerator
+
             self._city_generator = CityGenerator(dataset=self._dataset)
 
     def generate(self) -> str:

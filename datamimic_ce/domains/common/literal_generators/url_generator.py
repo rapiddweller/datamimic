@@ -12,6 +12,7 @@ class UrlGenerator(BaseLiteralGenerator):
     """
     Generate a random url
     """
+
     def __init__(self, locale: str | None = None, schemes: list[str] | None = None):
         self._gen = DataFakerGenerator(locale=locale, method="url", schemes=schemes)
 

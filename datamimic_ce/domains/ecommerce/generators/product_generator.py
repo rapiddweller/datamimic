@@ -9,14 +9,13 @@ Product generator module.
 
 This module provides a generator for e-commerce product data.
 """
+
 import random
 from pathlib import Path
 
-from datamimic_ce.utils.file_util import FileUtil
-
-from datamimic_ce.utils.file_content_storage import FileContentStorage
-
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.utils.file_content_storage import FileContentStorage
+from datamimic_ce.utils.file_util import FileUtil
 
 
 class ProductGenerator(BaseDomainGenerator):
@@ -39,11 +38,10 @@ class ProductGenerator(BaseDomainGenerator):
             Data of product base on dat type
         """
         file_name = f"{data_type.lower()}_{self._dataset.upper()}.csv"
-        file_path = (Path(__file__).parent.parent.parent
-                     .parent / "domain_data/ecommerce" / file_name)
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data/ecommerce" / file_name
         header_dict, loaded_data = FileContentStorage.load_file_with_custom_func(
             cache_key=str(file_path),
-            read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=",")
+            read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=","),
         )
 
         wgt_idx = header_dict["weight"]
@@ -68,7 +66,9 @@ class ProductGenerator(BaseDomainGenerator):
         return max(min_price, min(price, max_price))  # Ensure price is between min_price and max_price
 
     def get_random_features(self, category: str, min_feature: int = 1, max_feature: int = 1) -> list[str]:
-        features = self._load_product_json("features_by_category").get(category, ["High quality", "Versatile", "Durable"])
+        features = self._load_product_json("features_by_category").get(
+            category, ["High quality", "Versatile", "Durable"]
+        )
         return random.sample(features, min(len(features), random.randint(min_feature, max_feature)))
 
     def get_random_weight(self, category: str) -> float:
@@ -79,7 +79,7 @@ class ProductGenerator(BaseDomainGenerator):
         default_dimensions = {
             "length": {"min": 1, "max": 200},
             "width": {"min": 1, "max": 200},
-            "height": {"min": 1, "max": 200}
+            "height": {"min": 1, "max": 200},
         }
         dimensions = self._load_product_json("dimension_ranges_by_category").get(category, default_dimensions)
         length = round(random.uniform(dimensions["length"]["min"], dimensions["length"]["max"]), 1)
@@ -94,10 +94,7 @@ class ProductGenerator(BaseDomainGenerator):
 
     @staticmethod
     def _load_product_json(file_name):
-        file_path = (Path(__file__).parent.parent.parent
-                     .parent / "domain_data/ecommerce/product" / f"{file_name}.json")
+        file_path = Path(__file__).parent.parent.parent.parent / "domain_data/ecommerce/product" / f"{file_name}.json"
         return FileContentStorage.load_file_with_custom_func(
-            cache_key=str(file_path),
-            read_func=lambda: FileUtil.read_json_to_dict(file_path)
+            cache_key=str(file_path), read_func=lambda: FileUtil.read_json_to_dict(file_path)
         )
-

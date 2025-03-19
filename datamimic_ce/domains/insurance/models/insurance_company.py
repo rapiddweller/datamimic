@@ -10,9 +10,8 @@ Insurance Company model.
 This module defines the insurance company model for the insurance domain.
 """
 
-
-from typing import Any
 import uuid
+from typing import Any
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
@@ -21,6 +20,7 @@ from datamimic_ce.domains.insurance.generators.insurance_company_generator impor
 
 class InsuranceCompany(BaseEntity):
     """Insurance company information."""
+
     def __init__(self, insurance_company_generator: InsuranceCompanyGenerator):
         super().__init__()
         self._insurance_company_generator = insurance_company_generator
@@ -54,7 +54,7 @@ class InsuranceCompany(BaseEntity):
     @property_cache
     def headquarters(self) -> str:
         return self.company_data["headquarters"]
-    
+
     @property
     @property_cache
     def website(self) -> str:

@@ -5,9 +5,10 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import datetime
-from pathlib import Path
 import random
+from pathlib import Path
 from typing import Any
+
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
@@ -24,25 +25,57 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         return self._person_generator
 
     def generate_device_type(self) -> str:
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / "medical" / f"device_types_{self._dataset}.csv"
-        loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_weight_csv(str(file_path)))
+        file_path = (
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "healthcare"
+            / "medical"
+            / f"device_types_{self._dataset}.csv"
+        )
+        loaded_data = FileContentStorage.load_file_with_custom_func(
+            str(file_path), lambda: FileUtil.read_weight_csv(file_path)
+        )
         return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
-    
+
     def generate_manufacturer(self) -> str:
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / "medical" / f"manufacturers_{self._dataset}.csv"
-        loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_weight_csv(str(file_path)))
+        file_path = (
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "healthcare"
+            / "medical"
+            / f"manufacturers_{self._dataset}.csv"
+        )
+        loaded_data = FileContentStorage.load_file_with_custom_func(
+            str(file_path), lambda: FileUtil.read_weight_csv(file_path)
+        )
         return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
-    
+
     def generate_device_status(self) -> str:
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / "medical" / f"device_statuses_{self._dataset}.csv"
-        loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_weight_csv(str(file_path)))
+        file_path = (
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "healthcare"
+            / "medical"
+            / f"device_statuses_{self._dataset}.csv"
+        )
+        loaded_data = FileContentStorage.load_file_with_custom_func(
+            str(file_path), lambda: FileUtil.read_weight_csv(file_path)
+        )
         return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
-    
+
     def generate_location(self) -> str:
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / "medical" / f"locations_{self._dataset}.csv"
-        loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_weight_csv(str(file_path)))
+        file_path = (
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "healthcare"
+            / "medical"
+            / f"locations_{self._dataset}.csv"
+        )
+        loaded_data = FileContentStorage.load_file_with_custom_func(
+            str(file_path), lambda: FileUtil.read_weight_csv(file_path)
+        )
         return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
-    
+
     def generate_usage_log(self, username: str, device_type: str) -> list[dict[str, str]]:
         logs = []
 
@@ -129,7 +162,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
             return ""
 
         return random.choice(notes_options)
-    
+
     def generate_maintenance_history(self) -> list[dict[str, Any]]:
         """Generate maintenance history for the device.
 
@@ -270,7 +303,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         """Generate notes for maintenance history.
 
         Returns:
-            A string representing maintenance notes.        
+            A string representing maintenance notes.
         """
         notes_options = [
             "Device operating within normal parameters after service.",
@@ -289,4 +322,4 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         if random.random() < 0.1:
             return ""
 
-        return random.choice(notes_options) 
+        return random.choice(notes_options)

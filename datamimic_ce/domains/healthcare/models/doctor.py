@@ -10,12 +10,12 @@ Doctor entity model.
 This module provides the Doctor entity model for generating realistic doctor data.
 """
 
-
 import datetime
 import random
 import string
-from typing import Any
 import uuid
+from typing import Any
+
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.models.address import Address
@@ -76,7 +76,7 @@ class Doctor(BaseEntity):
         prefix = "".join(random.choices(string.ascii_uppercase, k=2))
         number = "".join(random.choices(string.digits, k=6))
         return f"{prefix}-{number}"
-    
+
     @property
     @property_cache
     def person_data(self) -> Person:
@@ -93,7 +93,7 @@ class Doctor(BaseEntity):
         return self.person_data.given_name
 
     @property
-    @property_cache 
+    @property_cache
     def last_name(self) -> str:
         """Get the doctor's last name.
 
@@ -207,7 +207,6 @@ class Doctor(BaseEntity):
             A list of certifications.
         """
         return self._doctor_generator.generate_certifications()
-
 
     @property
     @property_cache

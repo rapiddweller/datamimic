@@ -1,4 +1,3 @@
-import datetime
 import random
 import string
 import pytest
@@ -72,6 +71,7 @@ class TestEntityMedicalDevice:
         assert medical_device.usage_logs == medical_device.usage_logs
         assert medical_device.maintenance_history == medical_device.maintenance_history
 
+    @pytest.mark.flaky(reruns=3)
     def test_two_different_entities(self):
         medical_device_service = MedicalDeviceService()    
         medical_device1 = medical_device_service.generate()

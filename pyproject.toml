@@ -65,6 +65,7 @@ dev-dependencies = [
     "pytest~=8.3.4", # Testing framework
     "pytest-xdist~=3.6.1", # Distributed testing (parallel execution)
     "pytest-cov~=6.0.0", # Coverage reporting for pytest
+    "pytest-rerunfailures~=15.0.0", # Reruns failed tests
     "memory-profiler~=0.61.0", # Monitors memory usage during code execution
     "ruff>=0.9.2", # Fast Python linter written in Rust
     "sqlalchemy-stubs>=0.4",

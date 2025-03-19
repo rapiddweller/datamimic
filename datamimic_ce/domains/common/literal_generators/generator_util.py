@@ -15,6 +15,7 @@ from datamimic_ce.data_sources.data_source_pagination import DataSourcePaginatio
 from datamimic_ce.domains.common.literal_generators.academic_title_generator import AcademicTitleGenerator
 from datamimic_ce.domains.common.literal_generators.birthdate_generator import BirthdateGenerator
 from datamimic_ce.domains.common.literal_generators.boolean_generator import BooleanGenerator
+
 # from datamimic_ce.domains.common.literal_generators.business_generators import (
 #     CreditCardGenerator,
 #     CurrencyGenerator,
@@ -24,16 +25,19 @@ from datamimic_ce.domains.common.literal_generators.boolean_generator import Boo
 from datamimic_ce.domains.common.literal_generators.cnpj_generator import CNPJGenerator
 from datamimic_ce.domains.common.literal_generators.color_generators import ColorGenerator
 from datamimic_ce.domains.common.literal_generators.company_name_generator import CompanyNameGenerator
+
 # from datamimic_ce.domains.common.literal_generators.cpf_generator import CPFGenerator
 from datamimic_ce.domains.common.literal_generators.cpf_generator import CPFGenerator
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 from datamimic_ce.domains.common.literal_generators.department_name_generator import DepartmentNameGenerator
+
 # from datamimic_ce.domains.common.literal_generators.document_generators import (
 #     FilePathGenerator,
 #     ISBNGenerator,
 #     MIMETypeGenerator,
 # )
 from datamimic_ce.domains.common.literal_generators.domain_generator import DomainGenerator
+
 # from datamimic_ce.domains.common.literal_generators.ean_generator import EANGenerator
 from datamimic_ce.domains.common.literal_generators.ean_generator import EANGenerator
 from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
@@ -41,6 +45,7 @@ from datamimic_ce.domains.common.literal_generators.family_name_generator import
 from datamimic_ce.domains.common.literal_generators.float_generator import FloatGenerator
 from datamimic_ce.domains.common.literal_generators.gender_generator import GenderGenerator
 from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
+
 # from datamimic_ce.domains.common.literal_generators.healthcare_generators import (
 #     AllergyGenerator,
 #     DiagnosisGenerator,
@@ -59,6 +64,7 @@ from datamimic_ce.domains.common.literal_generators.nobility_title_generator imp
 from datamimic_ce.domains.common.literal_generators.password_generator import PasswordGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.common.literal_generators.sector_generator import SectorGenerator
+
 # from datamimic_ce.domains.common.literal_generators.security_generators import (
 #     HashGenerator,
 #     MnemonicPhraseGenerator,
@@ -68,12 +74,15 @@ from datamimic_ce.domains.common.literal_generators.sector_generator import Sect
 # )
 from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
 from datamimic_ce.domains.common.literal_generators.ssn_generator import SSNGenerator
+
 # from datamimic_ce.domains.common.literal_generators.ssn_generator import SSNGenerator
 from datamimic_ce.domains.common.literal_generators.street_name_generator import StreetNameGenerator
+
 # from datamimic_ce.domains.common.literal_generators.text_generators import ParagraphGenerator
 from datamimic_ce.domains.common.literal_generators.token_generator import TokenGenerator
 from datamimic_ce.domains.common.literal_generators.url_generator import UrlGenerator
 from datamimic_ce.domains.common.literal_generators.uuid_generator import UUIDGenerator
+
 # from datamimic_ce.domains.healthcare.generators.healthcare_generators import DiagnosisGenerator
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.statement import Statement
@@ -248,10 +257,10 @@ class GeneratorUtil:
         return sorted(self._class_dict.keys())
 
     def create_generator(
-            self,
-            generator_str: str,
-            stmt: Statement,
-            pagination: DataSourcePagination | None = None,
+        self,
+        generator_str: str,
+        stmt: Statement,
+        pagination: DataSourcePagination | None = None,
     ):
         """
         Create a generator based on the element's attribute "generator".
@@ -268,9 +277,6 @@ class GeneratorUtil:
         Raises:
             ValueError: If generator creation fails or configuration is invalid
         """
-        # Set generated_count as 1 for inner geniter_context which has no pagination
-        generated_count = 1 if pagination is None else pagination.limit
-
         try:
             # Get generator from element <generator>
             generator_from_ctx = self._context.root.generators.get(generator_str)
@@ -290,7 +296,7 @@ class GeneratorUtil:
 
                     # Parse remaining parameters if any
                     if "," in params_str:
-                        remaining_params = params_str[params_str.find(",") + 1:].strip()
+                        remaining_params = params_str[params_str.find(",") + 1 :].strip()
                         if remaining_params:
                             for param in remaining_params.split(","):
                                 if "=" not in param:
@@ -420,10 +426,10 @@ class GeneratorUtil:
 
     @staticmethod
     def faker_generator(
-            method: str,
-            locale: str | None = "en_US",
-            args: str | list | None = None,
-            kwargs: dict | None = None,
+        method: str,
+        locale: str | None = "en_US",
+        args: str | list | None = None,
+        kwargs: dict | None = None,
     ):
         """
         Generate fake data using the Faker library.

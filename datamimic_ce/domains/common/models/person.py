@@ -15,7 +15,7 @@ from typing import Any
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
-from datamimic_ce.domains.common.generators.person_generator import PersonGenerator 
+from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.common.models.address import Address
 
 
@@ -25,10 +25,11 @@ class Person(BaseEntity):
     This class provides a model for representing a person with common attributes
     such as name, age, gender, etc.
     """
+
     def __init__(self, person_generator: PersonGenerator):
         super().__init__()
         self._person_generator = person_generator
-        
+
     @property
     @property_cache
     def gender(self) -> str:
@@ -88,7 +89,7 @@ class Person(BaseEntity):
             The email of the person.
         """
         return self._person_generator.email_generator.generate_with_name(self.given_name, self.family_name)
-    
+
     @property
     @property_cache
     def phone(self) -> str:
@@ -108,7 +109,7 @@ class Person(BaseEntity):
             The address of the person as a dictionary.
         """
         return Address(self._person_generator.address_generator)
-    
+
     @property
     @property_cache
     def birthdate(self) -> datetime:
@@ -118,30 +119,27 @@ class Person(BaseEntity):
             The birthdate of the person.
         """
         return self._person_generator.birthdate_generator.generate()
-    
+
     @property
     @property_cache
-    def academic_title(self) -> str:
-        """Get the academic title of the person.
-        """
+    def academic_title(self) -> str | None:
+        """Get the academic title of the person."""
         return self._person_generator.academic_title_generator.generate()
-    
+
     @property
     @property_cache
-    def nobility_title(self) -> str:
-        """Get the nobility title of the person.
-        """
+    def nobility_title(self) -> str | None:
+        """Get the nobility title of the person."""
         return self._person_generator.nobility_title_generator.generate()
-        
+
     @property
     @property_cache
     def salutation(self) -> str:
-        """Get the salutation of the person.
-        """
+        """Get the salutation of the person."""
         gender = self.gender.upper()
 
         return self._person_generator.get_salutation_data(gender)
-    
+
     def to_dict(self) -> dict[str, Any]:
         """Convert the person to a dictionary.
 

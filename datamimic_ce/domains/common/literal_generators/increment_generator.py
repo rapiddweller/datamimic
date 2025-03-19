@@ -5,8 +5,8 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
 
 
 class IncrementGenerator(BaseLiteralGenerator):

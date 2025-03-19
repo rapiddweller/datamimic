@@ -7,5 +7,6 @@ def generate_companies():
     for company in companies:
         print(company.to_dict())
 
+
 if __name__ == "__main__":
     generate_companies()

@@ -7,6 +7,8 @@
 import random
 
 from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+
+
 class BooleanGenerator(BaseLiteralGenerator):
     """
     Purpose: generate a random boolean value (True or False).

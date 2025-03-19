@@ -6,16 +6,20 @@
 
 
 from abc import ABC
-from typing import TypeVar, Generic, Type
+from typing import Generic, TypeVar
+
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domain_core.base_entity import BaseEntity
 
 T = TypeVar("T", bound=BaseEntity)
+
+
 class BaseDomainService(ABC, Generic[T]):
     """
     Base class for all domain services.
     """
-    def __init__(self, data_generator: BaseDomainGenerator, model_cls: Type[T]):
+
+    def __init__(self, data_generator: BaseDomainGenerator, model_cls: type[T]):
         self._data_generator = data_generator
         self._model_cls = model_cls
 
@@ -25,7 +29,6 @@ class BaseDomainService(ABC, Generic[T]):
         :return:
         """
         return self._model_cls(self._data_generator)
-    
 
     def generate_batch(self, count: int = 10) -> list[T]:
         """

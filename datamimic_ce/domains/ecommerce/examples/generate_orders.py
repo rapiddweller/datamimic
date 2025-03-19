@@ -24,7 +24,7 @@ from datamimic_ce.utils.domain_class_util import DomainClassUtil
 def main():
     """Generate sample order data and print it to the console."""
     domain_class_util = DomainClassUtil()
-    
+
     # Create an order for the US dataset
     print("Generating an order for the US dataset:")
     order_us = Order(
@@ -96,7 +96,8 @@ def main():
     # Print order IDs and dates
     for i, order_data in enumerate(orders, 1):
         print(
-            f"{i}. Order {order_data['order_id']} - {order_data['date']} - {order_data['status']} - ${order_data['total_amount']:.2f}"
+            f"{i}. Order {order_data['order_id']} - {order_data['date']} - {order_data['status']} "
+            f"- ${order_data['total_amount']:.2f}"
         )
 
 

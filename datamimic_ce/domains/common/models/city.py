@@ -6,7 +6,6 @@
 
 from typing import Any
 
-
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.generators.city_generator import CityGenerator
@@ -19,6 +18,7 @@ class City(BaseEntity):
     This class provides access to city data including name, postal code, area code,
     state, language, population, and country information.
     """
+
     def __init__(self, city_generator: CityGenerator):
         super().__init__()
         self._city_generator = city_generator
@@ -30,9 +30,9 @@ class City(BaseEntity):
 
         Returns:
             The city data.
-        """ 
+        """
         return self._city_generator.get_random_city()
-    
+
     @property
     @property_cache
     def name(self) -> str:
@@ -42,7 +42,7 @@ class City(BaseEntity):
             The name of the city.
         """
         return self.city_data["name"]
-    
+
     @property
     @property_cache
     def postal_code(self) -> str:
@@ -82,10 +82,10 @@ class City(BaseEntity):
             The language of the city.
         """
         return self.city_data["language"]
-    
+
     @property
     @property_cache
-    def population(self) -> str:
+    def population(self) -> int | None:
         """Get the population of the city.
 
         Returns:
@@ -95,7 +95,7 @@ class City(BaseEntity):
         if population is None or population == "":
             return None
         return int(population)
-    
+
     @property
     @property_cache
     def name_extension(self) -> str:
@@ -115,22 +115,22 @@ class City(BaseEntity):
             The country of the city.
         """
         return self.city_data["country"]
-    
+
     @property
     @property_cache
     def country_code(self) -> str:
         """Get the country code of the city.
 
         Returns:
-            The country code of the city.   
+            The country code of the city.
 
         """
         return self.city_data["country_code"]
-    
+
     def to_dict(self) -> dict[str, Any]:
         """Convert the city to a dictionary.
 
-        Returns:    
+        Returns:
             A dictionary representation of the city.
         """
         return {
@@ -142,6 +142,5 @@ class City(BaseEntity):
             "population": self.population,
             "name_extension": self.name_extension,
             "country": self.country,
-            "country_code": self.country_code
+            "country_code": self.country_code,
         }
-    

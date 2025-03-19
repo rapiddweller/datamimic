@@ -8,6 +8,7 @@ from datamimic_ce.domain_core.base_domain_service import BaseDomainService
 from datamimic_ce.domains.finance.generators.credit_card_generator import CreditCardGenerator
 from datamimic_ce.domains.finance.models.credit_card import CreditCard
 
+
 class CreditCardService(BaseDomainService[CreditCard]):
     def __init__(self, dataset: str | None = None):
         super().__init__(CreditCardGenerator(dataset=dataset), CreditCard)

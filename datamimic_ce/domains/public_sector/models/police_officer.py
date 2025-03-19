@@ -12,9 +12,9 @@ This module provides the PoliceOfficer entity model for generating realistic pol
 
 import datetime
 import random
-from typing import Any
 import uuid
- 
+from typing import Any
+
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.models.address import Address
@@ -38,8 +38,7 @@ class PoliceOfficer(BaseEntity):
 
     def __init__(self, police_officer_generator: PoliceOfficerGenerator):
         super().__init__()
-        self.police_officer_generator = police_officer_generator   
-
+        self.police_officer_generator = police_officer_generator
 
     # Property getters
     @property
@@ -137,7 +136,6 @@ class PoliceOfficer(BaseEntity):
         """
         return self.police_officer_generator.get_rank()
 
-
     @property
     @property_cache
     def department(self) -> str:
@@ -228,7 +226,6 @@ class PoliceOfficer(BaseEntity):
 
         num_certifications = random.randint(1, 4)
         return random.sample(all_certifications, num_certifications)
-
 
     @property
     @property_cache

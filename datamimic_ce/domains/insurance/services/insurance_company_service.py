@@ -10,7 +10,6 @@ Insurance Company Service.
 This module provides service functions for generating and managing insurance companies.
 """
 
-
 from datamimic_ce.domain_core.base_domain_service import BaseDomainService
 from datamimic_ce.domains.insurance.generators.insurance_company_generator import InsuranceCompanyGenerator
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany

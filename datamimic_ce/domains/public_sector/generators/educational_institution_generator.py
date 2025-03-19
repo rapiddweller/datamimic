@@ -1,5 +1,3 @@
-
-
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
@@ -23,11 +21,11 @@ class EducationalInstitutionGenerator(BaseDomainGenerator):
     @property
     def address_generator(self) -> AddressGenerator:
         return self._address_generator
-    
-    @property   
+
+    @property
     def phone_number_generator(self) -> PhoneNumberGenerator:
         return self._phone_number_generator
-    
+
     @property
     def email_generator(self) -> EmailAddressGenerator:
         return self._email_generator

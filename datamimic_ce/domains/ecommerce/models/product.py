@@ -9,8 +9,9 @@ Product model.
 
 This module provides a model for representing an e-commerce product.
 """
+
 import random
-from typing import Any, Dict, List
+from typing import Any
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
@@ -34,8 +35,6 @@ class Product(BaseEntity):
         """
         super().__init__()
         self._product_generator = product_generator
-        # create product name and check support dataset
-        self.name
 
     @property
     @property_cache
@@ -105,8 +104,7 @@ class Product(BaseEntity):
         # Create description
         description = f"{name} - {', '.join(selected_features)}. "
         description += (
-            f"This premium {category.lower().replace('_', ' ')} "
-            f"product offers exceptional quality and value. "
+            f"This premium {category.lower().replace('_', ' ')} product offers exceptional quality and value. "
         )
         # Add random benefit
         description += self._product_generator.get_product_data_by_data_type("product_benefits")
@@ -217,7 +215,7 @@ class Product(BaseEntity):
 
     @property
     @property_cache
-    def tags(self) -> List[str]:
+    def tags(self) -> list[str]:
         """Get the product tags.
 
         Returns:
@@ -249,7 +247,7 @@ class Product(BaseEntity):
 
         return all_tags
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the product to a dictionary.
 
         Returns:

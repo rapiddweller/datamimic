@@ -7,6 +7,7 @@
 
 from pathlib import Path
 from typing import Any
+
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
@@ -27,8 +28,8 @@ class CityGenerator(BaseDomainGenerator):
         self._dataset = dataset or "US"
         self._country_name = None
         self._city_data = None
-    
-    def _get_city_data(self) -> tuple[dict[str, int], list[tuple]]:
+
+    def _get_city_data(self):
         """Load city data from CSV file.
 
         Returns:
@@ -36,13 +37,22 @@ class CityGenerator(BaseDomainGenerator):
         """
         if self._city_data is None:
             try:
-                file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "city" / f"city_{self._dataset}.csv"
-                self._city_data = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=";"))
+                file_path = (
+                    Path(__file__).parent.parent.parent.parent  
+                    / "domain_data"
+                    / "common"
+                    / "city"
+                    / f"city_{self._dataset}.csv"
+                )
+                self._city_data = FileContentStorage.load_file_with_custom_func(
+                    cache_key=str(file_path),
+                    read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=";"),
+                )
             except FileNotFoundError as e:
-                raise ValueError(f"No city data found for '{self._dataset}': {e}")
+                raise ValueError(f"No city data found for '{self._dataset}': {e}") from e
         return self._city_data
-                        
-    def _get_country_name(self) -> str:
+
+    def _get_country_name(self):
         """Get country name from CSV file.
 
         Returns:
@@ -50,11 +60,14 @@ class CityGenerator(BaseDomainGenerator):
         """
         if self._country_name is None:
             file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "country.csv"
-            country_df = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path), read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=","))
+            country_df = FileContentStorage.load_file_with_custom_func(
+                cache_key=str(file_path),
+                read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=","),
+            )
             country_name_dict = {row[0]: row[4] for row in country_df}
             self._country_name = country_name_dict[self._dataset]
         return self._country_name
-    
+
     def get_random_city(self) -> dict[str, Any]:
         """Get a random city.
 
@@ -86,7 +99,9 @@ class CityGenerator(BaseDomainGenerator):
             "state": city_row[city_header_dict.get("state.id")] if "state.id" in city_header_dict else None,
             "language": city_row[city_header_dict.get("language")] if "language" in city_header_dict else None,
             "population": city_row[city_header_dict.get("population")] if "population" in city_header_dict else None,
-            "name_extension": city_row[city_header_dict.get("nameExtension")] if "nameExtension" in city_header_dict else "",
+            "name_extension": city_row[city_header_dict.get("nameExtension")]
+            if "nameExtension" in city_header_dict
+            else "",
             "country": country_name,
             "country_code": self._dataset,
         }

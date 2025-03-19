@@ -23,7 +23,7 @@ class HospitalGenerator(BaseDomainGenerator):
         self._address_generator = AddressGenerator(dataset=self._dataset)
         self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset)
 
-    @property   
+    @property
     def dataset(self) -> str:
         """Get the dataset.
 
@@ -31,6 +31,7 @@ class HospitalGenerator(BaseDomainGenerator):
             The dataset.
         """
         return self._dataset
+
     @property
     def address_generator(self) -> AddressGenerator:
         """Get the address generator.
@@ -39,7 +40,7 @@ class HospitalGenerator(BaseDomainGenerator):
             The address generator.
         """
         return self._address_generator
-    
+
     @property
     def phone_number_generator(self) -> PhoneNumberGenerator:
         """Get the phone number generator.
@@ -48,17 +49,17 @@ class HospitalGenerator(BaseDomainGenerator):
             The phone number generator.
         """
         return self._phone_number_generator
-    
+
     def generate_hospital_name(self, city: str, state: str) -> str:
         """Generate a hospital name based on location.
 
-    Args:
-        city: The city where the hospital is located.
-        state: The state where the hospital is located.
+        Args:
+            city: The city where the hospital is located.
+            state: The state where the hospital is located.
 
-    Returns:
-        A hospital name.
-    """
+        Returns:
+            A hospital name.
+        """
         # Define name patterns
         name_patterns = [
             "{city} General Hospital",
@@ -93,21 +94,21 @@ class HospitalGenerator(BaseDomainGenerator):
 
         # Fill in the pattern with the city and state
         return pattern.format(city=city, state=state)
-    
+
     def get_hospital_type(self):
         default_hospital_types = [
-                "General",
-                "Teaching",
-                "Community",
-                "Specialty",
-                "Rehabilitation",
-                "Psychiatric",
-                "Children's",
-                "Veterans",
-                "Long-term Care",
-            ]
+            "General",
+            "Teaching",
+            "Community",
+            "Specialty",
+            "Rehabilitation",
+            "Psychiatric",
+            "Children's",
+            "Veterans",
+            "Long-term Care",
+        ]
         return random.choice(default_hospital_types)
-    
+
     def generate_departments(self, hospital_type: str, count: int | None = None) -> list[str]:
         """Generate a list of hospital departments.
 
@@ -266,7 +267,7 @@ class HospitalGenerator(BaseDomainGenerator):
             return sorted(all_departments)
         else:
             return sorted(random.sample(all_departments, count))
-    
+
     def generate_services(self, hospital_type: str, departments: list[str], count: int | None = None) -> list[str]:
         """Generate a list of hospital services.
 
@@ -483,7 +484,7 @@ class HospitalGenerator(BaseDomainGenerator):
             return sorted(all_services)
         else:
             return sorted(random.sample(all_services, count))
-    
+
     def generate_accreditation(self, hospital_type: str) -> list[str]:
         """Generate a list of hospital accreditations.
 
@@ -553,6 +554,3 @@ class HospitalGenerator(BaseDomainGenerator):
 
         # Select random accreditations
         return random.sample(all_accreditations, num_accreditations)
-
-
-

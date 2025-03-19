@@ -25,7 +25,7 @@ from datamimic_ce.utils.domain_class_util import DomainClassUtil
 def main():
     """Generate sample product data and print it to the console."""
     class_factory_util = DomainClassUtil()
-    
+
     # Method 1: Using the Product model directly with US dataset
     print("Method 1: Using the Product model directly (US dataset)")
     product_us = Product(class_factory_util=class_factory_util, dataset="US")

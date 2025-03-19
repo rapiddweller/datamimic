@@ -3,7 +3,6 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-from typing import Optional
 
 from datamimic_ce.domain_core.base_domain_service import BaseDomainService
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator

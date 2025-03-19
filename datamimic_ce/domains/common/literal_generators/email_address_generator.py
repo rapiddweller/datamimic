@@ -21,18 +21,15 @@ class EmailAddressGenerator(BaseLiteralGenerator):
 
     def __init__(
         self,
-        dataset: str,
+        dataset: str | None = None,
         given_name: str | None = None,
         family_name: str | None = None,
     ):
+        self._dataset = dataset or "US"
         self._given_name = given_name
-        self._given_name_generator = (
-            GivenNameGenerator(dataset=dataset) if given_name is None else None
-        )
+        self._given_name_generator = GivenNameGenerator(dataset=self._dataset) if given_name is None else None
         self._family_name = family_name
-        self._family_name_generator = (
-            FamilyNameGenerator(dataset=dataset) if family_name is None else None
-        )
+        self._family_name_generator = FamilyNameGenerator(dataset=self._dataset) if family_name is None else None
         self._company_name: str | None = None
         self._domain_generator = DomainGenerator()
 

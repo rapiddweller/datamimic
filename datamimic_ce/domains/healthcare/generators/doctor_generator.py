@@ -10,19 +10,20 @@ Doctor generator utilities.
 This module provides utility functions for generating doctor data.
 """
 
-from pathlib import Path
 import random
+from pathlib import Path
 
-
-from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
-from datamimic_ce.logger import logger
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
+from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
+from datamimic_ce.logger import logger
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
+
 class DoctorGenerator(BaseDomainGenerator):
     """Generate doctor data."""
+
     def __init__(self, dataset: str | None = None):
         self._dataset = dataset or "US"
         self._person_generator = PersonGenerator(dataset=self._dataset, min_age=25)
@@ -31,11 +32,11 @@ class DoctorGenerator(BaseDomainGenerator):
     @property
     def person_generator(self) -> PersonGenerator:
         return self._person_generator
-    
+
     @property
     def hospital_generator(self) -> HospitalGenerator:
         return self._hospital_generator
-    
+
     def generate_specialty(self) -> str:
         """Generate a medical specialty.
 
@@ -43,8 +44,16 @@ class DoctorGenerator(BaseDomainGenerator):
             A medical specialty.
         """
         try:
-            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare"/ "medical" / f"specialties_{self._dataset}.csv"
-            wgt, loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight"))
+            file_path = (
+                Path(__file__).parent.parent.parent.parent
+                / "domain_data"
+                / "healthcare"
+                / "medical"
+                / f"specialties_{self._dataset}.csv"
+            )
+            wgt, loaded_data = FileContentStorage.load_file_with_custom_func(
+                str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
+            )
             loaded_data = [item["specialty"] for item in loaded_data]
         except FileNotFoundError as e:
             logger.warning(f"Specialties file not found for dataset {self._dataset}. Using default specialties: {e}")
@@ -70,9 +79,9 @@ class DoctorGenerator(BaseDomainGenerator):
             for item in default_data:
                 loaded_data.append(item[0])
                 wgt.append(float(item[1]))
-        
+
         return random.choices(loaded_data, weights=wgt)[0]
-    
+
     def generate_medical_school(self) -> str:
         """Generate a medical school.
 
@@ -80,19 +89,20 @@ class DoctorGenerator(BaseDomainGenerator):
             A medical school.
         """
         # TODO: Add more medical schools
-        all_medical_schools = ["Harvard Medical School", 
-                "Johns Hopkins School of Medicine",
-                "Stanford University School of Medicine",
-                "University of California, San Francisco",
-                "Columbia University Vagelos College of Physicians and Surgeons",
-                "Mayo Clinic Alix School of Medicine",
-                "University of Pennsylvania Perelman School of Medicine",
-                "Washington University School of Medicine",
-                "Yale School of Medicine",
-                "Duke University School of Medicine",
+        all_medical_schools = [
+            "Harvard Medical School",
+            "Johns Hopkins School of Medicine",
+            "Stanford University School of Medicine",
+            "University of California, San Francisco",
+            "Columbia University Vagelos College of Physicians and Surgeons",
+            "Mayo Clinic Alix School of Medicine",
+            "University of Pennsylvania Perelman School of Medicine",
+            "Washington University School of Medicine",
+            "Yale School of Medicine",
+            "Duke University School of Medicine",
         ]
         return random.choice(all_medical_schools)
-    
+
     def generate_certifications(self) -> list[str]:
         """Generate a list of certifications.
 
@@ -100,10 +110,20 @@ class DoctorGenerator(BaseDomainGenerator):
             A list of certifications.
         """
         try:
-            file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / "medical" / f"certifications_{self._dataset}.csv"
-            wgt, loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight"))
+            file_path = (
+                Path(__file__).parent.parent.parent.parent
+                / "domain_data"
+                / "healthcare"
+                / "medical"
+                / f"certifications_{self._dataset}.csv"
+            )
+            wgt, loaded_data = FileContentStorage.load_file_with_custom_func(
+                str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
+            )
         except FileNotFoundError as e:
-            logger.warning(f"Certifications file not found for dataset {self._dataset}. Using default certifications: {e}")
+            logger.warning(
+                f"Certifications file not found for dataset {self._dataset}. Using default certifications: {e}"
+            )
             default_data = [
                 ("Board Certified", 1.0),
                 ("American Board of Medical Specialties", 1.0),

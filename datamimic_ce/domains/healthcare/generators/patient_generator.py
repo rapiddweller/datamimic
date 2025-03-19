@@ -26,10 +26,10 @@ class PatientGenerator(BaseDomainGenerator):
     def __init__(self, dataset: str | None = None):
         self._dataset = dataset or "US"
         self._person_generator = PersonGenerator(dataset=self._dataset)
-        self._family_name_generator = FamilyNameGenerator(dataset=self._dataset)    
+        self._family_name_generator = FamilyNameGenerator(dataset=self._dataset)
         self._given_name_generator = GivenNameGenerator(dataset=self._dataset)
         self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset)
-        
+
     @property
     def person_generator(self) -> PersonGenerator:
         """Get the person generator.
@@ -38,7 +38,7 @@ class PatientGenerator(BaseDomainGenerator):
             The person generator.
         """
         return self._person_generator
-    
+
     def generate_age_appropriate_conditions(self, age: int) -> list[str]:
         """Generate a list of medical conditions appropriate for the given age.
 
@@ -138,33 +138,45 @@ class PatientGenerator(BaseDomainGenerator):
 
         return result
 
-
     def generate_insurance_provider(self) -> str:
         """Generate a random insurance provider.
 
         Returns:
             A random insurance provider.
         """
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / "medical" / f"insurance_providers_{self._dataset}.csv"
+        file_path = (
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "healthcare"
+            / "medical"
+            / f"insurance_providers_{self._dataset}.csv"
+        )
         loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path),
-            lambda: FileUtil.read_weight_csv(str(file_path))
+            str(file_path), lambda: FileUtil.read_weight_csv(file_path)
         )
         return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
-    
+
     def get_allergies(self) -> list[str]:
         # Determine how many allergies to generate (most people have 0-3)
         num_allergies = random.choices([0, 1, 2, 3, 4, 5], weights=[0.5, 0.2, 0.15, 0.1, 0.03, 0.02], k=1)[0]
 
         if num_allergies == 0:
             return []
-        
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / "medical" / f"allergies_{self._dataset}.csv"
-        wgt, loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight"))
+
+        file_path = (
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "healthcare"
+            / "medical"
+            / f"allergies_{self._dataset}.csv"
+        )
+        wgt, loaded_data = FileContentStorage.load_file_with_custom_func(
+            str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
+        )
 
         random_choices = random.choices(loaded_data, weights=wgt, k=num_allergies)
         return [choice["allergen"] for choice in random_choices]
-    
+
     def get_medications(self, age: int) -> list[str]:
         # Determine how many medications to generate
         # Older people tend to take more medications
@@ -182,12 +194,20 @@ class PatientGenerator(BaseDomainGenerator):
         if num_medications == 0:
             return []
 
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / "medical" / f"medications_{self._dataset}.csv"
-        wgt, loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight"))
+        file_path = (
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "healthcare"
+            / "medical"
+            / f"medications_{self._dataset}.csv"
+        )
+        wgt, loaded_data = FileContentStorage.load_file_with_custom_func(
+            str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
+        )
 
         random_choices = random.choices(loaded_data, weights=wgt, k=num_medications)
         return [choice["name"] for choice in random_choices]
-        
+
     def get_emergency_contact(self, last_name: str) -> dict[str, str]:
         """Generate a random emergency contact.
 
@@ -198,10 +218,7 @@ class PatientGenerator(BaseDomainGenerator):
         first_name = self._given_name_generator.generate()
 
         # 50% chance the emergency contact has the same last name
-        if random.random() < 0.5:
-            last_name = last_name
-        else:
-            last_name = self._family_name_generator.generate()
+        last_name = self._family_name_generator.generate() if random.random() < 0.5 else last_name
 
         # Generate a relationship
         relationships = [

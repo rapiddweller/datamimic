@@ -178,7 +178,7 @@ class MedicalDevice(BaseEntity):
         """
         assigned_person = Person(self._medical_device_generator.person_generator)
         return assigned_person.name
-    
+
     @property
     @property_cache
     def specifications(self) -> dict[str, str]:
@@ -253,7 +253,6 @@ class MedicalDevice(BaseEntity):
         """
         return self._medical_device_generator.generate_maintenance_history()
 
-
     def to_dict(self) -> dict[str, Any]:
         """Convert the medical device to a dictionary.
 
@@ -277,4 +276,3 @@ class MedicalDevice(BaseEntity):
             "usage_logs": self.usage_logs,
             "maintenance_history": self.maintenance_history,
         }
-

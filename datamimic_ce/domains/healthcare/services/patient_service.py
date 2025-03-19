@@ -10,15 +10,9 @@ Patient service.
 This module provides the PatientService class for generating and managing patient data.
 """
 
-import csv
-import json
-import os
-from typing import Any
-
 from datamimic_ce.domain_core.base_domain_service import BaseDomainService
 from datamimic_ce.domains.healthcare.generators.patient_generator import PatientGenerator
 from datamimic_ce.domains.healthcare.models.patient import Patient
-from datamimic_ce.utils.domain_class_util import DomainClassUtil
 
 
 class PatientService(BaseDomainService[Patient]):

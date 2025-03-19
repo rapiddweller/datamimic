@@ -7,22 +7,24 @@
 
 from pathlib import Path
 from typing import Any
+
+from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.logger import logger
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
-from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 
 
 class CountryGenerator(BaseDomainGenerator):
     """Generator for country-related attributes.
-    
+
     Provides methods to generate country-related attributes such as
     ISO code, name, default language locale, phone code, and population.
     """
+
     def __init__(self):
         pass
-        
-    def load_country_data(self) -> dict[str, tuple[Any, ...]]:
+
+    def load_country_data(self):
         """Load country data from CSV file.
 
         Returns:
@@ -33,7 +35,10 @@ class CountryGenerator(BaseDomainGenerator):
 
         try:
             # Load country data
-            country_data = FileContentStorage.load_file_with_custom_func(cache_key=str(country_file_path), read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(country_file_path, delimiter=","))
+            country_data = FileContentStorage.load_file_with_custom_func(
+                cache_key=str(country_file_path),
+                read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(country_file_path, delimiter=","),
+            )
 
             country_data_dict = {country[0]: country for country in country_data}
 
@@ -43,7 +48,7 @@ class CountryGenerator(BaseDomainGenerator):
             logger.error(f"Error loading country data: {e}")
             raise e
 
-    def get_country_by_iso_code(self, iso_code: str) -> dict[str, Any] | None:
+    def get_country_by_iso_code(self, iso_code: str):
         """Get a country by ISO code.
 
         Args:
@@ -85,7 +90,6 @@ class CountryGenerator(BaseDomainGenerator):
             "name": country_row[4],
             "population": country_row[5],
         }
-
 
     def _get_base_path_country(self) -> Path:
         """Get the base path for country data.

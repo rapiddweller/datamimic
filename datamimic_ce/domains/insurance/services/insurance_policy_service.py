@@ -10,13 +10,12 @@ Insurance Policy Service.
 This module provides service functions for generating and managing insurance policies.
 """
 
-
 from datamimic_ce.domain_core.base_domain_service import BaseDomainService
 from datamimic_ce.domains.insurance.generators.insurance_policy_generator import InsurancePolicyGenerator
 from datamimic_ce.domains.insurance.models.insurance_policy import InsurancePolicy
 
 
-class InsurancePolicyService(BaseDomainService[InsurancePolicy])    :
+class InsurancePolicyService(BaseDomainService[InsurancePolicy]):
     """Service for generating and managing insurance policies."""
 
     def __init__(self, dataset: str | None = None):

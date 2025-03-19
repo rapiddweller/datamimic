@@ -41,16 +41,19 @@ class ClassFactoryCEUtil(BaseClassFactoryUtil):
     @staticmethod
     def get_datetime_generator():
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+
         return DateTimeGenerator
 
     @staticmethod
     def get_integer_generator():
         from datamimic_ce.domains.common.literal_generators.integer_generator import IntegerGenerator
+
         return IntegerGenerator
 
     @staticmethod
     def get_string_generator():
         from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
+
         return StringGenerator
 
     @staticmethod

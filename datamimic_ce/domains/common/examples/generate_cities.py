@@ -9,5 +9,6 @@ def generate_cities():
     for city in cities:
         print(city.to_dict())
 
+
 if __name__ == "__main__":
     generate_cities()

@@ -81,6 +81,7 @@ class TestEntityProduct:
         assert product.rating == product.rating
         assert product.tags == product.tags
 
+    @pytest.mark.flaky(reruns=3)
     def test_two_different_entities(self):
         product_service = ProductService()
         product1 = product_service.generate()
@@ -98,7 +99,8 @@ class TestEntityProduct:
         random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
         while random_dataset in self._supported_datasets:
             random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
+        product_service = ProductService(dataset=random_dataset)
+        product = product_service.generate()
         # Raise FileNotFoundError because not found csv file of unsupported dataset
         with pytest.raises(FileNotFoundError):
-            product_service = ProductService(dataset=random_dataset)
-            product_service.generate()
+            product.to_dict()

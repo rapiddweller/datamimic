@@ -13,8 +13,8 @@ This module provides the Patient entity model for generating realistic patient d
 import datetime
 import random
 import string
-from typing import Any
 import uuid
+from typing import Any
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
@@ -91,7 +91,7 @@ class Patient(BaseEntity):
     def first_name(self) -> str:
         """Get the patient's first name.
 
-        Returns:    
+        Returns:
             The patient's first name.
         """
         return self.person_data.given_name
@@ -107,7 +107,7 @@ class Patient(BaseEntity):
         return self.person_data.family_name
 
     @property
-    @property_cache     
+    @property_cache
     def full_name(self) -> str:
         """Get the patient's full name.
 
@@ -134,7 +134,7 @@ class Patient(BaseEntity):
         Returns:
             The patient's date of birth in YYYY-MM-DD format.
         """
-        return self.person_data.birthdate   
+        return self.person_data.birthdate
 
     @property
     @property_cache
@@ -191,18 +191,12 @@ class Patient(BaseEntity):
             The patient's weight in kilograms.
         """
         # Generate weight based on gender, age, and height
-        gender = self.gender
         age = self.age
         height_cm = self.height_cm
 
         # Calculate a base weight using BMI formula (weight = BMI * height^2)
         # Use a normal BMI range (18.5 - 29.9)
-        if age < 18:
-            # Children and teenagers - lower BMI range
-            base_bmi = random.uniform(16, 24)
-        else:
-            # Adults - normal BMI range with some variation
-            base_bmi = random.uniform(18.5, 29.9)
+        base_bmi = random.uniform(16, 24) if age < 18 else random.uniform(18.5, 29.9)
 
         # Calculate weight from BMI and height
         # BMI = weight(kg) / height(m)^2
@@ -226,7 +220,6 @@ class Patient(BaseEntity):
         height_m = self.height_cm / 100
         bmi = self.weight_kg / (height_m**2)
         return round(bmi, 1)
-            
 
     @property
     @property_cache
@@ -266,7 +259,7 @@ class Patient(BaseEntity):
         Returns:
             A dictionary containing emergency contact information.
         """
-        return self._patient_generator.get_emergency_contact(self.last_name)        
+        return self._patient_generator.get_emergency_contact(self.last_name)
 
     @property
     @property_cache

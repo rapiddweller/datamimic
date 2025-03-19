@@ -7,5 +7,6 @@ def generate_people(count: int = 10):
     for person in people:
         print(person.to_dict())
 
+
 if __name__ == "__main__":
     generate_people(10)

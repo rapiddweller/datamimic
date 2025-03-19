@@ -16,12 +16,17 @@ class BankGenerator(BaseDomainGenerator):
         self._dataset = dataset or "US"
 
     def generate_bank_data(self) -> dict:
-        file_path = Path(
-            __file__).parent.parent.parent.parent / "domain_data" / "finance" / "bank" / f"banks_{self._dataset}.csv"
-        header_dict, loaded_data = FileContentStorage.load_file_with_custom_func(cache_key=str(file_path),
-                                                                                               read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(
-                                                                                                   file_path,
-                                                                                                   delimiter=","))
+        file_path = (
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "finance"
+            / "bank"
+            / f"banks_{self._dataset}.csv"
+        )
+        header_dict, loaded_data = FileContentStorage.load_file_with_custom_func(
+            cache_key=str(file_path),
+            read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=","),
+        )
 
         wgt_idx = header_dict["weight"]
         bank_data = random.choices(loaded_data, weights=[float(row[wgt_idx]) for row in loaded_data])[0]
@@ -29,5 +34,5 @@ class BankGenerator(BaseDomainGenerator):
         return {
             "name": bank_data[header_dict["name"]],
             "swift_code": bank_data[header_dict["swift_code"]],
-            "routing_number": bank_data[header_dict["routing_number"]] if "routing_number" in header_dict else ""
+            "routing_number": bank_data[header_dict["routing_number"]] if "routing_number" in header_dict else "",
         }

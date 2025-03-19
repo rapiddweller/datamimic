@@ -128,7 +128,7 @@ class Order(BaseEntity):
         """
         # 80% chance billing address is same as shipping
         # Otherwise generate a different address
-        return self.shipping_address if random.random() < 0.8 else Address(self._order_generator.address_generator) 
+        return self.shipping_address if random.random() < 0.8 else Address(self._order_generator.address_generator)
 
     @property
     @property_cache
@@ -202,7 +202,7 @@ class Order(BaseEntity):
     @property
     @property_cache
     def notes(self) -> str | None:
-        """Get order notes. 
+        """Get order notes.
 
         Returns:
             Order notes if applicable, or None

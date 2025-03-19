@@ -1,6 +1,7 @@
-from pathlib import Path
 import random
+from pathlib import Path
 from typing import Any
+
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
@@ -18,10 +19,14 @@ class InsuranceCompanyGenerator(BaseDomainGenerator):
         self._dataset = dataset or "US"
 
     def get_random_company(self) -> dict[str, Any]:
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "insurance" / f"companies_{self._dataset}.csv"
-        loaded_wgt, loaded_data = FileContentStorage.load_file_with_custom_func(str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight"))
-        company_data= random.choices(loaded_data, weights=loaded_wgt, k=1)[0]
-        
+        file_path = (
+            Path(__file__).parent.parent.parent.parent / "domain_data" / "insurance" / f"companies_{self._dataset}.csv"
+        )
+        loaded_wgt, loaded_data = FileContentStorage.load_file_with_custom_func(
+            str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
+        )
+        company_data = random.choices(loaded_data, weights=loaded_wgt, k=1)[0]
+
         return {
             "name": company_data["name"],
             "code": company_data["code"],

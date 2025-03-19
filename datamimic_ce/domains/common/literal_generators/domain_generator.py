@@ -27,7 +27,7 @@ class DomainGenerator(BaseLiteralGenerator):
         self._web_dataset = FileUtil.read_wgt_file(web_path)
         self._tld_dataset = FileUtil.read_wgt_file(tld_path)
 
-        self._company_name: str | None = None
+        self._company_name = None
         self._company_name_generator = CompanyNameGenerator()
 
     def generate(self) -> str:

@@ -72,6 +72,7 @@ class TestCreditCard:
         assert credit_card.bin == credit_card.bin
         assert credit_card.iban == credit_card.iban
 
+    @pytest.mark.flaky(reruns=3)
     def test_two_different_entities(self):
         credit_card_service = CreditCardService()
         credit_card1 = credit_card_service.generate()

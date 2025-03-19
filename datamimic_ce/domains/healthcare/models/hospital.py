@@ -12,8 +12,8 @@ This module provides the Hospital entity model for generating realistic hospital
 
 import datetime
 import random
-from typing import Any
 import uuid
+from typing import Any
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
@@ -22,7 +22,6 @@ from datamimic_ce.domains.healthcare.generators.hospital_generator import Hospit
 
 
 class Hospital(BaseEntity):
-
     def __init__(self, hospital_generator: HospitalGenerator):
         super().__init__()
         self._hospital_generator = hospital_generator
@@ -102,7 +101,7 @@ class Hospital(BaseEntity):
             # General hospitals vary in size
             return random.randint(100, 500)
 
-    @property   
+    @property
     @property_cache
     def staff_count(self) -> int:
         """Get the hospital staff count.
@@ -172,7 +171,6 @@ class Hospital(BaseEntity):
             # Other hospital types are rarely teaching hospitals
             return random.random() < 0.1
 
-
     @property
     @property_cache
     def website(self) -> str:
@@ -198,10 +196,7 @@ class Hospital(BaseEntity):
             name = f"hospital{self.hospital_id.lower()}"
 
         # Generate domain extension based on country
-        if self._hospital_generator.dataset == "US":
-            domain = ".org"
-        else:
-            domain = f".{self._hospital_generator.dataset.lower()}"
+        domain = f".{self._hospital_generator.dataset.lower()}"
 
         return f"https://www.{name}{domain}"
 

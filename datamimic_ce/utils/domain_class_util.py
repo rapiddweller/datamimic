@@ -12,7 +12,8 @@ This module provides backward compatibility with the old ClassFactoryUtil class.
 
 import importlib
 import inspect
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 
@@ -60,7 +61,6 @@ class DomainClassUtil:
         module_path, class_name = class_path.rsplit(".", 1)
         module = importlib.import_module(module_path)
         return getattr(module, class_name)
-
 
     @staticmethod
     def get_subclasses(base_class: type[T], include_abstract: bool = False) -> list[type[T]]:
@@ -120,9 +120,7 @@ class DomainClassUtil:
         return None
 
     @staticmethod
-    def create_dynamic_class(
-        name: str, bases: tuple = (object,), attributes: dict[str, Any] | None = None
-    ) -> type:
+    def create_dynamic_class(name: str, bases: tuple = (object,), attributes: dict[str, Any] | None = None) -> type:
         """Create a new class dynamically.
 
         Args:
@@ -157,7 +155,6 @@ class DomainClassUtil:
 
         return decorator
 
-
     @staticmethod
     def get_registered_classes(base_class: type[T]) -> dict[str, type[T]]:
         """Get all classes registered with a base class.
@@ -172,7 +169,6 @@ class DomainClassUtil:
             base_class._registered_classes = {}  # type: ignore
 
         return base_class._registered_classes  # type: ignore
-
 
     @staticmethod
     def create_registered_instance(base_class: type[T], name: str, **kwargs: Any) -> T:

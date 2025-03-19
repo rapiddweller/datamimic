@@ -5,16 +5,16 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import random
-from typing import Optional
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.generators.company_generator import CompanyGenerator
 from datamimic_ce.domains.common.models.address import Address
 
+
 class Company(BaseEntity):
     """Company entity model representing a business organization.
-    
+
     This class provides access to company data including name, sector, email, URL, phone number,
     office phone number, fax, address, and more.
     """
@@ -32,7 +32,7 @@ class Company(BaseEntity):
     @property_cache
     def id(self) -> str:
         """Get the ID of the company.
-        
+
         Returns:
             The ID of the company
         """
@@ -47,32 +47,32 @@ class Company(BaseEntity):
             The short name of the company
         """
         return self._company_generator.company_name_generator.generate()
-    
+
     @property
     @property_cache
-    def sector(self) -> Optional[str]:
+    def sector(self) -> str | None:
         """Get the sector in which the company operates.
 
         Returns:
             The sector in which the company operates
         """
         return self._company_generator.sector_generator.generate()
-    
-    @property   
+
+    @property
     @property_cache
     def legal_form(self) -> str:
         """Get the legal form of the company.
-        
+
         Returns:
             The legal form of the company
         """
         return self._company_generator.get_legal_form()
-    
+
     @property
     @property_cache
     def full_name(self) -> str:
         """Get the full name of the company.
-        
+
         Returns:
             The full name of the company
         """
@@ -85,7 +85,7 @@ class Company(BaseEntity):
         if legal_form is not None:
             builder.append(legal_form)
         return " ".join(builder)
-    
+
     @property
     @property_cache
     def email(self) -> str:
@@ -95,10 +95,10 @@ class Company(BaseEntity):
             The email address of the company
         """
         return self._company_generator.email_address_generator.generate_with_company_name(self.short_name)
-    
+
     @property
     @property_cache
-    def url(self) -> Optional[str]:
+    def url(self) -> str | None:
         """Get the URL of the company.
 
         Returns:
@@ -107,47 +107,47 @@ class Company(BaseEntity):
         scheme = random.choice(["http", "https"])
         company_email_domain = self.email.split("@")[1]
         return f"{scheme}://{company_email_domain}"
-    
+
     @property
     @property_cache
-    def phone_number(self) -> Optional[str]:
+    def phone_number(self) -> str | None:
         """Get the phone number of the company.
 
         Returns:
             The phone number of the company
         """
         return self._company_generator.phone_number_generator.generate()
-    
+
     @property
     @property_cache
-    def office_phone(self) -> Optional[str]:
+    def office_phone(self) -> str | None:
         """Get the office phone number of the company.
 
         Returns:
             The office phone number of the company
         """
         return self._company_generator.phone_number_generator.generate()
-    
+
     @property
     @property_cache
-    def fax(self) -> Optional[str]:
+    def fax(self) -> str | None:
         """Get the fax number of the company.
 
         Returns:
             The fax number of the company
         """
         return self._company_generator.phone_number_generator.generate()
-    
+
     @property
     @property_cache
     def address_data(self) -> Address:
         """Get the address of the company.
-        
+
         Returns:
             The address of the company
         """
         return Address(self._company_generator.address_generator)
-    
+
     @property
     @property_cache
     def street(self) -> str:
@@ -157,7 +157,7 @@ class Company(BaseEntity):
             The street address of the company
         """
         return self.address_data.street
-    
+
     @property
     @property_cache
     def house_number(self) -> str:
@@ -167,7 +167,7 @@ class Company(BaseEntity):
             The house number of the company
         """
         return self.address_data.house_number
-    
+
     @property
     @property_cache
     def city(self) -> str:
@@ -177,17 +177,17 @@ class Company(BaseEntity):
             The city where the company is located
         """
         return self.address_data.city
-    
+
     @property
     @property_cache
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Get the state where the company is located.
 
         Returns:
             The state where the company is located
         """
         return self.address_data.state
-    
+
     @property
     @property_cache
     def zip_code(self) -> str:
@@ -197,7 +197,7 @@ class Company(BaseEntity):
             The zip code of the company
         """
         return self.address_data.zip_code
-    
+
     @property
     @property_cache
     def country(self) -> str:
@@ -207,7 +207,7 @@ class Company(BaseEntity):
             The country where the company is located
         """
         return self.address_data.country
-    
+
     @property
     @property_cache
     def country_code(self) -> str:
@@ -217,7 +217,7 @@ class Company(BaseEntity):
             The country code of the company
         """
         return self._company_generator.dataset
-    
+
     def to_dict(self) -> dict:
         """Convert company entity to a dictionary.
 
@@ -240,4 +240,3 @@ class Company(BaseEntity):
             "country": self.country,
             "country_code": self.country_code,
         }
-    

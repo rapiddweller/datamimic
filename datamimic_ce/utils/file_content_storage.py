@@ -14,6 +14,7 @@ class FileContentStorage:
     """
     Load file and store content in cache for later use
     """
+
     _file_data_cache: ClassVar[dict[str, Any]] = {}
 
     @classmethod
@@ -39,7 +40,7 @@ class FileContentStorage:
         # Try to load from storage
         if cache_key in cls._file_data_cache:
             return cls._file_data_cache[cache_key]
-            
+
         logger.debug(f"CACHE MISS: File content storage cache miss, load file for {cache_key}")
 
         # Read file using custom function

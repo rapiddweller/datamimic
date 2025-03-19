@@ -10,15 +10,9 @@ Police officer service.
 This module provides a service for working with PoliceOfficer entities.
 """
 
-import json
-import os
-from typing import Any, ClassVar
-
 from datamimic_ce.domain_core.base_domain_service import BaseDomainService
 from datamimic_ce.domains.public_sector.generators.police_officer_generator import PoliceOfficerGenerator
 from datamimic_ce.domains.public_sector.models.police_officer import PoliceOfficer
-from datamimic_ce.logger import logger
-from datamimic_ce.utils.domain_class_util import DomainClassUtil
 
 
 class PoliceOfficerService(BaseDomainService[PoliceOfficer]):

@@ -13,8 +13,8 @@ realistic public administration office data.
 
 import datetime
 import random
-from typing import Any
 import uuid
+from typing import Any
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
@@ -34,6 +34,7 @@ class AdministrationOffice(BaseEntity):
     Data is loaded from country-specific CSV files when available,
     falling back to generic data files if needed.
     """
+
     def __init__(self, administration_office_generator: AdministrationOfficeGenerator):
         super().__init__()
         self._administration_office_generator = administration_office_generator
@@ -58,9 +59,9 @@ class AdministrationOffice(BaseEntity):
             The office address.
         """
         return Address(self._administration_office_generator.address_generator)
-    
+
     @property
-    @property_cache 
+    @property_cache
     def name(self) -> str:
         """Get the office name.
 
@@ -240,7 +241,6 @@ class AdministrationOffice(BaseEntity):
 
         return current_year - random.randint(min_age, max_age)
 
-
     @property
     @property_cache
     def staff_count(self) -> int:
@@ -307,7 +307,6 @@ class AdministrationOffice(BaseEntity):
             A dictionary mapping days to hours.
         """
         weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-        weekend = ["Saturday", "Sunday"]
         hours = {}
 
         # Most government offices have standard hours on weekdays
@@ -356,10 +355,7 @@ class AdministrationOffice(BaseEntity):
         url_name = "".join(c for c in url_name if c.isalnum())
 
         # Determine domain extension based on jurisdiction
-        if "federal" in self.jurisdiction.lower():
-            domain = ".gov"
-        else:
-            domain = ".gov"  # All US government entities use .gov
+        domain = ".gov"
 
         return f"https://www.{url_name}{domain}"
 
@@ -400,7 +396,6 @@ class AdministrationOffice(BaseEntity):
             department = "info"
 
         return f"{department}@{domain}"
-
 
     @property
     @property_cache
@@ -588,7 +583,6 @@ class AdministrationOffice(BaseEntity):
         # Choose a subset of services
         num_services = random.randint(5, min(10, len(all_services)))
         return random.sample(all_services, num_services)
-
 
     @property
     @property_cache
@@ -801,7 +795,6 @@ class AdministrationOffice(BaseEntity):
             leadership[position] = f"{fname} {lname}"
 
         return leadership
-
 
     def to_dict(self) -> dict[str, Any]:
         """Convert the administration office entity to a dictionary.

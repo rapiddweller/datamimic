@@ -20,33 +20,34 @@ from datamimic_ce.domains.common.literal_generators.phone_number_generator impor
 
 T = TypeVar("T")  # Define a type variable for generic typing
 
+
 class AdministrationOfficeGenerator(BaseDomainGenerator):
     """Generator for administration office data."""
 
-    def __init__(self, dataset: str = "US"):
+    def __init__(self, dataset: str | None = None):
         """Initialize the administration office generator.
 
         Args:
             dataset: The country code to use for data generation
         """
-        self._dataset = dataset
-        self._address_generator = AddressGenerator(dataset=dataset)
-        self._phone_number_generator = PhoneNumberGenerator(dataset=dataset)   
-        self._family_name_generator = FamilyNameGenerator(dataset=dataset)
-        self._given_name_generator = GivenNameGenerator(dataset=dataset)
+        self._dataset = dataset or "US" 
+        self._address_generator = AddressGenerator(dataset=self._dataset)
+        self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset)
+        self._family_name_generator = FamilyNameGenerator(dataset=self._dataset)
+        self._given_name_generator = GivenNameGenerator(dataset=self._dataset)
 
     @property
     def address_generator(self) -> AddressGenerator:
         return self._address_generator
-    
+
     @property
     def phone_number_generator(self) -> PhoneNumberGenerator:
         return self._phone_number_generator
-    
+
     @property
     def family_name_generator(self) -> FamilyNameGenerator:
         return self._family_name_generator
-    
+
     @property
     def given_name_generator(self) -> GivenNameGenerator:
         return self._given_name_generator

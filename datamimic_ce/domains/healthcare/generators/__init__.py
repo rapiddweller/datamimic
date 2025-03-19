@@ -11,6 +11,7 @@ This module provides generators for the healthcare domain entities.
 """
 
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
+
 __all__ = [
     "HospitalGenerator",
 ]

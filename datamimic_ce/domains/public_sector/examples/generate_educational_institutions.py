@@ -96,7 +96,7 @@ def main():
             for key, value in institution.items():
                 if isinstance(value, dict):
                     nested_keys.append(key)
-                    for nested_key in value.keys():
+                    for nested_key in value:
                         fieldnames.add(f"{key}_{nested_key}")
 
             # Remove nested dictionaries

@@ -24,4 +24,3 @@ class MedicalDeviceService(BaseDomainService[MedicalDevice]):
             dataset: The dataset to use for generating medical device data.
         """
         super().__init__(MedicalDeviceGenerator(dataset=dataset), MedicalDevice)
-

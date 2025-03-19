@@ -20,13 +20,15 @@ class FamilyNameGenerator(BaseLiteralGenerator):
         self._dataset = dataset or "US"
 
         try:
-            file_path = Path(__file__).parent.parent.parent.parent.joinpath(f"domain_data/common/person/familyName_{self._dataset}.csv")
+            file_path = Path(__file__).parent.parent.parent.parent.joinpath(
+                f"domain_data/common/person/familyName_{self._dataset}.csv"
+            )
             values, wgt = FileUtil.read_mutil_column_wgt_file(
                 file_path,
             )
 
             first_column = [row[0] for row in values]
-            self._dataset = first_column, wgt
+            self._loaded_data = first_column, wgt
         except Exception as err:
             raise ValueError(f"Not support dataset: {dataset}: {err}") from err
 
@@ -36,4 +38,4 @@ class FamilyNameGenerator(BaseLiteralGenerator):
         Returns:
             Optional[str]: Returns a string if successful, otherwise returns None.
         """
-        return random.choices(self._dataset[0], self._dataset[1], k=1)[0]
+        return random.choices(self._loaded_data[0], self._loaded_data[1], k=1)[0]

@@ -10,27 +10,30 @@ Medical Procedure generator utilities.
 This module provides utility functions for generating medical procedure data.
 """
 
-from pathlib import Path
 import random
+from pathlib import Path
 
+from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
-class MedicalProcedureGenerator:
+
+class MedicalProcedureGenerator(BaseDomainGenerator):
     def __init__(self, dataset: str | None = None):
         self._dataset = dataset or "US"
+
     def get_procedure_name(self, category: str, specialty: str, is_surgical: bool, is_diagnostic: bool) -> str:
         """Generate a procedure name based on category, specialty, and type.
 
-    Args:
-        category: The procedure category.
-        specialty: The medical specialty.
-        is_surgical: Whether the procedure is surgical.
-        is_diagnostic: Whether the procedure is diagnostic.
+        Args:
+            category: The procedure category.
+            specialty: The medical specialty.
+            is_surgical: Whether the procedure is surgical.
+            is_diagnostic: Whether the procedure is diagnostic.
 
-    Returns:
-        A procedure name.
-    """
+        Returns:
+            A procedure name.
+        """
         # Define procedure name patterns by category
         category_patterns = {
             "Cardiovascular": [
@@ -627,7 +630,6 @@ class MedicalProcedureGenerator:
 
         return procedure_name
 
-
     def generate_procedure_description(
         self,
         name: str,
@@ -825,255 +827,253 @@ class MedicalProcedureGenerator:
 
         return description
 
+    # def generate_procedure_equipment(is_surgical: bool, category: str) -> list[str]:
+    #     """Generate a list of equipment required for a procedure.
 
-    def generate_procedure_equipment(is_surgical: bool, category: str) -> list[str]:
-        """Generate a list of equipment required for a procedure.
+    #     Args:
+    #         is_surgical: Whether the procedure is surgical.
+    #         category: The procedure category.
 
-        Args:
-            is_surgical: Whether the procedure is surgical.
-            category: The procedure category.
+    #     Returns:
+    #         A list of required equipment.
+    #     """
+    #     # Define common equipment for all procedures
+    #     common_equipment = [
+    #         "Examination table",
+    #         "Medical gloves",
+    #         "Antiseptic solution",
+    #         "Sterile drapes",
+    #         "Vital signs monitor",
+    #     ]
 
-        Returns:
-            A list of required equipment.
-        """
-        # Define common equipment for all procedures
-        common_equipment = [
-            "Examination table",
-            "Medical gloves",
-            "Antiseptic solution",
-            "Sterile drapes",
-            "Vital signs monitor",
-        ]
+    #     # Define surgical equipment
+    #     surgical_equipment = [
+    #         "Surgical instruments",
+    #         "Scalpel",
+    #         "Forceps",
+    #         "Retractors",
+    #         "Sutures",
+    #         "Surgical scissors",
+    #         "Electrocautery device",
+    #         "Surgical masks",
+    #         "Surgical gowns",
+    #         "Anesthesia machine",
+    #         "Suction device",
+    #     ]
 
-        # Define surgical equipment
-        surgical_equipment = [
-            "Surgical instruments",
-            "Scalpel",
-            "Forceps",
-            "Retractors",
-            "Sutures",
-            "Surgical scissors",
-            "Electrocautery device",
-            "Surgical masks",
-            "Surgical gowns",
-            "Anesthesia machine",
-            "Suction device",
-        ]
+    #     # Define diagnostic equipment
+    #     diagnostic_equipment = [
+    #         "Diagnostic imaging equipment",
+    #         "Ultrasound machine",
+    #         "X-ray machine",
+    #         "CT scanner",
+    #         "MRI machine",
+    #         "Endoscope",
+    #         "Microscope",
+    #         "Laboratory equipment",
+    #         "Biopsy needles",
+    #         "Specimen containers",
+    #     ]
 
-        # Define diagnostic equipment
-        diagnostic_equipment = [
-            "Diagnostic imaging equipment",
-            "Ultrasound machine",
-            "X-ray machine",
-            "CT scanner",
-            "MRI machine",
-            "Endoscope",
-            "Microscope",
-            "Laboratory equipment",
-            "Biopsy needles",
-            "Specimen containers",
-        ]
+    #     # Define category-specific equipment
+    #     category_equipment = {
+    #         "Cardiovascular": [
+    #             "ECG machine",
+    #             "Cardiac monitor",
+    #             "Defibrillator",
+    #             "Blood pressure monitor",
+    #             "Stethoscope",
+    #             "Cardiac catheterization equipment",
+    #         ],
+    #         "Digestive": [
+    #             "Endoscope",
+    #             "Colonoscope",
+    #             "Gastroscope",
+    #             "Biopsy forceps",
+    #             "Specimen containers",
+    #         ],
+    #         "Respiratory": [
+    #             "Bronchoscope",
+    #             "Spirometer",
+    #             "Oxygen delivery system",
+    #             "Ventilator",
+    #             "Nebulizer",
+    #         ],
+    #         "Musculoskeletal": [
+    #             "Orthopedic instruments",
+    #             "Bone saw",
+    #             "Drill",
+    #             "Implants",
+    #             "Casting materials",
+    #         ],
+    #         "Nervous": [
+    #             "Neurosurgical instruments",
+    #             "Microscope",
+    #             "Stereotactic frame",
+    #             "Nerve stimulator",
+    #             "EEG machine",
+    #         ],
+    #         "Eye": [
+    #             "Ophthalmoscope",
+    #             "Slit lamp",
+    #             "Tonometer",
+    #             "Eye speculum",
+    #             "Ophthalmic surgical microscope",
+    #         ],
+    #         "Urinary": [
+    #             "Cystoscope",
+    #             "Urethral catheters",
+    #             "Urine collection system",
+    #             "Lithotripter",
+    #         ],
+    #         "Radiology": [
+    #             "X-ray machine",
+    #             "CT scanner",
+    #             "MRI machine",
+    #             "Ultrasound machine",
+    #             "Fluoroscope",
+    #             "PACS system",
+    #         ],
+    #     }
 
-        # Define category-specific equipment
-        category_equipment = {
-            "Cardiovascular": [
-                "ECG machine",
-                "Cardiac monitor",
-                "Defibrillator",
-                "Blood pressure monitor",
-                "Stethoscope",
-                "Cardiac catheterization equipment",
-            ],
-            "Digestive": [
-                "Endoscope",
-                "Colonoscope",
-                "Gastroscope",
-                "Biopsy forceps",
-                "Specimen containers",
-            ],
-            "Respiratory": [
-                "Bronchoscope",
-                "Spirometer",
-                "Oxygen delivery system",
-                "Ventilator",
-                "Nebulizer",
-            ],
-            "Musculoskeletal": [
-                "Orthopedic instruments",
-                "Bone saw",
-                "Drill",
-                "Implants",
-                "Casting materials",
-            ],
-            "Nervous": [
-                "Neurosurgical instruments",
-                "Microscope",
-                "Stereotactic frame",
-                "Nerve stimulator",
-                "EEG machine",
-            ],
-            "Eye": [
-                "Ophthalmoscope",
-                "Slit lamp",
-                "Tonometer",
-                "Eye speculum",
-                "Ophthalmic surgical microscope",
-            ],
-            "Urinary": [
-                "Cystoscope",
-                "Urethral catheters",
-                "Urine collection system",
-                "Lithotripter",
-            ],
-            "Radiology": [
-                "X-ray machine",
-                "CT scanner",
-                "MRI machine",
-                "Ultrasound machine",
-                "Fluoroscope",
-                "PACS system",
-            ],
-        }
+    #     # Select equipment based on procedure type and category
+    #     selected_equipment = common_equipment.copy()
 
-        # Select equipment based on procedure type and category
-        selected_equipment = common_equipment.copy()
+    #     if is_surgical:
+    #         selected_equipment.extend(random.sample(surgical_equipment, min(5, len(surgical_equipment))))
+    #     else:
+    #         selected_equipment.extend(random.sample(diagnostic_equipment, min(3, len(diagnostic_equipment))))
 
-        if is_surgical:
-            selected_equipment.extend(random.sample(surgical_equipment, min(5, len(surgical_equipment))))
-        else:
-            selected_equipment.extend(random.sample(diagnostic_equipment, min(3, len(diagnostic_equipment))))
+    #     # Add category-specific equipment if available
+    #     if category in category_equipment:
+    #         selected_equipment.extend(
+    #             random.sample(category_equipment[category], min(3, len(category_equipment[category])))
+    #         )
 
-        # Add category-specific equipment if available
-        if category in category_equipment:
-            selected_equipment.extend(
-                random.sample(category_equipment[category], min(3, len(category_equipment[category])))
-            )
+    #     # Remove duplicates and return a random subset
+    #     unique_equipment = list(set(selected_equipment))
+    #     num_equipment = random.randint(3, min(8, len(unique_equipment)))
 
-        # Remove duplicates and return a random subset
-        unique_equipment = list(set(selected_equipment))
-        num_equipment = random.randint(3, min(8, len(unique_equipment)))
+    #     return random.sample(unique_equipment, num_equipment)
 
-        return random.sample(unique_equipment, num_equipment)
+    # def generate_procedure_complications(is_surgical: bool, category: str) -> list[str]:
+    #     """Generate a list of potential complications for a procedure.
 
+    #     Args:
+    #         is_surgical: Whether the procedure is surgical.
+    #         category: The procedure category.
 
-    def generate_procedure_complications(is_surgical: bool, category: str) -> list[str]:
-        """Generate a list of potential complications for a procedure.
+    #     Returns:
+    #         A list of potential complications.
+    #     """
+    #     # Define common complications for all procedures
+    #     common_complications = [
+    #         "Infection",
+    #         "Bleeding",
+    #         "Pain",
+    #         "Allergic reaction",
+    #         "Nausea",
+    #     ]
 
-        Args:
-            is_surgical: Whether the procedure is surgical.
-            category: The procedure category.
+    #     # Define surgical complications
+    #     surgical_complications = [
+    #         "Wound dehiscence",
+    #         "Surgical site infection",
+    #         "Excessive bleeding",
+    #         "Blood clots",
+    #         "Reaction to anesthesia",
+    #         "Damage to surrounding tissues",
+    #         "Scarring",
+    #         "Delayed healing",
+    #         "Nerve damage",
+    #         "Post-operative pain",
+    #     ]
 
-        Returns:
-            A list of potential complications.
-        """
-        # Define common complications for all procedures
-        common_complications = [
-            "Infection",
-            "Bleeding",
-            "Pain",
-            "Allergic reaction",
-            "Nausea",
-        ]
+    #     # Define non-surgical complications
+    #     non_surgical_complications = [
+    #         "Discomfort",
+    #         "Bruising",
+    #         "Dizziness",
+    #         "Allergic reaction",
+    #         "Skin irritation",
+    #         "Temporary pain",
+    #         "Nausea",
+    #     ]
 
-        # Define surgical complications
-        surgical_complications = [
-            "Wound dehiscence",
-            "Surgical site infection",
-            "Excessive bleeding",
-            "Blood clots",
-            "Reaction to anesthesia",
-            "Damage to surrounding tissues",
-            "Scarring",
-            "Delayed healing",
-            "Nerve damage",
-            "Post-operative pain",
-        ]
+    #     # Define category-specific complications
+    #     category_complications = {
+    #         "Cardiovascular": [
+    #             "Arrhythmia",
+    #             "Myocardial infarction",
+    #             "Stroke",
+    #             "Cardiac tamponade",
+    #             "Vascular damage",
+    #         ],
+    #         "Digestive": [
+    #             "Perforation",
+    #             "Bleeding",
+    #             "Infection",
+    #             "Ileus",
+    #             "Anastomotic leak",
+    #         ],
+    #         "Respiratory": [
+    #             "Pneumonia",
+    #             "Respiratory depression",
+    #             "Bronchospasm",
+    #             "Pneumothorax",
+    #             "Aspiration",
+    #         ],
+    #         "Musculoskeletal": [
+    #             "Joint stiffness",
+    #             "Implant failure",
+    #             "Non-union",
+    #             "Compartment syndrome",
+    #             "Osteomyelitis",
+    #         ],
+    #         "Nervous": [
+    #             "Neurological deficit",
+    #             "Seizure",
+    #             "Intracranial hemorrhage",
+    #             "Spinal cord injury",
+    #             "Meningitis",
+    #         ],
+    #         "Eye": [
+    #             "Vision loss",
+    #             "Infection",
+    #             "Increased intraocular pressure",
+    #             "Retinal detachment",
+    #             "Corneal abrasion",
+    #         ],
+    #         "Urinary": [
+    #             "Urinary retention",
+    #             "Urinary tract infection",
+    #             "Hematuria",
+    #             "Ureteral injury",
+    #             "Bladder perforation",
+    #         ],
+    #     }
 
-        # Define non-surgical complications
-        non_surgical_complications = [
-            "Discomfort",
-            "Bruising",
-            "Dizziness",
-            "Allergic reaction",
-            "Skin irritation",
-            "Temporary pain",
-            "Nausea",
-        ]
+    #     # Select complications based on procedure type and category
+    #     selected_complications = common_complications.copy()
 
-        # Define category-specific complications
-        category_complications = {
-            "Cardiovascular": [
-                "Arrhythmia",
-                "Myocardial infarction",
-                "Stroke",
-                "Cardiac tamponade",
-                "Vascular damage",
-            ],
-            "Digestive": [
-                "Perforation",
-                "Bleeding",
-                "Infection",
-                "Ileus",
-                "Anastomotic leak",
-            ],
-            "Respiratory": [
-                "Pneumonia",
-                "Respiratory depression",
-                "Bronchospasm",
-                "Pneumothorax",
-                "Aspiration",
-            ],
-            "Musculoskeletal": [
-                "Joint stiffness",
-                "Implant failure",
-                "Non-union",
-                "Compartment syndrome",
-                "Osteomyelitis",
-            ],
-            "Nervous": [
-                "Neurological deficit",
-                "Seizure",
-                "Intracranial hemorrhage",
-                "Spinal cord injury",
-                "Meningitis",
-            ],
-            "Eye": [
-                "Vision loss",
-                "Infection",
-                "Increased intraocular pressure",
-                "Retinal detachment",
-                "Corneal abrasion",
-            ],
-            "Urinary": [
-                "Urinary retention",
-                "Urinary tract infection",
-                "Hematuria",
-                "Ureteral injury",
-                "Bladder perforation",
-            ],
-        }
+    #     if is_surgical:
+    #         selected_complications.extend(random.sample(surgical_complications, min(3, len(surgical_complications))))
+    #     else:
+    #         selected_complications.extend(
+    #             random.sample(non_surgical_complications, min(2, len(non_surgical_complications)))
+    #         )
 
-        # Select complications based on procedure type and category
-        selected_complications = common_complications.copy()
+    #     # Add category-specific complications if available
+    #     if category in category_complications:
+    #         selected_complications.extend(
+    #             random.sample(category_complications[category], min(2, len(category_complications[category])))
+    #         )
 
-        if is_surgical:
-            selected_complications.extend(random.sample(surgical_complications, min(3, len(surgical_complications))))
-        else:
-            selected_complications.extend(
-                random.sample(non_surgical_complications, min(2, len(non_surgical_complications)))
-            )
+    #     # Remove duplicates and return a random subset
+    #     unique_complications = list(set(selected_complications))
+    #     num_complications = random.randint(2, min(5, len(unique_complications)))
 
-        # Add category-specific complications if available
-        if category in category_complications:
-            selected_complications.extend(
-                random.sample(category_complications[category], min(2, len(category_complications[category])))
-            )
-
-        # Remove duplicates and return a random subset
-        unique_complications = list(set(selected_complications))
-        num_complications = random.randint(2, min(5, len(unique_complications)))
-
-        return random.sample(unique_complications, num_complications)
+    #     return random.sample(unique_complications, num_complications)
 
     def generate_specialty(self) -> str:
         """Generate a medical specialty.
@@ -1081,16 +1081,17 @@ class MedicalProcedureGenerator:
         Returns:
             A medical specialty.
         """
-        file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "healthcare" / "medical" / f"specialties_{self._dataset}.csv"
-        wgt, loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path),
-            lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
+        file_path = (
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "healthcare"
+            / "medical"
+            / f"specialties_{self._dataset}.csv"
         )
-        return random.choices(
-            loaded_data,
-            weights=wgt,
-            k=1
-        )[0]["specialty"]
+        wgt, loaded_data = FileContentStorage.load_file_with_custom_func(
+            str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
+        )
+        return random.choices(loaded_data, weights=wgt, k=1)[0]["specialty"]
 
     def generate_category(self) -> str:
         categories = [

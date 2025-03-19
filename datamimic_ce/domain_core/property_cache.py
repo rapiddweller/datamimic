@@ -11,7 +11,7 @@ This module provides a utility class for caching entity properties.
 """
 
 import functools
-from typing import Callable
+from collections.abc import Callable
 
 
 def property_cache(func: Callable) -> Callable:
@@ -26,7 +26,7 @@ def property_cache(func: Callable) -> Callable:
     Returns:
         A wrapped function that caches the result
     """
-    cache_name = func.__name__ 
+    cache_name = func.__name__
 
     @functools.wraps(func)
     def wrapper(self):

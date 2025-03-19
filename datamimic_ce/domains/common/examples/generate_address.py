@@ -1,4 +1,3 @@
-from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.common.services.address_service import AddressService
 
 
@@ -10,6 +9,7 @@ def generate_address():
     address = address_service.generate()
     print(address.to_dict())
 
+
 def generate_batch_address():
     """
     Generate a batch of addresses
@@ -18,6 +18,7 @@ def generate_batch_address():
     addresses = address_service.generate_batch(10)
     for address in addresses:
         print(address.to_dict())
+
 
 if __name__ == "__main__":
     print("Generating single address:")

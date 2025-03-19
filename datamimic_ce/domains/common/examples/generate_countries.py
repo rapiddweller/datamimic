@@ -7,5 +7,6 @@ def generate_countries():
     for country in countries:
         print(country.to_dict())
 
+
 if __name__ == "__main__":
     generate_countries()

@@ -55,5 +55,5 @@ class Bank(BaseEntity):
             "routing_number": self.routing_number,
             "bank_code": self.bank_code,
             "bic": self.bic,
-            "bin": self.bin
+            "bin": self.bin,
         }

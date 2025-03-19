@@ -4,11 +4,10 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from collections.abc import Iterator
 import traceback
+from collections.abc import Iterator
 from typing import Any, Final
 
-from datamimic_ce.logger import logger
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.constants.attribute_constants import (
     ATTR_CONSTANT,
@@ -26,6 +25,7 @@ from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntityDataSource
+from datamimic_ce.logger import logger
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
 from datamimic_ce.tasks.task_util import TaskUtil
@@ -212,14 +212,15 @@ class VariableTask(KeyVariableTask):
                     count=1 if pagination is None else pagination.limit,
                 )
             except Exception as e:
-                logger.error(f"Failed to execute <variable> '{self._statement.name}': "
-                             f"Can't create entity '{statement.entity}': {e}")
+                logger.error(
+                    f"Failed to execute <variable> '{self._statement.name}': "
+                    f"Can't create entity '{statement.entity}': {e}"
+                )
                 traceback.print_exc()
                 raise ValueError(
                     f"Failed to execute <variable> '{self._statement.name}': "
                     f"Can't create entity '{statement.entity}': {e}"
                 ) from e
-            
 
             self._mode = self._ENTITY_MODE
         else:
@@ -239,15 +240,12 @@ class VariableTask(KeyVariableTask):
     @staticmethod
     def _get_entity_generator(ctx: Context, entity_name: str, locale: str, dataset: str, count: int):
         entity_class_name, kwargs = StringUtil.parse_constructor_string(entity_name)
-        
+
         # Check if entity_class_name contains dots indicating a domain path
         if "." in entity_class_name:
             # For domain paths like "common.models.Company"
             # Create instance directly using the class factory util
-            return DomainClassUtil.create_instance(
-                f"datamimic_ce.domains.{entity_class_name}",
-                **kwargs
-            )
+            return DomainClassUtil.create_instance(f"datamimic_ce.domains.{entity_class_name}", **kwargs)
         else:
             # For simple names like "Company", use the entity mapping
             # Complete mapping of all entities across domains
@@ -258,7 +256,6 @@ class VariableTask(KeyVariableTask):
                 "Address": "common.services.AddressService",
                 "City": "common.services.CityService",
                 "Country": "common.services.CountryService",
-                
                 # Finance domain entities
                 "CreditCard": "finance.services.CreditCardService",
                 "Bank": "finance.services.BankService",
@@ -267,13 +264,11 @@ class VariableTask(KeyVariableTask):
                 # "Invoice": "finance.models.invoice.Invoice",
                 # "Transaction": "finance.models.transaction.Transaction",
                 # "DigitalWallet": "finance.models.digital_wallet.DigitalWallet",
-                
                 # Ecommerce domain entities
                 "Product": "ecommerce.services.ProductService",
                 "Order": "ecommerce.services.OrderService",
                 # "UserAccount": "ecommerce.models.user_account.UserAccount",
                 # "CRM": "ecommerce.models.crm.CRM",
-                
                 # Healthcare domain entities
                 "Patient": "healthcare.services.PatientService",
                 "Doctor": "healthcare.services.DoctorService",
@@ -282,26 +277,21 @@ class VariableTask(KeyVariableTask):
                 "MedicalProcedure": "healthcare.services.MedicalProcedureService",
                 # "LabTest": "healthcare.models.lab_test.LabTest",
                 # "ClinicalTrial": "healthcare.models.clinical_trial.ClinicalTrial",
-                
                 # Insurance domain entities (new domain)
                 "InsuranceCompany": "insurance.services.InsuranceCompanyService",
                 "InsurancePolicy": "insurance.services.InsurancePolicyService",
                 "InsuranceProduct": "insurance.services.InsuranceProductService",
                 "InsuranceCoverage": "insurance.services.InsuranceCoverageService",
-                
                 # Public Sector domain entities (new domain)
                 "AdministrationOffice": "public_sector.services.AdministrationOfficeService",
                 "EducationalInstitution": "public_sector.services.EducationalInstitutionService",
-                "PoliceOfficer": "public_sector.services.PoliceOfficerService"
+                "PoliceOfficer": "public_sector.services.PoliceOfficerService",
             }
 
             # Use the mapping to create the entity
             if entity_class_name in entity_mappings:
                 domain_entity_path = entity_mappings[entity_class_name]
-                return DomainClassUtil.create_instance(
-                    f"datamimic_ce.domains.{domain_entity_path}",
-                    **kwargs
-                )
+                return DomainClassUtil.create_instance(f"datamimic_ce.domains.{domain_entity_path}", **kwargs)
             else:
                 # If no mapping exists, entity is not supported
                 raise ValueError(f"Entity '{entity_name}' is not supported in the domain architecture.")

@@ -6,7 +6,6 @@
 
 import random
 from pathlib import Path
-from typing import Literal
 
 from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.utils.file_util import FileUtil
@@ -46,7 +45,7 @@ class GivenNameGenerator(BaseLiteralGenerator):
 
             first_column = [row[0] for row in values]
             return first_column, wgt
-        
+
         except Exception as err:
             raise ValueError(f"Not support dataset: {self._dataset}: {err}") from err
 
@@ -58,7 +57,7 @@ class GivenNameGenerator(BaseLiteralGenerator):
         """
         return self.generate_with_gender(self._gender)
 
-    def generate_with_gender(self, gender: Literal["male", "female", "other"]):
+    def generate_with_gender(self, gender: str | None):
         """
         Generate random given name with gender
         Returns:
@@ -68,6 +67,9 @@ class GivenNameGenerator(BaseLiteralGenerator):
             selected_dataset = self._dataset_male
         elif gender == "female":
             selected_dataset = self._dataset_female
-        else:
+        elif self._gender == "other" or self._gender is None:
             selected_dataset = self._dataset_male if random.choice([True, False]) else self._dataset_female
+        else:
+            raise ValueError(f"Invalid gender: {gender}")
+
         return random.choices(selected_dataset[0], selected_dataset[1], k=1)[0]

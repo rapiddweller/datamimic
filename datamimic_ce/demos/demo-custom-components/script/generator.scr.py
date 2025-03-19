@@ -1,5 +1,3 @@
-
-
 from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
 
 

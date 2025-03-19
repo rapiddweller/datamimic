@@ -7,6 +7,7 @@
 from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 
+
 class CNPJGenerator(BaseLiteralGenerator):
     """
     Generates Brazilian CNPJ numbers.

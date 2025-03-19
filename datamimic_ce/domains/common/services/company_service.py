@@ -16,5 +16,6 @@ class CompanyService(BaseDomainService[Company]):
 
     This class provides methods for creating, retrieving, and managing company data.
     """
+
     def __init__(self, dataset: str | None = None):
-        super().__init__(CompanyGenerator(dataset=dataset), Company)       
+        super().__init__(CompanyGenerator(dataset=dataset), Company)

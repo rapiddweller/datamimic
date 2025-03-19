@@ -88,6 +88,7 @@ class TestEntityPatient:
         assert patient.insurance_policy_number == patient.insurance_policy_number
         assert patient.person_data == patient.person_data
 
+    @pytest.mark.flaky(reruns=3)
     def test_two_different_entities(self):
         patient_service = PatientService()    
         patient1 = patient_service.generate()

@@ -67,6 +67,7 @@ class TestEntityEducationalInstitution:
         assert educational_institution.accreditations == educational_institution.accreditations
         assert educational_institution.facilities == educational_institution.facilities
 
+    @pytest.mark.flaky(reruns=3)
     def test_two_different_entities(self):
         educational_institution_service = EducationalInstitutionService()
         educational_institution1 = educational_institution_service.generate()

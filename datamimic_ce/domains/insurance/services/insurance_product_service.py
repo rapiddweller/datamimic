@@ -10,7 +10,6 @@ Insurance Product Service.
 This module provides service functions for generating and managing insurance products.
 """
 
-
 from datamimic_ce.domain_core.base_domain_service import BaseDomainService
 from datamimic_ce.domains.insurance.generators.insurance_product_generator import InsuranceProductGenerator
 from datamimic_ce.domains.insurance.models.insurance_product import InsuranceProduct

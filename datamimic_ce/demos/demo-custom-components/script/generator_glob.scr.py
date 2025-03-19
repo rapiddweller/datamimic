@@ -6,6 +6,7 @@ from faker import Faker
 
 from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
 
+
 class GlobRandomHexColorGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         return f"#{random.randint(0, 0xFFFFFF):06x}"

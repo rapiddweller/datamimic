@@ -12,8 +12,8 @@ This module provides the MedicalProcedure entity model for generating realistic 
 
 import random
 import string
-from typing import Any
 import uuid
+from typing import Any
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
@@ -85,7 +85,7 @@ class MedicalProcedure(BaseEntity):
         return self._medical_procedure_generator.get_procedure_name(
             self.category, self.specialty, self.is_surgical, self.is_diagnostic
         )
-    
+
     @property
     @property_cache
     def category(self) -> str:
@@ -95,7 +95,7 @@ class MedicalProcedure(BaseEntity):
             The procedure category.
         """
         return self._medical_procedure_generator.generate_category()
-    
+
     @property
     @property_cache
     def description(self) -> str:
@@ -107,7 +107,6 @@ class MedicalProcedure(BaseEntity):
         return self._medical_procedure_generator.generate_procedure_description(
             self.name, self.category, self.is_surgical, self.is_diagnostic, self.is_preventive, self.requires_anesthesia
         )
-
 
     @property
     @property_cache
@@ -135,7 +134,6 @@ class MedicalProcedure(BaseEntity):
             # Non-surgical procedures tend to be shorter
             return random.randint(10, 120)  # 10 minutes to 2 hours
 
-
     @property
     @property_cache
     def cost(self) -> float:
@@ -145,7 +143,7 @@ class MedicalProcedure(BaseEntity):
             The procedure cost.
         """
         # Cost depends on various factors
-        base_cost = 0
+        base_cost = 0.0
 
         # Surgical procedures are more expensive
         if self.is_surgical:
@@ -180,6 +178,7 @@ class MedicalProcedure(BaseEntity):
             return random.random() < 0.9  # 90% chance
         else:
             return random.random() < 0.2  # 20% chance
+
     @property
     @property_cache
     def is_surgical(self) -> bool:
@@ -220,7 +219,6 @@ class MedicalProcedure(BaseEntity):
         else:
             return random.random() < 0.3  # 30% chance
 
-
     @property
     @property_cache
     def recovery_time_days(self) -> int:
@@ -236,7 +234,6 @@ class MedicalProcedure(BaseEntity):
         else:
             # Non-surgical procedures have shorter recovery times
             return random.randint(0, 3)  # 0 to 3 days
-
 
     def to_dict(self) -> dict[str, Any]:
         """Convert the medical procedure entity to a dictionary.

@@ -5,11 +5,10 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-
-from datamimic_ce.domains.common.literal_generators.company_name_generator import CompanyNameGenerator
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.city_generator import CityGenerator
 from datamimic_ce.domains.common.generators.country_generator import CountryGenerator
+from datamimic_ce.domains.common.literal_generators.company_name_generator import CompanyNameGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.common.literal_generators.street_name_generator import StreetNameGenerator
 
@@ -19,6 +18,7 @@ class AddressGenerator(BaseDomainGenerator):
 
     This class generates random address data using the data from datasets.
     """
+
     def __init__(self, dataset: str | None = None):
         """Initialize the AddressGenerator.
 
@@ -36,7 +36,7 @@ class AddressGenerator(BaseDomainGenerator):
         self._street_name_generator = StreetNameGenerator(dataset=self._dataset)
 
     @property
-    def dataset(self) -> str:  
+    def dataset(self) -> str:
         """Get the dataset.
 
         Returns:
@@ -70,7 +70,7 @@ class AddressGenerator(BaseDomainGenerator):
             The phone number generator.
         """
         return self._phone_number_generator
-    
+
     @property
     def company_name_generator(self) -> CompanyNameGenerator:
         """Get the company name generator.
@@ -79,7 +79,7 @@ class AddressGenerator(BaseDomainGenerator):
             The company name generator.
         """
         return self._company_name_generator
-    
+
     @property
     def street_name_generator(self) -> StreetNameGenerator:
         """Get the street name generator.
@@ -88,4 +88,3 @@ class AddressGenerator(BaseDomainGenerator):
             The street name generator.
         """
         return self._street_name_generator
-    

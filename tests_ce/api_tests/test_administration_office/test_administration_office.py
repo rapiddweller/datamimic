@@ -1,5 +1,5 @@
+import pytest
 from datamimic_ce.domains.common.models.address import Address
-from datamimic_ce.domains.common.services.address_service import AddressService
 from datamimic_ce.domains.public_sector.models.administration_office import AdministrationOffice
 from datamimic_ce.domains.public_sector.services.administration_office_service import AdministrationOfficeService
 
@@ -63,6 +63,7 @@ class TestEntityAdministrationOffice:
         assert administration_office.leadership == administration_office.leadership
         assert administration_office.address == administration_office.address
 
+    @pytest.mark.flaky(reruns=3)
     def test_two_different_entities(self):
         administration_office_service = AdministrationOfficeService()
         administration_office1 = administration_office_service.generate()

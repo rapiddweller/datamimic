@@ -10,15 +10,9 @@ Doctor service.
 This module provides a service for working with Doctor entities.
 """
 
-import json
-import os
-from typing import Any, ClassVar
-
 from datamimic_ce.domain_core.base_domain_service import BaseDomainService
 from datamimic_ce.domains.healthcare.generators.doctor_generator import DoctorGenerator
 from datamimic_ce.domains.healthcare.models.doctor import Doctor
-from datamimic_ce.logger import logger
-from datamimic_ce.utils.domain_class_util import DomainClassUtil
 
 
 class DoctorService(BaseDomainService[Doctor]):

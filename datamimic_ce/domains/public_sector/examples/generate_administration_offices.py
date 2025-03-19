@@ -69,7 +69,8 @@ def main():
         offices = service.get_offices_by_jurisdiction(args.jurisdiction, args.count)
     elif args.min_budget is not None and args.max_budget is not None:
         print(
-            f"Generating {args.count} offices with budget between ${args.min_budget:,.2f} and ${args.max_budget:,.2f}..."
+            f"Generating {args.count} offices with budget between ${args.min_budget:,.2f} "
+            f"and ${args.max_budget:,.2f}..."
         )
         offices = service.get_offices_by_budget_range(args.min_budget, args.max_budget, args.count)
     else:
@@ -96,7 +97,7 @@ def main():
             for key, value in office.items():
                 if isinstance(value, dict):
                     nested_keys.append(key)
-                    for nested_key in value.keys():
+                    for nested_key in value:
                         fieldnames.add(f"{key}_{nested_key}")
 
             # Remove nested dictionaries
