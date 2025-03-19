@@ -26,8 +26,10 @@ class ProductGenerator(BaseDomainGenerator):
     of products with realistic data.
     """
 
-    def __init__(self, dataset: str = "US"):
+    def __init__(self, dataset: str = "US", min_price: float = 0.99, max_price: float = 999.99):
         self._dataset = dataset
+        self._min_price = min(min_price, max_price)
+        self._max_price = max(min_price, max_price)
 
     def get_product_data_by_data_type(self, data_type: str) -> str:
         """Load data for the specified type and dataset.
@@ -47,16 +49,13 @@ class ProductGenerator(BaseDomainGenerator):
         wgt_idx = header_dict["weight"]
         return random.choices(loaded_data, weights=[float(row[wgt_idx]) for row in loaded_data])[0][0]
 
-    def price_with_strategy(self, min_price: float = 0.99, max_price: float = 999.99) -> float:
+    def price_with_strategy(self) -> float:
         """Generate a price using common pricing strategies.
-
-        Args:
-            min_price: Minimum price
-            max_price: Maximum price
-
         Returns:
             A price following common pricing strategies like .99 endings
         """
+        min_price = self._min_price
+        max_price = self._max_price
         # Use different price points based on common retail pricing strategies
         price_points = [
             round(random.uniform(min_price, max_price), 2),  # Regular price

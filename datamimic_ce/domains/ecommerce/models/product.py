@@ -34,8 +34,8 @@ class Product(BaseEntity):
         """
         super().__init__()
         self._product_generator = product_generator
-        # call function to create product datas
-        self._create_product_data()
+        # create product name and check support dataset
+        self.name
 
     @property
     @property_cache
@@ -272,20 +272,3 @@ class Product(BaseEntity):
             "rating": self.rating,
             "tags": self.tags,
         }
-
-    def _create_product_data(self):
-        self.product_id
-        self.name
-        self.description
-        self.price
-        self.category
-        self.brand
-        self.sku
-        self.condition
-        self.availability
-        self.currency
-        self.weight
-        self.dimensions
-        self.color
-        self.rating
-        self.tags
