@@ -1,35 +1,37 @@
-from datamimic_ce.core.interfaces import Generator
 
 
-class RandomHexColorGenerator(Generator):
+from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+
+
+class RandomHexColorGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         import random
 
         return f"#{random.randint(0, 0xFFFFFF):06x}"
 
 
-class RandomIPAddressGenerator(Generator):
+class RandomIPAddressGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         import random
 
         return ".".join(map(str, (random.randint(0, 255) for _ in range(4))))
 
 
-class RandomUUIDGenerator(Generator):
+class RandomUUIDGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         import uuid
 
         return str(uuid.uuid4())
 
 
-class RandomMACAddressGenerator(Generator):
+class RandomMACAddressGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         import random
 
         return ":".join([f"{random.randint(0, 255):02x}" for _ in range(6)])
 
 
-class RandomISBNGenerator(Generator):
+class RandomISBNGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         import random
 
@@ -43,7 +45,7 @@ class RandomISBNGenerator(Generator):
         return f"{isbn}-{check_digit}"
 
 
-class RandomCoordinatesGenerator(Generator):
+class RandomCoordinatesGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         import random
 
@@ -52,7 +54,7 @@ class RandomCoordinatesGenerator(Generator):
         return f"{latitude},{longitude}"
 
 
-class RandomLicensePlateGenerator(Generator):
+class RandomLicensePlateGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         import random
         import string
@@ -62,7 +64,7 @@ class RandomLicensePlateGenerator(Generator):
         return f"{letters}-{numbers}"
 
 
-class RandomPasswordGenerator(Generator):
+class RandomPasswordGenerator(BaseLiteralGenerator):
     def __init__(self, length: int = 12):
         self.length = length
 
@@ -74,7 +76,7 @@ class RandomPasswordGenerator(Generator):
         return "".join(random.choices(characters, k=self.length))
 
 
-class RandomMovieTitleGenerator(Generator):
+class RandomMovieTitleGenerator(BaseLiteralGenerator):
     def __init__(self):
         from faker import Faker
 
@@ -84,7 +86,7 @@ class RandomMovieTitleGenerator(Generator):
         return self.fake.catch_phrase()
 
 
-class RandomUserAgentGenerator(Generator):
+class RandomUserAgentGenerator(BaseLiteralGenerator):
     def __init__(self):
         from faker import Faker
 
@@ -94,7 +96,7 @@ class RandomUserAgentGenerator(Generator):
         return self.fake.user_agent()
 
 
-class RandomNameGenerator(Generator):
+class RandomNameGenerator(BaseLiteralGenerator):
     def __init__(self):
         from faker import Faker
 
@@ -104,7 +106,7 @@ class RandomNameGenerator(Generator):
         return self.fake.name()
 
 
-class RandomEmailGenerator(Generator):
+class RandomEmailGenerator(BaseLiteralGenerator):
     def __init__(self):
         from faker import Faker
 
@@ -114,7 +116,7 @@ class RandomEmailGenerator(Generator):
         return self.fake.email()
 
 
-class RandomFloatGenerator(Generator):
+class RandomFloatGenerator(BaseLiteralGenerator):
     def __init__(self, min: float, max: float):
         self.min = min
         self.max = max
@@ -125,7 +127,7 @@ class RandomFloatGenerator(Generator):
         return random.uniform(self.min, self.max)
 
 
-class RandomTransactionTypeGenerator(Generator):
+class RandomTransactionTypeGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         import random
 

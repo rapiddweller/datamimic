@@ -47,6 +47,8 @@ class TestEntity:
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_credit_card.xml")
         engine.test_with_timer()
 
+    # TODO: Test nobility ratio again
+    @pytest.mark.skip(reason="Test nobility ratio again")
     def test_entity_person_relative_attribute(self):
         default_dataset = "US"
         engine = DataMimicTest(

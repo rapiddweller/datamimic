@@ -125,9 +125,3 @@ class TestDemos:
     def test_overview_generator(self):
         """Test the overview generator demo."""
         self._run_demo_test(self._demos_dir / "overview-generator")
-
-    def test_demo_generator(self):
-        """Legacy test method kept for backward compatibility."""
-        logger.info("Running legacy test_demo_generator")
-        test_engine = DataMimicTest(test_dir=self._test_dir, filename="datamimic.xml")
-        test_engine.test_with_timer()
