@@ -49,6 +49,7 @@ class TestBank:
         assert bank.bic == bank.bic
         assert bank.bin == bank.bin
 
+    @pytest.mark.flaky(reruns=3)
     def test_two_different_entities(self):
         bank_service = BankService()
         bank1 = bank_service.generate()

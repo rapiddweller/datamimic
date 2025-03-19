@@ -94,6 +94,7 @@ class TestDemos:
         """Test the model demo."""
         self._run_demo_test(self._demos_dir / "demo-model")
 
+    @pytest.mark.skip(reason="Move to external service tests")
     def test_demo_mongodb(self):
         """Test the MongoDB demo."""
         self._run_demo_test(self._demos_dir / "demo-mongodb")
@@ -106,6 +107,7 @@ class TestDemos:
         """Test the Python scripting demo."""
         self._run_demo_test(self._demos_dir / "demo-py-scripting")
 
+    @pytest.mark.skip(reason="Move to external service tests")
     def test_demo_selector(self):
         """Test the selector demo."""
         self._run_demo_test(self._demos_dir / "demo-selector")

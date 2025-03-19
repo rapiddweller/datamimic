@@ -22,11 +22,11 @@
 	<echo>Running CreditCardNumberGenerator</echo>
 	<generate name="CreditCardNumber" count="50" target="ConsoleExporter">
 		<variable name="genobject" entity="CreditCard"/>
-		<key name="credit_card_number" script="genobject.credit_card_number"/>
+		<key name="credit_card_number" script="genobject.card_number"/>
 		<key name="card_holder" script="genobject.card_holder"/>
 		<key name="cvc_number" script="genobject.cvc_number"/>
 		<key name="expiration_date" script="genobject.expiration_date"/>
-		<key name="credit_card_provider" script="genobject.credit_card_provider"/>
+		<key name="credit_card_provider" script="genobject.card_provider"/>
 	</generate>
 
 </setup>
