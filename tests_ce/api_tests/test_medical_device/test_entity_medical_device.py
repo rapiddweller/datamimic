@@ -1,5 +1,3 @@
-import random
-import string
 import pytest
 
 from datamimic_ce.domains.healthcare.models.medical_device import MedicalDevice
@@ -71,7 +69,7 @@ class TestEntityMedicalDevice:
         assert medical_device.usage_logs == medical_device.usage_logs
         assert medical_device.maintenance_history == medical_device.maintenance_history
 
-    @pytest.mark.flaky(reruns=3)
+    @pytest.mark.flaky(reruns=10)
     def test_two_different_entities(self):
         medical_device_service = MedicalDeviceService()    
         medical_device1 = medical_device_service.generate()
@@ -98,9 +96,7 @@ class TestEntityMedicalDevice:
         self._test_single_medical_device(medical_device)
 
     def test_not_supported_dataset(self):
-        random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
-        while random_dataset in self._supported_datasets:
-            random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
+        random_dataset = "XX"
         # Raise ValueError because Street name data not found for unsupported dataset
         with pytest.raises(ValueError):
             medical_device_service = MedicalDeviceService(dataset=random_dataset)

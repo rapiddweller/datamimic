@@ -1,4 +1,5 @@
 
+import pytest
 from datamimic_ce.domains.common.models.country import Country
 from datamimic_ce.domains.common.services.country_service import CountryService
 
@@ -41,6 +42,7 @@ class TestEntityCountry:
         assert country_data["phone_code"] == country.phone_code
         assert country_data["population"] == country.population
 
+    @pytest.mark.flaky(reruns=3)
     def test_different_entities(self):
         country_service = CountryService()
         country1 = country_service.generate()

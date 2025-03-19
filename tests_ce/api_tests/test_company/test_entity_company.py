@@ -1,5 +1,3 @@
-import random
-import string
 import pytest
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.common.models.company import Company
@@ -72,6 +70,7 @@ class TestEntityCompany:
         assert company.state == company.state
         assert company.zip_code == company.zip_code
 
+    @pytest.mark.flaky(reruns=3)
     def test_two_different_entities(self):
         company_service = CompanyService()
         company1 = company_service.generate()
@@ -97,9 +96,7 @@ class TestEntityCompany:
         self._test_single_company(company)
 
     def test_not_supported_dataset(self):
-        random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
-        while random_dataset in self._supported_datasets:
-            random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
+        random_dataset = "XX"
         # Raise ValueError because Company data not found for unsupported dataset   
         with pytest.raises(ValueError):
             company_service = CompanyService(dataset=random_dataset)

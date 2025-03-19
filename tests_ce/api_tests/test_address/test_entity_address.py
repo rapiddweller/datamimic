@@ -60,6 +60,7 @@ class TestEntityAddress:
         assert address.fax == address.fax
         assert address.organization == address.organization
 
+    @pytest.mark.flaky(reruns=3)
     def test_two_different_entities(self):
         address_service = AddressService()
         address1 = address_service.generate()

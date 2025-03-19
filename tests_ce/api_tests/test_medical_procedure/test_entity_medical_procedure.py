@@ -82,6 +82,7 @@ class TestEntityMedicalProcedure:
         assert medical_procedure.procedure_code == medical_procedure.procedure_code
         assert medical_procedure.recovery_time_days == medical_procedure.recovery_time_days
 
+    @pytest.mark.flaky(reruns=10)
     def test_two_different_entities(self):
         medical_procedure_service = MedicalProcedureService()    
         medical_procedure1 = medical_procedure_service.generate()

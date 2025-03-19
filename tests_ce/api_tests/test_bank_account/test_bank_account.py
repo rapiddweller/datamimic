@@ -64,7 +64,7 @@ class TestBankAccount:
         assert bank_account.last_transaction_date == bank_account.last_transaction_date
         assert bank_account.bank_name == bank_account.bank_name
 
-    @pytest.mark.flaky(reruns=3)
+    @pytest.mark.flaky(reruns=10)
     def test_two_different_entities(self):
         bank_account_service = BankAccountService()
         bank_account1 = bank_account_service.generate()

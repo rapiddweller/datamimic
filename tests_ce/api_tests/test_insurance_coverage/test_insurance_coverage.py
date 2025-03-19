@@ -50,6 +50,19 @@ class TestInsuranceCoverage:
         assert insurance_coverage.min_coverage == insurance_coverage.min_coverage
         assert insurance_coverage.max_coverage == insurance_coverage.max_coverage
 
+    @pytest.mark.flaky(reruns=10)
+    def test_two_different_entities(self):
+        insurance_coverage_service = InsuranceCoverageService()
+        insurance_coverage1 = insurance_coverage_service.generate()
+        insurance_coverage2 = insurance_coverage_service.generate()
+        assert insurance_coverage1.name != insurance_coverage2.name 
+        assert insurance_coverage1.code != insurance_coverage2.code
+        assert insurance_coverage1.product_code != insurance_coverage2.product_code
+        assert insurance_coverage1.description != insurance_coverage2.description
+        assert insurance_coverage1.min_coverage != insurance_coverage2.min_coverage
+        assert insurance_coverage1.max_coverage != insurance_coverage2.max_coverage     
+        
+
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):
         insurance_coverage_service = InsuranceCoverageService(dataset=dataset)

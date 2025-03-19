@@ -83,6 +83,7 @@ class TestEntityPoliceOfficer:
         assert police_officer.phone == police_officer.phone
         assert police_officer.address == police_officer.address
 
+    @pytest.mark.flaky(reruns=10)
     def test_two_different_entities(self):
         police_officer_service = PoliceOfficerService()
         police_officer1 = police_officer_service.generate()

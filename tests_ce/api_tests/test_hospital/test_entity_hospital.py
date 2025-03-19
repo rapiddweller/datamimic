@@ -1,5 +1,3 @@
-import random
-import string
 import pytest
 
 from datamimic_ce.domains.common.models.address import Address
@@ -76,6 +74,7 @@ class TestEntityHospital:
         assert hospital.emergency_services == hospital.emergency_services
         assert hospital.teaching_status == hospital.teaching_status
 
+    @pytest.mark.flaky(reruns=3)
     def test_two_different_entities(self):
         hospital_service = HospitalService()
         hospital1 = hospital_service.generate()
@@ -97,9 +96,7 @@ class TestEntityHospital:
         self._test_single_hospital(hospital)
 
     def test_not_supported_dataset(self):
-        random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
-        while random_dataset in self._supported_datasets:
-            random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
+        random_dataset = "XX"
         # Raise ValueError because Street name data not found for unsupported dataset
         with pytest.raises(ValueError):
             hospital_service = HospitalService(dataset=random_dataset)

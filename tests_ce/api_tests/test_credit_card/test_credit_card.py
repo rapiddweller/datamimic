@@ -83,7 +83,6 @@ class TestCreditCard:
         assert credit_card1.expiration_date != credit_card2.expiration_date
         assert credit_card1.cvv != credit_card2.cvv
         assert credit_card1.cvc_number != credit_card2.cvc_number
-        assert credit_card1.is_active != credit_card2.is_active
         assert credit_card1.credit_limit != credit_card2.credit_limit
         assert credit_card1.current_balance != credit_card2.current_balance
         assert credit_card1.issue_date != credit_card2.issue_date

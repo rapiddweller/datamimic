@@ -51,6 +51,18 @@ class TestInsuranceCompany:
         assert insurance_company.headquarters == insurance_company.headquarters
         assert insurance_company.website == insurance_company.website
 
+    @pytest.mark.flaky(reruns=3)
+    def test_two_different_entities(self):
+        insurance_company_service = InsuranceCompanyService()
+        insurance_company1 = insurance_company_service.generate()
+        insurance_company2 = insurance_company_service.generate()
+        assert insurance_company1.id != insurance_company2.id
+        assert insurance_company1.name != insurance_company2.name   
+        assert insurance_company1.code != insurance_company2.code
+        assert insurance_company1.founded_year != insurance_company2.founded_year
+        assert insurance_company1.headquarters != insurance_company2.headquarters
+        assert insurance_company1.website != insurance_company2.website
+
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):
         insurance_company_service = InsuranceCompanyService(dataset=dataset)

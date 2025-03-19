@@ -49,6 +49,18 @@ class TestInsuranceProduct:
         assert insurance_product.description == insurance_product.description
         assert insurance_product.coverages == insurance_product.coverages
 
+    @pytest.mark.flaky(reruns=3)
+    def test_two_different_entities(self):
+        insurance_product_service = InsuranceProductService()
+        insurance_product1 = insurance_product_service.generate()
+        insurance_product2 = insurance_product_service.generate()
+        assert insurance_product1.id != insurance_product2.id   
+        assert insurance_product1.type != insurance_product2.type
+        assert insurance_product1.code != insurance_product2.code
+        assert insurance_product1.description != insurance_product2.description
+        assert insurance_product1.coverages != insurance_product2.coverages     
+        
+
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):
         insurance_product_service = InsuranceProductService(dataset=dataset)

@@ -30,7 +30,7 @@ def property_cache(func: Callable) -> Callable:
 
     @functools.wraps(func)
     def wrapper(self):
-        if self.field_cache.get(cache_name) is None:
+        if cache_name not in self.field_cache:
             # Generate a new value and store it in the cache
             value = func(self)
             self.field_cache[cache_name] = value

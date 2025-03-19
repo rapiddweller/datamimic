@@ -1,6 +1,4 @@
 import datetime
-import random
-import string
 import pytest
 
 from datamimic_ce.domains.common.models.person import Person
@@ -116,9 +114,7 @@ class TestEntityPatient:
         self._test_single_patient(patient)
 
     def test_not_supported_dataset(self):
-        random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
-        while random_dataset in self._supported_datasets:
-            random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
+        random_dataset = "XX"
         # Raise ValueError because Street name data not found for unsupported dataset
         with pytest.raises(ValueError):
             patient_service = PatientService(dataset=random_dataset)

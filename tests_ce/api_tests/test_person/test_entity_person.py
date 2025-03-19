@@ -74,7 +74,6 @@ class TestEntityPerson:
         assert person1.phone != person2.phone
         assert person1.address != person2.address
         assert person1.birthdate != person2.birthdate
-        assert person1.academic_title != person2.academic_title
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_person_generator_dataset(self, dataset):

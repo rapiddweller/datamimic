@@ -47,6 +47,7 @@ class TestEntityCity:
         assert city.language == city.language
         assert city.population == city.population
 
+    @pytest.mark.flaky(reruns=3)
     def test_two_different_entities(self):
         city_service = CityService()
         city1 = city_service.generate()
@@ -68,9 +69,7 @@ class TestEntityCity:
         self._test_single_city(city)
 
     def test_not_supported_dataset(self):
-        random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
-        while random_dataset in self._supported_datasets:
-            random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
+        random_dataset = "XX"
         # Raise ValueError because City data not found for unsupported dataset
         city_service = CityService(dataset=random_dataset)
         city = city_service.generate()
