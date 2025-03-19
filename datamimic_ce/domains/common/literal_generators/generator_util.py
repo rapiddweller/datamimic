@@ -16,29 +16,16 @@ from datamimic_ce.domains.common.literal_generators.academic_title_generator imp
 from datamimic_ce.domains.common.literal_generators.birthdate_generator import BirthdateGenerator
 from datamimic_ce.domains.common.literal_generators.boolean_generator import BooleanGenerator
 
-# from datamimic_ce.domains.common.literal_generators.business_generators import (
-#     CreditCardGenerator,
-#     CurrencyGenerator,
-#     JobTitleGenerator,
-# )
-# from datamimic_ce.domains.common.literal_generators.cnpj_generator import CNPJGenerator
 from datamimic_ce.domains.common.literal_generators.cnpj_generator import CNPJGenerator
 from datamimic_ce.domains.common.literal_generators.color_generators import ColorGenerator
 from datamimic_ce.domains.common.literal_generators.company_name_generator import CompanyNameGenerator
 
-# from datamimic_ce.domains.common.literal_generators.cpf_generator import CPFGenerator
 from datamimic_ce.domains.common.literal_generators.cpf_generator import CPFGenerator
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 from datamimic_ce.domains.common.literal_generators.department_name_generator import DepartmentNameGenerator
 
-# from datamimic_ce.domains.common.literal_generators.document_generators import (
-#     FilePathGenerator,
-#     ISBNGenerator,
-#     MIMETypeGenerator,
-# )
 from datamimic_ce.domains.common.literal_generators.domain_generator import DomainGenerator
 
-# from datamimic_ce.domains.common.literal_generators.ean_generator import EANGenerator
 from datamimic_ce.domains.common.literal_generators.ean_generator import EANGenerator
 from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
 from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
@@ -46,18 +33,6 @@ from datamimic_ce.domains.common.literal_generators.float_generator import Float
 from datamimic_ce.domains.common.literal_generators.gender_generator import GenderGenerator
 from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
 
-# from datamimic_ce.domains.common.literal_generators.healthcare_generators import (
-#     AllergyGenerator,
-#     DiagnosisGenerator,
-#     ImmunizationGenerator,
-#     LabResultGenerator,
-#     MedicalAppointmentGenerator,
-#     MedicalProcedureGenerator,
-#     MedicationGenerator,
-#     PatientHistoryGenerator,
-#     SymptomGenerator,
-#     VitalSignsGenerator,
-# )
 from datamimic_ce.domains.common.literal_generators.hash_generator import HashGenerator
 from datamimic_ce.domains.common.literal_generators.increment_generator import IncrementGenerator
 from datamimic_ce.domains.common.literal_generators.nobility_title_generator import NobilityTitleGenerator
@@ -65,25 +40,15 @@ from datamimic_ce.domains.common.literal_generators.password_generator import Pa
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.common.literal_generators.sector_generator import SectorGenerator
 
-# from datamimic_ce.domains.common.literal_generators.security_generators import (
-#     HashGenerator,
-#     MnemonicPhraseGenerator,
-#     PasswordGenerator,
-#     TokenGenerator,
-#     UUIDGenerator,
-# )
 from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
 from datamimic_ce.domains.common.literal_generators.ssn_generator import SSNGenerator
 
-# from datamimic_ce.domains.common.literal_generators.ssn_generator import SSNGenerator
 from datamimic_ce.domains.common.literal_generators.street_name_generator import StreetNameGenerator
 
-# from datamimic_ce.domains.common.literal_generators.text_generators import ParagraphGenerator
 from datamimic_ce.domains.common.literal_generators.token_generator import TokenGenerator
 from datamimic_ce.domains.common.literal_generators.url_generator import UrlGenerator
 from datamimic_ce.domains.common.literal_generators.uuid_generator import UUIDGenerator
 
-# from datamimic_ce.domains.healthcare.generators.healthcare_generators import DiagnosisGenerator
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.statement import Statement
 
@@ -142,12 +107,6 @@ class GeneratorUtil:
             # Visual and Design
             "ColorGenerator": ColorGenerator,
             # Healthcare
-            # "MedicalProcedureGenerator": MedicalProcedureGenerator,
-            # "MedicationGenerator": MedicationGenerator,
-            # "PatientHistoryGenerator": PatientHistoryGenerator,
-            # "SymptomGenerator": SymptomGenerator,
-            # "VitalSignsGenerator": VitalSignsGenerator,
-            # Special
             "SequenceTableGenerator": SequenceTableGenerator,
         }
 

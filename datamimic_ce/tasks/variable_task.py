@@ -260,23 +260,15 @@ class VariableTask(KeyVariableTask):
                 "CreditCard": "finance.services.CreditCardService",
                 "Bank": "finance.services.BankService",
                 "BankAccount": "finance.services.BankAccountService",
-                # "Payment": "finance.models.payment.Payment",
-                # "Invoice": "finance.models.invoice.Invoice",
-                # "Transaction": "finance.models.transaction.Transaction",
-                # "DigitalWallet": "finance.models.digital_wallet.DigitalWallet",
                 # Ecommerce domain entities
                 "Product": "ecommerce.services.ProductService",
                 "Order": "ecommerce.services.OrderService",
-                # "UserAccount": "ecommerce.models.user_account.UserAccount",
-                # "CRM": "ecommerce.models.crm.CRM",
                 # Healthcare domain entities
                 "Patient": "healthcare.services.PatientService",
                 "Doctor": "healthcare.services.DoctorService",
                 "Hospital": "healthcare.services.HospitalService",
                 "MedicalDevice": "healthcare.services.MedicalDeviceService",
                 "MedicalProcedure": "healthcare.services.MedicalProcedureService",
-                # "LabTest": "healthcare.models.lab_test.LabTest",
-                # "ClinicalTrial": "healthcare.models.clinical_trial.ClinicalTrial",
                 # Insurance domain entities (new domain)
                 "InsuranceCompany": "insurance.services.InsuranceCompanyService",
                 "InsurancePolicy": "insurance.services.InsurancePolicyService",
