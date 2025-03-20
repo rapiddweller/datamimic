@@ -5,6 +5,10 @@ hide:
 
 ## Upcoming Changes
 
+### Features
+
+* ✨ **constraint** function: A new tags `<constraint>` and `<rule>` that help filter source data before generate process
+
 ### Refactors
 
 * 🔥 Downgrade version of some library dill==0.3.9 to dill>=0.3.0, numpy==2.2.2 to numpy>=1.26.3, psutil>=6.1.0 to psutil>=5.9.5
