@@ -1,0 +1,58 @@
+<setup>
+    <!-- Hospital Entity -->
+    <echo>Running HospitalEntity</echo>
+    <generate name="hospitals" count="10" target="CSV">
+        <variable name="hospital" entity="Hospital" />
+        <key name="hospital_id" script="hospital.hospital_id" />
+        <key name="name" script="hospital.name" />
+        <key name="type" script="hospital.type" />
+        <!-- <key name="capacity" script="hospital.capacity" /> -->
+        <!-- <key name="street" script="hospital.street" /> -->
+        <!-- <key name="city" script="hospital.city" /> -->
+        <!-- <key name="state" script="hospital.state" />     -->
+        <!-- <key name="zip_code" script="hospital.zip_code" /> -->
+        <!-- <key name="country" script="hospital.country" /> -->
+        <key name="phone" script="hospital.phone" />
+        <key name="email" script="hospital.email" />
+        <key name="website" script="hospital.website" />
+        <key name="emergency_services" script="hospital.emergency_services" />
+        <array name="accreditation" script="hospital.accreditation" />
+        <key name="founding_year" script="hospital.founding_year" />
+        <!-- <nestedKey name="departments" script="hospital.departments" /> -->
+        <!-- <nestedKey name="specialties" script="hospital.specialties" /> -->
+        <!-- <nestedKey name="services" script="hospital.services" /> -->
+        <!-- <key name="medical_director" script="hospital.medical_director" /> -->
+        <!-- <key name="insurance_accepted" script="hospital.insurance_accepted" /> -->
+        <!-- <key name="rating" script="hospital.rating" /> -->
+    </generate>
+
+    <!-- US Hospital Entity -->
+    <echo>Running USHospitalEntity</echo>
+    <generate name="us_hospitals" count="5" target="CSV">
+        <variable name="hospital" entity="Hospital" />
+        <key name="hospital_id" script="hospital.hospital_id" />
+        <key name="name" script="hospital.name" />
+        <key name="type" script="hospital.type" />
+        <!-- <key name="capacity" script="hospital.capacity" /> -->
+        <!-- <key name="street" script="hospital.street" /> -->
+        <!-- <key name="city" script="hospital.city" /> -->
+        <!-- <key name="state" script="hospital.state" /> -->
+        <!-- <key name="zip_code" script="hospital.zip_code" /> -->
+        <!-- <key name="country" script="hospital.country" /> -->
+        <key name="phone" script="hospital.phone" />
+        <key name="email" script="hospital.email" />
+        <key name="website" script="hospital.website" />
+        <key name="emergency_services" script="hospital.emergency_services" />
+        <array name="accreditation" script="hospital.accreditation" />
+        <key name="founding_year" script="hospital.founding_year" />
+        <!-- <nestedKey name="departments" script="hospital.departments" /> -->
+        <!-- <nestedKey name="specialties" script="hospital.specialties" /> -->
+        <!-- <nestedKey name="services" script="hospital.services" /> -->
+        <!-- <key name="ceo" script="hospital.ceo" /> -->
+        <!-- <key name="medical_director" script="hospital.medical_director" /> -->
+        <!-- <key name="insurance_accepted" script="hospital.insurance_accepted" /> -->
+        <!-- <key name="rating" script="hospital.rating" /> -->
+        <!-- <key name="medicare_provider_number" script="hospital.medicare_provider_number" /> -->
+        <!-- <key name="trauma_level" script="hospital.trauma_level" /> -->
+    </generate>
+</setup> 

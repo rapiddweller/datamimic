@@ -1,0 +1,18 @@
+<setup multiprocessing="0">
+    <generate name="administration_office" count="5" target="ConsoleExporter">
+        <variable name="administration_office" entity="AdministrationOffice" />
+        <key name="office_id" script="administration_office.office_id" />
+        <key name="name" script="administration_office.name" />
+        <key name="type" script="administration_office.type" />
+        <key name="address" script="administration_office.address" />
+        <key name="email" script="administration_office.email" />
+        <key name="phone" script="administration_office.phone" />
+        <variable name="administration_office1" entity="AdministrationOffice" />
+        <key name="office_id1" script="administration_office1.office_id" />
+        <key name="name1" script="administration_office1.name" />
+        <key name="type1" script="administration_office1.type" />
+        <key name="address1" script="administration_office1.address" />
+        <key name="email1" script="administration_office1.email" />
+        <key name="phone1" script="administration_office1.phone" />
+    </generate>
+</setup>

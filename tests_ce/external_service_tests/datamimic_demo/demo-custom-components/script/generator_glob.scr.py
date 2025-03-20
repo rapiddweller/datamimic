@@ -11,30 +11,29 @@ import uuid
 
 from faker import Faker
 
-from datamimic_ce.generators.generator import Generator
+from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
 
-
-class GlobRandomHexColorGenerator(Generator):
+class GlobRandomHexColorGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         return f"#{random.randint(0, 0xFFFFFF):06x}"
 
 
-class GlobRandomIPAddressGenerator(Generator):
+class GlobRandomIPAddressGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         return ".".join(map(str, (random.randint(0, 255) for _ in range(4))))
 
 
-class GlobRandomUUIDGenerator(Generator):
+class GlobRandomUUIDGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         return str(uuid.uuid4())
 
 
-class GlobRandomMACAddressGenerator(Generator):
+class GlobRandomMACAddressGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         return ":".join([f"{random.randint(0, 255):02x}" for _ in range(6)])
 
 
-class GlobRandomISBNGenerator(Generator):
+class GlobRandomISBNGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         prefix = "978"
         group = random.randint(0, 1)
@@ -46,14 +45,14 @@ class GlobRandomISBNGenerator(Generator):
         return f"{isbn}-{check_digit}"
 
 
-class GlobRandomCoordinatesGenerator(Generator):
+class GlobRandomCoordinatesGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         latitude = random.uniform(-90, 90)
         longitude = random.uniform(-180, 180)
         return f"{latitude},{longitude}"
 
 
-class GlobRandomLicensePlateGenerator(Generator):
+class GlobRandomLicensePlateGenerator(BaseLiteralGenerator):
     def generate(self) -> str:
         import string
 
@@ -62,7 +61,7 @@ class GlobRandomLicensePlateGenerator(Generator):
         return f"{letters}-{numbers}"
 
 
-class GlobRandomPasswordGenerator(Generator):
+class GlobRandomPasswordGenerator(BaseLiteralGenerator):
     def __init__(self, length: int = 12):
         self.length = length
 
@@ -71,7 +70,7 @@ class GlobRandomPasswordGenerator(Generator):
         return "".join(random.choices(characters, k=self.length))
 
 
-class GlobRandomMovieTitleGenerator(Generator):
+class GlobRandomMovieTitleGenerator(BaseLiteralGenerator):
     def __init__(self):
         self.fake = Faker()
 
@@ -79,7 +78,7 @@ class GlobRandomMovieTitleGenerator(Generator):
         return self.fake.catch_phrase()
 
 
-class GlobRandomUserAgentGenerator(Generator):
+class GlobRandomUserAgentGenerator(BaseLiteralGenerator):
     def __init__(self):
         self.fake = Faker()
 

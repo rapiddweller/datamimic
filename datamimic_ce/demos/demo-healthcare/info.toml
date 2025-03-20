@@ -1,0 +1,6 @@
+title = "Demo Healthcare"
+description = "Explore available entities and generators."
+icon = "generator"
+tags = ["#generator", "#datasets", "#domains", "#healthcare"]
+projectName = "demo-healthcare"
+id = "demo-healthcare"

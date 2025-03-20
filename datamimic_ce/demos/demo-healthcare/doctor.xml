@@ -1,0 +1,48 @@
+<setup>
+    <!-- Doctor Entity -->
+    <echo>Running DoctorEntity</echo>
+    <generate name="doctors" count="10" target="CSV">
+        <variable name="doctor" entity="Doctor" />
+        <key name="doctor_id" script="doctor.doctor_id" />
+        <key name="first_name" script="doctor.first_name" />
+        <key name="last_name" script="doctor.last_name" />
+        <key name="specialty" script="doctor.specialty" />
+        <key name="license_number" script="doctor.license_number" />
+        <!-- <key name="hospital_affiliation" script="doctor.hospital_affiliation" /> -->
+        <key name="email" script="doctor.email" />
+        <!-- <key name="contact_number" script="doctor.contact_number" /> -->
+        <!-- <variable name="office_address" script="doctor.office_address" /> -->
+        <!-- <key name="street" script="office_address.street" />
+        <key name="city" script="office_address.city" />
+        <key name="state" script="office_address.state" />
+        <key name="zip_code" script="office_address.zip_code" />
+        <key name="country" script="office_address.country" /> -->
+        <key name="npi_number" script="doctor.npi_number" />
+        <!-- <nestedKey name="education" script="doctor.education" /> -->
+        <nestedKey name="certifications" script="doctor.certifications" />
+        <!-- <nestedKey name="languages" script="doctor.languages" /> -->
+        <!-- <nestedKey name="schedule" script="doctor.schedule" /> -->
+        <key name="accepting_new_patients" script="doctor.accepting_new_patients" />
+    </generate>
+
+    <!-- UK Doctor Entity -->
+    <echo>Running UK DoctorEntity</echo>
+    <generate name="uk_doctors" count="5" target="CSV">
+        <variable name="doctor" entity="Doctor" locale="en_GB" />
+        <key name="doctor_id" script="doctor.doctor_id" />
+        <key name="first_name" script="doctor.first_name" />
+        <key name="last_name" script="doctor.last_name" />
+        <key name="specialty" script="doctor.specialty" />
+        <key name="license_number" script="doctor.license_number" />
+        <!-- <key name="hospital_affiliation" script="doctor.hospital_affiliation" /> -->
+        <!-- <variable name="office_address" script="doctor.office_address" /> -->
+        <!-- <key name="street" script="office_address.street" />
+        <key name="city" script="office_address.city" />
+        <key name="state" script="office_address.state" />
+        <key name="zip_code" script="office_address.zip_code" />
+        <key name="country" script="office_address.country" /> -->
+        <key name="npi_number" script="doctor.npi_number" />
+        <!-- <nestedKey name="education" script="doctor.education" /> -->
+        <nestedKey name="certifications" script="doctor.certifications" />
+    </generate>
+</setup> 

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup>
+    <echo>DATAMIMIC Domain-Based Architecture Demo</echo>
+    <echo>This demo showcases the new domain-based architecture with entities from multiple domains</echo>
+    
+    <!-- Generate entities from Common Domain -->
+    <echo>Generating Common Domain Entities</echo>
+    <generate name="Companies" count="3">
+        <variable name="company" entity="Company" dataset="US" />
+        <key name="id" script="company.id" />
+        <key name="name" script="company.full_name" />
+        <key name="sector" script="company.sector" />
+        <key name="address" script="company.street + ' ' + company.house_number + ', ' + company.city + ', ' + company.zip_code" />
+        <key name="country" script="company.country" />
+        <key name="contact" script="company.email" />
+    </generate>
+    
+    <!-- Generate entities from Healthcare Domain -->
+    <echo>Generating Healthcare Domain Entities</echo>
+    <generate name="Doctors" count="3">
+        <variable name="doctor" entity="Doctor" dataset="US" />
+        <key name="id" script="doctor.id" />
+        <key name="name" script="doctor.full_name" />
+        <key name="specialty" script="doctor.specialty" />
+        <key name="license" script="doctor.license_number" />
+        <key name="hospital" script="doctor.hospital_name" />
+        <key name="contact" script="doctor.email" />
+    </generate>
+    
+    <!-- Generate entities from Ecommerce Domain -->
+    <echo>Generating Ecommerce Domain Entities</echo>
+    <generate name="Products" count="5">
+        <variable name="product" entity="Product" dataset="US" />
+        <key name="id" script="product.id" />
+        <key name="name" script="product.name" />
+        <key name="description" script="product.description" />
+        <key name="category" script="product.category" />
+        <key name="price" script="product.price" />
+        <key name="sku" script="product.sku" />
+    </generate>
+    
+    <!-- Combine different domains in a related example -->
+    <echo>Generating Cross-Domain Example</echo>
+    <generate name="MedicalSuppliers" count="2">
+        <variable name="company" entity="Company" dataset="US" />
+        <variable name="device" entity="MedicalDevice" dataset="US" />
+        <key name="supplier_id" script="company.id" />
+        <key name="supplier_name" script="company.full_name" />
+        <key name="supplier_contact" script="company.email" />
+        <key name="device_id" script="device.id" />
+        <key name="device_name" script="device.name" />
+        <key name="device_type" script="device.device_type" />
+        <key name="device_price" script="device.price" />
+        <key name="device_manufacturer" script="device.manufacturer" />
+    </generate>
+</setup>

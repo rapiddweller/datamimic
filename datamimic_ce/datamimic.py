@@ -88,7 +88,7 @@ class DataMimic:
             if result:
                 return result
         return None
-    
+
     def _validate_xml_model(self, root_stmt: SetupStatement, factory_config: FactoryConfig) -> None:
         """
         Validate XML model for factory mode
@@ -98,7 +98,6 @@ class DataMimic:
         # Validate root number of processes
         if root_stmt.num_process is not None and root_stmt.num_process > 1:
             logger.warning("Multiple processes are not supported in factory mode")
-
 
         # Get entity statement by entity name
         entity_stmt = None
@@ -120,8 +119,7 @@ class DataMimic:
         # Validate targets
         if len(entity_stmt.targets) > 1:
             logger.warning("Targets are not supported in factory mode")
-            entity_stmt.targets = set()    
-
+            entity_stmt.targets = set()
 
     def parse_and_execute(self) -> None:
         """Parse root XML descriptor file and execute."""

@@ -1,0 +1,16 @@
+position,code,description,level,weight
+Agency Director,DIR,The head of a government agency who provides leadership and executive oversight for the entire organization,7,0.01
+Deputy Director,DEP_DIR,Senior executive who reports directly to the Agency Director and may oversee major divisions,6,0.02
+Division Chief,DIV_CHIEF,Executive who manages a major division within an agency,5,0.03
+Department Head,DEPT_HEAD,Manager who oversees a specific department within a division,4,0.05
+Program Manager,PROG_MGR,Manager responsible for overseeing specific programs or initiatives,3,0.08
+Senior Analyst,SR_ANLST,Experienced professional who analyzes data and provides recommendations for agency programs and policies,3,0.10
+Policy Analyst,POL_ANLST,Professional who analyzes and develops policy recommendations,2,0.10
+Administrative Officer,ADMIN_OFF,Manager responsible for administrative functions like budget and personnel,3,0.05
+Budget Analyst,BUDG_ANLST,Professional who analyzes and manages budgetary matters for the agency,2,0.08
+HR Specialist,HR_SPEC,Professional who handles human resources functions like recruitment and employee relations,2,0.07
+IT Specialist,IT_SPEC,Professional who supports and maintains information technology systems,2,0.08
+Public Affairs Specialist,PA_SPEC,Professional who manages communications and public relations,2,0.05
+Legal Counsel,LEGAL,Attorney who provides legal advice and representation for the agency,3,0.04
+Administrative Assistant,ADMIN_ASST,Support staff who provides administrative assistance to agency personnel,1,0.12
+Clerk,CLERK,Support staff who performs routine administrative and clerical tasks,1,0.12

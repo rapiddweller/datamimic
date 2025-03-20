@@ -1,0 +1,33 @@
+<setup>
+    <!-- Clinical Trial Entity -->
+    <echo>Running ClinicalTrialEntity</echo>
+    <generate name="clinical_trials" count="10" target="CSV">
+        <variable name="trial" entity="ClinicalTrial" />
+        <key name="trial_id" script="trial.trial_id" />
+        <key name="nct_id" script="trial.nct_id" />
+        <key name="irb_number" script="trial.irb_number" />
+        <key name="protocol_id" script="trial.protocol_id" />
+        <key name="eudract_number" script="trial.eudract_number" />
+        <key name="title" script="trial.title" />
+        <key name="description" script="trial.description" />
+        <key name="brief_summary" script="trial.brief_summary" />
+        <key name="phase" script="trial.phase" />
+        <key name="status" script="trial.status" />
+        <key name="start_date" script="trial.start_date" />
+        <key name="end_date" script="trial.end_date" />
+        <key name="sponsor" script="trial.sponsor" />
+        <key name="condition" script="trial.condition" />
+        <key name="lead_investigator" script="trial.lead_investigator" />
+        <key name="study_type" script="trial.study_type" />
+        <nestedKey name="study_design" script="trial.study_design" />
+        <key name="gender" script="trial.gender" />
+        <nestedKey name="age_range" script="trial.age_range" />
+        <key name="enrollment" script="trial.enrollment" />
+        <nestedKey name="eligibility_criteria" script="trial.eligibility_criteria" />
+        <nestedKey name="locations" script="trial.locations" />
+        <nestedKey name="interventions" script="trial.interventions" />
+        <nestedKey name="primary_outcomes" script="trial.primary_outcomes" />
+        <nestedKey name="secondary_outcomes" script="trial.secondary_outcomes" />
+        <key name="results_summary" script="trial.results_summary" />
+    </generate>
+</setup> 

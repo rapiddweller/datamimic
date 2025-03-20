@@ -1,0 +1,20 @@
+product_code,name,code,description,min_coverage,max_coverage,weight
+AUTO,Liability,LIAB,Covers damages to other people and property,15000,1000000,0.3
+AUTO,Collision,COLL,Covers damage to your vehicle from an accident,5000,100000,0.25
+AUTO,Comprehensive,COMP,Covers damages not caused by a collision,5000,100000,0.2
+AUTO,Uninsured Motorist,UMOT,Covers damages caused by uninsured drivers,10000,500000,0.15
+AUTO,Medical Payments,MEDR,Covers medical expenses from an accident,1000,50000,0.1
+HOME,Dwelling Coverage,DWEL,Covers the structure of your home,100000,2000000,0.3
+HOME,Personal Property,PROP,Covers personal belongings,50000,1000000,0.25
+HOME,Liability,LIAB,Covers legal expenses if someone is injured on your property,100000,1000000,0.2
+HOME,Additional Living Expenses,ADDL,Covers costs if you can't live in your home,10000,200000,0.15
+HOME,Medical Payments,MEDR,Covers medical expenses for guests,1000,10000,0.1
+LIFE,Term Life,TERM,Coverage for a specific period,25000,2000000,0.4
+LIFE,Whole Life,WHOL,Lifetime coverage with cash value,50000,5000000,0.3
+LIFE,Universal Life,UNIV,Flexible life insurance with investment,100000,10000000,0.2
+LIFE,Variable Life,VARL,Life insurance with investment options,100000,5000000,0.1
+HLTH,Hospitalization,HOSP,Covers hospital stays,5000,unlimited,0.3
+HLTH,Prescription Drugs,PRES,Covers prescription medications,500,unlimited,0.25
+HLTH,Outpatient Care,OUTP,Covers outpatient services,1000,unlimited,0.2
+HLTH,Emergency Care,EMER,Covers emergency services,2000,unlimited,0.15
+HLTH,Preventive Care,PREV,Covers wellness and preventive services,500,10000,0.1

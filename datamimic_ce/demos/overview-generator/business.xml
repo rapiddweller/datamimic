@@ -3,7 +3,7 @@
 
     <!-- Payment Information -->
     <generate name="payment_info" count="10">
-        <key name="credit_card" generator="CreditCardGenerator()" />
+        <variable name="credit_card" generator="CreditCardGenerator()" />
         <key name="currency_code" generator="CurrencyGenerator(code_only=True)" />
         <key name="currency_amount" generator="CurrencyGenerator(code_only=False)" />
     </generate>

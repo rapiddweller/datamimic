@@ -1,0 +1,22 @@
+name,department_id,jurisdiction,address,city,state,phone,website,weight
+New York Police Department,NYPD-01,City,"1 Police Plaza, New York, NY 10038","New York","NY","212-555-1000","www.nyc.gov/nypd",0.12
+Los Angeles Police Department,LAPD-02,City,"100 W. 1st Street, Los Angeles, CA 90012","Los Angeles","CA","213-555-2000","www.lapdonline.org",0.10
+Chicago Police Department,CPD-03,City,"3510 S. Michigan Ave, Chicago, IL 60653","Chicago","IL","312-555-3000","www.chicagopolice.org",0.09
+Houston Police Department,HPD-04,City,"1200 Travis St, Houston, TX 77002","Houston","TX","713-555-4000","www.houstonpolice.org",0.08
+Philadelphia Police Department,PPD-05,City,"750 Race St, Philadelphia, PA 19106","Philadelphia","PA","215-555-5000","www.phillypolice.com",0.07
+Phoenix Police Department,PHX-06,City,"620 W Washington St, Phoenix, AZ 85003","Phoenix","AZ","602-555-6000","www.phoenix.gov/police",0.06
+San Antonio Police Department,SAPD-07,City,"315 S Santa Rosa, San Antonio, TX 78207","San Antonio","TX","210-555-7000","www.sanantonio.gov/sapd",0.05
+San Diego Police Department,SDPD-08,City,"1401 Broadway, San Diego, CA 92101","San Diego","CA","619-555-8000","www.sandiego.gov/police",0.05
+Dallas Police Department,DPD-09,City,"1400 S Lamar St, Dallas, TX 75215","Dallas","TX","214-555-9000","www.dallaspolice.net",0.05
+San Jose Police Department,SJPD-10,City,"201 W Mission St, San Jose, CA 95110","San Jose","CA","408-555-1100","www.sjpd.org",0.04
+Austin Police Department,APD-11,City,"715 E 8th St, Austin, TX 78701","Austin","TX","512-555-1200","www.austintexas.gov/police",0.04
+Jacksonville Sheriff's Office,JSO-12,County,"501 E Bay St, Jacksonville, FL 32202","Jacksonville","FL","904-555-1300","www.jaxsheriff.org",0.03
+Fort Worth Police Department,FWPD-13,City,"505 W Felix St, Fort Worth, TX 76115","Fort Worth","TX","817-555-1400","www.fortworthpd.com",0.03
+Columbus Division of Police,CDP-14,City,"120 Marconi Blvd, Columbus, OH 43215","Columbus","OH","614-555-1500","www.columbus.gov/police",0.03
+Charlotte-Mecklenburg Police,CMPD-15,City,"601 E Trade St, Charlotte, NC 28202","Charlotte","NC","704-555-1600","www.cmpd.org",0.03
+Indianapolis Metropolitan Police,IMPD-16,City,"50 N Alabama St, Indianapolis, IN 46204","Indianapolis","IN","317-555-1700","www.indy.gov/impd",0.03
+Seattle Police Department,SPD-17,City,"610 5th Ave, Seattle, WA 98124","Seattle","WA","206-555-1800","www.seattle.gov/police",0.02
+Denver Police Department,DPD-18,City,"1331 Cherokee St, Denver, CO 80204","Denver","CO","720-555-1900","www.denvergov.org/police",0.02
+Washington DC Metropolitan Police,MPD-19,City,"300 Indiana Ave NW, Washington, DC 20001","Washington","DC","202-555-2100","www.mpdc.dc.gov",0.02
+Boston Police Department,BPD-20,City,"1 Schroeder Plaza, Boston, MA 02120","Boston","MA","617-555-2200","www.bpdnews.com",0.02
+Las Vegas Metropolitan Police,LVMPD-21,County,"400 S Martin L King Blvd, Las Vegas, NV 89106","Las Vegas","NV","702-555-2300","www.lvmpd.com",0.02

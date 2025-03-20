@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.generators.company_name_generator import CompanyNameGenerator
+from datamimic_ce.domains.common.literal_generators.company_name_generator import CompanyNameGenerator
 
 
 def test_company_name_generator():

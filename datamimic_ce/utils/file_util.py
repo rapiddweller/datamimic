@@ -6,7 +6,6 @@
 
 import csv
 import json
-import random
 import shutil
 from pathlib import Path
 
@@ -105,33 +104,37 @@ class FileUtil:
         :param encoding: encoding of the CSV file
         :return: a tuple containing a dictionary of headers and a list of tuples with string datas
         """
-        header_dict = {}
-        with file_path.open("r", newline="", encoding=encoding) as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=delimiter)
-            header = next(csvreader)  # Store the header
-            for idx, column in enumerate(header):
-                header_dict[column] = idx
-            data = [tuple(row) for row in csvreader]
-        return header_dict, data
+        try:
+            header_dict = {}
+            with file_path.open("r", newline="", encoding=encoding) as csvfile:
+                csvreader = csv.reader(csvfile, delimiter=delimiter)
+                header = next(csvreader)  # Store the header
+                for idx, column in enumerate(header):
+                    modified_column = column.replace("\ufeff", "")
+                    header_dict[modified_column] = idx
+                data = [tuple(row) for row in csvreader]
+            return header_dict, data
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"CSV file not found: {file_path}") from e
 
-    @staticmethod
-    def read_csv_to_dict_of_tuples_without_header_and_fill_missing_value(
-        file_path: Path, encoding="utf-8"
-    ) -> list[tuple]:
-        """
-        Read CSV to data list and replace missing value as None
-        :param file_path: Path to the CSV file
-        :param encoding: encoding of the CSV file
-        :return: a list of tuples containing the string data
-        """
-        data = []
-        with file_path.open("r", newline="", encoding=encoding) as csvfile:
-            csvreader = csv.reader(csvfile)
-            for row in csvreader:
-                # Replace empty strings with None
-                row_with_none = [None if value == "" else value for value in row]
-                data.append(tuple(row_with_none))
-        return data
+    # @staticmethod
+    # def read_csv_to_dict_of_tuples_without_header_and_fill_missing_value(
+    #     file_path: Path, encoding="utf-8"
+    # ) -> list[tuple]:
+    #     """
+    #     Read CSV to data list and replace missing value as None
+    #     :param file_path: Path to the CSV file
+    #     :param encoding: encoding of the CSV file
+    #     :return: a list of tuples containing the string data
+    #     """
+    #     data = []
+    #     with file_path.open("r", newline="", encoding=encoding) as csvfile:
+    #         csvreader = csv.reader(csvfile)
+    #         for row in csvreader:
+    #             # Replace empty strings with None
+    #             row_with_none = [None if value == "" else value for value in row]
+    #             data.append(tuple(row_with_none))
+    #     return data
 
     @staticmethod
     def read_csv_to_list_of_tuples_without_header(
@@ -144,24 +147,27 @@ class FileUtil:
         :param encoding: encoding of the CSV file
         :return: a list of tuples containing the string data
         """
-        with file_path.open("r", newline="", encoding=encoding) as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=delimiter)
-            data = [tuple(row) for row in csvreader]
-        return data
+        try:
+            with file_path.open("r", newline="", encoding=encoding) as csvfile:
+                csvreader = csv.reader(csvfile, delimiter=delimiter)
+                data = [tuple(row) for row in csvreader]
+            return data
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"CSV file not found: {file_path}") from e
 
-    @staticmethod
-    def read_csv_having_single_column(file_path: Path, delimiter: str = ",", encoding="utf-8") -> list:
-        """
-        Read CSV having only 1 column
-        :param file_path:
-        :param delimiter:
-        :param encoding:
-        :return: a list of string datas
-        """
-        with file_path.open("r", newline="", encoding=encoding) as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=delimiter)
-            data = [row[0] for row in csvreader]
-        return data
+    # @staticmethod
+    # def read_csv_having_single_column(file_path: Path, delimiter: str = ",", encoding="utf-8") -> list:
+    #     """
+    #     Read CSV having only 1 column
+    #     :param file_path:
+    #     :param delimiter:
+    #     :param encoding:
+    #     :return: a list of string datas
+    #     """
+    #     with file_path.open("r", newline="", encoding=encoding) as csvfile:
+    #         csvreader = csv.reader(csvfile, delimiter=delimiter)
+    #         data = [row[0] for row in csvreader]
+    #     return data
 
     @staticmethod
     def read_wgt_file(file_path: Path, delimiter: str = ",", encoding="utf-8") -> tuple[list, list]:
@@ -187,7 +193,7 @@ class FileUtil:
                     else:
                         raise ValueError(f"Not a valid wgt file {str(file_path)}")
         except Exception as e:
-            raise ValueError("Error loading CSV file:", e) from e
+            raise ValueError(f"Error loading CSV file '{str(file_path)}':", e) from e
 
         weights_sum = sum(weights)
         weights = [weight / weights_sum for weight in weights]
@@ -222,11 +228,6 @@ class FileUtil:
 
         # Return the tuple of weights list and data_without_weights list
         return (weights, data_without_weights)
-
-    @staticmethod
-    def select_records_from_wgt_file(file_path: Path, count: int) -> list:
-        data, wgt = FileUtil.read_wgt_file(file_path)
-        return random.choices(data, wgt, k=count)
 
     @staticmethod
     def read_mutil_column_wgt_file(
@@ -265,7 +266,7 @@ class FileUtil:
             # Return the tuple of values list and weights list
             return values, weights
         except Exception as e:
-            raise ValueError("Error loading CSV file:" + str(e)) from e
+            raise ValueError(f"Error loading CSV file '{str(file_path)}':", e) from e
 
     @staticmethod
     def copy_file(source: Path, destination: Path) -> None:

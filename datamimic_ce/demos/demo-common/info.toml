@@ -1,0 +1,10 @@
+[demo]
+name = "Common Domain"
+description = "Demonstrates the common domain entities including Company, Address, City, and Country"
+category = "Domain Entities"
+tags = ["common", "domain", "company", "address"]
+author = "Rapiddweller Asia Co., Ltd."
+icon = "🏢"
+
+[files]
+company = "company.xml"

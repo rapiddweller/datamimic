@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup>
+    <echo>DATAMIMIC Common Domain Demo</echo>
+    <echo>This demo showcases the entities in the common domain</echo>
+    
+    <include uri="company.xml" />
+</setup>

@@ -1,0 +1,12 @@
+rank,code,description,tier,weight
+Polizeimeister,PM,Laufbahngruppe des mittleren Dienstes in der Polizei,1,0.3
+Polizeiobermeister,POM,Laufbahngruppe des mittleren Dienstes in der Polizei,1,0.3
+Polizeihauptmeister,PHM,Laufbahngruppe des mittleren Dienstes in der Polizei,2,0.15
+Polizeikommissar,PK,Laufbahngruppe des gehobenen Dienstes in der Polizei,3,0.1
+Polizeioberkommissar,POK,Laufbahngruppe des gehobenen Dienstes in der Polizei,3,0.05
+Polizeihauptkommissar,PHK,Laufbahngruppe des gehobenen Dienstes in der Polizei,4,0.05
+Erster Polizeihauptkommissar,EPHK,Laufbahngruppe des gehobenen Dienstes in der Polizei,4,0.02
+Polizeirat,PR,Laufbahngruppe des höheren Dienstes in der Polizei,5,0.01
+Polizeioberrat,POR,Laufbahngruppe des höheren Dienstes in der Polizei,5,0.01
+Polizeidirektor,PD,Laufbahngruppe des höheren Dienstes in der Polizei,6,0.005
+Leitender Polizeidirektor,LPD,Laufbahngruppe des höheren Dienstes in der Polizei,7,0.005

@@ -1,0 +1,18 @@
+product_code,name,code,description,min_coverage,max_coverage,weight
+AUTO,Kfz-Haftpflicht,LIAB,Deckt Schäden an anderen Personen und Eigentum,7500000,100000000,0.4
+AUTO,Teilkasko,TEIL,Deckt teilweise Schäden am eigenen Fahrzeug,5000,50000,0.3
+AUTO,Vollkasko,VOLL,Umfassender Schutz für das eigene Fahrzeug,10000,100000,0.2
+AUTO,Insassenschutz,INSS,Schutzt Fahrer und Mitfahrer,10000,50000,0.1
+HOME,Gebäudeversicherung,GEBA,Schutz für die Bausubstanz,100000,2000000,0.35
+HOME,Hausratversicherung,HAUS,Schutz für persönliches Eigentum,20000,500000,0.35
+HOME,Haftpflicht,LIAB,Deckung für Haftungsansprüche,3000000,50000000,0.2
+HOME,Elementarschutz,ELEM,Schutz gegen Naturkatastrophen,10000,1000000,0.1
+LIFE,Risikolebensversicherung,RISK,Schutz für einen bestimmten Zeitraum,20000,1000000,0.4
+LIFE,Kapitallebensversicherung,KAPI,Lebenslanger Schutz mit Sparanteil,50000,1000000,0.3
+LIFE,Fondsgebundene Lebensversicherung,FOND,Lebensversicherung mit Anlageoptionen,50000,1000000,0.2
+LIFE,Sterbegeldversicherung,STER,Deckt Bestattungskosten,5000,20000,0.1
+HLTH,Stationäre Behandlung,STAT,Deckt Krankenhausaufenthalte,unlimited,unlimited,0.3
+HLTH,Ambulante Behandlung,AMBU,Deckt ambulante Leistungen,unlimited,unlimited,0.3
+HLTH,Zahnersatz,ZAHN,Deckt Zahnersatzleistungen,1000,10000,0.2
+HLTH,Heilpraktiker,HEIL,Deckt alternative Behandlungsmethoden,500,5000,0.1
+HLTH,Krankentagegeld,KTAG,Zahlung bei Arbeitsunfähigkeit,30,200,0.1

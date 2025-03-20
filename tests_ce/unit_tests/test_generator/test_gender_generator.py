@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.generators.gender_generator import GenderGenerator
+from datamimic_ce.domains.common.literal_generators.gender_generator import GenderGenerator
 
 
 class TestGenderGenerator:

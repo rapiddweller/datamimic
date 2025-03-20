@@ -1,0 +1,36 @@
+<setup multiprocessing="0">
+    <generate name="medical_device" count="10" target="ConsoleExporter">
+        <variable name="medical_device" entity="MedicalDevice"/>
+        <key name="device_id" script="medical_device.device_id"/>
+        <key name="device_type" script="medical_device.device_type"/>
+        <key name="manufacturer" script="medical_device.manufacturer"/>
+        <key name="model_number" script="medical_device.model_number"/>
+        <key name="serial_number" script="medical_device.serial_number"/>
+        <key name="manufacture_date" script="medical_device.manufacture_date"/>
+        <key name="expiration_date" script="medical_device.expiration_date"/>
+        <key name="last_maintenance_date" script="medical_device.last_maintenance_date"/>
+        <key name="next_maintenance_date" script="medical_device.next_maintenance_date"/>
+        <key name="status" script="medical_device.status"/>
+        <key name="location" script="medical_device.location"/>
+        <key name="assigned_to" script="medical_device.assigned_to"/>
+        <!-- <key name="specifications" script="medical_device.specifications"/> -->
+        <!-- <key name="usage_logs" script="medical_device.usage_logs"/> -->
+        <!-- <key name="maintenance_history" script="medical_device.maintenance_history"/> -->
+        <variable name="medical_device_2" entity="MedicalDevice"/>
+        <key name="device_id2" script="medical_device_2.device_id"/>
+        <key name="device_type2" script="medical_device_2.device_type"/>
+        <key name="manufacturer2" script="medical_device_2.manufacturer"/>
+        <key name="model_number2" script="medical_device_2.model_number"/>
+        <key name="serial_number2" script="medical_device_2.serial_number"/>
+        <key name="manufacture_date2" script="medical_device_2.manufacture_date"/>
+        <key name="expiration_date2" script="medical_device_2.expiration_date"/>
+        <key name="last_maintenance_date2" script="medical_device_2.last_maintenance_date"/>
+        <key name="next_maintenance_date2" script="medical_device_2.next_maintenance_date"/>
+        <key name="status2" script="medical_device_2.status"/>
+        <key name="location2" script="medical_device_2.location"/>
+        <key name="assigned_to2" script="medical_device_2.assigned_to"/>
+        <!-- <key name="specifications2" script="medical_device_2.specifications"/> -->
+        <!-- <key name="usage_logs2" script="medical_device_2.usage_logs"/> -->
+        <!-- <key name="maintenance_history2" script="medical_device_2.maintenance_history"/> -->
+    </generate>
+</setup>

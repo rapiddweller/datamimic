@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 import exrex  # type: ignore
 
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
-from datamimic_ce.generators.generator_util import GeneratorUtil
+from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.utils.base_data_generation_util import BaseDataGenerationUtil
 
 

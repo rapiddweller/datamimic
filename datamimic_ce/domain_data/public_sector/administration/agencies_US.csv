@@ -1,0 +1,23 @@
+name,agency_id,level,department,address,city,state,phone,website,weight
+Department of Health and Human Services,HHS,Federal,Executive,"200 Independence Avenue SW, Washington, DC 20201","Washington","DC","202-555-1000","www.hhs.gov",0.10
+Department of Education,ED,Federal,Executive,"400 Maryland Avenue SW, Washington, DC 20202","Washington","DC","202-555-2000","www.ed.gov",0.09
+Department of Transportation,DOT,Federal,Executive,"1200 New Jersey Avenue SE, Washington, DC 20590","Washington","DC","202-555-3000","www.transportation.gov",0.08
+Department of Housing and Urban Development,HUD,Federal,Executive,"451 7th Street SW, Washington, DC 20410","Washington","DC","202-555-4000","www.hud.gov",0.07
+Environmental Protection Agency,EPA,Federal,Independent,"1200 Pennsylvania Avenue NW, Washington, DC 20460","Washington","DC","202-555-5000","www.epa.gov",0.07
+Social Security Administration,SSA,Federal,Independent,"6401 Security Boulevard, Baltimore, MD 21235","Baltimore","MD","410-555-6000","www.ssa.gov",0.07
+California Department of Motor Vehicles,CA_DMV,State,Executive,"2415 First Avenue, Sacramento, CA 95818","Sacramento","CA","916-555-7000","www.dmv.ca.gov",0.06
+New York State Department of Health,NY_DOH,State,Executive,"Corning Tower, Empire State Plaza, Albany, NY 12237","Albany","NY","518-555-8000","www.health.ny.gov",0.05
+Texas Department of Transportation,TX_DOT,State,Executive,"125 East 11th Street, Austin, TX 78701","Austin","TX","512-555-9000","www.txdot.gov",0.05
+Illinois Department of Human Services,IL_DHS,State,Executive,"100 South Grand Avenue East, Springfield, IL 62762","Springfield","IL","217-555-1100","www.dhs.illinois.gov",0.04
+Los Angeles County Department of Public Health,LA_DPH,County,Health,"313 N Figueroa Street, Los Angeles, CA 90012","Los Angeles","CA","213-555-1200","www.publichealth.lacounty.gov",0.04
+Cook County Assessor's Office,COOK_ASR,County,Revenue,"118 N Clark Street, Chicago, IL 60602","Chicago","IL","312-555-1300","www.cookcountyassessor.com",0.03
+Harris County Tax Office,HARRIS_TAX,County,Revenue,"1001 Preston Street, Houston, TX 77002","Houston","TX","713-555-1400","www.tax.harriscountytx.gov",0.03
+City of Chicago Department of Buildings,CHI_DOB,City,Housing,"121 N LaSalle Street, Chicago, IL 60602","Chicago","IL","312-555-1500","www.chicago.gov/buildings",0.03
+New York City Department of Finance,NYC_DOF,City,Finance,"1 Centre Street, New York, NY 10007","New York","NY","212-555-1600","www.nyc.gov/finance",0.03
+Los Angeles Building and Safety Department,LA_BSD,City,Housing,"201 N Figueroa Street, Los Angeles, CA 90012","Los Angeles","CA","213-555-1700","www.ladbs.org",0.03
+San Francisco Planning Department,SF_PLAN,City,Planning,"49 South Van Ness Avenue, San Francisco, CA 94103","San Francisco","CA","415-555-1800","www.sf.planning.org",0.03
+Houston Public Works,HOU_PW,City,Infrastructure,"611 Walker Street, Houston, TX 77002","Houston","TX","832-555-1900","www.publicworks.houstontx.gov",0.03
+Miami-Dade Water and Sewer Department,MIAMI_WSD,County,Utilities,"3071 SW 38th Avenue, Miami, FL 33146","Miami","FL","305-555-2000","www.miamidade.gov/water",0.02
+Boston Inspectional Services Department,BOS_ISD,City,Housing,"1010 Massachusetts Avenue, Boston, MA 02118","Boston","MA","617-555-2100","www.boston.gov/isd",0.02
+Dallas Parks and Recreation Department,DAL_PARK,City,Parks,"5620 E Grand Avenue, Dallas, TX 75223","Dallas","TX","214-555-2200","www.dallasparks.org",0.02
+Portland Bureau of Transportation,PDX_BOT,City,Transportation,"1120 SW 5th Avenue, Portland, OR 97204","Portland","OR","503-555-2300","www.portland.gov/transportation",0.01
