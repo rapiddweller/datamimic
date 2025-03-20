@@ -3,7 +3,7 @@ hide:
   - navigation
 ---
 
-## Latest Changes
+## Upcoming Changes
 
 ### Refactors
 
