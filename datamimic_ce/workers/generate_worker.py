@@ -16,7 +16,9 @@ from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.logger import logger, setup_logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
+from datamimic_ce.tasks.constraints_task import ConstraintsTask
 from datamimic_ce.tasks.generate_task import GenerateTask
+from datamimic_ce.tasks.rule_task import RuleTask
 from datamimic_ce.utils.logging_util import gen_timer
 
 
@@ -188,6 +190,11 @@ class GenerateWorker:
             )
         )
 
+        # execute ConstraintsTask to filter source_data with its rules
+        for task in tasks:
+            if isinstance(task, ConstraintsTask):
+                source_data = task.execute(source_data, pagination, stmt.cyclic)
+
         # Shuffle source data if distribution is random
         if is_random_distribution:
             seed = root_context.get_distribution_seed()
@@ -227,6 +234,9 @@ class GenerateWorker:
                                 # Store temp product in context for later evaluate
                                 inner_generate_key = key.split("|", 1)[-1].strip()
                                 ctx.current_variables[inner_generate_key] = value
+                    # Do not execute ConstraintsTask and RuleTask
+                    elif isinstance(task, ConstraintsTask | RuleTask):
+                        pass
                     else:
                         task.execute(ctx)
 
