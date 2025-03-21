@@ -159,12 +159,13 @@ class NestedKeyTask(Task):
         else:
             raise ValueError(f"Cannot load original data for <nestedKey> '{self._statement.name}'")
 
-        # TODO: execute ConstraintsTask here to filter source data
-        for sub_task in self._sub_tasks:
-            if isinstance(sub_task, ConstraintsTask):
-                nestedkey_len = self._determine_nestedkey_length(context=parent_context)
-                temp_pagination = DataSourcePagination(skip=0, limit=nestedkey_len) if nestedkey_len else None
-                result = sub_task.execute(result, pagination=temp_pagination, cyclic=self.statement.cyclic)
+        # execute ConstraintsTask here to filter source data
+        if self._sub_tasks:
+            for sub_task in self._sub_tasks:
+                if isinstance(sub_task, ConstraintsTask):
+                    nestedkey_len = self._determine_nestedkey_length(context=parent_context)
+                    temp_pagination = DataSourcePagination(skip=0, limit=nestedkey_len) if nestedkey_len else None
+                    result = sub_task.execute(result, pagination=temp_pagination, cyclic=self.statement.cyclic)
 
         # Post convert value after executing sub-tasks
         if isinstance(result, list):
