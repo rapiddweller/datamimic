@@ -28,9 +28,9 @@ class PersonGenerator(BaseDomainGenerator):
     first name, last name, email address, phone number, and address.
     """
 
-    def __init__(self, dataset: str | None = None, min_age: int = 18, max_age: int = 65, female_quota: float = 0.5):
+    def __init__(self, dataset: str | None = None, min_age: int = 18, max_age: int = 65, female_quota: float = 0.5, other_gender_quota: float = 0.0):
         self._dataset = dataset or "US"
-        self._gender_generator = GenderGenerator(female_quota=female_quota)
+        self._gender_generator = GenderGenerator(female_quota=female_quota, other_gender_quota=other_gender_quota)
         self._given_name_generator = GivenNameGenerator(dataset=self._dataset)
         self._family_name_generator = FamilyNameGenerator(dataset=self._dataset)
         self._email_generator = EmailAddressGenerator(dataset=self._dataset)
