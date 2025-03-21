@@ -53,7 +53,7 @@ class TestConstraints(TestCase):
 
         for ele in constraints_customers:
             assert isinstance(ele["id"], int)
-            assert ele["id"] in range(1, 101)
+            assert ele["id"] in range(1, 30)
             if ele["credit_score"] < 600:
                 assert ele["risk_profile"] == 'High'
             elif 600 <= ele["credit_score"] < 750:
@@ -209,7 +209,7 @@ class TestConstraints(TestCase):
         assert len(cyclic_false) == 29
         for ele in cyclic_false:
             assert isinstance(ele["id"], int)
-            assert ele["id"] in range(1, 1001)
+            assert ele["id"] in range(1, 30)
             if ele["credit_score"] < 600:
                 assert ele["risk_profile"] == 'High'
             elif 600 <= ele["credit_score"] < 750:

@@ -159,14 +159,6 @@ class NestedKeyTask(Task):
         else:
             raise ValueError(f"Cannot load original data for <nestedKey> '{self._statement.name}'")
 
-        # execute ConstraintsTask here to filter source data
-        if self._sub_tasks:
-            for sub_task in self._sub_tasks:
-                if isinstance(sub_task, ConstraintsTask):
-                    nestedkey_len = self._determine_nestedkey_length(context=parent_context)
-                    temp_pagination = DataSourcePagination(skip=0, limit=nestedkey_len) if nestedkey_len else None
-                    result = sub_task.execute(result, pagination=temp_pagination, cyclic=self.statement.cyclic)
-
         # Post convert value after executing sub-tasks
         if isinstance(result, list):
             result = list(map(lambda ele: self._post_convert(ele), result))
@@ -328,7 +320,8 @@ class NestedKeyTask(Task):
         :return:
         """
         result = []
-
+        # filter source data by constraints
+        value = self._filter_source_by_constraints_task(parent_context=parent_context, source_data=value)
         # Determine len of nestedkey
         count = self._determine_nestedkey_length(context=parent_context)
         value_len = len(value)
@@ -392,3 +385,16 @@ class NestedKeyTask(Task):
         for converter in self._converter_list:
             value = converter.convert(value)
         return value
+
+    def _filter_source_by_constraints_task(self, parent_context: GenIterContext, source_data: list) -> list:
+        """
+        Execute ConstraintsTask to filter source data
+        """
+        result = {}
+        if self._sub_tasks:
+            for sub_task in self._sub_tasks:
+                if isinstance(sub_task, ConstraintsTask):
+                    nestedkey_len = self._determine_nestedkey_length(context=parent_context)
+                    temp_pagination = DataSourcePagination(skip=0, limit=nestedkey_len) if nestedkey_len else None
+                    result = sub_task.execute(source_data, pagination=temp_pagination, cyclic=self.statement.cyclic)
+        return result
