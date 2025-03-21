@@ -18,11 +18,12 @@ class RayGenerateWorker(GenerateWorker):
     """
 
     def mp_process(
-        self,
-        copied_context: SetupContext | GenIterContext,
-        statement: GenerateStatement,
-        chunks: list[tuple[int, int]],
-        page_size: int,
+            self,
+            copied_context: SetupContext | GenIterContext,
+            statement: GenerateStatement,
+            chunks: list[tuple[int, int]],
+            page_size: int,
+            source_operation: dict
     ) -> dict[str, list]:
         """
         Ray multiprocessing process for generating, exporting data by page, and merging result.
@@ -30,7 +31,7 @@ class RayGenerateWorker(GenerateWorker):
         # Execute generate task using Ray
         futures = [
             self.ray_process.options(enable_task_events=False).remote(
-                copied_context, statement, worker_id, chunk_start, chunk_end, page_size
+                copied_context, statement, worker_id, chunk_start, chunk_end, page_size, source_operation
             )
             for worker_id, (chunk_start, chunk_end) in enumerate(chunks, 1)
         ]
@@ -48,12 +49,13 @@ class RayGenerateWorker(GenerateWorker):
     @staticmethod
     @ray.remote
     def ray_process(
-        context: SetupContext | GenIterContext,
-        stmt: GenerateStatement,
-        worker_id: int,
-        chunk_start: int,
-        chunk_end: int,
-        page_size: int,
+            context: SetupContext | GenIterContext,
+            stmt: GenerateStatement,
+            worker_id: int,
+            chunk_start: int,
+            chunk_end: int,
+            page_size: int,
+            source_operation: dict
     ) -> dict:
         """
         Ray remote function to generate and export data by page in multiprocessing.
@@ -62,5 +64,5 @@ class RayGenerateWorker(GenerateWorker):
         GenerateWorker.mp_preprocess(context, worker_id)
 
         return GenerateWorker.generate_and_export_data_by_chunk(
-            context, stmt, worker_id, chunk_start, chunk_end, page_size
+            context, stmt, worker_id, chunk_start, chunk_end, page_size, source_operation
         )

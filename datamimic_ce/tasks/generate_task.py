@@ -4,15 +4,14 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+
+
 import copy
 import math
 import shutil
-
-import dill  # type: ignore
+import dill
 import ray
-
 from datamimic_ce.clients.database_client import DatabaseClient
-from datamimic_ce.config import settings
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
@@ -23,7 +22,10 @@ from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
+from datamimic_ce.utils.file_content_storage import FileContentStorage
+from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.logging_util import gen_timer
+from datamimic_ce.config import settings
 
 
 class GenerateTask(CommonSubTask):
@@ -162,7 +164,7 @@ class GenerateTask(CommonSubTask):
 
         return num_workers
 
-    def execute(self, context: SetupContext | GenIterContext) -> dict[str, list] | None:
+    def execute(self, context: SetupContext | GenIterContext, source_operation: dict = {}) -> dict[str, list] | None:
         """
         Execute generate task.
         First, generate data and export data by page.
@@ -230,7 +232,7 @@ class GenerateTask(CommonSubTask):
                             f"is not supported"
                         )
                     # Execute generate task by page in multiprocessing using Ray or multiprocessing
-                    merged_result = mp_worker.mp_process(copied_context, self._statement, chunks, page_size)
+                    merged_result = mp_worker.mp_process(copied_context, self._statement, chunks, page_size, source_operation)
 
                 # Execute generate task by page in single process
                 else:
@@ -239,7 +241,7 @@ class GenerateTask(CommonSubTask):
                     from datamimic_ce.workers.generate_worker import GenerateWorker
 
                     merged_result = GenerateWorker.generate_and_export_data_by_chunk(
-                        context, self._statement, worker_id, 0, count, page_size
+                        context, self._statement, worker_id, 0, count, page_size, source_operation
                     )
 
                 # At the end of OUTERMOST gen_stmt:
