@@ -390,11 +390,12 @@ class NestedKeyTask(Task):
         """
         Execute ConstraintsTask to filter source data
         """
-        result = {}
+        result = source_data
         if self._sub_tasks:
             for sub_task in self._sub_tasks:
                 if isinstance(sub_task, ConstraintsTask):
                     nestedkey_len = self._determine_nestedkey_length(context=parent_context)
                     temp_pagination = DataSourcePagination(skip=0, limit=nestedkey_len) if nestedkey_len else None
                     result = sub_task.execute(source_data, pagination=temp_pagination, cyclic=self.statement.cyclic)
+                    break
         return result
