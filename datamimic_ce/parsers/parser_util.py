@@ -113,6 +113,7 @@ class ParserUtil:
                 EL_ELEMENT,
                 EL_ARRAY,
                 EL_CONDITION,
+                EL_CONSTRAINTS,
             },
             EL_CONDITION: {EL_IF, EL_ELSE_IF, EL_ELSE},
             EL_GENERATE: {

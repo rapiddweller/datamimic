@@ -15,6 +15,7 @@ from datamimic_ce.data_sources.data_source_pagination import DataSourcePaginatio
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
+from datamimic_ce.tasks.constraints_task import ConstraintsTask
 from datamimic_ce.tasks.element_task import ElementTask
 from datamimic_ce.tasks.task import Task
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
@@ -158,6 +159,13 @@ class NestedKeyTask(Task):
         else:
             raise ValueError(f"Cannot load original data for <nestedKey> '{self._statement.name}'")
 
+        # TODO: execute ConstraintsTask here to filter source data
+        for sub_task in self._sub_tasks:
+            if isinstance(sub_task, ConstraintsTask):
+                nestedkey_len = self._determine_nestedkey_length(context=parent_context)
+                temp_pagination = DataSourcePagination(skip=0, limit=nestedkey_len) if nestedkey_len else None
+                result = sub_task.execute(result, pagination=temp_pagination, cyclic=self.statement.cyclic)
+
         # Post convert value after executing sub-tasks
         if isinstance(result, list):
             result = list(map(lambda ele: self._post_convert(ele), result))
@@ -187,6 +195,9 @@ class NestedKeyTask(Task):
                 try:
                     if isinstance(sub_task, ElementTask):
                         attributes.update(sub_task.generate_xml_attribute(ctx))
+                    elif isinstance(sub_task, ConstraintsTask):
+                        # do not execute ConstraintsTask here, ConstraintsTask is for filter source data
+                        pass
                     else:
                         sub_task.execute(ctx)
                 except StopIteration:
