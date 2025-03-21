@@ -16,7 +16,21 @@ class PersonService(BaseDomainService[Person]):
     This class provides methods for creating, retrieving, and managing person data.
     """
 
-    def __init__(self, dataset: str | None = None, min_age: int = 18, max_age: int = 65, female_quota: float = 0.5, other_gender_quota: float = 0.0):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        min_age: int = 18,
+        max_age: int = 65,
+        female_quota: float = 0.5,
+        other_gender_quota: float = 0.0,
+    ):
         super().__init__(
-            PersonGenerator(dataset=dataset, min_age=min_age, max_age=max_age, female_quota=female_quota, other_gender_quota=other_gender_quota), Person
+            PersonGenerator(
+                dataset=dataset,
+                min_age=min_age,
+                max_age=max_age,
+                female_quota=female_quota,
+                other_gender_quota=other_gender_quota,
+            ),
+            Person,
         )
