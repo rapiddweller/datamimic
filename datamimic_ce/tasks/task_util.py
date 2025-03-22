@@ -522,3 +522,10 @@ class TaskUtil:
         """
         # Always False in CE cause this is an EE feature
         return False
+
+    @staticmethod
+    def execute_data_source_operation(source_data: list, source_operation: dict | None) -> None:
+        """
+        (EE feature only) Execute data source operation on source_data
+        """
+        pass
