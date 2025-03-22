@@ -162,7 +162,11 @@ class GenerateTask(CommonSubTask):
 
         return num_workers
 
-    def execute(self, context: SetupContext | GenIterContext) -> dict[str, list] | None:
+    def execute(
+            self, 
+            context: SetupContext | GenIterContext, 
+            source_operation: dict | None = None
+            ) -> dict[str, list] | None:
         """
         Execute generate task.
         First, generate data and export data by page.
@@ -230,7 +234,9 @@ class GenerateTask(CommonSubTask):
                             f"is not supported"
                         )
                     # Execute generate task by page in multiprocessing using Ray or multiprocessing
-                    merged_result = mp_worker.mp_process(copied_context, self._statement, chunks, page_size)
+                    merged_result = mp_worker.mp_process(
+                        copied_context, self._statement, chunks, page_size, source_operation
+                        )
 
                 # Execute generate task by page in single process
                 else:
@@ -239,7 +245,7 @@ class GenerateTask(CommonSubTask):
                     from datamimic_ce.workers.generate_worker import GenerateWorker
 
                     merged_result = GenerateWorker.generate_and_export_data_by_chunk(
-                        context, self._statement, worker_id, 0, count, page_size
+                        context, self._statement, worker_id, 0, count, page_size, source_operation
                     )
 
                 # At the end of OUTERMOST gen_stmt:
