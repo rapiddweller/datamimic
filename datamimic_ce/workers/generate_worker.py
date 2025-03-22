@@ -192,8 +192,9 @@ class GenerateWorker:
             )
         )
 
-        GenerateWorker._execute_data_source_operation(source_data, source_operation)
-
+        # (EE feature only) Execute data source operation on source_data
+        task_util_cls.execute_data_source_operation(source_data, source_operation)
+    
         # execute ConstraintsTask to filter source_data with its rules
         for task in tasks:
             if isinstance(task, ConstraintsTask):
@@ -281,26 +282,3 @@ class GenerateWorker:
         # Deserialize multiprocessing arguments
         context.root.namespace.update(dill.loads(context.root.namespace_functions))
         context.root.generators = dill.loads(context.root.generators)
-
-    @staticmethod
-    def _execute_data_source_operation(source_data: list, source_operation: dict | None) -> None:
-        """
-        Execute data source operation on source_data
-        """
-        # If no operation, do nothing
-        if source_operation is None:
-            return
-        for product in source_data:
-            for operation_key, operation_action in source_operation.items():
-                # Skip operation if action is empty
-                if operation_action == "":
-                    continue
-                # Skip operation if key is not in product
-                if operation_key not in product:
-                    continue
-                # Delete operation
-                if operation_action == "delete":
-                    del product[operation_key]
-                # TODO: Add other operation actions
-                else:
-                    raise ValueError(f"Unsupported operation action: {operation_action}")
