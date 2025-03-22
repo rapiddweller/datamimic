@@ -35,7 +35,7 @@ class GenerateWorker:
             chunk_start: int,
             chunk_end: int,
             page_size: int,
-            source_operation: dict
+            source_operation: dict | None
     ) -> dict:
         """
         Generate and export data by page in a single process.
@@ -126,7 +126,7 @@ class GenerateWorker:
     @staticmethod
     def _generate_product_by_page_in_single_process(
             context: SetupContext | GenIterContext, stmt: GenerateStatement, page_start: int, page_end: int,
-            worker_id: int, source_operation: dict
+            worker_id: int, source_operation: dict | None
     ) -> dict[str, list]:
         """
         (IMPORTANT: Only to be used as Ray multiprocessing function)
@@ -283,18 +283,24 @@ class GenerateWorker:
         context.root.generators = dill.loads(context.root.generators)
 
     @staticmethod
-    def _execute_data_source_operation(source_data: list, source_operation: dict) -> list:
+    def _execute_data_source_operation(source_data: list, source_operation: dict | None) -> None:
         """
         Execute data source operation on source_data
         """
+        # If no operation, do nothing
+        if source_operation is None:
+            return
         for product in source_data:
             for operation_key, operation_action in source_operation.items():
+                # Skip operation if action is empty
                 if operation_action == "":
                     continue
+                # Skip operation if key is not in product
                 if operation_key not in product:
                     continue
+                # Delete operation
                 if operation_action == "delete":
                     del product[operation_key]
+                # TODO: Add other operation actions
                 else:
                     raise ValueError(f"Unsupported operation action: {operation_action}")
-        return source_data

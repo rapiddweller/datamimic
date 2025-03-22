@@ -23,7 +23,7 @@ class RayGenerateWorker(GenerateWorker):
             statement: GenerateStatement,
             chunks: list[tuple[int, int]],
             page_size: int,
-            source_operation: dict
+            source_operation: dict | None
     ) -> dict[str, list]:
         """
         Ray multiprocessing process for generating, exporting data by page, and merging result.
@@ -55,7 +55,7 @@ class RayGenerateWorker(GenerateWorker):
             chunk_start: int,
             chunk_end: int,
             page_size: int,
-            source_operation: dict
+            source_operation: dict | None
     ) -> dict:
         """
         Ray remote function to generate and export data by page in multiprocessing.
