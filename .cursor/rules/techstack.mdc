@@ -1,0 +1,12 @@
+---
+description: My Techstack
+globs: 
+alwaysApply: true
+---
+Python 3.11 for the server, core ce, core ee, lsp, worker and scheduler rd-svc-datamimic-platform/src/server 
+
+React 18 and Typescript for the UI rd-svc-datamimic-platform/src/ui
+
+Postgres SQL databases for Platform related data in server project rd-svc-datamimic-platform/src/server ( Project, User, Tasks, Demos )
+
+Rust for speeding up processes in the EE core /Users/akell/PycharmProjects/development-v2/datamimic-ee

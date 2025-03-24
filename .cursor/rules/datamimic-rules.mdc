@@ -1,6 +1,15 @@
+---
+description: DATAMIMC rule
+globs: 
+alwaysApply: true
+---
 # DATAMIMIC Development Guidelines
 
+Project Path: /Users/akell/PycharmProjects/development-v2/datamimic
+Virtual Environment: /Users/akell/PycharmProjects/development-v2/datamimic/.venv
+
 ## Build & Test Commands
+- Install Deps: `uv sync --all-extras --no-cache`
 - Format code: `uv run ruff format datamimic_ce`
 - Lint code: `ruff check datamimic_ce`
 - Type checking: `mypy datamimic_ce`

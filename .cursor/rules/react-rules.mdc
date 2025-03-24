@@ -1,0 +1,22 @@
+---
+description: Reac Ru
+globs: *.tsx, *.ts
+alwaysApply: false
+---
+# File patterns: *.tsx, *.ts
+
+## React Guidelines
+- Use functional components
+- Implement proper prop types
+- Follow React best practices
+
+## Style
+- Use Tailwind CSS (src/ui/tailwind.config.js)
+- Follow team's style guide
+
+
+always use pnpm not npm
+
+src/ui
+src/ui/package.json
+src/ui/tsconfig.json
