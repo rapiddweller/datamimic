@@ -35,6 +35,8 @@ class PersonGenerator(BaseDomainGenerator):
         max_age: int = 65,
         female_quota: float = 0.5,
         other_gender_quota: float = 0.0,
+        noble_quota: float = 0.001,
+        academic_title_quota: float = 0.5,
     ):
         self._dataset = dataset or "US"
         self._gender_generator = GenderGenerator(female_quota=female_quota, other_gender_quota=other_gender_quota)
@@ -48,8 +50,8 @@ class PersonGenerator(BaseDomainGenerator):
         self._birthdate_generator = BirthdateGenerator(
             class_factory_util=ClassFactoryCEUtil(), min_age=min_age, max_age=max_age
         )
-        self._academic_title_generator = AcademicTitleGenerator(dataset=self._dataset)
-        self._nobility_title_generator = NobilityTitleGenerator(dataset=self._dataset)
+        self._academic_title_generator = AcademicTitleGenerator(dataset=self._dataset, quota=academic_title_quota)
+        self._nobility_title_generator = NobilityTitleGenerator(dataset=self._dataset, noble_quota=noble_quota)
 
     @property
     def gender_generator(self) -> GenderGenerator:
