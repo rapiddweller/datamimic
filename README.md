@@ -282,6 +282,42 @@ Find more examples in the `datamimic_ce/demos` directory.
 
 ---
 
+## Domains Usage
+
+### Basic usage
+To generate realistic domain-specific objects in your Python code, simply use the provided services. Here's an example using the PersonService:
+
+```python
+from datamimic_ce.domains.common.services import PersonService
+# get object service
+person_service = PersonService()
+# use object service to generate object (Person)
+person = person_service.generate()
+# get attribute of generated object
+name = person.name  # Jose Ayers
+given_name = person.given_name  # Jose
+family_name = person.family_name  # Jose
+age = person.age  # 64
+```
+
+### Available Domain Services
+We offer a wide range of pre-built services for generating realistic data across various domains:
+
+```text
+PersonService, AddressService, CityService, CountryService, CompanyService,
+ProductService, OrderService, BankService, BankAccountService, CreditCardService,
+HospitalService, PatientService, MedicalDeviceService, MedicalProcedureService,
+InsuranceCompanyService, InsuranceCoverageService, InsurancePolicyService, InsuranceProductService,
+PoliceOfficerService, EducationalInstitutionService, AdministrationOfficeService
+```
+
+### Custom Domain Services
+Need a more tailored solution? Use CustomerFactory to build custom domain services based on your specific needs.
+
+📖 For more information, see to the Domain Services Documentation (https://docs.datamimic.io).
+
+---
+
 ## Contributing
 
 We ❤️ contributions! Here's how you can help:
