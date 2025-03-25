@@ -110,7 +110,7 @@ class Address(BaseEntity):
     @property_cache
     def organization(self) -> str:
         return self._address_generator.company_name_generator.generate()
-    
+
     @property
     @property_cache
     def full_address(self) -> str:

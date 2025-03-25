@@ -827,7 +827,6 @@ class MedicalProcedureGenerator(BaseDomainGenerator):
 
         return description
 
-
     def generate_specialty(self) -> str:
         """Generate a medical specialty.
 

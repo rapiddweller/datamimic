@@ -31,9 +31,9 @@ class TransactionGenerator(BaseDomainGenerator):
         """
         self._dataset = dataset or "US"
         self._reference_generator = DataFakerGenerator("uuid4")
-        self._transaction_data = {}
-        self._currency_data = {}
-        self._amount_data = {}
+        self._transaction_data: dict[str, tuple[dict[str, int], list[tuple]]] = {}
+        self._currency_data: dict[str, tuple[dict[str, int], list[tuple]]] = {}
+        self._amount_data: dict[str, tuple[dict[str, int], list[tuple]]] = {}
 
     @property
     def dataset(self) -> str:

@@ -18,11 +18,3 @@ class BaseLiteralGenerator(ABC):
         Generate a random literal value.
         """
         raise NotImplementedError("Subclasses must implement this method")
-
-
-class BaseLiteralGenerator:
-    """Base generator for literal values following specific distributions.
-
-    This class provides mechanisms to generate primitive data types according to
-    configured probability distributions.
-    """

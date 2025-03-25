@@ -38,7 +38,7 @@ class CityGenerator(BaseDomainGenerator):
         if self._city_data is None:
             try:
                 file_path = (
-                    Path(__file__).parent.parent.parent.parent  
+                    Path(__file__).parent.parent.parent.parent
                     / "domain_data"
                     / "common"
                     / "city"

@@ -90,6 +90,16 @@ class Person(BaseEntity):
 
     @property
     @property_cache
+    def name(self) -> str:
+        """Get the name of the person.
+
+        Returns:
+            The name of the person.
+        """
+        return self.full_name
+
+    @property
+    @property_cache
     def age(self) -> int:
         """Get the age of the person.
 

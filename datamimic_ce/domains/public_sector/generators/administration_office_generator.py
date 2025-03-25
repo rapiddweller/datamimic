@@ -30,7 +30,7 @@ class AdministrationOfficeGenerator(BaseDomainGenerator):
         Args:
             dataset: The country code to use for data generation
         """
-        self._dataset = dataset or "US" 
+        self._dataset = dataset or "US"
         self._address_generator = AddressGenerator(dataset=self._dataset)
         self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset)
         self._family_name_generator = FamilyNameGenerator(dataset=self._dataset)

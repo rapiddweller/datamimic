@@ -163,10 +163,8 @@ class GenerateTask(CommonSubTask):
         return num_workers
 
     def execute(
-            self, 
-            context: SetupContext | GenIterContext, 
-            source_operation: dict | None = None
-            ) -> dict[str, list] | None:
+        self, context: SetupContext | GenIterContext, source_operation: dict | None = None
+    ) -> dict[str, list] | None:
         """
         Execute generate task.
         First, generate data and export data by page.
@@ -236,7 +234,7 @@ class GenerateTask(CommonSubTask):
                     # Execute generate task by page in multiprocessing using Ray or multiprocessing
                     merged_result = mp_worker.mp_process(
                         copied_context, self._statement, chunks, page_size, source_operation
-                        )
+                    )
 
                 # Execute generate task by page in single process
                 else:
