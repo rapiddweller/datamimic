@@ -68,21 +68,21 @@ class PoliceOfficer(BaseEntity):
 
     @property
     @property_cache
-    def first_name(self) -> str:
-        """Get the officer's first name.
+    def given_name(self) -> str:
+        """Get the officer's given name.
 
         Returns:
-            The officer's first name.
+            The officer's given name.
         """
         return self.person_data.given_name
 
     @property
     @property_cache
-    def last_name(self) -> str:
-        """Get the officer's last name.
+    def family_name(self) -> str:
+        """Get the officer's family name.
 
         Returns:
-            The officer's last name.
+            The officer's family name.
         """
         return self.person_data.family_name
 
@@ -94,7 +94,7 @@ class PoliceOfficer(BaseEntity):
         Returns:
             The officer's full name.
         """
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.given_name} {self.family_name}"
 
     @property
     @property_cache
@@ -307,8 +307,8 @@ class PoliceOfficer(BaseEntity):
         return {
             "officer_id": self.officer_id,
             "badge_number": self.badge_number,
-            "first_name": self.first_name,
-            "last_name": self.last_name,
+            "given_name": self.given_name,
+            "family_name": self.family_name,
             "full_name": self.full_name,
             "gender": self.gender,
             "birthdate": self.birthdate,

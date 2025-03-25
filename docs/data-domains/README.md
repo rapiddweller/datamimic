@@ -2,7 +2,7 @@
 
 Welcome to the documentation for the Domain-Driven Framework component of DATAMIMIC, a sophisticated synthetic data generation platform. This documentation specifically covers the domain-driven architecture for generating weighted, statistically accurate synthetic data.
 
-> **Note**: This documentation focuses specifically on the Domain-Driven Architecture features of DATAMIMIC. DATAMIMIC offers many additional capabilities beyond what is documented here.
+> **Note**: This documentation focuses specifically on the Domain-Driven Architecture features of DATAMIMIC. For comprehensive documentation including detailed model descriptions, exporters, importers, platform UI, and more, please visit our official online documentation at [https://docs.datamimic.io/](https://docs.datamimic.io/)
 
 ## Core Documentation
 
@@ -12,6 +12,21 @@ Welcome to the documentation for the Domain-Driven Framework component of DATAMI
 - [Weighted Distributions System](weighted_distributions.md) - How DATAMIMIC's distribution system works
 - [Testing with DATAMIMIC](testing_with_datamimic.md) - Using synthetic data for testing
 - [DATAMIMIC vs Other Libraries](comparison.md) - Comparison with other data generation tools
+
+> For more detailed information on domain models, exporters, importers, and platform integration, please refer to our [official online documentation](https://docs.datamimic.io/).
+
+## Available Domains
+
+DATAMIMIC implements several industry-specific domains:
+
+| Domain        | Description                                 | Key Entities                                  |
+|---------------|---------------------------------------------|-----------------------------------------------|
+| Common        | Generally useful entities                   | Person, Address, Company, City, Country       |
+| Healthcare    | Medical and healthcare entities             | Patient, Doctor, Hospital, MedicalRecord      |
+| Finance       | Financial services entities                 | BankAccount, Transaction, Loan, Investment    |
+| E-commerce    | Online shopping and retail                  | Product, Order, Customer, Review              |
+| Insurance     | Insurance industry entities                 | Policy, Claim, Insured, RiskProfile           |
+| Public Sector | Government and public administration        | Citizen, Agency, EducationalInstitution       |
 
 ## Quick Start Guide
 
@@ -39,14 +54,14 @@ print(f"Email: {person.email}")
 from datamimic_ce.domains.healthcare.services import PatientService
 
 # Create a healthcare service
-patient_service = PatientService(dataset="US")
+patient_service = PatientService()
 
 # Generate a single patient
 patient = patient_service.generate()
 
 # Access patient properties
 print(f"Patient ID: {patient.patient_id}")
-print(f"Name: {patient.given_name} {patient.family_name}")
+print(f"Name: {patient.full_name}")
 print(f"Blood Type: {patient.blood_type}")
 print(f"Medical Conditions: {patient.conditions}")
 ```
@@ -57,17 +72,40 @@ print(f"Medical Conditions: {patient.conditions}")
 from datamimic_ce.domains.finance.services import BankAccountService, TransactionService
 
 # Create finance services
-account_service = BankAccountService(dataset="US")
-transaction_service = TransactionService(dataset="US")
+account_service = BankAccountService()
+transaction_service = TransactionService()
 
 # Generate an account
 account = account_service.generate()
 
-# Generate transactions for that account
-transactions = transaction_service.generate_for_account(account, count=5)
+# Generate transactions
+transactions = transaction_service.generate_batch(count=5)
 
 # Access financial data
 print(f"Account: {account.account_number}")
-print(f"Balance: {account.balance} {account.currency}")
+print(f"Balance: ${account.balance:.2f}")
 print(f"Transactions: {len(transactions)}")
-``` 
+```
+
+## Complete Examples
+
+For complete working examples, see:
+
+- [Person Generation Example](../examples/person_generation.md)
+- [Healthcare Data Example](../examples/healthcare_generation.md)
+
+## Domain Service Reference
+
+Each domain includes specialized services for generating entities:
+
+- **Common Domain**: `PersonService`, `AddressService`, `CompanyService`
+- **Healthcare Domain**: `PatientService`, `DoctorService`, `HospitalService`
+- **Finance Domain**: `BankAccountService`, `TransactionService`, `LoanService`
+- **E-commerce Domain**: `ProductService`, `OrderService`, `CustomerService`
+- **Insurance Domain**: `PolicyService`, `ClaimService`, `InsuredService`
+
+See the [Domain Services](domain_services.md) documentation for detailed API reference.
+
+## Implementation Status
+
+All examples and documentation in this section have been verified to work with the current version of DATAMIMIC. Our continuous testing ensures that the documented functionality is accurate and reliable. 

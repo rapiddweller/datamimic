@@ -39,6 +39,15 @@ class InsurancePolicy(BaseEntity):
     def policy_holder(self) -> Person:
         return Person(self.insurance_policy_generator.person_generator)
 
+    @policy_holder.setter
+    def policy_holder(self, value: Person) -> None:
+        """Set the policy holder.
+
+        Args:
+            value: The person to set as the policy holder.
+        """
+        self._field_cache["policy_holder"] = value
+
     @property
     @property_cache
     def coverages(self) -> list[InsuranceCoverage]:
@@ -51,6 +60,15 @@ class InsurancePolicy(BaseEntity):
     @property_cache
     def premium(self) -> float:
         return random.uniform(100, 1000)
+
+    @premium.setter
+    def premium(self, value: float) -> None:
+        """Set the premium amount.
+
+        Args:
+            value: The premium amount to set.
+        """
+        self._field_cache["premium"] = value
 
     @property
     @property_cache
@@ -71,6 +89,15 @@ class InsurancePolicy(BaseEntity):
     @property_cache
     def status(self) -> str:
         return random.choice(["active", "inactive", "cancelled"])
+
+    @status.setter
+    def status(self, value: str) -> None:
+        """Set the policy status.
+
+        Args:
+            value: The status to set.
+        """
+        self._field_cache["status"] = value
 
     @property
     @property_cache

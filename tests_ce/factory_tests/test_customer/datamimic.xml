@@ -2,26 +2,26 @@
     <!-- customer.xml -->
     <generate name="customer" count="10">
         <!-- Basic customer info -->
-        <variable name="person" entity="Person(min_age=21, max_age=67)"/>
-        <key name="id" generator="IncrementGenerator"/>
-        <key name="first_name" script="person.given_name"/>
-        <key name="last_name" script="person.family_name"/>
-        <key name="email" script="person.email"/>
-        <key name="status" values="'active', 'inactive', 'pending'"/>
+        <variable name="person" entity="Person(min_age=21, max_age=67)" />
+        <key name="id" generator="IncrementGenerator" />
+        <key name="given_name" script="person.given_name" />
+        <key name="family_name" script="person.family_name" />
+        <key name="email" script="person.email" />
+        <key name="status" values="'active', 'inactive', 'pending'" />
 
         <!-- Nested address information -->
-<!--        <nestedKey name="address" type="dict">-->
-<!--            <key name="street" script="person.street"/>-->
-<!--            <key name="city" script="person.city"/>-->
-<!--            <key name="postal_code" script="person.postal_code"/>-->
-<!--            <key name="country" script="person.country"/>-->
-<!--        </nestedKey>-->
+        <!--        <nestedKey name="address" type="dict">-->
+        <!--            <key name="street" script="person.street"/>-->
+        <!--            <key name="city" script="person.city"/>-->
+        <!--            <key name="postal_code" script="person.postal_code"/>-->
+        <!--            <key name="country" script="person.country"/>-->
+        <!--        </nestedKey>-->
 
-<!--        &lt;!&ndash; Order history &ndash;&gt;-->
-<!--        <nestedKey name="orders" type="list" minCount="0" maxCount="5">-->
-<!--            <key name="order_id" generator="IncrementGenerator"/>-->
-<!--            <key name="amount" generator="IntegerGenerator(min=10, max=1000)"/>-->
-<!--            <key name="date" generator="DateTimeGenerator(min='2023-1-1', max='2024-12-31')"/>-->
-<!--        </nestedKey>-->
+        <!--        &lt;!&ndash; Order history &ndash;&gt;-->
+        <!--        <nestedKey name="orders" type="list" minCount="0" maxCount="5">-->
+        <!--            <key name="order_id" generator="IncrementGenerator"/>-->
+        <!--            <key name="amount" generator="IntegerGenerator(min=10, max=1000)"/>-->
+        <!--            <key name="date" generator="DateTimeGenerator(min='2023-1-1', max='2024-12-31')"/>-->
+        <!--        </nestedKey>-->
     </generate>
 </setup>

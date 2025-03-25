@@ -208,17 +208,17 @@ class PatientGenerator(BaseDomainGenerator):
         random_choices = random.choices(loaded_data, weights=wgt, k=num_medications)
         return [choice["name"] for choice in random_choices]
 
-    def get_emergency_contact(self, last_name: str) -> dict[str, str]:
+    def get_emergency_contact(self, family_name: str) -> dict[str, str]:
         """Generate a random emergency contact.
 
         Returns:
             A dictionary containing emergency contact information.
         """
         # Generate a name for the emergency contact
-        first_name = self._given_name_generator.generate()
+        given_name = self._given_name_generator.generate()
 
-        # 50% chance the emergency contact has the same last name
-        last_name = self._family_name_generator.generate() if random.random() < 0.5 else last_name
+        # 50% chance the emergency contact has the same family name
+        family_name = self._family_name_generator.generate() if random.random() < 0.5 else family_name
 
         # Generate a relationship
         relationships = [
@@ -236,4 +236,4 @@ class PatientGenerator(BaseDomainGenerator):
         relationship = random.choice(relationships)
         phone_number = self._phone_number_generator.generate()
 
-        return {"name": f"{first_name} {last_name}", "relationship": relationship, "phone": phone_number}
+        return {"name": f"{given_name} {family_name}", "relationship": relationship, "phone": phone_number}

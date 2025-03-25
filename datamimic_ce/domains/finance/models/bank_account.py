@@ -69,6 +69,15 @@ class BankAccount(BaseEntity):
     def balance(self) -> float:
         return random.uniform(0, 1000000)
 
+    @balance.setter
+    def balance(self, value: float) -> None:
+        """Set the bank account balance.
+
+        Args:
+            value: The balance amount to set.
+        """
+        self._field_cache["balance"] = value
+
     @property
     @property_cache
     def currency(self) -> str:

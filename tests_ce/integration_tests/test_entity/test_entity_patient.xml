@@ -1,41 +1,41 @@
 <setup multiprocessing="0">
     <generate name="patient" count="10" target="ConsoleExporter">
-        <variable name="patient" entity="Patient"/>
-        <key name="patient_id" script="patient.patient_id"/>
-        <key name="first_name" script="patient.first_name"/>
-        <key name="last_name" script="patient.last_name"/>
-        <key name="full_name" script="patient.full_name"/>
-        <key name="gender" script="patient.gender"/>
-        <key name="birthdate" script="patient.birthdate"/>
-        <key name="age" script="patient.age"/>
-        <key name="blood_type" script="patient.blood_type"/>    
-        <key name="height_cm" script="patient.height_cm"/>
-        <key name="weight_kg" script="patient.weight_kg"/>
-        <key name="bmi" script="patient.bmi"/>
+        <variable name="patient" entity="Patient" />
+        <key name="patient_id" script="patient.patient_id" />
+        <key name="given_name" script="patient.given_name" />
+        <key name="family_name" script="patient.family_name" />
+        <key name="full_name" script="patient.full_name" />
+        <key name="gender" script="patient.gender" />
+        <key name="birthdate" script="patient.birthdate" />
+        <key name="age" script="patient.age" />
+        <key name="blood_type" script="patient.blood_type" />
+        <key name="height_cm" script="patient.height_cm" />
+        <key name="weight_kg" script="patient.weight_kg" />
+        <key name="bmi" script="patient.bmi" />
         <!-- <key name="allergies" script="patient.allergies"/> -->
         <!-- <key name="medications" script="patient.medications"/> -->
         <!-- <key name="conditions" script="patient.conditions"/> -->
         <!-- <key name="emergency_contact" script="patient.emergency_contact"/> -->
-        <key name="insurance_provider" script="patient.insurance_provider"/>
-        <key name="insurance_policy_number" script="patient.insurance_policy_number"/>
+        <key name="insurance_provider" script="patient.insurance_provider" />
+        <key name="insurance_policy_number" script="patient.insurance_policy_number" />
         <!-- <key name="medical_records" script="patient.medical_records"/> -->
-        <variable name="patient_2" entity="Patient"/>
-        <key name="patient_id2" script="patient_2.patient_id"/>
-        <key name="first_name2" script="patient_2.first_name"/>
-        <key name="last_name2" script="patient_2.last_name"/>
-        <key name="full_name2" script="patient_2.full_name"/>
-        <key name="gender2" script="patient_2.gender"/> 
-        <key name="birthdate2" script="patient_2.birthdate"/>
-        <key name="age2" script="patient_2.age"/>
-        <key name="blood_type2" script="patient_2.blood_type"/>
-        <key name="height_cm2" script="patient_2.height_cm"/>
-        <key name="weight_kg2" script="patient_2.weight_kg"/>
-        <key name="bmi2" script="patient_2.bmi"/>
+        <variable name="patient_2" entity="Patient" />
+        <key name="patient_id2" script="patient_2.patient_id" />
+        <key name="given_name2" script="patient_2.given_name" />
+        <key name="family_name2" script="patient_2.family_name" />
+        <key name="full_name2" script="patient_2.full_name" />
+        <key name="gender2" script="patient_2.gender" />
+        <key name="birthdate2" script="patient_2.birthdate" />
+        <key name="age2" script="patient_2.age" />
+        <key name="blood_type2" script="patient_2.blood_type" />
+        <key name="height_cm2" script="patient_2.height_cm" />
+        <key name="weight_kg2" script="patient_2.weight_kg" />
+        <key name="bmi2" script="patient_2.bmi" />
         <!-- <key name="allergies2" script="patient_2.allergies"/> -->
-        <!-- <key name="medications2" script="patient_2.medications"/> -->  
+        <!-- <key name="medications2" script="patient_2.medications"/> -->
         <!-- <key name="conditions2" script="patient_2.conditions"/> -->
         <!-- <key name="emergency_contact2" script="patient_2.emergency_contact"/> -->
-        <key name="insurance_provider2" script="patient_2.insurance_provider"/>
-        <key name="insurance_policy_number2" script="patient_2.insurance_policy_number"/>
-    </generate> 
+        <key name="insurance_provider2" script="patient_2.insurance_provider" />
+        <key name="insurance_policy_number2" script="patient_2.insurance_policy_number" />
+    </generate>
 </setup>

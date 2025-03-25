@@ -5,8 +5,8 @@
     <generate name="patients" count="10" target="CSV">
         <variable name="patient" entity="Patient" />
         <key name="patient_id" script="patient.patient_id" />
-        <key name="first_name" script="patient.first_name" />
-        <key name="last_name" script="patient.last_name" />
+        <key name="given_name" script="patient.given_name" />
+        <key name="family_name" script="patient.family_name" />
         <key name="date_of_birth" script="patient.birthdate" />
         <key name="gender" script="patient.gender" />
         <key name="blood_type" script="patient.blood_type" />
@@ -31,8 +31,8 @@
     <generate name="us_patients" count="5" target="CSV">
         <variable name="patient" entity="Patient" locale="en_US" />
         <key name="patient_id" script="patient.patient_id" />
-        <key name="first_name" script="patient.first_name" />
-        <key name="last_name" script="patient.last_name" />
+        <key name="given_name" script="patient.given_name" />
+        <key name="family_name" script="patient.family_name" />
         <key name="date_of_birth" script="patient.birthdate" />
         <key name="gender" script="patient.gender" />
         <key name="blood_type" script="patient.blood_type" />
@@ -50,9 +50,9 @@
     <generate name="de_patients" count="5" target="CSV">
         <variable name="patient" entity="Patient" locale="de_DE" />
         <key name="patient_id" script="patient.patient_id" />
-        <key name="first_name" script="patient.first_name" />
-        <key name="last_name" script="patient.last_name" />
-        <key name="date_of_birth" script="patient.birthdate" /> 
+        <key name="given_name" script="patient.given_name" />
+        <key name="family_name" script="patient.family_name" />
+        <key name="date_of_birth" script="patient.birthdate" />
         <key name="gender" script="patient.gender" />
         <key name="blood_type" script="patient.blood_type" />
         <!-- <variable name="address" script="patient.address" />

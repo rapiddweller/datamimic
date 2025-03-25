@@ -293,8 +293,8 @@ class FileUtil:
     <generate name="datamimic_user_list" count="1000" target="CSV,JSON">
         <variable name="person" entity="Person(min_age=18, max_age=90, female_quota=0.5)"/>
         <key name="id" generator="IncrementGenerator"/>
-        <key name="first_name" script="person.given_name"/>
-        <key name="last_name" script="person.family_name"/>
+        <key name="given_name" script="person.given_name"/>
+        <key name="family_name" script="person.family_name"/>
         <key name="gender" script="person.gender"/>
         <key name="birthDate" script="person.birthdate" converter="DateFormat('%d.%m.%Y')"/>
         <key name="email" script="person.family_name + '@' + person.given_name + '.de'"/>

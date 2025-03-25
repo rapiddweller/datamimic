@@ -1,19 +1,21 @@
 from datetime import datetime
 
 import pytest
+
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.public_sector.models.police_officer import PoliceOfficer
 from datamimic_ce.domains.public_sector.services.police_officer_service import PoliceOfficerService
- 
 
-class TestEntityPoliceOfficer:  
+
+class TestEntityPoliceOfficer:
     _supported_datasets = ["US", "DE"]
+
     def _test_single_police_officer(self, police_officer: PoliceOfficer):
         assert isinstance(police_officer, PoliceOfficer)
         assert isinstance(police_officer.officer_id, str)
         assert isinstance(police_officer.badge_number, str)
-        assert isinstance(police_officer.first_name, str)
-        assert isinstance(police_officer.last_name, str)
+        assert isinstance(police_officer.given_name, str)
+        assert isinstance(police_officer.family_name, str)
         assert isinstance(police_officer.full_name, str)
         assert isinstance(police_officer.gender, str)
         assert isinstance(police_officer.birthdate, datetime)
@@ -31,8 +33,8 @@ class TestEntityPoliceOfficer:
         assert isinstance(police_officer.address, Address)
         assert police_officer.officer_id is not None and police_officer.officer_id != ""
         assert police_officer.badge_number is not None and police_officer.badge_number != ""
-        assert police_officer.first_name is not None and police_officer.first_name != ""
-        assert police_officer.last_name is not None and police_officer.last_name != ""
+        assert police_officer.given_name is not None and police_officer.given_name != ""
+        assert police_officer.family_name is not None and police_officer.family_name != ""
         assert police_officer.full_name is not None and police_officer.full_name != ""
         assert police_officer.gender is not None and police_officer.gender != ""
         assert police_officer.birthdate is not None and police_officer.birthdate != ""
@@ -48,7 +50,7 @@ class TestEntityPoliceOfficer:
         assert police_officer.email is not None and police_officer.email != ""
         assert police_officer.phone is not None and police_officer.phone != ""
         assert police_officer.address is not None and police_officer.address != ""
-        
+
     def test_generate_single_police_officer(self):
         police_officer_service = PoliceOfficerService()
         police_officer = police_officer_service.generate()
@@ -61,12 +63,12 @@ class TestEntityPoliceOfficer:
         for police_officer in police_officers:
             self._test_single_police_officer(police_officer)
 
-    def test_police_officer_property_cache(self):   
+    def test_police_officer_property_cache(self):
         police_officer_service = PoliceOfficerService()
         police_officer = police_officer_service.generate()
         assert police_officer.badge_number == police_officer.badge_number
-        assert police_officer.first_name == police_officer.first_name
-        assert police_officer.last_name == police_officer.last_name
+        assert police_officer.given_name == police_officer.given_name
+        assert police_officer.family_name == police_officer.family_name
         assert police_officer.full_name == police_officer.full_name
         assert police_officer.gender == police_officer.gender
         assert police_officer.birthdate == police_officer.birthdate
@@ -88,8 +90,8 @@ class TestEntityPoliceOfficer:
         police_officer_service = PoliceOfficerService()
         police_officer1 = police_officer_service.generate()
         police_officer2 = police_officer_service.generate()
-        assert police_officer1.first_name != police_officer2.first_name
-        assert police_officer1.last_name != police_officer2.last_name
+        assert police_officer1.given_name != police_officer2.given_name
+        assert police_officer1.family_name != police_officer2.family_name
         assert police_officer1.full_name != police_officer2.full_name
         # assert police_officer1.gender != police_officer2.gender
         assert police_officer1.birthdate != police_officer2.birthdate
@@ -117,4 +119,3 @@ class TestEntityPoliceOfficer:
         police_officer = police_officer_service.generate()
         with pytest.raises(FileNotFoundError):
             police_officer.to_dict()
-

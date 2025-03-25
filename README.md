@@ -189,11 +189,6 @@ print(f"Conditions: {', '.join(patient.conditions)}")
 # Generate batch data
 people = person_service.generate_batch(count=1000)
 print(f"Generated {len(people)} unique people")
-
-# Export to JSON
-import json
-with open('people.json', 'w') as f:
-    json.dump([p.to_dict() for p in people], f, indent=2)
 ```
 
 ### Method 2: Using XML Configuration
@@ -205,8 +200,8 @@ Create a data model in XML format (`datamimic.xml`):
     <generate name="datamimic_user_list" count="100" target="CSV,JSON">
         <variable name="person" entity="Person(min_age=18, max_age=90, female_quota=0.5)"/>
         <key name="id" generator="IncrementGenerator"/>
-        <key name="first_name" script="person.given_name"/>
-        <key name="last_name" script="person.family_name"/>
+        <key name="given_name" script="person.given_name"/>
+        <key name="family_name" script="person.family_name"/>
         <key name="gender" script="person.gender"/>
         <key name="birth_date" script="person.birthdate" converter="DateFormat('%d.%m.%Y')"/>
         <key name="email" script="person.family_name + '@' + person.given_name + '.de'"/>

@@ -1,109 +1,118 @@
 <setup multiprocessing="False">
 
     <generate name="script1" count="50" target="ConsoleExporter">
-        <variable name="count" type="integer" generator="IncrementGenerator"/>
-        <key name="generatorTest" generator="CustomStringGenerator(prefix=f'nr {count}-')"/>
+        <variable name="count" type="integer" generator="IncrementGenerator" />
+        <key name="generatorTest" generator="CustomStringGenerator(prefix=f'nr {count}-')" />
     </generate>
 
     <generate name="script2" count="50" target="ConsoleExporter">
-        <variable name="count" type="integer" generator="IncrementGenerator"/>
-        <key name="generatorTest" generator="CustomStringGenerator(prefix=f'nr {count}-')" converter="CustomConverter"/>
+        <variable name="count" type="integer" generator="IncrementGenerator" />
+        <key name="generatorTest" generator="CustomStringGenerator(prefix=f'nr {count}-')"
+            converter="CustomConverter" />
     </generate>
 
     <generate name="scriptExample" count="50" target="ConsoleExporter">
-        <variable name="variable1" type="integer" generator="IncrementGenerator"/>
-        <key name="script_example_1" script="'example string'"/>
-        <key name="script_example_2" script="str(123)"/>
-        <key name="script_example_3" script="'Hello, ' + 'world!'"/>
-        <key name="script_example_4" script="fake.name()"/>
-        <key name="script_example_5" script="uuid.uuid4().hex"/>
-        <key name="script_example_6" script="os.getenv('USER', 'default_user')"/>
-        <key name="script_example_8" script="json.dumps({'key': 'value'})"/>
-        <key name="script_example_9" script="1 + 2"/>
-        <key name="script_example_10" script="variable1 * 2"/>
-        <key name="script_example_11" script="random.randint(1, 100)"/>
-        <key name="script_example_12" script="int('42')"/>
-        <key name="script_example_13" script="len('example')"/>
-        <key name="script_example_14" script="datetime.datetime.now().year"/>
-        <key name="script_example_15" script="1.23"/>
-        <key name="script_example_16" script="variable1 / 3.0"/>
-        <key name="script_example_17" script="random.uniform(1.0, 10.0)"/>
-        <key name="script_example_18" script="float('3.14')"/>
-        <key name="script_example_19" script="math.sqrt(16)"/>
-        <key name="script_example_20" script="datetime.datetime.now().timestamp()"/>
-        <key name="script_example_21" script="True"/>
-        <key name="script_example_22" script="False"/>
-        <key name="script_example_23" script="variable1 > 10"/>
-        <key name="script_example_24" script="'example' in 'example string'"/>
-        <key name="script_example_25" script="not False"/>
-        <key name="script_example_26" script="random.choice([True, False])"/>
-        <key name="script_example_27" script="len('example') > 5"/>
-        <variable name="variable_script_example_1" script="1 + 2"/>
-        <key name="variable_script_key_example_1" script="variable_script_example_1"/>
-        <variable name="variable_script_example_2" script="variable1 * 2"/>
-        <key name="variable_script_key_example_2" script="variable_script_example_2"/>
-        <variable name="variable_script_example_5" script="random.randint(0, 100)"/>
-        <key name="variable_script_key_example_5" script="variable_script_example_5"/>
-        <variable name="variable_script_example_6" script="datetime.datetime.now().isoformat()"/>
-        <key name="variable_script_key_example_6" script="variable_script_example_6"/>
-        <variable name="variable_script_example_7" script="hashlib.md5('some_string'.encode()).hexdigest()"/>
-        <key name="variable_script_key_example_7" script="variable_script_example_7"/>
-        <variable name="variable_script_example_8" script="sum([1, 2, 3, 4])"/>
-        <key name="variable_script_key_example_8" script="variable_script_example_8"/>
-        <variable name="variable_script_example_10" script="[{'id': 1, 'name': 'Alice'}, {'id': 2, 'name': 'Bob'}]"/>
-        <nestedKey name="variable_script_key_example_10" script="variable_script_example_10"/>
+        <variable name="variable1" type="integer" generator="IncrementGenerator" />
+        <key name="script_example_1" script="'example string'" />
+        <key name="script_example_2" script="str(123)" />
+        <key name="script_example_3" script="'Hello, ' + 'world!'" />
+        <key name="script_example_4" script="fake.name()" />
+        <key name="script_example_5" script="uuid.uuid4().hex" />
+        <key name="script_example_6" script="os.getenv('USER', 'default_user')" />
+        <key name="script_example_8" script="json.dumps({'key': 'value'})" />
+        <key name="script_example_9" script="1 + 2" />
+        <key name="script_example_10" script="variable1 * 2" />
+        <key name="script_example_11" script="random.randint(1, 100)" />
+        <key name="script_example_12" script="int('42')" />
+        <key name="script_example_13" script="len('example')" />
+        <key name="script_example_14" script="datetime.datetime.now().year" />
+        <key name="script_example_15" script="1.23" />
+        <key name="script_example_16" script="variable1 / 3.0" />
+        <key name="script_example_17" script="random.uniform(1.0, 10.0)" />
+        <key name="script_example_18" script="float('3.14')" />
+        <key name="script_example_19" script="math.sqrt(16)" />
+        <key name="script_example_20" script="datetime.datetime.now().timestamp()" />
+        <key name="script_example_21" script="True" />
+        <key name="script_example_22" script="False" />
+        <key name="script_example_23" script="variable1 > 10" />
+        <key name="script_example_24" script="'example' in 'example string'" />
+        <key name="script_example_25" script="not False" />
+        <key name="script_example_26" script="random.choice([True, False])" />
+        <key name="script_example_27" script="len('example') > 5" />
+        <variable name="variable_script_example_1" script="1 + 2" />
+        <key name="variable_script_key_example_1" script="variable_script_example_1" />
+        <variable name="variable_script_example_2" script="variable1 * 2" />
+        <key name="variable_script_key_example_2" script="variable_script_example_2" />
+        <variable name="variable_script_example_5" script="random.randint(0, 100)" />
+        <key name="variable_script_key_example_5" script="variable_script_example_5" />
+        <variable name="variable_script_example_6" script="datetime.datetime.now().isoformat()" />
+        <key name="variable_script_key_example_6" script="variable_script_example_6" />
+        <variable name="variable_script_example_7"
+            script="hashlib.md5('some_string'.encode()).hexdigest()" />
+        <key name="variable_script_key_example_7" script="variable_script_example_7" />
+        <variable name="variable_script_example_8" script="sum([1, 2, 3, 4])" />
+        <key name="variable_script_key_example_8" script="variable_script_example_8" />
+        <variable name="variable_script_example_10"
+            script="[{'id': 1, 'name': 'Alice'}, {'id': 2, 'name': 'Bob'}]" />
+        <nestedKey name="variable_script_key_example_10" script="variable_script_example_10" />
         <variable name="variable_script_example_11"
-                  script="list(map(lambda x: {'id': x, 'name': f'User{x}'}, range(1, 5)))"/>
-        <nestedKey name="variable_script_key_example_11" script="variable_script_example_11"/>
+            script="list(map(lambda x: {'id': x, 'name': f'User{x}'}, range(1, 5)))" />
+        <nestedKey name="variable_script_key_example_11" script="variable_script_example_11" />
         <variable name="variable_script_example_12"
-                  script="[{'city': 'New York', 'population': 8000000}, {'city': 'Los Angeles', 'population': 4000000}]"/>
-        <nestedKey name="variable_script_key_example_12" script="variable_script_example_12"/>
-        <variable name="variable_script_example_13" script="{'user': {'id': 1, 'name': 'Alice'}}"/>
-        <nestedKey name="variable_script_key_example_13" script="variable_script_example_13"/>
-        <variable name="variable_script_example_14" script="{'product': {'name': 'Laptop', 'price': 999.99}}"/>
-        <nestedKey name="variable_script_key_example_14" script="variable_script_example_14"/>
-        <variable name="variable_script_example_15" script="{'address': {'city': 'New York', 'zipcode': '10001'}}"/>
-        <nestedKey name="variable_script_key_example_15" script="variable_script_example_15"/>
-        <variable name="variable_script_example_16" script="{'company': {'name': 'Tech Corp', 'employees': 200}}"/>
-        <nestedKey name="variable_script_key_example_16" script="variable_script_example_16"/>
-        <array name="nested_key_script_example_1" script="[10, 20, 30]"/>
-        <array name="nested_key_script_example_2" script="[True, False, True]"/>
-        <array name="nested_key_script_example_3" script="['Rose', 'Lotus', 'Jasmine']"/>
-        <array name="nested_key_script_example_4" script="[fake.name() for _ in range(3)]"/>
-        <array name="nested_key_script_example_5" script="[random.randint(1, 10) for _ in range(5)]"/>
-        <array name="nested_key_script_example_7" script="[uuid.uuid4().hex for _ in range(4)]"/>
-        <nestedKey name="nested_key_script_example_9" script="{'id': 1, 'name': 'John Doe'}"/>
+            script="[{'city': 'New York', 'population': 8000000}, {'city': 'Los Angeles', 'population': 4000000}]" />
+        <nestedKey name="variable_script_key_example_12" script="variable_script_example_12" />
+        <variable name="variable_script_example_13" script="{'user': {'id': 1, 'name': 'Alice'}}" />
+        <nestedKey name="variable_script_key_example_13" script="variable_script_example_13" />
+        <variable name="variable_script_example_14"
+            script="{'product': {'name': 'Laptop', 'price': 999.99}}" />
+        <nestedKey name="variable_script_key_example_14" script="variable_script_example_14" />
+        <variable name="variable_script_example_15"
+            script="{'address': {'city': 'New York', 'zipcode': '10001'}}" />
+        <nestedKey name="variable_script_key_example_15" script="variable_script_example_15" />
+        <variable name="variable_script_example_16"
+            script="{'company': {'name': 'Tech Corp', 'employees': 200}}" />
+        <nestedKey name="variable_script_key_example_16" script="variable_script_example_16" />
+        <array name="nested_key_script_example_1" script="[10, 20, 30]" />
+        <array name="nested_key_script_example_2" script="[True, False, True]" />
+        <array name="nested_key_script_example_3" script="['Rose', 'Lotus', 'Jasmine']" />
+        <array name="nested_key_script_example_4" script="[fake.name() for _ in range(3)]" />
+        <array name="nested_key_script_example_5" script="[random.randint(1, 10) for _ in range(5)]" />
+        <array name="nested_key_script_example_7" script="[uuid.uuid4().hex for _ in range(4)]" />
+        <nestedKey name="nested_key_script_example_9" script="{'id': 1, 'name': 'John Doe'}" />
         <nestedKey name="nested_key_script_example_10"
-                   script="{'date': datetime.datetime.now(), 'temperature': 22.5}"/>
-        <nestedKey name="nested_key_script_example_11" script="{'company': 'Example Corp', 'address': '1234 Main St'}"/>
-        <nestedKey name="nested_key_script_example_12" script="{'username': fake.user_name(), 'email': fake.email()}"/>
+            script="{'date': datetime.datetime.now(), 'temperature': 22.5}" />
+        <nestedKey name="nested_key_script_example_11"
+            script="{'company': 'Example Corp', 'address': '1234 Main St'}" />
+        <nestedKey name="nested_key_script_example_12"
+            script="{'username': fake.user_name(), 'email': fake.email()}" />
         <nestedKey name="nested_key_script_example_13"
-                   script="{'order_id': uuid.uuid4().hex, 'total': random.uniform(20.0, 100.0)}"/>
-        <nestedKey name="nested_key_script_example_14" script="{'product': 'Widget', 'quantity': 10, 'price': 19.99}"/>
+            script="{'order_id': uuid.uuid4().hex, 'total': random.uniform(20.0, 100.0)}" />
+        <nestedKey name="nested_key_script_example_14"
+            script="{'product': 'Widget', 'quantity': 10, 'price': 19.99}" />
         <nestedKey name="nested_key_script_example_15"
-                   script="{'session_id': uuid.uuid4().hex, 'timestamp': datetime.datetime.now().timestamp()}"/>
+            script="{'session_id': uuid.uuid4().hex, 'timestamp': datetime.datetime.now().timestamp()}" />
         <nestedKey name="nested_key_script_example_16"
-                   script="{'env': os.getenv('ENV', 'development'), 'debug': os.getenv('DEBUG', 'false').lower() == 'true'}"/>
+            script="{'env': os.getenv('ENV', 'development'), 'debug': os.getenv('DEBUG', 'false').lower() == 'true'}" />
     </generate>
 
-        <generate name="simple_types_dataset" count="100" target="ConsoleExporter">
-        <key name="academic_title" generator="AcademicTitleGenerator"/>
-        <key name="is_active" generator="BooleanGenerator"/>
-        <key name="cnpj" generator="CNPJGenerator"/>
-        <key name="cpf" generator="CPFGenerator"/>
-        <key name="company_name" generator="CompanyNameGenerator"/>
-        <key name="created_at" generator="DateTimeGenerator(min='2010-08-01', max='2020-08-31', input_format='%Y-%m-%d')"/>
-        <key name="domain" generator="DomainGenerator"/>
-        <key name="ean" generator="EANGenerator"/>
-        <key name="email" generator="EmailAddressGenerator"/>
-        <key name="last_name" generator="FamilyNameGenerator"/>
-        <key name="first_name" generator="GivenNameGenerator"/>
-        <key name="incremental_id" generator="IncrementGenerator"/>
-        <key name="phone_number" generator="PhoneNumberGenerator"/>
-        <key name="sector" generator="SectorGenerator"/>
-        <key name="ssn" generator="SSNGenerator"/>
-        <key name="random_string" generator="StringGenerator(min_len=10,max_len=20)"/>
-        <key name="uuid" generator="UUIDGenerator"/>
+    <generate name="simple_types_dataset" count="100" target="ConsoleExporter">
+        <key name="academic_title" generator="AcademicTitleGenerator" />
+        <key name="is_active" generator="BooleanGenerator" />
+        <key name="cnpj" generator="CNPJGenerator" />
+        <key name="cpf" generator="CPFGenerator" />
+        <key name="company_name" generator="CompanyNameGenerator" />
+        <key name="created_at"
+            generator="DateTimeGenerator(min='2010-08-01', max='2020-08-31', input_format='%Y-%m-%d')" />
+        <key name="domain" generator="DomainGenerator" />
+        <key name="ean" generator="EANGenerator" />
+        <key name="email" generator="EmailAddressGenerator" />
+        <key name="family_name" generator="FamilyNameGenerator" />
+        <key name="given_name" generator="GivenNameGenerator" />
+        <key name="incremental_id" generator="IncrementGenerator" />
+        <key name="phone_number" generator="PhoneNumberGenerator" />
+        <key name="sector" generator="SectorGenerator" />
+        <key name="ssn" generator="SSNGenerator" />
+        <key name="random_string" generator="StringGenerator(min_len=10,max_len=20)" />
+        <key name="uuid" generator="UUIDGenerator" />
     </generate>
 </setup>
-

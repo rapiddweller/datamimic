@@ -2,52 +2,24 @@
 
 The Enterprise Edition of DATAMIMIC offers advanced capabilities beyond the Community Edition, with a focus on enterprise integration, AI-powered generation, enhanced privacy features, and superior synthetic data quality.
 
-## Synthetic Data Quality Benchmarks
-
-DATAMIMIC Enterprise Edition delivers synthetic data that is statistically indistinguishable from real data while guaranteeing complete privacy. Our synthetic data quality outperforms open-source alternatives on multiple dimensions:
-
-### ML based Synthetic Data Generators
-
-- **Higher Statistical Accuracy**: DATAMIMIC preserves statistical relationships with up to 30% higher accuracy
-- **Better Column Correlations**: More accurate preservation of relationships between variables 
-- **Superior Distribution Matching**: More realistic distribution patterns across all data types
-- **Improved ML Utility**: Models trained on DATAMIMIC synthetic data perform closer to those trained on real data
-
-### Comprehensive Evaluation Framework
-
-DATAMIMIC Enterprise Edition includes a robust evaluation framework for assessing synthetic data quality:
-
-```python
-# Example: Evaluating synthetic data quality
-from datamimic_ee.evaluation import DataQualityEvaluator
-
-# Compare synthetic data to original data
-evaluator = DataQualityEvaluator(original_data, synthetic_data)
-results = evaluator.evaluate_all_metrics()
-
-# View detailed quality metrics
-print(f"Statistical similarity score: {results.statistical_similarity}")
-print(f"Privacy guarantee score: {results.privacy_guarantee}")
-print(f"Machine learning utility: {results.ml_utility}")
-```
+> **Note**: For comprehensive documentation on all DATAMIMIC features including detailed model descriptions, exporters, importers, platform UI, and more, please refer to our official online documentation at [https://docs.datamimic.io/](https://docs.datamimic.io/)
 
 ## AI-Powered Generation
 
-### GAN-based Synthesis
+### Advanced AI-Driven Synthesis
 
-DATAMIMIC Enterprise Edition leverages advanced Generative Adversarial Networks (GANs) to produce synthetic data with extremely high fidelity:
+DATAMIMIC Enterprise Edition employs a sophisticated hybrid approach to synthetic data generation, combining the power of machine learning with domain-specific modeling:
 
-- Auto-detection of data distributions and patterns
-- Preservation of complex inter-column dependencies
-- Specialized GANs for different data types (numerical, categorical, time-series)
+- **Intelligent Pattern Analysis**: Our system automatically analyzes your real data to detect distributions, correlations, and hidden patterns without compromising privacy
+- **Adaptive ML Generator Training**: We train specialized machine learning generators that capture the essence of your data's structure and relationships
+- **Cross-Source Data Harmonization**: Seamlessly combine data from multiple sources while maintaining statistical coherence and business logic
+- **Domain-Model Integration**: Generated data is refined through DATAMIMIC's powerful domain models, ensuring business validity and system compatibility
+- **Rule-Based Validation**: Apply customizable rule sets to guarantee that all synthetic data adheres to your target system's constraints and requirements
+- **Continuous Learning Pipeline**: Generators can be reused and retrained as your data evolves, creating a sustainable synthetic data ecosystem
 
-### LLM Integration
+This revolutionary approach delivers synthetic data that is statistically accurate, structurally sound, and immediately usable in your enterprise environment—all while maintaining the highest standards of data privacy.
 
-Natural language generation powered by Large Language Models:
-
-- Context-aware text generation that maintains coherence with numerical data
-- Domain-specific vocabulary and phrasing
-- Realistic narrative generation based on data patterns
+> For detailed information on AI model architecture and implementation, please see our [Advanced Model Definition](https://docs.datamimic.io/reference/model/data-definition-advanced/).
 
 ## Advanced Enterprise Integrations
 
@@ -65,9 +37,10 @@ Natural language generation powered by Large Language Models:
 
 ### Advanced Connectors
 
-- **Enterprise Systems**: SAP, Oracle, Salesforce integrations
 - **Cloud Platforms**: AWS, Azure, GCP native connectors
 - **Legacy Systems**: Mainframe and legacy database compatibility
+
+> For complete documentation on integrations, connectors and supported formats, see our [Platform Integration Guide](https://docs.datamimic.io/reference/model/data-definition-core/?h=object+sto#example-1-using-object-storage-for-data-generation).
 
 ## Enhanced Privacy Features
 
@@ -85,7 +58,13 @@ Natural language generation powered by Large Language Models:
 
 ## Getting Started with Enterprise Edition
 
-For information on accessing DATAMIMIC Enterprise Edition:
+Ready to transform your data strategy with DATAMIMIC Enterprise Edition?
 
-- Email: [sales@rapiddweller.com](mailto:sales@rapiddweller.com)
-- Visit: [datamimic.io/enterprise](https://datamimic.io/enterprise) 
+- **Book a Free Strategy Call**: Let our experts analyze your specific data challenges and demonstrate how DATAMIMIC can solve them
+- **Request a Personalized Demo**: See DATAMIMIC in action with your own use cases and data scenarios
+- **Contact Our Team**: Reach out to our solution architects at [sales@rapiddweller.com](mailto:sales@rapiddweller.com)
+- **Explore Enterprise Solutions**: Visit [datamimic.io](https://datamimic.io) to discover our full suite of enterprise capabilities
+
+Take the first step toward enterprise-grade synthetic data generation today!
+
+> For complete documentation on the DATAMIMIC platform, including the web UI, advanced features, and enterprise capabilities, visit [https://docs.datamimic.io/](https://docs.datamimic.io/)

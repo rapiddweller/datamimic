@@ -4,8 +4,8 @@
     <generate name="doctors" count="10" target="CSV">
         <variable name="doctor" entity="Doctor" />
         <key name="doctor_id" script="doctor.doctor_id" />
-        <key name="first_name" script="doctor.first_name" />
-        <key name="last_name" script="doctor.last_name" />
+        <key name="given_name" script="doctor.given_name" />
+        <key name="family_name" script="doctor.family_name" />
         <key name="specialty" script="doctor.specialty" />
         <key name="license_number" script="doctor.license_number" />
         <!-- <key name="hospital_affiliation" script="doctor.hospital_affiliation" /> -->
@@ -30,8 +30,8 @@
     <generate name="uk_doctors" count="5" target="CSV">
         <variable name="doctor" entity="Doctor" locale="en_GB" />
         <key name="doctor_id" script="doctor.doctor_id" />
-        <key name="first_name" script="doctor.first_name" />
-        <key name="last_name" script="doctor.last_name" />
+        <key name="given_name" script="doctor.given_name" />
+        <key name="family_name" script="doctor.family_name" />
         <key name="specialty" script="doctor.specialty" />
         <key name="license_number" script="doctor.license_number" />
         <!-- <key name="hospital_affiliation" script="doctor.hospital_affiliation" /> -->

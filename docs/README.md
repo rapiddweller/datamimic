@@ -1,25 +1,36 @@
 # DATAMIMIC Documentation
 
-Welcome to the official documentation for DATAMIMIC, a powerful synthetic data generation platform that combines model-driven approaches with AI to produce high-quality, realistic data for development, testing, and demonstration.
+Welcome to the official documentation for DATAMIMIC, a powerful synthetic data generation platform that combines domain-driven approaches with weighted distributions to produce high-quality, realistic data for development, testing, and demonstration.
+
+> **Note**: For comprehensive documentation including detailed model descriptions, exporters, importers, platform UI, and more, please visit our official online documentation at [https://docs.datamimic.io/](https://docs.datamimic.io/)
+
+This project documentation focuses specifically on:
+- Using data domains
+- Command-line interface
+- Getting started with the Community Edition
+- Developer integration
 
 ## Documentation Sections
 
 - [Core Concepts](#core-concepts)
 - [Getting Started](#getting-started)
-- [Domain-Driven Framework](#domain-driven-framework)
-- [API Reference](#api-reference)
-- [Advanced Topics](#advanced-topics)
-- [Synthetic Data Quality](#synthetic-data-quality)
+- [Domain-Driven Framework](data-domains/README.md)
+- [Examples](examples/README.md)
+- [API Reference](api/README.md)
+- [Advanced Topics](advanced/README.md)
+- [Developer Guide](developer_guide.md)
 
 ## Core Concepts
 
 DATAMIMIC is built around several core concepts:
 
-- **Model-Driven Generation** - Define your data models and let DATAMIMIC generate the appropriate instances
-- **Domain-Specific Data** - Industry-specific data models with realistic properties and relationships
+- **Domain-Driven Generation** - Industry-specific data models with realistic properties and relationships
 - **Weighted Distributions** - Statistical accuracy through real-world distribution patterns
+- **Entity Relationships** - Create complex, interconnected data entities
 - **Data Privacy** - Built-in tools for anonymization and pseudonymization
-- **Advanced Features** - Comprehensive set of features for enterprise-grade synthetic data generation
+- **Multi-Domain Support** - Healthcare, Finance, Insurance, E-commerce, and more
+
+For detailed information on DATAMIMIC's architecture and model descriptions, please refer to our [online documentation](https://docs.datamimic.io/).
 
 ## Getting Started
 
@@ -31,109 +42,105 @@ To install DATAMIMIC Community Edition:
 pip install datamimic-ce
 ```
 
-For the Enterprise Edition with additional features:
+### Quick Start - Python API
 
-```bash
-pip install datamimic-ee
-```
-
-### Quick Start - XML Configuration
-
-DATAMIMIC can be used with XML configuration files:
-
-```xml
-<setup>
-    <generate name="users" count="100" target="CSV,JSON">
-        <variable name="person" entity="Person(dataset='US')"/>
-        <key name="id" generator="IncrementGenerator"/>
-        <key name="first_name" script="person.given_name"/>
-        <key name="last_name" script="person.family_name"/>
-        <key name="email" script="person.email"/>
-        <key name="age" script="person.age"/>
-    </generate>
-</setup>
-```
-
-Run with the command-line tool:
-
-```bash
-datamimic run config.xml
-```
-
-### Quick Start - Python SDK
-
-DATAMIMIC can also be used directly in Python:
+The fastest way to get started with DATAMIMIC is using the Python API:
 
 ```python
 from datamimic_ce.domains.common.services import PersonService
+
+# Create a service instance
+person_service = PersonService(dataset="US")
+
+# Generate a single person
+person = person_service.generate()
+
+# Access person attributes
+print(f"Name: {person.name}")
+print(f"Age: {person.age}")
+print(f"Email: {person.email}")
+print(f"Address: {person.address.street}, {person.address.city}, {person.address.state}")
+```
+
+### Generate Healthcare Data
+
+DATAMIMIC provides specialized services for different domains:
+
+```python
 from datamimic_ce.domains.healthcare.services import PatientService
 
-# Generate common entities
-person_service = PersonService(dataset="US")
-person = person_service.generate()
-print(f"Generated person: {person.name}, {person.age} years old")
+# Create a patient service
+patient_service = PatientService()
 
-# Generate healthcare entities
-patient_service = PatientService(dataset="US")
+# Generate a patient with medical information
 patient = patient_service.generate()
-print(f"Patient {patient.patient_id}: {patient.given_name} {patient.family_name}")
-print(f"Medical conditions: {', '.join(patient.conditions)}")
 
-# Generate a batch of entities
-patients = patient_service.generate_batch(count=100)
-print(f"Generated {len(patients)} unique patients")
+# Access patient-specific attributes
+print(f"Patient ID: {patient.patient_id}")
+print(f"Blood Type: {patient.blood_type}")
+print(f"Medical Conditions: {patient.conditions}")
+```
+
+### Generate Multiple Entities
+
+You can easily generate multiple entities at once:
+
+```python
+# Generate a batch of people
+people = person_service.generate_batch(count=100)
+print(f"Generated {len(people)} unique people")
+
+# Export to other formats if needed
+for person in people[:5]:
+    print(f"{person.name}, {person.age} years old")
 ```
 
 ## Domain-Driven Framework
 
-The Domain-Driven Framework is a powerful component of DATAMIMIC that provides industry-specific entities and realistic data generation based on weighted distributions.
+DATAMIMIC's domain-driven framework organizes synthetic data generation by industry domains:
 
-For detailed documentation on the Domain-Driven Framework, see the [domain-specific documentation](data-domains/README.md).
+- **Common Domain** - [Person](examples/person_generation.md), Address, Company
+- **Healthcare Domain** - [Patient](examples/healthcare_generation.md), Doctor, Hospital
+- **Finance Domain** - BankAccount, Transaction, Loan
+- **Insurance Domain** - Policy, Claim, Insured
+- **E-commerce Domain** - Product, Order, Customer
 
-Key domains include:
-- **Common** - Basic entities like Person, Address, Company
-- **Healthcare** - Medical entities like Patient, Doctor, Hospital
-- **Finance** - Banking entities like Account, Transaction
-- **Insurance** - Policy, Claim, and other insurance-specific entities
-- **E-commerce** - Products, Orders, and online retail entities
-- **Public Sector** - Government and public administration entities
+For detailed documentation on the domain-driven framework, see the [domain-specific documentation](data-domains/README.md).
+
+## Examples
+
+DATAMIMIC includes detailed examples demonstrating various use cases:
+
+- [Person Generation](examples/person_generation.md) - Generate and work with person entities
+- [Healthcare Data Generation](examples/healthcare_generation.md) - Create realistic healthcare data
 
 ## API Reference
 
-Detailed API documentation is available for all DATAMIMIC components:
+The API reference documentation covers:
 
-- [Command Line Interface](api/cli.md)
-- [Configuration XML](api/xml-config.md)
-- [Python SDK](api/python-sdk.md)
-- [Extension APIs](api/extensions.md)
+- Python SDK for all domains
+- Configuration options
+- Extension APIs
+
+For complete API documentation, see the [API Reference](api/README.md).
 
 ## Advanced Topics
 
-DATAMIMIC offers a wide range of advanced capabilities:
+DATAMIMIC offers advanced capabilities for power users:
 
-- [Customizing Generators](advanced/custom-generators.md)
-- [Database Integration](advanced/database-integration.md)
-- [Data Privacy & Compliance](advanced/data-privacy.md)
-- [Performance Optimization](advanced/performance.md)
-- [Enterprise Features](advanced/enterprise-features.md)
+- [Enterprise Features](advanced/enterprise-features.md) - Advanced features available in the Enterprise Edition
+- Custom generators and extensions
+- Performance optimization
+- Database integration
 
-Additional advanced capabilities include:
+For detailed information on advanced topics, see the [Advanced Topics](advanced/README.md) documentation.
 
-- **Custom Generators** - Extend the built-in generators with your own logic
-- **Complex Relationships** - Define sophisticated relationships between entities
-- **Multiple Export Formats** - Support for JSON, XML, CSV, RDBMS, MongoDB, and more
-- **Data Anonymization** - GDPR-compliant data anonymization and masking
-- **Validation Rules** - Define and enforce data validation rules
-- **Scripting** - Extend functionality with Python scripts
-- **Domain-Specific Models** - Industry-specific entities with realistic properties
+For comprehensive information on the DATAMIMIC platform UI, advanced models, and enterprise capabilities, please visit our [official online documentation](https://docs.datamimic.io/).
 
-## Synthetic Data Quality
+## Developer Guide
 
-The Enterprise Edition of DATAMIMIC delivers synthetic data with superior quality compared to open-source alternatives:
+For developers looking to integrate DATAMIMIC into their applications or extend its functionality, we provide a comprehensive [Developer Guide](developer_guide.md).
 
-- **Statistical Accuracy** - Preserves statistical relationships with higher fidelity
-- **Column Correlations** - Maintains dependencies between variables
-- **Distribution Matching** - Creates realistic distribution patterns
-- **ML Utility** - Produces synthetic data that maintains utility for machine learning
+## Verified Examples
 
-For detailed information about DATAMIMIC's synthetic data quality and benchmarks, see the [Enterprise Features](advanced/enterprise-features.md) documentation. 
+All the examples included in this documentation have been tested and verified to work with the current version of DATAMIMIC. The test results can be found in our test scripts that validate each example. 
