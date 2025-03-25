@@ -1,0 +1,18 @@
+transaction_type,template,weight
+Deposit,Deposit from {},25
+Deposit,Incoming deposit - {},15
+Withdrawal,Withdrawal at {},20
+Withdrawal,Cash withdrawal - {},15
+Transfer,Transfer to {},20
+Transfer,Funds transfer to {},15
+Payment,Payment to {},25
+Payment,Bill payment - {},15
+Fee,Service fee from {},20
+Fee,Fee charge - {},15
+Interest,Interest payment,25
+Interest,Interest earned,15
+Refund,Refund from {},20
+Refund,Credit from {} - refund,15
+Adjustment,Adjustment from {},20
+Adjustment,Account adjustment - {},15
+Generic,Transaction with {},10 

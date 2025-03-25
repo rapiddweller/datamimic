@@ -1,0 +1,102 @@
+category,merchant_name,weight
+Einzelhandel,Amazon,20
+Einzelhandel,MediaMarkt,18
+Einzelhandel,Kaufland,15
+Einzelhandel,Saturn,12
+Einzelhandel,Otto,10
+Einzelhandel,Lidl,8
+Einzelhandel,Aldi,7
+Einzelhandel,Real,5
+Einzelhandel,Conrad,5
+Lebensmittel,EDEKA,20
+Lebensmittel,REWE,15
+Lebensmittel,Aldi Süd,15
+Lebensmittel,Kaufland,12
+Lebensmittel,Lidl,10
+Lebensmittel,Penny,8
+Lebensmittel,Netto,7
+Lebensmittel,Norma,5
+Lebensmittel,Tegut,5
+Lebensmittel,SPAR,3
+Gastronomie,McDonald's,18
+Gastronomie,Starbucks,18
+Gastronomie,Vapiano,12
+Gastronomie,Subway,10
+Gastronomie,Domino's Pizza,8
+Gastronomie,Burger King,7
+Gastronomie,Nordsee,7
+Gastronomie,KFC,5
+Gastronomie,Tchibo,5
+Gastronomie,Hans im Glück,5
+Gastronomie,Block House,5
+Unterhaltung,Netflix,20
+Unterhaltung,Spotify,15
+Unterhaltung,CinemaxX,10
+Unterhaltung,Disney+,10
+Unterhaltung,Steam,8
+Unterhaltung,UCI Kinowelt,8
+Unterhaltung,Sky,7
+Unterhaltung,Apple TV+,5
+Unterhaltung,Cineplex,5
+Unterhaltung,Eventim,5
+Unterhaltung,Xbox Live,5
+Unterhaltung,PlayStation Network,2
+Reisen,Deutsche Bahn,20
+Reisen,Lufthansa,15
+Reisen,Airbnb,12
+Reisen,Booking.com,10
+Reisen,FlixBus,8
+Reisen,TUI,7
+Reisen,Eurowings,7
+Reisen,ADAC,5
+Reisen,Marriott,5
+Reisen,Holiday Inn,5
+Reisen,Sixt,5
+Reisen,Expedia,3
+Versorgung,Deutsche Telekom,20
+Versorgung,Vodafone,18
+Versorgung,O2,15
+Versorgung,E.ON,10
+Versorgung,Vattenfall,10
+Versorgung,1&1,8
+Versorgung,EnBW,7
+Versorgung,RWE,5
+Versorgung,EWE,5
+Versorgung,Stadtwerke München,2
+Gesundheitswesen,DocMorris,20
+Gesundheitswesen,dm,18
+Gesundheitswesen,Rossmann,15
+Gesundheitswesen,AOK,12
+Gesundheitswesen,TK,10
+Gesundheitswesen,Barmer,8
+Gesundheitswesen,DAK,7
+Gesundheitswesen,Allianz Krankenversicherung,5
+Gesundheitswesen,Medizinisches Labor,5
+Gesundheitswesen,Apotheke am Markt,5
+Gesundheitswesen,Hausarzt Dr. Schmidt,5
+Bildung,Universität Berlin,15
+Bildung,Technische Hochschule,15
+Bildung,Volkshochschule,12
+Bildung,Studierendenwerk,12
+Bildung,Schulbuchverlag,10
+Bildung,Sprachschule,8
+Bildung,Online-Lernportal,7
+Bildung,Hochschulsport,7
+Bildung,Universitätsbibliothek,7
+Bildung,Studentenwerk,5
+Bildung,Studienbeitrag,2
+Dienstleistungen,Versicherungsbeitrag,15
+Dienstleistungen,Steuerberatung,15
+Dienstleistungen,Rechtsanwalt,15
+Dienstleistungen,Reinigungsservice,12
+Dienstleistungen,Handwerker,10
+Dienstleistungen,Kfz-Werkstatt,8
+Dienstleistungen,Steuererklärung,8
+Dienstleistungen,Friseur,7
+Dienstleistungen,Finanzdienstleister,5
+Dienstleistungen,Gartenpflege,5
+Sonstiges,Verschiedenes,30
+Sonstiges,Nicht klassifiziert,25
+Sonstiges,Sonstiges,20
+Sonstiges,Allgemein,15
+Sonstiges,Unbekannt,10 

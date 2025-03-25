@@ -1,0 +1,6 @@
+title = "Demo E-commerce"
+description = "Showcase of e-commerce data generation including products, customers, and orders."
+icon = "store"
+tags = ["#generator", "#datasets", "#domains", "#ecommerce"]
+projectName = "demo-ecommerce"
+id = "demo-ecommerce"

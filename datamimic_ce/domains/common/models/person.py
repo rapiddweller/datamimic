@@ -80,7 +80,7 @@ class Person(BaseEntity):
 
     @property
     @property_cache
-    def name(self) -> str:
+    def full_name(self) -> str:
         """Get the full name of the person.
 
         Returns:
@@ -124,6 +124,16 @@ class Person(BaseEntity):
 
         Returns:
             The phone number of the person.
+        """
+        return self._person_generator.phone_generator.generate()
+
+    @property
+    @property_cache
+    def mobile_phone(self) -> str:
+        """Get the mobile phone number of the person.
+
+        Returns:
+            The mobile phone number of the person.
         """
         return self._person_generator.phone_generator.generate()
 
@@ -186,11 +196,13 @@ class Person(BaseEntity):
             "birthdate": self.birthdate,
             "given_name": self.given_name,
             "family_name": self.family_name,
+            "full_name": self.full_name,
             "gender": self.gender,
             "name": self.name,
             "age": self.age,
             "email": self.email,
             "phone": self.phone,
+            "mobile_phone": self.mobile_phone,
             "academic_title": self.academic_title,
             "salutation": self.salutation,
             "nobility_title": self.nobility_title,

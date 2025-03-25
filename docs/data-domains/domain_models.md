@@ -54,16 +54,19 @@ Provides shared entities used across all domains:
 
 ```
 Person
-├── gender: str
 ├── given_name: str
 ├── family_name: str
 ├── name: str
+├── gender: str
 ├── age: int
-├── date_of_birth: date
+├── birthdate: datetime
 ├── email: str
-├── phone_number: str
+├── phone: str
+├── mobile_phone: str
 ├── address: Address
-└── nationality: str
+├── academic_title: str
+├── salutation: str
+└── nobility_title: str
 ```
 
 #### Address
@@ -72,24 +75,68 @@ Person
 Address
 ├── street: str
 ├── house_number: str
-├── city: City
-├── postal_code: str
+├── city: str
 ├── state: str
-├── country: Country
+├── postal_code: str
+├── zip_code: str
+├── country: str
+├── country_code: str
+├── phone: str
+├── mobile_phone: str
+├── office_phone: str
+├── private_phone: str
+├── fax: str
+├── organization: str
 └── full_address: str
+```
+
+#### City
+
+```
+City
+├── name: str
+├── postal_code: str
+├── area_code: str
+├── state: str
+├── language: str
+├── population: int
+├── name_extension: str
+├── country: str
+└── country_code: str
+```
+
+#### Country
+
+```
+Country
+├── iso_code: str
+├── name: str
+├── default_language_locale: str
+├── phone_code: str
+└── population: str
 ```
 
 #### Company
 
 ```
 Company
-├── name: str
-├── industry: str
-├── size: str
-├── address: Address
+├── id: str
+├── short_name: str
+├── full_name: str
+├── sector: str
+├── legal_form: str
+├── email: str
+├── url: str
 ├── phone_number: str
-├── website: str
-└── founded_year: int
+├── office_phone: str
+├── fax: str
+├── street: str
+├── house_number: str
+├── city: str
+├── state: str
+├── zip_code: str
+├── country: str
+└── country_code: str
 ```
 
 ### Healthcare Domain
@@ -146,17 +193,56 @@ Hospital
 
 Financial services entities:
 
+#### CreditCard
+
+```
+CreditCard
+├── card_type: str
+├── card_number: str
+├── card_provider: str
+├── card_holder: str
+├── expiration_date: datetime | str
+├── cvv: str
+├── cvc_number: str
+├── is_active: bool
+├── credit_limit: float
+├── current_balance: float
+├── issue_date: datetime | str
+├── bank_name: str
+├── bank_code: str
+├── bic: str
+├── bin: str
+└── iban: str
+```
+
+#### Bank
+
+```
+Bank
+├── name: str
+├── swift_code: str
+├── routing_number: str
+├── bank_code: str
+├── bic: str
+├── bin: str
+└── customer_service_phone: str
+```
+
 #### BankAccount
 
 ```
 BankAccount
 ├── account_number: str
+├── iban: str
 ├── account_type: str
-├── owner: Person
-├── balance: Decimal
+├── balance: float
 ├── currency: str
-├── open_date: date
-└── status: str
+├── created_date: datetime
+├── last_transaction_date: datetime
+├── bank_name: str
+├── bank_code: str
+├── bic: str
+└── bin: str
 ```
 
 #### Transaction
@@ -165,43 +251,76 @@ BankAccount
 Transaction
 ├── transaction_id: str
 ├── account: BankAccount
-├── amount: Decimal
+├── transaction_date: datetime
+├── amount: float
 ├── transaction_type: str
-├── date: datetime
 ├── description: str
-├── category: str
-└── merchant: str
+├── reference_number: str
+├── status: str
+├── currency: str
+├── currency_symbol: str
+├── merchant_name: str
+├── merchant_category: str
+├── location: str
+├── is_international: bool
+├── channel: str
+└── direction: str
 ```
 
 ### Insurance Domain
 
 Insurance-specific entities:
 
+#### InsuranceCompany
+
+```
+InsuranceCompany
+├── id: str
+├── name: str
+├── code: str
+├── founded_year: str
+├── headquarters: str
+└── website: str
+```
+
+#### InsuranceProduct
+
+```
+InsuranceProduct
+├── id: str
+├── type: str
+├── code: str
+├── description: str
+└── coverages: List[InsuranceCoverage]
+```
+
+#### InsuranceCoverage
+
+```
+InsuranceCoverage
+├── name: str
+├── code: str
+├── product_code: str
+├── description: str
+├── min_coverage: str
+└── max_coverage: str
+```
+
 #### InsurancePolicy
 
 ```
 InsurancePolicy
-├── policy_number: str
-├── policy_type: str
-├── policyholder: Person
+├── id: str
+├── company: InsuranceCompany
+├── product: InsuranceProduct
+├── policy_holder: Person
+├── coverages: List[InsuranceCoverage]
+├── premium: float
+├── premium_frequency: str
 ├── start_date: date
 ├── end_date: date
-├── premium: Decimal
-├── coverage_amount: Decimal
-└── status: str
-```
-
-#### Claim
-
-```
-Claim
-├── claim_id: str
-├── policy: InsurancePolicy
-├── date_filed: date
-├── amount: Decimal
-├── description: str
 ├── status: str
-└── resolution_date: date
+└── created_date: datetime
 ```
 
 ### E-commerce Domain
@@ -215,11 +334,18 @@ Product
 ├── product_id: str
 ├── name: str
 ├── description: str
+├── price: float
 ├── category: str
-├── price: Decimal
-├── inventory: int
-├── manufacturer: str
-└── ratings: List[Rating]
+├── brand: str
+├── sku: str
+├── condition: str
+├── availability: str
+├── currency: str
+├── weight: float
+├── dimensions: str
+├── color: str
+├── rating: float
+└── tags: List[str]
 ```
 
 #### Order
@@ -227,43 +353,91 @@ Product
 ```
 Order
 ├── order_id: str
-├── customer: Person
-├── items: List[Product]
-├── total_amount: Decimal
+├── user_id: str
+├── product_list: List[Product]
+├── total_amount: float
 ├── date: datetime
-├── shipping_address: Address
+├── status: str
 ├── payment_method: str
-└── status: str
+├── shipping_method: str
+├── shipping_address: Address
+├── billing_address: Address
+├── currency: str
+├── tax_amount: float
+├── shipping_amount: float
+├── discount_amount: float
+├── coupon_code: str
+└── notes: str
 ```
 
 ### Public Sector Domain
 
 Government and public administration entities:
 
-#### PublicOffice
+#### AdministrationOffice
 
 ```
-PublicOffice
+AdministrationOffice
+├── office_id: str
 ├── name: str
 ├── type: str
 ├── address: Address
 ├── jurisdiction: str
+├── founding_year: int
 ├── staff_count: int
-└── services: List[str]
+├── annual_budget: float
+├── hours_of_operation: dict
+├── website: str
+├── email: str
+├── phone: str
+├── services: List[str]
+├── departments: List[str]
+└── leadership: dict
 ```
 
 #### EducationalInstitution
 
 ```
 EducationalInstitution
+├── institution_id: str
 ├── name: str
 ├── type: str
-├── address: Address
+├── level: str
 ├── founding_year: int
 ├── student_count: int
 ├── staff_count: int
+├── website: str
+├── email: str
+├── phone: str
 ├── programs: List[str]
-└── accreditations: List[str]
+├── accreditations: List[str]
+├── facilities: List[str]
+└── address: Address
+```
+
+#### PoliceOfficer
+
+```
+PoliceOfficer
+├── officer_id: str
+├── badge_number: str
+├── given_name: str
+├── family_name: str
+├── full_name: str
+├── gender: str
+├── birthdate: str
+├── age: int
+├── rank: str
+├── department: str
+├── unit: str
+├── hire_date: str
+├── years_of_service: int
+├── certifications: List[str]
+├── languages: List[str]
+├── shift: str
+├── email: str
+├── phone: str
+└── address: Address
 ```
 
 ## Entity Relationships
@@ -271,9 +445,10 @@ EducationalInstitution
 Entities can be related to create complex, realistic data structures:
 
 - A Person can have multiple BankAccounts
-- A Patient can have a primary Doctor
-- A Doctor can work at a Hospital
-- An Order contains multiple Products
-- A Claim is linked to an InsurancePolicy
+- A BankAccount can have multiple Transactions
+- A CreditCard is linked to a BankAccount and Person
+- An Order contains multiple Products and references shipping/billing Addresses
+- An InsurancePolicy is linked to an InsuranceCompany, InsuranceProduct, and Person
+- A Transaction references a BankAccount
 
 These relationships maintain logical consistency, ensuring generated data reflects realistic scenarios. 

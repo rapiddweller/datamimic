@@ -1,0 +1,9 @@
+transaction_type,modifier,weight
+Einzahlung,1.0,15
+Auszahlung,1.0,20
+Überweisung,1.2,10
+Zahlung,1.0,40
+Gebühr,0.5,5
+Zinsen,0.3,2
+Rückerstattung,1.0,5
+Anpassung,0.7,3 

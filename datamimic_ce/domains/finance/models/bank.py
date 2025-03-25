@@ -48,6 +48,21 @@ class Bank(BaseEntity):
     def bin(self) -> str:
         return DataGenerationCEUtil.rnd_str_from_regex("[0-9]{4}")
 
+    @property
+    @property_cache
+    def customer_service_phone(self) -> str:
+        """Get a customer service phone number for the bank.
+
+        Returns:
+            A formatted phone number string.
+        """
+        if hasattr(self._bank_generator, "dataset") and self._bank_generator.dataset == "de_DE":
+            # German format
+            return "+49 " + DataGenerationCEUtil.rnd_str_from_regex("[0-9]{3} [0-9]{5,7}")
+        else:
+            # US format
+            return "+1 " + DataGenerationCEUtil.rnd_str_from_regex("[0-9]{3}-[0-9]{3}-[0-9]{4}")
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
@@ -56,4 +71,5 @@ class Bank(BaseEntity):
             "bank_code": self.bank_code,
             "bic": self.bic,
             "bin": self.bin,
+            "customer_service_phone": self.customer_service_phone,
         }

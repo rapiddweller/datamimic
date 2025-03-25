@@ -191,6 +191,22 @@ people = person_service.generate_batch(count=1000)
 print(f"Generated {len(people)} unique people")
 ```
 
+#### 🚀 Benefits and Use Cases
+
+- **🔧 Direct Control**: Fine-grained programmatic control over data generation
+- **🧩 Composable**: Combine different services for complex scenarios
+- **🏭 High Volume**: Efficiently generate thousands of records with minimal code
+- **🔍 Inspection**: Direct access to object properties for validation
+- **🔄 Customization**: Easily modify parameters to suit specific test cases
+- **⚡ Performance**: Native Python execution for maximum speed
+
+Perfect for:
+- Applications requiring direct integration with Python codebase
+- Complex data manipulation scenarios
+- When you need full programmatic control
+- Scenarios requiring dynamic parameter adjustment
+- High-performance data generation requirements
+
 ### Method 2: Using XML Configuration
 
 Create a data model in XML format (`datamimic.xml`):
@@ -217,6 +233,22 @@ Then generate the data using the command line:
 ```bash
 datamimic run datamimic.xml
 ```
+
+#### 🚀 Benefits and Use Cases
+
+- **📝 Declarative**: Define your data requirements in a clear, declarative format
+- **🔄 Reusable**: Create templates that can be reused across projects
+- **🔌 Portable**: XML definitions work across different environments
+- **🧰 Tooling**: Compatible with XML editors and validation tools
+- **📊 Output Flexibility**: Generate multiple output formats from a single definition
+- **🔒 Stability**: Consistent outputs across runs
+
+Perfect for:
+- Configuration-driven applications
+- CI/CD pipeline integration
+- Cross-language environments
+- When separation of code and data definitions is needed
+- Scenarios requiring multiple output formats
 
 ### Method 3: Generate Complex Related Data
 
@@ -255,6 +287,74 @@ for i, patient in enumerate(patients[:5]):  # Show just the first 5
 if len(patients) > 5:
     print(f"  - And {len(patients) - 5} more patients...")
 ```
+
+#### 🚀 Benefits and Use Cases
+
+- **🔗 Relationships**: Create complex, interconnected data relationships
+- **🧩 Entity Graphs**: Build complete entity graphs with referential integrity
+- **🌐 Ecosystem**: Model entire business domains in a single setup
+- **📊 Real-world Modeling**: Simulate realistic business scenarios
+- **🧪 End-to-End Testing**: Test complex business rules across related entities
+- **🔍 Data Consistency**: Ensure consistent relationships across your test data
+
+Perfect for:
+- Complex domain modeling
+- Database schema validation
+- Microservice integration testing
+- Business logic validation across entity boundaries
+- Scenarios requiring realistic data relationships
+
+### Method 4: Custom Domain Factory
+
+Create a factory for test-specific data generation with the `DataMimicTestFactory`:
+
+**customer.xml**:
+```xml
+<setup>
+    <!-- customer.xml -->
+    <generate name="customer" count="10">
+        <!-- Basic customer info -->
+        <variable name="person" entity="Person(min_age=21, max_age=67)"/>
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="first_name" script="person.given_name"/>
+        <key name="last_name" script="person.family_name"/>
+        <key name="email" script="person.email"/>
+        <key name="status" values="'active', 'inactive', 'pending'"/>
+    </generate>
+</setup>
+```
+
+```python
+from datamimic_ce.factory.datamimic_test_factory import DataMimicTestFactory
+
+customer_factory = DataMimicTestFactory("customer.xml", "customer")
+customer = customer_factory.create()
+
+print(customer["id"])  # 1
+print(customer["first_name"])  # Jose
+print(customer["last_name"])   # Ayers
+```
+
+#### 🚀 Benefits and Use Cases
+
+- **🧪 Testing Focus**: Simplified API designed specifically for testing scenarios
+- **🔄 Dictionary Access**: Easy access to generated data through dictionary-like interface
+- **📝 Test Fixtures**: Create consistent test fixtures for unit and integration tests
+- **🧩 Factory Pattern**: Implements the factory pattern for test data generation
+- **📊 Deterministic Output**: Predictable outputs for repeatable test scenarios
+- **🚀 Productivity**: Rapid test data creation with minimal setup
+- **🏗️ Test Architecture**: Clean separation between test data and test logic
+- **🌱 Maintainability**: Centralized data definition for easier updates
+
+Perfect for:
+- Unit testing with consistent test data
+- Integration testing with complex business rules
+- Test-driven development (TDD) workflows
+- Creating pre-configured test fixtures
+- Simplifying test setup with one-line data generation
+- Projects requiring standardized test data across multiple test suites
+- Keeping test data definitions separate from test logic
+- Rapid development of test scenarios
 
 ---
 

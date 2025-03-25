@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup>
+    <echo>Generating Customer Data</echo>
+
+    <!-- Customers using Person entity from Common domain -->
+    <generate name="customers" count="50" target="CSV,JSON">
+        <variable name="person" entity="Person(min_age=18, max_age=80)" />
+        <key name="customer_id" generator="UUIDGenerator" />
+        <key name="given_name" script="person.given_name" />
+        <key name="family_name" script="person.family_name" />
+        <key name="name" script="person.name" />
+        <key name="gender" script="person.gender" />
+        <key name="age" script="person.age" />
+        <key name="date_of_birth" script="person.birthdate" />
+        <key name="email" script="person.email" />
+        <key name="phone" script="person.phone" />
+        <key name="mobile_phone" script="person.mobile_phone" />
+        <variable name="address" script="person.address" />
+        <key name="street" script="address.street" />
+        <key name="house_number" script="address.house_number" />
+        <key name="city" script="address.city" />
+        <key name="postal_code" script="address.postal_code" />
+        <key name="state" script="address.state" />
+        <key name="country" script="address.country" />
+        <key name="full_address" script="address.full_address" />
+        <key name="preferred_payment"
+            values="'CreditCard', 'PayPal', 'BankTransfer', 'CashOnDelivery'" />
+        <key name="customer_since" type="string" pattern="-5y|now" />
+    </generate>
+
+    <!-- US Customers -->
+    <echo>Generating US Customer Data</echo>
+    <generate name="us_customers" count="25" target="CSV">
+        <variable name="person" entity="Person(min_age=21, max_age=75)" locale="en_US" />
+        <key name="customer_id" generator="UUIDGenerator" />
+        <key name="given_name" script="person.given_name" />
+        <key name="family_name" script="person.family_name" />
+        <key name="email" script="person.email" />
+        <key name="phone_number" script="person.phone" />
+        <variable name="address" script="person.address" />
+        <key name="full_address" script="address.full_address" />
+        <key name="state" script="address.state" />
+        <key name="preferred_payment" values="'CreditCard', 'PayPal', 'ApplePay', 'CashOnDelivery'" />
+    </generate>
+
+    <!-- German Customers -->
+    <echo>Generating German Customer Data</echo>
+    <generate name="de_customers" count="25" target="CSV">
+        <variable name="person" entity="Person(min_age=18, max_age=80)" locale="de_DE" />
+        <key name="customer_id" generator="UUIDGenerator" />
+        <key name="given_name" script="person.given_name" />
+        <key name="family_name" script="person.family_name" />
+        <key name="email" script="person.email" />
+        <key name="phone_number" script="person.phone" />
+        <variable name="address" script="person.address" />
+        <key name="full_address" script="address.full_address" />
+        <key name="bundesland" script="address.state" />
+        <key name="preferred_payment" values="'SEPA', 'PayPal', 'Klarna', 'BankTransfer'" />
+    </generate>
+</setup> 

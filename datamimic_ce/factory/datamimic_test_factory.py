@@ -10,8 +10,8 @@ from datamimic_ce.factory.factory_config import FactoryConfig
 
 
 class DataMimicTestFactory:
-    def __init__(self, xml_path: Path, entity_name: str):
-        self._xml_path = xml_path
+    def __init__(self, xml_path: Path | str, entity_name: str):
+        self._xml_path = Path(xml_path)
         self._entity_name = entity_name
 
     def create(self, custom_data: dict | None = None):

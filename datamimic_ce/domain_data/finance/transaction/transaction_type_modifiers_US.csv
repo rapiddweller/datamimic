@@ -1,0 +1,9 @@
+transaction_type,modifier,weight
+Deposit,1.0,15
+Withdrawal,1.0,20
+Transfer,1.2,10
+Payment,1.0,40
+Fee,0.5,5
+Interest,0.3,2
+Refund,1.0,5
+Adjustment,0.7,3 
