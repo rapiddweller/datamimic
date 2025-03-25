@@ -274,11 +274,16 @@ class TransactionGenerator(BaseDomainGenerator):
             currencies_path = (
                 Path(__file__).parent.parent.parent.parent / "domain_data" / "ecommerce" / "currencies.csv"
             )
-            header_dict, loaded_data = FileContentStorage.load_file_with_custom_func(
-                cache_key=str(currencies_path),
-                read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(currencies_path, delimiter=","),
-            )
-            self._currency_data["currencies"] = (header_dict, loaded_data)
+            # Convert the weighted data into the expected format (header_dict, data)
+            header_dict = {"code": 0, "name": 1, "weight": 2, "symbol": 3}  # Define the header structure
+            with currencies_path.open("r", newline="", encoding="utf-8") as csvfile:
+                import csv
+
+                csvreader = csv.reader(csvfile, delimiter=",")
+                next(csvreader)  # Skip header row
+                data = [tuple(row) for row in csvreader]  # Keep all columns to maintain structure
+
+            self._currency_data["currencies"] = (header_dict, data)
 
         # Get currency mapping for the current dataset
         mapping_header, mapping_data = self._currency_data["currency_mapping"]

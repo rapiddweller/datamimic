@@ -14,8 +14,8 @@ class TestFakerGenerator:
     def test_generate(self):
         for _ in range(100):
             generate_int = DataFakerGenerator(method="random_int", locale="de", min=0, max=15, step=3).generate()
-            generate_given_name = DataFakerGenerator(method="given_name_female", locale="zh").generate()
-            generate_family_name = DataFakerGenerator(method="family_name_female", locale="zh").generate()
+            generate_given_name = DataFakerGenerator(method="first_name_female", locale="zh").generate()
+            generate_family_name = DataFakerGenerator(method="last_name_female", locale="zh").generate()
             generate_company = DataFakerGenerator(method="company").generate()
 
             assert 0 <= generate_int <= 15

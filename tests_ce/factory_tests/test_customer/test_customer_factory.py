@@ -3,7 +3,6 @@ from pathlib import Path
 from tests_ce.factory_tests.test_customer.customer_factory import CustomerFactory
 
 
-
 class TestCustomerFactory:
     _test_dir = Path(__file__).resolve().parent
     _customer_factory = CustomerFactory(_test_dir / "datamimic.xml", "customer")
