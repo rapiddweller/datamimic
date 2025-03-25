@@ -14,7 +14,6 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -39,10 +38,7 @@ class ProductGenerator(BaseDomainGenerator):
         """
         file_name = f"{data_type.lower()}_{self._dataset.upper()}.csv"
         file_path = Path(__file__).parent.parent.parent.parent / "domain_data/ecommerce" / file_name
-        header_dict, loaded_data = FileContentStorage.load_file_with_custom_func(
-            cache_key=str(file_path),
-            read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=","),
-        )
+        header_dict, loaded_data = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=",")
 
         wgt_idx = header_dict["weight"]
         return random.choices(loaded_data, weights=[float(row[wgt_idx]) for row in loaded_data])[0][0]
@@ -95,6 +91,4 @@ class ProductGenerator(BaseDomainGenerator):
     @staticmethod
     def _load_product_json(file_name):
         file_path = Path(__file__).parent.parent.parent.parent / "domain_data/ecommerce/product" / f"{file_name}.json"
-        return FileContentStorage.load_file_with_custom_func(
-            cache_key=str(file_path), read_func=lambda: FileUtil.read_json_to_dict(file_path)
-        )
+        return FileUtil.read_json(file_path)

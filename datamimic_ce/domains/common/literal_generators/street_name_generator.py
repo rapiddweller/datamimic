@@ -9,7 +9,6 @@ from pathlib import Path
 
 from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.logger import logger
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -29,9 +28,7 @@ class StreetNameGenerator(BaseLiteralGenerator):
 
         # Load file data
         try:
-            self._values, self._wgt = FileContentStorage.load_file_with_custom_func(
-                str(file_path), lambda: FileUtil.read_wgt_file(file_path)
-            )
+            self._values, self._wgt = FileUtil.read_wgt_file(file_path)
         except FileNotFoundError as e:
             logger.error(f"Street name data not found for dataset '{dataset}'")
             raise FileNotFoundError(f"Street name data not found for dataset '{dataset}': {e}") from e

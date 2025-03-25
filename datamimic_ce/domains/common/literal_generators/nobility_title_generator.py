@@ -8,7 +8,6 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -37,15 +36,9 @@ class NobilityTitleGenerator(BaseLiteralGenerator):
         male_file_path = prefix_path.joinpath(file_name_male)
         female_file_path = prefix_path.joinpath(file_name_female)
 
-        self._male_values, self._male_weights = FileContentStorage.load_file_with_custom_func(
-            cache_key=str(male_file_path),
-            read_func=lambda: FileUtil.read_wgt_file(file_path=male_file_path),
-        )
+        self._male_values, self._male_weights = FileUtil.read_wgt_file(file_path=male_file_path)
 
-        self._female_values, self._female_weights = FileContentStorage.load_file_with_custom_func(
-            cache_key=str(female_file_path),
-            read_func=lambda: FileUtil.read_wgt_file(file_path=female_file_path),
-        )
+        self._female_values, self._female_weights = FileUtil.read_wgt_file(file_path=female_file_path)
 
     def generate(self) -> str | None:
         """

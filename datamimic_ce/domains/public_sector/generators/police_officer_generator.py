@@ -6,7 +6,6 @@ from datamimic_ce.domains.common.generators.address_generator import AddressGene
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -50,9 +49,7 @@ class PoliceOfficerGenerator(BaseDomainGenerator):
         file_path = (
             Path(__file__).parents[3] / "domain_data" / "public_sector" / "police" / f"ranks_{self._dataset}.csv"
         )
-        loaded_weights, loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
-        )
+        loaded_weights, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
         return random.choices(loaded_data, weights=loaded_weights, k=1)[0].get("rank")
 
     def get_department(self) -> str:
@@ -64,7 +61,5 @@ class PoliceOfficerGenerator(BaseDomainGenerator):
         file_path = (
             Path(__file__).parents[3] / "domain_data" / "public_sector" / "police" / f"departments_{self._dataset}.csv"
         )
-        loaded_weights, loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
-        )
+        loaded_weights, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
         return random.choices(loaded_data, weights=loaded_weights, k=1)[0].get("department_id")

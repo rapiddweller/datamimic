@@ -5,9 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
-import csv
 import itertools
-import json
 import random
 from collections.abc import Iterable, Iterator
 from pathlib import Path
@@ -24,6 +22,7 @@ from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.utils.file_content_storage import FileContentStorage
+from datamimic_ce.utils.file_util import FileUtil
 
 
 class DataSourceRegistry:
@@ -35,23 +34,21 @@ class DataSourceRegistry:
         logger.debug(f"Load source {key} from file")
         # Load source data from file
         if key.endswith(".csv"):
-            return FileContentStorage.load_file_with_custom_func(
-                key,
-                lambda: [row for row in csv.DictReader(open(key, newline=""), delimiter=csv_separator)]
-            )
+            return FileUtil.read_csv_to_dict_list(Path(key), csv_separator)
         elif key.endswith(".json"):
-            return FileContentStorage.load_file_with_custom_func(
-                key,
-                lambda: json.load(open(key)),
-            )
+            json_data = FileUtil.read_json(Path(key))
+            if isinstance(json_data, list):
+                return json_data
+            elif isinstance(json_data, dict):
+                return [json_data]
+            else:
+                raise ValueError(f"JSON file '{key}' must contain a list of objects or a dictionary")
+            return json_data
         elif key.endswith(".xml"):
             return FileContentStorage.load_file_with_custom_func(
                 key,
                 lambda: xmltodict.parse(open(key).read(), attr_prefix="@", cdata_key="#text")
-                # type: ignore[assignment]
             )
-            # with open(key) as file:
-            #     data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")  # type: ignore[assignment]
         else:
             raise ValueError(f"Data source '{key}' is not supported is not handled by DataSourceRegistry")
 
@@ -104,7 +101,10 @@ class DataSourceRegistry:
             # Check if source is data source file or database collection/table
             # 2.1: Check if datasource is csv file
             if source_str.endswith(".csv") or source_str.endswith(".json") or source_str.endswith(".xml"):
-                ds_len = len(DataSourceRegistry._get_source(str(root_ctx.descriptor_dir / source_str)))
+                ds_len = len(DataSourceRegistry._get_source(
+                    str(root_ctx.descriptor_dir / source_str),
+                    (getattr(stmt, "separator", None) or ctx.root.default_separator)
+                ))
             # 2.4: Check if datasource is memstore
             elif root_ctx.memstore_manager.contain(source_str) and hasattr(stmt, "type"):
                 ds_len = root_ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(stmt.type or stmt.name)
@@ -350,7 +350,6 @@ class DataSourceRegistry:
         """
         cyclic = cyclic if cyclic is not None else False
         # Read the XML data from a file
-        # file_data = xmltodict.parse(file.read(), attr_prefix="@", cdata_key="#text")
         file_data = DataSourceRegistry._get_source(str(file_path))
         # Handle the case where data might be None
         if file_data is None:

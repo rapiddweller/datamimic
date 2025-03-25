@@ -11,7 +11,6 @@ from typing import Any
 
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -26,55 +25,47 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
 
     def generate_device_type(self) -> str:
         file_path = (
-            Path(__file__).parent.parent.parent.parent
-            / "domain_data"
-            / "healthcare"
-            / "medical"
-            / f"device_types_{self._dataset}.csv"
+                Path(__file__).parent.parent.parent.parent
+                / "domain_data"
+                / "healthcare"
+                / "medical"
+                / f"device_types_{self._dataset}.csv"
         )
-        loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_weight_csv(file_path)
-        )
-        return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
+        loaded_data = FileUtil.read_weight_csv(file_path)
+        return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore[arg-type]
 
     def generate_manufacturer(self) -> str:
         file_path = (
-            Path(__file__).parent.parent.parent.parent
-            / "domain_data"
-            / "healthcare"
-            / "medical"
-            / f"manufacturers_{self._dataset}.csv"
+                Path(__file__).parent.parent.parent.parent
+                / "domain_data"
+                / "healthcare"
+                / "medical"
+                / f"manufacturers_{self._dataset}.csv"
         )
-        loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_weight_csv(file_path)
-        )
-        return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
+        loaded_data = FileUtil.read_weight_csv(file_path)
+        return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore[arg-type]
 
     def generate_device_status(self) -> str:
         file_path = (
-            Path(__file__).parent.parent.parent.parent
-            / "domain_data"
-            / "healthcare"
-            / "medical"
-            / f"device_statuses_{self._dataset}.csv"
+                Path(__file__).parent.parent.parent.parent
+                / "domain_data"
+                / "healthcare"
+                / "medical"
+                / f"device_statuses_{self._dataset}.csv"
         )
-        loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_weight_csv(file_path)
-        )
-        return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
+        loaded_data = FileUtil.read_weight_csv(file_path)
+        return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore[arg-type]
 
     def generate_location(self) -> str:
         file_path = (
-            Path(__file__).parent.parent.parent.parent
-            / "domain_data"
-            / "healthcare"
-            / "medical"
-            / f"locations_{self._dataset}.csv"
+                Path(__file__).parent.parent.parent.parent
+                / "domain_data"
+                / "healthcare"
+                / "medical"
+                / f"locations_{self._dataset}.csv"
         )
-        loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_weight_csv(file_path)
-        )
-        return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
+        loaded_data = FileUtil.read_weight_csv(file_path)  # type: ignore[arg-type]
+        return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore[arg-type]
 
     def generate_usage_log(self, username: str, device_type: str) -> list[dict[str, str]]:
         logs = []

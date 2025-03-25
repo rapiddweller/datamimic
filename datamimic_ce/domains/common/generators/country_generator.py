@@ -10,7 +10,6 @@ from typing import Any
 
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.logger import logger
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -35,10 +34,7 @@ class CountryGenerator(BaseDomainGenerator):
 
         try:
             # Load country data
-            country_data = FileContentStorage.load_file_with_custom_func(
-                cache_key=str(country_file_path),
-                read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(country_file_path, delimiter=","),
-            )
+            country_data = FileUtil.read_csv_to_list_of_tuples_without_header(country_file_path, delimiter=",")
 
             country_data_dict = {country[0]: country for country in country_data}
 

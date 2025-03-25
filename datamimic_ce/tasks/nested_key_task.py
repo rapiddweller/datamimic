@@ -248,7 +248,7 @@ class NestedKeyTask(Task):
                     file_path=self._descriptor_dir / source, separator=separator
                 )
             elif source.endswith("json"):
-                list_value = FileUtil.read_json_to_dict_list(self._descriptor_dir / source)
+                list_value = FileUtil.read_json_to_list(self._descriptor_dir / source)
             else:
                 raise ValueError(f"Invalid source '{source}' of nestedkey '{self._statement.name}'")
 

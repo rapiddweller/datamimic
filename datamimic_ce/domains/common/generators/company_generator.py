@@ -15,7 +15,6 @@ from datamimic_ce.domains.common.literal_generators.email_address_generator impo
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.common.literal_generators.sector_generator import SectorGenerator
 from datamimic_ce.logger import logger
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -103,9 +102,7 @@ class CompanyGenerator(BaseDomainGenerator):
                 / "organization"
                 / f"legalForm_{self._legal_dataset}.csv"
             )
-            legal_values, legal_wgt = FileContentStorage.load_file_with_custom_func(
-                cache_key=str(file_path), read_func=lambda: FileUtil.read_wgt_file(file_path)
-            )
+            legal_values, legal_wgt = FileUtil.read_wgt_file(file_path)
         except Exception as e:
             logger.warning(
                 f"Legal form data does not exist for dataset '{self._legal_dataset}', using 'US' as fallback: {e}"
@@ -118,7 +115,5 @@ class CompanyGenerator(BaseDomainGenerator):
                 / "organization"
                 / f"legalForm_{self._legal_dataset}.csv"
             )
-            legal_values, legal_wgt = FileContentStorage.load_file_with_custom_func(
-                cache_key=str(file_path), read_func=lambda: FileUtil.read_wgt_file(file_path)
-            )
+            legal_values, legal_wgt = FileUtil.read_wgt_file(file_path)
         return random.choices(legal_values, weights=legal_wgt, k=1)[0]

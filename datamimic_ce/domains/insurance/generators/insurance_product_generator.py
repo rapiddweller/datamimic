@@ -4,7 +4,6 @@ from typing import Any
 
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.insurance.generators.insurance_coverage_generator import InsuranceCoverageGenerator
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -28,9 +27,7 @@ class InsuranceProductGenerator(BaseDomainGenerator):
         file_path = (
             Path(__file__).parent.parent.parent.parent / "domain_data" / "insurance" / f"products_{self._dataset}.csv"
         )
-        loaded_wgt, loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
-        )
+        loaded_wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
         product_data = random.choices(loaded_data, weights=loaded_wgt, k=1)[0]
 
         return {

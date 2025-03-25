@@ -17,7 +17,6 @@ from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
 from datamimic_ce.logger import logger
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -51,9 +50,7 @@ class DoctorGenerator(BaseDomainGenerator):
                 / "medical"
                 / f"specialties_{self._dataset}.csv"
             )
-            wgt, loaded_data = FileContentStorage.load_file_with_custom_func(
-                str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
-            )
+            wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
             loaded_data = [item["specialty"] for item in loaded_data]
         except FileNotFoundError as e:
             logger.warning(f"Specialties file not found for dataset {self._dataset}. Using default specialties: {e}")
@@ -117,9 +114,7 @@ class DoctorGenerator(BaseDomainGenerator):
                 / "medical"
                 / f"certifications_{self._dataset}.csv"
             )
-            wgt, loaded_data = FileContentStorage.load_file_with_custom_func(
-                str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
-            )
+            wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
         except FileNotFoundError as e:
             logger.warning(
                 f"Certifications file not found for dataset {self._dataset}. Using default certifications: {e}"
