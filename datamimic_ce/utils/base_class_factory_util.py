@@ -88,7 +88,7 @@ class BaseClassFactoryUtil(ABC):
 
     @staticmethod
     @abstractmethod
-    def get_datasource_registry():
+    def get_datasource_registry_cls():
         """
         Abstract method to get the datasource utility class.
 

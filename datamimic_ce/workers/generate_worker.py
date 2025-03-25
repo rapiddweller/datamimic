@@ -29,13 +29,13 @@ class GenerateWorker:
 
     @staticmethod
     def generate_and_export_data_by_chunk(
-        context: SetupContext | GenIterContext,
-        stmt: GenerateStatement,
-        worker_id: int,
-        chunk_start: int,
-        chunk_end: int,
-        page_size: int,
-        source_operation: dict | None,
+            context: SetupContext | GenIterContext,
+            stmt: GenerateStatement,
+            worker_id: int,
+            chunk_start: int,
+            chunk_end: int,
+            page_size: int,
+            source_operation: dict | None,
     ) -> dict:
         """
         Generate and export data by page in a single process.
@@ -117,20 +117,16 @@ class GenerateWorker:
             for key in list(return_keys_set):
                 result[key] = result.get(key, []) + result_dict.get(key, [])
 
-        # Log DataSourceRegistry statistics
-        if isinstance(context, SetupContext):
-            context.class_factory_util.get_datasource_registry().log_cache_info()
-
         return result
 
     @staticmethod
     def _generate_product_by_page_in_single_process(
-        context: SetupContext | GenIterContext,
-        stmt: GenerateStatement,
-        page_start: int,
-        page_end: int,
-        worker_id: int,
-        source_operation: dict | None,
+            context: SetupContext | GenIterContext,
+            stmt: GenerateStatement,
+            page_start: int,
+            page_end: int,
+            worker_id: int,
+            source_operation: dict | None,
     ) -> dict[str, list]:
         """
         (IMPORTANT: Only to be used as Ray multiprocessing function)
@@ -193,11 +189,9 @@ class GenerateWorker:
                 load_start_idx,
                 load_end_idx,
                 load_pagination,
+                source_operation,
             )
         )
-
-        # (EE feature only) Execute data source operation on source_data
-        task_util_cls.execute_data_source_operation(source_data, source_operation)
 
         # execute ConstraintsTask to filter source_data with its rules
         for task in tasks:
