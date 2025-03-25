@@ -43,7 +43,6 @@ class DataSourceRegistry:
                 return [json_data]
             else:
                 raise ValueError(f"JSON file '{key}' must contain a list of objects or a dictionary")
-            return json_data
         elif key.endswith(".xml"):
             return FileContentStorage.load_file_with_custom_func(
                 key,
