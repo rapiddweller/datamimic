@@ -11,7 +11,7 @@
         <nestedKey name="friends" type="list" source="data/person.ent.csv">
             <nestedKey name="newSubElementFromEnt" type="list" source="data/person.ent.csv">
                 <nestedKey name="newSubSubElementFromEnt" type="list" source="data/person.ent.csv"/>
-                <key name="active" source="data/active.wgt.csv"/>
+                <key name="active" type="bool" source="data/active.wgt.csv"/>
             </nestedKey>
         </nestedKey>
         <nestedKey name="pets" type="list" count="1">

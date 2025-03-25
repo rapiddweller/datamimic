@@ -18,7 +18,7 @@
         <key name="tc_creation" generator="DateTimeGenerator"/>
         <key name="full_name" script="person.name"/>
         <key name="email" script="person.email"/>
-        <key name="active" source="data/active.wgt.csv"/>
+        <key name="active" type="bool" source="data/active.wgt.csv"/>
         <key name="active" type="bool" values="True,False"/>
         <key name="hashed_password" generator="StringGenerator(max_len=20)"/>
         <key name="language" values="'german','english','vietnamese'"/>

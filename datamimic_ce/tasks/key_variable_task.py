@@ -37,10 +37,10 @@ class KeyVariableTask(Task):
     _STRING_MODE = "string"
 
     def __init__(
-        self,
-        ctx: SetupContext,
-        statement: KeyStatement | VariableStatement | ElementStatement,
-        pagination: DataSourcePagination | None = None,
+            self,
+            ctx: SetupContext,
+            statement: KeyStatement | VariableStatement | ElementStatement,
+            pagination: DataSourcePagination | None = None,
     ):
         from datamimic_ce.tasks.task_util import TaskUtil
 
@@ -149,10 +149,10 @@ class KeyVariableTask(Task):
                     raise ValueError(f"Failed when execute script of element '{self._statement.name}': {str(e)}") from e
             # Throw error if <key> evaluated script get not simple data type
             if (
-                self._element_tag == "key"
-                and isinstance(value, Iterable)
-                and not isinstance(value, str)
-                and not (isinstance(value, dict) and "#text" in value)
+                    self._element_tag == "key"
+                    and isinstance(value, Iterable)
+                    and not isinstance(value, str)
+                    and not (isinstance(value, dict) and "#text" in value)
             ):
                 raise ValueError(
                     f"<key> '{self._statement.name}' expects simple data type, "
@@ -265,7 +265,7 @@ class KeyVariableTask(Task):
         elif data_type == DATA_TYPE_FLOAT:
             return float(value)
         elif data_type == DATA_TYPE_BOOL:
-            return value not in ("False", "0", 0, False)
+            return value not in ("false", "False", "0", 0, False)
         elif data_type is None:
             return value
         else:
