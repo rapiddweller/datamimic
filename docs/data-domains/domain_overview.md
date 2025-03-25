@@ -110,4 +110,3 @@ DATAMIMIC's Domain-Driven Framework offers several advantages over traditional s
 - [Using Domain Services](domain_services.md) - Guide to using the service APIs
 - [Weighted Distributions System](weighted_distributions.md) - How distributions work
 - [Testing with DATAMIMIC](testing_with_datamimic.md) - Using synthetic data for testing
-- [DATAMIMIC vs Other Libraries](comparison.md) - Comparison with other data generation libraries 

@@ -19,14 +19,14 @@ Welcome to the documentation for the Domain-Driven Framework component of DATAMI
 
 DATAMIMIC implements several industry-specific domains:
 
-| Domain        | Description                                 | Key Entities                                  |
-|---------------|---------------------------------------------|-----------------------------------------------|
-| Common        | Generally useful entities                   | Person, Address, Company, City, Country       |
-| Healthcare    | Medical and healthcare entities             | Patient, Doctor, Hospital, MedicalRecord      |
-| Finance       | Financial services entities                 | BankAccount, Transaction, Loan, Investment    |
-| E-commerce    | Online shopping and retail                  | Product, Order, Customer, Review              |
-| Insurance     | Insurance industry entities                 | Policy, Claim, Insured, RiskProfile           |
-| Public Sector | Government and public administration        | Citizen, Agency, EducationalInstitution       |
+| Domain        | Description                                 | Key Entities                                        |
+|---------------|---------------------------------------------|-----------------------------------------------------|
+| Common        | Generally useful entities                   | Person, Address, Company, City, Country             |
+| Healthcare    | Medical and healthcare entities             | Patient, Doctor, Hospital, MedicalProcedure,        |
+| Finance       | Financial services entities                 | BankAccount, Transaction, Bank, CreditCard          |
+| E-commerce    | Online shopping and retail                  | Product, Order                                      |
+| Insurance     | Insurance industry entities                 | Policy, Product, Company, Coverage                  |
+| Public Sector | Government and public administration        | Citizen, Agency, EducationalInstitution             |
 
 ## Quick Start Guide
 
@@ -98,11 +98,11 @@ For complete working examples, see:
 
 Each domain includes specialized services for generating entities:
 
-- **Common Domain**: `PersonService`, `AddressService`, `CompanyService`
-- **Healthcare Domain**: `PatientService`, `DoctorService`, `HospitalService`
-- **Finance Domain**: `BankAccountService`, `TransactionService`, `LoanService`
-- **E-commerce Domain**: `ProductService`, `OrderService`, `CustomerService`
-- **Insurance Domain**: `PolicyService`, `ClaimService`, `InsuredService`
+- **Common Domain**: `PersonService`, `AddressService`, `CompanyService`, `CountryService`, `CityService`
+- **Healthcare Domain**: `PatientService`, `DoctorService`, `HospitalService`, `MedicalProcedureService`, `MedicalDeviceService`
+- **Finance Domain**: `BankAccountService`, `TransactionService`, `CrediCardService`, `BankService`
+- **E-commerce Domain**: `ProductService`, `OrderService`
+- **Insurance Domain**: `InsurancePolicyService`, `InsuranceCompanyService`, `InsuranceCoverageService`, `InsuranceProductService`
 
 See the [Domain Services](domain_services.md) documentation for detailed API reference.
 
