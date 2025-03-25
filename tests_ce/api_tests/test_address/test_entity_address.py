@@ -1,12 +1,18 @@
 import random
 import string
+
 import pytest
+
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.common.services.address_service import AddressService
 
 
 class TestEntityAddress:
-    _supported_datasets = ["AD", "AL", "AT", "AU", "BA", "BE", "BG", "BR", "CA", "CH", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GB", "GR", "HR", "HU", "IE", "IS", "IT", "LI", "LT", "LU", "LV", "MC", "NL", "NO", "NZ", "PL", "PT", "RO", "RU", "SE", "SI", "SK", "SM", "TH", "TR", "UA", "US", "VA", "VE", "VN"]
+    _supported_datasets = ["AD", "AL", "AT", "AU", "BA", "BE", "BG", "BR", "CA", "CH", "CY", "CZ", "DE", "DK", "EE",
+                           "ES", "FI", "FR", "GB", "GR", "HR", "HU", "IE", "IS", "IT", "LI", "LT", "LU", "LV", "MC",
+                           "NL", "NO", "NZ", "PL", "PT", "RO", "RU", "SE", "SI", "SK", "SM", "TH", "TR", "UA", "US",
+                           "VA", "VE", "VN"]
+
     def _test_single_address(self, address: Address):
         assert isinstance(address, Address)
         assert isinstance(address.street, str)
@@ -32,7 +38,7 @@ class TestEntityAddress:
         assert address.mobile_phone is not None and address.mobile_phone != ""
         assert address.fax is not None and address.fax != ""
         assert address.organization is not None and address.organization != ""
-        
+
     def test_generate_single_address(self):
         address_service = AddressService()
         address = address_service.generate()
@@ -87,6 +93,6 @@ class TestEntityAddress:
         random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
         while random_dataset in self._supported_datasets:
             random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
-        # Raise ValueError because Street name data not found for unsupported dataset
-        with pytest.raises(ValueError):
+        # Raise FileNotFound because Street name data not found for unsupported dataset
+        with pytest.raises(FileNotFoundError):
             address_service = AddressService(dataset=random_dataset)

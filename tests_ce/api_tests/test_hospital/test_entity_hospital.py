@@ -7,6 +7,7 @@ from datamimic_ce.domains.healthcare.services.hospital_service import HospitalSe
 
 class TestEntityHospital:
     _supported_datasets = ["US", "DE"]
+
     def _test_single_hospital(self, hospital: Hospital):
         assert isinstance(hospital, Hospital)
         assert isinstance(hospital.hospital_id, str)
@@ -39,9 +40,9 @@ class TestEntityHospital:
         assert hospital.staff_count is not None and hospital.staff_count != 0
         assert hospital.founding_year is not None and hospital.founding_year != 0
         assert hospital.accreditation is not None and hospital.accreditation != []
-        assert hospital.emergency_services is not None 
-        assert hospital.teaching_status is not None 
-        assert hospital.emergency_services is not None 
+        assert hospital.emergency_services is not None
+        assert hospital.teaching_status is not None
+        assert hospital.emergency_services is not None
 
     def test_generate_single_hospital(self):
         hospital_service = HospitalService()
@@ -97,6 +98,6 @@ class TestEntityHospital:
 
     def test_not_supported_dataset(self):
         random_dataset = "XX"
-        # Raise ValueError because Street name data not found for unsupported dataset
-        with pytest.raises(ValueError):
+        # Raise FileNotFound because Street name data not found for unsupported dataset
+        with pytest.raises(FileNotFoundError):
             hospital_service = HospitalService(dataset=random_dataset)
