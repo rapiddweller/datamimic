@@ -282,9 +282,9 @@ Find more examples in the `datamimic_ce/demos` directory.
 
 ---
 
-## Domains Usage
+## Generate data usage by code
 
-### Basic usage
+### Basic domain usage
 To generate realistic domain-specific objects in your Python code, simply use the provided services. Here's an example using the PersonService:
 
 ```python
