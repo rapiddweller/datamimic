@@ -29,4 +29,4 @@ class TestWeightedDataSourceFunctional:
 
         for people in people_from_source:
             active_value = people["active"]
-            assert active_value == ""
+            assert active_value is None

@@ -265,6 +265,8 @@ class KeyVariableTask(Task):
         elif data_type == DATA_TYPE_FLOAT:
             return float(value)
         elif data_type == DATA_TYPE_BOOL:
+            if value == "" or value is None:
+                return None
             return value not in ("false", "False", "0", 0, False)
         elif data_type is None:
             return value
