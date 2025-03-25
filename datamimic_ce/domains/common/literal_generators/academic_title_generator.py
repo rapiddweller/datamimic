@@ -9,7 +9,6 @@ from pathlib import Path
 
 from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.logger import logger
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -56,10 +55,7 @@ class AcademicTitleGenerator(BaseLiteralGenerator):
 
     @staticmethod
     def _load_academy_csv(file_path: Path):
-        values, weights = FileContentStorage.load_file_with_custom_func(
-            cache_key=str(file_path),
-            read_func=lambda: FileUtil.read_wgt_file(file_path=file_path),
-        )
+        values, weights = FileUtil.read_wgt_file(file_path=file_path)
 
         # normalize weights
         total_weight = sum(weights)

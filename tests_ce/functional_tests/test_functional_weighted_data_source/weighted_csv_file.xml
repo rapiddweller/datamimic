@@ -4,6 +4,6 @@
         <key name="people_id" script="people.id"/>
         <key name="people_name" script="people.name"/>
         <key name="people_age" script="people.age"/>
-        <key name="active" source="data/active.wgt.csv"/>
+        <key name="active" type="bool" source="data/active.wgt.csv"/>
     </generate>
 </setup>

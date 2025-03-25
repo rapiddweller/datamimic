@@ -18,7 +18,6 @@ from datamimic_ce.domains.common.generators.person_generator import PersonGenera
 from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
 from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -145,16 +144,14 @@ class PatientGenerator(BaseDomainGenerator):
             A random insurance provider.
         """
         file_path = (
-            Path(__file__).parent.parent.parent.parent
-            / "domain_data"
-            / "healthcare"
-            / "medical"
-            / f"insurance_providers_{self._dataset}.csv"
+                Path(__file__).parent.parent.parent.parent
+                / "domain_data"
+                / "healthcare"
+                / "medical"
+                / f"insurance_providers_{self._dataset}.csv"
         )
-        loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_weight_csv(file_path)
-        )
-        return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]
+        loaded_data = FileUtil.read_weight_csv(file_path)
+        return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore
 
     def get_allergies(self) -> list[str]:
         # Determine how many allergies to generate (most people have 0-3)
@@ -164,15 +161,13 @@ class PatientGenerator(BaseDomainGenerator):
             return []
 
         file_path = (
-            Path(__file__).parent.parent.parent.parent
-            / "domain_data"
-            / "healthcare"
-            / "medical"
-            / f"allergies_{self._dataset}.csv"
+                Path(__file__).parent.parent.parent.parent
+                / "domain_data"
+                / "healthcare"
+                / "medical"
+                / f"allergies_{self._dataset}.csv"
         )
-        wgt, loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
-        )
+        wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
 
         random_choices = random.choices(loaded_data, weights=wgt, k=num_allergies)
         return [choice["allergen"] for choice in random_choices]
@@ -195,15 +190,13 @@ class PatientGenerator(BaseDomainGenerator):
             return []
 
         file_path = (
-            Path(__file__).parent.parent.parent.parent
-            / "domain_data"
-            / "healthcare"
-            / "medical"
-            / f"medications_{self._dataset}.csv"
+                Path(__file__).parent.parent.parent.parent
+                / "domain_data"
+                / "healthcare"
+                / "medical"
+                / f"medications_{self._dataset}.csv"
         )
-        wgt, loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
-        )
+        wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
 
         random_choices = random.choices(loaded_data, weights=wgt, k=num_medications)
         return [choice["name"] for choice in random_choices]

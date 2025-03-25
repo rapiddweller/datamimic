@@ -14,7 +14,6 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -840,9 +839,7 @@ class MedicalProcedureGenerator(BaseDomainGenerator):
             / "medical"
             / f"specialties_{self._dataset}.csv"
         )
-        wgt, loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
-        )
+        wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
         return random.choices(loaded_data, weights=wgt, k=1)[0]["specialty"]
 
     def generate_category(self) -> str:

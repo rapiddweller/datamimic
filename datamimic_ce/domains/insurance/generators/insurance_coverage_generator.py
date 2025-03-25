@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Any
 
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -22,9 +21,7 @@ class InsuranceCoverageGenerator(BaseDomainGenerator):
         file_path = (
             Path(__file__).parent.parent.parent.parent / "domain_data" / "insurance" / f"coverages_{self._dataset}.csv"
         )
-        loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_csv_having_weight_column(file_path, "weight")
-        )
+        loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
         coverage_data = random.choices(loaded_data[1], weights=loaded_data[0], k=1)[0]
 
         return {

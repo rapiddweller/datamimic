@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -44,10 +43,7 @@ class CityGenerator(BaseDomainGenerator):
                     / "city"
                     / f"city_{self._dataset}.csv"
                 )
-                self._city_data = FileContentStorage.load_file_with_custom_func(
-                    cache_key=str(file_path),
-                    read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=";"),
-                )
+                self._city_data = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=";")
             except FileNotFoundError as e:
                 raise ValueError(f"No city data found for '{self._dataset}': {e}") from e
         return self._city_data
@@ -60,10 +56,7 @@ class CityGenerator(BaseDomainGenerator):
         """
         if self._country_name is None:
             file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "common" / "country.csv"
-            country_df = FileContentStorage.load_file_with_custom_func(
-                cache_key=str(file_path),
-                read_func=lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=","),
-            )
+            country_df = FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=",")
             country_name_dict = {row[0]: row[4] for row in country_df}
             self._country_name = country_name_dict[self._dataset]
         return self._country_name

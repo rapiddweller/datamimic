@@ -137,7 +137,7 @@ class VariableTask(KeyVariableTask):
                     file_data = (
                         FileUtil.read_csv_to_dict_list(file_path=descriptor_dir / source_str, separator=separator)
                         if source_str.endswith("csv")
-                        else FileUtil.read_json_to_dict_list(descriptor_dir / source_str)
+                        else FileUtil.read_json_to_list(descriptor_dir / source_str)
                     )
                     if is_random_distribution:
                         self._random_items_iterator = iter(

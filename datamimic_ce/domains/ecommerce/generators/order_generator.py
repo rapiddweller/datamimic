@@ -4,7 +4,6 @@ from pathlib import Path
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -30,9 +29,7 @@ class OrderGenerator(BaseDomainGenerator):
         file_path = (
             Path(__file__).parent.parent.parent.parent / "domain_data/ecommerce" / f"order_statuses_{self._dataset}.csv"
         )
-        header_dict, loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
-        )
+        header_dict, loaded_data = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
 
         wgt_idx = header_dict["weight"]
         status_idx = header_dict["status"]
@@ -44,9 +41,7 @@ class OrderGenerator(BaseDomainGenerator):
             / "domain_data/ecommerce"
             / f"payment_methods_{self._dataset}.csv"
         )
-        header_dict, loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
-        )
+        header_dict, loaded_data = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
 
         wgt_idx = header_dict["weight"]
         method_idx = header_dict["method"]
@@ -58,9 +53,7 @@ class OrderGenerator(BaseDomainGenerator):
             / "domain_data/ecommerce"
             / f"shipping_methods_{self._dataset}.csv"
         )
-        header_dict, loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
-        )
+        header_dict, loaded_data = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
 
         wgt_idx = header_dict["weight"]
         method_idx = header_dict["method"]
@@ -70,9 +63,7 @@ class OrderGenerator(BaseDomainGenerator):
         file_path = (
             Path(__file__).parent.parent.parent.parent / "domain_data/ecommerce" / f"currencies_{self._dataset}.csv"
         )
-        header_dict, loaded_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
-        )
+        header_dict, loaded_data = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
 
         wgt_idx = header_dict["weight"]
         code_idx = header_dict["code"]
@@ -84,9 +75,7 @@ class OrderGenerator(BaseDomainGenerator):
             / "domain_data/ecommerce"
             / f"shipping_methods_{self._dataset}.csv"
         )
-        header_dict, datas = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
-        )
+        header_dict, datas = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
         method_idx = header_dict["method"]
         min_cost_idx = header_dict["min_cost"]
         max_cost_idx = header_dict["max_cost"]

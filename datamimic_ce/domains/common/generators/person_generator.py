@@ -17,7 +17,6 @@ from datamimic_ce.domains.common.literal_generators.gender_generator import Gend
 from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
 from datamimic_ce.domains.common.literal_generators.nobility_title_generator import NobilityTitleGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -103,9 +102,6 @@ class PersonGenerator(BaseDomainGenerator):
             / "person"
             / f"salutation_{self._dataset}.csv"
         )
-        header_dict, data = FileContentStorage.load_file_with_custom_func(
-            cache_key=str(salutation_file_path),
-            read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(salutation_file_path, delimiter=","),
-        )
+        header_dict, data = FileUtil.read_csv_to_dict_of_tuples_with_header(salutation_file_path, delimiter=",")
 
         return data[0][header_dict[gender]] if gender in header_dict else ""

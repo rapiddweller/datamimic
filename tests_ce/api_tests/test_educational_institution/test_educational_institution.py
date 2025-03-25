@@ -1,12 +1,13 @@
-
 import pytest
+
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.public_sector.models.educational_institution import EducationalInstitution
 from datamimic_ce.domains.public_sector.services.educational_institution_service import EducationalInstitutionService
- 
 
-class TestEntityEducationalInstitution:  
+
+class TestEntityEducationalInstitution:
     _supported_datasets = ["US", "DE"]
+
     def _test_single_educational_institution(self, educational_institution: EducationalInstitution):
         assert isinstance(educational_institution, EducationalInstitution)
         assert isinstance(educational_institution.institution_id, str)
@@ -36,7 +37,7 @@ class TestEntityEducationalInstitution:
         assert educational_institution.programs is not None and educational_institution.programs != ""
         assert educational_institution.accreditations is not None and educational_institution.accreditations != ""
         assert educational_institution.facilities is not None and educational_institution.facilities != ""
-    
+
     def test_generate_single_educational_institution(self):
         educational_institution_service = EducationalInstitutionService()
         educational_institution = educational_institution_service.generate()
@@ -49,8 +50,8 @@ class TestEntityEducationalInstitution:
         for educational_institution in educational_institutions:
             self._test_single_educational_institution(educational_institution)
 
-    def test_educational_institution_property_cache(self):   
-        educational_institution_service = EducationalInstitutionService() 
+    def test_educational_institution_property_cache(self):
+        educational_institution_service = EducationalInstitutionService()
         educational_institution = educational_institution_service.generate()
         assert educational_institution.institution_id == educational_institution.institution_id
         assert educational_institution.name == educational_institution.name
@@ -87,7 +88,6 @@ class TestEntityEducationalInstitution:
         assert educational_institution1.accreditations != educational_institution2.accreditations
         assert educational_institution1.facilities != educational_institution2.facilities
 
-
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_educational_institution_dataset(self, dataset):
         educational_institution_service = EducationalInstitutionService(dataset=dataset)
@@ -95,6 +95,5 @@ class TestEntityEducationalInstitution:
         self._test_single_educational_institution(educational_institution)
 
     def test_not_supported_dataset(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(FileNotFoundError):
             educational_institution_service = EducationalInstitutionService(dataset="XX")
-

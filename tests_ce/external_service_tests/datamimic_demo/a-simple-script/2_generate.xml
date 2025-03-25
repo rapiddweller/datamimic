@@ -12,6 +12,6 @@
         <key name="superuser" values="True, False" />
         <key name="email"
             script="'info@' + company.short_name.replace(' ', '-') + str(tc_creation) + '.de'" />
-        <key name="active" source="data/active.wgt.csv" />
+        <key name="active" type="bool" source="data/active.wgt.csv" />
     </generate>
 </setup>

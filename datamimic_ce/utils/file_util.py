@@ -13,6 +13,8 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
+from datamimic_ce.utils.file_content_storage import FileContentStorage
+
 
 class FileUtil:
     @staticmethod
@@ -23,15 +25,19 @@ class FileUtil:
         :param encoding:
         :return:
         """
-        properties_dict = {}
 
         try:
-            with path.open("r", encoding=encoding) as file:
-                for line in file:
-                    # Skip comments and empty lines
-                    if line.strip() and not line.startswith("#"):
-                        key, value = line.strip().split("=", 1)
-                        properties_dict[key.strip()] = value.strip()
+            properties_dict = {}
+            # Load file content from cache or file
+            data = FileContentStorage.load_file_with_custom_func(
+                str(path), lambda: [line.strip() for line in path.open("r", encoding=encoding)]
+            )
+            # Parse properties from file content
+            for line in data:
+                # Skip comments and empty lines
+                if line.strip() and not line.startswith("#"):
+                    key, value = line.strip().split("=", 1)
+                    properties_dict[key.strip()] = value.strip()
         except FileNotFoundError as e:
             raise FileNotFoundError(
                 f"Property file not found {str(path)}, please check the file path again. Error message: {e}"
@@ -40,20 +46,42 @@ class FileUtil:
         return properties_dict
 
     @staticmethod
+    def _read_raw_csv(file_path: Path, separator: str, encoding="utf-8") -> list[tuple]:
+        """
+        Read raw csv data
+        """
+        try:
+            return FileContentStorage.load_file_with_custom_func(str(file_path), lambda: [tuple(row) for row in
+                                                                                          csv.reader(file_path.open("r",
+                                                                                                                    newline="",
+                                                                                                                    encoding=encoding),
+                                                                                                     delimiter=separator)])
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"CSV file not found '{file_path}', error: {e}") from e
+
+    @staticmethod
+    def read_csv_to_dict_list(file_path: Path, separator: str, encoding="utf-8") -> list[dict]:
+        """
+        Read data from csv and parse into list of dict
+        """
+        raw_data = FileUtil._read_raw_csv(file_path, separator, encoding)
+        header = raw_data[0]
+        processed_data = [dict(zip(header, row, strict=False)) for row in raw_data[1:]]
+        return processed_data
+
+    @staticmethod
     def read_weight_csv(file_path: Path, separator: str = ",", encoding="utf-8") -> DataFrame:
         """
         Read none_header, 2_columns, weight csv
         then return as DataFrame
         """
-        df = pd.read_csv(
-            filepath_or_buffer=file_path,
-            delimiter=separator,
-            header=None,
-            names=[0, 1],
-            encoding=encoding,
-        )
-        # Replace NaN df in the 'weight' column with 1
-        df[1] = df[1].fillna(1)
+        # Load file content from cache or file
+        raw_data = FileUtil._read_raw_csv(file_path, separator, encoding)
+
+        # Convert data to DataFrame, select only 2 columns (data and weight)
+        df = pd.DataFrame(raw_data, columns=[0, 1])
+        # Convert column 1 to float and replace NaN with 1
+        df[1] = df[1].astype(float).fillna(1)
         # Replace NaN df in the first column with None to avoid nan
         df[0] = df[0].replace(to_replace=np.nan, value=None)
         # Calculate probability using count stat
@@ -62,40 +90,41 @@ class FileUtil:
         return df
 
     @staticmethod
-    def read_csv_to_dict_list(file_path: Path, separator: str, encoding="utf-8") -> list[dict]:
+    def read_json(file_path: Path, encoding="utf-8") -> list[dict] | dict:
         """
-        Read data from csv and parse into list of dict
+        Read data from JSON
         """
-        data_list = []
-
-        with file_path.open(mode="r", newline="", encoding=encoding) as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=separator)
-            for row in reader:
-                data_list.append(row)
-
-        return data_list
-
+        try:
+            return FileContentStorage.load_file_with_custom_func(str(file_path), lambda: json.load(
+                file_path.open(mode="r", encoding=encoding)))
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"JSON file not found '{file_path}', error: {e}") from e
+        
     @staticmethod
-    def read_json_to_dict_list(file_path: Path, encoding="utf-8") -> list[dict]:
+    def read_json_to_list(file_path: Path, encoding="utf-8") -> list[dict]:
         """
         Read data from JSON and parse into list of dict
         """
-        with file_path.open(mode="r", encoding=encoding) as json_file:
-            data_list = json.load(json_file)
-        return data_list
-
+        json_data = FileUtil.read_json(file_path, encoding)
+        if isinstance(json_data, list):
+            return json_data
+        else:
+            raise ValueError(f"JSON file '{file_path}' must contain a list of objects")
+        
     @staticmethod
     def read_json_to_dict(file_path: Path, encoding="utf-8") -> dict:
         """
-        List data from JSON and parse into single dict
+        Read data from JSON and parse into dict
         """
-        with file_path.open(mode="r", encoding=encoding) as json_file:
-            data_dict = json.load(json_file)
-        return data_dict
+        json_data = FileUtil.read_json(file_path, encoding)
+        if isinstance(json_data, dict):
+            return json_data
+        else:
+            raise ValueError(f"JSON file '{file_path}' must contain a dictionary")
 
     @staticmethod
     def read_csv_to_dict_of_tuples_with_header(
-        file_path: Path, delimiter: str = ",", encoding="utf-8"
+            file_path: Path, delimiter: str = ",", encoding="utf-8"
     ) -> tuple[dict, list[tuple]]:
         """
         Read CSV to header dict and data list
@@ -104,41 +133,23 @@ class FileUtil:
         :param encoding: encoding of the CSV file
         :return: a tuple containing a dictionary of headers and a list of tuples with string datas
         """
-        try:
-            header_dict = {}
-            with file_path.open("r", newline="", encoding=encoding) as csvfile:
-                csvreader = csv.reader(csvfile, delimiter=delimiter)
-                header = next(csvreader)  # Store the header
-                for idx, column in enumerate(header):
-                    modified_column = column.replace("\ufeff", "")
-                    header_dict[modified_column] = idx
-                data = [tuple(row) for row in csvreader]
-            return header_dict, data
-        except FileNotFoundError as e:
-            raise FileNotFoundError(f"CSV file not found: {file_path}") from e
+        # Load raw data
+        raw_data = FileUtil._read_raw_csv(file_path, delimiter, encoding)
+        header = raw_data[0]
+        data_rows = raw_data[1:]
 
-    # @staticmethod
-    # def read_csv_to_dict_of_tuples_without_header_and_fill_missing_value(
-    #     file_path: Path, encoding="utf-8"
-    # ) -> list[tuple]:
-    #     """
-    #     Read CSV to data list and replace missing value as None
-    #     :param file_path: Path to the CSV file
-    #     :param encoding: encoding of the CSV file
-    #     :return: a list of tuples containing the string data
-    #     """
-    #     data = []
-    #     with file_path.open("r", newline="", encoding=encoding) as csvfile:
-    #         csvreader = csv.reader(csvfile)
-    #         for row in csvreader:
-    #             # Replace empty strings with None
-    #             row_with_none = [None if value == "" else value for value in row]
-    #             data.append(tuple(row_with_none))
-    #     return data
+        # Create header dict
+        header_dict = {}
+        for idx, column in enumerate(header):
+            modified_column = column.replace("\ufeff", "")
+            header_dict[modified_column] = idx
+
+        # Return header dict and data rows
+        return header_dict, data_rows
 
     @staticmethod
     def read_csv_to_list_of_tuples_without_header(
-        file_path: Path, delimiter: str = ",", encoding="utf-8"
+            file_path: Path, delimiter: str = ",", encoding="utf-8"
     ) -> list[tuple]:
         """
         Read CSV without header to data list
@@ -147,27 +158,7 @@ class FileUtil:
         :param encoding: encoding of the CSV file
         :return: a list of tuples containing the string data
         """
-        try:
-            with file_path.open("r", newline="", encoding=encoding) as csvfile:
-                csvreader = csv.reader(csvfile, delimiter=delimiter)
-                data = [tuple(row) for row in csvreader]
-            return data
-        except FileNotFoundError as e:
-            raise FileNotFoundError(f"CSV file not found: {file_path}") from e
-
-    # @staticmethod
-    # def read_csv_having_single_column(file_path: Path, delimiter: str = ",", encoding="utf-8") -> list:
-    #     """
-    #     Read CSV having only 1 column
-    #     :param file_path:
-    #     :param delimiter:
-    #     :param encoding:
-    #     :return: a list of string datas
-    #     """
-    #     with file_path.open("r", newline="", encoding=encoding) as csvfile:
-    #         csvreader = csv.reader(csvfile, delimiter=delimiter)
-    #         data = [row[0] for row in csvreader]
-    #     return data
+        return FileUtil._read_raw_csv(file_path, delimiter, encoding)
 
     @staticmethod
     def read_wgt_file(file_path: Path, delimiter: str = ",", encoding="utf-8") -> tuple[list, list]:
@@ -180,21 +171,22 @@ class FileUtil:
         """
         values = []
         weights = []
-        try:
-            with open(file_path, newline="", encoding=encoding) as csvfile:
-                csvreader = csv.reader(csvfile, delimiter=delimiter)
-                for row in csvreader:
-                    values.append(row[0])
-                    if len(row) == 2:
-                        weights.append(float(row[1]))
-                    elif len(row) == 1:
-                        # Assume weight as 1 if missing
-                        weights.append(1.0)
-                    else:
-                        raise ValueError(f"Not a valid wgt file {str(file_path)}")
-        except Exception as e:
-            raise ValueError(f"Error loading CSV file '{str(file_path)}':", e) from e
 
+        # Load raw data
+        raw_data = FileUtil._read_raw_csv(file_path, delimiter, encoding)
+
+        # Process data
+        for row in raw_data:
+            values.append(row[0])
+            if len(row) == 2:
+                weights.append(float(row[1]))
+            elif len(row) == 1:
+                # Assume weight as 1 if missing
+                weights.append(1.0)
+            else:
+                raise ValueError(f"Not a valid wgt file {str(file_path)}")
+
+        # Normalize weights
         weights_sum = sum(weights)
         weights = [weight / weights_sum for weight in weights]
 
@@ -213,28 +205,28 @@ class FileUtil:
         weights = []  # List to store weights
         data_without_weights = []  # List to store dictionaries of data without the specified weight column
 
-        # Open the CSV file for reading
-        with filepath.open(newline="", encoding=encoding) as csvfile:
-            # Use csv.DictReader to automatically read rows into dictionaries
-            reader = csv.DictReader(csvfile, delimiter=delimiter)
-            for row in reader:
-                # Extract and remove the specified weight column from the row
-                weight = row.pop(weight_column_name, None)
-                if weight is not None:
-                    # Convert weight to the appropriate type (float, int) if necessary
-                    weights.append(float(weight))
-                    # Add the modified row (now without the weight) to the data_without_weights list
-                    data_without_weights.append(row)
+        # Load raw data
+        list_of_dict_data = FileUtil.read_csv_to_dict_list(filepath, delimiter, encoding)
+
+        # Process data
+        for row in list_of_dict_data:
+            # Extract and remove the specified weight column from the row
+            weight = row.pop(weight_column_name, None)
+            if weight is not None:
+                # Convert weight to the appropriate type (float, int) if necessary
+                weights.append(float(weight))
+                # Add the modified row (now without the weight) to the data_without_weights list
+                data_without_weights.append(row)
 
         # Return the tuple of weights list and data_without_weights list
         return (weights, data_without_weights)
 
     @staticmethod
     def read_mutil_column_wgt_file(
-        file_path: Path,
-        weight_col_index: int = 1,
-        delimiter: str = ",",
-        encoding="utf-8",
+            file_path: Path,
+            weight_col_index: int = 1,
+            delimiter: str = ",",
+            encoding="utf-8",
     ) -> tuple[list, list]:
         """
         Read wgt file having no header and mutil columns,
@@ -248,25 +240,23 @@ class FileUtil:
         weights = []  # List to store weights
         values = []  # List to store data
 
-        try:
-            with open(file_path, newline="", encoding=encoding) as csvfile:
-                csvreader = csv.reader(csvfile, delimiter=delimiter)
-                for row in csvreader:
-                    # Skip the empty row
-                    if not row:
-                        continue
-                    # default weight 1.0 when weight column is missing or wrong index
-                    if weight_col_index < 0 or weight_col_index >= len(row):
-                        weights.append(1.0)
-                    else:
-                        weight = row[weight_col_index]
-                        weights.append(float(weight) if weight else 1.0)
+        # Load raw data
+        raw_data = FileUtil._read_raw_csv(file_path, delimiter, encoding)
 
-                    values.append(row)
-            # Return the tuple of values list and weights list
-            return values, weights
-        except Exception as e:
-            raise ValueError(f"Error loading CSV file '{str(file_path)}':", e) from e
+        for row in raw_data:
+            # Skip the empty row
+            if not row:
+                continue
+            # default weight 1.0 when weight column is missing or wrong index
+            if weight_col_index < 0 or weight_col_index >= len(row):
+                weights.append(1.0)
+            else:
+                weight = row[weight_col_index]
+                weights.append(float(weight) if weight else 1.0)
+
+            values.append(row)
+        # Return the tuple of values list and weights list
+        return values, weights
 
     @staticmethod
     def copy_file(source: Path, destination: Path) -> None:

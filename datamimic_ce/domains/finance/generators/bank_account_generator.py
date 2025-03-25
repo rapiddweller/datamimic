@@ -10,7 +10,6 @@ from pathlib import Path
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -36,14 +35,10 @@ class BankAccountGenerator(BaseDomainGenerator):
         file_path = (
             Path(__file__).parent.parent.parent.parent / "domain_data" / "finance" / f"account_types_{self.dataset}.csv"
         )
-        account_types_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path)
-        )[1:]
+        account_types_data = FileUtil.read_csv_to_list_of_tuples_without_header(file_path)[1:]
         return random.choices(account_types_data, weights=[float(item[1]) for item in account_types_data], k=1)[0][0]
 
     def get_currency(self) -> str:
         file_path = Path(__file__).parent.parent.parent.parent / "domain_data" / "ecommerce" / "currencies.csv"
-        currency_data = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: FileUtil.read_csv_to_list_of_tuples_without_header(file_path)
-        )[1:]
+        currency_data = FileUtil.read_csv_to_list_of_tuples_without_header(file_path)[1:]
         return random.choices(currency_data, weights=[float(item[2]) for item in currency_data], k=1)[0][0]
