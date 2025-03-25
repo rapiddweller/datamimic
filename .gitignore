@@ -83,3 +83,5 @@ test_artifacts/
 **/output/
 .coverage.*
 .coverage
+
+.cursor

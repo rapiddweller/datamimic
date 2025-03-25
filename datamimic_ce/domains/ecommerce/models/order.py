@@ -67,6 +67,15 @@ class Order(BaseEntity):
         """
         return [Product(self._order_generator.product_generator) for _ in range(random.randint(1, 10))]
 
+    @product_list.setter
+    def product_list(self, value: list[Product]) -> None:
+        """Set the product list.
+
+        Args:
+            value: The list of products to set.
+        """
+        self._field_cache["product_list"] = value
+
     @property
     @property_cache
     def date(self) -> datetime.datetime:
@@ -86,6 +95,15 @@ class Order(BaseEntity):
             An order status (e.g., PENDING, DELIVERED)
         """
         return self._order_generator.get_order_status()
+
+    @status.setter
+    def status(self, value: str) -> None:
+        """Set the order status.
+
+        Args:
+            value: The order status to set.
+        """
+        self._field_cache["status"] = value
 
     @property
     @property_cache
@@ -117,6 +135,15 @@ class Order(BaseEntity):
         """
         # In a real implementation, this would use an Address model
         return Address(self._order_generator.address_generator)
+
+    @shipping_address.setter
+    def shipping_address(self, value: Address) -> None:
+        """Set the shipping address.
+
+        Args:
+            value: The shipping address to set.
+        """
+        self._field_cache["shipping_address"] = value
 
     @property
     @property_cache

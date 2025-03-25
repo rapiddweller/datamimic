@@ -50,6 +50,15 @@ class Person(BaseEntity):
         """
         return self._person_generator.given_name_generator.generate()
 
+    @given_name.setter
+    def given_name(self, value: str) -> None:
+        """Set the given name of the person.
+
+        Args:
+            value: The given name to set.
+        """
+        self._field_cache["given_name"] = value
+
     @property
     @property_cache
     def family_name(self) -> str:
@@ -60,15 +69,34 @@ class Person(BaseEntity):
         """
         return self._person_generator.family_name_generator.generate()
 
+    @family_name.setter
+    def family_name(self, value: str) -> None:
+        """Set the family name of the person.
+
+        Args:
+            value: The family name to set.
+        """
+        self._field_cache["family_name"] = value
+
     @property
     @property_cache
-    def name(self) -> str:
+    def full_name(self) -> str:
         """Get the full name of the person.
 
         Returns:
             The full name of the person.
         """
         return f"{self.given_name} {self.family_name}"
+
+    @property
+    @property_cache
+    def name(self) -> str:
+        """Get the name of the person.
+
+        Returns:
+            The name of the person.
+        """
+        return self.full_name
 
     @property
     @property_cache
@@ -90,6 +118,15 @@ class Person(BaseEntity):
         """
         return self._person_generator.email_generator.generate_with_name(self.given_name, self.family_name)
 
+    @email.setter
+    def email(self, value: str) -> None:
+        """Set the email of the person.
+
+        Args:
+            value: The email to set.
+        """
+        self._field_cache["email"] = value
+
     @property
     @property_cache
     def phone(self) -> str:
@@ -102,6 +139,16 @@ class Person(BaseEntity):
 
     @property
     @property_cache
+    def mobile_phone(self) -> str:
+        """Get the mobile phone number of the person.
+
+        Returns:
+            The mobile phone number of the person.
+        """
+        return self._person_generator.phone_generator.generate()
+
+    @property
+    @property_cache
     def address(self) -> Address:
         """Get the address of the person.
 
@@ -109,6 +156,15 @@ class Person(BaseEntity):
             The address of the person as a dictionary.
         """
         return Address(self._person_generator.address_generator)
+
+    @address.setter
+    def address(self, value: Address) -> None:
+        """Set the address of the person.
+
+        Args:
+            value: The address to set.
+        """
+        self._field_cache["address"] = value
 
     @property
     @property_cache
@@ -150,11 +206,13 @@ class Person(BaseEntity):
             "birthdate": self.birthdate,
             "given_name": self.given_name,
             "family_name": self.family_name,
+            "full_name": self.full_name,
             "gender": self.gender,
             "name": self.name,
             "age": self.age,
             "email": self.email,
             "phone": self.phone,
+            "mobile_phone": self.mobile_phone,
             "academic_title": self.academic_title,
             "salutation": self.salutation,
             "nobility_title": self.nobility_title,

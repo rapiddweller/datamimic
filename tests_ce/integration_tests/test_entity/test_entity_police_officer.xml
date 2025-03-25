@@ -3,8 +3,8 @@
         <variable name="police_officer" entity="PoliceOfficer" />
         <key name="officer_id" script="police_officer.officer_id" />
         <key name="badge_number" script="police_officer.badge_number" />
-        <key name="first_name" script="police_officer.first_name" />
-        <key name="last_name" script="police_officer.last_name" />
+        <key name="given_name" script="police_officer.given_name" />
+        <key name="family_name" script="police_officer.family_name" />
         <key name="full_name" script="police_officer.full_name" />
         <key name="gender" script="police_officer.gender" />
         <key name="birthdate" script="police_officer.birthdate" />
@@ -13,32 +13,32 @@
         <key name="department" script="police_officer.department" />
         <key name="unit" script="police_officer.unit" />
         <key name="hire_date" script="police_officer.hire_date" />
-        <key name="years_of_service" script="police_officer.years_of_service" />    
+        <key name="years_of_service" script="police_officer.years_of_service" />
         <array name="certifications" script="police_officer.certifications" />
         <array name="languages" script="police_officer.languages" />
         <key name="shift" script="police_officer.shift" />
         <key name="email" script="police_officer.email" />
         <key name="phone" script="police_officer.phone" />
         <key name="address" script="police_officer.address" />
-        <variable name="police_officer1" entity="PoliceOfficer" />  
+        <variable name="police_officer1" entity="PoliceOfficer" />
         <key name="officer_id1" script="police_officer1.officer_id" />
         <key name="badge_number1" script="police_officer1.badge_number" />
-        <key name="first_name1" script="police_officer1.first_name" />
-        <key name="last_name1" script="police_officer1.last_name" />
+        <key name="given_name1" script="police_officer1.given_name" />
+        <key name="family_name1" script="police_officer1.family_name" />
         <key name="full_name1" script="police_officer1.full_name" />
-        <key name="gender1" script="police_officer1.gender" />  
+        <key name="gender1" script="police_officer1.gender" />
         <key name="birthdate1" script="police_officer1.birthdate" />
         <key name="age1" script="police_officer1.age" />
         <key name="rank1" script="police_officer1.rank" />
         <key name="department1" script="police_officer1.department" />
         <key name="unit1" script="police_officer1.unit" />
-        <key name="hire_date1" script="police_officer1.hire_date" />    
+        <key name="hire_date1" script="police_officer1.hire_date" />
         <key name="years_of_service1" script="police_officer1.years_of_service" />
         <array name="certifications1" script="police_officer1.certifications" />
         <array name="languages1" script="police_officer1.languages" />
         <key name="shift1" script="police_officer1.shift" />
         <key name="email1" script="police_officer1.email" />
         <key name="phone1" script="police_officer1.phone" />
-        <key name="address1" script="police_officer1.address" />    
+        <key name="address1" script="police_officer1.address" />
     </generate>
 </setup>

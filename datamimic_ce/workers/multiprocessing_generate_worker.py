@@ -17,12 +17,12 @@ class MultiprocessingGenerateWorker(GenerateWorker):
     """
 
     def mp_process(
-            self,
-            copied_context: SetupContext | GenIterContext,
-            statement: GenerateStatement,
-            chunks: list[tuple[int, int]],
-            page_size: int,
-            source_operation: dict | None
+        self,
+        copied_context: SetupContext | GenIterContext,
+        statement: GenerateStatement,
+        chunks: list[tuple[int, int]],
+        page_size: int,
+        source_operation: dict | None,
     ) -> dict[str, list]:
         """
         Multiprocessing process for generating, exporting data by page, and merging result.

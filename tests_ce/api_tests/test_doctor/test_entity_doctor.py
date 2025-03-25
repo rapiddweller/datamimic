@@ -1,4 +1,5 @@
 import datetime
+
 import pytest
 
 from datamimic_ce.domains.common.models.address import Address
@@ -8,9 +9,9 @@ from datamimic_ce.domains.healthcare.models.hospital import Hospital
 from datamimic_ce.domains.healthcare.services.doctor_service import DoctorService
 
 
-
 class TestEntityDoctor:
     _supported_datasets = ["US", "DE"]
+
     def _test_single_doctor(self, doctor: Doctor):
         assert isinstance(doctor, Doctor)
         assert isinstance(doctor.doctor_id, str)
@@ -21,15 +22,15 @@ class TestEntityDoctor:
         assert isinstance(doctor.office_hours, dict)
         assert isinstance(doctor.hospital, Hospital)
         assert isinstance(doctor.medical_school, str)
-        assert isinstance(doctor.graduation_year, int)  
+        assert isinstance(doctor.graduation_year, int)
         assert isinstance(doctor.years_of_experience, int)
         assert isinstance(doctor.certifications, list)
         assert isinstance(doctor.specialty, str)
         assert isinstance(doctor.gender, str)
         assert isinstance(doctor.birthdate, datetime.datetime)
         assert isinstance(doctor.age, int)
-        assert isinstance(doctor.first_name, str)
-        assert isinstance(doctor.last_name, str)
+        assert isinstance(doctor.given_name, str)
+        assert isinstance(doctor.family_name, str)
         assert isinstance(doctor.full_name, str)
         assert isinstance(doctor.npi_number, str)
         assert isinstance(doctor.license_number, str)
@@ -39,19 +40,19 @@ class TestEntityDoctor:
         assert doctor.address is not None and doctor.address != ""
         assert doctor.phone is not None and doctor.phone != ""
         assert doctor.email is not None and doctor.email != ""
-        assert doctor.accepting_new_patients is not None 
+        assert doctor.accepting_new_patients is not None
         assert doctor.office_hours is not None and doctor.office_hours != {}
         assert doctor.hospital is not None and doctor.hospital != ""
         assert doctor.medical_school is not None and doctor.medical_school != ""
-        assert doctor.graduation_year is not None 
-        assert doctor.years_of_experience is not None 
+        assert doctor.graduation_year is not None
+        assert doctor.years_of_experience is not None
         assert doctor.certifications is not None and doctor.certifications != []
         assert doctor.specialty is not None and doctor.specialty != ""
         assert doctor.gender is not None and doctor.gender != ""
         assert doctor.birthdate is not None and doctor.birthdate != datetime.datetime.min
         assert doctor.age is not None and doctor.age != 0
-        assert doctor.first_name is not None and doctor.first_name != ""
-        assert doctor.last_name is not None and doctor.last_name != ""
+        assert doctor.given_name is not None and doctor.given_name != ""
+        assert doctor.family_name is not None and doctor.family_name != ""
         assert doctor.full_name is not None and doctor.full_name != ""
         assert doctor.npi_number is not None and doctor.npi_number != ""
         assert doctor.license_number is not None and doctor.license_number != ""
@@ -73,8 +74,8 @@ class TestEntityDoctor:
         doctor_service = DoctorService()
         doctor = doctor_service.generate()
         assert doctor.doctor_id == doctor.doctor_id
-        assert doctor.first_name == doctor.first_name
-        assert doctor.last_name == doctor.last_name
+        assert doctor.given_name == doctor.given_name
+        assert doctor.family_name == doctor.family_name
         assert doctor.full_name == doctor.full_name
         assert doctor.npi_number == doctor.npi_number
         assert doctor.license_number == doctor.license_number
@@ -99,8 +100,8 @@ class TestEntityDoctor:
         doctor1 = doctor_service.generate()
         doctor2 = doctor_service.generate()
         assert doctor1.doctor_id != doctor2.doctor_id
-        assert doctor1.first_name != doctor2.first_name
-        assert doctor1.last_name != doctor2.last_name
+        assert doctor1.given_name != doctor2.given_name
+        assert doctor1.family_name != doctor2.family_name
         assert doctor1.full_name != doctor2.full_name
         assert doctor1.npi_number != doctor2.npi_number
         assert doctor1.license_number != doctor2.license_number
@@ -115,7 +116,7 @@ class TestEntityDoctor:
         assert doctor1.certifications != doctor2.certifications
         assert doctor1.specialty != doctor2.specialty
         assert doctor1.birthdate != doctor2.birthdate
-        assert doctor1.age != doctor2.age   
+        assert doctor1.age != doctor2.age
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

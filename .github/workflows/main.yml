@@ -432,11 +432,13 @@ jobs:
           mv coverage-reports/coverage-unit/coverage.xml coverage-reports/coverage-unit.xml
           mv coverage-reports/coverage-external-service/coverage.xml coverage-reports/coverage-external-service.xml
           mv coverage-reports/coverage-factory/coverage.xml coverage-reports/coverage-factory.xml
+          mv coverage-reports/coverage-api/coverage.xml coverage-reports/coverage-api.xml
           rm -rf coverage-reports/coverage-functional
           rm -rf coverage-reports/coverage-integration
           rm -rf coverage-reports/coverage-unit
           rm -rf coverage-reports/coverage-external-service
           rm -rf coverage-reports/coverage-factory
+          rm -rf coverage-reports/coverage-api
           rm -rf coverage-reports/artifact
           rm -rf coverage-reports/setup
 

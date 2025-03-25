@@ -16,7 +16,10 @@ T = TypeVar("T", bound=BaseEntity)
 
 class BaseDomainService(ABC, Generic[T]):
     """
-    Base class for all domain services.
+    Base service class for domain operations.
+
+    This class provides the interface and common functionality for domain-specific
+    services that generate and manipulate domain entities.
     """
 
     def __init__(self, data_generator: BaseDomainGenerator, model_cls: type[T]):

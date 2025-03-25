@@ -88,21 +88,21 @@ class Patient(BaseEntity):
 
     @property
     @property_cache
-    def first_name(self) -> str:
-        """Get the patient's first name.
+    def given_name(self) -> str:
+        """Get the patient's given name.
 
         Returns:
-            The patient's first name.
+            The patient's given name.
         """
         return self.person_data.given_name
 
     @property
     @property_cache
-    def last_name(self) -> str:
-        """Get the patient's last name.
+    def family_name(self) -> str:
+        """Get the patient's family name.
 
         Returns:
-            The patient's last name.
+            The patient's family name.
         """
         return self.person_data.family_name
 
@@ -114,7 +114,7 @@ class Patient(BaseEntity):
         Returns:
             The patient's full name.
         """
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.given_name} {self.family_name}"
 
     @property
     @property_cache
@@ -259,7 +259,7 @@ class Patient(BaseEntity):
         Returns:
             A dictionary containing emergency contact information.
         """
-        return self._patient_generator.get_emergency_contact(self.last_name)
+        return self._patient_generator.get_emergency_contact(self.family_name)
 
     @property
     @property_cache
@@ -285,18 +285,38 @@ class Patient(BaseEntity):
 
         return f"{prefix}-{number}"
 
+    @property
+    def primary_doctor(self):
+        """Get the patient's primary doctor.
+
+        Returns:
+            The patient's primary doctor.
+        """
+        if "primary_doctor" in self._field_cache:
+            return self._field_cache["primary_doctor"]
+        return None
+
+    @primary_doctor.setter
+    def primary_doctor(self, value):
+        """Set the patient's primary doctor.
+
+        Args:
+            value: The doctor to assign as the patient's primary doctor.
+        """
+        self._field_cache["primary_doctor"] = value
+
     def to_dict(self) -> dict[str, Any]:
         """Convert the patient entity to a dictionary.
 
         Returns:
             A dictionary containing all patient properties.
         """
-        return {
+        result = {
             "patient_id": self.patient_id,
             "medical_record_number": self.medical_record_number,
             "ssn": self.ssn,
-            "first_name": self.first_name,
-            "last_name": self.last_name,
+            "given_name": self.given_name,
+            "family_name": self.family_name,
             "full_name": self.full_name,
             "gender": self.gender,
             "birthdate": self.birthdate,
@@ -312,3 +332,8 @@ class Patient(BaseEntity):
             "insurance_provider": self.insurance_provider,
             "insurance_policy_number": self.insurance_policy_number,
         }
+
+        if "primary_doctor" in self._field_cache:
+            result["primary_doctor"] = self.primary_doctor
+
+        return result

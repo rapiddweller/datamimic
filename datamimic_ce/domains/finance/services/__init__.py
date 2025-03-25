@@ -13,5 +13,6 @@ This module provides services for the finance domain entities.
 from datamimic_ce.domains.finance.services.bank_account_service import BankAccountService
 from datamimic_ce.domains.finance.services.bank_service import BankService
 from datamimic_ce.domains.finance.services.credit_card_service import CreditCardService
+from datamimic_ce.domains.finance.services.transaction_service import TransactionService
 
-__all__ = ["BankAccountService", "BankService", "CreditCardService"]
+__all__ = ["BankAccountService", "BankService", "CreditCardService", "TransactionService"]

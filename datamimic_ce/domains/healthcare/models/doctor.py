@@ -84,21 +84,21 @@ class Doctor(BaseEntity):
 
     @property
     @property_cache
-    def first_name(self) -> str:
-        """Get the doctor's first name.
+    def given_name(self) -> str:
+        """Get the doctor's given name.
 
         Returns:
-            The doctor's first name.
+            The doctor's given name.
         """
         return self.person_data.given_name
 
     @property
     @property_cache
-    def last_name(self) -> str:
-        """Get the doctor's last name.
+    def family_name(self) -> str:
+        """Get the doctor's family name.
 
         Returns:
-            The doctor's last name.
+            The doctor's family name.
         """
         return self.person_data.family_name
 
@@ -110,7 +110,7 @@ class Doctor(BaseEntity):
         Returns:
             The doctor's full name.
         """
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.given_name} {self.family_name}"
 
     @property
     @property_cache
@@ -156,6 +156,15 @@ class Doctor(BaseEntity):
     @property_cache
     def hospital(self) -> Hospital:
         return Hospital(self._doctor_generator.hospital_generator)
+
+    @hospital.setter
+    def hospital(self, value: Hospital) -> None:
+        """Set the doctor's hospital.
+
+        Args:
+            value: The hospital to assign to the doctor.
+        """
+        self._field_cache["hospital"] = value
 
     @property
     @property_cache
@@ -286,8 +295,8 @@ class Doctor(BaseEntity):
             "doctor_id": self.doctor_id,
             "npi_number": self.npi_number,
             "license_number": self.license_number,
-            "first_name": self.first_name,
-            "last_name": self.last_name,
+            "given_name": self.given_name,
+            "family_name": self.family_name,
             "full_name": self.full_name,
             "gender": self.gender,
             "birthdate": self.birthdate,

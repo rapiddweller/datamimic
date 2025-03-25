@@ -209,10 +209,10 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         Returns:
             A string representing a technician name.
         """
-        first_names = ["Alex", "Sam", "Jordan", "Casey", "Taylor", "Morgan", "Riley", "Jamie"]
-        last_names = ["Tech", "Service", "Repair", "Maintenance", "Support", "Systems", "Engineering"]
+        given_names = ["Alex", "Sam", "Jordan", "Casey", "Taylor", "Morgan", "Riley", "Jamie"]
+        family_names = ["Tech", "Service", "Repair", "Maintenance", "Support", "Systems", "Engineering"]
 
-        return f"{random.choice(first_names)} {random.choice(last_names)}"
+        return f"{random.choice(given_names)} {random.choice(family_names)}"
 
     def _generate_maintenance_type(self) -> str:
         """Generate a maintenance type.

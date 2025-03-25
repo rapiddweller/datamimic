@@ -14,6 +14,9 @@ from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 class BaseEntity(ABC):
     """
     Base class for all domain entities.
+
+    This class provides common functionality for all entity objects used in domain models,
+    including property access and validation.
     """
 
     def __init__(self, generator: BaseDomainGenerator | None = None):
@@ -24,7 +27,7 @@ class BaseEntity(ABC):
     @property
     def field_cache(self):
         return self._field_cache
-    
+
     @abstractmethod
     def to_dict(self) -> dict[str, Any]:
         """Convert the entity to a dictionary."""

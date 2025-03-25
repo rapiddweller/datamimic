@@ -1,48 +1,48 @@
 <setup multiprocessing="0">
     <generate name="doctor" count="10" target="ConsoleExporter">
-        <variable name="doctor" entity="Doctor"/>
-        <key name="doctor_id" script="doctor.doctor_id"/>
-        <key name="npi_number" script="doctor.npi_number"/>
-        <key name="license_number" script="doctor.license_number"/>
-        <key name="person_data" script="doctor.person_data"/>
-        <key name="first_name" script="doctor.first_name"/>
-        <key name="last_name" script="doctor.last_name"/>
-        <key name="full_name" script="doctor.full_name"/>
-        <key name="gender" script="doctor.gender"/>
-        <key name="birthdate" script="doctor.birthdate"/>
-        <key name="age" script="doctor.age"/>
-        <key name="specialty" script="doctor.specialty"/>
-        <key name="hospital" script="doctor.hospital"/>
-        <key name="medical_school" script="doctor.medical_school"/>
-        <key name="graduation_year" script="doctor.graduation_year"/>
-        <key name="years_of_experience" script="doctor.years_of_experience"/>
+        <variable name="doctor" entity="Doctor" />
+        <key name="doctor_id" script="doctor.doctor_id" />
+        <key name="npi_number" script="doctor.npi_number" />
+        <key name="license_number" script="doctor.license_number" />
+        <key name="person_data" script="doctor.person_data" />
+        <key name="given_name" script="doctor.given_name" />
+        <key name="family_name" script="doctor.family_name" />
+        <key name="full_name" script="doctor.full_name" />
+        <key name="gender" script="doctor.gender" />
+        <key name="birthdate" script="doctor.birthdate" />
+        <key name="age" script="doctor.age" />
+        <key name="specialty" script="doctor.specialty" />
+        <key name="hospital" script="doctor.hospital" />
+        <key name="medical_school" script="doctor.medical_school" />
+        <key name="graduation_year" script="doctor.graduation_year" />
+        <key name="years_of_experience" script="doctor.years_of_experience" />
         <!-- <key name="certifications" script="doctor.certifications"/> -->
-        <key name="accepting_new_patients" script="doctor.accepting_new_patients"/>
+        <key name="accepting_new_patients" script="doctor.accepting_new_patients" />
         <!-- <key name="office_hours" script="doctor.office_hours"/>  -->
-        <key name="email" script="doctor.email"/>
-        <key name="phone" script="doctor.phone"/>
-        <key name="address" script="doctor.address"/>
-        <variable name="doctor_2" entity="Doctor"/>
-        <key name="doctor_id2" script="doctor_2.doctor_id"/>
-        <key name="npi_number2" script="doctor_2.npi_number"/>
-        <key name="license_number2" script="doctor_2.license_number"/>
-        <key name="person_data2" script="doctor_2.person_data"/>
-        <key name="first_name2" script="doctor_2.first_name"/>
-        <key name="last_name2" script="doctor_2.last_name"/>
-        <key name="full_name2" script="doctor_2.full_name"/>
-        <key name="gender2" script="doctor_2.gender"/>
-        <key name="birthdate2" script="doctor_2.birthdate"/>
-        <key name="age2" script="doctor_2.age"/>    
-        <key name="specialty2" script="doctor_2.specialty"/>
-        <key name="hospital2" script="doctor_2.hospital"/>
-        <key name="medical_school2" script="doctor_2.medical_school"/>
-        <key name="graduation_year2" script="doctor_2.graduation_year"/>
-        <key name="years_of_experience2" script="doctor_2.years_of_experience"/>
-        <!-- <key name="certifications2" script="doctor_2.certifications"/> --> 
-        <key name="accepting_new_patients2" script="doctor_2.accepting_new_patients"/>
+        <key name="email" script="doctor.email" />
+        <key name="phone" script="doctor.phone" />
+        <key name="address" script="doctor.address" />
+        <variable name="doctor_2" entity="Doctor" />
+        <key name="doctor_id2" script="doctor_2.doctor_id" />
+        <key name="npi_number2" script="doctor_2.npi_number" />
+        <key name="license_number2" script="doctor_2.license_number" />
+        <key name="person_data2" script="doctor_2.person_data" />
+        <key name="given_name2" script="doctor_2.given_name" />
+        <key name="family_name2" script="doctor_2.family_name" />
+        <key name="full_name2" script="doctor_2.full_name" />
+        <key name="gender2" script="doctor_2.gender" />
+        <key name="birthdate2" script="doctor_2.birthdate" />
+        <key name="age2" script="doctor_2.age" />
+        <key name="specialty2" script="doctor_2.specialty" />
+        <key name="hospital2" script="doctor_2.hospital" />
+        <key name="medical_school2" script="doctor_2.medical_school" />
+        <key name="graduation_year2" script="doctor_2.graduation_year" />
+        <key name="years_of_experience2" script="doctor_2.years_of_experience" />
+        <!-- <key name="certifications2" script="doctor_2.certifications"/> -->
+        <key name="accepting_new_patients2" script="doctor_2.accepting_new_patients" />
         <!-- <key name="office_hours2" script="doctor_2.office_hours"/> -->
-        <key name="email2" script="doctor_2.email"/>
-        <key name="phone2" script="doctor_2.phone"/>
-        <key name="address2" script="doctor_2.address"/>
+        <key name="email2" script="doctor_2.email" />
+        <key name="phone2" script="doctor_2.phone" />
+        <key name="address2" script="doctor_2.address" />
     </generate>
 </setup>

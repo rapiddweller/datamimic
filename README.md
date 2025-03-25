@@ -129,6 +129,243 @@ Traditional test data generation can be time-consuming and may compromise data p
 - **Enhancing Test Coverage**: Simulate diverse data scenarios for comprehensive testing.
 - **Ensuring Compliance**: Maintain data privacy and comply with legal regulations.
 - **Improving Data Quality**: Generate realistic data that mirrors production environments.
+- **Superior Synthetic Data**: Produce synthetic data with higher accuracy than open-source alternatives.
+
+---
+
+## Advanced Features
+
+DATAMIMIC supports a rich set of advanced capabilities:
+
+- **Custom Generators**: Create your own data generators for specialized use cases
+- **Data Relationships**: Define complex relationships between entities with referential integrity
+- **Import/Export Formats**: Support for JSON, XML, CSV, RDBMS and MongoDB
+- **Import/Export Formats (Enterprise Edition)**: Kafka, EDI, XSD and more enterprise formats
+- **Data Anonymization**: Anonymize data to comply with privacy regulations while maintaining data utility
+- **Data Validation**: Define and enforce data validation rules for consistency
+- **Scripting**: Extend functionality using Python scripts for complete flexibility
+- **Database Integration**: Connect to databases for seamless data generation and storage
+- **Model-Driven Generation**: Utilize models to generate realistic data with proper distributions
+- **Weighted Distribution System**: Generate data that follows real-world statistical patterns
+- **Multi-Domain Support**: Industry-specific models across healthcare, finance, insurance, and more
+
+---
+
+## Quick Start Guide for Developers
+
+### Installation
+
+Install DATAMIMIC Community Edition using pip:
+
+```bash
+pip install datamimic-ce
+```
+
+### Method 1: Using Python API
+
+Generate synthetic data directly in your Python code:
+
+```python
+# Import the required services
+from datamimic_ce.domains.common.services import PersonService
+from datamimic_ce.domains.healthcare.services import PatientService
+from datamimic_ce.domains.finance.services import BankAccountService
+
+# Generate person data
+person_service = PersonService(dataset="US")
+person = person_service.generate()
+
+print(f"Person: {person.name}, {person.age} years old")
+print(f"Email: {person.email}")
+print(f"Address: {person.address.street}, {person.address.city}, {person.address.state}")
+
+# Generate healthcare data
+patient_service = PatientService()
+patient = patient_service.generate()
+print(f"Patient ID: {patient.patient_id}")
+print(f"Blood Type: {patient.blood_type}")
+print(f"Conditions: {', '.join(patient.conditions)}")
+
+# Generate batch data
+people = person_service.generate_batch(count=1000)
+print(f"Generated {len(people)} unique people")
+```
+
+#### 🚀 Benefits and Use Cases
+
+- **🔧 Direct Control**: Fine-grained programmatic control over data generation
+- **🧩 Composable**: Combine different services for complex scenarios
+- **🏭 High Volume**: Efficiently generate thousands of records with minimal code
+- **🔍 Inspection**: Direct access to object properties for validation
+- **🔄 Customization**: Easily modify parameters to suit specific test cases
+- **⚡ Performance**: Native Python execution for maximum speed
+
+Perfect for:
+- Applications requiring direct integration with Python codebase
+- Complex data manipulation scenarios
+- When you need full programmatic control
+- Scenarios requiring dynamic parameter adjustment
+- High-performance data generation requirements
+
+### Method 2: Using XML Configuration
+
+Create a data model in XML format (`datamimic.xml`):
+
+```xml
+<setup>
+    <generate name="datamimic_user_list" count="100" target="CSV,JSON">
+        <variable name="person" entity="Person(min_age=18, max_age=90, female_quota=0.5)"/>
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="given_name" script="person.given_name"/>
+        <key name="family_name" script="person.family_name"/>
+        <key name="gender" script="person.gender"/>
+        <key name="birth_date" script="person.birthdate" converter="DateFormat('%d.%m.%Y')"/>
+        <key name="email" script="person.family_name + '@' + person.given_name + '.de'"/>
+        <key name="ce_user" values="True, False"/>
+        <key name="ee_user" values="True, False"/>
+        <key name="datamimic_lover" constant="DEFINITELY"/>
+    </generate>
+</setup>
+```
+
+Then generate the data using the command line:
+
+```bash
+datamimic run datamimic.xml
+```
+
+#### 🚀 Benefits and Use Cases
+
+- **📝 Declarative**: Define your data requirements in a clear, declarative format
+- **🔄 Reusable**: Create templates that can be reused across projects
+- **🔌 Portable**: XML definitions work across different environments
+- **🧰 Tooling**: Compatible with XML editors and validation tools
+- **📊 Output Flexibility**: Generate multiple output formats from a single definition
+- **🔒 Stability**: Consistent outputs across runs
+
+Perfect for:
+- Configuration-driven applications
+- CI/CD pipeline integration
+- Cross-language environments
+- When separation of code and data definitions is needed
+- Scenarios requiring multiple output formats
+
+### Method 3: Generate Complex Related Data
+
+You can create realistic scenarios with related entities:
+
+```python
+# Import required services
+from datamimic_ce.domains.healthcare.services import PatientService, DoctorService, HospitalService
+
+# Create the services
+hospital_service = HospitalService()
+doctor_service = DoctorService()
+patient_service = PatientService()
+
+# Generate related entities
+hospital = hospital_service.generate()
+doctors = doctor_service.generate_batch(count=5)
+patients = patient_service.generate_batch(count=20)
+
+# Create relationships
+for doctor in doctors:
+    doctor.hospital = hospital
+    
+for patient in patients:
+    patient.primary_doctor = doctors[0]  # Assign the first doctor to all patients
+    
+# Print the relationships
+print(f"Hospital: {hospital.name}")
+print(f"Doctors ({len(doctors)}):")
+for doctor in doctors:
+    print(f"  - Dr. {doctor.family_name}, {doctor.specialty}")
+    
+print(f"Patients ({len(patients)}):")
+for i, patient in enumerate(patients[:5]):  # Show just the first 5
+    print(f"  - {patient.given_name} {patient.family_name} (Patient ID: {patient.patient_id})")
+if len(patients) > 5:
+    print(f"  - And {len(patients) - 5} more patients...")
+```
+
+#### 🚀 Benefits and Use Cases
+
+- **🔗 Relationships**: Create complex, interconnected data relationships
+- **🧩 Entity Graphs**: Build complete entity graphs with referential integrity
+- **🌐 Ecosystem**: Model entire business domains in a single setup
+- **📊 Real-world Modeling**: Simulate realistic business scenarios
+- **🧪 End-to-End Testing**: Test complex business rules across related entities
+- **🔍 Data Consistency**: Ensure consistent relationships across your test data
+
+Perfect for:
+- Complex domain modeling
+- Database schema validation
+- Microservice integration testing
+- Business logic validation across entity boundaries
+- Scenarios requiring realistic data relationships
+
+### Method 4: Custom Domain Factory
+
+Create a factory for test-specific data generation with the `DataMimicTestFactory`:
+
+**customer.xml**:
+```xml
+<setup>
+    <!-- customer.xml -->
+    <generate name="customer" count="10">
+        <!-- Basic customer info -->
+        <variable name="person" entity="Person(min_age=21, max_age=67)"/>
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="first_name" script="person.given_name"/>
+        <key name="last_name" script="person.family_name"/>
+        <key name="email" script="person.email"/>
+        <key name="status" values="'active', 'inactive', 'pending'"/>
+    </generate>
+</setup>
+```
+
+```python
+from datamimic_ce.factory.datamimic_test_factory import DataMimicTestFactory
+
+customer_factory = DataMimicTestFactory("customer.xml", "customer")
+customer = customer_factory.create()
+
+print(customer["id"])  # 1
+print(customer["first_name"])  # Jose
+print(customer["last_name"])   # Ayers
+```
+
+#### 🚀 Benefits and Use Cases
+
+- **🧪 Testing Focus**: Simplified API designed specifically for testing scenarios
+- **🔄 Dictionary Access**: Easy access to generated data through dictionary-like interface
+- **📝 Test Fixtures**: Create consistent test fixtures for unit and integration tests
+- **🧩 Factory Pattern**: Implements the factory pattern for test data generation
+- **📊 Deterministic Output**: Predictable outputs for repeatable test scenarios
+- **🚀 Productivity**: Rapid test data creation with minimal setup
+- **🏗️ Test Architecture**: Clean separation between test data and test logic
+- **🌱 Maintainability**: Centralized data definition for easier updates
+
+Perfect for:
+- Unit testing with consistent test data
+- Integration testing with complex business rules
+- Test-driven development (TDD) workflows
+- Creating pre-configured test fixtures
+- Simplifying test setup with one-line data generation
+- Projects requiring standardized test data across multiple test suites
+- Keeping test data definitions separate from test logic
+- Rapid development of test scenarios
+
+---
+
+## Documentation
+
+For comprehensive documentation, please visit:
+
+- [Main Documentation](docs/README.md) - Overview and getting started guide
+- [Domain-Driven Framework](docs/data-domains/README.md) - Documentation for domain-specific data generation
+- [API Reference](docs/api/) - Detailed API documentation
+- [Advanced Topics](docs/advanced/) - Advanced usage and customization
 
 ---
 
@@ -151,7 +388,7 @@ pip install datamimic-ce
 Verify the installation:
 
 ```bash
-datamimic --version
+datamimic version
 ```
 
 ### Developer Installation
@@ -171,89 +408,6 @@ For contributors and developers who want to work with the source code:
     cd datamimic
     uv sync
     ```
-
----
-
-## Usage Guide
-
-### Basic Usage
-
-1. Create a new data generation project:
-
-    ```bash
-    datamimic init my-project
-    cd my-project
-    ```
-
-2. Configure your data model in `datamimic.xml`:
-
-    ```xml
-    <setup>
-        <generate name="datamimic_user_list" count="100" target="CSV,JSON">
-            <variable name="person" entity="Person(min_age=18, max_age=90, female_quota=0.5)"/>
-            <key name="id" generator="IncrementGenerator"/>
-            <key name="first_name" script="person.given_name"/>
-            <key name="last_name" script="person.family_name"/>
-            <key name="gender" script="person.gender"/>
-            <key name="birth_date" script="person.birthdate" converter="DateFormat('%d.%m.%Y')"/>
-            <key name="email" script="person.family_name + '@' + person.given_name + '.de'"/>
-            <key name="ce_user" values="True, False"/>
-            <key name="ee_user" values="True, False"/>
-            <key name="datamimic_lover" constant="DEFINITELY"/>
-        </generate>
-    </setup>
-    ```
-
-3. Generate data:
-
-    ```bash
-    datamimic run datamimic.xml
-    ```
-
-4. Access the generated data in the `output` directory.
-
-    **json export:**
-
-    ```json
-   [
-   {"id": 1, "first_name": "Mary", "last_name": "Mcgowan", "gender": "female", "birth_date": "1946-05-15T00:00:00", "email": "Mcgowan@Mary.de", "ce_user": false, "ee_user": true, "datamimic_lover": "DEFINITELY"},
-   {"id": 2, "first_name": "Gabrielle", "last_name": "Malone", "gender": "female", "birth_date": "1989-11-27T00:00:00", "email": "Malone@Gabrielle.de", "ce_user": false, "ee_user": true, "datamimic_lover": "DEFINITELY"},
-   {"id": 4, "first_name": "Margaret", "last_name": "Torres", "gender": "female", "birth_date": "2006-07-13T00:00:00", "email": "Torres@Margaret.de", "ce_user": false, "ee_user": false, "datamimic_lover": "DEFINITELY"},
-    {"id": 5, "first_name": "Monica", "last_name": "Meyers", "gender": "female", "birth_date": "1983-07-22T00:00:00", "email": "Meyers@Monica.de", "ce_user": true, "ee_user": false, "datamimic_lover": "DEFINITELY"},
-    {"id": 6, "first_name": "Jason", "last_name": "Davis", "gender": "male", "birth_date": "1941-07-05T00:00:00", "email": "Davis@Jason.de", "ce_user": true, "ee_user": false, "datamimic_lover": "DEFINITELY"},
-    {"...":  "..."},
-    {"id": 100, "first_name": "Jared", "last_name": "Rivas", "gender": "male", "birth_date": "1975-03-16T00:00:00", "email": "Rivas@Jared.de", "ce_user": true, "ee_user": true, "datamimic_lover": "DEFINITELY"}
-   ]
-    ```
-
-    **csv export:**
-
-    ```csv
-    id|first_name|last_name|gender|birth_date|email|ce_user|ee_user|datamimic_lover
-    1|Mary|Mcgowan|female|1946-05-15 00:00:00|Mcgowan@Mary.de|False|True|DEFINITELY
-    2|Gabrielle|Malone|female|1989-11-27 00:00:00|Malone@Gabrielle.de|False|True|DEFINITELY
-    3|Antonio|Davis|male|2005-05-12 00:00:00|Davis@Antonio.de|False|True|DEFINITELY
-    4|Margaret|Torres|female|2006-07-13 00:00:00|Torres@Margaret.de|False|False|DEFINITELY
-    5|Monica|Meyers|female|1983-07-22 00:00:00|Meyers@Monica.de|True|False|DEFINITELY
-    ...
-    100|Jason|Davis|male|1941-07-05 00:00:00|Davis@Jason.de|True|False|DEFINITELY
-    ```
-
-### Advanced Features
-
-DATAMIMIC supports various advanced features:
-
-- **Custom Generators**: Create your own data generators
-- **Data Relationships**: Define complex relationships between entities
-- **Import/Export Formats**: Support for JSON, XML, CSV, RDBMS and MongoDB
-- **Import/Export Formats ( only EE )**: Kafka, EDI, XSD and more
-- **Data Anonymization**: Anonymize data to comply with privacy regulations
-- **Data Validation**: Define and enforce data validation rules
-- **Scripting**: Extend functionality using Python scripts
-- **Database Integration**: Connect to databases for seamless data generation
-- **Model-Driven Generation**: Utilize models to generate realistic data
-- **Validation Rules**: Define and enforce data validation rules
-- **Scripting**: Extend functionality using Python scripts
 
 ---
 
@@ -387,6 +541,7 @@ Professional Power for Business Success
 | Enterprise Integrations | ❌ | ✅ |
 | SLA Support | ❌ | ✅ |
 | Custom Development | ❌ | ✅ |
+| Superior Synthetic Data Quality | ❌ | ✅ |
 
 ---
 

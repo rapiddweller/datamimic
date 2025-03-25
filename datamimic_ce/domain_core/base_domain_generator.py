@@ -5,9 +5,11 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+class BaseDomainGenerator:
+    """Base generator class for domain-specific data generation.
 
-class BaseDomainGenerator: 
+    This class defines the interface for all domain generators that produce
+    synthetic data following domain-specific rules and distributions.
     """
-    Base class for all domain generators.
-    """
+
     pass

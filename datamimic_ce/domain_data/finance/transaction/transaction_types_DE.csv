@@ -1,0 +1,9 @@
+transaction_type,weight,direction
+Einzahlung,15,credit
+Auszahlung,20,debit
+Überweisung,15,debit
+Zahlung,35,debit
+Gebühr,5,debit
+Zinsen,2,credit
+Rückerstattung,5,credit
+Anpassung,3,credit 

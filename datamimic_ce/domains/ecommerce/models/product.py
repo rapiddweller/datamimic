@@ -120,6 +120,15 @@ class Product(BaseEntity):
         """
         return self._product_generator.price_with_strategy()
 
+    @price.setter
+    def price(self, value: float) -> None:
+        """Set the product price.
+
+        Args:
+            value: The price to set.
+        """
+        self._field_cache["price"] = value
+
     @property
     @property_cache
     def sku(self) -> str:
@@ -154,6 +163,15 @@ class Product(BaseEntity):
             A product availability status (e.g., IN_STOCK)
         """
         return self._product_generator.get_product_data_by_data_type("product_availability")
+
+    @availability.setter
+    def availability(self, value: str) -> None:
+        """Set the product availability.
+
+        Args:
+            value: The availability status to set.
+        """
+        self._field_cache["availability"] = value
 
     @property
     @property_cache
