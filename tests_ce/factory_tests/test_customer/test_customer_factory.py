@@ -1,12 +1,11 @@
 from pathlib import Path
 
-from tests_ce.factory_tests.test_customer.customer_factory import CustomerFactory
-
+from datamimic_ce.factory.datamimic_test_factory import DataMimicTestFactory
 
 
 class TestCustomerFactory:
     _test_dir = Path(__file__).resolve().parent
-    _customer_factory = CustomerFactory(_test_dir / "datamimic.xml", "customer")
+    _customer_factory = DataMimicTestFactory(_test_dir / "datamimic.xml", "customer")
 
     def test_customer_factory(self):
         customer = self._customer_factory.create()
