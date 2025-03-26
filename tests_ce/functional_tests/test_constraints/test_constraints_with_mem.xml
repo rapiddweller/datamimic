@@ -1,4 +1,4 @@
-<setup multiprocessing="1" numProcess="2">
+<setup numProcess="2">
   <database id="sqlitedb" system="source" environment="environment" />
   <execute uri="script/hospital.scr.sql" target="sqlitedb" />
   <memstore id="mem" />

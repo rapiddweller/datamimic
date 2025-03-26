@@ -1,4 +1,4 @@
-<setup multiprocessing="1" numProcess="2">
+<setup numProcess="2">
   <generate name="container" count="1">
     <nestedKey name="cyclic_true" source="script/person_data.json"
       type="list" count="1000" cyclic="True">

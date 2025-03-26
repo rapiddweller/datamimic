@@ -1,12 +1,12 @@
-<setup multiprocessing="1" numProcess="2">
-    <memstore id="mem"/>
+<setup numProcess="2">
+    <memstore id="mem" />
     <generate name="data" count="100000" target="mem">
-        <key name="id" generator="IncrementGenerator"/>
-        <key name="tc_creation_src" constant="BEN"/>
-        <key name="no" generator="IncrementGenerator"/>
-        <key name="active" type="bool" constant="False"/>
-        <variable name="company" entity="Company" dataset="DE" locale="de_DE"/>
-        <key name="name" script="company.short_name"/>
+        <key name="id" generator="IncrementGenerator" />
+        <key name="tc_creation_src" constant="BEN" />
+        <key name="no" generator="IncrementGenerator" />
+        <key name="active" type="bool" constant="False" />
+        <variable name="company" entity="Company" dataset="DE" locale="de_DE" />
+        <key name="name" script="company.short_name" />
     </generate>
-    <generate name="data2" type="data" source="mem" target=""/>
+    <generate name="data2" type="data" source="mem" target="" />
 </setup>

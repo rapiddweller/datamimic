@@ -1,4 +1,4 @@
-<setup multiprocessing="1" numProcess="2">
+<setup numProcess="2">
       <generate name="synthetic_customers" count="10000" pageSize="50"
             source="script/person_nested_data.json"
             cyclic="True" distribution="ordered"
