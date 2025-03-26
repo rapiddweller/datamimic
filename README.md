@@ -142,8 +142,6 @@ datamimic run ./healthcare-example/datamimic.xml
 - [CLI Interface](docs/api/cli.md)
 - [Data Domains Details](docs/data-domains/README.md)
 
-Developer Guide
-
 ---
 
 ## ❓ FAQ
