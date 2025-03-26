@@ -1,14 +1,14 @@
-# DataMimic Developer Guide
+# DATAMIMIC Developer Guide
 
 ## Introduction
 
-DataMimic is a powerful synthetic data generation framework built on a domain-driven architecture that produces high-quality, weighted dataset-driven synthetic data for various industries. Unlike generic data generation libraries, DataMimic focuses on creating data that accurately mimics real-world distributions and relationships, making it ideal for testing, training, and demonstration purposes.
+DATAMIMIC is a powerful synthetic data generation framework built on a domain-driven architecture that produces high-quality, weighted dataset-driven synthetic data for various industries. Unlike generic data generation libraries, DATAMIMIC focuses on creating data that accurately mimics real-world distributions and relationships, making it ideal for testing, training, and demonstration purposes.
 
 > **Note**: For comprehensive documentation including detailed model descriptions, exporters, importers, platform UI, and more, please visit our official online documentation at [https://docs.datamimic.io/](https://docs.datamimic.io/)
 
 ## Installation
 
-To install DataMimic Community Edition:
+To install DATAMIMIC Community Edition:
 
 ```bash
 pip install datamimic-ce
@@ -16,7 +16,7 @@ pip install datamimic-ce
 
 ## Core Architecture
 
-DataMimic is built on three main architectural components:
+DATAMIMIC is built on three main architectural components:
 
 1. **Domain Core** - Provides the foundational classes and interfaces for all domain models
 2. **Domains** - Industry-specific implementations of entities and business logic
@@ -94,7 +94,7 @@ people_json = json.dumps([p.to_dict() for p in people], cls=DatetimeEncoder)
 
 ## Domain Models
 
-DataMimic includes specialized models for various industry domains:
+DATAMIMIC includes specialized models for various industry domains:
 
 ### Healthcare Domain
 
@@ -126,7 +126,7 @@ DataMimic includes specialized models for various industry domains:
 
 ## Weighted Distributions
 
-A key advantage of DataMimic is its use of weighted distributions based on real-world data patterns:
+A key advantage of DATAMIMIC is its use of weighted distributions based on real-world data patterns:
 
 ```python
 from datamimic_ce.domains.healthcare.services import PatientService
@@ -146,7 +146,7 @@ patients = patient_service.generate_batch(count=100)
 
 ## Unit Testing with DataMimic
 
-DataMimic excels at creating test data for unit and integration tests:
+DATAMIMIC excels at creating test data for unit and integration tests:
 
 ```python
 import unittest
@@ -183,7 +183,7 @@ class TestTransactionProcessor(unittest.TestCase):
 
 ## Comparison with Other Libraries
 
-| Feature | DataMimic | Faker | Mimesis |
+| Feature | DATAMIMIC | Faker | Mimesis |
 |---------|-----------|-------|---------|
 | Domain-specific models | ✓ | ✗ | Partial |
 | Realistic distributions | ✓ | ✗ | ✗ |
@@ -237,6 +237,6 @@ class CustomEntity(BaseEntity):
 
 ## Conclusion
 
-DataMimic's domain-driven architecture provides a powerful framework for generating synthetic data that accurately reflects real-world patterns and relationships. By leveraging weighted distributions and domain-specific models, DataMimic enables developers to create high-quality test data, training datasets, and demonstration data that closely mimics production systems.
+DataMimic's domain-driven architecture provides a powerful framework for generating synthetic data that accurately reflects real-world patterns and relationships. By leveraging weighted distributions and domain-specific models, DATAMIMIC enables developers to create high-quality test data, training datasets, and demonstration data that closely mimics production systems.
 
 For further assistance or to contribute to the project, visit our GitHub repository or contact the development team.

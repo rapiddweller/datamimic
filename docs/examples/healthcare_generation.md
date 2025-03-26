@@ -1,6 +1,6 @@
 # Healthcare Data Generation with DataMimic
 
-This example demonstrates how to generate synthetic healthcare data using the DataMimic framework.
+This example demonstrates how to generate synthetic healthcare data using the DATAMIMIC framework.
 
 ## Basic Patient Generation
 
@@ -284,4 +284,4 @@ Patients:
 - Mary Johnson, 29 years old, Conditions: []
 ```
 
-This demonstrates how DataMimic can generate realistic, related healthcare entities for testing and development. 
+This demonstrates how DATAMIMIC can generate realistic, related healthcare entities for testing and development. 
