@@ -15,7 +15,7 @@ from datamimic_ce.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID
 from datamimic_ce.constants.element_constants import (
     EL_ARRAY,
     EL_CONDITION,
-    EL_CONSTRAINTS,
+    EL_SOURCE_CONSTRAINTS,
     EL_DATABASE,
     EL_ECHO,
     EL_ELEMENT,
@@ -40,7 +40,7 @@ from datamimic_ce.constants.element_constants import (
 from datamimic_ce.logger import logger
 from datamimic_ce.parsers.array_parser import ArrayParser
 from datamimic_ce.parsers.condition_parser import ConditionParser
-from datamimic_ce.parsers.constraints_parser import ConstraintsParser
+from datamimic_ce.parsers.source_constraints_parser import SourceConstraintsParser
 from datamimic_ce.parsers.database_parser import DatabaseParser
 from datamimic_ce.parsers.echo_parser import EchoParser
 from datamimic_ce.parsers.element_parser import ElementParser
@@ -113,7 +113,7 @@ class ParserUtil:
                 EL_ELEMENT,
                 EL_ARRAY,
                 EL_CONDITION,
-                EL_CONSTRAINTS,
+                EL_SOURCE_CONSTRAINTS,
             },
             EL_CONDITION: {EL_IF, EL_ELSE_IF, EL_ELSE},
             EL_GENERATE: {
@@ -127,7 +127,7 @@ class ParserUtil:
                 EL_ECHO,
                 EL_CONDITION,
                 EL_INCLUDE,
-                EL_CONSTRAINTS,
+                EL_SOURCE_CONSTRAINTS,
             },
             EL_INCLUDE: {EL_SETUP},
             EL_ITEM: {EL_KEY, EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ELEMENT},
@@ -136,7 +136,7 @@ class ParserUtil:
             EL_IF: None,
             EL_ELSE_IF: None,
             EL_ELSE: None,
-            EL_CONSTRAINTS: {EL_RULE},
+            EL_SOURCE_CONSTRAINTS: {EL_RULE},
         }
 
         return valid_sub_element_dict.get(ele_tag, set())
@@ -196,8 +196,8 @@ class ParserUtil:
             return ElementParser(class_factory_util, element=element, properties=properties)
         elif tag == EL_GENERATOR:
             return GeneratorParser(class_factory_util, element=element, properties=properties)
-        elif tag == EL_CONSTRAINTS:
-            return ConstraintsParser(class_factory_util, element=element, properties=properties)
+        elif tag == EL_SOURCE_CONSTRAINTS:
+            return SourceConstraintsParser(class_factory_util, element=element, properties=properties)
         elif tag == EL_RULE:
             return RuleParser(class_factory_util, element=element, properties=properties)
         else:
@@ -251,7 +251,7 @@ class ParserUtil:
                     stmt = parser.parse()
                 elif isinstance(parser, KeyParser | RuleParser):
                     stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
-                elif isinstance(parser, ConditionParser | ConstraintsParser):
+                elif isinstance(parser, ConditionParser | SourceConstraintsParser):
                     stmt = parser.parse(
                         descriptor_dir=descriptor_dir, parent_stmt=cast(CompositeStatement, parent_stmt)
                     )

@@ -8,17 +8,17 @@ import itertools
 
 from datamimic_ce.contexts.context import SAFE_GLOBALS, DotableDict
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.statements.constraints_statement import ConstraintsStatement
+from datamimic_ce.statements.source_constraints_statement import SourceConstraintsStatement
 from datamimic_ce.statements.rule_statement import RuleStatement
 from datamimic_ce.tasks.task import Task
 
 
-class ConstraintsTask(Task):
-    def __init__(self, statement: ConstraintsStatement):
+class SourceConstraintsTask(Task):
+    def __init__(self, statement: SourceConstraintsStatement):
         self._statement = statement
 
     @property
-    def statement(self) -> ConstraintsStatement:
+    def statement(self) -> SourceConstraintsStatement:
         return self._statement
 
     def execute(self, source_data, pagination: DataSourcePagination | None = None, cyclic: bool | None = False) -> list:

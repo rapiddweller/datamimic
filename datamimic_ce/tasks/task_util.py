@@ -35,7 +35,7 @@ from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.array_statement import ArrayStatement
 from datamimic_ce.statements.condition_statement import ConditionStatement
-from datamimic_ce.statements.constraints_statement import ConstraintsStatement
+from datamimic_ce.statements.source_constraints_statement import SourceConstraintsStatement
 from datamimic_ce.statements.database_statement import DatabaseStatement
 from datamimic_ce.statements.echo_statement import EchoStatement
 from datamimic_ce.statements.element_statement import ElementStatement
@@ -58,7 +58,7 @@ from datamimic_ce.statements.statement import Statement
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.array_task import ArrayTask
 from datamimic_ce.tasks.condition_task import ConditionTask
-from datamimic_ce.tasks.constraints_task import ConstraintsTask
+from datamimic_ce.tasks.source_constraints_task import SourceConstraintsTask
 from datamimic_ce.tasks.database_task import DatabaseTask
 from datamimic_ce.tasks.echo_task import EchoTask
 from datamimic_ce.tasks.element_task import ElementTask
@@ -133,8 +133,8 @@ class TaskUtil:
             return ElementTask(ctx, stmt)
         elif isinstance(stmt, GeneratorStatement):
             return GeneratorTask(stmt)
-        elif isinstance(stmt, ConstraintsStatement):
-            return ConstraintsTask(stmt)
+        elif isinstance(stmt, SourceConstraintsStatement):
+            return SourceConstraintsTask(stmt)
         elif isinstance(stmt, RuleStatement):
             return RuleTask(stmt)
         else:

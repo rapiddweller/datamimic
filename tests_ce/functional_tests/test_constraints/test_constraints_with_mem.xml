@@ -17,8 +17,8 @@
 
     <generate name="constraint_patient" type="generate_selector" source="mem" target="ConsoleExporter">
         <key name="id" generator="IncrementGenerator"/>
-        <constraints>
+        <sourceConstraints>
           <rule if="True" then="total_bill_amount &gt; 150"/>
-        </constraints>
+        </sourceConstraints>
     </generate>
 </setup>

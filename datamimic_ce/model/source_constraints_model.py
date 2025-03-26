@@ -7,5 +7,5 @@
 from pydantic import BaseModel
 
 
-class ConstraintsModel(BaseModel):
+class SourceConstraintsModel(BaseModel):
     pass

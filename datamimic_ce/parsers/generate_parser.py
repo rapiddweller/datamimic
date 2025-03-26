@@ -10,7 +10,7 @@ from xml.etree.ElementTree import Element
 from datamimic_ce.constants.element_constants import EL_GENERATE
 from datamimic_ce.model.generate_model import GenerateModel
 from datamimic_ce.parsers.statement_parser import StatementParser
-from datamimic_ce.statements.constraints_statement import ConstraintsStatement
+from datamimic_ce.statements.source_constraints_statement import SourceConstraintsStatement
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
@@ -60,11 +60,11 @@ class GenerateParser(StatementParser):
     @staticmethod
     def _check_only_one_constraints_tag(sub_stmt_list: list[Statement]):
         """
-        Only one 'constraints' tag per generate
+        Only one 'SourceConstraints' tag per generate
         """
         count = 0
         for stmt in sub_stmt_list:
-            if isinstance(stmt, ConstraintsStatement):
+            if isinstance(stmt, SourceConstraintsStatement):
                 count += 1
         if count > 1:
-            raise SyntaxError("Only once <constraints> allow in per <generate>")
+            raise SyntaxError("Only once <sourceConstraints> allow in per <generate>")

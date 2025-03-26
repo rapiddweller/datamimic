@@ -15,7 +15,7 @@ from datamimic_ce.data_sources.data_source_pagination import DataSourcePaginatio
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
-from datamimic_ce.tasks.constraints_task import ConstraintsTask
+from datamimic_ce.tasks.source_constraints_task import SourceConstraintsTask
 from datamimic_ce.tasks.element_task import ElementTask
 from datamimic_ce.tasks.task import Task
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
@@ -188,8 +188,8 @@ class NestedKeyTask(Task):
                 try:
                     if isinstance(sub_task, ElementTask):
                         attributes.update(sub_task.generate_xml_attribute(ctx))
-                    elif isinstance(sub_task, ConstraintsTask):
-                        # do not execute ConstraintsTask here, ConstraintsTask is for filter source data
+                    elif isinstance(sub_task, SourceConstraintsTask):
+                        # do not execute SourceConstraintsTask here, SourceConstraintsTask is for filter source data
                         pass
                     else:
                         sub_task.execute(ctx)
@@ -388,12 +388,12 @@ class NestedKeyTask(Task):
 
     def _filter_source_by_constraints_task(self, parent_context: GenIterContext, source_data: list) -> list:
         """
-        Execute ConstraintsTask to filter source data
+        Execute SourceConstraintsTask to filter source data
         """
         result = source_data
         if self._sub_tasks:
             for sub_task in self._sub_tasks:
-                if isinstance(sub_task, ConstraintsTask):
+                if isinstance(sub_task, SourceConstraintsTask):
                     nestedkey_len = self._determine_nestedkey_length(context=parent_context)
                     temp_pagination = DataSourcePagination(skip=0, limit=nestedkey_len) if nestedkey_len else None
                     result = sub_task.execute(source_data, pagination=temp_pagination, cyclic=self.statement.cyclic)

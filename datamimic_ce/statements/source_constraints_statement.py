@@ -6,6 +6,6 @@
 from datamimic_ce.statements.composite_statement import CompositeStatement
 
 
-class ConstraintsStatement(CompositeStatement):
+class SourceConstraintsStatement(CompositeStatement):
     def __init__(self, parent_stmt: CompositeStatement):
         super().__init__(None, parent_stmt=parent_stmt)

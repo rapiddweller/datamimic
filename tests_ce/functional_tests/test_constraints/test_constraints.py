@@ -120,7 +120,7 @@ class TestConstraints(TestCase):
             engine.test_with_timer()
             assert False
         except SyntaxError as e:
-            assert "Only once <constraints> allow in per <generate>" in e.msg
+            assert "Only once <sourceConstraints> allow in per <generate>" in e.msg
 
     def test_constraints_nested_data(self):
         engine = DataMimicTest(test_dir=self._test_dir,
