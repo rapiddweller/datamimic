@@ -1,9 +1,9 @@
-<setup multiprocessing="1" numProcess="3">
+<setup numProcess="3">
     <generate name="customer" count="10" target="CSV" pageSize="7">
-        <key name="cid" generator="IncrementGenerator"/>
+        <key name="cid" generator="IncrementGenerator" />
         <generate name="inner_user" count="3" target="CSV" numProcess="1">
-            <variable name="iid" generator="IncrementGenerator"/>
-            <key name="uid" script="cid*10 + inner_user.iid"/>
+            <variable name="iid" generator="IncrementGenerator" />
+            <key name="uid" script="cid*10 + inner_user.iid" />
         </generate>
     </generate>
 </setup>

@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -7,6 +7,7 @@
 
 from datamimic_ce.domains.common.models.city import City
 from datamimic_ce.domains.common.services.city_service import CityService
+
 
 class TestCityGenerator:
     _supported_dataset = [
@@ -73,7 +74,7 @@ class TestCityGenerator:
                 assert isinstance(generated_city.name, str)
                 assert generated_city.postal_code is not None, "can not generate city postal_code"
                 assert isinstance(generated_city.postal_code, str)
-                #TODO: add test for state
+                # TODO: add test for state
                 # assert generated_city.state is not None, "can not generate city state"
                 # assert isinstance(generated_city.state, str)
                 # language is optional

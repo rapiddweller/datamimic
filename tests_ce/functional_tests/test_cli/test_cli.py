@@ -1,3 +1,4 @@
+import os
 import shutil
 from pathlib import Path
 from unittest.mock import patch
@@ -15,11 +16,74 @@ class TestCLI:
         assert result.exit_code == 0
         assert "DATAMIMIC version:" in result.output
 
+    def test_info_command(self):
+        """Test info command shows system and configuration details"""
+        result = runner.invoke(app, ["info"])
+        assert result.exit_code == 0
+        assert "System Information" in result.output
+        assert "DATAMIMIC Version" in result.output
+        assert "Python Version" in result.output
+        assert "Operating System" in result.output
+        assert "Config File" in result.output
+        assert "Log Level" in result.output
+
+    def test_validate_descriptor_failure(self):
+        """Test failed XML descriptor validation"""
+        with runner.isolated_filesystem():
+            with open("invalid.xml", "w") as f:
+                f.write("<invalid>")
+            result = runner.invoke(app, ["validate", "invalid.xml"])
+            assert result.exit_code == 1
+            assert "validation failed" in result.output.lower()
+
+    def test_validate_nonexistent_file(self):
+        """Test validation of non-existent file"""
+        result = runner.invoke(app, ["validate", "nonexistent.xml"])
+        assert result.exit_code == 1
+        assert "file not found" in result.output.lower()
+
     def test_demo_list(self):
         result = runner.invoke(app, ["demo", "list"])
         assert result.exit_code == 0
         assert "Name" in result.output
         assert "Description" in result.output
+
+    def test_demo_info_valid(self):
+        """Test getting information about a valid demo"""
+        with (
+            patch("pathlib.Path.exists", return_value=True),
+            patch(
+                "toml.load",
+                return_value={
+                    "projectName": "Test Demo",
+                    "description": "A test demo",
+                    "dependencies": "pytest",
+                    "usage": "datamimic demo create test-demo",
+                },
+            ),
+        ):
+            result = runner.invoke(app, ["demo", "info", "test-demo"])
+            assert result.exit_code == 0
+            assert "Test Demo" in result.output
+            assert "A test demo" in result.output
+            assert "pytest" in result.output
+
+    def test_demo_info_invalid(self):
+        """Test getting information about an invalid demo"""
+        result = runner.invoke(app, ["demo", "info", "nonexistent-demo"])
+        assert result.exit_code == 1
+        assert "not found" in result.output.lower()
+
+    def test_run_with_environment_variables(self):
+        """Test run command respects environment variables"""
+        with (
+            runner.isolated_filesystem(),
+            patch.dict(os.environ, {"DATAMIMIC_CONFIG": "./config.yml"}),
+        ):
+            with open("test.xml", "w") as f:
+                f.write("<setup></setup>")
+            result = runner.invoke(app, ["run", "test.xml"])
+            assert result.exit_code == 0
 
     def test_demo_create_requires_demo_name_or_all(self):
         result = runner.invoke(app, ["demo", "create"])
@@ -52,8 +116,6 @@ class TestCLI:
         finally:
             # Cleanup
             if target_dir.exists():
-                import shutil
-
                 shutil.rmtree(target_dir)
 
     def test_run_requires_valid_descriptor_path(self):
@@ -106,7 +168,7 @@ class TestCLI:
     @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
     def test_init_creates_nested_directories(self, mock_create_structure, tmp_path):
         """Test project initialization with nested directory structure"""
-        project_name = "test-project"  # Changed to valid project name
+        project_name = "test-project"
         target_dir = tmp_path / "deep/nested/location"
 
         try:
@@ -160,3 +222,11 @@ class TestCLI:
         result = runner.invoke(app, ["init", "invalid/name"])
         assert result.exit_code == 1
         assert "Error: Project name can only contain" in result.output
+
+    def test_demo_info(self):
+        """Test getting detailed information about a specific demo"""
+        result = runner.invoke(app, ["demo", "info", "demo-condition"])
+        assert result.exit_code == 0
+        assert "Demo Information" in result.output
+        assert "Description" in result.output
+        assert "Required Dependencies" in result.output

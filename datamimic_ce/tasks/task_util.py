@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -35,7 +35,6 @@ from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.array_statement import ArrayStatement
 from datamimic_ce.statements.condition_statement import ConditionStatement
-from datamimic_ce.statements.constraints_statement import ConstraintsStatement
 from datamimic_ce.statements.database_statement import DatabaseStatement
 from datamimic_ce.statements.echo_statement import EchoStatement
 from datamimic_ce.statements.element_statement import ElementStatement
@@ -54,11 +53,11 @@ from datamimic_ce.statements.mongodb_statement import MongoDBStatement
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.rule_statement import RuleStatement
+from datamimic_ce.statements.source_constraints_statement import ConstraintsStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.array_task import ArrayTask
 from datamimic_ce.tasks.condition_task import ConditionTask
-from datamimic_ce.tasks.constraints_task import ConstraintsTask
 from datamimic_ce.tasks.database_task import DatabaseTask
 from datamimic_ce.tasks.echo_task import EchoTask
 from datamimic_ce.tasks.element_task import ElementTask
@@ -79,6 +78,7 @@ from datamimic_ce.tasks.mongodb_task import MongoDBTask
 from datamimic_ce.tasks.nested_key_task import NestedKeyTask
 from datamimic_ce.tasks.reference_task import ReferenceTask
 from datamimic_ce.tasks.rule_task import RuleTask
+from datamimic_ce.tasks.source_constraints_task import ConstraintsTask
 from datamimic_ce.tasks.task import Task
 from datamimic_ce.utils.object_util import ObjectUtil
 
@@ -344,11 +344,11 @@ class TaskUtil:
             if source_operation:
                 # (EE feature only) Load XML file with source operation
                 source_data = data_source_registry.load_xml_file_with_operation(
-                    root_context.descriptor_dir / source_str, 
-                    stmt.cyclic, 
-                    load_start_idx, 
-                    load_end_idx, 
-                    source_operation
+                    root_context.descriptor_dir / source_str,
+                    stmt.cyclic,
+                    load_start_idx,
+                    load_end_idx,
+                    source_operation,
                 )
             else:
                 source_data = data_source_registry.load_xml_file(

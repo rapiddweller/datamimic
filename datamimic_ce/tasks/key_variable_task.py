@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -37,10 +37,10 @@ class KeyVariableTask(Task):
     _STRING_MODE = "string"
 
     def __init__(
-            self,
-            ctx: SetupContext,
-            statement: KeyStatement | VariableStatement | ElementStatement,
-            pagination: DataSourcePagination | None = None,
+        self,
+        ctx: SetupContext,
+        statement: KeyStatement | VariableStatement | ElementStatement,
+        pagination: DataSourcePagination | None = None,
     ):
         from datamimic_ce.tasks.task_util import TaskUtil
 
@@ -149,10 +149,10 @@ class KeyVariableTask(Task):
                     raise ValueError(f"Failed when execute script of element '{self._statement.name}': {str(e)}") from e
             # Throw error if <key> evaluated script get not simple data type
             if (
-                    self._element_tag == "key"
-                    and isinstance(value, Iterable)
-                    and not isinstance(value, str)
-                    and not (isinstance(value, dict) and "#text" in value)
+                self._element_tag == "key"
+                and isinstance(value, Iterable)
+                and not isinstance(value, str)
+                and not (isinstance(value, dict) and "#text" in value)
             ):
                 raise ValueError(
                     f"<key> '{self._statement.name}' expects simple data type, "

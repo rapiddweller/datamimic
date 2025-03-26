@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -144,11 +144,11 @@ class PatientGenerator(BaseDomainGenerator):
             A random insurance provider.
         """
         file_path = (
-                Path(__file__).parent.parent.parent.parent
-                / "domain_data"
-                / "healthcare"
-                / "medical"
-                / f"insurance_providers_{self._dataset}.csv"
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "healthcare"
+            / "medical"
+            / f"insurance_providers_{self._dataset}.csv"
         )
         loaded_data = FileUtil.read_weight_csv(file_path)
         return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore
@@ -161,11 +161,11 @@ class PatientGenerator(BaseDomainGenerator):
             return []
 
         file_path = (
-                Path(__file__).parent.parent.parent.parent
-                / "domain_data"
-                / "healthcare"
-                / "medical"
-                / f"allergies_{self._dataset}.csv"
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "healthcare"
+            / "medical"
+            / f"allergies_{self._dataset}.csv"
         )
         wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
 
@@ -190,11 +190,11 @@ class PatientGenerator(BaseDomainGenerator):
             return []
 
         file_path = (
-                Path(__file__).parent.parent.parent.parent
-                / "domain_data"
-                / "healthcare"
-                / "medical"
-                / f"medications_{self._dataset}.csv"
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "healthcare"
+            / "medical"
+            / f"medications_{self._dataset}.csv"
         )
         wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
 

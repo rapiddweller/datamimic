@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -51,11 +51,13 @@ class FileUtil:
         Read raw csv data
         """
         try:
-            return FileContentStorage.load_file_with_custom_func(str(file_path), lambda: [tuple(row) for row in
-                                                                                          csv.reader(file_path.open("r",
-                                                                                                                    newline="",
-                                                                                                                    encoding=encoding),
-                                                                                                     delimiter=separator)])
+            return FileContentStorage.load_file_with_custom_func(
+                str(file_path),
+                lambda: [
+                    tuple(row)
+                    for row in csv.reader(file_path.open("r", newline="", encoding=encoding), delimiter=separator)
+                ],
+            )
         except FileNotFoundError as e:
             raise FileNotFoundError(f"CSV file not found '{file_path}', error: {e}") from e
 
@@ -95,11 +97,12 @@ class FileUtil:
         Read data from JSON
         """
         try:
-            return FileContentStorage.load_file_with_custom_func(str(file_path), lambda: json.load(
-                file_path.open(mode="r", encoding=encoding)))
+            return FileContentStorage.load_file_with_custom_func(
+                str(file_path), lambda: json.load(file_path.open(mode="r", encoding=encoding))
+            )
         except FileNotFoundError as e:
             raise FileNotFoundError(f"JSON file not found '{file_path}', error: {e}") from e
-        
+
     @staticmethod
     def read_json_to_list(file_path: Path, encoding="utf-8") -> list[dict]:
         """
@@ -110,7 +113,7 @@ class FileUtil:
             return json_data
         else:
             raise ValueError(f"JSON file '{file_path}' must contain a list of objects")
-        
+
     @staticmethod
     def read_json_to_dict(file_path: Path, encoding="utf-8") -> dict:
         """
@@ -124,7 +127,7 @@ class FileUtil:
 
     @staticmethod
     def read_csv_to_dict_of_tuples_with_header(
-            file_path: Path, delimiter: str = ",", encoding="utf-8"
+        file_path: Path, delimiter: str = ",", encoding="utf-8"
     ) -> tuple[dict, list[tuple]]:
         """
         Read CSV to header dict and data list
@@ -149,7 +152,7 @@ class FileUtil:
 
     @staticmethod
     def read_csv_to_list_of_tuples_without_header(
-            file_path: Path, delimiter: str = ",", encoding="utf-8"
+        file_path: Path, delimiter: str = ",", encoding="utf-8"
     ) -> list[tuple]:
         """
         Read CSV without header to data list
@@ -223,10 +226,10 @@ class FileUtil:
 
     @staticmethod
     def read_mutil_column_wgt_file(
-            file_path: Path,
-            weight_col_index: int = 1,
-            delimiter: str = ",",
-            encoding="utf-8",
+        file_path: Path,
+        weight_col_index: int = 1,
+        delimiter: str = ",",
+        encoding="utf-8",
     ) -> tuple[list, list]:
         """
         Read wgt file having no header and mutil columns,

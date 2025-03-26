@@ -364,8 +364,8 @@ For comprehensive documentation, please visit:
 
 - [Main Documentation](docs/README.md) - Overview and getting started guide
 - [Domain-Driven Framework](docs/data-domains/README.md) - Documentation for domain-specific data generation
-- [API Reference](docs/api/) - Detailed API documentation
-- [Advanced Topics](docs/advanced/) - Advanced usage and customization
+- [CLI Reference](docs/api/cli.md) - Detailed CLI documentation
+- [Advanced Topics](docs/advanced/README.md) - Advanced usage and customization
 
 ---
 

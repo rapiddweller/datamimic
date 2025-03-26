@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -13,7 +13,9 @@ from datamimic_ce.domains.ecommerce.services import OrderService
 
 
 class TestEntityOrder:
-    _supported_datasets = ["US",]
+    _supported_datasets = [
+        "US",
+    ]
 
     def _check_order_data(self, order: Order):
         assert isinstance(order, Order)
@@ -74,7 +76,7 @@ class TestEntityOrder:
         assert order.date == order.date
         assert order.status == order.status
         assert order.payment_method == order.payment_method
-        assert order.shipping_method == order.shipping_method   
+        assert order.shipping_method == order.shipping_method
         assert order.shipping_address == order.shipping_address
         assert order.billing_address == order.billing_address
         assert order.currency == order.currency
@@ -82,7 +84,7 @@ class TestEntityOrder:
         assert order.shipping_amount == order.shipping_amount
         assert order.discount_amount == order.discount_amount
         assert order.coupon_code == order.coupon_code
-        assert order.notes == order.notes   
+        assert order.notes == order.notes
 
     @pytest.mark.flaky(reruns=3)
     def test_two_different_entities(self):

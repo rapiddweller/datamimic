@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -8,8 +8,8 @@ import itertools
 
 from datamimic_ce.contexts.context import SAFE_GLOBALS, DotableDict
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.statements.constraints_statement import ConstraintsStatement
 from datamimic_ce.statements.rule_statement import RuleStatement
+from datamimic_ce.statements.source_constraints_statement import ConstraintsStatement
 from datamimic_ce.tasks.task import Task
 
 

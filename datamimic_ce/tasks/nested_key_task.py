@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -15,8 +15,8 @@ from datamimic_ce.data_sources.data_source_pagination import DataSourcePaginatio
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
-from datamimic_ce.tasks.constraints_task import ConstraintsTask
 from datamimic_ce.tasks.element_task import ElementTask
+from datamimic_ce.tasks.source_constraints_task import ConstraintsTask
 from datamimic_ce.tasks.task import Task
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 from datamimic_ce.utils.file_util import FileUtil
@@ -320,8 +320,8 @@ class NestedKeyTask(Task):
         :return:
         """
         result = []
-        # filter source data by constraints
-        value = self._filter_source_by_constraints_task(parent_context=parent_context, source_data=value)
+        # filter source data by source_constraints
+        value = self._filter_source_by_source_constraints_task(parent_context=parent_context, source_data=value)
         # Determine len of nestedkey
         count = self._determine_nestedkey_length(context=parent_context)
         value_len = len(value)
@@ -386,7 +386,7 @@ class NestedKeyTask(Task):
             value = converter.convert(value)
         return value
 
-    def _filter_source_by_constraints_task(self, parent_context: GenIterContext, source_data: list) -> list:
+    def _filter_source_by_source_constraints_task(self, parent_context: GenIterContext, source_data: list) -> list:
         """
         Execute ConstraintsTask to filter source data
         """

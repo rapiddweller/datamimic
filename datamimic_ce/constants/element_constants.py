@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -25,5 +25,5 @@ EL_GENERATOR = "generator"
 EL_CONDITION = "condition"
 EL_ELSE_IF = "else-if"
 EL_ELSE = "else"
-EL_CONSTRAINTS = "constraints"
+EL_SOURCE_CONSTRAINTS = "sourceConstraints"
 EL_RULE = "rule"

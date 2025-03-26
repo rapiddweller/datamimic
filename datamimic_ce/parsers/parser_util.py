@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -15,7 +15,6 @@ from datamimic_ce.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID
 from datamimic_ce.constants.element_constants import (
     EL_ARRAY,
     EL_CONDITION,
-    EL_CONSTRAINTS,
     EL_DATABASE,
     EL_ECHO,
     EL_ELEMENT,
@@ -35,12 +34,12 @@ from datamimic_ce.constants.element_constants import (
     EL_REFERENCE,
     EL_RULE,
     EL_SETUP,
+    EL_SOURCE_CONSTRAINTS,
     EL_VARIABLE,
 )
 from datamimic_ce.logger import logger
 from datamimic_ce.parsers.array_parser import ArrayParser
 from datamimic_ce.parsers.condition_parser import ConditionParser
-from datamimic_ce.parsers.constraints_parser import ConstraintsParser
 from datamimic_ce.parsers.database_parser import DatabaseParser
 from datamimic_ce.parsers.echo_parser import EchoParser
 from datamimic_ce.parsers.element_parser import ElementParser
@@ -58,6 +57,7 @@ from datamimic_ce.parsers.memstore_parser import MemstoreParser
 from datamimic_ce.parsers.nested_key_parser import NestedKeyParser
 from datamimic_ce.parsers.reference_parser import ReferenceParser
 from datamimic_ce.parsers.rule_parser import RuleParser
+from datamimic_ce.parsers.source_constraints_parser import ConstraintsParser
 from datamimic_ce.parsers.variable_parser import VariableParser
 from datamimic_ce.statements.array_statement import ArrayStatement
 from datamimic_ce.statements.composite_statement import CompositeStatement
@@ -113,7 +113,7 @@ class ParserUtil:
                 EL_ELEMENT,
                 EL_ARRAY,
                 EL_CONDITION,
-                EL_CONSTRAINTS,
+                EL_SOURCE_CONSTRAINTS,
             },
             EL_CONDITION: {EL_IF, EL_ELSE_IF, EL_ELSE},
             EL_GENERATE: {
@@ -127,7 +127,7 @@ class ParserUtil:
                 EL_ECHO,
                 EL_CONDITION,
                 EL_INCLUDE,
-                EL_CONSTRAINTS,
+                EL_SOURCE_CONSTRAINTS,
             },
             EL_INCLUDE: {EL_SETUP},
             EL_ITEM: {EL_KEY, EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ELEMENT},
@@ -136,7 +136,7 @@ class ParserUtil:
             EL_IF: None,
             EL_ELSE_IF: None,
             EL_ELSE: None,
-            EL_CONSTRAINTS: {EL_RULE},
+            EL_SOURCE_CONSTRAINTS: {EL_RULE},
         }
 
         return valid_sub_element_dict.get(ele_tag, set())
@@ -196,7 +196,7 @@ class ParserUtil:
             return ElementParser(class_factory_util, element=element, properties=properties)
         elif tag == EL_GENERATOR:
             return GeneratorParser(class_factory_util, element=element, properties=properties)
-        elif tag == EL_CONSTRAINTS:
+        elif tag == EL_SOURCE_CONSTRAINTS:
             return ConstraintsParser(class_factory_util, element=element, properties=properties)
         elif tag == EL_RULE:
             return RuleParser(class_factory_util, element=element, properties=properties)

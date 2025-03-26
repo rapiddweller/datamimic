@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -25,44 +25,44 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
 
     def generate_device_type(self) -> str:
         file_path = (
-                Path(__file__).parent.parent.parent.parent
-                / "domain_data"
-                / "healthcare"
-                / "medical"
-                / f"device_types_{self._dataset}.csv"
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "healthcare"
+            / "medical"
+            / f"device_types_{self._dataset}.csv"
         )
         loaded_data = FileUtil.read_weight_csv(file_path)
         return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore[arg-type]
 
     def generate_manufacturer(self) -> str:
         file_path = (
-                Path(__file__).parent.parent.parent.parent
-                / "domain_data"
-                / "healthcare"
-                / "medical"
-                / f"manufacturers_{self._dataset}.csv"
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "healthcare"
+            / "medical"
+            / f"manufacturers_{self._dataset}.csv"
         )
         loaded_data = FileUtil.read_weight_csv(file_path)
         return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore[arg-type]
 
     def generate_device_status(self) -> str:
         file_path = (
-                Path(__file__).parent.parent.parent.parent
-                / "domain_data"
-                / "healthcare"
-                / "medical"
-                / f"device_statuses_{self._dataset}.csv"
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "healthcare"
+            / "medical"
+            / f"device_statuses_{self._dataset}.csv"
         )
         loaded_data = FileUtil.read_weight_csv(file_path)
         return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore[arg-type]
 
     def generate_location(self) -> str:
         file_path = (
-                Path(__file__).parent.parent.parent.parent
-                / "domain_data"
-                / "healthcare"
-                / "medical"
-                / f"locations_{self._dataset}.csv"
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "healthcare"
+            / "medical"
+            / f"locations_{self._dataset}.csv"
         )
         loaded_data = FileUtil.read_weight_csv(file_path)  # type: ignore[arg-type]
         return random.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore[arg-type]

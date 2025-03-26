@@ -1,16 +1,14 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 import datetime
 from pathlib import Path
 
-from datamimic_ce.data_mimic_test import DataMimicTest
-
 import pandas as pd
 
-from datamimic_ce.domains.common.models import Address
+from datamimic_ce.data_mimic_test import DataMimicTest
 
 
 class TestEntityFunctional:
@@ -18,9 +16,8 @@ class TestEntityFunctional:
 
     def test_functional_entity_person(self) -> None:
         engine = DataMimicTest(
-            test_dir=self._test_dir,
-            filename="functional_test_entity_person.xml",
-            capture_test_result=True)
+            test_dir=self._test_dir, filename="functional_test_entity_person.xml", capture_test_result=True
+        )
         engine.test_with_timer()
 
         result = engine.capture_result()
@@ -39,9 +36,8 @@ class TestEntityFunctional:
 
     def test_functional_entity_product(self) -> None:
         engine = DataMimicTest(
-            test_dir=self._test_dir,
-            filename="functional_test_entity_product.xml",
-            capture_test_result=True)
+            test_dir=self._test_dir, filename="functional_test_entity_product.xml", capture_test_result=True
+        )
         engine.test_with_timer()
 
         result = engine.capture_result()
@@ -57,9 +53,8 @@ class TestEntityFunctional:
 
     def test_functional_entity_order(self) -> None:
         engine = DataMimicTest(
-            test_dir=self._test_dir,
-            filename="functional_test_entity_order.xml",
-            capture_test_result=True)
+            test_dir=self._test_dir, filename="functional_test_entity_order.xml", capture_test_result=True
+        )
         engine.test_with_timer()
 
         result = engine.capture_result()
@@ -77,19 +72,21 @@ class TestEntityFunctional:
         """
         helper of test case test_functional_entity_product
         """
-        ecommerce_data_dir = Path(__file__).resolve().parents[3]/"datamimic_ce/domain_data/ecommerce"
+        ecommerce_data_dir = Path(__file__).resolve().parents[3] / "datamimic_ce/domain_data/ecommerce"
         category_list = pd.read_csv(ecommerce_data_dir.joinpath("product_categories_US.csv"))["category"].tolist()
         brands_list = pd.read_csv(ecommerce_data_dir.joinpath("product_brands_US.csv"))["brand"].tolist()
         benefits_list = pd.read_csv(ecommerce_data_dir.joinpath("product_benefits.csv"))["benefit"].tolist()
         conditions_list = pd.read_csv(ecommerce_data_dir.joinpath("product_conditions_US.csv"))["condition"].tolist()
-        availabilities_list = pd.read_csv(ecommerce_data_dir.joinpath("product_availability_US.csv"))["availability"].tolist()
+        availabilities_list = pd.read_csv(ecommerce_data_dir.joinpath("product_availability_US.csv"))[
+            "availability"
+        ].tolist()
         currencies_list = pd.read_csv(ecommerce_data_dir.joinpath("currencies_US.csv"))["code"].tolist()
         colors_list = pd.read_csv(ecommerce_data_dir.joinpath("product_colors_US.csv"))["color"].tolist()
         for product in products:
             product_id = product["product_id"]
             assert isinstance(product_id, str)
             assert product_id.startswith("PROD")
-            assert len(product_id) == len("PROD")+8
+            assert len(product_id) == len("PROD") + 8
 
             name = product["name"]
             category = product["category"]
@@ -104,7 +101,7 @@ class TestEntityFunctional:
             description = product["description"]
             assert isinstance(description, str)
             assert name in description
-            assert category.lower().replace('_', ' ') in description
+            assert category.lower().replace("_", " ") in description
             assert any(benefit in description for benefit in benefits_list)
 
             assert 1.99 <= product["price"] <= 19.99
@@ -135,7 +132,7 @@ class TestEntityFunctional:
             tags = product["tags"]
             assert isinstance(tags, list)
             assert len(tags) >= 4
-            assert category.lower().replace('_', ' ') in tags
+            assert category.lower().replace("_", " ") in tags
             assert brand.lower() in tags
             assert condition.lower() in tags if condition != "NEW" else condition.lower() not in tags
 
@@ -160,7 +157,7 @@ class TestEntityFunctional:
             user_id = order["user_id"]
             assert isinstance(user_id, str)
             assert user_id.startswith("USER")
-            assert len(user_id) == len("USER")+8
+            assert len(user_id) == len("USER") + 8
 
             assert "date" in order
             assert isinstance(order["date"], datetime.datetime)
@@ -202,21 +199,26 @@ class TestEntityFunctional:
             assert "coupon_code" in order
             assert isinstance(order["coupon_code"], (str, type(None)))
             if order["coupon_code"]:
-                assert any(coupon_prefixes in order["coupon_code"] for coupon_prefixes in ["SAVE", "DISCOUNT", "SPECIAL", "PROMO", "DEAL"])
+                assert any(
+                    coupon_prefixes in order["coupon_code"]
+                    for coupon_prefixes in ["SAVE", "DISCOUNT", "SPECIAL", "PROMO", "DEAL"]
+                )
 
             assert "notes" in order
             assert isinstance(order["notes"], (str, type(None)))
             if order["notes"]:
-                assert order["notes"] in ["Please leave at the front door",
-                                          "Call before delivery",
-                                          "Gift - please don't include receipt",
-                                          "Fragile items - handle with care",
-                                          "Please deliver after 5pm",
-                                          "Ring doorbell upon delivery",
-                                          "Contact customer before shipping",
-                                          "Include gift message",
-                                          "Expedite if possible",
-                                          "Address has a gate code: 1234",]
+                assert order["notes"] in [
+                    "Please leave at the front door",
+                    "Call before delivery",
+                    "Gift - please don't include receipt",
+                    "Fragile items - handle with care",
+                    "Please deliver after 5pm",
+                    "Ring doorbell upon delivery",
+                    "Contact customer before shipping",
+                    "Include gift message",
+                    "Expedite if possible",
+                    "Address has a gate code: 1234",
+                ]
 
             assert "total_amount" in order
             assert isinstance(order["total_amount"], float)

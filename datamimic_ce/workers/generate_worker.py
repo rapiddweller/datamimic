@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -16,9 +16,9 @@ from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.logger import logger, setup_logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
-from datamimic_ce.tasks.constraints_task import ConstraintsTask
 from datamimic_ce.tasks.generate_task import GenerateTask
 from datamimic_ce.tasks.rule_task import RuleTask
+from datamimic_ce.tasks.source_constraints_task import ConstraintsTask
 from datamimic_ce.utils.logging_util import gen_timer
 
 
@@ -29,13 +29,13 @@ class GenerateWorker:
 
     @staticmethod
     def generate_and_export_data_by_chunk(
-            context: SetupContext | GenIterContext,
-            stmt: GenerateStatement,
-            worker_id: int,
-            chunk_start: int,
-            chunk_end: int,
-            page_size: int,
-            source_operation: dict | None,
+        context: SetupContext | GenIterContext,
+        stmt: GenerateStatement,
+        worker_id: int,
+        chunk_start: int,
+        chunk_end: int,
+        page_size: int,
+        source_operation: dict | None,
     ) -> dict:
         """
         Generate and export data by page in a single process.
@@ -121,12 +121,12 @@ class GenerateWorker:
 
     @staticmethod
     def _generate_product_by_page_in_single_process(
-            context: SetupContext | GenIterContext,
-            stmt: GenerateStatement,
-            page_start: int,
-            page_end: int,
-            worker_id: int,
-            source_operation: dict | None,
+        context: SetupContext | GenIterContext,
+        stmt: GenerateStatement,
+        page_start: int,
+        page_end: int,
+        worker_id: int,
+        source_operation: dict | None,
     ) -> dict[str, list]:
         """
         (IMPORTANT: Only to be used as Ray multiprocessing function)

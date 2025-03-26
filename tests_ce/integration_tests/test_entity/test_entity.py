@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -151,7 +151,7 @@ class TestEntity:
 
     def test_entity_educational_institution(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_educational_institution.xml")
-        engine.test_with_timer()    
+        engine.test_with_timer()
 
     def test_entity_administration_office(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_administration_office.xml")
@@ -176,7 +176,3 @@ class TestEntity:
     def test_entity_patient(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_entity_patient.xml")
         engine.test_with_timer()
-        
-        
-        
-        
