@@ -45,7 +45,7 @@ class WeightedEntityDataSource:
         weight_column = weight_column_name or "weight"
         self._weights, self._data_dict_list = FileUtil.read_csv_having_weight_column(
             file_path, weight_column, separator
-            )
+        )
 
     def generate(self) -> dict:
         """

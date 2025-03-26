@@ -344,11 +344,11 @@ class TaskUtil:
             if source_operation:
                 # (EE feature only) Load XML file with source operation
                 source_data = data_source_registry.load_xml_file_with_operation(
-                    root_context.descriptor_dir / source_str, 
-                    stmt.cyclic, 
-                    load_start_idx, 
-                    load_end_idx, 
-                    source_operation
+                    root_context.descriptor_dir / source_str,
+                    stmt.cyclic,
+                    load_start_idx,
+                    load_end_idx,
+                    source_operation,
                 )
             else:
                 source_data = data_source_registry.load_xml_file(

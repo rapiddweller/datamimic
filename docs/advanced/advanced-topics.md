@@ -6,11 +6,11 @@ This section covers advanced topics for power users and developers who want to e
 
 ## Contents
 
-- [Customizing Generators](custom-generators.md) - Create your own data generators
-- [Database Integration](database-integration.md) - Connect DATAMIMIC to databases
-- [Data Privacy & Compliance](data-privacy.md) - Ensure compliance with privacy regulations
-- [Performance Optimization](performance.md) - Optimize DATAMIMIC for large datasets
-- [Enterprise Features](enterprise-features.md) - Overview of Enterprise Edition features
+- Create your own data generators
+- Connect DATAMIMIC to databases
+- Ensure compliance with privacy regulations
+- Optimize DATAMIMIC for large datasets
+- Overview of Enterprise Edition features [Enterprise Features](enterprise-features.md)
 
 > Additional advanced topics including detailed model descriptions, exporters, importers, platform integration, and UI documentation are available in our [official online documentation](https://docs.datamimic.io/).
 
@@ -23,7 +23,7 @@ DATAMIMIC provides multiple extension points for custom development:
 - **Custom Validators** - Add validation rules for your data
 - **Custom Importers/Exporters** - Support additional data sources and targets
 
-For complete documentation on extension mechanisms and advanced integrations, please refer to our [official online documentation](https://docs.datamimic.io/developers/).
+For complete documentation on extension mechanisms and advanced integrations, please refer to our [official online documentation](https://docs.datamimic.io/).
 
 ## Performance Considerations
 
@@ -43,4 +43,4 @@ Beyond basic configuration, DATAMIMIC supports:
 - Dependency management between entities
 - Advanced distribution configurations 
 
-For detailed information on all advanced features and capabilities, please visit our [comprehensive online documentation](https://docs.datamimic.io/). 
+For detailed information on all advanced features and capabilities, please visit our [comprehensive online documentation](https://docs.datamimic.io/reference/generators/custom/). 

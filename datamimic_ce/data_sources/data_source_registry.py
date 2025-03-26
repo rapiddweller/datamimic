@@ -45,8 +45,7 @@ class DataSourceRegistry:
                 raise ValueError(f"JSON file '{key}' must contain a list of objects or a dictionary")
         elif key.endswith(".xml"):
             return FileContentStorage.load_file_with_custom_func(
-                key,
-                lambda: xmltodict.parse(open(key).read(), attr_prefix="@", cdata_key="#text")
+                key, lambda: xmltodict.parse(open(key).read(), attr_prefix="@", cdata_key="#text")
             )
         else:
             raise ValueError(f"Data source '{key}' is not supported is not handled by DataSourceRegistry")
@@ -100,10 +99,12 @@ class DataSourceRegistry:
             # Check if source is data source file or database collection/table
             # 2.1: Check if datasource is csv file
             if source_str.endswith(".csv") or source_str.endswith(".json") or source_str.endswith(".xml"):
-                ds_len = len(DataSourceRegistry._get_source(
-                    str(root_ctx.descriptor_dir / source_str),
-                    (getattr(stmt, "separator", None) or ctx.root.default_separator)
-                ))
+                ds_len = len(
+                    DataSourceRegistry._get_source(
+                        str(root_ctx.descriptor_dir / source_str),
+                        (getattr(stmt, "separator", None) or ctx.root.default_separator),
+                    )
+                )
             # 2.4: Check if datasource is memstore
             elif root_ctx.memstore_manager.contain(source_str) and hasattr(stmt, "type"):
                 ds_len = root_ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(stmt.type or stmt.name)
@@ -201,7 +202,7 @@ class DataSourceRegistry:
 
     @staticmethod
     def get_cyclic_data_iterator(
-            data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None = False
+        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None = False
     ) -> Iterator | None:
         """
         Get cyclic iterator from iterable data source
@@ -221,7 +222,7 @@ class DataSourceRegistry:
 
     @staticmethod
     def get_shuffled_data_with_cyclic(
-            data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None, seed: int
+        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None, seed: int
     ) -> list:
         """
         Get shuffled data from iterable data source
@@ -265,19 +266,19 @@ class DataSourceRegistry:
             current_seed += 1
 
         start_idx_cap = start_idx % source_len
-        return res[start_idx_cap: start_idx_cap + end_idx - start_idx]
+        return res[start_idx_cap : start_idx_cap + end_idx - start_idx]
 
     @staticmethod
     def load_csv_file(
-            ctx: SetupContext,
-            file_path: Path,
-            separator: str,
-            cyclic: bool | None,
-            start_idx: int,
-            end_idx: int,
-            source_scripted: bool,
-            prefix: str,
-            suffix: str,
+        ctx: SetupContext,
+        file_path: Path,
+        separator: str,
+        cyclic: bool | None,
+        start_idx: int,
+        end_idx: int,
+        source_scripted: bool,
+        prefix: str,
+        suffix: str,
     ) -> list[dict]:
         """
         Load CSV content from file with skip and limit.
@@ -375,8 +376,9 @@ class DataSourceRegistry:
         return DataSourceRegistry.get_cyclic_data_list(data=items, cyclic=cyclic, pagination=pagination)
 
     @staticmethod
-    def load_xml_file_with_operation(file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int,
-                                     source_operation: dict | None):
+    def load_xml_file_with_operation(
+        file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int, source_operation: dict | None
+    ):
         """
         (EE feature only)
         Load XML content from file using skip and limit.
