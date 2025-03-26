@@ -1,4 +1,4 @@
-# Healthcare Data Generation with DataMimic
+# Healthcare Data Generation with DATAMIMIC
 
 This example demonstrates how to generate synthetic healthcare data using the DATAMIMIC framework.
 
