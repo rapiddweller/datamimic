@@ -60,11 +60,11 @@ class GenerateParser(StatementParser):
     @staticmethod
     def _check_only_one_source_constraints_tag(sub_stmt_list: list[Statement]):
         """
-        Only one 'source_constraints' tag per generate
+        Only one 'sourceConstraints' tag per generate
         """
         count = 0
         for stmt in sub_stmt_list:
             if isinstance(stmt, ConstraintsStatement):
                 count += 1
         if count > 1:
-            raise SyntaxError("Only once <source_constraints> allow in per <generate>")
+            raise SyntaxError("Only once <sourceConstraints> allowed per <generate>")
