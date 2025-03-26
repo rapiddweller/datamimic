@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -7,12 +7,10 @@
 import random
 from pathlib import Path
 
-from datamimic_ce.generators.generator import Generator
-from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class WeightedEntityDataSource(Generator):
+class WeightedEntityDataSource:
     """
     Purpose: generate a dict of entity (header_name: row_value)
     from "entity.wgt.ent.csv" file with corresponding weight.
@@ -44,11 +42,9 @@ class WeightedEntityDataSource(Generator):
     """
 
     def __init__(self, file_path: Path, separator: str, weight_column_name: str | None = None):
-        file_store = FileContentStorage()
         weight_column = weight_column_name or "weight"
-        self._weights, self._data_dict_list = file_store.load_file_with_custom_func(
-            str(file_path),
-            lambda: FileUtil.read_csv_having_weight_column(file_path, weight_column, separator),
+        self._weights, self._data_dict_list = FileUtil.read_csv_having_weight_column(
+            file_path, weight_column, separator
         )
 
     def generate(self) -> dict:

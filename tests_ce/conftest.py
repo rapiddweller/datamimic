@@ -1,14 +1,17 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-
-
+import os
 import subprocess
 import time
 
 import pytest
+
+os.environ["RAY_DEDUP_LOGS"] = "0"
+
+import ray
 
 from datamimic_ce.config import settings
 from datamimic_ce.logger import logger
@@ -50,3 +53,10 @@ def mysql_services():
         raise e
     except Exception as e:
         raise e
+
+
+@pytest.fixture(scope="session")
+def ray_session():
+    ray.init()
+    yield None
+    ray.shutdown()

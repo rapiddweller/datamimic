@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -39,9 +39,9 @@ class DatabaseClient(Client):
             cyclic and (pagination.limit > data_len or pagination.skip + pagination.limit > data_len)
         ):
             data = self.get(query)
-            from datamimic_ce.data_sources.data_source_util import DataSourceUtil
+            from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 
-            return DataSourceUtil.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
+            return DataSourceRegistry.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
         else:
             return self.get_by_page_with_query(query, pagination)
 

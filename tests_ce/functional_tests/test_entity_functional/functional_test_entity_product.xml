@@ -1,0 +1,39 @@
+<setup>
+    <generate name="default_product" count="50" target="">
+        <variable name="product" entity="Product(min_price=1.99, max_price=19.99)"/>
+        <key name="product_id" script="product.product_id"/>
+        <key name="name" script="product.name"/>
+        <key name="description" script="product.description"/>
+        <key name="price" script="product.price"/>
+        <key name="category" script="product.category"/>
+        <key name="brand" script="product.brand"/>
+        <key name="sku" script="product.sku"/>
+        <key name="condition" script="product.condition"/>
+        <key name="availability" script="product.availability"/>
+        <key name="currency" script="product.currency"/>
+        <key name="weight" script="product.weight"/>
+        <key name="dimensions" script="product.dimensions"/>
+        <key name="color" script="product.color"/>
+        <key name="rating" script="product.rating"/>
+        <array name="tags" script="product.tags"/>
+    </generate>
+
+    <generate name="us_product" count="50" target="">
+        <variable name="product" entity="Product(dataset='US', min_price=1.99, max_price=19.99)"/>
+        <key name="product_id" script="product.product_id"/>
+        <key name="name" script="product.name"/>
+        <key name="description" script="product.description"/>
+        <key name="price" script="product.price"/>
+        <key name="category" script="product.category"/>
+        <key name="brand" script="product.brand"/>
+        <key name="sku" script="product.sku"/>
+        <key name="condition" script="product.condition"/>
+        <key name="availability" script="product.availability"/>
+        <key name="currency" script="product.currency"/>
+        <key name="weight" script="product.weight"/>
+        <key name="dimensions" script="product.dimensions"/>
+        <key name="color" script="product.color"/>
+        <key name="rating" script="product.rating"/>
+        <array name="tags" script="product.tags"/>
+    </generate>
+</setup>

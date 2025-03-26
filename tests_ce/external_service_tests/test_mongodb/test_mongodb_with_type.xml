@@ -1,0 +1,41 @@
+<setup>
+    <mongodb id="mongodb"/>
+
+    <!-- clear mongo_func_test database -->
+    <generate name="delete" source="mongodb" selector="find: 'mongo_func_test', filter: {}" target="mongodb.delete">
+    </generate>
+
+    <!--  generate simple data  -->
+    <generate name="mongo_func_test" target="mongodb" count="20">
+        <key name="user_id" generator="IncrementGenerator"/>
+        <key name="user_name" values="'Bob', 'Frank', 'Phil'"/>
+    </generate>
+
+    <!--  query data from mongodb with variable type  -->
+    <generate name="mongo_data" count="20">
+        <variable name="mongo_data" source="mongodb" type="mongo_func_test"/>
+        <key name="id" script="mongo_data.user_id"/>
+        <key name="name" script="mongo_data.user_name"/>
+    </generate>
+
+    <generate name="data_ordered" count="20">
+        <variable name="mongo_data" source="mongodb" type="mongo_func_test" distribution="ordered"/>
+        <key name="id" script="mongo_data.user_id"/>
+        <key name="name" script="mongo_data.user_name"/>
+    </generate>
+
+    <!--  query data from mongodb with generate type  -->
+    <generate name="mongo_selector" source="mongodb" type="mongo_func_test"/>
+
+    <generate name="mongo_selector_ordered" source="mongodb" type="mongo_func_test"
+              distribution="ordered"/>
+
+    <!--  delete data from mongodb  -->
+    <generate name="mongo_delete" source="mongodb"
+              selector="find: 'mongo_func_test', filter: {}"
+              target="mongodb.delete">
+    </generate>
+
+    <generate name="delete_check" type="mongo_func_test" source="mongodb" target="">
+    </generate>
+</setup>

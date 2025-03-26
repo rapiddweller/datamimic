@@ -1,11 +1,11 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.generators.gender_generator import GenderGenerator
+from datamimic_ce.domains.common.literal_generators.gender_generator import GenderGenerator
 
 
 class TestGenderGenerator:
@@ -17,9 +17,9 @@ class TestGenderGenerator:
         for index, female_quota in enumerate(female_quota_cases):
             generator = GenderGenerator(female_quota=female_quota)
             count = sum(generator.generate() == "female" for _ in range(100_000))
-            assert self.__is_between_target_fluctuation(
-                count / 100_000, female_quota, deviation
-            ), f"Test {index + 1} failed"
+            assert self.__is_between_target_fluctuation(count / 100_000, female_quota, deviation), (
+                f"Test {index + 1} failed"
+            )
 
             # print(count / 100_000)
 
@@ -31,9 +31,9 @@ class TestGenderGenerator:
         for index, other_quota in enumerate(other_quota_cases):
             generator = GenderGenerator(other_gender_quota=other_quota)
             count = sum(generator.generate() == "other" for _ in range(100_000))
-            assert self.__is_between_target_fluctuation(
-                count / 100_000, other_quota, deviation
-            ), f"Test {index + 1} failed"
+            assert self.__is_between_target_fluctuation(count / 100_000, other_quota, deviation), (
+                f"Test {index + 1} failed"
+            )
 
     def test_generate_with_female_quota_and_other_quota(self):
         female_quota_cases = [0.5, 0.2, 1]
@@ -56,19 +56,19 @@ class TestGenderGenerator:
                     elif gender == "other":
                         count_other += 1
 
-                assert self.__is_between_target_fluctuation(
-                    count_female / times, female_quota, deviation
-                ), f"Test female quota {f_index+1}-{o_index + 1} failed"
+                assert self.__is_between_target_fluctuation(count_female / times, female_quota, deviation), (
+                    f"Test female quota {f_index + 1}-{o_index + 1} failed"
+                )
 
                 other_true_quota = other_quota if (female_quota + other_quota <= 1) else (1 - female_quota)
-                assert self.__is_between_target_fluctuation(
-                    count_other / times, other_true_quota, deviation
-                ), f"Test other gender quota {f_index + 1}-{o_index + 1} failed"
+                assert self.__is_between_target_fluctuation(count_other / times, other_true_quota, deviation), (
+                    f"Test other gender quota {f_index + 1}-{o_index + 1} failed"
+                )
 
                 male_quota = 1 - female_quota - other_true_quota
-                assert self.__is_between_target_fluctuation(
-                    count_male / times, male_quota, deviation
-                ), f"Test male quota {f_index + 1}-{o_index + 1} failed"
+                assert self.__is_between_target_fluctuation(count_male / times, male_quota, deviation), (
+                    f"Test male quota {f_index + 1}-{o_index + 1} failed"
+                )
 
     @staticmethod
     def __is_between_target_fluctuation(value: float, target: float, deviation: float) -> bool:

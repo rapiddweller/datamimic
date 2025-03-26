@@ -1,0 +1,17 @@
+<setup  multiprocessing="True" numProcess="2">
+    <generate name="group" count="10" target="ConsoleExporter">
+        <variable name="id" generator="IncrementGenerator"/>
+        <variable name="random_int" type="int"/>
+        <variable name="random_string" generator="StringGenerator(max_len=20)"/>
+        <variable name="random_bool" type="bool"/>
+        <key name="id" script="id"/>
+        <nestedKey name="people" type="list" count="9">
+            <key name="id" generator="IncrementGenerator"/>
+            <variable name="var" source="data/arnginfo.ent.csv" cyclic="True"/>
+            <key name="people_var" script="people.var.sort_code"/>
+            <key name="show_random_int" script="random_int"/>
+            <key name="show_random_string" script="random_string"/>
+            <key name="show_random_bool" script="random_bool"/>
+        </nestedKey>
+    </generate>
+</setup>

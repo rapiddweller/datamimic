@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -13,8 +13,8 @@ from datamimic_ce.clients.database_client import Client
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.converter.converter import Converter
 from datamimic_ce.converter.custom_converter import CustomConverter
+from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
-from datamimic_ce.generators.generator import Generator
 from datamimic_ce.logger import logger
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
 from datamimic_ce.statements.setup_statement import SetupStatement
@@ -32,7 +32,7 @@ class SetupContext(Context):
         memstore_manager: MemstoreManager,
         task_id: str,
         test_mode: bool,
-        test_result_exporter: TestResultExporter | None,
+        test_result_exporter: TestResultExporter,
         default_separator: str,
         default_locale: str,
         default_dataset: str,
@@ -180,7 +180,7 @@ class SetupContext(Context):
 
         # Add Generator and Converter to the namespace for evaluation
         ns = {
-            "Generator": Generator,
+            "Generator": BaseLiteralGenerator,
             "Converter": Converter,
             "CustomConverter": CustomConverter,
         }
@@ -291,7 +291,7 @@ class SetupContext(Context):
         return self._test_mode
 
     @property
-    def test_result_exporter(self) -> TestResultExporter | None:
+    def test_result_exporter(self) -> TestResultExporter:
         return self._test_result_exporter
 
     @property

@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -26,15 +26,7 @@ class RdbmsCredential(Credential, BaseModel):
     model_config = ConfigDict(extra="allow")
 
     def get_credentials(self):
-        return {
-            "dbms": self.dbms,
-            "host": self.host,
-            "port": self.port,
-            "user": self.user,
-            "password": self.password,
-            "database": self.database,
-            "db_schema": self.db_schema,
-        }
+        return BaseModel.model_dump(self)
 
     def check_credentials(self):
         if not self.dbms:

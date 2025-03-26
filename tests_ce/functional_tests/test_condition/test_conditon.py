@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -100,7 +100,7 @@ class TestCondition(TestCase):
             assert c_2["lucky_2"] is not None
             assert isinstance(c_2["lucky_2"], str)
 
-        container_3 = result["container_3"]
+        container_3 = result["sup_3|container_3"]
         assert len(container_3) == 3 * 2
         for c_3 in container_3:
             assert c_3["lucky_3"] is not None

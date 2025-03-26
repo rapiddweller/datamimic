@@ -1,0 +1,9 @@
+transaction_type,weight,direction
+Deposit,15,credit
+Withdrawal,20,debit
+Transfer,10,debit
+Payment,40,debit
+Fee,5,debit
+Interest,2,credit
+Refund,5,credit
+Adjustment,3,credit 

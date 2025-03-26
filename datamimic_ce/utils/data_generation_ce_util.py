@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 import exrex  # type: ignore
 
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
-from datamimic_ce.generators.generator_util import GeneratorUtil
+from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.utils.base_data_generation_util import BaseDataGenerationUtil
 
 
@@ -227,3 +227,32 @@ class DataGenerationCEUtil(BaseDataGenerationUtil):
             return random_datetime
         except Exception as e:
             return f"Error occurred while getting random datetime: {str(e)}"
+
+    @staticmethod
+    def rnd_float(min_val: float, max_val: float) -> float:
+        """
+        Generate a random float within the specified range.
+
+        Args:
+            min_val: The minimum value in the range (inclusive)
+            max_val: The maximum value in the range (inclusive)
+
+        Returns:
+            A randomly generated float within the specified range
+        """
+        return min_val + random.random() * (max_val - min_val)
+
+    @staticmethod
+    def rnd_choice(sequence):
+        """
+        Choose a random element from a sequence.
+
+        Args:
+            sequence: The sequence to choose from
+
+        Returns:
+            A randomly chosen element from the sequence
+        """
+        if not sequence:
+            raise ValueError("Cannot choose from an empty sequence")
+        return random.choice(sequence)

@@ -1,0 +1,33 @@
+<setup  multiprocessing="True" numProcess="2">
+    <memstore id="mem"/>
+    <generate name="product" count="15" target="mem">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" values="'Alice', 'Bob', 'Cameron'"/>
+    </generate>
+
+    <generate name="part_mem_test" count="10" target="">
+        <nestedKey name="count_not_define" type="product" source="mem"/>
+        <nestedKey name="non_cyclic_product" type="product" count="30" cyclic="False" source="mem"/>
+        <nestedKey name="cyclic_product" type="product" count="30" cyclic="True" source="mem"/>
+    </generate>
+
+    <!--    source is CSV file-->
+    <generate name="product_csv" source="data/products.ent.csv" target="mem"/>
+
+    <generate name="part_mem_csv_test" count="20" target="">
+        <nestedKey name="count_not_define" type="product_csv" source="mem"/>
+        <nestedKey name="non_cyclic_product" type="product_csv" count="40" cyclic="False" source="mem"/>
+        <nestedKey name="cyclic_product" type="product_csv" count="40" cyclic="True" source="mem"/>
+    </generate>
+
+    <!--    source is JSON file-->
+    <generate name="people_json" source="data/people.json" target="mem"/>
+
+    <generate name="part_mem_json_test" count="30" target="">
+        <nestedKey name="count_not_define" type="people_json" source="mem"/>
+        <nestedKey name="non_cyclic_product" type="people_json" count="50" cyclic="False" source="mem"/>
+        <nestedKey name="cyclic_product" type="people_json" count="50" cyclic="True" source="mem"/>
+    </generate>
+
+
+</setup>

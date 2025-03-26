@@ -1,0 +1,7 @@
+<setup  multiprocessing="True" numProcess="2">
+    <generate name="cyclic-product" source="data/products.ent.csv" count="10" cyclic="True" target="ConsoleExporter">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="non-cyclic-product" source="data/products.ent.csv" count="10" cyclic="False"
+              target="ConsoleExporter"/>
+</setup>

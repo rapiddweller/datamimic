@@ -1,0 +1,18 @@
+<setup multiprocessing="0">
+    <generate name="insurance_company" count="5" target="ConsoleExporter">
+        <variable name="insurance_company" entity="InsuranceCompany" />
+        <key name="id" script="insurance_company.id" />
+        <key name="name" script="insurance_company.name" />
+        <key name="code" script="insurance_company.code" />
+        <key name="founded_year" script="insurance_company.founded_year" />
+        <key name="headquarters" script="insurance_company.headquarters" />
+        <key name="website" script="insurance_company.website" />   
+        <variable name="insurance_company1" entity="InsuranceCompany" />    
+        <key name="id1" script="insurance_company1.id" />
+        <key name="name1" script="insurance_company1.name" />
+        <key name="code1" script="insurance_company1.code" />
+        <key name="founded_year1" script="insurance_company1.founded_year" />
+        <key name="headquarters1" script="insurance_company1.headquarters" />
+        <key name="website1" script="insurance_company1.website" />
+    </generate>
+</setup>

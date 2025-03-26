@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -12,10 +12,11 @@ from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_util import DataSourceUtil
+from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.tasks.element_task import ElementTask
+from datamimic_ce.tasks.source_constraints_task import ConstraintsTask
 from datamimic_ce.tasks.task import Task
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 from datamimic_ce.utils.file_util import FileUtil
@@ -154,7 +155,7 @@ class NestedKeyTask(Task):
                 pass
 
                 seed = parent_context.root.get_distribution_seed()
-                result = DataSourceUtil.get_shuffled_data_with_cyclic(result, None, self._statement.cyclic, seed)
+                result = DataSourceRegistry.get_shuffled_data_with_cyclic(result, None, self._statement.cyclic, seed)
         else:
             raise ValueError(f"Cannot load original data for <nestedKey> '{self._statement.name}'")
 
@@ -187,6 +188,9 @@ class NestedKeyTask(Task):
                 try:
                     if isinstance(sub_task, ElementTask):
                         attributes.update(sub_task.generate_xml_attribute(ctx))
+                    elif isinstance(sub_task, ConstraintsTask):
+                        # do not execute ConstraintsTask here, ConstraintsTask is for filter source data
+                        pass
                     else:
                         sub_task.execute(ctx)
                 except StopIteration:
@@ -244,7 +248,7 @@ class NestedKeyTask(Task):
                     file_path=self._descriptor_dir / source, separator=separator
                 )
             elif source.endswith("json"):
-                list_value = FileUtil.read_json_to_dict_list(self._descriptor_dir / source)
+                list_value = FileUtil.read_json_to_list(self._descriptor_dir / source)
             else:
                 raise ValueError(f"Invalid source '{source}' of nestedkey '{self._statement.name}'")
 
@@ -316,7 +320,8 @@ class NestedKeyTask(Task):
         :return:
         """
         result = []
-
+        # filter source data by source_constraints
+        value = self._filter_source_by_source_constraints_task(parent_context=parent_context, source_data=value)
         # Determine len of nestedkey
         count = self._determine_nestedkey_length(context=parent_context)
         value_len = len(value)
@@ -324,7 +329,7 @@ class NestedKeyTask(Task):
         nestedkey_len = value_len if count is None else count if self._statement.cyclic else min(count, value_len)
 
         # Init original data of nestedkey
-        iterate_value = DataSourceUtil.get_cyclic_data_list(
+        iterate_value = DataSourceRegistry.get_cyclic_data_list(
             data=value,
             pagination=DataSourcePagination(0, nestedkey_len),
             cyclic=self._statement.cyclic,
@@ -380,3 +385,17 @@ class NestedKeyTask(Task):
         for converter in self._converter_list:
             value = converter.convert(value)
         return value
+
+    def _filter_source_by_source_constraints_task(self, parent_context: GenIterContext, source_data: list) -> list:
+        """
+        Execute ConstraintsTask to filter source data
+        """
+        result = source_data
+        if self._sub_tasks:
+            for sub_task in self._sub_tasks:
+                if isinstance(sub_task, ConstraintsTask):
+                    nestedkey_len = self._determine_nestedkey_length(context=parent_context)
+                    temp_pagination = DataSourcePagination(skip=0, limit=nestedkey_len) if nestedkey_len else None
+                    result = sub_task.execute(source_data, pagination=temp_pagination, cyclic=self.statement.cyclic)
+                    break
+        return result

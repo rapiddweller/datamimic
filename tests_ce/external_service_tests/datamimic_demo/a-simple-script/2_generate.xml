@@ -1,0 +1,17 @@
+<setup multiprocessing="0">
+    <generate name="customer" count="{customer_count}" target="">
+        <variable name="cars_data" type="CARS" source="mem" />
+        <variable name="person" entity="Person(min_age=21, max_age=67, female_quota=0.5)" />
+        <variable name="company" entity="Company" />
+        <key name="bool" generator="BooleanGenerator" />
+        <key name="tc_creation" generator="IntegerGenerator(max=999999999)" />
+        <key name="car" script="cars_data.brand" />
+        <key name="given_name" script="person.family_name" />
+        <key name="family_name" script="person.given_name" />
+        <key name="birthDate" script="person.birthdate" converter="DateFormat('%d.%m.%Y')" />
+        <key name="superuser" values="True, False" />
+        <key name="email"
+            script="'info@' + company.short_name.replace(' ', '-') + str(tc_creation) + '.de'" />
+        <key name="active" type="bool" source="data/active.wgt.csv" />
+    </generate>
+</setup>

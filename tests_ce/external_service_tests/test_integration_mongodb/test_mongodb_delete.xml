@@ -1,0 +1,13 @@
+<setup>
+    <mongodb id="mongodb"/>
+    <generate name="mongo5" target="ConsoleExporter, mongodb" count="10">
+        <key name="user_id" generator="IncrementGenerator"/>
+        <key name="user_name" values="'Bob', 'Frank', 'Phil'"/>
+    </generate>
+    <generate name="mongo5" source="mongodb"
+              selector="find: 'mongo5', filter: {'user_name': {'$ne': 'Bob'}}"
+              target="mongodb.delete, ConsoleExporter">
+    </generate>
+    <generate name="checkdb" type="mongo5" source="mongodb" target="ConsoleExporter">
+    </generate>
+</setup>

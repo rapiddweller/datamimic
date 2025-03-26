@@ -1,0 +1,6 @@
+<setup>
+    <generate name="company" source="data/company.json" target="">
+        <generate name="departments" script="company.departments" distribution="ordered" target="JSON, ConsoleExporter">
+        </generate>
+    </generate>
+</setup>

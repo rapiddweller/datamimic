@@ -1,0 +1,16 @@
+position,code,description,level,weight
+Behördenleiter/in,BL,Leitung einer Behörde und Verantwortung für die gesamte Organisation,7,0.01
+Stellvertretende/r Behördenleiter/in,SBL,Unterstützung der Behördenleitung und Vertretung bei Abwesenheit,6,0.02
+Abteilungsleiter/in,AL,Leitung einer Abteilung innerhalb einer Behörde,5,0.03
+Referatsleiter/in,RL,Leitung eines Referats innerhalb einer Abteilung,4,0.05
+Sachgebietsleiter/in,SGL,Leitung eines Sachgebiets innerhalb eines Referats,3,0.07
+Hauptsachbearbeiter/in,HSB,Erfahrene Fachkraft mit komplexen Aufgaben und Koordinationsfunktion,3,0.09
+Sachbearbeiter/in,SB,Fachkraft zur Bearbeitung von Verwaltungsvorgängen,2,0.20
+Verwaltungsamtmann/frau,VAMT,Beamter/Beamtin im gehobenen Dienst mit Führungsaufgaben,3,0.05
+Verwaltungsoberinspektor/in,VOI,Beamter/Beamtin im gehobenen Dienst,2,0.07
+Regierungsrat/rätin,RR,Beamter/Beamtin im höheren Dienst,4,0.03
+Ministerialrat/rätin,MR,Leitende/r Beamter/Beamtin im höheren Dienst in einem Ministerium,5,0.02
+IT-Fachkraft,ITF,Fachkraft für Informationstechnologie,2,0.08
+Verwaltungsfachangestellte/r,VFA,Angestellte/r für Verwaltungsaufgaben,1,0.10
+Bürosachbearbeiter/in,BSB,Fachkraft für Büroorganisation und -kommunikation,1,0.09
+Verwaltungshelfer/in,VH,Hilfskraft für einfache Verwaltungstätigkeiten,1,0.09

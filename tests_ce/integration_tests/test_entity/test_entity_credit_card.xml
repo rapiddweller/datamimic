@@ -1,26 +1,26 @@
 <setup multiprocessing="0">
     <generate name="credit_card" count="10" target="ConsoleExporter">
         <variable name="credit_card" entity="CreditCard"/>
-        <key name="credit_card_number" script="credit_card.credit_card_number"/>
-        <key name="credit_card_number1" script="credit_card.credit_card_number"/>
+        <key name="card_number" script="credit_card.card_number"/>
+        <key name="card_number1" script="credit_card.card_number"/>
         <key name="card_holder" script="credit_card.card_holder"/>
         <key name="card_holder1" script="credit_card.card_holder"/>
         <key name="cvc_number" script="credit_card.cvc_number"/>
         <key name="cvc_number1" script="credit_card.cvc_number"/>
         <key name="expiration_date" script="credit_card.expiration_date"/>
         <key name="expiration_date1" script="credit_card.expiration_date"/>
-        <key name="credit_card_provider" script="credit_card.credit_card_provider"/>
-        <key name="credit_card_provider1" script="credit_card.credit_card_provider"/>
+        <key name="card_provider" script="credit_card.card_provider"/>
+        <key name="card_provider1" script="credit_card.card_provider"/>
         <variable name="credit_card1" entity="CreditCard"/>
-        <key name="credit_card_number2" script="credit_card1.credit_card_number"/>
-        <key name="credit_card_number3" script="credit_card1.credit_card_number"/>
+        <key name="card_number2" script="credit_card1.card_number"/>
+        <key name="card_number3" script="credit_card1.card_number"/>
         <key name="card_holder2" script="credit_card1.card_holder"/>
         <key name="card_holder3" script="credit_card1.card_holder"/>
         <key name="cvc_number2" script="credit_card1.cvc_number"/>
         <key name="cvc_number3" script="credit_card1.cvc_number"/>
         <key name="expiration_date2" script="credit_card1.expiration_date"/>
         <key name="expiration_date3" script="credit_card1.expiration_date"/>
-        <key name="credit_card_provider2" script="credit_card1.credit_card_provider"/>
-        <key name="credit_card_provider3" script="credit_card1.credit_card_provider"/>
+        <key name="card_provider2" script="credit_card1.card_provider"/>
+        <key name="card_provider3" script="credit_card1.card_provider"/>
     </generate>
 </setup>

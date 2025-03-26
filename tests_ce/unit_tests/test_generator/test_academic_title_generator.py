@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -7,7 +7,7 @@
 
 from numpy import nan
 
-from datamimic_ce.generators.academic_title_generator import AcademicTitleGenerator
+from datamimic_ce.domains.common.literal_generators.academic_title_generator import AcademicTitleGenerator
 
 
 class TestAcademicTitleGenerator:

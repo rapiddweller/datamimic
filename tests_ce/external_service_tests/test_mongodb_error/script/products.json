@@ -1,0 +1,17 @@
+[
+  {
+    "product_id": 101,
+    "product_name": "notebook",
+    "price": 5.99
+  },
+  {
+    "product_id": 102,
+    "product_name": "book",
+    "price": 9.99
+  },
+  {
+    "product_id": 103,
+    "product_name": "pencil",
+    "price": 1.99
+  }
+]

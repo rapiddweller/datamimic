@@ -1,15 +1,13 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-
 import re
 from typing import Any
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.constants.exporter_constants import EXPORTER_TEST_RESULT_EXPORTER
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.converter.append_converter import AppendConverter
@@ -28,7 +26,9 @@ from datamimic_ce.converter.upper_case_converter import UpperCaseConverter
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.enums.converter_enums import ConverterEnum
 from datamimic_ce.exporters.csv_exporter import CSVExporter
+from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.json_exporter import JsonExporter
+from datamimic_ce.exporters.memstore import Memstore
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.exporters.txt_exporter import TXTExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
@@ -52,6 +52,8 @@ from datamimic_ce.statements.memstore_statement import MemstoreStatement
 from datamimic_ce.statements.mongodb_statement import MongoDBStatement
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
+from datamimic_ce.statements.rule_statement import RuleStatement
+from datamimic_ce.statements.source_constraints_statement import ConstraintsStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.array_task import ArrayTask
@@ -64,11 +66,6 @@ from datamimic_ce.tasks.else_task import ElseTask
 from datamimic_ce.tasks.execute_task import ExecuteTask
 from datamimic_ce.tasks.generate_task import (
     GenerateTask,
-    _evaluate_selector_script,
-    _load_csv_file,
-    _load_json_file,
-    _load_xml_file,
-    _pre_consume_product,
 )
 from datamimic_ce.tasks.generator_task import GeneratorTask
 from datamimic_ce.tasks.if_task import IfTask
@@ -80,8 +77,9 @@ from datamimic_ce.tasks.memstore_task import MemstoreTask
 from datamimic_ce.tasks.mongodb_task import MongoDBTask
 from datamimic_ce.tasks.nested_key_task import NestedKeyTask
 from datamimic_ce.tasks.reference_task import ReferenceTask
+from datamimic_ce.tasks.rule_task import RuleTask
+from datamimic_ce.tasks.source_constraints_task import ConstraintsTask
 from datamimic_ce.tasks.task import Task
-from datamimic_ce.utils.multiprocessing_page_info import MultiprocessingPageInfo
 from datamimic_ce.utils.object_util import ObjectUtil
 
 
@@ -135,6 +133,10 @@ class TaskUtil:
             return ElementTask(ctx, stmt)
         elif isinstance(stmt, GeneratorStatement):
             return GeneratorTask(stmt)
+        elif isinstance(stmt, ConstraintsStatement):
+            return ConstraintsTask(stmt)
+        elif isinstance(stmt, RuleStatement):
+            return RuleTask(stmt)
         else:
             raise ValueError(f"Cannot created task for statement {stmt.__class__.__name__}")
 
@@ -276,16 +278,17 @@ class TaskUtil:
         )
 
     @staticmethod
-    def gen_task_load_data_from_source(
+    def gen_task_load_data_from_source_or_script(
         context: SetupContext,
         stmt: GenerateStatement,
-        source_str: str,
+        source_str: str,  # DO NOT remove this parameter, used on EE as well
         separator: str,
         source_scripted: bool,
-        processed_data_count: int,
+        processed_data_count: int,  # DO NOT remove this parameter, used on EE as well
         load_start_idx: int,
         load_end_idx: int,
         load_pagination: DataSourcePagination | None,
+        source_operation: dict | None,
     ) -> tuple[list[dict], bool]:
         """
         Generate task to load data from source
@@ -299,11 +302,17 @@ class TaskUtil:
         prefix = stmt.variable_prefix or setup_ctx.default_variable_prefix
         suffix = stmt.variable_suffix or setup_ctx.default_variable_suffix
 
+        data_source_registry = root_context.class_factory_util.get_datasource_registry_cls()
+
         if source_str is None:
-            build_from_source = False
+            if stmt.script is None:
+                build_from_source = False
+            else:
+                # Evaluate script in source
+                source_data = context.evaluate_python_expression(stmt.script)
         # Load data from CSV
         elif source_str.endswith(".csv"):
-            source_data = _load_csv_file(
+            source_data = data_source_registry.load_csv_file(
                 ctx=context,
                 file_path=root_context.descriptor_dir / source_str,
                 separator=separator,
@@ -316,8 +325,7 @@ class TaskUtil:
             )
         # Load data from JSON
         elif source_str.endswith(".json"):
-            source_data = _load_json_file(
-                root_context.task_id,
+            source_data = data_source_registry.load_json_file(
                 root_context.descriptor_dir / source_str,
                 stmt.cyclic,
                 load_start_idx,
@@ -333,9 +341,19 @@ class TaskUtil:
                     logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
         # Load data from XML
         elif source_str.endswith(".xml"):
-            source_data = _load_xml_file(
-                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
-            )
+            if source_operation:
+                # (EE feature only) Load XML file with source operation
+                source_data = data_source_registry.load_xml_file_with_operation(
+                    root_context.descriptor_dir / source_str,
+                    stmt.cyclic,
+                    load_start_idx,
+                    load_end_idx,
+                    source_operation,
+                )
+            else:
+                source_data = data_source_registry.load_xml_file(
+                    root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
+                )
             # if sourceScripted then evaluate python expression in json
             if source_scripted:
                 source_data = TaskUtil.evaluate_file_script_template(
@@ -352,7 +370,7 @@ class TaskUtil:
             # Load data from MongoDB
             if isinstance(client, MongoDBClient):
                 if stmt.selector:
-                    selector = _evaluate_selector_script(context, stmt)
+                    selector = TaskUtil.evaluate_selector_script(context, stmt)
                     source_data = client.get_by_page_with_query(query=selector, pagination=load_pagination)
                 elif stmt.type:
                     source_data = client.get_by_page_with_type(collection_name=stmt.type, pagination=load_pagination)
@@ -370,7 +388,7 @@ class TaskUtil:
             # Load data from RDBMS
             elif isinstance(client, RdbmsClient):
                 if stmt.selector:
-                    selector = _evaluate_selector_script(context, stmt)
+                    selector = TaskUtil.evaluate_selector_script(context, stmt)
                     source_data = client.get_by_page_with_query(original_query=selector, pagination=load_pagination)
                 else:
                     source_data = client.get_by_page_with_type(
@@ -386,85 +404,131 @@ class TaskUtil:
         return return_source_data, build_from_source
 
     @staticmethod
-    def consume_product_by_page(
+    def export_product_by_page(
         root_context: SetupContext,
         stmt: GenerateStatement,
-        xml_result: list,
-        page_info: MultiprocessingPageInfo,
+        xml_result: dict[str, list[dict]],
+        exporter_state_manager: ExporterStateManager,
     ) -> None:
         """
-        Consume single list of product in generate statement.
+        Export single page of product in generate statement.
 
         :param root_context: SetupContext instance.
         :param stmt: GenerateStatement instance.
-        :param xml_result: List of generated product data.
-        :param page_info: Tuple containing page information.
+        :param xml_result: Dictionary of product data.
+        :param exporter_state_manager: ExporterStateManager instance.
         :return: None
         """
-        # Convert XML result into JSON result
-        json_result = [GenerateTask.convert_xml_dict_to_json_dict(res) for res in xml_result]
+        # If product is in XML format, convert it to JSON
+        json_result = [TaskUtil.convert_xml_dict_to_json_dict(product) for product in xml_result[stmt.full_name]]
 
         # Wrap product key and value into a tuple
         # for iterate database may have key, value, and other statement attribute info
-        json_product = _pre_consume_product(stmt, json_result)
-
-        # Create exporters cache in root context if it doesn't exist
-        if not hasattr(root_context, "_task_exporters"):
-            # Using task_id to namespace the cache
-            root_context.task_exporters = {}
+        if getattr(stmt, "selector", False):
+            json_product = (stmt.name, json_result, {"selector": stmt.selector})
+        elif getattr(stmt, "type", False):
+            json_product = (stmt.name, json_result, {"type": stmt.type})
+        else:
+            json_product = (stmt.name, json_result)  # type: ignore[assignment]
 
         # Create a unique cache key incorporating task_id and statement details
-        cache_key = f"{root_context.task_id}_{stmt.name}_{stmt.storage_id}_{stmt}"
-
-        # Get or create exporters
-        if cache_key not in root_context.task_exporters:
-            # Create the consumer set once
-            consumer_set = stmt.targets.copy()
-            # consumer_set.add(EXPORTER_PREVIEW) deactivating preview exporter for multi-process
-            if root_context.test_mode and not root_context.use_mp:
-                consumer_set.add(EXPORTER_TEST_RESULT_EXPORTER)
-
-            # Create exporters with operations
-            (
-                consumers_with_operation,
-                consumers_without_operation,
-            ) = root_context.class_factory_util.get_exporter_util().create_exporter_list(
-                setup_context=root_context,
-                stmt=stmt,
-                targets=list(consumer_set),
-                page_info=page_info,
-            )
-
-            # Cache the exporters
-            root_context.task_exporters[cache_key] = {
-                "with_operation": consumers_with_operation,
-                "without_operation": consumers_without_operation,
-                "page_count": 0,  # Track number of pages processed
-            }
+        exporters_cache_key = stmt.full_name
 
         # Get cached exporters
-        exporters = root_context.task_exporters[cache_key]
+        exporters = root_context.task_exporters[exporters_cache_key]
         exporters["page_count"] += 1
 
         # Use cached exporters
-        # Run consumers with operations first
-        for consumer, operation in exporters["with_operation"]:
-            if isinstance(consumer, MongoDBExporter) and operation == "upsert":
-                json_product = consumer.upsert(product=json_product)
-            elif hasattr(consumer, operation):
-                getattr(consumer, operation)(json_product)
+        # Run exporters with operations first
+        for exporter, operation in exporters["with_operation"]:
+            if isinstance(exporter, MongoDBExporter) and operation == "upsert":
+                json_product = exporter.upsert(product=json_product)
+            elif hasattr(exporter, operation):
+                getattr(exporter, operation)(json_product)
             else:
-                raise ValueError(f"Consumer does not support operation: {consumer}.{operation}")
+                raise ValueError(f"Exporter does not support operation: {exporter}.{operation}")
 
-        # Run consumers without operations
-        for consumer in exporters["without_operation"]:
+        task_util_cls = root_context.class_factory_util.get_task_util_cls()
+
+        task_util_cls.exporter_without_operation(
+            root_context.task_id,
+            json_product,
+            xml_result,
+            stmt,
+            exporters["without_operation"],
+            exporter_state_manager,
+            exporters["page_count"] == 1,
+        )
+
+    @staticmethod
+    def exporter_without_operation(
+        task_id: str,
+        json_product: tuple,
+        xml_result: dict,
+        stmt: GenerateStatement,
+        exporters_without_operation: list,
+        exporter_state_manager: ExporterStateManager,
+        first_page: bool,
+    ):
+        # Run exporters without operations
+        for exporter in exporters_without_operation:
             try:
-                if isinstance(consumer, XMLExporter):
-                    consumer.consume((json_product[0], xml_result))
-                elif isinstance(consumer, JsonExporter | TXTExporter | CSVExporter):
-                    consumer.consume(json_product)
+                # Skip lazy exporters
+                if isinstance(exporter, Memstore):
+                    continue
+                elif isinstance(exporter, XMLExporter):
+                    exporter.consume(
+                        (json_product[0], xml_result[stmt.full_name]), stmt.full_name, exporter_state_manager
+                    )
+                elif isinstance(exporter, JsonExporter | TXTExporter | CSVExporter):
+                    exporter.consume(json_product, stmt.full_name, exporter_state_manager)
                 else:
-                    consumer.consume(json_product)
+                    exporter.consume(json_product)
             except Exception as e:
-                logger.error(f"Error in consumer {type(consumer).__name__}: {str(e)}")
-                raise
+                # import traceback
+                # traceback.print_exc()
+                logger.error(f"Error in exporter {type(exporter).__name__}: {str(e)}")
+                raise ValueError(f"Error in exporter {type(exporter).__name__}: {e}") from e
+
+    @staticmethod
+    def evaluate_selector_script(context: Context, stmt: GenerateStatement):
+        """
+        Evaluate script selector.
+
+        :param context: Context instance.
+        :param stmt: GenerateStatement instance.
+        :return: Evaluated selector.
+        """
+        selector = stmt.selector or ""
+        prefix = stmt.variable_prefix or context.root.default_variable_prefix
+        suffix = stmt.variable_suffix or context.root.default_variable_suffix
+        return TaskUtil.evaluate_variable_concat_prefix_suffix(context, selector, prefix=prefix, suffix=suffix)
+
+    @staticmethod
+    def convert_xml_dict_to_json_dict(xml_dict: dict):
+        """
+        Convert XML dict with #text and @attribute to pure JSON dict.
+
+        :param xml_dict: XML dictionary.
+        :return: JSON dictionary.
+        """
+        if "#text" in xml_dict:
+            return xml_dict["#text"]
+        res = {}
+        for key, value in xml_dict.items():
+            if not key.startswith("@"):
+                if isinstance(value, dict):
+                    res[key] = TaskUtil.convert_xml_dict_to_json_dict(value)
+                elif isinstance(value, list):
+                    res[key] = [TaskUtil.convert_xml_dict_to_json_dict(v) if isinstance(v, dict) else v for v in value]
+                else:
+                    res[key] = value
+        return res
+
+    @staticmethod
+    def is_source_ml_model(stmt: GenerateStatement):
+        """
+        check if source is model train by ml-train or not
+        """
+        # Always False in CE cause this is an EE feature
+        return False

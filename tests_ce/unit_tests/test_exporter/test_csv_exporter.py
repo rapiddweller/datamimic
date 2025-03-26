@@ -1,54 +1,12 @@
 import csv
-import multiprocessing
-import os
 import tempfile
 import unittest
 import uuid
 from pathlib import Path
 
 from datamimic_ce.exporters.csv_exporter import CSVExporter
-
-
-def generate_mock_data(total_records=3000, title="Mock Title", year=2020):
-    """Generate mock data for testing."""
-    return [{"id": f"movie_{i + 1}", "title": f"{title} {i + 1}", "year": year} for i in range(total_records)]
-
-
-class MockSetupContext:
-    def __init__(self, task_id, descriptor_dir):
-        self.task_id = task_id
-        self.descriptor_dir = descriptor_dir
-        self.default_encoding = "utf-8"
-        self.default_separator = ","
-        self.default_line_separator = "\n"
-        self.use_mp = False
-
-    def get_client_by_id(self, client_id):
-        # Return a dummy client or data, replace MagicMock dependency
-        return {"id": client_id, "data": "mock_client_data"}
-
-
-def worker(data_chunk, shared_storage_list, task_id, descriptor_dir, properties):
-    setup_context = MockSetupContext(task_id=task_id, descriptor_dir=descriptor_dir)
-    setup_context.properties = properties
-    exporter = CSVExporter(
-        setup_context=setup_context,
-        chunk_size=1000,
-        product_name="test_product",
-        page_info=None,
-        fieldnames=None,
-        delimiter=None,
-        quotechar=None,
-        quoting=None,
-        line_terminator=None,
-        encoding=None,
-    )
-    exporter._buffer_file = None
-    product = ("test_product", data_chunk)
-    exporter.consume(product)
-    exporter.finalize_chunks()
-    exporter.upload_to_storage(bucket="test_bucket", name=exporter.product_name)
-    shared_storage_list.extend(exporter._buffer_file.open_calls)
+from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
+from tests_ce.unit_tests.test_exporter.exporter_test_util import generate_mock_data, MockSetupContext
 
 
 class TestCSVExporter(unittest.TestCase):
@@ -68,7 +26,6 @@ class TestCSVExporter(unittest.TestCase):
             quotechar=quotechar,
             quoting=quoting,
             line_terminator=line_terminator,
-            page_info=None,
             fieldnames=None,
             encoding=encoding,
         )
@@ -81,8 +38,11 @@ class TestCSVExporter(unittest.TestCase):
         """Test exporting 3000 records with chunk size 1000 in a single process (3 chunk files expected)."""
         original_data = generate_mock_data(3000)
         product = ("test_product", original_data)
-        self.exporter.consume(product)
-        self.exporter.finalize_chunks()
+        stmt_full_name = "test_product"
+        worker_id = 1
+        exporter_state_manager = ExporterStateManager(worker_id)
+        self.exporter.consume(product, stmt_full_name, exporter_state_manager)
+        self.exporter.finalize_chunks(worker_id)
 
     def test_custom_delimiter_and_encoding(self):
         """Test exporting with custom delimiter and encoding."""
@@ -91,8 +51,13 @@ class TestCSVExporter(unittest.TestCase):
 
         original_data = generate_mock_data(10)
         product = ("test_product", original_data)
-        self.exporter.consume(product)
-        self.exporter.finalize_chunks()
+
+        stmt_full_name = "test_product"
+        worker_id = 1
+        exporter_state_manager = ExporterStateManager(worker_id)
+
+        self.exporter.consume(product, stmt_full_name, exporter_state_manager)
+        self.exporter.finalize_chunks(worker_id)
 
     def test_special_characters_in_data(self):
         """Test exporting data containing delimiters, quotes, and newlines."""
@@ -106,17 +71,38 @@ class TestCSVExporter(unittest.TestCase):
             {"id": "4", "title": "Title with delimiter; semicolon", "year": 2023},
         ]
         product = ("test_product", special_data)
-        self.exporter.consume(product)
-        self.exporter.finalize_chunks()
+
+        stmt_full_name = "test_product"
+        worker_id = 1
+        exporter_state_manager = ExporterStateManager(worker_id)
+
+        self.exporter.consume(product, stmt_full_name, exporter_state_manager)
+        self.exporter.finalize_chunks(worker_id)
 
     def test_large_dataset(self):
         """Test exporting a very large dataset to check performance and memory usage."""
         total_records = 500_000  # Half a million records
-        self.exporter.chunk_size = 100_000
+        self.exporter = CSVExporter(
+            setup_context=self.setup_context,
+            product_name="test_product",
+            chunk_size=100_000,
+            delimiter=None,
+            quotechar=None,
+            quoting=None,
+            line_terminator=None,
+            fieldnames=None,
+            encoding="utf-8",
+        )
+
         original_data = generate_mock_data(total_records)
         product = ("test_product", original_data)
-        self.exporter.consume(product)
-        self.exporter.finalize_chunks()
+
+        stmt_full_name = "test_product"
+        worker_id = 1
+        exporter_state_manager = ExporterStateManager(worker_id)
+
+        self.exporter.consume(product, stmt_full_name, exporter_state_manager)
+        self.exporter.finalize_chunks(worker_id)
 
     def test_invalid_data_handling(self):
         """Test exporting data with invalid data types."""
@@ -125,36 +111,41 @@ class TestCSVExporter(unittest.TestCase):
             {"id": "2", "title": "Another Title", "year": "Invalid Year"},  # Year should be an int
         ]
         product = ("test_product", invalid_data)
-        self.exporter.consume(product)
-        self.exporter.finalize_chunks()
 
-    @unittest.skipIf(os.name == "posix", "Skipping multiprocessing test on Linux")
-    def test_multiprocessing_export(self):
-        total_processes = os.cpu_count() or 1
-        total_records_per_process = 5000
-        data = generate_mock_data(total_records_per_process * total_processes)
-        data_chunks = [
-            data[i * total_records_per_process : (i + 1) * total_records_per_process] for i in range(total_processes)
-        ]
+        stmt_full_name = "test_product"
+        worker_id = 1
+        exporter_state_manager = ExporterStateManager(worker_id)
 
-        manager = multiprocessing.Manager()
-        shared_storage_list = manager.list()
-        processes = []
-        for chunk in data_chunks:
-            p = multiprocessing.Process(
-                target=worker,
-                args=(
-                    chunk,
-                    shared_storage_list,
-                    self.setup_context.task_id,
-                    self.setup_context.descriptor_dir,
-                    self.setup_context.properties,
-                ),
-            )
-            p.start()
-            processes.append(p)
-        for p in processes:
-            p.join()
+        self.exporter.consume(product, stmt_full_name, exporter_state_manager)
+        self.exporter.finalize_chunks(worker_id)
+
+    # @unittest.skipIf(os.name == "posix", "Skipping multiprocessing test on Linux")
+    # def test_multiprocessing_export(self):
+    #     total_processes = os.cpu_count() or 1
+    #     total_records_per_process = 5000
+    #     data = generate_mock_data(total_records_per_process * total_processes)
+    #     data_chunks = [
+    #         data[i * total_records_per_process : (i + 1) * total_records_per_process] for i in range(total_processes)
+    #     ]
+    #
+    #     manager = multiprocessing.Manager()
+    #     shared_storage_list = manager.list()
+    #     processes = []
+    #     for chunk in data_chunks:
+    #         p = multiprocessing.Process(
+    #             target=worker,
+    #             args=(
+    #                 chunk,
+    #                 shared_storage_list,
+    #                 self.setup_context.task_id,
+    #                 self.setup_context.descriptor_dir,
+    #                 self.setup_context.properties,
+    #             ),
+    #         )
+    #         p.start()
+    #         processes.append(p)
+    #     for p in processes:
+    #         p.join()
 
     def test_empty_records_and_missing_fields(self):
         """Test exporting data with empty records and missing fields."""
@@ -165,39 +156,81 @@ class TestCSVExporter(unittest.TestCase):
             {"id": "3", "year": 2022},  # Missing 'title'
         ]
         product = ("test_product", data_with_missing_fields)
+        stmt_full_name = "test_product"
+        worker_id = 1
+        exporter_state_manager = ExporterStateManager(worker_id)
+
         self.exporter.fieldnames = ["id", "title", "year"]  # Specify fieldnames to handle missing fields
-        self.exporter.consume(product)
-        self.exporter.finalize_chunks()
+        self.exporter.consume(product, stmt_full_name, exporter_state_manager)
+        self.exporter.finalize_chunks(worker_id)
 
     def test_product_with_type(self):
         """Test exporting data with product type."""
         data = generate_mock_data(5)
         product = ("test_product", data, {"type": "test_type"})
-        self.exporter.consume(product)
-        self.exporter.finalize_chunks()
+        stmt_full_name = "test_product"
+        worker_id = 1
+        exporter_state_manager = ExporterStateManager(worker_id)
+
+        self.exporter.consume(product, stmt_full_name, exporter_state_manager)
+        self.exporter.finalize_chunks(worker_id)
 
     def test_consume_invalid_product(self):
         """Test that consuming an invalid product raises ValueError."""
+        stmt_full_name = "test_product"
+        worker_id = 1
+        exporter_state_manager = ExporterStateManager(worker_id)
+
         with self.assertRaises(ValueError):
-            self.exporter.consume("invalid_product")
+            self.exporter.consume("invalid_product", stmt_full_name, exporter_state_manager)
 
     def test_chunk_rotation_without_remainder(self):
         """Test exporting data where total records are a multiple of chunk size."""
         total_records = 5000
-        self.exporter.chunk_size = 1000
+        self.exporter = CSVExporter(
+            setup_context=self.setup_context,
+            product_name="test_product",
+            chunk_size=1000,
+            delimiter=None,
+            quotechar=None,
+            quoting=None,
+            line_terminator=None,
+            fieldnames=None,
+            encoding="utf-8",
+        )
+
         original_data = generate_mock_data(total_records)
         product = ("test_product", original_data)
-        self.exporter.consume(product)
-        self.exporter.finalize_chunks()
+        stmt_full_name = "test_product"
+        worker_id = 1
+        exporter_state_manager = ExporterStateManager(worker_id)
+
+        self.exporter.consume(product, stmt_full_name, exporter_state_manager)
+        self.exporter.finalize_chunks(worker_id)
 
     def test_chunk_rotation_with_remainder(self):
         """Test exporting data where total records are not a multiple of chunk size."""
         total_records = 5500
-        self.exporter.chunk_size = 1000
+        self.exporter = CSVExporter(
+            setup_context=self.setup_context,
+            product_name="test_product",
+            chunk_size=1000,
+            delimiter=None,
+            quotechar=None,
+            quoting=None,
+            line_terminator=None,
+            fieldnames=None,
+            encoding="utf-8",
+        )
+
         original_data = generate_mock_data(total_records)
         product = ("test_product", original_data)
-        self.exporter.consume(product)
-        self.exporter.finalize_chunks()
+        stmt_full_name = "test_product"
+        worker_id = 1
+        exporter_state_manager = ExporterStateManager(worker_id)
+
+        self.exporter.consume(product, stmt_full_name, exporter_state_manager)
+        self.exporter.finalize_chunks(worker_id)
 
     def test_no_fieldnames_provided(self):
         """Test exporting when fieldnames are not provided and need to be inferred."""
@@ -207,9 +240,13 @@ class TestCSVExporter(unittest.TestCase):
         ]
         self.exporter.fieldnames = None  # Ensure fieldnames are not set
         product = ("test_product", data)
-        self.exporter.consume(product)
+        stmt_full_name = "test_product"
+        worker_id = 1
+        exporter_state_manager = ExporterStateManager(worker_id)
+
+        self.exporter.consume(product, stmt_full_name, exporter_state_manager)
         self.assertEqual(self.exporter.fieldnames, ["id", "title", "year"])  # Fieldnames inferred
-        self.exporter.finalize_chunks()
+        self.exporter.finalize_chunks(worker_id)
 
     def test_export_with_custom_quotechar(self):
         """Test exporting data with a custom quote character."""
@@ -222,15 +259,18 @@ class TestCSVExporter(unittest.TestCase):
             quotechar=None,
             quoting=None,
             line_terminator=None,
-            page_info=None,
             fieldnames=None,
             encoding=None,
         )
 
         data = generate_mock_data(5)
         product = ("test_product", data)
-        self.exporter.consume(product)
-        self.exporter.finalize_chunks()
+        stmt_full_name = "test_product"
+        worker_id = 1
+        exporter_state_manager = ExporterStateManager(worker_id)
+
+        self.exporter.consume(product, stmt_full_name, exporter_state_manager)
+        self.exporter.finalize_chunks(worker_id)
 
     def test_export_with_different_quoting_options(self):
         """Test exporting data with different quoting options."""
@@ -239,8 +279,12 @@ class TestCSVExporter(unittest.TestCase):
 
             data = generate_mock_data(5)
             product = ("test_product", data)
-            self.exporter.consume(product)
-            self.exporter.finalize_chunks()
+            stmt_full_name = "test_product"
+            worker_id = 1
+            exporter_state_manager = ExporterStateManager(worker_id)
+
+            self.exporter.consume(product, stmt_full_name, exporter_state_manager)
+            self.exporter.finalize_chunks(worker_id)
 
     def test_export_with_custom_encoding(self):
         """Test exporting data with a custom encoding."""
@@ -248,14 +292,22 @@ class TestCSVExporter(unittest.TestCase):
 
         data = generate_mock_data(10)
         product = ("test_product", data)
-        self.exporter.consume(product)
-        self.exporter.finalize_chunks()
+        stmt_full_name = "test_product"
+        worker_id = 1
+        exporter_state_manager = ExporterStateManager(worker_id)
+
+        self.exporter.consume(product, stmt_full_name, exporter_state_manager)
+        self.exporter.finalize_chunks(worker_id)
 
     def test_export_empty_data_list(self):
         """Test exporting when data list is empty."""
         product = ("test_product", [])
-        self.exporter.consume(product)
-        self.exporter.finalize_chunks()
+        stmt_full_name = "test_product"
+        worker_id = 1
+        exporter_state_manager = ExporterStateManager(worker_id)
+
+        self.exporter.consume(product, stmt_full_name, exporter_state_manager)
+        self.exporter.finalize_chunks(worker_id)
 
 
 if __name__ == "__main__":

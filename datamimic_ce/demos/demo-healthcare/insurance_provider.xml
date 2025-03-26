@@ -1,0 +1,58 @@
+<setup>
+    <!-- Insurance Provider Entity -->
+    <echo>Running InsuranceProviderEntity</echo>
+    <generate name="insurance_providers" count="10" target="CSV">
+        <variable name="provider" entity="InsuranceProvider" />
+        <key name="provider_id" script="provider.provider_id" />
+        <key name="name" script="provider.name" />
+        <key name="type" script="provider.type" />
+        <key name="street" script="provider.street" />
+        <key name="city" script="provider.city" />
+        <key name="state" script="provider.state" />
+        <key name="zip_code" script="provider.zip_code" />
+        <key name="country" script="provider.country" />
+        <key name="phone" script="provider.phone" />
+        <key name="email" script="provider.email" />
+        <key name="website" script="provider.website" />
+        <key name="year_established" script="provider.year_established" />
+        <key name="customer_service_phone" script="provider.customer_service_phone" />
+        <key name="claims_phone" script="provider.claims_phone" />
+        <nestedKey name="plan_types" script="provider.plan_types" />
+        <nestedKey name="coverage_areas" script="provider.coverage_areas" />
+        <key name="member_count" script="provider.member_count" />
+        <key name="network_size" script="provider.network_size" />
+        <key name="annual_revenue" script="provider.annual_revenue" />
+        <key name="ceo" script="provider.ceo" />
+        <key name="rating" script="provider.rating" />
+    </generate>
+
+    <!-- US Insurance Provider Entity -->
+    <echo>Running USInsuranceProviderEntity</echo>
+    <generate name="us_insurance_providers" count="5" target="CSV">
+        <variable name="provider" entity="USInsuranceProvider" />
+        <key name="provider_id" script="provider.provider_id" />
+        <key name="name" script="provider.name" />
+        <key name="type" script="provider.type" />
+        <key name="street" script="provider.street" />
+        <key name="city" script="provider.city" />
+        <key name="state" script="provider.state" />
+        <key name="zip_code" script="provider.zip_code" />
+        <key name="country" script="provider.country" />
+        <key name="phone" script="provider.phone" />
+        <key name="email" script="provider.email" />
+        <key name="website" script="provider.website" />
+        <key name="year_established" script="provider.year_established" />
+        <key name="customer_service_phone" script="provider.customer_service_phone" />
+        <key name="claims_phone" script="provider.claims_phone" />
+        <nestedKey name="plan_types" script="provider.plan_types" />
+        <nestedKey name="coverage_areas" script="provider.coverage_areas" />
+        <key name="member_count" script="provider.member_count" />
+        <key name="network_size" script="provider.network_size" />
+        <key name="annual_revenue" script="provider.annual_revenue" />
+        <key name="ceo" script="provider.ceo" />
+        <key name="rating" script="provider.rating" />
+        <key name="medicare_provider" script="provider.medicare_provider" />
+        <key name="medicaid_provider" script="provider.medicaid_provider" />
+        <key name="aca_marketplace_plans" script="provider.aca_marketplace_plans" />
+    </generate>
+</setup> 

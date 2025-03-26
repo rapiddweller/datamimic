@@ -1,0 +1,26 @@
+<setup>
+
+	<echo>Running ContainerGenerator</echo>
+	<generate type="Container" count="50" consumer="">
+		<variable name="genobject" generator="ContainerGenerator"/>
+		<attribute name="code" script="genobject.code"/>
+	</generate>
+
+	<echo>Running ContainerNumberGenerator</echo>
+	<generate type="ContainerNumber" count="50" consumer="">
+		<attribute name="value" generator="ContainerNumberGenerator"/>
+	</generate>
+
+	<echo>Running ContainerOwnerGenerator</echo>
+	<generate type="ContainerOwner" count="50" consumer="">
+		<variable name="genobject" generator="ContainerOwnerGenerator"/>
+		<attribute name="bicRegistered" script="genobject.bicRegistered"/>
+		<attribute name="companyId" script="genobject.companyId"/>
+		<attribute name="country" script="genobject.country"/>
+		<attribute name="countryCode" script="genobject.countryCode"/>
+		<attribute name="name" script="genobject.name"/>
+		<attribute name="prefix" script="genobject.prefix"/>
+		<attribute name="url" script="genobject.url"/>
+	</generate>
+
+</setup>

@@ -1,0 +1,31 @@
+name,street,city,state,zip_code,weight
+Quest Diagnostics,123 Main Street,New York,NY,10001,200
+LabCorp,456 Oak Avenue,Los Angeles,CA,90001,190
+Mayo Clinic Laboratories,200 First Street SW,Rochester,MN,55905,180
+ARUP Laboratories,500 Chipeta Way,Salt Lake City,UT,84108,170
+BioReference Laboratories,481 Edward H Ross Drive,Elmwood Park,NJ,07407,160
+Cleveland Clinic Laboratories,9500 Euclid Avenue,Cleveland,OH,44195,150
+Myriad Genetics,320 Wakara Way,Salt Lake City,UT,84108,140
+Exact Sciences,5505 Endeavor Lane,Madison,WI,53719,130
+Ambry Genetics,15 Argonaut,Aliso Viejo,CA,92656,120
+Invitae,1400 16th Street,San Francisco,CA,94103,110
+Guardant Health,505 Penobscot Drive,Redwood City,CA,94063,100
+Foundation Medicine,150 Second Street,Cambridge,MA,02141,90
+Natera,201 Industrial Road,San Carlos,CA,94070,80
+Tempus Labs,600 West Chicago Avenue,Chicago,IL,60654,70
+Caris Life Sciences,750 West John Carpenter Freeway,Irving,TX,75039,60
+Genova Diagnostics,63 Zillicoa Street,Asheville,NC,28801,50
+Vibrant America,1021 Howard Avenue,San Carlos,CA,94070,40
+Veracyte,6000 Shoreline Court,South San Francisco,CA,94080,30
+Adaptive Biotechnologies,1551 Eastlake Avenue East,Seattle,WA,98102,20
+Illumina Clinical Services,5200 Illumina Way,San Diego,CA,92122,10
+Thermo Fisher Scientific,168 Third Avenue,Waltham,MA,02451,10
+Roche Diagnostics,9115 Hague Road,Indianapolis,IN,46250,10
+Abbott Laboratories,100 Abbott Park Road,Abbott Park,IL,60064,10
+Siemens Healthineers,40 Liberty Boulevard,Malvern,PA,19355,10
+Beckman Coulter,250 South Kraemer Boulevard,Brea,CA,92821,10
+Bio-Rad Laboratories,1000 Alfred Nobel Drive,Hercules,CA,94547,10
+Qiagen,19300 Germantown Road,Germantown,MD,20874,10
+Hologic,250 Campus Drive,Marlborough,MA,01752,10
+Danaher,2200 Pennsylvania Avenue NW,Washington,DC,20037,10
+PerkinElmer,940 Winter Street,Waltham,MA,02451,10 

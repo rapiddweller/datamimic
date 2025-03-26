@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -23,7 +23,7 @@ class LogExporter(Exporter):
         name = product[0]
         data = product[1]
 
-        logger.info(f"{ self.__class__.__name__ } - Start")
+        logger.info(f"{self.__class__.__name__} - Start")
         for row in data[: self.MAX_ITEM_TO_LOG]:
             logger.info(f"{name}: {row}")
 
@@ -34,4 +34,4 @@ class LogExporter(Exporter):
                 f"For larger datasets, consider using other exporter such as CSV or TXT."
             )
 
-        logger.info(f"{ self.__class__.__name__ } - Close")
+        logger.info(f"{self.__class__.__name__} - Close")

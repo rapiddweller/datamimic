@@ -1,9 +1,10 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import traceback
 from collections.abc import Iterator
 from typing import Any, Final
 
@@ -22,19 +23,13 @@ from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_util import DataSourceUtil
+from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntityDataSource
-from datamimic_ce.entities.address_entity import AddressEntity
-from datamimic_ce.entities.bank_account_entity import BankAccountEntity
-from datamimic_ce.entities.bank_entity import BankEntity
-from datamimic_ce.entities.city_entity import CityEntity
-from datamimic_ce.entities.company_entity import CompanyEntity
-from datamimic_ce.entities.country_entity import CountryEntity
-from datamimic_ce.entities.credit_card_entity import CreditCardEntity
-from datamimic_ce.entities.person_entity import PersonEntity
+from datamimic_ce.logger import logger
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
 from datamimic_ce.tasks.task_util import TaskUtil
+from datamimic_ce.utils.domain_class_util import DomainClassUtil
 from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.string_util import StringUtil
 
@@ -115,7 +110,7 @@ class VariableTask(KeyVariableTask):
                         self._mode = self._RANDOM_DISTRIBUTION_MODE
                         selected_data = client.get_by_page_with_query(selector)
                         self._random_items_iterator = iter(
-                            DataSourceUtil.get_shuffled_data_with_cyclic(
+                            DataSourceRegistry.get_shuffled_data_with_cyclic(
                                 selected_data, pagination, statement.cyclic, seed
                             )
                         )
@@ -142,15 +137,17 @@ class VariableTask(KeyVariableTask):
                     file_data = (
                         FileUtil.read_csv_to_dict_list(file_path=descriptor_dir / source_str, separator=separator)
                         if source_str.endswith("csv")
-                        else FileUtil.read_json_to_dict_list(descriptor_dir / source_str)
+                        else FileUtil.read_json_to_list(descriptor_dir / source_str)
                     )
                     if is_random_distribution:
                         self._random_items_iterator = iter(
-                            DataSourceUtil.get_shuffled_data_with_cyclic(file_data, pagination, statement.cyclic, seed)
+                            DataSourceRegistry.get_shuffled_data_with_cyclic(
+                                file_data, pagination, statement.cyclic, seed
+                            )
                         )
                         self._mode = self._RANDOM_DISTRIBUTION_MODE
                     else:
-                        self._iterator = DataSourceUtil.get_cyclic_data_iterator(
+                        self._iterator = DataSourceRegistry.get_cyclic_data_iterator(
                             data=file_data,
                             cyclic=statement.cyclic,
                             pagination=pagination,
@@ -191,7 +188,7 @@ class VariableTask(KeyVariableTask):
                         if is_random_distribution:
                             self._random_items_iterator = (
                                 iter(
-                                    DataSourceUtil.get_shuffled_data_with_cyclic(
+                                    DataSourceRegistry.get_shuffled_data_with_cyclic(
                                         file_data, pagination, statement.cyclic, seed
                                     )
                                 )
@@ -207,7 +204,7 @@ class VariableTask(KeyVariableTask):
             locale = statement.locale or ctx.default_locale
             dataset = statement.dataset or ctx.default_dataset
             try:
-                self._entity = self._get_entity(
+                self._entity_generator = self._get_entity_generator(
                     ctx,
                     entity_name=statement.entity,
                     locale=locale,
@@ -215,6 +212,11 @@ class VariableTask(KeyVariableTask):
                     count=1 if pagination is None else pagination.limit,
                 )
             except Exception as e:
+                logger.error(
+                    f"Failed to execute <variable> '{self._statement.name}': "
+                    f"Can't create entity '{statement.entity}': {e}"
+                )
+                traceback.print_exc()
                 raise ValueError(
                     f"Failed to execute <variable> '{self._statement.name}': "
                     f"Can't create entity '{statement.entity}': {e}"
@@ -236,33 +238,57 @@ class VariableTask(KeyVariableTask):
         return self._statement
 
     @staticmethod
-    def _get_entity(ctx: Context, entity_name: str, locale: str, dataset: str, count: int):
+    def _get_entity_generator(ctx: Context, entity_name: str, locale: str, dataset: str, count: int):
         entity_class_name, kwargs = StringUtil.parse_constructor_string(entity_name)
-        if isinstance(ctx, SetupContext) and hasattr(ctx, "class_factory_util"):
-            cls_factory_util = ctx.class_factory_util
-        if entity_class_name == "Person":
-            return PersonEntity(cls_factory_util, dataset=dataset, count=count, locale=locale, **kwargs)
-        if entity_class_name == "Company":
-            return CompanyEntity(
-                cls_factory_util=cls_factory_util,
-                locale=locale,
-                dataset=dataset,
-                count=count,
-            )
-        if entity_class_name == "City":
-            return CityEntity(class_factory_util=cls_factory_util, dataset=dataset)
-        if entity_class_name == "Address":
-            return AddressEntity(class_factory_util=cls_factory_util, dataset=dataset)
-        if entity_class_name == "CreditCard":
-            return CreditCardEntity(cls_factory_util)
-        if entity_class_name == "Bank":
-            return BankEntity(cls_factory_util)
-        if entity_class_name == "BankAccount":
-            return BankAccountEntity(cls_factory_util, locale=locale, dataset=dataset)
-        if entity_class_name == "Country":
-            return CountryEntity(cls_factory_util)
+
+        # Check if entity_class_name contains dots indicating a domain path
+        if "." in entity_class_name:
+            # For domain paths like "common.models.Company"
+            # Create instance directly using the class factory util
+            return DomainClassUtil.create_instance(f"datamimic_ce.domains.{entity_class_name}", **kwargs)
         else:
-            raise ValueError(f"Entity {entity_name} is not supported.")
+            # For simple names like "Company", use the entity mapping
+            # Complete mapping of all entities across domains
+            entity_mappings = {
+                # Common domain entities
+                "Company": "common.services.CompanyService",
+                "Person": "common.services.PersonService",
+                "Address": "common.services.AddressService",
+                "City": "common.services.CityService",
+                "Country": "common.services.CountryService",
+                # Finance domain entities
+                "CreditCard": "finance.services.CreditCardService",
+                "Bank": "finance.services.BankService",
+                "BankAccount": "finance.services.BankAccountService",
+                # Ecommerce domain entities
+                "Product": "ecommerce.services.ProductService",
+                "Order": "ecommerce.services.OrderService",
+                # Healthcare domain entities
+                "Patient": "healthcare.services.PatientService",
+                "Doctor": "healthcare.services.DoctorService",
+                "Hospital": "healthcare.services.HospitalService",
+                "MedicalDevice": "healthcare.services.MedicalDeviceService",
+                "MedicalProcedure": "healthcare.services.MedicalProcedureService",
+                # Insurance domain entities (new domain)
+                "InsuranceCompany": "insurance.services.InsuranceCompanyService",
+                "InsurancePolicy": "insurance.services.InsurancePolicyService",
+                "InsuranceProduct": "insurance.services.InsuranceProductService",
+                "InsuranceCoverage": "insurance.services.InsuranceCoverageService",
+                # Public Sector domain entities (new domain)
+                "AdministrationOffice": "public_sector.services.AdministrationOfficeService",
+                "EducationalInstitution": "public_sector.services.EducationalInstitutionService",
+                "PoliceOfficer": "public_sector.services.PoliceOfficerService",
+            }
+
+            # Use the mapping to create the entity
+            if entity_class_name in entity_mappings:
+                domain_entity_path = entity_mappings[entity_class_name]
+                return DomainClassUtil.create_instance(f"datamimic_ce.domains.{domain_entity_path}", **kwargs)
+            else:
+                # If no mapping exists, entity is not supported
+                raise ValueError(f"Entity '{entity_name}' is not supported in the domain architecture.")
+
+        # No more fallback to legacy entities - fully committed to domain-based architecture
 
     def execute(self, ctx: Context) -> None:
         """
@@ -273,8 +299,7 @@ class VariableTask(KeyVariableTask):
         if self._mode == self._ITERATOR_MODE:
             value = next(self._iterator) if self._iterator is not None else None
         elif self._mode == self._ENTITY_MODE:
-            self._entity.reset()
-            value = self._entity
+            value = self._entity_generator.generate()
         elif self._mode == self._WEIGHTED_ENTITY_MODE:
             value = self._weighted_data_source.generate()
         elif self._mode == self._ITERATION_SELECTOR_MODE:
@@ -301,7 +326,7 @@ class VariableTask(KeyVariableTask):
             file_data = ctx.evaluate_python_expression(self._statement.source)
             if is_random_distribution:
                 self._random_items_iterator = iter(
-                    DataSourceUtil.get_shuffled_data_with_cyclic(
+                    DataSourceRegistry.get_shuffled_data_with_cyclic(
                         file_data,
                         self._pagination,
                         self.statement.cyclic,
@@ -313,7 +338,7 @@ class VariableTask(KeyVariableTask):
                     raise StopIteration("No more random items to iterate for statement: " + self._statement.name)
                 value = next(self._random_items_iterator)
             else:
-                self._iterator = DataSourceUtil.get_cyclic_data_iterator(
+                self._iterator = DataSourceRegistry.get_cyclic_data_iterator(
                     data=file_data,
                     cyclic=self.statement.cyclic,
                     pagination=self._pagination,

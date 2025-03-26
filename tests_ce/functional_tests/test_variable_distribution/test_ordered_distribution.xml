@@ -1,10 +1,10 @@
-<setup multiprocessing="1" numProcess="2">
-    <memstore id="mem"/>
+<setup numProcess="2">
+    <memstore id="mem" />
     <generate name="data_source" count="10" target="mem" multiprocessing="0">
-        <key name="counter" type="int" generator="IncrementGenerator"/>
+        <key name="counter" type="int" generator="IncrementGenerator" />
     </generate>
-    <generate name="check" count="20" target="ConsoleExporter" multiprocessing="1">
-        <variable name="counter_var" source="mem" type="data_source" distribution="ordered"/>
-        <key name="counter" script="counter_var.counter"/>
+    <generate name="check" count="20" target="ConsoleExporter" numProcess="2">
+        <variable name="counter_var" source="mem" type="data_source" distribution="ordered" />
+        <key name="counter" script="counter_var.counter" />
     </generate>
 </setup>

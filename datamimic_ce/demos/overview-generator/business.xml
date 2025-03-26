@@ -1,0 +1,32 @@
+<setup>
+    <echo>Running Business Generators</echo>
+
+    <!-- Payment Information -->
+    <generate name="payment_info" count="10">
+        <variable name="credit_card" generator="CreditCardGenerator()" />
+        <key name="currency_code" generator="CurrencyGenerator(code_only=True)" />
+        <key name="currency_amount" generator="CurrencyGenerator(code_only=False)" />
+    </generate>
+
+    <!-- Job Information -->
+    <generate name="job_info" count="10">
+        <key name="default_title" generator="JobTitleGenerator()" />
+        <key name="junior_role" generator="JobTitleGenerator(level='junior')" />
+        <key name="senior_role" generator="JobTitleGenerator(level='senior')" />
+        <key name="executive_role" generator="JobTitleGenerator(level='executive')" />
+    </generate>
+
+    <!-- Company Information -->
+    <generate name="company_info" count="10">
+        <key name="company_name" generator="CompanyNameGenerator()" />
+        <key name="department" generator="DepartmentNameGenerator()" />
+        <key name="sector" generator="SectorGenerator()" />
+    </generate>
+
+    <!-- Academic and Nobility Titles -->
+    <generate name="titles" count="10">
+        <key name="academic_title" generator="AcademicTitleGenerator()" />
+        <key name="nobility_title" generator="NobilityTitleGenerator()" />
+    </generate>
+
+</setup> 

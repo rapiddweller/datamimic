@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -7,23 +7,23 @@
 
 import re
 
-from datamimic_ce.generators.data_faker_generator import DataFakerGenerator
+from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 
 
 class TestFakerGenerator:
     def test_generate(self):
         for _ in range(100):
             generate_int = DataFakerGenerator(method="random_int", locale="de", min=0, max=15, step=3).generate()
-            generate_first_name = DataFakerGenerator(method="first_name_female", locale="zh").generate()
-            generate_last_name = DataFakerGenerator(method="last_name_female", locale="zh").generate()
+            generate_given_name = DataFakerGenerator(method="first_name_female", locale="zh").generate()
+            generate_family_name = DataFakerGenerator(method="last_name_female", locale="zh").generate()
             generate_company = DataFakerGenerator(method="company").generate()
 
             assert 0 <= generate_int <= 15
-            assert isinstance(generate_first_name, str)
-            assert isinstance(generate_last_name, str)
+            assert isinstance(generate_given_name, str)
+            assert isinstance(generate_family_name, str)
             assert isinstance(generate_company, str)
 
-            chinese_name = generate_last_name + generate_first_name
+            chinese_name = generate_family_name + generate_given_name
             zh_characters = ""
             # find all Chinese characters
             for c in re.findall(r"[\u4e00-\u9fff]+", chinese_name):

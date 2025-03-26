@@ -1,0 +1,247 @@
+AD,ca_AD,376,6[0-9],Andorra,77000,parish,,town
+AE,ar_AE,971,5[05],United Arab Emirates,9900000,emirate,municipality,city
+AF,ps_AF,93,7[0-9],Afghanistan,38900000,province,district,city
+AG,en_AG,1268,7[2-9][0-9],Antigua and Barbuda,98000,parish,,city
+AI,en_AI,1264,5[8-9][0-9],Anguilla,15000,district,,village
+AL,sq_AL,355,6[0-9],Albania,2800000,county,municipality,city
+AM,hy_AM,374,9[3-9],Armenia,2900000,province,municipality,city
+AN,nl_AN,599,[56][0-9],Netherlands Antilles,227000,island,,city
+AO,pt_AO,244,9[0-9],Angola,32900000,province,municipality,city
+AQ,en_AQ,672,[1-9][0-9],Antarctica,1000,region,station,base
+AR,es_AR,54,11[0-9],Argentina,45200000,province,department,city
+AS,en_AS,1684,7[2-9][0-9],American Samoa,55000,district,,village
+AT,de_AT,43,(650|660|664|676|680|681|688|699),Austria,9000000,Bundesland,Bezirk,Gemeinde
+AU,en_AU,61,4[0-9],Australia,25700000,state,shire,city
+AW,nl_AW,297,5[6-9][0-9],Aruba,107000,region,,city
+AX,sv_AX,358,4[0-9],Åland Islands,30000,municipality,,town
+AZ,az_AZ,994,5[0-9],Azerbaijan,10100000,district,,city
+BA,bs_BA,387,6[1235],Bosnia and Herzegovina,3300000,entity,canton,municipality
+BB,en_BB,1246,2[5-9][0-9],Barbados,287000,parish,,city
+BD,bn_BD,880,1[7-9],Bangladesh,164700000,division,district,city
+BE,fr_BE,32,4[7-9],Belgium,11600000,region,province,municipality
+BF,fr_BF,226,7[0-9],Burkina Faso,20900000,region,province,commune
+BG,bg_BG,359,(8[789]|48),Bulgaria,6900000,province,municipality,city
+BH,ar_BH,973,3[0-9],Bahrain,1700000,governorate,,village
+BI,rn_BI,257,7[9-9],Burundi,11900000,province,commune,zone
+BJ,fr_BJ,229,9[0-9],Benin,12100000,department,commune,arrondissement
+BL,fr_BL,590,6[0-9],Saint Barthélemy,10000,,,city
+BM,en_BM,1441,5[0-9][0-9],Bermuda,62000,parish,,city
+BN,ms_BN,673,8[0-9],Brunei Darussalam,437000,district,mukim,village
+BO,es_BO,591,7[0-9],Bolivia,11700000,department,province,municipality
+BR,pt_BR,55,[7-9][0-9],Brazil,212600000,região,estado,município
+BS,en_BS,1242,[3-5]5[0-9],Bahamas,393000,district,,city
+BT,dz_BT,975,1[7-9],Bhutan,772000,district,gewog,village
+BV,no_BV,47,[4-9][0-9],Bouvet Island,0,,,
+BW,en_BW,267,7[1-9],Botswana,2300000,district,sub-district,village
+BY,be_BY,375,25[0-9],Belarus,9400000,region,district,city
+BZ,en_BZ,501,6[0-9][0-9],Belize,398000,district,,city
+CA,en_CA,1,4[0-9][0-9],Canada,38000000,province,county,city
+CC,en_CC,61,4[0-9][0-9],Cocos (Keeling) Islands,600,,,village
+CD,fr_CD,243,9[0-9],"Congo, The Democratic Republic of the",89500000,province,territory,city
+CF,fr_CF,236,7[0-9],Central African Republic,4800000,prefecture,sub-prefecture,commune
+CG,fr_CG,242,0[5-6],Congo,5500000,department,district,commune
+CH,de_CH,41,7[46-9],Switzerland,8700000,canton,district,commune
+CI,fr_CI,225,0[7-9],Côte d'Ivoire,26400000,district,region,department
+CK,en_CK,682,5[5-9],Cook Islands,17500,island,,village
+CL,es_CL,56,9[89],Chile,19100000,region,province,commune
+CM,fr_CM,237,6[5-9],Cameroon,26500000,region,division,subdivision
+CN,zh_CN,86,1[35][0-9],China,1410000000,province,prefecture,county
+CO,es_CO,57,3[0-9][0-9],Colombia,50900000,department,province,municipality
+CR,es_CR,506,8[0-9],Costa Rica,5100000,province,canton,district
+CU,es_CU,53,5[0-9],Cuba,11300000,province,municipality,city
+CV,pt_CV,238,9[0-9],Cape Verde,556000,island,municipality,city
+CX,en_CX,61,4[0-9][0-9],Christmas Island,1900,,,settlement
+CY,el_CY,357,9[679],Cyprus,1200000,district,municipality,village
+CZ,cs_CZ,420,(60|7[237]),Czech Republic,10700000,region,district,municipality
+DE,de_DE,49,1[5-7][0-9],Germany,83800000,Bundesland,Kreis,Gemeinde
+DJ,fr_DJ,253,77[0-9],Djibouti,988000,region,,city
+DK,da_DK,45,[34]0,Denmark,5800000,region,municipality,city
+DM,en_DM,1767,2[7-9][0-9],Dominica,72000,parish,,village
+DO,es_DO,1809,8[0-9][0-9],Dominican Republic,10800000,province,municipality,city
+DZ,ar_DZ,213,5[5-9],Algeria,43900000,province,district,municipality
+EC,es_EC,593,[89][0-9],Ecuador,17600000,province,canton,parish
+EE,et_EE,372,5[0-9],Estonia,1300000,county,municipality,city
+EG,ar_EG,20,1[0-9],Egypt,102300000,governorate,district,city
+EH,ar_EH,212,6[0-9],Western Sahara,597000,region,,city
+ER,ti_ER,291,7[0-9],Eritrea,3500000,region,province,district
+ES,es_ES,34,6[0-9][0-9],Spain,47400000,comunidad autónoma,provincia,municipio
+ET,am_ET,251,9[0-9],Ethiopia,115000000,region,zone,district
+FI,fi_FI,358,(4[0-9]|50),Finland,5500000,maakunta,seutukunta,kunta
+FJ,en_FJ,679,9[0-9][0-9],Fiji,896000,division,province,district
+FK,en_FK,500,5[5-9][0-9],Falkland Islands (Malvinas),3500,,,settlement
+FM,en_FM,691,9[2-9][0-9],"Micronesia, Federated States of",115000,state,municipality,town
+FO,fo_FO,298,2[0-9][0-9],Faroe Islands,49000,region,municipality,city
+FR,fr_FR,33,6[0-9],France,67400000,région,département,commune
+GA,fr_GA,241,6[0-9][0-9],Gabon,2200000,province,department,commune
+GB,en_GB,44,7[57-9],United Kingdom,67200000,county,district,city
+GD,en_GD,1473,4[0-9][0-9],Grenada,112000,parish,,city
+GE,ka_GE,995,5[0-9][0-9],Georgia,3700000,region,municipality,city
+GF,fr_GF,594,6[0-9][0-9],French Guiana,298000,arrondissement,commune,city
+GG,en_GG,44,7[9][0-9][0-9],Guernsey,63000,parish,,city
+GH,en_GH,233,28[0-9],Ghana,31000000,region,district,city
+GI,en_GI,350,5[6-9][0-9],Gibraltar,33700,,,city
+GL,kl_GL,299,5[0-9][0-9],Greenland,56000,municipality,,city
+GM,en_GM,220,9[0-9][0-9],Gambia,2400000,division,district,village
+GN,fr_GN,224,6[0-9][0-9],Guinea,13100000,region,prefecture,sub-prefecture
+GP,fr_GP,590,6[9][0-9],Guadeloupe,400000,arrondissement,commune,city
+GQ,es_GQ,240,5[5-9][0-9],Equatorial Guinea,1400000,province,district,municipality
+GR,el_GR,30,69[3479],Greece,10400000,region,regional unit,municipality
+GS,en_GS,500,7[0-9][0-9],South Georgia and the South Sandwich Islands,30,,,settlement
+GT,es_GT,502,5[0-9][0-9],Guatemala,17900000,department,municipality,city
+GU,en_GU,1671,7[7-9][0-9],Guam,169000,,,village
+GW,pt_GW,245,9[5-9][0-9],Guinea-Bissau,1970000,region,sector,section
+GY,en_GY,592,6[0-9][0-9],Guyana,787000,region,neighborhood,village
+HK,zh_HK,852,9[0-9][0-9],Hong Kong,7500000,district,constituency,area
+HM,en_HM,672,1[0-9][0-9],Heard Island and McDonald Islands,0,,,
+HN,es_HN,504,9[0-9][0-9],Honduras,9900000,department,municipality,city
+HR,hr_HR,385,9[0-9],Croatia,4000000,county,municipality,city
+HT,ht_HT,509,3[8-9][0-9],Haiti,11400000,department,arrondissement,commune
+HU,hu_HU,36,[237]0,Hungary,9700000,county,district,city
+ID,id_ID,62,8[1-9][0-9],Indonesia,273500000,province,regency,district
+IE,en_IE,353,8[0-9],Ireland,5000000,county,electoral division,town
+IL,he_IL,972,5[0-9],Israel,9200000,district,subdistrict,city
+IM,en_IM,44,7[6][0-9][0-9],Isle of Man,85000,parish,district,city
+IN,hi_IN,91,9[2-47-9],India,1380000000,state,district,city
+IO,en_IO,246,3[8-9][0-9],British Indian Ocean Territory,3000,,,settlement
+IQ,ar_IQ,964,7[5-9][0-9],Iraq,40200000,governorate,district,subdistrict
+IR,fa_IR,98,9[0-9][0-9],"Iran, Islamic Republic of",83900000,province,county,district
+IS,is_IS,354,[68][0-9][0-9],Iceland,341000,region,constituency,municipality
+IT,it_IT,39,3[0-9][0-9],Italy,60300000,regione,provincia,comune
+JE,en_JE,44,7[8][0-9][0-9],Jersey,103000,parish,,village
+JM,en_JM,1876,8[7-9][0-9],Jamaica,2960000,county,parish,city
+JO,ar_JO,962,7[7-9][0-9],Jordan,10200000,governorate,district,city
+JP,ja_JP,81,[7-9]0[0-9],Japan,125800000,prefecture,county,city
+KE,sw_KE,254,7[0-9][0-9],Kenya,53800000,county,constituency,ward
+KG,ky_KG,996,5[5-9][0-9],Kyrgyzstan,6600000,region,district,city
+KH,km_KH,855,9[5-9],Cambodia,16700000,province,district,commune
+KI,en_KI,686,9[0-9],Kiribati,119000,island group,island,village
+KM,ar_KM,269,3[2-9][0-9],Comoros,870000,island,prefecture,commune
+KN,en_KN,1869,7[6-9][0-9],Saint Kitts and Nevis,53000,parish,,city
+KP,ko_KP,850,1[0-9][0-9],"Korea, Democratic People's Republic of",25700000,province,county,city
+KR,ko_KR,82,1[016-9],"Korea, Republic of",51780000,province,county,city
+KW,ar_KW,965,6[5-9][0-9],Kuwait,4300000,governorate,area,city
+KY,en_KY,1345,9[2-9][0-9],Cayman Islands,65700,district,,city
+KZ,kk_KZ,7,(300|333|70[0-9]|777),Kazakhstan,18800000,region,district,city
+LA,lo_LA,856,20[0-9],Lao People's Democratic Republic,7300000,province,district,village
+LB,ar_LB,961,7[0-5],Lebanon,6800000,governorate,district,municipality
+LC,en_LC,1758,7[2-9][0-9],Saint Lucia,183000,quarter,,city
+LI,de_LI,423,7[7-9][0-9],Liechtenstein,38000,district,county,Gemeinde
+LK,si_LK,94,7[1-9][0-9],Sri Lanka,21900000,province,district,municipality
+LR,en_LR,231,5[5-9][0-9],Liberia,5100000,county,district,city
+LS,en_LS,266,5[0-9][0-9],Lesotho,2100000,district,constituency,ward
+LT,lt_LT,370,6[0-9][0-9],Lithuania,2800000,county,municipality,eldership
+LU,fr_LU,352,6[269][18],Luxembourg,632000,district,canton,commune
+LV,lv_LV,371,2[0-9][0-9],Latvia,1900000,district,municipality,city
+LY,ar_LY,218,9[0-9][0-9],Libyan Arab Jamahiriya,6900000,district,municipality,city
+MA,ar_MA,212,6[0-9][0-9],Morocco,36900000,region,province,commune
+MC,fr_MC,377,6[0-9][0-9],Monaco,39000,quarter,,city
+MD,ro_MD,373,6[9][0-9][0-9],Moldova,2600000,district,municipality,city
+ME,sr_ME,382,6[7-9][0-9],Montenegro,620000,municipality,,city
+MF,fr_MF,590,6[9][0-9],Saint Martin,38700,district,quarter,city
+MG,mg_MG,261,3[0-9][0-9],Madagascar,27700000,province,region,district
+MH,en_MH,692,2[3-9][0-9],Marshall Islands,59000,chain,municipality,city
+MK,mk_MK,389,7[0-9][0-9],"Macedonia, The former Yugoslav Republic of",2100000,statistical region,municipality,city
+ML,fr_ML,223,7[0-9][0-9],Mali,20300000,region,cercle,commune
+MM,my_MM,95,9[7-9][0-9],Myanmar,54400000,state,district,township
+MN,mn_MN,976,9[5-9][0-9],Mongolia,3300000,province,district,city
+MO,zh_MO,853,6[3-9][0-9],Macao,650000,parish,,city
+MP,en_MP,1670,7[8-9][0-9],Northern Mariana Islands,57500,municipality,,village
+MQ,fr_MQ,596,6[9][0-9],Martinique,375000,arrondissement,commune,city
+MR,ar_MR,222,4[0-9][0-9],Mauritania,4600000,region,department,commune
+MS,en_MS,1664,4[9][0-9],Montserrat,5000,parish,,village
+MT,mt_MT,356,[79]9[0-9],Malta,515000,region,district,locality
+MU,en_MU,230,5[0-9][0-9],Mauritius,1270000,district,,city
+MV,dv_MV,960,7[7-9][0-9],Maldives,541000,atoll,administrative island,city
+MW,ny_MW,265,9[9][0-9],Malawi,19100000,region,district,city
+MX,es_MX,52,1[0-9][0-9],Mexico,128900000,state,municipality,city
+MY,ms_MY,60,1[0-9][0-9],Malaysia,32400000,state,district,city
+MZ,pt_MZ,258,8[2-5],Mozambique,31300000,province,district,city
+NA,en_NA,264,81[0-9],Namibia,2500000,region,constituency,settlement
+NC,fr_NC,687,7[5-9][0-9],New Caledonia,271000,province,commune,city
+NE,fr_NE,227,9[0-9][0-9],Niger,24200000,region,department,commune
+NF,en_NF,672,3[8-9][0-9],Norfolk Island,1750,,,village
+NG,en_NG,234,80[5-9],Nigeria,206100000,state,local government area,city
+NI,es_NI,505,8[8-9][0-9],Nicaragua,6600000,department,municipality,city
+NL,nl_NL,31,6[0-9],Netherlands,17400000,provincie,gemeente,city
+NO,no_NO,47,[49][0-9],Norway,5400000,county,municipality,city
+NP,ne_NP,977,9[8-9][0-9],Nepal,29100000,province,district,municipality
+NR,en_NR,674,5[5-9][0-9],Nauru,10800,district,,settlement
+NU,en_NU,683,7[6-9][0-9],Niue,1600,,,village
+NZ,en_NZ,64,2[01457-9],New Zealand,5000000,region,territorial authority,city
+OM,ar_OM,968,9[0-9][0-9],Oman,5100000,governorate,wilayat,city
+PA,es_PA,507,6[0-9][0-9],Panama,4300000,province,district,corregimiento
+PE,es_PE,51,9[0-9][0-9],Peru,33000000,region,province,district
+PF,fr_PF,689,8[7-9][0-9],French Polynesia,282000,administrative subdivision,commune,city
+PG,en_PG,675,7[0-9][0-9],Papua New Guinea,8900000,province,district,local-level government
+PH,tl_PH,63,9[0-9][0-9],Philippines,109600000,region,province,city
+PK,ur_PK,92,3[0-6][0-9],Pakistan,221000000,province,division,district
+PL,pl_PL,48,(5[01][0-9]|6[069][0-9]|7[289][0-9]|88[0-9]),Poland,37800000,województwo,powiat,gmina
+PM,fr_PM,508,5[5-9][0-9],Saint Pierre and Miquelon,5800,,,commune
+PN,en_PN,64,21[0-9],Pitcairn,50,,,settlement
+PR,es_PR,1787,9[3-9][0-9],Puerto Rico,2900000,municipality,barrio,city
+PS,ar_PS,970,5[9][0-9],"Palestinian Territory, Occupied",5100000,governorate,,city
+PT,pt_PT,351,9[0-9][0-9],Portugal,10300000,district,municipality,civil parish
+PW,en_PW,680,7[7-9][0-9],Palau,18000,state,,city
+PY,es_PY,595,9[0-9][0-9],Paraguay,7100000,department,district,city
+QA,ar_QA,974,[56][0-9][0-9],Qatar,2900000,municipality,,zone
+RE,fr_RE,262,69[2-9][0-9],Réunion,895000,arrondissement,commune,city
+RO,ro_RO,40,7[0-9][0-9],Romania,19200000,county,municipality,city
+RS,sr_RS,381,6[0-9][0-9],Serbia,6900000,district,municipality,city
+RU,ru_RU,7,9[0-9][0-9],Russian Federation,144100000,federal subject,district,city
+RW,rw_RW,250,7[8-9][0-9],Rwanda,12900000,province,district,sector
+SA,ar_SA,966,5[04-6][0-9],Saudi Arabia,34800000,region,governorate,city
+SB,en_SB,677,7[4-9][0-9],Solomon Islands,687000,province,,city
+SC,en_SC,248,2[5-9][0-9],Seychelles,98000,administrative district,,city
+SD,ar_SD,249,9[0-9][0-9],Sudan,43800000,state,district,locality
+SE,sv_SE,46,7[0-9][0-9],Sweden,10400000,län,kommun,city
+SG,en_SG,65,[89][0-9][0-9],Singapore,5900000,region,community development district,city
+SH,en_SH,290,2[9][0-9],Saint Helena,6000,administrative area,,city
+SI,sl_SI,386,3[0-9][0-9],Slovenia,2100000,statistical region,municipality,settlement
+SJ,no_SJ,47,7[9][0-9],Svalbard and Jan Mayen,2600,,,settlement
+SK,sk_SK,421,(090[1-9]|09[1-5][0-9]),Slovakia,5500000,region,district,municipality
+SL,en_SL,232,7[6-9][0-9],Sierra Leone,8000000,province,district,chiefdom
+SM,it_SM,378,66[0-9][0-9],San Marino,34000,municipality,castello,city
+SN,fr_SN,221,7[7-9][0-9],Senegal,16700000,region,department,arrondissement
+SO,so_SO,252,6[1-9][0-9],Somalia,15900000,region,district,city
+SR,nl_SR,597,8[5-9][0-9],Suriname,590000,district,resort,city
+SS,en_SS,211,9[1-2][0-9],South Sudan,11200000,state,county,city
+ST,pt_ST,239,9[8-9][0-9],Sao Tome and Principe,219000,province,district,city
+SV,es_SV,503,7[0-9][0-9],El Salvador,6500000,department,municipality,city
+SY,ar_SY,963,9[5-9][0-9],Syrian Arab Republic,17500000,governorate,district,municipality
+SZ,en_SZ,268,7[6-9][0-9],Swaziland,1200000,region,constituency,city
+TC,en_TC,1649,2[4-9][0-9],Turks and Caicos Islands,38700,district,,settlement
+TD,fr_TD,235,6[0-9][0-9],Chad,16400000,region,department,sub-prefecture
+TF,fr_TF,262,69[2-9][0-9],French Southern Territories,140,district,,settlement
+TG,fr_TG,228,9[0-9][0-9],Togo,8300000,region,prefecture,commune
+TH,th_TH,66,[19][0-9][0-9],Thailand,70000000,region,province,district
+TJ,tg_TJ,992,9[3-9][0-9],Tajikistan,9500000,region,district,jamoat
+TK,en_TK,690,7[0-2][0-9],Tokelau,1500,,,village
+TL,pt_TL,670,7[7-9][0-9],Timor-Leste,1300000,municipality,administrative post,suco
+TM,tk_TM,993,6[5-9][0-9],Turkmenistan,6000000,province,district,city
+TN,ar_TN,216,2[0-9][0-9],Tunisia,11800000,governorate,delegation,municipality
+TO,to_TO,676,7[7-9][0-9],Tonga,105000,division,district,village
+TR,tr_TR,90,5[0-9][0-9],Turkey,84300000,province,district,municipality
+TT,en_TT,1868,7[0-9][0-9],Trinidad and Tobago,1400000,regional corporation,city,town
+TV,en_TV,688,7[0-9][0-9],Tuvalu,11800,island,district,village
+TW,zh_TW,886,9[0-9][0-9],"Taiwan, Province of China",23800000,county,township,district
+TZ,sw_TZ,255,7[4-9][0-9],"Tanzania, United Republic of",59700000,region,district,ward
+UA,uk_UA,380,(39|50|6[3678]|97),Ukraine,43700000,oblast,raion,city
+UG,en_UG,256,7[5-9][0-9],Uganda,45700000,region,district,county
+UM,en_UM,1,8[0-9][0-9],United States Minor Outlying Islands,300,,,settlement
+US,en_US,1,9[0-9][0-9],United States,331000000,state,county,city
+UY,es_UY,598,9[0-9][0-9],Uruguay,3500000,department,section,city
+UZ,uz_UZ,998,9[0-9][0-9],Uzbekistan,33900000,region,district,city
+VA,it_VA,39,06698,Vatican City State,825,,,city
+VC,en_VC,1784,5[2-9][0-9],Saint Vincent and the Grenadines,110000,parish,,city
+VE,es_VE,58,(41[245678]|42[46]),Venezuela,28400000,state,municipality,city
+VG,en_VG,1284,3[4-9][0-9],"Virgin Islands, British",30200,district,,city
+VI,en_VI,1340,7[7-9][0-9],"Virgin Islands, U.S.",104000,district,,city
+VN,vi_VN,84,9[0-9][0-9],Viet Nam,97300000,province,district,commune
+VU,bi_VU,678,5[4-9][0-9],Vanuatu,307000,province,,city
+WF,fr_WF,681,7[2-9][0-9],Wallis and Futuna,11500,kingdom,,village
+WS,sm_WS,685,7[2-9][0-9],Samoa,198000,district,constitutional district,village
+YE,ar_YE,967,7[0-9][0-9],Yemen,29800000,governorate,district,city
+YT,fr_YT,262,63[9][0-9],Mayotte,279000,canton,commune,city
+ZA,en_ZA,27,[78][0-9][0-9],South Africa,59300000,province,district,municipality
+ZM,en_ZM,260,9[6-7][0-9],Zambia,18400000,province,district,city
+ZW,en_ZW,263,7[1-9][0-9],Zimbabwe,14900000,province,district,city

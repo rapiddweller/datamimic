@@ -1,0 +1,61 @@
+<setup>
+    <mongodb id="mongodb"/>
+
+    <generate name="key_test" count="10" target="ConsoleExporter">
+        <variable name="country" constant="VietNam"/>
+        <key name="id" generator="IncrementGenerator"/>
+
+        <key name="country_name" string="__country__"/>
+        <key name="country_name_with_id" string="__country_____id__"/>
+        <key name="country_name_with_addition_underscore" string="___country___"/>
+        <key name="country_name_with_double_addition_underscore" string="____country____"/>
+    </generate>
+
+    <generate name="variable_test" count="10" target="ConsoleExporter">
+        <variable name="country" constant="VietNam"/>
+        <key name="id" generator="IncrementGenerator"/>
+
+        <variable name="country_holder" string="__country__"/>
+        <variable name="country_id_holder" string="__country_____id__"/>
+        <variable name="country_name_underscore" string="___country___"/>
+        <variable name="country_name_double_underscore" string="____country____"/>
+
+        <key name="country_name" script="country_holder"/>
+        <key name="country_name_with_id" script="country_id_holder"/>
+        <key name="country_name_with_addition_underscore" script="country_name_underscore"/>
+        <key name="country_name_with_double_addition_underscore" script="country_name_double_underscore"/>
+    </generate>
+
+    <generate name="source_script_test" source="data/temp_script.json" sourceScripted="True" target="ConsoleExporter">
+        <key name="partyIdCode" generator="IntegerGenerator"/>
+    </generate>
+
+    <!-- clear mongo test database -->
+    <generate name="delete" source="mongodb" selector="find: 'mongo_suffix_prefix_test', filter: {}" target="mongodb.delete"/>
+
+    <!--  generate simple data  -->
+    <generate name="mongo_suffix_prefix_test" target="mongodb" count="10">
+        <key name="user_id" generator="IncrementGenerator"/>
+        <key name="user_name" values="'Bob', 'Frank', 'Phil'"/>
+    </generate>
+
+    <!--  query data from mongodb  -->
+    <variable name="collection_head" constant="mongo"/>
+    <variable name="collection_name" constant="suffix_prefix"/>
+
+    <generate name="mongo_all_data" count="10" target="ConsoleExporter">
+        <variable name="mongo_data" source="mongodb" selector="find: '__collection_head_____collection_name___test', filter: {}"/>
+        <key name="id" script="mongo_data.user_id"/>
+        <key name="name" script="mongo_data.user_name"/>
+    </generate>
+
+    <variable name="find_bob" constant="Bob"/>
+
+    <generate name="bob_data"
+              source="mongodb"
+              selector="find: '__collection_head_____collection_name___test', filter: {'user_name': '__find_bob__'}"
+              target="ConsoleExporter"/>
+
+    <!-- clear mongo test database -->
+    <generate name="clear" source="mongodb" selector="find: 'mongo_suffix_prefix_test', filter: {}" target="mongodb.delete"/>
+</setup>

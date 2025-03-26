@@ -1,0 +1,22 @@
+<setup  multiprocessing="True" numProcess="2">
+    <memstore id="mem"/>
+    <mongodb id="mongodb" system="mongodb" environment="local"/>
+
+    <generate name="delete" source="mongodb" selector="find: 'mongo2', filter: {}" target="mongodb.delete">
+    </generate>
+
+    <generate name="mongo2" target="ConsoleExporter, mongodb" count="15">
+        <key name="user_id" generator="IncrementGenerator"/>
+        <key name="user_name" values="'Bob', 'Frank', 'Phil'"/>
+    </generate>
+
+    <generate name="data2" target="ConsoleExporter, mem" count="20">
+        <variable name="mongo2" source="mongodb" selector="find : 'mongo2', filter : {}" cyclic="True"/>
+        <key name="id" script="mongo2.user_id"/>
+        <key name="name" script="mongo2.user_name"/>
+    </generate>
+
+    <generate name="check" type="data2" source="mem" target="ConsoleExporter">
+        <key name="count" generator="IncrementGenerator"/>
+    </generate>
+</setup>

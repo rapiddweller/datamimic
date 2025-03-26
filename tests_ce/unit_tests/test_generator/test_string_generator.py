@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -9,7 +9,7 @@ import re
 
 import pytest
 
-from datamimic_ce.generators.string_generator import StringGenerator
+from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.utils.class_factory_ce_util import ClassFactoryCEUtil
 
 

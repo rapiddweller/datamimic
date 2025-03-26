@@ -1,0 +1,38 @@
+[{
+  "library": {
+    "books": [
+      {
+        "id": 101,
+        "title": "The Quantum Enigma",
+        "genre": "Science Fiction",
+        "authors": [
+          {
+            "name": "John Doe",
+            "country": "USA"
+          }
+        ],
+        "publisher": {
+          "name": "Future Press",
+          "location": "New York",
+          "year": 2023
+        }
+      },
+      {
+        "id": 102,
+        "title": "Cooking with Love",
+        "genre": "Cooking",
+        "authors": [
+          {
+            "name": "Jane Smith",
+            "country": "Canada"
+          }
+        ],
+        "publisher": {
+          "name": "Home Kitchen",
+          "location": "Toronto",
+          "year": 2021
+        }
+      }
+    ]
+  }
+}]

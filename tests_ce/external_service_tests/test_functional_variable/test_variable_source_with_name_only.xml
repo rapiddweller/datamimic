@@ -1,0 +1,11 @@
+<setup  multiprocessing="True" numProcess="2">
+    <database id="dbPostgres" system="postgres"/>
+    <execute uri="script/setup_test_variable_source_with_name_only.sql" target="dbPostgres"/>
+    <execute uri="script/my_python.src.py"/>
+    <variable name="db_postgres_test_variable_source_with_name_only" source="dbPostgres" distribution="ordered"/>
+    <generate name="user" count="10" target="ConsoleExporter">
+        <key name="id" script="db_postgres_test_variable_source_with_name_only.id"/>
+        <key name="name" script="db_postgres_test_variable_source_with_name_only.text"/>
+        <key name="number" script="db_postgres_test_variable_source_with_name_only.number"/>
+    </generate>
+</setup>

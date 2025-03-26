@@ -1,0 +1,56 @@
+<setup>
+    <echo>Running Healthcare Generators</echo>
+
+    <!-- Basic Medical Information -->
+    <generate name="diagnoses" count="10">
+        <key name="general_diagnosis" generator="DiagnosisGenerator()" />
+        <key name="cardiac_diagnosis" generator="DiagnosisGenerator(category='cardiac')" />
+    </generate>
+
+    <!-- Vital Signs -->
+    <generate name="vital_signs" count="10">
+        <key name="vitals" generator="VitalSignsGenerator(vital_type='bp')" />
+        <key name="temperature" generator="VitalSignsGenerator(vital_type='temp')" />
+        <key name="pulse" generator="VitalSignsGenerator(vital_type='pulse')" />
+        <key name="spo2" generator="VitalSignsGenerator(vital_type='spo2')" />
+    </generate>
+
+    <!-- Medications -->
+    <generate name="medications" count="10">
+        <key name="current_medications" generator="MedicationGenerator()" />
+        <key name="cardiac_medications" generator="MedicationGenerator(category='cardiac')" />
+    </generate>
+
+    <!-- Lab Results -->
+    <generate name="lab_results" count="10">
+        <key name="cbc" generator="LabResultGenerator(test_type='cbc')" />
+        <key name="metabolic" generator="LabResultGenerator(test_type='metabolic')" />
+    </generate>
+
+    <!-- Procedures -->
+    <generate name="procedures" count="10">
+        <key name="general_procedure" generator="MedicalProcedureGenerator()" />
+        <key name="surgical_procedure" generator="MedicalProcedureGenerator(category='surgical')" />
+    </generate>
+
+    <!-- Health Information -->
+    <generate name="health_info" count="10">
+        <key name="allergies" generator="AllergyGenerator(include_reaction=True)" />
+        <key name="immunizations"
+            generator="ImmunizationGenerator(include_date=True, include_booster=True)" />
+        <key name="symptoms"
+            generator="SymptomGenerator(disease_category='general', number_of_symptoms=3)" />
+    </generate>
+
+    <!-- Appointments -->
+    <generate name="appointments" count="10">
+        <key name="next_appointment" generator="MedicalAppointmentGenerator(include_time=True)" />
+    </generate>
+
+    <!-- Patient History -->
+    <generate name="history" count="10">
+        <key name="patient_history"
+            generator="PatientHistoryGenerator(include_allergies=True, include_immunizations=True)" />
+    </generate>
+
+</setup> 

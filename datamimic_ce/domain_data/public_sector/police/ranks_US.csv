@@ -1,0 +1,8 @@
+rank,code,description,tier,weight
+Police Officer,PO,A law enforcement officer who patrols assigned areas to enforce laws and respond to calls,1,0.6
+Detective,DET,An investigator who works to solve crimes and conducts investigations,2,0.2
+Sergeant,SGT,A first-line supervisor who oversees a squad of officers or detectives,3,0.1
+Lieutenant,LT,A mid-level supervisor who oversees multiple sergeants and their squads,4,0.05
+Captain,CAPT,A commanding officer who oversees multiple lieutenants and their units,5,0.03
+Deputy Chief,DEP_CHIEF,An executive who oversees multiple captains and their divisions,6,0.01
+Chief of Police,CHIEF,The highest-ranking officer who oversees the entire police department,7,0.01

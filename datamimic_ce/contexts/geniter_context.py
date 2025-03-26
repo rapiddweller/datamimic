@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -20,7 +20,7 @@ class GenIterContext(Context):
         self._current_name = current_name
         self._current_product: dict = {}
         self._current_variables: dict = {}
-        self._namespace: dict = {}
+        self._worker_id: int | None = None
 
     @property
     def current_name(self) -> str:
@@ -42,6 +42,20 @@ class GenIterContext(Context):
     def parent(self) -> Context:
         return self._parent
 
+    @property
+    def worker_id(self) -> int:
+        if self._worker_id is not None:
+            return self._worker_id
+
+        if isinstance(self._parent, GenIterContext):
+            return self._parent.worker_id
+
+        raise ValueError("Worker ID not found in context hierarchy.")
+
+    @worker_id.setter
+    def worker_id(self, value: int) -> None:
+        self._worker_id = value
+
     def add_current_product_field(self, key_path, value):
         """
         Add field to current product using string key path (i.e. "data.people.name")
@@ -50,6 +64,3 @@ class GenIterContext(Context):
         :return:
         """
         dict_nested_update(self.current_product, key_path, value)
-
-    def get_namespace(self):
-        return self._namespace

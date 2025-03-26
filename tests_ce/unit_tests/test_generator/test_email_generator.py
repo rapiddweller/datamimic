@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -9,9 +9,9 @@ import pytest
 from pydantic import BaseModel, ValidationError
 from pydantic.networks import EmailStr
 
-from datamimic_ce.generators.email_address_generator import EmailAddressGenerator
-from datamimic_ce.generators.family_name_generator import FamilyNameGenerator
-from datamimic_ce.generators.given_name_generator import GivenNameGenerator
+from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
+from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
+from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
 
 
 class EmailModel(BaseModel):
@@ -26,7 +26,7 @@ def test_invalid_email() -> None:
 
 
 def test_email_generator_without_name_input() -> None:
-    email_address_generator = EmailAddressGenerator(dataset="US", generated_count=1)
+    email_address_generator = EmailAddressGenerator(dataset="US")
 
     assert email_address_generator
     email = email_address_generator.generate()
@@ -35,13 +35,11 @@ def test_email_generator_without_name_input() -> None:
 
 def test_email_generator_with_name_input() -> None:
     for _ in range(10):
-        given_name = GivenNameGenerator(dataset="US", generated_count=1).generate()
+        given_name = GivenNameGenerator(dataset="US").generate()
         assert isinstance(given_name, str)
-        family_name = FamilyNameGenerator(dataset="US", generated_count=1).generate()
+        family_name = FamilyNameGenerator(dataset="US").generate()
         assert isinstance(family_name, str)
-        with_name_email_generator = EmailAddressGenerator(
-            dataset="US", given_name=given_name, family_name=family_name, generated_count=1
-        )
+        with_name_email_generator = EmailAddressGenerator(dataset="US", given_name=given_name, family_name=family_name)
 
         email = with_name_email_generator.generate()
 

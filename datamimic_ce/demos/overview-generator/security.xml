@@ -1,0 +1,36 @@
+<setup>
+    <echo>Running Security Generators</echo>
+
+    <!-- UUIDs -->
+    <generate name="uuids" count="10">
+        <key name="uuid" generator="UUIDGenerator" />
+    </generate>
+
+    <!-- Cryptographic Hashes -->
+    <generate name="hashes" count="10">
+        <key name="sha256" generator="HashGenerator()" />
+        <key name="sha512" generator="HashGenerator(algorithm='sha512')" />
+        <key name="md5" generator="HashGenerator(algorithm='md5')" />
+    </generate>
+
+    <!-- Security Tokens -->
+    <generate name="tokens" count="10">
+        <key name="hex_token" generator="TokenGenerator(token_type='hex', entropy=32)" />
+        <key name="urlsafe_token" generator="TokenGenerator(token_type='urlsafe', entropy=32)" />
+    </generate>
+
+    <!-- Mnemonic Phrases -->
+    <!-- TODO: Implement this demo -->
+    <!-- <generate name="mnemonics" count="10">
+        <key name="mnemonic_12" generator="MnemonicPhraseGenerator(word_count=12)" />
+        <key name="mnemonic_24" generator="MnemonicPhraseGenerator(word_count=24)" />
+    </generate> -->
+
+    <!-- Passwords -->
+    <generate name="passwords" count="10">
+        <key name="strong_password" generator="PasswordGenerator(length=16)" />
+        <key name="simple_password" generator="PasswordGenerator(length=12, include_special=False)" />
+        <key name="numeric_password" generator="PasswordGenerator(length=8, include_special=False, include_uppercase=False)" />
+    </generate>
+
+</setup>

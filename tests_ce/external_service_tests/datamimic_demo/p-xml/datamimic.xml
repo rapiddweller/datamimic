@@ -1,0 +1,12 @@
+<setup multiprocessing="False" defaultDataset="US" defaultLocale="en" defaultSeparator=";">
+    <!--
+    Datamimic XML Demo
+    ======================================
+    Datamimic XML Demo is a Datamimic project that demonstrates export XML file.
+    -->
+
+    <include uri="1_xml_generate.xml" />
+    <include uri="2_xml_template_1.xml" />
+    <include uri="3_xml_template_2.xml" />
+    <include uri="4_xml_template_script.xml" />
+</setup>

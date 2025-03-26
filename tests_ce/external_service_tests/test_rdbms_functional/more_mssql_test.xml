@@ -1,0 +1,17 @@
+<setup>
+
+    <database id="sourceDB" system="mssql" environment="environment"/>
+
+    <include uri="conf/base.properties"/>
+
+    <!-- Run database setup scripts to create schema and tables -->
+    <execute uri="script/setup_mssql.scr.sql" target="sourceDB"/>
+
+    <include uri="1_generate.xml"/>
+
+    <include uri="2_sql_with_variable.xml"/>
+
+    <include uri="3_iterate.xml"/>
+
+    <include uri="4_mssql_cross_collection.xml"/>
+</setup>

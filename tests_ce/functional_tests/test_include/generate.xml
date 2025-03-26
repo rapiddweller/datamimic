@@ -1,10 +1,10 @@
-<setup multiprocessing="1" numProcess="1">
-    <include uri="conf/base_2.properties"/>
+<setup numProcess="2">
+    <include uri="conf/base_2.properties" />
 
     <generate name="CUSTOMER" count="{customer_count}" target="ConsoleExporter">
-        <key name="id" generator="IncrementGenerator"/>
+        <key name="id" generator="IncrementGenerator" />
     </generate>
     <generate name="USER" count="{user_count}" target="ConsoleExporter">
-        <key name="id" generator="IncrementGenerator"/>
+        <key name="id" generator="IncrementGenerator" />
     </generate>
 </setup>

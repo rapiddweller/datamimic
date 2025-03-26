@@ -1,0 +1,8 @@
+<setup  multiprocessing="True" numProcess="2">
+    <variable name="group_name" values="'IEEE','ISO','IAEA'"/>
+    <generate name="group" count="3" target="ConsoleExporter">
+        <key name="id" generator="IncrementGenerator"/>
+        <variable name="var_name" script="group_name" defaultValue="None"/>
+        <key name="name" script="var_name"/>
+    </generate>
+</setup>

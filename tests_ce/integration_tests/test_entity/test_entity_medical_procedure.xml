@@ -1,0 +1,34 @@
+<setup multiprocessing="0">
+    <generate name="medical_procedure" count="10" target="ConsoleExporter">
+        <variable name="medical_procedure" entity="MedicalProcedure"/>
+        <key name="procedure_id" script="medical_procedure.procedure_id"/>
+        <key name="procedure_code" script="medical_procedure.procedure_code"/>
+        <key name="name" script="medical_procedure.name"/>
+        <key name="description" script="medical_procedure.description"/>
+        <key name="specialty" script="medical_procedure.specialty"/>
+        <key name="category" script="medical_procedure.category"/>  
+        <key name="duration_minutes" script="medical_procedure.duration_minutes"/>
+        <key name="cost" script="medical_procedure.cost"/>
+        <key name="requires_anesthesia" script="medical_procedure.requires_anesthesia"/>
+        <key name="is_surgical" script="medical_procedure.is_surgical"/>
+        <key name="is_diagnostic" script="medical_procedure.is_diagnostic"/>
+        <key name="is_preventive" script="medical_procedure.is_preventive"/>
+        <key name="recovery_time_days" script="medical_procedure.recovery_time_days"/>
+        <key name="cpt_code" script="medical_procedure.cpt_code"/>  
+        <variable name="medical_procedure_2" entity="MedicalProcedure"/>
+        <key name="procedure_id2" script="medical_procedure_2.procedure_id"/>
+        <key name="procedure_code2" script="medical_procedure_2.procedure_code"/>
+        <key name="name2" script="medical_procedure_2.name"/>
+        <key name="description2" script="medical_procedure_2.description"/>
+        <key name="specialty2" script="medical_procedure_2.specialty"/>
+        <key name="category2" script="medical_procedure_2.category"/>  
+        <key name="duration_minutes2" script="medical_procedure_2.duration_minutes"/>
+        <key name="cost2" script="medical_procedure_2.cost"/>
+        <key name="requires_anesthesia2" script="medical_procedure_2.requires_anesthesia"/>
+        <key name="is_surgical2" script="medical_procedure_2.is_surgical"/>
+        <key name="is_diagnostic2" script="medical_procedure_2.is_diagnostic"/>
+        <key name="is_preventive2" script="medical_procedure_2.is_preventive"/>
+        <key name="recovery_time_days2" script="medical_procedure_2.recovery_time_days"/>
+        <key name="cpt_code2" script="medical_procedure_2.cpt_code"/>  
+    </generate>
+</setup>

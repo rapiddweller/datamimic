@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     DEFAULT_LOGGER: str = "DATAMIMIC"
 
     LIB_EDITION: str = "CE"
+
+    RAY_DEBUG: bool = False
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 
 

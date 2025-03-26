@@ -1,0 +1,62 @@
+<setup multiprocessing="0">
+    <generate name="crm_records" count="10" target="ConsoleExporter">
+        <!-- Generate standard CRM records -->
+        <variable name="crm" entity="CRM" />
+        <key name="customer_id" script="crm.customer_id" />
+        <key name="given_name" script="crm.given_name" />
+        <key name="family_name" script="crm.family_name" />
+        <key name="email" script="crm.email" />
+        <key name="phone" script="crm.phone" />
+        <key name="address" script="crm.address" />
+        <key name="customer_since" script="crm.customer_since" />
+        <key name="segment" script="crm.segment" />
+        <key name="lifetime_value" script="crm.lifetime_value" />
+        <key name="interaction_history" script="crm.interaction_history" />
+        <key name="preferences" script="crm.preferences" />
+
+        <!-- Generate specific customer segments for demonstration -->
+        <variable name="premium_customer" entity="CRM">
+            <param name="segment" value="Premium" />
+            <param name="lifetime_value_min" value="5000" />
+        </variable>
+        <key name="premium_id" script="premium_customer.customer_id" />
+        <key name="premium_name"
+            script="premium_customer.given_name + ' ' + premium_customer.family_name" />
+        <key name="premium_email" script="premium_customer.email" />
+        <key name="premium_segment" script="premium_customer.segment" />
+        <key name="premium_value" script="premium_customer.lifetime_value" />
+
+        <variable name="standard_customer" entity="CRM">
+            <param name="segment" value="Standard" />
+            <param name="lifetime_value_max" value="2000" />
+        </variable>
+        <key name="standard_id" script="standard_customer.customer_id" />
+        <key name="standard_name"
+            script="standard_customer.given_name + ' ' + standard_customer.family_name" />
+        <key name="standard_email" script="standard_customer.email" />
+        <key name="standard_segment" script="standard_customer.segment" />
+        <key name="standard_value" script="standard_customer.lifetime_value" />
+
+        <variable name="new_customer" entity="CRM">
+            <param name="segment" value="New" />
+            <param name="lifetime_value_max" value="500" />
+        </variable>
+        <key name="new_id" script="new_customer.customer_id" />
+        <key name="new_name" script="new_customer.given_name + ' ' + new_customer.family_name" />
+        <key name="new_email" script="new_customer.email" />
+        <key name="new_segment" script="new_customer.segment" />
+        <key name="new_value" script="new_customer.lifetime_value" />
+
+        <!-- Demonstrate relationships between customers and user accounts -->
+        <variable name="user_account" entity="UserAccount" />
+        <key name="user_id" script="user_account.user_id" />
+        <key name="username" script="user_account.username" />
+        <key name="user_email" script="user_account.email" />
+
+        <!-- Link CRM customer to user account -->
+        <key name="linked_customer_id" script="premium_customer.customer_id" />
+        <key name="linked_user_id" script="user_account.user_id" />
+        <key name="relationship"
+            script="'Customer ' + premium_customer.customer_id + ' is linked to user account ' + user_account.user_id" />
+    </generate>
+</setup> 

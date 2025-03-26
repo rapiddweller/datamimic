@@ -1,0 +1,9 @@
+<setup>
+    <generate name="iterate_simple_user" type="simple_user" source="sourceDB" target="ConsoleExporter"
+              distribution="ordered">
+    </generate>
+    <generate name="iterate_customer" type="customer" source="sourceDB" target="ConsoleExporter" distribution="ordered">
+    </generate>
+    <generate name="iterate_user" type="user" source="sourceDB" target="ConsoleExporter" distribution="ordered">
+    </generate>
+</setup>

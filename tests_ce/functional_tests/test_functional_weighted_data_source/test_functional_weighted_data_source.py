@@ -1,11 +1,10 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
 
-import math
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
@@ -30,5 +29,4 @@ class TestWeightedDataSourceFunctional:
 
         for people in people_from_source:
             active_value = people["active"]
-            if active_value is not None:
-                assert not math.isnan(active_value), f"Active value is NaN for {people}"
+            assert active_value is None

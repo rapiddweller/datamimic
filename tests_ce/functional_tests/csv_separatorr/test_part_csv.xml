@@ -1,5 +1,5 @@
-<setup  multiprocessing="True" numProcess="2">
-    <generate name="people1" target="ConsoleExporter" count="1">
+<setup numProcess="2">
+    <generate name="people1" target="ConsoleExporter" count="1" mpPlatform="ray">
         <nestedKey name="peopleCsv" type="list" source="data/person.ent.csv" separator=","/>
         <nestedKey name="shortPeopleCsv" count="2" type="list" source="data/person.ent.csv" separator=","/>
     </generate>

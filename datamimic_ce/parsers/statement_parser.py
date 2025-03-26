@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -67,7 +67,8 @@ class StatementParser(ABC):
         generator_class_name_list = [
             "CNPJGenerator",
             "CPFGenerator",
-            "IncrementGenerator" "DateTimeGenerator",
+            "IncrementGenerator",
+            "DateTimeGenerator",
             "DepartmentNameGenerator",
             "BirthdateGenerator",
             "EmailAddressGenerator",
@@ -117,8 +118,9 @@ class StatementParser(ABC):
             return
         if len(valid_sub_ele_set) == 0 and len(self._element) > 0:
             raise ValueError(
-                f"""Element <{self._element.tag}>{" inside element " + f"'{composite_stmt.name}'" 
-                if composite_stmt is not None else ''} does not accept any sub-elements"""
+                f"""Element <{self._element.tag}>{
+                    " inside element " + f"'{composite_stmt.name}'" if composite_stmt is not None else ""
+                } does not accept any sub-elements"""
             )
         for child in self._element:
             if child.tag not in valid_sub_ele_set:

@@ -1,0 +1,17 @@
+<setup>
+
+	<include uri="address.xml" />
+	<include uri="finance.xml" />
+	<include uri="organization.xml" />
+	<include uri="person.xml" />
+	<include uri="net.xml" />
+	<include uri="us.xml" />
+	<include uri="product.xml" />
+	<include uri="br.xml" />
+	<!-- <include uri="shipping.xml" /> -->
+	<!-- <include uri="container.xml" /> -->
+	<include uri="company.xml" />
+	<!-- <include uri="logistic.xml" /> -->
+	<include uri="faker.xml" />
+
+</setup>

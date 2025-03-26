@@ -1,0 +1,24 @@
+<setup numProcess="2">
+  <database id="sqlitedb" system="source" environment="environment" />
+  <execute uri="script/hospital.scr.sql" target="sqlitedb" />
+  <memstore id="mem" />
+
+  <generate name="hospital" source="data/hospital_data.ent.csv" target="sqlitedb" />
+  <generate name="patient" source="data/patient_data.ent.csv" target="sqlitedb" />
+  <generate name="bill" source="data/bill_data.ent.csv" target="sqlitedb" />
+
+  <generate name="generate_selector"
+    source="sqlitedb"
+    selector="SELECT patient.patient_id, patient.patient_name, patient.age, SUM(bill.amount) AS total_bill_amount
+              FROM patient INNER JOIN bill ON patient.patient_id = bill.patient_id
+              GROUP BY patient.patient_id, patient.patient_name, patient.age"
+    target="mem">
+  </generate>
+
+  <generate name="constraint_patient" type="generate_selector" source="mem" target="ConsoleExporter">
+    <key name="id" generator="IncrementGenerator" />
+    <sourceConstraints>
+      <rule if="True" then="total_bill_amount &gt; 150" />
+    </sourceConstraints>
+  </generate>
+</setup>

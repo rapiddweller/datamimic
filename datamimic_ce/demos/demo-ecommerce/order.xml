@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup>
+    <echo>Generating Order Data</echo>
+
+    <!-- Order entity from E-commerce domain -->
+    <generate name="orders" count="100" target="CSV,JSON">
+        <variable name="order" entity="Order" />
+        <key name="order_id" script="order.order_id" />
+        <key name="user_id" script="order.user_id" />
+        <key name="date" script="order.date" />
+        <key name="status" script="order.status" />
+        <key name="payment_method" script="order.payment_method" />
+        <key name="shipping_method" script="order.shipping_method" />
+        <key name="currency" script="order.currency" />
+        <key name="tax_amount" script="order.tax_amount" />
+        <key name="shipping_amount" script="order.shipping_amount" />
+        <key name="discount_amount" script="order.discount_amount" />
+        <key name="total_amount" script="order.total_amount" />
+
+        <variable name="shipping_address" script="order.shipping_address" />
+        <key name="shipping_address" script="shipping_address.full_address" />
+
+        <variable name="billing_address" script="order.billing_address" />
+        <key name="billing_address" script="billing_address.full_address" />
+    </generate>
+
+    <!-- US Order entity -->
+    <echo>Generating US Order Data</echo>
+    <generate name="us_orders" count="50" target="CSV">
+        <variable name="order" entity="Order" locale="en_US" />
+        <key name="order_id" script="order.order_id" />
+        <key name="date" script="order.date" converter="DateFormat('%m/%d/%Y')" />
+        <key name="status" script="order.status" />
+        <key name="payment_method" script="order.payment_method" />
+        <key name="total_amount" script="order.total_amount" />
+        <key name="total_formatted" script="'$' + str(order.total_amount)" />
+        <key name="tax_amount" script="order.tax_amount" />
+        <key name="tax_formatted" script="'$' + str(order.tax_amount)" />
+        <key name="shipping_amount" script="order.shipping_amount" />
+        <key name="shipping_formatted" script="'$' + str(order.shipping_amount)" />
+
+        <variable name="shipping_address" script="order.shipping_address" />
+        <key name="shipping_state" script="shipping_address.state" />
+    </generate>
+
+    <!-- German Order entity -->
+    <echo>Generating German Order Data</echo>
+    <generate name="de_orders" count="50" target="CSV">
+        <variable name="order" entity="Order" locale="de_DE" />
+        <key name="order_id" script="order.order_id" />
+        <key name="date" script="order.date" converter="DateFormat('%d.%m.%Y')" />
+        <key name="status" script="order.status" />
+        <key name="payment_method" script="order.payment_method" />
+        <key name="total_amount" script="order.total_amount" />
+        <key name="total_formatted" script="str(order.total_amount) + ' €'" />
+        <key name="tax_amount" script="order.tax_amount" />
+        <key name="tax_formatted" script="str(order.tax_amount) + ' €'" />
+        <key name="shipping_amount" script="order.shipping_amount" />
+        <key name="shipping_formatted" script="str(order.shipping_amount) + ' €'" />
+
+        <variable name="shipping_address" script="order.shipping_address" />
+        <key name="shipping_bundesland" script="shipping_address.state" />
+    </generate>
+</setup> 

@@ -1,0 +1,30 @@
+<setup>
+    <!-- Doctor Entity -->
+    <echo>Running DoctorEntity</echo>
+    <generate name="doctors" count="10" target="CSV">
+        <variable name="doctor" entity="Doctor" />
+        <key name="doctor_id" script="doctor.doctor_id" />
+        <key name="given_name" script="doctor.given_name" />
+        <key name="family_name" script="doctor.family_name" />
+        <key name="specialty" script="doctor.specialty" />
+        <key name="license_number" script="doctor.license_number" />
+        <key name="hospital" script="doctor.hospital.name" />
+        <key name="email" script="doctor.email" />
+        <key name="npi_number" script="doctor.npi_number" />
+        <nestedKey name="certifications" script="doctor.certifications" />
+        <key name="accepting_new_patients" script="doctor.accepting_new_patients" />
+    </generate>
+
+    <!-- UK Doctor Entity -->
+    <echo>Running UK DoctorEntity</echo>
+    <generate name="uk_doctors" count="5" target="CSV">
+        <variable name="doctor" entity="Doctor" locale="en_GB" />
+        <key name="doctor_id" script="doctor.doctor_id" />
+        <key name="given_name" script="doctor.given_name" />
+        <key name="family_name" script="doctor.family_name" />
+        <key name="specialty" script="doctor.specialty" />
+        <key name="license_number" script="doctor.license_number" />
+        <key name="npi_number" script="doctor.npi_number" />
+        <nestedKey name="certifications" script="doctor.certifications" />
+    </generate>
+</setup> 

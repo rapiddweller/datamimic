@@ -1,0 +1,78 @@
+<setup multiprocessing="0">
+    <generate name="digital_wallets" count="10" target="ConsoleExporter">
+        <!-- Generate standard digital wallets -->
+        <variable name="wallet" entity="DigitalWallet" />
+        <key name="wallet_id" script="wallet.wallet_id" />
+        <key name="owner_id" script="wallet.owner_id" />
+        <key name="wallet_type" script="wallet.wallet_type" />
+        <key name="balance" script="wallet.balance" />
+        <key name="currency" script="wallet.currency" />
+        <key name="created_date" script="wallet.created_date" />
+        <key name="last_transaction_date" script="wallet.last_transaction_date" />
+        <key name="status" script="wallet.status" />
+        <key name="payment_methods" script="wallet.payment_methods" />
+        <key name="transaction_history" script="wallet.transaction_history" />
+        <key name="settings" script="wallet.settings" />
+
+        <!-- Generate specific wallet types for demonstration -->
+        <variable name="crypto_wallet" entity="DigitalWallet">
+            <param name="wallet_type" value="Crypto" />
+            <param name="currency" value="BTC" />
+            <param name="balance_min" value="0.1" />
+            <param name="balance_max" value="10" />
+        </variable>
+        <key name="crypto_id" script="crypto_wallet.wallet_id" />
+        <key name="crypto_owner" script="crypto_wallet.owner_id" />
+        <key name="crypto_type" script="crypto_wallet.wallet_type" />
+        <key name="crypto_balance" script="crypto_wallet.balance" />
+        <key name="crypto_currency" script="crypto_wallet.currency" />
+
+        <variable name="mobile_wallet" entity="DigitalWallet">
+            <param name="wallet_type" value="Mobile" />
+            <param name="currency" value="USD" />
+            <param name="balance_min" value="50" />
+            <param name="balance_max" value="500" />
+        </variable>
+        <key name="mobile_id" script="mobile_wallet.wallet_id" />
+        <key name="mobile_owner" script="mobile_wallet.owner_id" />
+        <key name="mobile_type" script="mobile_wallet.wallet_type" />
+        <key name="mobile_balance" script="mobile_wallet.balance" />
+        <key name="mobile_currency" script="mobile_wallet.currency" />
+
+        <variable name="bank_wallet" entity="DigitalWallet">
+            <param name="wallet_type" value="Bank" />
+            <param name="currency" value="EUR" />
+            <param name="balance_min" value="1000" />
+            <param name="balance_max" value="10000" />
+        </variable>
+        <key name="bank_id" script="bank_wallet.wallet_id" />
+        <key name="bank_owner" script="bank_wallet.owner_id" />
+        <key name="bank_type" script="bank_wallet.wallet_type" />
+        <key name="bank_balance" script="bank_wallet.balance" />
+        <key name="bank_currency" script="bank_wallet.currency" />
+
+        <!-- Demonstrate relationships between wallets and user accounts -->
+        <variable name="user_account" entity="UserAccount" />
+        <key name="user_id" script="user_account.user_id" />
+        <key name="username" script="user_account.username" />
+        <key name="user_email" script="user_account.email" />
+
+        <!-- Link wallet to user account -->
+        <key name="linked_wallet_id" script="crypto_wallet.wallet_id" />
+        <key name="linked_user_id" script="user_account.user_id" />
+        <key name="relationship"
+            script="'Wallet ' + crypto_wallet.wallet_id + ' is owned by user ' + user_account.user_id" />
+
+        <!-- Demonstrate relationships between wallets and CRM records -->
+        <variable name="crm" entity="CRM" />
+        <key name="customer_id" script="crm.customer_id" />
+        <key name="customer_name" script="crm.given_name + ' ' + crm.family_name" />
+        <key name="customer_email" script="crm.email" />
+
+        <!-- Link wallet to CRM customer -->
+        <key name="customer_wallet_id" script="mobile_wallet.wallet_id" />
+        <key name="wallet_customer_id" script="crm.customer_id" />
+        <key name="customer_relationship"
+            script="'Customer ' + crm.customer_id + ' owns wallet ' + mobile_wallet.wallet_id" />
+    </generate>
+</setup> 

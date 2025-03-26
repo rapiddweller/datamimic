@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -10,10 +10,10 @@ from importlib.resources import files
 from datamimic_ce.logger import logger
 
 
-def get_datamimic_lib_version() -> str | None:
-    """Get DataMimic library version."""
+def get_datamimic_lib_version(lib_name: str = "datamimic-ce") -> str | None:
+    """Get DATAMIMIC library version."""
     try:
-        return importlib.metadata.version("datamimic-ce")
+        return importlib.metadata.version(lib_name)
     except importlib.metadata.PackageNotFoundError:
         return "unknown"
 

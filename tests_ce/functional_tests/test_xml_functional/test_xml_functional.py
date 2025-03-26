@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -15,9 +15,7 @@ class TestXmlFunctional:
     _test_dir = Path(__file__).resolve().parent
 
     def test_import_xml(self):
-        engine = DataMimicTest(
-            test_dir=self._test_dir, filename="test_import_xml.xml", capture_test_result=True
-        )
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_import_xml.xml", capture_test_result=True)
         engine.test_with_timer()
         result = engine.capture_result()
 
@@ -33,13 +31,13 @@ class TestXmlFunctional:
             assert len(row) == 7
 
     def test_export_xml(self):
-        engine = DataMimicTest(
-            test_dir=self._test_dir, filename="test_export_xml.xml", capture_test_result=True
-        )
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_export_xml.xml", capture_test_result=True)
         engine.test_with_timer()
         result = engine.capture_result()
         task_id = engine.task_id
-        file_path = self._test_dir.joinpath(f"output/{task_id}_xml_export_template_1/product_export_template_1_chunk_0.xml")
+        file_path = self._test_dir.joinpath(
+            f"output/{task_id}_xml_export_template_1/product_export_template_1_pid_1_chunk_0.xml"
+        )
         tree = ET.parse(file_path)
         root = tree.getroot()
 

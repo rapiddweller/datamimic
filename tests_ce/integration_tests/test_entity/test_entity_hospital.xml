@@ -1,0 +1,36 @@
+<setup multiprocessing="0">
+    <generate name="hospital" count="10" target="ConsoleExporter">
+        <variable name="hospital" entity="Hospital"/>
+        <key name="hospital_id" script="hospital.hospital_id"/>
+        <key name="name" script="hospital.name"/>
+        <key name="type" script="hospital.type"/>
+        <!-- <key name="departments" script="hospital.departments"/> -->
+        <!-- <key name="services" script="hospital.services"/> -->
+        <key name="bed_count" script="hospital.bed_count"/>
+        <key name="staff_count" script="hospital.staff_count"/>
+        <key name="founding_year" script="hospital.founding_year"/>
+        <!-- <key name="accreditation" script="hospital.accreditation"/> -->
+        <key name="emergency_services" script="hospital.emergency_services"/>
+        <key name="teaching_status" script="hospital.teaching_status"/>
+        <key name="website" script="hospital.website"/>
+        <key name="phone" script="hospital.phone"/>
+        <key name="email" script="hospital.email"/>
+        <key name="address" script="hospital.address"/>
+        <variable name="hospital_2" entity="Hospital"/>
+        <key name="hospital_id2" script="hospital_2.hospital_id"/>
+        <key name="name2" script="hospital_2.name"/>
+        <key name="type2" script="hospital_2.type"/>
+        <!-- <key name="departments2" script="hospital_2.departments"/> -->
+        <!-- <key name="services2" script="hospital_2.services"/> -->
+        <key name="bed_count2" script="hospital_2.bed_count"/>  
+        <key name="staff_count2" script="hospital_2.staff_count"/>
+        <key name="founding_year2" script="hospital_2.founding_year"/>
+        <!-- <key name="accreditation2" script="hospital_2.accreditation"/> -->
+        <key name="emergency_services2" script="hospital_2.emergency_services"/>
+        <key name="teaching_status2" script="hospital_2.teaching_status"/>
+        <key name="website2" script="hospital_2.website"/>  
+        <key name="phone2" script="hospital_2.phone"/>
+        <key name="email2" script="hospital_2.email"/>
+        <key name="address2" script="hospital_2.address"/>
+    </generate> 
+</setup>

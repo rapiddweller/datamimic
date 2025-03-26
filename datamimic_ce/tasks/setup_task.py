@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -22,7 +22,7 @@ class SetupTask:
         task_id: str,
         properties: dict | None,
         test_mode: bool,
-        test_result_storage: TestResultExporter | None,
+        test_result_storage: TestResultExporter,
         descriptor_dir: Path,
         class_factory_util: BaseClassFactoryUtil,
     ):

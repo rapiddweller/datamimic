@@ -1,0 +1,74 @@
+<setup  multiprocessing="True" numProcess="2">
+    <memstore id="mem"/>
+    <mongodb id="mongodb"/>
+
+    <!--  clear collections before run test  -->
+    <generate name="delete_users" source="mongodb" selector="find: 'more_users', filter: {}" target="mongodb.delete">
+    </generate>
+    <generate name="delete_orders" source="mongodb" selector="find: 'more_orders', filter: {}" target="mongodb.delete">
+    </generate>
+    <generate name="delete_products" source="mongodb" selector="find: 'more_products', filter: {}" target="mongodb.delete">
+    </generate>
+
+    <!--  generate orders collection  -->
+    <generate name="more_orders" source="script/orders.json" target="mongodb"/>
+
+    <!--  generate users collection  -->
+    <generate name="more_users" source="script/users.json" target="mongodb"/>
+
+    <!--  generate products collection  -->
+    <generate name="more_products" source="script/products.json" target="mongodb"/>
+
+    <generate name="more_summary" count="20" target="ConsoleExporter">
+        <variable name="result" source="mongodb"
+                  selector='aggregate: "more_users",
+                            pipeline: [
+                              {
+                                "$lookup": {
+                                  "from": "more_orders",
+                                  "localField": "user_id",
+                                  "foreignField": "user_id",
+                                  "as": "userOrders"
+                                }
+                              },
+                              {
+                                "$unwind": "$userOrders"
+                              },
+                              {
+                                "$lookup": {
+                                  "from": "more_products",
+                                  "localField": "userOrders.order_item",
+                                  "foreignField": "product_name",
+                                  "as": "orderProducts"
+                                }
+                              },
+                              {
+                                "$unwind": "$orderProducts"
+                              },
+                              {
+                                "$group": {
+                                  "_id": "$user_id",
+                                  "user_name": { "$first": "$user_name" },
+                                  "order_items": { "$push": "$userOrders.order_item" },
+                                  "quantities": { "$first": "$userOrders.quantity" },
+                                  "total_spending": {
+                                    "$sum": {
+                                      "$multiply": ["$userOrders.quantity", "$orderProducts.price"]
+                                    }
+                                  }
+                                }
+                              }
+                            ]'
+        />
+        <nestedKey name="users_orders" script="result"/>
+    </generate>
+
+
+    <!--  clear collections after run test  -->
+    <generate name="delete_users" source="mongodb" selector="find: 'more_users', filter: {}" target="mongodb.delete">
+    </generate>
+    <generate name="delete_orders" source="mongodb" selector="find: 'more_orders', filter: {}" target="mongodb.delete">
+    </generate>
+    <generate name="delete_products" source="mongodb" selector="find: 'more_products', filter: {}" target="mongodb.delete">
+    </generate>
+</setup>

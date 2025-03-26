@@ -4,6 +4,9 @@
 **/**/.DS_STORE
 .DS_STORE
 
+# VSCode
+.vscode
+
 # Virtual environment
 .venv
 venv
@@ -78,3 +81,7 @@ test_artifacts/
 /.run/
 /tests_ce/db/
 **/output/
+.coverage.*
+.coverage
+
+.cursor

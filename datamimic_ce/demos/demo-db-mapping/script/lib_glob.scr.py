@@ -53,7 +53,7 @@ class CustomBusinessMappingConverter(CustomConverter):
         # logger.debug(f"WHERE clause: {where_clause}")
 
         # Construct the final SQL query
-        sql_query = f"SELECT {output_columns} " f"FROM business_mapping WHERE {where_clause} " f"LIMIT 1"
+        sql_query = f"SELECT {output_columns} FROM business_mapping WHERE {where_clause} LIMIT 1"
         # logger.debug(f"SQL query: {sql_query}")
         return sql_query
 

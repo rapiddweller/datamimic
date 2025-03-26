@@ -1,0 +1,31 @@
+<setup multiprocessing="0">
+    <generate name="digital_wallet" count="10" target="ConsoleExporter">
+        <variable name="wallet" entity="DigitalWallet" />
+        <key name="wallet_id" script="wallet.wallet_id" />
+        <key name="wallet_id1" script="wallet.wallet_id" />
+        <key name="owner_id" script="wallet.owner_id" />
+        <key name="owner_id1" script="wallet.owner_id" />
+        <key name="wallet_type" script="wallet.wallet_type" />
+        <key name="wallet_type1" script="wallet.wallet_type" />
+        <key name="balance" script="wallet.balance" />
+        <key name="balance1" script="wallet.balance" />
+        <key name="currency" script="wallet.currency" />
+        <key name="currency1" script="wallet.currency" />
+        <key name="created_date" script="wallet.created_date" />
+        <key name="created_date1" script="wallet.created_date" />
+        <key name="last_transaction_date" script="wallet.last_transaction_date" />
+        <key name="last_transaction_date1" script="wallet.last_transaction_date" />
+        <key name="status" script="wallet.status" />
+        <key name="status1" script="wallet.status" />
+
+        <variable name="wallet1" entity="DigitalWallet" />
+        <key name="wallet_id2" script="wallet1.wallet_id" />
+        <key name="wallet_id3" script="wallet1.wallet_id" />
+        <key name="owner_id2" script="wallet1.owner_id" />
+        <key name="owner_id3" script="wallet1.owner_id" />
+        <key name="wallet_type2" script="wallet1.wallet_type" />
+        <key name="wallet_type3" script="wallet1.wallet_type" />
+        <key name="balance2" script="wallet1.balance" />
+        <key name="balance3" script="wallet1.balance" />
+    </generate>
+</setup> 

@@ -1,0 +1,26 @@
+<setup multiprocessing="0">
+    <generate name="insurance_policy" count="5" target="ConsoleExporter">
+        <variable name="insurance_policy" entity="InsurancePolicy" />
+        <key name="id" script="insurance_policy.id" />
+        <key name="company" script="insurance_policy.company" />
+        <key name="product" script="insurance_policy.product" />
+        <key name="policy_holder" script="insurance_policy.policy_holder" />
+        <key name="premium" script="insurance_policy.premium" />
+        <key name="premium_frequency" script="insurance_policy.premium_frequency" />
+        <key name="start_date" script="insurance_policy.start_date" />
+        <key name="end_date" script="insurance_policy.end_date" />
+        <key name="status" script="insurance_policy.status" />
+        <key name="created_date" script="insurance_policy.created_date" />
+        <variable name="insurance_policy1" entity="InsurancePolicy" />  
+        <key name="id1" script="insurance_policy1.id" />
+        <key name="company1" script="insurance_policy1.company" />
+        <key name="product1" script="insurance_policy1.product" />
+        <key name="policy_holder1" script="insurance_policy1.policy_holder" />
+        <key name="premium1" script="insurance_policy1.premium" />
+        <key name="premium_frequency1" script="insurance_policy1.premium_frequency" />
+        <key name="start_date1" script="insurance_policy1.start_date" />
+        <key name="end_date1" script="insurance_policy1.end_date" />
+        <key name="status1" script="insurance_policy1.status" />
+        <key name="created_date1" script="insurance_policy1.created_date" />
+    </generate>
+</setup>

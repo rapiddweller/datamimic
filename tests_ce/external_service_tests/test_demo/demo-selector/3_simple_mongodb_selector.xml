@@ -1,0 +1,62 @@
+<setup>
+  <!-- clear mongo_func_test database -->
+  <generate name="delete" source="mongodb" selector="find: 'mongo_func_test', filter: {}" target="mongodb.delete" />
+
+  <!--  generate simple data  -->
+  <generate name="mongo_func_test" target="mongodb" count="20">
+    <key name="user_id" generator="IncrementGenerator" />
+    <key name="user_name" values="'Bob', 'Frank', 'Phil'" />
+  </generate>
+
+  <!--  query data from mongodb  -->
+  <generate name="data" count="20">
+    <variable name="mongo_data" source="mongodb" selector="find: 'mongo_func_test', filter: {}" />
+    <key name="id" script="mongo_data.user_id" />
+    <key name="name" script="mongo_data.user_name" />
+  </generate>
+
+  <!--  query data from mongodb with filter and projection  -->
+  <generate
+    name="mongo_selector"
+    source="mongodb"
+    selector="find: 'mongo_func_test',
+                    filter: {'user_name': {'$ne': 'Bob'}},
+                    projection: {'user_name': 1}"
+  >
+  </generate>
+
+  <!--  update mongodb  -->
+  <generate name="mongo_update" type="mongo_func_test" source="mongodb" target="mongodb.update">
+    <key name="addition" values="'Addition 1', 'Addition 2', 'Addition 3'" />
+  </generate>
+
+  <generate name="update_check" type="mongo_func_test" source="mongodb" />
+
+  <!--  update mongodb with upsert true -->
+  <generate
+    name="mongo_upsert"
+    source="mongodb"
+    selector="find: 'mongo_func_test', filter: {'user_name': 'Mary'}"
+    target="mongodb.upsert"
+  >
+    <key name="addition" values="'addition_value1', 'addition_value2', 'addition_value3'" />
+    <key name="second_addition" values="'value1', 'value2', 'value3'" />
+    <key name="other_addition" values="'other_value1', 'other_value2', 'other_value3'" />
+  </generate>
+
+  <generate name="upsert_check" type="mongo_func_test" source="mongodb" />
+
+  <!--  delete data from mongodb with selector  -->
+  <generate
+    name="mongo_delete"
+    source="mongodb"
+    selector="find: 'mongo_func_test', filter: {'user_name': {'$ne': 'Bob'}}"
+    target="mongodb.delete"
+  >
+  </generate>
+
+  <generate name="delete_check" type="mongo_func_test" source="mongodb" />
+
+  <!-- clear mongo_func_test database -->
+  <generate name="delete" source="mongodb" selector="find: 'mongo_func_test', filter: {}" target="mongodb.delete" />
+</setup>

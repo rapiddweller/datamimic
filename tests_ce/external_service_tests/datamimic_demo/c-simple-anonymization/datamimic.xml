@@ -1,0 +1,18 @@
+<setup>
+
+	<database id="sourceDB" system="source" />
+	<database id="targetDB" system="target" />
+
+	<!-- Load config properties| setup databases and memstore -->
+	<include uri="conf/base.properties" />
+	<memstore id='mem' />
+
+	<!-- Include DATAMIMIC scripts -->
+	<include uri="1_prepare.xml" />
+	<include uri="2_generate.xml" />
+
+	<!-- Include examples for obfuscating data of identifiable natural persons -->
+	<include uri="3-1-anon-person-constant.xml" />
+	<include uri="3-2-anon-person-hash.xml" />
+
+</setup>

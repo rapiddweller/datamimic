@@ -1,0 +1,13 @@
+role,code,description,level,weight
+Principal,PRIN,The head administrator of a school who provides leadership and manages all school operations,5,0.03
+Assistant Principal,ASST_PRIN,Administrator who assists the principal in managing the school and may oversee specific areas like discipline or curriculum,4,0.05
+Department Head,DEPT_HEAD,Faculty member who oversees a specific academic department like Math or English,3,0.07
+Teacher,TCHR,Educator responsible for instructing students in specific subjects,2,0.50
+Counselor,COUN,Professional who provides academic and personal guidance to students,2,0.10
+School Psychologist,PSYCH,Mental health professional who evaluates and supports students' psychological needs,3,0.05
+Librarian,LIB,Staff member who manages the school library and supports student research,2,0.03
+School Nurse,NURSE,Healthcare professional who provides medical care to students and staff,2,0.03
+Administrative Assistant,ADMIN,Staff member who provides administrative support to school leadership,1,0.05
+Custodian,CUST,Staff member responsible for maintaining school facilities,1,0.04
+Security Officer,SEC,Staff member responsible for maintaining safety and security at the school,1,0.03
+School Social Worker,SOC_WORK,Professional who helps students and families access social services and support,2,0.02

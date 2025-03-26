@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup>
+    <echo>Running E-commerce Domain Showcase</echo>
+
+    <!-- Include all domain entities for e-commerce -->
+    <include uri="product.xml" />
+    <include uri="customer.xml" />
+    <include uri="order.xml" />
+
+    <!-- Future extensions could include -->
+    <!-- <include uri="review.xml" /> -->
+    <!-- <include uri="shipping.xml" /> -->
+    <!-- <include uri="payment.xml" /> -->
+</setup> 

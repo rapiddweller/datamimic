@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup>
+    <!-- Medication Entity -->
+    <echo>Running MedicationEntity</echo>
+    <generate name="medications" count="10" target="CSV">
+        <variable name="medication" entity="Medication" />
+        <key name="medication_id" script="medication.medication_id" />
+        <key name="name" script="medication.name" />
+        <key name="generic_name" script="medication.generic_name" />
+        <key name="brand_name" script="medication.brand_name" />
+        <key name="dosage" script="medication.dosage" />
+        <key name="form" script="medication.form" />
+        <key name="route" script="medication.route" />
+        <key name="manufacturer" script="medication.manufacturer" />
+        <key name="category" script="medication.category" />
+        <key name="controlled_substance" script="medication.controlled_substance" />
+        <key name="controlled_substance_schedule" script="medication.controlled_substance_schedule" />
+        <key name="prescription_required" script="medication.prescription_required" />
+        <key name="approval_date" script="medication.approval_date" />
+        <key name="ndc_code" script="medication.ndc_code" />
+        <nestedKey name="active_ingredients" script="medication.active_ingredients" />
+        <nestedKey name="indications" script="medication.indications" />
+        <nestedKey name="contraindications" script="medication.contraindications" />
+        <nestedKey name="side_effects" script="medication.side_effects" />
+        <nestedKey name="interactions" script="medication.interactions" />
+        <key name="half_life" script="medication.half_life" />
+        <key name="storage_temp" script="medication.storage_temp" />
+        <key name="pregnancy_category" script="medication.pregnancy_category" />
+    </generate>
+
+    <!-- Prescription Entity -->
+    <echo>Running PrescriptionEntity</echo>
+    <generate name="prescriptions" count="10" target="CSV">
+        <variable name="prescription" entity="Prescription" />
+        <key name="prescription_id" script="prescription.prescription_id" />
+        <key name="patient_id" script="prescription.patient_id" />
+        <key name="patient_name" script="prescription.patient_name" />
+        <key name="doctor_id" script="prescription.doctor_id" />
+        <key name="doctor_name" script="prescription.doctor_name" />
+        <key name="medication_id" script="prescription.medication_id" />
+        <key name="medication_name" script="prescription.medication_name" />
+        <key name="dosage" script="prescription.dosage" />
+        <key name="frequency" script="prescription.frequency" />
+        <key name="quantity" script="prescription.quantity" />
+        <key name="refills" script="prescription.refills" />
+        <key name="date_prescribed" script="prescription.date_prescribed" />
+        <key name="date_filled" script="prescription.date_filled" />
+        <key name="expiration_date" script="prescription.expiration_date" />
+        <key name="pharmacy_id" script="prescription.pharmacy_id" />
+        <key name="pharmacy_name" script="prescription.pharmacy_name" />
+        <key name="instructions" script="prescription.instructions" />
+        <key name="status" script="prescription.status" />
+        <key name="controlled_substance" script="prescription.controlled_substance" />
+        <key name="controlled_substance_schedule"
+            script="prescription.controlled_substance_schedule" />
+        <key name="prescription_notes" script="prescription.prescription_notes" />
+    </generate>
+</setup> 

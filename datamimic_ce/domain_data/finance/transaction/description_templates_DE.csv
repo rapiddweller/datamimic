@@ -1,0 +1,18 @@
+transaction_type,template,weight
+Einzahlung,Einzahlung von {},25
+Einzahlung,Eingehende Einzahlung - {},15
+Auszahlung,Auszahlung bei {},20
+Auszahlung,Bargeldauszahlung - {},15
+Überweisung,Überweisung an {},20
+Überweisung,Geldüberweisung an {},15
+Zahlung,Zahlung an {},25
+Zahlung,Rechnungszahlung - {},15
+Gebühr,Servicegebühr von {},20
+Gebühr,Gebührenabrechnung - {},15
+Zinsen,Zinszahlung,25
+Zinsen,Erhaltene Zinsen,15
+Rückerstattung,Rückerstattung von {},20
+Rückerstattung,Gutschrift von {} - Rückerstattung,15
+Anpassung,Anpassung von {},20
+Anpassung,Kontoanpassung - {},15
+Generic,Transaktion mit {},10 

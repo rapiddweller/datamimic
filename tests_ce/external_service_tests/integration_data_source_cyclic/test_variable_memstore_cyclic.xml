@@ -1,0 +1,15 @@
+<setup  multiprocessing="True" numProcess="2">
+    <memstore id="mem"/>
+    <generate name="product" count="5" target="ConsoleExporter, mem">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" values="'Alice', 'Bob', 'Cameron'"/>
+    </generate>
+    <generate name="non-cyclic-var" count="10" target="ConsoleExporter">
+        <variable name="var" type="product" source="mem" cyclic="False"/>
+        <key name="id" script="var.id"/>
+    </generate>
+    <generate name="cyclic-var" count="10" target="ConsoleExporter">
+        <variable name="var" type="product" source="mem" cyclic="True"/>
+        <key name="id" script="var.id"/>
+    </generate>
+</setup>

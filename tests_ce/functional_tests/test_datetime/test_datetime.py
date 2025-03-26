@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -100,39 +100,39 @@ class TestDateTime:
             # Validate milliseconds precision
             datetime_with_millis = entry["datetime_to_millis"]
             assert isinstance(datetime_with_millis, str), "The datetime with milliseconds should be a string."
-            assert datetime_with_millis.endswith(
-                ".123"
-            ), f"Expected milliseconds to be '.123', but got '{datetime_with_millis}'"
+            assert datetime_with_millis.endswith(".123"), (
+                f"Expected milliseconds to be '.123', but got '{datetime_with_millis}'"
+            )
 
             # Validate microseconds precision
             datetime_with_microseconds = entry["datetime_to_microseconds"]
-            assert datetime_with_microseconds.endswith(
-                ".123456"
-            ), f"Expected microseconds to be '.123456', but got '{datetime_with_microseconds}'"
+            assert datetime_with_microseconds.endswith(".123456"), (
+                f"Expected microseconds to be '.123456', but got '{datetime_with_microseconds}'"
+            )
 
             # Validate nanoseconds precision
             datetime_with_nanoseconds = entry["datetime_to_nanoseconds"]
-            assert datetime_with_nanoseconds.endswith(
-                ".123456000"
-            ), f"Expected nanoseconds to be '.123456000', but got '{datetime_with_nanoseconds}'"
+            assert datetime_with_nanoseconds.endswith(".123456000"), (
+                f"Expected nanoseconds to be '.123456000', but got '{datetime_with_nanoseconds}'"
+            )
 
             # Check epoch outputs (seconds, millis, micros, and nanos)
             ref = entry["epoch_reference"]
             expected_epoch_seconds = entry["to_epoch"]
             assert ref == expected_epoch_seconds, f"Expected epoch in seconds: {ref}, but got: {expected_epoch_seconds}"
 
-            ref = f'{entry["epoch_reference"]}000'
+            ref = f"{entry['epoch_reference']}000"
             expected_epoch_millis = entry["to_epoch_millis"]
-            assert (
-                ref == expected_epoch_millis
-            ), f"Expected epoch in milliseconds: {ref}, but got: {expected_epoch_millis}"
+            assert ref == expected_epoch_millis, (
+                f"Expected epoch in milliseconds: {ref}, but got: {expected_epoch_millis}"
+            )
 
-            ref = f'{entry["epoch_reference"]}000000'
+            ref = f"{entry['epoch_reference']}000000"
             expected_epoch_micros = entry["to_epoch_micros"]
-            assert (
-                ref == expected_epoch_micros
-            ), f"Expected epoch in microseconds: {ref}, but got: {expected_epoch_micros}"
+            assert ref == expected_epoch_micros, (
+                f"Expected epoch in microseconds: {ref}, but got: {expected_epoch_micros}"
+            )
 
-            ref = f'{entry["epoch_reference"]}000000000'
+            ref = f"{entry['epoch_reference']}000000000"
             expected_epoch_nanos = entry["to_epoch_nanos"]
             assert ref == expected_epoch_nanos, f"Expected epoch in nanoseconds: {ref}, but got: {expected_epoch_nanos}"

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup>
+    <echo>Generating Product Data</echo>
+
+    <!-- Products using domain entity -->
+    <generate name="products" count="50" target="CSV,JSON">
+        <variable name="product" entity="Product" />
+        <key name="product_id" script="product.product_id" />
+        <key name="name" script="product.name" />
+        <key name="description" script="product.description" />
+        <key name="category" script="product.category" />
+        <key name="brand" script="product.brand" />
+        <key name="price" script="product.price" />
+        <key name="sku" script="product.sku" />
+        <key name="condition" script="product.condition" />
+        <key name="availability" script="product.availability" />
+        <key name="currency" script="product.currency" />
+        <key name="weight" script="product.weight" />
+        <key name="dimensions" script="product.dimensions" />
+        <key name="rating" script="product.rating" />
+    </generate>
+
+    <!-- US-specific products -->
+    <echo>Generating US Product Data</echo>
+    <generate name="us_products" count="25" target="CSV">
+        <variable name="product" entity="Product" locale="en_US" />
+        <key name="product_id" script="product.product_id" />
+        <key name="name" script="product.name" />
+        <key name="category" script="product.category" />
+        <key name="brand" script="product.brand" />
+        <key name="price_usd" script="product.price" />
+        <key name="price_formatted" script="'$' + str(product.price)" />
+        <key name="sku" script="product.sku" />
+        <key name="availability" script="product.availability" />
+        <key name="rating" script="product.rating" />
+        <key name="condition" script="product.condition" />
+    </generate>
+
+    <!-- German-specific products -->
+    <echo>Generating German Product Data</echo>
+    <generate name="de_products" count="25" target="CSV">
+        <variable name="product" entity="Product" locale="de_DE" />
+        <key name="product_id" script="product.product_id" />
+        <key name="name" script="product.name" />
+        <key name="category" script="product.category" />
+        <key name="brand" script="product.brand" />
+        <key name="price_eur" script="product.price" />
+        <key name="price_formatted" script="str(product.price) + ' €'" />
+        <key name="sku" script="product.sku" />
+        <key name="availability" script="product.availability" />
+        <key name="rating" script="product.rating" />
+        <key name="zustand" script="product.condition" />
+    </generate>
+</setup> 

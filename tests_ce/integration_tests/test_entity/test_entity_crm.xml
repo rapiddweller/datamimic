@@ -1,0 +1,33 @@
+<setup multiprocessing="0">
+    <generate name="crm" count="10" target="ConsoleExporter">
+        <variable name="crm" entity="CRM" />
+        <key name="customer_id" script="crm.customer_id" />
+        <key name="customer_id1" script="crm.customer_id" />
+        <key name="given_name" script="crm.given_name" />
+        <key name="given_name1" script="crm.given_name" />
+        <key name="family_name" script="crm.family_name" />
+        <key name="family_name1" script="crm.family_name" />
+        <key name="email" script="crm.email" />
+        <key name="email1" script="crm.email" />
+        <key name="phone" script="crm.phone" />
+        <key name="phone1" script="crm.phone" />
+        <key name="customer_since" script="crm.customer_since" />
+        <key name="customer_since1" script="crm.customer_since" />
+        <key name="segment" script="crm.segment" />
+        <key name="segment1" script="crm.segment" />
+        <key name="lifetime_value" script="crm.lifetime_value" />
+        <key name="lifetime_value1" script="crm.lifetime_value" />
+
+        <variable name="crm1" entity="CRM" />
+        <key name="customer_id2" script="crm1.customer_id" />
+        <key name="customer_id3" script="crm1.customer_id" />
+        <key name="given_name2" script="crm1.given_name" />
+        <key name="given_name3" script="crm1.given_name" />
+        <key name="family_name2" script="crm1.family_name" />
+        <key name="family_name3" script="crm1.family_name" />
+        <key name="email2" script="crm1.email" />
+        <key name="email3" script="crm1.email" />
+        <key name="segment2" script="crm1.segment" />
+        <key name="segment3" script="crm1.segment" />
+    </generate>
+</setup> 

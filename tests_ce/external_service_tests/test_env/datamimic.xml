@@ -1,0 +1,10 @@
+<setup>
+    <mongodb id="mongodb2" system="mongodb"/>
+    <database id="dbPostgres" system="postgres"/>
+    <execute uri="script/backup.sql" target="dbPostgres"/>
+    <generate name="data2" target="ConsoleExporter, mongodb2" count="5">
+        <variable name="user" source="dbPostgres" selector="SELECT id, text FROM public.db_postgres_types4"/>
+        <key name="user_id" script="user.id"/>
+        <key name="user_name" script="user.text"/>
+    </generate>
+</setup>

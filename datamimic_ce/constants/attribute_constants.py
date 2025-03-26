@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -72,3 +72,6 @@ ATTR_VARIABLE_PREFIX: Final = "variablePrefix"
 ATTR_VARIABLE_SUFFIX: Final = "variableSuffix"
 ATTR_STRING: Final = "string"
 ATTR_BUCKET: Final = "bucket"
+ATTR_MP_PLATFORM: Final = "mpPlatform"
+ATTR_IF: Final = "if"
+ATTR_THEN: Final = "then"

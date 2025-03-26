@@ -1,0 +1,11 @@
+<setup multiprocessing="False">
+    <mongodb id="mongodb"/>
+    <generate name="mongo3" target="ConsoleExporter, mongodb" count="10">
+        <key name="user_id" generator="IncrementGenerator"/>
+        <key name="user_name" values="'Bob', 'Frank', 'Phil'"/>
+    </generate>
+    <generate name="test" source="mongodb"
+              selector="find: 'mongo3', filter: {'user_name': {'$ne': 'Bob'}}, projection: {'user_name': 1}"
+              target="ConsoleExporter">
+    </generate>
+</setup>

@@ -1,0 +1,9 @@
+<setup numProcess="2">
+    <generate name="multi_user" source="data/users.json" target="XML, ConsoleExporter" mpPlatform="ray">
+        <generate name="users" script="userProfile.users" target="XML, ConsoleExporter" mpPlatform="ray">
+            <nestedKey name="membership_type" type="dict">
+                <key name="is_premium" type="bool" condition="userProfile.users[0].membership == 'premium'"/>
+            </nestedKey>
+        </generate>
+    </generate>
+</setup>

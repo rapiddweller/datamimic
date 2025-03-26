@@ -1,0 +1,13 @@
+<setup  multiprocessing="True" numProcess="2">
+    <database id="sourceDB" system="postgres"/>
+    <execute uri="script/setup_postgresql.scr.sql" target="sourceDB"/>
+    <generate name="counter" count="10">
+        <variable name="cid" generator="IncrementGenerator(start=0)"/>
+        <generate name="motorcycles" count="10" target="sourceDB">
+            <variable name="mid" type="int" generator="IncrementGenerator(start=0)"/>
+            <key name="id" type="int" script="motorcycles.mid + cid*10"/>
+            <key name="year" type="int" values="1970, 2023"/>
+        </generate>
+    </generate>
+    <generate name="motorbike" type="motorcycles" source="sourceDB"/>
+</setup>

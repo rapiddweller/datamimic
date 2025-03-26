@@ -1,0 +1,16 @@
+<setup>
+    <generate name="DateTimeConverter" target="ConsoleExporter" count="20">
+        <variable name="datetime_generated" generator="DateTimeGenerator(random=True)"/>
+        <key name="row_id" generator="IncrementGenerator"/>
+        <key name="without_converter" script="datetime_generated"/>
+        <key name="converter_dd_mmm_yyyy" script="datetime_generated" converter="DateFormat('%d-%b-%Y')"/>
+        <key name="converter_dd_mmm_yyyy_UP" script="datetime_generated" outDateFormat="%d-%b-%Y"
+             converter="UpperCase"/>
+        <key name="converter_mmm_dd_HH_MM" script="datetime_generated" converter="DateFormat('%b-%d@%H%Mh')"/>
+
+        <!--    Use script to extract year, month or day-->
+        <key name="year" script="datetime_generated.year"/>
+        <key name="month" script="datetime_generated.month"/>
+        <key name="day" script="datetime_generated.day"/>
+    </generate>
+</setup>

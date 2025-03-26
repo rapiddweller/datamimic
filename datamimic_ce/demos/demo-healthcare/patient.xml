@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup>
+    <!-- Patient Entity -->
+    <echo>Running PatientEntity</echo>
+    <generate name="patients" count="10" target="CSV">
+        <variable name="patient" entity="Patient" />
+        <key name="patient_id" script="patient.patient_id" />
+        <key name="given_name" script="patient.given_name" />
+        <key name="family_name" script="patient.family_name" />
+        <key name="date_of_birth" script="patient.birthdate" />
+        <key name="gender" script="patient.gender" />
+        <key name="blood_type" script="patient.blood_type" />
+        <variable name="address" entity="Address" />
+        <key name="street" script="address.street" />
+        <key name="city" script="address.city" />
+        <key name="state" script="address.state" />
+        <key name="zip_code" script="address.zip_code" />
+        <key name="country" script="address.country" />
+        <key name="insurance_provider" script="patient.insurance_provider" />
+        <key name="insurance_policy_number" script="patient.insurance_policy_number" />
+        <nestedKey name="emergency_contact" script="patient.emergency_contact" />
+        <array name="allergies" script="patient.allergies" />
+        <array name="medications" script="patient.medications" />
+        <array name="conditions" script="patient.conditions" />
+    </generate>
+
+    <!-- US Patient Entity -->
+    <echo>Running US PatientEntity</echo>
+    <generate name="us_patients" count="5" target="CSV">
+        <variable name="patient" entity="Patient" locale="en_US" />
+        <key name="patient_id" script="patient.patient_id" />
+        <key name="given_name" script="patient.given_name" />
+        <key name="family_name" script="patient.family_name" />
+        <key name="date_of_birth" script="patient.birthdate" />
+        <key name="gender" script="patient.gender" />
+        <key name="blood_type" script="patient.blood_type" />
+        <variable name="address" entity="Address" dataset="US" />
+        <key name="street" script="address.street" />
+        <key name="city" script="address.city" />
+        <key name="state" script="address.state" />
+        <key name="zip_code" script="address.zip_code" />
+        <key name="country" script="address.country" />
+        <key name="insurance_provider" script="patient.insurance_provider" />
+        <array name="allergies" script="patient.allergies" />
+        <array name="medications" script="patient.medications" />
+        <array name="conditions" script="patient.conditions" />
+    </generate>
+
+    <!-- German Patient Entity -->
+    <echo>Running German PatientEntity</echo>
+    <generate name="de_patients" count="5" target="CSV">
+        <variable name="patient" entity="Patient" locale="de_DE" />
+        <key name="patient_id" script="patient.patient_id" />
+        <key name="given_name" script="patient.given_name" />
+        <key name="family_name" script="patient.family_name" />
+        <key name="date_of_birth" script="patient.birthdate" />
+        <key name="gender" script="patient.gender" />
+        <key name="blood_type" script="patient.blood_type" />
+        <variable name="address" entity="Address" dataset="DE" />
+        <key name="street" script="address.street" />
+        <key name="city" script="address.city" />
+        <key name="state" script="address.state" />
+        <key name="zip_code" script="address.zip_code" />
+        <key name="country" script="address.country" />
+        <key name="insurance_provider" script="patient.insurance_provider" />
+        <array name="allergies" script="patient.allergies" />
+        <array name="medications" script="patient.medications" />
+        <array name="conditions" script="patient.conditions" />
+    </generate>
+</setup> 

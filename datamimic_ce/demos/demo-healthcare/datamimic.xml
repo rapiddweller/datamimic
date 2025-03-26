@@ -1,0 +1,11 @@
+<setup>
+    <echo>Running Healthcare Data Generation</echo>
+    <include uri="patient.xml" />
+    <include uri="doctor.xml" />
+    <!-- <include uri="lab_test.xml" /> -->
+    <!-- <include uri="medical_record.xml" /> -->
+    <include uri="hospital.xml" />
+    <!-- <include uri="medication.xml" /> -->
+    <!-- <include uri="insurance_provider.xml" /> -->
+    <!-- <include uri="clinical_trial.xml" /> -->
+</setup> 

@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -17,8 +17,8 @@ from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.weighted_data_source import WeightedDataSource
-from datamimic_ce.generators.generator_util import GeneratorUtil
-from datamimic_ce.generators.sequence_table_generator import SequenceTableGenerator
+from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
+from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
 from datamimic_ce.statements.element_statement import ElementStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.variable_statement import VariableStatement
@@ -146,9 +146,7 @@ class KeyVariableTask(Task):
                         else ctx.evaluate_python_expression(self._statement.default_value)
                     )
                 else:
-                    raise ValueError(
-                        f"Failed when execute script of element " f"'{self._statement.name}': {str(e)}"
-                    ) from e
+                    raise ValueError(f"Failed when execute script of element '{self._statement.name}': {str(e)}") from e
             # Throw error if <key> evaluated script get not simple data type
             if (
                 self._element_tag == "key"
@@ -158,7 +156,7 @@ class KeyVariableTask(Task):
             ):
                 raise ValueError(
                     f"<key> '{self._statement.name}' expects simple data type, "
-                    f"but get invalid value '{value}' with type '{type(value).__name__ }'"
+                    f"but get invalid value '{value}' with type '{type(value).__name__}'"
                 )
         elif self._mode == self._CONSTANT_MODE:
             value = self._statement.constant
@@ -267,7 +265,9 @@ class KeyVariableTask(Task):
         elif data_type == DATA_TYPE_FLOAT:
             return float(value)
         elif data_type == DATA_TYPE_BOOL:
-            return value not in ("False", "0", 0, False)
+            if value == "" or value is None:
+                return None
+            return value not in ("false", "False", "0", 0, False)
         elif data_type is None:
             return value
         else:
