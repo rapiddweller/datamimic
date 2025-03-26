@@ -16,9 +16,9 @@ from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.logger import logger, setup_logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
-from datamimic_ce.tasks.constraints_task import ConstraintsTask
 from datamimic_ce.tasks.generate_task import GenerateTask
 from datamimic_ce.tasks.rule_task import RuleTask
+from datamimic_ce.tasks.source_constraints_task import ConstraintsTask
 from datamimic_ce.utils.logging_util import gen_timer
 
 

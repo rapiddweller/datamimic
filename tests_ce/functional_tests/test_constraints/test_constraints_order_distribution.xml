@@ -1,13 +1,13 @@
-<setup  multiprocessing="1" numProcess="2">
-    <generate name="synthetic_customers" count="100" pageSize="50"
-              source="script/person_less_data.json"
-              cyclic="True" distribution="ordered"
-              target="ConsoleExporter">
-        <key name="id" generator="IncrementGenerator"/>
-        <constraints>
-          <rule if="credit_score &lt; 600" then="risk_profile == 'High'"/>
-          <rule if="credit_score &gt;= 600 and credit_score &lt; 750" then="risk_profile == 'Medium'"/>
-          <rule if="credit_score &gt;= 750" then="risk_profile == 'Low'"/>
-        </constraints>
-    </generate>
+<setup multiprocessing="1" numProcess="2">
+  <generate name="synthetic_customers" count="100" pageSize="50"
+    source="script/person_less_data.json"
+    cyclic="True" distribution="ordered"
+    target="ConsoleExporter">
+    <key name="id" generator="IncrementGenerator" />
+    <sourceConstraints>
+      <rule if="credit_score &lt; 600" then="risk_profile == 'High'" />
+      <rule if="credit_score &gt;= 600 and credit_score &lt; 750" then="risk_profile == 'Medium'" />
+      <rule if="credit_score &gt;= 750" then="risk_profile == 'Low'" />
+    </sourceConstraints>
+  </generate>
 </setup>

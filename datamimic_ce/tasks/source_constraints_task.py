@@ -8,8 +8,8 @@ import itertools
 
 from datamimic_ce.contexts.context import SAFE_GLOBALS, DotableDict
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.statements.constraints_statement import ConstraintsStatement
 from datamimic_ce.statements.rule_statement import RuleStatement
+from datamimic_ce.statements.source_constraints_statement import ConstraintsStatement
 from datamimic_ce.tasks.task import Task
 
 
