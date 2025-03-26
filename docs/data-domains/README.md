@@ -11,7 +11,6 @@ Welcome to the documentation for the Domain-Driven Framework component of DATAMI
 - [Using Domain Services](domain_services.md) - Guide to using the domain service APIs
 - [Weighted Distributions System](weighted_distributions.md) - How DATAMIMIC's distribution system works
 - [Testing with DATAMIMIC](testing_with_datamimic.md) - Using synthetic data for testing
-- [DATAMIMIC vs Other Libraries](comparison.md) - Comparison with other data generation tools
 
 > For more detailed information on domain models, exporters, importers, and platform integration, please refer to our [official online documentation](https://docs.datamimic.io/).
 

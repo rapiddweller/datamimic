@@ -1,6 +1,6 @@
-# Person Generation with DataMimic
+# Person Generation with DATAMIMIC
 
-This example demonstrates how to generate synthetic person data using the DataMimic framework.
+This example demonstrates how to generate synthetic person data using the DATAMIMIC framework.
 
 ## Basic Person Generation
 
@@ -77,7 +77,7 @@ Person 5: Susan Johnson, 31 years old
 
 ## Working with Different Locales
 
-DataMimic supports generating data for different regions by specifying the dataset:
+DATAMIMIC supports generating data for different regions by specifying the dataset:
 
 ```python
 # Create services for different regions
@@ -219,4 +219,4 @@ Seniors: 17 (17.0%)
 Young Adults: 23 (23.0%)
 ```
 
-This distribution reflects realistic demographic patterns due to DataMimic's weighted datasets. 
+This distribution reflects realistic demographic patterns due to DATAMIMIC's weighted datasets. 
