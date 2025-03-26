@@ -141,7 +141,6 @@ datamimic run ./healthcare-example/datamimic.xml
 
 - [CLI Interface](docs/api/cli.md)
 - [Data Domains Details](docs/data-domains/README.md)
-- [Developer Guide](docs/developer_guide.md)
 
 Developer Guide
 
@@ -152,6 +151,10 @@ Developer Guide
 **Q:** Is Community Edition suitable for commercial projects?
 
 **A:** Absolutely! DATAMIMIC CE uses the MIT License.
+
+**Q:** Why upgrade to Enterprise Edition (EE) instead of using Community Edition (CE)?
+
+**A:** EE provides a web UI, enterprise support, team collaboration, and advanced features like AI-powered test data generation, workflow automation, and compliance tools.
 
 **Q:** Can I contribute?
 

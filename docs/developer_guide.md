@@ -144,7 +144,7 @@ patients = patient_service.generate_batch(count=100)
 # real-world patterns, not random uniform distributions
 ```
 
-## Unit Testing with DataMimic
+## Unit Testing with DATAMIMIC
 
 DATAMIMIC excels at creating test data for unit and integration tests:
 
@@ -201,7 +201,7 @@ class TestTransactionProcessor(unittest.TestCase):
 4. **Set the locale** - Use the `dataset` parameter to generate region-specific data
 5. **Leverage to_dict()** - Convert entities to dictionaries for serialization
 
-## Extending DataMimic
+## Extending DATAMIMIC
 
 To create custom domain entities:
 
@@ -237,6 +237,6 @@ class CustomEntity(BaseEntity):
 
 ## Conclusion
 
-DataMimic's domain-driven architecture provides a powerful framework for generating synthetic data that accurately reflects real-world patterns and relationships. By leveraging weighted distributions and domain-specific models, DATAMIMIC enables developers to create high-quality test data, training datasets, and demonstration data that closely mimics production systems.
+DATAMIMIC's domain-driven architecture provides a powerful framework for generating synthetic data that accurately reflects real-world patterns and relationships. By leveraging weighted distributions and domain-specific models, DATAMIMIC enables developers to create high-quality test data, training datasets, and demonstration data that closely mimics production systems.
 
 For further assistance or to contribute to the project, visit our GitHub repository or contact the development team.

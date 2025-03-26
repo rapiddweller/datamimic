@@ -1,4 +1,4 @@
-# Person Generation with DataMimic
+# Person Generation with DATAMIMIC
 
 This example demonstrates how to generate synthetic person data using the DATAMIMIC framework.
 
@@ -219,4 +219,4 @@ Seniors: 17 (17.0%)
 Young Adults: 23 (23.0%)
 ```
 
-This distribution reflects realistic demographic patterns due to DataMimic's weighted datasets. 
+This distribution reflects realistic demographic patterns due to DATAMIMIC's weighted datasets. 
