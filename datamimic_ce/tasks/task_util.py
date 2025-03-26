@@ -289,6 +289,7 @@ class TaskUtil:
         load_end_idx: int,
         load_pagination: DataSourcePagination | None,
         source_operation: dict | None,
+        operation_metadata: dict | None,
     ) -> tuple[list[dict], bool]:
         """
         Generate task to load data from source
@@ -349,6 +350,7 @@ class TaskUtil:
                     load_start_idx,
                     load_end_idx,
                     source_operation,
+                    operation_metadata,
                 )
             else:
                 source_data = data_source_registry.load_xml_file(
