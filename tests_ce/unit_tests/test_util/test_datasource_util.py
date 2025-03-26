@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -34,8 +34,8 @@ class TestDataSourceUtil:
         seed = random.randint(0, 100)
         print()
         assert (
-                len(DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed))
-                == page_step
+            len(DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed))
+            == page_step
         )
         checking_list = []
         for pagination in pagination_list:
@@ -63,8 +63,8 @@ class TestDataSourceUtil:
         seed = random.randint(0, 100)
         print()
         assert (
-                len(DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed))
-                == page_step
+            len(DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed))
+            == page_step
         )
         checking_list = []
         for pagination in pagination_list:
@@ -92,8 +92,8 @@ class TestDataSourceUtil:
         seed = random.randint(0, 100)
         print()
         assert (
-                len(DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed))
-                == page_step
+            len(DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed))
+            == page_step
         )
         checking_list = []
         for pagination in pagination_list:
@@ -121,8 +121,8 @@ class TestDataSourceUtil:
         seed = random.randint(0, 100)
         print()
         assert (
-                len(DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed))
-                == page_step
+            len(DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed))
+            == page_step
         )
         checking_list = []
         for pagination in pagination_list:
@@ -150,8 +150,8 @@ class TestDataSourceUtil:
         seed = random.randint(0, 100)
         print()
         assert (
-                len(DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed))
-                == page_step
+            len(DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination_list[0], cyclic, seed))
+            == page_step
         )
         checking_list = []
         for pagination in pagination_list:

@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -109,14 +109,13 @@ class TestRdbmsFunctional:
 
         # Verify iterate_simple_user
         iterate_simple_user = result["iterate_simple_user"]
-        assert len(iterate_simple_user) == len(
-            simple_user
-        ), f"Expected iterate_simple_user length {len(simple_user)}, got {len(iterate_simple_user)}"
+        assert len(iterate_simple_user) == len(simple_user), (
+            f"Expected iterate_simple_user length {len(simple_user)}, got {len(iterate_simple_user)}"
+        )
         for i in range(len(simple_user)):
             for key, value in simple_user[i].items():
                 assert iterate_simple_user[i].get(key) == value, (
-                    f"Mismatch at index {i} for key '{key}': "
-                    f"expected {value}, got {iterate_simple_user[i].get(key)}"
+                    f"Mismatch at index {i} for key '{key}': expected {value}, got {iterate_simple_user[i].get(key)}"
                 )
 
         self._assert_iterate(result, False)

@@ -1,11 +1,12 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
 
 import pytest
+
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 
 
@@ -27,7 +28,6 @@ class TestPhoneNumberGenerator:
         # if dataset not exist -> use US dataset
         with pytest.raises(ValueError, match="Country with ISO code XX not found"):
             phone_number = PhoneNumberGenerator(dataset="XX").generate()
-        
 
     def test_phone_number_generator_none_country_code(self):
         # if dataset not exist -> use US dataset

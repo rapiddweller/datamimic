@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2024 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -18,14 +18,15 @@ class TestAttributeScript:
         engine.test_with_timer()
 
         result = engine.capture_result()
-        departments = result['departments']
+        departments = result["departments"]
         assert len(departments) == 2
-        assert departments[0]['id'] == 101
-        assert departments[1]['id'] == 102
+        assert departments[0]["id"] == 101
+        assert departments[1]["id"] == 102
 
     def test_attribute_script_with_nestedKey(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_attribute_script_with_nestedkey.xml",
-                               capture_test_result=True)
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_attribute_script_with_nestedkey.xml", capture_test_result=True
+        )
         engine.test_with_timer()
         result = engine.capture_result()
 
@@ -41,14 +42,15 @@ class TestAttributeScript:
         assert len(genre_book) == 2
         for genre_sci in genre_book:
             assert "genre_sci" in genre_sci
-            assert len(genre_sci['genre_sci']) == 4
+            assert len(genre_sci["genre_sci"]) == 4
 
         library = result["library"]
         assert len(library) == 1
 
     def test_attribute_script_with_multiprocessing(self):
-        engine = DataMimicTest(test_dir=self._test_dir, filename="test_with_multiprocessing.xml",
-                               capture_test_result=True)
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_with_multiprocessing.xml", capture_test_result=True
+        )
         engine.test_with_timer()
 
         result = engine.capture_result()
@@ -56,7 +58,7 @@ class TestAttributeScript:
         books = result["users"]
         assert len(books) == 2
         for i in books:
-            assert 'membership_type' in i
+            assert "membership_type" in i
 
             if i == 0:
                 assert i["membership_type"]["is_premium"] is False
