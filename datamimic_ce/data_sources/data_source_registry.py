@@ -377,7 +377,12 @@ class DataSourceRegistry:
 
     @staticmethod
     def load_xml_file_with_operation(
-        file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int, source_operation: dict | None
+        file_path: Path,
+        cyclic: bool | None,
+        start_idx: int,
+        end_idx: int,
+        source_operation: dict | None,
+        operation_metadata: dict | None,
     ):
         """
         (EE feature only)

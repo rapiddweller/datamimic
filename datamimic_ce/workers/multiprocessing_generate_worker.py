@@ -23,6 +23,7 @@ class MultiprocessingGenerateWorker(GenerateWorker):
         chunks: list[tuple[int, int]],
         page_size: int,
         source_operation: dict | None,
+        operation_metadata: dict | None,
     ) -> dict[str, list]:
         """
         Multiprocessing process for generating, exporting data by page, and merging result.
@@ -32,7 +33,16 @@ class MultiprocessingGenerateWorker(GenerateWorker):
             mp_result = pool.map(
                 self.mp_wrapper,
                 [
-                    (copied_context, statement, worker_id, chunk_start, chunk_end, page_size, source_operation)
+                    (
+                        copied_context,
+                        statement,
+                        worker_id,
+                        chunk_start,
+                        chunk_end,
+                        page_size,
+                        source_operation,
+                        operation_metadata,
+                    )
                     for worker_id, (chunk_start, chunk_end) in enumerate(chunks, 1)
                 ],
             )
@@ -53,11 +63,11 @@ class MultiprocessingGenerateWorker(GenerateWorker):
         from datamimic_ce.workers.generate_worker import GenerateWorker
 
         # Unpack arguments
-        context, stmt, worker_id, chunk_start, chunk_end, page_size, source_operation = args
+        context, stmt, worker_id, chunk_start, chunk_end, page_size, source_operation, operation_metadata = args
 
         # Preprocess serializable objects
         GenerateWorker.mp_preprocess(context, worker_id)
 
         return GenerateWorker.generate_and_export_data_by_chunk(
-            context, stmt, worker_id, chunk_start, chunk_end, page_size, source_operation
+            context, stmt, worker_id, chunk_start, chunk_end, page_size, source_operation, operation_metadata
         )

@@ -36,6 +36,7 @@ class GenerateWorker:
         chunk_end: int,
         page_size: int,
         source_operation: dict | None,
+        operation_metadata: dict | None,
     ) -> dict:
         """
         Generate and export data by page in a single process.
@@ -96,7 +97,7 @@ class GenerateWorker:
                 timer_result["records_count"] = page_end - page_start
                 # Generate product
                 result_dict = GenerateWorker._generate_product_by_page_in_single_process(
-                    context, stmt, page_start, page_end, worker_id, source_operation
+                    context, stmt, page_start, page_end, worker_id, source_operation, operation_metadata
                 )
 
             with gen_timer("export", root_context.report_logging, stmt.full_name) as timer_result:
@@ -127,6 +128,7 @@ class GenerateWorker:
         page_end: int,
         worker_id: int,
         source_operation: dict | None,
+        operation_metadata: dict | None,
     ) -> dict[str, list]:
         """
         (IMPORTANT: Only to be used as Ray multiprocessing function)
@@ -190,6 +192,7 @@ class GenerateWorker:
                 load_end_idx,
                 load_pagination,
                 source_operation,
+                operation_metadata,
             )
         )
 
