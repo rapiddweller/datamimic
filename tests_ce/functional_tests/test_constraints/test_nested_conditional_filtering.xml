@@ -1,0 +1,70 @@
+<setup numProcess="2">
+    <generate name="nested_filtering_container" count="1">
+        <!-- Nested keys with constraints that filter based on various conditions -->
+
+        <!-- Nested key 1: Filter high income customers -->
+        <nestedKey name="high_income" source="script/customer_data.json" type="list" count="500"
+            cyclic="True">
+            <key name="id" generator="IncrementGenerator" />
+            <sourceConstraints>
+                <!-- Only keep records with income >= 100000 -->
+                <rule if="income >= 100000" then="True" />
+                <rule if="income &lt; 100000" then="False" />
+            </sourceConstraints>
+        </nestedKey>
+
+        <!-- Nested key 2: Filter customers with good credit -->
+        <nestedKey name="good_credit" source="script/customer_data.json" type="list" count="500"
+            cyclic="True">
+            <key name="id" generator="IncrementGenerator" />
+            <sourceConstraints>
+                <!-- Only keep records with credit_score >= 720 -->
+                <rule if="credit_score >= 720" then="True" />
+                <rule if="credit_score &lt; 720" then="False" />
+            </sourceConstraints>
+        </nestedKey>
+
+        <!-- Nested key 3: Filter premium customers (high income AND good credit) -->
+        <nestedKey name="premium_customers" source="script/customer_data.json" type="list"
+            count="500"
+            cyclic="True">
+            <key name="id" generator="IncrementGenerator" />
+            <sourceConstraints>
+                <!-- Only keep records with income >= 100000 AND credit_score >= 720 -->
+                <rule if="income >= 100000 and credit_score >= 720" then="True" />
+                <rule if="not (income >= 100000 and credit_score >= 720)" then="False" />
+            </sourceConstraints>
+        </nestedKey>
+
+        <!-- Nested key 4: Filter young OR wealthy customers -->
+        <nestedKey name="young_or_wealthy" source="script/customer_data.json" type="list"
+            count="500"
+            cyclic="True">
+            <key name="id" generator="IncrementGenerator" />
+            <key name="age" generator="IntegerGenerator(min=25, max=29)" />
+            <key name="income" generator="IntegerGenerator(min=150000, max=160000)" />
+            <sourceConstraints>
+                <!-- Only keep records with age < 30 OR income >= 150000 -->
+                <rule if="age &lt; 30 or income >= 150000" then="True" />
+                <rule if="not (age &lt; 30 or income >= 150000)" then="False" />
+            </sourceConstraints>
+        </nestedKey>
+
+        <!-- Nested key 5: Filter NOT high risk customers -->
+        <nestedKey name="not_high_risk" source="script/customer_data.json" type="list" count="500"
+            cyclic="True">
+            <key name="id" generator="IncrementGenerator" />
+            <sourceConstraints>
+                <!-- Assign risk categories -->
+                <rule if="credit_score &lt; 600" then="risk_category = 'High'" />
+                <rule if="credit_score >= 600 and credit_score &lt; 720"
+                    then="risk_category = 'Medium'" />
+                <rule if="credit_score >= 720" then="risk_category = 'Low'" />
+
+                <!-- Only keep records that are NOT high risk -->
+                <rule if="not (credit_score &lt; 600)" then="True" />
+                <rule if="credit_score &lt; 600" then="False" />
+            </sourceConstraints>
+        </nestedKey>
+    </generate>
+</setup> 

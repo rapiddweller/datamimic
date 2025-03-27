@@ -12,22 +12,22 @@ from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.services.rule_execution_service import RuleExecutionService
 from datamimic_ce.statements.rule_statement import RuleStatement
-from datamimic_ce.statements.source_constraints_statement import ConstraintsStatement
+from datamimic_ce.statements.target_constraints_statement import TargetConstraintsStatement
 from datamimic_ce.tasks.base_constraint_task import BaseConstraintTask
 
 logger = logging.getLogger("datamimic")
 
 
-class ConstraintsTask(BaseConstraintTask):
+class TargetConstraintsTask(BaseConstraintTask):
     """
-    Task that applies source constraints to filter and transform data.
+    Task that applies target constraints to filter and transform data after mapping.
     """
 
-    def __init__(self, statement: ConstraintsStatement):
+    def __init__(self, statement: TargetConstraintsStatement):
         super().__init__(statement)
 
     @property
-    def statement(self) -> ConstraintsStatement:
+    def statement(self) -> TargetConstraintsStatement:
         return self._statement  # type: ignore
 
     def _convert_numeric_strings(self, data_dict):
@@ -53,7 +53,7 @@ class ConstraintsTask(BaseConstraintTask):
         self, source_data, pagination: DataSourcePagination | None = None, cyclic: bool | None = False
     ) -> list[Any] | GenIterContext:
         """
-        Execute the source constraints task.
+        Execute the target constraints task.
 
         Args:
             source_data: The source data to be filtered/transformed
@@ -68,13 +68,13 @@ class ConstraintsTask(BaseConstraintTask):
             return self._process_geniter_context(source_data)
 
         # Handle regular data flow for source data as a list
-        filter_data = list(source_data)
+        target_data = list(source_data)
         # If source is empty, return empty list
-        if len(filter_data) == 0:
+        if len(target_data) == 0:
             return []
 
-        for i in range(len(filter_data) - 1, -1, -1):  # Iterate from last to first
-            data_dict = copy.deepcopy(filter_data[i])
+        for i in range(len(target_data) - 1, -1, -1):  # Iterate from last to first
+            data_dict = copy.deepcopy(target_data[i])
 
             for key, value in data_dict.items():
                 if isinstance(value, dict):
@@ -96,12 +96,12 @@ class ConstraintsTask(BaseConstraintTask):
                         break
 
             if should_filter:
-                del filter_data[i]  # remove data that doesn't meet rules
+                del target_data[i]  # remove data that doesn't meet rules
             else:
                 # Update original data with modified values
                 for key, value in data_dict.items():
                     if not key.startswith("_"):
-                        filter_data[i][key] = value
+                        target_data[i][key] = value
 
         # Apply pagination and return the result
-        return self._apply_pagination(filter_data, pagination, cyclic or False)
+        return self._apply_pagination(target_data, pagination, cyclic or False)

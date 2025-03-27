@@ -396,6 +396,10 @@ class NestedKeyTask(Task):
                 if isinstance(sub_task, ConstraintsTask):
                     nestedkey_len = self._determine_nestedkey_length(context=parent_context)
                     temp_pagination = DataSourcePagination(skip=0, limit=nestedkey_len) if nestedkey_len else None
-                    result = sub_task.execute(source_data, pagination=temp_pagination, cyclic=self.statement.cyclic)
+                    task_result = sub_task.execute(
+                        source_data, pagination=temp_pagination, cyclic=self.statement.cyclic
+                    )
+                    if isinstance(task_result, list):
+                        result = task_result
                     break
         return result

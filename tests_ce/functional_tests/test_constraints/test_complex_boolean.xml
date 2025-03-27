@@ -1,0 +1,33 @@
+<setup numProcess="2">
+    <!-- Generate test data with complex boolean expressions in constraints -->
+    <generate name="complex_boolean_filtering" count="200" cyclic="True"
+        source="script/person_data.json" target="ConsoleExporter">
+        <key name="id" generator="IncrementGenerator" />
+        <key name="age" generator="IntegerGenerator(min=18, max=70)" />
+
+        <!-- Source constraints with complex boolean expressions -->
+        <sourceConstraints>
+            <!-- First, assign risk profiles based on credit score -->
+            <rule if="credit_score &lt; 600" then="risk_profile = 'High'" />
+            <rule if="credit_score >= 600 and credit_score &lt; 750" then="risk_profile = 'Medium'" />
+            <rule if="credit_score >= 750" then="risk_profile = 'Low'" />
+
+            <!-- Create a special category with complex boolean expression:
+           (high income OR perfect credit) AND young -->
+            <rule if="(income >= 100000 or credit_score >= 800) and age &lt; 30"
+                then="special_category = True" />
+
+            <!-- Another complex condition with NOT operator -->
+            <rule if="not (credit_score &lt; 700 or income &lt; 40000)"
+                then="premium_eligible = True" />
+
+            <!-- Apply a nested condition -->
+            <rule if="risk_profile == 'Low' and (age &lt; 30 or income > 80000)"
+                then="prime_customer = True" />
+
+            <!-- Filter out certain records with compound condition -->
+            <rule if="risk_profile == 'High' and income &lt; 25000 and age > 60"
+                then="False" />
+        </sourceConstraints>
+    </generate>
+</setup> 

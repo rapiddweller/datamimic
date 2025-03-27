@@ -1,0 +1,46 @@
+<setup numProcess="2">
+    <generate name="multi_level_filtering" count="1">
+        <!-- Multi-level filtering: source constraints -> mapping -> target constraints -->
+        <nestedKey name="final_approved" source="script/person_income_data.json" type="list"
+            count="200"
+            cyclic="True">
+            <key name="id" generator="IncrementGenerator" />
+
+            <!-- First level: Source constraints to classify risk based on credit score -->
+            <sourceConstraints>
+                <rule if="credit_score &lt; 600" then="risk_profile = 'High'" />
+                <rule if="credit_score >= 600 and credit_score &lt; 700"
+                    then="risk_profile = 'Medium'" />
+                <rule if="credit_score >= 700" then="risk_profile = 'Low'" />
+
+                <!-- Filter out customers with very low credit score -->
+                <rule if="credit_score &lt; 500" then="False" />
+            </sourceConstraints>
+
+            <!-- Second level: Mapping to calculate approval status based on income and risk -->
+            <mapping>
+                <!-- Set default status -->
+                <rule if="True" then="approval_status = 'Pending'" />
+
+                <!-- Apply complex rules for status -->
+                <rule if="income >= 100000" then="approval_status = 'Approved'" />
+                <rule if="income >= 40000 and risk_profile == 'Low'"
+                    then="approval_status = 'Approved'" />
+                <rule if="income >= 40000 and risk_profile == 'Medium'"
+                    then="approval_status = 'Approved'" />
+                <rule if="income >= 85000 and risk_profile == 'High'"
+                    then="approval_status = 'Approved'" />
+                <rule if="income &lt; 30000" then="approval_status = 'Denied'" />
+                <rule if="income &lt; 50000 and risk_profile == 'High'"
+                    then="approval_status = 'Denied'" />
+            </mapping>
+
+            <!-- Third level: Target constraints to filter only customers with sufficient income -->
+            <targetConstraints>
+                <!-- Only keep the customers with sufficient income -->
+                <rule if="income >= 40000" then="True" />
+                <rule if="income &lt; 40000" then="False" />
+            </targetConstraints>
+        </nestedKey>
+    </generate>
+</setup> 

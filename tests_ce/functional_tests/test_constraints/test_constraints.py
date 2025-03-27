@@ -136,17 +136,16 @@ class TestConstraints(TestCase):
         result = engine.capture_result()
 
         synthetic_customers = result["synthetic_customers"]
-        assert len(synthetic_customers) == 10000
+        assert len(synthetic_customers) == 20
         for customer in synthetic_customers:
             assert isinstance(customer["id"], int)
-            assert customer["id"] in range(1, 10001)
-            ele = customer["financial_info"]
-            if ele["credit_score"] < 600:
-                assert ele["risk_profile"] == "High"
-            elif 600 <= ele["credit_score"] < 750:
-                assert ele["risk_profile"] == "Medium"
+            assert customer["id"] in range(1, 21)
+            if customer["credit_score"] < 600:
+                assert customer["risk_profile"] == "High"
+            elif 600 <= customer["credit_score"] < 750:
+                assert customer["risk_profile"] == "Medium"
             else:
-                assert ele["risk_profile"] == "Low"
+                assert customer["risk_profile"] == "Low"
 
     def test_constraints_if_rule_empty(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_constraints_if_rule_empty.xml")

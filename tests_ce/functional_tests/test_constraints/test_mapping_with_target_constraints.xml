@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup numProcess="2">
+    <generate name="combined_test" count="100" pageSize="50"
+        source="script/test_mapping_data.json" cyclic="True">
+        <key name="id" generator="IncrementGenerator" />
+
+        <!-- First apply mapping to calculate financial metrics -->
+        <mapping>
+            <!-- Calculate credit categories based on score -->
+            <rule if="credit_score &lt; 600" then="credit_category = 'Poor'" />
+            <rule if="credit_score &gt;= 600 and credit_score &lt; 700"
+                then="credit_category = 'Fair'" />
+            <rule if="credit_score &gt;= 700 and credit_score &lt; 750"
+                then="credit_category = 'Good'" />
+            <rule if="credit_score &gt;= 750" then="credit_category = 'Excellent'" />
+
+            <!-- Categorize income levels -->
+            <rule if="income &lt; 40000" then="income_category = 'Low'" />
+            <rule if="income &gt;= 40000 and income &lt; 70000" then="income_category = 'Medium'" />
+            <rule if="income &gt;= 70000" then="income_category = 'High'" />
+
+            <!-- Calculate maximum loan potential based on income and credit category -->
+            <rule if="credit_category == 'Poor'" then="max_loan = income * 1.5" />
+            <rule if="credit_category == 'Fair'" then="max_loan = income * 2.5" />
+            <rule if="credit_category == 'Good'" then="max_loan = income * 3.5" />
+            <rule if="credit_category == 'Excellent'" then="max_loan = income * 4.5" />
+        </mapping>
+    </generate>
+</setup> 

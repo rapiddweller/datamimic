@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup numProcess="2">
+    <generate name="dependency_test" count="100" pageSize="50" source="script/person_data.json"
+        cyclic="True">
+        <key name="id" generator="IncrementGenerator" />
+        <mapping>
+            <rule if="True" then="mapped_value = 42" />
+        </mapping>
+        <targetConstraints>
+            <rule if="mapped_value == 42" then="target_value = 'success'" />
+        </targetConstraints>
+    </generate>
+</setup>

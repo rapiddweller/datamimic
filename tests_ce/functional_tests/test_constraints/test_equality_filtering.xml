@@ -1,0 +1,86 @@
+<setup numProcess="2">
+    <generate name="equality_filtering_results" count="1">
+        <!-- This test focuses on equality comparisons for filtering -->
+
+        <!-- First filter: exact equality on categorical value -->
+        <nestedKey name="exact_match_category" source="script/customer_data.json" type="list"
+            count="300" cyclic="True">
+            <key name="id" generator="IncrementGenerator" />
+            <!-- No need to override customer_type, as we want to filter the existing values -->
+
+            <sourceConstraints>
+                <!-- Exact match on customer_type (categorical) -->
+                <rule if="customer_type == 'Premium'" then="True" />
+                <rule if="customer_type != 'Premium'" then="False" />
+            </sourceConstraints>
+        </nestedKey>
+
+        <!-- Second filter: exact equality on numeric value -->
+        <nestedKey name="exact_match_numeric" source="script/customer_data.json" type="list"
+            count="300" cyclic="True">
+            <key name="id" generator="IncrementGenerator" />
+            <key name="age" constant="30" type="int" />
+
+            <sourceConstraints>
+                <!-- Exact match on age (numeric) -->
+                <rule if="age == 30" then="True" />
+                <rule if="age != 30" then="False" />
+            </sourceConstraints>
+        </nestedKey>
+
+        <!-- Third filter: compound equality with AND -->
+        <nestedKey name="compound_equality" source="script/customer_data.json" type="list"
+            count="300"
+            cyclic="True">
+            <key name="id" generator="IncrementGenerator" />
+            <key name="age" generator="IntegerGenerator(min=18, max=80)" />
+            <key name="status" constant="Active" />
+
+            <sourceConstraints>
+                <!-- First assign risk categories based on credit score -->
+                <rule if="credit_score &lt; 600" then="risk_profile = 'High'" />
+                <rule if="credit_score >= 600 and credit_score &lt; 750"
+                    then="risk_profile = 'Medium'" />
+                <rule if="credit_score >= 750" then="risk_profile = 'Low'" />
+
+                <!-- Compound equality filtering -->
+                <rule if="risk_profile == 'Low' and status == 'Active'" then="True" />
+                <rule if="not (risk_profile == 'Low' and status == 'Active')" then="False" />
+            </sourceConstraints>
+        </nestedKey>
+
+        <!-- Fourth filter: multiple equality conditions with OR -->
+        <nestedKey name="multiple_equalities" source="script/customer_data.json" type="list"
+            count="300" cyclic="True">
+            <key name="id" generator="IncrementGenerator" />
+            <key name="region" values="'North','South'" />
+
+            <sourceConstraints>
+                <!-- First assign risk categories based on credit score -->
+                <rule if="credit_score &lt; 600" then="risk_profile = 'High'" />
+                <rule if="credit_score >= 600 and credit_score &lt; 750"
+                    then="risk_profile = 'Medium'" />
+                <rule if="credit_score >= 750" then="risk_profile = 'Low'" />
+
+                <!-- Multiple equality filtering with OR -->
+                <rule if="region == 'North' or region == 'South' or risk_profile == 'Low'"
+                    then="True" />
+                <rule if="not (region == 'North' or region == 'South' or risk_profile == 'Low')"
+                    then="False" />
+            </sourceConstraints>
+        </nestedKey>
+
+        <!-- Fifth filter: inequality filtering -->
+        <nestedKey name="inequality_filtering" source="script/customer_data.json" type="list"
+            count="300" cyclic="True">
+            <key name="id" generator="IncrementGenerator" />
+            <key name="region" values="'North','South'" />
+
+            <sourceConstraints>
+                <!-- Filter out specific regions -->
+                <rule if="region != 'East' and region != 'West'" then="True" />
+                <rule if="region == 'East' or region == 'West'" then="False" />
+            </sourceConstraints>
+        </nestedKey>
+    </generate>
+</setup> 

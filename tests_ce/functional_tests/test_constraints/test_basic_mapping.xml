@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup numProcess="2">
+    <generate name="mapping_test" count="100" pageSize="50"
+        source="script/test_mapping_data.json" cyclic="True">
+        <key name="id" generator="IncrementGenerator" />
+        <mapping>
+            <!-- Calculate interest rate based on credit score -->
+            <rule if="credit_score &lt; 600" then="interest_rate = 0.15" />
+            <rule if="credit_score &gt;= 600 and credit_score &lt; 700" then="interest_rate = 0.12" />
+            <rule if="credit_score &gt;= 700 and credit_score &lt; 800" then="interest_rate = 0.09" />
+            <rule if="credit_score &gt;= 800" then="interest_rate = 0.06" />
+
+            <!-- Calculate max loan based on income -->
+            <rule if="income &lt; 30000" then="max_loan = income * 1.5" />
+            <rule if="income &gt;= 30000 and income &lt; 60000" then="max_loan = income * 2.0" />
+            <rule if="income &gt;= 60000" then="max_loan = income * 2.5" />
+
+            <!-- Calculate monthly payment -->
+            <rule if="max_loan > 0" then="monthly_payment = max_loan * interest_rate / 12" />
+        </mapping>
+    </generate>
+</setup> 

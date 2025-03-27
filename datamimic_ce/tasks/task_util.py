@@ -48,6 +48,7 @@ from datamimic_ce.statements.include_statement import IncludeStatement
 from datamimic_ce.statements.item_statement import ItemStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.list_statement import ListStatement
+from datamimic_ce.statements.mapping_statement import MappingStatement
 from datamimic_ce.statements.memstore_statement import MemstoreStatement
 from datamimic_ce.statements.mongodb_statement import MongoDBStatement
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
@@ -55,6 +56,7 @@ from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.rule_statement import RuleStatement
 from datamimic_ce.statements.source_constraints_statement import ConstraintsStatement
 from datamimic_ce.statements.statement import Statement
+from datamimic_ce.statements.target_constraints_statement import TargetConstraintsStatement
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.array_task import ArrayTask
 from datamimic_ce.tasks.condition_task import ConditionTask
@@ -73,12 +75,14 @@ from datamimic_ce.tasks.include_task import IncludeTask
 from datamimic_ce.tasks.item_task import ItemTask
 from datamimic_ce.tasks.key_task import KeyTask
 from datamimic_ce.tasks.list_task import ListTask
+from datamimic_ce.tasks.mapping_task import MappingTask
 from datamimic_ce.tasks.memstore_task import MemstoreTask
 from datamimic_ce.tasks.mongodb_task import MongoDBTask
 from datamimic_ce.tasks.nested_key_task import NestedKeyTask
 from datamimic_ce.tasks.reference_task import ReferenceTask
 from datamimic_ce.tasks.rule_task import RuleTask
 from datamimic_ce.tasks.source_constraints_task import ConstraintsTask
+from datamimic_ce.tasks.target_constraints_task import TargetConstraintsTask
 from datamimic_ce.tasks.task import Task
 from datamimic_ce.utils.object_util import ObjectUtil
 
@@ -135,6 +139,10 @@ class TaskUtil:
             return GeneratorTask(stmt)
         elif isinstance(stmt, ConstraintsStatement):
             return ConstraintsTask(stmt)
+        elif isinstance(stmt, MappingStatement):
+            return MappingTask(stmt)
+        elif isinstance(stmt, TargetConstraintsStatement):
+            return TargetConstraintsTask(stmt)
         elif isinstance(stmt, RuleStatement):
             return RuleTask(stmt)
         else:
