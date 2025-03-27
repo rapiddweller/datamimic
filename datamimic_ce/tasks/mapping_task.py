@@ -26,25 +26,6 @@ class MappingTask(BaseConstraintTask):
     def statement(self) -> MappingStatement:
         return self._statement  # type: ignore
 
-    def _convert_numeric_strings(self, data_dict):
-        """Helper function to convert string values to numeric types where appropriate."""
-        for key, value in list(data_dict.items()):
-            if isinstance(value, str):
-                try:
-                    # Try to convert to int first
-                    if value.isdigit() or (value.startswith("-") and value[1:].isdigit()):
-                        data_dict[key] = int(value)
-                    # Then try float
-                    else:
-                        try:
-                            float_val = float(value)
-                            data_dict[key] = float_val
-                        except ValueError:
-                            pass  # Keep as string if conversion fails
-                except Exception as e:
-                    logger.debug(f"Error converting value for {key}: {e}")
-        return data_dict
-
     def execute(
         self, source_data, pagination: DataSourcePagination | None = None, cyclic: bool | None = False
     ) -> list[Any] | GenIterContext:

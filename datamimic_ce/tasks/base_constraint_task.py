@@ -32,7 +32,6 @@ class BaseConstraintTask(Task, ABC):
 
     def __init__(self, statement: CompositeStatement):
         self._statement = statement
-        self._rule_execution_service = RuleExecutionService()
 
     @property
     def statement(self) -> CompositeStatement:
