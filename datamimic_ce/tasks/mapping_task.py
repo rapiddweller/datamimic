@@ -6,12 +6,9 @@
 import logging
 from typing import Any
 
-from datamimic_ce.contexts.context import DotableDict
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.services.rule_execution_service import RuleExecutionService
 from datamimic_ce.statements.mapping_statement import MappingStatement
-from datamimic_ce.statements.rule_statement import RuleStatement
 from datamimic_ce.tasks.base_constraint_task import BaseConstraintTask
 
 logger = logging.getLogger("datamimic")
@@ -62,36 +59,7 @@ class MappingTask(BaseConstraintTask):
         Returns:
             The mapped data or updated GenIterContext
         """
-        # Handle GenIterContext case (integration with generate workflow)
-        if isinstance(source_data, GenIterContext):
-            return self._process_geniter_context(source_data)
-
-        # Handle regular data flow for source data as a list
-        mapping_data = list(source_data)
-        # If source is empty, return empty list
-        if len(mapping_data) == 0:
-            return []
-
-        for i, data_dict in enumerate(mapping_data):
-            for key, value in data_dict.items():
-                if isinstance(value, dict):
-                    data_dict[key] = DotableDict(value)
-
-            # Convert string values to numeric types where appropriate
-            data_dict = self._convert_numeric_strings(data_dict)
-
-            # Process each rule using the rule execution service
-            for child_stmt in self.statement.sub_statements:
-                if isinstance(child_stmt, RuleStatement):
-                    # Use RuleExecutionService to evaluate and execute the rule
-                    data_dict, _ = RuleExecutionService.execute_rule_for_dict(
-                        rule_statement=child_stmt, data_dict=data_dict, rule_owner=self.__class__.__name__
-                    )
-
-            # Update the original data with the modified values
-            for key, value in data_dict.items():
-                if not key.startswith("_"):
-                    mapping_data[i][key] = value
-
-        # Apply pagination and return the result
-        return self._apply_pagination(mapping_data, pagination, cyclic or False)
+        # Use standard execution flow without filtering mode
+        return self._handle_standard_execution(
+            source_data=source_data, pagination=pagination, cyclic=cyclic, filter_mode=False
+        )

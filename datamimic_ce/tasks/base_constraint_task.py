@@ -3,14 +3,13 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-import copy
-import itertools
 import logging
 from abc import ABC, abstractmethod
 from typing import Any
 
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.services.data_transformation_service import DataTransformationService
 from datamimic_ce.services.rule_execution_service import RuleExecutionService
 from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.rule_statement import RuleStatement
@@ -28,6 +27,7 @@ class BaseConstraintTask(Task, ABC):
     - Context handling
     - Rule execution logic
     - Error handling and logging
+    - Data list processing
     """
 
     def __init__(self, statement: CompositeStatement):
@@ -48,22 +48,7 @@ class BaseConstraintTask(Task, ABC):
         Returns:
             Dictionary with string values converted to appropriate numeric types
         """
-        for key, value in list(data_dict.items()):
-            if isinstance(value, str):
-                try:
-                    # Try to convert to int first
-                    if value.isdigit() or (value.startswith("-") and value[1:].isdigit()):
-                        data_dict[key] = int(value)
-                    # Then try float
-                    else:
-                        try:
-                            float_val = float(value)
-                            data_dict[key] = float_val
-                        except ValueError:
-                            pass  # Keep as string if conversion fails
-                except Exception as e:
-                    logger.debug(f"Error converting value for {key}: {e}")
-        return data_dict
+        return DataTransformationService.convert_numeric_strings(data_dict)
 
     def _handle_geniter_context(self, ctx: GenIterContext) -> dict[str, Any]:
         """
@@ -160,24 +145,60 @@ class BaseConstraintTask(Task, ABC):
         Returns:
             Paginated (and possibly cycled) data
         """
-        # If data is empty, return empty list
-        if len(data_list) == 0:
+        return DataTransformationService.apply_pagination(data_list, pagination, cyclic)
+
+    def _process_data_with_rules(
+        self, data_list: list[dict[str, Any]], filter_mode: bool = True
+    ) -> list[dict[str, Any]]:
+        """
+        Process a list of dictionaries by applying rules from the statement.
+
+        Args:
+            data_list: List of dictionaries to process
+            filter_mode: Whether to filter out items that don't meet rules (True) or just transform them (False)
+
+        Returns:
+            Processed list of dictionaries
+        """
+        return DataTransformationService.process_data_with_rules(
+            data_list=data_list, statement=self.statement, rule_owner=self.__class__.__name__, filter_mode=filter_mode
+        )
+
+    def _handle_standard_execution(
+        self,
+        source_data,
+        pagination: DataSourcePagination | None = None,
+        cyclic: bool | None = False,
+        filter_mode: bool = True,
+    ) -> list[Any] | GenIterContext:
+        """
+        Standard execution flow for constraint tasks.
+
+        Args:
+            source_data: The source data to be processed
+            pagination: Optional pagination configuration
+            cyclic: Whether to cycle through the source data
+            filter_mode: Whether to filter out items that don't meet rules
+
+        Returns:
+            Processed data or updated GenIterContext
+        """
+        # Handle GenIterContext case (integration with generate workflow)
+        if isinstance(source_data, GenIterContext):
+            return self._process_geniter_context(source_data)
+
+        # Handle regular data flow for source data as a list
+        result_data = list(source_data)
+
+        # If source is empty, return empty list
+        if len(result_data) == 0:
             return []
 
-        # Determine start and end indices based on pagination
-        if pagination is None:
-            start_idx = 0
-            end_idx = len(data_list)
-        else:
-            start_idx = pagination.skip
-            end_idx = pagination.skip + pagination.limit
+        # Process the data with rules
+        result_data = self._process_data_with_rules(result_data, filter_mode)
 
-        # Apply cyclic behavior if requested
-        if cyclic:
-            iterator = itertools.cycle(data_list)
-            return [copy.deepcopy(ele) for ele in itertools.islice(iterator, start_idx, end_idx)]
-        else:
-            return list(itertools.islice(data_list, start_idx, end_idx))
+        # Apply pagination and return the result
+        return self._apply_pagination(result_data, pagination, cyclic or False)
 
     @abstractmethod
     def execute(

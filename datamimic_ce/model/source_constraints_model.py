@@ -7,7 +7,7 @@
 from pydantic import BaseModel
 
 
-class ConstraintsModel(BaseModel):
+class SourceConstraintsModel(BaseModel):
     """
     Model representing source constraints for filtering input source data
     before synthetic data generation. Source constraints define rules that
