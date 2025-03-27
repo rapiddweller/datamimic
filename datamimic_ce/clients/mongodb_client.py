@@ -12,12 +12,12 @@ from typing import Any, cast
 from pymongo import MongoClient, UpdateOne
 
 from datamimic_ce.clients.database_client import DatabaseClient
-from datamimic_ce.credentials.mongodb_credential import MongoDBCredential
+from datamimic_ce.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 
 
 class MongoDBClient(DatabaseClient):
-    def __init__(self, credential: MongoDBCredential):
+    def __init__(self, credential: MongoDBConnectionConfig):
         self._credential = credential
 
     def _create_connection(self) -> MongoClient:

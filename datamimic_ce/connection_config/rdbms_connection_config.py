@@ -7,12 +7,12 @@
 
 from pydantic import BaseModel, ConfigDict
 
-from datamimic_ce.credentials.credential import Credential
+from datamimic_ce.connection_config.connection_config_base import ConnectionConfig
 
 
-class RdbmsCredential(Credential, BaseModel):
+class RdbmsConnectionConfig(ConnectionConfig, BaseModel):
     """
-    Database's credentials used for connecting to database server
+    Database's connection configuration used for connecting to database server
     """
 
     dbms: str
@@ -25,10 +25,10 @@ class RdbmsCredential(Credential, BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    def get_credentials(self):
+    def get_connection_config(self):
         return BaseModel.model_dump(self)
 
-    def check_credentials(self):
+    def check_connection_config(self):
         if not self.dbms:
             raise ValueError("DBMS is required")
 
