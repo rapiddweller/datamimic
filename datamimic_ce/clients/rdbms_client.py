@@ -28,7 +28,7 @@ class RdbmsClient(DatabaseClient):
         self._task_id = task_id
 
         # Prepare sqlalchemy engine kwargs, also remove datamimic-specific kwargs
-        self._engine_kwargs = credential.get_credentials()
+        self._engine_kwargs = credential.get_connection_config()
         # Remove datamimic-specific kwargs
         not_engine_kwargs = [
             "dbms",

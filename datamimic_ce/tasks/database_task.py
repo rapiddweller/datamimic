@@ -15,7 +15,7 @@ class DatabaseTask(Task):
         self._statement = statement
 
     def execute(self, ctx: SetupContext):
-        client = RdbmsClient(self._statement.db_credential, ctx.task_id)
+        client = RdbmsClient(self._statement.db_connection_config, ctx.task_id)
         ctx.add_client(self._statement.db_id, client)
 
     @property

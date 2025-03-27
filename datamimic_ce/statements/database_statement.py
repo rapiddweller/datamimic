@@ -13,7 +13,7 @@ class DatabaseStatement(Statement):
     def __init__(self, model: DatabaseModel):
         super().__init__(None, None)
 
-        # Get connection configuration from descriptor element attribute, user defined conf or system env properties file
+        # Get connection configuration from descriptor element attribute, user defined conf or system env properties
         self._db_id = model.id
 
         # Compose Database connection configuration
