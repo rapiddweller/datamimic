@@ -8,29 +8,29 @@ from typing import Any
 
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.statements.source_constraints_statement import ConstraintsStatement
+from datamimic_ce.statements.target_constraints_statement import TargetConstraintsStatement
 from datamimic_ce.tasks.base_constraint_task import BaseConstraintTask
 
 logger = logging.getLogger("datamimic")
 
 
-class ConstraintsTask(BaseConstraintTask):
+class TargetConstraintsTask(BaseConstraintTask):
     """
-    Task that applies source constraints to filter and transform data.
+    Task that applies target constraints to filter and transform data after mapping.
     """
 
-    def __init__(self, statement: ConstraintsStatement):
+    def __init__(self, statement: TargetConstraintsStatement):
         super().__init__(statement)
 
     @property
-    def statement(self) -> ConstraintsStatement:
+    def statement(self) -> TargetConstraintsStatement:
         return self._statement  # type: ignore
 
     def execute(
         self, source_data, pagination: DataSourcePagination | None = None, cyclic: bool | None = False
     ) -> list[Any] | GenIterContext:
         """
-        Execute the source constraints task.
+        Execute the target constraints task.
 
         Args:
             source_data: The source data to be filtered/transformed

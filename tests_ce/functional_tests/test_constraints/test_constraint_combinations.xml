@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<setup numProcess="2">
+    <!-- Test combining source constraints, mapping, and target constraints in sequence -->
+    <generate name="combined_constraints" count="150"
+        source="script/test_mapping_data.json" target="ConsoleExporter" cyclic="True">
+        <key name="id" generator="IncrementGenerator" />
+
+        <!-- Source constraints for classification and initial filtering -->
+        <sourceConstraints>
+            <!-- Classify income into categories -->
+            <rule if="income &lt; 30000" then="income_category = 'Low'" />
+            <rule if="income >= 30000 and income &lt; 100000" then="income_category = 'Medium'" />
+            <rule if="income >= 100000" then="income_category = 'High'" />
+
+            <!-- Classify credit score -->
+            <rule if="credit_score &lt; 600" then="credit_category = 'Poor'" />
+            <rule if="credit_score >= 600 and credit_score &lt; 720" then="credit_category = 'Fair'" />
+            <rule if="credit_score >= 720" then="credit_category = 'Good'" />
+
+            <!-- Initial filtering - remove very low income -->
+            <rule if="income &lt; 20000" then="False" />
+        </sourceConstraints>
+
+        <!-- Mapping for data transformation and calculations -->
+        <mapping>
+            <!-- Calculate maximum loan amount based on income -->
+            <rule if="True" then="max_loan = income * 0.4" />
+
+            <!-- Calculate interest rate based on credit category -->
+            <rule if="credit_category == 'Poor'" then="interest_rate = 0.15" />
+            <rule if="credit_category == 'Fair'" then="interest_rate = 0.08" />
+            <rule if="credit_category == 'Good'" then="interest_rate = 0.05" />
+
+            <!-- Calculate monthly payment -->
+            <rule if="max_loan > 0" then="monthly_payment = max_loan * interest_rate / 12" />
+        </mapping>
+
+        <!-- Target constraints for final filtering and adjustments -->
+        <targetConstraints>
+            <!-- Filter out customers with poor credit and high loan amounts -->
+            <rule if="credit_category == 'Poor' and max_loan > 50000" then="False" />
+
+            <!-- Filter out customers with extreme debt-to-income ratio -->
+            <rule if="monthly_payment > income * 0.28" then="False" />
+
+            <!-- Apply final eligibility check -->
+            <rule if="credit_score &lt; 500" then="False" />
+
+            <!-- Add approval status to remaining records -->
+            <rule if="credit_category == 'Good' and income_category != 'Low'"
+                then="final_status = 'Approved'" />
+            <rule if="credit_category == 'Fair' and income_category == 'High'"
+                then="final_status = 'Approved'" />
+            <rule if="not ('final_status' in locals() and final_status == 'Approved')"
+                then="final_status = 'Review'" />
+        </targetConstraints>
+    </generate>
+</setup> 
