@@ -16,19 +16,19 @@ from sqlalchemy.pool import QueuePool
 
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.config import settings
-from datamimic_ce.credentials.rdbms_credential import RdbmsCredential
+from datamimic_ce.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.logger import logger
 
 
 class RdbmsClient(DatabaseClient):
-    def __init__(self, credential: RdbmsCredential, task_id: str | None = None):
+    def __init__(self, credential: RdbmsConnectionConfig, task_id: str | None = None):
         self._credential = credential
         self._engine = None
         self._task_id = task_id
 
         # Prepare sqlalchemy engine kwargs, also remove datamimic-specific kwargs
-        self._engine_kwargs = credential.get_credentials()
+        self._engine_kwargs = credential.get_connection_config()
         # Remove datamimic-specific kwargs
         not_engine_kwargs = [
             "dbms",

@@ -7,12 +7,12 @@
 
 from pydantic import BaseModel, ConfigDict
 
-from datamimic_ce.credentials.credential import Credential
+from datamimic_ce.connection_config.connection_config_base import ConnectionConfig
 
 
-class MongoDBCredential(BaseModel, Credential):
+class MongoDBConnectionConfig(BaseModel, ConnectionConfig):
     """
-    MongoDB's credentials used for connecting to database server
+    MongoDB's connection configuration used for connecting to database server
     """
 
     host: str
@@ -23,7 +23,7 @@ class MongoDBCredential(BaseModel, Credential):
 
     model_config = ConfigDict(extra="allow")
 
-    def get_credentials(self):
+    def get_connection_config(self):
         return {
             "host": self.host,
             "port": self.port,
@@ -32,7 +32,7 @@ class MongoDBCredential(BaseModel, Credential):
             "password": self.password,
         }
 
-    def check_credentials(self):
+    def check_connection_config(self):
         if not self.host:
             raise ValueError("Host is required")
 

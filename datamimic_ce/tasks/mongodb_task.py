@@ -21,5 +21,5 @@ class MongoDBTask(SetupSubTask):
     def execute(self, ctx: SetupContext):
         ctx.add_client(
             self._statement.mongodb_id,
-            MongoDBClient(self._statement.mongodb_credential),
+            MongoDBClient(self._statement.mongodb_connection_config),
         )
