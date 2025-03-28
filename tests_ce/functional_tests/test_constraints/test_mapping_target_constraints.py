@@ -65,6 +65,11 @@ class TestMappingTargetConstraints(TestCase):
             print(f"Rule didn't match: {customers[0]['income']} > 50000 and {customers[0]['years_employed']} > 2")
 
         # Verify source constraints were applied correctly
+        risk_profile_hight, risk_profile_medium, risk_profile_low = 0, 0, 0
+        interest_rate_high, interest_rate_medium, interest_rate_low = 0, 0, 0
+        credit_limit_very_high, credit_limit_high, credit_limit_medium, credit_limit_low = 0, 0, 0, 0
+        approval_status_high, approval_status_medium, approval_status_low = 0, 0, 0
+
         for customer in customers:
             assert isinstance(customer["id"], int)
             assert customer["id"] in range(1, 101)
@@ -79,35 +84,63 @@ class TestMappingTargetConstraints(TestCase):
             # Check source constraints (risk profile assignment)
             if customer["credit_score"] < 600:
                 assert customer["risk_profile"] == "High"
+                risk_profile_hight += 1
             elif 600 <= customer["credit_score"] < 750:
                 assert customer["risk_profile"] == "Medium"
+                risk_profile_medium += 1
             else:
                 assert customer["risk_profile"] == "Low"
+                risk_profile_low += 1
 
             # Check mapping rules (interest rates)
             if customer["risk_profile"] == "High":
                 assert customer["interest_rate"] == 0.15
+                interest_rate_high += 1
             elif customer["risk_profile"] == "Medium":
                 assert customer["interest_rate"] == 0.10
+                interest_rate_medium += 1
             elif customer["risk_profile"] == "Low":
                 assert customer["interest_rate"] == 0.05
+                interest_rate_low += 1
 
             # Check mapping rules (credit limits)
             if customer["income"] > 100000 and customer["years_employed"] > 5:
                 assert customer["credit_limit"] == 50000
+                credit_limit_very_high += 1
+            elif customer["income"] > 50000 and customer["years_employed"] > 2:
+                assert customer["credit_limit"] == 25000
+                credit_limit_high += 1
             elif customer["income"] > 30000:
                 assert customer["credit_limit"] == 10000
+                credit_limit_medium += 1
             elif customer["income"] <= 30000:
                 assert customer["credit_limit"] == 5000
+                credit_limit_low += 1
 
             # Check target constraints (approval status)
             if customer["credit_limit"] >= 25000 and customer["interest_rate"] <= 0.08:
                 assert customer["approval_status"] == "Approved"
-            elif customer["credit_limit"] < 25000 or customer["interest_rate"] > 0.08:
+                approval_status_high += 1
+            elif 5000 < customer["credit_limit"] < 25000 and customer["interest_rate"] > 0.08:
                 assert customer["approval_status"] == "Review"
-
-            if customer["credit_limit"] <= 5000 and customer["interest_rate"] >= 0.12:
+                approval_status_medium += 1
+            elif customer["credit_limit"] <= 5000 and customer["interest_rate"] >= 0.12:
                 assert customer["approval_status"] == "Denied"
+                approval_status_low += 1
+
+        assert risk_profile_hight > 0
+        assert risk_profile_medium > 0
+        assert risk_profile_low > 0
+        assert interest_rate_high > 0
+        assert interest_rate_medium > 0
+        assert interest_rate_low > 0
+        assert credit_limit_very_high > 0
+        assert credit_limit_high > 0
+        assert credit_limit_medium > 0
+        assert credit_limit_low > 0
+        assert approval_status_high > 0
+        assert approval_status_medium > 0
+        assert approval_status_low > 0
 
     def test_constraints_sequence(self):
         """
