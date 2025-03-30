@@ -255,7 +255,8 @@ class GenerateTask(CommonSubTask):
                         actual_count = len(product_data)
                         if actual_count != count:
                             logger.info(
-                                f"Requested to generate {count:,} records but actually generated {actual_count:,} records due to filtering"
+                                f"Requested to generate {count:,} records but actually "
+                                f"generated {actual_count:,} records due to filtering"
                             )
                             timer_result["records_count"] = actual_count
 
