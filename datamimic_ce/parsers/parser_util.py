@@ -28,15 +28,11 @@ from datamimic_ce.constants.element_constants import (
     EL_ITEM,
     EL_KEY,
     EL_LIST,
-    EL_MAPPING,
     EL_MEMSTORE,
     EL_MONGODB,
     EL_NESTED_KEY,
     EL_REFERENCE,
-    EL_RULE,
     EL_SETUP,
-    EL_SOURCE_CONSTRAINTS,
-    EL_TARGET_CONSTRAINTS,
     EL_VARIABLE,
 )
 from datamimic_ce.logger import logger
@@ -55,13 +51,9 @@ from datamimic_ce.parsers.include_parser import IncludeParser
 from datamimic_ce.parsers.item_parser import ItemParser
 from datamimic_ce.parsers.key_parser import KeyParser
 from datamimic_ce.parsers.list_parser import ListParser
-from datamimic_ce.parsers.mapping_parser import MappingParser
 from datamimic_ce.parsers.memstore_parser import MemstoreParser
 from datamimic_ce.parsers.nested_key_parser import NestedKeyParser
 from datamimic_ce.parsers.reference_parser import ReferenceParser
-from datamimic_ce.parsers.rule_parser import RuleParser
-from datamimic_ce.parsers.source_constraints_parser import ConstraintsParser
-from datamimic_ce.parsers.target_constraints_parser import TargetConstraintsParser
 from datamimic_ce.parsers.variable_parser import VariableParser
 from datamimic_ce.statements.array_statement import ArrayStatement
 from datamimic_ce.statements.composite_statement import CompositeStatement
@@ -117,9 +109,6 @@ class ParserUtil:
                 EL_ELEMENT,
                 EL_ARRAY,
                 EL_CONDITION,
-                EL_SOURCE_CONSTRAINTS,
-                EL_MAPPING,
-                EL_TARGET_CONSTRAINTS,
             },
             EL_CONDITION: {EL_IF, EL_ELSE_IF, EL_ELSE},
             EL_GENERATE: {
@@ -133,9 +122,6 @@ class ParserUtil:
                 EL_ECHO,
                 EL_CONDITION,
                 EL_INCLUDE,
-                EL_SOURCE_CONSTRAINTS,
-                EL_MAPPING,
-                EL_TARGET_CONSTRAINTS,
             },
             EL_INCLUDE: {EL_SETUP},
             EL_ITEM: {EL_KEY, EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ELEMENT},
@@ -144,9 +130,6 @@ class ParserUtil:
             EL_IF: None,
             EL_ELSE_IF: None,
             EL_ELSE: None,
-            EL_SOURCE_CONSTRAINTS: {EL_RULE},
-            EL_MAPPING: {EL_RULE},
-            EL_TARGET_CONSTRAINTS: {EL_RULE},
         }
 
         return valid_sub_element_dict.get(ele_tag, set())
@@ -206,14 +189,6 @@ class ParserUtil:
             return ElementParser(class_factory_util, element=element, properties=properties)
         elif tag == EL_GENERATOR:
             return GeneratorParser(class_factory_util, element=element, properties=properties)
-        elif tag == EL_SOURCE_CONSTRAINTS:
-            return ConstraintsParser(class_factory_util, element=element, properties=properties)
-        elif tag == EL_MAPPING:
-            return MappingParser(class_factory_util, element=element, properties=properties)
-        elif tag == EL_TARGET_CONSTRAINTS:
-            return TargetConstraintsParser(class_factory_util, element=element, properties=properties)
-        elif tag == EL_RULE:
-            return RuleParser(class_factory_util, element=element, properties=properties)
         else:
             raise ValueError(f"Cannot get parser for element <{tag}>")
 
@@ -263,9 +238,9 @@ class ParserUtil:
                     | GeneratorParser,
                 ):
                     stmt = parser.parse()
-                elif isinstance(parser, KeyParser | RuleParser):
+                elif isinstance(parser, KeyParser):
                     stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
-                elif isinstance(parser, ConditionParser | ConstraintsParser | MappingParser | TargetConstraintsParser):
+                elif isinstance(parser, ConditionParser):
                     stmt = parser.parse(
                         descriptor_dir=descriptor_dir, parent_stmt=cast(CompositeStatement, parent_stmt)
                     )
