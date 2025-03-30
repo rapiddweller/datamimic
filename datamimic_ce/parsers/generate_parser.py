@@ -11,7 +11,6 @@ from datamimic_ce.constants.element_constants import EL_GENERATE
 from datamimic_ce.model.generate_model import GenerateModel
 from datamimic_ce.parsers.statement_parser import StatementParser
 from datamimic_ce.statements.generate_statement import GenerateStatement
-from datamimic_ce.statements.source_constraints_statement import ConstraintsStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
@@ -52,19 +51,5 @@ class GenerateParser(StatementParser):
             gen_stmt,
         )
 
-        self._check_only_one_source_constraints_tag(sub_stmt_list)
-
         gen_stmt.sub_statements = sub_stmt_list
         return gen_stmt
-
-    @staticmethod
-    def _check_only_one_source_constraints_tag(sub_stmt_list: list[Statement]):
-        """
-        Only one 'sourceConstraints' tag per generate
-        """
-        count = 0
-        for stmt in sub_stmt_list:
-            if isinstance(stmt, ConstraintsStatement):
-                count += 1
-        if count > 1:
-            raise SyntaxError("Only once <sourceConstraints> allowed per <generate>")

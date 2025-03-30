@@ -249,6 +249,17 @@ class GenerateTask(CommonSubTask):
                         context, self._statement, worker_id, 0, count, page_size, source_operation, operation_metadata
                     )
 
+                # Update the actual record count in the timer result
+                for product_name, product_data in merged_result.items():
+                    if product_name == self.statement.full_name:
+                        actual_count = len(product_data)
+                        if actual_count != count:
+                            logger.info(
+                                f"Requested to generate {count:,} records but actually "
+                                f"generated {actual_count:,} records due to filtering"
+                            )
+                            timer_result["records_count"] = actual_count
+
                 # At the end of OUTERMOST gen_stmt:
                 # - export gathered product with LAZY exporters, such as TestResultExporter, MemstoreExporter,...
                 # - gather and upload ARTIFACT exporters, such as TXT, JSON,... then clean temp directory
