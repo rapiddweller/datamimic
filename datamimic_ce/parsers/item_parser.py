@@ -11,13 +11,11 @@ from datamimic_ce.constants.element_constants import EL_ITEM
 from datamimic_ce.model.item_model import ItemModel
 from datamimic_ce.parsers.statement_parser import StatementParser
 from datamimic_ce.statements.item_statement import ItemStatement
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
 class ItemParser(StatementParser):
     def __init__(
         self,
-        class_factory_util: BaseClassFactoryUtil,
         element: Element,
         properties: dict,
     ):
@@ -25,7 +23,6 @@ class ItemParser(StatementParser):
             element,
             properties,
             valid_element_tag=EL_ITEM,
-            class_factory_util=class_factory_util,
         )
 
     def parse(self, descriptor_dir: Path) -> ItemStatement:
@@ -34,10 +31,10 @@ class ItemParser(StatementParser):
         :return:
         """
         # Parse sub elements
+        from datamimic_ce.parsers.parser_util import ParserUtil
 
         item_stmt = ItemStatement(self.validate_attributes(ItemModel))
-        sub_stmt_list = self._class_factory_util.get_parser_util_cls()().parse_sub_elements(
-            class_factory_util=self._class_factory_util,
+        sub_stmt_list = ParserUtil.parse_sub_elements(
             descriptor_dir=descriptor_dir,
             element=self._element,
             properties=self._properties,

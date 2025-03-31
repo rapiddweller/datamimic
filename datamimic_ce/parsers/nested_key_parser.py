@@ -12,13 +12,11 @@ from datamimic_ce.model.nested_key_model import NestedKeyModel
 from datamimic_ce.parsers.statement_parser import StatementParser
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.statement import Statement
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
 class NestedKeyParser(StatementParser):
     def __init__(
         self,
-        class_factory_util: BaseClassFactoryUtil,
         element: Element,
         properties: dict,
     ):
@@ -26,7 +24,6 @@ class NestedKeyParser(StatementParser):
             element,
             properties,
             valid_element_tag=EL_NESTED_KEY,
-            class_factory_util=class_factory_util,
         )
 
     def parse(self, descriptor_dir: Path, parent_stmt: Statement) -> NestedKeyStatement:
@@ -35,10 +32,10 @@ class NestedKeyParser(StatementParser):
         :return:
         """
         # Parse sub elements
+        from datamimic_ce.parsers.parser_util import ParserUtil
 
         nested_key_stmt = NestedKeyStatement(self.validate_attributes(NestedKeyModel), parent_stmt)
-        sub_stmt_list = self._class_factory_util.get_parser_util_cls()().parse_sub_elements(
-            class_factory_util=self._class_factory_util,
+        sub_stmt_list = ParserUtil.parse_sub_elements(
             descriptor_dir=descriptor_dir,
             element=self._element,
             properties=self._properties,

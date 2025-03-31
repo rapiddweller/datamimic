@@ -13,25 +13,41 @@ from datamimic_ce.statements.statement import Statement
 
 
 class Task(ABC):
+    """
+    Super class of all tasks
+    """
+
     @property
     @abstractmethod
     def statement(self) -> Statement:
         pass
 
 
-class SetupSubTask(Task, ABC):
-    @abstractmethod
-    def execute(self, ctx: SetupContext) -> Any:
-        pass
+class GenSubTask(Task, ABC):
+    """
+    Sub-task of GenerateTask
+    """
 
-
-class GenIterSubTask(Task, ABC):
     @abstractmethod
     def execute(self, ctx: GenIterContext) -> Any:
         pass
 
 
+class SetupSubTask(Task, ABC):
+    """
+    Sub-task of SetupTask
+    """
+
+    @abstractmethod
+    def execute(self, ctx: SetupContext) -> Any:
+        pass
+
+
 class CommonSubTask(Task, ABC):
+    """
+    Sub-task of SetupTask and GenerateTask
+    """
+
     @abstractmethod
     def execute(self, ctx: SetupContext | GenIterContext) -> Any:
         pass

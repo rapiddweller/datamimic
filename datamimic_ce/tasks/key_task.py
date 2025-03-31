@@ -23,9 +23,11 @@ from datamimic_ce.domains.common.literal_generators.generator_util import Genera
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.tasks.element_task import ElementTask
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
+from datamimic_ce.tasks.task import GenSubTask
+from datamimic_ce.tasks.task_util import TaskUtil
 
 
-class KeyTask(KeyVariableTask):
+class KeyTask(KeyVariableTask, GenSubTask):
     def __init__(
         self,
         ctx: SetupContext,
@@ -62,11 +64,9 @@ class KeyTask(KeyVariableTask):
         :return:
         """
         root_ctx = ctx.root
-        class_factory_util = root_ctx.class_factory_util
-        task_util_cls = class_factory_util.get_task_util_cls()
 
         # check condition to enable or disable element, default True
-        condition = task_util_cls.evaluate_condition_value(
+        condition = TaskUtil.evaluate_condition_value(
             ctx=ctx, element_name=self._statement.name, value=self.statement.condition
         )
 
@@ -80,7 +80,7 @@ class KeyTask(KeyVariableTask):
             attributes = {}
             if hasattr(self._statement, "sub_statements"):
                 for stmt in self._statement.sub_statements:
-                    task = task_util_cls.get_task_by_statement(root_ctx, stmt)
+                    task = TaskUtil.get_task_by_statement(root_ctx, stmt)
                     if isinstance(task, ElementTask) and isinstance(ctx, GenIterContext):
                         attributes.update(task.generate_xml_attribute(ctx))
                     else:

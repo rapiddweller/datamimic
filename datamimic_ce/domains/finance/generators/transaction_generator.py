@@ -15,7 +15,7 @@ from pathlib import Path
 
 from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
-from datamimic_ce.utils.data_generation_ce_util import DataGenerationCEUtil
+from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -256,7 +256,7 @@ class TransactionGenerator(BaseDomainGenerator):
         Returns:
             A random alphanumeric reference number.
         """
-        return DataGenerationCEUtil.rnd_str_from_regex("[A-Z0-9]{10,12}")
+        return StringGenerator.rnd_str_from_regex("[A-Z0-9]{10,12}")
 
     def get_currency(self) -> dict:
         """Get currency information based on the current dataset.

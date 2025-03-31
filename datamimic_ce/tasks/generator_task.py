@@ -7,10 +7,10 @@
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.statements.generator_statement import GeneratorStatement
-from datamimic_ce.tasks.task import Task
+from datamimic_ce.tasks.task import SetupSubTask
 
 
-class GeneratorTask(Task):
+class GeneratorTask(SetupSubTask):
     """
     Store a generator to SetupContext
     """

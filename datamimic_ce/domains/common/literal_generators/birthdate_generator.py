@@ -7,7 +7,7 @@
 from datetime import datetime, timedelta
 
 from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
+from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 
 
 class BirthdateGenerator(BaseLiteralGenerator):
@@ -29,7 +29,6 @@ class BirthdateGenerator(BaseLiteralGenerator):
 
     def __init__(
         self,
-        class_factory_util: BaseClassFactoryUtil,
         min_age: int = 1,
         max_age: int = 100,
     ) -> None:
@@ -49,7 +48,7 @@ class BirthdateGenerator(BaseLiteralGenerator):
             today = datetime(today.year, 2, 28)
         self._min_birthdate = datetime(today.year - max_age - 1, today.month, today.day) + timedelta(days=1)
         self._max_birthdate = datetime(today.year - min_age, today.month, today.day)
-        self._date_generator = class_factory_util.get_datetime_generator()(
+        self._date_generator = DateTimeGenerator(
             min=str(self._min_birthdate), max=str(self._max_birthdate), random=True
         )
 
@@ -60,7 +59,10 @@ class BirthdateGenerator(BaseLiteralGenerator):
         Returns:
             datetime: generated date
         """
-        return self._date_generator.generate()
+        result = self._date_generator.generate()
+        if not isinstance(result, datetime):
+            raise ValueError("BirthdateGenerator must return a datetime object")
+        return result
 
     def reset(self) -> None:
         pass

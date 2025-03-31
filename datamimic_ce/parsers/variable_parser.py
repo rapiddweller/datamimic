@@ -11,7 +11,6 @@ from datamimic_ce.model.variable_model import VariableModel
 from datamimic_ce.parsers.statement_parser import StatementParser
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.statements.variable_statement import VariableStatement
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
 class VariableParser(StatementParser):
@@ -21,7 +20,6 @@ class VariableParser(StatementParser):
 
     def __init__(
         self,
-        class_factory_util: BaseClassFactoryUtil,
         element: Element,
         properties: dict,
     ):
@@ -29,7 +27,6 @@ class VariableParser(StatementParser):
             element,
             properties,
             valid_element_tag=EL_VARIABLE,
-            class_factory_util=class_factory_util,
         )
 
     def parse(self, parent_stmt: Statement, has_parent_setup: bool | None = False) -> VariableStatement:

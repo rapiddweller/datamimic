@@ -34,7 +34,6 @@ class MedicalProcedure(BaseEntity):
         """Initialize the MedicalProcedure entity.
 
         Args:
-            class_factory_util: The class factory utility.
             locale: The locale to use for generating data.
         """
         super().__init__()

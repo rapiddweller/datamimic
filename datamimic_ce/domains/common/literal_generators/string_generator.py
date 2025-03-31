@@ -4,14 +4,18 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import random
+import re
+import string
+
+import exrex  # type: ignore
+
 from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
 class StringGenerator(BaseLiteralGenerator):
     def __init__(
         self,
-        class_factory_util: BaseClassFactoryUtil,
         min_len: int | None = None,
         max_len: int | None = None,
         char_set: str | None = None,
@@ -53,15 +57,35 @@ class StringGenerator(BaseLiteralGenerator):
                 f"Cannot generate unique string with length {self._max_len} "
                 f"from character set of size {len(self._char_set)}"
             )
-        self._class_factory_util = class_factory_util.get_data_generation_util()
 
     def generate(self) -> str:
-        # Handle mode random
-        return self._class_factory_util.rnd_str(
-            char_set=self._char_set,
-            min_val=self._min_len,
-            max_val=self._max_len,
-            unique=self.unique,
-            prefix=self.prefix,
-            suffix=self.suffix,
-        )
+        try:
+            # regex
+            if any(c in self._char_set for c in ".^$*+?{}[]|()"):
+                compiled_regex = re.compile(self._char_set)
+                char_set_list = list(set(compiled_regex.findall(string.printable)))
+            else:
+                # simple character
+                char_set_list = list(set(self._char_set))
+        except re.error:
+            char_set_list = list(set(self._char_set))
+
+        # If unique, ensure each character only appears once
+        if self.unique:
+            length = random.randint(self._min_len, self._max_len)
+            if len(char_set_list) < length:
+                raise ValueError("Character set is too small to generate a unique string of this length.")
+            result = random.sample(char_set_list, length)  # random.sample ensures uniqueness
+        else:
+            length = random.randint(self._min_len, self._max_len)
+            result = [random.choice(char_set_list) for _ in range(length)]
+
+        return self.prefix + "".join(result) + self.suffix
+
+    @staticmethod
+    def rnd_str_from_regex(pattern: str) -> str:
+        pattern = r"" + pattern
+        result = exrex.getone(pattern, 1)
+        if result is None:
+            raise ValueError(f"Cannot generate string from regex pattern: {pattern}")
+        return result

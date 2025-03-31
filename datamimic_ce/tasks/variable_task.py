@@ -28,13 +28,14 @@ from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntity
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
+from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.domain_class_util import DomainClassUtil
 from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.string_util import StringUtil
 
 
-class VariableTask(KeyVariableTask):
+class VariableTask(KeyVariableTask, CommonSubTask):
     _iterator: Iterator[Any] | None
     _ITERATOR_MODE: Final = "iterator"
     _ENTITY_MODE: Final = "entity_builder"
@@ -294,7 +295,6 @@ class VariableTask(KeyVariableTask):
         """
         Generate data for element <variable>
         """
-        from datamimic_ce.tasks.task_util import TaskUtil
 
         if self._mode == self._ITERATOR_MODE:
             value = next(self._iterator) if self._iterator is not None else None

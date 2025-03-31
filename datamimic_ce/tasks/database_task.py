@@ -7,10 +7,10 @@
 from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.statements.database_statement import DatabaseStatement
-from datamimic_ce.tasks.task import Task
+from datamimic_ce.tasks.task import SetupSubTask
 
 
-class DatabaseTask(Task):
+class DatabaseTask(SetupSubTask):
     def __init__(self, statement: DatabaseStatement):
         self._statement = statement
 

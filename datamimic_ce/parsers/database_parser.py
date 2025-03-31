@@ -11,7 +11,6 @@ from datamimic_ce.constants.element_constants import EL_DATABASE
 from datamimic_ce.model.database_model import DatabaseModel
 from datamimic_ce.parsers.statement_parser import StatementParser
 from datamimic_ce.statements.database_statement import DatabaseStatement
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
 class DatabaseParser(StatementParser):
@@ -21,7 +20,6 @@ class DatabaseParser(StatementParser):
 
     def __init__(
         self,
-        class_factory_util: BaseClassFactoryUtil,
         element: Element,
         properties: dict,
     ):
@@ -29,7 +27,6 @@ class DatabaseParser(StatementParser):
             element,
             properties,
             valid_element_tag=EL_DATABASE,
-            class_factory_util=class_factory_util,
         )
 
     def parse(self, descriptor_dir: Path) -> DatabaseStatement:
@@ -39,7 +36,7 @@ class DatabaseParser(StatementParser):
         """
         from datamimic_ce.parsers.parser_util import ParserUtil
 
-        db_credentials = ParserUtil.fulfill_credentials_v2(
+        db_credentials = ParserUtil.fulfill_credentials(
             descriptor_dir=descriptor_dir,
             descriptor_attr=self._element.attrib,
             env_props=self.properties,

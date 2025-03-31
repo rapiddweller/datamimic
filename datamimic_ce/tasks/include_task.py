@@ -10,6 +10,7 @@ from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.parsers.descriptor_parser import DescriptorParser
 from datamimic_ce.statements.include_statement import IncludeStatement
 from datamimic_ce.tasks.task import CommonSubTask
+from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -59,7 +60,6 @@ class IncludeTask(CommonSubTask):
 
             # Parse and execute descriptor file
             sub_setup_stmt = DescriptorParser.parse(
-                ctx.class_factory_util,
                 ctx.descriptor_dir / self.statement.uri,
                 ctx.properties,
             )
@@ -77,8 +77,7 @@ class IncludeTask(CommonSubTask):
         root_ctx = ctx.root
         if uri.endswith(".xml"):
             # Parse and execute descriptor file
-            sub_geniter_stmt = DescriptorParser.parse(
-                root_ctx.class_factory_util,
+            sub_setup_stmt = DescriptorParser.parse(
                 root_ctx.descriptor_dir / uri,
                 root_ctx.properties,
             )
@@ -86,14 +85,13 @@ class IncludeTask(CommonSubTask):
             copied_root_context = copy.deepcopy(root_ctx)
 
             # Update root_context with attributes defined in sub-setup statement
-            copied_root_context.update_with_stmt(sub_geniter_stmt)
+            copied_root_context.update_with_stmt(sub_setup_stmt)
             # Update root_context with parent_context variables and current_product
             copied_root_context.global_variables.update(ctx.current_variables)
             copied_root_context.global_variables.update(ctx.current_product)
 
-            task_util_cls = copied_root_context.class_factory_util.get_task_util_cls()
-            for stmt in sub_geniter_stmt.sub_statements:
-                task = task_util_cls.get_task_by_statement(copied_root_context, stmt)
-                task.execute(copied_root_context)
+            for stmt in sub_setup_stmt.sub_statements:
+                task = TaskUtil.get_task_by_statement(copied_root_context, stmt)
+                task.execute(copied_root_context)  # type: ignore[attr-defined]
         else:
             raise ValueError(f"Unsupported include file type: {uri} inside <generate>. Only .xml is supported")

@@ -8,7 +8,6 @@ from xml.etree.ElementTree import Element
 
 from datamimic_ce.constants.element_constants import EL_ELSE
 from datamimic_ce.parsers.if_else_base_parser import IfElseBaseParser
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
 class ElseParser(IfElseBaseParser):
@@ -18,8 +17,7 @@ class ElseParser(IfElseBaseParser):
 
     def __init__(
         self,
-        class_factory_util: BaseClassFactoryUtil,
         element: Element,
         properties: dict,
     ):
-        super().__init__(class_factory_util, element, properties, valid_element_tag=EL_ELSE)
+        super().__init__(element, properties, valid_element_tag=EL_ELSE)
