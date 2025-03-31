@@ -9,10 +9,10 @@ import re
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.echo_statement import EchoStatement
-from datamimic_ce.tasks.task import Task
+from datamimic_ce.tasks.task import CommonSubTask
 
 
-class EchoTask(Task):
+class EchoTask(CommonSubTask):
     """
     Print value inside echo tag to debug logger
     """

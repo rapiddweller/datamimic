@@ -9,7 +9,6 @@ from pathlib import Path
 
 from datamimic_ce.parsers.setup_parser import SetupParser
 from datamimic_ce.statements.setup_statement import SetupStatement
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
 class DescriptorParser:
@@ -19,7 +18,6 @@ class DescriptorParser:
 
     @staticmethod
     def parse(
-        cls_factory_util: BaseClassFactoryUtil,
         descriptor_file_path: Path,
         properties: dict | None,
     ) -> SetupStatement:
@@ -34,7 +32,7 @@ class DescriptorParser:
             root = tree.getroot()
 
             # Use SetupParser to parse root element "setup"
-            setup_parser = SetupParser(cls_factory_util, root, properties)
+            setup_parser = SetupParser(root, properties)
             root_stmt = setup_parser.parse(descriptor_file_path.parent)
             return root_stmt
         except FileNotFoundError as e:

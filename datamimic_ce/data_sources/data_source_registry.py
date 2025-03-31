@@ -274,8 +274,8 @@ class DataSourceRegistry:
         file_path: Path,
         separator: str,
         cyclic: bool | None,
-        start_idx: int,
-        end_idx: int,
+        start_idx: int | None,
+        end_idx: int | None,
         source_scripted: bool,
         prefix: str,
         suffix: str,
@@ -313,7 +313,7 @@ class DataSourceRegistry:
         return result
 
     @staticmethod
-    def load_json_file(file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
+    def load_json_file(file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None) -> list[dict]:
         """
         Load JSON content from file using skip and limit.
 
@@ -338,7 +338,7 @@ class DataSourceRegistry:
         return DataSourceRegistry.get_cyclic_data_list(data=file_data, cyclic=cyclic, pagination=pagination)
 
     @staticmethod
-    def load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int, end_idx: int) -> list[dict]:
+    def load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None) -> list[dict]:
         """
         Load XML content from file using skip and limit.
 
@@ -379,10 +379,8 @@ class DataSourceRegistry:
     def load_xml_file_with_operation(
         file_path: Path,
         cyclic: bool | None,
-        start_idx: int,
+        start_idx: int | None,
         end_idx: int,
-        source_operation: dict | None,
-        operation_metadata: dict | None,
     ):
         """
         (EE feature only)

@@ -63,7 +63,6 @@ from datamimic_ce.statements.include_statement import IncludeStatement
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.setup_statement import SetupStatement
 from datamimic_ce.statements.statement import Statement
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -135,7 +134,7 @@ class ParserUtil:
         return valid_sub_element_dict.get(ele_tag, set())
 
     @staticmethod
-    def get_parser_by_element(class_factory_util: BaseClassFactoryUtil, element: Element, properties: dict):
+    def _get_parser_by_element(element: Element, properties: dict):
         """
         Parser factory: Creating parser based on element
         :param element:
@@ -146,63 +145,61 @@ class ParserUtil:
         if tag == EL_MONGODB:
             from datamimic_ce.parsers.mongodb_parser import MongoDBParser
 
-            return MongoDBParser(class_factory_util, element, properties)
+            return MongoDBParser(element, properties)
         elif tag == EL_GENERATE:
             from datamimic_ce.parsers.generate_parser import GenerateParser
 
-            return GenerateParser(class_factory_util, element, properties)
+            return GenerateParser(element, properties)
         elif tag == EL_KEY:
             from datamimic_ce.parsers.key_parser import KeyParser
 
-            return KeyParser(class_factory_util, element, properties)
+            return KeyParser(element, properties)
         elif tag == EL_DATABASE:
-            return DatabaseParser(class_factory_util, element, properties)
+            return DatabaseParser(element, properties)
         elif tag == EL_VARIABLE:
-            return VariableParser(class_factory_util, element, properties)
+            return VariableParser(element, properties)
         elif tag == EL_NESTED_KEY:
-            return NestedKeyParser(class_factory_util, element, properties)
+            return NestedKeyParser(element, properties)
         elif tag == EL_INCLUDE:
-            return IncludeParser(class_factory_util, element, properties)
+            return IncludeParser(element, properties)
         elif tag == EL_MEMSTORE:
-            return MemstoreParser(class_factory_util, element, properties)
+            return MemstoreParser(element, properties)
         elif tag == EL_EXECUTE:
-            return ExecuteParser(class_factory_util, element, properties)
+            return ExecuteParser(element, properties)
         elif tag == EL_REFERENCE:
-            return ReferenceParser(class_factory_util, element, properties)
+            return ReferenceParser(element, properties)
         elif tag == EL_LIST:
-            return ListParser(class_factory_util, element, properties)
+            return ListParser(element, properties)
         elif tag == EL_ITEM:
-            return ItemParser(class_factory_util, element, properties)
+            return ItemParser(element, properties)
         elif tag == EL_IF:
-            return IfParser(class_factory_util, element=element, properties=properties)
+            return IfParser(element, properties)
         elif tag == EL_CONDITION:
-            return ConditionParser(class_factory_util, element=element, properties=properties)
+            return ConditionParser(element, properties)
         elif tag == EL_ELSE_IF:
-            return ElseIfParser(class_factory_util, element=element, properties=properties)
+            return ElseIfParser(element, properties)
         elif tag == EL_ELSE:
-            return ElseParser(class_factory_util, element=element, properties=properties)
+            return ElseParser(element, properties)
         elif tag == EL_ARRAY:
-            return ArrayParser(class_factory_util, element=element, properties=properties)
+            return ArrayParser(element, properties)
         elif tag == EL_ECHO:
-            return EchoParser(class_factory_util, element=element, properties=properties)
+            return EchoParser(element, properties)
         elif tag == EL_ELEMENT:
-            return ElementParser(class_factory_util, element=element, properties=properties)
+            return ElementParser(element, properties)
         elif tag == EL_GENERATOR:
-            return GeneratorParser(class_factory_util, element=element, properties=properties)
+            return GeneratorParser(element, properties)
         else:
             raise ValueError(f"Cannot get parser for element <{tag}>")
 
+    @staticmethod
     def parse_sub_elements(
-        self,
-        class_factory_util: BaseClassFactoryUtil,
         descriptor_dir: Path,
         element: Element,
-        properties: dict,
+        properties: dict[str, str] | None,
         parent_stmt: Statement,
     ) -> list[Statement]:
         """
         Parse sub-elements of composite element into list of Statement
-        :param class_factory_util:
         :param descriptor_dir:
         :param element:
         :param properties:
@@ -212,10 +209,10 @@ class ParserUtil:
         result = []
 
         # Create a copied props for possible updating later, prevent updating original props dict
-        copied_props = copy.deepcopy(properties) or {}
+        copied_props = copy.deepcopy(properties) if properties else {}
 
         for child_ele in element:
-            parser = self.get_parser_by_element(class_factory_util, child_ele, copied_props)
+            parser = ParserUtil._get_parser_by_element(child_ele, copied_props)
             # TODO: add more child-element-able parsers such as
             #  attribute, reference, part,... (i.e. elements which have attribute 'name')
             stmt: Statement
@@ -296,7 +293,7 @@ class ParserUtil:
         return attributes
 
     @staticmethod
-    def fulfill_credentials_v2(
+    def fulfill_credentials(
         descriptor_dir: Path,
         descriptor_attr: dict,
         env_props: dict[str, str] | None,

@@ -3,12 +3,16 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
+import random
 import re
+import string
 from typing import Any
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
+from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
 from datamimic_ce.contexts.context import Context
+from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.converter.append_converter import AppendConverter
 from datamimic_ce.converter.converter import Converter
@@ -24,6 +28,7 @@ from datamimic_ce.converter.remove_none_or_empty_element_converter import Remove
 from datamimic_ce.converter.timestamp2date_converter import Timestamp2DateConverter
 from datamimic_ce.converter.upper_case_converter import UpperCaseConverter
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.enums.converter_enums import ConverterEnum
 from datamimic_ce.exporters.csv_exporter import CSVExporter
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
@@ -55,25 +60,13 @@ from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.array_task import ArrayTask
-from datamimic_ce.tasks.condition_task import ConditionTask
 from datamimic_ce.tasks.database_task import DatabaseTask
 from datamimic_ce.tasks.echo_task import EchoTask
 from datamimic_ce.tasks.element_task import ElementTask
-from datamimic_ce.tasks.else_if_task import ElseIfTask
-from datamimic_ce.tasks.else_task import ElseTask
 from datamimic_ce.tasks.execute_task import ExecuteTask
-from datamimic_ce.tasks.generate_task import (
-    GenerateTask,
-)
 from datamimic_ce.tasks.generator_task import GeneratorTask
-from datamimic_ce.tasks.if_task import IfTask
-from datamimic_ce.tasks.include_task import IncludeTask
-from datamimic_ce.tasks.item_task import ItemTask
-from datamimic_ce.tasks.key_task import KeyTask
-from datamimic_ce.tasks.list_task import ListTask
 from datamimic_ce.tasks.memstore_task import MemstoreTask
 from datamimic_ce.tasks.mongodb_task import MongoDBTask
-from datamimic_ce.tasks.nested_key_task import NestedKeyTask
 from datamimic_ce.tasks.reference_task import ReferenceTask
 from datamimic_ce.tasks.task import Task
 from datamimic_ce.utils.object_util import ObjectUtil
@@ -86,47 +79,66 @@ class TaskUtil:
         stmt: Statement,
         pagination: DataSourcePagination | None = None,
     ) -> Task:
-        class_factory_util = ctx.class_factory_util
         if isinstance(stmt, GenerateStatement):
-            return GenerateTask(stmt, class_factory_util)
+            from datamimic_ce.tasks.generate_task import GenerateTask
+
+            return GenerateTask(stmt)
         elif isinstance(stmt, MongoDBStatement):
             return MongoDBTask(stmt)
         elif isinstance(stmt, DatabaseStatement):
             return DatabaseTask(stmt)
         elif isinstance(stmt, IncludeStatement):
+            from datamimic_ce.tasks.include_task import IncludeTask
+
             return IncludeTask(stmt)
         elif isinstance(stmt, MemstoreStatement):
             return MemstoreTask(stmt)
         elif isinstance(stmt, ExecuteStatement):
             return ExecuteTask(stmt)
         elif isinstance(stmt, KeyStatement):
+            from datamimic_ce.tasks.key_task import KeyTask
+
             return KeyTask(ctx, stmt, pagination)
         elif isinstance(stmt, VariableStatement):
             from datamimic_ce.tasks.variable_task import VariableTask
 
             return VariableTask(ctx, stmt, pagination)
         elif isinstance(stmt, NestedKeyStatement):
-            return NestedKeyTask(ctx, stmt, class_factory_util)
+            from datamimic_ce.tasks.nested_key_task import NestedKeyTask
+
+            return NestedKeyTask(ctx, stmt)
         elif isinstance(stmt, ArrayStatement):
-            return ArrayTask(ctx, stmt)
+            return ArrayTask(stmt)
         elif isinstance(stmt, ReferenceStatement):
             return ReferenceTask(stmt, pagination)
         elif isinstance(stmt, ListStatement):
-            return ListTask(ctx=ctx, statement=stmt, class_factory_util=class_factory_util)
+            from datamimic_ce.tasks.list_task import ListTask
+
+            return ListTask(ctx=ctx, statement=stmt)
         elif isinstance(stmt, ItemStatement):
-            return ItemTask(ctx, stmt, class_factory_util)
+            from datamimic_ce.tasks.item_task import ItemTask
+
+            return ItemTask(ctx, stmt)
         elif isinstance(stmt, IfStatement):
-            return IfTask(stmt, class_factory_util)
+            from datamimic_ce.tasks.if_task import IfTask
+
+            return IfTask(stmt)
         elif isinstance(stmt, ConditionStatement):
-            return ConditionTask(stmt, class_factory_util)
+            from datamimic_ce.tasks.condition_task import ConditionTask
+
+            return ConditionTask(stmt)
         elif isinstance(stmt, ElseIfStatement):
-            return ElseIfTask(stmt, class_factory_util)
+            from datamimic_ce.tasks.else_if_task import ElseIfTask
+
+            return ElseIfTask(stmt)
         elif isinstance(stmt, ElseStatement):
-            return ElseTask(stmt, class_factory_util)
+            from datamimic_ce.tasks.else_task import ElseTask
+
+            return ElseTask(stmt)
         elif isinstance(stmt, EchoStatement):
             return EchoTask(stmt)
         elif isinstance(stmt, ElementStatement):
-            return ElementTask(ctx, stmt)
+            return ElementTask(ctx, stmt)  # type: ignore[return-value]
         elif isinstance(stmt, GeneratorStatement):
             return GeneratorTask(stmt)
         else:
@@ -191,7 +203,7 @@ class TaskUtil:
             raise e
 
     @staticmethod
-    def evaluate_condition_value(ctx: Context, element_name: str, value: str | None) -> bool:
+    def evaluate_condition_value(ctx: Context, element_name: str | None, value: str | None) -> bool:
         """
         Evaluate value in 'condition' property
         Value must be a boolean expression
@@ -271,31 +283,26 @@ class TaskUtil:
 
     @staticmethod
     def gen_task_load_data_from_source_or_script(
-        context: SetupContext,
+        context: SetupContext | GenIterContext,
         stmt: GenerateStatement,
-        source_str: str,  # DO NOT remove this parameter, used on EE as well
+        source_str: str | None,
         separator: str,
         source_scripted: bool,
-        processed_data_count: int,  # DO NOT remove this parameter, used on EE as well
-        load_start_idx: int,
-        load_end_idx: int,
+        load_start_idx: int | None,
+        load_end_idx: int | None,
         load_pagination: DataSourcePagination | None,
-        source_operation: dict | None,
-        operation_metadata: dict | None,
     ) -> tuple[list[dict], bool]:
         """
         Generate task to load data from source
         """
         build_from_source = True
-        root_context = context.root
         source_data: dict | list = []
 
-        # get prefix and suffix
-        setup_ctx = context.root if not isinstance(context, SetupContext) else context
-        prefix = stmt.variable_prefix or setup_ctx.default_variable_prefix
-        suffix = stmt.variable_suffix or setup_ctx.default_variable_suffix
+        root_context = context.root
 
-        data_source_registry = root_context.class_factory_util.get_datasource_registry_cls()
+        # get prefix and suffix
+        prefix = stmt.variable_prefix or root_context.default_variable_prefix
+        suffix = stmt.variable_suffix or root_context.default_variable_suffix
 
         if source_str is None:
             if stmt.script is None:
@@ -305,8 +312,8 @@ class TaskUtil:
                 source_data = context.evaluate_python_expression(stmt.script)
         # Load data from CSV
         elif source_str.endswith(".csv"):
-            source_data = data_source_registry.load_csv_file(
-                ctx=context,
+            source_data = DataSourceRegistry.load_csv_file(
+                ctx=root_context,
                 file_path=root_context.descriptor_dir / source_str,
                 separator=separator,
                 cyclic=stmt.cyclic,
@@ -318,7 +325,7 @@ class TaskUtil:
             )
         # Load data from JSON
         elif source_str.endswith(".json"):
-            source_data = data_source_registry.load_json_file(
+            source_data = DataSourceRegistry.load_json_file(
                 root_context.descriptor_dir / source_str,
                 stmt.cyclic,
                 load_start_idx,
@@ -328,26 +335,15 @@ class TaskUtil:
             if source_scripted:
                 try:
                     source_data = TaskUtil.evaluate_file_script_template(
-                        ctx=context, datas=source_data, prefix=prefix, suffix=suffix
+                        ctx=root_context, datas=source_data, prefix=prefix, suffix=suffix
                     )
                 except Exception as e:
                     logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
         # Load data from XML
         elif source_str.endswith(".xml"):
-            if source_operation:
-                # (EE feature only) Load XML file with source operation
-                source_data = data_source_registry.load_xml_file_with_operation(
-                    root_context.descriptor_dir / source_str,
-                    stmt.cyclic,
-                    load_start_idx,
-                    load_end_idx,
-                    source_operation,
-                    operation_metadata,
-                )
-            else:
-                source_data = data_source_registry.load_xml_file(
-                    root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
-                )
+            source_data = DataSourceRegistry.load_xml_file(
+                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
+            )
             # if sourceScripted then evaluate python expression in json
             if source_scripted:
                 source_data = TaskUtil.evaluate_file_script_template(
@@ -364,7 +360,7 @@ class TaskUtil:
             # Load data from MongoDB
             if isinstance(client, MongoDBClient):
                 if stmt.selector:
-                    selector = TaskUtil.evaluate_selector_script(context, stmt)
+                    selector = TaskUtil.evaluate_selector_script(root_context, stmt)
                     source_data = client.get_by_page_with_query(query=selector, pagination=load_pagination)
                 elif stmt.type:
                     source_data = client.get_by_page_with_type(collection_name=stmt.type, pagination=load_pagination)
@@ -382,7 +378,7 @@ class TaskUtil:
             # Load data from RDBMS
             elif isinstance(client, RdbmsClient):
                 if stmt.selector:
-                    selector = TaskUtil.evaluate_selector_script(context, stmt)
+                    selector = TaskUtil.evaluate_selector_script(root_context, stmt)
                     source_data = client.get_by_page_with_query(original_query=selector, pagination=load_pagination)
                 else:
                     source_data = client.get_by_page_with_type(
@@ -442,27 +438,21 @@ class TaskUtil:
             else:
                 raise ValueError(f"Exporter does not support operation: {exporter}.{operation}")
 
-        task_util_cls = root_context.class_factory_util.get_task_util_cls()
-
-        task_util_cls.exporter_without_operation(
-            root_context.task_id,
+        TaskUtil.exporter_without_operation(
             json_product,
             xml_result,
             stmt,
             exporters["without_operation"],
             exporter_state_manager,
-            exporters["page_count"] == 1,
         )
 
     @staticmethod
     def exporter_without_operation(
-        task_id: str,
         json_product: tuple,
         xml_result: dict,
         stmt: GenerateStatement,
         exporters_without_operation: list,
         exporter_state_manager: ExporterStateManager,
-        first_page: bool,
     ):
         # Run exporters without operations
         for exporter in exporters_without_operation:
@@ -526,3 +516,20 @@ class TaskUtil:
         """
         # Always False in CE cause this is an EE feature
         return False
+
+    @staticmethod
+    def generate_random_value_based_on_type(
+        data_type: str | None = None,
+    ) -> str | int | bool | float:
+        if data_type == DATA_TYPE_STRING:
+            min_len = 0
+            max_len = 20
+            return "".join(random.choice(string.ascii_letters) for _ in range(random.randint(min_len, max_len)))
+        elif data_type == DATA_TYPE_INT:
+            return random.randint(0, 100)
+        elif data_type == DATA_TYPE_FLOAT:
+            return random.uniform(0, 100)
+        elif data_type == DATA_TYPE_BOOL:
+            return random.choice((True, False))
+        else:
+            raise ValueError(f"Cannot generate random value for data type {data_type}")

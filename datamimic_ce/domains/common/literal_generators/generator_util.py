@@ -20,6 +20,7 @@ from datamimic_ce.domains.common.literal_generators.color_generators import Colo
 from datamimic_ce.domains.common.literal_generators.company_name_generator import CompanyNameGenerator
 from datamimic_ce.domains.common.literal_generators.cpf_generator import CPFGenerator
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
+from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 from datamimic_ce.domains.common.literal_generators.department_name_generator import DepartmentNameGenerator
 from datamimic_ce.domains.common.literal_generators.domain_generator import DomainGenerator
 from datamimic_ce.domains.common.literal_generators.ean_generator import EANGenerator
@@ -30,6 +31,7 @@ from datamimic_ce.domains.common.literal_generators.gender_generator import Gend
 from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
 from datamimic_ce.domains.common.literal_generators.hash_generator import HashGenerator
 from datamimic_ce.domains.common.literal_generators.increment_generator import IncrementGenerator
+from datamimic_ce.domains.common.literal_generators.integer_generator import IntegerGenerator
 from datamimic_ce.domains.common.literal_generators.nobility_title_generator import NobilityTitleGenerator
 from datamimic_ce.domains.common.literal_generators.password_generator import PasswordGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
@@ -37,6 +39,7 @@ from datamimic_ce.domains.common.literal_generators.sector_generator import Sect
 from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
 from datamimic_ce.domains.common.literal_generators.ssn_generator import SSNGenerator
 from datamimic_ce.domains.common.literal_generators.street_name_generator import StreetNameGenerator
+from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.common.literal_generators.token_generator import TokenGenerator
 from datamimic_ce.domains.common.literal_generators.url_generator import UrlGenerator
 from datamimic_ce.domains.common.literal_generators.uuid_generator import UUIDGenerator
@@ -56,14 +59,13 @@ class GeneratorUtil:
         Args:
             context (Context): The context in which the generators are used.
         """
-        cls_factory_util = context.root.class_factory_util
         # Define all available generators
         self._class_dict = {
             # Basic Generators
             "IncrementGenerator": IncrementGenerator,
-            "DateTimeGenerator": cls_factory_util.get_datetime_generator(),
-            "IntegerGenerator": cls_factory_util.get_integer_generator(),
-            "StringGenerator": cls_factory_util.get_string_generator(),
+            "DateTimeGenerator": DateTimeGenerator,
+            "IntegerGenerator": IntegerGenerator,
+            "StringGenerator": StringGenerator,
             "FloatGenerator": FloatGenerator,
             "BooleanGenerator": BooleanGenerator,
             "DataFakerGenerator": DataFakerGenerator,
@@ -100,12 +102,6 @@ class GeneratorUtil:
             # Healthcare
             "SequenceTableGenerator": SequenceTableGenerator,
         }
-
-        self._generator_with_class_factory_util = (
-            "IntegerGenerator",
-            "StringGenerator",
-            "BirthdateGenerator",
-        )
         self._context = context
 
     def get_supported_generators(self) -> dict[str, list[str]]:
@@ -321,16 +317,6 @@ class GeneratorUtil:
             # Handle other generators with constructor parameters
             if class_name != generator_str:
                 local_ns = copy.deepcopy(self._class_dict)
-                if class_name in self._generator_with_class_factory_util:
-                    class_name, args_str = generator_str[:-1].split("(")
-                    # Filtering out empty arguments to avoid extra commas
-                    args = [arg.strip() for arg in args_str.split(",") if arg.strip()]
-
-                    args.append("class_factory_util=class_factory_util")
-                    local_ns.update({"class_factory_util": self._context.root.class_factory_util})
-
-                    new_args_str = ", ".join(args)
-                    generator_str = f"{class_name}({new_args_str})"
 
                 result = self._context.evaluate_python_expression(generator_str, local_ns)
             else:
@@ -338,8 +324,6 @@ class GeneratorUtil:
                     result = cls(
                         dataset=self._context.root.default_dataset,
                     )
-                elif class_name in self._generator_with_class_factory_util:
-                    result = cls(class_factory_util=self._context.root.class_factory_util)
                 else:
                     result = cls()
 

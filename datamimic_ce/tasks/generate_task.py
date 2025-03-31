@@ -16,13 +16,15 @@ from datamimic_ce.config import settings
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.exporters.exporter_util import ExporterUtil
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.tasks.task import CommonSubTask
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
+from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.logging_util import gen_timer
 
 
@@ -32,9 +34,8 @@ class GenerateTask(CommonSubTask):
 
     """
 
-    def __init__(self, statement: GenerateStatement, class_factory_util: BaseClassFactoryUtil):
+    def __init__(self, statement: GenerateStatement):
         self._statement = statement
-        self._class_factory_util = class_factory_util
 
     @property
     def statement(self) -> GenerateStatement:
@@ -125,7 +126,7 @@ class GenerateTask(CommonSubTask):
         :return: None
         """
         # 1. Scan statement
-        ctx.root.class_factory_util.get_datasource_registry_cls().set_data_source_length(ctx, statement)
+        DataSourceRegistry.set_data_source_length(ctx, statement)
         # 2. Scan sub-statement
         if isinstance(statement, CompositeStatement):
             for child_stmt in statement.sub_statements:
@@ -165,8 +166,6 @@ class GenerateTask(CommonSubTask):
     def execute(
         self,
         context: SetupContext | GenIterContext,
-        source_operation: dict | None = None,
-        operation_metadata: dict | None = None,
     ) -> dict[str, list] | None:
         """
         Execute generate task.
@@ -235,9 +234,7 @@ class GenerateTask(CommonSubTask):
                             f"is not supported"
                         )
                     # Execute generate task by page in multiprocessing using Ray or multiprocessing
-                    merged_result = mp_worker.mp_process(
-                        copied_context, self._statement, chunks, page_size, source_operation, operation_metadata
-                    )
+                    merged_result = mp_worker.mp_process(copied_context, self._statement, chunks, page_size)
 
                 # Execute generate task by page in single process
                 else:
@@ -246,7 +243,7 @@ class GenerateTask(CommonSubTask):
                     from datamimic_ce.workers.generate_worker import GenerateWorker
 
                     merged_result = GenerateWorker.generate_and_export_data_by_chunk(
-                        context, self._statement, worker_id, 0, count, page_size, source_operation, operation_metadata
+                        context, self._statement, worker_id, 0, count, page_size
                     )
 
                 # Update the actual record count in the timer result
@@ -312,9 +309,7 @@ class GenerateTask(CommonSubTask):
         num_workers = GenerateTask._determine_num_workers(context, stmt)
 
         # Get ARTIFACT exporters from statement
-        exporter_list = context.root.class_factory_util.get_exporter_util().get_all_exporter(
-            context, stmt, list(stmt.targets)
-        )
+        exporter_list = ExporterUtil.get_all_exporter(context, stmt, list(stmt.targets))
         # Finalize chunks files (writing end of file)
         for exporter in exporter_list:
             if hasattr(exporter, "finalize_chunks"):
@@ -331,9 +326,7 @@ class GenerateTask(CommonSubTask):
         """
         Export artifact files to storage (Execute on outermost gen_stmt)
         """
-        exporters_list = context.root.class_factory_util.get_exporter_util().get_all_exporter(
-            context, stmt, list(stmt.targets)
-        )
+        exporters_list = ExporterUtil.get_all_exporter(context, stmt, list(stmt.targets))
         # Export artifact files of current statement
         for exporter in exporters_list:
             if hasattr(exporter, "save_exported_result"):
@@ -354,12 +347,12 @@ class GenerateTask(CommonSubTask):
         :return: None
         """
         root_context = context.root
-        task_util_cls = root_context.class_factory_util.get_task_util_cls()
 
         pre_tasks = [
-            task_util_cls.get_task_by_statement(root_context, child_stmt, None)
+            TaskUtil.get_task_by_statement(root_context, child_stmt, None)
             for child_stmt in self.statement.sub_statements
             if isinstance(child_stmt, KeyStatement)
         ]
         for task in pre_tasks:
-            task.pre_execute(context)
+            if hasattr(task, "pre_execute"):
+                task.pre_execute(context)

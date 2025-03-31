@@ -39,7 +39,6 @@ class Patient(BaseEntity):
         """Initialize the Patient entity.
 
         Args:
-            class_factory_util: The class factory utility.
             locale: The locale to use for generating data.
             dataset: The dataset to use for generating data.
         """

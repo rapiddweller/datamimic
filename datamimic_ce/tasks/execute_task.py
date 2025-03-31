@@ -10,10 +10,10 @@ from pathlib import Path
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.statements.execute_statement import ExecuteStatement
-from datamimic_ce.tasks.task import Task
+from datamimic_ce.tasks.task import SetupSubTask
 
 
-class ExecuteTask(Task):
+class ExecuteTask(SetupSubTask):
     def __init__(self, statement: ExecuteStatement):
         self._statement = statement
 

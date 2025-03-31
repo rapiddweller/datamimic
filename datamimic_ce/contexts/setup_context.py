@@ -18,7 +18,6 @@ from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
 from datamimic_ce.statements.setup_statement import SetupStatement
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
 class SetupContext(Context):
@@ -28,7 +27,6 @@ class SetupContext(Context):
 
     def __init__(
         self,
-        class_factory_util: BaseClassFactoryUtil,
         memstore_manager: MemstoreManager,
         task_id: str,
         test_mode: bool,
@@ -54,7 +52,6 @@ class SetupContext(Context):
     ):
         # SetupContext is always its root_context
         super().__init__(self)
-        self._class_factory_util = class_factory_util
         self._descriptor_dir = descriptor_dir
         self._clients = {} if clients is None else clients
         self._data_source_len = {} if data_source_len is None else data_source_len
@@ -106,7 +103,6 @@ class SetupContext(Context):
 
         # Create a new instance of SetupContext with the copied attributes
         return SetupContext(
-            class_factory_util=self._class_factory_util,
             task_id=self._task_id,
             memstore_manager=self._memstore_manager,
             use_mp=copy.deepcopy(self._use_mp, memo),
@@ -229,10 +225,6 @@ class SetupContext(Context):
             # Ignore not-defined props in parent context
             if value is not None:
                 setattr(self, key, value)
-
-    @property
-    def class_factory_util(self):
-        return self._class_factory_util
 
     @property
     def clients(self) -> dict:

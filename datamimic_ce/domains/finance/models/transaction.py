@@ -16,9 +16,9 @@ from typing import Any
 
 from datamimic_ce.domain_core.base_entity import BaseEntity
 from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
-from datamimic_ce.utils.data_generation_ce_util import DataGenerationCEUtil
 
 
 class Transaction(BaseEntity):
@@ -51,7 +51,7 @@ class Transaction(BaseEntity):
         Returns:
             A unique identifier for the transaction.
         """
-        return DataGenerationCEUtil.rnd_str_from_regex("[A-Z0-9]{16}")
+        return StringGenerator.rnd_str_from_regex("[A-Z0-9]{16}")
 
     @property
     @property_cache

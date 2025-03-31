@@ -44,11 +44,7 @@ class PersonGenerator(BaseDomainGenerator):
         self._email_generator = EmailAddressGenerator(dataset=self._dataset)
         self._phone_generator = PhoneNumberGenerator(dataset=self._dataset)
         self._address_generator = AddressGenerator(dataset=self._dataset)
-        from datamimic_ce.utils.class_factory_ce_util import ClassFactoryCEUtil
-
-        self._birthdate_generator = BirthdateGenerator(
-            class_factory_util=ClassFactoryCEUtil(), min_age=min_age, max_age=max_age
-        )
+        self._birthdate_generator = BirthdateGenerator(min_age=min_age, max_age=max_age)
         self._academic_title_generator = AcademicTitleGenerator(dataset=self._dataset, quota=academic_title_quota)
         self._nobility_title_generator = NobilityTitleGenerator(dataset=self._dataset, noble_quota=noble_quota)
 

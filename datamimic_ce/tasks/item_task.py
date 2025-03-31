@@ -8,25 +8,20 @@ from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.statements.item_statement import ItemStatement
 from datamimic_ce.tasks.element_task import ElementTask
-from datamimic_ce.tasks.task import Task
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
+from datamimic_ce.tasks.task import GenSubTask
+from datamimic_ce.tasks.task_util import TaskUtil
 
 
-class ItemTask(Task):
+class ItemTask(GenSubTask):
     def __init__(
         self,
         ctx: SetupContext,
         statement: ItemStatement,
-        class_factory_util: BaseClassFactoryUtil,
     ):
         self._statement = statement
-        self._class_factory_util = class_factory_util
 
         # Not apply pagination for sub-statement
-        self._sub_tasks = [
-            class_factory_util.get_task_util_cls().get_task_by_statement(ctx, child_stmt)
-            for child_stmt in statement.sub_statements
-        ]
+        self._sub_tasks = [TaskUtil.get_task_by_statement(ctx, child_stmt) for child_stmt in statement.sub_statements]
 
     @property
     def statement(self) -> ItemStatement:
@@ -38,10 +33,8 @@ class ItemTask(Task):
         :param parent_context:
         :return:
         """
-        task_util_cls = self._class_factory_util.get_task_util_cls()
-
         # check condition to enable or disable element, default True
-        condition = task_util_cls.evaluate_condition_value(
+        condition = TaskUtil.evaluate_condition_value(
             ctx=parent_context,
             element_name=self._statement.name,
             value=self._statement.condition,
@@ -55,6 +48,8 @@ class ItemTask(Task):
                 if isinstance(sub_task, ElementTask):
                     result.update(sub_task.generate_xml_attribute(ctx))
                 else:
+                    if not isinstance(sub_task, GenSubTask):
+                        raise ValueError(f"Generate sub-task expected, but got {type(sub_task)}")
                     sub_task.execute(ctx)
                     # Add sub-element of item to result dict
                     result.update(ctx.current_product)

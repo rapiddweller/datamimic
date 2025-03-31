@@ -14,9 +14,11 @@ from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
+from datamimic_ce.exporters.exporter_util import ExporterUtil
 from datamimic_ce.logger import logger, setup_logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.tasks.generate_task import GenerateTask
+from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.logging_util import gen_timer
 
 
@@ -33,8 +35,6 @@ class GenerateWorker:
         chunk_start: int,
         chunk_end: int,
         page_size: int,
-        source_operation: dict | None,
-        operation_metadata: dict | None,
     ) -> dict:
         """
         Generate and export data by page in a single process.
@@ -63,7 +63,7 @@ class GenerateWorker:
         (
             consumers_with_operation,
             consumers_without_operation,
-        ) = root_context.class_factory_util.get_exporter_util().create_exporter_list(
+        ) = ExporterUtil.create_exporter_list(
             setup_context=root_context,
             stmt=stmt,
             targets=list(exporters_set),
@@ -95,15 +95,13 @@ class GenerateWorker:
                 timer_result["records_count"] = page_end - page_start
                 # Generate product
                 result_dict = GenerateWorker._generate_product_by_page_in_single_process(
-                    context, stmt, page_start, page_end, worker_id, source_operation, operation_metadata
+                    context, stmt, page_start, page_end, worker_id
                 )
 
             with gen_timer("export", root_context.report_logging, stmt.full_name) as timer_result:
                 timer_result["records_count"] = page_end - page_start
                 # Export product by page
-                context.root.class_factory_util.get_task_util_cls().export_product_by_page(
-                    context.root, stmt, result_dict, exporter_state_manager
-                )
+                TaskUtil.export_product_by_page(context.root, stmt, result_dict, exporter_state_manager)
 
             # Determine list of keys to be returned
             return_keys_set = set(result_dict.keys())
@@ -125,8 +123,6 @@ class GenerateWorker:
         page_start: int,
         page_end: int,
         worker_id: int,
-        source_operation: dict | None,
-        operation_metadata: dict | None,
     ) -> dict[str, list]:
         """
         (IMPORTANT: Only to be used as Ray multiprocessing function)
@@ -146,11 +142,7 @@ class GenerateWorker:
         # Determined page of data source to load
         # If distribution is random, load all data before shuffle, which means no pagination (or, pagination=None)
         # If distribution is not random, load data by pagination
-        if context.root.class_factory_util.get_task_util_cls().is_source_ml_model(stmt):
-            # if source data is from ml-train model, distribution is False
-            is_random_distribution = False
-        else:
-            is_random_distribution = stmt.distribution in ("random", None)
+        is_random_distribution = False if TaskUtil.is_source_ml_model(stmt) else stmt.distribution in ("random", None)
         if is_random_distribution:
             # Use task_id as seed for random distribution
             # Don't use pagination for random distribution to load all data before shuffle
@@ -163,13 +155,11 @@ class GenerateWorker:
             load_pagination = pagination
 
         # Extract converter list for post-processing
-        task_util_cls = root_context.class_factory_util.get_task_util_cls()
-        converter_list = task_util_cls.create_converter_list(context, stmt.converter)
+        converter_list = TaskUtil.create_converter_list(context, stmt.converter)
 
         # 1: Build sub-tasks in GenIterStatement
         tasks = [
-            task_util_cls.get_task_by_statement(root_context, child_stmt, pagination)
-            for child_stmt in stmt.sub_statements
+            TaskUtil.get_task_by_statement(root_context, child_stmt, pagination) for child_stmt in stmt.sub_statements
         ]
 
         # 2: Load data source from file, database, memory, Kafka, etc.
@@ -178,20 +168,15 @@ class GenerateWorker:
         )
         separator = stmt.separator or root_context.default_separator
 
-        source_data, build_from_source = (
-            context.root.class_factory_util.get_task_util_cls().gen_task_load_data_from_source_or_script(
-                context,
-                stmt,
-                stmt.source,
-                separator,
-                source_scripted,
-                processed_data_count,
-                load_start_idx,
-                load_end_idx,
-                load_pagination,
-                source_operation,
-                operation_metadata,
-            )
+        source_data, build_from_source = TaskUtil.gen_task_load_data_from_source_or_script(
+            context,
+            stmt,
+            stmt.source,
+            separator,
+            source_scripted,
+            load_start_idx,
+            load_end_idx,
+            load_pagination,
         )
 
         # Shuffle source data if distribution is random
@@ -234,8 +219,7 @@ class GenerateWorker:
                                 inner_generate_key = key.split("|", 1)[-1].strip()
                                 ctx.current_variables[inner_generate_key] = value
                     else:
-                        task.execute(ctx)
-
+                        task.execute(ctx)  # type: ignore[attr-defined]
                 # Post-process product by applying converters
                 for converter in converter_list:
                     ctx.current_product = converter.convert(ctx.current_product)
@@ -245,9 +229,15 @@ class GenerateWorker:
                     # Evaluate python expression in source
                     prefix = stmt.variable_prefix or root_context.default_variable_prefix
                     suffix = stmt.variable_suffix or root_context.default_variable_suffix
-                    ctx.current_product = task_util_cls.evaluate_file_script_template(
+                    evaluated_product = TaskUtil.evaluate_file_script_template(
                         ctx=ctx, datas=ctx.current_product, prefix=prefix, suffix=suffix
                     )
+                    # Update current product with evaluated product
+                    if not isinstance(evaluated_product, dict):
+                        raise ValueError(
+                            f"Source script evaluated result must be a dictionary, but got {type(evaluated_product)}"
+                        )
+                    ctx.current_product = evaluated_product
 
                 result.append(ctx.current_product)
             except StopIteration:

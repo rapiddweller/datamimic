@@ -9,9 +9,9 @@ from xml.etree.ElementTree import Element
 
 from datamimic_ce.constants.element_constants import EL_SETUP
 from datamimic_ce.model.setup_model import SetupModel
+from datamimic_ce.parsers.parser_util import ParserUtil
 from datamimic_ce.parsers.statement_parser import StatementParser
 from datamimic_ce.statements.setup_statement import SetupStatement
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
 class SetupParser(StatementParser):
@@ -19,12 +19,11 @@ class SetupParser(StatementParser):
     Parse element "setup" into RootStatement
     """
 
-    def __init__(self, cls_factory_util: BaseClassFactoryUtil, element: Element, properties: dict | None):
+    def __init__(self, element: Element, properties: dict | None):
         super().__init__(
             element,
             properties,
             valid_element_tag=EL_SETUP,
-            class_factory_util=cls_factory_util,
         )
 
     def parse(self, descriptor_dir: Path) -> SetupStatement:
@@ -35,8 +34,7 @@ class SetupParser(StatementParser):
         # Parse sub elements
 
         setup_stmt = SetupStatement(self.validate_attributes(SetupModel))
-        sub_stmt_list = self._class_factory_util.get_parser_util_cls()().parse_sub_elements(
-            self._class_factory_util,
+        sub_stmt_list = ParserUtil.parse_sub_elements(
             descriptor_dir,
             self._element,
             self._properties,

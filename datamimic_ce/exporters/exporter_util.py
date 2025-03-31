@@ -151,8 +151,6 @@ class ExporterUtil:
         except ValueError as e:
             raise ValueError(f"Error parsing target string: {e}") from e
 
-        exporter_util = setup_context.class_factory_util.get_exporter_util()
-
         # Now loop over the parsed functions and create exporters
         for target in parsed_targets:
             exporter_name = target["function_name"]
@@ -161,11 +159,11 @@ class ExporterUtil:
             if "." in exporter_name:
                 consumer_name, operation = exporter_name.split(".", 1)
                 client = setup_context.get_client_by_id(consumer_name)
-                consumer = exporter_util.create_exporter_from_client(client, consumer_name)
+                consumer = ExporterUtil.create_exporter_from_client(client, consumer_name)
                 consumers_with_operation.append((consumer, operation))
             # Handle consumer without operation
             else:
-                consumer = exporter_util.get_exporter_by_name(
+                consumer = ExporterUtil.get_exporter_by_name(
                     setup_context=setup_context,
                     name=exporter_name,
                     gen_stmt=stmt,
