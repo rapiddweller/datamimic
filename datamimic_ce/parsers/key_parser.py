@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import cast
 from xml.etree.ElementTree import Element
 
-from datamimic_ce.constants.element_constants import EL_KEY
+from datamimic_ce.constants.element_constants import EL_KEY, EL_ELEMENT # Added EL_ELEMENT
 from datamimic_ce.model.key_model import KeyModel
 from datamimic_ce.parsers.statement_parser import StatementParser
 from datamimic_ce.statements.composite_statement import CompositeStatement
@@ -20,6 +20,9 @@ class KeyParser(StatementParser):
     """
     Parse element "attribute" into AttributeStatement
     """
+    ALLOWED_SUB_ELEMENTS: set[str] | None = {
+        EL_ELEMENT
+    }
 
     def __init__(
         self,

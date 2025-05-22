@@ -26,6 +26,8 @@ class RdbmsClient(DatabaseClient):
         self._credential = credential
         self._engine = None
         self._task_id = task_id
+        self._table_count_cache: dict[str, int] = {}
+        self._query_count_cache: dict[str, int] = {}
 
         # Prepare sqlalchemy engine kwargs, also remove datamimic-specific kwargs
         self._engine_kwargs = credential.get_connection_config()
@@ -252,12 +254,25 @@ class RdbmsClient(DatabaseClient):
         :param table_name:
         :return:
         """
+        if table_name in self._table_count_cache:
+            return self._table_count_cache[table_name]
+
         engine = self._create_engine()
-        table = self._get_metadata(engine).tables[self._get_actual_table_name(table_name)]
+        # Use self._get_actual_table_name to ensure consistent casing/schema for cache key
+        actual_table_name_key = self._get_actual_table_name(table_name)
+        if actual_table_name_key in self._table_count_cache: # Check again with actual name
+            return self._table_count_cache[actual_table_name_key]
+
+        table = self._get_metadata(engine).tables[actual_table_name_key]
         with engine.connect() as connection:
-            count_query = select(func.count().label("row_count")).select_from(table)
-            result = connection.execute(count_query)
-            return result.scalar()
+            count_query_stmt = select(func.count().label("row_count")).select_from(table)
+            result = connection.execute(count_query_stmt)
+            count = result.scalar()
+            if count is None: # Ensure count is not None, default to 0 if scalar() returns None
+                count = 0
+            self._table_count_cache[table_name] = count # Cache with original name
+            self._table_count_cache[actual_table_name_key] = count # Cache with actual name for consistency
+            return count
 
     def count_query_length(self, query: str) -> int:
         """
@@ -265,12 +280,17 @@ class RdbmsClient(DatabaseClient):
         :param query:
         :return:
         """
+        if query in self._query_count_cache:
+            return self._query_count_cache[query]
+
         if self._credential.dbms == "oracle":
-            count_query = f"SELECT COUNT(*) FROM ({query}) original_query"
+            count_query_str = f"SELECT COUNT(*) FROM ({query}) original_query"
         else:
-            count_query = f"SELECT COUNT(*) FROM ({query}) AS original_query"
-        query_res = self.get(count_query)
-        return query_res[0][0]
+            count_query_str = f"SELECT COUNT(*) FROM ({query}) AS original_query"
+        query_res = self.get(count_query_str)
+        count = query_res[0][0] if query_res and query_res[0] else 0
+        self._query_count_cache[query] = count
+        return count
 
     @staticmethod
     def _get_driver_for_dbms(dbms: str):

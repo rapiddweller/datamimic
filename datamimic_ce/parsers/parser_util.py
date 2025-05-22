@@ -82,56 +82,8 @@ class ParserUtil:
         else:
             raise ValueError(f"Cannot get element tag for statement {stmt.__class__.__name__}")
 
-    @staticmethod
-    def get_valid_sub_elements_set_by_tag(ele_tag: str) -> set | None:
-        # return None mean that element can have all kind of sub element,
-        # check StatementParser._validate_sub_elements for detail
-        valid_sub_element_dict = {
-            EL_SETUP: {
-                EL_MONGODB,
-                EL_GENERATE,
-                EL_DATABASE,
-                EL_INCLUDE,
-                EL_MEMSTORE,
-                EL_EXECUTE,
-                EL_ECHO,
-                EL_VARIABLE,
-                EL_GENERATOR,
-            },
-            EL_NESTED_KEY: {
-                EL_KEY,
-                EL_VARIABLE,
-                EL_NESTED_KEY,
-                EL_EXECUTE,
-                EL_LIST,
-                EL_ECHO,
-                EL_ELEMENT,
-                EL_ARRAY,
-                EL_CONDITION,
-            },
-            EL_CONDITION: {EL_IF, EL_ELSE_IF, EL_ELSE},
-            EL_GENERATE: {
-                EL_GENERATE,
-                EL_KEY,
-                EL_VARIABLE,
-                EL_REFERENCE,
-                EL_NESTED_KEY,
-                EL_LIST,
-                EL_ARRAY,
-                EL_ECHO,
-                EL_CONDITION,
-                EL_INCLUDE,
-            },
-            EL_INCLUDE: {EL_SETUP},
-            EL_ITEM: {EL_KEY, EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ELEMENT},
-            EL_KEY: {EL_ELEMENT},
-            EL_LIST: {EL_ITEM},
-            EL_IF: None,
-            EL_ELSE_IF: None,
-            EL_ELSE: None,
-        }
-
-        return valid_sub_element_dict.get(ele_tag, set())
+    # get_valid_sub_elements_set_by_tag method removed as per refactoring.
+    # Each StatementParser subclass now defines its own ALLOWED_SUB_ELEMENTS.
 
     @staticmethod
     def _get_parser_by_element(element: Element, properties: dict):

@@ -31,13 +31,13 @@ class StatementParser(ABC):
         env_properties: dict[str, str] | None,
         valid_element_tag: str,
     ):
-        from datamimic_ce.parsers.parser_util import ParserUtil
-        # valid_sub_elements = ParserUtil.get_valid_sub_elements_set_by_tag(valid_element_tag)
+        # from datamimic_ce.parsers.parser_util import ParserUtil # No longer needed for get_valid_sub_elements_set_by_tag
 
         self._element: Element = element
         self._properties = env_properties
         self._valid_element_tag = valid_element_tag
-        self._valid_sub_elements = ParserUtil.get_valid_sub_elements_set_by_tag(valid_element_tag)
+        # Initialize _valid_sub_elements from the class attribute of the specific parser instance
+        self._valid_sub_elements = type(self).ALLOWED_SUB_ELEMENTS 
 
         # Validate XML element
         self._validate_element_tag()

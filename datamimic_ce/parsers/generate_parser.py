@@ -7,7 +7,11 @@
 from pathlib import Path
 from xml.etree.ElementTree import Element
 
-from datamimic_ce.constants.element_constants import EL_GENERATE
+from datamimic_ce.constants.element_constants import (
+    EL_GENERATE, EL_KEY, EL_VARIABLE, EL_REFERENCE,
+    EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ECHO,
+    EL_CONDITION, EL_INCLUDE
+)
 from datamimic_ce.model.generate_model import GenerateModel
 from datamimic_ce.parsers.statement_parser import StatementParser
 from datamimic_ce.statements.generate_statement import GenerateStatement
@@ -18,6 +22,11 @@ class GenerateParser(StatementParser):
     """
     Parse element "generate" into GenerateStatement
     """
+    ALLOWED_SUB_ELEMENTS: set[str] | None = {
+        EL_GENERATE, EL_KEY, EL_VARIABLE, EL_REFERENCE,
+        EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ECHO,
+        EL_CONDITION, EL_INCLUDE,
+    }
 
     def __init__(
         self,

@@ -47,7 +47,36 @@ class PersonGenerator(BaseDomainGenerator):
         self._birthdate_generator = BirthdateGenerator(min_age=min_age, max_age=max_age)
         self._academic_title_generator = AcademicTitleGenerator(dataset=self._dataset, quota=academic_title_quota)
         self._nobility_title_generator = NobilityTitleGenerator(dataset=self._dataset, noble_quota=noble_quota)
+        self._salutation_data = self._load_salutation_data()
 
+    def _load_salutation_data(self) -> dict:
+        """Loads salutation data from CSV file."""
+        salutation_file_path = (
+            Path(__file__).parent.parent.parent.parent
+            / "domain_data"
+            / "common"
+            / "person"
+            / f"salutation_{self._dataset}.csv"
+        )
+        header_dict, data = FileUtil.read_csv_to_dict_of_tuples_with_header(salutation_file_path, delimiter=",")
+        # Convert list of tuples to a more usable dict for salutations
+        # The original implementation of get_salutation_data returned data[0][header_dict[gender]]
+        # which means it expects a specific structure. We will replicate that structure.
+        # header_dict maps column name (gender) to index.
+        # data is a list of tuples (rows). data[0] is the first row.
+        # So, we want to store a dictionary where keys are genders and values are the salutations from the first row.
+        
+        processed_salutation_data = {}
+        if data: # Check if data is not empty
+            first_row = data[0]
+            for gender, index in header_dict.items():
+                if index < len(first_row):
+                     processed_salutation_data[gender] = first_row[index]
+                else:
+                    # Handle cases where index might be out of bounds for the first row
+                    processed_salutation_data[gender] = "" 
+        return processed_salutation_data
+        
     @property
     def gender_generator(self) -> GenderGenerator:
         return self._gender_generator
@@ -85,19 +114,12 @@ class PersonGenerator(BaseDomainGenerator):
         return self._nobility_title_generator
 
     def get_salutation_data(self, gender: str) -> str:
-        """Get salutation data from CSV file.
+        """Get salutation for a given gender from cached data.
+
+        Args:
+            gender: The gender for which to retrieve the salutation.
 
         Returns:
-            A dictionary containing salutation data.
+            The salutation string if found, otherwise an empty string.
         """
-
-        salutation_file_path = (
-            Path(__file__).parent.parent.parent.parent
-            / "domain_data"
-            / "common"
-            / "person"
-            / f"salutation_{self._dataset}.csv"
-        )
-        header_dict, data = FileUtil.read_csv_to_dict_of_tuples_with_header(salutation_file_path, delimiter=",")
-
-        return data[0][header_dict[gender]] if gender in header_dict else ""
+        return self._salutation_data.get(gender, "")
