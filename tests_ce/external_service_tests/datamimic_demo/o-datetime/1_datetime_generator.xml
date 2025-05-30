@@ -11,7 +11,7 @@
         <key name="biased_datetime"
              generator="DateTimeGenerator(random=True, hour_weights='[0.2]*6 + [0.02]*18', minute_weights='[1 if m in (0,15,30,45) else 0 for m in range(60)]', second_weights='[1]+[0]*59')"/>
         <key name="night_only"
-             generator="DateTimeGenerator(random=True, hour_weights='[1 if h < 6 else 0 for h in range(24)]')"/>
+             generator="DateTimeGenerator(random=True, hour_weights='[1 if h &lt; 6 else 0 for h in range(24)]')"/>
         <key name="quarter_hour"
              generator="DateTimeGenerator(random=True, minute_weights='[1 if m in (0,15,30,45) else 0 for m in range(60)]')"/>
         <key name="full_minute"

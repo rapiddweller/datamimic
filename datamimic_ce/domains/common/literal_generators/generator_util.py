@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import ast
 import copy
 import uuid
 
@@ -230,66 +231,12 @@ class GeneratorUtil:
                 return generator_from_ctx
 
             # Parse generator string into type and parameters
+            class_name: str
             if "(" in generator_str:
-                class_name, params_str = generator_str[:-1].split("(", 1)
-                params: dict[str, str | bool | int | float] = {}
-
-                # Special handling for DataFakerGenerator with positional argument
-                if class_name == "DataFakerGenerator" and "'" in params_str:
-                    # Extract the method name (first positional argument)
-                    method = params_str.split(",")[0].strip("' ")
-                    params["method"] = method
-
-                    # Parse remaining parameters if any
-                    if "," in params_str:
-                        remaining_params = params_str[params_str.find(",") + 1 :].strip()
-                        if remaining_params:
-                            for param in remaining_params.split(","):
-                                if "=" not in param:
-                                    continue
-                                key, value = param.split("=", 1)
-                                key = key.strip()
-                                value = value.strip()
-
-                                # Handle string values
-                                if value.startswith("'") and value.endswith("'"):
-                                    value = value[1:-1]
-                                # Handle boolean values
-                                elif value.lower() in ("true", "false"):
-                                    value = str(value.lower() == "true")
-                                # Handle numeric values
-                                elif value.isdigit():
-                                    value = str(int(value))
-                                elif value.replace(".", "").isdigit():
-                                    value = str(float(value))
-
-                                params[key] = value
-                else:
-                    # Normal parameter parsing for other generators
-                    if params_str:
-                        for param in params_str.split(","):
-                            if "=" not in param:
-                                continue
-                            key, value = param.split("=", 1)
-                            key = key.strip()
-                            value = value.strip()
-
-                            # Handle string values
-                            if value.startswith("'") and value.endswith("'"):
-                                value = value[1:-1]
-                            # Handle boolean values
-                            elif value.lower() in ("true", "false"):
-                                value = str(value.lower() == "true")
-                            # Handle numeric values
-                            elif value.isdigit():
-                                value = str(int(value))
-                            elif value.replace(".", "").isdigit():
-                                value = str(float(value))
-
-                            params[key] = value
+                class_name_candidate, _ = generator_str.split("(", 1)
+                class_name = class_name_candidate.strip()
             else:
-                class_name = generator_str
-                params = {}
+                class_name = generator_str.strip()
 
             # Get generator class
             cls = self._class_dict.get(class_name)
@@ -299,43 +246,112 @@ class GeneratorUtil:
                 elif isinstance(self._context, Context):
                     cls = self._context.root.get_dynamic_class(class_name)
                 else:
-                    raise ValueError(f"Cannot find generator {class_name}")
+                    raise ValueError(f"Cannot find generator class for '{class_name}'")
 
-            # Initialize result variable
             result = None
 
-            # Special handling for sequence generator in multi-process environment
             if class_name == "SequenceTableGenerator":
-                # Create sequence generator with process-aware context
                 result = cls(context=self._context, stmt=stmt)
-
-                # Add pagination with process-specific adjustments if needed
                 if pagination:
                     result.add_pagination(pagination=pagination)
                 return result
 
-            # Handle other generators with constructor parameters
-            if class_name != generator_str:
-                local_ns = copy.deepcopy(self._class_dict)
+            # --- DateTimeGenerator special parsing ---
+            if class_name == "DateTimeGenerator":
+                try:
+                    module_node = ast.parse(generator_str)
+                    if not (
+                        module_node.body
+                        and isinstance(module_node.body[0], ast.Expr)
+                        and isinstance(module_node.body[0].value, ast.Call)
+                    ):
+                        pass
+                    else:
+                        call_node = module_node.body[0].value
+                        if not (isinstance(call_node.func, ast.Name) and call_node.func.id == "DateTimeGenerator"):
+                            pass
+                        else:
+                            parsed_constructor_args = {}
+                            for kw in call_node.keywords:
+                                param_name = kw.arg
+                                if param_name is None:
+                                    raise ValueError(f"Keyword argument name is None in {generator_str}")
+                                value_str = ast.get_source_segment(generator_str, kw.value)
+                                if value_str is None:
+                                    raise ValueError(
+                                        f"Could not extract source for param {param_name} in {generator_str}"
+                                    )
+                                if param_name in ("hour_weights", "minute_weights", "second_weights"):
+                                    # Typkorrektur: param_name ist str, nicht str | None
+                                    # Entferne äußere Hochkommas, falls vorhanden
+                                    if (value_str.startswith("'") and value_str.endswith("'")) or (
+                                        value_str.startswith('"') and value_str.endswith('"')
+                                    ):
+                                        value_str = value_str[1:-1]
+                                    try:
+                                        parsed_constructor_args[param_name] = self._context.evaluate_python_expression(
+                                            value_str
+                                        )
+                                    except Exception as eval_exc:
+                                        try:
+                                            parsed_constructor_args[param_name] = ast.literal_eval(value_str)
+                                        except Exception as lit_exc:
+                                            logger.error(f"Fehler beim Parsen von {param_name}: {eval_exc} / {lit_exc}")
+                                            raise ValueError(
+                                                f"Konnte {param_name} nicht als Liste parsen: {value_str}"
+                                            ) from eval_exc
+                                else:
+                                    parsed_constructor_args[param_name] = ast.literal_eval(value_str)
+                            if call_node.args:
+                                logger.warning(
+                                    f"Positional args are not processed for DateTimeGenerator string: {generator_str}"
+                                )
+                            result = cls(**parsed_constructor_args)
+                            return result
+                except Exception as e_dt_parse:
+                    logger.error(
+                        f"Failed to parse DateTimeGenerator arguments from '{generator_str}' using ast: {e_dt_parse}"
+                    )
+                    raise ValueError(
+                        f"Error parsing parameters for DateTimeGenerator from '{generator_str}': {e_dt_parse}"
+                    ) from e_dt_parse
+            # --- End DateTimeGenerator special parsing ---
 
-                result = self._context.evaluate_python_expression(generator_str, local_ns)
+            # Fallback: evaluate_python_expression for other generators with params
+            if "(" in generator_str:
+                local_ns = copy.deepcopy(self._class_dict)
+                # Instanz-Namespaces getrennt halten, um Typkonflikte zu vermeiden
+                local_ns_inst = {"context": self._context, "self": self}
+                try:
+                    result = self._context.evaluate_python_expression(generator_str, {**local_ns, **local_ns_inst})
+                except Exception as e_eval:
+                    logger.error(
+                        f"Error evaluating generator string '{generator_str}' with evaluate_python_expression: {e_eval}"
+                    )
+                    raise ValueError(
+                        f"Cannot create generator '{class_name}' from string '{generator_str}' using evaluate: {e_eval}"
+                    ) from e_eval
             else:
                 if class_name in ["EmailAddressGenerator", "FamilyNameGenerator", "GivenNameGenerator"]:
-                    result = cls(
-                        dataset=self._context.root.default_dataset,
-                    )
+                    result = cls(dataset=self._context.root.default_dataset)
                 else:
                     result = cls()
-
-            # Add pagination for increment generators
             if isinstance(result, IncrementGenerator):
-                result.add_pagination(pagination=pagination)
-
+                if hasattr(result, "add_pagination") and callable(result.add_pagination):
+                    result.add_pagination(pagination=pagination)
+                else:
+                    logger.warning(f"Generator {class_name} is IncrementGenerator but lacks add_pagination method.")
+            if result is None:
+                raise ValueError(f"Failed to create generator for '{generator_str}': result is None.")
             return result
-
         except Exception as e:
-            logger.error("Error creating generator: %s", e)
-            raise ValueError(f"Cannot create generator '{class_name}' of element '{stmt.name}': {e}") from e
+            current_class_name = class_name if "class_name" in locals() else generator_str
+            element_name_str = f" of element '{stmt.name}'" if stmt and hasattr(stmt, "name") else ""
+            logger.error(f"Error creating generator '{current_class_name}'{element_name_str}: {e}")
+            if not isinstance(e, ValueError):
+                raise ValueError(f"Cannot create generator '{current_class_name}'{element_name_str}: {e}") from e
+            else:
+                raise
 
     @staticmethod
     def is_valid_uuid(input_string: str) -> bool:

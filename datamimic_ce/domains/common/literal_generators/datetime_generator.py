@@ -65,9 +65,21 @@ class DateTimeGenerator(BaseLiteralGenerator):
                 return base_result
             # Mit Gewichtung: Datumsteil bleibt, Zeitteil wird nach Gewichtung gesetzt
             year, month, day = base_result.year, base_result.month, base_result.day
-            hour = random.choices(range(24), weights=self._hour_weights, k=1)[0] if self._hour_weights else base_result.hour
-            minute = random.choices(range(60), weights=self._minute_weights, k=1)[0] if self._minute_weights else base_result.minute
-            second = random.choices(range(60), weights=self._second_weights, k=1)[0] if self._second_weights else base_result.second
+            hour = (
+                random.choices(range(24), weights=self._hour_weights, k=1)[0]
+                if self._hour_weights
+                else base_result.hour
+            )
+            minute = (
+                random.choices(range(60), weights=self._minute_weights, k=1)[0]
+                if self._minute_weights
+                else base_result.minute
+            )
+            second = (
+                random.choices(range(60), weights=self._second_weights, k=1)[0]
+                if self._second_weights
+                else base_result.second
+            )
             return datetime(year, month, day, hour, minute, second)
         else:
             result = self._result
