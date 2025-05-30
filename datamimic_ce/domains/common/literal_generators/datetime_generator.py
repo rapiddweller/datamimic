@@ -23,8 +23,14 @@ class DateTimeGenerator(BaseLiteralGenerator):
         value: str | None = None,
         random: bool = False,
         input_format: str | None = None,
+        hour_weights: list[float] | None = None,
+        minute_weights: list[float] | None = None,
+        second_weights: list[float] | None = None,
     ):
         input_format = input_format if input_format else "%Y-%m-%d %H:%M:%S"
+        self._hour_weights = hour_weights
+        self._minute_weights = minute_weights
+        self._second_weights = second_weights
         # Handle custom (fixed) datetype value
         if value:
             self._result = datetime.strptime(value, input_format)
@@ -53,7 +59,28 @@ class DateTimeGenerator(BaseLiteralGenerator):
     def generate(self) -> datetime | str:
         if self._mode == self._RANDOM_DATETIME_MODE:
             random_seconds = random.randint(0, int(self._time_difference.total_seconds()))
-            result = self._start_date + timedelta(seconds=random_seconds)
+            base_result = self._start_date + timedelta(seconds=random_seconds)
+            # Falls keine Gewichtung: Standardverhalten
+            if self._hour_weights is None and self._minute_weights is None and self._second_weights is None:
+                return base_result
+            # Mit Gewichtung: Datumsteil bleibt, Zeitteil wird nach Gewichtung gesetzt
+            year, month, day = base_result.year, base_result.month, base_result.day
+            hour = (
+                random.choices(range(24), weights=self._hour_weights, k=1)[0]
+                if self._hour_weights
+                else base_result.hour
+            )
+            minute = (
+                random.choices(range(60), weights=self._minute_weights, k=1)[0]
+                if self._minute_weights
+                else base_result.minute
+            )
+            second = (
+                random.choices(range(60), weights=self._second_weights, k=1)[0]
+                if self._second_weights
+                else base_result.second
+            )
+            return datetime(year, month, day, hour, minute, second)
         else:
             result = self._result
         return result

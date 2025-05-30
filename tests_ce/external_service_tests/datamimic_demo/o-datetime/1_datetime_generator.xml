@@ -8,5 +8,13 @@
              generator="DateTimeGenerator(min='2010-08-01', max='2010-08-31', input_format='%Y-%m-%d')"/>
         <key name="datetime_generator_2055"
              generator="DateTimeGenerator(min='2055-02-01 0:0:0', max='2056-07-31 0:0:0')"/>
+        <key name="biased_datetime"
+             generator="DateTimeGenerator(random=True, hour_weights='[0.2]*6 + [0.02]*18', minute_weights='[1 if m in (0,15,30,45) else 0 for m in range(60)]', second_weights='[1]+[0]*59')"/>
+        <key name="night_only"
+             generator="DateTimeGenerator(random=True, hour_weights='[1 if h &lt; 6 else 0 for h in range(24)]')"/>
+        <key name="quarter_hour"
+             generator="DateTimeGenerator(random=True, minute_weights='[1 if m in (0,15,30,45) else 0 for m in range(60)]')"/>
+        <key name="full_minute"
+             generator="DateTimeGenerator(random=True, second_weights='[1]+[0]*59')"/>
     </generate>
 </setup>

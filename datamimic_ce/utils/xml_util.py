@@ -3,12 +3,22 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-
-
+import ast
 import xml.etree.ElementTree as ET
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
+from xml.sax.saxutils import unescape as stdlib_unescape
 
 import toml
+
+_SAFE_PARSE_XML_ENTITIES = {
+    "&quot;": '"',  # Corrected: map &quot; to a single double quote character
+    "&apos;": "'",
+    "&amp;": "&",
+    "&lt;": "<",
+    "&gt;": ">",
+}
 
 
 class XMLValidator:
@@ -121,3 +131,75 @@ class XMLValidator:
             List[str]: List of validation error messages
         """
         return self.errors
+
+
+def safe_parse_generator_param(param_value: str, evaluator: Callable[[str], Any] | None = None) -> Any:
+    """
+    Safely parses a string parameter value from XML, which might be XML escaped,
+    and attempts to evaluate it as a Python literal (e.g., list, dict, number, string, boolean, None).
+
+    Handles cases such as:
+    - "123" -> 123
+    - "'hello'" -> "hello"
+    - "\\"hello\\"" -> "hello"
+    - "[1, 2, 3]" -> [1, 2, 3]
+    - "{'a': 1}" -> {'a': 1}
+    - "None" -> None
+    - "True" -> True
+    - "&quot;[1, 2, 3]&quot;" -> unescapes to "\"[1, 2, 3]\"", then evaluates inner "[1, 2, 3]" to [1, 2, 3]
+    - "'[1, 2, 3]'" -> unescapes to "'[1, 2, 3]'", then evaluates inner "[1, 2, 3]" to [1, 2, 3]
+
+    If an optional `evaluator` function is provided, this function will be used to attempt
+    to evaluate the string if it's not a simple Python literal but might be an expression
+    (e.g., "[0.1]*10" or "[x for x in range(5)]"). If evaluation via `evaluator` fails,
+    the string (after unescaping) is returned.
+
+    If parsing as a literal fails and no evaluator is provided (or the evaluator fails),
+    the unescaped string is returned.
+    """
+    if not isinstance(param_value, str):
+        return param_value  # Already parsed or not a string
+
+    try:
+        # Step 1: Unescape XML entities.
+        processed_value = stdlib_unescape(param_value, entities=_SAFE_PARSE_XML_ENTITIES)
+    except Exception:
+        # Fallback if unescaping has an issue, though unlikely for string inputs
+        processed_value = param_value
+
+    try:
+        # Step 2: Attempt to evaluate as a Python literal.
+        evaluated_value = ast.literal_eval(processed_value)
+
+        if isinstance(evaluated_value, str):
+            # The first literal_eval resulted in a string. This could be:
+            # 1. A string that itself represents a literal (e.g., param_value was "'[1,2,3]'").
+            # 2. A string that is an expression (e.g., param_value was "'[0.1]*10'").
+            # 3. A plain string (e.g., param_value was "'actual_string'").
+            try:
+                # Try to evaluate this string as a literal again (handles case 1)
+                return ast.literal_eval(evaluated_value)
+            except (ValueError, SyntaxError, TypeError):
+                # If the inner evaluation fails, it means the string was not a simple literal.
+                # It could be an expression (case 2) or a plain string that just happens
+                # to be the content (case 3, e.g. evaluated_value is "[0.1]*10" or "actual_string").
+                if evaluator:
+                    try:
+                        return evaluator(evaluated_value)  # Try to evaluate as expression
+                    except Exception:
+                        # Evaluator failed, so it's likely just a plain string.
+                        return evaluated_value
+                return evaluated_value  # No evaluator, return the string
+        else:
+            # The first evaluation yielded a non-string literal (list, dict, number, bool, None)
+            return evaluated_value
+    except (ValueError, SyntaxError, TypeError):
+        # If not a valid Python literal string (e.g., "some_text", or an expression like "[0.1]*10" without quotes),
+        # return the processed (unescaped) string itself, unless an evaluator can handle it.
+        if evaluator:
+            try:
+                return evaluator(processed_value)  # Try to evaluate as expression
+            except Exception:
+                # Evaluator failed, so it's likely just a plain string.
+                return processed_value
+        return processed_value
