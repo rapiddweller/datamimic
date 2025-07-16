@@ -21,10 +21,10 @@
 
 | Feature                        | Community | Enterprise |
 |--------------------------------|-----------|------------|
-| Core Model-driven Generation   | ✅        | ✅         |
+| Model-driven Generation.       | ✅        | ✅         |
 | Python & XML APIs              | ✅        | ✅         |
-| Basic Anonymization            | ✅        | ✅         |
-| AI-Enhanced Data Generation    | ❌        | ✅         |
+| Anonymization.                 | ✅        | ✅         |
+| ML-Enhanced Data Generation    | ❌        | ✅         |
 | Advanced Enterprise Integrations | ❌      | ✅         |
 | Priority Support & SLA         | ❌        | ✅         |
 
