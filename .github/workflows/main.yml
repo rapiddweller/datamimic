@@ -49,7 +49,7 @@ jobs:
 
   install_dependencies:
     runs-on: ubuntu-22.04
-    container: python:3.11-slim-buster
+    container: python:3.11-slim-bookworm
     needs: setup
     permissions:
       contents: read
