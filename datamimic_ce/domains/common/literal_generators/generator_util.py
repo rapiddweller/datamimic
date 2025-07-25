@@ -44,6 +44,7 @@ from datamimic_ce.domains.common.literal_generators.string_generator import Stri
 from datamimic_ce.domains.common.literal_generators.token_generator import TokenGenerator
 from datamimic_ce.domains.common.literal_generators.url_generator import UrlGenerator
 from datamimic_ce.domains.common.literal_generators.uuid_generator import UUIDGenerator
+from datamimic_ce.domains.common.literal_generators.global_increment_generator import GlobalIncrementGenerator
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.statement import Statement
 
@@ -70,6 +71,7 @@ class GeneratorUtil:
             "FloatGenerator": FloatGenerator,
             "BooleanGenerator": BooleanGenerator,
             "DataFakerGenerator": DataFakerGenerator,
+            "GlobalIncrementGenerator": GlobalIncrementGenerator,
             # Identity and Personal Information
             "SSNGenerator": SSNGenerator,
             "CNPJGenerator": CNPJGenerator,
@@ -249,6 +251,18 @@ class GeneratorUtil:
                     raise ValueError(f"Cannot find generator class for '{class_name}'")
 
             result = None
+
+            if class_name == "GlobalIncrementGenerator":
+                # Build the fully qualified key path for uniqueness
+                # Traverse up the statement tree to build the path
+                path = []
+                current = stmt
+                while current is not None and hasattr(current, 'name'):
+                    path.append(current.name)
+                    current = getattr(current, 'parent', None)
+                qualified_key = ".".join(reversed(path))
+                result = cls(qualified_key=qualified_key, context=self._context)
+                return result
 
             if class_name == "SequenceTableGenerator":
                 result = cls(context=self._context, stmt=stmt)
