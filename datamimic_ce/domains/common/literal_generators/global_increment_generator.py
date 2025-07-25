@@ -6,6 +6,7 @@
 
 from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
 
+
 class GlobalIncrementRegistry:
     def __init__(self):
         self.counters = {}
@@ -20,6 +21,7 @@ class GlobalIncrementRegistry:
 
     def reset(self):
         self.counters.clear()
+
 
 class GlobalIncrementGenerator(BaseLiteralGenerator):
     def __init__(self, qualified_key, context):
