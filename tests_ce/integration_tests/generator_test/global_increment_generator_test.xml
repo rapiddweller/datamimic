@@ -1,0 +1,13 @@
+<setup>
+    <generate name="customers" count="3" target="ConsoleExporter">
+        <key name="cId" generator="GlobalIncrementGenerator" />
+        <generate name="orders" count="3" target="ConsoleExporter">
+            <key name="oId" generator="GlobalIncrementGenerator" />
+            <key name="cId" script="cId" />
+            <generate name="line_items" count="3" target="ConsoleExporter">
+                <key name="lId" generator="GlobalIncrementGenerator" />
+                <key name="oId" script="orders.oId" />
+            </generate>
+        </generate>
+    </generate>
+</setup>

@@ -30,6 +30,7 @@ from datamimic_ce.domains.common.literal_generators.family_name_generator import
 from datamimic_ce.domains.common.literal_generators.float_generator import FloatGenerator
 from datamimic_ce.domains.common.literal_generators.gender_generator import GenderGenerator
 from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
+from datamimic_ce.domains.common.literal_generators.global_increment_generator import GlobalIncrementGenerator
 from datamimic_ce.domains.common.literal_generators.hash_generator import HashGenerator
 from datamimic_ce.domains.common.literal_generators.increment_generator import IncrementGenerator
 from datamimic_ce.domains.common.literal_generators.integer_generator import IntegerGenerator
@@ -70,6 +71,7 @@ class GeneratorUtil:
             "FloatGenerator": FloatGenerator,
             "BooleanGenerator": BooleanGenerator,
             "DataFakerGenerator": DataFakerGenerator,
+            "GlobalIncrementGenerator": GlobalIncrementGenerator,
             # Identity and Personal Information
             "SSNGenerator": SSNGenerator,
             "CNPJGenerator": CNPJGenerator,
@@ -249,6 +251,18 @@ class GeneratorUtil:
                     raise ValueError(f"Cannot find generator class for '{class_name}'")
 
             result = None
+
+            if class_name == "GlobalIncrementGenerator":
+                # Build the fully qualified key path for uniqueness
+                # Traverse up the statement tree to build the path
+                path = []
+                current = stmt
+                while current is not None and hasattr(current, "name"):
+                    path.append(current.name)
+                    current = getattr(current, "parent", None)  # type: ignore
+                qualified_key = ".".join(reversed(path))  # type: ignore
+                result = cls(qualified_key=qualified_key, context=self._context)
+                return result
 
             if class_name == "SequenceTableGenerator":
                 result = cls(context=self._context, stmt=stmt)

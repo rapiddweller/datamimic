@@ -49,7 +49,7 @@ jobs:
 
   install_dependencies:
     runs-on: ubuntu-22.04
-    container: python:3.11-slim-buster
+    container: python:3.11-slim-bookworm
     needs: setup
     permissions:
       contents: read
@@ -90,7 +90,7 @@ jobs:
   mypy:
     runs-on: ubuntu-22.04
     needs: install_dependencies
-    container: python:3.11-slim-buster
+    container: python:3.11-slim-bookworm
     steps:
       - name: Setup git
         run: |
@@ -115,7 +115,7 @@ jobs:
   ruff:
     runs-on: ubuntu-22.04
     needs: install_dependencies
-    container: python:3.11-slim-buster
+    container: python:3.11-slim-bookworm
     steps:
       - name: Setup git
         run: |
@@ -174,7 +174,7 @@ jobs:
   unit_test:
     runs-on: ubuntu-22.04
     needs: install_dependencies
-    container: python:3.11-slim-buster
+    container: python:3.11-slim-bookworm
     steps:
       - name: Setup git
         run: |
@@ -204,7 +204,7 @@ jobs:
   functional_test:
     runs-on: ubuntu-22.04
     needs: install_dependencies
-    container: python:3.11-slim-buster
+    container: python:3.11-slim-bookworm
     steps:
       - name: Setup git
         run: |
@@ -234,7 +234,7 @@ jobs:
   integration_test:
     runs-on: ubuntu-22.04
     needs: install_dependencies
-    container: python:3.11-slim-buster
+    container: python:3.11-slim-bookworm
     steps:
       - name: Setup git
         run: |
@@ -314,7 +314,7 @@ jobs:
           APP_USER_PASSWORD: rdpassword
         ports:
           - 1521:1521
-    container: python:3.11-slim-buster
+    container: python:3.11-slim-bookworm
     steps:
       - name: Setup git
         run: |
@@ -348,7 +348,7 @@ jobs:
   factory_test:
     runs-on: ubuntu-22.04
     needs: install_dependencies
-    container: python:3.11-slim-buster
+    container: python:3.11-slim-bookworm
     steps:
       - name: Setup git
         run: |
@@ -378,7 +378,7 @@ jobs:
   api_test:
     runs-on: ubuntu-22.04
     needs: install_dependencies
-    container: python:3.11-slim-buster
+    container: python:3.11-slim-bookworm
     steps:
       - name: Setup git
         run: |

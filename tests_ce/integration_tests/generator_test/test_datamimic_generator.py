@@ -27,3 +27,7 @@ class TestDatamimicGenerator:
         )
         engine = DataMimicTest(test_dir=datamimic_dir, filename="datamimic.xml")
         engine.test_with_timer()
+
+    def test_global_increment_generator(self):
+        engine = DataMimicTest(test_dir=self._test_dir, filename="global_increment_generator_test.xml")
+        engine.test_with_timer()

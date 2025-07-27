@@ -36,7 +36,7 @@ class TestXmlFunctional:
         result = engine.capture_result()
         task_id = engine.task_id
         file_path = self._test_dir.joinpath(
-            f"output/{task_id}_xml_export_template_1/product_export_template_1_pid_1_chunk_0.xml"
+            f"output/{task_id}/export_template_1.xml"
         )
         tree = ET.parse(file_path)
         root = tree.getroot()

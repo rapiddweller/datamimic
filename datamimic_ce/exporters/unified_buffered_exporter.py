@@ -82,9 +82,11 @@ class UnifiedBufferedExporter(Exporter, ABC):
         """
         Get the buffer file for the current chunk index.
         """
-        buffer_file = self._get_buffer_tmp_dir(worker_id) / Path(
-            f"product_{self.product_name}_pid_{worker_id}_chunk_{chunk_index}.{self.get_file_extension()}"
-        )
+        if not self._chunk_size:
+            filename = f"{self.product_name}.{self.get_file_extension()}"
+        else:
+            filename = f"{self.product_name}_{chunk_index}.{self.get_file_extension()}"
+        buffer_file = self._get_buffer_tmp_dir(worker_id) / filename
 
         return buffer_file
 
@@ -209,9 +211,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         """
         logger.info(f"Saving exported result for product {self.product_name}")
 
-        base_dir_path = self._descriptor_dir / "output"
-        base_name = f"{self._task_id}_{self._exporter_type}_{self.product_name}"
-        exporter_dir_path = base_dir_path / base_name
+        exporter_dir_path = self._descriptor_dir / "output" / self._task_id
 
         # Handle existing directory by adding version number
 
@@ -229,7 +229,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
                 while target_path.exists():
                     logger.warning(f"File {target_path} already exists. Creating version {version}")
                     base_name = file.stem  # Gets filename without extension
-                    target_path = exporter_dir_path / f"{base_name}_v{version}{file.suffix}"
+                    target_path = exporter_dir_path / f"{base_name}_{version}{file.suffix}"
                     version += 1
 
                 shutil.move(file, target_path)
