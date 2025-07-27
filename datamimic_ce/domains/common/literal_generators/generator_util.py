@@ -259,8 +259,8 @@ class GeneratorUtil:
                 current = stmt
                 while current is not None and hasattr(current, "name"):
                     path.append(current.name)
-                    current = getattr(current, "parent", None) # type: ignore
-                qualified_key = ".".join(reversed(path))   # type: ignore
+                    current = getattr(current, "parent", None)  # type: ignore
+                qualified_key = ".".join(reversed(path))  # type: ignore
                 result = cls(qualified_key=qualified_key, context=self._context)
                 return result
 

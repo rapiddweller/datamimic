@@ -82,9 +82,11 @@ class UnifiedBufferedExporter(Exporter, ABC):
         """
         Get the buffer file for the current chunk index.
         """
-        buffer_file = self._get_buffer_tmp_dir(worker_id) / Path(
-            f"product_{self.product_name}.{self.get_file_extension()}"
-        )
+        if not self._chunk_size:
+            filename = f"{self.product_name}.{self.get_file_extension()}"
+        else:
+            filename = f"{self.product_name}_{chunk_index}.{self.get_file_extension()}"
+        buffer_file = self._get_buffer_tmp_dir(worker_id) / filename
 
         return buffer_file
 
