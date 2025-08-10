@@ -1,0 +1,8 @@
+<setup>
+    <execute uri="script/stateful_generator.scr.py"/>
+    <generate name="customer" count="10001" pageSize="10000">
+        <variable name="id_var" generator="StatefulIncrementGenerator"/>
+        <key name="id" script="id_var"/>
+    </generate>
+</setup>
+

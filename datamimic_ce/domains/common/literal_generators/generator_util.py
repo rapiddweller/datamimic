@@ -341,7 +341,9 @@ class GeneratorUtil:
 
             # Fallback: evaluate_python_expression for other generators with params
             if "(" in generator_str:
-                local_ns = copy.deepcopy(self._class_dict)
+                # A shallow copy is sufficient here and avoids recursion issues
+                # with certain generator classes like ``SequenceTableGenerator``.
+                local_ns = self._class_dict.copy()
                 # Instanz-Namespaces getrennt halten, um Typkonflikte zu vermeiden
                 local_ns_inst = {"context": self._context, "self": self}
                 try:
