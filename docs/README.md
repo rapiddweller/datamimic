@@ -18,6 +18,7 @@ This project documentation focuses specifically on:
 - [Examples](examples/README.md)
 - [API Reference](api/README.md)
 - [Advanced Topics](advanced/README.md)
+- [Controlling Generator Caching](generator_lifecycle.md)
 - [Developer Guide](developer_guide.md)
 
 ## Core Concepts
