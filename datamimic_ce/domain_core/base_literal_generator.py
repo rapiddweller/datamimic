@@ -12,6 +12,10 @@ class BaseLiteralGenerator(ABC):
     Base class for all literal generators (only generate literal values)
     """
 
+    # Generators are cached in the root context by default. Set
+    # ``cache_in_root = False`` in subclasses to opt out of global caching.
+    cache_in_root: bool = True
+
     @abstractmethod
     def generate(self):
         """

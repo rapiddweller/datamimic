@@ -210,6 +210,7 @@ class GeneratorUtil:
         generator_str: str,
         stmt: Statement,
         pagination: DataSourcePagination | None = None,
+        key: str | None = None,
     ):
         """
         Create a generator based on the element's attribute "generator".
@@ -219,6 +220,9 @@ class GeneratorUtil:
             generator_str (str): The generator string.
             stmt (Statement): The statement object.
             pagination (Optional[DataSourcePagination]): The pagination object.
+            key (Optional[str]): Key used for root-level caching. If provided,
+                the generator will be stored and retrieved using this key
+                instead of the raw ``generator_str``.
 
         Returns:
             Any: The created generator instance.
@@ -228,7 +232,8 @@ class GeneratorUtil:
         """
         try:
             # Get generator from element <generator>
-            generator_from_ctx = self._context.root.generators.get(generator_str)
+            cache_key = key or generator_str
+            generator_from_ctx = self._context.root.generators.get(cache_key)
             if generator_from_ctx is not None:
                 return generator_from_ctx
 
@@ -360,7 +365,12 @@ class GeneratorUtil:
                     logger.warning(f"Generator {class_name} is IncrementGenerator but lacks add_pagination method.")
             if result is None:
                 raise ValueError(f"Failed to create generator for '{generator_str}': result is None.")
-            self._context.root.generators[generator_str] = result
+
+            # Decide whether to cache the generator instance globally. Generators
+            # can opt out by defining ``cache_in_root = False``.
+            if getattr(result, "cache_in_root", True):
+                self._context.root.generators[cache_key] = result
+
             return result
         except Exception as e:
             current_class_name = class_name if "class_name" in locals() else generator_str
