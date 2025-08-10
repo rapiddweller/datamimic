@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import ast
-import copy
 import uuid
 
 from faker import Faker

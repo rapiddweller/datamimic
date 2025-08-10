@@ -1,0 +1,6 @@
+<setup>
+    <execute uri="script/prefixed_weighted_int.scr.py"/>
+    <generate name="customer" count="20001" pageSize="10000">
+        <key name="custId_sparse" generator="PrefixedWeightedInt(prefix='A', increment=1, keep_counter=True, offset_rules=SPARSE_ID_OFFSET_RULES)"/>
+    </generate>
+</setup>
