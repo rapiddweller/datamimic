@@ -117,7 +117,7 @@ class SetupContext(Context):
             default_dataset=self._default_dataset,
             default_locale=self._default_locale,
             global_variables=self.global_variables,
-            generators=copy.deepcopy(self._generators),
+            generators=copy.deepcopy(self._generators, memo),
             num_process=copy.deepcopy(self._num_process, memo),
             default_variable_prefix=self._default_variable_prefix,
             default_variable_suffix=self._default_variable_suffix,

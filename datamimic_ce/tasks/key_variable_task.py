@@ -95,7 +95,10 @@ class KeyVariableTask:
             # Try to init generator with or without args.
             try:
                 self._generator = GeneratorUtil(ctx).create_generator(
-                    self._statement.generator, self._statement, self._pagination
+                    self._statement.generator,
+                    self._statement,
+                    self._pagination,
+                    key=self._statement.full_name,
                 )
                 self._mode = self._GENERATOR_MODE
             # If init generator failed while creating task, try to lazy-init in the first task execution
@@ -174,7 +177,12 @@ class KeyVariableTask:
         elif self._mode == self._LAZY_GENERATOR_MODE:
             # Try to init generator again in first task execution
             self._generator = (
-                GeneratorUtil(ctx).create_generator(self._statement.generator, self.statement, self._pagination)
+                GeneratorUtil(ctx).create_generator(
+                    self._statement.generator,
+                    self.statement,
+                    self._pagination,
+                    key=self._statement.full_name,
+                )
                 if self._statement.generator is not None
                 else None
             )
@@ -187,10 +195,14 @@ class KeyVariableTask:
             else:
                 value = None
         elif self._mode == self._GENERATOR_MODE:
-            if isinstance(self._generator, SequenceTableGenerator) or self._generator is not None:
-                value = self._generator.generate()
-            else:
-                value = None
+            if self._statement.generator is not None and self._generator is None:
+                self._generator = GeneratorUtil(ctx).create_generator(
+                    self._statement.generator,
+                    self.statement,
+                    self._pagination,
+                    key=self._statement.full_name,
+                )
+            value = self._generator.generate() if self._generator is not None else None
             # Convert numpy.bool_ to bool for being compatible with consumer (db,...)
             if isinstance(value, numpy.bool_):
                 value = bool(value)

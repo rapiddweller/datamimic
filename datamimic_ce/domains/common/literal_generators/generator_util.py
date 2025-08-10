@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import ast
-import copy
 import uuid
 
 from faker import Faker
@@ -210,6 +209,7 @@ class GeneratorUtil:
         generator_str: str,
         stmt: Statement,
         pagination: DataSourcePagination | None = None,
+        key: str | None = None,
     ):
         """
         Create a generator based on the element's attribute "generator".
@@ -219,6 +219,9 @@ class GeneratorUtil:
             generator_str (str): The generator string.
             stmt (Statement): The statement object.
             pagination (Optional[DataSourcePagination]): The pagination object.
+            key (Optional[str]): Key used for root-level caching. If provided,
+                the generator will be stored and retrieved using this key
+                instead of the raw ``generator_str``.
 
         Returns:
             Any: The created generator instance.
@@ -228,7 +231,8 @@ class GeneratorUtil:
         """
         try:
             # Get generator from element <generator>
-            generator_from_ctx = self._context.root.generators.get(generator_str)
+            cache_key = key or generator_str
+            generator_from_ctx = self._context.root.generators.get(cache_key)
             if generator_from_ctx is not None:
                 return generator_from_ctx
 
@@ -262,12 +266,18 @@ class GeneratorUtil:
                     current = getattr(current, "parent", None)  # type: ignore
                 qualified_key = ".".join(reversed(path))  # type: ignore
                 result = cls(qualified_key=qualified_key, context=self._context)
+                self._context.root.generators[cache_key] = result
+                if cache_key != generator_str and generator_str not in self._context.root.generators:
+                    self._context.root.generators[generator_str] = result
                 return result
 
             if class_name == "SequenceTableGenerator":
                 result = cls(context=self._context, stmt=stmt)
                 if pagination:
                     result.add_pagination(pagination=pagination)
+                self._context.root.generators[cache_key] = result
+                if cache_key != generator_str and generator_str not in self._context.root.generators:
+                    self._context.root.generators[generator_str] = result
                 return result
 
             # --- DateTimeGenerator special parsing ---
@@ -321,6 +331,9 @@ class GeneratorUtil:
                                     f"Positional args are not processed for DateTimeGenerator string: {generator_str}"
                                 )
                             result = cls(**parsed_constructor_args)
+                            self._context.root.generators[cache_key] = result
+                            if cache_key != generator_str and generator_str not in self._context.root.generators:
+                                self._context.root.generators[generator_str] = result
                             return result
                 except Exception as e_dt_parse:
                     logger.error(
@@ -333,7 +346,9 @@ class GeneratorUtil:
 
             # Fallback: evaluate_python_expression for other generators with params
             if "(" in generator_str:
-                local_ns = copy.deepcopy(self._class_dict)
+                # A shallow copy is sufficient here and avoids recursion issues
+                # with certain generator classes like ``SequenceTableGenerator``.
+                local_ns = self._class_dict.copy()
                 # Instanz-Namespaces getrennt halten, um Typkonflikte zu vermeiden
                 local_ns_inst = {"context": self._context, "self": self}
                 try:
@@ -357,6 +372,14 @@ class GeneratorUtil:
                     logger.warning(f"Generator {class_name} is IncrementGenerator but lacks add_pagination method.")
             if result is None:
                 raise ValueError(f"Failed to create generator for '{generator_str}': result is None.")
+
+            # Decide whether to cache the generator instance globally. Generators
+            # can opt out by defining ``cache_in_root = False``.
+            if getattr(result, "cache_in_root", True):
+                self._context.root.generators[cache_key] = result
+                if cache_key != generator_str and generator_str not in self._context.root.generators:
+                    self._context.root.generators[generator_str] = result
+
             return result
         except Exception as e:
             current_class_name = class_name if "class_name" in locals() else generator_str
