@@ -187,10 +187,11 @@ class KeyVariableTask:
             else:
                 value = None
         elif self._mode == self._GENERATOR_MODE:
-            if isinstance(self._generator, SequenceTableGenerator) or self._generator is not None:
-                value = self._generator.generate()
-            else:
-                value = None
+            if self._statement.generator is not None:
+                self._generator = GeneratorUtil(ctx).create_generator(
+                    self._statement.generator, self.statement, self._pagination
+                )
+            value = self._generator.generate() if self._generator is not None else None
             # Convert numpy.bool_ to bool for being compatible with consumer (db,...)
             if isinstance(value, numpy.bool_):
                 value = bool(value)

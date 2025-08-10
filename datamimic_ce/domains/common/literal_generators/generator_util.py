@@ -262,12 +262,14 @@ class GeneratorUtil:
                     current = getattr(current, "parent", None)  # type: ignore
                 qualified_key = ".".join(reversed(path))  # type: ignore
                 result = cls(qualified_key=qualified_key, context=self._context)
+                self._context.root.generators[generator_str] = result
                 return result
 
             if class_name == "SequenceTableGenerator":
                 result = cls(context=self._context, stmt=stmt)
                 if pagination:
                     result.add_pagination(pagination=pagination)
+                self._context.root.generators[generator_str] = result
                 return result
 
             # --- DateTimeGenerator special parsing ---
@@ -321,6 +323,7 @@ class GeneratorUtil:
                                     f"Positional args are not processed for DateTimeGenerator string: {generator_str}"
                                 )
                             result = cls(**parsed_constructor_args)
+                            self._context.root.generators[generator_str] = result
                             return result
                 except Exception as e_dt_parse:
                     logger.error(
@@ -357,6 +360,7 @@ class GeneratorUtil:
                     logger.warning(f"Generator {class_name} is IncrementGenerator but lacks add_pagination method.")
             if result is None:
                 raise ValueError(f"Failed to create generator for '{generator_str}': result is None.")
+            self._context.root.generators[generator_str] = result
             return result
         except Exception as e:
             current_class_name = class_name if "class_name" in locals() else generator_str
