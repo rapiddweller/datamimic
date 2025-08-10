@@ -249,7 +249,7 @@ def test_sequence_table_generator_multi_process_partitions_non_overlapping():
     per_proc = (root_gen.count + 2 - 1) // 2  # == 5
     base = 1000 - root_gen.count
     expected_start0 = base + pagination.skip
-    expected_start1 = base + (1 * per_proc) + (1 * per_proc + pagination.skip)
+    expected_start1 = base + 2 * per_proc + pagination.skip
 
     assert vals0[0] == expected_start0
     assert vals1[0] == expected_start1
