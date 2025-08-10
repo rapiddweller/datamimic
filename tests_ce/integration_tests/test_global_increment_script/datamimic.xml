@@ -1,0 +1,41 @@
+<setup>
+    <execute uri="script/lib.py"/>
+    <!-- Generate Customers -->
+    <generate name="customers" count="10" target="JSON">
+        <variable name="person" entity="Person(min_age=20, max_age=45, female_quota=0.5)" dataset="US"/>
+        <key name="cId" script="customer_id()" />
+        <key name="Name" script="f'{person.given_name} {person.family_name}'"/>
+        <key name="Birthdate" script="person.birthdate"/>
+        <key name="Gender" script="person.gender"/>
+
+        <key name="ordersPerCust" generator="IntegerGenerator(min=1,max=40)" />
+        <!-- Generate Orders per Customer (random 1-40 orders) -->
+        <nestedKey name="orders" type="list" count="{ordersPerCust}">
+            <variable name="order" entity="Order" />
+            <key name="oId" script="order_id()" />
+            <key name="cId" script="cId" />
+            <variable name="total_line_items" generator="IntegerGenerator(min=1, max=20)"/>
+            <!-- Generate Line Items per Order (random 1-20 items) -->
+            <nestedKey name="line_items" type="list" count="{orders.total_line_items}">
+                <variable name="product" entity="Product" />
+                <key name="lId" script="lineitem_id()" />
+                <key name="oId" script="orders.oId" />
+                <key name="product_id" script="orders.line_items.product.product_id" />
+                <key name="category" script="orders.line_items.product.category" />
+                <key name="brand" script="orders.line_items.product.brand" />
+                <key name="name" script="orders.line_items.product.name" />
+                <key name="rating" script="orders.line_items.product.rating" />
+                <array name="tags" script="orders.line_items.product.tags" />
+                <key name="Price" type="float" generator="FloatGenerator(min=1.0, max=9.0, granularity=0.01)" />
+                <variable name="add_to_order" script="add_to_order_total(orders.line_items.Price)" />
+            </nestedKey>
+            <key name="LineItemsInOrder" script="orders.total_line_items" />
+            <key name="OrderTotalPrice" script="get_order_total()" />
+            <variable name="add_to_customer" script="add_to_customer_total(orders.OrderTotalPrice)" />
+            <variable name="reset_order" script="reset_order_total()" />
+        </nestedKey>
+        <key name="ordersPerCust" script="get_customer_orders()" />
+        <key name="LifetimeValuePerCust" script="get_customer_total()" />
+        <variable name="reset_customer" script="reset_customer_total()" />
+    </generate>
+</setup>
