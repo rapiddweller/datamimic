@@ -1,5 +1,5 @@
 <setup>
-    <generate name="customers" count="3" target="ConsoleExporter">
+    <generate name="customers" count="10" target="ConsoleExporter" numProcess="1">
         <key name="cId" generator="GlobalIncrementGenerator" />
         <generate name="orders" count="3" target="ConsoleExporter">
             <key name="oId" generator="GlobalIncrementGenerator" />

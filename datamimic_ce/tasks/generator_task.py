@@ -26,6 +26,4 @@ class GeneratorTask(SetupSubTask):
         # Creation and optional caching of the generator is delegated to
         # ``GeneratorUtil``. It decides whether the generator should be stored
         # in the root context based on the generator's ``cache_in_root`` flag.
-        GeneratorUtil(ctx).create_generator(
-            self._statement.generator, self._statement, key=self._statement.name
-        )
+        GeneratorUtil(ctx).create_generator(self._statement.generator, self._statement, key=self._statement.name)
