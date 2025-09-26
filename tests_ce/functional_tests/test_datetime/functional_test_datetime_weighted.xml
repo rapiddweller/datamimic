@@ -1,0 +1,30 @@
+<setup>
+  <generate name="weighted_datetime_test" count="200" target="ConsoleExporter">
+    <!-- Month-weighted: March only across 2024 -->
+    <key name="march_only"
+         generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-12-31 23:59:59', random=True, month_weights='[0,0,1]+[0]*9', seed=42)"/>
+
+    <!-- Weekday-weighted: Mondays only in Jan 2024 -->
+    <key name="mondays_only"
+         generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-01-31 23:59:59', random=True, weekday_weights='[1,0,0,0,0,0,0]', seed=101)"/>
+
+    <!-- Day-of-month weighted: 15th only across Jan–Feb 2024 (includes Feb 29) -->
+    <key name="dom_15_only"
+         generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-02-29 23:59:59', random=True, dom_weights='[0]*14+[1]+[0]*16', seed=202)"/>
+
+    <!-- Combined filters: March + Monday + 4th day -->
+    <key name="combined_filters"
+         generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-12-31 23:59:59', random=True, month_weights='[0,0,1]+[0]*9', weekday_weights='[1,0,0,0,0,0,0]', dom_weights='[0,0,0,1]+[0]*27', seed=7)"/>
+
+    <!-- Tight boundary window with time weights to stress clamping -->
+    <key name="tight_window_weighted"
+         generator="DateTimeGenerator(min='2025-07-20 12:00:00', max='2025-07-20 12:00:05', random=True, hour_weights='[0]*12+[1]+[0]*11', minute_weights='[1]+[0]*59', second_weights='[1]+[0]*59', seed=303)"/>
+
+    <!-- Determinism: two identical generators with the same seed -->
+    <key name="det_a"
+         generator="DateTimeGenerator(min='2024-03-01 00:00:00', max='2024-03-31 23:59:59', random=True, weekday_weights='[1,0,0,0,0,0,0]', dom_weights='[0,0,0,1]+[0]*27', seed=999)"/>
+    <key name="det_b"
+         generator="DateTimeGenerator(min='2024-03-01 00:00:00', max='2024-03-31 23:59:59', random=True, weekday_weights='[1,0,0,0,0,0,0]', dom_weights='[0,0,0,1]+[0]*27', seed=999)"/>
+  </generate>
+</setup>
+

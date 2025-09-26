@@ -16,6 +16,7 @@ This project documentation focuses specifically on:
 - [Getting Started](#getting-started)
 - [Domain-Driven Framework](data-domains/README.md)
 - [Examples](examples/README.md)
+  - DateTime Generator (weighted + DSL): examples/datetime_generator.md
 - [API Reference](api/README.md)
 - [Advanced Topics](advanced/README.md)
 - [Controlling Generator Caching](generator_lifecycle.md)
