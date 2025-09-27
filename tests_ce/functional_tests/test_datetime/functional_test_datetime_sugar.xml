@@ -1,0 +1,48 @@
+<setup>
+  <generate name="weighted_datetime_sugar" count="250" target="ConsoleExporter">
+    <!-- Uniform window example -->
+    <key name="uniform"
+         generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-12-31 23:59:59', random=True)"/>
+    <!-- Weekdays sugar: business days only -->
+    <key name="biz_days"
+         generator="DateTimeGenerator(min='2024-04-01 00:00:00', max='2024-04-30 23:59:59', random=True, weekdays='Mon-Fri', seed=11)"/>
+
+    <!-- Weekends sugar: weekend only -->
+    <key name="weekends"
+         generator="DateTimeGenerator(min='2024-04-01 00:00:00', max='2024-04-30 23:59:59', random=True, weekdays='Weekend', seed=12)"/>
+
+    <!-- Months include range -->
+    <key name="months_include"
+         generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-12-31 23:59:59', random=True, months='3,7-9', seed=13)"/>
+
+    <!-- Months exclude -->
+    <key name="months_exclude"
+         generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-12-31 23:59:59', random=True, months_exclude='2,4', seed=14)"/>
+
+    <!-- Quarter tokens: Q1 should restrict to Jan-Mar -->
+    <key name="months_q1"
+         generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-12-31 23:59:59', random=True, months='Q1', seed=141)"/>
+
+    <!-- Multiple quarters: Q2,Q4 restricts to Apr-Jun and Oct-Dec -->
+    <key name="months_q2_q4"
+         generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-12-31 23:59:59', random=True, months='Q2,Q4', seed=142)"/>
+
+    <!-- Day-of-month sugar: last day only -->
+    <key name="dom_last"
+         generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-12-31 23:59:59', random=True, dom='last', seed=15)"/>
+
+    <!-- Day-of-month sugar: 1-5,15,31 only -->
+    <key name="dom_multi"
+         generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-12-31 23:59:59', random=True, dom='1-5,15,31', seed=16)"/>
+
+    <!-- Hours preset + minute/second granularity -->
+    <key name="hours_office_gran15_10"
+         generator="DateTimeGenerator(min='2024-04-01 00:00:00', max='2024-04-30 23:59:59', random=True, hours_preset='office', minute_granularity=15, second_granularity=10, seed=17)"/>
+
+    <!-- Deterministic plain random (no day-level weights) -->
+    <key name="plain_det_a"
+         generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-01-31 23:59:59', random=True, seed=42)"/>
+    <key name="plain_det_b"
+         generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-01-31 23:59:59', random=True, seed=42)"/>
+  </generate>
+</setup>

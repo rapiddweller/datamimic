@@ -303,7 +303,14 @@ class GeneratorUtil:
                                     raise ValueError(
                                         f"Could not extract source for param {param_name} in {generator_str}"
                                     )
-                                if param_name in ("hour_weights", "minute_weights", "second_weights"):
+                                if param_name in (
+                                    "hour_weights",
+                                    "minute_weights",
+                                    "second_weights",
+                                    "month_weights",
+                                    "weekday_weights",
+                                    "dom_weights",
+                                ):
                                     # Typkorrektur: param_name ist str, nicht str | None
                                     # Entferne äußere Hochkommas, falls vorhanden
                                     if (value_str.startswith("'") and value_str.endswith("'")) or (

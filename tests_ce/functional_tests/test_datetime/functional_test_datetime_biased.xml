@@ -1,0 +1,15 @@
+<setup>
+  <generate name="biased_datetime_test" count="400" target="ConsoleExporter">
+    <key name="biased_datetime"
+         generator="DateTimeGenerator(
+           min='2020-02-01 0:0:0',
+           max='2025-07-31 0:0:0',
+           month_weights='[0.5] * 2 + [1] * 3 + [0.8] * 3 + [1] * 3 + [0.5]',
+           hour_weights='[0.6]*6 + [0.3]*16 + [0.1]*2',
+           minute_weights='[1 if m in (0,15,30,45) else 0 for m in range(60)]',
+           second_weights='[1]+[0]*59',
+           seed=123
+         )"/>
+  </generate>
+</setup>
+

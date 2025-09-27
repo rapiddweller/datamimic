@@ -6,6 +6,7 @@ This section contains verified examples for using DATAMIMIC in various practical
 
 - [Person Generation](person_generation.md) - Generate and work with person entities
 - [Healthcare Data Generation](healthcare_generation.md) - Create realistic healthcare data
+- [DateTime Generator](datetime_generator.md) - Weighted, deterministic, and DSL sugar
 
 ## Upcoming Examples
 
