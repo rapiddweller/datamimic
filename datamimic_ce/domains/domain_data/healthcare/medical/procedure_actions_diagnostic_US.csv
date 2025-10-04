@@ -1,0 +1,15 @@
+Examination,1
+Evaluation,1
+Assessment,1
+Biopsy,0.7
+Aspiration,0.5
+Imaging,1
+Scanning,0.9
+Monitoring,0.8
+Testing,1
+Screening,0.9
+Analysis,0.7
+Measurement,0.7
+Endoscopy,0.6
+Arthroscopy,0.4
+Colonoscopy,0.5

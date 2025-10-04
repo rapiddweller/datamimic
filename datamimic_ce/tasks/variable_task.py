@@ -4,7 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import traceback
 from collections.abc import Iterator
 from typing import Any, Final
 
@@ -211,13 +210,14 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                     locale=locale,
                     dataset=dataset,
                     count=1 if pagination is None else pagination.limit,
+                    statement=statement,
                 )
             except Exception as e:
                 logger.error(
                     f"Failed to execute <variable> '{self._statement.name}': "
                     f"Can't create entity '{statement.entity}': {e}"
                 )
-                traceback.print_exc()
+                #  Avoid printing tracebacks directly; structured logs handle context.
                 raise ValueError(
                     f"Failed to execute <variable> '{self._statement.name}': "
                     f"Can't create entity '{statement.entity}': {e}"
@@ -239,8 +239,40 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         return self._statement
 
     @staticmethod
-    def _get_entity_generator(ctx: Context, entity_name: str, locale: str, dataset: str, count: int):
+    def _get_entity_generator(
+        ctx: Context, entity_name: str, locale: str, dataset: str, count: int, statement: VariableStatement
+    ):
+        from random import Random
+
+        from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+
         entity_class_name, kwargs = StringUtil.parse_constructor_string(entity_name)
+        # Inject dataset if not explicitly provided in constructor
+        kwargs.setdefault("dataset", dataset)
+        # Build demographic config + rng from statement attributes when present
+        demo_cfg = None
+        if any(
+            v is not None
+            for v in (statement.age_min, statement.age_max, statement.conditions_include, statement.conditions_exclude)
+        ):
+            includes = (
+                frozenset(x.strip() for x in (statement.conditions_include or "").split(",") if x.strip())
+                if statement.conditions_include is not None
+                else None
+            )
+            excludes = (
+                frozenset(x.strip() for x in (statement.conditions_exclude or "").split(",") if x.strip())
+                if statement.conditions_exclude is not None
+                else None
+            )
+            demo_cfg = DemographicConfig(
+                age_min=statement.age_min,
+                age_max=statement.age_max,
+                conditions_include=includes,
+                conditions_exclude=excludes,
+            )
+        rng_obj = Random(statement.rng_seed) if statement.rng_seed is not None else None
+        # Build from the last parsed VariableTask (self is not accessible in staticmethod); use closure via locals()
 
         # Check if entity_class_name contains dots indicating a domain path
         if "." in entity_class_name:
@@ -249,7 +281,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             return DomainClassUtil.create_instance(f"datamimic_ce.domains.{entity_class_name}", **kwargs)
         else:
             # For simple names like "Company", use the entity mapping
-            # Complete mapping of all entities across domains
+            # Complete mapping of all entities across domain_test
             entity_mappings = {
                 # Common domain entities
                 "Company": "common.services.CompanyService",
@@ -261,6 +293,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 "CreditCard": "finance.services.CreditCardService",
                 "Bank": "finance.services.BankService",
                 "BankAccount": "finance.services.BankAccountService",
+                "Transaction": "finance.services.TransactionService",
                 # Ecommerce domain entities
                 "Product": "ecommerce.services.ProductService",
                 "Order": "ecommerce.services.OrderService",
@@ -284,6 +317,27 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             # Use the mapping to create the entity
             if entity_class_name in entity_mappings:
                 domain_entity_path = entity_mappings[entity_class_name]
+                # Only attach demographic_config/rng for supported services
+                if demo_cfg is not None and entity_class_name in {
+                    "Patient",
+                    "Doctor",
+                    "PoliceOfficer",
+                    "Person",
+                    "InsurancePolicy",
+                    "MedicalDevice",
+                    "CreditCard",
+                }:
+                    kwargs["demographic_config"] = demo_cfg
+                if rng_obj is not None and entity_class_name in {
+                    "Patient",
+                    "Doctor",
+                    "PoliceOfficer",
+                    "Person",
+                    "InsurancePolicy",
+                    "MedicalDevice",
+                    "CreditCard",
+                }:
+                    kwargs["rng"] = rng_obj
                 return DomainClassUtil.create_instance(f"datamimic_ce.domains.{domain_entity_path}", **kwargs)
             else:
                 # If no mapping exists, entity is not supported

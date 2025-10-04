@@ -27,15 +27,7 @@ class TestAcademicTitleGenerator:
         "Emeritus Prof.",
     ]
 
-    _default_result = [
-        "",
-        "Bachelor",
-        "Master",
-        "PhD",
-        "Assistant Prof.",
-        "Associate Prof.",
-        "Prof.",
-    ]
+    _default_result = _us_results
 
     def test_academic_title(self):
         for _ in range(100):
@@ -68,9 +60,10 @@ class TestAcademicTitleGenerator:
     def test_invalid_dataset(self, caplog):
         with caplog.at_level("INFO"):
             academic_title_generator = AcademicTitleGenerator(dataset="SV")
-        assert "Academic title for dataset SV is not supported, change to default Academic title" in caplog.text
+        # Expect dataset_path fallback warning
+        assert "falling back to US dataset" in caplog.text
         assert academic_title_generator._quota == 0.5
-        assert set(academic_title_generator._values).issubset(set(self._default_result))
+        assert set(academic_title_generator._values).issubset(set(self._us_results))
         result = academic_title_generator.generate()
         assert result is not nan, "Must not be nan (panda empty value)"
-        assert result in self._default_result
+        assert result in self._us_results

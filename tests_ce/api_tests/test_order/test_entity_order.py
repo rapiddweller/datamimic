@@ -103,8 +103,12 @@ class TestEntityOrder:
 
     def test_not_supported_dataset(self):
         random_dataset = "XX"
-        # Raise FileNotFoundError because not found csv file of unsupported dataset
-        # OR ValueError Address data not found
-        with pytest.raises((FileNotFoundError, ValueError)):
-            order_service = OrderService(dataset=random_dataset)
-            order_service.generate()
+        # Fallback to US dataset with a single warning log; should not raise
+        order_service = OrderService(dataset=random_dataset)
+        order = order_service.generate()
+        self._check_order_data(order)
+
+    def test_supported_datasets_static(self):
+        codes = OrderService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

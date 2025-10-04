@@ -126,6 +126,12 @@ class TestEntityDoctor:
 
     def test_not_supported_dataset(self):
         random_dataset = "XX"
-        # Raise ValueError because Street name data not found for unsupported dataset
-        with pytest.raises(ValueError):
-            doctor_service = DoctorService(dataset=random_dataset)
+        # Fallback to US dataset with a single warning log; should not raise
+        doctor_service = DoctorService(dataset=random_dataset)
+        doctor = doctor_service.generate()
+        assert isinstance(doctor.to_dict(), dict)
+
+    def test_supported_datasets_static(self):
+        codes = DoctorService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

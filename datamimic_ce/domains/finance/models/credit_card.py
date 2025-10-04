@@ -10,14 +10,13 @@ Credit Card model.
 This module defines the credit card model for the finance domain.
 """
 
-import random
-import string
 from datetime import datetime
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.finance.generators.credit_card_generator import CreditCardGenerator
 from datamimic_ce.domains.finance.models.bank import Bank
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
@@ -51,7 +50,13 @@ class CreditCard(BaseEntity):
     @property
     @property_cache
     def card_number(self) -> str:
-        return "".join(random.choices(string.digits, k=16))
+        #  construct card number using dataset-specific card specs (prefix + length)
+        specs = self._credit_card_generator.get_card_specs()
+        prefix = specs.get("prefix", "")
+        total_len = specs.get("length", 16)
+        remaining = max(0, total_len - len(prefix))
+        suffix = StringGenerator.rnd_str_from_regex(f"[0-9]{{{remaining}}}") if remaining > 0 else ""
+        return f"{prefix}{suffix}"
 
     @property
     @property_cache
@@ -71,27 +76,34 @@ class CreditCard(BaseEntity):
     @property
     @property_cache
     def cvv(self) -> str:
-        return "".join(random.choices(string.digits, k=3))
+        #  honor dataset-specific cvv length from card types table
+        specs = self._credit_card_generator.get_card_specs()
+        cvv_len = specs.get("cvv_length", 3)
+        return StringGenerator.rnd_str_from_regex(f"[0-9]{{{cvv_len}}}")
 
     @property
     @property_cache
     def cvc_number(self) -> str:
-        return "".join(random.choices(string.digits, k=3))
+        #  keep CVC aligned with cvv length
+        specs = self._credit_card_generator.get_card_specs()
+        cvv_len = specs.get("cvv_length", 3)
+        return StringGenerator.rnd_str_from_regex(f"[0-9]{{{cvv_len}}}")
 
     @property
     @property_cache
     def is_active(self) -> bool:
-        return random.choice([True, False])
+        #  use generator RNG; avoid accessing private attrs
+        return self._credit_card_generator.rng.choice([True, False])
 
     @property
     @property_cache
     def credit_limit(self) -> float:
-        return random.uniform(1000, 999999)
+        return self._credit_card_generator.rng.uniform(1000, 999999)
 
     @property
     @property_cache
     def current_balance(self) -> float:
-        return random.uniform(100, 999999)
+        return self._credit_card_generator.rng.uniform(100, 999999)
 
     @property
     @property_cache

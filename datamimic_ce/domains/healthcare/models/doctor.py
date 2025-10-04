@@ -11,15 +11,13 @@ This module provides the Doctor entity model for generating realistic doctor dat
 """
 
 import datetime
-import random
-import string
-import uuid
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.healthcare.generators.doctor_generator import DoctorGenerator
 from datamimic_ce.domains.healthcare.models.hospital import Hospital
 
@@ -53,7 +51,10 @@ class Doctor(BaseEntity):
         Returns:
             A unique identifier for the doctor.
         """
-        return f"DOC-{uuid.uuid4().hex[:8].upper()}"
+        #  use shared PrefixedIdGenerator for prefixed short ID format
+        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
+
+        return PrefixedIdGenerator("DOC", "[0-9A-F]{8}").generate()
 
     @property
     @property_cache
@@ -63,7 +64,8 @@ class Doctor(BaseEntity):
         Returns:
             A 10-digit NPI number.
         """
-        return "".join(str(random.randint(0, 9)) for _ in range(10))
+        #  use shared StringGenerator for numeric pattern
+        return StringGenerator.rnd_str_from_regex("[0-9]{10}")
 
     @property
     @property_cache
@@ -73,9 +75,8 @@ class Doctor(BaseEntity):
         Returns:
             A medical license number.
         """
-        prefix = "".join(random.choices(string.ascii_uppercase, k=2))
-        number = "".join(random.choices(string.digits, k=6))
-        return f"{prefix}-{number}"
+        #  use shared StringGenerator for license number format
+        return StringGenerator.rnd_str_from_regex("[A-Z]{2}-[0-9]{6}")
 
     @property
     @property_cache
@@ -184,17 +185,9 @@ class Doctor(BaseEntity):
         Returns:
             The graduation year.
         """
-        current_year = datetime.datetime.now().year
-        min_years_after_graduation = 0  # Minimum years after graduation
-        max_years_after_graduation = 45  # Maximum years after graduation
-
-        # Calculate graduation year based on age and years after graduation
+        # Calculate graduation year based on age and avoid immediate repetition
         age = self.age
-        years_after_graduation = random.randint(
-            min_years_after_graduation,
-            min(max_years_after_graduation, age - 25),  # Assume graduated at 25 at the earliest
-        )
-        return current_year - years_after_graduation
+        return self._doctor_generator.pick_graduation_year(age)
 
     @property
     @property_cache
@@ -225,7 +218,7 @@ class Doctor(BaseEntity):
         Returns:
             True if the doctor is accepting new patients, False otherwise.
         """
-        return random.random() < 0.8  # 80% chance of accepting new patients
+        return self._doctor_generator.rng.random() < 0.8  # 80% chance of accepting new patients
 
     @property
     @property_cache
@@ -238,19 +231,20 @@ class Doctor(BaseEntity):
         days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
         hours = {}
 
+        rng = self._doctor_generator.rng
         for day in days:
-            if random.random() < 0.9:  # 90% chance of working on a weekday
-                start_hour = random.randint(7, 10)
-                end_hour = random.randint(16, 19)
+            if rng.random() < 0.9:  # 90% chance of working on a weekday
+                start_hour = rng.randint(7, 10)
+                end_hour = rng.randint(16, 19)
                 hours[day] = f"{start_hour:02d}:00 - {end_hour:02d}:00"
             else:
                 hours[day] = "Closed"
 
         # Weekend hours
         for day in ["Saturday", "Sunday"]:
-            if random.random() < 0.3:  # 30% chance of working on a weekend
-                start_hour = random.randint(8, 11)
-                end_hour = random.randint(14, 17)
+            if rng.random() < 0.3:  # 30% chance of working on a weekend
+                start_hour = rng.randint(8, 11)
+                end_hour = rng.randint(14, 17)
                 hours[day] = f"{start_hour:02d}:00 - {end_hour:02d}:00"
             else:
                 hours[day] = "Closed"

@@ -103,6 +103,10 @@ class TestEntityProduct:
             random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
         product_service = ProductService(dataset=random_dataset)
         product = product_service.generate()
-        # Raise FileNotFoundError because not found csv file of unsupported dataset
-        with pytest.raises(FileNotFoundError):
-            product.to_dict()
+        # Fallback to US dataset with a single warning log; should not raise
+        assert isinstance(product.to_dict(), dict)
+
+    def test_supported_datasets_static(self):
+        codes = ProductService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

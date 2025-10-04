@@ -25,6 +25,9 @@ class TestEntityMedicalDevice:
         assert isinstance(medical_device.maintenance_history, list)
 
         assert medical_device.device_id is not None and medical_device.device_id != ""
+        #  validate standardized device ID format
+        import re
+        assert re.fullmatch(r"DEV-\d{8}", medical_device.device_id)
         assert medical_device.manufacturer is not None and medical_device.manufacturer != ""
         assert medical_device.model_number is not None and medical_device.model_number != ""
         assert medical_device.serial_number is not None and medical_device.serial_number != ""
@@ -38,6 +41,11 @@ class TestEntityMedicalDevice:
         assert medical_device.specifications is not None and medical_device.specifications != {}
         assert medical_device.usage_logs is not None and medical_device.usage_logs != []
         assert medical_device.maintenance_history is not None and medical_device.maintenance_history != []      
+        #  validate temporal consistency of generated dates
+        from datetime import datetime
+        assert medical_device.manufacture_date <= medical_device.expiration_date
+        assert datetime.strptime(medical_device.last_maintenance_date, "%Y-%m-%d") <= datetime.now()
+        assert datetime.now() <= datetime.strptime(medical_device.next_maintenance_date, "%Y-%m-%d")
 
     def test_generate_single_medical_device(self):
         medical_device_service = MedicalDeviceService()
@@ -97,6 +105,12 @@ class TestEntityMedicalDevice:
 
     def test_not_supported_dataset(self):
         random_dataset = "XX"
-        # Raise ValueError because Street name data not found for unsupported dataset
-        with pytest.raises(ValueError):
-            medical_device_service = MedicalDeviceService(dataset=random_dataset)
+        # Fallback to US dataset with a single warning log; should not raise
+        medical_device_service = MedicalDeviceService(dataset=random_dataset)
+        medical_device = medical_device_service.generate()
+        assert isinstance(medical_device.to_dict(), dict)
+
+    def test_supported_datasets_static(self):
+        codes = MedicalDeviceService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

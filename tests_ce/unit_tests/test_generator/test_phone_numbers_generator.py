@@ -25,9 +25,11 @@ class TestPhoneNumberGenerator:
             assert phone_number.startswith("+49-")
 
     def test_phone_number_generator_not_exist_dataset(self):
-        # if dataset not exist -> use US dataset
-        with pytest.raises(ValueError, match="Country with ISO code XX not found"):
-            phone_number = PhoneNumberGenerator(dataset="XX").generate()
+        # if dataset not exist -> use US dataset (fallback)
+        phone_number = PhoneNumberGenerator(dataset="XX").generate()
+        assert phone_number
+        assert isinstance(phone_number, str)
+        assert phone_number.startswith("+1-")
 
     def test_phone_number_generator_none_country_code(self):
         # if dataset not exist -> use US dataset

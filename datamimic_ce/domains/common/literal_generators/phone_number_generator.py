@@ -6,7 +6,7 @@
 
 import random
 
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
 
 class PhoneNumberGenerator(BaseLiteralGenerator):
@@ -27,6 +27,7 @@ class PhoneNumberGenerator(BaseLiteralGenerator):
         dataset: str | None = "US",
         area_code: str | None = None,
         is_mobile: bool = False,
+        rng: random.Random | None = None,
     ):
         """Initialize the PhoneNumberGenerator.
 
@@ -36,11 +37,12 @@ class PhoneNumberGenerator(BaseLiteralGenerator):
             is_mobile: Whether to generate a mobile number
         """
         self._dataset = (dataset or "US").upper()
+        self._rng: random.Random = rng or random.Random()
         self._is_mobile = is_mobile
 
         from datamimic_ce.domains.common.generators import CountryGenerator
 
-        country_generator = CountryGenerator()
+        country_generator = CountryGenerator(dataset=self._dataset)
         country_data = country_generator.get_country_by_iso_code(self._dataset)
         self._country_code = country_data[2]
 
@@ -51,7 +53,7 @@ class PhoneNumberGenerator(BaseLiteralGenerator):
         else:
             from datamimic_ce.domains.common.generators import CityGenerator
 
-            self._city_generator = CityGenerator(dataset=self._dataset)
+            self._city_generator = CityGenerator(dataset=self._dataset, rng=self._rng)
 
     def generate(self) -> str:
         """Generate a random phone number.
@@ -63,11 +65,11 @@ class PhoneNumberGenerator(BaseLiteralGenerator):
             area_code = self._area_code
         else:
             if self._is_mobile:
-                area_code = str(random.randint(100, 999))
+                area_code = str(self._rng.randint(100, 999))
             else:
                 area_code = self._city_generator.get_random_city()["area_code"]
 
         local_number_length = 10 - len(area_code)
-        local_number = "".join(random.choices("0123456789", k=local_number_length))
+        local_number = "".join(self._rng.choices("0123456789", k=local_number_length))
 
         return f"+{self._country_code}-{area_code}-{local_number}"

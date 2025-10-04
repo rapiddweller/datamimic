@@ -1,0 +1,10 @@
+code,name,weight,symbol
+EUR,Euro,1.0,€
+USD,US Dollar,0.2,$
+GBP,British Pound,0.2,£
+CHF,Swiss Franc,0.1,CHF
+SEK,Swedish Krona,0.1,kr
+NOK,Norwegian Krone,0.1,kr
+JPY,Japanese Yen,0.1,¥
+SGD,Singapore Dollar,0.05,S$
+AUD,Australian Dollar,0.05,A$

@@ -31,6 +31,8 @@ class TestBankAccount:
         assert bank_account.currency != ""
         assert bank_account.created_date is not None
         assert bank_account.created_date != ""
+        #  ensure temporal consistency; last_transaction_date should not precede created_date
+        assert bank_account.created_date <= bank_account.last_transaction_date
         assert bank_account.bank_code != ""
         assert bank_account.bic is not None 
         assert bank_account.bin is not None
@@ -90,7 +92,12 @@ class TestBankAccount:
         self._test_single_bank_account(bank_account)
 
     def test_not_supported_dataset(self):
+        # Fallback to US dataset with a single warning log; should not raise
         bank_account_service = BankAccountService(dataset="FR")
         bank_account = bank_account_service.generate()
-        with pytest.raises(FileNotFoundError):
-            bank_account.to_dict()
+        assert isinstance(bank_account.to_dict(), dict)
+
+    def test_supported_datasets_static(self):
+        codes = BankAccountService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

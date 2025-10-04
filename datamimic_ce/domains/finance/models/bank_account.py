@@ -11,11 +11,10 @@ This module defines the bank account model for the finance domain.
 """
 
 import datetime
-import random
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
 from datamimic_ce.domains.finance.models.bank import Bank
 
@@ -67,7 +66,8 @@ class BankAccount(BaseEntity):
     @property
     @property_cache
     def balance(self) -> float:
-        return random.uniform(0, 1000000)
+        #  use generator RNG for determinism in tests
+        return self._bank_account_generator.rng.uniform(0, 1000000)
 
     @balance.setter
     def balance(self, value: float) -> None:
@@ -86,12 +86,14 @@ class BankAccount(BaseEntity):
     @property
     @property_cache
     def created_date(self) -> datetime.datetime:
-        return datetime.datetime.now() - datetime.timedelta(days=random.randint(0, 365))
+        #  delegate date generation to generator helper for determinism and SOC
+        return self._bank_account_generator.generate_created_date()
 
     @property
     @property_cache
     def last_transaction_date(self) -> datetime.datetime:
-        return datetime.datetime.now() - random.uniform(0, 1) * (datetime.datetime.now() - self.created_date)
+        #  delegate to generator to avoid module random in model
+        return self._bank_account_generator.generate_last_transaction_date(self.created_date)
 
     @property
     @property_cache

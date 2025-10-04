@@ -83,3 +83,7 @@ class TestEntityAdministrationOffice:
         assert administration_office1.leadership != administration_office2.leadership
         assert administration_office1.address != administration_office2.address
 
+    def test_supported_datasets_static(self):
+        codes = AdministrationOfficeService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

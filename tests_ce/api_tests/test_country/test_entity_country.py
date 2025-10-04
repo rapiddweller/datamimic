@@ -52,3 +52,8 @@ class TestEntityCountry:
         assert country1.default_language_locale != country2.default_language_locale
         assert country1.phone_code != country2.phone_code
         assert country1.population != country2.population
+
+    def test_supported_datasets_static(self):
+        codes = CountryService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

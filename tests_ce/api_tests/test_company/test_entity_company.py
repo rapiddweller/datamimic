@@ -97,6 +97,12 @@ class TestEntityCompany:
 
     def test_not_supported_dataset(self):
         random_dataset = "XX"
-        # Raise ValueError because Company data not found for unsupported dataset   
-        with pytest.raises(ValueError):
-            company_service = CompanyService(dataset=random_dataset)
+        # Fallback to US dataset with a single warning log; should not raise
+        company_service = CompanyService(dataset=random_dataset)
+        company = company_service.generate()
+        assert isinstance(company.to_dict(), dict)
+
+    def test_supported_datasets_static(self):
+        codes = CompanyService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

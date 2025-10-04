@@ -83,5 +83,12 @@ class TestEntityPerson:
 
     def test_not_supported_dataset(self):
         dataset = "XX"
-        with pytest.raises(ValueError):
-            person_service = PersonService(dataset=dataset)
+        # Fallback to US dataset with a single warning log; should not raise
+        person_service = PersonService(dataset=dataset)
+        person = person_service.generate()
+        assert isinstance(person.to_dict(), dict)
+
+    def test_supported_datasets_static(self):
+        codes = PersonService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

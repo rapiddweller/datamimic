@@ -1,7 +1,7 @@
 import json
 import random
 
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
 DEFAULT_OFFSET_RULES = [
     {"threshold": 1, "min": 1, "max": 1},

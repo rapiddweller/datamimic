@@ -1,0 +1,15 @@
+Excision,1
+Resection,1
+Repair,1
+Reconstruction,0.8
+Transplantation,0.5
+Implantation,0.7
+Removal,0.9
+Replacement,0.7
+Revision,0.6
+Fusion,0.5
+Amputation,0.3
+Anastomosis,0.4
+Bypass,0.4
+Grafting,0.4
+Ligation,0.3

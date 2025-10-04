@@ -68,6 +68,16 @@ If `min`/`max` constrain the first/last day, hours/minutes/seconds are sampled o
 
 Provide `seed` to get reproducible sequences (same inputs → same outputs).
 
+```python
+from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+
+g1 = DateTimeGenerator(random=True, seed=123)
+g2 = DateTimeGenerator(random=True, seed=123)
+assert g1.generate() == g2.generate()
+```
+
+In domain generators, prefer centralizing date selection behind a helper (e.g., `generate_order_date()`), so models remain pure and tests can inject a seeded RNG at the generator level.
+
 ## Validation
 
 The generator validates:
@@ -78,4 +88,3 @@ The generator validates:
 ## Demo Snippets
 
 See `datamimic_ce/demos/demo-datetime/1_datetime_generator.xml` for ready-to-run examples using the DSL sugar and weights.
-

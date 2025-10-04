@@ -1,0 +1,38 @@
+<setup>
+    <!-- Composite encounter demo: patient + doctor + hospital + procedure + device -->
+    <echo>Generating Healthcare Encounters (seeded + constrained)</echo>
+    <generate name="encounters" count="10" target="CSV">
+        <!-- Demonstrate DemographicConfig and rngSeed for reproducibility -->
+        <variable name="patient" entity="Patient" ageMin="45" ageMax="65" rngSeed="1337" />
+        <variable name="doctor" entity="Doctor" ageMin="30" ageMax="55" rngSeed="1337" />
+        <variable name="hospital" entity="Hospital" />
+        <variable name="procedure" entity="MedicalProcedure" />
+        <variable name="device" entity="MedicalDevice" />
+
+        <!-- Patient fields -->
+        <key name="patient_id" script="patient.patient_id" />
+        <key name="patient_name" script="patient.full_name" />
+        <key name="patient_age" script="patient.age" />
+        <array name="patient_conditions" script="patient.conditions" />
+
+        <!-- Doctor + hospital -->
+        <key name="doctor_id" script="doctor.doctor_id" />
+        <key name="doctor_name" script="doctor.full_name" />
+        <key name="doctor_specialty" script="doctor.specialty" />
+        <key name="hospital_name" script="hospital.name" />
+
+        <!-- Procedure summary -->
+        <key name="procedure_code" script="procedure.procedure_code" />
+        <key name="procedure_name" script="procedure.name" />
+        <key name="procedure_category" script="procedure.category" />
+        <key name="requires_anesthesia" script="procedure.requires_anesthesia" />
+        <key name="estimated_cost" script="procedure.cost" />
+
+        <!-- Device summary + nested histories -->
+        <key name="device_type" script="device.device_type" />
+        <key name="device_manufacturer" script="device.manufacturer" />
+        <nestedKey name="device_usage_logs" script="device.usage_logs" />
+        <nestedKey name="device_maintenance_history" script="device.maintenance_history" />
+    </generate>
+</setup>
+

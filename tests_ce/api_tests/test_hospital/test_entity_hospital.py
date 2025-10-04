@@ -98,6 +98,12 @@ class TestEntityHospital:
 
     def test_not_supported_dataset(self):
         random_dataset = "XX"
-        # Raise FileNotFound because Street name data not found for unsupported dataset
-        with pytest.raises(FileNotFoundError):
-            hospital_service = HospitalService(dataset=random_dataset)
+        # Fallback to US dataset with a single warning log; should not raise
+        hospital_service = HospitalService(dataset=random_dataset)
+        hospital = hospital_service.generate()
+        assert isinstance(hospital.to_dict(), dict)
+
+    def test_supported_datasets_static(self):
+        codes = HospitalService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

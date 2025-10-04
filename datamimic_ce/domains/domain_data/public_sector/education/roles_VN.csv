@@ -1,0 +1,13 @@
+role,code,description,level,weight
+Hiệu trưởng,PRIN,Người đứng đầu nhà trường lãnh đạo và quản lý toàn bộ hoạt động,5,0.03
+Phó hiệu trưởng,ASST_PRIN,Cán bộ hỗ trợ hiệu trưởng quản lý nhà trường và phụ trách các mảng như kỷ luật hay chương trình học,4,0.05
+Tổ trưởng chuyên môn,DEPT_HEAD,Giáo viên phụ trách điều hành một tổ bộ môn như Toán hoặc Ngữ văn,3,0.07
+Giáo viên,TCHR,Người giảng dạy trực tiếp các môn học cho học sinh,2,0.50
+Tư vấn học đường,COUN,Chuyên viên tư vấn định hướng học tập và tâm lý cho học sinh,2,0.10
+Chuyên viên tâm lý học đường,PSYCH,Chuyên gia đánh giá và hỗ trợ nhu cầu tâm lý của học sinh,3,0.05
+Thủ thư,LIB,Nhân viên quản lý thư viện và hỗ trợ học sinh nghiên cứu,2,0.03
+Y tế học đường,NURSE,Nhân viên y tế chăm sóc sức khỏe cho học sinh và giáo viên,2,0.03
+Thư ký/Trợ lý hành chính,ADMIN,Nhân viên hỗ trợ công tác hành chính cho Ban giám hiệu,1,0.05
+Custodian,CUST,Staff member responsible for maintaining school facilities,1,0.04
+Security Officer,SEC,Staff member responsible for maintaining safety and security at the school,1,0.03
+School Social Worker,SOC_WORK,Professional who helps students and families access social services and support,2,0.02

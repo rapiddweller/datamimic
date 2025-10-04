@@ -121,7 +121,16 @@ class ModelUtil:
         return ModelUtil._check_valid_additional_attributes(
             values=values,
             main_attributes=(ATTR_GENERATOR, ATTR_ENTITY),
-            additional_attributes=[ATTR_DATASET, ATTR_LOCALE],
+            additional_attributes=[
+                ATTR_DATASET,
+                ATTR_LOCALE,
+                # Demographic and RNG addons
+                "ageMin",
+                "ageMax",
+                "conditionsInclude",
+                "conditionsExclude",
+                "rngSeed",
+            ],
         )
 
     @staticmethod

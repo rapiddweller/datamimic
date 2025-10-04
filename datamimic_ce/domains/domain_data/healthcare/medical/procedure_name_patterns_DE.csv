@@ -1,0 +1,3 @@
+{action} am {location} {structure},1
+{action} der/des {structure},0.8
+{location} {structure} {action},0.6

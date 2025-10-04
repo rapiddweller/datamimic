@@ -7,10 +7,10 @@
 import random
 from typing import cast
 
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.common.literal_generators.domain_generator import DomainGenerator
 from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
 from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
 
 class EmailAddressGenerator(BaseLiteralGenerator):
@@ -25,13 +25,14 @@ class EmailAddressGenerator(BaseLiteralGenerator):
         given_name: str | None = None,
         family_name: str | None = None,
     ):
-        self._dataset = dataset or "US"
+        self._dataset = (dataset or "US").upper()  #  align downstream generators with ISO-based datasets
+        self._rng: random.Random = random.Random()
         self._given_name = given_name
         self._given_name_generator = GivenNameGenerator(dataset=self._dataset) if given_name is None else None
         self._family_name = family_name
         self._family_name_generator = FamilyNameGenerator(dataset=self._dataset) if family_name is None else None
         self._company_name: str | None = None
-        self._domain_generator = DomainGenerator()
+        self._domain_generator = DomainGenerator(dataset=self._dataset)
 
     def generate(self) -> str:
         """
@@ -47,7 +48,7 @@ class EmailAddressGenerator(BaseLiteralGenerator):
         else:
             domain = self._domain_generator.generate().lower()
 
-        join = random.choice(["_", ".", "0", "1"])
+        join = self._rng.choice(["_", ".", "0", "1"])
         if join == "0":
             return f"{given_name}{family_name}@{domain}"
         elif join == "1":

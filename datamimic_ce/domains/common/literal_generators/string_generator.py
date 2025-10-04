@@ -10,7 +10,7 @@ import string
 
 import exrex  # type: ignore
 
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
 
 class StringGenerator(BaseLiteralGenerator):
@@ -57,6 +57,7 @@ class StringGenerator(BaseLiteralGenerator):
                 f"Cannot generate unique string with length {self._max_len} "
                 f"from character set of size {len(self._char_set)}"
             )
+        self._rng: random.Random = random.Random()
 
     def generate(self) -> str:
         try:
@@ -72,13 +73,13 @@ class StringGenerator(BaseLiteralGenerator):
 
         # If unique, ensure each character only appears once
         if self.unique:
-            length = random.randint(self._min_len, self._max_len)
+            length = self._rng.randint(self._min_len, self._max_len)
             if len(char_set_list) < length:
                 raise ValueError("Character set is too small to generate a unique string of this length.")
-            result = random.sample(char_set_list, length)  # random.sample ensures uniqueness
+            result = self._rng.sample(char_set_list, length)  # random.sample ensures uniqueness
         else:
-            length = random.randint(self._min_len, self._max_len)
-            result = [random.choice(char_set_list) for _ in range(length)]
+            length = self._rng.randint(self._min_len, self._max_len)
+            result = [self._rng.choice(char_set_list) for _ in range(length)]
 
         return self.prefix + "".join(result) + self.suffix
 

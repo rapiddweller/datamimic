@@ -104,12 +104,16 @@ class TestEntityMedicalProcedure:
         medical_procedure = medical_procedure_service.generate()
         self._test_single_medical_procedure(medical_procedure)
 
+    def test_supported_datasets_static(self):
+        codes = MedicalProcedureService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes
+
     def test_not_supported_dataset(self):
         random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
         while random_dataset in self._supported_datasets:
             random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
-        # Raise ValueError because Street name data not found for unsupported dataset
+        # Fallback to US dataset with a single warning log; should not raise
         medical_procedure_service = MedicalProcedureService(dataset=random_dataset)
         medical_procedure = medical_procedure_service.generate()
-        with pytest.raises(FileNotFoundError):
-            medical_procedure.to_dict()
+        assert isinstance(medical_procedure.to_dict(), dict)

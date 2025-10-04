@@ -11,14 +11,13 @@ This module provides the EducationalInstitution entity model for generating
 realistic educational institution data.
 """
 
-import random
-import uuid
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.models.address import Address
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.public_sector.generators.educational_institution_generator import (
     EducationalInstitutionGenerator,
 )
@@ -41,6 +40,11 @@ class EducationalInstitution(BaseEntity):
         super().__init__()
         self._educational_institution_generator = educational_institution_generator
 
+    @property
+    def dataset(self) -> str:
+        """Expose dataset from generator."""
+        return self._educational_institution_generator.dataset  #  reuse normalized dataset for CSV lookups
+
     # Property getters
     @property
     @property_cache
@@ -50,7 +54,10 @@ class EducationalInstitution(BaseEntity):
         Returns:
             A unique identifier for the institution.
         """
-        return f"EDU-{uuid.uuid4().hex[:8].upper()}"
+        #  use shared PrefixedIdGenerator for prefixed short ID format
+        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
+
+        return PrefixedIdGenerator("EDU", "[0-9A-F]{8}").generate()
 
     @property
     @property_cache
@@ -130,7 +137,8 @@ class EducationalInstitution(BaseEntity):
                 f"Central Institute of {city}",
             ]
 
-        return random.choice(name_formats)
+        #  domain RNG must be deterministic via generator
+        return self._educational_institution_generator.rng.choice(name_formats)
 
     @property
     @property_cache
@@ -140,22 +148,8 @@ class EducationalInstitution(BaseEntity):
         Returns:
             The institution type.
         """
-        types = [
-            "Public School",
-            "Private School",
-            "Charter School",
-            "Magnet School",
-            "Community College",
-            "Public University",
-            "Private University",
-            "Research University",
-            "Technical Institute",
-            "Liberal Arts College",
-            "Vocational School",
-            "Special Education School",
-        ]
-
-        return random.choice(types)
+        #  move dataset I/O and weighted selection into generator helper
+        return self._educational_institution_generator.pick_institution_type(start=Path(__file__))
 
     @property
     @property_cache
@@ -166,20 +160,8 @@ class EducationalInstitution(BaseEntity):
             The education level.
         """
         institution_type = self.type
-
-        if "University" in institution_type or "College" in institution_type:
-            levels = ["Higher Education", "Undergraduate", "Graduate", "Postgraduate"]
-        elif "School" in institution_type:
-            if "Vocational" in institution_type:
-                levels = ["Vocational Education", "Technical Education", "Adult Education"]
-            elif "Special" in institution_type:
-                levels = ["Special Education", "K-12"]
-            else:
-                levels = ["Elementary", "Middle School", "High School", "K-12"]
-        else:
-            levels = ["Elementary", "Middle School", "High School", "Higher Education", "Vocational Education"]
-
-        return random.choice(levels)
+        # Delegate to generator for consistent anti-repetition and dataset handling
+        return self._educational_institution_generator.pick_level(institution_type, start=Path(__file__))
 
     @property
     @property_cache
@@ -201,7 +183,7 @@ class EducationalInstitution(BaseEntity):
             min_age = 15
             max_age = 150
 
-        return current_year - random.randint(min_age, max_age)
+        return current_year - self._educational_institution_generator.rng.randint(min_age, max_age)
 
     @property
     @property_cache
@@ -216,20 +198,20 @@ class EducationalInstitution(BaseEntity):
 
         # Adjust student count ranges based on institution type and level
         if "University" in institution_type:
-            return random.randint(5000, 40000)
+            return self._educational_institution_generator.rng.randint(5000, 40000)
         elif "College" in institution_type:
-            return random.randint(1000, 15000)
+            return self._educational_institution_generator.rng.randint(1000, 15000)
         elif "School" in institution_type:
             if "Elementary" in level:
-                return random.randint(200, 800)
+                return self._educational_institution_generator.rng.randint(200, 800)
             elif "Middle" in level:
-                return random.randint(300, 1000)
+                return self._educational_institution_generator.rng.randint(300, 1000)
             elif "High" in level:
-                return random.randint(500, 2500)
+                return self._educational_institution_generator.rng.randint(500, 2500)
             else:
-                return random.randint(200, 1500)
+                return self._educational_institution_generator.rng.randint(200, 1500)
         else:
-            return random.randint(100, 5000)
+            return self._educational_institution_generator.rng.randint(100, 5000)
 
     @property
     @property_cache
@@ -240,7 +222,9 @@ class EducationalInstitution(BaseEntity):
             The number of staff members.
         """
         student_count = self.student_count
-        student_to_staff_ratio = random.uniform(10, 25)  # Average student-to-staff ratio
+        student_to_staff_ratio = self._educational_institution_generator.rng.uniform(
+            10, 25
+        )  # Average student-to-staff ratio
 
         return max(5, int(student_count / student_to_staff_ratio))
 
@@ -303,112 +287,21 @@ class EducationalInstitution(BaseEntity):
             A list of programs.
         """
         level = self.level
-
-        # Define programs by level
-        elementary_programs = [
-            "Early Childhood Education",
-            "Elementary Education",
-            "Reading and Literacy",
-            "Math Fundamentals",
-            "Science Discovery",
-            "Arts and Music",
-            "Physical Education",
-            "Special Education",
-            "Gifted and Talented Program",
-            "After-School Programs",
-        ]
-
-        middle_school_programs = [
-            "Language Arts",
-            "Mathematics",
-            "Science",
-            "Social Studies",
-            "Physical Education",
-            "Foreign Languages",
-            "Technology Education",
-            "Visual and Performing Arts",
-            "Health Education",
-            "Career Exploration",
-        ]
-
-        high_school_programs = [
-            "English/Literature",
-            "Mathematics",
-            "Biology",
-            "Chemistry",
-            "Physics",
-            "History",
-            "Economics",
-            "Computer Science",
-            "Foreign Languages",
-            "Advanced Placement (AP)",
-            "International Baccalaureate (IB)",
-            "Technical Education",
-            "Business Studies",
-            "Performing Arts",
-            "Physical Education",
-            "Sports Teams",
-        ]
-
-        higher_education_programs = [
-            "Business Administration",
-            "Computer Science",
-            "Engineering",
-            "Life Sciences",
-            "Physical Sciences",
-            "Social Sciences",
-            "Humanities",
-            "Arts",
-            "Health Sciences",
-            "Education",
-            "Law",
-            "Medicine",
-            "Architecture",
-            "Agriculture",
-            "Environmental Studies",
-            "Communications",
-            "Mathematics",
-            "Psychology",
-            "Economics",
-            "Political Science",
-        ]
-
-        vocational_programs = [
-            "Automotive Technology",
-            "Construction Trades",
-            "Culinary Arts",
-            "Healthcare Technology",
-            "Information Technology",
-            "Manufacturing Technology",
-            "Cosmetology",
-            "Hospitality Management",
-            "Digital Media",
-            "Electrical Technology",
-            "HVAC Technology",
-            "Plumbing Technology",
-            "Welding",
-            "Aviation Technology",
-            "Agriculture Technology",
-        ]
-
-        # Select appropriate programs based on level
+        # Map level to slug
         if "Elementary" in level:
-            all_programs = elementary_programs
+            slug = "elementary"
         elif "Middle" in level:
-            all_programs = middle_school_programs
+            slug = "middle_school"
         elif "High" in level:
-            all_programs = high_school_programs
-        elif "Higher" in level or "Undergraduate" in level or "Graduate" in level or "Postgraduate" in level:
-            all_programs = higher_education_programs
-        elif "Vocational" in level or "Technical" in level:
-            all_programs = vocational_programs
+            slug = "high_school"
+        elif any(k in level for k in ("Higher", "Undergraduate", "Graduate", "Postgraduate")):
+            slug = "higher_education"
+        elif any(k in level for k in ("Vocational", "Technical")):
+            slug = "vocational"
         else:
-            # Mix of programs
-            all_programs = elementary_programs + middle_school_programs + high_school_programs
+            slug = "k12"
 
-        # Choose a subset of programs
-        num_programs = random.randint(3, min(10, len(all_programs)))
-        return random.sample(all_programs, num_programs)
+        return self._educational_institution_generator.pick_programs(slug, start=Path(__file__))
 
     @property
     @property_cache
@@ -419,51 +312,7 @@ class EducationalInstitution(BaseEntity):
             A list of accreditations.
         """
         institution_type = self.type
-
-        # Different accreditation bodies for different institution types
-        k12_accreditations = [
-            "Cognia (formerly AdvancED)",
-            "Middle States Association of Colleges and Schools",
-            "National Association of Independent Schools (NAIS)",
-            "National Blue Ribbon Schools Program",
-            "International Baccalaureate (IB) World School",
-            "Western Association of Schools and Colleges (WASC)",
-            "New England Association of Schools and Colleges (NEASC)",
-            "Southern Association of Colleges and Schools (SACS)",
-        ]
-
-        higher_ed_accreditations = [
-            "Higher Learning Commission (HLC)",
-            "Middle States Commission on Higher Education (MSCHE)",
-            "New England Commission of Higher Education (NECHE)",
-            "Northwest Commission on Colleges and Universities (NWCCU)",
-            "Southern Association of Colleges and Schools Commission on Colleges (SACSCOC)",
-            "WASC Senior College and University Commission (WSCUC)",
-            "Accreditation Council for Business Schools and Programs (ACBSP)",
-            "Accreditation Board for Engineering and Technology (ABET)",
-            "Commission on Collegiate Nursing Education (CCNE)",
-            "Council for the Accreditation of Educator Preparation (CAEP)",
-        ]
-
-        vocational_accreditations = [
-            "Council on Occupational Education (COE)",
-            "Accrediting Commission of Career Schools and Colleges (ACCSC)",
-            "National Accrediting Commission of Career Arts and Sciences (NACCAS)",
-            "Accrediting Bureau of Health Education Schools (ABHES)",
-            "Distance Education Accrediting Commission (DEAC)",
-        ]
-
-        # Select appropriate accreditations based on institution type and level
-        if "University" in institution_type or "College" in institution_type:
-            accreditation_list = higher_ed_accreditations
-        elif "Vocational" in institution_type or "Technical" in institution_type:
-            accreditation_list = vocational_accreditations
-        else:
-            accreditation_list = k12_accreditations
-
-        # Choose a subset of accreditations
-        num_accreditations = random.randint(1, min(3, len(accreditation_list)))
-        return random.sample(accreditation_list, num_accreditations)
+        return self._educational_institution_generator.pick_accreditations(institution_type, start=Path(__file__))
 
     @property
     @property_cache
@@ -473,78 +322,8 @@ class EducationalInstitution(BaseEntity):
         Returns:
             A list of facilities.
         """
-        import random
-
         institution_type = self.type
-
-        # Common facilities for all institution types
-        common_facilities = [
-            "Library",
-            "Computer Lab",
-            "Cafeteria",
-            "Administrative Offices",
-            "Classrooms",
-            "Gymnasium",
-            "Auditorium",
-            "Sports Fields",
-            "Parking",
-        ]
-
-        # Specialized facilities by institution type
-        k12_facilities = [
-            "Playground",
-            "Music Room",
-            "Art Studio",
-            "Science Labs",
-            "Counseling Center",
-            "Health Office",
-            "Special Education Classrooms",
-        ]
-
-        higher_ed_facilities = [
-            "Research Labs",
-            "Lecture Halls",
-            "Student Union",
-            "Dormitories/Residence Halls",
-            "Faculty Offices",
-            "Health Center",
-            "Fitness Center",
-            "Bookstore",
-            "Career Services Center",
-            "Technology Center",
-            "Recreation Center",
-            "Performance Spaces",
-            "Student Services Building",
-            "International Student Center",
-            "Graduate Student Center",
-        ]
-
-        vocational_facilities = [
-            "Workshops",
-            "Training Laboratories",
-            "Simulation Centers",
-            "Automotive Shop",
-            "Culinary Kitchen",
-            "Construction Workshop",
-            "Healthcare Simulation Lab",
-            "Welding Shop",
-            "Electrical Lab",
-            "IT Training Center",
-        ]
-
-        # Combine appropriate facilities based on institution type
-        all_facilities = common_facilities.copy()
-
-        if "University" in institution_type or "College" in institution_type:
-            all_facilities.extend(higher_ed_facilities)
-        elif "Vocational" in institution_type or "Technical" in institution_type:
-            all_facilities.extend(vocational_facilities)
-        else:
-            all_facilities.extend(k12_facilities)
-
-        # Choose a subset of facilities
-        num_facilities = random.randint(5, min(15, len(all_facilities)))
-        return random.sample(all_facilities, num_facilities)
+        return self._educational_institution_generator.pick_facilities(institution_type, start=Path(__file__))
 
     @property
     @property_cache

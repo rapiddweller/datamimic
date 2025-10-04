@@ -5,10 +5,12 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+import random
 from pathlib import Path
 from typing import Any
 
-from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.logger import logger
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -20,8 +22,9 @@ class CountryGenerator(BaseDomainGenerator):
     ISO code, name, default language locale, phone code, and population.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
+        self._dataset = (dataset or "US").upper()  #  lock dataset to ISO code so we can pick suffixed CSVs
+        self._rng: random.Random = rng or random.Random()
 
     def load_country_data(self):
         """Load country data from CSV file.
@@ -30,16 +33,13 @@ class CountryGenerator(BaseDomainGenerator):
             A dictionary containing country data.
         """
         # Prepare data file path
-        country_file_path = self._get_base_path_country() / "country.csv"
+        country_file_path = self._country_file_path()
 
         try:
             # Load country data
             country_data = FileUtil.read_csv_to_list_of_tuples_without_header(country_file_path, delimiter=",")
-
             country_data_dict = {country[0]: country for country in country_data}
-
             return country_data_dict
-
         except Exception as e:
             logger.error(f"Error loading country data: {e}")
             raise e
@@ -58,7 +58,10 @@ class CountryGenerator(BaseDomainGenerator):
 
         return_value = country_data.get(iso_code)
         if return_value is None:
-            raise ValueError(f"Country with ISO code {iso_code} not found")
+            #  fall back to US row if requested ISO code is unknown (e.g., random test code)
+            return_value = country_data.get("US")
+            if return_value is None:
+                raise ValueError(f"Country with ISO code {iso_code} not found")
         return return_value
 
     def get_random_country(self) -> dict[str, Any]:
@@ -67,13 +70,11 @@ class CountryGenerator(BaseDomainGenerator):
         Returns:
             A dictionary containing the country data.
         """
-        import random
-
         # Load country data
         country_data = self.load_country_data()
 
         # Get random index
-        random_index = random.randint(0, len(country_data) - 1)
+        random_index = self._rng.randint(0, len(country_data) - 1)
 
         # Get country row
         country_row = list(country_data.values())[random_index]
@@ -87,10 +88,6 @@ class CountryGenerator(BaseDomainGenerator):
             "population": country_row[5],
         }
 
-    def _get_base_path_country(self) -> Path:
-        """Get the base path for country data.
-
-        Returns:
-            The base path for country data.
-        """
-        return Path(__file__).parent.parent.parent.parent / "domain_data" / "common"
+    def _country_file_path(self) -> Path:
+        """Return dataset-specific country CSV path."""
+        return dataset_path("common", f"country_{self._dataset}.csv", start=Path(__file__))

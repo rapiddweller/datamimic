@@ -1,0 +1,23 @@
+<setup>
+    <!-- Medical Device Entity -->
+    <echo>Running MedicalDeviceEntity</echo>
+    <generate name="medical_devices" count="10" target="CSV">
+        <variable name="device" entity="MedicalDevice" />
+        <key name="device_id" script="device.device_id" />
+        <key name="device_type" script="device.device_type" />
+        <key name="manufacturer" script="device.manufacturer" />
+        <key name="model_number" script="device.model_number" />
+        <key name="serial_number" script="device.serial_number" />
+        <key name="manufacture_date" script="device.manufacture_date" />
+        <key name="expiration_date" script="device.expiration_date" />
+        <key name="last_maintenance_date" script="device.last_maintenance_date" />
+        <key name="next_maintenance_date" script="device.next_maintenance_date" />
+        <key name="status" script="device.status" />
+        <key name="location" script="device.location" />
+        <key name="assigned_to" script="device.assigned_to" />
+        <!-- Logs and history are lists; export as list with dicts -->
+        <nestedKey name="usage_logs" script="device.usage_logs" />
+        <nestedKey name="maintenance_history" script="device.maintenance_history" />
+    </generate>
+</setup>
+

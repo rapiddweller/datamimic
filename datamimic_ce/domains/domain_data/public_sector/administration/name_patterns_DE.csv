@@ -1,0 +1,6 @@
+{jurisdiction} Regierungsamt,1.0
+{jurisdiction} Verwaltungsdienst,0.9
+{jurisdiction} Verwaltungszentrum,0.8
+Abteilung für {office_type} - {city},0.7
+{state} {office_type} Abteilung,0.6
+{city} {office_type} Amt,0.5

@@ -1,0 +1,10 @@
+rank,code,description,tier,weight
+Chiến sĩ công an,CS,A officer responsible for tuần tra và xử lý nhiệm vụ cơ bản,1,0.45
+Hạ sĩ,HS,Thực hiện nhiệm vụ tuần tra theo chỉ huy cấp trên,1,0.15
+Trung sĩ,TS,Trực tiếp tham gia chuyên án và hỗ trợ điều tra,2,0.1
+Thiếu úy,TU,Chỉ huy tổ tuần tra và xử lý tình huống ban đầu,3,0.08
+Thượng úy,THU,Phụ trách đội nghiệp vụ và hướng dẫn cán bộ trẻ,4,0.07
+Đại úy,DU,Quản lý nhiều tổ công tác và điều phối chuyên án,5,0.06
+Thiếu tá,TT,Chỉ huy một phòng nghiệp vụ hoặc công an quận/huyện,6,0.04
+Trung tá,TTa,Giữ chức phó trưởng công an tỉnh/thành phố,7,0.03
+Đại tá,DTa,Chỉ huy trưởng công an tỉnh/thành phố,8,0.02

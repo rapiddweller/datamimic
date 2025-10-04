@@ -10,7 +10,7 @@ Insurance Company Service.
 This module provides service functions for generating and managing insurance companies.
 """
 
-from datamimic_ce.domain_core.base_domain_service import BaseDomainService
+from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.insurance.generators.insurance_company_generator import InsuranceCompanyGenerator
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
 
@@ -20,3 +20,11 @@ class InsuranceCompanyService(BaseDomainService[InsuranceCompany]):
 
     def __init__(self, dataset: str | None = None):
         super().__init__(InsuranceCompanyGenerator(dataset), InsuranceCompany)
+
+    @staticmethod
+    def supported_datasets() -> set[str]:
+        from pathlib import Path
+
+        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
+
+        return compute_supported_datasets(["insurance/companies_{CC}.csv"], start=Path(__file__))

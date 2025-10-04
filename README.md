@@ -77,6 +77,35 @@ print(f"Medical Conditions: {patient.conditions}")
 print(f"Blood Type: {patient.blood_type}")
 ```
 
+### Demographics & Seeding (First Example)
+
+Python (DemographicConfig + seeded RNG):
+```python
+from random import Random
+from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+from datamimic_ce.domains.healthcare.services import PatientService
+
+cfg = DemographicConfig(age_min=70, age_max=75)
+svc = PatientService(dataset="US", demographic_config=cfg, rng=Random(1337))
+patient = svc.generate()
+print({"name": patient.full_name, "age": patient.age, "conditions": patient.conditions})
+```
+
+XML (Demographic attributes + rngSeed):
+```xml
+<setup>
+  <generate name="seeded_seniors" count="3" target="CSV">
+    <variable name="patient" entity="Patient" dataset="US" ageMin="70" ageMax="75" rngSeed="1337" />
+    <key name="full_name" script="patient.full_name" />
+    <key name="age" script="patient.age" />
+    <array name="conditions" script="patient.conditions" />
+  </generate>
+  <!-- array is for primitives; use nestedKey for lists of dicts -->
+  <!-- <nestedKey name="records" script="some_list_of_dicts" /> -->
+  
+</setup>
+```
+
 **Example Output:**
 ```
 Patient ID: PAT-23AEEABA
@@ -168,7 +197,8 @@ for patient in elderly_diabetic_patients[:3]:
 ```xml
 <setup>
     <generate name="customer" count="10">
-        <variable name="person" entity="Person(min_age=21, max_age=67)"/>
+        <!-- Prefer attributes over constructor strings; deterministic when rngSeed is set -->
+        <variable name="person" entity="Person" ageMin="21" ageMax="67" rngSeed="42"/>
         <key name="id" generator="IncrementGenerator"/>
         <key name="first_name" script="person.given_name"/>
         <key name="last_name" script="person.family_name"/>
