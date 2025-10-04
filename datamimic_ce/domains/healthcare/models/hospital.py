@@ -11,13 +11,11 @@ This module provides the Hospital entity model for generating realistic hospital
 """
 
 import datetime
-import random
-import uuid
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.models.address import Address
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
 
 
@@ -34,7 +32,10 @@ class Hospital(BaseEntity):
         Returns:
             A unique identifier for the hospital.
         """
-        return f"HOSP-{uuid.uuid4().hex[:8].upper()}"
+        #  use shared PrefixedIdGenerator for prefixed short ID format
+        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
+
+        return PrefixedIdGenerator("HOSP", "[0-9A-F]{8}").generate()
 
     @property
     @property_cache
@@ -90,16 +91,16 @@ class Hospital(BaseEntity):
         hospital_type = self.type
         if hospital_type == "Specialty":
             # Specialty hospitals tend to be smaller
-            return random.randint(50, 200)
+            return self._hospital_generator.rng.randint(50, 200)
         elif hospital_type == "Community":
             # Community hospitals are medium-sized
-            return random.randint(100, 300)
+            return self._hospital_generator.rng.randint(100, 300)
         elif hospital_type == "Teaching":
             # Teaching hospitals tend to be larger
-            return random.randint(300, 1000)
+            return self._hospital_generator.rng.randint(300, 1000)
         else:
             # General hospitals vary in size
-            return random.randint(100, 500)
+            return self._hospital_generator.rng.randint(100, 500)
 
     @property
     @property_cache
@@ -110,7 +111,7 @@ class Hospital(BaseEntity):
             The number of staff members in the hospital.
         """
         bed_count = self.bed_count
-        staff_ratio = random.uniform(2.0, 4.0)
+        staff_ratio = self._hospital_generator.rng.uniform(2.0, 4.0)
 
         return int(bed_count * staff_ratio)
 
@@ -125,7 +126,7 @@ class Hospital(BaseEntity):
         current_year = datetime.datetime.now().year
 
         # Most hospitals were founded in the last 150 years
-        return random.randint(current_year - 150, current_year - 5)
+        return self._hospital_generator.rng.randint(current_year - 150, current_year - 5)
 
     @property
     @property_cache
@@ -147,10 +148,10 @@ class Hospital(BaseEntity):
         """
         if self.type == "Specialty":
             # Specialty hospitals are less likely to have emergency services
-            return random.random() < 0.3
+            return self._hospital_generator.rng.random() < 0.3
         else:
             # Other hospital types usually have emergency services
-            return random.random() < 0.9
+            return self._hospital_generator.rng.random() < 0.9
 
     @property
     @property_cache
@@ -166,10 +167,10 @@ class Hospital(BaseEntity):
             return True
         elif hospital_type == "General":
             # Some general hospitals are teaching hospitals
-            return random.random() < 0.3
+            return self._hospital_generator.rng.random() < 0.3
         else:
             # Other hospital types are rarely teaching hospitals
-            return random.random() < 0.1
+            return self._hospital_generator.rng.random() < 0.1
 
     @property
     @property_cache

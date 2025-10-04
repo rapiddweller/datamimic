@@ -1,0 +1,9 @@
+transaction_type,modifier,weight
+Nạp tiền,1.0,15
+Rút tiền,1.0,20
+Chuyển khoản,1.1,10
+Thanh toán,1.0,40
+Phí dịch vụ,0.5,5
+Lãi tiết kiệm,0.3,2
+Hoàn tiền,1.0,5
+Điều chỉnh,0.7,3

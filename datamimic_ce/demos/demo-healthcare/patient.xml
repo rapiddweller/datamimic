@@ -67,4 +67,14 @@
         <array name="medications" script="patient.medications" />
         <array name="conditions" script="patient.conditions" />
     </generate>
+
+    <!-- Seeded seniors cohort (deterministic) -->
+    <echo>Running Seeded Seniors PatientEntity</echo>
+    <generate name="seeded_senior_patients" count="5" target="CSV">
+        <variable name="patient" entity="Patient" ageMin="70" ageMax="80" rngSeed="777" />
+        <key name="patient_id" script="patient.patient_id" />
+        <key name="full_name" script="patient.full_name" />
+        <key name="age" script="patient.age" />
+        <array name="conditions" script="patient.conditions" />
+    </generate>
 </setup> 

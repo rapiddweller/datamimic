@@ -1,0 +1,7 @@
+type,code,description,weight
+Bảo hiểm xe máy,XE_MAY,Bảo vệ trách nhiệm dân sự và tai nạn cho xe máy,0.22
+Bảo hiểm ô tô,XE_O_TO,Chi trả thiệt hại vật chất và trách nhiệm pháp lý cho ô tô,0.2
+Bảo hiểm sức khỏe gia đình,Y_TE,Thanh toán chi phí khám bệnh và điều trị,0.18
+Bảo hiểm nhân thọ,NHAN_THO,Đảm bảo tài chính cho gia đình khi rủi ro tử vong hoặc thương tật,0.16
+Bảo hiểm du lịch,DU_LICH,Hỗ trợ chi phí y tế và hành lý khi du lịch trong và ngoài nước,0.12
+Bảo hiểm nhà ở,NHA_O,Bảo vệ tài sản và trách nhiệm dân sự cho nhà ở,0.12

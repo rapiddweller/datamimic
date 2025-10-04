@@ -1,0 +1,6 @@
+product_code,name,code,description,min_coverage,max_coverage,weight
+XE_MAY,Bảo hiểm trách nhiệm dân sự,TRACHNHIEM,Bồi thường thiệt hại cho bên thứ ba theo quy định,5000000,100000000,0.28
+XE_MAY,Bảo hiểm tai nạn người ngồi trên xe,TAINAN,Chi trả chi phí y tế cho lái xe và hành khách,2000000,50000000,0.18
+XE_O_TO,Bảo hiểm vật chất xe ô tô,VATCHAT,Chi trả sửa chữa hoặc thay thế khi va chạm,10000000,200000000,0.22
+Y_TE,Bảo hiểm sức khỏe gia đình,SUCKHOE,Thanh toán chi phí khám chữa bệnh nội trú và ngoại trú,5000000,200000000,0.2
+NHAN_THO,Bảo hiểm nhân thọ trọn đời,NHANTHO,Cung cấp quyền lợi tử vong và thương tật toàn bộ vĩnh viễn,100000000,2000000000,0.12

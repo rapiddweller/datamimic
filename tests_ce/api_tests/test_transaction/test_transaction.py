@@ -159,3 +159,8 @@ class TestTransaction:
         assert "is_international" in transaction_dict
         assert "channel" in transaction_dict
         assert "direction" in transaction_dict
+
+    def test_supported_datasets_static(self):
+        codes = TransactionService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

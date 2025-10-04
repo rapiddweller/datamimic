@@ -9,7 +9,7 @@
 from pathlib import Path
 
 from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.model.generator_model import GeneratorModel

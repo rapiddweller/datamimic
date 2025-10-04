@@ -93,6 +93,12 @@ class TestEntityAddress:
         random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
         while random_dataset in self._supported_datasets:
             random_dataset = "".join(random.choices(string.ascii_uppercase, k=2))
-        # Raise FileNotFound because Street name data not found for unsupported dataset
-        with pytest.raises(FileNotFoundError):
-            address_service = AddressService(dataset=random_dataset)
+        # Fallback to US dataset with a single warning log; should not raise
+        address_service = AddressService(dataset=random_dataset)
+        address = address_service.generate()
+        self._test_single_address(address)
+
+    def test_supported_datasets_static(self):
+        codes = AddressService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

@@ -5,9 +5,12 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.domain_core.base_domain_service import BaseDomainService
+from random import Random
+
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
+from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.domain_core import BaseDomainService
 
 
 class PersonService(BaseDomainService[Person]):
@@ -23,14 +26,38 @@ class PersonService(BaseDomainService[Person]):
         max_age: int = 65,
         female_quota: float = 0.5,
         other_gender_quota: float = 0.0,
+        demographic_config: DemographicConfig | None = None,
+        rng: Random | None = None,
     ):
+        resolved_config = (demographic_config or DemographicConfig()).with_defaults(
+            default_age_min=min_age,
+            default_age_max=max_age,
+        )
+        #  Keep backward-compatible defaults while centralizing overrides in one object.
+        min_age_resolved = resolved_config.age_min if resolved_config.age_min is not None else min_age
+        max_age_resolved = resolved_config.age_max if resolved_config.age_max is not None else max_age
         super().__init__(
             PersonGenerator(
                 dataset=dataset,
-                min_age=min_age,
-                max_age=max_age,
+                min_age=min_age_resolved,
+                max_age=max_age_resolved,
                 female_quota=female_quota,
                 other_gender_quota=other_gender_quota,
+                demographic_config=resolved_config,
+                rng=rng,
             ),
             Person,
         )
+
+    @staticmethod
+    def supported_datasets() -> set[str]:
+        from pathlib import Path
+
+        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
+
+        patterns = [
+            "common/person/givenName_male_{CC}.csv",
+            "common/person/givenName_female_{CC}.csv",
+            "common/person/familyName_{CC}.csv",
+        ]
+        return compute_supported_datasets(patterns, start=Path(__file__))

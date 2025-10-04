@@ -1,4 +1,4 @@
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
 class StatefulIncrementGenerator(BaseLiteralGenerator):
     def __init__(self):

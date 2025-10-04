@@ -32,7 +32,11 @@ class TestEntityPoliceOfficer:
         assert isinstance(police_officer.phone, str)
         assert isinstance(police_officer.address, Address)
         assert police_officer.officer_id is not None and police_officer.officer_id != ""
+        #  validate standardized ID and badge formats
+        import re
+        assert re.fullmatch(r"OFF-[0-9A-F]{8}", police_officer.officer_id)
         assert police_officer.badge_number is not None and police_officer.badge_number != ""
+        assert re.fullmatch(r"\d{4}", police_officer.badge_number)
         assert police_officer.given_name is not None and police_officer.given_name != ""
         assert police_officer.family_name is not None and police_officer.family_name != ""
         assert police_officer.full_name is not None and police_officer.full_name != ""
@@ -117,5 +121,10 @@ class TestEntityPoliceOfficer:
     def test_not_supported_dataset(self):
         police_officer_service = PoliceOfficerService(dataset="FR")
         police_officer = police_officer_service.generate()
-        with pytest.raises(FileNotFoundError):
-            police_officer.to_dict()
+        # Fallback to US dataset with a single warning log; should not raise
+        assert isinstance(police_officer.to_dict(), dict)
+
+    def test_supported_datasets_static(self):
+        codes = PoliceOfficerService.supported_datasets()
+        # At minimum, US and DE are present in repo datasets
+        assert "US" in codes and "DE" in codes

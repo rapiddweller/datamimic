@@ -180,14 +180,22 @@ class FileUtil:
 
         # Process data
         for row in raw_data:
-            values.append(row[0])
-            if len(row) == 2:
-                weights.append(float(row[1]))
+            #  tolerate text values containing delimiters; use last column as weight
+            if len(row) >= 2:
+                try:
+                    weights.append(float(row[-1]))
+                except (TypeError, ValueError):
+                    # Treat non-numeric weight as 1.0
+                    weights.append(1.0)
+                # Reconstruct value by joining all but the last column
+                values.append((",".join(row[:-1])).strip())
             elif len(row) == 1:
                 # Assume weight as 1 if missing
                 weights.append(1.0)
+                values.append(row[0])
             else:
-                raise ValueError(f"Not a valid wgt file {str(file_path)}")
+                # Skip empty rows
+                continue
 
         # Normalize weights
         weights_sum = sum(weights)

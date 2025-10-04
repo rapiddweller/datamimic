@@ -10,12 +10,15 @@ Product model.
 This module provides a model for representing an e-commerce product.
 """
 
-import random
+from pathlib import Path
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
+
+# NOTE: No dataset I/O in model; all loading done in ProductGenerator
 
 
 class Product(BaseEntity):
@@ -37,6 +40,10 @@ class Product(BaseEntity):
         self._product_generator = product_generator
 
     @property
+    def dataset(self) -> str:
+        return self._product_generator.dataset  #  reuse generator dataset when resolving CSV assets
+
+    @property
     @property_cache
     def product_id(self) -> str:
         """Get the product ID.
@@ -44,7 +51,10 @@ class Product(BaseEntity):
         Returns:
             A unique product ID
         """
-        return "PROD" + "".join(random.choices("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=8))
+        #  use shared PrefixedIdGenerator for prefixed ID without separator
+        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
+
+        return PrefixedIdGenerator("PROD", "[A-Z0-9]{8}", separator="").generate()
 
     @property
     @property_cache
@@ -81,13 +91,14 @@ class Product(BaseEntity):
         if not noun:
             noun = "Product"
 
-        patterns = [
+        #  deterministic RNG via generator; avoid module random
+        patterns = (
             f"{brand} {adjective} {noun}",
             f"{adjective} {noun} by {brand}",
             f"{brand} {noun}",
             f"{adjective} {brand} {noun}",
-        ]
-        return random.choice(patterns)
+        )
+        return self._product_generator.rng.choice(list(patterns))
 
     @property
     @property_cache
@@ -140,7 +151,8 @@ class Product(BaseEntity):
         # Format: BRAND-CATEGORY-RANDOM
         brand_code = self.brand[:3].upper()
         category_code = self.category[:3].upper()
-        random_code = "".join(random.choices("0123456789", k=6))
+        #  use common StringGenerator for numeric segment
+        random_code = StringGenerator.rnd_str_from_regex("[0-9]{6}")
 
         return f"{brand_code}-{category_code}-{random_code}"
 
@@ -221,15 +233,8 @@ class Product(BaseEntity):
         Returns:
             A rating between 1.0 and 5.0
         """
-        # Weight the ratings to make higher ratings more common
-        weights = [0.05, 0.1, 0.2, 0.3, 0.35]  # Probabilities for 1-5 stars
-        rating = float(random.choices([1, 2, 3, 4, 5], weights=weights, k=1)[0])
-
-        # Add decimal precision for half-star ratings
-        if random.random() < 0.5:
-            rating -= 0.5
-
-        return max(1.0, rating)  # Ensure minimum rating of 1.0
+        # Delegate to generator helper for dataset/rng logic
+        return self._product_generator.pick_rating(start=Path(__file__))
 
     @property
     @property_cache
@@ -259,9 +264,9 @@ class Product(BaseEntity):
         all_tags = base_tags + selected_category_tags
 
         # Add a popular/trending tag occasionally
-        if random.random() < 0.2:
-            trending_tags = ["bestseller", "trending", "popular", "new arrival", "limited edition", "sale"]
-            all_tags.append(random.choice(trending_tags))
+        tag = self._product_generator.maybe_pick_trending_tag(start=Path(__file__))
+        if tag:
+            all_tags.append(tag)
 
         return all_tags
 

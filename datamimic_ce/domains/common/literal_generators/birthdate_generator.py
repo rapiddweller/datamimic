@@ -6,8 +6,8 @@
 
 from datetime import datetime, timedelta
 
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
 
 class BirthdateGenerator(BaseLiteralGenerator):

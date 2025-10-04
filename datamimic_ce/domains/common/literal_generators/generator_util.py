@@ -321,10 +321,10 @@ class GeneratorUtil:
                                         parsed_constructor_args[param_name] = self._context.evaluate_python_expression(
                                             value_str
                                         )
-                                    except Exception as eval_exc:
+                                    except (ValueError, SyntaxError, NameError, TypeError) as eval_exc:
                                         try:
                                             parsed_constructor_args[param_name] = ast.literal_eval(value_str)
-                                        except Exception as lit_exc:
+                                        except (ValueError, SyntaxError) as lit_exc:
                                             logger.error(f"Fehler beim Parsen von {param_name}: {eval_exc} / {lit_exc}")
                                             raise ValueError(
                                                 f"Konnte {param_name} nicht als Liste parsen: {value_str}"
@@ -339,7 +339,7 @@ class GeneratorUtil:
                             # Use unified cache key for consistency with global cache
                             self._context.root.generators[cache_key] = result
                             return result
-                except Exception as e_dt_parse:
+                except (ValueError, SyntaxError, TypeError) as e_dt_parse:
                     logger.error(
                         f"Failed to parse DateTimeGenerator arguments from '{generator_str}' using ast: {e_dt_parse}"
                     )
@@ -357,7 +357,7 @@ class GeneratorUtil:
                 local_ns_inst = {"context": self._context, "self": self}
                 try:
                     result = self._context.evaluate_python_expression(generator_str, {**local_ns, **local_ns_inst})
-                except Exception as e_eval:
+                except (ValueError, SyntaxError, NameError, TypeError) as e_eval:
                     logger.error(
                         f"Error evaluating generator string '{generator_str}' with evaluate_python_expression: {e_eval}"
                     )
@@ -383,7 +383,7 @@ class GeneratorUtil:
                 self._context.root.generators[cache_key] = result
 
             return result
-        except Exception as e:
+        except (ValueError, SyntaxError, NameError, TypeError) as e:
             current_class_name = class_name if "class_name" in locals() else generator_str
             element_name_str = f" of element '{stmt.name}'" if stmt and hasattr(stmt, "name") else ""
             logger.error(f"Error creating generator '{current_class_name}'{element_name_str}: {e}")

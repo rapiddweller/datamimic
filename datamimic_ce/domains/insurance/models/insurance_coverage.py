@@ -1,7 +1,7 @@
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.insurance.generators.insurance_coverage_generator import InsuranceCoverageGenerator
 
 

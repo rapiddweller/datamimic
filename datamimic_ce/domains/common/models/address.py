@@ -4,12 +4,11 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import random
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 
 
 class Address(BaseEntity):
@@ -32,8 +31,11 @@ class Address(BaseEntity):
     @property
     @property_cache
     def house_number(self) -> str:
-        house_number = str(random.randint(1, 9999))
-        postfix = random.choices(["", "A", "B", "C", "bis", "ter"], weights=[0.7, 0.1, 0.1, 0.05, 0.05, 0.05])[0]
+        # Use generator rng to keep determinism
+        #  deterministic RNG via generator; models must not import random
+        rng = self._address_generator.rng
+        house_number = str(rng.randint(1, 9999))
+        postfix = rng.choices(["", "A", "B", "C", "bis", "ter"], weights=[0.7, 0.1, 0.1, 0.05, 0.05, 0.05])[0]
         return f"{house_number}{postfix}"
 
     @property

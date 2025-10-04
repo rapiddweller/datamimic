@@ -1,0 +1,9 @@
+transaction_type,weight,direction
+Nạp tiền,15,credit
+Rút tiền,20,debit
+Chuyển khoản,20,debit
+Thanh toán,30,debit
+Phí dịch vụ,5,debit
+Lãi tiết kiệm,3,credit
+Hoàn tiền,5,credit
+Điều chỉnh,2,credit

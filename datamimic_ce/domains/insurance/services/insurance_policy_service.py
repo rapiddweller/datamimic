@@ -10,7 +10,10 @@ Insurance Policy Service.
 This module provides service functions for generating and managing insurance policies.
 """
 
-from datamimic_ce.domain_core.base_domain_service import BaseDomainService
+from random import Random
+
+from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.insurance.generators.insurance_policy_generator import InsurancePolicyGenerator
 from datamimic_ce.domains.insurance.models.insurance_policy import InsurancePolicy
 
@@ -18,10 +21,33 @@ from datamimic_ce.domains.insurance.models.insurance_policy import InsurancePoli
 class InsurancePolicyService(BaseDomainService[InsurancePolicy]):
     """Service for generating and managing insurance policies."""
 
-    def __init__(self, dataset: str | None = None):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        demographic_config: DemographicConfig | None = None,
+        rng: Random | None = None,
+    ):
         """Initialize the insurance policy service.
 
         Args:
             dataset: The country code (e.g., "US", "DE") to use for data generation.
         """
-        super().__init__(InsurancePolicyGenerator(dataset=dataset), InsurancePolicy)
+        import random as _r
+
+        super().__init__(
+            InsurancePolicyGenerator(dataset=dataset, demographic_config=demographic_config, rng=rng or _r.Random()),
+            InsurancePolicy,
+        )
+
+    @staticmethod
+    def supported_datasets() -> set[str]:
+        from pathlib import Path
+
+        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
+
+        patterns = [
+            "insurance/policy/premium_buckets_{CC}.csv",
+            "insurance/policy/premium_frequencies_{CC}.csv",
+            "insurance/policy/statuses_{CC}.csv",
+        ]
+        return compute_supported_datasets(patterns, start=Path(__file__))

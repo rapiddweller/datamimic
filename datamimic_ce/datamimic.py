@@ -6,7 +6,6 @@
 import argparse
 import logging
 import os
-import traceback
 import uuid
 from pathlib import Path
 
@@ -142,8 +141,8 @@ class DataMimic:
             logger.error(f"Value error: {e}")
             raise e
         except Exception as err:
+            #  Avoid duplicate stack traces; logger.exception already captures traceback
             logger.exception(f"Error in DATAMIMIC process. Error message: {err}")
-            traceback.print_exc()
             raise err
 
     def capture_test_result(self) -> dict | None:

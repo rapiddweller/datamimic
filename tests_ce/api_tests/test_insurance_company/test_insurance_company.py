@@ -1,4 +1,5 @@
 import pytest
+from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
 from datamimic_ce.domains.insurance.services.insurance_company_service import InsuranceCompanyService
 
@@ -22,6 +23,8 @@ class TestInsuranceCompany:
         assert insurance_company.website is not None
 
         assert insurance_company.id != ""
+        #  ensure consistent UUID format by validating via common utility
+        assert GeneratorUtil.is_valid_uuid(insurance_company.id)
         assert insurance_company.name != ""
         assert insurance_company.code != ""
         assert insurance_company.founded_year != ""
@@ -72,5 +75,10 @@ class TestInsuranceCompany:
     def test_not_supported_dataset(self):
         insurance_company_service = InsuranceCompanyService(dataset="FR")
         company = insurance_company_service.generate()
-        with pytest.raises(FileNotFoundError):
-            company.to_dict()
+        # Fallback to US dataset with a single warning log; should not raise
+        assert isinstance(company.to_dict(), dict)
+
+    def test_supported_datasets_static(self):
+        codes = InsuranceCompanyService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

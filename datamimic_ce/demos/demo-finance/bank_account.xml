@@ -1,0 +1,18 @@
+<setup>
+    <echo>Generating Bank Accounts</echo>
+    <!-- Load helper to enrich accounts with nested transactions -->
+    <execute uri="script/ledger.scr.py" />
+    <generate name="bank_accounts" count="10" target="CSV">
+        <variable name="account" entity="BankAccount" />
+        <key name="account_number" script="account.account_number" />
+        <key name="iban" script="account.iban" />
+        <key name="account_type" script="account.account_type" />
+        <key name="balance" script="account.balance" />
+        <key name="currency" script="account.currency" />
+        <key name="created_date" script="account.created_date" />
+        <key name="last_transaction_date" script="account.last_transaction_date" />
+        <nestedKey name="bank" script="account.bank_data.to_dict()" />
+        <!-- Demonstrate nestedKey generation via Python helper with deterministic seed -->
+        <nestedKey name="transactions" script="generate_transactions_for_account(account, 5, 2025)" />
+    </generate>
+</setup>

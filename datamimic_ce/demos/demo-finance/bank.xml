@@ -1,0 +1,14 @@
+<setup>
+    <echo>Generating Banks</echo>
+    <generate name="banks" count="10" target="CSV">
+        <variable name="bank" entity="Bank" />
+        <key name="name" script="bank.name" />
+        <key name="swift_code" script="bank.swift_code" />
+        <key name="routing_number" script="bank.routing_number" />
+        <key name="bank_code" script="bank.bank_code" />
+        <key name="bic" script="bank.bic" />
+        <key name="bin" script="bank.bin" />
+        <key name="customer_service_phone" script="bank.customer_service_phone" />
+    </generate>
+</setup>
+

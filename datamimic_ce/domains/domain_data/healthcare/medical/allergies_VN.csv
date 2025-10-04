@@ -1,0 +1,11 @@
+allergen,severity,reaction,weight
+Penicillin,Nặng,Phát ban toàn thân,120
+Sulfonamid,Trung bình,Mề đay,100
+Aspirin,Nhẹ,Ngứa,90
+Hải sản (tôm cua),Nặng,Khó thở,110
+Đậu phộng,Nặng,Phù môi lưỡi,105
+Sữa bò,Trung bình,Đau bụng,80
+Phấn hoa,Nhẹ,Hắt hơi,70
+Bụi nhà,Nhẹ,Ngứa mũi,65
+Latex,Trung bình,Nổi mẩn đỏ,60
+Trứng gà,Nhẹ,Đỏ da,55

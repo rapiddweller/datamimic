@@ -1,7 +1,7 @@
 # import json
 # import unittest
 
-# from datamimic_ce.domains.common.literal_generators.healthcare_generators import (
+# from datamimic_ce.domain_test.common.literal_generators.healthcare_generators import (
 #     AllergyGenerator,
 #     DiagnosisGenerator,
 #     ImmunizationGenerator,

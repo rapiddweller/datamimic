@@ -1,0 +1,42 @@
+<setup>
+    <echo>Generating Transactions</echo>
+    <generate name="transactions" count="20" target="CSV">
+        <variable name="tx" entity="Transaction" />
+        <key name="transaction_id" script="tx.transaction_id" />
+        <key name="transaction_date" script="tx.transaction_date" />
+        <key name="amount" script="tx.amount" />
+        <key name="transaction_type" script="tx.transaction_type" />
+        <key name="description" script="tx.description" />
+        <key name="reference_number" script="tx.reference_number" />
+        <key name="status" script="tx.status" />
+        <key name="currency" script="tx.currency" />
+        <key name="currency_symbol" script="tx.currency_symbol" />
+        <key name="merchant_name" script="tx.merchant_name" />
+        <key name="merchant_category" script="tx.merchant_category" />
+        <key name="location" script="tx.location" />
+        <key name="is_international" script="tx.is_international" />
+        <key name="channel" script="tx.channel" />
+        <key name="direction" script="tx.direction" />
+    </generate>
+    
+    <!-- Dataset switch demonstration: DE transactions -->
+    <echo>Generating Transactions (DE dataset)</echo>
+    <generate name="transactions_de" count="10" target="CSV">
+        <variable name="tx" entity="Transaction" dataset="DE" />
+        <key name="transaction_id" script="tx.transaction_id" />
+        <key name="transaction_date" script="tx.transaction_date" />
+        <key name="amount" script="tx.amount" />
+        <key name="transaction_type" script="tx.transaction_type" />
+        <key name="description" script="tx.description" />
+        <key name="reference_number" script="tx.reference_number" />
+        <key name="status" script="tx.status" />
+        <key name="currency" script="tx.currency" />
+        <key name="currency_symbol" script="tx.currency_symbol" />
+        <key name="merchant_name" script="tx.merchant_name" />
+        <key name="merchant_category" script="tx.merchant_category" />
+        <key name="location" script="tx.location" />
+        <key name="is_international" script="tx.is_international" />
+        <key name="channel" script="tx.channel" />
+        <key name="direction" script="tx.direction" />
+    </generate>
+</setup>

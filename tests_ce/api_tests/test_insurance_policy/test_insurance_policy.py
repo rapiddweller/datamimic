@@ -1,5 +1,6 @@
 import datetime
 import pytest
+from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 
 from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
@@ -36,6 +37,8 @@ class TestInsurancePolicy:
         assert insurance_policy.created_date is not None
 
         assert insurance_policy.id != ""
+        #  ensure consistent UUID format by validating via common utility
+        assert GeneratorUtil.is_valid_uuid(insurance_policy.id)
         assert insurance_policy.start_date != ""
         assert insurance_policy.end_date != ""
         assert insurance_policy.status != ""
@@ -93,5 +96,10 @@ class TestInsurancePolicy:
     def test_not_supported_dataset(self):
         insurance_policy_service = InsurancePolicyService(dataset="FR")
         policy = insurance_policy_service.generate()
-        with pytest.raises(FileNotFoundError):
-            policy.to_dict()
+        # Fallback to US dataset with a single warning log; should not raise
+        assert isinstance(policy.to_dict(), dict)
+
+    def test_supported_datasets_static(self):
+        codes = InsurancePolicyService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

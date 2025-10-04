@@ -14,10 +14,28 @@
         <array name="services" script="hospital.services" />
     </generate>
 
-    <!-- US Hospital Entity -->
+    <!-- VN Hospital Entity -->
     <echo>Running USHospitalEntity</echo>
-    <generate name="us_hospitals" count="5" target="CSV">
-        <variable name="hospital" entity="Hospital" />
+    <generate name="vn_hospitals" count="5" target="CSV">
+        <variable name="hospital" dataset="VN" entity="Hospital" />
+        <key name="hospital_id" script="hospital.hospital_id" />
+        <key name="name" script="hospital.name" />
+        <key name="type" script="hospital.type" />
+        <key name="phone" script="hospital.phone" />
+        <key name="email" script="hospital.email" />
+        <key name="website" script="hospital.website" />
+        <key name="emergency_services" script="hospital.emergency_services" />
+        <array name="accreditation" script="hospital.accreditation" />
+        <key name="staff_count" script="hospital.staff_count" />
+        <key name="bed_count" script="hospital.bed_count" />
+        <array name="departments" script="hospital.departments" />
+        <array name="services" script="hospital.services" />
+    </generate>
+
+    <!-- DE Hospital Entity -->
+    <echo>Running USHospitalEntity</echo>
+    <generate name="de_hospitals" count="5" target="CSV">
+        <variable name="hospital" dataset="DE" entity="Hospital" />
         <key name="hospital_id" script="hospital.hospital_id" />
         <key name="name" script="hospital.name" />
         <key name="type" script="hospital.type" />

@@ -6,9 +6,9 @@
 
 # from typing import List, Dict, Any, Optional
 
-from datamimic_ce.domain_core.base_domain_service import BaseDomainService
 from datamimic_ce.domains.common.generators.company_generator import CompanyGenerator
 from datamimic_ce.domains.common.models.company import Company
+from datamimic_ce.domains.domain_core import BaseDomainService
 
 
 class CompanyService(BaseDomainService[Company]):
@@ -19,3 +19,17 @@ class CompanyService(BaseDomainService[Company]):
 
     def __init__(self, dataset: str | None = None):
         super().__init__(CompanyGenerator(dataset=dataset), Company)
+
+    @staticmethod
+    def supported_datasets() -> set[str]:
+        from pathlib import Path
+
+        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
+
+        patterns = [
+            "common/organization/sector_{CC}.csv",
+            "common/organization/legalForm_{CC}.csv",
+            "common/net/webmailDomain_{CC}.csv",
+            "common/net/tld_{CC}.csv",
+        ]
+        return compute_supported_datasets(patterns, start=Path(__file__))

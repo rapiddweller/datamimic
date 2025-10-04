@@ -5,7 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 import os
 import subprocess
+import sys
 import time
+from pathlib import Path
 
 import pytest
 
@@ -16,6 +18,7 @@ import ray
 from datamimic_ce.config import settings
 from datamimic_ce.logger import logger
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 @pytest.fixture
 def mysql_services():

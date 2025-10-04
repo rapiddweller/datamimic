@@ -1,0 +1,6 @@
+method,weight
+DHL Standard,0.45
+Hermes,0.15
+DPD,0.15
+DHL Express,0.15
+GLS,0.10

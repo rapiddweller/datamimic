@@ -12,7 +12,9 @@ from datamimic_ce.domains.healthcare.services import PatientService
 # Create a service instance
 patient_service = PatientService()
 
-# Generate a single patient
+# Generate a single patient (reproducible with seed)
+from random import Random
+patient_service = PatientService(dataset="US", rng=Random(2024))
 patient = patient_service.generate()
 
 # Access patient attributes
@@ -137,8 +139,8 @@ hospital = hospital_service.generate()
 
 # Access hospital attributes
 print(f"Hospital: {hospital.name}")
-print(f"Type: {hospital.hospital_type}")
-print(f"Beds: {hospital.beds}")
+print(f"Type: {hospital.type}")
+print(f"Beds: {hospital.bed_count}")
 ```
 
 Example output:
@@ -148,33 +150,9 @@ Type: Community Hospital
 Beds: 349
 ```
 
-## Electronic Health Records
+## Dataset-driven behavior
 
-Generate medical records for patients:
-
-```python
-from datamimic_ce.domains.healthcare.services import MedicalRecordService
-
-# Create a medical record service
-record_service = MedicalRecordService()
-
-# Generate a medical record for a specific patient
-medical_record = record_service.generate(patient_id=patient.patient_id)
-
-# Access medical record attributes
-print(f"Record ID: {medical_record.record_id}")
-print(f"Patient ID: {medical_record.patient_id}")
-print(f"Date: {medical_record.date}")
-print(f"Notes: {medical_record.notes[:100]}...")  # Truncated for readability
-```
-
-Example output:
-```
-Record ID: MR-9A76F1C2
-Patient ID: PAT-23AEEABA
-Date: 2023-11-15 09:45:00
-Notes: Patient presents with symptoms of depression. Reports feeling tired constantly and lacking interest in...
-```
+All doctor/hospital/patient attributes are selected from existing datasets located under `datamimic_ce/domains/domain_data/healthcare/medical/*_{CC}.csv`. Models do not read files directly; generators handle I/O and apply weights. Set `DATAMIMIC_STRICT_DATASET=1` to validate presence of localized files during development.
 
 ## Advanced Usage: Creating a Patient Cohort
 

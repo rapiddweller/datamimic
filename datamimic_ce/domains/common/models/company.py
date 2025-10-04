@@ -4,12 +4,11 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import random
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.generators.company_generator import CompanyGenerator
 from datamimic_ce.domains.common.models.address import Address
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 
 
 class Company(BaseEntity):
@@ -104,7 +103,9 @@ class Company(BaseEntity):
         Returns:
             The URL of the company
         """
-        scheme = random.choice(["http", "https"])
+        #  use generator RNG; avoid private attrs and module random
+        rng = self._company_generator.rng
+        scheme = rng.choice(["http", "https"])
         company_email_domain = self.email.split("@")[1]
         return f"{scheme}://{company_email_domain}"
 

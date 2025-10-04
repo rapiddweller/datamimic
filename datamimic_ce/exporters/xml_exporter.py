@@ -158,9 +158,7 @@ class XMLExporter(UnifiedBufferedExporter):
                     xmlfile.write(f"</{self.root_element}>")
             logger.debug(f"Finalized XML file: {buffer_file}")
         except Exception as e:
-            import traceback
-
-            traceback.print_exc()
+            #  logger.error/exception provide structured logs; remove duplicate stdout trace
             logger.error(f"Error finalizing buffer file: {e}")
             raise ExporterError(f"Error finalizing buffer file: {e}") from e
 

@@ -6,13 +6,13 @@
 
 import random
 
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
 
 class ColorGenerator(BaseLiteralGenerator):
     """Generate color values in different formats."""
 
-    def __init__(self, format_type: str = "hex"):
+    def __init__(self, format_type: str = "hex", rng: random.Random | None = None):
         """
         Initialize ColorGenerator.
 
@@ -20,6 +20,7 @@ class ColorGenerator(BaseLiteralGenerator):
             format_type (str): The color format to generate. Options: 'hex', 'rgb', 'name'
         """
         self._format = format_type.lower()
+        self._rng: random.Random = rng or random.Random()
         self._color_names = [
             "red",
             "green",
@@ -55,15 +56,15 @@ class ColorGenerator(BaseLiteralGenerator):
         """
         if self._format == "rgb":
             # Generate random RGB values
-            r = random.randint(0, 255)
-            g = random.randint(0, 255)
-            b = random.randint(0, 255)
+            r = self._rng.randint(0, 255)
+            g = self._rng.randint(0, 255)
+            b = self._rng.randint(0, 255)
             return f"rgb({r},{g},{b})"
         elif self._format == "name":
-            return random.choice(self._color_names)
+            return self._rng.choice(self._color_names)
         else:  # hex format
             # Generate hex color manually
-            r = random.randint(0, 255)
-            g = random.randint(0, 255)
-            b = random.randint(0, 255)
+            r = self._rng.randint(0, 255)
+            g = self._rng.randint(0, 255)
+            b = self._rng.randint(0, 255)
             return f"#{r:02x}{g:02x}{b:02x}"

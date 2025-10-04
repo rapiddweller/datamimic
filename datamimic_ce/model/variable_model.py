@@ -65,6 +65,12 @@ class VariableModel(BaseModel):
     variable_prefix: str | None = Field(None, alias=ATTR_VARIABLE_PREFIX)
     variable_suffix: str | None = Field(None, alias=ATTR_VARIABLE_SUFFIX)
     string: str | None = Field(None, alias=ATTR_STRING)
+    # Demographic and RNG extensions for entity variables
+    age_min: int | None = Field(None, alias="ageMin")
+    age_max: int | None = Field(None, alias="ageMax")
+    conditions_include: str | None = Field(None, alias="conditionsInclude")
+    conditions_exclude: str | None = Field(None, alias="conditionsExclude")
+    rng_seed: int | None = Field(None, alias="rngSeed")
 
     @model_validator(mode="before")
     @classmethod
@@ -98,6 +104,12 @@ class VariableModel(BaseModel):
                 ATTR_VARIABLE_PREFIX,
                 ATTR_VARIABLE_SUFFIX,
                 ATTR_STRING,
+                # Demographic + RNG extensions (entity/generator add-ons)
+                "ageMin",
+                "ageMax",
+                "conditionsInclude",
+                "conditionsExclude",
+                "rngSeed",
             },
         )
 

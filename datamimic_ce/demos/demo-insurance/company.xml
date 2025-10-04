@@ -1,0 +1,13 @@
+<setup>
+    <echo>Generating Insurance Companies</echo>
+    <generate name="insurance_companies" count="10" target="CSV">
+        <variable name="company" entity="InsuranceCompany" />
+        <key name="id" script="company.id" />
+        <key name="name" script="company.name" />
+        <key name="code" script="company.code" />
+        <key name="founded_year" script="company.founded_year" />
+        <key name="headquarters" script="company.headquarters" />
+        <key name="website" script="company.website" />
+    </generate>
+</setup>
+

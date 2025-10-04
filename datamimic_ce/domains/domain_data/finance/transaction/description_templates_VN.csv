@@ -1,0 +1,12 @@
+transaction_type,template,weight
+Nạp tiền,Nạp tiền từ {},25
+Nạp tiền,Giao dịch nạp - {},15
+Rút tiền,Rút tiền tại {},20
+Rút tiền,Rút tiền mặt - {},15
+Chuyển khoản,Chuyển khoản tới {},20
+Chuyển khoản,Giao dịch chuyển cho {},15
+Thanh toán,Thanh toán hóa đơn tại {},25
+Thanh toán,Thanh toán mua sắm - {},15
+Phí dịch vụ,Phí dịch vụ từ {},20
+Lãi tiết kiệm,Nhận lãi từ {},10
+Hoàn tiền,Hoàn tiền từ {},10

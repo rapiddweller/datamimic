@@ -12,7 +12,7 @@ import calendar
 import random as _random
 from datetime import date, datetime, time, timedelta
 
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
 
 class DateTimeGenerator(BaseLiteralGenerator):

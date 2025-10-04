@@ -1,0 +1,7 @@
+title = "Demo Insurance"
+description = "Showcase of insurance data generation including companies, products (with coverages), and policies (with policy holders)."
+icon = "shield"
+tags = ["#generator", "#datasets", "#domains", "#insurance"]
+projectName = "demo-insurance"
+id = "demo-insurance"
+

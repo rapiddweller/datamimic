@@ -10,13 +10,14 @@ Person model.
 This module provides a model for representing a person.
 """
 
+from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.common.models.address import Address
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 
 
 class Person(BaseEntity):
@@ -178,6 +179,14 @@ class Person(BaseEntity):
 
     @property
     @property_cache
+    def transaction_profile(self) -> str | Mapping[str, float] | None:
+        """Expose the configured transaction behavior profile."""
+
+        # Allow downstream finance generators to reuse demographic intent.
+        return self._person_generator.demographic_config.transaction_profile
+
+    @property
+    @property_cache
     def academic_title(self) -> str | None:
         """Get the academic title of the person."""
         return self._person_generator.academic_title_generator.generate()
@@ -216,4 +225,5 @@ class Person(BaseEntity):
             "academic_title": self.academic_title,
             "salutation": self.salutation,
             "nobility_title": self.nobility_title,
+            "transaction_profile": self.transaction_profile,
         }
