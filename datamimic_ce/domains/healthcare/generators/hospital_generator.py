@@ -23,8 +23,14 @@ class HospitalGenerator(BaseDomainGenerator):
         #  normalize dataset to ISO upper-case to map to suffixed CSVs consistently
         self._dataset = (dataset or "US").upper()
         self._rng: random.Random = rng or random.Random()
-        self._address_generator = AddressGenerator(dataset=self._dataset)
-        self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset)
+        self._address_generator = AddressGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
+        self._phone_number_generator = PhoneNumberGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
         self._last_type: str | None = None
 
     @property
@@ -57,6 +63,10 @@ class HospitalGenerator(BaseDomainGenerator):
     @property
     def rng(self) -> random.Random:
         return self._rng
+
+    def _derive_rng(self) -> random.Random:
+        # Spawn child RNGs so seeded hospitals can replay deterministically without coupling downstream draws.
+        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
 
     def generate_hospital_name(self, city: str, state: str) -> str:
         """Generate a hospital name based on location.

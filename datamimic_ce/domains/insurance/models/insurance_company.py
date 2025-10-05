@@ -12,7 +12,6 @@ This module defines the insurance company model for the insurance domain.
 
 from typing import Any
 
-from datamimic_ce.domains.common.literal_generators.uuid_generator import UUIDGenerator
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.insurance.generators.insurance_company_generator import InsuranceCompanyGenerator
@@ -28,8 +27,11 @@ class InsuranceCompany(BaseEntity):
     @property
     @property_cache
     def id(self) -> str:
-        #  unify ID generation via common literal generator for consistency across domains
-        return UUIDGenerator().generate()
+        rng = self._insurance_company_generator.rng
+        alphabet = "0123456789abcdef"
+        sections = [8, 4, 4, 4, 12]
+        parts = ["".join(rng.choice(alphabet) for _ in range(length)) for length in sections]
+        return "-".join(parts)
 
     @property
     @property_cache
@@ -59,7 +61,10 @@ class InsuranceCompany(BaseEntity):
     @property
     @property_cache
     def website(self) -> str:
-        return self.company_data["website"]
+        website = str(self.company_data["website"])
+        if website and not website.startswith("http"):
+            return f"https://{website.lstrip(':/')}"
+        return website
 
     def to_dict(self) -> dict[str, Any]:
         return {

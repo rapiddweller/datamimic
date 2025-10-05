@@ -40,10 +40,23 @@ class AdministrationOfficeGenerator(BaseDomainGenerator):
         """
         self._dataset = (dataset or "US").upper()  #  propagate normalized dataset to dependent generators
         self._rng = rng or random.Random()  #  deterministic RNG injection point
-        self._address_generator = AddressGenerator(dataset=self._dataset)
-        self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset)
-        self._family_name_generator = FamilyNameGenerator(dataset=self._dataset)
-        self._given_name_generator = GivenNameGenerator(dataset=self._dataset)
+        # Derive child RNGs so seeded administration offices replay deterministic nested attributes.
+        self._address_generator = AddressGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
+        self._phone_number_generator = PhoneNumberGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
+        self._family_name_generator = FamilyNameGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
+        self._given_name_generator = GivenNameGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
         # Track last office type to avoid immediate repetition in successive generations
         self._last_office_type: str | None = None
         # Track last jurisdiction to reduce immediate repetition across entities
@@ -76,6 +89,10 @@ class AdministrationOfficeGenerator(BaseDomainGenerator):
     @property
     def rng(self) -> random.Random:
         return self._rng
+
+    def _derive_rng(self) -> random.Random:
+        # Spawn deterministic child RNGs so seeded offices replay consistently without sharing streams.
+        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
 
     # Helper: pick office type from dataset using weighted values with anti-repeat
     def pick_office_type(self) -> str:

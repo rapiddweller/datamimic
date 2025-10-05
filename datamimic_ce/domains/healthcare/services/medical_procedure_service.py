@@ -10,6 +10,8 @@ Medical Procedure service.
 This module provides the MedicalProcedureService class for generating and managing medical procedure data.
 """
 
+from random import Random
+
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.healthcare.generators.medical_procedure_generator import MedicalProcedureGenerator
 from datamimic_ce.domains.healthcare.models.medical_procedure import MedicalProcedure
@@ -22,8 +24,8 @@ class MedicalProcedureService(BaseDomainService[MedicalProcedure]):
     and retrieving procedures with specific characteristics.
     """
 
-    def __init__(self, dataset: str | None = None):
-        super().__init__(MedicalProcedureGenerator(dataset=dataset), MedicalProcedure)
+    def __init__(self, dataset: str | None = None, rng: Random | None = None):
+        super().__init__(MedicalProcedureGenerator(dataset=dataset, rng=rng), MedicalProcedure)
 
     @staticmethod
     def supported_datasets() -> set[str]:

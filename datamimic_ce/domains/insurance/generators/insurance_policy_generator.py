@@ -41,7 +41,7 @@ class InsurancePolicyGenerator(BaseDomainGenerator):
 
             demographic_config = _DC()
         self._person_generator = PersonGenerator(dataset=dataset, rng=self._rng, demographic_config=demographic_config)
-        self._datetime_generator = DateTimeGenerator(random=True)
+        self._datetime_generator = DateTimeGenerator(random=True, rng=self._derive_rng())
         # Track last picks to avoid immediate repetition in tests without rerun plugin
         self._last_status: str | None = None
 
@@ -52,6 +52,10 @@ class InsurancePolicyGenerator(BaseDomainGenerator):
     @property
     def rng(self) -> random.Random:
         return self._rng
+
+    def _derive_rng(self) -> random.Random:
+        # Derive deterministic child RNGs so seeded policies replay across runs without cross-talk.
+        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
 
     @property
     def insurance_company_generator(self) -> InsuranceCompanyGenerator:

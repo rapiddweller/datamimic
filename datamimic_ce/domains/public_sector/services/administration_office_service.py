@@ -10,6 +10,8 @@ Administration office service.
 This module provides a service for working with AdministrationOffice entities.
 """
 
+from random import Random
+
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.public_sector.generators.administration_office_generator import AdministrationOfficeGenerator
 from datamimic_ce.domains.public_sector.models.administration_office import AdministrationOffice
@@ -22,8 +24,8 @@ class AdministrationOfficeService(BaseDomainService[AdministrationOffice]):
     AdministrationOffice entities.
     """
 
-    def __init__(self, dataset: str | None = None):
-        super().__init__(AdministrationOfficeGenerator(dataset=dataset), AdministrationOffice)
+    def __init__(self, dataset: str | None = None, rng: Random | None = None):
+        super().__init__(AdministrationOfficeGenerator(dataset=dataset, rng=rng), AdministrationOffice)
 
     @staticmethod
     def supported_datasets() -> set[str]:

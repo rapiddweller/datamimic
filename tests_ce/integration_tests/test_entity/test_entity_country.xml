@@ -23,4 +23,14 @@
         <key name="population2" script="country1.population"/>
         <key name="population3" script="country1.population"/>
     </generate>
+
+    <!-- WHY: Exercise EU dataset for countries so integration tests can check locale-aware phone codes and populations. -->
+    <echo>Generating French countries subset</echo>
+    <generate name="fr_countries" count="5" target="LogExporter">
+        <variable name="country_fr" entity="Country" dataset="FR"/>
+        <key name="iso_code" script="country_fr.iso_code"/>
+        <key name="name" script="country_fr.name"/>
+        <key name="phone_code" script="country_fr.phone_code"/>
+        <key name="population" script="country_fr.population"/>
+    </generate>
 </setup>

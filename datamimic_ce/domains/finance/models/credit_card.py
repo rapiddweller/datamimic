@@ -13,7 +13,6 @@ This module defines the credit card model for the finance domain.
 from datetime import datetime
 from typing import Any
 
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
@@ -55,7 +54,12 @@ class CreditCard(BaseEntity):
         prefix = specs.get("prefix", "")
         total_len = specs.get("length", 16)
         remaining = max(0, total_len - len(prefix))
-        suffix = StringGenerator.rnd_str_from_regex(f"[0-9]{{{remaining}}}") if remaining > 0 else ""
+        if remaining > 0:
+            # Use generator RNG instead of global exrex RNG so rngSeed descriptors replay.
+            digits = [str(self._credit_card_generator.rng.randint(0, 9)) for _ in range(remaining)]
+            suffix = "".join(digits)
+        else:
+            suffix = ""
         return f"{prefix}{suffix}"
 
     @property
@@ -79,7 +83,8 @@ class CreditCard(BaseEntity):
         #  honor dataset-specific cvv length from card types table
         specs = self._credit_card_generator.get_card_specs()
         cvv_len = specs.get("cvv_length", 3)
-        return StringGenerator.rnd_str_from_regex(f"[0-9]{{{cvv_len}}}")
+        digits = [str(self._credit_card_generator.rng.randint(0, 9)) for _ in range(cvv_len)]
+        return "".join(digits)
 
     @property
     @property_cache
@@ -87,7 +92,8 @@ class CreditCard(BaseEntity):
         #  keep CVC aligned with cvv length
         specs = self._credit_card_generator.get_card_specs()
         cvv_len = specs.get("cvv_length", 3)
-        return StringGenerator.rnd_str_from_regex(f"[0-9]{{{cvv_len}}}")
+        digits = [str(self._credit_card_generator.rng.randint(0, 9)) for _ in range(cvv_len)]
+        return "".join(digits)
 
     @property
     @property_cache

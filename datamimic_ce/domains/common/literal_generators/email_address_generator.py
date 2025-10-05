@@ -24,15 +24,25 @@ class EmailAddressGenerator(BaseLiteralGenerator):
         dataset: str | None = None,
         given_name: str | None = None,
         family_name: str | None = None,
+        rng: random.Random | None = None,
     ):
         self._dataset = (dataset or "US").upper()  #  align downstream generators with ISO-based datasets
-        self._rng: random.Random = random.Random()
+        self._rng: random.Random = rng or random.Random()
+
+        def _derive_rng() -> random.Random:
+            # Split deterministic streams so rngSeed descriptors do not couple email joins with domain picks.
+            return random.Random(self._rng.randrange(2**63)) if rng is not None else random.Random()
+
         self._given_name = given_name
-        self._given_name_generator = GivenNameGenerator(dataset=self._dataset) if given_name is None else None
+        self._given_name_generator = (
+            GivenNameGenerator(dataset=self._dataset, rng=_derive_rng()) if given_name is None else None
+        )
         self._family_name = family_name
-        self._family_name_generator = FamilyNameGenerator(dataset=self._dataset) if family_name is None else None
+        self._family_name_generator = (
+            FamilyNameGenerator(dataset=self._dataset, rng=_derive_rng()) if family_name is None else None
+        )
         self._company_name: str | None = None
-        self._domain_generator = DomainGenerator(dataset=self._dataset)
+        self._domain_generator = DomainGenerator(dataset=self._dataset, rng=_derive_rng())
 
     def generate(self) -> str:
         """

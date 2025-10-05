@@ -47,9 +47,19 @@ class PatientGenerator(BaseDomainGenerator):
             demographic_config=self._demographic_config,
             rng=self._rng,
         )
-        self._family_name_generator = FamilyNameGenerator(dataset=self._dataset)
-        self._given_name_generator = GivenNameGenerator(dataset=self._dataset)
-        self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset)
+        # Fan out deterministic RNG so seeded patient cohorts remain reproducible across dependent literals.
+        self._family_name_generator = FamilyNameGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
+        self._given_name_generator = GivenNameGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
+        self._phone_number_generator = PhoneNumberGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
         # Track last blood type to reduce immediate repetition in tests
         self._last_blood_type: str | None = None
 
@@ -75,6 +85,10 @@ class PatientGenerator(BaseDomainGenerator):
     @property
     def rng(self) -> Random:
         return self._rng
+
+    def _derive_rng(self) -> Random:
+        # Spawn child RNGs from the base seed so seeded cohorts remain reproducible without sharing streams.
+        return Random(self._rng.randrange(2**63)) if isinstance(self._rng, Random) else Random()
 
     # Helper: pick blood type with anti-repeat
     def pick_blood_type(self, *, start_path: str | None = None) -> str:
@@ -104,9 +118,15 @@ class PatientGenerator(BaseDomainGenerator):
             return []
         count_weights = self._condition_count_weights(age)
         num_conditions = self._rng.choices([0, 1, 2, 3, 4], weights=count_weights, k=1)[0]
+        if include and num_conditions == 0:
+            num_conditions = 1
         if num_conditions == 0:
             return []
-        return self._sample_unique_conditions(weighted, num_conditions)
+        selections = self._sample_unique_conditions(weighted, num_conditions)
+        missing_includes = [name for name in include if name and name.lower() not in {s.lower() for s in selections}]
+        for name in missing_includes:
+            selections.append(name)
+        return selections
 
     def _condition_count_weights(self, age: int) -> list[float]:
         """Return the count distribution for conditions based on age."""

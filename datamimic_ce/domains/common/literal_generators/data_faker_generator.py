@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import random
 from typing import Any
 
 from faker import Faker
@@ -23,12 +24,17 @@ class DataFakerGenerator(BaseLiteralGenerator):
         method: str,
         locale: str | None = "en_US",
         *args,
+        rng: random.Random | None = None,
         **kwargs,
     ) -> None:
         # validation support methods
         if method in UnsupportedMethod._value2member_map_ or method.startswith("_"):
             raise ValueError(f"Faker method '{method}' is not supported")
         self._faker = Faker(locale)
+        if rng is not None:
+            # WHY: faker.Faker exposes a dynamic `random` attribute; use setattr to keep mypy satisfied while
+            # still wiring the caller-provided RNG for deterministic runs.
+            self._faker.random = rng
         self._method = method
         self._locale = locale
         self._args = args

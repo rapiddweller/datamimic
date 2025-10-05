@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datetime import datetime, timedelta
+from random import Random
 
 from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
@@ -31,6 +32,7 @@ class BirthdateGenerator(BaseLiteralGenerator):
         self,
         min_age: int = 1,
         max_age: int = 100,
+        rng: Random | None = None,
     ) -> None:
         """
         Parameters:
@@ -48,8 +50,14 @@ class BirthdateGenerator(BaseLiteralGenerator):
             today = datetime(today.year, 2, 28)
         self._min_birthdate = datetime(today.year - max_age - 1, today.month, today.day) + timedelta(days=1)
         self._max_birthdate = datetime(today.year - min_age, today.month, today.day)
+        base_rng = rng or Random()
+        # Derive a dedicated RNG for date sampling so seeded runs stay reproducible without cross-coupling streams.
+        date_rng = Random(base_rng.randrange(2**63)) if rng is not None else Random()
         self._date_generator = DateTimeGenerator(
-            min=str(self._min_birthdate), max=str(self._max_birthdate), random=True
+            min=str(self._min_birthdate),
+            max=str(self._max_birthdate),
+            random=True,
+            rng=date_rng,
         )
 
     def generate(self) -> datetime:

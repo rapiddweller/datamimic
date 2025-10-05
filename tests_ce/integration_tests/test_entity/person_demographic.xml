@@ -1,0 +1,19 @@
+<setup multiprocessing="0">
+    <!-- WHY: Verify seeded Person demographic bounds purely through descriptor-driven generation. -->
+    <echo>Generating seeded person cohort with fixed demographic bounds</echo>
+    <generate name="seeded_persons_fixed_age" count="3" target="LogExporter">
+        <variable
+            name="person"
+            entity="Person"
+            dataset="US"
+            ageMin="45"
+            ageMax="45"
+            rngSeed="77"
+        />
+        <key name="full_name" script="person.full_name" />
+        <key name="age" script="person.age" />
+        <key name="gender" script="person.gender" />
+        <key name="email" script="person.email" />
+        <key name="transaction_profile" script="person.transaction_profile" />
+    </generate>
+</setup>

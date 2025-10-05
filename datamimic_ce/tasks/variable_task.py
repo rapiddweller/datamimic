@@ -331,10 +331,17 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 if rng_obj is not None and entity_class_name in {
                     "Patient",
                     "Doctor",
-                    "PoliceOfficer",
-                    "Person",
-                    "InsurancePolicy",
+                    "Hospital",
+                    "MedicalProcedure",
                     "MedicalDevice",
+                    "PoliceOfficer",
+                    "AdministrationOffice",
+                    "EducationalInstitution",
+                    "InsuranceCompany",
+                    "InsurancePolicy",
+                    "InsuranceProduct",
+                    "InsuranceCoverage",
+                    "Person",
                     "CreditCard",
                 }:
                     kwargs["rng"] = rng_obj

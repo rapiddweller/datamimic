@@ -18,9 +18,19 @@ class EducationalInstitutionGenerator(BaseDomainGenerator):
         """
         self._dataset = (dataset or "US").upper()  #  share a normalized dataset across all child generators
         self._rng = rng or random.Random()  #  deterministic RNG injection point
-        self._address_generator = AddressGenerator(dataset=self._dataset)
-        self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset)
-        self._email_generator = EmailAddressGenerator(dataset=self._dataset)
+        # Derive deterministic RNG streams so seeded institutions keep nested contact details stable.
+        self._address_generator = AddressGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
+        self._phone_number_generator = PhoneNumberGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
+        self._email_generator = EmailAddressGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
         # Track last chosen level to reduce immediate repetition across entities
         self._last_level: str | None = None
         self._last_accreditations: tuple[str, ...] | None = None
@@ -44,6 +54,10 @@ class EducationalInstitutionGenerator(BaseDomainGenerator):
     @property
     def rng(self) -> random.Random:
         return self._rng
+
+    def _derive_rng(self) -> random.Random:
+        # Fork deterministic child RNGs so seeded institutions replay without cross-coupling randomness.
+        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
 
     #  centralize level picking so we can avoid immediate repetition while
     # staying dataset-driven. The model calls into this helper.

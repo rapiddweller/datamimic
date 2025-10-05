@@ -35,7 +35,11 @@ class TransactionGenerator(BaseDomainGenerator):
         """
         self._dataset = (dataset or "US").upper()  #  normalize once for consistent dataset file suffixes
         self._rng: random.Random = rng or random.Random()
-        self._reference_generator = DataFakerGenerator("uuid4")
+        # Keep reference IDs deterministic when rngSeed is supplied via descriptors.
+        self._reference_generator = DataFakerGenerator(
+            "uuid4",
+            rng=self._derive_rng() if rng is not None else None,
+        )
         # Cache structures: map key -> (header_dict, rows)
         self._transaction_data: dict[str, tuple[dict[str, int], list[tuple[object, ...]]]] = {}
         self._currency_data: dict[str, tuple[dict[str, int], list[tuple[object, ...]]]] = {}
@@ -54,6 +58,10 @@ class TransactionGenerator(BaseDomainGenerator):
     def rng(self) -> random.Random:
         return self._rng
 
+    def _derive_rng(self) -> random.Random:
+        # Spawn deterministic child RNGs so seeded transaction batches replay without cross-coupling randomness.
+        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
+
     #  Centralize date sampling to keep model pure and determinism consistent
     def generate_transaction_date(self) -> dt.datetime:
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
@@ -61,7 +69,7 @@ class TransactionGenerator(BaseDomainGenerator):
         now = dt.datetime.now()
         min_dt = (now - dt.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = now.strftime("%Y-%m-%d %H:%M:%S")
-        gen = DateTimeGenerator(min=min_dt, max=max_dt, random=True).generate()
+        gen = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
         assert isinstance(gen, dt.datetime)
         return gen
 

@@ -61,7 +61,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         now = datetime.datetime.now()
         min_dt = (now - datetime.timedelta(days=3650)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = (now - datetime.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
-        dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True).generate()
+        dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
         assert isinstance(dt, datetime.datetime)
         return dt.strftime("%Y-%m-%d")
 
@@ -71,7 +71,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         now = datetime.datetime.now()
         min_dt = (now + datetime.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = (now + datetime.timedelta(days=1825)).strftime("%Y-%m-%d %H:%M:%S")
-        dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True).generate()
+        dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
         assert isinstance(dt, datetime.datetime)
         return dt.strftime("%Y-%m-%d")
 
@@ -81,7 +81,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         now = datetime.datetime.now()
         min_dt = (now - datetime.timedelta(days=180)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = now.strftime("%Y-%m-%d %H:%M:%S")
-        dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True).generate()
+        dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
         assert isinstance(dt, datetime.datetime)
         return dt.strftime("%Y-%m-%d")
 
@@ -91,7 +91,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         now = datetime.datetime.now()
         min_dt = (now + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = (now + datetime.timedelta(days=180)).strftime("%Y-%m-%d %H:%M:%S")
-        dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True).generate()
+        dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
         assert isinstance(dt, datetime.datetime)
         return dt.strftime("%Y-%m-%d")
 
@@ -167,7 +167,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         now = datetime.datetime.now()
         min_dt = (now - datetime.timedelta(days=730)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = (now - datetime.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
-        current_date = DateTimeGenerator(min=min_dt, max=max_dt, random=True).generate()
+        current_date = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
         assert isinstance(current_date, datetime.datetime)
 
         for _ in range(num_logs):
@@ -266,7 +266,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         now = datetime.datetime.now()
         min_dt = (now - datetime.timedelta(days=1095)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = (now - datetime.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
-        current_date = DateTimeGenerator(min=min_dt, max=max_dt, random=True).generate()
+        current_date = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
         assert isinstance(current_date, datetime.datetime)
 
         for _ in range(num_records):
@@ -380,3 +380,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         if self._rng.random() < 0.1:
             return ""
         return self._rng.choices(values, weights=w, k=1)[0]
+
+    def _derive_rng(self) -> random.Random:
+        # Fork deterministic child RNGs so seeded medical device descriptors replay without cross-coupling draws.
+        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()

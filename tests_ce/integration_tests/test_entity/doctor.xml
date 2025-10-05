@@ -1,0 +1,31 @@
+<setup>
+    <!-- Doctor Entity -->
+    <echo>Running DoctorEntity</echo>
+    <generate name="doctors" count="10" target="LogExporter">
+        <!-- Seeded to demonstrate reproducibility across runs -->
+        <variable name="doctor" entity="Doctor" rngSeed="2024" />
+        <key name="doctor_id" script="doctor.doctor_id" />
+        <key name="given_name" script="doctor.given_name" />
+        <key name="family_name" script="doctor.family_name" />
+        <key name="specialty" script="doctor.specialty" />
+        <key name="license_number" script="doctor.license_number" />
+        <key name="hospital" script="doctor.hospital.name" />
+        <key name="email" script="doctor.email" />
+        <key name="npi_number" script="doctor.npi_number" />
+        <array name="certifications" script="doctor.certifications" />
+        <key name="accepting_new_patients" script="doctor.accepting_new_patients" />
+    </generate>
+
+    <!-- VN Doctor Entity -->
+    <echo>Running VN DoctorEntity</echo>
+    <generate name="vn_doctors" count="5" target="LogExporter">
+        <variable name="doctor" entity="Doctor" dataset="VN" ageMin="35" ageMax="55" rngSeed="2024" />
+        <key name="doctor_id" script="doctor.doctor_id" />
+        <key name="given_name" script="doctor.given_name" />
+        <key name="family_name" script="doctor.family_name" />
+        <key name="specialty" script="doctor.specialty" />
+        <key name="license_number" script="doctor.license_number" />
+        <key name="npi_number" script="doctor.npi_number" />
+        <array name="certifications" script="doctor.certifications" />
+    </generate>
+</setup> 

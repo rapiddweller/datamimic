@@ -13,7 +13,6 @@ This module provides the Doctor entity model for generating realistic doctor dat
 import datetime
 from typing import Any
 
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
@@ -52,9 +51,9 @@ class Doctor(BaseEntity):
             A unique identifier for the doctor.
         """
         #  use shared PrefixedIdGenerator for prefixed short ID format
-        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
-
-        return PrefixedIdGenerator("DOC", "[0-9A-F]{8}").generate()
+        rng = self._doctor_generator.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"DOC-{suffix}"
 
     @property
     @property_cache
@@ -64,8 +63,8 @@ class Doctor(BaseEntity):
         Returns:
             A 10-digit NPI number.
         """
-        #  use shared StringGenerator for numeric pattern
-        return StringGenerator.rnd_str_from_regex("[0-9]{10}")
+        rng = self._doctor_generator.rng
+        return "".join(str(rng.randint(0, 9)) for _ in range(10))
 
     @property
     @property_cache
@@ -75,8 +74,10 @@ class Doctor(BaseEntity):
         Returns:
             A medical license number.
         """
-        #  use shared StringGenerator for license number format
-        return StringGenerator.rnd_str_from_regex("[A-Z]{2}-[0-9]{6}")
+        rng = self._doctor_generator.rng
+        letters = "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(2))
+        digits = "".join(str(rng.randint(0, 9)) for _ in range(6))
+        return f"{letters}-{digits}"
 
     @property
     @property_cache

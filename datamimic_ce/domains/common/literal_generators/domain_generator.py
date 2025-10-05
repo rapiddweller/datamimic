@@ -27,7 +27,8 @@ class DomainGenerator(BaseLiteralGenerator):
         self._tld_dataset = FileUtil.read_wgt_file(tld_path)
 
         self._company_name: str | None = None
-        self._company_name_generator = CompanyNameGenerator()
+        # Share the deterministic RNG so seeded email/domain combos remain reproducible end-to-end.
+        self._company_name_generator = CompanyNameGenerator(rng=self._rng)
 
     def generate(self) -> str:
         """

@@ -12,7 +12,6 @@ This module provides the MedicalProcedure entity model for generating realistic 
 
 from typing import Any
 
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.healthcare.generators.medical_procedure_generator import MedicalProcedureGenerator
@@ -45,10 +44,9 @@ class MedicalProcedure(BaseEntity):
         Returns:
             A unique identifier for the procedure.
         """
-        #  use shared PrefixedIdGenerator for prefixed short ID format
-        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
-
-        return PrefixedIdGenerator("PROC", "[0-9A-F]{8}").generate()
+        rng = self._medical_procedure_generator.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"PROC-{suffix}"
 
     @property
     @property_cache
@@ -58,8 +56,9 @@ class MedicalProcedure(BaseEntity):
         Returns:
             A procedure code.
         """
-        #  use shared StringGenerator for simple code pattern
-        return StringGenerator.rnd_str_from_regex("P[0-9]{5}")
+        rng = self._medical_procedure_generator.rng
+        digits = "".join(str(rng.randint(0, 9)) for _ in range(5))
+        return f"P{digits}"
 
     @property
     @property_cache
@@ -69,8 +68,10 @@ class MedicalProcedure(BaseEntity):
         Returns:
             A CPT code.
         """
-        #  use shared StringGenerator for numeric code pattern
-        return StringGenerator.rnd_str_from_regex("[1-9][0-9]{4}")
+        rng = self._medical_procedure_generator.rng
+        first = str(rng.randint(1, 9))
+        rest = "".join(str(rng.randint(0, 9)) for _ in range(4))
+        return f"{first}{rest}"
 
     @property
     @property_cache

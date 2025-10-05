@@ -39,4 +39,14 @@
         <key name="name_extension2" script="city1.name_extension"/>
         <key name="name_extension3" script="city1.name_extension"/>
     </generate>
+
+    <!-- WHY: Assert dataset overrides for cities so population ranges can be inspected in integration tests. -->
+    <echo>Generating German cities</echo>
+    <generate name="de_cities" count="4" target="LogExporter">
+        <variable name="city_de" entity="City" dataset="DE"/>
+        <key name="name" script="city_de.name"/>
+        <key name="state" script="city_de.state"/>
+        <key name="country" script="city_de.country"/>
+        <key name="population" script="city_de.population"/>
+    </generate>
 </setup>
