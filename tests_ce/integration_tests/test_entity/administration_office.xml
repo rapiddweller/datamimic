@@ -1,0 +1,27 @@
+<setup multiprocessing="0">
+    <!-- WHY: Add deterministic administration office coverage so seeded integration tests guard all attributes. -->
+    <echo>Generating seeded administration offices for deterministic regression coverage</echo>
+    <generate name="administration_offices" count="3" target="LogExporter">
+        <variable
+            name="office"
+            entity="AdministrationOffice"
+            dataset="US"
+            rngSeed="1337"
+        />
+        <key name="office_id" script="office.office_id" />
+        <key name="name" script="office.name" />
+        <key name="type" script="office.type" />
+        <key name="jurisdiction" script="office.jurisdiction" />
+        <key name="founding_year" script="office.founding_year" />
+        <key name="staff_count" script="office.staff_count" />
+        <key name="annual_budget" script="office.annual_budget" />
+        <nestedKey name="hours_of_operation" script="office.hours_of_operation" />
+        <key name="website" script="office.website" />
+        <key name="email" script="office.email" />
+        <key name="phone" script="office.phone" />
+        <array name="services" script="office.services" />
+        <array name="departments" script="office.departments" />
+        <nestedKey name="leadership" script="office.leadership" />
+        <nestedKey name="address" script="office.address.to_dict()" />
+    </generate>
+</setup>

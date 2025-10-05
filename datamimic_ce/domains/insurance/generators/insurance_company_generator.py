@@ -21,6 +21,10 @@ class InsuranceCompanyGenerator(BaseDomainGenerator):
         self._last_company_code: str | None = None
         self._last_founded_year: str | None = None
 
+    @property
+    def rng(self) -> random.Random:
+        return self._rng
+
     def get_random_company(self) -> dict[str, Any]:
         #  use unified dataset path helper
         file_path = dataset_path("insurance", f"companies_{self._dataset}.csv", start=Path(__file__))

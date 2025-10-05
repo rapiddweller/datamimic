@@ -43,9 +43,19 @@ class PoliceOfficerGenerator(BaseDomainGenerator):
         self._person_generator = PersonGenerator(
             dataset=self._dataset, demographic_config=demo, rng=self._rng, min_age=21
         )
-        self._address_generator = AddressGenerator(dataset=self._dataset)
-        self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset)
-        self._email_address_generator = EmailAddressGenerator(dataset=self._dataset)
+        # Hand child generators a derived RNG so seeded officers replay consistently across runs.
+        self._address_generator = AddressGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
+        self._phone_number_generator = PhoneNumberGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
+        self._email_address_generator = EmailAddressGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
 
     @property
     def person_generator(self) -> PersonGenerator:
@@ -71,6 +81,10 @@ class PoliceOfficerGenerator(BaseDomainGenerator):
     def rng(self) -> random.Random:
         return self._rng
 
+    def _derive_rng(self) -> random.Random:
+        # Spawn deterministic child RNGs so seeded officers replay without cross-coupling randomness.
+        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
+
     #  Centralize date generation to keep model pure and deterministic
     def generate_hire_date(self, age: int) -> str:
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
@@ -83,7 +97,7 @@ class PoliceOfficerGenerator(BaseDomainGenerator):
             "%Y-%m-%d %H:%M:%S"
         )
         max_dt = (now - __import__("datetime").timedelta(days=years_of_service * 365)).strftime("%Y-%m-%d %H:%M:%S")
-        dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True).generate()
+        dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
         import datetime as _dt
 
         assert isinstance(dt, _dt.datetime)

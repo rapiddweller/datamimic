@@ -32,10 +32,9 @@ class Hospital(BaseEntity):
         Returns:
             A unique identifier for the hospital.
         """
-        #  use shared PrefixedIdGenerator for prefixed short ID format
-        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
-
-        return PrefixedIdGenerator("HOSP", "[0-9A-F]{8}").generate()
+        rng = self._hospital_generator.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"HOSP-{suffix}"
 
     @property
     @property_cache

@@ -10,6 +10,8 @@ Hospital service.
 This module provides the HospitalService class for generating and managing hospital data.
 """
 
+from random import Random
+
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
 from datamimic_ce.domains.healthcare.models.hospital import Hospital
@@ -22,8 +24,8 @@ class HospitalService(BaseDomainService[Hospital]):
     and retrieving hospitals with specific characteristics.
     """
 
-    def __init__(self, dataset: str | None = None):
-        super().__init__(HospitalGenerator(dataset), Hospital)
+    def __init__(self, dataset: str | None = None, rng: Random | None = None):
+        super().__init__(HospitalGenerator(dataset=dataset, rng=rng), Hospital)
 
     @staticmethod
     def supported_datasets() -> set[str]:

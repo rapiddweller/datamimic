@@ -13,8 +13,6 @@ This module provides the Patient entity model for generating realistic patient d
 import datetime
 from typing import Any
 
-from datamimic_ce.domains.common.literal_generators.ssn_generator import SSNGenerator
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
@@ -52,10 +50,9 @@ class Patient(BaseEntity):
         Returns:
             A unique identifier for the patient.
         """
-        #  use shared PrefixedIdGenerator for prefixed short ID format
-        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
-
-        return PrefixedIdGenerator("PAT", "[0-9A-F]{8}").generate()
+        rng = self._patient_generator.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"PAT-{suffix}"
 
     @property
     @property_cache
@@ -65,10 +62,9 @@ class Patient(BaseEntity):
         Returns:
             A medical record number.
         """
-        #  use shared PrefixedIdGenerator for prefixed short ID format
-        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
-
-        return PrefixedIdGenerator("MRN", "[0-9A-F]{8}").generate()
+        rng = self._patient_generator.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"MRN-{suffix}"
 
     @property
     @property_cache
@@ -78,8 +74,9 @@ class Patient(BaseEntity):
         Returns:
             A social security number.
         """
-        #  use common SSNGenerator instead of manual formatting
-        return SSNGenerator().generate()
+        rng = self._patient_generator.rng
+        digits = [str(rng.randint(0, 9)) for _ in range(9)]
+        return f"{''.join(digits[:3])}-{''.join(digits[3:5])}-{''.join(digits[5:])}"
 
     @property
     @property_cache
@@ -293,9 +290,10 @@ class Patient(BaseEntity):
         Returns:
             The patient's insurance policy number.
         """
-        #  use shared StringGenerator for policy number format
-
-        return StringGenerator.rnd_str_from_regex("[A-Z]{3}-[0-9]{8}")
+        rng = self._patient_generator.rng
+        prefix = "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(3))
+        digits = "".join(str(rng.randint(0, 9)) for _ in range(8))
+        return f"{prefix}-{digits}"
 
     @property
     def primary_doctor(self):

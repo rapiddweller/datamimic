@@ -27,4 +27,15 @@
         <key name="iban2" script="bank_account1.iban"/>
         <key name="iban3" script="bank_account1.iban"/>
     </generate>
+
+    <!-- WHY: Exercise dataset-specific bank accounts for integration checks on currency and account type distributions. -->
+    <echo>Generating French bank accounts</echo>
+    <generate name="fr_bank_accounts" count="5" target="LogExporter">
+        <variable name="fr_account" entity="BankAccount" dataset="FR"/>
+        <key name="account_number" script="fr_account.account_number"/>
+        <key name="account_type" script="fr_account.account_type"/>
+        <key name="currency" script="fr_account.currency"/>
+        <key name="bank_name" script="fr_account.bank_name"/>
+        <key name="iban" script="fr_account.iban"/>
+    </generate>
 </setup>

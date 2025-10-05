@@ -1,0 +1,31 @@
+<setup multiprocessing="0">
+    <!-- WHY: Guard public-sector police officer pipeline with seeded RNG and full attribute capture. -->
+    <echo>Generating seeded police officers for deterministic regression coverage</echo>
+    <generate name="police_officers" count="4" target="LogExporter">
+        <variable
+            name="officer"
+            entity="PoliceOfficer"
+            dataset="US"
+            rngSeed="5150"
+        />
+        <key name="officer_id" script="officer.officer_id" />
+        <key name="badge_number" script="officer.badge_number" />
+        <key name="given_name" script="officer.given_name" />
+        <key name="family_name" script="officer.family_name" />
+        <key name="full_name" script="officer.full_name" />
+        <key name="gender" script="officer.gender" />
+        <key name="birthdate" script="officer.birthdate.isoformat()" />
+        <key name="age" script="officer.age" />
+        <key name="rank" script="officer.rank" />
+        <key name="department" script="officer.department" />
+        <key name="unit" script="officer.unit" />
+        <key name="hire_date" script="officer.hire_date" />
+        <key name="years_of_service" script="officer.years_of_service" />
+        <array name="certifications" script="officer.certifications" />
+        <array name="languages" script="officer.languages" />
+        <key name="shift" script="officer.shift" />
+        <key name="email" script="officer.email" />
+        <key name="phone" script="officer.phone" />
+        <nestedKey name="address" script="officer.address.to_dict()" />
+    </generate>
+</setup>

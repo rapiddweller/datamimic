@@ -10,6 +10,8 @@ Educational institution service.
 This module provides a service for working with EducationalInstitution entities.
 """
 
+from random import Random
+
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.public_sector.generators.educational_institution_generator import (
     EducationalInstitutionGenerator,
@@ -24,8 +26,8 @@ class EducationalInstitutionService(BaseDomainService[EducationalInstitution]):
     EducationalInstitution entities.
     """
 
-    def __init__(self, dataset: str | None = None):
-        super().__init__(EducationalInstitutionGenerator(dataset=dataset), EducationalInstitution)
+    def __init__(self, dataset: str | None = None, rng: Random | None = None):
+        super().__init__(EducationalInstitutionGenerator(dataset=dataset, rng=rng), EducationalInstitution)
 
     @staticmethod
     def supported_datasets() -> set[str]:

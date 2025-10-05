@@ -2,56 +2,85 @@
     <generate name="address" count="10" target="ConsoleExporter">
         <variable name="address" entity="Address"/>
         <key name="street" script="address.street"/>
+        <key name="street1" script="address.street"/>
         <key name="house_number" script="address.house_number"/>
+        <key name="house_number1" script="address.house_number"/>
         <key name="city" script="address.city"/>
+        <key name="city1" script="address.city"/>
         <key name="state" script="address.state"/>
-        <key name="postal_code" script="address.postal_code"/>
-        <key name="zip_code" script="address.zip_code"/>
-        <key name="country" script="address.country"/>
-        <key name="country_code" script="address.country_code"/>
-        <!-- <key name="continent" script="address.continent"/> -->
-        <key name="office_phone" script="address.office_phone"/>
-        <key name="private_phone" script="address.private_phone"/>
-        <key name="mobile_phone" script="address.mobile_phone"/>
-        <key name="fax" script="address.fax"/>
-        <!-- <key name="organization" script="address.organization"/> -->
+        <key name="state1" script="address.state"/>
         <key name="area" script="address.area"/>
-        <!-- <key name="state_abbr" script="address.state_abbr"/> -->
-        <!-- <key name="federal_subject" script="address.federal_subject"/> -->
-        <!-- <key name="prefecture" script="address.prefecture"/> -->
-        <!-- <key name="province" script="address.province"/> -->
-        <!-- <key name="region" script="address.region"/> -->
-        <!-- <key name="calling_code" script="address.calling_code"/> -->
-        <!-- <key name="isd_code" script="address.isd_code"/> -->
-        <!-- <key name="iata_code" script="address.iata_code"/> -->
-        <!-- <key name="icao_code" script="address.icao_code"/> -->
-        <!-- <key name="formatted_address" script="address.formatted_address"/> -->
+        <key name="area1" script="address.area"/>
+        <key name="country" script="address.country"/>
+        <key name="country1" script="address.country"/>
+        <key name="country_code" script="address.country_code"/>
+        <key name="country_code1" script="address.country_code"/>
+        <key name="zip_code" script="address.zip_code"/>
+        <key name="zip_code1" script="address.zip_code"/>
+        <key name="postal_code" script="address.postal_code"/>
+        <key name="postal_code1" script="address.postal_code"/>
+        <key name="office_phone" script="address.office_phone"/>
+        <key name="office_phone1" script="address.office_phone"/>
+        <key name="private_phone" script="address.private_phone"/>
+        <key name="private_phone1" script="address.private_phone"/>
+        <key name="mobile_phone" script="address.mobile_phone"/>
+        <key name="mobile_phone1" script="address.mobile_phone"/>
+        <key name="fax" script="address.fax"/>
+        <key name="fax1" script="address.fax"/>
+        <key name="organization" script="address.organization"/>
+        <key name="organization1" script="address.organization"/>
         <variable name="address1" entity="Address"/>
         <key name="street2" script="address1.street"/>
+        <key name="street3" script="address1.street"/>
         <key name="house_number2" script="address1.house_number"/>
+        <key name="house_number3" script="address1.house_number"/>
         <key name="city2" script="address1.city"/>
+        <key name="city3" script="address1.city"/>
         <key name="state2" script="address1.state"/>
-        <key name="postal_code2" script="address1.postal_code"/>
-        <key name="zip_code2" script="address1.zip_code"/>
-        <key name="country2" script="address1.country"/>
-        <key name="country_code2" script="address1.country_code"/>
-        <!-- <nestedKey name="coordinates2" script="address1.coordinates"/> -->
-        <!-- <key name="continent2" script="address1.continent"/> -->
-        <key name="office_phone2" script="address1.office_phone"/>
-        <key name="private_phone2" script="address1.private_phone"/>
-        <key name="mobile_phone2" script="address1.mobile_phone"/>
-        <key name="fax2" script="address1.fax"/>
-        <!-- <key name="organization2" script="address1.organization"/> -->
+
+        <key name="state3" script="address1.state"/>
         <key name="area2" script="address1.area"/>
-        <!-- <key name="state_abbr2" script="address1.state_abbr"/> -->
-        <!-- <key name="federal_subject2" script="address1.federal_subject"/> -->
-        <!-- <key name="prefecture2" script="address1.prefecture"/> -->
-        <!-- <key name="province2" script="address1.province"/> -->
-        <!-- <key name="region2" script="address1.region"/> -->
-        <!-- <key name="calling_code2" script="address1.calling_code"/> -->
-        <!-- <key name="isd_code2" script="address1.isd_code"/> -->
-        <!-- <key name="iata_code2" script="address1.iata_code"/> -->
-        <!-- <key name="icao_code2" script="address1.icao_code"/> -->
-        <!-- <key name="formatted_address2" script="address1.formatted_address"/> -->
+        <key name="area3" script="address1.area"/>
+        <key name="country2" script="address1.country"/>
+        <key name="country3" script="address1.country"/>
+        <key name="country_code2" script="address1.country_code"/>
+        <key name="country_code3" script="address1.country_code"/>
+        <key name="zip_code2" script="address1.zip_code"/>
+        <key name="zip_code3" script="address1.zip_code"/>
+        <key name="postal_code2" script="address1.postal_code"/>
+        <key name="postal_code3" script="address1.postal_code"/>
+        <key name="office_phone2" script="address1.office_phone"/>
+        <key name="office_phone3" script="address1.office_phone"/>
+        <key name="private_phone2" script="address1.private_phone"/>
+        <key name="private_phone3" script="address1.private_phone"/>
+        <key name="mobile_phone2" script="address1.mobile_phone"/>
+        <key name="mobile_phone3" script="address1.mobile_phone"/>
+        <key name="fax2" script="address1.fax"/>
+        <key name="fax3" script="address1.fax"/>
+        <key name="organization2" script="address1.organization"/>
+        <key name="organization3" script="address1.organization"/>
+
+    </generate>
+
+    <!-- WHY: Use a seeded Person demographic config to validate that nested address data is reproducible across runs. -->
+    <echo>Generating seeded US households</echo>
+    <generate name="seeded_households" count="4" target="LogExporter">
+        <variable
+            name="resident"
+            entity="Person"
+            dataset="US"
+            ageMin="30"
+            ageMax="45"
+            rngSeed="641"
+        />
+        <variable name="home" script="resident.address"/>
+        <key name="resident_name" script="resident.name"/>
+        <key name="resident_age" script="resident.age"/>
+        <key name="street" script="home.street"/>
+        <key name="house_number" script="home.house_number"/>
+        <key name="city" script="home.city"/>
+        <key name="state" script="home.state"/>
+        <key name="country" script="home.country"/>
+        <key name="postal_code" script="home.postal_code"/>
     </generate>
 </setup>

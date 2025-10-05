@@ -38,7 +38,7 @@ class CreditCardGenerator(BaseDomainGenerator):
         self._person_generator = PersonGenerator(
             dataset=self._dataset, rng=self._rng, demographic_config=demographic_config
         )
-        self._date_generator = DateTimeGenerator(random=True)
+        self._date_generator = DateTimeGenerator(random=True, rng=self._derive_rng())
         self._bank_account_generator = BankAccountGenerator(dataset=self._dataset, rng=self._rng)
         self._card_types_cache: list[tuple] | None = None
         self._card_specs: dict | None = None
@@ -58,6 +58,10 @@ class CreditCardGenerator(BaseDomainGenerator):
     @property
     def rng(self) -> random.Random:
         return self._rng
+
+    def _derive_rng(self) -> random.Random:
+        # Provide deterministic child RNGs so seeded credit-card descriptors replay consistently.
+        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
 
     @property
     def dataset(self) -> str:

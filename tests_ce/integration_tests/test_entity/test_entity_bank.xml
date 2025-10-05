@@ -19,4 +19,13 @@
         <key name="bin2" script="bank1.bin"/>
         <key name="bin3" script="bank1.bin"/>
     </generate>
+
+    <!-- WHY: Cover dataset overrides for banks so integration assertions can ensure locale-specific codes remain stable. -->
+    <echo>Generating German banks</echo>
+    <generate name="seeded_de_banks" count="3" target="LogExporter">
+        <variable name="bank_de" entity="Bank" dataset="DE"/>
+        <key name="name" script="bank_de.name"/>
+        <key name="bic" script="bank_de.bic"/>
+        <key name="bank_code" script="bank_de.bank_code"/>
+    </generate>
 </setup>

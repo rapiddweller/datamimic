@@ -1,0 +1,218 @@
+{
+    "AUTOMOTIVE": [
+        "Steel",
+        "Aluminum",
+        "Rubber",
+        "Carbon fiber",
+        "Synthetic leather",
+        "High-strength polymer",
+        "Tempered glass"
+    ],
+    "BABY": [
+        "Organic cotton",
+        "Bamboo viscose",
+        "Food-grade silicone",
+        "Natural rubber",
+        "Merino wool",
+        "Recycled polyester",
+        "Plant-based dyes"
+    ],
+    "BEAUTY": [
+        "Glass",
+        "PET plastic",
+        "Recyclable aluminum",
+        "Paper",
+        "Sugarcane bioplastic",
+        "Post-consumer recycled plastic",
+        "Miron violet glass"
+    ],
+    "BEVERAGES": [
+        "Glass",
+        "Aluminum",
+        "Tetra Pak",
+        "Stainless steel",
+        "BPA-free plastic",
+        "Compostable biopolymer",
+        "Borosilicate glass"
+    ],
+    "BOOKS": [
+        "Recycled paper",
+        "Soy-based ink",
+        "Cardstock",
+        "Linen",
+        "Cotton-blend paper",
+        "Vegan leather",
+        "Wood pulp board"
+    ],
+    "CLOTHING": [
+        "Cotton",
+        "Linen",
+        "Organic cotton",
+        "Recycled polyester",
+        "Merino wool",
+        "Tencel lyocell",
+        "Hemp"
+    ],
+    "ELECTRONICS": [
+        "Aluminum",
+        "ABS plastic",
+        "Tempered glass",
+        "Silicone",
+        "Carbon fiber",
+        "Magnesium alloy",
+        "Copper wiring"
+    ],
+    "FOOD": [
+        "Compostable fiber",
+        "Glass",
+        "Recyclable aluminum",
+        "PET plastic",
+        "Paper",
+        "PLA bioplastic",
+        "Vacuum-sealed film"
+    ],
+    "FURNITURE": [
+        "Oak wood",
+        "Engineered wood",
+        "Powder-coated steel",
+        "Top-grain leather",
+        "Performance fabric",
+        "Rattan",
+        "Water-based lacquer"
+    ],
+    "GAMING": [
+        "Injection-molded plastic",
+        "Aluminum alloy",
+        "Tempered glass",
+        "PU leather",
+        "Memory foam",
+        "RGB acrylic panel",
+        "Braided nylon"
+    ],
+    "GARDEN": [
+        "Galvanized steel",
+        "Cedar wood",
+        "Recycled polypropylene",
+        "Terracotta",
+        "Coconut coir",
+        "UV-resistant resin",
+        "Natural stone"
+    ],
+    "HEALTH": [
+        "Amber glass",
+        "High-density polyethylene",
+        "Medical-grade silicone",
+        "Stainless steel",
+        "Paperboard",
+        "Polycarbonate",
+        "Foil blister film"
+    ],
+    "HOME_GOODS": [
+        "Solid wood",
+        "Ceramic",
+        "Bamboo",
+        "Stainless steel",
+        "Tempered glass",
+        "Resin",
+        "Stoneware"
+    ],
+    "JEWELRY": [
+        "Sterling silver",
+        "Gold vermeil",
+        "Titanium",
+        "Rose gold",
+        "Platinum",
+        "Recycled gold",
+        "Lab-grown diamonds"
+    ],
+    "KITCHEN": [
+        "18/10 stainless steel",
+        "Cast iron",
+        "Borosilicate glass",
+        "Beech wood",
+        "Food-grade silicone",
+        "Anodized aluminum",
+        "Ceramic nonstick coating"
+    ],
+    "LUXURY_BEAUTY": [
+        "Crystal glass",
+        "Polished aluminum",
+        "Italian leather",
+        "Gold foil",
+        "Ceramic",
+        "Cashmere paper",
+        "Recycled glass"
+    ],
+    "OFFICE_SUPPLIES": [
+        "Polypropylene",
+        "Recycled paper",
+        "Anodized aluminum",
+        "ABS plastic",
+        "Bamboo",
+        "FSC-certified cardboard",
+        "PET felt"
+    ],
+    "OUTDOOR": [
+        "Ripstop nylon",
+        "Aluminum",
+        "Carbon fiber",
+        "Weather-resistant polyester",
+        "Stainless steel",
+        "Waterproof TPU",
+        "Kevlar"
+    ],
+    "PERSONAL_CARE": [
+        "Bamboo",
+        "Silicone",
+        "Recycled HDPE",
+        "Glass",
+        "Sugarcane bioplastic",
+        "Compostable paper",
+        "Plant-based bristles"
+    ],
+    "PET_SUPPLIES": [
+        "Faux fur",
+        "Rubber",
+        "Food-grade silicone",
+        "Stainless steel",
+        "Recycled polyester",
+        "Memory foam",
+        "Natural jute"
+    ],
+    "SMART_HOME": [
+        "Aluminum",
+        "ABS plastic",
+        "Tempered glass",
+        "Printed circuit board",
+        "Silicone gasket",
+        "Recycled PET",
+        "Flame-retardant polycarbonate"
+    ],
+    "SPORTS": [
+        "Neoprene",
+        "Kevlar",
+        "Recycled rubber",
+        "Aluminum",
+        "High-impact plastic",
+        "Moisture-wicking mesh",
+        "EVA foam"
+    ],
+    "TOYS": [
+        "Birch wood",
+        "Food-grade silicone",
+        "Recycled plastic",
+        "Organic cotton",
+        "Cardboard",
+        "Natural rubber",
+        "Non-toxic dyes"
+    ],
+    "TRAVEL": [
+        "Polycarbonate",
+        "Ballistic nylon",
+        "Aluminum frame",
+        "Vegan leather",
+        "TPU laminate",
+        "Memory foam",
+        "Reinforced ABS"
+    ]
+}

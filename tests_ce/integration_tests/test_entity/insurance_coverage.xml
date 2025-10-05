@@ -1,0 +1,18 @@
+<setup multiprocessing="0">
+    <!-- WHY: Protect insurance coverage generator determinism and data completeness with seeded output. -->
+    <echo>Generating seeded insurance coverages for deterministic regression coverage</echo>
+    <generate name="insurance_coverages" count="6" target="LogExporter">
+        <variable
+            name="coverage"
+            entity="InsuranceCoverage"
+            dataset="US"
+            rngSeed="9001"
+        />
+        <key name="name" script="coverage.name" />
+        <key name="code" script="coverage.code" />
+        <key name="product_code" script="coverage.product_code" />
+        <key name="description" script="coverage.description" />
+        <key name="min_coverage" script="coverage.min_coverage" />
+        <key name="max_coverage" script="coverage.max_coverage" />
+    </generate>
+</setup>

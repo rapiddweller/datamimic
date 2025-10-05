@@ -2,7 +2,6 @@ import datetime
 from pathlib import Path
 from typing import Any
 
-from datamimic_ce.domains.common.literal_generators.uuid_generator import UUIDGenerator
 from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseEntity
 from datamimic_ce.domains.domain_core.property_cache import property_cache
@@ -10,6 +9,7 @@ from datamimic_ce.domains.insurance.generators.insurance_policy_generator import
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
 from datamimic_ce.domains.insurance.models.insurance_product import InsuranceProduct
+from datamimic_ce.domains.utils.rng_uuid import uuid4_from_random
 
 
 class InsurancePolicy(BaseEntity):
@@ -22,8 +22,7 @@ class InsurancePolicy(BaseEntity):
     @property
     @property_cache
     def id(self) -> str:
-        #  unify ID generation via common literal generator for consistency across domains
-        return UUIDGenerator().generate()
+        return uuid4_from_random(self.insurance_policy_generator.rng)
 
     @property
     @property_cache

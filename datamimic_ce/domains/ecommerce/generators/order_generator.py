@@ -13,7 +13,11 @@ class OrderGenerator(BaseDomainGenerator):
         self._dataset = dataset.upper()  #  normalize for consistent dataset file suffixes
         self._rng: random.Random = rng or random.Random()
         self._product_generator = ProductGenerator(dataset=dataset, rng=self._rng)
-        self._address_generator = AddressGenerator(dataset=dataset)
+        # Share deterministic RNG to nested address fields so seeded orders replay.
+        self._address_generator = AddressGenerator(
+            dataset=dataset,
+            rng=self._derive_rng() if rng is not None else None,
+        )
 
     @property
     def dataset(self) -> str:
@@ -31,6 +35,10 @@ class OrderGenerator(BaseDomainGenerator):
     def rng(self) -> random.Random:
         return self._rng
 
+    def _derive_rng(self) -> random.Random:
+        # Spawn deterministic child RNGs so seeded orders replay without cross-coupling randomness.
+        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
+
     #  Centralize date generation; models stay pure and RNG boundaries are clear
     def generate_order_date(self) -> dt.datetime:
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
@@ -38,7 +46,7 @@ class OrderGenerator(BaseDomainGenerator):
         now = dt.datetime.now()
         min_dt = (now - dt.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = now.strftime("%Y-%m-%d %H:%M:%S")
-        val = DateTimeGenerator(min=min_dt, max=max_dt, random=True).generate()
+        val = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
         assert isinstance(val, dt.datetime)
         return val
 

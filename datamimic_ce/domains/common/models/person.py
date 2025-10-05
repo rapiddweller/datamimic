@@ -49,7 +49,7 @@ class Person(BaseEntity):
         Returns:
             The first name of the person.
         """
-        return self._person_generator.given_name_generator.generate()
+        return self._person_generator.given_name_generator.generate_with_gender(self.gender)
 
     @given_name.setter
     def given_name(self, value: str) -> None:
@@ -195,7 +195,7 @@ class Person(BaseEntity):
     @property_cache
     def nobility_title(self) -> str | None:
         """Get the nobility title of the person."""
-        return self._person_generator.nobility_title_generator.generate()
+        return self._person_generator.nobility_title_generator.generate_with_gender(self.gender)
 
     @property
     @property_cache

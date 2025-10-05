@@ -43,7 +43,7 @@ class NobilityTitleGenerator(BaseLiteralGenerator):
         self._male_values, self._male_weights = FileUtil.read_wgt_file(file_path=male_file_path)
         self._female_values, self._female_weights = FileUtil.read_wgt_file(file_path=female_file_path)
 
-    def generate(self) -> str | None:
+    def generate(self) -> str:
         """
         Generate random nobility title
             Returns:
@@ -51,23 +51,35 @@ class NobilityTitleGenerator(BaseLiteralGenerator):
         """
         if self._gender in ["male", "female", "other"]:
             return self.generate_with_gender(self._gender)
-        else:
-            return ""
+        return ""
 
-    def generate_with_gender(self, gender: str):
+    def generate_with_gender(self, gender: str) -> str:
         """
         Generate random nobility title
             Returns:
                 Optional[str]: Returns a string if successful, otherwise returns None.
         """
-        if self._rng.random() < self._noble_quota:
-            if gender == "male":
-                return self._male_values and self._rng.choices(self._male_values, self._male_weights, k=1)[0] or None
-            elif gender == "female":
-                return (
-                    self._female_values and self._rng.choices(self._female_values, self._female_weights, k=1)[0] or None
-                )
-            else:
-                """"""
-        else:
+        if self._rng.random() >= self._noble_quota:
             return ""
+
+        values: list[str]
+        weights: list[float]
+        if gender == "male":
+            values = list(self._male_values)
+            weights = list(self._male_weights)
+        elif gender == "female":
+            values = list(self._female_values)
+            weights = list(self._female_weights)
+        else:
+            # WHY: Merge available titles for non-binary genders instead of returning None when quota triggers.
+            values = list(self._male_values) + list(self._female_values)
+            weights = list(self._male_weights) + list(self._female_weights)
+
+        if not values:
+            return ""
+
+        # Align weight vector with values; default to uniform if source data is missing.
+        if not weights or len(weights) != len(values):
+            weights = [1.0 for _ in values]
+
+        return self._rng.choices(values, weights=weights, k=1)[0]

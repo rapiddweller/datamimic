@@ -49,10 +49,9 @@ class MedicalDevice(BaseEntity):
         Returns:
             A string representing a device ID.
         """
-        #  use shared PrefixedIdGenerator for prefixed short ID format
-        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
-
-        return PrefixedIdGenerator("DEV", "[0-9]{8}").generate()
+        rng = self._medical_device_generator.rng
+        suffix = "".join(str(rng.randint(0, 9)) for _ in range(8))
+        return f"DEV-{suffix}"
 
     @property
     @property_cache
@@ -82,10 +81,10 @@ class MedicalDevice(BaseEntity):
         Returns:
             A string representing a model number.
         """
-        #  use shared StringGenerator for deterministic pattern
-        from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
-
-        return StringGenerator.rnd_str_from_regex("[A-Z]{2}[0-9]{4}")
+        rng = self._medical_device_generator.rng
+        letters = "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(2))
+        digits = "".join(str(rng.randint(0, 9)) for _ in range(4))
+        return f"{letters}{digits}"
 
     @property
     @property_cache
@@ -97,9 +96,9 @@ class MedicalDevice(BaseEntity):
         """
         # Format: MFG-YYYY-XXXXXXXX
         year = self._medical_device_generator.rng.randint(2010, datetime.datetime.now().year)
-        from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
-
-        random_part = StringGenerator.rnd_str_from_regex("[A-Z0-9]{8}")
+        rng = self._medical_device_generator.rng
+        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        random_part = "".join(rng.choice(alphabet) for _ in range(8))
         return f"MFG-{year}-{random_part}"
 
     @property

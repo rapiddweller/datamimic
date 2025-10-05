@@ -44,9 +44,10 @@ class DateTimeGenerator(BaseLiteralGenerator):
         minute_granularity: int | None = None,
         second_granularity: int | None = None,
         seed: int | None = None,
+        rng: _random.Random | None = None,
     ):
-        # private RNG for determinism
-        self._rng = _random.Random(seed)
+        # Allow callers to inject their rng so rngSeed descriptors replay deterministically.
+        self._rng = rng or _random.Random(seed)
 
         # format and weights
         self._input_format = input_format if input_format else "%Y-%m-%d %H:%M:%S"

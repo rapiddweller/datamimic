@@ -67,4 +67,14 @@
         <key name="url2" script="company1.url"/>
         <key name="url3" script="company1.url"/>
     </generate>
+
+    <!-- WHY: Validate dataset overrides for companies to confirm locale-specific address data in integration assertions. -->
+    <echo>Generating German companies</echo>
+    <generate name="de_companies" count="4" target="LogExporter">
+        <variable name="company_de" entity="Company" dataset="DE"/>
+        <key name="full_name" script="company_de.full_name"/>
+        <key name="city" script="company_de.city"/>
+        <key name="country" script="company_de.country"/>
+        <key name="sector" script="company_de.sector"/>
+    </generate>
 </setup>
