@@ -9,6 +9,7 @@ from datamimic_ce.domains.insurance.generators.insurance_policy_generator import
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
 from datamimic_ce.domains.insurance.models.insurance_product import InsuranceProduct
+from datamimic_ce.domains.utils.rng_uuid import uuid4_from_random
 
 
 class InsurancePolicy(BaseEntity):
@@ -21,13 +22,7 @@ class InsurancePolicy(BaseEntity):
     @property
     @property_cache
     def id(self) -> str:
-        rng = self.insurance_policy_generator.rng
-        hex_chars = "0123456789abcdef"
-        sections = [8, 4, 4, 4, 12]
-        parts = []
-        for length in sections:
-            parts.append("".join(rng.choice(hex_chars) for _ in range(length)))
-        return "-".join(parts)
+        return uuid4_from_random(self.insurance_policy_generator.rng)
 
     @property
     @property_cache

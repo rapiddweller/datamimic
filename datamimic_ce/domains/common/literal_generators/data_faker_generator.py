@@ -5,12 +5,16 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import random
-from typing import Any
+from typing import Any, Protocol, cast
 
 from faker import Faker
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.enums.faker_enums import UnsupportedMethod
+
+
+class _SupportsRandom(Protocol):
+    random: random.Random
 
 
 class DataFakerGenerator(BaseLiteralGenerator):
@@ -32,9 +36,9 @@ class DataFakerGenerator(BaseLiteralGenerator):
             raise ValueError(f"Faker method '{method}' is not supported")
         self._faker = Faker(locale)
         if rng is not None:
-            # WHY: faker.Faker exposes a dynamic `random` attribute; use setattr to keep mypy satisfied while
-            # still wiring the caller-provided RNG for deterministic runs.
-            self._faker.random = rng
+            # WHY: faker.Faker exposes a dynamic `random` attribute; cast to a protocol so mypy accepts the assignment.
+            faker_with_random = cast(_SupportsRandom, self._faker)
+            faker_with_random.random = rng
         self._method = method
         self._locale = locale
         self._args = args
