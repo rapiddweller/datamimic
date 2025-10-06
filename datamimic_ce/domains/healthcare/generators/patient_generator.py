@@ -14,6 +14,7 @@ from functools import cache
 from pathlib import Path
 from random import Random
 
+from datamimic_ce.domains.common.demographics.sampler import DemographicSample, DemographicSampler
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
 from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
@@ -37,6 +38,7 @@ class PatientGenerator(BaseDomainGenerator):
         self,
         dataset: str | None = None,
         demographic_config: DemographicConfig | None = None,
+        demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
     ):
         self._dataset = dataset or "US"
@@ -45,8 +47,10 @@ class PatientGenerator(BaseDomainGenerator):
         self._person_generator = PersonGenerator(
             dataset=self._dataset,
             demographic_config=self._demographic_config,
+            demographic_sampler=demographic_sampler,
             rng=self._rng,
         )
+        self._demographic_sampler = demographic_sampler
         # Fan out deterministic RNG so seeded patient cohorts remain reproducible across dependent literals.
         self._family_name_generator = FamilyNameGenerator(
             dataset=self._dataset,
@@ -103,12 +107,27 @@ class PatientGenerator(BaseDomainGenerator):
         self._last_blood_type = choice
         return choice
 
-    def generate_age_appropriate_conditions(self, age: int) -> list[str]:
+    def generate_age_appropriate_conditions(
+        self, age: int, demographic_sample: DemographicSample | None = None
+    ) -> list[str]:
         """Generate weighted medical conditions for the given age."""
 
         base_weights = _load_condition_base_weights(self._dataset)
         include = self._demographic_config.normalized_includes()
         exclude = self._demographic_config.normalized_excludes()
+        if demographic_sample is not None and demographic_sample.conditions:
+            selections = [
+                condition
+                for condition in demographic_sample.conditions
+                if condition.lower() not in {name.lower() for name in exclude}
+            ]
+            normalized_includes = {name.lower(): name for name in include}
+            present = {name.lower() for name in selections}
+            for key, original in normalized_includes.items():
+                if key not in present and key not in {name.lower() for name in exclude}:
+                    selections.append(original)
+            # Deterministic ordering keeps tests stable when sampler emits frozensets.
+            return sorted(selections)
         if not base_weights:
             return []
         #  Apply age multipliers while keeping CSV as the single source of names and base weights.

@@ -12,6 +12,7 @@ This module provides a service for working with PoliceOfficer entities.
 
 from random import Random
 
+from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.public_sector.generators.police_officer_generator import PoliceOfficerGenerator
@@ -29,12 +30,18 @@ class PoliceOfficerService(BaseDomainService[PoliceOfficer]):
         self,
         dataset: str | None = None,
         demographic_config: DemographicConfig | None = None,
+        demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
     ):
         import random as _r
 
         super().__init__(
-            PoliceOfficerGenerator(dataset=dataset, rng=rng or _r.Random(), demographic_config=demographic_config),
+            PoliceOfficerGenerator(
+                dataset=dataset,
+                rng=rng or _r.Random(),
+                demographic_config=demographic_config,
+                demographic_sampler=demographic_sampler,
+            ),
             PoliceOfficer,
         )
 

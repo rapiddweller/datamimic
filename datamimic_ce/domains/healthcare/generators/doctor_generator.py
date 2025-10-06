@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
     from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 
 import random
@@ -35,6 +36,7 @@ class DoctorGenerator(BaseDomainGenerator):
         dataset: str | None = None,
         rng: random.Random | None = None,
         demographic_config: DemographicConfig | None = None,
+        demographic_sampler: DemographicSampler | None = None,
     ):
         #  normalize dataset to ISO-3166 alpha-2 and keep lookup consistent
         self._dataset = (dataset or "US").upper()
@@ -43,7 +45,11 @@ class DoctorGenerator(BaseDomainGenerator):
 
         demo = demographic_config if demographic_config is not None else _DC()
         self._person_generator = PersonGenerator(
-            dataset=self._dataset, demographic_config=demo, rng=self._rng, min_age=25
+            dataset=self._dataset,
+            demographic_config=demo,
+            demographic_sampler=demographic_sampler,
+            rng=self._rng,
+            min_age=25,
         )
         self._hospital_generator = HospitalGenerator(dataset=self._dataset, rng=self._rng)
         self._last_specialty: str | None = None

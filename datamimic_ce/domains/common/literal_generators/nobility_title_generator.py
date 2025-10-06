@@ -71,7 +71,7 @@ class NobilityTitleGenerator(BaseLiteralGenerator):
             values = list(self._female_values)
             weights = list(self._female_weights)
         else:
-            # WHY: Merge available titles for non-binary genders instead of returning None when quota triggers.
+            # Merge available titles for non-binary genders instead of returning None when quota triggers.
             values = list(self._male_values) + list(self._female_values)
             weights = list(self._male_weights) + list(self._female_weights)
 

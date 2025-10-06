@@ -7,9 +7,11 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 from random import Random
 
+from datamimic_ce.domains.common.demographics.sampler import DemographicSample, DemographicSampler
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.common.literal_generators.academic_title_generator import AcademicTitleGenerator
 from datamimic_ce.domains.common.literal_generators.birthdate_generator import BirthdateGenerator
@@ -42,10 +44,12 @@ class PersonGenerator(BaseDomainGenerator):
         noble_quota: float = 0.001,
         academic_title_quota: float = 0.5,
         demographic_config: DemographicConfig | None = None,
+        demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
     ):
         self._dataset = dataset or "US"
         self._rng: Random = rng or Random()
+        self._demographic_sampler = demographic_sampler
         # Normalize demographic overrides once to keep SPOT and reuse downstream.
         resolved_config = (demographic_config or DemographicConfig()).with_defaults(
             default_age_min=min_age,
@@ -84,12 +88,12 @@ class PersonGenerator(BaseDomainGenerator):
             rng=self._derive_rng() if rng is not None else None,
         )
         self._demographic_config = resolved_config
-        birth_min = self._demographic_config.age_min if self._demographic_config.age_min is not None else min_age
-        birth_max = self._demographic_config.age_max if self._demographic_config.age_max is not None else max_age
+        self._birth_min = self._demographic_config.age_min if self._demographic_config.age_min is not None else min_age
+        self._birth_max = self._demographic_config.age_max if self._demographic_config.age_max is not None else max_age
         # Clamp birthdate sampling to caller-provided bounds without scattering defaults.
         self._birthdate_generator = BirthdateGenerator(
-            min_age=birth_min,
-            max_age=birth_max,
+            min_age=self._birth_min,
+            max_age=self._birth_max,
             rng=self._derive_rng() if rng is not None else None,
         )
         self._academic_title_generator = AcademicTitleGenerator(
@@ -102,10 +106,25 @@ class PersonGenerator(BaseDomainGenerator):
             noble_quota=noble_quota,
             rng=self._derive_rng() if rng is not None else None,
         )
+        self._demographic_rng = self._derive_rng() if demographic_sampler is not None and rng is not None else Random()
 
     def _derive_rng(self) -> Random:
         # Spawn child RNGs from the base seed so seeded descriptors replay without entangling independent draws.
         return Random(self._rng.randrange(2**63)) if isinstance(self._rng, Random) else Random()
+
+    def reserve_demographic_sample(self) -> DemographicSample:
+        if self._demographic_sampler is None:
+            return DemographicSample(age=None, sex=None, conditions=frozenset())
+        age, sex = self._demographic_sampler.sample_age_sex(self._demographic_rng)
+        clamped_age = max(self._birth_min, min(self._birth_max, age))
+        conditions = self._demographic_sampler.sample_conditions(clamped_age, sex, self._demographic_rng)
+        # Sample once per entity so downstream services share consistent demographics.
+        return DemographicSample(age=clamped_age, sex=sex, conditions=conditions)
+
+    def generate_birthdate_for_age(self, age: int) -> datetime:
+        # Dedicated generator keeps demographic birthdates independent from other literal draws.
+        generator = BirthdateGenerator(min_age=age, max_age=age, rng=self._derive_rng())
+        return generator.generate()
 
     @property
     def gender_generator(self) -> GenderGenerator:

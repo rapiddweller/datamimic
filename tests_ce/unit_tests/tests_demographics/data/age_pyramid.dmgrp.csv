@@ -1,0 +1,7 @@
+dataset,version,sex,age_min,age_max,weight
+TEST,v1,F,0,17,0.2
+TEST,v1,F,18,35,0.3
+TEST,v1,F,36,80,0.5
+TEST,v1,M,0,17,0.25
+TEST,v1,M,18,35,0.35
+TEST,v1,M,36,80,0.4

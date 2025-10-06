@@ -21,7 +21,7 @@ def uuid4_from_random(rng: Random) -> str:
     """
 
     value = rng.getrandbits(128)
-    # WHY: Enforce UUID version/variant bits so downstream validators accept the value.
+    # Enforce UUID version/variant bits so downstream validators accept the value.
     value &= ~(0xF << 76)
     value |= 0x4 << 76  # Set version 4
     value &= ~(0x3 << 62)

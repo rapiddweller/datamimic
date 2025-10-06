@@ -249,6 +249,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         entity_class_name, kwargs = StringUtil.parse_constructor_string(entity_name)
         # Inject dataset if not explicitly provided in constructor
         kwargs.setdefault("dataset", dataset)
+        demographic_context = getattr(ctx.root, "demographic_context", None)
         # Build demographic config + rng from statement attributes when present
         demo_cfg = None
         if any(
@@ -272,6 +273,13 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 conditions_exclude=excludes,
             )
         rng_obj = Random(statement.rng_seed) if statement.rng_seed is not None else None
+        if demo_cfg is None and demographic_context is not None and demographic_context.overrides is not None:
+            # Share profile-level defaults when no per-variable overrides are provided.
+            demo_cfg = demographic_context.overrides
+        if rng_obj is None and demographic_context is not None:
+            # Derive entity-level RNGs from the demographics root seed to keep sampling reproducible.
+            rng_obj = Random(demographic_context.rng.randrange(2**63))
+        demographic_sampler = demographic_context.sampler if demographic_context is not None else None
         # Build from the last parsed VariableTask (self is not accessible in staticmethod); use closure via locals()
 
         # Check if entity_class_name contains dots indicating a domain path
@@ -318,16 +326,22 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             if entity_class_name in entity_mappings:
                 domain_entity_path = entity_mappings[entity_class_name]
                 # Only attach demographic_config/rng for supported services
-                if demo_cfg is not None and entity_class_name in {
+                supported_demographic_entities = {
                     "Patient",
                     "Doctor",
                     "PoliceOfficer",
                     "Person",
+                }
+                config_enabled_entities = supported_demographic_entities | {
                     "InsurancePolicy",
                     "MedicalDevice",
                     "CreditCard",
-                }:
-                    kwargs["demographic_config"] = demo_cfg
+                }
+                if demo_cfg is not None and entity_class_name in config_enabled_entities:
+                    kwargs.setdefault("demographic_config", demo_cfg)
+                if demographic_sampler is not None and entity_class_name in supported_demographic_entities:
+                    # Thread pure sampler through to entities that know how to consume demographics.
+                    kwargs.setdefault("demographic_sampler", demographic_sampler)
                 if rng_obj is not None and entity_class_name in {
                     "Patient",
                     "Doctor",

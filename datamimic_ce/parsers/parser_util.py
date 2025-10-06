@@ -16,6 +16,7 @@ from datamimic_ce.constants.element_constants import (
     EL_ARRAY,
     EL_CONDITION,
     EL_DATABASE,
+    EL_DEMOGRAPHICS,
     EL_ECHO,
     EL_ELEMENT,
     EL_ELSE,
@@ -97,6 +98,7 @@ class ParserUtil:
                 EL_ECHO,
                 EL_VARIABLE,
                 EL_GENERATOR,
+                EL_DEMOGRAPHICS,
             },
             EL_NESTED_KEY: {
                 EL_KEY,
@@ -188,6 +190,10 @@ class ParserUtil:
             return ElementParser(element, properties)
         elif tag == EL_GENERATOR:
             return GeneratorParser(element, properties)
+        elif tag == EL_DEMOGRAPHICS:
+            from datamimic_ce.parsers.demographics_parser import DemographicsParser
+
+            return DemographicsParser(element, properties)
         else:
             raise ValueError(f"Cannot get parser for element <{tag}>")
 

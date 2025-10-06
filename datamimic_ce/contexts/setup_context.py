@@ -11,6 +11,7 @@ from typing import Any
 
 from datamimic_ce.clients.database_client import Client
 from datamimic_ce.contexts.context import Context
+from datamimic_ce.contexts.demographic_context import DemographicContext
 from datamimic_ce.converter.converter import Converter
 from datamimic_ce.converter.custom_converter import CustomConverter
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
@@ -49,6 +50,7 @@ class SetupContext(Context):
         generators: dict | None = None,
         default_source_scripted: bool | None = None,
         report_logging: bool = True,
+        demographic_context: DemographicContext | None = None,
     ):
         # SetupContext is always its root_context
         super().__init__(self)
@@ -86,6 +88,7 @@ class SetupContext(Context):
         self._report_logging = report_logging
         self._current_seed = current_seed
         self._task_exporters: dict[str, dict[str, Any]] = {}
+        self._demographic_context = demographic_context
 
     def __deepcopy__(self, memo):
         """
@@ -125,6 +128,7 @@ class SetupContext(Context):
             default_source_scripted=self._default_source_scripted,
             report_logging=copy.deepcopy(self._report_logging),
             current_seed=self._current_seed,
+            demographic_context=copy.deepcopy(self._demographic_context, memo),
         )
 
     def _deepcopy_clients(self, memo):
@@ -225,6 +229,14 @@ class SetupContext(Context):
             # Ignore not-defined props in parent context
             if value is not None:
                 setattr(self, key, value)
+
+    @property
+    def demographic_context(self) -> DemographicContext | None:
+        return self._demographic_context
+
+    def set_demographic_context(self, context: DemographicContext) -> None:
+        # Keep demographics explicit on the root context instead of mutable module globals.
+        self._demographic_context = context
 
     @property
     def clients(self) -> dict:
