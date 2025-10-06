@@ -12,6 +12,7 @@ This module provides the PatientService class for generating and managing patien
 
 from random import Random
 
+from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.healthcare.generators.patient_generator import PatientGenerator
@@ -29,11 +30,17 @@ class PatientService(BaseDomainService[Patient]):
         self,
         dataset: str | None = None,
         demographic_config: DemographicConfig | None = None,
+        demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
     ):
         # Thread demographic and RNG overrides through the service layer.
         super().__init__(
-            PatientGenerator(dataset=dataset, demographic_config=demographic_config, rng=rng),
+            PatientGenerator(
+                dataset=dataset,
+                demographic_config=demographic_config,
+                demographic_sampler=demographic_sampler,
+                rng=rng,
+            ),
             Patient,
         )
 

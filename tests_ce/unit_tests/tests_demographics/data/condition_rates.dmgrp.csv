@@ -1,0 +1,6 @@
+dataset,version,condition,sex,age_min,age_max,prevalence
+TEST,v1,Asthma,,0,17,0.1
+TEST,v1,Asthma,,18,80,0.05
+TEST,v1,Diabetes,F,36,80,0.15
+TEST,v1,Diabetes,M,36,80,0.12
+TEST,v1,Hypertension,,36,80,0.3

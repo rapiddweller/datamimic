@@ -41,6 +41,7 @@ from datamimic_ce.logger import logger
 from datamimic_ce.statements.array_statement import ArrayStatement
 from datamimic_ce.statements.condition_statement import ConditionStatement
 from datamimic_ce.statements.database_statement import DatabaseStatement
+from datamimic_ce.statements.demographics_statement import DemographicsStatement
 from datamimic_ce.statements.echo_statement import EchoStatement
 from datamimic_ce.statements.element_statement import ElementStatement
 from datamimic_ce.statements.else_if_statement import ElseIfStatement
@@ -127,6 +128,10 @@ class TaskUtil:
             from datamimic_ce.tasks.condition_task import ConditionTask
 
             return ConditionTask(stmt)
+        elif isinstance(stmt, DemographicsStatement):
+            from datamimic_ce.tasks.demographics_task import DemographicsTask
+
+            return DemographicsTask(stmt)
         elif isinstance(stmt, ElseIfStatement):
             from datamimic_ce.tasks.else_if_task import ElseIfTask
 

@@ -7,6 +7,7 @@
 
 from random import Random
 
+from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.common.models.person import Person
@@ -27,6 +28,7 @@ class PersonService(BaseDomainService[Person]):
         female_quota: float = 0.5,
         other_gender_quota: float = 0.0,
         demographic_config: DemographicConfig | None = None,
+        demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
         noble_quota: float = 0.001,
         academic_title_quota: float = 0.5,
@@ -46,6 +48,8 @@ class PersonService(BaseDomainService[Person]):
                 female_quota=female_quota,
                 other_gender_quota=other_gender_quota,
                 demographic_config=resolved_config,
+                # Pass sampler through the service so entity generation can honour population priors.
+                demographic_sampler=demographic_sampler,
                 rng=rng,
                 # Thread descriptor-level overrides for noble/title quotas into the generator for determinism.
                 noble_quota=noble_quota,

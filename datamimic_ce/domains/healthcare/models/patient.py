@@ -260,7 +260,9 @@ class Patient(BaseEntity):
         Returns:
             A list of medical conditions.
         """
-        return self._patient_generator.generate_age_appropriate_conditions(self.age)
+        sample = self.person_data.demographic_sample
+        # Feed sampler-backed conditions first so overrides only adjust instead of resampling.
+        return self._patient_generator.generate_age_appropriate_conditions(self.age, sample)
 
     @property
     @property_cache

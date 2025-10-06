@@ -4,6 +4,7 @@ import random
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
     from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 
 from pathlib import Path
@@ -29,6 +30,7 @@ class PoliceOfficerGenerator(BaseDomainGenerator):
         dataset: str | None = None,
         rng: random.Random | None = None,
         demographic_config: DemographicConfig | None = None,
+        demographic_sampler: DemographicSampler | None = None,
     ):
         """Initialize the police officer generator.
 
@@ -41,7 +43,11 @@ class PoliceOfficerGenerator(BaseDomainGenerator):
 
         demo = demographic_config if demographic_config is not None else _DC()
         self._person_generator = PersonGenerator(
-            dataset=self._dataset, demographic_config=demo, rng=self._rng, min_age=21
+            dataset=self._dataset,
+            demographic_config=demo,
+            demographic_sampler=demographic_sampler,
+            rng=self._rng,
+            min_age=21,
         )
         # Hand child generators a derived RNG so seeded officers replay consistently across runs.
         self._address_generator = AddressGenerator(

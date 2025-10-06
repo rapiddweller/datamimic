@@ -36,7 +36,7 @@ class DataFakerGenerator(BaseLiteralGenerator):
             raise ValueError(f"Faker method '{method}' is not supported")
         self._faker = Faker(locale)
         if rng is not None:
-            # WHY: faker.Faker exposes a dynamic `random` attribute; cast to a protocol so mypy accepts the assignment.
+            # faker.Faker exposes a dynamic `random` attribute; cast to a protocol so mypy accepts the assignment.
             faker_with_random = cast(_SupportsRandom, self._faker)
             faker_with_random.random = rng
         self._method = method

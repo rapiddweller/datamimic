@@ -12,6 +12,7 @@ This module provides a service for working with Doctor entities.
 
 from random import Random
 
+from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.healthcare.generators.doctor_generator import DoctorGenerator
@@ -29,12 +30,19 @@ class DoctorService(BaseDomainService[Doctor]):
         self,
         dataset: str | None = None,
         demographic_config: DemographicConfig | None = None,
+        demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
     ) -> None:
         import random as _r
 
         super().__init__(
-            DoctorGenerator(dataset=dataset, rng=rng or _r.Random(), demographic_config=demographic_config), Doctor
+            DoctorGenerator(
+                dataset=dataset,
+                rng=rng or _r.Random(),
+                demographic_config=demographic_config,
+                demographic_sampler=demographic_sampler,
+            ),
+            Doctor,
         )
 
     @staticmethod
