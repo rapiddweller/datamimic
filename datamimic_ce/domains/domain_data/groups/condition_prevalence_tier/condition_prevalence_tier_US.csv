@@ -1,0 +1,56 @@
+group_id,condition,weight
+cond_high_prevalence,Asthma,0.050018
+cond_high_prevalence,Coronary Artery Disease,0.053591
+cond_high_prevalence,Hyperlipidemia,0.060736
+cond_high_prevalence,Hypertension,0.071454
+cond_high_prevalence,Obesity,0.057163
+cond_high_prevalence,Type 2 Diabetes,0.064309
+cond_low_prevalence,ADHD,0.010718
+cond_low_prevalence,Allergic Rhinitis,0.003573
+cond_low_prevalence,Allergies,0.014291
+cond_low_prevalence,Alzheimer's Disease,0.014291
+cond_low_prevalence,Anemia,0.003573
+cond_low_prevalence,Autism Spectrum Disorder,0.010004
+cond_low_prevalence,Bipolar Disorder,0.003573
+cond_low_prevalence,Cancer,0.017864
+cond_low_prevalence,Cataracts,0.003573
+cond_low_prevalence,Cerebral Palsy,0.007145
+cond_low_prevalence,Chronic Fatigue Syndrome,0.003573
+cond_low_prevalence,Congenital Heart Defects,0.006431
+cond_low_prevalence,Crohn's Disease,0.005359
+cond_low_prevalence,Eczema,0.003573
+cond_low_prevalence,Eczema,0.012504
+cond_low_prevalence,Epilepsy,0.003573
+cond_low_prevalence,Epilepsy,0.011433
+cond_low_prevalence,Fabry Disease,0.001786
+cond_low_prevalence,Fibromyalgia,0.003573
+cond_low_prevalence,Glaucoma,0.003573
+cond_low_prevalence,Gout,0.003573
+cond_low_prevalence,HIV/AIDS,0.008932
+cond_low_prevalence,Hearing Loss,0.003573
+cond_low_prevalence,Hepatitis C,0.007145
+cond_low_prevalence,Irritable Bowel Syndrome,0.012862
+cond_low_prevalence,Lupus,0.003573
+cond_low_prevalence,Macular Degeneration,0.003573
+cond_low_prevalence,Multiple Sclerosis,0.010718
+cond_low_prevalence,Parkinson's Disease,0.012504
+cond_low_prevalence,Post-Traumatic Stress Disorder,0.003573
+cond_low_prevalence,Psoriasis,0.003573
+cond_low_prevalence,Rheumatoid Arthritis,0.003573
+cond_low_prevalence,Schizophrenia,0.003573
+cond_low_prevalence,Sleep Apnea,0.019650
+cond_low_prevalence,Stroke,0.016077
+cond_low_prevalence,Substance Use Disorder,0.003573
+cond_low_prevalence,Ulcerative Colitis,0.005359
+cond_medium_prevalence,Anxiety,0.035727
+cond_medium_prevalence,Arthritis,0.042872
+cond_medium_prevalence,Atrial Fibrillation,0.026795
+cond_medium_prevalence,COPD,0.046445
+cond_medium_prevalence,Chronic Kidney Disease,0.028582
+cond_medium_prevalence,Depression,0.039300
+cond_medium_prevalence,Gastroesophageal Reflux Disease,0.030368
+cond_medium_prevalence,Heart Failure,0.025009
+cond_medium_prevalence,Hypothyroidism,0.032154
+cond_medium_prevalence,Migraine,0.021436
+cond_medium_prevalence,Osteoporosis,0.023223
+cond_medium_prevalence,Type 1 Diabetes,0.021436

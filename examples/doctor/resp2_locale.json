@@ -1,0 +1,24 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "ff911bb47c562a2bb382e8890745f36f9764e8640d9f1f616002c670fe332ebb",
+    "seed_canonical": "3069011196268734596"
+  },
+  "domain": "doctor",
+  "items": [
+    {
+      "first_name": "Mia",
+      "full_name": "Prof. Dr. Mia Schneider",
+      "hospital": "Klinikum Mitte",
+      "human_id": "DOC-E13583C7",
+      "id": "e13583c7-8400-564c-98fa-8a982c190165",
+      "last_name": "Schneider",
+      "license_number": "DE-E13583C7",
+      "locale": "de_DE",
+      "specialty": "kardiologie",
+      "title": "Prof. Dr."
+    }
+  ],
+  "request_hash": "1be9d091e42a9b7952c942262d62c8ab72b532d94af57b5dc6d142e820107282",
+  "version": "v1"
+}

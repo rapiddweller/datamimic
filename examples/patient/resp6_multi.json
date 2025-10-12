@@ -1,0 +1,142 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "47ec2fe5e46eed6033e7900b1a664718c74603df6a856b542d363ab9c26ea052",
+    "seed_canonical": "13799953621401316012"
+  },
+  "domain": "patient",
+  "items": [
+    {
+      "address_id": "3e83855e-8856-5740-a0f3-a333f9cb0374",
+      "age": 19,
+      "conditions": [
+        "I10"
+      ],
+      "human_id": "US-CLINIC-54",
+      "id": "2985ae92-14d9-52c7-a73a-c57a5efb273e",
+      "insurance_provider": "CareOne",
+      "locale": "en_US",
+      "person_id": "45a50c20-9d3d-5885-bbeb-c7d8903fe367",
+      "primary_condition": "I10"
+    },
+    {
+      "address_id": "e76e080c-a8cd-5290-a33e-9e7977ec11cd",
+      "age": 55,
+      "conditions": [
+        "E11"
+      ],
+      "human_id": "US-CLINIC-08",
+      "id": "0549befb-f48a-5d21-a120-6209839cf683",
+      "insurance_provider": "HealthGuard",
+      "locale": "en_US",
+      "person_id": "0a2fc98e-81f0-5be8-b400-d21a1006a162",
+      "primary_condition": "E11"
+    },
+    {
+      "address_id": "ecd3ca0d-ad90-51ce-ab71-57ecede8ea5a",
+      "age": 75,
+      "conditions": [
+        "J45"
+      ],
+      "human_id": "US-CLINIC-44",
+      "id": "45e78664-3327-5e07-82db-136a91f9adba",
+      "insurance_provider": "Metro Insurance",
+      "locale": "en_US",
+      "person_id": "1fee8990-13b4-5ceb-a3b2-9e558bfab65c",
+      "primary_condition": "J45"
+    },
+    {
+      "address_id": "5f01148e-20a0-57c2-a3ba-035cbfe0ac25",
+      "age": 28,
+      "conditions": [
+        "I10"
+      ],
+      "human_id": "US-CLINIC-29",
+      "id": "41be631f-a8ea-5203-9241-57867e11d449",
+      "insurance_provider": "CareOne",
+      "locale": "en_US",
+      "person_id": "ba7d6599-7204-5a1f-9ba9-2e06362a69a1",
+      "primary_condition": "I10"
+    },
+    {
+      "address_id": "9783062c-ce12-524e-b269-ce3411fa3021",
+      "age": 51,
+      "conditions": [
+        "E11"
+      ],
+      "human_id": "US-CLINIC-31",
+      "id": "3b2ebc11-cd1f-5717-abbb-af2879bccb40",
+      "insurance_provider": "HealthGuard",
+      "locale": "en_US",
+      "person_id": "feda2359-8a31-50ae-ba62-6014ebcf561d",
+      "primary_condition": "E11"
+    },
+    {
+      "address_id": "aa64d1cf-bac7-5cc8-8b3f-d1bf631a387d",
+      "age": 64,
+      "conditions": [
+        "J45"
+      ],
+      "human_id": "US-CLINIC-53",
+      "id": "e3ef1a29-e1f4-50de-a5d3-ca8e1f535cc4",
+      "insurance_provider": "Metro Insurance",
+      "locale": "en_US",
+      "person_id": "009c64ba-d39e-5a8e-9d8d-d56ba4411dde",
+      "primary_condition": "J45"
+    },
+    {
+      "address_id": "375a7da8-9713-507e-be96-a1445eb48b11",
+      "age": 44,
+      "conditions": [
+        "I10"
+      ],
+      "human_id": "US-CLINIC-67",
+      "id": "c6c4d89d-c38b-5eb0-b270-56c865634f41",
+      "insurance_provider": "CareOne",
+      "locale": "en_US",
+      "person_id": "4f677eb3-c400-5172-8a4c-72e4aa59a20c",
+      "primary_condition": "I10"
+    },
+    {
+      "address_id": "4eb42672-d5c1-5464-ad7d-46fc541ebf9f",
+      "age": 41,
+      "conditions": [
+        "E11"
+      ],
+      "human_id": "US-CLINIC-61",
+      "id": "518b72dc-783f-5440-ab22-7230af353826",
+      "insurance_provider": "HealthGuard",
+      "locale": "en_US",
+      "person_id": "14234a03-028f-569f-a569-38c0bc69abf8",
+      "primary_condition": "E11"
+    },
+    {
+      "address_id": "0d8b1cac-0bf0-5172-b45c-2118fa85c9c1",
+      "age": 32,
+      "conditions": [
+        "J45"
+      ],
+      "human_id": "US-CLINIC-64",
+      "id": "e016fbb2-3dcd-5cad-ae51-ab668247b4b1",
+      "insurance_provider": "Metro Insurance",
+      "locale": "en_US",
+      "person_id": "fd520170-ef7a-5ff3-9b76-e118ef5ff9a0",
+      "primary_condition": "J45"
+    },
+    {
+      "address_id": "cae47228-2131-59a9-93bf-66a679d03162",
+      "age": 72,
+      "conditions": [
+        "I10"
+      ],
+      "human_id": "US-CLINIC-96",
+      "id": "2f115cf4-6fe0-50a8-9096-1992131d470e",
+      "insurance_provider": "CareOne",
+      "locale": "en_US",
+      "person_id": "e6dc3126-22ac-551d-acc7-37af81f50a8f",
+      "primary_condition": "I10"
+    }
+  ],
+  "request_hash": "90c489c094a0aae9b61700be47ec0c66f81f80a2622416f2e34cc71369ff13b0",
+  "version": "v1"
+}

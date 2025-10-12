@@ -1,0 +1,25 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "2269fa269ca41379c49a31c0a2977721a9d82b546276d0d70cc2bdd82b87cb32",
+    "seed_canonical": "3445102689993055007"
+  },
+  "domain": "patient",
+  "items": [
+    {
+      "address_id": "8e354507-e55f-5c93-a760-e0d6b79b660f",
+      "age": 40,
+      "conditions": [
+        "I10"
+      ],
+      "human_id": "VN-BENHVIEN-90",
+      "id": "6be734f6-7d92-57be-8774-f5174ffb4a0b",
+      "insurance_provider": "Bảo Việt",
+      "locale": "vi_VN",
+      "person_id": "4e6ca564-3713-5d46-83d5-36303fb90667",
+      "primary_condition": "I10"
+    }
+  ],
+  "request_hash": "e7a5aea20400747bcd53ca3dc44d19425263c875ed11c87848e42c1a44739bf6",
+  "version": "v1"
+}

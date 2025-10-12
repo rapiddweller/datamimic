@@ -1,0 +1,5 @@
+group_id,gender,weight
+gender_majority,Female,0.465116
+gender_majority,Male,0.465116
+gender_majority,Other,0.046512
+gender_majority,Unknown,0.023256

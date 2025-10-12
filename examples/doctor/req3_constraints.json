@@ -1,0 +1,15 @@
+{
+  "clock": "2025-01-01T00:00:00Z",
+  "constraints": {
+    "license_prefix": "US",
+    "specialty": [
+      "cardiology",
+      "general"
+    ]
+  },
+  "count": 2,
+  "domain": "doctor",
+  "locale": "en_US",
+  "seed": "constraints",
+  "version": "v1"
+}

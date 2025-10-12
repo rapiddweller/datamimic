@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PersonResponseV1",
+  "type": "object",
+  "required": ["domain", "version", "request_hash", "items", "determinism_proof"],
+  "additionalProperties": false,
+  "properties": {
+    "domain": {"const": "person"},
+    "version": {"const": "v1"},
+    "request_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "human_id",
+          "first_name",
+          "last_name",
+          "full_name",
+          "sex",
+          "age",
+          "date_of_birth",
+          "nationality",
+          "locale"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "format": "uuid"},
+          "human_id": {"type": "string", "pattern": "^PER-[0-9A-F]{8}$"},
+          "first_name": {"type": "string"},
+          "last_name": {"type": "string"},
+          "full_name": {"type": "string"},
+          "sex": {"type": "string", "enum": ["F", "M", "X"]},
+          "age": {"type": "integer", "minimum": 0, "maximum": 120},
+          "date_of_birth": {"type": "string", "format": "date"},
+          "nationality": {"type": "string"},
+          "locale": {"type": "string", "pattern": "^[a-z]{2}_[A-Z]{2}$"}
+        }
+      }
+    },
+    "determinism_proof": {
+      "type": "object",
+      "required": ["algorithm", "seed_canonical", "content_hash"],
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {"type": "string", "enum": ["uuid5+sha256"]},
+        "seed_canonical": {"type": "string"},
+        "content_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    }
+  }
+}

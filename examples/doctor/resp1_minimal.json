@@ -1,0 +1,24 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "4e77bd69cbb0ab22722c5667cf4eaf6ec2fbc6514233b60bf4e4f9752fffb1c9",
+    "seed_canonical": "3069011196268734596"
+  },
+  "domain": "doctor",
+  "items": [
+    {
+      "first_name": "Olivia",
+      "full_name": "DO Olivia Williams",
+      "hospital": "Northwest Medical Center",
+      "human_id": "DOC-E13583C7",
+      "id": "e13583c7-8400-564c-98fa-8a982c190165",
+      "last_name": "Williams",
+      "license_number": "US-E13583C7",
+      "locale": "en_US",
+      "specialty": "cardiology",
+      "title": "DO"
+    }
+  ],
+  "request_hash": "58252060afc5e8ecaa036e26fef6d71eb0a817395b305f8dfbd745461410d220",
+  "version": "v1"
+}

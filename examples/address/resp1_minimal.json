@@ -1,0 +1,23 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "11b30362d14df1696991e8ee9400a80032fa72a76234cbd6ae5a0b6166a2c85c",
+    "seed_canonical": "3069011196268734596"
+  },
+  "domain": "address",
+  "items": [
+    {
+      "city": "Seattle",
+      "country": "US",
+      "formatted": "142 Maple Avenue, Seattle, WA 48875, US",
+      "human_id": "ADR-BDA2F643",
+      "id": "bda2f643-71c6-5c57-b266-9be649119566",
+      "line1": "142 Maple Avenue",
+      "locale": "en_US",
+      "postal_code": "48875",
+      "state": "WA"
+    }
+  ],
+  "request_hash": "f277a6e7da21fb7a9e80ffe5e7bb13e9bfad1aa32d686690edeb5d716af555bf",
+  "version": "v1"
+}

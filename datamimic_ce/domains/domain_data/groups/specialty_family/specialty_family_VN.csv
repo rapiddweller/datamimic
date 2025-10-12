@@ -1,0 +1,16 @@
+group_id,specialty,weight
+spec_other,Chẩn đoán hình ảnh,0.058111
+spec_other,Cấp cứu,0.082324
+spec_other,Da liễu,0.053269
+spec_other,Gây mê hồi sức,0.062954
+spec_other,Hô hấp,0.048426
+spec_other,Ngoại khoa,0.067797
+spec_other,Nhi khoa,0.087167
+spec_other,Nội khoa,0.092010
+spec_other,Nội tiết,0.046005
+spec_other,Sản phụ khoa,0.077482
+spec_other,Thận - Tiết niệu,0.043584
+spec_other,Tim mạch,0.072639
+spec_other,Tâm thần,0.072639
+spec_other,Vật lý trị liệu và Phục hồi chức năng,0.038741
+spec_other,Y học gia đình,0.096852

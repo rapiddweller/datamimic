@@ -1,0 +1,21 @@
+group_id,condition,weight
+cond_high_prevalence,Tăng huyết áp,0.093677
+cond_high_prevalence,Đái tháo đường tuýp 2,0.084309
+cond_low_prevalence,Bệnh Gút,0.025761
+cond_low_prevalence,Bệnh gan nhiễm mỡ không do rượu,0.039813
+cond_low_prevalence,Bệnh phổi tắc nghẽn mạn tính (COPD),0.060890
+cond_low_prevalence,Hội chứng chuyển hóa,0.035129
+cond_low_prevalence,Loãng xương,0.046838
+cond_low_prevalence,Loét dạ dày,0.037471
+cond_low_prevalence,Rối loạn giấc ngủ,0.021077
+cond_low_prevalence,Rối loạn lo âu,0.028103
+cond_low_prevalence,Suy giáp,0.042155
+cond_low_prevalence,Sỏi thận,0.032787
+cond_low_prevalence,Thiếu máu,0.030445
+cond_low_prevalence,Trầm cảm,0.051522
+cond_low_prevalence,Viêm da cơ địa,0.023419
+cond_low_prevalence,Viêm khớp,0.056206
+cond_medium_prevalence,Bệnh động mạch vành,0.070258
+cond_medium_prevalence,Hen phế quản,0.065574
+cond_medium_prevalence,Rối loạn mỡ máu,0.079625
+cond_medium_prevalence,Thừa cân béo phì,0.074941

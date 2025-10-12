@@ -1,0 +1,34 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "b3c03b2254064867209304e0786b891bf78efb52cbf3d02671f0475c2fedc8e9",
+    "seed_canonical": "16295437679671003933"
+  },
+  "domain": "address",
+  "items": [
+    {
+      "city": "Berlin",
+      "country": "DE",
+      "formatted": "193 Bahnhofstraße, Berlin, BE 10771, DE",
+      "human_id": "ADR-7C410C1C",
+      "id": "7c410c1c-5937-5276-9b01-bdb89603b9e5",
+      "line1": "193 Bahnhofstraße",
+      "locale": "de_DE",
+      "postal_code": "10771",
+      "state": "BE"
+    },
+    {
+      "city": "München",
+      "country": "DE",
+      "formatted": "92 Bahnhofstraße, München, BY 10551, DE",
+      "human_id": "ADR-3B88E42D",
+      "id": "3b88e42d-0cf1-5ebc-aa0f-43e3c3fd0d04",
+      "line1": "92 Bahnhofstraße",
+      "locale": "de_DE",
+      "postal_code": "10551",
+      "state": "BY"
+    }
+  ],
+  "request_hash": "9eafeee08c60dc8bb2803fe0b53c57c596145a6846e1103ce681e56102046cfb",
+  "version": "v1"
+}
