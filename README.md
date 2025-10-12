@@ -171,7 +171,7 @@ Equivalent XML model:
 | Healthcare & Finance domains            | ✅              | ✅               |
 | Multi-user collaboration                | ❌              | ✅               |
 | Governance & lineage dashboards         | ❌              | ✅               |
-| ML engines (Mostly AI, Gretel, Sklearn) | ❌              | ✅               |
+| ML engines (Mostly AI, Synthcity, ... ) | ❌              | ✅               |
 | RBAC & audit logging (HIPAA/GDPR/PCI)   | ❌              | ✅               |
 | Managed EDIFACT / SWIFT adapters        | ❌              | ✅               |
 
