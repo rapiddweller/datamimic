@@ -1,0 +1,102 @@
+category,merchant_name,weight
+Retail,Amazon,20
+Retail,Walmart,18
+Retail,Target,15
+Retail,Best Buy,12
+Retail,Home Depot,10
+Retail,Costco,8
+Retail,Macy's,7
+Retail,Kohl's,5
+Retail,Lowe's,5
+Grocery,Kroger,20
+Grocery,Safeway,15
+Grocery,Whole Foods,15
+Grocery,Trader Joe's,12
+Grocery,Aldi,10
+Grocery,Publix,8
+Grocery,Wegmans,7
+Grocery,ShopRite,5
+Grocery,Albertsons,5
+Grocery,H-E-B,3
+Dining,McDonald's,18
+Dining,Starbucks,18
+Dining,Chipotle,12
+Dining,Subway,10
+Dining,Domino's,8
+Dining,Taco Bell,7
+Dining,Chick-fil-A,7
+Dining,Burger King,5
+Dining,Panera Bread,5
+Dining,Olive Garden,5
+Dining,Applebee's,5
+Entertainment,Netflix,20
+Entertainment,Spotify,15
+Entertainment,AMC Theaters,10
+Entertainment,Disney+,10
+Entertainment,Steam,8
+Entertainment,Hulu,8
+Entertainment,HBO Max,7
+Entertainment,Apple TV+,5
+Entertainment,Regal Cinemas,5
+Entertainment,Ticketmaster,5
+Entertainment,Xbox Live,5
+Entertainment,PlayStation Network,2
+Travel,Uber,18
+Travel,Lyft,15
+Travel,Airbnb,12
+Travel,Expedia,10
+Travel,Delta Airlines,8
+Travel,Marriott,7
+Travel,American Airlines,7
+Travel,United Airlines,5
+Travel,Hilton,5
+Travel,Southwest Airlines,5
+Travel,Enterprise Rent-A-Car,5
+Travel,Booking.com,3
+Utilities,AT&T,20
+Utilities,Verizon,18
+Utilities,Comcast Xfinity,15
+Utilities,PG&E,10
+Utilities,T-Mobile,10
+Utilities,Spectrum,8
+Utilities,ConEdison,7
+Utilities,Cox Communications,5
+Utilities,Duke Energy,5
+Utilities,Southern California Edison,2
+Healthcare,CVS Pharmacy,20
+Healthcare,Walgreens,18
+Healthcare,UnitedHealth,12
+Healthcare,Kaiser Permanente,10
+Healthcare,Anthem Blue Cross,8
+Healthcare,Cigna,7
+Healthcare,Aetna,7
+Healthcare,Humana,5
+Healthcare,Express Scripts,5
+Healthcare,Quest Diagnostics,5
+Healthcare,LabCorp,3
+Education,University Bookstore,15
+Education,Coursera,15
+Education,Udemy,12
+Education,Student Loans,12
+Education,School Fees,10
+Education,Chegg,8
+Education,Khan Academy,7
+Education,Pearson,7
+Education,McGraw Hill,7
+Education,College Board,5
+Education,FAFSA,2
+Services,Professional Fees,15
+Services,Insurance,15
+Services,Subscription,15
+Services,Cleaning Service,12
+Services,Maintenance,10
+Services,Legal Services,8
+Services,Tax Preparation,8
+Services,Accounting Services,7
+Services,Financial Advisor,5
+Services,Landscaping,5
+Other,Miscellaneous,30
+Other,Unclassified,25
+Other,Other,20
+Other,Generic,15
+Other,Unknown,10 

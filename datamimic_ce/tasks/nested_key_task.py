@@ -16,25 +16,22 @@ from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.tasks.element_task import ElementTask
-from datamimic_ce.tasks.source_constraints_task import ConstraintsTask
-from datamimic_ce.tasks.task import Task
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
+from datamimic_ce.tasks.task import GenSubTask
+from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class NestedKeyTask(Task):
+class NestedKeyTask(GenSubTask):
     def __init__(
         self,
         ctx: SetupContext,
         statement: NestedKeyStatement,
-        class_factory_util: BaseClassFactoryUtil,
     ):
         self._statement = statement
         self._default_value = statement.default_value
         self._descriptor_dir = ctx.root.descriptor_dir
-        self._class_factory_util = class_factory_util
         self._sub_tasks: list | None = None
-        self._converter_list = class_factory_util.get_task_util_cls().create_converter_list(ctx, statement.converter)
+        self._converter_list = TaskUtil.create_converter_list(ctx, statement.converter)
 
     @property
     def statement(self) -> NestedKeyStatement:
@@ -46,10 +43,9 @@ class NestedKeyTask(Task):
         :param parent_context:
         :return:
         """
-        task_util_cls = self._class_factory_util.get_task_util_cls()
         # Lazy creating sub_tasks of nestedkey_task for refreshing state of sub_tasks among nestedkey_tasks
         self._sub_tasks = [
-            task_util_cls.get_task_by_statement(
+            TaskUtil.get_task_by_statement(
                 ctx=parent_context.root,
                 stmt=child_stmt,
             )
@@ -57,7 +53,7 @@ class NestedKeyTask(Task):
         ]
 
         # check condition to enable or disable element, default True
-        condition = task_util_cls.evaluate_condition_value(
+        condition = TaskUtil.evaluate_condition_value(
             ctx=parent_context,
             element_name=self._statement.name,
             value=self._statement.condition,
@@ -82,9 +78,8 @@ class NestedKeyTask(Task):
         :return:
         """
         # Set pagination as length of list
-        task_util_cls = self._class_factory_util.get_task_util_cls()
         self._sub_tasks = [
-            task_util_cls.get_task_by_statement(
+            TaskUtil.get_task_by_statement(
                 ctx=parent_context.root,
                 stmt=child_stmt,
                 pagination=DataSourcePagination(skip=0, limit=nestedkey_length),
@@ -152,8 +147,6 @@ class NestedKeyTask(Task):
             # Shuffle data if distribution is random
             if is_random_distribution:
                 # Use task_id as seed for random distribution
-                pass
-
                 seed = parent_context.root.get_distribution_seed()
                 result = DataSourceRegistry.get_shuffled_data_with_cyclic(result, None, self._statement.cyclic, seed)
         else:
@@ -188,9 +181,6 @@ class NestedKeyTask(Task):
                 try:
                     if isinstance(sub_task, ElementTask):
                         attributes.update(sub_task.generate_xml_attribute(ctx))
-                    elif isinstance(sub_task, ConstraintsTask):
-                        # do not execute ConstraintsTask here, ConstraintsTask is for filter source data
-                        pass
                     else:
                         sub_task.execute(ctx)
                 except StopIteration:
@@ -280,8 +270,6 @@ class NestedKeyTask(Task):
             else bool(parent_context.root.default_source_scripted)
         )
         if source_scripted:
-            from datamimic_ce.tasks.task_util import TaskUtil
-
             # Determine variable prefix and suffix
             ctx = parent_context.parent if isinstance(parent_context, GenIterContext) else parent_context
             while isinstance(ctx, GenIterContext):
@@ -320,8 +308,6 @@ class NestedKeyTask(Task):
         :return:
         """
         result = []
-        # filter source data by source_constraints
-        value = self._filter_source_by_source_constraints_task(parent_context=parent_context, source_data=value)
         # Determine len of nestedkey
         count = self._determine_nestedkey_length(context=parent_context)
         value_len = len(value)
@@ -385,17 +371,3 @@ class NestedKeyTask(Task):
         for converter in self._converter_list:
             value = converter.convert(value)
         return value
-
-    def _filter_source_by_source_constraints_task(self, parent_context: GenIterContext, source_data: list) -> list:
-        """
-        Execute ConstraintsTask to filter source data
-        """
-        result = source_data
-        if self._sub_tasks:
-            for sub_task in self._sub_tasks:
-                if isinstance(sub_task, ConstraintsTask):
-                    nestedkey_len = self._determine_nestedkey_length(context=parent_context)
-                    temp_pagination = DataSourcePagination(skip=0, limit=nestedkey_len) if nestedkey_len else None
-                    result = sub_task.execute(source_data, pagination=temp_pagination, cyclic=self.statement.cyclic)
-                    break
-        return result

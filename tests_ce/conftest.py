@@ -5,17 +5,20 @@
 # For questions and support, contact: info@rapiddweller.com
 import os
 import subprocess
+import sys
 import time
+from pathlib import Path
 
 import pytest
 
-os.environ["RAY_DEDUP_LOGS"] = "0"
+# WHY: Remove Ray-specific env var since Ray is optional and not used in tests.
 
-import ray
+# WHY: Ray is optional now. Remove hard dependency from tests.
 
 from datamimic_ce.config import settings
 from datamimic_ce.logger import logger
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 @pytest.fixture
 def mysql_services():
@@ -55,8 +58,4 @@ def mysql_services():
         raise e
 
 
-@pytest.fixture(scope="session")
-def ray_session():
-    ray.init()
-    yield None
-    ray.shutdown()
+# Removed unused ray_session fixture: tests do not require Ray.

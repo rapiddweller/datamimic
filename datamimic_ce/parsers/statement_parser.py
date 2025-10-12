@@ -15,7 +15,6 @@ from datamimic_ce.constants.attribute_constants import ATTR_ID, ATTR_NAME
 from datamimic_ce.constants.element_constants import EL_DATABASE, EL_MONGODB
 from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.statement import Statement
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
 class StatementParser(ABC):
@@ -31,21 +30,18 @@ class StatementParser(ABC):
         element: Element,
         env_properties: dict[str, str] | None,
         valid_element_tag: str,
-        class_factory_util: BaseClassFactoryUtil,
     ):
-        self._class_factory_util = class_factory_util
-        valid_sub_elements = self._class_factory_util.get_parser_util_cls().get_valid_sub_elements_set_by_tag(
-            valid_element_tag
-        )
+        from datamimic_ce.parsers.parser_util import ParserUtil
+        # valid_sub_elements = ParserUtil.get_valid_sub_elements_set_by_tag(valid_element_tag)
 
         self._element: Element = element
         self._properties = env_properties
         self._valid_element_tag = valid_element_tag
-        self._valid_sub_elements = valid_sub_elements
+        self._valid_sub_elements = ParserUtil.get_valid_sub_elements_set_by_tag(valid_element_tag)
 
         # Validate XML element
         self._validate_element_tag()
-        self._validate_sub_elements(valid_sub_elements)
+        self._validate_sub_elements()
         self._validate_statement_name()
 
     @property
@@ -108,22 +104,30 @@ class StatementParser(ABC):
         if self._element.tag != self._valid_element_tag:
             raise ValueError(f"Expect element tag name '{self._valid_element_tag}', but got '{self._element.tag}'")
 
-    def _validate_sub_elements(self, valid_sub_ele_set: set, composite_stmt: CompositeStatement | None = None) -> None:
+    def set_and_validate_valid_sub_elements(self, valid_sub_ele_set: set | None) -> None:
+        """
+        Set and validate valid sub elements
+        :return:
+        """
+        self._valid_sub_elements = valid_sub_ele_set
+        self._validate_sub_elements()
+
+    def _validate_sub_elements(self, composite_stmt: CompositeStatement | None = None) -> None:
         """
         Validate sub elements
         :return:
         """
         # Return if valid_sub_ele_set has not been set
-        if valid_sub_ele_set is None:
+        if self._valid_sub_elements is None:
             return
-        if len(valid_sub_ele_set) == 0 and len(self._element) > 0:
+        if len(self._valid_sub_elements) == 0 and len(self._element) > 0:
             raise ValueError(
                 f"""Element <{self._element.tag}>{
                     " inside element " + f"'{composite_stmt.name}'" if composite_stmt is not None else ""
                 } does not accept any sub-elements"""
             )
         for child in self._element:
-            if child.tag not in valid_sub_ele_set:
+            if child.tag not in self._valid_sub_elements:
                 raise ValueError(
                     f"Element <{self._element.tag}> get invalid child <{child.tag}>"
                     f", expects: {', '.join(map(lambda ele: f'<{ele}>', self._valid_sub_elements))}, "

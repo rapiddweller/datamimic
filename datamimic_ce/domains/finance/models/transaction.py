@@ -11,14 +11,13 @@ This module defines the transaction model for the finance domain.
 """
 
 import datetime
-import random
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
-from datamimic_ce.utils.data_generation_ce_util import DataGenerationCEUtil
 
 
 class Transaction(BaseEntity):
@@ -38,10 +37,8 @@ class Transaction(BaseEntity):
         self._transaction_type = self._transaction_generator.get_transaction_type()
         self._transaction_data = self._transaction_generator.generate_transaction_data(bank_account)
 
-        # Generate random transaction date within the last year
-        now = datetime.datetime.now()
-        days_ago = random.randint(0, 365)
-        self._transaction_date = now - datetime.timedelta(days=days_ago)
+        #  delegate date sampling to generator for SOC and deterministic RNG boundaries
+        self._transaction_date = self._transaction_generator.generate_transaction_date()
 
     @property
     @property_cache
@@ -51,7 +48,7 @@ class Transaction(BaseEntity):
         Returns:
             A unique identifier for the transaction.
         """
-        return DataGenerationCEUtil.rnd_str_from_regex("[A-Z0-9]{16}")
+        return StringGenerator.rnd_str_from_regex("[A-Z0-9]{16}")
 
     @property
     @property_cache
@@ -184,7 +181,7 @@ class Transaction(BaseEntity):
         Returns:
             True if the transaction is international, False otherwise.
         """
-        return random.choices([True, False], weights=[10, 90], k=1)[0]
+        return self._transaction_generator.rng.choices([True, False], weights=[10, 90], k=1)[0]
 
     @property
     @property_cache

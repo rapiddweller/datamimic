@@ -1,0 +1,38 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "c65783762f59a68afa7100d4d69de1f28670a5b81983b89657317b81cfafd465",
+    "seed_canonical": "16295437679671003933"
+  },
+  "domain": "patient",
+  "items": [
+    {
+      "address_id": "7c410c1c-5937-5276-9b01-bdb89603b9e5",
+      "age": 45,
+      "conditions": [
+        "I10"
+      ],
+      "human_id": "US-CLINIC-69",
+      "id": "e96a8156-e68a-5ede-89c7-5b8d740f4d74",
+      "insurance_provider": "CareOne",
+      "locale": "en_US",
+      "person_id": "adce1588-cb1e-5e2f-8f8d-dacdc87ae47b",
+      "primary_condition": "I10"
+    },
+    {
+      "address_id": "3b88e42d-0cf1-5ebc-aa0f-43e3c3fd0d04",
+      "age": 45,
+      "conditions": [
+        "I10"
+      ],
+      "human_id": "US-CLINIC-59",
+      "id": "657d2775-c8a0-5a60-8de1-d08f6d7b06d9",
+      "insurance_provider": "HealthGuard",
+      "locale": "en_US",
+      "person_id": "db938666-df23-5585-997b-78862749650c",
+      "primary_condition": "I10"
+    }
+  ],
+  "request_hash": "692e4573fa03f9e63887fc99603e76f4bb231fa9c327ca94ad7f1fcb61699b42",
+  "version": "v1"
+}

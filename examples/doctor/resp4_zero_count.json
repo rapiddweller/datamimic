@@ -1,0 +1,11 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "seed_canonical": "17949464049882842526"
+  },
+  "domain": "doctor",
+  "items": [],
+  "request_hash": "dc761f3f39efb46810f5bb0e873635d30e4e3d60f79a0da26491f1c8ce38cf5c",
+  "version": "v1"
+}

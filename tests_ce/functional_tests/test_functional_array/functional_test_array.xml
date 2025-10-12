@@ -1,5 +1,5 @@
 <setup  multiprocessing="True" numProcess="2">
-    <generate name="array_tag_test" count="50" target="" mpPlatform="ray">
+    <generate name="array_tag_test" count="50" target="" mpPlatform="multiprocessing">
         <key name="count" type="int" generator="IncrementGenerator"/>
         <nestedKey name="nested_key" type="dict">
             <array name="string_array" type="string" count="10"/>

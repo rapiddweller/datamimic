@@ -6,7 +6,6 @@
 import argparse
 import logging
 import os
-import traceback
 import uuid
 from pathlib import Path
 
@@ -22,7 +21,6 @@ from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger, setup_logger
 from datamimic_ce.parsers.descriptor_parser import DescriptorParser
 from datamimic_ce.tasks.setup_task import SetupTask
-from datamimic_ce.utils.class_factory_ce_util import ClassFactoryCEUtil
 from datamimic_ce.utils.logging_util import log_system_info
 from datamimic_ce.utils.system_util import log_memory_info
 
@@ -61,7 +59,6 @@ class DataMimic:
         logger.info(f"Task ID: {self._task_id}")
 
         self._validate_descriptor_path()
-        self._class_factory_util = ClassFactoryCEUtil()
 
     def _validate_descriptor_path(self):
         """Validates that the descriptor path is a valid file."""
@@ -125,13 +122,12 @@ class DataMimic:
         """Parse root XML descriptor file and execute."""
         try:
             # Parse descriptor and validate XML model
-            root_stmt = DescriptorParser.parse(self._class_factory_util, self._descriptor_path, self._platform_props)
+            root_stmt = DescriptorParser.parse(self._descriptor_path, self._platform_props)
             if self._factory_config is not None:
                 self._validate_xml_model(root_stmt, self._factory_config)
 
             # Execute setup task
             setup_task = SetupTask(
-                class_factory_util=self._class_factory_util,
                 setup_stmt=root_stmt,
                 memstore_manager=None,
                 task_id=self._task_id,
@@ -145,8 +141,8 @@ class DataMimic:
             logger.error(f"Value error: {e}")
             raise e
         except Exception as err:
+            #  Avoid duplicate stack traces; logger.exception already captures traceback
             logger.exception(f"Error in DATAMIMIC process. Error message: {err}")
-            traceback.print_exc()
             raise err
 
     def capture_test_result(self) -> dict | None:

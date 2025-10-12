@@ -1,0 +1,8 @@
+<setup>
+  <demographics dataset="DE" version="2023Q4" dir="DE/2023Q4" rngSeed="42" />
+  <generate name="cohort" count="1000" target="CSV">
+    <variable name="patient" entity="Patient" dataset="DE" rngSeed="1234" />
+    <key name="age" script="patient.age" />
+    <array name="conditions" script="patient.conditions" />
+  </generate>
+</setup>

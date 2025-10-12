@@ -1,6 +1,6 @@
-<setup multiprocessing="0" defaultDataset="US">
-    <generate name="customer" count="50000" target="">
-        <variable name="person" entity="Person"/>
+<setup defaultDataset="US">
+    <generate name="customer" count="500">
+        <variable name="person" entity="Person(noble_quota=0.005)"/>
         <key name="gender" script="person.gender"/>
         <key name="birthdate" script="person.birthdate"/>
         <key name="name" script="person.name"/>
@@ -11,5 +11,20 @@
         <key name="age" script="person.age"/>
         <key name="salutation" script="person.salutation"/>
         <key name="noble_title" script="person.nobility_title"/>
+    </generate>
+
+    <!-- WHY: Add a seeded noble cohort so integration tests can assert deterministic noble ratios under demographic bounds. -->
+    <generate name="seeded_nobles" count="25" target="LogExporter">
+        <variable
+            name="seeded_person"
+            entity="Person(noble_quota=0.5)"
+            dataset="US"
+            ageMin="40"
+            ageMax="55"
+            rngSeed="777"
+        />
+        <key name="name" script="seeded_person.name"/>
+        <key name="age" script="seeded_person.age"/>
+        <key name="noble_title" script="seeded_person.nobility_title"/>
     </generate>
 </setup>

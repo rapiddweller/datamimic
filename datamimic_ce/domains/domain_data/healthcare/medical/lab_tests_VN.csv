@@ -1,0 +1,12 @@
+test_name,unit,reference_range,weight
+Công thức máu toàn bộ (CBC),N/A,Tham chiếu theo từng thành phần,200
+Hemoglobin,g/dL,Nam: 13.5-17.5; Nữ: 12.0-15.5,180
+Hematocrit,%,Nam: 41-50; Nữ: 36-44,170
+Số lượng bạch cầu,K/uL,4.5-11.0,190
+Đường huyết lúc đói,mg/dL,70-99,180
+Cholesterol toàn phần,mg/dL,<200,170
+Triglycerid,mg/dL,<150,160
+Men gan ALT,U/L,7-55,150
+Men gan AST,U/L,8-48,150
+Creatinin,mg/dL,0.6-1.3,140
+Protein C phản ứng (CRP),mg/L,<10,130

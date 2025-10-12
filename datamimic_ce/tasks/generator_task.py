@@ -7,10 +7,10 @@
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.statements.generator_statement import GeneratorStatement
-from datamimic_ce.tasks.task import Task
+from datamimic_ce.tasks.task import SetupSubTask
 
 
-class GeneratorTask(Task):
+class GeneratorTask(SetupSubTask):
     """
     Store a generator to SetupContext
     """
@@ -23,7 +23,7 @@ class GeneratorTask(Task):
         return self._statement
 
     def execute(self, ctx: Context):
-        # Store a generator to SetupContext
-        ctx.root.generators[self._statement.name] = GeneratorUtil(ctx).create_generator(
-            self._statement.generator, self._statement
-        )
+        # Creation and optional caching of the generator is delegated to
+        # ``GeneratorUtil``. It decides whether the generator should be stored
+        # in the root context based on the generator's ``cache_in_root`` flag.
+        GeneratorUtil(ctx).create_generator(self._statement.generator, self._statement, key=self._statement.name)

@@ -1,0 +1,17 @@
+{
+    "ELECTRONICS": ["tech", "gadget", "digital", "electronic", "device", "smart"],
+    "CLOTHING": ["fashion", "apparel", "wear", "outfit", "style", "garment"],
+    "HOME_GOODS": ["home", "decor", "household", "interior", "domestic", "living"],
+    "BEAUTY": ["cosmetic", "makeup", "skincare", "beauty", "grooming", "personal care"],
+    "HEALTH": ["wellness", "fitness", "health", "medical", "supplement", "care"],
+    "SPORTS": ["athletic", "fitness", "exercise", "sport", "outdoor", "activity"],
+    "TOYS": ["play", "game", "children", "kids", "fun", "entertainment"],
+    "BOOKS": ["reading", "literature", "education", "knowledge", "learning", "publication"],
+    "FOOD": ["edible", "gourmet", "cuisine", "snack", "meal", "nutrition"],
+    "BEVERAGES": ["drink", "liquid", "refreshment", "hydration", "thirst", "brew"],
+    "AUTOMOTIVE": ["car", "vehicle", "auto", "motor", "driving", "transport"],
+    "OFFICE_SUPPLIES": ["office", "business", "professional", "work", "stationery", "desk"],
+    "PET_SUPPLIES": ["pet", "animal", "companion", "care", "dog", "cat"],
+    "JEWELRY": ["accessory", "ornament", "decoration", "adornment", "precious", "gem"],
+    "FURNITURE": ["furnishing", "interior", "home", "decor", "living", "room"]
+}

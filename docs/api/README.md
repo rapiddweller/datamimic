@@ -8,6 +8,7 @@ This section provides detailed API documentation for using DATAMIMIC in your app
 - [XML Configuration](xml-config.md) - Reference for XML-based configuration
 - [Python SDK](python-sdk.md) - Comprehensive Python API documentation
 - [Extension APIs](extensions.md) - APIs for extending DATAMIMIC functionality
+- [DateTime Generator](datetime_generator.md) - Full guide for weighted, deterministic, and DSL sugar usage
 
 ## Getting Started
 

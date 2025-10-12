@@ -11,19 +11,16 @@ from datamimic_ce.statements.else_if_statement import ElseIfStatement
 from datamimic_ce.statements.else_statement import ElseStatement
 from datamimic_ce.statements.if_statement import IfStatement
 from datamimic_ce.tasks.condition_task import ConditionTask
-from datamimic_ce.tasks.generate_task import GenerateTask
-from datamimic_ce.tasks.task import Task
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
+from datamimic_ce.tasks.task import CommonSubTask, GenSubTask
+from datamimic_ce.tasks.task_util import TaskUtil
 
 
-class IfElseBaseTask(Task, ABC):
+class IfElseBaseTask(GenSubTask, ABC):
     def __init__(
         self,
         statement: IfStatement | ElseIfStatement | ElseStatement,
-        class_factory_util: BaseClassFactoryUtil,
     ):
         self._statement = statement
-        self._class_factory_util = class_factory_util
 
     @property
     def statement(self) -> IfStatement | ElseIfStatement | ElseStatement:
@@ -35,9 +32,10 @@ class IfElseBaseTask(Task, ABC):
         :param parent_context:
         :return:
         """
-        task_util_cls = self._class_factory_util.get_task_util_cls()
+        from datamimic_ce.tasks.generate_task import GenerateTask
+
         child_tasks = [
-            task_util_cls.get_task_by_statement(ctx=parent_context.root, stmt=child_stmt)
+            TaskUtil.get_task_by_statement(ctx=parent_context.root, stmt=child_stmt)
             for child_stmt in self.statement.sub_statements
         ]
 
@@ -55,5 +53,7 @@ class IfElseBaseTask(Task, ABC):
                     for key, value in values.items():
                         product_holder[key] = product_holder.get(key, []) + value
             else:
+                if not isinstance(child_task, GenSubTask | CommonSubTask):
+                    raise ValueError(f"Common sub-task expected, but got {type(child_task)}")
                 child_task.execute(parent_context)
         return product_holder

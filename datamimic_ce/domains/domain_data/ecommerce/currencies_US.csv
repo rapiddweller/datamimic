@@ -1,0 +1,9 @@
+code,name,weight,symbol
+USD,US Dollar,1.0,$
+CAD,Canadian Dollar,0.1,C$
+MXN,Mexican Peso,0.05,Mex$
+EUR,Euro,0.3,€
+GBP,British Pound,0.2,£
+JPY,Japanese Yen,0.2,¥
+AUD,Australian Dollar,0.1,A$
+CHF,Swiss Franc,0.1,CHF

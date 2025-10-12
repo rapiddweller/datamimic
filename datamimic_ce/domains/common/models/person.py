@@ -10,13 +10,15 @@ Person model.
 This module provides a model for representing a person.
 """
 
+from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.common.demographics.sampler import DemographicSample
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.common.models.address import Address
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 
 
 class Person(BaseEntity):
@@ -29,6 +31,7 @@ class Person(BaseEntity):
     def __init__(self, person_generator: PersonGenerator):
         super().__init__()
         self._person_generator = person_generator
+        self._demographic_sample: DemographicSample = person_generator.reserve_demographic_sample()
 
     @property
     @property_cache
@@ -38,6 +41,13 @@ class Person(BaseEntity):
         Returns:
             The gender of the person.
         """
+        sample_sex = self._demographic_sample.sex
+        if sample_sex is not None:
+            normalized = sample_sex.upper()
+            if normalized == "F":
+                return "female"
+            if normalized == "M":
+                return "male"
         return self._person_generator.gender_generator.generate()
 
     @property
@@ -48,7 +58,7 @@ class Person(BaseEntity):
         Returns:
             The first name of the person.
         """
-        return self._person_generator.given_name_generator.generate()
+        return self._person_generator.given_name_generator.generate_with_gender(self.gender)
 
     @given_name.setter
     def given_name(self, value: str) -> None:
@@ -174,7 +184,22 @@ class Person(BaseEntity):
         Returns:
             The birthdate of the person.
         """
+        if self._demographic_sample.age is not None:
+            # Align birthdate with demographic priors so age property matches sampled intent.
+            return self._person_generator.generate_birthdate_for_age(self._demographic_sample.age)
         return self._person_generator.birthdate_generator.generate()
+
+    @property
+    @property_cache
+    def transaction_profile(self) -> str | Mapping[str, float] | None:
+        """Expose the configured transaction behavior profile."""
+
+        # Allow downstream finance generators to reuse demographic intent.
+        return self._person_generator.demographic_config.transaction_profile
+
+    @property
+    def demographic_sample(self) -> DemographicSample:
+        return self._demographic_sample
 
     @property
     @property_cache
@@ -186,7 +211,7 @@ class Person(BaseEntity):
     @property_cache
     def nobility_title(self) -> str | None:
         """Get the nobility title of the person."""
-        return self._person_generator.nobility_title_generator.generate()
+        return self._person_generator.nobility_title_generator.generate_with_gender(self.gender)
 
     @property
     @property_cache
@@ -216,4 +241,5 @@ class Person(BaseEntity):
             "academic_title": self.academic_title,
             "salutation": self.salutation,
             "nobility_title": self.nobility_title,
+            "transaction_profile": self.transaction_profile,
         }

@@ -1,0 +1,6 @@
+method,weight
+SEPA-Lastschrift,0.35
+Rechnungskauf,0.15
+PayPal,0.25
+Kreditkarte,0.2
+Sofortüberweisung,0.05

@@ -44,6 +44,12 @@ class VariableStatement(Statement):
         self._variable_prefix = model.variable_prefix
         self._variable_suffix = model.variable_suffix
         self._string = model.string
+        # Demographic + RNG extensions
+        self._age_min = model.age_min
+        self._age_max = model.age_max
+        self._conditions_include = model.conditions_include
+        self._conditions_exclude = model.conditions_exclude
+        self._rng_seed = model.rng_seed
 
     @property
     def name(self) -> str:
@@ -148,3 +154,24 @@ class VariableStatement(Statement):
     @property
     def string(self) -> str | None:
         return self._string
+
+    # Demographic + RNG getters
+    @property
+    def age_min(self) -> int | None:
+        return self._age_min
+
+    @property
+    def age_max(self) -> int | None:
+        return self._age_max
+
+    @property
+    def conditions_include(self) -> str | None:
+        return self._conditions_include
+
+    @property
+    def conditions_exclude(self) -> str | None:
+        return self._conditions_exclude
+
+    @property
+    def rng_seed(self) -> int | None:
+        return self._rng_seed

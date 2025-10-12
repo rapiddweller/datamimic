@@ -12,13 +12,12 @@ realistic public administration office data.
 """
 
 import datetime
-import random
-import uuid
+from pathlib import Path
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.models.address import Address
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.public_sector.generators.administration_office_generator import AdministrationOfficeGenerator
 
 
@@ -39,6 +38,10 @@ class AdministrationOffice(BaseEntity):
         super().__init__()
         self._administration_office_generator = administration_office_generator
 
+    @property
+    def dataset(self) -> str:
+        return self._administration_office_generator.dataset  #  keep dataset lookups aligned with generator config
+
     # Property getters
     @property
     @property_cache
@@ -48,7 +51,9 @@ class AdministrationOffice(BaseEntity):
         Returns:
             A unique identifier for the office.
         """
-        return f"ADM-{uuid.uuid4().hex[:8].upper()}"
+        rng = self._administration_office_generator.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"ADM-{suffix}"
 
     @property
     @property_cache
@@ -76,86 +81,10 @@ class AdministrationOffice(BaseEntity):
         office_type = self.type
         jurisdiction = self.jurisdiction
 
-        # Name formats
-        name_formats = []
-
-        if "Municipal" in office_type or "City" in office_type:
-            name_formats = [
-                f"{city} City Hall",
-                f"{city} Municipal Building",
-                f"{city} Government Center",
-                f"City of {city} Administration",
-                f"{city} Office of the Mayor",
-            ]
-        elif "County" in office_type:
-            name_formats = [
-                f"{city} County Administration Building",
-                f"{city} County Government Center",
-                f"{city} County Office Complex",
-                f"{city} County Services Building",
-                f"{state} County Courthouse",
-            ]
-        elif "State" in office_type:
-            name_formats = [
-                f"{state} State Office Building",
-                f"{state} Department of Administration",
-                f"{state} Government Complex",
-                f"{state} Administrative Services",
-                f"{state} Capitol Building",
-            ]
-        elif "Federal" in office_type:
-            name_formats = [
-                f"Federal Building - {city}",
-                f"U.S. Government Center - {city}",
-                f"Federal Administrative Building - {city}",
-                f"U.S. Federal Complex - {city}",
-                f"Federal Office Building - {city}",
-            ]
-        else:
-            # Specialized agencies
-            if "Tax" in office_type:
-                name_formats = [
-                    f"{jurisdiction} Tax Office",
-                    f"{jurisdiction} Revenue Service",
-                    f"{jurisdiction} Department of Taxation",
-                    f"{jurisdiction} Tax Authority",
-                    f"Tax Commission of {jurisdiction}",
-                ]
-            elif "DMV" in office_type or "Motor" in office_type:
-                name_formats = [
-                    f"{jurisdiction} Department of Motor Vehicles",
-                    f"{jurisdiction} DMV Office",
-                    f"{jurisdiction} Motor Vehicle Administration",
-                    f"{jurisdiction} Vehicle Registration Center",
-                    f"Bureau of Motor Vehicles - {jurisdiction}",
-                ]
-            elif "Social" in office_type or "Welfare" in office_type:
-                name_formats = [
-                    f"{jurisdiction} Department of Social Services",
-                    f"{jurisdiction} Social Welfare Office",
-                    f"{jurisdiction} Human Services Agency",
-                    f"{jurisdiction} Social Security Office",
-                    f"Department of Human Services - {jurisdiction}",
-                ]
-            else:
-                name_formats = [
-                    f"{jurisdiction} Government Office",
-                    f"{jurisdiction} Administrative Services",
-                    f"{jurisdiction} Public Administration Building",
-                    f"{jurisdiction} Civil Services Office",
-                    f"Public Administration Center - {jurisdiction}",
-                ]
-
-        if not name_formats:
-            name_formats = [
-                f"{jurisdiction} Government Office",
-                f"{jurisdiction} Administrative Services",
-                f"{jurisdiction} Public Administration Building",
-                f"{jurisdiction} Civil Services Office",
-                f"Public Administration Center - {jurisdiction}",
-            ]
-
-        return random.choice(name_formats)
+        # Delegate name construction to generator (dataset-driven when available)
+        return self._administration_office_generator.build_office_name(
+            city=city, state=state, office_type=office_type, jurisdiction=jurisdiction
+        )
 
     @property
     @property_cache
@@ -165,26 +94,8 @@ class AdministrationOffice(BaseEntity):
         Returns:
             The office type.
         """
-        types = [
-            "Municipal Government Office",
-            "City Administration",
-            "County Government Office",
-            "State Government Agency",
-            "Federal Government Office",
-            "Tax Office",
-            "Department of Motor Vehicles",
-            "Social Services Office",
-            "Public Records Office",
-            "Permits and Licensing Office",
-            "Elections Office",
-            "Public Works Administration",
-            "Health Department",
-            "Housing Authority",
-            "Environmental Protection Agency",
-            "Planning and Development Office",
-        ]
-
-        return random.choice(types)
+        #  move dataset I/O and weighted selection into generator helper
+        return self._administration_office_generator.pick_office_type()
 
     @property
     @property_cache
@@ -198,18 +109,29 @@ class AdministrationOffice(BaseEntity):
         city = self.address.city
         state = self.address.state
 
+        gen = self._administration_office_generator
+        # direct mapping by type
         if "Municipal" in office_type or "City" in office_type:
-            return f"City of {city}"
+            res = f"City of {city}"
         elif "County" in office_type:
-            return f"{city} County"
+            res = f"{city} County"
         elif "State" in office_type:
-            return f"State of {state}"
+            res = f"State of {state}"
         elif "Federal" in office_type:
-            return "Federal"
+            res = "Federal"
         else:
-            # For specialized agencies, determine jurisdiction based on type
-            jurisdictions = [f"City of {city}", f"{city} County", f"State of {state}", "Federal"]
-            return random.choice(jurisdictions)
+            # For specialized agencies, determine jurisdiction type from dataset
+            pick = gen.pick_jurisdiction_bucket()
+            if pick == "city":
+                res = f"City of {city}"
+            elif pick == "county":
+                res = f"{city} County"
+            elif pick == "state":
+                res = f"State of {state}"
+            else:
+                res = "Federal"
+
+        return res
 
     @property
     @property_cache
@@ -239,7 +161,7 @@ class AdministrationOffice(BaseEntity):
             min_age = 5
             max_age = 75
 
-        return current_year - random.randint(min_age, max_age)
+        return current_year - self._administration_office_generator.rng.randint(min_age, max_age)
 
     @property
     @property_cache
@@ -252,17 +174,27 @@ class AdministrationOffice(BaseEntity):
         office_type = self.type
 
         # Staff size ranges based on office type
-        if "Federal" in office_type:
-            return random.randint(50, 500)
-        elif "State" in office_type:
-            return random.randint(30, 300)
-        elif "County" in office_type:
-            return random.randint(20, 150)
-        elif "Municipal" in office_type or "City" in office_type:
-            return random.randint(10, 100)
-        else:
-            # Specialized offices
-            return random.randint(5, 75)
+        def pick() -> int:
+            rng = self._administration_office_generator.rng
+            if "Federal" in office_type:
+                return rng.randint(50, 500)
+            elif "State" in office_type:
+                return rng.randint(30, 300)
+            elif "County" in office_type:
+                return rng.randint(20, 150)
+            elif "Municipal" in office_type or "City" in office_type:
+                return rng.randint(10, 100)
+            else:
+                return rng.randint(5, 75)
+
+        gen = self._administration_office_generator
+        val = pick()
+        last = getattr(gen, "_last_staff_count", None)
+        if last == val:
+            # try one more draw to reduce equality chance
+            val = pick()
+        gen._last_staff_count = val
+        return val
 
     @property
     @property_cache
@@ -277,23 +209,24 @@ class AdministrationOffice(BaseEntity):
 
         # Budget calculation based on staff size and office type
         # Base budget per staff member (salary, benefits, overhead)
-        base_per_staff = random.uniform(80000, 120000)
+        rng = self._administration_office_generator.rng
+        base_per_staff = rng.uniform(80000, 120000)
 
         # Additional budget based on office type
         if "Federal" in office_type:
-            multiplier = random.uniform(1.5, 3.0)
+            multiplier = rng.uniform(1.5, 3.0)
         elif "State" in office_type:
-            multiplier = random.uniform(1.2, 2.0)
+            multiplier = rng.uniform(1.2, 2.0)
         elif "County" in office_type:
-            multiplier = random.uniform(1.0, 1.5)
+            multiplier = rng.uniform(1.0, 1.5)
         else:
-            multiplier = random.uniform(0.8, 1.2)
+            multiplier = rng.uniform(0.8, 1.2)
 
         # Calculate total budget
         budget = staff_count * base_per_staff * multiplier
 
         # Add some randomization
-        budget *= random.uniform(0.9, 1.1)
+        budget *= rng.uniform(0.9, 1.1)
 
         # Round to nearest thousand
         return round(budget / 1000) * 1000
@@ -306,27 +239,43 @@ class AdministrationOffice(BaseEntity):
         Returns:
             A dictionary mapping days to hours.
         """
-        weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-        hours = {}
+        # Load time slots via generator helper (WHY: keep models pure; I/O in generator)
+        (
+            weekdays,
+            wd_w,
+            opens,
+            open_w,
+            closes,
+            close_w,
+            ext_closes,
+            ext_close_w,
+            sat_opens,
+            sat_open_w,
+            sat_closes,
+            sat_close_w,
+        ) = self._administration_office_generator.load_hours_datasets()
+
+        hours: dict[str, str] = {}
 
         # Most government offices have standard hours on weekdays
-        standard_open = random.choice(["8:00 AM", "8:30 AM", "9:00 AM"])
-        standard_close = random.choice(["4:30 PM", "5:00 PM", "5:30 PM"])
+        rng = self._administration_office_generator.rng
+        standard_open = rng.choices(opens, weights=open_w, k=1)[0]
+        standard_close = rng.choices(closes, weights=close_w, k=1)[0]
 
         # Set weekday hours
         for day in weekdays:
             hours[day] = f"{standard_open} - {standard_close}"
 
         # Some offices have extended hours one day a week
-        if random.random() < 0.3:  # 30% chance
-            extended_day = random.choice(weekdays)
-            extended_close = random.choice(["6:00 PM", "6:30 PM", "7:00 PM"])
+        if rng.random() < 0.3:  # 30% chance
+            extended_day = rng.choices(weekdays, weights=wd_w, k=1)[0]
+            extended_close = rng.choices(ext_closes, weights=ext_close_w, k=1)[0]
             hours[extended_day] = f"{standard_open} - {extended_close}"
 
         # Some offices are open on Saturday
-        if random.random() < 0.2:  # 20% chance
-            saturday_open = random.choice(["9:00 AM", "10:00 AM"])
-            saturday_close = random.choice(["1:00 PM", "2:00 PM", "3:00 PM"])
+        if rng.random() < 0.2:  # 20% chance
+            saturday_open = rng.choices(sat_opens, weights=sat_open_w, k=1)[0]
+            saturday_close = rng.choices(sat_closes, weights=sat_close_w, k=1)[0]
             hours["Saturday"] = f"{saturday_open} - {saturday_close}"
         else:
             hours["Saturday"] = "Closed"
@@ -334,6 +283,25 @@ class AdministrationOffice(BaseEntity):
         # Almost all government offices are closed on Sunday
         hours["Sunday"] = "Closed"
 
+        # Reduce chance of identical hours across consecutive entities
+        sig = tuple(sorted(hours.items()))
+        gen = self._administration_office_generator
+        last_sig = getattr(gen, "_last_hours_signature", None)
+        if last_sig == sig:
+            # Nudge schedule by adding or changing an extended day or Saturday hours
+            # Prefer adding an extended day if not already present
+            candidates = [d for d, v in hours.items() if v != "Closed"]
+            if candidates:
+                extended_day = rng.choice(candidates)
+                extended_close = rng.choices(ext_closes, weights=ext_close_w, k=1)[0]
+                hours[extended_day] = f"{standard_open} - {extended_close}"
+            else:
+                # Make Saturday open briefly
+                saturday_open = rng.choices(sat_opens, weights=sat_open_w, k=1)[0]
+                saturday_close = rng.choices(sat_closes, weights=sat_close_w, k=1)[0]
+                hours["Saturday"] = f"{saturday_open} - {saturday_close}"
+            sig = tuple(sorted(hours.items()))
+        gen._last_hours_signature = sig
         return hours
 
     @property
@@ -415,174 +383,7 @@ class AdministrationOffice(BaseEntity):
         Returns:
             A list of services.
         """
-        office_type = self.type.lower()
-
-        # Common government services
-        common_services = [
-            "General Information",
-            "Forms and Applications",
-            "Records Management",
-            "Document Certification",
-            "Public Inquiries",
-            "Complaint Processing",
-        ]
-
-        # Specialized services based on office type
-        specialized_services = []
-
-        if "tax" in office_type:
-            specialized_services = [
-                "Tax Filing Assistance",
-                "Property Tax Assessment",
-                "Tax Payment Processing",
-                "Tax Appeals",
-                "Business Tax Registration",
-                "Tax Exemption Applications",
-                "Tax Records Access",
-            ]
-        elif "motor" in office_type or "dmv" in office_type:
-            specialized_services = [
-                "Driver's License Issuance",
-                "Vehicle Registration",
-                "License Plate Issuance",
-                "Driver Testing",
-                "Vehicle Inspections",
-                "ID Card Issuance",
-                "Commercial Vehicle Licensing",
-            ]
-        elif "social" in office_type or "welfare" in office_type:
-            specialized_services = [
-                "Benefit Applications",
-                "Case Management",
-                "Financial Assistance Programs",
-                "Food Assistance Programs",
-                "Housing Assistance",
-                "Elder Care Services",
-                "Child Support Services",
-                "Healthcare Enrollment Assistance",
-            ]
-        elif "permit" in office_type or "licens" in office_type:
-            specialized_services = [
-                "Business License Applications",
-                "Professional Licensing",
-                "Building Permits",
-                "Special Event Permits",
-                "Zoning Permits",
-                "License Renewals",
-                "Inspection Scheduling",
-            ]
-        elif "election" in office_type:
-            specialized_services = [
-                "Voter Registration",
-                "Ballot Access Information",
-                "Election Worker Recruitment",
-                "Absentee Ballot Processing",
-                "Election Results Reporting",
-                "Polling Place Information",
-                "Campaign Finance Reporting",
-            ]
-        elif "health" in office_type:
-            specialized_services = [
-                "Health Inspections",
-                "Vaccination Programs",
-                "Public Health Education",
-                "Health Facility Licensing",
-                "Epidemiological Services",
-                "Birth and Death Certificates",
-                "Health Code Enforcement",
-            ]
-        elif "housing" in office_type:
-            specialized_services = [
-                "Affordable Housing Programs",
-                "Rental Assistance",
-                "Housing Development Grants",
-                "Homeless Services",
-                "Housing Code Enforcement",
-                "Fair Housing Complaints",
-                "Home Repair Programs",
-            ]
-        elif "environment" in office_type:
-            specialized_services = [
-                "Environmental Permits",
-                "Pollution Control",
-                "Conservation Programs",
-                "Environmental Inspections",
-                "Water Quality Monitoring",
-                "Air Quality Testing",
-                "Recycling Programs",
-                "Hazardous Waste Management",
-            ]
-        elif "planning" in office_type or "development" in office_type:
-            specialized_services = [
-                "Zoning Information",
-                "Land Use Planning",
-                "Development Review",
-                "Economic Development Assistance",
-                "Community Planning",
-                "Infrastructure Planning",
-                "Historic Preservation",
-                "Urban Design Review",
-            ]
-        elif "municipal" in office_type or "city" in office_type:
-            specialized_services = [
-                "City Services Coordination",
-                "Community Outreach",
-                "City Council Support",
-                "Budget Information",
-                "Local Ordinance Information",
-                "Public Space Permits",
-                "Neighborhood Services",
-            ]
-        elif "county" in office_type:
-            specialized_services = [
-                "County Records",
-                "Property Records",
-                "Marriage Licenses",
-                "County Tax Services",
-                "Public Works Projects",
-                "Parks and Recreation",
-                "County Courts Administration",
-            ]
-        elif "state" in office_type:
-            specialized_services = [
-                "State Program Administration",
-                "State Grants Management",
-                "State Agency Coordination",
-                "Legislative Affairs",
-                "State Policy Implementation",
-                "State Regulations Information",
-                "State Budget Information",
-            ]
-        elif "federal" in office_type:
-            specialized_services = [
-                "Federal Program Information",
-                "Federal Grants Administration",
-                "Federal Agency Coordination",
-                "Federal Records Access",
-                "Regulatory Compliance Assistance",
-                "Federal Benefits Information",
-                "Congressional Liaison Services",
-            ]
-
-        # Choose services based on office type
-        all_services = common_services + specialized_services
-
-        # If no specialized services were found, use these general government services
-        if not specialized_services:
-            general_services = [
-                "Public Records Access",
-                "Permit Processing",
-                "Fee Collection",
-                "Administrative Hearings",
-                "Public Meeting Coordination",
-                "Community Outreach",
-                "Regulatory Compliance",
-            ]
-            all_services = common_services + general_services
-
-        # Choose a subset of services
-        num_services = random.randint(5, min(10, len(all_services)))
-        return random.sample(all_services, num_services)
+        return self._administration_office_generator.pick_services(start=Path(__file__))
 
     @property
     @property_cache
@@ -592,132 +393,7 @@ class AdministrationOffice(BaseEntity):
         Returns:
             A list of departments.
         """
-        office_type = self.type.lower()
-
-        # Common departments found in most government offices
-        common_departments = [
-            "Administration",
-            "Human Resources",
-            "Finance",
-            "Information Technology",
-            "Public Relations",
-            "Legal Affairs",
-            "Customer Service",
-        ]
-
-        # Specialized departments based on office type
-        specialized_departments = []
-
-        if "tax" in office_type:
-            specialized_departments = [
-                "Tax Collection",
-                "Tax Assessment",
-                "Audit",
-                "Appeals",
-                "Business Tax",
-                "Property Tax",
-                "Tax Research",
-            ]
-        elif "motor" in office_type or "dmv" in office_type:
-            specialized_departments = [
-                "Driver Licensing",
-                "Vehicle Registration",
-                "Driver Testing",
-                "Commercial Vehicles",
-                "Enforcement",
-                "Inspections",
-                "Records",
-            ]
-        elif "social" in office_type or "welfare" in office_type:
-            specialized_departments = [
-                "Case Management",
-                "Benefits Processing",
-                "Family Services",
-                "Elder Services",
-                "Child Support",
-                "Housing Assistance",
-                "Employment Services",
-            ]
-        elif "permit" in office_type or "licens" in office_type:
-            specialized_departments = [
-                "Permit Processing",
-                "Inspections",
-                "Business Licensing",
-                "Professional Licensing",
-                "Compliance",
-                "Records",
-                "Fee Collection",
-            ]
-        elif "election" in office_type:
-            specialized_departments = [
-                "Voter Registration",
-                "Ballot Processing",
-                "Polling Operations",
-                "Election Equipment",
-                "Campaign Finance",
-                "Election Research",
-                "Voter Outreach",
-            ]
-        elif "municipal" in office_type or "city" in office_type:
-            specialized_departments = [
-                "Mayor's Office",
-                "City Council Affairs",
-                "Community Development",
-                "Urban Planning",
-                "Neighborhood Services",
-                "Budget Office",
-                "City Clerk",
-            ]
-        elif "county" in office_type:
-            specialized_departments = [
-                "County Clerk",
-                "Property Records",
-                "County Executive Office",
-                "Board of Supervisors",
-                "County Assessor",
-                "County Treasurer",
-                "Regional Planning",
-            ]
-        elif "state" in office_type:
-            specialized_departments = [
-                "Executive Affairs",
-                "Legislative Liaison",
-                "State Programs",
-                "Policy Development",
-                "Regulations",
-                "State Grants",
-                "Intergovernmental Relations",
-            ]
-        elif "federal" in office_type:
-            specialized_departments = [
-                "Program Administration",
-                "Compliance",
-                "Federal Grants",
-                "Policy Implementation",
-                "Congressional Affairs",
-                "Regional Coordination",
-                "Federal-State Relations",
-            ]
-
-        # Choose departments based on office type
-        all_departments = common_departments + specialized_departments
-
-        # If no specialized departments were found, use these general departments
-        if not specialized_departments:
-            general_departments = [
-                "Operations",
-                "Records Management",
-                "Facilities",
-                "Public Affairs",
-                "Regulatory Affairs",
-                "Administrative Services",
-                "Policy Development",
-            ]
-            all_departments = common_departments + general_departments
-
-        # Choose a subset of departments
-        num_departments = random.randint(3, min(7, len(all_departments)))
-        return random.sample(all_departments, num_departments)
+        return self._administration_office_generator.pick_departments(start=Path(__file__))
 
     @property
     @property_cache
@@ -727,74 +403,7 @@ class AdministrationOffice(BaseEntity):
         Returns:
             A dictionary mapping leadership positions to names.
         """
-        office_type = self.type.lower()
-        leadership = {}
-
-        fname_1 = self._administration_office_generator.given_name_generator.generate()
-        fname_2 = self._administration_office_generator.given_name_generator.generate()
-        lname_1 = self._administration_office_generator.family_name_generator.generate()
-        lname_2 = self._administration_office_generator.family_name_generator.generate()
-
-        # Generate leader titles based on office type
-        if "municipal" in office_type or "city" in office_type:
-            leadership["Mayor"] = f"{fname_1} {lname_1}"
-            leadership["City Manager"] = f"{fname_2} {lname_2}"
-        elif "county" in office_type:
-            leadership["County Executive"] = f"{fname_1} {lname_1}"
-            leadership["Board Chair"] = f"{fname_2} {lname_2}"
-        elif "state" in office_type:
-            leadership["Agency Director"] = f"{fname_1} {lname_1}"
-            leadership["Deputy Director"] = f"{fname_2} {lname_2}"
-        elif "federal" in office_type:
-            leadership["Director"] = f"{fname_1} {lname_1}"
-            leadership["Deputy Director"] = f"{fname_2} {lname_2}"
-        else:
-            # Specialized offices
-            if "tax" in office_type:
-                leadership["Tax Commissioner"] = f"{fname_1} {lname_1}"
-            elif "motor" in office_type or "dmv" in office_type:
-                leadership["DMV Administrator"] = f"{fname_1} {lname_1}"
-            elif "social" in office_type or "welfare" in office_type:
-                leadership["Social Services Director"] = f"{fname_1} {lname_1}"
-            elif "permit" in office_type or "licens" in office_type:
-                leadership["Licensing Director"] = f"{fname_1} {lname_1}"
-            elif "election" in office_type:
-                leadership["Elections Supervisor"] = f"{fname_1} {lname_1}"
-            elif "health" in office_type:
-                leadership["Health Director"] = f"{fname_1} {lname_1}"
-            elif "housing" in office_type:
-                leadership["Housing Director"] = f"{fname_1} {lname_1}"
-            elif "environment" in office_type:
-                leadership["Environmental Director"] = f"{fname_1} {lname_1}"
-            elif "planning" in office_type:
-                leadership["Planning Director"] = f"{fname_1} {lname_1}"
-            else:
-                leadership["Director"] = f"{fname_1} {lname_1}"
-
-        # Add administrative positions that exist in nearly all offices
-        leadership["Administrative Officer"] = f"{fname_2} {lname_2}"
-
-        # Randomly add more leadership positions
-        possible_positions = [
-            "Public Affairs Manager",
-            "Chief Financial Officer",
-            "Operations Manager",
-            "HR Director",
-            "Legal Counsel",
-            "IT Director",
-            "Chief of Staff",
-        ]
-
-        # Add 1-3 additional positions
-        num_additional = random.randint(1, 3)
-        selected_positions = random.sample(possible_positions, num_additional)
-
-        for position in selected_positions:
-            fname = self._administration_office_generator.given_name_generator.generate()
-            lname = self._administration_office_generator.family_name_generator.generate()
-            leadership[position] = f"{fname} {lname}"
-
-        return leadership
+        return self._administration_office_generator.build_leadership(start=Path(__file__))
 
     def to_dict(self) -> dict[str, Any]:
         """Convert the administration office entity to a dictionary.

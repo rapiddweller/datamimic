@@ -1,0 +1,12 @@
+<setup>
+    <echo>Running Clinical Trial Cohort Demo</echo>
+    <!-- Load Python helpers into the global context -->
+    <execute uri="script/clinical_trial.scr.py" />
+
+    <!-- Generate a cohort using a seeded PatientService with DemographicConfig
+         Constraints: age 70–75, exclude 'Hypertension' -->
+    <generate name="clinical_trial_cohort" target="CSV">
+        <nestedKey name="patients" script="generate_clinical_cohort()" />
+    </generate>
+</setup>
+

@@ -1,0 +1,25 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "bd281a0a17f3bb697a9d7a4d03de7c16077e7d3aa868b6b9c71a7e9d8b70b38e",
+    "seed_canonical": "3069011196268734596"
+  },
+  "domain": "patient",
+  "items": [
+    {
+      "address_id": "bda2f643-71c6-5c57-b266-9be649119566",
+      "age": 77,
+      "conditions": [
+        "I10"
+      ],
+      "human_id": "US-CLINIC-63",
+      "id": "3e1edca8-aa80-5b95-b70b-ab7e486d0034",
+      "insurance_provider": "CareOne",
+      "locale": "en_US",
+      "person_id": "9ee2cf26-1141-5b96-8480-a598e207da33",
+      "primary_condition": "I10"
+    }
+  ],
+  "request_hash": "36225e05c0e21c477231782a7c89377be238a6787e00527fcfdd099d145d18c2",
+  "version": "v1"
+}

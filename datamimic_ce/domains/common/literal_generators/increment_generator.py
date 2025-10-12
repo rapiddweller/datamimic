@@ -6,13 +6,17 @@
 
 
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
 
 class IncrementGenerator(BaseLiteralGenerator):
     """
     Generate sequential number set
     """
+
+    # Do not cache increment generators globally as their state is usually
+    # meant to be local to the statement using them.
+    cache_in_root = False
 
     def __init__(self, start: int = 1, end: int = 9223372036854775807, step: int = 1):
         if step <= 0:

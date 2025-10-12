@@ -85,3 +85,4 @@ test_artifacts/
 .coverage
 
 .cursor
+/.coveragerc

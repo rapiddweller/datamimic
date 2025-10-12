@@ -9,13 +9,14 @@ from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.exporters.exporter_util import ExporterUtil
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.setup_statement import SetupStatement
 from datamimic_ce.tasks.generate_task import GenerateTask
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
+from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.dict_util import dict_nested_update
 
 
@@ -84,15 +85,9 @@ class TestGenerateTask:
         context.namespace = {"CustomClass": MagicMock()}
         context.current_seed = 42
 
-        # Setup class factory utility
-        context.class_factory_util = MagicMock(spec=BaseClassFactoryUtil)
-        datasource_util = MagicMock()
-        context.class_factory_util.get_datasource_registry_cls.return_value = datasource_util
-
         # Setup exporter utility
         exporter_util = MagicMock()
         exporter_util.create_exporter_list.return_value = ([], [])
-        context.class_factory_util.get_exporter_util.return_value = exporter_util
 
         # Setup memstore manager
         context.memstore_manager = MagicMock(spec=MemstoreManager)
@@ -165,8 +160,7 @@ class TestGenerateTask:
     @pytest.fixture
     def generate_task(self, mock_statement):
         """Create GenerateTask instance with mocked dependencies."""
-        class_factory_util = MagicMock(spec=BaseClassFactoryUtil)
-        return GenerateTask(mock_statement, class_factory_util)
+        return GenerateTask(mock_statement)         
 
     def test_determine_count_default(self, generate_task, mock_context):
         """Test _determine_count when no count is specified."""
@@ -282,11 +276,10 @@ class TestGenerateTask:
 
     def test_scan_data_source(self, generate_task, mock_context):
         """Test _scan_data_source method."""
-        datasource_util = mock_context.class_factory_util.get_datasource_registry_cls.return_value
+        with patch("datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.set_data_source_length") as mock_set_data_source_length:
+            GenerateTask._scan_data_source(mock_context, generate_task.statement)
 
-        GenerateTask._scan_data_source(mock_context, generate_task.statement)
-
-        datasource_util.set_data_source_length.assert_called_once_with(mock_context, generate_task.statement)
+            mock_set_data_source_length.assert_called_once_with(mock_context, generate_task.statement)
 
     @staticmethod
     def _get_chunk_indices(chunk_size: int, data_count: int) -> list:
@@ -307,22 +300,21 @@ class TestGenerateTask:
 
     def test_pre_execute(self, generate_task, mock_context, mock_statement):
         """Test pre_execute method."""
-        # Setup
-        key_statement = MagicMock(spec=KeyStatement)
-        mock_statement.sub_statements = [key_statement]
+        with patch("datamimic_ce.tasks.task_util.TaskUtil.get_task_by_statement") as mock_get_task_by_statement:
+            # Setup
+            key_statement = MagicMock(spec=KeyStatement)
+            mock_statement.sub_statements = [key_statement]
 
-        # Mock task util and task
-        task_util = MagicMock()
-        mock_task = MagicMock()
-        task_util.get_task_by_statement.return_value = mock_task
-        mock_context.class_factory_util.get_task_util_cls.return_value = task_util
+            # Mock task util and task
+            mock_task = MagicMock()
+            mock_get_task_by_statement.return_value = mock_task
 
-        # Execute
-        generate_task.pre_execute(mock_context)
+            # Execute
+            generate_task.pre_execute(mock_context)
 
-        # Verify
-        task_util.get_task_by_statement.assert_called_once_with(mock_context.root, key_statement, None)
-        mock_task.pre_execute.assert_called_once_with(mock_context)
+            # Verify
+            mock_get_task_by_statement.assert_called_once_with(mock_context.root, key_statement, None)
+            mock_task.pre_execute.assert_called_once_with(mock_context)
 
     @pytest.mark.skip("Need rework with ray")
     @pytest.mark.parametrize(
@@ -346,17 +338,16 @@ class TestGenerateTask:
 
         # Mock exporter util
         exporter_util = MagicMock()
-        mock_context.class_factory_util.get_exporter_util.return_value = exporter_util
 
         if has_mongodb_delete:
             # Create a mock MongoDBExporter with spec
             mock_mongo_exporter = MagicMock(spec=MongoDBExporter)
-            exporter_util.create_exporter_list.return_value = ([(mock_mongo_exporter, "delete")], [])
+            ExporterUtil.create_exporter_list.return_value = ([(mock_mongo_exporter, "delete")], [])
         else:
-            exporter_util.create_exporter_list.return_value = ([], [])
+            ExporterUtil.create_exporter_list.return_value = ([], [])
 
-        # Create the GenerateTask with the mock_statement and class_factory_util
-        generate_task = GenerateTask(mock_statement, mock_context.class_factory_util)
+        # Create the GenerateTask with the mock_statement
+        generate_task = GenerateTask(mock_statement)
 
         # Mock methods
         with (
@@ -444,7 +435,6 @@ class TestGenerateTask:
         # Create a root context, which is a SetupContext
         root_context = MagicMock(spec=SetupContext)
         root_context.global_variables = {}
-        root_context.class_factory_util = MagicMock(spec=BaseClassFactoryUtil)
 
         # Create a parent context, which is a GenIterContext
         parent_context = MagicMock(spec=GenIterContext)
@@ -455,7 +445,6 @@ class TestGenerateTask:
         # Mock the deepcopy to return a new mock of root_context
         copied_root_context = MagicMock(spec=SetupContext)
         copied_root_context.global_variables = {}
-        copied_root_context.class_factory_util = root_context.class_factory_util
 
         with patch("copy.deepcopy", return_value=copied_root_context):
             # Execute
@@ -464,25 +453,19 @@ class TestGenerateTask:
         # Verify that update_with_stmt was called on the copied_root_context
         copied_root_context.update_with_stmt.assert_called_once_with(setup_stmt)
 
-        # Verify that get_task_util_cls was called
-        copied_root_context.class_factory_util.get_task_util_cls.assert_called_once()
-        # Since there are no sub_statements, get_task_by_statement should not be called
-        task_util_cls = copied_root_context.class_factory_util.get_task_util_cls.return_value
-        task_util_cls.get_task_by_statement.assert_not_called()
-
         # Now, test with sub_statements
         # Add a sub_statement to setup_stmt
         stmt = MagicMock()
         setup_stmt.sub_statements = [stmt]
         mock_task = MagicMock()
-        task_util_cls.get_task_by_statement.return_value = mock_task
+        TaskUtil.get_task_by_statement.return_value = mock_task
 
         with patch("copy.deepcopy", return_value=copied_root_context):
             # Execute again
             GenerateTask.execute_include(setup_stmt, parent_context)
 
         # Verify that get_task_by_statement was called with the correct arguments
-        task_util_cls.get_task_by_statement.assert_called_with(copied_root_context, stmt)
+        TaskUtil.get_task_by_statement.assert_called_with(copied_root_context, stmt)
         # Verify that task.execute was called with the copied_root_context
         mock_task.execute.assert_called_with(copied_root_context)
 
@@ -508,7 +491,6 @@ class TestGenerateTask:
 
         # Mock task util
         task_util = MagicMock()
-        mock_context.class_factory_util.get_task_util_cls.return_value = task_util
 
         # Execute
         generate_task.pre_execute(mock_context)

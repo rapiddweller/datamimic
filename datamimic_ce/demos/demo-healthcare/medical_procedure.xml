@@ -1,0 +1,22 @@
+<setup>
+    <!-- Medical Procedure Entity -->
+    <echo>Running MedicalProcedureEntity</echo>
+    <generate name="medical_procedures" count="10" target="CSV">
+        <variable name="procedure" entity="MedicalProcedure" />
+        <key name="procedure_id" script="procedure.procedure_id" />
+        <key name="procedure_code" script="procedure.procedure_code" />
+        <key name="cpt_code" script="procedure.cpt_code" />
+        <key name="name" script="procedure.name" />
+        <key name="category" script="procedure.category" />
+        <key name="specialty" script="procedure.specialty" />
+        <key name="description" script="procedure.description" />
+        <key name="duration_minutes" script="procedure.duration_minutes" />
+        <key name="cost" script="procedure.cost" />
+        <key name="requires_anesthesia" script="procedure.requires_anesthesia" />
+        <key name="is_surgical" script="procedure.is_surgical" />
+        <key name="is_diagnostic" script="procedure.is_diagnostic" />
+        <key name="is_preventive" script="procedure.is_preventive" />
+        <key name="recovery_time_days" script="procedure.recovery_time_days" />
+    </generate>
+</setup>
+

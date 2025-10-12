@@ -1,0 +1,6 @@
+{jurisdiction} Cơ quan Chính phủ,1.0
+{jurisdiction} Dịch vụ Hành chính,0.9
+Trung tâm Hành chính {jurisdiction},0.8
+Sở {office_type} - {city},0.7
+{state} Phòng {office_type},0.6
+{city} Văn phòng {office_type},0.5

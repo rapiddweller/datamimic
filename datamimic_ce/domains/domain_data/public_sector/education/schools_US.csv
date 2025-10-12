@@ -1,0 +1,22 @@
+name,school_id,type,level,address,city,state,phone,website,weight
+Central High School,CHS-001,Public,High School,"425 E Central Ave, Springfield, IL 62702","Springfield","IL","217-555-3000","www.sps186.org/schools/central",0.09
+Washington Elementary School,WES-002,Public,Elementary School,"1500 W Washington St, Phoenix, AZ 85007","Phoenix","AZ","602-555-4500","www.wes.phoenixesd.org",0.08
+Lincoln Middle School,LMS-003,Public,Middle School,"1601 Lincoln Ave, Evanston, IL 60201","Evanston","IL","847-555-6700","www.district65.net/lincoln",0.08
+Roosevelt High School,RHS-004,Public,High School,"1410 NE 66th St, Seattle, WA 98115","Seattle","WA","206-555-8900","www.roosevelths.seattleschools.org",0.07
+Jefferson Elementary School,JES-005,Public,Elementary School,"1200 Jefferson St, Berkeley, CA 94703","Berkeley","CA","510-555-1200","www.berkeleyschools.net/schools/jefferson",0.07
+Madison Middle School,MMS-006,Public,Middle School,"4400 W 18th St, Houston, TX 77092","Houston","TX","713-555-3400","www.houstonisd.org/madisonms",0.06
+Westlake High School,WHS-007,Public,High School,"4100 Westbank Dr, Austin, TX 78746","Austin","TX","512-555-5600","www.westlakehighschool.com",0.06
+Oakwood Elementary School,OES-008,Public,Elementary School,"2700 Oakwood Dr, San Antonio, TX 78237","San Antonio","TX","210-555-7800","www.saisd.net/oakwood",0.05
+Riverside Middle School,RMS-009,Public,Middle School,"1600 Riverside Dr, Greenville, SC 29601","Greenville","SC","864-555-9000","www.greenville.k12.sc.us/riverside",0.05
+Phillips Academy,PA-010,Private,High School,"180 Main St, Andover, MA 01810","Andover","MA","978-555-1200","www.andover.edu",0.04
+St. Mary's Elementary School,SMES-011,Private,Elementary School,"1500 St Mary's Rd, Moraga, CA 94575","Moraga","CA","925-555-3400","www.stmarys-ca.edu",0.04
+Lakeside School,LS-012,Private,High School,"14050 1st Ave NE, Seattle, WA 98125","Seattle","WA","206-555-5600","www.lakesideschool.org",0.04
+Montessori Academy,MA-013,Private,Elementary School,"1601 Academy St, Nashville, TN 37212","Nashville","TN","615-555-7800","www.montessori-nashville.org",0.03
+Brooklyn Technical High School,BTHS-014,Public,High School,"29 Fort Greene Pl, Brooklyn, NY 11217","Brooklyn","NY","718-555-9000","www.bths.edu",0.03
+Stuyvesant High School,SHS-015,Public,High School,"345 Chambers St, New York, NY 10282","New York","NY","212-555-1200","www.stuy.edu",0.03
+Thomas Jefferson High School for Science and Technology,TJHSST-016,Public,High School,"6560 Braddock Rd, Alexandria, VA 22312","Alexandria","VA","703-555-3400","www.tjhsst.fcps.edu",0.03
+Walter Payton College Prep,WPCP-017,Public,High School,"1034 N Wells St, Chicago, IL 60610","Chicago","IL","312-555-5600","www.wpcp.org",0.03
+Bronx High School of Science,BHSS-018,Public,High School,"75 W 205th St, Bronx, NY 10468","Bronx","NY","718-555-7800","www.bxscience.edu",0.03
+Boston Latin School,BLS-019,Public,High School,"78 Avenue Louis Pasteur, Boston, MA 02115","Boston","MA","617-555-9000","www.bls.org",0.03
+Dalton School,DS-020,Private,K-12,"108 E 89th St, New York, NY 10128","New York","NY","212-555-1200","www.dalton.org",0.03
+Trinity School,TS-021,Private,K-12,"139 W 91st St, New York, NY 10024","New York","NY","212-555-3400","www.trinityschoolnyc.org",0.03

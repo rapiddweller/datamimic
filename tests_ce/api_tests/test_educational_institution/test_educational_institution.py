@@ -95,5 +95,12 @@ class TestEntityEducationalInstitution:
         self._test_single_educational_institution(educational_institution)
 
     def test_not_supported_dataset(self):
-        with pytest.raises(FileNotFoundError):
-            educational_institution_service = EducationalInstitutionService(dataset="XX")
+        # Fallback to US dataset with a single warning log; should not raise
+        educational_institution_service = EducationalInstitutionService(dataset="XX")
+        educational_institution = educational_institution_service.generate()
+        assert isinstance(educational_institution.to_dict(), dict)
+
+    def test_supported_datasets_static(self):
+        codes = EducationalInstitutionService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

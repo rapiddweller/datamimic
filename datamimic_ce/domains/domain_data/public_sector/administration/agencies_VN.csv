@@ -1,0 +1,24 @@
+name,agency_id,level,department,address,city,state,phone,website,weight
+Bộ Y tế,MOH,Trung ương,Y tế,"138A Giảng Võ, Quận Ba Đình","Hà Nội","Hà Nội","024-3846-4739","moh.gov.vn",0.10
+Bộ Giáo dục và Đào tạo,MOET,Trung ương,Giáo dục,"35 Đại Cồ Việt, Quận Hai Bà Trưng","Hà Nội","Hà Nội","024-3869-3711","moet.gov.vn",0.09
+Bộ Giao thông Vận tải,MT,Trung ương,Giao thông,"80 Trần Hưng Đạo, Quận Hoàn Kiếm","Hà Nội","Hà Nội","024-3942-4401","mt.gov.vn",0.08
+Bộ Xây dựng,MXD,Trung ương,Xây dựng,"37 Lê Đại Hành, Quận Hai Bà Trưng","Hà Nội","Hà Nội","024-3976-1273","moc.gov.vn",0.07
+Bộ Tài nguyên và Môi trường,MONRE,Trung ương,Tài nguyên & Môi trường,"10 Tôn Thất Thuyết, Quận Nam Từ Liêm","Hà Nội","Hà Nội","024-3795-6868","monre.gov.vn",0.07
+Tổng cục Thuế,GDT,Trung ương,Tài chính,"123 Lò Đúc, Quận Hai Bà Trưng","Hà Nội","Hà Nội","024-3971-4726","gdt.gov.vn",0.07
+Sở Giao thông Vận tải TP. Hồ Chí Minh,SGTVT-HCM,Thành phố,Giao thông,"63 Lý Tự Trọng, Quận 1","TP. Hồ Chí Minh","TP. Hồ Chí Minh","028-3822-1262","sgtvt.hochiminhcity.gov.vn",0.06
+Sở Giáo dục và Đào tạo Hà Nội,SGD-HN,Thành phố,Giáo dục,"23 Quang Trung, Quận Hoàn Kiếm","Hà Nội","Hà Nội","024-3926-3631","hanoi.edu.vn",0.05
+Sở Tài nguyên và Môi trường Đà Nẵng,STNMT-DN,Thành phố,Tài nguyên & Môi trường,"24 Trần Phú, Quận Hải Châu","Đà Nẵng","Đà Nẵng","0236-389-7777","stnmt.danang.gov.vn",0.05
+UBND Quận 1,UBND-Q1,Quận/Huyện,Hành chính,"47 Lê Duẩn, Quận 1","TP. Hồ Chí Minh","TP. Hồ Chí Minh","028-3822-7159","quan1.hochiminhcity.gov.vn",0.04
+Illinois Department of Human Services,IL_DHS,State,Executive,"100 South Grand Avenue East, Springfield, IL 62762","Springfield","IL","217-555-1100","www.dhs.illinois.gov",0.04
+Los Angeles County Department of Public Health,LA_DPH,County,Health,"313 N Figueroa Street, Los Angeles, CA 90012","Los Angeles","CA","213-555-1200","www.publichealth.lacounty.gov",0.04
+Cook County Assessor's Office,COOK_ASR,County,Revenue,"118 N Clark Street, Chicago, IL 60602","Chicago","IL","312-555-1300","www.cookcountyassessor.com",0.03
+Harris County Tax Office,HARRIS_TAX,County,Revenue,"1001 Preston Street, Houston, TX 77002","Houston","TX","713-555-1400","www.tax.harriscountytx.gov",0.03
+City of Chicago Department of Buildings,CHI_DOB,City,Housing,"121 N LaSalle Street, Chicago, IL 60602","Chicago","IL","312-555-1500","www.chicago.gov/buildings",0.03
+New York City Department of Finance,NYC_DOF,City,Finance,"1 Centre Street, New York, NY 10007","New York","NY","212-555-1600","www.nyc.gov/finance",0.03
+Los Angeles Building and Safety Department,LA_BSD,City,Housing,"201 N Figueroa Street, Los Angeles, CA 90012","Los Angeles","CA","213-555-1700","www.ladbs.org",0.03
+San Francisco Planning Department,SF_PLAN,City,Planning,"49 South Van Ness Avenue, San Francisco, CA 94103","San Francisco","CA","415-555-1800","www.sf.planning.org",0.03
+Houston Public Works,HOU_PW,City,Infrastructure,"611 Walker Street, Houston, TX 77002","Houston","TX","832-555-1900","www.publicworks.houstontx.gov",0.03
+Miami-Dade Water and Sewer Department,MIAMI_WSD,County,Utilities,"3071 SW 38th Avenue, Miami, FL 33146","Miami","FL","305-555-2000","www.miamidade.gov/water",0.02
+Boston Inspectional Services Department,BOS_ISD,City,Housing,"1010 Massachusetts Avenue, Boston, MA 02118","Boston","MA","617-555-2100","www.boston.gov/isd",0.02
+Dallas Parks and Recreation Department,DAL_PARK,City,Parks,"5620 E Grand Avenue, Dallas, TX 75223","Dallas","TX","214-555-2200","www.dallasparks.org",0.02
+Portland Bureau of Transportation,PDX_BOT,City,Transportation,"1120 SW 5th Avenue, Portland, OR 97204","Portland","OR","503-555-2300","www.portland.gov/transportation",0.01

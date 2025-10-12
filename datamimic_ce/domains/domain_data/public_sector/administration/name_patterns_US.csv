@@ -1,0 +1,6 @@
+{jurisdiction} Government Office,1.0
+{jurisdiction} Administrative Services,0.9
+{jurisdiction} Public Administration Center,0.8
+Department of {office_type} - {city},0.7
+{state} {office_type} Department,0.6
+{city} {office_type} Office,0.5

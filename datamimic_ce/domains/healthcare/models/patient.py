@@ -11,14 +11,11 @@ This module provides the Patient entity model for generating realistic patient d
 """
 
 import datetime
-import random
-import string
-import uuid
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.healthcare.generators.patient_generator import PatientGenerator
 
 
@@ -39,7 +36,6 @@ class Patient(BaseEntity):
         """Initialize the Patient entity.
 
         Args:
-            class_factory_util: The class factory utility.
             locale: The locale to use for generating data.
             dataset: The dataset to use for generating data.
         """
@@ -54,7 +50,9 @@ class Patient(BaseEntity):
         Returns:
             A unique identifier for the patient.
         """
-        return f"PAT-{uuid.uuid4().hex[:8].upper()}"
+        rng = self._patient_generator.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"PAT-{suffix}"
 
     @property
     @property_cache
@@ -64,7 +62,9 @@ class Patient(BaseEntity):
         Returns:
             A medical record number.
         """
-        return f"MRN-{uuid.uuid4().hex[:8].upper()}"
+        rng = self._patient_generator.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"MRN-{suffix}"
 
     @property
     @property_cache
@@ -74,7 +74,9 @@ class Patient(BaseEntity):
         Returns:
             A social security number.
         """
-        return f"{random.randint(100, 999)}-{random.randint(10, 99)}-{random.randint(1000, 9999)}"
+        rng = self._patient_generator.rng
+        digits = [str(rng.randint(0, 9)) for _ in range(9)]
+        return f"{''.join(digits[:3])}-{''.join(digits[3:5])}-{''.join(digits[5:])}"
 
     @property
     @property_cache
@@ -138,6 +140,13 @@ class Patient(BaseEntity):
 
     @property
     @property_cache
+    def transaction_profile(self) -> str | dict[str, float] | None:
+        """Expose the transaction profile for downstream consumers."""
+
+        return self.person_data.transaction_profile
+
+    @property
+    @property_cache
     def age(self) -> int:
         """Get the patient's age.
 
@@ -154,8 +163,8 @@ class Patient(BaseEntity):
         Returns:
             The patient's blood type.
         """
-        blood_types = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
-        return random.choice(blood_types)
+        #  dataset I/O and anti-repeat handled in generator helper
+        return self._patient_generator.pick_blood_type(start_path=__file__)
 
     @property
     @property_cache
@@ -169,18 +178,19 @@ class Patient(BaseEntity):
         gender = self.gender
         age = self.age
 
+        rng = self._patient_generator.rng  #  use generator RNG via property; avoid private attr
         if age < 18:
             # Children and teenagers
             if gender == "Male":
-                return round(random.uniform(90 + (age * 5), 110 + (age * 5)), 1)
+                return round(rng.uniform(90 + (age * 5), 110 + (age * 5)), 1)
             else:
-                return round(random.uniform(90 + (age * 4.8), 110 + (age * 4.8)), 1)
+                return round(rng.uniform(90 + (age * 4.8), 110 + (age * 4.8)), 1)
         else:
             # Adults
             if gender == "Male":
-                return round(random.uniform(160, 190), 1)
+                return round(rng.uniform(160, 190), 1)
             else:
-                return round(random.uniform(150, 175), 1)
+                return round(rng.uniform(150, 175), 1)
 
     @property
     @property_cache
@@ -196,7 +206,8 @@ class Patient(BaseEntity):
 
         # Calculate a base weight using BMI formula (weight = BMI * height^2)
         # Use a normal BMI range (18.5 - 29.9)
-        base_bmi = random.uniform(16, 24) if age < 18 else random.uniform(18.5, 29.9)
+        rng = self._patient_generator.rng
+        base_bmi = rng.uniform(16, 24) if age < 18 else rng.uniform(18.5, 29.9)
 
         # Calculate weight from BMI and height
         # BMI = weight(kg) / height(m)^2
@@ -205,7 +216,7 @@ class Patient(BaseEntity):
 
         # Add some random variation
         weight_variation = weight * 0.1  # 10% variation
-        weight += random.uniform(-weight_variation, weight_variation)
+        weight += rng.uniform(-weight_variation, weight_variation)
 
         return round(weight, 1)
 
@@ -249,7 +260,9 @@ class Patient(BaseEntity):
         Returns:
             A list of medical conditions.
         """
-        return self._patient_generator.generate_age_appropriate_conditions(self.age)
+        sample = self.person_data.demographic_sample
+        # Feed sampler-backed conditions first so overrides only adjust instead of resampling.
+        return self._patient_generator.generate_age_appropriate_conditions(self.age, sample)
 
     @property
     @property_cache
@@ -279,11 +292,10 @@ class Patient(BaseEntity):
         Returns:
             The patient's insurance policy number.
         """
-        # Generate a policy number with a mix of letters and numbers
-        prefix = "".join(random.choices(string.ascii_uppercase, k=3))
-        number = "".join(random.choices(string.digits, k=8))
-
-        return f"{prefix}-{number}"
+        rng = self._patient_generator.rng
+        prefix = "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(3))
+        digits = "".join(str(rng.randint(0, 9)) for _ in range(8))
+        return f"{prefix}-{digits}"
 
     @property
     def primary_doctor(self):
@@ -331,6 +343,7 @@ class Patient(BaseEntity):
             "emergency_contact": self.emergency_contact,
             "insurance_provider": self.insurance_provider,
             "insurance_policy_number": self.insurance_policy_number,
+            "transaction_profile": self.transaction_profile,
         }
 
         if "primary_doctor" in self._field_cache:

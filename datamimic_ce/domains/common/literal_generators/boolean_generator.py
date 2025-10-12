@@ -6,7 +6,7 @@
 
 import random
 
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
 
 class BooleanGenerator(BaseLiteralGenerator):
@@ -23,7 +23,7 @@ class BooleanGenerator(BaseLiteralGenerator):
         prob_true (float): probability of generating a True value (default is 0.5).
     """
 
-    def __init__(self, prob_true: float = 0.5) -> None:
+    def __init__(self, prob_true: float = 0.5, rng: random.Random | None = None) -> None:
         """
         Parameters:
             prob_true (float): probability of generating a True value (default is 0.5).
@@ -38,6 +38,7 @@ class BooleanGenerator(BaseLiteralGenerator):
                 f"but got invalid value {prob_true}."
             )
         self.prob_true = prob_true
+        self._rng = rng or random.Random()
 
     def generate(self) -> bool:
         """
@@ -46,4 +47,4 @@ class BooleanGenerator(BaseLiteralGenerator):
         Returns:
             bool: generated boolean value
         """
-        return random.random() < self.prob_true
+        return self._rng.random() < self.prob_true

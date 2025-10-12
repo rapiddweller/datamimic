@@ -40,7 +40,7 @@ address = person.address
 print(f"Street: {address.street}")
 print(f"City: {address.city}")
 print(f"State: {address.state}")
-print(f"Zip: {address.zip}")
+print(f"Zip: {address.zip_code}")
 print(f"Country: {address.country}")
 ```
 
@@ -58,8 +58,10 @@ Country: United States
 You can generate multiple people at once using the `generate_batch` method:
 
 ```python
-# Generate a batch of people
-people = person_service.generate_batch(count=5)
+# Generate a batch of people (reproducible with a seed)
+from random import Random
+seeded_service = PersonService(dataset="US", rng=Random(4242))
+people = seeded_service.generate_batch(count=5)
 
 # Loop through and access attributes
 for i, person in enumerate(people):
@@ -80,19 +82,19 @@ Person 5: Susan Johnson, 31 years old
 DATAMIMIC supports generating data for different regions by specifying the dataset:
 
 ```python
-# Create services for different regions
+# Create services for different datasets
 us_service = PersonService(dataset="US")
-uk_service = PersonService(dataset="UK")
-ca_service = PersonService(dataset="CA")  # Canada
+de_service = PersonService(dataset="DE")
+vn_service = PersonService(dataset="VN")
 
-# Generate people from different regions
+# Generate people from different datasets
 us_person = us_service.generate()
-uk_person = uk_service.generate()
-ca_person = ca_service.generate()
+de_person = de_service.generate()
+vn_person = vn_service.generate()
 
-print(f"US Person: {us_person.name}, {us_person.address.state}")
-print(f"UK Person: {uk_person.name}, {uk_person.address.state}")
-print(f"CA Person: {ca_person.name}, {ca_person.address.state}")
+print(f"US Person: {us_person.name}, {us_person.address.country_code}")
+print(f"DE Person: {de_person.name}, {de_person.address.country_code}")
+print(f"VN Person: {vn_person.name}, {vn_person.address.country_code}")
 ```
 
 Example output:
@@ -156,12 +158,12 @@ Example output:
 You can customize the generation process by providing specific parameters:
 
 ```python
-# Generate a person with specific characteristics
-custom_person = person_service.generate(
-    gender="female",
-    age_range=(25, 35)  # Only generate people between 25-35
-)
+from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 
+# Configure demographics (e.g., restrict age range; increase female quota)
+config = DemographicConfig(age_min=25, age_max=35, female_quota=0.8)
+person_service_custom = PersonService(dataset="US", demographic_config=config)
+custom_person = person_service_custom.generate()
 print(f"Custom Person: {custom_person.name}, {custom_person.age} years old, {custom_person.gender}")
 ```
 
@@ -176,18 +178,25 @@ Person entities can be used as the foundation for other domain-specific entities
 
 ```python
 from datamimic_ce.domains.healthcare.services import PatientService
-from datamimic_ce.domains.finance.services import CustomerService
+from random import Random
 
-# Generate domain-specific entities based on people
-patient_service = PatientService()
+# Generate domain-specific entities with a fixed seed
+patient_service = PatientService(dataset="US", rng=Random(77))
 patient = patient_service.generate()
-
-customer_service = CustomerService()
-customer = customer_service.generate()
-
 print(f"Patient: {patient.full_name}, ID: {patient.patient_id}")
-print(f"Customer: {customer.full_name}, ID: {customer.customer_id}")
 ```
+
+## Reproducible Runs with Seeds
+
+To create reproducible runs, pass a seeded `random.Random` to services that accept `rng`:
+
+```python
+from random import Random
+svc_a = PersonService(dataset="US", rng=Random(123))
+svc_b = PersonService(dataset="US", rng=Random(123))
+assert svc_a.generate().to_dict() == svc_b.generate().to_dict()
+```
+
 
 Example output:
 ```

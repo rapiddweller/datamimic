@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import copy
+import ast
 import uuid
 
 from faker import Faker
@@ -20,6 +20,7 @@ from datamimic_ce.domains.common.literal_generators.color_generators import Colo
 from datamimic_ce.domains.common.literal_generators.company_name_generator import CompanyNameGenerator
 from datamimic_ce.domains.common.literal_generators.cpf_generator import CPFGenerator
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
+from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 from datamimic_ce.domains.common.literal_generators.department_name_generator import DepartmentNameGenerator
 from datamimic_ce.domains.common.literal_generators.domain_generator import DomainGenerator
 from datamimic_ce.domains.common.literal_generators.ean_generator import EANGenerator
@@ -28,8 +29,10 @@ from datamimic_ce.domains.common.literal_generators.family_name_generator import
 from datamimic_ce.domains.common.literal_generators.float_generator import FloatGenerator
 from datamimic_ce.domains.common.literal_generators.gender_generator import GenderGenerator
 from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
+from datamimic_ce.domains.common.literal_generators.global_increment_generator import GlobalIncrementGenerator
 from datamimic_ce.domains.common.literal_generators.hash_generator import HashGenerator
 from datamimic_ce.domains.common.literal_generators.increment_generator import IncrementGenerator
+from datamimic_ce.domains.common.literal_generators.integer_generator import IntegerGenerator
 from datamimic_ce.domains.common.literal_generators.nobility_title_generator import NobilityTitleGenerator
 from datamimic_ce.domains.common.literal_generators.password_generator import PasswordGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
@@ -37,6 +40,7 @@ from datamimic_ce.domains.common.literal_generators.sector_generator import Sect
 from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
 from datamimic_ce.domains.common.literal_generators.ssn_generator import SSNGenerator
 from datamimic_ce.domains.common.literal_generators.street_name_generator import StreetNameGenerator
+from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.common.literal_generators.token_generator import TokenGenerator
 from datamimic_ce.domains.common.literal_generators.url_generator import UrlGenerator
 from datamimic_ce.domains.common.literal_generators.uuid_generator import UUIDGenerator
@@ -56,17 +60,17 @@ class GeneratorUtil:
         Args:
             context (Context): The context in which the generators are used.
         """
-        cls_factory_util = context.root.class_factory_util
         # Define all available generators
         self._class_dict = {
             # Basic Generators
             "IncrementGenerator": IncrementGenerator,
-            "DateTimeGenerator": cls_factory_util.get_datetime_generator(),
-            "IntegerGenerator": cls_factory_util.get_integer_generator(),
-            "StringGenerator": cls_factory_util.get_string_generator(),
+            "DateTimeGenerator": DateTimeGenerator,
+            "IntegerGenerator": IntegerGenerator,
+            "StringGenerator": StringGenerator,
             "FloatGenerator": FloatGenerator,
             "BooleanGenerator": BooleanGenerator,
             "DataFakerGenerator": DataFakerGenerator,
+            "GlobalIncrementGenerator": GlobalIncrementGenerator,
             # Identity and Personal Information
             "SSNGenerator": SSNGenerator,
             "CNPJGenerator": CNPJGenerator,
@@ -100,12 +104,6 @@ class GeneratorUtil:
             # Healthcare
             "SequenceTableGenerator": SequenceTableGenerator,
         }
-
-        self._generator_with_class_factory_util = (
-            "IntegerGenerator",
-            "StringGenerator",
-            "BirthdateGenerator",
-        )
         self._context = context
 
     def get_supported_generators(self) -> dict[str, list[str]]:
@@ -211,6 +209,7 @@ class GeneratorUtil:
         generator_str: str,
         stmt: Statement,
         pagination: DataSourcePagination | None = None,
+        key: str | None = None,
     ):
         """
         Create a generator based on the element's attribute "generator".
@@ -220,6 +219,9 @@ class GeneratorUtil:
             generator_str (str): The generator string.
             stmt (Statement): The statement object.
             pagination (Optional[DataSourcePagination]): The pagination object.
+            key (Optional[str]): Key used for root-level caching. If provided,
+                the generator will be stored and retrieved using this key
+                instead of the raw ``generator_str``.
 
         Returns:
             Any: The created generator instance.
@@ -229,71 +231,18 @@ class GeneratorUtil:
         """
         try:
             # Get generator from element <generator>
-            generator_from_ctx = self._context.root.generators.get(generator_str)
+            cache_key = key or generator_str
+            generator_from_ctx = self._context.root.generators.get(cache_key)
             if generator_from_ctx is not None:
                 return generator_from_ctx
 
             # Parse generator string into type and parameters
+            class_name: str
             if "(" in generator_str:
-                class_name, params_str = generator_str[:-1].split("(", 1)
-                params: dict[str, str | bool | int | float] = {}
-
-                # Special handling for DataFakerGenerator with positional argument
-                if class_name == "DataFakerGenerator" and "'" in params_str:
-                    # Extract the method name (first positional argument)
-                    method = params_str.split(",")[0].strip("' ")
-                    params["method"] = method
-
-                    # Parse remaining parameters if any
-                    if "," in params_str:
-                        remaining_params = params_str[params_str.find(",") + 1 :].strip()
-                        if remaining_params:
-                            for param in remaining_params.split(","):
-                                if "=" not in param:
-                                    continue
-                                key, value = param.split("=", 1)
-                                key = key.strip()
-                                value = value.strip()
-
-                                # Handle string values
-                                if value.startswith("'") and value.endswith("'"):
-                                    value = value[1:-1]
-                                # Handle boolean values
-                                elif value.lower() in ("true", "false"):
-                                    value = str(value.lower() == "true")
-                                # Handle numeric values
-                                elif value.isdigit():
-                                    value = str(int(value))
-                                elif value.replace(".", "").isdigit():
-                                    value = str(float(value))
-
-                                params[key] = value
-                else:
-                    # Normal parameter parsing for other generators
-                    if params_str:
-                        for param in params_str.split(","):
-                            if "=" not in param:
-                                continue
-                            key, value = param.split("=", 1)
-                            key = key.strip()
-                            value = value.strip()
-
-                            # Handle string values
-                            if value.startswith("'") and value.endswith("'"):
-                                value = value[1:-1]
-                            # Handle boolean values
-                            elif value.lower() in ("true", "false"):
-                                value = str(value.lower() == "true")
-                            # Handle numeric values
-                            elif value.isdigit():
-                                value = str(int(value))
-                            elif value.replace(".", "").isdigit():
-                                value = str(float(value))
-
-                            params[key] = value
+                class_name_candidate, _ = generator_str.split("(", 1)
+                class_name = class_name_candidate.strip()
             else:
-                class_name = generator_str
-                params = {}
+                class_name = generator_str.strip()
 
             # Get generator class
             cls = self._class_dict.get(class_name)
@@ -303,55 +252,145 @@ class GeneratorUtil:
                 elif isinstance(self._context, Context):
                     cls = self._context.root.get_dynamic_class(class_name)
                 else:
-                    raise ValueError(f"Cannot find generator {class_name}")
+                    raise ValueError(f"Cannot find generator class for '{class_name}'")
 
-            # Initialize result variable
             result = None
 
-            # Special handling for sequence generator in multi-process environment
-            if class_name == "SequenceTableGenerator":
-                # Create sequence generator with process-aware context
-                result = cls(context=self._context, stmt=stmt)
-
-                # Add pagination with process-specific adjustments if needed
-                if pagination:
-                    result.add_pagination(pagination=pagination)
+            if class_name == "GlobalIncrementGenerator":
+                # Build the fully qualified key path for uniqueness
+                # Traverse up the statement tree to build the path
+                path = []
+                current = stmt
+                while current is not None and hasattr(current, "name"):
+                    path.append(current.name)
+                    current = getattr(current, "parent", None)  # type: ignore
+                qualified_key = ".".join(reversed(path))  # type: ignore
+                result = cls(qualified_key=qualified_key, context=self._context)
+                # Use unified cache key (may differ from generator_str when a key is provided)
+                self._context.root.generators[cache_key] = result
                 return result
 
-            # Handle other generators with constructor parameters
-            if class_name != generator_str:
-                local_ns = copy.deepcopy(self._class_dict)
-                if class_name in self._generator_with_class_factory_util:
-                    class_name, args_str = generator_str[:-1].split("(")
-                    # Filtering out empty arguments to avoid extra commas
-                    args = [arg.strip() for arg in args_str.split(",") if arg.strip()]
+            if class_name == "SequenceTableGenerator":
+                result = cls(context=self._context, stmt=stmt)
+                if pagination:
+                    result.add_pagination(pagination=pagination)
+                # Use unified cache key (may differ from generator_str when a key is provided)
+                self._context.root.generators[cache_key] = result
+                return result
 
-                    args.append("class_factory_util=class_factory_util")
-                    local_ns.update({"class_factory_util": self._context.root.class_factory_util})
+            # --- DateTimeGenerator special parsing ---
+            if class_name == "DateTimeGenerator":
+                try:
+                    module_node = ast.parse(generator_str)
+                    if not (
+                        module_node.body
+                        and isinstance(module_node.body[0], ast.Expr)
+                        and isinstance(module_node.body[0].value, ast.Call)
+                    ):
+                        pass
+                    else:
+                        call_node = module_node.body[0].value
+                        if not (isinstance(call_node.func, ast.Name) and call_node.func.id == "DateTimeGenerator"):
+                            pass
+                        else:
+                            parsed_constructor_args = {}
+                            for kw in call_node.keywords:
+                                param_name = kw.arg
+                                if param_name is None:
+                                    raise ValueError(f"Keyword argument name is None in {generator_str}")
+                                value_str = ast.get_source_segment(generator_str, kw.value)
+                                if value_str is None:
+                                    raise ValueError(
+                                        f"Could not extract source for param {param_name} in {generator_str}"
+                                    )
+                                if param_name in (
+                                    "hour_weights",
+                                    "minute_weights",
+                                    "second_weights",
+                                    "month_weights",
+                                    "weekday_weights",
+                                    "dom_weights",
+                                ):
+                                    # Typkorrektur: param_name ist str, nicht str | None
+                                    # Entferne äußere Hochkommas, falls vorhanden
+                                    if (value_str.startswith("'") and value_str.endswith("'")) or (
+                                        value_str.startswith('"') and value_str.endswith('"')
+                                    ):
+                                        value_str = value_str[1:-1]
+                                    try:
+                                        parsed_constructor_args[param_name] = self._context.evaluate_python_expression(
+                                            value_str
+                                        )
+                                    except (ValueError, SyntaxError, NameError, TypeError) as eval_exc:
+                                        try:
+                                            parsed_constructor_args[param_name] = ast.literal_eval(value_str)
+                                        except (ValueError, SyntaxError) as lit_exc:
+                                            logger.error(f"Fehler beim Parsen von {param_name}: {eval_exc} / {lit_exc}")
+                                            raise ValueError(
+                                                f"Konnte {param_name} nicht als Liste parsen: {value_str}"
+                                            ) from eval_exc
+                                else:
+                                    parsed_constructor_args[param_name] = ast.literal_eval(value_str)
+                            if call_node.args:
+                                logger.warning(
+                                    f"Positional args are not processed for DateTimeGenerator string: {generator_str}"
+                                )
+                            result = cls(**parsed_constructor_args)
+                            # Use unified cache key for consistency with global cache
+                            self._context.root.generators[cache_key] = result
+                            return result
+                except (ValueError, SyntaxError, TypeError) as e_dt_parse:
+                    logger.error(
+                        f"Failed to parse DateTimeGenerator arguments from '{generator_str}' using ast: {e_dt_parse}"
+                    )
+                    raise ValueError(
+                        f"Error parsing parameters for DateTimeGenerator from '{generator_str}': {e_dt_parse}"
+                    ) from e_dt_parse
+            # --- End DateTimeGenerator special parsing ---
 
-                    new_args_str = ", ".join(args)
-                    generator_str = f"{class_name}({new_args_str})"
-
-                result = self._context.evaluate_python_expression(generator_str, local_ns)
+            # Fallback: evaluate_python_expression for other generators with params
+            if "(" in generator_str:
+                # A shallow copy is sufficient here and avoids recursion issues
+                # with certain generator classes like ``SequenceTableGenerator``.
+                local_ns = self._class_dict.copy()
+                # Instanz-Namespaces getrennt halten, um Typkonflikte zu vermeiden
+                local_ns_inst = {"context": self._context, "self": self}
+                try:
+                    result = self._context.evaluate_python_expression(generator_str, {**local_ns, **local_ns_inst})
+                except (ValueError, SyntaxError, NameError, TypeError) as e_eval:
+                    logger.error(
+                        f"Error evaluating generator string '{generator_str}' with evaluate_python_expression: {e_eval}"
+                    )
+                    raise ValueError(
+                        f"Cannot create generator '{class_name}' from string '{generator_str}' using evaluate: {e_eval}"
+                    ) from e_eval
             else:
                 if class_name in ["EmailAddressGenerator", "FamilyNameGenerator", "GivenNameGenerator"]:
-                    result = cls(
-                        dataset=self._context.root.default_dataset,
-                    )
-                elif class_name in self._generator_with_class_factory_util:
-                    result = cls(class_factory_util=self._context.root.class_factory_util)
+                    result = cls(dataset=self._context.root.default_dataset)
                 else:
                     result = cls()
-
-            # Add pagination for increment generators
             if isinstance(result, IncrementGenerator):
-                result.add_pagination(pagination=pagination)
+                if hasattr(result, "add_pagination") and callable(result.add_pagination):
+                    result.add_pagination(pagination=pagination)
+                else:
+                    logger.warning(f"Generator {class_name} is IncrementGenerator but lacks add_pagination method.")
+            if result is None:
+                raise ValueError(f"Failed to create generator for '{generator_str}': result is None.")
+
+            # Decide whether to cache the generator instance globally. Generators
+            # can opt out by defining ``cache_in_root = False``.
+            if getattr(result, "cache_in_root", True):
+                self._context.root.generators[cache_key] = result
 
             return result
-
-        except Exception as e:
-            logger.error("Error creating generator: %s", e)
-            raise ValueError(f"Cannot create generator '{class_name}' of element '{stmt.name}': {e}") from e
+        except (ValueError, SyntaxError, NameError, TypeError) as e:
+            current_class_name = class_name if "class_name" in locals() else generator_str
+            element_name_str = f" of element '{stmt.name}'" if stmt and hasattr(stmt, "name") else ""
+            logger.error(f"Error creating generator '{current_class_name}'{element_name_str}: {e}")
+            if not isinstance(e, ValueError):
+                raise ValueError(f"Cannot create generator '{current_class_name}'{element_name_str}: {e}") from e
+            else:
+                raise
 
     @staticmethod
     def is_valid_uuid(input_string: str) -> bool:

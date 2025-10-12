@@ -127,3 +127,11 @@ class TestDemos:
     def test_overview_generator(self):
         """Test the overview generator demo."""
         self._run_demo_test(self._demos_dir / "overview-generator")
+
+    def test_demo_insurance(self):
+        """Test the insurance demo."""
+        self._run_demo_test(self._demos_dir / "demo-insurance")
+
+    def test_demo_finance(self):
+        """Test the finance demo."""
+        self._run_demo_test(self._demos_dir / "demo-finance")

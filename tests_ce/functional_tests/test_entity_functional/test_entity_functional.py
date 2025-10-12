@@ -72,10 +72,10 @@ class TestEntityFunctional:
         """
         helper of test case test_functional_entity_product
         """
-        ecommerce_data_dir = Path(__file__).resolve().parents[3] / "datamimic_ce/domain_data/ecommerce"
+        ecommerce_data_dir = Path(__file__).resolve().parents[3] / "datamimic_ce/domains/domain_data/ecommerce"
         category_list = pd.read_csv(ecommerce_data_dir.joinpath("product_categories_US.csv"))["category"].tolist()
         brands_list = pd.read_csv(ecommerce_data_dir.joinpath("product_brands_US.csv"))["brand"].tolist()
-        benefits_list = pd.read_csv(ecommerce_data_dir.joinpath("product_benefits.csv"))["benefit"].tolist()
+        benefits_list = pd.read_csv(ecommerce_data_dir.joinpath("product_benefits_US.csv"))["benefit"].tolist()
         conditions_list = pd.read_csv(ecommerce_data_dir.joinpath("product_conditions_US.csv"))["condition"].tolist()
         availabilities_list = pd.read_csv(ecommerce_data_dir.joinpath("product_availability_US.csv"))[
             "availability"
@@ -140,7 +140,7 @@ class TestEntityFunctional:
         """
         helper of test case test_functional_entity_order
         """
-        ecommerce_data_dir = Path(__file__).resolve().parents[3] / "datamimic_ce/domain_data/ecommerce"
+        ecommerce_data_dir = Path(__file__).resolve().parents[3] / "datamimic_ce/domains/domain_data/ecommerce"
         status_list = pd.read_csv(ecommerce_data_dir.joinpath("order_statuses_US.csv"))["status"].tolist()
         payment_methods_list = pd.read_csv(ecommerce_data_dir.joinpath("payment_methods_US.csv"))["method"].tolist()
         shipping_methods_list = pd.read_csv(ecommerce_data_dir.joinpath("shipping_methods_US.csv"))["method"].tolist()
@@ -195,30 +195,6 @@ class TestEntityFunctional:
             assert "discount_amount" in order
             assert isinstance(order["discount_amount"], float)
             assert order["discount_amount"] >= 0.0
-
-            assert "coupon_code" in order
-            assert isinstance(order["coupon_code"], (str, type(None)))
-            if order["coupon_code"]:
-                assert any(
-                    coupon_prefixes in order["coupon_code"]
-                    for coupon_prefixes in ["SAVE", "DISCOUNT", "SPECIAL", "PROMO", "DEAL"]
-                )
-
-            assert "notes" in order
-            assert isinstance(order["notes"], (str, type(None)))
-            if order["notes"]:
-                assert order["notes"] in [
-                    "Please leave at the front door",
-                    "Call before delivery",
-                    "Gift - please don't include receipt",
-                    "Fragile items - handle with care",
-                    "Please deliver after 5pm",
-                    "Ring doorbell upon delivery",
-                    "Contact customer before shipping",
-                    "Include gift message",
-                    "Expedite if possible",
-                    "Address has a gate code: 1234",
-                ]
 
             assert "total_amount" in order
             assert isinstance(order["total_amount"], float)

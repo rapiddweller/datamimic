@@ -70,8 +70,12 @@ class TestEntityCity:
 
     def test_not_supported_dataset(self):
         random_dataset = "XX"
-        # Raise ValueError because City data not found for unsupported dataset
+        # Fallback to US dataset with a single warning log; should not raise
         city_service = CityService(dataset=random_dataset)
         city = city_service.generate()
-        with pytest.raises(ValueError):
-            city.to_dict()
+        assert isinstance(city.to_dict(), dict)
+
+    def test_supported_datasets_static(self):
+        codes = CityService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

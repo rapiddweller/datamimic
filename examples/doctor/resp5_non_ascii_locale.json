@@ -1,0 +1,24 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "db623b52fce4b2de07c399a2196f2b4ef557ccaa6fe3e4c9263b2959cb74cc22",
+    "seed_canonical": "3445102689993055007"
+  },
+  "domain": "doctor",
+  "items": [
+    {
+      "first_name": "Trang",
+      "full_name": "ThS. Trang Nguyễn",
+      "hospital": "Bệnh viện Bạch Mai",
+      "human_id": "DOC-E37172E4",
+      "id": "e37172e4-d311-52b8-9f15-3067ea625093",
+      "last_name": "Nguyễn",
+      "license_number": "VN-E37172E4",
+      "locale": "vi_VN",
+      "specialty": "tim mạch",
+      "title": "ThS."
+    }
+  ],
+  "request_hash": "d732d0b3b120dc8548d8f18036bdb09f01023b4f8fe0d800cd049700456ecf4e",
+  "version": "v1"
+}

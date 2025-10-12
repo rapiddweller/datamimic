@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PatientResponseV1",
+  "type": "object",
+  "required": ["domain", "version", "request_hash", "items", "determinism_proof"],
+  "additionalProperties": false,
+  "properties": {
+    "domain": {"const": "patient"},
+    "version": {"const": "v1"},
+    "request_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "human_id",
+          "person_id",
+          "address_id",
+          "age",
+          "primary_condition",
+          "conditions",
+          "insurance_provider",
+          "locale"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "format": "uuid"},
+          "human_id": {"type": "string", "pattern": "^[A-Z0-9-]+-[0-9]{2}$"},
+          "person_id": {"type": "string", "format": "uuid"},
+          "address_id": {"type": "string", "format": "uuid"},
+          "age": {"type": "integer", "minimum": 0, "maximum": 120},
+          "primary_condition": {"type": "string"},
+          "conditions": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 1
+          },
+          "insurance_provider": {"type": "string"},
+          "locale": {"type": "string", "pattern": "^[a-z]{2}_[A-Z]{2}$"}
+        }
+      }
+    },
+    "determinism_proof": {
+      "type": "object",
+      "required": ["algorithm", "seed_canonical", "content_hash"],
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {"type": "string", "enum": ["uuid5+sha256"]},
+        "seed_canonical": {"type": "string"},
+        "content_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    }
+  }
+}

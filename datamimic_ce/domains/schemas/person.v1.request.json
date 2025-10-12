@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PersonRequestV1",
+  "type": "object",
+  "required": ["domain", "version", "count", "seed", "locale", "clock"],
+  "additionalProperties": false,
+  "properties": {
+    "domain": {"const": "person"},
+    "version": {"const": "v1"},
+    "count": {"type": "integer", "minimum": 0, "maximum": 1000},
+    "seed": {"oneOf": [{"type": "integer"}, {"type": "string"}]},
+    "locale": {"type": "string", "pattern": "^[a-z]{2}_[A-Z]{2}$"},
+    "profile_id": {"type": "string", "minLength": 1},
+    "component_id": {"type": "string", "minLength": 1},
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sex": {
+          "oneOf": [
+            {"type": "string", "enum": ["F", "M", "X"]},
+            {
+              "type": "array",
+              "items": {"type": "string", "enum": ["F", "M", "X"]},
+              "minItems": 1
+            }
+          ]
+        },
+        "age": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min": {"type": "integer", "minimum": 0, "maximum": 120},
+            "max": {"type": "integer", "minimum": 0, "maximum": 120}
+          }
+        },
+        "nationality": {"type": "string"}
+      }
+    },
+    "clock": {"type": "string", "format": "date-time"}
+  },
+  "allOf": [
+    {
+      "not": {
+        "required": ["profile_id", "component_id"]
+      }
+    }
+  ]
+}

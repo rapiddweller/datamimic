@@ -70,7 +70,12 @@ class TestBank:
         self._test_single_bank(bank)
 
     def test_not_supported_dataset(self):
+        # Fallback to US dataset with a single warning log; should not raise
         bank_service = BankService(dataset="FR")
         bank = bank_service.generate()
-        with pytest.raises(FileNotFoundError):
-            bank.to_dict()
+        assert isinstance(bank.to_dict(), dict)
+
+    def test_supported_datasets_static(self):
+        codes = BankService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

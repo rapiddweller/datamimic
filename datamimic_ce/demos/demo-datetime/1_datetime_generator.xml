@@ -8,5 +8,29 @@
                generator="DateTimeGenerator(min='2010-08-01', max='2010-08-31', input_format='%Y-%m-%d')" />
     <key name="datetime_generator_2055"
                generator="DateTimeGenerator(min='2055-02-01 0:0:0', max='2056-07-31 0:0:0')" />
+    <!-- DSL sugar: simple filters and presets -->
+    <key name="q1_only"
+               generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-12-31 23:59:59', random=True, months='Q1', seed=1)" />
+    <key name="weekdays_only"
+               generator="DateTimeGenerator(min='2024-04-01 00:00:00', max='2024-04-30 23:59:59', random=True, weekdays='Mon-Fri', seed=2)" />
+    <key name="dom_last_only"
+               generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-12-31 23:59:59', random=True, dom='last', seed=3)" />
+    <key name="office_hours_15m_10s"
+               generator="DateTimeGenerator(min='2024-04-01 00:00:00', max='2024-04-30 23:59:59', random=True, hours_preset='office', minute_granularity=15, second_granularity=10, seed=4)" />
+    <!-- Biased sampling across months/hours/minutes/seconds (example) -->
+    <key name="biased_datetime"
+               generator="DateTimeGenerator(min='2020-02-01 0:0:0', max='2025-07-31 0:0:0', month_weights='[0.5] * 2 + [1] * 3 + [0.8] * 3 + [1] * 3 + [0.5]', hour_weights='[0.6]*6 + [0.3]*16 + [0.1]*2', minute_weights='[1 if m in (0,15,30,45) else 0 for m in range(60)]', second_weights='[1]+[0]*59')" />
+    <!-- Month-weighted: prefer March only -->
+    <key name="month_weighted_march"
+               generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-12-31 23:59:59', random=True, month_weights='[0,0,1]+[0]*9', seed=42)" />
+    <!-- Weekday-weighted: Mondays only -->
+    <key name="weekday_monday_only"
+               generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-01-31 23:59:59', random=True, weekday_weights='[1,0,0,0,0,0,0]')" />
+    <!-- Day-of-month weighted: 15th only -->
+    <key name="dom_15_only"
+               generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-02-29 23:59:59', random=True, dom_weights='[0]*14+[1]+[0]*16')" />
+    <!-- Combine month + weekday + dom with hour weighting -->
+    <key name="combined_filters"
+               generator="DateTimeGenerator(min='2024-01-01 00:00:00', max='2024-12-31 23:59:59', random=True, month_weights='[0,0,1]+[0]*9', weekday_weights='[1,0,0,0,0,0,0]', dom_weights='[0,0,0,1]+[0]*27', hour_weights='[0.1]*9+[1.0]*9+[0.1]*6', seed=7)" />
   </generate>
 </setup>

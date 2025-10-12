@@ -12,10 +12,10 @@ from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.statements.reference_statement import ReferenceStatement
-from datamimic_ce.tasks.task import Task
+from datamimic_ce.tasks.task import GenSubTask
 
 
-class ReferenceTask(Task):
+class ReferenceTask(GenSubTask):
     def __init__(self, statement: ReferenceStatement, pagination: DataSourcePagination | None = None):
         self._statement: ReferenceStatement = statement
         self._pagination: DataSourcePagination | None = pagination

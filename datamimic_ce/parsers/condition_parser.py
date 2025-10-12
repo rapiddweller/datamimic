@@ -15,13 +15,11 @@ from datamimic_ce.statements.else_if_statement import ElseIfStatement
 from datamimic_ce.statements.else_statement import ElseStatement
 from datamimic_ce.statements.if_statement import IfStatement
 from datamimic_ce.statements.statement import Statement
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
 class ConditionParser(StatementParser):
     def __init__(
         self,
-        class_factory_util: BaseClassFactoryUtil,
         element: Element,
         properties: dict,
     ):
@@ -29,7 +27,6 @@ class ConditionParser(StatementParser):
             element,
             properties,
             valid_element_tag=ATTR_CONDITION,
-            class_factory_util=class_factory_util,
         )
 
     def parse(self, descriptor_dir: Path, parent_stmt: CompositeStatement) -> ConditionStatement:
@@ -38,10 +35,10 @@ class ConditionParser(StatementParser):
         :return:
         """
         # Parse sub elements
+        from datamimic_ce.parsers.parser_util import ParserUtil
 
         condition_stmt = ConditionStatement(parent_stmt)
-        sub_stmt_list = self._class_factory_util.get_parser_util_cls()().parse_sub_elements(
-            class_factory_util=self._class_factory_util,
+        sub_stmt_list = ParserUtil.parse_sub_elements(
             descriptor_dir=descriptor_dir,
             element=self._element,
             properties=self._properties,

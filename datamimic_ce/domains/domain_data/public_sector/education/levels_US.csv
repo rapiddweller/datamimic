@@ -1,0 +1,22 @@
+University,Higher Education,1
+University,Undergraduate,1
+University,Graduate,1
+University,Postgraduate,1
+College,Higher Education,1
+College,Undergraduate,1
+College,Graduate,1
+College,Postgraduate,1
+Vocational,Vocational Education,1
+Vocational,Technical Education,1
+Vocational,Adult Education,1
+Special,Special Education,1
+Special,K-12,1
+School,Elementary,1
+School,Middle School,1
+School,High School,1
+School,K-12,1
+Default,Elementary,1
+Default,Middle School,1
+Default,High School,1
+Default,Higher Education,1
+Default,Vocational Education,1

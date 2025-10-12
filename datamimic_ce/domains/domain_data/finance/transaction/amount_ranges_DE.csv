@@ -1,0 +1,11 @@
+category,min_amount,max_amount,weight
+Einzelhandel,13.0,180.0,20
+Lebensmittel,9.0,130.0,18
+Gastronomie,7.0,90.0,15
+Unterhaltung,9.0,75.0,8
+Reisen,45.0,900.0,7
+Versorgung,18.0,140.0,10
+Gesundheitswesen,18.0,450.0,8
+Bildung,45.0,900.0,5
+Dienstleistungen,18.0,270.0,7
+Sonstiges,4.5,180.0,2 

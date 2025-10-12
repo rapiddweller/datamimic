@@ -1,0 +1,2 @@
+dataset,version,profile_id,source,notes,age_group_ref,gender_group_ref,condition_group_ref,region_group_ref,sector_group_ref,specialty_group_ref,area_cluster_ref,coverage_line_ref
+DE,v1,de_urban_adult,synthetic,"Urban adult profile leveraging medium-pop states",age_18_44,gender_majority,cond_medium_prevalence,state_pop_medium,sector_other,spec_other,area_201,coverage_other

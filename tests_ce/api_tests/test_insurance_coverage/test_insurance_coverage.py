@@ -72,5 +72,10 @@ class TestInsuranceCoverage:
     def test_not_supported_dataset(self):
         insurance_coverage_service = InsuranceCoverageService(dataset="FR")
         coverage = insurance_coverage_service.generate()
-        with pytest.raises(FileNotFoundError):
-            coverage.to_dict()
+        # Fallback to US dataset with a single warning log; should not raise
+        assert isinstance(coverage.to_dict(), dict)
+
+    def test_supported_datasets_static(self):
+        codes = InsuranceCoverageService.supported_datasets()
+        assert isinstance(codes, set) and len(codes) > 0
+        assert "US" in codes and "DE" in codes

@@ -1,0 +1,7 @@
+title = "Demo Finance"
+description = "Showcase of finance data generation including banks, accounts (with nested transactions), and transactions."
+icon = "bank"
+tags = ["#generator", "#datasets", "#domains", "#finance"]
+projectName = "demo-finance"
+id = "demo-finance"
+

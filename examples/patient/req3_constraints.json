@@ -1,0 +1,17 @@
+{
+  "clock": "2025-01-01T00:00:00Z",
+  "constraints": {
+    "age": {
+      "max": 45,
+      "min": 45
+    },
+    "conditions": [
+      "I10"
+    ]
+  },
+  "count": 2,
+  "domain": "patient",
+  "locale": "en_US",
+  "seed": "constraints",
+  "version": "v1"
+}

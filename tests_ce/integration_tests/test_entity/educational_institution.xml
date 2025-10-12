@@ -1,0 +1,26 @@
+<setup multiprocessing="0">
+    <!-- WHY: Exercise educational institution entity end-to-end with seeded RNG for regression checks. -->
+    <echo>Generating seeded educational institutions for deterministic regression coverage</echo>
+    <generate name="educational_institutions" count="3" target="LogExporter">
+        <variable
+            name="institution"
+            entity="EducationalInstitution"
+            dataset="US"
+            rngSeed="424242"
+        />
+        <key name="institution_id" script="institution.institution_id" />
+        <key name="name" script="institution.name" />
+        <key name="type" script="institution.type" />
+        <key name="level" script="institution.level" />
+        <key name="founding_year" script="institution.founding_year" />
+        <key name="student_count" script="institution.student_count" />
+        <key name="staff_count" script="institution.staff_count" />
+        <key name="website" script="institution.website" />
+        <key name="email" script="institution.email" />
+        <key name="phone" script="institution.phone" />
+        <array name="programs" script="institution.programs" />
+        <array name="accreditations" script="institution.accreditations" />
+        <array name="facilities" script="institution.facilities" />
+        <nestedKey name="address" script="institution.address.to_dict()" />
+    </generate>
+</setup>

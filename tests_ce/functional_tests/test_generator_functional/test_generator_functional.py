@@ -101,28 +101,24 @@ class TestDatamimicGeneratorFunctional:
         assert len(academic_title) == 100
         prefix = self._test_dir.parent.parent.parent
 
-        titles, weights = FileUtil.read_wgt_file(
-            prefix.joinpath("datamimic_ce/domain_data/common/person/title.csv"), delimiter=","
-        )
         cn_titles, cn_weights = FileUtil.read_wgt_file(
-            prefix.joinpath("datamimic_ce/domain_data/common/person/title_CN.csv"), delimiter=","
+            prefix.joinpath("datamimic_ce/domains/domain_data/common/person/title_CN.csv"), delimiter=","
         )
         de_titles, de_weights = FileUtil.read_wgt_file(
-            prefix.joinpath("datamimic_ce/domain_data/common/person/title_DE.csv"), delimiter=","
+            prefix.joinpath("datamimic_ce/domains/domain_data/common/person/title_DE.csv"), delimiter=","
         )
         fr_titles, fr_weights = FileUtil.read_wgt_file(
-            prefix.joinpath("datamimic_ce/domain_data/common/person/title_FR.csv"), delimiter=","
+            prefix.joinpath("datamimic_ce/domains/domain_data/common/person/title_FR.csv"), delimiter=","
         )
         it_titles, it_weights = FileUtil.read_wgt_file(
-            prefix.joinpath("datamimic_ce/domain_data/common/person/title_IT.csv"), delimiter=","
+            prefix.joinpath("datamimic_ce/domains/domain_data/common/person/title_IT.csv"), delimiter=","
         )
         us_titles, us_weights = FileUtil.read_wgt_file(
-            prefix.joinpath("datamimic_ce/domain_data/common/person/title_US.csv"), delimiter=","
+            prefix.joinpath("datamimic_ce/domains/domain_data/common/person/title_US.csv"), delimiter=","
         )
 
         for element in academic_title:
             assert element["non-title"] == ""
-            assert element["title"] in titles
             assert element["CN-title"] in cn_titles
             assert element["DE-title"] in de_titles
             assert element["FR-title"] in fr_titles

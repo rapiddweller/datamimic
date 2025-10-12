@@ -7,13 +7,12 @@
 
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
 from datamimic_ce.contexts.geniter_context import GenIterContext
-from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.statements.array_statement import ArrayStatement
-from datamimic_ce.tasks.task import Task
+from datamimic_ce.tasks.task import GenSubTask
 
 
-class ArrayTask(Task):
-    def __init__(self, ctx: SetupContext | None, statement: ArrayStatement):
+class ArrayTask(GenSubTask):
+    def __init__(self, statement: ArrayStatement):
         self._valid_element_type = {
             DATA_TYPE_STRING,
             DATA_TYPE_INT,
@@ -41,16 +40,16 @@ class ArrayTask(Task):
         """
         Create new data for path
         """
+        from datamimic_ce.tasks.task_util import TaskUtil
+
         array_type = self._statement.type
         count = self.statement.count
 
         if not count:
             return None
 
-        data_generation_util = parent_context.root.class_factory_util.get_data_generation_util()
-
         value: list[str | int | bool | float] = [
-            data_generation_util.generate_random_value_based_on_type(array_type) for _ in range(count)
+            TaskUtil.generate_random_value_based_on_type(array_type) for _ in range(count)
         ]
         # Add field "array" into current product
         parent_context.add_current_product_field(self._statement.name, value)

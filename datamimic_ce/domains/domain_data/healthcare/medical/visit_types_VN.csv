@@ -1,0 +1,11 @@
+visit_type,weight
+Khám định kỳ,200
+Tái khám,180
+Khám cấp cứu,160
+Khám chuyên khoa,150
+Tiêm chủng,130
+Khám sức khỏe tổng quát,170
+Khám phòng bệnh,120
+Xét nghiệm chẩn đoán,110
+Tư vấn từ xa,90
+Theo dõi sau nhập viện,100

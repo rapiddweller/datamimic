@@ -1,0 +1,22 @@
+name,school_id,type,level,address,city,state,phone,website,weight
+Trường THPT Chuyên Hà Nội - Amsterdam,HNA-001,Công lập,Trung học phổ thông,"Hoàng Minh Giám, Cầu Giấy","Hà Nội","Hà Nội","024-5555-0101","www.hn-ams.edu.vn",0.10
+Trường Tiểu học Lê Văn Tám,LVT-002,Công lập,Tiểu học,"30 Lý Tự Trọng, Quận 1","TP. Hồ Chí Minh","TP. Hồ Chí Minh","028-5555-0202","leventam.hcm.edu.vn",0.09
+Trường THCS Nguyễn Gia Thiều,NGT-003,Công lập,Trung học cơ sở,"373 Lê Quang Định, Bình Thạnh","TP. Hồ Chí Minh","TP. Hồ Chí Minh","028-5555-0303","nguyengiathieu.hcm.edu.vn",0.08
+Trường THPT Chuyên Lê Hồng Phong,LPH-004,Công lập,Trung học phổ thông,"235 Nguyễn Văn Cừ, Quận 5","TP. Hồ Chí Minh","TP. Hồ Chí Minh","028-5555-0404","thpt-lehongphong-hcm.edu.vn",0.08
+Trường Tiểu học Võ Thị Sáu,VTS-005,Công lập,Tiểu học,"20 Võ Thị Sáu, Quận 3","TP. Hồ Chí Minh","TP. Hồ Chí Minh","028-5555-0505","vothisau.q3.edu.vn",0.07
+Trường THCS Giảng Võ,GV-006,Công lập,Trung học cơ sở,"25 Trần Huy Liệu, Ba Đình","Hà Nội","Hà Nội","024-5555-0606","giangvo.edu.vn",0.07
+Trường THPT Quốc gia Việt Đức,VGD-007,Công lập,Trung học phổ thông,"47 Lý Thường Kiệt, Hoàn Kiếm","Hà Nội","Hà Nội","024-5555-0707","vietduc.edu.vn",0.07
+Trường Tiểu học Vinschool Central Park,VCP-008,Tư thục,Tiểu học,"208 Nguyễn Hữu Cảnh, Bình Thạnh","TP. Hồ Chí Minh","TP. Hồ Chí Minh","028-5555-0808","www.vinschool.edu.vn",0.06
+Trường THCS & THPT Nguyễn Tất Thành,NTT-009,Tư thục liên cấp,Liên cấp,"136 Xuân Thủy, Cầu Giấy","Hà Nội","Hà Nội","024-5555-0909","ntt.edu.vn",0.06
+Phillips Academy,PA-010,Private,High School,"180 Main St, Andover, MA 01810","Andover","MA","978-555-1200","www.andover.edu",0.04
+St. Mary's Elementary School,SMES-011,Private,Elementary School,"1500 St Mary's Rd, Moraga, CA 94575","Moraga","CA","925-555-3400","www.stmarys-ca.edu",0.04
+Lakeside School,LS-012,Private,High School,"14050 1st Ave NE, Seattle, WA 98125","Seattle","WA","206-555-5600","www.lakesideschool.org",0.04
+Montessori Academy,MA-013,Private,Elementary School,"1601 Academy St, Nashville, TN 37212","Nashville","TN","615-555-7800","www.montessori-nashville.org",0.03
+Brooklyn Technical High School,BTHS-014,Public,High School,"29 Fort Greene Pl, Brooklyn, NY 11217","Brooklyn","NY","718-555-9000","www.bths.edu",0.03
+Stuyvesant High School,SHS-015,Public,High School,"345 Chambers St, New York, NY 10282","New York","NY","212-555-1200","www.stuy.edu",0.03
+Thomas Jefferson High School for Science and Technology,TJHSST-016,Public,High School,"6560 Braddock Rd, Alexandria, VA 22312","Alexandria","VA","703-555-3400","www.tjhsst.fcps.edu",0.03
+Walter Payton College Prep,WPCP-017,Public,High School,"1034 N Wells St, Chicago, IL 60610","Chicago","IL","312-555-5600","www.wpcp.org",0.03
+Bronx High School of Science,BHSS-018,Public,High School,"75 W 205th St, Bronx, NY 10468","Bronx","NY","718-555-7800","www.bxscience.edu",0.03
+Boston Latin School,BLS-019,Public,High School,"78 Avenue Louis Pasteur, Boston, MA 02115","Boston","MA","617-555-9000","www.bls.org",0.03
+Dalton School,DS-020,Private,K-12,"108 E 89th St, New York, NY 10128","New York","NY","212-555-1200","www.dalton.org",0.03
+Trinity School,TS-021,Private,K-12,"139 W 91st St, New York, NY 10024","New York","NY","212-555-3400","www.trinityschoolnyc.org",0.03

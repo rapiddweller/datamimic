@@ -1,0 +1,12 @@
+<setup>
+    <execute uri="script/prefixed_weighted_int.scr.py"/>
+    <!-- Generate Ids: sequential, sparse, uuid -->
+
+    <generate name="customers" count="100" distribution="ordered" numProcess="1" pageSize="10" target="ConsoleExporter">
+        <key name="custId_seq" script="customer_id()" />
+        <key name="custId_sparse" generator="PrefixedWeightedInt(prefix='A',increment=1,offset_rules=SPARSE_ID_OFFSET_RULES)" />
+        <key name="custId_seq_WI" generator="PrefixedWeightedInt(prefix='S',increment=1,offset_rules=NO_OFFSET)" />
+        <key name="custId_uuid" generator="UUIDGenerator" />
+    </generate>
+</setup>
+

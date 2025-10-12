@@ -1,0 +1,23 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "c13a4daac8e43eed87c4be086b697d283a5cc9fe2d905b3b9b22354cd1c3c5d6",
+    "seed_canonical": "3069011196268734596"
+  },
+  "domain": "address",
+  "items": [
+    {
+      "city": "Berlin",
+      "country": "DE",
+      "formatted": "142 Bahnhofstraße, Berlin, BE 48875, DE",
+      "human_id": "ADR-BDA2F643",
+      "id": "bda2f643-71c6-5c57-b266-9be649119566",
+      "line1": "142 Bahnhofstraße",
+      "locale": "de_DE",
+      "postal_code": "48875",
+      "state": "BE"
+    }
+  ],
+  "request_hash": "1ae0a53933b2dfd9123f0aa89377c1471e2a87dcb54170714fcab1b962a81f6e",
+  "version": "v1"
+}

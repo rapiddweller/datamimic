@@ -10,14 +10,12 @@ from datamimic_ce.statements.condition_statement import ConditionStatement
 from datamimic_ce.statements.else_if_statement import ElseIfStatement
 from datamimic_ce.statements.else_statement import ElseStatement
 from datamimic_ce.statements.if_statement import IfStatement
-from datamimic_ce.tasks.task import Task
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
+from datamimic_ce.tasks.task import GenSubTask
 
 
-class ConditionTask(Task):
-    def __init__(self, statement: ConditionStatement, class_factory_util: BaseClassFactoryUtil):
+class ConditionTask(GenSubTask):
+    def __init__(self, statement: ConditionStatement):
         self._statement = statement
-        self._class_factory_util = class_factory_util
 
     @property
     def statement(self) -> ConditionStatement:
@@ -29,9 +27,10 @@ class ConditionTask(Task):
         :param parent_context:
         :return:
         """
-        task_util_cls = self._class_factory_util.get_task_util_cls()
+        from datamimic_ce.tasks.task_util import TaskUtil
+
         child_tasks = [
-            task_util_cls.get_task_by_statement(ctx=parent_context.root, stmt=child_stmt)
+            TaskUtil.get_task_by_statement(parent_context.root, child_stmt)
             for child_stmt in self.statement.sub_statements
         ]
 
@@ -41,15 +40,18 @@ class ConditionTask(Task):
         is_executed = False
         for child_task in child_tasks:
             # If the stmt block is executed, break the loop
+            if not isinstance(child_task, GenSubTask):
+                raise ValueError(f"Generate sub-task expected, but got {type(child_task)}")
             if is_executed:
                 break
-            if isinstance(child_task.statement, IfStatement | ElseIfStatement):
+            child_stmt = child_task.statement
+            if isinstance(child_stmt, IfStatement | ElseIfStatement):
                 # Get the condition from the child task's statement
-                condition = parent_context.evaluate_python_expression(child_task.statement.condition)
+                condition = parent_context.evaluate_python_expression(child_stmt.condition)
                 if condition:
                     result = child_task.execute(parent_context)
                     is_executed = True
-            elif isinstance(child_task.statement, ElseStatement):
+            elif isinstance(child_stmt, ElseStatement):
                 result = child_task.execute(parent_context)
                 is_executed = True
 

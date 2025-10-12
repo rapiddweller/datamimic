@@ -8,4 +8,22 @@
         <variable name="country" entity="Country"/>
         <variable name="credit_card" entity="CreditCard"/>
     </generate>
+
+    <!-- WHY: Carry healthcare demo concepts into the aggregate descriptor for end-to-end demographic validation. -->
+    <echo>Generating seeded patient cohort for demographic gates</echo>
+    <generate name="seeded_patients" count="6" target="LogExporter">
+        <variable
+            name="patient"
+            entity="Patient"
+            dataset="US"
+            ageMin="60"
+            ageMax="70"
+            conditionsInclude="Diabetes"
+            conditionsExclude="Hypertension"
+            rngSeed="4242"
+        />
+        <key name="full_name" script="patient.full_name"/>
+        <key name="age" script="patient.age"/>
+        <array name="conditions" script="patient.conditions"/>
+    </generate>
 </setup>

@@ -6,10 +6,10 @@
 
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.statements.memstore_statement import MemstoreStatement
-from datamimic_ce.tasks.task import Task
+from datamimic_ce.tasks.task import SetupSubTask
 
 
-class MemstoreTask(Task):
+class MemstoreTask(SetupSubTask):
     def __init__(self, statement: MemstoreStatement):
         self._statement = statement
 

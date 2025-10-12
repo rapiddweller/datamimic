@@ -1,0 +1,36 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "8001f201f94b2fbbe5fbf396cd8a0ae9abc9569594ea1bba48587e643bccf2a7",
+    "seed_canonical": "16295437679671003933"
+  },
+  "domain": "doctor",
+  "items": [
+    {
+      "first_name": "Olivia",
+      "full_name": "MD Olivia Brown",
+      "hospital": "Northwest Medical Center",
+      "human_id": "DOC-6BD5CEF3",
+      "id": "6bd5cef3-8c07-5b35-8172-b2a9d048b700",
+      "last_name": "Brown",
+      "license_number": "US-6BD5CEF3",
+      "locale": "en_US",
+      "specialty": "cardiology",
+      "title": "MD"
+    },
+    {
+      "first_name": "Noah",
+      "full_name": "MD Noah Williams",
+      "hospital": "Austin Heart Institute",
+      "human_id": "DOC-F95C3793",
+      "id": "f95c3793-ea16-55ce-a420-d8339ab7f3c1",
+      "last_name": "Williams",
+      "license_number": "US-F95C3793",
+      "locale": "en_US",
+      "specialty": "general",
+      "title": "MD"
+    }
+  ],
+  "request_hash": "8d133e065a5516eceb3798a7f73c4c4c43cb627d116afb2b5618585d3adda9ca",
+  "version": "v1"
+}

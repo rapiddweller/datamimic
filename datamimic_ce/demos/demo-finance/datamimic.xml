@@ -1,0 +1,7 @@
+<setup>
+    <echo>Running Finance Demos</echo>
+    <include uri="bank.xml" />
+    <include uri="bank_account.xml" />
+    <include uri="transaction.xml" />
+</setup>
+

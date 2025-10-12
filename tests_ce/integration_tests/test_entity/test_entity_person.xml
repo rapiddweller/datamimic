@@ -40,4 +40,21 @@
         <key name="name3" script="person2.name"/>
 
     </generate>
+
+    <!-- WHY: Mirror healthcare and finance demos by adding a seeded cohort with bounded demographics for integration checks. -->
+    <echo>Generating seeded person cohort with demographic bounds</echo>
+    <generate name="seeded_person_cohort" count="5" target="LogExporter">
+        <variable
+            name="seeded_person"
+            entity="Person"
+            dataset="US"
+            ageMin="28"
+            ageMax="35"
+            rngSeed="2025"
+        />
+        <key name="full_name" script="seeded_person.name"/>
+        <key name="age" script="seeded_person.age"/>
+        <key name="gender" script="seeded_person.gender"/>
+        <key name="email" script="seeded_person.email"/>
+    </generate>
 </setup>

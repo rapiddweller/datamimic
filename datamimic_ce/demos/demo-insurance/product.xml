@@ -1,0 +1,12 @@
+<setup>
+    <echo>Generating Insurance Products</echo>
+    <generate name="insurance_products" count="10" target="CSV">
+        <variable name="product" entity="InsuranceProduct" />
+        <key name="id" script="product.id" />
+        <key name="type" script="product.type" />
+        <key name="code" script="product.code" />
+        <key name="description" script="product.description" />
+        <!-- Coverages are objects; export via nestedKey (list of dicts) -->
+        <nestedKey name="coverages" script="[c.to_dict() for c in product.coverages]" />
+    </generate>
+</setup>

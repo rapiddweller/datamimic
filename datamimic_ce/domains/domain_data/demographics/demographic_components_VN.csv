@@ -1,0 +1,2 @@
+component_id,dmgrp_profile_id,constraints_json
+urban_adult,vn_urban_adult,"{""age"":{""min"":22,""max"":38}}"

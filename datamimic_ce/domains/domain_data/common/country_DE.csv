@@ -1,0 +1,5 @@
+DE,de_DE,49,1[5-9][0-9],Deutschland,83200000,Bundesland,Landkreis,Stadt
+AT,de_AT,43,6[1-9][0-9],Österreich,9000000,Bundesland,Bezirk,Stadt
+CH,de_CH,41,4[1-9][0-9],Schweiz,8700000,Kanton,Bezirk,Stadt
+NL,nl_NL,31,3[0-9]{2},Niederlande,17400000,Provinz,Gemeente,Stadt
+BE,de_BE,32,2[0-9]{2},Belgien,11600000,Region,Gemeinde,Stadt

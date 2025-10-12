@@ -5,13 +5,11 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import datetime
-import random
-import string
 from typing import Any, TypeVar
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.healthcare.generators.medical_device_generator import MedicalDeviceGenerator
 
 T = TypeVar("T")
@@ -40,6 +38,10 @@ class MedicalDevice(BaseEntity):
         self._medical_device_generator = medical_device_generator
 
     @property
+    def dataset(self) -> str:
+        return self._medical_device_generator.dataset  #  use generator property; avoid private attr
+
+    @property
     @property_cache
     def device_id(self) -> str:
         """Generate a unique device ID.
@@ -47,9 +49,9 @@ class MedicalDevice(BaseEntity):
         Returns:
             A string representing a device ID.
         """
-        prefix = "DEV"
-        random_digits = "".join(random.choices(string.digits, k=8))
-        return f"{prefix}-{random_digits}"
+        rng = self._medical_device_generator.rng
+        suffix = "".join(str(rng.randint(0, 9)) for _ in range(8))
+        return f"DEV-{suffix}"
 
     @property
     @property_cache
@@ -79,9 +81,10 @@ class MedicalDevice(BaseEntity):
         Returns:
             A string representing a model number.
         """
-        prefix = "".join(random.choices(string.ascii_uppercase, k=2))
-        suffix = "".join(random.choices(string.digits, k=4))
-        return f"{prefix}{suffix}"
+        rng = self._medical_device_generator.rng
+        letters = "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(2))
+        digits = "".join(str(rng.randint(0, 9)) for _ in range(4))
+        return f"{letters}{digits}"
 
     @property
     @property_cache
@@ -92,8 +95,10 @@ class MedicalDevice(BaseEntity):
             A string representing a serial number.
         """
         # Format: MFG-YYYY-XXXXXXXX
-        year = random.randint(2010, datetime.datetime.now().year)
-        random_part = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        year = self._medical_device_generator.rng.randint(2010, datetime.datetime.now().year)
+        rng = self._medical_device_generator.rng
+        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        random_part = "".join(rng.choice(alphabet) for _ in range(8))
         return f"MFG-{year}-{random_part}"
 
     @property
@@ -104,10 +109,8 @@ class MedicalDevice(BaseEntity):
         Returns:
             A string representing a manufacture date in ISO format.
         """
-        # Generate a date between 1 and 10 years ago
-        days_ago = random.randint(365, 3650)
-        date = datetime.datetime.now() - datetime.timedelta(days=days_ago)
-        return date.strftime("%Y-%m-%d")
+        #  delegate to generator for SOC and determinism
+        return self._medical_device_generator.generate_manufacture_date()
 
     @property
     @property_cache
@@ -117,10 +120,7 @@ class MedicalDevice(BaseEntity):
         Returns:
             A string representing an expiration date in ISO format.
         """
-        # Generate a date between 1 and 5 years in the future
-        days_ahead = random.randint(365, 1825)
-        date = datetime.datetime.now() + datetime.timedelta(days=days_ahead)
-        return date.strftime("%Y-%m-%d")
+        return self._medical_device_generator.generate_expiration_date()
 
     @property
     @property_cache
@@ -130,10 +130,7 @@ class MedicalDevice(BaseEntity):
         Returns:
             A string representing a last maintenance date in ISO format.
         """
-        # Generate a date between 1 and 180 days ago
-        days_ago = random.randint(1, 180)
-        date = datetime.datetime.now() - datetime.timedelta(days=days_ago)
-        return date.strftime("%Y-%m-%d")
+        return self._medical_device_generator.generate_last_maintenance_date()
 
     @property
     @property_cache
@@ -143,10 +140,7 @@ class MedicalDevice(BaseEntity):
         Returns:
             A string representing a next maintenance date in ISO format.
         """
-        # Generate a date between 1 and 180 days in the future
-        days_ahead = random.randint(1, 180)
-        date = datetime.datetime.now() + datetime.timedelta(days=days_ahead)
-        return date.strftime("%Y-%m-%d")
+        return self._medical_device_generator.generate_next_maintenance_date()
 
     @property
     @property_cache
@@ -190,46 +184,33 @@ class MedicalDevice(BaseEntity):
         specs = {}
 
         # Common specifications for all devices
-        specs["power_supply"] = random.choice(["AC", "Battery", "AC/Battery"])
-        specs["weight_kg"] = str(round(random.uniform(1.5, 200.0), 1))
-        specs["dimensions_cm"] = f"{random.randint(20, 200)}x{random.randint(20, 200)}x{random.randint(20, 200)}"
+        rng = self._medical_device_generator.rng
+        specs["power_supply"] = rng.choice(["AC", "Battery", "AC/Battery"])
+        specs["weight_kg"] = str(round(rng.uniform(1.5, 200.0), 1))
+        specs["dimensions_cm"] = f"{rng.randint(20, 200)}x{rng.randint(20, 200)}x{rng.randint(20, 200)}"
 
         # Device-specific specifications
         device_type = self.device_type.lower()
 
         if "ventilator" in device_type:
-            specs["flow_rate_lpm"] = str(random.randint(1, 60))
-            specs["pressure_range_cmh2o"] = f"{random.randint(0, 5)}-{random.randint(30, 50)}"
-            specs["modes"] = random.choice(
-                [
-                    "Volume Control, Pressure Control, SIMV",
-                    "CPAP, BiPAP, APRV",
-                    "Volume Control, Pressure Control, CPAP, BiPAP",
-                ]
-            )
+            specs["flow_rate_lpm"] = str(rng.randint(1, 60))
+            specs["pressure_range_cmh2o"] = f"{rng.randint(0, 5)}-{rng.randint(30, 50)}"
+            specs["modes"] = self._medical_device_generator.pick_ventilator_mode()
 
         elif "mri" in device_type:
-            specs["field_strength_tesla"] = random.choice(["1.5T", "3.0T", "7.0T"])
-            specs["bore_diameter_cm"] = str(random.randint(60, 80))
-            specs["gradient_strength_mtm"] = str(random.randint(20, 80))
+            specs["field_strength_tesla"] = self._medical_device_generator.pick_mri_field_strength()
+            specs["bore_diameter_cm"] = str(rng.randint(60, 80))
+            specs["gradient_strength_mtm"] = str(rng.randint(20, 80))
 
         elif "x-ray" in device_type:
-            specs["max_voltage_kv"] = str(random.randint(40, 150))
-            specs["max_current_ma"] = str(random.randint(100, 1000))
-            specs["detector_type"] = random.choice(["Flat Panel", "CCD", "CMOS"])
+            specs["max_voltage_kv"] = str(rng.randint(40, 150))
+            specs["max_current_ma"] = str(rng.randint(100, 1000))
+            specs["detector_type"] = self._medical_device_generator.pick_xray_detector_type()
 
         elif "ultrasound" in device_type:
-            specs["probe_types"] = random.choice(
-                ["Linear, Convex, Phased Array", "Linear, Convex, Transvaginal", "Linear, Convex, Cardiac"]
-            )
-            specs["imaging_modes"] = random.choice(
-                [
-                    "B-Mode, M-Mode, Color Doppler",
-                    "B-Mode, Color Doppler, Power Doppler",
-                    "B-Mode, M-Mode, Color Doppler, Power Doppler",
-                ]
-            )
-            specs["frequency_range_mhz"] = f"{random.randint(1, 5)}-{random.randint(10, 18)}"
+            specs["probe_types"] = self._medical_device_generator.pick_ultrasound_probe_type()
+            specs["imaging_modes"] = self._medical_device_generator.pick_ultrasound_imaging_mode()
+            specs["frequency_range_mhz"] = f"{rng.randint(1, 5)}-{rng.randint(10, 18)}"
 
         return specs
 

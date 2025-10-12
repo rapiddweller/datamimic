@@ -1,0 +1,6 @@
+FR,fr_FR,33,6[0-9],France,67400000,région,département,commune
+BE,fr_BE,32,4[7-9],Belgique,11600000,région,province,commune
+CH,fr_CH,41,7[46-9],Suisse,8700000,canton,district,commune
+CA,fr_CA,1,4[0-9][0-9],Canada,38000000,province,région,ville
+MC,fr_MC,377,6[0-9][0-9],Monaco,39000,quartier,,ville
+LU,fr_LU,352,6[269][18],Luxembourg,632000,district,canton,commune

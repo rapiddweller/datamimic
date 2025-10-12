@@ -10,12 +10,16 @@ Transaction Generator.
 This module provides functionality to generate transaction data for financial accounts.
 """
 
+from __future__ import annotations
+
+import datetime as dt
 import random
 from pathlib import Path
 
-from datamimic_ce.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
-from datamimic_ce.utils.data_generation_ce_util import DataGenerationCEUtil
+from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -23,17 +27,23 @@ from datamimic_ce.utils.file_util import FileUtil
 class TransactionGenerator(BaseDomainGenerator):
     """Generator for financial transaction data."""
 
-    def __init__(self, dataset: str | None = None):
+    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
         """Initialize the transaction generator.
 
         Args:
             dataset: The dataset code to use (e.g., 'US', 'DE'). Defaults to 'US'.
         """
-        self._dataset = dataset or "US"
-        self._reference_generator = DataFakerGenerator("uuid4")
-        self._transaction_data: dict[str, tuple[dict[str, int], list[tuple]]] = {}
-        self._currency_data: dict[str, tuple[dict[str, int], list[tuple]]] = {}
-        self._amount_data: dict[str, tuple[dict[str, int], list[tuple]]] = {}
+        self._dataset = (dataset or "US").upper()  #  normalize once for consistent dataset file suffixes
+        self._rng: random.Random = rng or random.Random()
+        # Keep reference IDs deterministic when rngSeed is supplied via descriptors.
+        self._reference_generator = DataFakerGenerator(
+            "uuid4",
+            rng=self._derive_rng() if rng is not None else None,
+        )
+        # Cache structures: map key -> (header_dict, rows)
+        self._transaction_data: dict[str, tuple[dict[str, int], list[tuple[object, ...]]]] = {}
+        self._currency_data: dict[str, tuple[dict[str, int], list[tuple[object, ...]]]] = {}
+        self._amount_data: dict[str, tuple[dict[str, int], list[tuple[object, ...]]]] = {}
 
     @property
     def dataset(self) -> str:
@@ -44,6 +54,25 @@ class TransactionGenerator(BaseDomainGenerator):
         """
         return self._dataset
 
+    @property
+    def rng(self) -> random.Random:
+        return self._rng
+
+    def _derive_rng(self) -> random.Random:
+        # Spawn deterministic child RNGs so seeded transaction batches replay without cross-coupling randomness.
+        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
+
+    #  Centralize date sampling to keep model pure and determinism consistent
+    def generate_transaction_date(self) -> dt.datetime:
+        from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+
+        now = dt.datetime.now()
+        min_dt = (now - dt.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
+        max_dt = now.strftime("%Y-%m-%d %H:%M:%S")
+        gen = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
+        assert isinstance(gen, dt.datetime)
+        return gen
+
     def _get_base_path(self, subdirectory: str) -> Path:
         """Get base path for domain data files.
 
@@ -53,7 +82,8 @@ class TransactionGenerator(BaseDomainGenerator):
         Returns:
             The full path to the specified directory.
         """
-        base_path = Path(__file__).parent.parent.parent.parent / "domain_data"
+        #  remove hardcoded repo traversal
+        base_path = dataset_path(start=Path(__file__))
 
         # Handle different directory structures based on subdirectory
         if subdirectory.startswith("../"):
@@ -68,7 +98,9 @@ class TransactionGenerator(BaseDomainGenerator):
             # Standard case for finance/subdirectory
             return base_path / "finance" / subdirectory
 
-    def _load_data_file(self, file_name: str, subdirectory: str = "transaction") -> tuple[dict, list]:
+    def _load_data_file(
+        self, file_name: str, subdirectory: str = "transaction"
+    ) -> tuple[dict[str, int], list[tuple[object, ...]]]:
         """Load data from a CSV file.
 
         Args:
@@ -85,7 +117,9 @@ class TransactionGenerator(BaseDomainGenerator):
             read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=","),
         )
 
-    def _weighted_choice(self, data: list, header_dict: dict, weight_key: str = "weight") -> tuple:
+    def _weighted_choice(
+        self, data: list[tuple[object, ...]], header_dict: dict[str, int], weight_key: str = "weight"
+    ) -> tuple[object, ...]:
         """Select a random item based on weights.
 
         Args:
@@ -99,11 +133,11 @@ class TransactionGenerator(BaseDomainGenerator):
         # Check if weight key exists in the header, otherwise use equal weights
         if weight_key in header_dict:
             wgt_idx = header_dict[weight_key]
-            weights = [float(row[wgt_idx]) for row in data]
-            return random.choices(data, weights=weights)[0]
+            weights = [float(str(row[wgt_idx])) for row in data]
+            return self._rng.choices(data, weights=weights)[0]
         else:
             # If no weight key exists, use equal weights
-            return random.choice(data)
+            return self._rng.choice(data)
 
     def get_transaction_type(self) -> dict:
         """Generate a random transaction type.
@@ -118,8 +152,8 @@ class TransactionGenerator(BaseDomainGenerator):
         header_dict, loaded_data = self._transaction_data["transaction_types"]
         type_data = self._weighted_choice(loaded_data, header_dict)
 
-        transaction_type = type_data[header_dict["transaction_type"]]
-        direction = type_data[header_dict["direction"]].strip()
+        transaction_type = str(type_data[header_dict["transaction_type"]])
+        direction = str(type_data[header_dict["direction"]]).strip()
 
         return {"type": transaction_type, "direction": direction}
 
@@ -135,7 +169,7 @@ class TransactionGenerator(BaseDomainGenerator):
 
         header_dict, loaded_data = self._transaction_data["categories"]
         category_data = self._weighted_choice(loaded_data, header_dict)
-        return category_data[header_dict["category"]]
+        return str(category_data[header_dict["category"]])
 
     def get_merchant_name(self, category: str | None = None) -> str:
         """Generate a random merchant name.
@@ -171,7 +205,7 @@ class TransactionGenerator(BaseDomainGenerator):
             if filtered_data:
                 merchant_data = self._weighted_choice(filtered_data, header_dict)
                 self._merchant_recursion_count = 0  # Reset recursion counter
-                return merchant_data[header_dict["merchant_name"]]
+                return str(merchant_data[header_dict["merchant_name"]])
             else:
                 # If no merchants found for the category, try with a new random category
                 # But don't recurse infinitely if no merchants exist at all
@@ -184,10 +218,10 @@ class TransactionGenerator(BaseDomainGenerator):
                 # Fallback if recursion limit reached or same category
                 self._merchant_recursion_count = 0  # Reset recursion counter
                 return f"{category} Merchant"
-        except Exception:
-            # Fallback if any error occurs
-            self._merchant_recursion_count = 0  # Reset recursion counter
-            return f"Generic {category} Merchant"
+        except (FileNotFoundError, KeyError, IndexError, ValueError):
+            # Narrow exception scope; do not mask unrelated errors
+            self._merchant_recursion_count = 0
+            return f"{category} Merchant"
 
     def get_status(self) -> str:
         """Generate a random transaction status.
@@ -201,7 +235,7 @@ class TransactionGenerator(BaseDomainGenerator):
 
         header_dict, loaded_data = self._transaction_data["status"]
         status_data = self._weighted_choice(loaded_data, header_dict)
-        return status_data[header_dict["status"]]
+        return str(status_data[header_dict["status"]])
 
     def get_channel(self) -> str:
         """Generate a random transaction channel.
@@ -215,7 +249,7 @@ class TransactionGenerator(BaseDomainGenerator):
 
         header_dict, loaded_data = self._transaction_data["channels"]
         channel_data = self._weighted_choice(loaded_data, header_dict)
-        return channel_data[header_dict["channel"]]
+        return str(channel_data[header_dict["channel"]])
 
     def get_location(self) -> str:
         """Generate a random location.
@@ -225,30 +259,30 @@ class TransactionGenerator(BaseDomainGenerator):
         """
         try:
             if "cities" not in self._transaction_data:
-                header_dict, loaded_data = self._load_data_file(f"city_{self._dataset}.csv", "common/city")
-                self._transaction_data["cities"] = (header_dict, loaded_data)
+                # Use existing datasets under common/city with semicolon delimiter
+                from datamimic_ce.domains.utils.dataset_path import dataset_path
+                from datamimic_ce.utils.file_util import FileUtil
 
-            header_dict, loaded_data = self._transaction_data["cities"]
+                file_path = dataset_path("common", "city", f"city_{self._dataset}.csv", start=Path(__file__))
+                rows = FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=";")
+                # Drop header if present
+                if rows and rows[0] and rows[0][0] == "state.id":
+                    rows = rows[1:]
+                self._transaction_data["cities"] = ({}, rows)
+
+            _, loaded_data = self._transaction_data["cities"]
 
             # Select a city at random - no weights for city data
-            city_data = random.choice(loaded_data)
+            city_data = self._rng.choice(loaded_data)
 
-            # Parse the city name from the combined string
-            # The format appears to be "state.id;name;county;postalCode;areaCode"
-            if len(city_data) > 0 and ";" in city_data[0]:
-                parts = city_data[0].split(";")
-                if len(parts) > 1:
-                    return parts[1]  # Return the city name
+            # city_data tuple format: (state.id, name, county, postalCode, areaCode)
+            if len(city_data) > 1:
+                return str(city_data[1])
 
-            # Fall back to the first field if parsing fails
-            return city_data[0]
-        except Exception:
-            # Fallback if city data fails to load or parse
-            default_cities = {
-                "US": ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix"],
-                "DE": ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt"],
-            }
-            return random.choice(default_cities.get(self._dataset, default_cities["US"]))
+            # Fall back to first field if parsing fails
+            return str(city_data[0])
+        except (FileNotFoundError, IndexError, KeyError, ValueError) as e:
+            raise ValueError(f"Unable to load or parse cities for dataset {self._dataset}") from e
 
     def get_reference_number(self) -> str:
         """Generate a random transaction reference number.
@@ -256,7 +290,7 @@ class TransactionGenerator(BaseDomainGenerator):
         Returns:
             A random alphanumeric reference number.
         """
-        return DataGenerationCEUtil.rnd_str_from_regex("[A-Z0-9]{10,12}")
+        return StringGenerator.rnd_str_from_regex("[A-Z0-9]{10,12}")
 
     def get_currency(self) -> dict:
         """Get currency information based on the current dataset.
@@ -271,26 +305,26 @@ class TransactionGenerator(BaseDomainGenerator):
 
         # Load all currencies for details (symbol, name)
         if "currencies" not in self._currency_data:
-            currencies_path = (
-                Path(__file__).parent.parent.parent.parent / "domain_data" / "ecommerce" / "currencies.csv"
-            )
+            currencies_path = dataset_path("ecommerce", f"currencies_{self.dataset}.csv", start=Path(__file__))
             # Convert the weighted data into the expected format (header_dict, data)
             header_dict = {"code": 0, "name": 1, "weight": 2, "symbol": 3}  # Define the header structure
+            from typing import cast
+
             with currencies_path.open("r", newline="", encoding="utf-8") as csvfile:
                 import csv
 
                 csvreader = csv.reader(csvfile, delimiter=",")
                 next(csvreader)  # Skip header row
                 data = [tuple(row) for row in csvreader]  # Keep all columns to maintain structure
-
-            self._currency_data["currencies"] = (header_dict, data)
+            data_typed = cast(list[tuple[object, ...]], data)
+            self._currency_data["currencies"] = (header_dict, data_typed)
 
         # Get currency mapping for the current dataset
         mapping_header, mapping_data = self._currency_data["currency_mapping"]
 
         # Select a currency code based on weights
         selected_mapping = self._weighted_choice(mapping_data, mapping_header)
-        currency_code = selected_mapping[mapping_header["currency_code"]]
+        currency_code = str(selected_mapping[mapping_header["currency_code"]])
 
         # Get additional currency details
         currency_header, currency_data = self._currency_data["currencies"]
@@ -301,8 +335,8 @@ class TransactionGenerator(BaseDomainGenerator):
             currency_info = filtered_currency[0]
             return {
                 "code": currency_code,
-                "name": currency_info[currency_header["name"]],
-                "symbol": currency_info[currency_header["symbol"]],
+                "name": str(currency_info[currency_header["name"]]),
+                "symbol": str(currency_info[currency_header["symbol"]]),
             }
         else:
             # Fallback if currency details not found
@@ -328,13 +362,13 @@ class TransactionGenerator(BaseDomainGenerator):
 
         if filtered_data:
             template_data = self._weighted_choice(filtered_data, header_dict)
-            return template_data[header_dict["template"]]
+            return str(template_data[header_dict["template"]])
         else:
             # Try to find generic template
             generic_data = [row for row in loaded_data if row[header_dict["transaction_type"]] == "Generic"]
             if generic_data:
                 template_data = self._weighted_choice(generic_data, header_dict)
-                return template_data[header_dict["template"]]
+                return str(template_data[header_dict["template"]])
             else:
                 # Last resort - use transaction type with merchant
                 return f"{transaction_type} - {{}}"
@@ -374,8 +408,8 @@ class TransactionGenerator(BaseDomainGenerator):
         if filtered_data:
             # Use first matching category (should be only one)
             category_data = filtered_data[0]
-            min_amount = float(category_data[header_dict["min_amount"]])
-            max_amount = float(category_data[header_dict["max_amount"]])
+            min_amount = float(str(category_data[header_dict["min_amount"]]))
+            max_amount = float(str(category_data[header_dict["max_amount"]]))
             return min_amount, max_amount
         else:
             # Default range if category not found
@@ -404,15 +438,15 @@ class TransactionGenerator(BaseDomainGenerator):
             row
             for row in loaded_data
             if len(row) > 0
-            and row[type_idx].strip()
-            and not row[type_idx].strip().startswith("#")
+            and str(row[type_idx]).strip()
+            and not str(row[type_idx]).strip().startswith("#")
             and row[type_idx] == transaction_type
         ]
 
         if filtered_data:
             # Use first matching transaction type (should be only one)
             type_data = filtered_data[0]
-            return float(type_data[header_dict["modifier"]])
+            return float(str(type_data[header_dict["modifier"]]))
         else:
             # Default modifier if type not found
             return 1.0
@@ -435,7 +469,7 @@ class TransactionGenerator(BaseDomainGenerator):
 
         # Generate amount with some randomness
         # Use log distribution to have more smaller transactions than larger ones
-        amount = min_amount + (max_amount - min_amount) * random.random() ** 1.5
+        amount = min_amount + (max_amount - min_amount) * self._rng.random() ** 1.5
         amount = amount * modifier
 
         # Round to 2 decimal places

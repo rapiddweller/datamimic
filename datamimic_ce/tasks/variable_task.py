@@ -4,7 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import traceback
 from collections.abc import Iterator
 from typing import Any, Final
 
@@ -28,13 +27,14 @@ from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntity
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
+from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.domain_class_util import DomainClassUtil
 from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.string_util import StringUtil
 
 
-class VariableTask(KeyVariableTask):
+class VariableTask(KeyVariableTask, CommonSubTask):
     _iterator: Iterator[Any] | None
     _ITERATOR_MODE: Final = "iterator"
     _ENTITY_MODE: Final = "entity_builder"
@@ -210,13 +210,14 @@ class VariableTask(KeyVariableTask):
                     locale=locale,
                     dataset=dataset,
                     count=1 if pagination is None else pagination.limit,
+                    statement=statement,
                 )
             except Exception as e:
                 logger.error(
                     f"Failed to execute <variable> '{self._statement.name}': "
                     f"Can't create entity '{statement.entity}': {e}"
                 )
-                traceback.print_exc()
+                #  Avoid printing tracebacks directly; structured logs handle context.
                 raise ValueError(
                     f"Failed to execute <variable> '{self._statement.name}': "
                     f"Can't create entity '{statement.entity}': {e}"
@@ -238,8 +239,48 @@ class VariableTask(KeyVariableTask):
         return self._statement
 
     @staticmethod
-    def _get_entity_generator(ctx: Context, entity_name: str, locale: str, dataset: str, count: int):
+    def _get_entity_generator(
+        ctx: Context, entity_name: str, locale: str, dataset: str, count: int, statement: VariableStatement
+    ):
+        from random import Random
+
+        from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+
         entity_class_name, kwargs = StringUtil.parse_constructor_string(entity_name)
+        # Inject dataset if not explicitly provided in constructor
+        kwargs.setdefault("dataset", dataset)
+        demographic_context = getattr(ctx.root, "demographic_context", None)
+        # Build demographic config + rng from statement attributes when present
+        demo_cfg = None
+        if any(
+            v is not None
+            for v in (statement.age_min, statement.age_max, statement.conditions_include, statement.conditions_exclude)
+        ):
+            includes = (
+                frozenset(x.strip() for x in (statement.conditions_include or "").split(",") if x.strip())
+                if statement.conditions_include is not None
+                else None
+            )
+            excludes = (
+                frozenset(x.strip() for x in (statement.conditions_exclude or "").split(",") if x.strip())
+                if statement.conditions_exclude is not None
+                else None
+            )
+            demo_cfg = DemographicConfig(
+                age_min=statement.age_min,
+                age_max=statement.age_max,
+                conditions_include=includes,
+                conditions_exclude=excludes,
+            )
+        rng_obj = Random(statement.rng_seed) if statement.rng_seed is not None else None
+        if demo_cfg is None and demographic_context is not None and demographic_context.overrides is not None:
+            # Share profile-level defaults when no per-variable overrides are provided.
+            demo_cfg = demographic_context.overrides
+        if rng_obj is None and demographic_context is not None:
+            # Derive entity-level RNGs from the demographics root seed to keep sampling reproducible.
+            rng_obj = Random(demographic_context.rng.randrange(2**63))
+        demographic_sampler = demographic_context.sampler if demographic_context is not None else None
+        # Build from the last parsed VariableTask (self is not accessible in staticmethod); use closure via locals()
 
         # Check if entity_class_name contains dots indicating a domain path
         if "." in entity_class_name:
@@ -248,7 +289,7 @@ class VariableTask(KeyVariableTask):
             return DomainClassUtil.create_instance(f"datamimic_ce.domains.{entity_class_name}", **kwargs)
         else:
             # For simple names like "Company", use the entity mapping
-            # Complete mapping of all entities across domains
+            # Complete mapping of all entities across domain_test
             entity_mappings = {
                 # Common domain entities
                 "Company": "common.services.CompanyService",
@@ -260,6 +301,7 @@ class VariableTask(KeyVariableTask):
                 "CreditCard": "finance.services.CreditCardService",
                 "Bank": "finance.services.BankService",
                 "BankAccount": "finance.services.BankAccountService",
+                "Transaction": "finance.services.TransactionService",
                 # Ecommerce domain entities
                 "Product": "ecommerce.services.ProductService",
                 "Order": "ecommerce.services.OrderService",
@@ -283,6 +325,40 @@ class VariableTask(KeyVariableTask):
             # Use the mapping to create the entity
             if entity_class_name in entity_mappings:
                 domain_entity_path = entity_mappings[entity_class_name]
+                # Only attach demographic_config/rng for supported services
+                supported_demographic_entities = {
+                    "Patient",
+                    "Doctor",
+                    "PoliceOfficer",
+                    "Person",
+                }
+                config_enabled_entities = supported_demographic_entities | {
+                    "InsurancePolicy",
+                    "MedicalDevice",
+                    "CreditCard",
+                }
+                if demo_cfg is not None and entity_class_name in config_enabled_entities:
+                    kwargs.setdefault("demographic_config", demo_cfg)
+                if demographic_sampler is not None and entity_class_name in supported_demographic_entities:
+                    # Thread pure sampler through to entities that know how to consume demographics.
+                    kwargs.setdefault("demographic_sampler", demographic_sampler)
+                if rng_obj is not None and entity_class_name in {
+                    "Patient",
+                    "Doctor",
+                    "Hospital",
+                    "MedicalProcedure",
+                    "MedicalDevice",
+                    "PoliceOfficer",
+                    "AdministrationOffice",
+                    "EducationalInstitution",
+                    "InsuranceCompany",
+                    "InsurancePolicy",
+                    "InsuranceProduct",
+                    "InsuranceCoverage",
+                    "Person",
+                    "CreditCard",
+                }:
+                    kwargs["rng"] = rng_obj
                 return DomainClassUtil.create_instance(f"datamimic_ce.domains.{domain_entity_path}", **kwargs)
             else:
                 # If no mapping exists, entity is not supported
@@ -294,7 +370,6 @@ class VariableTask(KeyVariableTask):
         """
         Generate data for element <variable>
         """
-        from datamimic_ce.tasks.task_util import TaskUtil
 
         if self._mode == self._ITERATOR_MODE:
             value = next(self._iterator) if self._iterator is not None else None

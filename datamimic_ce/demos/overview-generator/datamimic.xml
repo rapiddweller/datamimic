@@ -4,7 +4,7 @@
 
     Domains
     ======================================
-    DATAMIMIC Entity demo showcases the various generators for multiple domains to
+    DATAMIMIC Entity demo showcases the various generators for multiple domain_test to
      create data e.g. for personal data, addresses, internet, banking, telecom. They may be localized to specific
     languages and be grouped into hierarchical datasets, e.g. for continents, countries, and regions.
 

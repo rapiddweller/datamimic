@@ -1,0 +1,7 @@
+<setup>
+    <echo>Running Insurance Demos</echo>
+    <include uri="company.xml" />
+    <include uri="product.xml" />
+    <include uri="policy.xml" />
+</setup>
+

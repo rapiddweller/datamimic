@@ -1,0 +1,21 @@
+condition,age_min,age_max,weight_multiplier
+Allergies,0,17,3.0
+Eczema,0,17,2.5
+ADHD,6,25,3.5
+Autism Spectrum Disorder,0,25,3.2
+Congenital Heart Defects,0,12,4.0
+Type 1 Diabetes,0,29,2.5
+Type 1 Diabetes,30,120,0.4
+Epilepsy,0,30,2.0
+Cerebral Palsy,0,18,3.5
+Irritable Bowel Syndrome,18,45,1.8
+Fabry Disease,0,120,1.1
+Hypertension,40,120,1.5
+Hypertension,0,39,0.2
+Osteoporosis,60,120,1.6
+COPD,50,120,1.7
+Sleep Apnea,40,120,1.4
+Migraine,15,50,1.3
+Obesity,30,120,1.2
+Coronary Artery Disease,55,120,1.6
+Heart Failure,60,120,1.7

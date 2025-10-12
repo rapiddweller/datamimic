@@ -1,0 +1,16 @@
+position,code,description,level,weight
+Giám đốc sở,DIR,Người đứng đầu cơ quan nhà nước chỉ đạo và chịu trách nhiệm toàn bộ hoạt động,7,0.01
+Phó giám đốc,DEP_DIR,Lãnh đạo cấp phó phụ trách các lĩnh vực và hỗ trợ giám đốc,6,0.02
+Trưởng ban/Trưởng phòng thuộc sở,DIV_CHIEF,Lãnh đạo quản lý một ban chuyên môn trong cơ quan,5,0.03
+Trưởng phòng chuyên môn,DEPT_HEAD,Quản lý một phòng chuyên môn trực thuộc ban,4,0.05
+Trưởng dự án/Chương trình,PROG_MGR,Phụ trách triển khai và giám sát các chương trình mục tiêu,3,0.08
+Chuyên viên cao cấp,SR_ANLST,Chuyên gia phân tích và tham mưu chính sách quan trọng,3,0.10
+Chuyên viên chính sách,POL_ANLST,Phân tích và đề xuất giải pháp chính sách,2,0.10
+Chánh văn phòng,ADMIN_OFF,Điều hành công tác hành chính, tài chính và nhân sự,3,0.05
+Chuyên viên tài chính,BUDG_ANLST,Phân tích và quản lý ngân sách cơ quan,2,0.08
+Chuyên viên nhân sự,HR_SPEC,Phụ trách tuyển dụng và chế độ lao động,2,0.07
+Chuyên viên CNTT,IT_SPEC,Hỗ trợ và vận hành hệ thống công nghệ thông tin,2,0.08
+Chuyên viên truyền thông,PA_SPEC,Phụ trách thông tin đối ngoại và quan hệ công chúng,2,0.05
+Tư vấn pháp lý,LEGAL,Cung cấp ý kiến pháp lý và đại diện pháp lý cho cơ quan,3,0.04
+Thư ký hành chính,ADMIN_ASST,Hỗ trợ hành chính cho lãnh đạo và phòng ban,1,0.12
+Nhân viên văn thư,CLERK,Thực hiện công việc văn thư và hành chính thường xuyên,1,0.12

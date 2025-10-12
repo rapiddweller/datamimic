@@ -1,0 +1,23 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "5d7f14e39bcd93395074576920f1eb323d2ad7b10ff430316bd4f7d9537acaf0",
+    "seed_canonical": "3445102689993055007"
+  },
+  "domain": "address",
+  "items": [
+    {
+      "city": "Hà Nội",
+      "country": "VN",
+      "formatted": "18 Đường Nguyễn Huệ, Hà Nội, HN 508215, VN",
+      "human_id": "ADR-8E354507",
+      "id": "8e354507-e55f-5c93-a760-e0d6b79b660f",
+      "line1": "18 Đường Nguyễn Huệ",
+      "locale": "vi_VN",
+      "postal_code": "508215",
+      "state": "HN"
+    }
+  ],
+  "request_hash": "8925f5def725ef27f3755a3dca478d113cb7440f1e2cce64381a20abcfd3cd2a",
+  "version": "v1"
+}

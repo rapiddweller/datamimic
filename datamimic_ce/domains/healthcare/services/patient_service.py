@@ -10,7 +10,11 @@ Patient service.
 This module provides the PatientService class for generating and managing patient data.
 """
 
-from datamimic_ce.domain_core.base_domain_service import BaseDomainService
+from random import Random
+
+from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
+from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.healthcare.generators.patient_generator import PatientGenerator
 from datamimic_ce.domains.healthcare.models.patient import Patient
 
@@ -22,5 +26,35 @@ class PatientService(BaseDomainService[Patient]):
     and retrieving patients with specific characteristics.
     """
 
-    def __init__(self, dataset: str | None = None):
-        super().__init__(PatientGenerator(dataset=dataset), Patient)
+    def __init__(
+        self,
+        dataset: str | None = None,
+        demographic_config: DemographicConfig | None = None,
+        demographic_sampler: DemographicSampler | None = None,
+        rng: Random | None = None,
+    ):
+        # Thread demographic and RNG overrides through the service layer.
+        super().__init__(
+            PatientGenerator(
+                dataset=dataset,
+                demographic_config=demographic_config,
+                demographic_sampler=demographic_sampler,
+                rng=rng,
+            ),
+            Patient,
+        )
+
+    @staticmethod
+    def supported_datasets() -> set[str]:
+        from pathlib import Path
+
+        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
+
+        patterns = [
+            "healthcare/medical/blood_types_{CC}.csv",
+            "healthcare/medical/emergency_relationships_{CC}.csv",
+            "healthcare/medical/allergies_{CC}.csv",
+            "healthcare/medical/medications_{CC}.csv",
+            "healthcare/medical/insurance_providers_{CC}.csv",
+        ]
+        return compute_supported_datasets(patterns, start=Path(__file__))

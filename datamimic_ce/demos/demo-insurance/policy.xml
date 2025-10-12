@@ -1,0 +1,18 @@
+<setup>
+    <echo>Generating Insurance Policies</echo>
+    <generate name="insurance_policies" count="10" target="CSV">
+        <!-- Demonstrate seeded, demographic-constrained policy holders via DemographicConfig + rngSeed -->
+        <variable name="policy" entity="InsurancePolicy" ageMin="30" ageMax="65" rngSeed="4242" />
+        <key name="id" script="policy.id" />
+        <key name="premium" script="policy.premium" />
+        <key name="premium_frequency" script="policy.premium_frequency" />
+        <key name="status" script="policy.status" />
+        <key name="start_date" script="policy.start_date" />
+        <key name="end_date" script="policy.end_date" />
+        <nestedKey name="company" script="policy.company.to_dict()" />
+        <nestedKey name="product" script="policy.product.to_dict()" />
+        <nestedKey name="policy_holder" script="policy.policy_holder.to_dict()" />
+        <!-- Coverages are objects; use nestedKey -->
+        <nestedKey name="coverages" script="[c.to_dict() for c in policy.coverages]" />
+    </generate>
+</setup>

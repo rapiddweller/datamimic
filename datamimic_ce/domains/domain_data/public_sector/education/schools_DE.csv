@@ -1,0 +1,21 @@
+name,school_id,type,level,address,city,state,phone,website,weight
+Friedrich-Gymnasium,FG-001,Öffentlich,Gymnasium,"Friedrichstraße 10, 10117 Berlin","Berlin","Berlin","030-555-1000","www.friedrich-gymnasium.de",0.08
+Maria-Montessori-Grundschule,MMG-002,Öffentlich,Grundschule,"Musterstraße 15, 80333 München","München","Bayern","089-555-2000","www.mmg-muenchen.de",0.08
+Albert-Einstein-Gesamtschule,AEG-003,Öffentlich,Gesamtschule,"Einsteinweg 5, 20148 Hamburg","Hamburg","Hamburg","040-555-3000","www.aeg-hamburg.de",0.07
+Goethe-Gymnasium,GG-004,Öffentlich,Gymnasium,"Goethestraße 25, 60313 Frankfurt","Frankfurt","Hessen","069-555-4000","www.goethe-gymnasium-frankfurt.de",0.07
+Schiller-Realschule,SR-005,Öffentlich,Realschule,"Schillerplatz 3, 50667 Köln","Köln","Nordrhein-Westfalen","0221-555-5000","www.schiller-realschule-koeln.de",0.07
+Humboldt-Grundschule,HG-006,Öffentlich,Grundschule,"Humboldtstraße 8, 70178 Stuttgart","Stuttgart","Baden-Württemberg","0711-555-6000","www.humboldt-grundschule.de",0.06
+Lessing-Gymnasium,LG-007,Öffentlich,Gymnasium,"Lessingstraße 14, 40210 Düsseldorf","Düsseldorf","Nordrhein-Westfalen","0211-555-7000","www.lessing-gymnasium-duesseldorf.de",0.06
+Thomas-Mann-Realschule,TMR-008,Öffentlich,Realschule,"Mannweg 12, 04103 Leipzig","Leipzig","Sachsen","0341-555-8000","www.thomas-mann-realschule.de",0.05
+Kant-Gesamtschule,KG-009,Öffentlich,Gesamtschule,"Kantstraße 6, 01067 Dresden","Dresden","Sachsen","0351-555-9000","www.kant-gesamtschule.de",0.05
+Heinrich-Heine-Gymnasium,HHG-010,Öffentlich,Gymnasium,"Heineweg 10, 44135 Dortmund","Dortmund","Nordrhein-Westfalen","0231-555-1100","www.hhg-dortmund.de",0.05
+Max-Planck-Schule,MPS-011,Öffentlich,Gymnasium,"Planckstraße 7, 45141 Essen","Essen","Nordrhein-Westfalen","0201-555-1200","www.max-planck-schule-essen.de",0.04
+Hermann-Hesse-Realschule,HHR-012,Öffentlich,Realschule,"Hesseweg 20, 28195 Bremen","Bremen","Bremen","0421-555-1300","www.hermann-hesse-realschule.de",0.04
+Sophie-Scholl-Gesamtschule,SSG-013,Öffentlich,Gesamtschule,"Schollstraße 9, 30159 Hannover","Hannover","Niedersachsen","0511-555-1400","www.sophie-scholl-gesamtschule.de",0.04
+Albrecht-Dürer-Grundschule,ADG-014,Öffentlich,Grundschule,"Dürerweg 15, 90402 Nürnberg","Nürnberg","Bayern","0911-555-1500","www.albrecht-duerer-grundschule.de",0.04
+Waldorfschule München,WM-015,Privat,Gesamtschule,"Waldorfweg 12, 81677 München","München","Bayern","089-555-1600","www.waldorfschule-muenchen.de",0.04
+Internatsgymnasium Schloss Salem,ISS-016,Privat,Gymnasium,"Schlossbezirk 1, 88682 Salem","Salem","Baden-Württemberg","07553-555-1700","www.schule-schloss-salem.de",0.04
+Montessori-Schule Berlin,MSB-017,Privat,Gesamtschule,"Montessoriweg 8, 10787 Berlin","Berlin","Berlin","030-555-1800","www.montessori-berlin.de",0.03
+Rudolf-Steiner-Schule Hamburg,RSS-018,Privat,Gesamtschule,"Steinerweg 5, 22085 Hamburg","Hamburg","Hamburg","040-555-1900","www.rudolf-steiner-schule-hamburg.de",0.03
+Hölderlin-Gymnasium,HG-019,Öffentlich,Gymnasium,"Hölderlinstraße 3, 70174 Stuttgart","Stuttgart","Baden-Württemberg","0711-555-2000","www.hoelderlin-gymnasium.de",0.03
+Freie Schule Frankfurt,FSF-020,Privat,Gesamtschule,"Freiheitsweg 7, 60528 Frankfurt","Frankfurt","Hessen","069-555-2100","www.freie-schule-frankfurt.de",0.03

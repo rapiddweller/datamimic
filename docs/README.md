@@ -16,9 +16,13 @@ This project documentation focuses specifically on:
 - [Getting Started](#getting-started)
 - [Domain-Driven Framework](data-domains/README.md)
 - [Examples](examples/README.md)
+  - DateTime Generator (weighted + DSL): examples/datetime_generator.md
 - [API Reference](api/README.md)
 - [Advanced Topics](advanced/README.md)
+- [Controlling Generator Caching](generator_lifecycle.md)
 - [Developer Guide](developer_guide.md)
+- [Dataset Loading Standard](standards/datasets.md)
+- Seeding & Reproducibility: see Developer Guide ("Seeding & Reproducibility") and DateTime examples
 
 ## Core Concepts
 
@@ -94,6 +98,28 @@ print(f"Generated {len(people)} unique people")
 for person in people[:5]:
     print(f"{person.name}, {person.age} years old")
 ```
+    
+### Reproducible Runs (Seeding)
+
+DATAMIMIC favors explicit seeding via injected RNGs. Pass a seeded `random.Random` to services (when available) or directly to generators to get deterministic output:
+
+```python
+from random import Random
+from datamimic_ce.domains.common.services import PersonService
+
+# Deterministic people for the same seed
+svc_a = PersonService(dataset="US", rng=Random(123))
+svc_b = PersonService(dataset="US", rng=Random(123))
+assert svc_a.generate().to_dict() == svc_b.generate().to_dict()
+
+# Seed a generator directly when a service doesn't expose rng
+from datamimic_ce.domains.ecommerce.generators import ProductGenerator
+from datamimic_ce.domains.ecommerce.models import Product
+
+gen = ProductGenerator(dataset="US", rng=Random(42))
+prod = Product(gen)
+print(prod.to_dict())  # stable for the same seed
+```
 
 ## Domain-Driven Framework
 
@@ -105,6 +131,12 @@ DATAMIMIC's domain-driven framework organizes synthetic data generation by indus
 - **Insurance Domain** - Policy, Claim, Insured
 - **E-commerce Domain** - Product, Order, Customer
 
+See also the dataset loading rules in [Dataset Loading Standard](standards/datasets.md):
+- Use `dataset_path(...)` or lightweight loaders for all file access
+- Pass base filenames (helpers append `_{CC}.csv`)
+- Keep I/O in generators, not models
+- Declare supported datasets in services using `compute_supported_datasets([...], start=Path(__file__))`
+
 For detailed documentation on the domain-driven framework, see the [domain-specific documentation](data-domains/README.md).
 
 ## Examples
@@ -113,6 +145,7 @@ DATAMIMIC includes detailed examples demonstrating various use cases:
 
 - [Person Generation](examples/person_generation.md) - Generate and work with person entities
 - [Healthcare Data Generation](examples/healthcare_generation.md) - Create realistic healthcare data
+- [DateTime Generator](examples/datetime_generator.md) - Deterministic, weighted date/time sampling
 
 ## API Reference
 

@@ -10,7 +10,6 @@ from datetime import datetime
 import pytest
 
 from datamimic_ce.domains.common.literal_generators.birthdate_generator import BirthdateGenerator
-from datamimic_ce.utils.class_factory_ce_util import ClassFactoryCEUtil
 
 
 class TestBirthGenerator:
@@ -21,19 +20,15 @@ class TestBirthGenerator:
         datetime(2022, 12, 31),
     ]
 
-    @staticmethod
-    def get_class_factory_util():
-        return ClassFactoryCEUtil()
-
     def test_generate_birth_default(self):
-        generator = BirthdateGenerator(self.get_class_factory_util())
+        generator = BirthdateGenerator()
         for i in range(1000):
             generated_date = generator.generate()
             assert generated_date is not None, "failed to generate date"
             assert 1 <= generator.convert_birthdate_to_age(generated_date) <= 100, f"Test {i + 1} failed"
 
     def test_convert_birthdate_to_age_method(self):
-        generator = BirthdateGenerator(self.get_class_factory_util())
+        generator = BirthdateGenerator()
         current_date = datetime.now()
         for birthdate in self._birthdate_case:
             expected_age = (
@@ -53,7 +48,7 @@ class TestBirthGenerator:
     )
     def test_generate_birth_with_min_max_age(self, min_age, max_age):
         for _ in range(1000):
-            generator = BirthdateGenerator(self.get_class_factory_util(), min_age, max_age)
+            generator = BirthdateGenerator(min_age, max_age)
             generated_date = generator.generate()
             assert generated_date is not None, "failed to generate date"
             assert min_age <= generator.convert_birthdate_to_age(generated_date) <= max_age
@@ -62,4 +57,4 @@ class TestBirthGenerator:
         min_age = 19
         max_age = 18
         with pytest.raises(ValueError, match="max_age must higher than or equals min_age"):
-            BirthdateGenerator(self.get_class_factory_util(), min_age, max_age)
+            BirthdateGenerator(min_age, max_age)

@@ -1,15 +1,15 @@
 import datetime
-import random
-import uuid
+from pathlib import Path
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.insurance.generators.insurance_policy_generator import InsurancePolicyGenerator
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
 from datamimic_ce.domains.insurance.models.insurance_product import InsuranceProduct
+from datamimic_ce.domains.utils.rng_uuid import uuid4_from_random
 
 
 class InsurancePolicy(BaseEntity):
@@ -22,7 +22,7 @@ class InsurancePolicy(BaseEntity):
     @property
     @property_cache
     def id(self) -> str:
-        return str(uuid.uuid4())
+        return uuid4_from_random(self.insurance_policy_generator.rng)
 
     @property
     @property_cache
@@ -51,15 +51,17 @@ class InsurancePolicy(BaseEntity):
     @property
     @property_cache
     def coverages(self) -> list[InsuranceCoverage]:
+        rng = self.insurance_policy_generator.rng
         return [
             InsuranceCoverage(self.insurance_policy_generator.insurance_coverage_generator)
-            for _ in range(random.randint(1, 3))
+            for _ in range(rng.randint(1, 3))
         ]
 
     @property
     @property_cache
     def premium(self) -> float:
-        return random.uniform(100, 1000)
+        #  Delegate dataset I/O to generator helper per SOC
+        return self.insurance_policy_generator.pick_premium_amount(start_path=Path(__file__))
 
     @premium.setter
     def premium(self, value: float) -> None:
@@ -73,7 +75,8 @@ class InsurancePolicy(BaseEntity):
     @property
     @property_cache
     def premium_frequency(self) -> str:
-        return random.choice(["monthly", "quarterly", "yearly"])
+        #  Delegate dataset I/O to generator helper per SOC
+        return self.insurance_policy_generator.pick_premium_frequency(start_path=Path(__file__))
 
     @property
     @property_cache
@@ -88,7 +91,8 @@ class InsurancePolicy(BaseEntity):
     @property
     @property_cache
     def status(self) -> str:
-        return random.choice(["active", "inactive", "cancelled"])
+        #  Delegate dataset I/O to generator helper per SOC
+        return self.insurance_policy_generator.pick_status(start_path=Path(__file__))
 
     @status.setter
     def status(self, value: str) -> None:

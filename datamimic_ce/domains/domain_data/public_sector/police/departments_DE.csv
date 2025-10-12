@@ -1,0 +1,21 @@
+name,department_id,jurisdiction,address,city,state,phone,website,weight
+Polizeipräsidium Berlin,PPOL-BER,State,"Platz der Luftbrücke 6, 12101 Berlin","Berlin","Berlin","030-4664-0","www.polizei.berlin",0.15
+Polizeipräsidium München,PPOL-MUC,State,"Ettstraße 2, 80333 München","München","Bayern","089-2910-0","www.polizei.bayern.de",0.12
+Polizeipräsidium Hamburg,PPOL-HH,State,"Bruno-Georges-Platz 1, 22297 Hamburg","Hamburg","Hamburg","040-4286-50","www.polizei.hamburg",0.10
+Polizeipräsidium Frankfurt,PPOL-FFM,City,"Adickesallee 70, 60322 Frankfurt am Main","Frankfurt","Hessen","069-755-0","www.polizei.hessen.de",0.08
+Polizeipräsidium Köln,PPOL-K,City,"Walter-Pauli-Ring 2-6, 51103 Köln","Köln","Nordrhein-Westfalen","0221-229-0","www.polizei.nrw/koeln",0.07
+Polizeipräsidium Stuttgart,PPOL-S,City,"Hahnemannstraße 1, 70191 Stuttgart","Stuttgart","Baden-Württemberg","0711-5401-0","www.polizei-bw.de",0.06
+Polizeipräsidium Düsseldorf,PPOL-D,City,"Jürgensplatz 5-7, 40219 Düsseldorf","Düsseldorf","Nordrhein-Westfalen","0211-8700","www.polizei.nrw/duesseldorf",0.05
+Polizeipräsidium Leipzig,PPOL-L,City,"Dimitroffstraße 1, 04107 Leipzig","Leipzig","Sachsen","0341-966-0","www.polizei.sachsen.de",0.05
+Polizeipräsidium Dresden,PPOL-DD,City,"Schießgasse 7, 01067 Dresden","Dresden","Sachsen","0351-483-0","www.polizei.sachsen.de",0.04
+Polizeipräsidium Dortmund,PPOL-DO,City,"Markgrafenstraße 102, 44139 Dortmund","Dortmund","Nordrhein-Westfalen","0231-132-0","www.polizei.nrw/dortmund",0.04
+Polizeipräsidium Essen,PPOL-E,City,"Büscherstraße 2-6, 45131 Essen","Essen","Nordrhein-Westfalen","0201-829-0","www.polizei.nrw/essen",0.03
+Polizeipräsidium Bremen,PPOL-HB,State,"In der Vahr 76, 28329 Bremen","Bremen","Bremen","0421-362-0","www.polizei.bremen.de",0.03
+Polizeipräsidium Hannover,PPOL-H,City,"Waterloostraße 9, 30169 Hannover","Hannover","Niedersachsen","0511-109-0","www.pd-h.polizei-nds.de",0.03
+Polizeipräsidium Nürnberg,PPOL-N,City,"Jakobsplatz 5, 90402 Nürnberg","Nürnberg","Bayern","0911-2112-0","www.polizei.bayern.de",0.03
+Polizeipräsidium Karlsruhe,PPOL-KA,City,"Beiertheimer Allee 16, 76137 Karlsruhe","Karlsruhe","Baden-Württemberg","0721-666-0","www.polizei-bw.de",0.02
+Polizeipräsidium Duisburg,PPOL-DU,City,"Düsseldorfer Straße 161-163, 47053 Duisburg","Duisburg","Nordrhein-Westfalen","0203-280-0","www.polizei.nrw/duisburg",0.02
+Polizeipräsidium Bochum,PPOL-BO,City,"Uhlandstraße 35, 44791 Bochum","Bochum","Nordrhein-Westfalen","0234-909-0","www.polizei.nrw/bochum",0.02
+Polizeipräsidium Wuppertal,PPOL-W,City,"Friedrich-Engels-Allee 228, 42285 Wuppertal","Wuppertal","Nordrhein-Westfalen","0202-284-0","www.polizei.nrw/wuppertal",0.02
+Polizeipräsidium Mannheim,PPOL-MA,City,"L 6, 1, 68161 Mannheim","Mannheim","Baden-Württemberg","0621-174-0","www.polizei-bw.de",0.02
+Polizeipräsidium Bielefeld,PPOL-BI,City,"Kurt-Schumacher-Straße 46, 33615 Bielefeld","Bielefeld","Nordrhein-Westfalen","0521-545-0","www.polizei.nrw/bielefeld",0.02

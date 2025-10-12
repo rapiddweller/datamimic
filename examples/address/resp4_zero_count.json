@@ -1,0 +1,11 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "seed_canonical": "17949464049882842526"
+  },
+  "domain": "address",
+  "items": [],
+  "request_hash": "b1121f67d1bcf10dacab2e4799d443af0a54abf210d0248f646f5698d6cc374d",
+  "version": "v1"
+}

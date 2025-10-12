@@ -9,20 +9,21 @@ import math
 import shutil
 
 import dill  # type: ignore
-import ray
 
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.config import settings
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.exporters.exporter_util import ExporterUtil
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.tasks.task import CommonSubTask
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
+from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.logging_util import gen_timer
 
 
@@ -32,9 +33,8 @@ class GenerateTask(CommonSubTask):
 
     """
 
-    def __init__(self, statement: GenerateStatement, class_factory_util: BaseClassFactoryUtil):
+    def __init__(self, statement: GenerateStatement):
         self._statement = statement
-        self._class_factory_util = class_factory_util
 
     @property
     def statement(self) -> GenerateStatement:
@@ -125,7 +125,7 @@ class GenerateTask(CommonSubTask):
         :return: None
         """
         # 1. Scan statement
-        ctx.root.class_factory_util.get_datasource_registry_cls().set_data_source_length(ctx, statement)
+        DataSourceRegistry.set_data_source_length(ctx, statement)
         # 2. Scan sub-statement
         if isinstance(statement, CompositeStatement):
             for child_stmt in statement.sub_statements:
@@ -163,7 +163,8 @@ class GenerateTask(CommonSubTask):
         return num_workers
 
     def execute(
-        self, context: SetupContext | GenIterContext, source_operation: dict | None = None
+        self,
+        context: SetupContext | GenIterContext,
     ) -> dict[str, list] | None:
         """
         Execute generate task.
@@ -178,7 +179,9 @@ class GenerateTask(CommonSubTask):
         with gen_timer("process", context.root.report_logging, self.statement.full_name) as timer_result:
             try:
                 # Mark Ray initialization status for shutdown at the end of execution
-                is_ray_initialized = False
+                # Ray is optional; only import/initialize if explicitly requested.
+                is_ray_initialized = False  # WHY: make Ray optional, avoid hard dependency
+                _ray_mod = None  # local handle to ray module if imported
 
                 # Pre-execute sub-tasks before generating any data
                 self.pre_execute(context)
@@ -220,11 +223,21 @@ class GenerateTask(CommonSubTask):
 
                         mp_worker = MultiprocessingGenerateWorker()
                     elif mp_platform == "ray":
-                        from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
+                        # Ray is optional; import lazily and raise a clear error if missing.
+                        try:
+                            import ray as _ray  # type: ignore
 
+                            from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
+                        except ImportError as e:  # WHY: allow install without ray, fail only when asked to use it
+                            raise RuntimeError(
+                                "Ray not installed. Install with 'pip install datamimic-ce[ray]' "
+                                "or set mp_platform='multiprocessing'."
+                            ) from e
+
+                        _ray_mod = _ray
                         mp_worker = RayGenerateWorker()  # type: ignore[assignment]
                         # Initialize Ray
-                        ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False)
+                        _ray_mod.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False)
                         is_ray_initialized = True
                     else:
                         raise ValueError(
@@ -232,9 +245,7 @@ class GenerateTask(CommonSubTask):
                             f"is not supported"
                         )
                     # Execute generate task by page in multiprocessing using Ray or multiprocessing
-                    merged_result = mp_worker.mp_process(
-                        copied_context, self._statement, chunks, page_size, source_operation
-                    )
+                    merged_result = mp_worker.mp_process(copied_context, self._statement, chunks, page_size)
 
                 # Execute generate task by page in single process
                 else:
@@ -243,8 +254,19 @@ class GenerateTask(CommonSubTask):
                     from datamimic_ce.workers.generate_worker import GenerateWorker
 
                     merged_result = GenerateWorker.generate_and_export_data_by_chunk(
-                        context, self._statement, worker_id, 0, count, page_size, source_operation
+                        context, self._statement, worker_id, 0, count, page_size
                     )
+
+                # Update the actual record count in the timer result
+                for product_name, product_data in merged_result.items():
+                    if product_name == self.statement.full_name:
+                        actual_count = len(product_data)
+                        if actual_count != count:
+                            logger.info(
+                                f"Requested to generate {count:,} records but actually "
+                                f"generated {actual_count:,} records due to filtering"
+                            )
+                            timer_result["records_count"] = actual_count
 
                 # At the end of OUTERMOST gen_stmt:
                 # - export gathered product with LAZY exporters, such as TestResultExporter, MemstoreExporter,...
@@ -273,8 +295,8 @@ class GenerateTask(CommonSubTask):
                     for temp_dir in context.descriptor_dir.glob(f"temp_result_{context.task_id}*"):
                         shutil.rmtree(temp_dir)
                 # Shutdown Ray if initialized
-                if is_ray_initialized:
-                    ray.shutdown()
+                if is_ray_initialized and _ray_mod is not None:
+                    _ray_mod.shutdown()
 
     @staticmethod
     def export_memstore(setup_context: SetupContext, current_stmt: GenerateStatement, merged_result: dict[str, list]):
@@ -298,9 +320,7 @@ class GenerateTask(CommonSubTask):
         num_workers = GenerateTask._determine_num_workers(context, stmt)
 
         # Get ARTIFACT exporters from statement
-        exporter_list = context.root.class_factory_util.get_exporter_util().get_all_exporter(
-            context, stmt, list(stmt.targets)
-        )
+        exporter_list = ExporterUtil.get_all_exporter(context, stmt, list(stmt.targets))
         # Finalize chunks files (writing end of file)
         for exporter in exporter_list:
             if hasattr(exporter, "finalize_chunks"):
@@ -317,9 +337,7 @@ class GenerateTask(CommonSubTask):
         """
         Export artifact files to storage (Execute on outermost gen_stmt)
         """
-        exporters_list = context.root.class_factory_util.get_exporter_util().get_all_exporter(
-            context, stmt, list(stmt.targets)
-        )
+        exporters_list = ExporterUtil.get_all_exporter(context, stmt, list(stmt.targets))
         # Export artifact files of current statement
         for exporter in exporters_list:
             if hasattr(exporter, "save_exported_result"):
@@ -340,12 +358,12 @@ class GenerateTask(CommonSubTask):
         :return: None
         """
         root_context = context.root
-        task_util_cls = root_context.class_factory_util.get_task_util_cls()
 
         pre_tasks = [
-            task_util_cls.get_task_by_statement(root_context, child_stmt, None)
+            TaskUtil.get_task_by_statement(root_context, child_stmt, None)
             for child_stmt in self.statement.sub_statements
             if isinstance(child_stmt, KeyStatement)
         ]
         for task in pre_tasks:
-            task.pre_execute(context)
+            if hasattr(task, "pre_execute"):
+                task.pre_execute(context)

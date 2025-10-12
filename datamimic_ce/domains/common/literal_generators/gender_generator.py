@@ -6,7 +6,7 @@
 
 import random
 
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
 
 class GenderGenerator(BaseLiteralGenerator):
@@ -19,7 +19,12 @@ class GenderGenerator(BaseLiteralGenerator):
         female_quota (float): female quota to generate FEMALE gender.
     """
 
-    def __init__(self, female_quota: float | None = None, other_gender_quota: float | None = None):
+    def __init__(
+        self,
+        female_quota: float | None = None,
+        other_gender_quota: float | None = None,
+        rng: random.Random | None = None,
+    ):
         """
         Constructor for GenderGenerator with default quota of female/male/other are 0.49/0.49/0.02
         (if argument is not passed in constructor).
@@ -36,6 +41,7 @@ class GenderGenerator(BaseLiteralGenerator):
         female_quota, male_quota, other_gender_quota = self._calculate_gender_rate(female_quota, other_gender_quota)
         self._wgt = [female_quota, male_quota, other_gender_quota]
         self._values = ["female", "male", "other"]
+        self._rng: random.Random = rng or random.Random()
 
     def generate(self) -> str:
         """
@@ -44,7 +50,7 @@ class GenderGenerator(BaseLiteralGenerator):
         Returns:
             str: generated string gender
         """
-        return random.choices(self._values, weights=self._wgt, k=1)[0]
+        return self._rng.choices(self._values, weights=self._wgt, k=1)[0]
 
     @staticmethod
     def _calculate_gender_rate(female_quota, other_gender_quota):

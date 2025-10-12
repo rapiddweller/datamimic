@@ -11,14 +11,13 @@ This module provides the PoliceOfficer entity model for generating realistic pol
 """
 
 import datetime
-import random
-import uuid
+from pathlib import Path
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.common.models.person import Person
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.public_sector.generators.police_officer_generator import PoliceOfficerGenerator
 
 
@@ -38,7 +37,15 @@ class PoliceOfficer(BaseEntity):
 
     def __init__(self, police_officer_generator: PoliceOfficerGenerator):
         super().__init__()
-        self.police_officer_generator = police_officer_generator
+        self._police_officer_generator = police_officer_generator
+
+    @property
+    def police_officer_generator(self) -> PoliceOfficerGenerator:
+        return self._police_officer_generator
+
+    @property
+    def dataset(self) -> str:
+        return self._police_officer_generator.dataset  #  align downstream CSV reads with configured dataset
 
     # Property getters
     @property
@@ -49,7 +56,9 @@ class PoliceOfficer(BaseEntity):
         Returns:
             A unique identifier for the officer.
         """
-        return f"OFF-{uuid.uuid4().hex[:8].upper()}"
+        rng = self.police_officer_generator.rng
+        suffix = "".join(rng.choice("0123456789ABCDEF") for _ in range(8))
+        return f"OFF-{suffix}"
 
     @property
     @property_cache
@@ -59,7 +68,8 @@ class PoliceOfficer(BaseEntity):
         Returns:
             A badge number.
         """
-        return f"{random.randint(1000, 9999)}"
+        rng = self.police_officer_generator.rng
+        return "".join(str(rng.randint(0, 9)) for _ in range(4))
 
     @property
     @property_cache
@@ -154,22 +164,8 @@ class PoliceOfficer(BaseEntity):
         Returns:
             The unit name.
         """
-        units = [
-            "Patrol",
-            "Traffic",
-            "Detectives",
-            "SWAT",
-            "K-9",
-            "Narcotics",
-            "Homicide",
-            "Internal Affairs",
-            "Community Relations",
-            "Juvenile",
-            "Cyber Crimes",
-            "Evidence",
-            "Training",
-        ]
-        return random.choice(units)
+        #  delegate to generator helper to keep model pure and allow dataset-driven units
+        return self.police_officer_generator.pick_unit()
 
     @property
     @property_cache
@@ -179,11 +175,8 @@ class PoliceOfficer(BaseEntity):
         Returns:
             The hire date in YYYY-MM-DD format.
         """
-        # Calculate a reasonable hire date based on years_of_service
-        years_of_service = random.randint(0, min(30, self.age - 21))  # Assume minimum age of 21 to join
-        current_date = datetime.datetime.now()
-        hire_date = current_date - datetime.timedelta(days=years_of_service * 365)
-        return hire_date.strftime("%Y-%m-%d")
+        #  delegate date generation to generator for SOC and determinism
+        return self.police_officer_generator.generate_hire_date(self.age)
 
     @property
     @property_cache
@@ -206,26 +199,8 @@ class PoliceOfficer(BaseEntity):
         Returns:
             A list of certifications.
         """
-        all_certifications = [
-            "Basic Law Enforcement",
-            "Advanced Law Enforcement",
-            "Firearms Training",
-            "Defensive Tactics",
-            "Emergency Vehicle Operations",
-            "Crisis Intervention",
-            "De-escalation Techniques",
-            "First Aid/CPR",
-            "Narcotics Investigation",
-            "Hostage Negotiation",
-            "K-9 Handler",
-            "SWAT Operations",
-            "Cyber Crime Investigation",
-            "Crime Scene Investigation",
-            "Motorcycle Patrol",
-        ]
-
-        num_certifications = random.randint(1, 4)
-        return random.sample(all_certifications, num_certifications)
+        #  delegate dataset I/O and selection to generator helper
+        return self.police_officer_generator.pick_certifications(start=Path(__file__))
 
     @property
     @property_cache
@@ -235,27 +210,7 @@ class PoliceOfficer(BaseEntity):
         Returns:
             A list of languages.
         """
-        languages = ["English"]
-
-        # Chance to add additional languages
-        additional_languages = [
-            "Spanish",
-            "French",
-            "German",
-            "Chinese",
-            "Arabic",
-            "Russian",
-            "Japanese",
-            "Korean",
-            "Portuguese",
-            "Italian",
-        ]
-        num_additional = random.randint(0, 2)
-
-        if num_additional > 0:
-            languages.extend(random.sample(additional_languages, num_additional))
-
-        return languages
+        return self.police_officer_generator.pick_languages(start=Path(__file__))
 
     @property
     @property_cache
@@ -265,8 +220,7 @@ class PoliceOfficer(BaseEntity):
         Returns:
             The shift (e.g., 'Day', 'Night', 'Swing').
         """
-        shifts = ["Day Shift (7AM-3PM)", "Evening Shift (3PM-11PM)", "Night Shift (11PM-7AM)", "Rotating Shift"]
-        return random.choice(shifts)
+        return self.police_officer_generator.pick_shift(start=Path(__file__))
 
     @property
     @property_cache

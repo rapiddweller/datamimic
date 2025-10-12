@@ -1,9 +1,10 @@
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
+from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
-from datamimic_ce.utils.data_generation_ce_util import DataGenerationCEUtil
 
 
 class Bank(BaseEntity):
@@ -41,12 +42,16 @@ class Bank(BaseEntity):
     @property
     @property_cache
     def bic(self) -> str:
-        return DataGenerationCEUtil.rnd_str_from_regex("[A-Z]{4}DE[A-Z0-9]{2}")
+        #  embed dataset country code (US/DE) into BIC pattern for consistency
+        ds = getattr(self._bank_generator, "dataset", "US").upper()
+        # Basic 8-char BIC: 4 letters bank + 2-letter country + 2 alnum location
+        pattern = f"[A-Z]{{4}}{ds}[A-Z0-9]{{2}}"
+        return StringGenerator.rnd_str_from_regex(pattern)
 
     @property
     @property_cache
     def bin(self) -> str:
-        return DataGenerationCEUtil.rnd_str_from_regex("[0-9]{4}")
+        return StringGenerator.rnd_str_from_regex("[0-9]{4}")
 
     @property
     @property_cache
@@ -56,12 +61,9 @@ class Bank(BaseEntity):
         Returns:
             A formatted phone number string.
         """
-        if hasattr(self._bank_generator, "dataset") and self._bank_generator.dataset == "de_DE":
-            # German format
-            return "+49 " + DataGenerationCEUtil.rnd_str_from_regex("[0-9]{3} [0-9]{5,7}")
-        else:
-            # US format
-            return "+1 " + DataGenerationCEUtil.rnd_str_from_regex("[0-9]{3}-[0-9]{3}-[0-9]{4}")
+        #  use shared PhoneNumberGenerator with dataset for consistent formatting
+        ds = getattr(self._bank_generator, "dataset", "US")
+        return PhoneNumberGenerator(dataset=ds).generate()
 
     def to_dict(self) -> dict[str, Any]:
         return {

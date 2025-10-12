@@ -1,0 +1,77 @@
+{
+    "ELECTRONICS": {
+        "length": {"min": 5, "max": 100},
+        "width": {"min": 5, "max": 80},
+        "height": {"min": 1, "max": 30}
+    },
+    "CLOTHING": {
+        "length": {"min": 20, "max": 60},
+        "width": {"min": 15, "max": 40},
+        "height": {"min": 1, "max": 5}
+    },
+    "HOME_GOODS": {
+        "length": {"min": 10, "max": 150},
+        "width": {"min": 10, "max": 100},
+        "height": {"min": 5, "max": 80}
+    },
+    "BEAUTY": {
+        "length": {"min": 3, "max": 20},
+        "width": {"min": 3, "max": 10},
+        "height": {"min": 3, "max": 15}
+    },
+    "HEALTH": {
+        "length": {"min": 3, "max": 20},
+        "width": {"min": 3, "max": 15},
+        "height": {"min": 3, "max": 10}
+    },
+    "SPORTS": {
+        "length": {"min": 5, "max": 200},
+        "width": {"min": 5, "max": 80},
+        "height": {"min": 5, "max": 50}
+    },
+    "TOYS": {
+        "length": {"min": 5, "max": 60},
+        "width": {"min": 5, "max": 40},
+        "height": {"min": 5, "max": 30}
+    },
+    "BOOKS": {
+        "length": {"min": 15, "max": 30},
+        "width": {"min": 10, "max": 25},
+        "height": {"min": 1, "max": 5}
+    },
+    "FOOD": {
+        "length": {"min": 5, "max": 30},
+        "width": {"min": 5, "max": 20},
+        "height": {"min": 5, "max": 20}
+    },
+    "BEVERAGES": {
+        "length": {"min": 5, "max": 30},
+        "width": {"min": 5, "max": 30},
+        "height": {"min": 10, "max": 40}
+    },
+    "AUTOMOTIVE": {
+        "length": {"min": 5, "max": 100},
+        "width": {"min": 5, "max": 60},
+        "height": {"min": 2, "max": 30}
+    },
+    "OFFICE_SUPPLIES": {
+        "length": {"min": 5, "max": 40},
+        "width": {"min": 5, "max": 30},
+        "height": {"min": 1, "max": 20}
+    },
+    "PET_SUPPLIES": {
+        "length": {"min": 10, "max": 100},
+        "width": {"min": 10, "max": 60},
+        "height": {"min": 5, "max": 50}
+    },
+    "JEWELRY": {
+        "length": {"min": 1, "max": 15},
+        "width": {"min": 1, "max": 15},
+        "height": {"min": 1, "max": 5}
+    },
+    "FURNITURE": {
+        "length": {"min": 30, "max": 200},
+        "width": {"min": 30, "max": 150},
+        "height": {"min": 30, "max": 100}
+    }
+}

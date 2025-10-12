@@ -11,7 +11,7 @@ from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
 from datamimic_ce.statements.setup_statement import SetupStatement
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
+from datamimic_ce.tasks.task_util import TaskUtil
 
 
 class SetupTask:
@@ -24,7 +24,6 @@ class SetupTask:
         test_mode: bool,
         test_result_storage: TestResultExporter,
         descriptor_dir: Path,
-        class_factory_util: BaseClassFactoryUtil,
     ):
         self._descriptor_dir = descriptor_dir
         self._setup_stmt = setup_stmt
@@ -41,12 +40,10 @@ class SetupTask:
         self._default_dataset = setup_stmt.default_dataset or "US"
         self._default_variable_prefix = setup_stmt.default_variable_prefix or "__"
         self._default_variable_suffix = setup_stmt.default_variable_suffix or "__"
-        self._class_factory_util = class_factory_util
 
     def execute(self) -> None:
         # Init root context
         root_context = SetupContext(
-            class_factory_util=self._class_factory_util,
             memstore_manager=self._memstore_manager,
             task_id=self._task_id,
             use_mp=self._use_mp,
@@ -65,10 +62,9 @@ class SetupTask:
             report_logging=self._setup_stmt.report_logging in (True, None),  # default value is True
         )
 
-        task_util_cls = self._class_factory_util.get_task_util_cls()
         for stmt in self._setup_stmt.sub_statements:
-            task = task_util_cls.get_task_by_statement(root_context, stmt)
-            task.execute(root_context)
+            task = TaskUtil.get_task_by_statement(root_context, stmt)
+            task.execute(root_context)  # type: ignore[attr-defined]
 
     @staticmethod
     def execute_include(setup_stmt: SetupStatement, parent_context: SetupContext) -> None:
@@ -84,7 +80,6 @@ class SetupTask:
         # Update root_context with attributes defined in sub-setup statement
         root_context.update_with_stmt(setup_stmt)
 
-        task_util_cls = parent_context.class_factory_util.get_task_util_cls()
         for stmt in setup_stmt.sub_statements:
-            task = task_util_cls.get_task_by_statement(root_context, stmt)
-            task.execute(root_context)
+            task = TaskUtil.get_task_by_statement(root_context, stmt)
+            task.execute(root_context)  # type: ignore[attr-defined]

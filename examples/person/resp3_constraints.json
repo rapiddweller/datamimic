@@ -1,0 +1,36 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "1832485da9442e011e90c3a4581a4116650ff48cea04386a14d66c433f1b3cc7",
+    "seed_canonical": "16295437679671003933"
+  },
+  "domain": "person",
+  "items": [
+    {
+      "age": 30,
+      "date_of_birth": "1995-08-15",
+      "first_name": "Olivia",
+      "full_name": "Olivia Brown",
+      "human_id": "PER-ADCE1588",
+      "id": "adce1588-cb1e-5e2f-8f8d-dacdc87ae47b",
+      "last_name": "Brown",
+      "locale": "en_US",
+      "nationality": "US",
+      "sex": "F"
+    },
+    {
+      "age": 30,
+      "date_of_birth": "1995-06-12",
+      "first_name": "Olivia",
+      "full_name": "Olivia Williams",
+      "human_id": "PER-DB938666",
+      "id": "db938666-df23-5585-997b-78862749650c",
+      "last_name": "Williams",
+      "locale": "en_US",
+      "nationality": "US",
+      "sex": "F"
+    }
+  ],
+  "request_hash": "c4a2ace8ba3fb71cb71b3cda8f93752f5a7019c9c1a8a05909dc93c92283a317",
+  "version": "v1"
+}

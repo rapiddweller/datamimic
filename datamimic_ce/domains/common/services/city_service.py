@@ -4,9 +4,9 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.domain_core.base_domain_service import BaseDomainService
 from datamimic_ce.domains.common.generators.city_generator import CityGenerator
 from datamimic_ce.domains.common.models.city import City
+from datamimic_ce.domains.domain_core import BaseDomainService
 
 
 class CityService(BaseDomainService[City]):
@@ -17,3 +17,15 @@ class CityService(BaseDomainService[City]):
 
     def __init__(self, dataset: str = "US"):
         super().__init__(CityGenerator(dataset), City)
+
+    @staticmethod
+    def supported_datasets() -> set[str]:
+        from pathlib import Path
+
+        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
+
+        patterns = [
+            "common/city/city_{CC}.csv",
+            "common/country_{CC}.csv",
+        ]
+        return compute_supported_datasets(patterns, start=Path(__file__))

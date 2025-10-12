@@ -4,17 +4,18 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
+import random
+
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
 
 class IntegerGenerator(BaseLiteralGenerator):
-    def __init__(self, class_factory_util: BaseClassFactoryUtil, min: int = 0, max: int = 1000000) -> None:
+    def __init__(self, min: int = 0, max: int = 1000000, rng: random.Random | None = None) -> None:
         if min > max:
             raise ValueError(f"Failed when init IntegerGenerator because min({min}) > max({max})")
         self._min = min
         self._max = max
-        self._class_factory_util = class_factory_util
+        self._rng: random.Random = rng or random.Random()
 
     def generate(self) -> int:
-        return self._class_factory_util.get_data_generation_util().rnd_int(self._min, self._max)
+        return self._rng.randint(self._min, self._max)

@@ -16,26 +16,27 @@ DATAMIMIC entities follow a consistent pattern:
 The basic structure of a DATAMIMIC entity:
 
 ```python
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
+
 
 class ExampleEntity(BaseEntity):
     def __init__(self, generator):
         super().__init__()
         self._generator = generator
-        
+
     @property
     @property_cache
     def id(self) -> str:
         # Generated once and cached
         return self._generator.generate_id()
-        
+
     @property
     @property_cache
     def attribute(self) -> str:
         # Uses weighted distribution
         return self._generator.attribute_generator.generate()
-        
+
     def to_dict(self) -> dict:
         # Convert entity to dictionary
         return {

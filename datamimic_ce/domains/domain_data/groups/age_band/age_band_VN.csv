@@ -1,0 +1,4 @@
+group_id,min_age,max_age,weight
+age_0_17,0,17,0.507668
+age_18_44,18,44,0.199407
+age_45_plus,45,200,0.292925

@@ -1,0 +1,6 @@
+type,prefix,length,cvv_length,weight
+VISA,4,16,3,0.35
+MASTERCARD,5,16,3,0.3
+JCB,3528|3589,16,3,0.15
+Napas,9704|9706|9707,16,3,0.1
+AMEX,34|37,15,4,0.1

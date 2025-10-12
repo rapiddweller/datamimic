@@ -1,0 +1,11 @@
+code,description,type,weight
+I10,Tăng huyết áp nguyên phát,ICD-10,200
+E11.9,Đái tháo đường tuýp 2 không biến chứng,ICD-10,180
+J44.9,Bệnh phổi tắc nghẽn mạn tính không xác định,ICD-10,130
+J45.909,Hen phế quản không biến chứng,ICD-10,140
+K21.9,Trào ngược dạ dày - thực quản không biến chứng,ICD-10,120
+M54.5,Đau thắt lưng,ICD-10,110
+E78.5,Rối loạn lipid máu không đặc hiệu,ICD-10,125
+F32.9,Rối loạn trầm cảm đơn cực không đặc hiệu,ICD-10,105
+N39.0,Nhiễm trùng đường tiểu,ICD-10,100
+A09,Tiêu chảy và viêm dạ dày ruột nghi do nhiễm trùng,ICD-10,95

@@ -11,14 +11,14 @@ from typing import Any
 
 from datamimic_ce.clients.database_client import Client
 from datamimic_ce.contexts.context import Context
+from datamimic_ce.contexts.demographic_context import DemographicContext
 from datamimic_ce.converter.converter import Converter
 from datamimic_ce.converter.custom_converter import CustomConverter
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
 from datamimic_ce.statements.setup_statement import SetupStatement
-from datamimic_ce.utils.base_class_factory_util import BaseClassFactoryUtil
 
 
 class SetupContext(Context):
@@ -28,7 +28,6 @@ class SetupContext(Context):
 
     def __init__(
         self,
-        class_factory_util: BaseClassFactoryUtil,
         memstore_manager: MemstoreManager,
         task_id: str,
         test_mode: bool,
@@ -51,10 +50,10 @@ class SetupContext(Context):
         generators: dict | None = None,
         default_source_scripted: bool | None = None,
         report_logging: bool = True,
+        demographic_context: DemographicContext | None = None,
     ):
         # SetupContext is always its root_context
         super().__init__(self)
-        self._class_factory_util = class_factory_util
         self._descriptor_dir = descriptor_dir
         self._clients = {} if clients is None else clients
         self._data_source_len = {} if data_source_len is None else data_source_len
@@ -89,6 +88,7 @@ class SetupContext(Context):
         self._report_logging = report_logging
         self._current_seed = current_seed
         self._task_exporters: dict[str, dict[str, Any]] = {}
+        self._demographic_context = demographic_context
 
     def __deepcopy__(self, memo):
         """
@@ -106,7 +106,6 @@ class SetupContext(Context):
 
         # Create a new instance of SetupContext with the copied attributes
         return SetupContext(
-            class_factory_util=self._class_factory_util,
             task_id=self._task_id,
             memstore_manager=self._memstore_manager,
             use_mp=copy.deepcopy(self._use_mp, memo),
@@ -121,7 +120,7 @@ class SetupContext(Context):
             default_dataset=self._default_dataset,
             default_locale=self._default_locale,
             global_variables=self.global_variables,
-            generators=copy.deepcopy(self._generators),
+            generators=copy.deepcopy(self._generators, memo),
             num_process=copy.deepcopy(self._num_process, memo),
             default_variable_prefix=self._default_variable_prefix,
             default_variable_suffix=self._default_variable_suffix,
@@ -129,6 +128,7 @@ class SetupContext(Context):
             default_source_scripted=self._default_source_scripted,
             report_logging=copy.deepcopy(self._report_logging),
             current_seed=self._current_seed,
+            demographic_context=copy.deepcopy(self._demographic_context, memo),
         )
 
     def _deepcopy_clients(self, memo):
@@ -231,8 +231,12 @@ class SetupContext(Context):
                 setattr(self, key, value)
 
     @property
-    def class_factory_util(self):
-        return self._class_factory_util
+    def demographic_context(self) -> DemographicContext | None:
+        return self._demographic_context
+
+    def set_demographic_context(self, context: DemographicContext) -> None:
+        # Keep demographics explicit on the root context instead of mutable module globals.
+        self._demographic_context = context
 
     @property
     def clients(self) -> dict:

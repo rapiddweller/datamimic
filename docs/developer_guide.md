@@ -22,6 +22,48 @@ DATAMIMIC is built on three main architectural components:
 2. **Domains** - Industry-specific implementations of entities and business logic
 3. **Domain Data** - Contains weighted datasets that ensure realistic data distributions
 
+### Dataset Loading (TL;DR)
+
+Follow the dataset standard in `docs/standards/datasets.md` for all file access:
+
+- Always resolve files via `dataset_path(...)` or the lightweight loaders in `datamimic_ce.utils.dataset_loader`.
+- Pass base filenames to loaders; the helper appends `_{CC}.csv` using the generator’s normalized dataset.
+- Honor strict mode with `DATAMIMIC_STRICT_DATASET=1` to validate presence without US fallback.
+- Keep all dataset I/O in generators; models remain pure and only read values from their generator.
+
+Examples
+
+Headerless weighted CSV (value,weight):
+
+```python
+from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
+
+values, weights = load_weighted_values_try_dataset(
+    "ecommerce", "order", "coupon_prefixes.csv", dataset=self._dataset, start=Path(__file__)
+)
+prefix = pick_one_weighted(self._rng, values, weights)
+```
+
+Headered weighted CSV (with `weight` column):
+
+```python
+from datamimic_ce.domains.utils.dataset_path import dataset_path
+from datamimic_ce.utils.file_util import FileUtil
+
+path = dataset_path("ecommerce", f"product_categories_{self._dataset}.csv", start=Path(__file__))
+header, rows = FileUtil.read_csv_to_dict_of_tuples_with_header(path, ",")
+weights = [float(r[header["weight"]]) for r in rows]
+category = self._rng.choices(rows, weights=weights, k=1)[0][header["category"]]
+```
+
+Per‑category specialization (base filename carries the key):
+
+```python
+values, weights = load_weighted_values_try_dataset(
+    "ecommerce", f"product_nouns_{category}.csv", dataset=self._dataset, start=Path(__file__)
+)
+```
+
 ### Domain Core Components
 
 The core components define the base interfaces and abstract classes:
@@ -40,8 +82,12 @@ Domain services are the primary entry point for generating synthetic data. Each 
 ```python
 from datamimic_ce.domains.common.services import PersonService
 
-# Create a service instance
-person_service = PersonService(dataset="US")  # Specify locale/dataset
+# Reproducible run: inject a seeded RNG
+from random import Random
+seeded = Random(42)
+
+# Create a service instance (pass rng when supported by the service)
+person_service = PersonService(dataset="US", rng=seeded)  # Specify dataset + seed
 
 # Generate a single person
 person = person_service.generate()
@@ -84,8 +130,8 @@ class DatetimeEncoder(json.JSONEncoder):
             return obj.isoformat()
         return super().default(obj)
 
-# Generate a batch of people
-person_service = PersonService(dataset="US")
+# Generate a batch of people (deterministic when seeded)
+person_service = PersonService(dataset="US", rng=Random(1234))
 people = person_service.generate_batch(count=100)
 
 # Convert to JSON for storage or transmission
@@ -155,16 +201,15 @@ from my_application.transaction_processor import TransactionProcessor
 
 class TestTransactionProcessor(unittest.TestCase):
     def setUp(self):
-        # Create services
-        self.account_service = BankAccountService()
-        self.transaction_service = TransactionService()
-        
+        # Create services (seed for reproducibility)
+        from random import Random
+        rng = Random(2025)
+        self.account_service = BankAccountService(dataset="US")
+        self.transaction_service = TransactionService(dataset="US")
+
         # Generate test data
         self.test_account = self.account_service.generate()
-        self.test_transactions = self.transaction_service.generate_batch(
-            count=10,
-            account_id=self.test_account.account_id
-        )
+        self.test_transactions = self.transaction_service.generate_batch(count=10)
         
         # Initialize system under test
         self.processor = TransactionProcessor()
@@ -200,6 +245,72 @@ class TestTransactionProcessor(unittest.TestCase):
 3. **Explore available attributes** - Each entity has rich metadata beyond basic fields
 4. **Set the locale** - Use the `dataset` parameter to generate region-specific data
 5. **Leverage to_dict()** - Convert entities to dictionaries for serialization
+6. **Keep models pure** - No dataset I/O or module `random` in models; use the generator’s RNG
+7. **Declare supported datasets** - Services should report supported ISO codes via `compute_supported_datasets([...], start=Path(__file__))`
+
+### Strict Dataset Mode
+
+Set `DATAMIMIC_STRICT_DATASET=1` to enforce that dataset‑suffixed files must exist for the selected dataset (no US fallback). This is useful in CI and when validating new datasets.
+
+## Seeding & Reproducibility
+
+DATAMIMIC favors explicit seeding via injected RNGs instead of hidden global seeds.
+
+- When a service exposes `rng` in its constructor (e.g., `PersonService`, `PatientService`), pass a seeded `random.Random`:
+
+```python
+from random import Random
+from datamimic_ce.domains.healthcare.services import PatientService
+
+svc = PatientService(dataset="US", rng=Random(99))
+pat1 = svc.generate()
+pat2 = svc.generate()  # deterministic sequence for the same seed
+```
+
+- When a service does not expose `rng`, seed the underlying generator directly and construct the model:
+
+```python
+from random import Random
+from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
+from datamimic_ce.domains.ecommerce.models.product import Product
+
+gen = ProductGenerator(dataset="US", rng=Random(42))
+prod = Product(gen)
+```
+
+- Composite generators propagate the injected RNG to sub-generators (e.g., policy → company/product/coverage), keeping all draws in one deterministic stream.
+
+Tip: reuse the same seeded `Random` instance for related generators if you want stable cross-entity correlation; create separate `Random` instances to isolate streams.
+
+### XML Demographics & Seeding
+
+Entity variables in XML can pass demographic constraints and a deterministic seed directly to services that support `Person`-based generation (e.g., `Person`, `Patient`, `Doctor`, `PoliceOfficer`).
+
+Example:
+
+```xml
+<setup>
+  <generate name="seeded_doctors" count="3" target="CSV">
+    <variable
+      name="doc"
+      entity="Doctor"
+      dataset="US"
+      ageMin="30"
+      ageMax="45"
+      conditionsInclude="Diabetes"
+      conditionsExclude="Hypertension"
+      rngSeed="1234" />
+    <key name="full_name" script="doc.full_name" />
+    <key name="age" script="doc.age" />
+    <array name="certifications" script="doc.certifications" />
+  </generate>
+</setup>
+```
+
+Notes:
+- `ageMin`, `ageMax`, `conditionsInclude`, `conditionsExclude` map to the service’s `DemographicConfig`.
+- `rngSeed` seeds the service RNG for deterministic sequences.
+- When attributes are omitted, defaults apply; models remain pure and never access module-level randomness.
 
 ## Extending DATAMIMIC
 
@@ -213,21 +324,22 @@ To create custom domain entities:
 Example of a custom entity:
 
 ```python
-from datamimic_ce.domain_core.base_entity import BaseEntity
+from datamimic_ce.domains.domain_core import BaseEntity
+
 
 class CustomEntity(BaseEntity):
     def __init__(self):
         super().__init__()
         self.custom_id = None
         self.custom_attribute = None
-        
+
     @classmethod
     def from_dict(cls, data):
         entity = cls()
         entity.custom_id = data.get("custom_id")
         entity.custom_attribute = data.get("custom_attribute")
         return entity
-        
+
     def to_dict(self):
         return {
             "custom_id": self.custom_id,

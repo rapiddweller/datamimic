@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import ray
+import ray  # type: ignore[import-not-found]
 
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
@@ -23,7 +23,6 @@ class RayGenerateWorker(GenerateWorker):
         statement: GenerateStatement,
         chunks: list[tuple[int, int]],
         page_size: int,
-        source_operation: dict | None,
     ) -> dict[str, list]:
         """
         Ray multiprocessing process for generating, exporting data by page, and merging result.
@@ -31,7 +30,12 @@ class RayGenerateWorker(GenerateWorker):
         # Execute generate task using Ray
         futures = [
             self.ray_process.options(enable_task_events=False).remote(
-                copied_context, statement, worker_id, chunk_start, chunk_end, page_size, source_operation
+                copied_context,
+                statement,
+                worker_id,
+                chunk_start,
+                chunk_end,
+                page_size,
             )
             for worker_id, (chunk_start, chunk_end) in enumerate(chunks, 1)
         ]
@@ -55,7 +59,6 @@ class RayGenerateWorker(GenerateWorker):
         chunk_start: int,
         chunk_end: int,
         page_size: int,
-        source_operation: dict | None,
     ) -> dict:
         """
         Ray remote function to generate and export data by page in multiprocessing.
@@ -64,5 +67,5 @@ class RayGenerateWorker(GenerateWorker):
         GenerateWorker.mp_preprocess(context, worker_id)
 
         return GenerateWorker.generate_and_export_data_by_chunk(
-            context, stmt, worker_id, chunk_start, chunk_end, page_size, source_operation
+            context, stmt, worker_id, chunk_start, chunk_end, page_size
         )

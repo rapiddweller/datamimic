@@ -11,12 +11,12 @@ This module provides a model for representing an e-commerce order.
 """
 
 import datetime
-import random
 from typing import Any
 
-from datamimic_ce.domain_core.base_entity import BaseEntity
-from datamimic_ce.domain_core.property_cache import property_cache
+from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.common.models.address import Address
+from datamimic_ce.domains.domain_core import BaseEntity
+from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.ecommerce.generators.order_generator import OrderGenerator
 from datamimic_ce.domains.ecommerce.models.product import Product
 
@@ -38,6 +38,11 @@ class Order(BaseEntity):
         self._order_generator = order_generator
 
     @property
+    def dataset(self) -> str:
+        """Expose dataset from generator."""
+        return self._order_generator.dataset.upper()  #  ensure downstream lookups hit _{dataset}.csv assets
+
+    @property
     @property_cache
     def order_id(self) -> str:
         """Get the order ID.
@@ -45,7 +50,10 @@ class Order(BaseEntity):
         Returns:
             A unique order ID
         """
-        return "ORD" + "".join(random.choices("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=8))
+        #  use shared PrefixedIdGenerator for prefixed ID without separator
+        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
+
+        return PrefixedIdGenerator("ORD", "[A-Z0-9]{8}", separator="").generate()
 
     @property
     @property_cache
@@ -55,7 +63,10 @@ class Order(BaseEntity):
         Returns:
             A unique user ID
         """
-        return "USER" + "".join(random.choices("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=8))
+        #  use shared PrefixedIdGenerator for prefixed ID without separator
+        from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
+
+        return PrefixedIdGenerator("USER", "[A-Z0-9]{8}", separator="").generate()
 
     @property
     @property_cache
@@ -65,7 +76,8 @@ class Order(BaseEntity):
         Returns:
             A list of products with quantities and prices
         """
-        return [Product(self._order_generator.product_generator) for _ in range(random.randint(1, 10))]
+        rng = self._order_generator.rng
+        return [Product(self._order_generator.product_generator) for _ in range(rng.randint(1, 10))]
 
     @product_list.setter
     def product_list(self, value: list[Product]) -> None:
@@ -84,7 +96,8 @@ class Order(BaseEntity):
         Returns:
             A random date within the specified range
         """
-        return datetime.datetime.now() - datetime.timedelta(days=random.randint(0, 365))
+        #  delegate to generator for SOC and determinism
+        return self._order_generator.generate_order_date()
 
     @property
     @property_cache
@@ -155,7 +168,8 @@ class Order(BaseEntity):
         """
         # 80% chance billing address is same as shipping
         # Otherwise generate a different address
-        return self.shipping_address if random.random() < 0.8 else Address(self._order_generator.address_generator)
+        rng = self._order_generator.rng
+        return self.shipping_address if rng.random() < 0.8 else Address(self._order_generator.address_generator)
 
     @property
     @property_cache
@@ -178,7 +192,7 @@ class Order(BaseEntity):
         # Calculate subtotal from product list
         subtotal = sum(product.price for product in self.product_list)
         # Apply tax rate (5-12%)
-        tax_rate = random.uniform(0.05, 0.12)
+        tax_rate = self._order_generator.rng.uniform(0.05, 0.12)
         return round(subtotal * tax_rate, 2)
 
     @property
@@ -201,11 +215,12 @@ class Order(BaseEntity):
             The discount amount for the order
         """
         # 30% chance of having a discount
-        if random.random() < 0.3:
+        rng = self._order_generator.rng
+        if rng.random() < 0.3:
             # Calculate subtotal from product list
             subtotal = sum(product.price for product in self.product_list)
             # Apply discount rate (5-25%)
-            discount_rate = random.uniform(0.05, 0.25)
+            discount_rate = rng.uniform(0.05, 0.25)
             return round(subtotal * discount_rate, 2)
         else:
             return 0.0
@@ -219,10 +234,10 @@ class Order(BaseEntity):
             A coupon code if applicable, or None
         """
         if self.discount_amount > 0:
-            # Generate a coupon code if there's a discount
-            coupon_prefixes = ["SAVE", "DISCOUNT", "SPECIAL", "PROMO", "DEAL"]
-            prefix = random.choice(coupon_prefixes)
-            code = "".join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=6))
+            # Generate a coupon code if there's a discount (delegate to generator)
+            prefix = self._order_generator.pick_coupon_prefix()
+            #  use shared StringGenerator for code part
+            code = StringGenerator.rnd_str_from_regex("[A-Z0-9]{6}")
             return f"{prefix}{code}"
         return None
 
@@ -234,23 +249,7 @@ class Order(BaseEntity):
         Returns:
             Order notes if applicable, or None
         """
-        # 20% chance of having notes
-        notes = None
-        if random.random() < 0.2:
-            notes_options = [
-                "Please leave at the front door",
-                "Call before delivery",
-                "Gift - please don't include receipt",
-                "Fragile items - handle with care",
-                "Please deliver after 5pm",
-                "Ring doorbell upon delivery",
-                "Contact customer before shipping",
-                "Include gift message",
-                "Expedite if possible",
-                "Address has a gate code: 1234",
-            ]
-            notes = random.choice(notes_options)
-        return notes
+        return self._order_generator.maybe_pick_note()
 
     @property
     @property_cache

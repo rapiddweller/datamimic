@@ -7,7 +7,7 @@
 import random
 import secrets
 
-from datamimic_ce.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
 
 class PasswordGenerator(BaseLiteralGenerator):
