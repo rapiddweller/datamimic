@@ -1,5 +1,5 @@
 <setup  multiprocessing="True" numProcess="2">
-    <generate name="bike" count="100" target="ConsoleExporter" mpPlatform="ray">
+    <generate name="bike" count="100" target="ConsoleExporter" mpPlatform="multiprocessing">
         <key name="id" type="int" generator="IncrementGenerator"/>
         <key name="year" type="int" values="1970, 2023"/>
         <nestedKey name="attributes" type="dict" condition="year &lt; 2000">

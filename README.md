@@ -72,6 +72,43 @@ print(response["items"][0]["id"])
 
 Same input → same output.
 Seeds, clocks, and UUIDv5 namespaces guarantee reproducibility across CI, dev, and analytics pipelines.
+Here’s a sharper, more README-friendly rewrite that feels technical yet inviting — something that speaks equally to devs and agent builders. It keeps the essence but polishes framing, rhythm, and clarity:
+
+---
+
+### Deterministic Data Generation
+
+DATAMIMIC lets you generate the *same* data, every time across machines, environments, or CI pipelines.
+Seeds, clocks, and UUIDv5 namespaces ensure your synthetic datasets remain reproducible and traceable, no matter where or when they’re generated.
+
+```python
+from datamimic_ce.domains.facade import generate_domain
+
+request = {
+    "domain": "person",
+    "version": "v1",
+    "count": 1,
+    "seed": "docs-demo",                # identical seed → identical output
+    "locale": "en_US",
+    "clock": "2025-01-01T00:00:00Z"     # fixed clock = stable time context
+}
+
+response = generate_domain(request)
+print(response["items"][0]["id"])
+```
+
+**Result:**
+`Same input → same output.`
+
+Behind the scenes, every deterministic request combines:
+
+* A **stable seed** (for idempotent randomness),
+* A **frozen clock** (for time-dependent values), and
+* A **UUIDv5 namespace** (for globally consistent identifiers).
+
+Together, they form a reproducibility contract. Ideal for CI/CD pipelines, agent workflows, and analytics verification.
+
+Agents can safely re-invoke the same generation call and receive byte-for-byte identical data. 
 
 ---
 
@@ -116,7 +153,7 @@ print(account.account_number, account.balance)
 * **Schema validation** (XSD, JSONSchema) → structural integrity
 * **Provenance hashing** → audit-friendly lineage
 
-📘 See [Developer Guide](docs/setup/developer-guide.md)
+📘 See [Developer Guide](docs/developer_guide.md)
 
 ---
 
@@ -184,9 +221,6 @@ datamimic version
 * **Core pipeline:** Determinism kit + domain services + schema validators
 * **Governance layer:** Group tables, linkage audits, provenance hashing
 * **Execution layer:** CLI, API, and XML runners
-* **Testing:** Property-based validation (`pytest -m docs`)
-
-📚 Full details: [Architecture Overview](docs/overview/introduction.md)
 
 ---
 
