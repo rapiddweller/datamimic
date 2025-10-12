@@ -1,0 +1,3 @@
+dataset,version,profile_id,source,notes,age_group_ref,gender_group_ref,condition_group_ref,region_group_ref,sector_group_ref,specialty_group_ref,area_cluster_ref,coverage_line_ref
+US,v1,urban_adult,synthetic,"Urban adult coverage across large states",age_18_44,gender_majority,cond_medium_prevalence,state_pop_large,sector_other,spec_internal,area_212,coverage_other
+US,v1,diabetes_profile,synthetic,"Elevated diabetes prevalence focus",age_45_plus,gender_majority,cond_high_prevalence,state_pop_medium,sector_other,spec_internal,area_404,coverage_other

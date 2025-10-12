@@ -1,85 +1,129 @@
-# DATAMIMIC - Generate Consistent Test Datasets
+# DATAMIMIC — Deterministic Synthetic Test Data That Makes Sense
 
-**The only tool that generates realistic, interconnected test data that actually makes sense together.**
+**Generate realistic, interconnected, and reproducible test data for finance, healthcare, and beyond.**
 
-Faker gives you random data. DATAMIMIC gives you realistic datasets where:
-- Patient medical conditions match their age and demographics
-- Bank account transactions respect balance constraints
-- Insurance policies align with patient risk profiles
+Faker gives you *random* data.
+**DATAMIMIC** gives you *consistent, explainable datasets* that respect business logic and domain constraints.
 
-[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
+* 🧬 Patient medical histories that match age and demographics
+* 💳 Bank transactions that obey balance constraints
+* 🛡 Insurance policies aligned with real risk profiles
+
+[![CI](https://img.shields.io/badge/CI-passing-brightgreen.svg)](https://github.com/rapiddweller/datamimic/actions)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=coverage)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/Python-≥3.10-blue.svg)](https://www.python.org/downloads/)
+[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+---
+
+## 🧠 What Problem DATAMIMIC Solves
+
+Typical data generators (like Faker) produce **isolated random values**.
+That’s fine for unit tests — but meaningless for system, analytics, or compliance testing.
+
+**Example:**
+
+```python
+# Faker – broken relationships
+patient_name = fake.name()
+patient_age = fake.random_int(1, 99)
+conditions = [fake.word()]
+# "25-year-old with Alzheimer's" – nonsense data.
+```
+
+**DATAMIMIC – contextual realism**
+
+```python
+from datamimic_ce.domains.healthcare.services import PatientService
+
+patient = PatientService().generate()
+print(f"{patient.full_name}, {patient.age}, {patient.conditions}")
+# "Shirley Thompson, 72, ['Diabetes', 'Hypertension']"
+```
+
+---
+
+## ⚙️ Quickstart (Community Edition)
+
+Install and run:
 
 ```bash
 pip install datamimic-ce
 ```
 
-## The Problem with Random Test Data
+### Deterministic generation
 
-**Faker Example** (broken relationships):
 ```python
-# This creates nonsensical data
-patient_name = fake.name()           # "John Smith"
-patient_age = fake.random_int(1, 99) # 25
-conditions = [fake.word()]           # ["Alzheimer's"]
-```
-*Result: 25-year-old with Alzheimer's? Your tests miss real edge cases.*
+from datamimic_ce.domains.facade import generate_domain
 
-**DATAMIMIC Example** (realistic relationships):
-```python
-from datamimic_ce.domains.healthcare.services import PatientService
+request = {
+    "domain": "person",
+    "version": "v1",
+    "count": 1,
+    "seed": "docs-demo",
+    "locale": "en_US",
+    "clock": "2025-01-01T00:00:00Z"
+}
 
-patient_service = PatientService()
-patient = patient_service.generate()
-
-print(f"Patient: {patient.full_name}, Age: {patient.age}")
-print(f"Conditions: {patient.conditions}")
-# Result: 72-year-old with ["Diabetes", "Hypertension", "Arthritis"]
+response = generate_domain(request)
+print(response["items"][0]["id"])
 ```
 
-## When You Need DATAMIMIC
+Same input → same output.
+Seeds, clocks, and UUIDv5 namespaces guarantee reproducibility across CI, dev, and analytics pipelines.
 
-✅ **Healthcare systems** - Medical records with age-appropriate conditions  
-✅ **Financial applications** - Bank accounts with realistic transaction patterns  
-✅ **Insurance platforms** - Policies that match patient risk profiles  
-✅ **Multi-table databases** - Foreign keys and relationships that actually work  
-✅ **Integration testing** - Complete business scenarios, not isolated records  
+---
 
-## Quick Start
+## 🧩 Domains & Examples
 
-### 1. Installation
-
-```bash
-pip install datamimic-ce
-```
-
-Verify installation:
-```bash
-datamimic version
-```
-
-### 2. Healthcare Data Generation
+### 🏥 Healthcare
 
 ```python
 from datamimic_ce.domains.healthcare.services import PatientService
-
-# Generate realistic patient data
-patient_service = PatientService()
-patient = patient_service.generate()
-
-# Access patient attributes
-print(f"Patient ID: {patient.patient_id}")
-print(f"Name: {patient.full_name}")
-print(f"Age: {patient.age}")
-print(f"Medical Conditions: {patient.conditions}")
-print(f"Blood Type: {patient.blood_type}")
+patient = PatientService().generate()
+print(patient.full_name, patient.conditions)
 ```
 
-### Demographics & Seeding (First Example)
+* **PatientService** – Demographically realistic patients
+* **DoctorService** – Specialties match conditions
+* **HospitalService** – Realistic bed capacities and types
+* **MedicalRecordService** – Longitudinal health records
 
-Python (DemographicConfig + seeded RNG):
+### 💰 Finance
+
+```python
+from datamimic_ce.domains.finance.services import BankAccountService
+account = BankAccountService().generate()
+print(account.account_number, account.balance)
+```
+
+* Balances respect transactions
+* Card/IBAN formats per locale
+* Distributions tuned for fraud analytics and reconciliation
+
+### 👤 Demographics
+
+* `PersonService` – Culturally consistent names, addresses, phone patterns
+* Locale packs for DE / US / VN, versioned and auditable
+
+---
+
+## 🔒 Deterministic by Design
+
+* **Frozen clocks** and **canonical hashing** → reproducible IDs
+* **Seeded random generators** → identical outputs across runs
+* **Schema validation** (XSD, JSONSchema) → structural integrity
+* **Provenance hashing** → audit-friendly lineage
+
+📘 See [Developer Guide](docs/setup/developer-guide.md)
+
+---
+
+## 🧮 XML / Python Model Workflow
+
+Python-based generation:
+
 ```python
 from random import Random
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
@@ -87,11 +131,11 @@ from datamimic_ce.domains.healthcare.services import PatientService
 
 cfg = DemographicConfig(age_min=70, age_max=75)
 svc = PatientService(dataset="US", demographic_config=cfg, rng=Random(1337))
-patient = svc.generate()
-print({"name": patient.full_name, "age": patient.age, "conditions": patient.conditions})
+print(svc.generate().to_dict())
 ```
 
-XML (Demographic attributes + rngSeed):
+Equivalent XML model:
+
 ```xml
 <setup>
   <generate name="seeded_seniors" count="3" target="CSV">
@@ -100,252 +144,82 @@ XML (Demographic attributes + rngSeed):
     <key name="age" script="patient.age" />
     <array name="conditions" script="patient.conditions" />
   </generate>
-  <!-- array is for primitives; use nestedKey for lists of dicts -->
-  <!-- <nestedKey name="records" script="some_list_of_dicts" /> -->
-  
 </setup>
 ```
 
-**Example Output:**
-```
-Patient ID: PAT-23AEEABA
-Name: Shirley Thompson
-Age: 65
-Medical Conditions: ['Depression']
-Blood Type: AB-
-```
+---
 
-### 3. Financial Services Data
+## ⚖️ CE vs EE Comparison
 
-```python
-from datamimic_ce.domains.financial.services.bank_account_service import BankAccountService
+| Feature                                 | Community (CE) | Enterprise (EE) |
+| --------------------------------------- | -------------- | --------------- |
+| Deterministic domain generation         | ✅              | ✅               |
+| XML + Python pipelines                  | ✅              | ✅               |
+| Healthcare & Finance domains            | ✅              | ✅               |
+| Multi-user collaboration                | ❌              | ✅               |
+| Governance & lineage dashboards         | ❌              | ✅               |
+| ML engines (Mostly AI, Gretel, Sklearn) | ❌              | ✅               |
+| RBAC & audit logging (HIPAA/GDPR/PCI)   | ❌              | ✅               |
+| Managed EDIFACT / SWIFT adapters        | ❌              | ✅               |
 
-# Generate bank account data
-account_service = BankAccountService()
-account = account_service.generate()
+👉 [Compare editions](https://datamimic.io) • [Book a strategy call](https://datamimic.io/contact)
 
-# Access financial properties
-print(f"Account Number: {account.account_number}")
-print(f"Account Type: {account.account_type}")
-print(f"Balance: ${account.balance:.2f}")
-print(f"Transactions: {len(account.transactions)}")
-```
+---
 
-### 4. Complex Healthcare Scenarios
-
-```python
-from datamimic_ce.domains.healthcare.services import (
-    PatientService, DoctorService, HospitalService
-)
-
-# Generate complete healthcare ecosystem
-hospital_service = HospitalService()
-doctor_service = DoctorService()
-patient_service = PatientService()
-
-# Create related entities
-hospital = hospital_service.generate()
-doctors = doctor_service.generate_batch(count=3)
-patients = patient_service.generate_batch(count=10)
-
-print(f"Hospital: {hospital.name} ({hospital.hospital_type})")
-print(f"Capacity: {hospital.beds} beds")
-
-print("\nMedical Staff:")
-for doctor in doctors:
-    print(f"- Dr. {doctor.full_name}, {doctor.specialty}")
-    print(f"  Experience: {doctor.years_of_experience} years")
-
-print(f"\nPatients: {len(patients)} total")
-```
-
-**Example Output:**
-```
-Hospital: Cornell Healthcare (Community Hospital)
-Capacity: 349 beds
-
-Medical Staff:
-- Dr. Teresa Gross, Obstetrics and Gynecology
-  Experience: 4 years
-- Dr. Isaac Kerr, Family Medicine
-  Experience: 12 years
-
-Patients: 10 total
-```
-
-## Advanced Use Cases
-
-### Target Specific Patient Demographics
-
-```python
-# Generate elderly patients with diabetes
-elderly_diabetic_patients = []
-all_patients = patient_service.generate_batch(count=100)
-
-for patient in all_patients:
-    if patient.age >= 65 and "Diabetes" in patient.conditions:
-        elderly_diabetic_patients.append(patient)
-
-print(f"Found {len(elderly_diabetic_patients)} elderly diabetic patients")
-for patient in elderly_diabetic_patients[:3]:
-    print(f"- {patient.full_name}, {patient.age} years old")
-    print(f"  Conditions: {patient.conditions}")
-```
-
-### XML-Based Data Generation
-
-```xml
-<setup>
-    <generate name="customer" count="10">
-        <!-- Prefer attributes over constructor strings; deterministic when rngSeed is set -->
-        <variable name="person" entity="Person" ageMin="21" ageMax="67" rngSeed="42"/>
-        <key name="id" generator="IncrementGenerator"/>
-        <key name="first_name" script="person.given_name"/>
-        <key name="last_name" script="person.family_name"/>
-        <key name="email" script="person.email"/>
-        <key name="status" values="'active', 'inactive', 'pending'"/>
-    </generate>
-</setup>
-```
-
-Use in tests:
-```python
-from datamimic_ce.factory.datamimic_test_factory import DataMimicTestFactory
-
-customer_factory = DataMimicTestFactory("customer.xml", "customer")
-customer = customer_factory.create()
-
-print(customer["id"])         # 1
-print(customer["first_name"]) # Jose
-print(customer["email"])      # jose.ayers@example.com
-```
-
-### Export to CSV
-
-```python
-import csv
-
-# Generate and export patient data
-patients = patient_service.generate_batch(count=50)
-
-with open('patients.csv', 'w', newline='') as csvfile:
-    fieldnames = ['patient_id', 'name', 'age', 'gender', 'conditions']
-    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-    
-    writer.writeheader()
-    for patient in patients:
-        writer.writerow({
-            'patient_id': patient.patient_id,
-            'name': patient.full_name,
-            'age': patient.age,
-            'gender': patient.gender,
-            'conditions': ', '.join(patient.conditions)
-        })
-```
-
-## Why Not Just Use Faker?
-
-| Scenario | Faker Result | DATAMIMIC Result |
-|----------|-------------|------------------|
-| Patient Data | 25-year-old with Alzheimer's | 72-year-old with age-appropriate conditions |
-| Bank Account | $50M balance with $2 transaction | Balance reflects realistic transaction history |
-| Medical Records | Random doctor + random patient | Doctor specialty matches patient conditions |
-| Insurance | Any policy for any patient | Coverage appropriate for patient risk profile |
-
-**Faker creates individual random values. DATAMIMIC creates realistic business scenarios.**
-
-## CLI and Batch Processing
+## 🧰 CLI & Automation
 
 ```bash
 # Run instant healthcare demo
 datamimic demo create healthcare-example
 datamimic run ./healthcare-example/datamimic.xml
 
-# Verify installation
+# Verify version
 datamimic version
 ```
 
-## Available Domains
+---
 
-**🏥 Healthcare**
-- `PatientService` - Realistic patient demographics and conditions
-- `DoctorService` - Medical professionals with appropriate specialties
-- `HospitalService` - Healthcare facilities with realistic capacity
-- `MedicalRecordService` - Patient records with consistent history
+## 🧭 Architecture Snapshot
 
-**💰 Financial Services**  
-- `BankAccountService` - Accounts with realistic transaction patterns
-- Transaction history that respects balance constraints
-- Account types aligned with customer demographics
+* **Core pipeline:** Determinism kit + domain services + schema validators
+* **Governance layer:** Group tables, linkage audits, provenance hashing
+* **Execution layer:** CLI, API, and XML runners
+* **Testing:** Property-based validation (`pytest -m docs`)
 
-**👤 General Demographics**
-- `PersonService` - Culturally consistent names and locations
-- Geographic and demographic correlations
-
-## Enterprise vs Community
-
-| Feature                        | Community | Enterprise |
-|--------------------------------|-----------|------------|
-| Domain-specific data generation | ✅        | ✅         |
-| Python & XML APIs              | ✅        | ✅         |
-| Healthcare, Financial domains   | ✅        | ✅         |
-| ML-Enhanced Data Generation     | ❌        | ✅         |
-| Advanced Enterprise Integrations | ❌      | ✅         |
-| Web UI & Team Collaboration    | ❌        | ✅         |
-| Priority Support & SLA         | ❌        | ✅         |
-
-👉 [Learn more about Enterprise Edition](https://datamimic.io)  
-📞 [Book a Free Strategy Call](https://datamimic.io/contact)
-
-## Documentation & Resources
-
-📚 **[Full Documentation](https://docs.datamimic.io)**
-
-📘 **Additional Resources:**
-- [CLI Interface](docs/api/cli.md)
-- [Data Domains Details](docs/data-domains/README.md)
-
-🚀 **Try the healthcare demo:**
-```bash
-datamimic demo create healthcare-example
-datamimic run ./healthcare-example/datamimic.xml
-```
-
-## FAQ
-
-**Q:** Is Community Edition suitable for commercial projects?
-
-**A:** Absolutely! DATAMIMIC CE uses the MIT License.
-
-**Q:** How is this different from Faker?
-
-**A:** Faker generates random individual values. DATAMIMIC generates domain-specific datasets where related fields follow real-world business rules and correlations.
-
-**Q:** What domains are supported?
-
-**A:** Currently healthcare, financial services, and general demographics. More domains are added regularly.
-
-**Q:** Can I contribute?
-
-**A:** Yes! See [Contributing Guide](CONTRIBUTING.md).
-
-## Support & Community
-
-💬 **[GitHub Discussions](https://github.com/rapiddweller/datamimic/discussions)**  
-🐛 **[Issue Tracker](https://github.com/rapiddweller/datamimic/issues)**  
-📧 **[Email Support](mailto:support@rapiddweller.com)**
-
-## Stay Connected
-
-🌐 **[Website](https://datamimic.io)**  
-💼 **[LinkedIn](https://www.linkedin.com/company/rapiddweller)**
+📚 Full details: [Architecture Overview](docs/overview/introduction.md)
 
 ---
 
-**Ready to generate data that makes sense?**
+## 🌍 Industry Blueprints
+
+### Finance
+
+* Simulate SWIFT / ISO 20022 flows
+* Replay hashed PCI transaction histories
+* Validate fraud and reconciliation pipelines
+
+### Healthcare
+
+* Generate deterministic patient journeys
+* Integrate HL7/FHIR/EDIFACT exchanges
+* Reproduce QA datasets for regression testing
+
+---
+
+## 📚 Documentation & Community
+
+* [📘 Full Documentation](https://docs.datamimic.io)
+* [💬 GitHub Discussions](https://github.com/rapiddweller/datamimic/discussions)
+* [🐛 Issue Tracker](https://github.com/rapiddweller/datamimic/issues)
+* [📧 Email Support](mailto:support@rapiddweller.com)
+
+---
+
+## 🚀 Get Started
 
 ```bash
 pip install datamimic-ce
 ```
 
-⭐ **Star us on GitHub** if DATAMIMIC solves your test data problems!
+**Generate data that makes sense — deterministically.**
+⭐ Star us on GitHub if DATAMIMIC improves your testing workflow.

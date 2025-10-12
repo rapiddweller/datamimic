@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DoctorRequestV1",
+  "type": "object",
+  "required": ["domain", "version", "count", "seed", "locale", "clock"],
+  "additionalProperties": false,
+  "properties": {
+    "domain": {"const": "doctor"},
+    "version": {"const": "v1"},
+    "count": {"type": "integer", "minimum": 0, "maximum": 1000},
+    "seed": {"oneOf": [{"type": "integer"}, {"type": "string"}]},
+    "locale": {"type": "string", "pattern": "^[a-z]{2}_[A-Z]{2}$"},
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "specialty": {
+          "oneOf": [
+            {"type": "string"},
+            {"type": "array", "items": {"type": "string"}, "minItems": 1}
+          ]
+        },
+        "license_prefix": {"type": "string"}
+      }
+    },
+    "clock": {"type": "string", "format": "date-time"}
+  }
+}

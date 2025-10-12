@@ -33,6 +33,12 @@ def _strict_dataset_mode() -> bool:
     return val not in ("0", "false", "False")
 
 
+def is_strict_dataset_mode() -> bool:
+    """Public helper so callers can respect strict dataset mode."""
+
+    return _strict_dataset_mode()
+
+
 def repo_root(start: Path | None = None) -> Path:
     """Return repository root inferred from a file location.
 

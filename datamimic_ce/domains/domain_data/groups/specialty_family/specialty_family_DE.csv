@@ -1,0 +1,41 @@
+group_id,specialty,weight
+spec_other,Allgemeinmedizin,0.073937
+spec_other,Anästhesiologie,0.048059
+spec_other,Arbeitsmedizin,0.003697
+spec_other,Augenheilkunde,0.031423
+spec_other,Chirurgie,0.051756
+spec_other,Endokrinologie,0.024030
+spec_other,Gefäßchirurgie,0.005545
+spec_other,Gynäkologie und Geburtshilfe,0.059150
+spec_other,Hals-Nasen-Ohren-Heilkunde,0.009242
+spec_other,Humangenetik,0.003697
+spec_other,Hämatologie,0.014787
+spec_other,Infektiologie,0.016636
+spec_other,Kardiologie,0.040665
+spec_other,Neonatologie,0.003697
+spec_other,Nephrologie,0.022181
+spec_other,Neurologie,0.035120
+spec_other,Notfallmedizin,0.062847
+spec_other,Nuklearmedizin,0.003697
+spec_other,Onkologie,0.025878
+spec_other,Orthopädie,0.036969
+spec_other,Palliativmedizin,0.003697
+spec_other,Pathologie,0.003697
+spec_other,Physikalische und Rehabilitative Medizin,0.012939
+spec_other,Plastische Chirurgie,0.007394
+spec_other,Pneumologie,0.020333
+spec_other,Pädiatrie,0.066543
+spec_other,Radiologie,0.044362
+spec_other,Rheumatologie,0.018484
+spec_other,Schlafmedizin,0.003697
+spec_other,Sportmedizin,0.003697
+spec_other,Thoraxchirurgie,0.003697
+spec_other,Urologie,0.029575
+spec_urgent,Allergologie,0.011091
+spec_urgent,Dermatologie,0.033272
+spec_urgent,Gastroenterologie,0.027726
+spec_urgent,Geriatrie,0.003697
+spec_urgent,Innere Medizin,0.070240
+spec_urgent,Psychiatrie und Psychotherapie,0.055453
+spec_urgent,Schmerzmedizin,0.003697
+spec_urgent,Strahlentherapie,0.003697

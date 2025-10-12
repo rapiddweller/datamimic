@@ -1,0 +1,25 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "2ad522de7754877807438d7fb840d781dad0aabf65b331039e176cc0f5bfd8a5",
+    "seed_canonical": "3069011196268734596"
+  },
+  "domain": "patient",
+  "items": [
+    {
+      "address_id": "bda2f643-71c6-5c57-b266-9be649119566",
+      "age": 77,
+      "conditions": [
+        "I10"
+      ],
+      "human_id": "DE-KLINIK-63",
+      "id": "3e1edca8-aa80-5b95-b70b-ab7e486d0034",
+      "insurance_provider": "AOK",
+      "locale": "de_DE",
+      "person_id": "9ee2cf26-1141-5b96-8480-a598e207da33",
+      "primary_condition": "I10"
+    }
+  ],
+  "request_hash": "5b397d9e5a900c6d35df145a69a0dd89e572a8a3a82c26900dab28fa149f37da",
+  "version": "v1"
+}

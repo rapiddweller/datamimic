@@ -97,7 +97,8 @@ print(f"Generated {len(people)} unique people")
 # Export to other formats if needed
 for person in people[:5]:
     print(f"{person.name}, {person.age} years old")
-
+```
+    
 ### Reproducible Runs (Seeding)
 
 DATAMIMIC favors explicit seeding via injected RNGs. Pass a seeded `random.Random` to services (when available) or directly to generators to get deterministic output:
@@ -118,7 +119,6 @@ from datamimic_ce.domains.ecommerce.models import Product
 gen = ProductGenerator(dataset="US", rng=Random(42))
 prod = Product(gen)
 print(prod.to_dict())  # stable for the same seed
-```
 ```
 
 ## Domain-Driven Framework

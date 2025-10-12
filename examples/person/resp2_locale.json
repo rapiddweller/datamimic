@@ -1,0 +1,24 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "29cba3f102a3d3fa44ed83fc4ba3226306b1ba000e897904fa15e021b6e36202",
+    "seed_canonical": "3069011196268734596"
+  },
+  "domain": "person",
+  "items": [
+    {
+      "age": 56,
+      "date_of_birth": "1969-09-18",
+      "first_name": "Mia",
+      "full_name": "Mia Schneider",
+      "human_id": "PER-9EE2CF26",
+      "id": "9ee2cf26-1141-5b96-8480-a598e207da33",
+      "last_name": "Schneider",
+      "locale": "de_DE",
+      "nationality": "DE",
+      "sex": "F"
+    }
+  ],
+  "request_hash": "4f9be232a55cc511d5c3701216b8b062098e0e2ee4bc0ab70ab6dbe6812a02e0",
+  "version": "v1"
+}

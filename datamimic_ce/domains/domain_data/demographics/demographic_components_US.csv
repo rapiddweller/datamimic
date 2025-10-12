@@ -1,0 +1,3 @@
+component_id,dmgrp_profile_id,constraints_json
+urban_adult,urban_adult,"{""age"":{""min"":25,""max"":45}}"
+chronic_diabetes,diabetes_profile,"{""conditions"": [""E11""],""age"":{""min"":45,""max"":70}}"

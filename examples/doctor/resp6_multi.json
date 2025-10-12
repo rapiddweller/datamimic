@@ -1,0 +1,132 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "e9abf3c9f0e3d25172afc44fa847889de86dcda76c2aa72cfe6e111ae31f7ddc",
+    "seed_canonical": "13799953621401316012"
+  },
+  "domain": "doctor",
+  "items": [
+    {
+      "first_name": "Emma",
+      "full_name": "MD Emma Smith",
+      "hospital": "Northwest Medical Center",
+      "human_id": "DOC-A57BD415",
+      "id": "a57bd415-e419-5457-8e4a-3e27ee0728f8",
+      "last_name": "Smith",
+      "license_number": "US-A57BD415",
+      "locale": "en_US",
+      "specialty": "cardiology",
+      "title": "MD"
+    },
+    {
+      "first_name": "Noah",
+      "full_name": "MD Noah Smith",
+      "hospital": "Austin Heart Institute",
+      "human_id": "DOC-3CBF5EF4",
+      "id": "3cbf5ef4-d61f-50e0-b619-72e61cfdd4c1",
+      "last_name": "Smith",
+      "license_number": "US-3CBF5EF4",
+      "locale": "en_US",
+      "specialty": "pediatrics",
+      "title": "MD"
+    },
+    {
+      "first_name": "Alex",
+      "full_name": "MD Alex Brown",
+      "hospital": "Boston General",
+      "human_id": "DOC-C5EA710E",
+      "id": "c5ea710e-32dc-5670-a1ec-ed9164277390",
+      "last_name": "Brown",
+      "license_number": "US-C5EA710E",
+      "locale": "en_US",
+      "specialty": "general",
+      "title": "MD"
+    },
+    {
+      "first_name": "Emma",
+      "full_name": "MD Emma Brown",
+      "hospital": "Northwest Medical Center",
+      "human_id": "DOC-C241123D",
+      "id": "c241123d-653c-5159-adef-a8b70f634dac",
+      "last_name": "Brown",
+      "license_number": "US-C241123D",
+      "locale": "en_US",
+      "specialty": "cardiology",
+      "title": "MD"
+    },
+    {
+      "first_name": "Noah",
+      "full_name": "DO Noah Johnson",
+      "hospital": "Austin Heart Institute",
+      "human_id": "DOC-C7EA6BC0",
+      "id": "c7ea6bc0-52c5-5dab-a9aa-c08f672d7707",
+      "last_name": "Johnson",
+      "license_number": "US-C7EA6BC0",
+      "locale": "en_US",
+      "specialty": "pediatrics",
+      "title": "DO"
+    },
+    {
+      "first_name": "Jordan",
+      "full_name": "MD Jordan Brown",
+      "hospital": "Boston General",
+      "human_id": "DOC-38861489",
+      "id": "38861489-7b6c-56a8-820b-a54f39acdae0",
+      "last_name": "Brown",
+      "license_number": "US-38861489",
+      "locale": "en_US",
+      "specialty": "general",
+      "title": "MD"
+    },
+    {
+      "first_name": "Ava",
+      "full_name": "DO Ava Johnson",
+      "hospital": "Northwest Medical Center",
+      "human_id": "DOC-476FC8D6",
+      "id": "476fc8d6-d6c7-59b1-b3c6-a6a96b436fe0",
+      "last_name": "Johnson",
+      "license_number": "US-476FC8D6",
+      "locale": "en_US",
+      "specialty": "cardiology",
+      "title": "DO"
+    },
+    {
+      "first_name": "Liam",
+      "full_name": "DO Liam Johnson",
+      "hospital": "Austin Heart Institute",
+      "human_id": "DOC-0104A126",
+      "id": "0104a126-bb99-5b7f-947e-8451e49de5d9",
+      "last_name": "Johnson",
+      "license_number": "US-0104A126",
+      "locale": "en_US",
+      "specialty": "pediatrics",
+      "title": "DO"
+    },
+    {
+      "first_name": "Taylor",
+      "full_name": "DO Taylor Brown",
+      "hospital": "Boston General",
+      "human_id": "DOC-F22197FD",
+      "id": "f22197fd-9f41-5cba-82a7-3f0da1d0fb9b",
+      "last_name": "Brown",
+      "license_number": "US-F22197FD",
+      "locale": "en_US",
+      "specialty": "general",
+      "title": "DO"
+    },
+    {
+      "first_name": "Ava",
+      "full_name": "DO Ava Brown",
+      "hospital": "Northwest Medical Center",
+      "human_id": "DOC-D35D5ABE",
+      "id": "d35d5abe-5948-5d13-951c-ca46e3238c4d",
+      "last_name": "Brown",
+      "license_number": "US-D35D5ABE",
+      "locale": "en_US",
+      "specialty": "cardiology",
+      "title": "DO"
+    }
+  ],
+  "request_hash": "8a54bc3b3dea7eb773226ae6ed0d9d0aca22c91b6b0ee405788da6599c6dd0fa",
+  "version": "v1"
+}

@@ -1,0 +1,11 @@
+{
+  "clock": "2025-01-01T00:00:00Z",
+  "constraints": {
+    "postal_code_prefix": "10"
+  },
+  "count": 2,
+  "domain": "address",
+  "locale": "de_DE",
+  "seed": "constraints",
+  "version": "v1"
+}

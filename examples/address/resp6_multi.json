@@ -1,0 +1,122 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "bdda37ac328e584c12981c897cf3cc94f15f3001939ae0cb8651432bc7bfed7e",
+    "seed_canonical": "13799953621401316012"
+  },
+  "domain": "address",
+  "items": [
+    {
+      "city": "Seattle",
+      "country": "US",
+      "formatted": "23 Oak Street, Seattle, WA 09669, US",
+      "human_id": "ADR-3E83855E",
+      "id": "3e83855e-8856-5740-a0f3-a333f9cb0374",
+      "line1": "23 Oak Street",
+      "locale": "en_US",
+      "postal_code": "09669",
+      "state": "WA"
+    },
+    {
+      "city": "Austin",
+      "country": "US",
+      "formatted": "18 Maple Avenue, Austin, TX 12047, US",
+      "human_id": "ADR-E76E080C",
+      "id": "e76e080c-a8cd-5290-a33e-9e7977ec11cd",
+      "line1": "18 Maple Avenue",
+      "locale": "en_US",
+      "postal_code": "12047",
+      "state": "TX"
+    },
+    {
+      "city": "Boston",
+      "country": "US",
+      "formatted": "191 Cedar Lane, Boston, MA 72802, US",
+      "human_id": "ADR-ECD3CA0D",
+      "id": "ecd3ca0d-ad90-51ce-ab71-57ecede8ea5a",
+      "line1": "191 Cedar Lane",
+      "locale": "en_US",
+      "postal_code": "72802",
+      "state": "MA"
+    },
+    {
+      "city": "Seattle",
+      "country": "US",
+      "formatted": "123 Oak Street, Seattle, WA 14743, US",
+      "human_id": "ADR-5F01148E",
+      "id": "5f01148e-20a0-57c2-a3ba-035cbfe0ac25",
+      "line1": "123 Oak Street",
+      "locale": "en_US",
+      "postal_code": "14743",
+      "state": "WA"
+    },
+    {
+      "city": "Austin",
+      "country": "US",
+      "formatted": "149 Maple Avenue, Austin, TX 34677, US",
+      "human_id": "ADR-9783062C",
+      "id": "9783062c-ce12-524e-b269-ce3411fa3021",
+      "line1": "149 Maple Avenue",
+      "locale": "en_US",
+      "postal_code": "34677",
+      "state": "TX"
+    },
+    {
+      "city": "Boston",
+      "country": "US",
+      "formatted": "137 Maple Avenue, Boston, MA 99036, US",
+      "human_id": "ADR-AA64D1CF",
+      "id": "aa64d1cf-bac7-5cc8-8b3f-d1bf631a387d",
+      "line1": "137 Maple Avenue",
+      "locale": "en_US",
+      "postal_code": "99036",
+      "state": "MA"
+    },
+    {
+      "city": "Seattle",
+      "country": "US",
+      "formatted": "62 Cedar Lane, Seattle, WA 84223, US",
+      "human_id": "ADR-375A7DA8",
+      "id": "375a7da8-9713-507e-be96-a1445eb48b11",
+      "line1": "62 Cedar Lane",
+      "locale": "en_US",
+      "postal_code": "84223",
+      "state": "WA"
+    },
+    {
+      "city": "Austin",
+      "country": "US",
+      "formatted": "70 Oak Street, Austin, TX 48804, US",
+      "human_id": "ADR-4EB42672",
+      "id": "4eb42672-d5c1-5464-ad7d-46fc541ebf9f",
+      "line1": "70 Oak Street",
+      "locale": "en_US",
+      "postal_code": "48804",
+      "state": "TX"
+    },
+    {
+      "city": "Boston",
+      "country": "US",
+      "formatted": "137 Oak Street, Boston, MA 51895, US",
+      "human_id": "ADR-0D8B1CAC",
+      "id": "0d8b1cac-0bf0-5172-b45c-2118fa85c9c1",
+      "line1": "137 Oak Street",
+      "locale": "en_US",
+      "postal_code": "51895",
+      "state": "MA"
+    },
+    {
+      "city": "Seattle",
+      "country": "US",
+      "formatted": "118 Cedar Lane, Seattle, WA 48831, US",
+      "human_id": "ADR-CAE47228",
+      "id": "cae47228-2131-59a9-93bf-66a679d03162",
+      "line1": "118 Cedar Lane",
+      "locale": "en_US",
+      "postal_code": "48831",
+      "state": "WA"
+    }
+  ],
+  "request_hash": "cec530511f112623acfd285bc19e5c6abdbd58b111138ac40bf939b3460b6ca1",
+  "version": "v1"
+}

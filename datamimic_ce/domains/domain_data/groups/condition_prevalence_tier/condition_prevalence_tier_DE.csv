@@ -1,0 +1,46 @@
+group_id,condition,weight
+cond_high_prevalence,Adipositas,0.064128
+cond_high_prevalence,Bluthochdruck,0.080160
+cond_high_prevalence,Diabetes Typ 2,0.072144
+cond_high_prevalence,Hyperlipidämie,0.068136
+cond_high_prevalence,Koronare Herzkrankheit,0.060120
+cond_low_prevalence,Allergische Rhinitis,0.004008
+cond_low_prevalence,Alzheimer-Krankheit,0.016032
+cond_low_prevalence,Anämie,0.004008
+cond_low_prevalence,Bipolare Störung,0.004008
+cond_low_prevalence,Chronisches Erschöpfungssyndrom,0.004008
+cond_low_prevalence,Colitis ulcerosa,0.006012
+cond_low_prevalence,Epilepsie,0.004008
+cond_low_prevalence,Fibromyalgie,0.004008
+cond_low_prevalence,Gicht,0.004008
+cond_low_prevalence,Glaukom,0.004008
+cond_low_prevalence,HIV/AIDS,0.010020
+cond_low_prevalence,Hepatitis C,0.008016
+cond_low_prevalence,Herzinsuffizienz,0.028056
+cond_low_prevalence,Hörverlust,0.004008
+cond_low_prevalence,Katarakt,0.004008
+cond_low_prevalence,Krebs,0.020040
+cond_low_prevalence,Lupus,0.004008
+cond_low_prevalence,Makuladegeneration,0.004008
+cond_low_prevalence,Migräne,0.024048
+cond_low_prevalence,Morbus Crohn,0.006012
+cond_low_prevalence,Multiple Sklerose,0.012024
+cond_low_prevalence,Neurodermitis,0.004008
+cond_low_prevalence,Osteoporose,0.026052
+cond_low_prevalence,Parkinson-Krankheit,0.014028
+cond_low_prevalence,Posttraumatische Belastungsstörung,0.004008
+cond_low_prevalence,Psoriasis,0.004008
+cond_low_prevalence,Rheumatoide Arthritis,0.004008
+cond_low_prevalence,Schizophrenie,0.004008
+cond_low_prevalence,Schlafapnoe,0.022044
+cond_low_prevalence,Schlaganfall,0.018036
+cond_low_prevalence,Substanzgebrauchsstörung,0.004008
+cond_medium_prevalence,Angststörung,0.040080
+cond_medium_prevalence,Arthrose,0.048096
+cond_medium_prevalence,Asthma,0.056112
+cond_medium_prevalence,COPD,0.052104
+cond_medium_prevalence,Chronische Nierenerkrankung,0.032064
+cond_medium_prevalence,Depression,0.044088
+cond_medium_prevalence,Gastroösophageale Refluxkrankheit,0.034068
+cond_medium_prevalence,Hypothyreose,0.036072
+cond_medium_prevalence,Vorhofflimmern,0.030060

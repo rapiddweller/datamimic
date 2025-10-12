@@ -1,0 +1,24 @@
+{
+  "determinism_proof": {
+    "algorithm": "uuid5+sha256",
+    "content_hash": "5b0cb52f9856f7be1b207ca2f9b7c10ce647d476b2b70d0967a44a3ff00db8c1",
+    "seed_canonical": "3445102689993055007"
+  },
+  "domain": "person",
+  "items": [
+    {
+      "age": 38,
+      "date_of_birth": "1987-12-25",
+      "first_name": "Trang",
+      "full_name": "Trang Nguyễn",
+      "human_id": "PER-4E6CA564",
+      "id": "4e6ca564-3713-5d46-83d5-36303fb90667",
+      "last_name": "Nguyễn",
+      "locale": "vi_VN",
+      "nationality": "VN",
+      "sex": "F"
+    }
+  ],
+  "request_hash": "a326d0bb969fcf6861a03cc1939a71bdd57f8cc5d5bf85cbc34fdf81b0547e78",
+  "version": "v1"
+}

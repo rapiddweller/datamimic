@@ -1,0 +1,45 @@
+group_id,specialty,weight
+spec_internal,Internal Medicine,0.066087
+spec_other,Anesthesiology,0.045217
+spec_other,Cardiology,0.038261
+spec_other,Critical Care Medicine,0.003478
+spec_other,Endocrinology,0.022609
+spec_other,Hematology,0.013913
+spec_other,Hospice and Palliative Medicine,0.003478
+spec_other,Infectious Disease,0.015652
+spec_other,Medical Genetics,0.003478
+spec_other,Nephrology,0.020870
+spec_other,Neurology,0.033043
+spec_other,Nuclear Medicine,0.003478
+spec_other,Obstetrics and Gynecology,0.055652
+spec_other,Oncology,0.024348
+spec_other,Ophthalmology,0.029565
+spec_other,Orthopedics,0.034783
+spec_other,Otolaryngology,0.008696
+spec_other,Pain Medicine,0.003478
+spec_other,Palliative Care,0.003478
+spec_other,Pathology,0.003478
+spec_other,Physical Medicine and Rehabilitation,0.012174
+spec_other,Preventive Medicine,0.003478
+spec_other,Psychiatry,0.052174
+spec_other,Pulmonology,0.019130
+spec_other,Radiation Oncology,0.003478
+spec_other,Radiology,0.041739
+spec_other,Rheumatology,0.017391
+spec_other,Sleep Medicine,0.003478
+spec_other,Sports Medicine,0.003478
+spec_other,Urology,0.027826
+spec_pediatric,Pediatrics,0.062609
+spec_primary_care,Family Medicine,0.069565
+spec_urgent,Allergy and Immunology,0.010435
+spec_urgent,Dermatology,0.031304
+spec_urgent,Emergency Medicine,0.059130
+spec_urgent,Gastroenterology,0.026087
+spec_urgent,General Surgery,0.048696
+spec_urgent,Geriatrics,0.003478
+spec_urgent,Neonatal-Perinatal Medicine,0.003478
+spec_urgent,Plastic Surgery,0.006957
+spec_urgent,Surgery,0.048696
+spec_urgent,Thoracic Surgery,0.003478
+spec_urgent,Transplant Surgery,0.003478
+spec_urgent,Vascular Surgery,0.005217

@@ -2,6 +2,7 @@
 
 from .loader import DemographicProfileError, load_demographic_profile
 from .profile import DemographicProfile, DemographicProfileId, normalize_sex
+from .profile_meta import profile_group_refs
 from .sampler import DemographicSample, DemographicSampler
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "DemographicSample",
     "load_demographic_profile",
     "normalize_sex",
+    "profile_group_refs",
 ]

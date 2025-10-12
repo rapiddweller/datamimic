@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AddressRequestV1",
+  "type": "object",
+  "required": ["domain", "version", "count", "seed", "locale", "clock"],
+  "additionalProperties": false,
+  "properties": {
+    "domain": {"const": "address"},
+    "version": {"const": "v1"},
+    "count": {"type": "integer", "minimum": 0, "maximum": 1000},
+    "seed": {"oneOf": [{"type": "integer"}, {"type": "string"}]},
+    "locale": {"type": "string", "pattern": "^[a-z]{2}_[A-Z]{2}$"},
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "country": {"type": "string", "pattern": "^[A-Z]{2}$"},
+        "postal_code_prefix": {"oneOf": [{"type": "string"}, {"type": "integer"}]}
+      }
+    },
+    "clock": {"type": "string", "format": "date-time"}
+  }
+}
