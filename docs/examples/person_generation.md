@@ -184,6 +184,7 @@ from random import Random
 patient_service = PatientService(dataset="US", rng=Random(77))
 patient = patient_service.generate()
 print(f"Patient: {patient.full_name}, ID: {patient.patient_id}")
+```
 
 ## Reproducible Runs with Seeds
 
@@ -195,7 +196,7 @@ svc_a = PersonService(dataset="US", rng=Random(123))
 svc_b = PersonService(dataset="US", rng=Random(123))
 assert svc_a.generate().to_dict() == svc_b.generate().to_dict()
 ```
-```
+
 
 Example output:
 ```

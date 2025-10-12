@@ -52,31 +52,7 @@ Install and run:
 pip install datamimic-ce
 ```
 
-### Deterministic generation
-
-```python
-from datamimic_ce.domains.facade import generate_domain
-
-request = {
-    "domain": "person",
-    "version": "v1",
-    "count": 1,
-    "seed": "docs-demo",
-    "locale": "en_US",
-    "clock": "2025-01-01T00:00:00Z"
-}
-
-response = generate_domain(request)
-print(response["items"][0]["id"])
-```
-
-Same input → same output.
-Seeds, clocks, and UUIDv5 namespaces guarantee reproducibility across CI, dev, and analytics pipelines.
-Here’s a sharper, more README-friendly rewrite that feels technical yet inviting — something that speaks equally to devs and agent builders. It keeps the essence but polishes framing, rhythm, and clarity:
-
----
-
-### Deterministic Data Generation
+## Deterministic Data Generation
 
 DATAMIMIC lets you generate the *same* data, every time across machines, environments, or CI pipelines.
 Seeds, clocks, and UUIDv5 namespaces ensure your synthetic datasets remain reproducible and traceable, no matter where or when they’re generated.
@@ -106,7 +82,7 @@ Behind the scenes, every deterministic request combines:
 * A **frozen clock** (for time-dependent values), and
 * A **UUIDv5 namespace** (for globally consistent identifiers).
 
-Together, they form a reproducibility contract. Ideal for CI/CD pipelines, agent workflows, and analytics verification.
+Together, they form a reproducibility contract. Ideal for CI/CD pipelines, agentic pipelines, and analytics verification.
 
 Agents can safely re-invoke the same generation call and receive byte-for-byte identical data. 
 
