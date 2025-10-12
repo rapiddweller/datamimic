@@ -1,5 +1,5 @@
 <setup>
-    <generate name="generate_container" count="6" target="" mpPlatform="ray">
+    <generate name="generate_container" count="6" target="" mpPlatform="multiprocessing">
         <key name="id" generator="IncrementGenerator"/>
         <condition>
             <if condition="id % 2 == 0">

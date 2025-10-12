@@ -9,7 +9,6 @@ import math
 import shutil
 
 import dill  # type: ignore
-import ray
 
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.config import settings
@@ -180,7 +179,9 @@ class GenerateTask(CommonSubTask):
         with gen_timer("process", context.root.report_logging, self.statement.full_name) as timer_result:
             try:
                 # Mark Ray initialization status for shutdown at the end of execution
-                is_ray_initialized = False
+                # Ray is optional; only import/initialize if explicitly requested.
+                is_ray_initialized = False  # WHY: make Ray optional, avoid hard dependency
+                _ray_mod = None  # local handle to ray module if imported
 
                 # Pre-execute sub-tasks before generating any data
                 self.pre_execute(context)
@@ -222,11 +223,21 @@ class GenerateTask(CommonSubTask):
 
                         mp_worker = MultiprocessingGenerateWorker()
                     elif mp_platform == "ray":
-                        from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
+                        # Ray is optional; import lazily and raise a clear error if missing.
+                        try:
+                            import ray as _ray  # type: ignore
 
+                            from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
+                        except ImportError as e:  # WHY: allow install without ray, fail only when asked to use it
+                            raise RuntimeError(
+                                "Ray not installed. Install with 'pip install datamimic-ce[ray]' "
+                                "or set mp_platform='multiprocessing'."
+                            ) from e
+
+                        _ray_mod = _ray
                         mp_worker = RayGenerateWorker()  # type: ignore[assignment]
                         # Initialize Ray
-                        ray.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False)
+                        _ray_mod.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False)
                         is_ray_initialized = True
                     else:
                         raise ValueError(
@@ -284,8 +295,8 @@ class GenerateTask(CommonSubTask):
                     for temp_dir in context.descriptor_dir.glob(f"temp_result_{context.task_id}*"):
                         shutil.rmtree(temp_dir)
                 # Shutdown Ray if initialized
-                if is_ray_initialized:
-                    ray.shutdown()
+                if is_ray_initialized and _ray_mod is not None:
+                    _ray_mod.shutdown()
 
     @staticmethod
     def export_memstore(setup_context: SetupContext, current_stmt: GenerateStatement, merged_result: dict[str, list]):
