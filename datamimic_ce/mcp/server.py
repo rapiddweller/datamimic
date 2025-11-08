@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import MISSING, fields
-from typing import Any, TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from fastmcp import FastMCP
 from starlette.applications import Starlette
@@ -13,7 +13,6 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_401_UNAUTHORIZED
-from starlette.routing import Mount, Route
 
 from datamimic_ce.domains import facade
 from datamimic_ce.mcp import resources
@@ -39,9 +38,7 @@ class _APIKeyMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-m
         super().__init__(app)
         self._api_key = api_key
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         provided = request.headers.get("authorization")
         token = None
         if provided and provided.lower().startswith("bearer "):
@@ -86,7 +83,7 @@ def generate_impl(args: GenerateArgs) -> dict[str, Any]:
     payload = args.to_payload()
     # WHY: The facade owns canonical hashing and RNG seeding; forwarding the payload
     # untouched prevents duplicate hash derivations and keeps determinism obvious.
-    return cast(dict[str, Any], facade.generate_domain(payload))
+    return facade.generate_domain(payload)
 
 
 def create_server(*, api_key: str | None = None) -> FastMCP:
@@ -162,7 +159,7 @@ def build_sse_app(
     None after streaming. This does not affect functionality; tests verify end-to-end.
     """
 
-    sse_factory = cast(Callable[[], Starlette], getattr(server, "sse_app"))
+    sse_factory = cast(Callable[[], Starlette], server.sse_app)
     sse_app = sse_factory()
     if middleware:
         for entry in middleware:

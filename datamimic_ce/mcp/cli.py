@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 from enum import Enum
+from typing import Annotated
 
 import typer
 import uvicorn
@@ -24,6 +25,12 @@ app = typer.Typer(help="Run the DataMimic MCP server")
 
 _DEFAULT_HOST = "127.0.0.1"
 _DEFAULT_PORT = 8765
+
+# WHY: Avoid ruff-bugbear B008 (no function calls in argument defaults).
+# We compute environment-derived defaults at module load and use them as
+# plain defaults, while passing Typer options via `Annotated` metadata.
+_ENV_HOST_DEFAULT = os.getenv("DATAMIMIC_MCP_HOST", _DEFAULT_HOST)
+_ENV_PORT_DEFAULT = int(os.getenv("DATAMIMIC_MCP_PORT", str(_DEFAULT_PORT)))
 
 
 class Transport(str, Enum):
@@ -51,22 +58,24 @@ class LogLevel(str, Enum):
 
 @app.command()
 def serve(
-    host: str = typer.Option(
-        os.getenv("DATAMIMIC_MCP_HOST", _DEFAULT_HOST),
-        help="Host interface to bind for SSE transport",
-    ),
-    port: int = typer.Option(
-        int(os.getenv("DATAMIMIC_MCP_PORT", str(_DEFAULT_PORT))),
-        help="TCP port to bind for SSE transport",
-    ),
-    transport: Transport = typer.Option(
-        Transport.sse,
-        help="FastMCP transport (sse for network clients, stdio for agent runtimes)",
-    ),
-    log_level: LogLevel = typer.Option(
-        LogLevel.info,
-        help="Log level when running the SSE server",
-    ),
+    host: Annotated[
+        str,
+        typer.Option(help="Host interface to bind for SSE transport"),
+    ] = _ENV_HOST_DEFAULT,
+    port: Annotated[
+        int,
+        typer.Option(help="TCP port to bind for SSE transport"),
+    ] = _ENV_PORT_DEFAULT,
+    transport: Annotated[
+        Transport,
+        typer.Option(
+            help="FastMCP transport (sse for network clients, stdio for agent runtimes)",
+        ),
+    ] = Transport.sse,
+    log_level: Annotated[
+        LogLevel,
+        typer.Option(help="Log level when running the SSE server"),
+    ] = LogLevel.info,
 ) -> None:
     """Start the FastMCP server with optional API key gating."""
 

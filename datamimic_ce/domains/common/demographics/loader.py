@@ -173,7 +173,7 @@ def _validate_band_coverage(bands: Iterable[DemographicAgeBand], file_path: Path
             )
         if previous and band.age_min > previous.age_max + 1:
             logger.warning(
-                "Gap detected between age bands for sex='%s' in '%s': [%s,%s] -> [%s,%s]",  # type: ignore[str-format]
+                "Gap detected between age bands for sex='%s' in '%s': [%s,%s] -> [%s,%s]",
                 sex or "",
                 file_path,
                 previous.age_min,

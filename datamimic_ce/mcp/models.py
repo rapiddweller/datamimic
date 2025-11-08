@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import csv
-from functools import lru_cache
+from functools import cache
 from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
@@ -23,7 +23,7 @@ _DATASET_LOCALE_DEFAULTS: dict[str, str] = {
 }
 
 
-@lru_cache(maxsize=None)
+@cache
 def _default_locale_for_dataset(dataset: str) -> str | None:
     """Infer the canonical locale for a dataset using packaged metadata."""
 
@@ -76,10 +76,7 @@ class GenerateArgs(BaseModel):
     )
     dataset: str | None = Field(
         None,
-        description=(
-            "Dataset code that implies a locale (e.g. US). "
-            "Mutually exclusive with custom locale overrides."
-        ),
+        description=("Dataset code that implies a locale (e.g. US). Mutually exclusive with custom locale overrides."),
     )
     constraints: dict[str, Any] | None = Field(
         None,
@@ -99,7 +96,7 @@ class GenerateArgs(BaseModel):
     )
 
     @model_validator(mode="after")
-    def _enforce_contracts(self) -> "GenerateArgs":
+    def _enforce_contracts(self) -> GenerateArgs:
         if self.profile_id and self.component_id:
             raise ValueError("profile_id and component_id cannot be combined")
 

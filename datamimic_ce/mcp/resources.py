@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterator, Literal, cast
+from typing import Any, Literal, cast
 
 from datamimic_ce.domains import facade
 
