@@ -98,31 +98,38 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
     def generate_device_type(self) -> str:
         file_path = dataset_path("healthcare", "medical", f"device_types_{self._dataset}.csv", start=Path(__file__))
         loaded_data = FileUtil.read_weight_csv(file_path)
-        return self._rng.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore[arg-type]
+        values: list[str] = [str(v) for v in loaded_data[0].tolist() if v is not None]
+        weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
+        return self._rng.choices(values, weights=weights, k=1)[0]
 
     def generate_manufacturer(self) -> str:
         file_path = dataset_path("healthcare", "medical", f"manufacturers_{self._dataset}.csv", start=Path(__file__))
         loaded_data = FileUtil.read_weight_csv(file_path)
-        values, weights = loaded_data[0], loaded_data[1]
+        values: list[str] = [str(v) for v in loaded_data[0].tolist() if v is not None]
+        weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
         # avoid immediate repetition when possible
         if self._last_manufacturer in values and len(values) > 1:
             pool = [(v, float(w)) for v, w in zip(values, weights, strict=False) if v != self._last_manufacturer]
             p_vals, p_w = zip(*pool, strict=False)
             choice = self._rng.choices(list(p_vals), weights=list(p_w), k=1)[0]
         else:
-            choice = self._rng.choices(values, weights=weights, k=1)[0]  # type: ignore[arg-type]
+            choice = self._rng.choices(values, weights=weights, k=1)[0]
         self._last_manufacturer = choice
-        return choice  # type: ignore[return-value]
+        return choice
 
     def generate_device_status(self) -> str:
         file_path = dataset_path("healthcare", "medical", f"device_statuses_{self._dataset}.csv", start=Path(__file__))
         loaded_data = FileUtil.read_weight_csv(file_path)
-        return self._rng.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore[arg-type]
+        values: list[str] = [str(v) for v in loaded_data[0].tolist() if v is not None]
+        weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
+        return self._rng.choices(values, weights=weights, k=1)[0]
 
     def generate_location(self) -> str:
         file_path = dataset_path("healthcare", "medical", f"locations_{self._dataset}.csv", start=Path(__file__))
-        loaded_data = FileUtil.read_weight_csv(file_path)  # type: ignore[arg-type]
-        return self._rng.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore[arg-type]
+        loaded_data = FileUtil.read_weight_csv(file_path)
+        values: list[str] = [str(v) for v in loaded_data[0].tolist() if v is not None]
+        weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
+        return self._rng.choices(values, weights=weights, k=1)[0]
 
     # Helpers for specifications (modes, detector types, etc.) used by the model
     def pick_ventilator_mode(self) -> str:

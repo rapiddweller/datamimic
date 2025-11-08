@@ -7,6 +7,7 @@
 import copy
 import math
 import shutil
+from typing import Protocol
 
 import dill  # type: ignore
 
@@ -218,6 +219,18 @@ class GenerateTask(CommonSubTask):
 
                     # Determine multiprocessing platform and process data in parallel
                     mp_platform = self._statement.mp_platform or "multiprocessing"
+
+                    # unify worker types for mypy. Both worker classes expose `mp_process` with the same signature.
+                    class _MpWorker(Protocol):
+                        def mp_process(
+                            self,
+                            copied_context: SetupContext | GenIterContext,
+                            statement: GenerateStatement,
+                            chunks: list[tuple[int, int]],
+                            page_size: int,
+                        ) -> dict[str, list]: ...
+
+                    mp_worker: _MpWorker
                     if mp_platform == "multiprocessing":
                         from datamimic_ce.workers.multiprocessing_generate_worker import MultiprocessingGenerateWorker
 
@@ -225,7 +238,7 @@ class GenerateTask(CommonSubTask):
                     elif mp_platform == "ray":
                         # Ray is optional; import lazily and raise a clear error if missing.
                         try:
-                            import ray as _ray  # type: ignore
+                            import ray as _ray
 
                             from datamimic_ce.workers.ray_generate_worker import RayGenerateWorker
                         except ImportError as e:  # WHY: allow install without ray, fail only when asked to use it
@@ -235,7 +248,7 @@ class GenerateTask(CommonSubTask):
                             ) from e
 
                         _ray_mod = _ray
-                        mp_worker = RayGenerateWorker()  # type: ignore[assignment]
+                        mp_worker = RayGenerateWorker()
                         # Initialize Ray
                         _ray_mod.init(ignore_reinit_error=True, local_mode=settings.RAY_DEBUG, include_dashboard=False)
                         is_ray_initialized = True
