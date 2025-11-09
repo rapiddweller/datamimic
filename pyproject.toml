@@ -49,11 +49,18 @@ ray = [
     "ray>=2.40.0",
 ]
 
+# Optional dependency group for MCP server surface
+mcp = [
+    "fastmcp>=2.0",
+    "uvicorn>=0.30",
+]
+
 [tool.setuptools_scm]
 local_scheme = "dirty-tag"  # Includes a "dirty" tag in version if working directory is not clean
 
 [project.scripts]
 datamimic = "datamimic_ce.cli:app"  # Entry point for your CLI application
+datamimic-mcp = "datamimic_ce.mcp.cli:app"
 
 [tool.setuptools]
 include-package-data = true
@@ -83,10 +90,14 @@ dev-dependencies = [
     "types-psutil>=6.0.0",
     "types-xmltodict>=0.13.0",
     "types-lxml>=5.3.0",
+    "fastmcp>=2.0",
+    "uvicorn>=0.30",
 ]
 
 [tool.mypy]
 python_version = "3.11"
+warn_redundant_casts = true
+warn_unused_ignores = true
 
 [tool.ruff]
 line-length = 120                  # Maximum line length
@@ -124,3 +135,20 @@ addopts = "-n auto --dist=loadscope"
 
 [tool.pyright]
 typeCheckingMode="off"
+
+[tool.pylint.main]
+fail-under = 9.0
+fail-on = ["E", "F"]
+
+[tool.pylint.reports]
+output-format = "colorized"
+
+[[tool.mypy.overrides]]
+module = "datamimic_ce.*"
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = "datamimic_ce.mcp.*"
+follow_imports = "normal"
+disallow_any_generics = true
+no_implicit_optional = true
