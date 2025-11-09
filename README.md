@@ -14,29 +14,25 @@ Faker gives you *random* data.
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+![MCP Ready](https://img.shields.io/badge/MCP-ready-8A2BE2.svg)
 
 ---
 
-## 🧠 What Problem DATAMIMIC Solves
+## ✨ Why DATAMIMIC?
 
-Typical data generators (like Faker) produce **isolated random values**.
-That’s fine for unit tests — but meaningless for system, analytics, or compliance testing.
-
-**Example:**
+Typical data generators produce **isolated random values**. That’s fine for unit tests — but meaningless for system, analytics, or compliance testing.
 
 ```python
-# Faker – broken relationships
+# Faker — broken relationships
 patient_name = fake.name()
 patient_age = fake.random_int(1, 99)
-conditions = [fake.word()]
-# "25-year-old with Alzheimer's" – nonsense data.
+conditions   = [fake.word()]
+# "25-year-old with Alzheimer's" — nonsense data
 ```
 
-**DATAMIMIC – contextual realism**
-
 ```python
+# DATAMIMIC — contextual realism
 from datamimic_ce.domains.healthcare.services import PatientService
-
 patient = PatientService().generate()
 print(f"{patient.full_name}, {patient.age}, {patient.conditions}")
 # "Shirley Thompson, 72, ['Diabetes', 'Hypertension']"
@@ -52,10 +48,9 @@ Install and run:
 pip install datamimic-ce
 ```
 
-## Deterministic Data Generation
+### Deterministic Generation
 
-DATAMIMIC lets you generate the *same* data, every time across machines, environments, or CI pipelines.
-Seeds, clocks, and UUIDv5 namespaces ensure your synthetic datasets remain reproducible and traceable, no matter where or when they’re generated.
+DATAMIMIC produces the *same data for the same request*, across machines and CI runs. Seeds, clocks, and UUIDv5 namespaces enforce reproducibility.
 
 ```python
 from datamimic_ce.domains.facade import generate_domain
@@ -71,20 +66,66 @@ request = {
 
 response = generate_domain(request)
 print(response["items"][0]["id"])
+# Same input → same output
 ```
 
-**Result:**
-`Same input → same output.`
+**Determinism Contract**
 
-Behind the scenes, every deterministic request combines:
+* **Inputs:** `{seed, clock, uuidv5-namespace, request body}`
+* **Guarantees:** byte-identical payloads + stable `determinism_proof.content_hash`
+* **Scope:** all CE domains (see docs for domain-specific caveats)
 
-* A **stable seed** (for idempotent randomness),
-* A **frozen clock** (for time-dependent values), and
-* A **UUIDv5 namespace** (for globally consistent identifiers).
+---
 
-Together, they form a reproducibility contract. Ideal for CI/CD pipelines, agentic pipelines, and analytics verification.
+## ⚡ MCP (Model Context Protocol)
 
-Agents can safely re-invoke the same generation call and receive byte-for-byte identical data. 
+Run DATAMIMIC as an MCP server so Claude / Cursor (and agents) can call deterministic data tools.
+
+**Install**
+
+```bash
+pip install datamimic-ce[mcp]
+# Development
+pip install -e .[mcp]
+```
+
+**Run (SSE transport)**
+
+```bash
+export DATAMIMIC_MCP_HOST=127.0.0.1
+export DATAMIMIC_MCP_PORT=8765
+# Optional auth; clients must send the same token via Authorization: Bearer or X-API-Key
+export DATAMIMIC_MCP_API_KEY=changeme
+datamimic-mcp
+```
+
+**In-proc example (determinism proof)**
+
+```python
+import anyio, json
+from fastmcp.client import Client
+from datamimic_ce.mcp.models import GenerateArgs
+from datamimic_ce.mcp.server import create_server
+
+async def main():
+    args = GenerateArgs(domain="person", locale="en_US", seed=42, count=2)
+    payload = args.model_dump(mode="python")
+    async with Client(create_server()) as c:
+        a = await c.call_tool("generate", {"args": payload})
+        b = await c.call_tool("generate", {"args": payload})
+        print(json.loads(a[0].text)["determinism_proof"]["content_hash"]
+              == json.loads(b[0].text)["determinism_proof"]["content_hash"])  # True
+anyio.run(main)
+```
+
+**Config keys**
+
+* `DATAMIMIC_MCP_HOST` (default `127.0.0.1`)
+* `DATAMIMIC_MCP_PORT` (default `8765`)
+* `DATAMIMIC_MCP_API_KEY` (unset = no auth)
+* Requests over cap (`count > 10_000`) are rejected with `422`.
+
+➡️ **Full guide, IDE configs (Claude/Cursor), transports, errors:** [`docs/mcp_quickstart.md`](docs/mcp_quickstart.md)
 
 ---
 
@@ -98,10 +139,10 @@ patient = PatientService().generate()
 print(patient.full_name, patient.conditions)
 ```
 
-* **PatientService** – Demographically realistic patients
-* **DoctorService** – Specialties match conditions
-* **HospitalService** – Realistic bed capacities and types
-* **MedicalRecordService** – Longitudinal health records
+* Demographically realistic patients
+* Doctor specialties match conditions
+* Hospital capacities and types
+* Longitudinal medical records
 
 ### 💰 Finance
 
@@ -111,31 +152,30 @@ account = BankAccountService().generate()
 print(account.account_number, account.balance)
 ```
 
-* Balances respect transactions
+* Balances respect transaction histories
 * Card/IBAN formats per locale
-* Distributions tuned for fraud analytics and reconciliation
+* Distributions tuned for fraud/reconciliation tests
 
-### 👤 Demographics
+### 🌐 Demographics
 
-* `PersonService` – Culturally consistent names, addresses, phone patterns
-* Locale packs for DE / US / VN, versioned and auditable
+* `PersonService` with locale packs (DE / US / VN), versioned and auditable
 
 ---
 
 ## 🔒 Deterministic by Design
 
-* **Frozen clocks** and **canonical hashing** → reproducible IDs
-* **Seeded random generators** → identical outputs across runs
-* **Schema validation** (XSD, JSONSchema) → structural integrity
-* **Provenance hashing** → audit-friendly lineage
+* **Frozen clocks** + **canonical hashing** → reproducible IDs
+* **Seeded RNG** → identical outputs across runs
+* **Schema validation** (XSD/JSONSchema) → structural integrity
+* **Provenance hashing** → audit-ready lineage
 
 📘 See [Developer Guide](docs/developer_guide.md)
 
 ---
 
-## 🧮 XML / Python Model Workflow
+## 🧮 XML / Python Parity
 
-Python-based generation:
+Python:
 
 ```python
 from random import Random
@@ -147,7 +187,7 @@ svc = PatientService(dataset="US", demographic_config=cfg, rng=Random(1337))
 print(svc.generate().to_dict())
 ```
 
-Equivalent XML model:
+Equivalent XML:
 
 ```xml
 <setup>
@@ -162,24 +202,7 @@ Equivalent XML model:
 
 ---
 
-## ⚖️ CE vs EE Comparison
-
-| Feature                                 | Community (CE) | Enterprise (EE) |
-| --------------------------------------- | -------------- | --------------- |
-| Deterministic domain generation         | ✅              | ✅               |
-| XML + Python pipelines                  | ✅              | ✅               |
-| Healthcare & Finance domains            | ✅              | ✅               |
-| Multi-user collaboration                | ❌              | ✅               |
-| Governance & lineage dashboards         | ❌              | ✅               |
-| ML engines (Mostly AI, Synthcity, ... ) | ❌              | ✅               |
-| RBAC & audit logging (HIPAA/GDPR/PCI)   | ❌              | ✅               |
-| Managed EDIFACT / SWIFT adapters        | ❌              | ✅               |
-
-👉 [Compare editions](https://datamimic.io) • [Book a strategy call](https://datamimic.io/contact)
-
----
-
-## 🧰 CLI & Automation
+## 🧰 CLI
 
 ```bash
 # Run instant healthcare demo
@@ -190,29 +213,38 @@ datamimic run ./healthcare-example/datamimic.xml
 datamimic version
 ```
 
+**Quality gates (repo):**
+
+```bash
+make typecheck   # mypy --strict
+make lint        # pylint (≥9.0 score target)
+make coverage    # target ≥ 90%
+```
+
 ---
 
 ## 🧭 Architecture Snapshot
 
-* **Core pipeline:** Determinism kit + domain services + schema validators
-* **Governance layer:** Group tables, linkage audits, provenance hashing
-* **Execution layer:** CLI, API, and XML runners
+* **Core pipeline:** Determinism kit • Domain services • Schema validators
+* **Governance layer:** Group tables • Linkage audits • Provenance hashing
+* **Execution layer:** CLI • API • XML runners • MCP server
 
 ---
 
-## 🌍 Industry Blueprints
+## ⚖️ CE vs EE
 
-### Finance
+| Feature                               | Community (CE) | Enterprise (EE) |
+| ------------------------------------- | -------------- | --------------- |
+| Deterministic domain generation       | ✅              | ✅               |
+| XML + Python pipelines                | ✅              | ✅               |
+| Healthcare & Finance domains          | ✅              | ✅               |
+| Multi-user collaboration              | ❌              | ✅               |
+| Governance & lineage dashboards       | ❌              | ✅               |
+| ML engines (Mostly AI, Synthcity, …)  | ❌              | ✅               |
+| RBAC & audit logging (HIPAA/GDPR/PCI) | ❌              | ✅               |
+| EDIFACT / SWIFT adapters              | ❌              | ✅               |
 
-* Simulate SWIFT / ISO 20022 flows
-* Replay hashed PCI transaction histories
-* Validate fraud and reconciliation pipelines
-
-### Healthcare
-
-* Generate deterministic patient journeys
-* Integrate HL7/FHIR/EDIFACT exchanges
-* Reproduce QA datasets for regression testing
+👉 [Compare editions](https://datamimic.io) • [Book a strategy call](https://datamimic.io/contact)
 
 ---
 
