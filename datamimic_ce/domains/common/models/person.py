@@ -43,11 +43,13 @@ class Person(BaseEntity):
         """
         sample_sex = self._demographic_sample.sex
         if sample_sex is not None:
-            normalized = sample_sex.upper()
-            if normalized == "F":
+            normalized = sample_sex.strip().upper()
+            if normalized.startswith("F"):
                 return "female"
-            if normalized == "M":
+            if normalized.startswith("M"):
                 return "male"
+            if normalized.startswith("O"):
+                return "other"
         return self._person_generator.gender_generator.generate()
 
     @property
