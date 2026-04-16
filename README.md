@@ -1,56 +1,140 @@
-# DATAMIMIC — Deterministic Synthetic Test Data That Makes Sense
+# DATAMIMIC — Governed Test Data for Regulated Enterprises
 
-**Generate realistic, interconnected, and reproducible test data for finance, healthcare, and beyond.**
+> **This repository contains the DATAMIMIC Community Edition (CE)** — the open-source deterministic data engine at the core of the **DATAMIMIC Enterprise Platform**.
+>
+> CE is fully usable standalone for deterministic synthetic data generation and PII-aware pseudonymization. The Enterprise Platform builds on a separately optimised EE core and adds governed workflows, PII scanning, role-based access, audit logging, scheduling, multi-system execution, and the full operational layer that regulated enterprises require.
+>
+> 👉 **Enterprise Platform:** [datamimic.io](https://datamimic.io) &nbsp;|&nbsp; 📘 **Docs:** [docs.datamimic.io](https://docs.datamimic.io) &nbsp;|&nbsp; 📅 **Book a strategy call:** [datamimic.io/contact](https://datamimic.io/contact)
 
-Faker gives you *random* data.
-**DATAMIMIC** gives you *consistent, explainable datasets* that respect business logic and domain constraints.
-
-* 🧬 Patient medical histories that match age and demographics
-* 💳 Bank transactions that obey balance constraints
-* 🛡 Insurance policies aligned with real risk profiles
+---
 
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen.svg)](https://github.com/rapiddweller/datamimic/actions)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=coverage)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-![MCP Ready](https://img.shields.io/badge/MCP-ready-8A2BE2.svg)
+[![MCP Ready](https://img.shields.io/badge/MCP-ready-8A2BE2.svg)](docs/mcp_quickstart.md)
 
 ---
 
-## ✨ Why DATAMIMIC?
+## What is DATAMIMIC?
 
-Typical data generators produce **isolated random values**. That’s fine for unit tests — but meaningless for system, analytics, or compliance testing.
+**DATAMIMIC is the enterprise standard for governed test data operations.**
 
-```python
-# Faker — broken relationships
-patient_name = fake.name()
-patient_age = fake.random_int(1, 99)
-conditions   = [fake.word()]
-# "25-year-old with Alzheimer's" — nonsense data
-```
+Enterprises in banking, insurance, and regulated industries use DATAMIMIC to:
 
-```python
-# DATAMIMIC — contextual realism
-from datamimic_ce.domains.healthcare.services import PatientService
-patient = PatientService().generate()
-print(f"{patient.full_name}, {patient.age}, {patient.conditions}")
-# "Shirley Thompson, 72, ['Diabetes', 'Hypertension']"
-```
+- **Scan** source systems for PII — probability-scored field detection with configurable thresholds (EE: automated via DataWorkbench; CE: manual model definition)
+- **Generate** fully synthetic, deterministic datasets — model-driven, zero production data, no compliance risk
+- **Pseudonymize** source data — deterministic (seeded) or privacy-maximized (non-seeded) field transformation from source to target system
+- **Execute** repeatable workflows across complex system landscapes: Oracle, PostgreSQL, MongoDB, Kafka, JSON, XML, CSV
+- **Audit** every run with immutable logs, provenance hashing, and role-based traceability
+- **Govern** test data demand through reusable templates, approval flows, and self-service execution
+
+> Used in production at Tier-1 European banks and global payment processing enterprises for deterministic test data across Oracle, MongoDB, and Kafka pipelines.
 
 ---
 
-## ⚙️ Quickstart (Community Edition)
+## CE vs Enterprise Platform
 
-Install and run:
+CE and EE are **not the same engine with a feature flag**. The EE core is an independently optimised execution engine built for enterprise-scale throughput and operational control.
 
-```bash
-pip install datamimic-ce
-```
+### Engine comparison
 
-### Deterministic Generation
+| Capability | Community Edition (CE) | Enterprise Platform (EE) |
+|---|---|---|
+| Deterministic data generation | ✅ | ✅ |
+| **Pseudonymization — seeded (GDPR Art. 25)** | ✅ manual model | ✅ automated via DataWorkbench |
+| **Pseudonymization — non-seeded (privacy-maximized)** | ✅ manual model | ✅ automated via DataWorkbench |
+| Python API + XML pipelines | ✅ | ✅ |
+| Domain models: Finance, Healthcare, Demographics | ✅ | ✅ |
+| MCP server for AI agent integration | ✅ | ✅ |
+| CLI + local execution | ✅ | ✅ |
+| **Scale** | millions of records | **linearly scalable to 1,000,000,000+ records** via isolated multiprocessing and Ray-based distributed execution |
+| **PII scanner** | ❌ | ✅ probability-scored field detection, configurable threshold, DataWorkbench integration |
+| **Runtime configuration profiles** | ❌ | ✅ Performance · Balanced · Flexibility |
+| **Memory management** | standard | optimised for high-volume batch and streaming |
+| **Logging granularity** | flat execution log | configurable: minimal · standard · deep nested tracing |
+| **Nested structure evaluation** | basic | deep nested generation with extended condition + ruleset evaluation |
+| **Importer / exporter logging** | ❌ | per-stage logging for importers and exporters |
+| **Error handling** | standard exceptions | structured error catalog with recovery strategies |
+| **ML engine integration** | ❌ | combine statistical models with conditions, rulesets, validators |
 
-DATAMIMIC produces the *same data for the same request*, across machines and CI runs. Seeds, clocks, and UUIDv5 namespaces enforce reproducibility.
+### Platform capabilities (EE only)
+
+| Capability | EE |
+|---|---|
+| Multi-user collaboration | ✅ |
+| Role-based access control (RBAC) | ✅ |
+| Audit logs + provenance dashboards | ✅ |
+| **PII scanner — probability scoring, threshold-based field flagging** | ✅ |
+| **DataWorkbench — visual field mapping and pseudonymization model builder** | ✅ |
+| Reusable enterprise template library | ✅ |
+| Scheduled execution + task runner | ✅ |
+| CI/CD pipeline integration (Tosca, Jenkins, GitLab) | ✅ |
+| Multi-system execution: Oracle, MongoDB, Kafka | ✅ |
+| **Template engine: EDIFACT, SWIFT MT, HL7 + spec-specific editors** | ✅ |
+| GDPR / HIPAA / PCI audit compliance layer | ✅ |
+| On-premise deployment + air-gapped environments | ✅ |
+| LSP-powered IDE tooling for DSL authoring | ✅ |
+
+👉 [Compare editions in detail](https://datamimic.io) &nbsp;|&nbsp; [Book a platform demo](https://datamimic.io/contact)
+
+---
+
+## EE runtime profiles
+
+The EE core supports three runtime configuration profiles, selectable per execution context:
+
+| Profile | Optimises for | Typical use case |
+|---|---|---|
+| **Performance** | Maximum throughput via isolated multiprocessing + Ray-based distributed execution | Bulk generation at nine-figure record volumes to PostgreSQL, Oracle, Kafka |
+| **Balanced** | Throughput + full audit logging | Standard enterprise pipeline runs with compliance requirements |
+| **Flexibility** | Deep nested evaluation, extended condition and ruleset processing | Complex domain models with ML engine combinations, multi-level referential structures |
+
+Logging depth is independently configurable per profile — from minimal (throughput-optimised) to full nested tracing across importers, exporters, and generation stages.
+
+---
+
+## EE template engine
+
+The EE template engine generates industry-standard financial and healthcare message formats from DATAMIMIC models, with spec-specific editors for each format:
+
+| Format | Standard | Spec-specific editor |
+|---|---|---|
+| EDIFACT | UN/EDIFACT | ✅ |
+| SWIFT MT | SWIFT MT | ✅ |
+| HL7 | HL7 v2.x | ✅ |
+
+Templates are versioned, reusable across scenarios, and fully integrated with the DATAMIMIC DSL and audit layer. Generated messages are deterministic and traceable to their source model.
+
+---
+
+## Who is DATAMIMIC for?
+
+### Enterprise Platform (EE)
+| Role | What DATAMIMIC solves |
+|---|---|
+| **QA / Test Manager** | Eliminate manual test data requests. Self-service, governed, always ready. |
+| **Business Analyst** | Define data requirements in business-readable models — no scripting needed. |
+| **Platform / DevOps Engineer** | Integrate deterministic test data generation into CI/CD and scheduled pipelines. |
+| **Compliance / Audit** | Full audit trail for every generation run. Regulator-ready logs, no production data exposure. |
+| **Enterprise Architect** | One governed standard across Oracle, MongoDB, Kafka, flat files, and custom systems. |
+
+### Community Edition (CE)
+Developers and data engineers who need deterministic synthetic data generation or PII-aware pseudonymization in local environments, CI pipelines, or agent-driven workflows. PII field identification is manual — the EE DataWorkbench automates this step.
+
+---
+
+## Why deterministic generation matters
+
+Most test data tools produce random output. That breaks regression tests, audit trails, and cross-team reproducibility.
+
+**DATAMIMIC's determinism contract:**
+
+- Same seed + same model = byte-identical output, every run, every machine
+- Frozen clocks + canonical hashing = stable temporal context
+- UUIDv5 namespaces = reproducible entity identifiers
+- Provenance hash on every output = audit-ready lineage
 
 ```python
 from datamimic_ce.domains.facade import generate_domain
@@ -59,47 +143,144 @@ request = {
     "domain": "person",
     "version": "v1",
     "count": 1,
-    "seed": "docs-demo",                # identical seed → identical output
+    "seed": "regression-suite-42",       # identical seed → identical output
     "locale": "en_US",
-    "clock": "2025-01-01T00:00:00Z"     # fixed clock = stable time context
+    "clock": "2025-01-01T00:00:00Z"      # fixed clock = stable time context
 }
 
 response = generate_domain(request)
-print(response["items"][0]["id"])
-# Same input → same output
+# Same input → same output, always, everywhere
 ```
-
-**Determinism Contract**
-
-* **Inputs:** `{seed, clock, uuidv5-namespace, request body}`
-* **Guarantees:** byte-identical payloads + stable `determinism_proof.content_hash`
-* **Scope:** all CE domains (see docs for domain-specific caveats)
 
 ---
 
-## ⚡ MCP (Model Context Protocol)
+## Why DATAMIMIC beats Faker and generic generators
 
-Run DATAMIMIC as an MCP server so Claude / Cursor (and agents) can call deterministic data tools.
+| | Faker / Random generators | DATAMIMIC CE | DATAMIMIC EE |
+|---|---|---|---|
+| Reproducible output | ❌ | ✅ | ✅ |
+| Domain-aware relationships | ❌ | ✅ | ✅ |
+| Business logic constraints | ❌ | ✅ | ✅ |
+| Audit-ready provenance | ❌ | ✅ | ✅ |
+| Source data pseudonymization | ❌ | ✅ manual | ✅ automated |
+| PII field detection | ❌ | ❌ | ✅ probability-scored |
+| Enterprise governance layer | ❌ | ❌ | ✅ |
+| Multi-system execution | ❌ | ❌ | ✅ |
+| Role-based workflows | ❌ | ❌ | ✅ |
+| Regulated industry compliance | ❌ | ❌ | ✅ |
 
-**Install**
+```python
+# Faker — broken relationships
+from faker import Faker
+fake = Faker()
+patient_age = fake.random_int(1, 99)
+conditions  = [fake.word()]
+# "25-year-old with Alzheimer's" — meaningless for any real test
+
+# DATAMIMIC — domain-aware, deterministic
+from datamimic_ce.domains.healthcare.services import PatientService
+patient = PatientService().generate()
+print(f"{patient.full_name}, {patient.age}, {patient.conditions}")
+# "Shirley Thompson, 72, ['Diabetes', 'Hypertension']" — every time
+```
+
+---
+
+## Quickstart — Community Edition
+
+```bash
+pip install datamimic-ce
+```
+
+### Healthcare domain
+
+```python
+from datamimic_ce.domains.healthcare.services import PatientService
+
+patient = PatientService().generate()
+print(patient.full_name, patient.age, patient.conditions)
+# Age-appropriate conditions, demographically realistic, deterministic
+```
+
+### Finance domain
+
+```python
+from datamimic_ce.domains.finance.services import BankAccountService
+
+account = BankAccountService().generate()
+print(account.account_number, account.balance)
+# Balance-consistent, locale-correct, reproducible
+```
+
+### Pseudonymization — CE (manual model)
+
+DATAMIMIC supports two pseudonymization modes with different privacy postures:
+
+| Mode | How | Legal classification | Use case |
+|---|---|---|---|
+| **Seeded** (`rngSeed` set) | Deterministic, reproducible | Pseudonymization — GDPR Art. 25 | Regression testing, stable CI/CD pipelines |
+| **Non-seeded** (no `rngSeed`) | Non-deterministic, no reversible mapping at field level | Privacy-maximized transformation | One-time data delivery, higher privacy posture |
+
+> **Note on GDPR anonymization:** Full anonymization status under GDPR depends on complete field coverage across all quasi-identifiers and a re-identification risk assessment on the complete record — not on individual field transformation alone. DATAMIMIC does not make anonymization claims on behalf of the customer. Non-seeded mode maximizes privacy at the transformation level; the customer is responsible for assessing re-identification risk across the full dataset.
+
+In CE, PII fields are identified and modeled manually in the XML pipeline:
+
+```xml
+<setup>
+  <generate name="customers" source="customer_export" target="customer_test">
+    <key name="first_name"  converter="Mask" />
+    <key name="email"       converter="anonymize_email" />
+    <key name="iban"        converter="generate_iban" dataset="DE" rngSeed="42" />
+    <key name="birth_date"  converter="shift_date" shiftDays="90" />
+  </generate>
+</setup>
+```
+
+```bash
+datamimic run ./pseudonymize-customers/datamimic.xml
+```
+
+`source` is a controlled export or staging input — never a live production connection.
+
+With `rngSeed` set: same source record → same pseudonymized output on every run. Stable for regression testing.
+
+Without `rngSeed`: non-deterministic output — no reversible mapping exists at the field level. Stronger privacy posture for one-time delivery scenarios.
+
+> **In the Enterprise Platform (EE):** the DataWorkbench PII scanner automatically scans source schemas, assigns probability scores to each field, and flags candidates above a configurable threshold. Flagged fields are wired into the pseudonymization model automatically — no manual field mapping required.
+
+
+
+```xml
+<setup>
+  <generate name="patients" count="1000" target="CSV">
+    <variable name="patient" entity="Patient" dataset="US" ageMin="60" ageMax="80" rngSeed="42" />
+    <key name="full_name"   script="patient.full_name" />
+    <key name="age"         script="patient.age" />
+    <array name="conditions" script="patient.conditions" />
+  </generate>
+</setup>
+```
+
+```bash
+datamimic run ./patient-scenario/datamimic.xml
+```
+
+---
+
+## MCP Server — AI Agent Integration
+
+DATAMIMIC CE ships with a Model Context Protocol (MCP) server, making it directly callable from AI agents, Claude, Cursor, and any MCP-compatible runtime.
 
 ```bash
 pip install datamimic-ce[mcp]
-# Development
-pip install -e .[mcp]
-```
 
-**Run (SSE transport)**
-
-```bash
 export DATAMIMIC_MCP_HOST=127.0.0.1
 export DATAMIMIC_MCP_PORT=8765
-# Optional auth; clients must send the same token via Authorization: Bearer or X-API-Key
-export DATAMIMIC_MCP_API_KEY=changeme
+export DATAMIMIC_MCP_API_KEY=your-key
 datamimic-mcp
 ```
 
-**In-proc example (determinism proof)**
+Agents can call `generate` with a domain, seed, count, and locale and receive deterministic, provenance-hashed output — making DATAMIMIC the natural test data runtime for agent-driven workflows.
 
 ```python
 import anyio, json
@@ -113,155 +294,131 @@ async def main():
     async with Client(create_server()) as c:
         a = await c.call_tool("generate", {"args": payload})
         b = await c.call_tool("generate", {"args": payload})
-        print(json.loads(a[0].text)["determinism_proof"]["content_hash"]
-              == json.loads(b[0].text)["determinism_proof"]["content_hash"])  # True
+        # Determinism proof: identical hashes across calls
+        assert (json.loads(a[0].text)["determinism_proof"]["content_hash"]
+             == json.loads(b[0].text)["determinism_proof"]["content_hash"])
+
 anyio.run(main)
 ```
 
-**Config keys**
-
-* `DATAMIMIC_MCP_HOST` (default `127.0.0.1`)
-* `DATAMIMIC_MCP_PORT` (default `8765`)
-* `DATAMIMIC_MCP_API_KEY` (unset = no auth)
-* Requests over cap (`count > 10_000`) are rejected with `422`.
-
-➡️ **Full guide, IDE configs (Claude/Cursor), transports, errors:** [`docs/mcp_quickstart.md`](docs/mcp_quickstart.md)
+📘 Full guide: [`docs/mcp_quickstart.md`](docs/mcp_quickstart.md)
 
 ---
 
-## 🧩 Domains & Examples
+## Architecture
 
-### 🏥 Healthcare
+CE and EE have **separate, independently maintained cores**. CE is not a stripped-down EE. EE is not CE with features unlocked. They share the same DSL and determinism contract but diverge completely at the execution layer.
 
-```python
-from datamimic_ce.domains.healthcare.services import PatientService
-patient = PatientService().generate()
-print(patient.full_name, patient.conditions)
+```
+╔══════════════════════════════════════════════════════════════════╗
+║              DATAMIMIC ENTERPRISE PLATFORM (EE)                  ║
+║                                                                  ║
+║  ┌──────────────────────────────────────────────────────────┐    ║
+║  │  PLATFORM LAYER                                          │    ║
+║  │  UI · RBAC · Governance · Audit Dashboards               │    ║
+║  │  DataWorkbench · PII Scanner · Pseudonymization Builder  │    ║
+║  │  Scheduler · Task Runner · CI/CD · Template Engine       │    ║
+║  └──────────────────────────────────────────────────────────┘    ║
+║                                                                  ║
+║  ┌──────────────────────────────────────────────────────────┐    ║
+║  │  EE CORE  (optimised, separate from CE)                  │    ║
+║  │                                                          │    ║
+║  │  Ray-based distributed execution                         │    ║
+║  │  Isolated multiprocessing · Linear scalability           │    ║
+║  │  Runtime profiles: Performance · Balanced · Flexibility  │    ║
+║  │  Deep nested evaluation · Conditions · Rulesets          │    ║
+║  │  ML engine integration · Structured error catalog        │    ║
+║  │  Per-stage importer/exporter logging                     │    ║
+║  └──────────────────────────────────────────────────────────┘    ║
+╚══════════════════════════════════════════════════════════════════╝
+
+╔══════════════════════════════════════════════════════════════════╗
+║              DATAMIMIC COMMUNITY EDITION (CE)  — this repo       ║
+║                                                                  ║
+║  Determinism Kit · Domain Services · Schema Validators           ║
+║  Synthetic Generation · Pseudonymization (manual model)          ║
+║  Python API · XML Pipelines · CLI · MCP Server                   ║
+╚══════════════════════════════════════════════════════════════════╝
+
+         ↓              ↓              ↓              ↓
+    PostgreSQL       Oracle         MongoDB      Kafka / Files
 ```
 
-* Demographically realistic patients
-* Doctor specialties match conditions
-* Hospital capacities and types
-* Longitudinal medical records
-
-### 💰 Finance
-
-```python
-from datamimic_ce.domains.finance.services import BankAccountService
-account = BankAccountService().generate()
-print(account.account_number, account.balance)
-```
-
-* Balances respect transaction histories
-* Card/IBAN formats per locale
-* Distributions tuned for fraud/reconciliation tests
-
-### 🌐 Demographics
-
-* `PersonService` with locale packs (DE / US / VN), versioned and auditable
+Both editions share the same DATAMIMIC DSL and determinism contract. Scale, throughput, governance, and operational control are EE-only.
 
 ---
 
-## 🔒 Deterministic by Design
+## Supported systems (Enterprise Platform)
 
-* **Frozen clocks** + **canonical hashing** → reproducible IDs
-* **Seeded RNG** → identical outputs across runs
-* **Schema validation** (XSD/JSONSchema) → structural integrity
-* **Provenance hashing** → audit-ready lineage
-
-📘 See [Developer Guide](docs/developer_guide.md)
-
----
-
-## 🧮 XML / Python Parity
-
-Python:
-
-```python
-from random import Random
-from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
-from datamimic_ce.domains.healthcare.services import PatientService
-
-cfg = DemographicConfig(age_min=70, age_max=75)
-svc = PatientService(dataset="US", demographic_config=cfg, rng=Random(1337))
-print(svc.generate().to_dict())
-```
-
-Equivalent XML:
-
-```xml
-<setup>
-  <generate name="seeded_seniors" count="3" target="CSV">
-    <variable name="patient" entity="Patient" dataset="US" ageMin="70" ageMax="75" rngSeed="1337" />
-    <key name="full_name" script="patient.full_name" />
-    <key name="age" script="patient.age" />
-    <array name="conditions" script="patient.conditions" />
-  </generate>
-</setup>
-```
+| System | Read | Write | Notes |
+|---|---|---|---|
+| PostgreSQL | ✅ | ✅ | Schema introspection, referential integrity |
+| Oracle | ✅ | ✅ | Production-validated in Tier-1 banking environments |
+| MongoDB | ✅ | ✅ | Nested document generation |
+| Apache Kafka | ✅ | ✅ | Real-time streaming, payment scenarios |
+| CSV / JSON / XML | ✅ | ✅ | Flat file pipelines |
+| EDIFACT / SWIFT MT | — | ✅ | Financial message formats |
 
 ---
 
-## 🧰 CLI
+## CE domains
+
+| Domain | Models available |
+|---|---|
+| **Healthcare** | Patient, Doctor, Hospital, MedicalRecord |
+| **Finance** | BankAccount, CreditCard, Transaction, LoanRecord |
+| **Demographics** | Person (DE / US / VN locale packs), Address, Company |
+
+All domains are versioned, seeded, and audit-ready.
+
+---
+
+## CLI reference
 
 ```bash
-# Run instant healthcare demo
+# Run a scenario
+datamimic run ./my-scenario/datamimic.xml
+
+# Launch a demo
 datamimic demo create healthcare-example
 datamimic run ./healthcare-example/datamimic.xml
 
-# Verify version
+# Version check
 datamimic version
 ```
 
-**Quality gates (repo):**
+---
 
-```bash
-make typecheck   # mypy --strict
-make lint        # pylint (≥9.0 score target)
-make coverage    # target ≥ 90%
-```
+## Documentation
+
+| Resource | Link |
+|---|---|
+| Full documentation | [docs.datamimic.io](https://docs.datamimic.io) |
+| MCP quickstart | [docs/mcp_quickstart.md](docs/mcp_quickstart.md) |
+| Developer guide | [docs/developer_guide.md](docs/developer_guide.md) |
+| Enterprise platform | [datamimic.io](https://datamimic.io) |
+| GitHub Discussions | [Discussions](https://github.com/rapiddweller/datamimic/discussions) |
+| Issue tracker | [Issues](https://github.com/rapiddweller/datamimic/issues) |
+| Email support | support@rapiddweller.com |
 
 ---
 
-## 🧭 Architecture Snapshot
+## Contributing
 
-* **Core pipeline:** Determinism kit • Domain services • Schema validators
-* **Governance layer:** Group tables • Linkage audits • Provenance hashing
-* **Execution layer:** CLI • API • XML runners • MCP server
+See [CONTRIBUTING.md](CONTRIBUTING.md). CE is MIT licensed and community contributions are welcome.
 
----
-
-## ⚖️ CE vs EE
-
-| Feature                               | Community (CE) | Enterprise (EE) |
-| ------------------------------------- | -------------- | --------------- |
-| Deterministic domain generation       | ✅              | ✅               |
-| XML + Python pipelines                | ✅              | ✅               |
-| Healthcare & Finance domains          | ✅              | ✅               |
-| Multi-user collaboration              | ❌              | ✅               |
-| Governance & lineage dashboards       | ❌              | ✅               |
-| ML engines (Mostly AI, Synthcity, …)  | ❌              | ✅               |
-| RBAC & audit logging (HIPAA/GDPR/PCI) | ❌              | ✅               |
-| EDIFACT / SWIFT adapters              | ❌              | ✅               |
-
-👉 [Compare editions](https://datamimic.io) • [Book a strategy call](https://datamimic.io/contact)
+The CE engine is the foundation. If you are building integrations, domain extensions, or MCP tooling on top of DATAMIMIC, we want to hear from you.
 
 ---
 
-## 📚 Documentation & Community
+## License
 
-* [📘 Full Documentation](https://docs.datamimic.io)
-* [💬 GitHub Discussions](https://github.com/rapiddweller/datamimic/discussions)
-* [🐛 Issue Tracker](https://github.com/rapiddweller/datamimic/issues)
-* [📧 Email Support](mailto:support@rapiddweller.com)
+MIT — see [LICENSE](LICENSE).
+
+The DATAMIMIC Enterprise Platform (EE) is a commercial product. [Contact us](https://datamimic.io/contact) for licensing.
 
 ---
 
-## 🚀 Get Started
+**DATAMIMIC — Make test data a standard, not a manual process.**
 
-```bash
-pip install datamimic-ce
-```
-
-**Generate data that makes sense — deterministically.**
-⭐ Star us on GitHub if DATAMIMIC improves your testing workflow.
+[datamimic.io](https://datamimic.io) &nbsp;|&nbsp; [Book a demo](https://datamimic.io/contact) &nbsp;|&nbsp; [LinkedIn](https://linkedin.com/company/rapiddweller)
