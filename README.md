@@ -2,7 +2,7 @@
 
 > **This repository contains the DATAMIMIC Community Edition (CE)** — the open-source deterministic data engine at the core of the **DATAMIMIC Enterprise Platform**.
 >
-> CE is fully usable standalone for deterministic synthetic data generation. The Enterprise Platform builds on a separately optimised EE core and adds governed workflows, role-based access, audit logging, scheduling, multi-system execution, and the full operational layer that regulated enterprises require.
+> CE is fully usable standalone for deterministic synthetic data generation and PII-aware pseudonymization. The Enterprise Platform builds on a separately optimised EE core and adds governed workflows, PII scanning, role-based access, audit logging, scheduling, multi-system execution, and the full operational layer that regulated enterprises require.
 >
 > 👉 **Enterprise Platform:** [datamimic.io](https://datamimic.io) &nbsp;|&nbsp; 📘 **Docs:** [docs.datamimic.io](https://docs.datamimic.io) &nbsp;|&nbsp; 📅 **Book a strategy call:** [datamimic.io/contact](https://datamimic.io/contact)
 
@@ -23,10 +23,11 @@
 
 Enterprises in banking, insurance, and regulated industries use DATAMIMIC to:
 
-- **Standardize** how test data requirements are defined, modeled, and fulfilled across teams
-- **Generate** fully synthetic, deterministic datasets — no production data, no compliance risk
-- **Execute** repeatable test data workflows across complex system landscapes: Oracle, PostgreSQL, MongoDB, Kafka, JSON, XML, CSV
-- **Audit** every generation run with immutable logs, provenance hashing, and role-based traceability
+- **Scan** source systems for PII — probability-scored field detection with configurable thresholds (EE: automated via DataWorkbench; CE: manual model definition)
+- **Generate** fully synthetic, deterministic datasets — model-driven, zero production data, no compliance risk
+- **Pseudonymize** source data — deterministic (seeded) or privacy-maximized (non-seeded) field transformation from source to target system
+- **Execute** repeatable workflows across complex system landscapes: Oracle, PostgreSQL, MongoDB, Kafka, JSON, XML, CSV
+- **Audit** every run with immutable logs, provenance hashing, and role-based traceability
 - **Govern** test data demand through reusable templates, approval flows, and self-service execution
 
 > Used in production at Tier-1 European banks and global payment processing enterprises for deterministic test data across Oracle, MongoDB, and Kafka pipelines.
@@ -42,11 +43,14 @@ CE and EE are **not the same engine with a feature flag**. The EE core is an ind
 | Capability | Community Edition (CE) | Enterprise Platform (EE) |
 |---|---|---|
 | Deterministic data generation | ✅ | ✅ |
+| **Pseudonymization — seeded (GDPR Art. 25)** | ✅ manual model | ✅ automated via DataWorkbench |
+| **Pseudonymization — non-seeded (privacy-maximized)** | ✅ manual model | ✅ automated via DataWorkbench |
 | Python API + XML pipelines | ✅ | ✅ |
 | Domain models: Finance, Healthcare, Demographics | ✅ | ✅ |
 | MCP server for AI agent integration | ✅ | ✅ |
 | CLI + local execution | ✅ | ✅ |
 | **Scale** | millions of records | **linearly scalable to 1,000,000,000+ records** via isolated multiprocessing and Ray-based distributed execution |
+| **PII scanner** | ❌ | ✅ probability-scored field detection, configurable threshold, DataWorkbench integration |
 | **Runtime configuration profiles** | ❌ | ✅ Performance · Balanced · Flexibility |
 | **Memory management** | standard | optimised for high-volume batch and streaming |
 | **Logging granularity** | flat execution log | configurable: minimal · standard · deep nested tracing |
@@ -62,6 +66,8 @@ CE and EE are **not the same engine with a feature flag**. The EE core is an ind
 | Multi-user collaboration | ✅ |
 | Role-based access control (RBAC) | ✅ |
 | Audit logs + provenance dashboards | ✅ |
+| **PII scanner — probability scoring, threshold-based field flagging** | ✅ |
+| **DataWorkbench — visual field mapping and pseudonymization model builder** | ✅ |
 | Reusable enterprise template library | ✅ |
 | Scheduled execution + task runner | ✅ |
 | CI/CD pipeline integration (Tosca, Jenkins, GitLab) | ✅ |
@@ -115,7 +121,7 @@ Templates are versioned, reusable across scenarios, and fully integrated with th
 | **Enterprise Architect** | One governed standard across Oracle, MongoDB, Kafka, flat files, and custom systems. |
 
 ### Community Edition (CE)
-Developers and data engineers who need deterministic, domain-aware synthetic data generation in local environments, CI pipelines, or agent-driven workflows.
+Developers and data engineers who need deterministic synthetic data generation or PII-aware pseudonymization in local environments, CI pipelines, or agent-driven workflows. PII field identification is manual — the EE DataWorkbench automates this step.
 
 ---
 
@@ -156,6 +162,8 @@ response = generate_domain(request)
 | Domain-aware relationships | ❌ | ✅ | ✅ |
 | Business logic constraints | ❌ | ✅ | ✅ |
 | Audit-ready provenance | ❌ | ✅ | ✅ |
+| Source data pseudonymization | ❌ | ✅ manual | ✅ automated |
+| PII field detection | ❌ | ❌ | ✅ probability-scored |
 | Enterprise governance layer | ❌ | ❌ | ✅ |
 | Multi-system execution | ❌ | ❌ | ✅ |
 | Role-based workflows | ❌ | ❌ | ✅ |
@@ -204,7 +212,43 @@ print(account.account_number, account.balance)
 # Balance-consistent, locale-correct, reproducible
 ```
 
-### XML pipeline (equivalent to Python API)
+### Pseudonymization — CE (manual model)
+
+DATAMIMIC supports two pseudonymization modes with different privacy postures:
+
+| Mode | How | Legal classification | Use case |
+|---|---|---|---|
+| **Seeded** (`rngSeed` set) | Deterministic, reproducible | Pseudonymization — GDPR Art. 25 | Regression testing, stable CI/CD pipelines |
+| **Non-seeded** (no `rngSeed`) | Non-deterministic, no reversible mapping at field level | Privacy-maximized transformation | One-time data delivery, higher privacy posture |
+
+> **Note on GDPR anonymization:** Full anonymization status under GDPR depends on complete field coverage across all quasi-identifiers and a re-identification risk assessment on the complete record — not on individual field transformation alone. DATAMIMIC does not make anonymization claims on behalf of the customer. Non-seeded mode maximizes privacy at the transformation level; the customer is responsible for assessing re-identification risk across the full dataset.
+
+In CE, PII fields are identified and modeled manually in the XML pipeline:
+
+```xml
+<setup>
+  <generate name="customers" source="customer_export" target="customer_test">
+    <key name="first_name"  converter="Mask" />
+    <key name="email"       converter="anonymize_email" />
+    <key name="iban"        converter="generate_iban" dataset="DE" rngSeed="42" />
+    <key name="birth_date"  converter="shift_date" shiftDays="90" />
+  </generate>
+</setup>
+```
+
+```bash
+datamimic run ./pseudonymize-customers/datamimic.xml
+```
+
+`source` is a controlled export or staging input — never a live production connection.
+
+With `rngSeed` set: same source record → same pseudonymized output on every run. Stable for regression testing.
+
+Without `rngSeed`: non-deterministic output — no reversible mapping exists at the field level. Stronger privacy posture for one-time delivery scenarios.
+
+> **In the Enterprise Platform (EE):** the DataWorkbench PII scanner automatically scans source schemas, assigns probability scores to each field, and flags candidates above a configurable threshold. Flagged fields are wired into the pseudonymization model automatically — no manual field mapping required.
+
+
 
 ```xml
 <setup>
@@ -266,33 +310,35 @@ anyio.run(main)
 CE and EE have **separate, independently maintained cores**. CE is not a stripped-down EE. EE is not CE with features unlocked. They share the same DSL and determinism contract but diverge completely at the execution layer.
 
 ```
-╔═════════════════════════════════════════════════════════════════╗
-║              DATAMIMIC ENTERPRISE PLATFORM (EE)                 ║
-║                                                                 ║
-║  ┌──────────────────────────────────────────────────────────┐   ║
-║  │  PLATFORM LAYER                                          │   ║
-║  │  UI · RBAC · Governance · Audit Dashboards               │   ║
-║  │  Scheduler · Task Runner · CI/CD · Template Engine       │   ║
-║  └──────────────────────────────────────────────────────────┘   ║
-║                                                                 ║
-║  ┌──────────────────────────────────────────────────────────┐   ║
-║  │  EE CORE  (optimised, separate from CE)                  │   ║
-║  │                                                          │   ║
-║  │  Ray-based distributed execution                         │   ║
-║  │  Isolated multiprocessing · Linear scalability           │   ║
-║  │  Runtime profiles: Performance · Balanced · Flexibility  │   ║
-║  │  Deep nested evaluation · Conditions · Rulesets          │   ║
-║  │  ML engine integration · Structured error catalog        │   ║
-║  │  Per-stage importer/exporter logging                     │   ║
-║  └──────────────────────────────────────────────────────────┘   ║
-╚═════════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════╗
+║              DATAMIMIC ENTERPRISE PLATFORM (EE)                  ║
+║                                                                  ║
+║  ┌──────────────────────────────────────────────────────────┐    ║
+║  │  PLATFORM LAYER                                          │    ║
+║  │  UI · RBAC · Governance · Audit Dashboards               │    ║
+║  │  DataWorkbench · PII Scanner · Pseudonymization Builder  │    ║
+║  │  Scheduler · Task Runner · CI/CD · Template Engine       │    ║
+║  └──────────────────────────────────────────────────────────┘    ║
+║                                                                  ║
+║  ┌──────────────────────────────────────────────────────────┐    ║
+║  │  EE CORE  (optimised, separate from CE)                  │    ║
+║  │                                                          │    ║
+║  │  Ray-based distributed execution                         │    ║
+║  │  Isolated multiprocessing · Linear scalability           │    ║
+║  │  Runtime profiles: Performance · Balanced · Flexibility  │    ║
+║  │  Deep nested evaluation · Conditions · Rulesets          │    ║
+║  │  ML engine integration · Structured error catalog        │    ║
+║  │  Per-stage importer/exporter logging                     │    ║
+║  └──────────────────────────────────────────────────────────┘    ║
+╚══════════════════════════════════════════════════════════════════╝
 
-╔═════════════════════════════════════════════════════════════════╗
-║              DATAMIMIC COMMUNITY EDITION (CE)  — this repo      ║
-║                                                                 ║
-║  Determinism Kit · Domain Services · Schema Validators          ║
-║  Python API · XML Pipelines · CLI · MCP Server                  ║
-╚═════════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════╗
+║              DATAMIMIC COMMUNITY EDITION (CE)  — this repo       ║
+║                                                                  ║
+║  Determinism Kit · Domain Services · Schema Validators           ║
+║  Synthetic Generation · Pseudonymization (manual model)          ║
+║  Python API · XML Pipelines · CLI · MCP Server                   ║
+╚══════════════════════════════════════════════════════════════════╝
 
          ↓              ↓              ↓              ↓
     PostgreSQL       Oracle         MongoDB      Kafka / Files
