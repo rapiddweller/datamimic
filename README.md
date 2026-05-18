@@ -34,7 +34,7 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 **The Enterprise Platform adds:**
 
 - **PII scanner** — probability-scored field detection with configurable thresholds via DataWorkbench
-- **Multi-system execution** — Oracle / MongoDB / Kafka / EDIFACT / SWIFT MT / HL7 in coordinated workflows with referential integrity
+- **Multi-system execution** — Oracle / MongoDB / Kafka / EDIFACT / SWIFT MT / HL7 v2.x / HL7 FHIR in coordinated workflows with referential integrity
 - **Governance layer** — role-based dashboards, audit trails, approval flows, reusable enterprise templates, scheduler
 - **Performance core** — Rust fastpath, ML/auto-regressive engine for complex distributions, keyset and manifest building, optimised distributed execution
 - **On-premise / air-gapped deployment** — podman-compose or Helm, with consulting-led rollout
@@ -83,7 +83,7 @@ CE and EE are **not the same engine with a feature flag**. They share the DSL an
 | Scheduled execution + task runner | ✅ |
 | CI/CD pipeline integration (Tosca, Jenkins, GitLab) | ✅ |
 | Multi-system execution: Oracle, MongoDB, Kafka | ✅ |
-| **Template engine: schema-aware editor for EDIFACT, SWIFT MT, HL7, and further industry formats — customer-uploadable specs, additional editors deliverable in days on the same framework** | ✅ |
+| **Template engine: schema-aware editors for EDIFACT, SWIFT MT, HL7 v2.x, and HL7 FHIR — customer-uploadable specs, further industry formats deliverable in days on the same framework** | ✅ |
 | Audit-evidence artefacts for GDPR Art. 30 records, PCI DSS 4.0 Req. 6.5.5 (test data) reviews, and — for US Covered Entities / Business Associates — HIPAA §164.312 evidence packs | ✅ |
 | On-premise deployment + air-gapped environments | ✅ |
 | LSP-powered IDE tooling for DSL authoring | ✅ |
@@ -126,10 +126,11 @@ The EE template engine generates industry-standard financial messages from DATAM
 |---|---|
 | **UN/EDIFACT** | Schema-aware form editor; spec versions and subsets per engagement |
 | **SWIFT MT** | Schema-aware form editor; categories and SR versions per engagement |
-| **HL7** | Engine-supported; editor deliverable in days on the same framework |
-| **Further industry formats** (ISO 20022 / MX, FHIR, vertical dialects) | Built into the editor catalogue as part of POC and 1-year engagement scopes |
+| **HL7 v2.x** | Schema-aware form editor; versions per engagement |
+| **HL7 FHIR** | Schema-aware form editor for FHIR resources (Patient, Observation, Encounter, …); profiles per engagement |
+| **Further industry formats** (ISO 20022 / MX, vertical dialects) | Built into the editor catalogue as part of POC and 1-year engagement scopes — typically delivered in days on the same framework |
 
-Because every editor sits on the same framework, additional standards are typically delivered in days, not release cycles. Customers can also download, adjust, and upload their own specs directly — DATAMIMIC's spec library expands with customer needs, not with quarterly vendor release notes.
+Customers can also download, adjust, and upload their own specs directly — DATAMIMIC's spec library expands with customer needs, not with quarterly vendor release notes.
 
 Generated messages are deterministic and traceable to their source model, and syntactically valid against the registered spec. They are intended for **test and training environments only** — they are not network-validated and must not be transmitted on production SWIFTNet or EDI networks. See the [SWIFT CSP note](#supported-systems) below.
 
