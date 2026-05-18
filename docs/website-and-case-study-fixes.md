@@ -99,7 +99,6 @@ Einzeiler, kein CE-Branding, macht das eigentliche Differenzierungsmerkmal sicht
 | Framework | Was DATAMIMIC beiträgt |
 |---|---|
 | GDPR Art. 4(5) / Art. 25 / Art. 32 | Seeded pseudonymization mit deterministischem Mapping; provenance-hashed Outputs als TOMs-Evidenz |
-| EU AI Act (Reg. 2024/1689) Art. 10 | Provenance-hashed synthetic datasets als data-governance documentation für High-Risk-AI-Provider |
 | DORA (Reg. 2022/2554) Art. 25 | Reproducible test datasets für ICT-Tools-Testing (nicht TLPT) |
 | ISO/IEC 27701:2019 A.7.2.1 / 7.2.8 | Synthetic data statt PII in Non-Prod; dokumentierte Model-Definitionen als Privacy-by-Design-Evidenz |
 | PCI DSS 4.0 Req. 6.5.5 | Synthetic PAN generation für Test/Dev (kein Live-PAN-Test) |

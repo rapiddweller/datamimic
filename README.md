@@ -2,7 +2,7 @@
 
 > **This repository contains the DATAMIMIC Community Edition (CE)** — the open-source deterministic data engine at the core of the **DATAMIMIC Enterprise Platform**.
 >
-> CE is fully usable standalone for deterministic synthetic data generation and PII-aware pseudonymization. The Enterprise Platform builds on a separately optimised EE core and adds governed workflows, PII scanning, role-based access, audit logging, scheduling, multi-system execution, and the full operational layer that regulated enterprises require.
+> CE is fully usable standalone for deterministic synthetic data generation and PII-aware pseudonymization. The Enterprise Platform adds governed workflows, PII scanning, role-based access, audit logging, scheduling, multi-system execution, and the full operational layer that regulated enterprises require.
 >
 > 👉 **Enterprise Platform:** [datamimic.io](https://datamimic.io) &nbsp;|&nbsp; 📘 **Docs:** [docs.datamimic.io](https://docs.datamimic.io) &nbsp;|&nbsp; 📅 **Book a strategy call:** [datamimic.io/contact](https://datamimic.io/contact)
 
@@ -21,7 +21,7 @@
 
 **DATAMIMIC CE is the open-source deterministic data engine at the core of the DATAMIMIC Enterprise Platform.** It is usable standalone for synthetic data generation and PII-aware pseudonymization in any local, CI, or agent-driven workflow.
 
-The Enterprise Platform builds on a separately-optimised EE core and adds the governed workflows, scanners, dashboards, and execution layer that regulated enterprises require for production-scale test-data operations.
+The Enterprise Platform adds the governed workflows, scanners, dashboards, and execution layer that regulated enterprises require for production-scale test-data operations.
 
 **Available in CE (this repo):**
 
@@ -45,7 +45,7 @@ The Enterprise Platform builds on a separately-optimised EE core and adds the go
 
 ## CE vs Enterprise Platform
 
-CE and EE are **not the same engine with a feature flag**. The EE core is an independently optimised execution engine built for enterprise-scale throughput and operational control.
+CE and EE are **not the same engine with a feature flag**. They share the DSL and determinism contract, but EE is an independently optimised execution engine built for enterprise-scale throughput and operational control.
 
 ### Engine comparison
 
@@ -327,7 +327,7 @@ from datamimic_ce.domains.healthcare.services import PatientService
 patient = PatientService().generate(seed="ci-pipeline-42", locale="en_US")
 ```
 
-**2. Deterministic data backend for AI agents and LLM tooling.** The bundled MCP server (`pip install datamimic-ce[mcp]`) exposes `generate` as an MCP tool. Agents call it with seed, locale, count; outputs ship with a `determinism_proof.content_hash` for verification — exactly the kind of evidence EU AI Act Art. 10 (data governance) and Art. 50 (transparency) audits want to see.
+**2. Deterministic data backend for AI agents and LLM tooling.** The bundled MCP server (`pip install datamimic-ce[mcp]`) exposes `generate` as an MCP tool. Agents call it with seed, locale, count; outputs ship with a `determinism_proof.content_hash` so the same call can be re-executed and verified later — useful for agent regression tests and for any workflow where the data the agent saw needs to be reconstructable.
 
 **3. Pseudonymization of staging and QA exports.** Manual model in CE (XML pipeline), no scanner license required. Seeded mode for stable regression test data; non-seeded mode for one-time deliveries with maximized privacy posture. See the [Pseudonymization section above](#pseudonymization--ce-manual-model).
 
@@ -341,7 +341,6 @@ DATAMIMIC produces evidence and reproducible artifacts that support compliance w
 
 | Regulation / standard | Where DATAMIMIC contributes |
 |---|---|
-| **EU AI Act (Reg. 2024/1689)** — Art. 10 (data governance) | Provenance-hashed synthetic datasets for training/test data with reproducible lineage; supports the data-governance documentation that high-risk-AI providers must maintain |
 | **DORA (Reg. 2022/2554)** — Art. 25 (testing of ICT tools and systems) | Reproducible test datasets for non-TLPT resilience tests; deterministic data fixtures for ICT testing programmes |
 | **ISO/IEC 27701:2019** — A.7.2.1, 7.2.8 (privacy by design and RoPA-supporting evidence) | Synthetic data in lieu of PII in non-production environments; documented model definitions as privacy-by-design evidence |
 | **HIPAA Security Rule** — §164.312 technical safeguards *(US Covered Entities / Business Associates only)* | Synthetic Patient/MedicalDevice/MedicalProcedure data for dev and test environments without ePHI exposure |
@@ -354,7 +353,7 @@ DATAMIMIC produces evidence and reproducible artifacts that support compliance w
 
 ## Architecture
 
-CE and EE have **separate, independently maintained cores**. CE is not a stripped-down EE. EE is not CE with features unlocked. They share the same DSL and determinism contract but diverge completely at the execution layer.
+CE and EE share the DATAMIMIC DSL and the determinism contract. The execution layer is separate: CE is a single-machine engine built on Python; EE is an independently-optimised execution engine with a Rust fastpath, ML/auto-regressive generation, keyset and manifest building from live schemas, and distributed execution at billion-record scale.
 
 ```
 ╔══════════════════════════════════════════════════════════════════╗
