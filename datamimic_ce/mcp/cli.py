@@ -9,7 +9,7 @@ This keeps the CLI thin, explicit, and compatible across Typer versions.
 from __future__ import annotations
 
 import os
-from enum import Enum
+from enum import StrEnum
 from typing import Annotated
 
 import typer
@@ -33,7 +33,7 @@ _ENV_HOST_DEFAULT = os.getenv("DATAMIMIC_MCP_HOST", _DEFAULT_HOST)
 _ENV_PORT_DEFAULT = int(os.getenv("DATAMIMIC_MCP_PORT", str(_DEFAULT_PORT)))
 
 
-class Transport(str, Enum):
+class Transport(StrEnum):
     """Supported transport mechanisms for FastMCP.
 
     WHY: Replaces ``Literal['sse', 'stdio']`` to avoid Typer limitations.
@@ -43,7 +43,7 @@ class Transport(str, Enum):
     stdio = "stdio"
 
 
-class LogLevel(str, Enum):
+class LogLevel(StrEnum):
     """Supported log levels for uvicorn.
 
     WHY: Replaces ``Literal[...]`` to avoid Typer limitations.
