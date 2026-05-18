@@ -1,6 +1,6 @@
 # DATAMIMIC — Governed Test Data for Regulated Enterprises
 
-> **This repository contains the DATAMIMIC Community Edition (CE)** — the open-source deterministic data engine at the core of the **DATAMIMIC Enterprise Platform**.
+> **This repository contains the DATAMIMIC Community Edition (CE).** MIT-licensed, Python-native, MCP-ready.
 >
 > CE is fully usable standalone for deterministic synthetic data generation and PII-aware pseudonymization. The Enterprise Platform adds governed workflows, PII scanning, role-based access, audit logging, scheduling, multi-system execution, and the full operational layer that regulated enterprises require.
 >
@@ -58,7 +58,7 @@ CE and EE are **not the same engine with a feature flag**. They share the DSL an
 | Domain models: Finance, Healthcare, Demographics | ✅ | ✅ |
 | MCP server for AI agent integration | ✅ | ✅ |
 | CLI + local execution | ✅ | ✅ |
-| **Scale** | millions of records | **designed for billion-record workloads** via isolated multiprocessing and Ray-based distributed execution |
+| **Scale** | millions of records via Python multiprocessing (and optional Ray) | **designed for billion-record workloads** — Rust fastpath, optimised multi-process execution, and keyset/manifest building on top of the shared Ray distribution layer |
 | **PII scanner** | ❌ | ✅ probability-scored field detection, configurable threshold, DataWorkbench integration |
 | **Runtime configuration profiles** | ❌ | ✅ Performance · Balanced · Flexibility |
 | **Memory management** | standard | optimised for high-volume batch and streaming |
@@ -66,7 +66,9 @@ CE and EE are **not the same engine with a feature flag**. They share the DSL an
 | **Nested structure evaluation** | basic | deep nested generation with extended condition + ruleset evaluation |
 | **Importer / exporter logging** | ❌ | per-stage logging for importers and exporters |
 | **Error handling** | standard exceptions | structured error catalog with recovery strategies |
-| **ML engine integration** | ❌ | combine statistical models with conditions, rulesets, validators |
+| **Rust fastpath** | ❌ | performance-critical paths in Rust |
+| **Keyset and manifest building** | ❌ | reads live DB schemas to build coordinated multi-table generation plans |
+| **ML / auto-regressive engine** | ❌ | combine statistical models with conditions, rulesets, validators for complex distributions |
 
 ### Platform capabilities (EE only)
 
@@ -96,7 +98,7 @@ The EE core supports three runtime configuration profiles, selectable per execut
 
 | Profile | Optimises for | Typical use case |
 |---|---|---|
-| **Performance** | Maximum throughput via isolated multiprocessing + Ray-based distributed execution | Bulk generation at nine-figure record volumes to PostgreSQL, Oracle, Kafka |
+| **Performance** | Maximum throughput via Rust fastpath, optimised multi-process execution, and Ray-based distribution | Bulk generation at billion-record volumes to PostgreSQL, Oracle, Kafka |
 | **Balanced** | Throughput + full audit logging | Standard enterprise pipeline runs with compliance requirements |
 | **Flexibility** | Deep nested evaluation, extended condition and ruleset processing | Complex domain models with ML engine combinations, multi-level referential structures |
 
@@ -143,7 +145,7 @@ Most test data tools produce random output. That breaks regression tests, audit 
 - Same seed + same model = byte-identical output, every run, every machine
 - Frozen clocks + canonical hashing = stable temporal context
 - UUIDv5 namespaces = reproducible entity identifiers
-- Provenance hash on every output = audit-ready lineage
+- Provenance hash on every output = re-executable lineage
 
 ```python
 from datamimic_ce.domains.facade import generate_domain
@@ -170,13 +172,13 @@ response = generate_domain(request)
 | Reproducible output | ❌ | ✅ | ✅ |
 | Domain-aware relationships | ❌ | ✅ | ✅ |
 | Business logic constraints | ❌ | ✅ | ✅ |
-| Audit-ready provenance | ❌ | ✅ | ✅ |
+| Per-output provenance hash | ❌ | ✅ | ✅ |
 | Source data pseudonymization | ❌ | ✅ manual | ✅ automated |
 | PII field detection | ❌ | ❌ | ✅ probability-scored |
 | Enterprise governance layer | ❌ | ❌ | ✅ |
 | Multi-system execution | ❌ | ❌ | ✅ |
 | Role-based workflows | ❌ | ❌ | ✅ |
-| Regulated industry compliance | ❌ | ❌ | ✅ |
+| Designed for regulated-industry deployment (governance, audit, RBAC) | ❌ | ❌ | ✅ |
 
 ```python
 # Faker — broken relationships
@@ -227,7 +229,7 @@ DATAMIMIC supports two pseudonymization modes with different privacy postures:
 
 | Mode | How | Legal classification | Use case |
 |---|---|---|---|
-| **Seeded** (`rngSeed` set) | Deterministic, reproducible | Pseudonymization — GDPR Art. 25 | Regression testing, stable CI/CD pipelines |
+| **Seeded** (`rngSeed` set) | Deterministic, reproducible | Pseudonymization (GDPR Art. 4(5)) | Regression testing, stable CI/CD pipelines |
 | **Non-seeded** (no `rngSeed`) | Non-deterministic, no reversible mapping at field level | Privacy-maximized transformation | One-time data delivery, higher privacy posture |
 
 > **Note on GDPR anonymization:** Full anonymization status under GDPR depends on complete field coverage across all quasi-identifiers and a re-identification risk assessment on the complete record — not on individual field transformation alone. DATAMIMIC does not make anonymization claims on behalf of the customer. Non-seeded mode maximizes privacy at the transformation level; the customer is responsible for assessing re-identification risk across the full dataset.
@@ -353,7 +355,7 @@ DATAMIMIC produces evidence and reproducible artifacts that support compliance w
 
 ## Architecture
 
-CE and EE share the DATAMIMIC DSL and the determinism contract. The execution layer is separate: CE is a single-machine engine built on Python; EE is an independently-optimised execution engine with a Rust fastpath, ML/auto-regressive generation, keyset and manifest building from live schemas, and distributed execution at billion-record scale.
+CE and EE share the DATAMIMIC DSL and the determinism contract. The execution layer is separate: CE is a Python execution engine using multiprocessing (with optional Ray for distribution); EE is an independently-optimised execution engine with a Rust fastpath, ML/auto-regressive generation, keyset and manifest building from live schemas, and optimised distributed execution at billion-record scale.
 
 ```
 ╔══════════════════════════════════════════════════════════════════╗
