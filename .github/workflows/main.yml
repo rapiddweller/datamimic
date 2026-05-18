@@ -78,13 +78,9 @@ jobs:
           echo redis=${REDIS_HOST}:${REDIS_PORT} with password=${REDIS_PASSWORD}
           echo logger_redis=${LOGGER_REDIS_HOST}:${LOGGER_REDIS_PORT} with password=${LOGGER_REDIS_PASSWORD}
         shell: bash
-      - name: Create virtual env
-        run: |
-          uv venv .venv --python 3.11
-          . .venv/bin/activate
       - name: Install dependencies
         run: |
-          uv sync --all-extras
+          uv sync --all-extras --python 3.11
         shell: bash
 
   mypy:
