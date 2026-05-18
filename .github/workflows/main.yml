@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -40,7 +40,7 @@ jobs:
           echo "LIB_VERSION_WITHOUT_PATCH=$LIB_VERSION_WITHOUT_PATCH" >> build.env
 
       - name: Upload build.env
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: setup
           path: build.env
@@ -61,12 +61,12 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           fetch-tags: true
       - name: Cache python venv
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
@@ -98,11 +98,11 @@ jobs:
           apt-get install -y git
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v8
       - name: Load venv cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
@@ -123,11 +123,11 @@ jobs:
           apt-get install -y git
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v8
       - name: Load venv cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
@@ -142,19 +142,19 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           fetch-tags: true
           ref: ${{ github.event.pull_request.head.ref || github.ref }}
 
       - name: Set Up Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
       - name: Install uv Package Manager
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v8
 
       - name: Install dependencies
         run: |
@@ -167,7 +167,7 @@ jobs:
         shell: bash
 
       - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: dist/*
 
@@ -182,11 +182,11 @@ jobs:
           apt-get install -y git
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v8
       - name: Load venv cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
@@ -196,7 +196,7 @@ jobs:
           uv run pytest tests_ce/unit_tests/ --cov --cov-report=xml
         shell: bash
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-unit
           path: coverage.xml
@@ -212,11 +212,11 @@ jobs:
           apt-get install -y git
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v8
       - name: Load venv cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
@@ -226,7 +226,7 @@ jobs:
           uv run pytest tests_ce/functional_tests/ --cov --cov-report=xml
         shell: bash
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-functional
           path: coverage.xml
@@ -242,11 +242,11 @@ jobs:
           apt-get install -y git
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v8
       - name: Load venv cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
@@ -256,7 +256,7 @@ jobs:
           uv run pytest tests_ce/integration_tests/ --cov --cov-report=xml
         shell: bash
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-integration
           path: coverage.xml
@@ -326,11 +326,11 @@ jobs:
           apt-get update
           ACCEPT_EULA=Y apt-get install -y msodbcsql17
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v8
       - name: Load venv cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
@@ -340,7 +340,7 @@ jobs:
           uv run pytest tests_ce/external_service_tests/ --cov=. --cov-report=xml
         shell: bash
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-external-service
           path: coverage.xml
@@ -356,11 +356,11 @@ jobs:
           apt-get install -y git
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v8
       - name: Load venv cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
@@ -370,7 +370,7 @@ jobs:
           uv run pytest tests_ce/factory_tests/ --cov=. --cov-report=xml
         shell: bash
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-factory
           path: coverage.xml
@@ -386,11 +386,11 @@ jobs:
           apt-get install -y git
           git config --global --add safe.directory $(realpath .)
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v8
       - name: Load venv cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
@@ -400,7 +400,7 @@ jobs:
           uv run pytest tests_ce/api_tests/ --cov=. --cov-report=xml
         shell: bash
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-api
           path: coverage.xml
@@ -418,10 +418,10 @@ jobs:
       ]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download unit test coverage report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: coverage-reports
 
@@ -479,7 +479,7 @@ jobs:
             arch: arm64 # Ubuntu GitHub runners do not support ARM64 yet
     steps:
       - name: Set Up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.arch }}
@@ -490,7 +490,7 @@ jobs:
           pip install uv
 
       - name: Download All Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: dist
 
@@ -596,10 +596,10 @@ jobs:
       contents: read
     steps:
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v8
 
       - name: Download All Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: dist
 
@@ -637,7 +637,7 @@ jobs:
       contents: read
     steps:
       - name: Download All Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: dist
 
@@ -669,7 +669,7 @@ jobs:
     needs: [release]
     steps:
       - name: Download build.env
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: setup
 
