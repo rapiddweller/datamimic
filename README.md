@@ -23,14 +23,14 @@
 
 Enterprises in banking, insurance, and regulated industries use DATAMIMIC to:
 
-- **Scan** source systems for PII — probability-scored field detection with configurable thresholds (EE: automated via DataWorkbench; CE: manual model definition)
-- **Generate** fully synthetic, deterministic datasets — model-driven, zero production data, no compliance risk
+- **Scan** source systems for PII — probability-scored field detection with configurable thresholds *(EE: automated via DataWorkbench; CE: manual model definition)*
+- **Generate** fully synthetic, deterministic datasets — model-driven, zero production data
 - **Pseudonymize** source data — deterministic (seeded) or privacy-maximized (non-seeded) field transformation from source to target system
-- **Execute** repeatable workflows across complex system landscapes: Oracle, PostgreSQL, MongoDB, Kafka, JSON, XML, CSV
-- **Audit** every run with immutable logs, provenance hashing, and role-based traceability
-- **Govern** test data demand through reusable templates, approval flows, and self-service execution
+- **Execute** repeatable workflows: single-system pipelines in CE; multi-system landscapes (Oracle, PostgreSQL, MongoDB, Kafka, JSON, XML, CSV) in EE
+- **Produce audit evidence** — append-only execution logs and provenance hashing on every output; role-based dashboards in EE
+- **Govern** test data demand through reusable templates, approval flows, and self-service execution *(EE)*
 
-> Used in production at Tier-1 European banks and global payment processing enterprises for deterministic test data across Oracle, MongoDB, and Kafka pipelines.
+> Deployed in regulated EU banking environments for deterministic test data across Oracle, MongoDB, and Kafka pipelines.
 
 ---
 
@@ -49,7 +49,7 @@ CE and EE are **not the same engine with a feature flag**. The EE core is an ind
 | Domain models: Finance, Healthcare, Demographics | ✅ | ✅ |
 | MCP server for AI agent integration | ✅ | ✅ |
 | CLI + local execution | ✅ | ✅ |
-| **Scale** | millions of records | **linearly scalable to 1,000,000,000+ records** via isolated multiprocessing and Ray-based distributed execution |
+| **Scale** | millions of records | **designed for billion-record workloads** via isolated multiprocessing and Ray-based distributed execution |
 | **PII scanner** | ❌ | ✅ probability-scored field detection, configurable threshold, DataWorkbench integration |
 | **Runtime configuration profiles** | ❌ | ✅ Performance · Balanced · Flexibility |
 | **Memory management** | standard | optimised for high-volume batch and streaming |
@@ -73,7 +73,7 @@ CE and EE are **not the same engine with a feature flag**. The EE core is an ind
 | CI/CD pipeline integration (Tosca, Jenkins, GitLab) | ✅ |
 | Multi-system execution: Oracle, MongoDB, Kafka | ✅ |
 | **Template engine: EDIFACT, SWIFT MT, HL7 + spec-specific editors** | ✅ |
-| GDPR / HIPAA / PCI audit compliance layer | ✅ |
+| Audit evidence support for GDPR / HIPAA / PCI assessments | ✅ |
 | On-premise deployment + air-gapped environments | ✅ |
 | LSP-powered IDE tooling for DSL authoring | ✅ |
 
@@ -305,6 +305,41 @@ anyio.run(main)
 
 ---
 
+## Where CE fits on its own
+
+Most teams adopt CE for one of three reasons. EE is not required for any of them.
+
+**1. Reproducible test data for CI/CD pipelines.** Same seed → byte-identical output across machines. Regression tests stop being flaky because the input data is stable across runs.
+
+```python
+from datamimic_ce.domains.healthcare.services import PatientService
+
+# This call returns the exact same patient on every machine, every run.
+patient = PatientService().generate(seed="ci-pipeline-42", locale="en_US")
+```
+
+**2. Deterministic data backend for AI agents and LLM tooling.** The bundled MCP server (`pip install datamimic-ce[mcp]`) exposes `generate` as an MCP tool. Agents call it with seed, locale, count; outputs ship with a `determinism_proof.content_hash` for verification — exactly the kind of evidence EU AI Act Art. 10 (data governance) and Art. 50 (transparency) audits want to see.
+
+**3. Pseudonymization of staging and QA exports.** Manual model in CE (XML pipeline), no scanner license required. Seeded mode for stable regression test data; non-seeded mode for one-time deliveries with maximized privacy posture. See the [Pseudonymization section above](#pseudonymization--ce-manual-model).
+
+---
+
+## Where DATAMIMIC fits in your compliance program
+
+DATAMIMIC produces evidence and reproducible artifacts that support compliance work. It does not replace your DPO, your CISO, or your auditor. The following are pointers for where DATAMIMIC outputs commonly slot into established programs:
+
+| Regulation / standard | Where DATAMIMIC contributes |
+|---|---|
+| **EU AI Act (Reg. 2024/1689)** — Art. 10 (data governance), Art. 50 (transparency) | Provenance-hashed synthetic datasets for training/test data with reproducible lineage; deterministic outputs that audit reviewers can re-execute |
+| **DORA (Reg. 2022/2554)** — Art. 24–27 (resilience testing), Art. 8 (asset register) | Reproducible test datasets for resilience testing programs; deterministic data fixtures for ICT system inventories |
+| **ISO/IEC 27701:2025** — A.1.4 (privacy by design), A.1.2.9 (RoPA) | Synthetic data in lieu of PII in non-production environments; documented model definitions as privacy-by-design evidence |
+| **HIPAA Security Rule** — §164.312 technical safeguards | Synthetic Patient/MedicalDevice/MedicalProcedure data for dev and test environments without ePHI exposure |
+| **GDPR Art. 25** (data protection by design) | Seeded pseudonymization with deterministic mapping; non-seeded mode for stronger privacy posture |
+
+> These pointers do not constitute legal advice or a compliance attestation. Consult your DPO, CISO, or qualified counsel for formal compliance determinations. Full anonymization status under GDPR depends on re-identification risk across the complete dataset — see the [pseudonymization disclaimer above](#pseudonymization--ce-manual-model).
+
+---
+
 ## Architecture
 
 CE and EE have **separate, independently maintained cores**. CE is not a stripped-down EE. EE is not CE with features unlocked. They share the same DSL and determinism contract but diverge completely at the execution layer.
@@ -348,42 +383,56 @@ Both editions share the same DATAMIMIC DSL and determinism contract. Scale, thro
 
 ---
 
-## Supported systems (Enterprise Platform)
+## Supported systems
 
-| System | Read | Write | Notes |
+| System | CE | EE | Notes |
 |---|---|---|---|
-| PostgreSQL | ✅ | ✅ | Schema introspection, referential integrity |
-| Oracle | ✅ | ✅ | Production-validated in Tier-1 banking environments |
-| MongoDB | ✅ | ✅ | Nested document generation |
-| Apache Kafka | ✅ | ✅ | Real-time streaming, payment scenarios |
+| PostgreSQL | ✅ | ✅ | EE adds schema introspection and referential integrity |
+| MySQL | ✅ | ✅ | |
+| Oracle | ✅ | ✅ | EE production-validated in regulated banking environments |
+| MS SQL Server | ✅ | ✅ | |
+| SQLite | ✅ | ✅ | Lightweight CI/CD fixtures |
+| MongoDB | ✅ | ✅ | EE adds nested document generation |
 | CSV / JSON / XML | ✅ | ✅ | Flat file pipelines |
-| EDIFACT / SWIFT MT | — | ✅ | Financial message formats |
+| Apache Kafka | — | ✅ | Real-time streaming, payment scenarios |
+| EDIFACT / SWIFT MT | — | ✅ | Test/training output only; does not satisfy SWIFT CSP production-environment controls (1.1, 1.4) |
 
 ---
 
 ## CE domains
 
-| Domain | Models available |
+| Domain | Services available |
 |---|---|
-| **Healthcare** | Patient, Doctor, Hospital, MedicalRecord |
-| **Finance** | BankAccount, CreditCard, Transaction, LoanRecord |
+| **Healthcare** | Patient, Doctor, Hospital, MedicalDevice, MedicalProcedure |
+| **Finance** | Bank, BankAccount, CreditCard, Transaction |
+| **Insurance** | InsuranceCompany, InsuranceProduct, InsurancePolicy, InsuranceCoverage |
+| **E-commerce** | Order, Product |
+| **Public sector** | AdministrationOffice, EducationalInstitution, PoliceOfficer |
 | **Demographics** | Person (DE / US / VN locale packs), Address, Company |
 
-All domains are versioned, seeded, and audit-ready.
+All services are versioned, seeded, and audit-ready. Each service exposes the same deterministic API: `Service().generate(seed=…, locale=…, count=…)`.
 
 ---
 
 ## CLI reference
 
 ```bash
+# Initialize a new project
+datamimic init ./my-scenario
+
+# Validate an XML descriptor without executing it
+datamimic validate ./my-scenario/datamimic.xml
+
 # Run a scenario
 datamimic run ./my-scenario/datamimic.xml
 
-# Launch a demo
+# Demos
+datamimic demo list
 datamimic demo create healthcare-example
-datamimic run ./healthcare-example/datamimic.xml
+datamimic demo create --all --target ./my_demos
 
-# Version check
+# System and version info
+datamimic info
 datamimic version
 ```
 
