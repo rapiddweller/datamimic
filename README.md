@@ -34,7 +34,7 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 **The Enterprise Platform adds:**
 
 - **PII scanner** — probability-scored field detection with configurable thresholds via DataWorkbench
-- **Multi-system execution** — Oracle / MongoDB / Kafka / EDIFACT / SWIFT MT / HL7 in coordinated workflows with referential integrity
+- **Multi-system execution** — Oracle / MongoDB / Kafka / EDIFACT / SWIFT MT in coordinated workflows with referential integrity
 - **Governance layer** — role-based dashboards, audit trails, approval flows, reusable enterprise templates, scheduler
 - **Performance core** — Rust fastpath, ML/auto-regressive engine for complex distributions, keyset and manifest building, optimised distributed execution
 - **On-premise / air-gapped deployment** — podman-compose or Helm, with consulting-led rollout
@@ -83,7 +83,7 @@ CE and EE are **not the same engine with a feature flag**. They share the DSL an
 | Scheduled execution + task runner | ✅ |
 | CI/CD pipeline integration (Tosca, Jenkins, GitLab) | ✅ |
 | Multi-system execution: Oracle, MongoDB, Kafka | ✅ |
-| **Template engine: EDIFACT, SWIFT MT, HL7 + spec-specific editors** | ✅ |
+| **Template engine: schema-aware editor for EDIFACT and SWIFT MT (additional formats built per engagement; customer-uploadable specs)** | ✅ |
 | Audit-evidence artefacts for GDPR Art. 30 records, PCI DSS 4.0 Req. 6.5.5 (test data) reviews, and — for US Covered Entities / Business Associates — HIPAA §164.312 evidence packs | ✅ |
 | On-premise deployment + air-gapped environments | ✅ |
 | LSP-powered IDE tooling for DSL authoring | ✅ |
@@ -108,15 +108,28 @@ Logging depth is independently configurable per profile — from minimal (throug
 
 ## EE template engine
 
-The EE template engine generates industry-standard financial and healthcare message formats from DATAMIMIC models, with spec-specific editors for each format:
+The EE template engine generates industry-standard financial messages from DATAMIMIC models. The workbench parses uploaded message samples, auto-detects the message type, and validates edits against the registered spec version in real time.
 
-| Format | Standard | Spec-specific editor |
-|---|---|---|
-| EDIFACT | UN/EDIFACT | ✅ |
-| SWIFT MT | SWIFT MT | ✅ |
-| HL7 | HL7 v2.x | ✅ |
+### Capabilities
 
-Templates are versioned, reusable across scenarios, and fully integrated with the DATAMIMIC DSL and audit layer. Generated messages are deterministic and traceable to their source model.
+- **Spec-aware form editing** — segments and elements rendered as structured forms with mandatory/optional indicators, per-field value suggestions, and inline custom-extension support
+- **Strict validation** against baked spec versions, with segment- and element-level error reporting
+- **Advisory mode** when a spec is unregistered or in draft — editing stays enabled, validation continues as guidance
+- **Round-trip** between the structured form view and the authoritative template text — no fidelity loss
+- **Download / adjust / upload your own spec** — customers can extend or override the baked spec catalogue without waiting for a release
+- **Live structure tree + preview** for every edit
+- **File auto-detection** — upload an existing message, the editor identifies the type and loads the matching spec
+
+### Formats with shipped editor support
+
+| Format | Coverage |
+|---|---|
+| **UN/EDIFACT** | Schema-aware form editor; spec versions and subsets per customer engagement |
+| **SWIFT MT** | Schema-aware form editor; categories and SR versions per customer engagement |
+
+Additional formats (ISO 20022 / MX, HL7, FHIR, industry-specific dialects) are built into the editor catalogue as part of POC and 1-year engagement scopes — DATAMIMIC's spec library expands with customer needs, not with quarterly vendor release notes.
+
+Generated messages are deterministic and traceable to their source model, and syntactically valid against the registered spec. They are intended for **test and training environments only** — they are not network-validated and must not be transmitted on production SWIFTNet or EDI networks. See the [SWIFT CSP note](#supported-systems) below.
 
 ---
 
