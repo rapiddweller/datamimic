@@ -19,18 +19,27 @@
 
 ## What is DATAMIMIC?
 
-**DATAMIMIC is the enterprise standard for governed test data operations.**
+**DATAMIMIC CE is the open-source deterministic data engine at the core of the DATAMIMIC Enterprise Platform.** It is usable standalone for synthetic data generation and PII-aware pseudonymization in any local, CI, or agent-driven workflow.
 
-Enterprises in banking, insurance, and regulated industries use DATAMIMIC to:
+The Enterprise Platform builds on a separately-optimised EE core and adds the governed workflows, scanners, dashboards, and execution layer that regulated enterprises require for production-scale test-data operations.
 
-- **Scan** source systems for PII — probability-scored field detection with configurable thresholds *(EE: automated via DataWorkbench; CE: manual model definition)*
-- **Generate** fully synthetic, deterministic datasets — model-driven, zero production data
-- **Pseudonymize** source data — deterministic (seeded) or privacy-maximized (non-seeded) field transformation from source to target system
-- **Execute** repeatable workflows: single-system pipelines in CE; multi-system landscapes (Oracle, PostgreSQL, MongoDB, Kafka, JSON, XML, CSV) in EE
-- **Produce audit evidence** — append-only execution logs and provenance hashing on every output; role-based dashboards in EE
-- **Govern** test data demand through reusable templates, approval flows, and self-service execution *(EE)*
+**Available in CE (this repo):**
 
-> Deployed in regulated EU banking environments for deterministic test data across Oracle, MongoDB, and Kafka pipelines.
+- **Generate** fully synthetic, deterministic datasets — model-driven, no source data required
+- **Pseudonymize** staging/QA exports — deterministic (seeded) or privacy-maximized (non-seeded) field transformation; PII fields identified and modeled manually in the XML pipeline
+- **Execute** single-system pipelines against PostgreSQL · MySQL · Oracle · MS SQL · SQLite · MongoDB · CSV · JSON · XML
+- **Emit provenance** — append-only execution logs and per-output content hash for audit re-execution
+- **Serve agents** — bundled MCP server exposing `generate` as a deterministic tool for AI/LLM tooling
+
+**The Enterprise Platform adds:**
+
+- **PII scanner** — probability-scored field detection with configurable thresholds via DataWorkbench
+- **Multi-system execution** — Oracle / MongoDB / Kafka / EDIFACT / SWIFT MT / HL7 in coordinated workflows with referential integrity
+- **Governance layer** — role-based dashboards, audit trails, approval flows, reusable enterprise templates, scheduler
+- **Performance core** — Rust fastpath, ML/auto-regressive engine for complex distributions, keyset and manifest building, optimised distributed execution
+- **On-premise / air-gapped deployment** — podman-compose or Helm, with consulting-led rollout
+
+> Deployed in a regulated EU banking engagement for deterministic test data across Oracle, MongoDB, and Kafka pipelines (see [datamimic.io case studies](https://datamimic.io)).
 
 ---
 
@@ -43,7 +52,7 @@ CE and EE are **not the same engine with a feature flag**. The EE core is an ind
 | Capability | Community Edition (CE) | Enterprise Platform (EE) |
 |---|---|---|
 | Deterministic data generation | ✅ | ✅ |
-| **Pseudonymization — seeded (GDPR Art. 25)** | ✅ manual model | ✅ automated via DataWorkbench |
+| **Pseudonymization — seeded** *(GDPR Art. 4(5); supports Art. 25 / Art. 32)* | ✅ manual model | ✅ automated via DataWorkbench |
 | **Pseudonymization — non-seeded (privacy-maximized)** | ✅ manual model | ✅ automated via DataWorkbench |
 | Python API + XML pipelines | ✅ | ✅ |
 | Domain models: Finance, Healthcare, Demographics | ✅ | ✅ |
@@ -73,11 +82,11 @@ CE and EE are **not the same engine with a feature flag**. The EE core is an ind
 | CI/CD pipeline integration (Tosca, Jenkins, GitLab) | ✅ |
 | Multi-system execution: Oracle, MongoDB, Kafka | ✅ |
 | **Template engine: EDIFACT, SWIFT MT, HL7 + spec-specific editors** | ✅ |
-| Audit evidence support for GDPR / HIPAA / PCI assessments | ✅ |
+| Audit-evidence artefacts for GDPR Art. 30 records, PCI DSS 4.0 Req. 6.5.5 (test data) reviews, and — for US Covered Entities / Business Associates — HIPAA §164.312 evidence packs | ✅ |
 | On-premise deployment + air-gapped environments | ✅ |
 | LSP-powered IDE tooling for DSL authoring | ✅ |
 
-👉 [Compare editions in detail](https://datamimic.io) &nbsp;|&nbsp; [Book a platform demo](https://datamimic.io/contact)
+👉 [Explore the Enterprise Platform](https://datamimic.io) &nbsp;|&nbsp; [Book a platform demo](https://datamimic.io/contact)
 
 ---
 
@@ -154,7 +163,7 @@ response = generate_domain(request)
 
 ---
 
-## Why DATAMIMIC beats Faker and generic generators
+## How DATAMIMIC differs from Faker and generic generators
 
 | | Faker / Random generators | DATAMIMIC CE | DATAMIMIC EE |
 |---|---|---|---|
@@ -328,13 +337,16 @@ patient = PatientService().generate(seed="ci-pipeline-42", locale="en_US")
 
 DATAMIMIC produces evidence and reproducible artifacts that support compliance work. It does not replace your DPO, your CISO, or your auditor. The following are pointers for where DATAMIMIC outputs commonly slot into established programs:
 
+> Both editions produce reproducible artefacts. CE covers single-system fixtures and provenance evidence; multi-system audit evidence with role-based dashboards is EE.
+
 | Regulation / standard | Where DATAMIMIC contributes |
 |---|---|
-| **EU AI Act (Reg. 2024/1689)** — Art. 10 (data governance), Art. 50 (transparency) | Provenance-hashed synthetic datasets for training/test data with reproducible lineage; deterministic outputs that audit reviewers can re-execute |
-| **DORA (Reg. 2022/2554)** — Art. 24–27 (resilience testing), Art. 8 (asset register) | Reproducible test datasets for resilience testing programs; deterministic data fixtures for ICT system inventories |
-| **ISO/IEC 27701:2025** — A.1.4 (privacy by design), A.1.2.9 (RoPA) | Synthetic data in lieu of PII in non-production environments; documented model definitions as privacy-by-design evidence |
-| **HIPAA Security Rule** — §164.312 technical safeguards | Synthetic Patient/MedicalDevice/MedicalProcedure data for dev and test environments without ePHI exposure |
-| **GDPR Art. 25** (data protection by design) | Seeded pseudonymization with deterministic mapping; non-seeded mode for stronger privacy posture |
+| **EU AI Act (Reg. 2024/1689)** — Art. 10 (data governance) | Provenance-hashed synthetic datasets for training/test data with reproducible lineage; supports the data-governance documentation that high-risk-AI providers must maintain |
+| **DORA (Reg. 2022/2554)** — Art. 25 (testing of ICT tools and systems) | Reproducible test datasets for non-TLPT resilience tests; deterministic data fixtures for ICT testing programmes |
+| **ISO/IEC 27701:2019** — A.7.2.1, 7.2.8 (privacy by design and RoPA-supporting evidence) | Synthetic data in lieu of PII in non-production environments; documented model definitions as privacy-by-design evidence |
+| **HIPAA Security Rule** — §164.312 technical safeguards *(US Covered Entities / Business Associates only)* | Synthetic Patient/MedicalDevice/MedicalProcedure data for dev and test environments without ePHI exposure |
+| **GDPR** — Art. 4(5) pseudonymization definition; Art. 25 privacy by design; Art. 32 security of processing | Seeded pseudonymization with deterministic mapping; non-seeded mode for stronger privacy posture |
+| **PCI DSS 4.0** — Req. 6.5.5 (live PANs prohibited in test/development) | Synthetic PAN generation for test environments; deterministic tokenisation reproducible across runs |
 
 > These pointers do not constitute legal advice or a compliance attestation. Consult your DPO, CISO, or qualified counsel for formal compliance determinations. Full anonymization status under GDPR depends on re-identification risk across the complete dataset — see the [pseudonymization disclaimer above](#pseudonymization--ce-manual-model).
 
@@ -356,14 +368,15 @@ CE and EE have **separate, independently maintained cores**. CE is not a strippe
 ║  └──────────────────────────────────────────────────────────┘    ║
 ║                                                                  ║
 ║  ┌──────────────────────────────────────────────────────────┐    ║
-║  │  EE CORE  (optimised, separate from CE)                  │    ║
+║  │  EE CORE  (separately maintained, more advanced than CE) │    ║
 ║  │                                                          │    ║
-║  │  Ray-based distributed execution                         │    ║
-║  │  Isolated multiprocessing · Linear scalability           │    ║
+║  │  Rust fastpath for performance-critical paths            │    ║
+║  │  ML / auto-regressive engine for complex distributions   │    ║
+║  │  Keyset and manifest building from live DB schemas       │    ║
+║  │  Optimised distributed execution at billion-record scale │    ║
 ║  │  Runtime profiles: Performance · Balanced · Flexibility  │    ║
 ║  │  Deep nested evaluation · Conditions · Rulesets          │    ║
-║  │  ML engine integration · Structured error catalog        │    ║
-║  │  Per-stage importer/exporter logging                     │    ║
+║  │  Structured error catalog · Per-stage execution logging  │    ║
 ║  └──────────────────────────────────────────────────────────┘    ║
 ╚══════════════════════════════════════════════════════════════════╝
 
@@ -395,7 +408,7 @@ Both editions share the same DATAMIMIC DSL and determinism contract. Scale, thro
 | MongoDB | ✅ | ✅ | EE adds nested document generation |
 | CSV / JSON / XML | ✅ | ✅ | Flat file pipelines |
 | Apache Kafka | — | ✅ | Real-time streaming, payment scenarios |
-| EDIFACT / SWIFT MT | — | ✅ | Test/training output only; does not satisfy SWIFT CSP production-environment controls (1.1, 1.4) |
+| EDIFACT / SWIFT MT | — | ✅ | Test/training output only; does not satisfy SWIFT CSCF v2025 secure-zone controls (1.1 environment protection, 1.4 internet restriction). Generated messages must not be transmitted from a CSP-attested secure zone. |
 
 ---
 
@@ -408,9 +421,9 @@ Both editions share the same DATAMIMIC DSL and determinism contract. Scale, thro
 | **Insurance** | InsuranceCompany, InsuranceProduct, InsurancePolicy, InsuranceCoverage |
 | **E-commerce** | Order, Product |
 | **Public sector** | AdministrationOffice, EducationalInstitution, PoliceOfficer |
-| **Demographics** | Person (DE / US / VN locale packs), Address, Company |
+| **Demographics** | Person (DE / US / VN locale packs), Address |
 
-All services are versioned, seeded, and audit-ready. Each service exposes the same deterministic API: `Service().generate(seed=…, locale=…, count=…)`.
+All services are versioned and seeded; each generation emits a provenance hash suitable as evidence in audit reviews. Same deterministic API across domains: `Service().generate(seed=…, locale=…, count=…)`.
 
 ---
 
@@ -468,6 +481,6 @@ The DATAMIMIC Enterprise Platform (EE) is a commercial product. [Contact us](htt
 
 ---
 
-**DATAMIMIC — Make test data a standard, not a manual process.**
+**DATAMIMIC — Deterministic, governed test data for regulated enterprises.**
 
 [datamimic.io](https://datamimic.io) &nbsp;|&nbsp; [Book a demo](https://datamimic.io/contact) &nbsp;|&nbsp; [LinkedIn](https://linkedin.com/company/rapiddweller)
