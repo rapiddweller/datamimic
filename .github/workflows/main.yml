@@ -580,47 +580,6 @@ jobs:
       - name: Run overview-generator
         run: datamimic run ./my_demos/overview-generator/datamimic.xml
 
-  publish_dev:
-    if: github.ref == 'refs/heads/development'
-    runs-on: ubuntu-22.04
-    needs: [e2e_test]
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/datamimic-ce
-    permissions:
-      id-token: write # IMPORTANT: mandatory for trusted publishing https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
-      contents: read
-    steps:
-      - name: Install uv
-        uses: astral-sh/setup-uv@v8.1.0
-
-      - name: Download All Build Artifacts
-        uses: actions/download-artifact@v7
-        with:
-          path: dist
-
-      - name: Move *.whl and *.tar.gz to dist directory
-        run: |
-          mv dist/artifact/*.whl dist
-          mv dist/artifact/*.tar.gz dist
-          rm -rf dist/artifact
-          rm -rf dist/setup
-          rm -rf dist/coverage-functional
-          rm -rf dist/coverage-integration
-          rm -rf dist/coverage-unit
-          rm -rf dist/coverage-external-service
-          rm -rf dist/coverage-factory
-          rm -rf dist/coverage-api
-
-      - name: List Contents of dist Directory
-        run: ls -R dist
-
-      - name: Publish distribution to TestPyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-  #          verbose: true
-
   release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04
