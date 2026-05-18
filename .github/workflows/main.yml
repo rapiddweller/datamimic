@@ -100,7 +100,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v8.1.0
       - name: Load venv cache
         uses: actions/cache/restore@v5
         with:
@@ -125,7 +125,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v8.1.0
       - name: Load venv cache
         uses: actions/cache/restore@v5
         with:
@@ -154,7 +154,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install uv Package Manager
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v8.1.0
 
       - name: Install dependencies
         run: |
@@ -184,7 +184,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v8.1.0
       - name: Load venv cache
         uses: actions/cache/restore@v5
         with:
@@ -214,7 +214,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v8.1.0
       - name: Load venv cache
         uses: actions/cache/restore@v5
         with:
@@ -244,7 +244,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v8.1.0
       - name: Load venv cache
         uses: actions/cache/restore@v5
         with:
@@ -328,7 +328,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v8.1.0
       - name: Load venv cache
         uses: actions/cache/restore@v5
         with:
@@ -358,7 +358,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v8.1.0
       - name: Load venv cache
         uses: actions/cache/restore@v5
         with:
@@ -388,7 +388,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v8.1.0
       - name: Load venv cache
         uses: actions/cache/restore@v5
         with:
@@ -596,7 +596,7 @@ jobs:
       contents: read
     steps:
       - name: Install uv
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v8.1.0
 
       - name: Download All Build Artifacts
         uses: actions/download-artifact@v7
