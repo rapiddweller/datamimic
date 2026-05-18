@@ -34,12 +34,13 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 **The Enterprise Platform adds:**
 
 - **PII scanner** — probability-scored field detection with configurable thresholds via DataWorkbench
-- **Multi-system execution** — Oracle / MongoDB / Kafka / EDIFACT / SWIFT MT / HL7 v2.x / HL7 FHIR in coordinated workflows with referential integrity
+- **Multi-system execution** — Oracle / MongoDB / Kafka in coordinated workflows with referential integrity
+- **Industry message templates** — EDIFACT / SWIFT MT / HL7 v2.x / HL7 FHIR generated as deterministic test/training artefacts
 - **Governance layer** — role-based dashboards, audit trails, approval flows, reusable enterprise templates, scheduler
 - **Performance core** — Rust fastpath, ML/auto-regressive engine for complex distributions, keyset and manifest building, optimised distributed execution
 - **On-premise / air-gapped deployment** — podman-compose or Helm, with consulting-led rollout
 
-> Deployed in a regulated EU banking engagement for deterministic test data across Oracle, MongoDB, and Kafka pipelines (see [datamimic.io case studies](https://datamimic.io)).
+> Deployed in regulated EU banking environments for deterministic test data across Oracle, MongoDB, and Kafka pipelines. Reference customers available under NDA — see also [datamimic.io case studies](https://datamimic.io).
 
 ---
 
@@ -83,7 +84,7 @@ CE and EE are **not the same engine with a feature flag**. They share the DSL an
 | Scheduled execution + task runner | ✅ |
 | CI/CD pipeline integration (Tosca, Jenkins, GitLab) | ✅ |
 | Multi-system execution: Oracle, MongoDB, Kafka | ✅ |
-| **Template engine: schema-aware editors for EDIFACT, SWIFT MT, HL7 v2.x, and HL7 FHIR — customer-uploadable specs, further industry formats deliverable in days on the same framework** | ✅ |
+| **Template engine: schema-aware editors for EDIFACT, SWIFT MT, HL7 v2.x, and HL7 FHIR — customer-uploadable specs, further industry formats built per engagement on the same framework** | ✅ |
 | Audit-evidence artefacts for GDPR Art. 30 records, PCI DSS 4.0 Req. 6.5.5 (test data) reviews, and — for US Covered Entities / Business Associates — HIPAA §164.312 evidence packs | ✅ |
 | On-premise deployment + air-gapped environments | ✅ |
 | LSP-powered IDE tooling for DSL authoring | ✅ |
@@ -128,9 +129,9 @@ The EE template engine generates industry-standard financial messages from DATAM
 | **SWIFT MT** | Schema-aware form editor; categories and SR versions per engagement |
 | **HL7 v2.x** | Schema-aware form editor; versions per engagement |
 | **HL7 FHIR** | Schema-aware form editor for FHIR resources (Patient, Observation, Encounter, …); profiles per engagement |
-| **Further industry formats** (ISO 20022 / MX, vertical dialects) | Built into the editor catalogue as part of POC and 1-year engagement scopes — typically delivered in days on the same framework |
+| **Further industry formats** (ISO 20022 / MX, vertical dialects) | Built into the editor catalogue per customer engagement, on the same framework |
 
-Customers can also download, adjust, and upload their own specs directly — DATAMIMIC's spec library expands with customer needs, not with quarterly vendor release notes.
+Customers can extend the spec catalogue between releases by downloading, adjusting, and uploading their own spec files directly.
 
 Generated messages are deterministic and traceable to their source model, and syntactically valid against the registered spec. They are intended for **test and training environments only** — they are not network-validated and must not be transmitted on production SWIFTNet or EDI networks. See the [SWIFT CSP note](#supported-systems) below.
 
@@ -339,10 +340,14 @@ Most teams adopt CE for one of three reasons. EE is not required for any of them
 **1. Reproducible test data for CI/CD pipelines.** Same seed → byte-identical output across machines. Regression tests stop being flaky because the input data is stable across runs.
 
 ```python
-from datamimic_ce.domains.healthcare.services import PatientService
+from datamimic_ce.domains.facade import generate_domain
 
-# This call returns the exact same patient on every machine, every run.
-patient = PatientService().generate(seed="ci-pipeline-42", locale="en_US")
+response = generate_domain({
+    "domain": "person", "version": "v1", "count": 1,
+    "seed": "ci-pipeline-42", "locale": "en_US",
+    "clock": "2026-01-01T00:00:00Z",
+})
+# Same input → same output, every machine, every run.
 ```
 
 **2. Deterministic data backend for AI agents and LLM tooling.** The bundled MCP server (`pip install datamimic-ce[mcp]`) exposes `generate` as an MCP tool. Agents call it with seed, locale, count; outputs ship with a `determinism_proof.content_hash` so the same call can be re-executed and verified later — useful for agent regression tests and for any workflow where the data the agent saw needs to be reconstructable.
@@ -359,8 +364,8 @@ DATAMIMIC produces evidence and reproducible artifacts that support compliance w
 
 | Regulation / standard | Where DATAMIMIC contributes |
 |---|---|
-| **DORA (Reg. 2022/2554)** — Art. 25 (testing of ICT tools and systems) | Reproducible test datasets for non-TLPT resilience tests; deterministic data fixtures for ICT testing programmes |
-| **ISO/IEC 27701:2019** — A.7.2.1, 7.2.8 (privacy by design and RoPA-supporting evidence) | Synthetic data in lieu of PII in non-production environments; documented model definitions as privacy-by-design evidence |
+| **DORA (Reg. 2022/2554)** — Art. 24 (testing of ICT tools, systems and processes; non-TLPT scope) | Reproducible test datasets for non-TLPT resilience tests; deterministic data fixtures for ICT testing programmes |
+| **ISO/IEC 27701:2019** — A.7.2.8 (records related to processing PII) and A.7.4.5 (PII minimisation) | Synthetic data in lieu of PII in non-production environments; documented model definitions as supporting evidence |
 | **HIPAA Security Rule** — §164.312 technical safeguards *(US Covered Entities / Business Associates only)* | Synthetic Patient/MedicalDevice/MedicalProcedure data for dev and test environments without ePHI exposure |
 | **GDPR** — Art. 4(5) pseudonymization definition; Art. 25 privacy by design; Art. 32 security of processing | Seeded pseudonymization with deterministic mapping; non-seeded mode for stronger privacy posture |
 | **PCI DSS 4.0** — Req. 6.5.5 (live PANs prohibited in test/development) | Synthetic PAN generation for test environments; deterministic tokenisation reproducible across runs |
@@ -406,10 +411,10 @@ CE and EE share the DATAMIMIC DSL and the determinism contract. The execution la
 ╚══════════════════════════════════════════════════════════════════╝
 
          ↓              ↓              ↓              ↓
-    PostgreSQL       Oracle         MongoDB      Kafka / Files
+    PostgreSQL       Oracle         MongoDB      CSV / JSON / XML
 ```
 
-Both editions share the same DATAMIMIC DSL and determinism contract. Scale, throughput, governance, and operational control are EE-only.
+EE adds Kafka, EDIFACT, SWIFT MT, HL7 v2.x, and HL7 FHIR as additional targets — see [Supported systems](#supported-systems) below. Both editions share the DATAMIMIC DSL and determinism contract.
 
 ---
 
@@ -425,6 +430,8 @@ Both editions share the same DATAMIMIC DSL and determinism contract. Scale, thro
 | MongoDB | ✅ | ✅ | EE adds nested document generation |
 | CSV / JSON / XML | ✅ | ✅ | Flat file pipelines |
 | Apache Kafka | — | ✅ | Real-time streaming, payment scenarios |
+| HL7 v2.x | — | ✅ | Test/training output via template engine |
+| HL7 FHIR | — | ✅ | Test/training output via template engine |
 | EDIFACT / SWIFT MT | — | ✅ | Test/training output only; does not satisfy SWIFT CSCF v2025 secure-zone controls (1.1 environment protection, 1.4 internet restriction). Generated messages must not be transmitted from a CSP-attested secure zone. |
 
 ---
@@ -440,7 +447,7 @@ Both editions share the same DATAMIMIC DSL and determinism contract. Scale, thro
 | **Public sector** | AdministrationOffice, EducationalInstitution, PoliceOfficer |
 | **Demographics** | Person (DE / US / VN locale packs), Address |
 
-All services are versioned and seeded; each generation emits a provenance hash suitable as evidence in audit reviews. Same deterministic API across domains: `Service().generate(seed=…, locale=…, count=…)`.
+All services are versioned and seeded; each generation emits a provenance hash suitable as evidence in audit reviews. Domain services can be used directly via constructor injection, or driven through the higher-level `generate_domain({...})` facade for seed/locale/clock/count parameterisation (currently supports `person`, `address`, `patient`, `doctor` at `v1`).
 
 ---
 
