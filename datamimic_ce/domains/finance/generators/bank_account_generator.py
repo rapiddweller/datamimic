@@ -10,15 +10,22 @@ from pathlib import Path
 
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.runtime import now_utc_naive
 from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
 class BankAccountGenerator(BaseDomainGenerator):
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        reference_now: datetime.datetime | None = None,
+    ):
         self._dataset = (dataset or "US").upper()  #  match dataset-specific CSV suffixes
         self._rng: random.Random = rng or random.Random()
+        self._reference_now: datetime.datetime = reference_now or now_utc_naive()
         self._bank_generator = BankGenerator(dataset=self._dataset, rng=self._rng)
         # Seed Faker with a derived RNG so account numbers replay under rngSeed-configured descriptors.
         self._account_number_generator = DataFakerGenerator(
@@ -48,7 +55,7 @@ class BankAccountGenerator(BaseDomainGenerator):
     def generate_created_date(self) -> datetime.datetime:
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 
-        now = datetime.datetime.now()
+        now = self._reference_now
         min_dt = (now - datetime.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = now.strftime("%Y-%m-%d %H:%M:%S")
         dt = DateTimeGenerator(
@@ -63,7 +70,7 @@ class BankAccountGenerator(BaseDomainGenerator):
     def generate_last_transaction_date(self, created_date: datetime.datetime) -> datetime.datetime:
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 
-        now = datetime.datetime.now()
+        now = self._reference_now
         min_dt = created_date.strftime("%Y-%m-%d %H:%M:%S")
         max_dt = now.strftime("%Y-%m-%d %H:%M:%S")
         dt = DateTimeGenerator(

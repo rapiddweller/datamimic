@@ -187,8 +187,10 @@ class PoliceOfficer(BaseEntity):
             The number of years of service.
         """
         # Calculate years of service based on hire date
+        from datamimic_ce.domains.domain_core.runtime import now_utc_naive
+
         hire_date = datetime.datetime.strptime(self.hire_date, "%Y-%m-%d")
-        current_date = datetime.datetime.now()
+        current_date = now_utc_naive()
         return (current_date - hire_date).days // 365
 
     @property

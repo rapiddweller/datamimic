@@ -140,7 +140,9 @@ class DoctorGenerator(BaseDomainGenerator):
 
     # Helper to pick a graduation year with anti-repetition
     def pick_graduation_year(self, age: int, *, now_year: int | None = None) -> int:
-        year_now = now_year or __import__("datetime").datetime.now().year
+        from datamimic_ce.domains.domain_core.runtime import now_utc_naive
+
+        year_now = now_year or now_utc_naive().year
         min_after = 0
         max_after = max(0, min(45, age - 25))
         years_after = self._rng.randint(min_after, max_after)

@@ -4,14 +4,21 @@ from pathlib import Path
 
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.runtime import now_utc_naive
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
 from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
 
 
 class OrderGenerator(BaseDomainGenerator):
-    def __init__(self, dataset: str = "US", rng: random.Random | None = None):
+    def __init__(
+        self,
+        dataset: str = "US",
+        rng: random.Random | None = None,
+        reference_now: dt.datetime | None = None,
+    ):
         self._dataset = dataset.upper()  #  normalize for consistent dataset file suffixes
         self._rng: random.Random = rng or random.Random()
+        self._reference_now: dt.datetime = reference_now or now_utc_naive()
         self._product_generator = ProductGenerator(dataset=dataset, rng=self._rng)
         # Share deterministic RNG to nested address fields so seeded orders replay.
         self._address_generator = AddressGenerator(
@@ -43,7 +50,7 @@ class OrderGenerator(BaseDomainGenerator):
     def generate_order_date(self) -> dt.datetime:
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 
-        now = dt.datetime.now()
+        now = self._reference_now
         min_dt = (now - dt.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = now.strftime("%Y-%m-%d %H:%M:%S")
         val = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()

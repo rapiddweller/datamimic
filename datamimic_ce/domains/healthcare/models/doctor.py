@@ -198,7 +198,9 @@ class Doctor(BaseEntity):
         Returns:
             The number of years of experience.
         """
-        current_year = datetime.datetime.now().year
+        from datamimic_ce.domains.domain_core.runtime import now_utc_naive
+
+        current_year = now_utc_naive().year
         return current_year - self.graduation_year
 
     @property

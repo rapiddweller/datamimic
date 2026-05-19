@@ -174,7 +174,9 @@ class AdministrationOfficeGenerator(BaseDomainGenerator):
 
     # Helper: founding year based on office type ranges (deterministic via rng)
     def pick_founding_year(self, office_type: str, *, now_year: int | None = None) -> int:
-        year = now_year or __import__("datetime").datetime.now().year
+        from datamimic_ce.domains.domain_core.runtime import now_utc_naive
+
+        year = now_year or now_utc_naive().year
         if "Federal" in office_type:
             min_age, max_age = 20, 200
         elif "State" in office_type:

@@ -94,8 +94,9 @@ class PoliceOfficerGenerator(BaseDomainGenerator):
     #  Centralize date generation to keep model pure and deterministic
     def generate_hire_date(self, age: int) -> str:
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
+        from datamimic_ce.domains.domain_core.runtime import now_utc_naive
 
-        now = __import__("datetime").datetime.now()
+        now = now_utc_naive()
         # Minimum age to join: 21. Years of service cannot exceed age-21 and cap at 30
         max_years = max(0, min(30, age - 21))
         years_of_service = self._rng.randint(0, max_years)

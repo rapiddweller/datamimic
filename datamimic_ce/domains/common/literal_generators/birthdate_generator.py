@@ -9,6 +9,7 @@ from random import Random
 
 from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.runtime import now_utc_naive
 
 
 class BirthdateGenerator(BaseLiteralGenerator):
@@ -33,18 +34,21 @@ class BirthdateGenerator(BaseLiteralGenerator):
         min_age: int = 1,
         max_age: int = 100,
         rng: Random | None = None,
+        reference_now: datetime | None = None,
     ) -> None:
         """
         Parameters:
             min_age (int): minimum age value (inclusively).
             max_age (int): maximum age value (inclusively).
+            rng: Optional seeded random instance for deterministic output.
+            reference_now: Optional fixed datetime to use as "today". Defaults to live UTC.
 
         Throws:
             ValueError: if min_age is higher than max_age
         """
         if min_age > max_age:
             raise ValueError("max_age must higher than or equals min_age")
-        today = datetime.now()
+        today = reference_now or now_utc_naive()
         # if today is 29-02 of leap year, to avoid error, change it to 28-02
         if today.month == 2 and today.day == 29:
             today = datetime(today.year, 2, 28)
@@ -76,14 +80,18 @@ class BirthdateGenerator(BaseLiteralGenerator):
         pass
 
     @staticmethod
-    def convert_birthdate_to_age(birth_date: datetime) -> int:
+    def convert_birthdate_to_age(birth_date: datetime, reference_now: datetime | None = None) -> int:
         """
         age are calculated from given birthday and today
         (today value depends on system time and change over time, not fixed).
 
+        Args:
+            birth_date: The birthdate to calculate age from.
+            reference_now: Optional fixed datetime to use as "today". Defaults to live UTC.
+
         Returns:
             age (int): calculated age (hour, minute, second, microsecond in datetime object equal 0 as default)
         """
-        today = datetime.now()
+        today = reference_now or now_utc_naive()
         age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
         return age

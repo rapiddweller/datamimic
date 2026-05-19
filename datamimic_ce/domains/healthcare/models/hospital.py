@@ -10,7 +10,6 @@ Hospital entity model.
 This module provides the Hospital entity model for generating realistic hospital data.
 """
 
-import datetime
 from typing import Any
 
 from datamimic_ce.domains.common.models.address import Address
@@ -122,7 +121,9 @@ class Hospital(BaseEntity):
         Returns:
             The year the hospital was founded.
         """
-        current_year = datetime.datetime.now().year
+        from datamimic_ce.domains.domain_core.runtime import now_utc_naive
+
+        current_year = now_utc_naive().year
 
         # Most hospitals were founded in the last 150 years
         return self._hospital_generator.rng.randint(current_year - 150, current_year - 5)

@@ -4,7 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import datetime
 from typing import Any, TypeVar
 
 from datamimic_ce.domains.common.models.person import Person
@@ -95,7 +94,9 @@ class MedicalDevice(BaseEntity):
             A string representing a serial number.
         """
         # Format: MFG-YYYY-XXXXXXXX
-        year = self._medical_device_generator.rng.randint(2010, datetime.datetime.now().year)
+        from datamimic_ce.domains.domain_core.runtime import now_utc_naive
+
+        year = self._medical_device_generator.rng.randint(2010, now_utc_naive().year)
         rng = self._medical_device_generator.rng
         alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         random_part = "".join(rng.choice(alphabet) for _ in range(8))
