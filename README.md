@@ -157,12 +157,16 @@ Developers and data engineers who need deterministic synthetic data generation o
 
 Most test data tools produce random output. That breaks regression tests, audit trails, and cross-team reproducibility.
 
-**DATAMIMIC's determinism contract:**
+**DATAMIMIC's determinism contract (CE scope):**
 
-- Same seed + same model = byte-identical output, every run, every machine
-- Frozen clocks + canonical hashing = stable temporal context
-- UUIDv5 namespaces = reproducible entity identifiers
-- Provenance hash on every output = re-executable lineage
+- **Facade-deterministic:** `generate_domain({...})` for the registered domains (currently `person`, `address`, `patient`, `doctor` at `v1`) produces byte-identical output for the same seed, across runs and across machines. Verified on every CI run via [`tests_ce/architecture/test_facade_determinism.py`](tests_ce/architecture/test_facade_determinism.py).
+- **Provenance hash on every facade output** = re-executable lineage. Same input → same `determinism_proof.content_hash`, always.
+- **UUIDv5 entity identifiers** = stable across runs and machines.
+- **Frozen clock parameter** = stable temporal context inside the facade.
+
+Direct service or generator use outside the facade (`PatientService().generate()`, literal generators, custom XML pipelines) is **best-effort deterministic**. Some composed paths rely on third-party libraries (e.g. `exrex`, locale-aware fakers) that may bypass the caller's seed.
+
+For contract-enforced determinism across **every** generator, service, and pipeline execution — backed by ADR-030 / ADR-031 SPOTs (`resolve_rng`, `seeded_mode` policy channel, wall-clock SPOT, child-generator spawn seam) and five architecture gates that fail CI on any drift — see the [Determinism contract — CE vs EE](#determinism-contract--ce-vs-ee) table below.
 
 ```python
 from datamimic_ce.domains.facade import generate_domain
@@ -177,8 +181,24 @@ request = {
 }
 
 response = generate_domain(request)
-# Same input → same output, always, everywhere
+# response["determinism_proof"]["content_hash"] is stable across runs.
 ```
+
+### Determinism contract — CE vs EE
+
+| Scope | CE | Enterprise Platform |
+|---|---|---|
+| **Facade** (`generate_domain` registered domains) | ✅ byte-identical, CI-gated | ✅ byte-identical |
+| **Domain services** (direct use, e.g. `CreditCardService().generate()`) | ⚠️ best-effort | ✅ byte-identical |
+| **Literal generators** (`StringGenerator`, regex-based, locale fakers) | ⚠️ best-effort | ✅ byte-identical |
+| **Custom XML pipelines** | ⚠️ best-effort | ✅ byte-identical |
+| **RNG ownership SPOT** (`resolve_rng`, explicit `seeded_mode` policy channel) | — | ✅ ADR-030 |
+| **Wall-clock SPOT** (single sanctioned `now()` callsite, drift-gated) | — | ✅ ADR-030 |
+| **Child-generator spawn seam** (no manual RNG plumbing) | — | ✅ ADR-031 |
+| **Architecture gates in CI** (RNG ownership, clock drift, DSL eval, seeded-mode propagation, dataset SPOT) | facade only | ✅ 5+ gates |
+| **Seeded vs unseeded pseudonymization** (deterministic clock anchor vs CSPRNG live-clock) | — | ✅ |
+
+CE is sufficient for reproducible CI/CD test data via the facade and for local development with deterministic synthetic generation. Regulated production deployments that require contract-enforced determinism across the full pipeline use the Enterprise Platform.
 
 ---
 
@@ -337,7 +357,7 @@ anyio.run(main)
 
 Most teams adopt CE for one of three reasons. EE is not required for any of them.
 
-**1. Reproducible test data for CI/CD pipelines.** Same seed → byte-identical output across machines. Regression tests stop being flaky because the input data is stable across runs.
+**1. Reproducible test data for CI/CD pipelines.** Pin a seed against the `generate_domain` facade and you get byte-identical output across runs and machines — gated by [`tests_ce/architecture/test_facade_determinism.py`](tests_ce/architecture/test_facade_determinism.py). Regression tests stop being flaky because the input data is stable across runs.
 
 ```python
 from datamimic_ce.domains.facade import generate_domain
