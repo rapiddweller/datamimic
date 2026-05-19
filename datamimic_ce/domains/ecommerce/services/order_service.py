@@ -4,6 +4,9 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import datetime as dt
+import random
+
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.ecommerce.generators.order_generator import OrderGenerator
 from datamimic_ce.domains.ecommerce.models.order import Order
@@ -16,10 +19,18 @@ class OrderService(BaseDomainService[Order]):
     including creating orders, filtering orders, and formatting outputs.
     """
 
-    def __init__(self, dataset: str | None = None):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        reference_now: dt.datetime | None = None,
+    ):
         #  Prefer generator to own normalization. Pass through when provided,
         # fallback to "US" for backward compatibility with generator signature.
-        super().__init__(OrderGenerator(dataset or "US"), Order)
+        super().__init__(
+            OrderGenerator(dataset or "US", rng=rng, reference_now=reference_now),
+            Order,
+        )
 
     @staticmethod
     def supported_datasets() -> set[str]:

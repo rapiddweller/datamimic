@@ -4,14 +4,16 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import random
+
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
 from datamimic_ce.domains.finance.models.bank import Bank
 
 
 class BankService(BaseDomainService[Bank]):
-    def __init__(self, dataset: str | None = None):
-        super().__init__(BankGenerator(dataset), Bank)
+    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
+        super().__init__(BankGenerator(dataset, rng=rng), Bank)
 
     @staticmethod
     def supported_datasets() -> set[str]:

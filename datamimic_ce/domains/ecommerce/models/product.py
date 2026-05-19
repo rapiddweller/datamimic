@@ -54,7 +54,9 @@ class Product(BaseEntity):
         #  use shared PrefixedIdGenerator for prefixed ID without separator
         from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
 
-        return PrefixedIdGenerator("PROD", "[A-Z0-9]{8}", separator="").generate()
+        return PrefixedIdGenerator(
+            "PROD", "[A-Z0-9]{8}", separator="", rng=getattr(self._product_generator, "_rng", None)
+        ).generate()
 
     @property
     @property_cache

@@ -10,14 +10,25 @@ Transaction Service.
 This module provides utility methods for working with Transaction entities.
 """
 
+import datetime as dt
+import random
+
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
 from datamimic_ce.domains.finance.models.transaction import Transaction
 
 
 class TransactionService(BaseDomainService[Transaction]):
-    def __init__(self, dataset: str | None = None):
-        super().__init__(TransactionGenerator(dataset=dataset), Transaction)
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        reference_now: dt.datetime | None = None,
+    ):
+        super().__init__(
+            TransactionGenerator(dataset=dataset, rng=rng, reference_now=reference_now),
+            Transaction,
+        )
 
     @staticmethod
     def supported_datasets() -> set[str]:

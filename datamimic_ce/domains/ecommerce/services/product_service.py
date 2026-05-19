@@ -4,6 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import random
+
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
 from datamimic_ce.domains.ecommerce.models.product import Product
@@ -16,11 +18,19 @@ class ProductService(BaseDomainService[Product]):
     including creating products, filtering products, and formatting outputs.
     """
 
-    def __init__(self, dataset: str | None = None, min_price: float = 0.99, max_price: float = 999.99):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        min_price: float = 0.99,
+        max_price: float = 999.99,
+        rng: random.Random | None = None,
+    ):
         #  Prefer generator to own normalization. Pass through when provided,
         # fallback to "US" for backward compatibility with generator signature.
         super().__init__(
-            ProductGenerator(dataset=dataset or "US", min_price=min_price, max_price=max_price),
+            ProductGenerator(
+                dataset=dataset or "US", min_price=min_price, max_price=max_price, rng=rng
+            ),
             Product,
         )
 

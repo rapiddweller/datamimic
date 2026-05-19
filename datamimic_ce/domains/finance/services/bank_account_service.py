@@ -4,14 +4,25 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import datetime as dt
+import random
+
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
 
 
 class BankAccountService(BaseDomainService[BankAccount]):
-    def __init__(self, dataset: str | None = None):
-        super().__init__(BankAccountGenerator(dataset=dataset), BankAccount)
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        reference_now: dt.datetime | None = None,
+    ):
+        super().__init__(
+            BankAccountGenerator(dataset=dataset, rng=rng, reference_now=reference_now),
+            BankAccount,
+        )
 
     @staticmethod
     def supported_datasets() -> set[str]:
