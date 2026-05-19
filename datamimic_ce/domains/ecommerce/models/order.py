@@ -237,7 +237,7 @@ class Order(BaseEntity):
             # Generate a coupon code if there's a discount (delegate to generator)
             prefix = self._order_generator.pick_coupon_prefix()
             #  use shared StringGenerator for code part
-            code = StringGenerator.rnd_str_from_regex("[A-Z0-9]{6}")
+            code = StringGenerator.rnd_str_from_regex("[A-Z0-9]{6}", rng=self._order_generator.rng)
             return f"{prefix}{code}"
         return None
 

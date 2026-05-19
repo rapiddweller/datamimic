@@ -84,9 +84,26 @@ class StringGenerator(BaseLiteralGenerator):
         return self.prefix + "".join(result) + self.suffix
 
     @staticmethod
-    def rnd_str_from_regex(pattern: str) -> str:
+    def rnd_str_from_regex(pattern: str, rng: random.Random | None = None) -> str:
         pattern = r"" + pattern
-        result = exrex.getone(pattern, 1)
+        if rng is not None:
+            # WHY: exrex imports `choice` and `randint` directly from the `random` module
+            # at import time, binding them as module-level names inside the exrex namespace.
+            # There is no supported API for injecting a custom RNG into exrex.getone().
+            # To make sampling deterministic we temporarily replace exrex.choice and
+            # exrex.randint with equivalents bound to the caller-supplied rng, then restore
+            # the originals.  This is safe for CE because generation runs single-threaded.
+            _orig_choice = exrex.choice
+            _orig_randint = exrex.randint
+            exrex.choice = rng.choice
+            exrex.randint = rng.randint
+            try:
+                result = exrex.getone(pattern, 1)
+            finally:
+                exrex.choice = _orig_choice
+                exrex.randint = _orig_randint
+        else:
+            result = exrex.getone(pattern, 1)
         if result is None:
             raise ValueError(f"Cannot generate string from regex pattern: {pattern}")
         return result

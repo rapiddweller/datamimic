@@ -19,6 +19,7 @@ from pathlib import Path
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.runtime import now_utc_naive
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
@@ -27,14 +28,22 @@ from datamimic_ce.utils.file_util import FileUtil
 class TransactionGenerator(BaseDomainGenerator):
     """Generator for financial transaction data."""
 
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        reference_now: dt.datetime | None = None,
+    ):
         """Initialize the transaction generator.
 
         Args:
             dataset: The dataset code to use (e.g., 'US', 'DE'). Defaults to 'US'.
+            rng: Optional seeded random instance for deterministic output.
+            reference_now: Optional fixed datetime to use as "now". Defaults to live UTC.
         """
         self._dataset = (dataset or "US").upper()  #  normalize once for consistent dataset file suffixes
         self._rng: random.Random = rng or random.Random()
+        self._reference_now: dt.datetime = reference_now or now_utc_naive()
         # Keep reference IDs deterministic when rngSeed is supplied via descriptors.
         self._reference_generator = DataFakerGenerator(
             "uuid4",
@@ -66,7 +75,7 @@ class TransactionGenerator(BaseDomainGenerator):
     def generate_transaction_date(self) -> dt.datetime:
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 
-        now = dt.datetime.now()
+        now = self._reference_now
         min_dt = (now - dt.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = now.strftime("%Y-%m-%d %H:%M:%S")
         gen = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
@@ -290,7 +299,7 @@ class TransactionGenerator(BaseDomainGenerator):
         Returns:
             A random alphanumeric reference number.
         """
-        return StringGenerator.rnd_str_from_regex("[A-Z0-9]{10,12}")
+        return StringGenerator.rnd_str_from_regex("[A-Z0-9]{10,12}", rng=self._rng)
 
     def get_currency(self) -> dict:
         """Get currency information based on the current dataset.

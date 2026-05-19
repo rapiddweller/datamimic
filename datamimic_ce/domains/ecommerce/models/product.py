@@ -152,7 +152,7 @@ class Product(BaseEntity):
         brand_code = self.brand[:3].upper()
         category_code = self.category[:3].upper()
         #  use common StringGenerator for numeric segment
-        random_code = StringGenerator.rnd_str_from_regex("[0-9]{6}")
+        random_code = StringGenerator.rnd_str_from_regex("[0-9]{6}", rng=self._product_generator.rng)
 
         return f"{brand_code}-{category_code}-{random_code}"
 
