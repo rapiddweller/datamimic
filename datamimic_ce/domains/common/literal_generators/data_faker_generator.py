@@ -5,16 +5,12 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import random
-from typing import Any, Protocol, cast
+from typing import Any
 
 from faker import Faker
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.enums.faker_enums import UnsupportedMethod
-
-
-class _SupportsRandom(Protocol):
-    random: random.Random
 
 
 class DataFakerGenerator(BaseLiteralGenerator):
@@ -29,16 +25,21 @@ class DataFakerGenerator(BaseLiteralGenerator):
         locale: str | None = "en_US",
         *args,
         rng: random.Random | None = None,
+        seed: int | None = None,
         **kwargs,
     ) -> None:
         # validation support methods
         if method in UnsupportedMethod._value2member_map_ or method.startswith("_"):
             raise ValueError(f"Faker method '{method}' is not supported")
         self._faker = Faker(locale)
-        if rng is not None:
-            # faker.Faker exposes a dynamic `random` attribute; cast to a protocol so mypy accepts the assignment.
-            faker_with_random = cast(_SupportsRandom, self._faker)
-            faker_with_random.random = rng
+        if seed is not None:
+            self._faker.seed_instance(seed)
+        elif rng is not None:
+            # Backward-compat path: anchor Faker's PRNG state to the caller's
+            # rng by pulling a 63-bit token from it. seed_instance is the
+            # official Faker API and is more robust against version upgrades
+            # than the previous faker.random = rng assignment.
+            self._faker.seed_instance(rng.getrandbits(63))
         self._method = method
         self._locale = locale
         self._args = args

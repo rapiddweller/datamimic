@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import random
 from typing import Any
 
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
@@ -11,8 +12,8 @@ from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralG
 
 
 class EANGenerator(BaseLiteralGenerator):
-    def __init__(self, locale: str | None = "en_US") -> None:
-        self._gen = DataFakerGenerator(method="ean", locale=locale)
+    def __init__(self, locale: str | None = "en_US", rng: random.Random | None = None) -> None:
+        self._gen = DataFakerGenerator(method="ean", locale=locale, rng=rng)
 
     def generate(self) -> Any:
         return self._gen.generate()

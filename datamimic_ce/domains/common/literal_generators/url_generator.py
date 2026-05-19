@@ -4,6 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import random
+
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
@@ -13,8 +15,13 @@ class UrlGenerator(BaseLiteralGenerator):
     Generate a random url
     """
 
-    def __init__(self, locale: str | None = None, schemes: list[str] | None = None):
-        self._gen = DataFakerGenerator(locale=locale, method="url", schemes=schemes)
+    def __init__(
+        self,
+        locale: str | None = None,
+        schemes: list[str] | None = None,
+        rng: random.Random | None = None,
+    ) -> None:
+        self._gen = DataFakerGenerator(locale=locale, method="url", schemes=schemes, rng=rng)
 
     def generate(self) -> str:
         url: str = self._gen.generate()
