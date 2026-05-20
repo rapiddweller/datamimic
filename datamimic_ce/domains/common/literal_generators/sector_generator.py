@@ -36,7 +36,7 @@ class SectorGenerator(BaseLiteralGenerator):
             logger.warning(f"Sector data does not exist for country code '{country_code}', using 'US' as fallback: {e}")
             file_path = dataset_path("common", "organization", "sector_US.csv", start=Path(__file__))
             self._sector_data_load = FileUtil.read_csv_to_list_of_tuples_without_header(file_path)
-        self._rng: random.Random = rng or random.Random()
+        super().__init__(rng=rng)
 
     def generate(self) -> str:
         """Generate a random sector.

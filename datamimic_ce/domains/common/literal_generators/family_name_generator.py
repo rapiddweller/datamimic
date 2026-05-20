@@ -7,19 +7,18 @@
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class FamilyNameGenerator(BaseLiteralGenerator):
+class FamilyNameGenerator(DatasetAwareDomainGenerator):
     """
     Generate random family name
     """
 
-    def __init__(self, dataset: str, rng: random.Random | None = None):
-        self._dataset = dataset or "US"
-        self._rng: random.Random = rng or random.Random()
+    def __init__(self, dataset: str | None = None, rng: random.Random | None = None, seeded_mode: bool | None = None):
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
 
         try:
             file_path = dataset_path("common", "person", f"familyName_{self._dataset}.csv", start=Path(__file__))
@@ -27,7 +26,7 @@ class FamilyNameGenerator(BaseLiteralGenerator):
             first_column = [row[0] for row in values]
             self._loaded_data = first_column, wgt
         except Exception as err:
-            raise ValueError(f"Not support dataset: {dataset}: {err}") from err
+            raise ValueError(f"Not support dataset: {self._dataset}: {err}") from err
 
     def generate(self) -> str:
         """

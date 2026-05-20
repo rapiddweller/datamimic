@@ -38,10 +38,10 @@ class GenderGenerator(BaseLiteralGenerator):
         Returns:
             GenderGenerator: new instance
         """
+        super().__init__(rng=rng)
         female_quota, male_quota, other_gender_quota = self._calculate_gender_rate(female_quota, other_gender_quota)
         self._wgt = [female_quota, male_quota, other_gender_quota]
         self._values = ["female", "male", "other"]
-        self._rng: random.Random = rng or random.Random()
 
     def generate(self) -> str:
         """

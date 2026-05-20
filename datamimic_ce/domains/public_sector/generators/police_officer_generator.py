@@ -31,14 +31,15 @@ class PoliceOfficerGenerator(BaseDomainGenerator):
         rng: random.Random | None = None,
         demographic_config: DemographicConfig | None = None,
         demographic_sampler: DemographicSampler | None = None,
+        seeded_mode: bool | None = None,
     ):
         """Initialize the police officer generator.
 
         Args:
             dataset: The dataset to use for data generation
         """
+        super().__init__(rng=rng, seeded_mode=seeded_mode)
         self._dataset = (dataset or "US").upper()  #  align dependent generators and dataset files
-        self._rng: random.Random = rng or random.Random()
         from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
 
         demo = demographic_config if demographic_config is not None else _DC()
@@ -47,6 +48,7 @@ class PoliceOfficerGenerator(BaseDomainGenerator):
             demographic_config=demo,
             demographic_sampler=demographic_sampler,
             rng=self._rng,
+            seeded_mode=self._seeded_mode,
             min_age=21,
         )
         # Hand child generators a derived RNG so seeded officers replay consistently across runs.

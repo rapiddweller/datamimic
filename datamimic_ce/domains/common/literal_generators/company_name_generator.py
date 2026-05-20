@@ -11,6 +11,7 @@ from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralG
 
 class CompanyNameGenerator(BaseLiteralGenerator):
     def __init__(self, rng: random.Random | None = None) -> None:
+        super().__init__(rng=rng)
         self._tech_1 = [
             "Auto",
             "Bit",
@@ -82,7 +83,6 @@ class CompanyNameGenerator(BaseLiteralGenerator):
             "World",
             "Zone",
         ]
-        self._rng: random.Random = rng or random.Random()
 
     def generate(self) -> str:
         return f"{self._rng.choice(self._tech_1)}{self._rng.choice(self._tech_2)}"

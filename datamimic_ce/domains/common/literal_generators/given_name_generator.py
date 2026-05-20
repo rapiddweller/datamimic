@@ -7,20 +7,25 @@
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class GivenNameGenerator(BaseLiteralGenerator):
+class GivenNameGenerator(DatasetAwareDomainGenerator):
     """
     Generate random given name
     """
 
-    def __init__(self, dataset: str | None = None, gender: str | None = None, rng: random.Random | None = None):
-        self._dataset = dataset or "US"
+    def __init__(
+        self,
+        dataset: str | None = None,
+        gender: str | None = None,
+        rng: random.Random | None = None,
+        seeded_mode: bool | None = None,
+    ):
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
         self._gender = gender
-        self._rng: random.Random = rng or random.Random()
         self._last_given: str | None = None
 
         # Prepare file path
@@ -30,10 +35,10 @@ class GivenNameGenerator(BaseLiteralGenerator):
         # Read file data
         if self._gender == "male":
             file_path = dataset_path("common", "person", file_name_male, start=Path(__file__))
-            self._dataset = self._select_records(file_path)
+            self._records = self._select_records(file_path)
         elif self._gender == "female":
             file_path = dataset_path("common", "person", file_name_female, start=Path(__file__))
-            self._dataset = self._select_records(file_path)
+            self._records = self._select_records(file_path)
         else:
             file_path_male = dataset_path("common", "person", file_name_male, start=Path(__file__))
             self._dataset_male = self._select_records(file_path_male)
@@ -62,7 +67,9 @@ class GivenNameGenerator(BaseLiteralGenerator):
         Returns:
             Optional[str]: Returns a string if successful, otherwise returns None.
         """
-        if gender == "male":
+        if self._gender in ("male", "female"):
+            selected_dataset = self._records
+        elif gender == "male":
             selected_dataset = self._dataset_male
         elif gender == "female":
             selected_dataset = self._dataset_female

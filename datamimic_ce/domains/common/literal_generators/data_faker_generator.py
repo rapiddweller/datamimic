@@ -28,6 +28,7 @@ class DataFakerGenerator(BaseLiteralGenerator):
         seed: int | None = None,
         **kwargs,
     ) -> None:
+        super().__init__(rng=rng)
         # validation support methods
         if method in UnsupportedMethod._value2member_map_ or method.startswith("_"):
             raise ValueError(f"Faker method '{method}' is not supported")

@@ -24,9 +24,9 @@ class NobilityTitleGenerator(BaseLiteralGenerator):
         noble_quota: float | None = None,
         rng: random.Random | None = None,
     ):
+        super().__init__(rng=rng)
         self._gender = gender
         self._noble_quota = noble_quota if noble_quota is not None else 0.001
-        self._rng: random.Random = rng or random.Random()
 
         allowed = {"DE", "GB", "ES", "FR", "IT", "US"}
         normalized_dataset = (dataset or "US").upper()

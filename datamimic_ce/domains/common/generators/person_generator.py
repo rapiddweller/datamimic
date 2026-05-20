@@ -22,12 +22,12 @@ from datamimic_ce.domains.common.literal_generators.given_name_generator import 
 from datamimic_ce.domains.common.literal_generators.nobility_title_generator import NobilityTitleGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class PersonGenerator(BaseDomainGenerator):
+class PersonGenerator(DatasetAwareDomainGenerator):
     """Generator for person-related attributes.
 
     Provides methods to generate person-related attributes such as
@@ -46,9 +46,9 @@ class PersonGenerator(BaseDomainGenerator):
         demographic_config: DemographicConfig | None = None,
         demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
+        seeded_mode: bool | None = None,
     ):
-        self._dataset = dataset or "US"
-        self._rng: Random = rng or Random()
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
         self._demographic_sampler = demographic_sampler
         # Normalize demographic overrides once to keep SPOT and reuse downstream.
         resolved_config = (demographic_config or DemographicConfig()).with_defaults(
@@ -86,6 +86,7 @@ class PersonGenerator(BaseDomainGenerator):
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
             rng=self._derive_rng() if rng is not None else None,
+            seeded_mode=self._seeded_mode,
         )
         self._demographic_config = resolved_config
         self._birth_min = self._demographic_config.age_min if self._demographic_config.age_min is not None else min_age
@@ -95,6 +96,7 @@ class PersonGenerator(BaseDomainGenerator):
             min_age=self._birth_min,
             max_age=self._birth_max,
             rng=self._derive_rng() if rng is not None else None,
+            seeded_mode=self._seeded_mode,
         )
         self._academic_title_generator = AcademicTitleGenerator(
             dataset=self._dataset,
@@ -108,10 +110,6 @@ class PersonGenerator(BaseDomainGenerator):
         )
         self._demographic_rng = self._derive_rng() if demographic_sampler is not None and rng is not None else Random()
 
-    def _derive_rng(self) -> Random:
-        # Spawn child RNGs from the base seed so seeded descriptors replay without entangling independent draws.
-        return Random(self._rng.randrange(2**63)) if isinstance(self._rng, Random) else Random()
-
     def reserve_demographic_sample(self) -> DemographicSample:
         if self._demographic_sampler is None:
             return DemographicSample(age=None, sex=None, conditions=frozenset())
@@ -123,7 +121,7 @@ class PersonGenerator(BaseDomainGenerator):
 
     def generate_birthdate_for_age(self, age: int) -> datetime:
         # Dedicated generator keeps demographic birthdates independent from other literal draws.
-        generator = BirthdateGenerator(min_age=age, max_age=age, rng=self._derive_rng())
+        generator = BirthdateGenerator(min_age=age, max_age=age, rng=self._derive_rng(), seeded_mode=self._seeded_mode)
         return generator.generate()
 
     @property

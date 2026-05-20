@@ -10,10 +10,10 @@ from typing import cast
 from datamimic_ce.domains.common.literal_generators.domain_generator import DomainGenerator
 from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
 from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
-from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 
 
-class EmailAddressGenerator(BaseLiteralGenerator):
+class EmailAddressGenerator(DatasetAwareDomainGenerator):
     """
     Generates Email Addresses
     Can pass in given_name and family_name to make the email follow the name structure
@@ -25,9 +25,9 @@ class EmailAddressGenerator(BaseLiteralGenerator):
         given_name: str | None = None,
         family_name: str | None = None,
         rng: random.Random | None = None,
+        seeded_mode: bool | None = None,
     ):
-        self._dataset = (dataset or "US").upper()  #  align downstream generators with ISO-based datasets
-        self._rng: random.Random = rng or random.Random()
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
 
         def _derive_rng() -> random.Random:
             # Split deterministic streams so rngSeed descriptors do not couple email joins with domain picks.

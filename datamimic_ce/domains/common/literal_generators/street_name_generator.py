@@ -26,7 +26,7 @@ class StreetNameGenerator(BaseLiteralGenerator):
 
         # Load file data
         self._values, self._wgt = FileUtil.read_wgt_file(file_path)
-        self._rng: random.Random = rng or random.Random()
+        super().__init__(rng=rng)
 
     def generate(self) -> str:
         """

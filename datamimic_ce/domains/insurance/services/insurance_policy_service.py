@@ -35,7 +35,12 @@ class InsurancePolicyService(BaseDomainService[InsurancePolicy]):
         import random as _r
 
         super().__init__(
-            InsurancePolicyGenerator(dataset=dataset, demographic_config=demographic_config, rng=rng or _r.Random()),
+            InsurancePolicyGenerator(
+                dataset=dataset,
+                demographic_config=demographic_config,
+                rng=rng or _r.Random(),
+                seeded_mode=True if rng is not None else None,
+            ),
             InsurancePolicy,
         )
 

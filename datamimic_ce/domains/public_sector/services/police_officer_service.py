@@ -39,6 +39,7 @@ class PoliceOfficerService(BaseDomainService[PoliceOfficer]):
             PoliceOfficerGenerator(
                 dataset=dataset,
                 rng=rng or _r.Random(),
+                seeded_mode=True if rng is not None else None,
                 demographic_config=demographic_config,
                 demographic_sampler=demographic_sampler,
             ),

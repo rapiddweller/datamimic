@@ -57,7 +57,7 @@ class StringGenerator(BaseLiteralGenerator):
                 f"Cannot generate unique string with length {self._max_len} "
                 f"from character set of size {len(self._char_set)}"
             )
-        self._rng: random.Random = random.Random()
+        super().__init__()
 
     def generate(self) -> str:
         try:

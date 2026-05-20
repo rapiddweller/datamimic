@@ -26,10 +26,10 @@ class PrefixedIdGenerator(BaseLiteralGenerator):
         separator: str = "-",
         rng: random.Random | None = None,
     ) -> None:
+        super().__init__(rng=rng)
         self._prefix = prefix
         self._body_pattern = body_pattern
         self._sep = separator
-        self._rng = rng
 
     def generate(self) -> str:
         body = StringGenerator.rnd_str_from_regex(self._body_pattern, rng=self._rng)
