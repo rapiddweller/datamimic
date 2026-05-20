@@ -7,6 +7,7 @@
 import random
 from pathlib import Path
 
+from datamimic_ce.domains.domain_core.base_domain_generator import normalize_dataset
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
@@ -29,7 +30,7 @@ class NobilityTitleGenerator(BaseLiteralGenerator):
         self._noble_quota = noble_quota if noble_quota is not None else 0.001
 
         allowed = {"DE", "GB", "ES", "FR", "IT", "US"}
-        normalized_dataset = (dataset or "US").upper()
+        normalized_dataset = normalize_dataset(dataset)
         if normalized_dataset not in allowed:
             normalized_dataset = "US"  #  default to US titles when dataset-specific data is unavailable
 
