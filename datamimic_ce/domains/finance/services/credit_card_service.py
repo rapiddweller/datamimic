@@ -21,7 +21,9 @@ class CreditCardService(BaseDomainService[CreditCard]):
         seeded_mode: bool | None = None,
     ):
         super().__init__(
-            CreditCardGenerator(dataset=dataset, demographic_config=demographic_config, rng=rng, seeded_mode=seeded_mode),
+            CreditCardGenerator(
+                dataset=dataset, demographic_config=demographic_config, rng=rng, seeded_mode=seeded_mode
+            ),
             CreditCard,
         )
 

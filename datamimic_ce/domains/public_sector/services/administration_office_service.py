@@ -25,7 +25,9 @@ class AdministrationOfficeService(BaseDomainService[AdministrationOffice]):
     """
 
     def __init__(self, dataset: str | None = None, rng: Random | None = None, seeded_mode: bool | None = None):
-        super().__init__(AdministrationOfficeGenerator(dataset=dataset, rng=rng, seeded_mode=seeded_mode), AdministrationOffice)
+        super().__init__(
+            AdministrationOfficeGenerator(dataset=dataset, rng=rng, seeded_mode=seeded_mode), AdministrationOffice
+        )
 
     @staticmethod
     def supported_datasets() -> set[str]:

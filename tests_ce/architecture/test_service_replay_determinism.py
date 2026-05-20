@@ -111,8 +111,15 @@ def _normalise(value, depth: int = 0, max_depth: int = 8):
 
 
 def _instantiate(cls: type, *, rng: Random):
-    """Construct the service with the rng arg the codebase accepts."""
-    return cls(rng=rng)
+    """Construct the service in explicit deterministic mode.
+
+    Determinism intent is expressed via ``seeded_mode=True`` — the policy
+    channel — alongside the seeded ``rng`` transport. This is what anchors
+    the reference clock on clock-anchored generators, so date fields
+    replay byte-identically rather than relying on two constructions
+    landing in the same wall-clock second.
+    """
+    return cls(rng=rng, seeded_mode=True)
 
 
 @pytest.mark.parametrize("service_cls", SERVICES_WITHOUT_DATASET, ids=lambda c: c.__name__)
