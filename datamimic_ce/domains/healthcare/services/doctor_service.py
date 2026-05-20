@@ -32,15 +32,15 @@ class DoctorService(BaseDomainService[Doctor]):
         demographic_config: DemographicConfig | None = None,
         demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
+        seeded_mode: bool | None = None,
     ) -> None:
-        import random as _r
-
         super().__init__(
             DoctorGenerator(
                 dataset=dataset,
-                rng=rng or _r.Random(),
+                rng=rng,
                 demographic_config=demographic_config,
                 demographic_sampler=demographic_sampler,
+                seeded_mode=seeded_mode,
             ),
             Doctor,
         )

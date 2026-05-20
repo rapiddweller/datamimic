@@ -24,12 +24,13 @@ class ProductService(BaseDomainService[Product]):
         min_price: float = 0.99,
         max_price: float = 999.99,
         rng: random.Random | None = None,
+        seeded_mode: bool | None = None,
     ):
         #  Prefer generator to own normalization. Pass through when provided,
         # fallback to "US" for backward compatibility with generator signature.
         super().__init__(
             ProductGenerator(
-                dataset=dataset or "US", min_price=min_price, max_price=max_price, rng=rng
+                dataset=dataset or "US", min_price=min_price, max_price=max_price, rng=rng, seeded_mode=seeded_mode
             ),
             Product,
         )

@@ -26,20 +26,22 @@ class InsurancePolicyService(BaseDomainService[InsurancePolicy]):
         dataset: str | None = None,
         demographic_config: DemographicConfig | None = None,
         rng: Random | None = None,
+        seeded_mode: bool | None = None,
     ):
         """Initialize the insurance policy service.
 
         Args:
             dataset: The country code (e.g., "US", "DE") to use for data generation.
+            demographic_config: Optional demographic configuration.
+            rng: Optional seeded random instance for deterministic output.
+            seeded_mode: Whether to operate in seeded/deterministic mode.
         """
-        import random as _r
-
         super().__init__(
             InsurancePolicyGenerator(
                 dataset=dataset,
                 demographic_config=demographic_config,
-                rng=rng or _r.Random(),
-                seeded_mode=True if rng is not None else None,
+                rng=rng,
+                seeded_mode=seeded_mode,
             ),
             InsurancePolicy,
         )

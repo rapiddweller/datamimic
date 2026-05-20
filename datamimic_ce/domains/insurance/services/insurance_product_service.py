@@ -20,13 +20,15 @@ from datamimic_ce.domains.insurance.models.insurance_product import InsurancePro
 class InsuranceProductService(BaseDomainService[InsuranceProduct]):
     """Service for generating and managing insurance products."""
 
-    def __init__(self, dataset: str | None = None, rng: Random | None = None):
+    def __init__(self, dataset: str | None = None, rng: Random | None = None, seeded_mode: bool | None = None):
         """Initialize the insurance product service.
 
         Args:
             dataset: The country code (e.g., "US", "DE") to use for data generation.
+            rng: Optional seeded random instance for deterministic output.
+            seeded_mode: Whether to operate in seeded/deterministic mode.
         """
-        super().__init__(InsuranceProductGenerator(dataset=dataset, rng=rng), InsuranceProduct)
+        super().__init__(InsuranceProductGenerator(dataset=dataset, rng=rng, seeded_mode=seeded_mode), InsuranceProduct)
 
     @staticmethod
     def supported_datasets() -> set[str]:

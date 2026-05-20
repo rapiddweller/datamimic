@@ -32,6 +32,7 @@ class PatientService(BaseDomainService[Patient]):
         demographic_config: DemographicConfig | None = None,
         demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
+        seeded_mode: bool | None = None,
     ):
         # Thread demographic and RNG overrides through the service layer.
         super().__init__(
@@ -40,6 +41,7 @@ class PatientService(BaseDomainService[Patient]):
                 demographic_config=demographic_config,
                 demographic_sampler=demographic_sampler,
                 rng=rng,
+                seeded_mode=seeded_mode,
             ),
             Patient,
         )

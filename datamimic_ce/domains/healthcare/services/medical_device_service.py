@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import datetime as dt
 from random import Random
 
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
@@ -24,16 +25,26 @@ class MedicalDeviceService(BaseDomainService[MedicalDevice]):
         dataset: str | None = None,
         demographic_config: DemographicConfig | None = None,
         rng: Random | None = None,
+        reference_now: dt.datetime | None = None,
+        seeded_mode: bool | None = None,
     ):
         """Initialize the MedicalDeviceService.
 
         Args:
             dataset: The dataset to use for generating medical device data.
+            demographic_config: Optional demographic configuration.
+            rng: Optional seeded random instance for deterministic output.
+            reference_now: Optional fixed datetime to use as "now".
+            seeded_mode: Whether to operate in seeded/deterministic mode.
         """
-        import random as _r
-
         super().__init__(
-            MedicalDeviceGenerator(dataset=dataset, demographic_config=demographic_config, rng=rng or _r.Random()),
+            MedicalDeviceGenerator(
+                dataset=dataset,
+                demographic_config=demographic_config,
+                rng=rng,
+                reference_now=reference_now,
+                seeded_mode=seeded_mode,
+            ),
             MedicalDevice,
         )
 

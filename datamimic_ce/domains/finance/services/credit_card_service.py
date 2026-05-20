@@ -18,11 +18,10 @@ class CreditCardService(BaseDomainService[CreditCard]):
         dataset: str | None = None,
         demographic_config: DemographicConfig | None = None,
         rng: Random | None = None,
+        seeded_mode: bool | None = None,
     ):
-        import random as _r
-
         super().__init__(
-            CreditCardGenerator(dataset=dataset, demographic_config=demographic_config, rng=rng or _r.Random()),
+            CreditCardGenerator(dataset=dataset, demographic_config=demographic_config, rng=rng, seeded_mode=seeded_mode),
             CreditCard,
         )
 

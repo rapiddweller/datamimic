@@ -24,11 +24,12 @@ class OrderService(BaseDomainService[Order]):
         dataset: str | None = None,
         rng: random.Random | None = None,
         reference_now: dt.datetime | None = None,
+        seeded_mode: bool | None = None,
     ):
         #  Prefer generator to own normalization. Pass through when provided,
         # fallback to "US" for backward compatibility with generator signature.
         super().__init__(
-            OrderGenerator(dataset or "US", rng=rng, reference_now=reference_now),
+            OrderGenerator(dataset or "US", rng=rng, reference_now=reference_now, seeded_mode=seeded_mode),
             Order,
         )
 

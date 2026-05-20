@@ -24,8 +24,8 @@ class HospitalService(BaseDomainService[Hospital]):
     and retrieving hospitals with specific characteristics.
     """
 
-    def __init__(self, dataset: str | None = None, rng: Random | None = None):
-        super().__init__(HospitalGenerator(dataset=dataset, rng=rng), Hospital)
+    def __init__(self, dataset: str | None = None, rng: Random | None = None, seeded_mode: bool | None = None):
+        super().__init__(HospitalGenerator(dataset=dataset, rng=rng, seeded_mode=seeded_mode), Hospital)
 
     @staticmethod
     def supported_datasets() -> set[str]:
