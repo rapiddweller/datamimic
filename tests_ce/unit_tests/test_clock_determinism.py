@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from datamimic_ce.domains.domain_core.runtime import DETERMINISTIC_ANCHOR
+from datamimic_ce.domains.domain_core.runtime.clock import DETERMINISTIC_ANCHOR
 
 
 # ---------------------------------------------------------------------------
