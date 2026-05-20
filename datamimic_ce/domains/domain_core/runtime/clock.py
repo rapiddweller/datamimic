@@ -11,7 +11,7 @@ UTC, anchored once at construction time.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Final
 
 DETERMINISTIC_ANCHOR: Final[datetime] = datetime(2025, 1, 1, 12, 0, 0)
@@ -20,7 +20,7 @@ DETERMINISTIC_ANCHOR: Final[datetime] = datetime(2025, 1, 1, 12, 0, 0)
 
 def now_utc_naive() -> datetime:
     """The single allowed wall-clock read in CE production code."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def resolve_clock(*, deterministic: bool) -> datetime:

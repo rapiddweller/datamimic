@@ -35,7 +35,6 @@ import random
 from datetime import datetime
 
 from datamimic_ce.domains.domain_core.runtime import (
-    now_utc_naive,
     resolve_clock,
     resolve_rng,
 )
