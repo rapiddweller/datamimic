@@ -5,6 +5,8 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+import random
+
 from datamimic_ce.domains.common.generators.country_generator import CountryGenerator
 from datamimic_ce.domains.common.models.country import Country
 from datamimic_ce.domains.domain_core import BaseDomainService
@@ -16,8 +18,13 @@ class CountryService(BaseDomainService[Country]):
     This class provides methods for creating, retrieving, and managing country data.
     """
 
-    def __init__(self, dataset: str | None = None):
-        super().__init__(CountryGenerator(dataset), Country)
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        seeded_mode: bool | None = None,
+    ):
+        super().__init__(CountryGenerator(dataset=dataset, rng=rng, seeded_mode=seeded_mode), Country)
 
     @staticmethod
     def supported_datasets() -> set[str]:

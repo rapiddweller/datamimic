@@ -6,6 +6,8 @@
 
 # from typing import List, Dict, Any, Optional
 
+import random
+
 from datamimic_ce.domains.common.generators.company_generator import CompanyGenerator
 from datamimic_ce.domains.common.models.company import Company
 from datamimic_ce.domains.domain_core import BaseDomainService
@@ -17,8 +19,13 @@ class CompanyService(BaseDomainService[Company]):
     This class provides methods for creating, retrieving, and managing company data.
     """
 
-    def __init__(self, dataset: str | None = None):
-        super().__init__(CompanyGenerator(dataset=dataset), Company)
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        seeded_mode: bool | None = None,
+    ):
+        super().__init__(CompanyGenerator(dataset=dataset, rng=rng, seeded_mode=seeded_mode), Company)
 
     @staticmethod
     def supported_datasets() -> set[str]:

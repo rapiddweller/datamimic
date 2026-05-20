@@ -22,6 +22,12 @@ from random import Random
 
 import pytest
 
+from datamimic_ce.domains.common.services.address_service import AddressService
+from datamimic_ce.domains.common.services.city_service import CityService
+from datamimic_ce.domains.common.services.company_service import CompanyService
+from datamimic_ce.domains.common.services.country_service import CountryService
+from datamimic_ce.domains.common.services.person_service import PersonService
+
 # All CE domain services that wrap a single entity. Listed explicitly so a
 # missing service is a visible PR change, not a discovery side-effect.
 from datamimic_ce.domains.ecommerce.services import OrderService, ProductService
@@ -71,6 +77,12 @@ SERVICES_WITHOUT_DATASET: list[type] = [
     AdministrationOfficeService,
     EducationalInstitutionService,
     PoliceOfficerService,
+    # common services — entity-producing wrappers, same contract
+    AddressService,
+    CityService,
+    CompanyService,
+    CountryService,
+    PersonService,
 ]
 
 

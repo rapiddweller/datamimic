@@ -4,6 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import random
+
 from datamimic_ce.domains.common.generators.city_generator import CityGenerator
 from datamimic_ce.domains.common.models.city import City
 from datamimic_ce.domains.domain_core import BaseDomainService
@@ -15,8 +17,13 @@ class CityService(BaseDomainService[City]):
     This class provides methods for creating, retrieving, and managing city data.
     """
 
-    def __init__(self, dataset: str = "US"):
-        super().__init__(CityGenerator(dataset), City)
+    def __init__(
+        self,
+        dataset: str = "US",
+        rng: random.Random | None = None,
+        seeded_mode: bool | None = None,
+    ):
+        super().__init__(CityGenerator(dataset=dataset, rng=rng, seeded_mode=seeded_mode), City)
 
     @staticmethod
     def supported_datasets() -> set[str]:

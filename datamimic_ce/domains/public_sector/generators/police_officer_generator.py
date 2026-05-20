@@ -7,9 +7,8 @@ if TYPE_CHECKING:
     from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
     from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 
-from pathlib import Path
-
 import datetime
+from pathlib import Path
 
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator

@@ -1,3 +1,5 @@
+import random
+
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.domain_core import BaseDomainService
@@ -9,8 +11,13 @@ class AddressService(BaseDomainService[Address]):
     This class provides methods for creating, retrieving, and managing address data.
     """
 
-    def __init__(self, dataset: str | None = None):
-        super().__init__(AddressGenerator(dataset), Address)
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        seeded_mode: bool | None = None,
+    ):
+        super().__init__(AddressGenerator(dataset=dataset, rng=rng, seeded_mode=seeded_mode), Address)
 
     @staticmethod
     def supported_datasets() -> set[str]:

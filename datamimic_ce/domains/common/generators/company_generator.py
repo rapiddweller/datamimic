@@ -32,11 +32,17 @@ class CompanyGenerator(DatasetAwareDomainGenerator):
         seeded_mode: bool | None = None,
     ):
         super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
-        self._company_name_generator = CompanyNameGenerator()
-        self._email_address_generator = EmailAddressGenerator(dataset=self._dataset)
-        self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset)
-        self._address_generator = AddressGenerator(dataset=self._dataset)
-        self._sector_generator = SectorGenerator(dataset=self._dataset)
+        self._company_name_generator = CompanyNameGenerator(rng=self._rng)
+        self._email_address_generator = EmailAddressGenerator(
+            dataset=self._dataset, rng=self._rng, seeded_mode=self._seeded_mode
+        )
+        self._phone_number_generator = PhoneNumberGenerator(
+            dataset=self._dataset, rng=self._rng, seeded_mode=self._seeded_mode
+        )
+        self._address_generator = AddressGenerator(
+            dataset=self._dataset, rng=self._rng, seeded_mode=self._seeded_mode
+        )
+        self._sector_generator = SectorGenerator(dataset=self._dataset, rng=self._rng)
         self._legal_dataset = self._dataset
         self._last_legal_form: str | None = None
 
