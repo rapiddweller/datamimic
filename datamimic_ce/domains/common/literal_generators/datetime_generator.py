@@ -337,7 +337,7 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
                 self._month_choices, self._month_choice_weights = self._build_month_choice_distribution()
             return
 
-        # Handle datetime.now() — use the anchored reference clock for determinism
+        # current-mode resolves to the anchored clock, not live now, for determinism
         self._result = self._reference_now
         self._mode = self._CURRENT_DATETIME_MODE
 

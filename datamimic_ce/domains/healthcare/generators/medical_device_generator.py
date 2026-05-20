@@ -177,7 +177,6 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
             days_forward = self._rng.randint(5, 60)
             current_date += datetime.timedelta(days=days_forward)
 
-            # Skip if we've gone past now
             if current_date > now:
                 break
 
@@ -276,7 +275,6 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
             days_forward = self._rng.randint(30, 180)
             current_date += datetime.timedelta(days=days_forward)
 
-            # Skip if we've gone past now
             if current_date > now:
                 break
 

@@ -36,10 +36,8 @@ class DataFakerGenerator(BaseLiteralGenerator):
         if seed is not None:
             self._faker.seed_instance(seed)
         elif rng is not None:
-            # Backward-compat path: anchor Faker's PRNG state to the caller's
-            # rng by pulling a 63-bit token from it. seed_instance is the
-            # official Faker API and is more robust against version upgrades
-            # than the previous faker.random = rng assignment.
+            # seed_instance is Faker's official seeding API; anchor it to a token
+            # drawn from the caller's rng so output replays under the shared seed.
             self._faker.seed_instance(rng.getrandbits(63))
         self._method = method
         self._locale = locale

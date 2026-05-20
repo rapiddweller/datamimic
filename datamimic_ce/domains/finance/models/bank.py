@@ -61,12 +61,9 @@ class Bank(BaseEntity):
         Returns:
             A formatted phone number string.
         """
-        # WHY: pass the bank generator's seeded rng down to PhoneNumberGenerator so
-        # the customer-service phone replays under the same determinism contract as
-        # bic/bin/swift_code — without it the phone falls back to wall-clock-seeded
-        # Random and breaks Service replay.
-        ds = getattr(self._bank_generator, "dataset", "US")
-        return PhoneNumberGenerator(dataset=ds, rng=self._bank_generator.rng).generate()
+        return PhoneNumberGenerator(
+            dataset=self._bank_generator.dataset, rng=self._bank_generator.rng
+        ).generate()
 
     def to_dict(self) -> dict[str, Any]:
         return {
