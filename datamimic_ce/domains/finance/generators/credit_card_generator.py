@@ -15,31 +15,38 @@ from pathlib import Path
 
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class CreditCardGenerator(BaseDomainGenerator):
+class CreditCardGenerator(DatasetAwareDomainGenerator):
     def __init__(
         self,
         dataset: str | None = None,
         rng: random.Random | None = None,
         demographic_config: DemographicConfig | None = None,
+        seeded_mode: bool | None = None,
     ):
-        self._dataset = dataset or "US"
-        self._rng: random.Random = rng or random.Random()
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
         #  ensure person data (names/emails/phones) follow the selected dataset (DE/US)
         if demographic_config is None:
             from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
 
             demographic_config = _DC()
         self._person_generator = PersonGenerator(
-            dataset=self._dataset, rng=self._rng, demographic_config=demographic_config
+            dataset=self._dataset,
+            rng=self._rng,
+            seeded_mode=self._seeded_mode,
+            demographic_config=demographic_config,
         )
         self._date_generator = DateTimeGenerator(random=True, rng=self._derive_rng())
-        self._bank_account_generator = BankAccountGenerator(dataset=self._dataset, rng=self._rng)
+        self._bank_account_generator = BankAccountGenerator(
+            dataset=self._dataset,
+            rng=self._rng,
+            seeded_mode=self._seeded_mode,
+        )
         self._card_types_cache: list[tuple] | None = None
         self._card_specs: dict | None = None
 
@@ -54,18 +61,6 @@ class CreditCardGenerator(BaseDomainGenerator):
     @property
     def bank_account_generator(self) -> BankAccountGenerator:
         return self._bank_account_generator
-
-    @property
-    def rng(self) -> random.Random:
-        return self._rng
-
-    def _derive_rng(self) -> random.Random:
-        # Provide deterministic child RNGs so seeded credit-card descriptors replay consistently.
-        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
-
-    @property
-    def dataset(self) -> str:
-        return self._dataset
 
     def generate_card_type(self) -> str:
         #  keep API returning type, but use dataset-specific specs

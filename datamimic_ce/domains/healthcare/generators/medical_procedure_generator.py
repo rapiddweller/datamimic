@@ -17,16 +17,19 @@ from __future__ import annotations
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class MedicalProcedureGenerator(BaseDomainGenerator):
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
-        #  normalize once so we consistently resolve _{CC}.csv files
-        self._dataset = (dataset or "US").upper()
-        self._rng: random.Random = rng or random.Random()
+class MedicalProcedureGenerator(DatasetAwareDomainGenerator):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        seeded_mode: bool | None = None,
+    ):
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
         self._last_specialty: str | None = None
         self._last_recovery_time: int | None = None
 
@@ -157,7 +160,3 @@ class MedicalProcedureGenerator(BaseDomainGenerator):
             val = self._rng.choice(candidates)
         self._last_recovery_time = val
         return val
-
-    @property
-    def rng(self) -> random.Random:
-        return self._rng

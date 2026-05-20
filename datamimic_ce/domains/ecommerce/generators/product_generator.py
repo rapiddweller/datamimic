@@ -13,14 +13,14 @@ This module provides a generator for e-commerce product data.
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
 )
 
 
-class ProductGenerator(BaseDomainGenerator):
+class ProductGenerator(DatasetAwareDomainGenerator):
     """Generator for e-commerce product data.
 
     This class provides methods to generate individual products or batches
@@ -28,20 +28,16 @@ class ProductGenerator(BaseDomainGenerator):
     """
 
     def __init__(
-        self, dataset: str = "US", min_price: float = 0.99, max_price: float = 999.99, rng: random.Random | None = None
+        self,
+        dataset: str = "US",
+        min_price: float = 0.99,
+        max_price: float = 999.99,
+        rng: random.Random | None = None,
+        seeded_mode: bool | None = None,
     ):
-        self._dataset = dataset.upper()  #  make dataset suffix case-consistent for CSV resolution
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
         self._min_price = min(min_price, max_price)
         self._max_price = max(min_price, max_price)
-        self._rng: random.Random = rng or random.Random()
-
-    @property
-    def dataset(self) -> str:
-        return self._dataset
-
-    @property
-    def rng(self) -> random.Random:
-        return self._rng
 
     # Helper: pick rating bucket and apply half-star tweak
     def pick_rating(self, *, start: Path) -> float:

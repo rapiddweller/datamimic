@@ -18,7 +18,7 @@ from datamimic_ce.domains.common.generators.address_generator import AddressGene
 from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
 from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
@@ -29,21 +29,28 @@ from datamimic_ce.utils.file_util import FileUtil
 T = TypeVar("T")  # Define a type variable for generic typing
 
 
-class AdministrationOfficeGenerator(BaseDomainGenerator):
+class AdministrationOfficeGenerator(DatasetAwareDomainGenerator):
     """Generator for administration office data."""
 
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        seeded_mode: bool | None = None,
+    ):
         """Initialize the administration office generator.
 
         Args:
             dataset: The country code to use for data generation
+            rng: Optional seeded random instance for deterministic output.
+            seeded_mode: Whether to operate in seeded/deterministic mode.
         """
-        self._dataset = (dataset or "US").upper()  #  propagate normalized dataset to dependent generators
-        self._rng = rng or random.Random()  #  deterministic RNG injection point
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
         # Derive child RNGs so seeded administration offices replay deterministic nested attributes.
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
             rng=self._derive_rng() if rng is not None else None,
+            seeded_mode=self._seeded_mode,
         )
         self._phone_number_generator = PhoneNumberGenerator(
             dataset=self._dataset,
@@ -81,18 +88,6 @@ class AdministrationOfficeGenerator(BaseDomainGenerator):
     @property
     def given_name_generator(self) -> GivenNameGenerator:
         return self._given_name_generator
-
-    @property
-    def dataset(self) -> str:
-        return self._dataset
-
-    @property
-    def rng(self) -> random.Random:
-        return self._rng
-
-    def _derive_rng(self) -> random.Random:
-        # Spawn deterministic child RNGs so seeded offices replay consistently without sharing streams.
-        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
 
     # Helper: pick office type from dataset using weighted values with anti-repeat
     def pick_office_type(self) -> str:

@@ -18,14 +18,13 @@ from pathlib import Path
 
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
-from datamimic_ce.domains.domain_core.runtime import now_utc_naive
+from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class TransactionGenerator(BaseDomainGenerator):
+class TransactionGenerator(ClockAnchoredDomainGenerator):
     """Generator for financial transaction data."""
 
     def __init__(
@@ -33,6 +32,7 @@ class TransactionGenerator(BaseDomainGenerator):
         dataset: str | None = None,
         rng: random.Random | None = None,
         reference_now: dt.datetime | None = None,
+        seeded_mode: bool | None = None,
     ):
         """Initialize the transaction generator.
 
@@ -40,10 +40,9 @@ class TransactionGenerator(BaseDomainGenerator):
             dataset: The dataset code to use (e.g., 'US', 'DE'). Defaults to 'US'.
             rng: Optional seeded random instance for deterministic output.
             reference_now: Optional fixed datetime to use as "now". Defaults to live UTC.
+            seeded_mode: Whether to operate in seeded/deterministic mode.
         """
-        self._dataset = (dataset or "US").upper()  #  normalize once for consistent dataset file suffixes
-        self._rng: random.Random = rng or random.Random()
-        self._reference_now: dt.datetime = reference_now or now_utc_naive()
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
         # Keep reference IDs deterministic when rngSeed is supplied via descriptors.
         self._reference_generator = DataFakerGenerator(
             "uuid4",
@@ -53,23 +52,6 @@ class TransactionGenerator(BaseDomainGenerator):
         self._transaction_data: dict[str, tuple[dict[str, int], list[tuple[object, ...]]]] = {}
         self._currency_data: dict[str, tuple[dict[str, int], list[tuple[object, ...]]]] = {}
         self._amount_data: dict[str, tuple[dict[str, int], list[tuple[object, ...]]]] = {}
-
-    @property
-    def dataset(self) -> str:
-        """Get the current dataset code.
-
-        Returns:
-            The dataset code.
-        """
-        return self._dataset
-
-    @property
-    def rng(self) -> random.Random:
-        return self._rng
-
-    def _derive_rng(self) -> random.Random:
-        # Spawn deterministic child RNGs so seeded transaction batches replay without cross-coupling randomness.
-        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
 
     #  Centralize date sampling to keep model pure and determinism consistent
     def generate_transaction_date(self) -> dt.datetime:

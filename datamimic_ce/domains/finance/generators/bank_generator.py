@@ -6,22 +6,21 @@
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class BankGenerator(BaseDomainGenerator):
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
-        self._dataset = (dataset or "US").upper()  #  bank datasets live in suffixed CSV files
-        self._rng: random.Random = rng or random.Random()
+class BankGenerator(DatasetAwareDomainGenerator):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        seeded_mode: bool | None = None,
+    ):
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
         # Track last pick to avoid immediate repetition in single process
         self._last_bank_name: str | None = None
-
-    @property
-    def dataset(self) -> str:
-        #  expose dataset so downstream models (e.g., Bank) can format data consistently
-        return self._dataset
 
     def generate_bank_data(self) -> dict:
         #  centralized dataset path

@@ -12,44 +12,37 @@ from datamimic_ce.domains.common.generators.country_generator import CountryGene
 from datamimic_ce.domains.common.literal_generators.company_name_generator import CompanyNameGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.common.literal_generators.street_name_generator import StreetNameGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 
 
-class AddressGenerator(BaseDomainGenerator):
+class AddressGenerator(DatasetAwareDomainGenerator):
     """Generator for address data.
 
     This class generates random address data using the data from datasets.
     """
 
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        seeded_mode: bool | None = None,
+    ):
         """Initialize the AddressGenerator.
 
         Args:
             dataset: The dataset to use for generating addresses.
+            rng: Optional seeded random instance for deterministic output.
+            seeded_mode: Whether to operate in seeded/deterministic mode.
         """
-        self._dataset = (dataset or "US").upper()  #  keep dataset uppercase so dependent generators reuse data files
-        self._rng: random.Random = rng or random.Random()
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
 
         # Init sub-generators
-        self._city_generator = CityGenerator(dataset=self._dataset, rng=self._rng)
-        self._country_generator = CountryGenerator(dataset=self._dataset, rng=self._rng)
+        self._city_generator = CityGenerator(dataset=self._dataset, rng=self._rng, seeded_mode=self._seeded_mode)
+        self._country_generator = CountryGenerator(dataset=self._dataset, rng=self._rng, seeded_mode=self._seeded_mode)
         self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset, rng=self._rng)
         self._company_name_generator = CompanyNameGenerator(rng=self._rng)
         # Lazy initialization of street name generator
         self._street_name_generator = StreetNameGenerator(dataset=self._dataset, rng=self._rng)
-
-    @property
-    def dataset(self) -> str:
-        """Get the dataset.
-
-        Returns:
-            The dataset.
-        """
-        return self._dataset
-
-    @property
-    def rng(self) -> random.Random:
-        return self._rng
 
     @property
     def city_generator(self) -> CityGenerator:

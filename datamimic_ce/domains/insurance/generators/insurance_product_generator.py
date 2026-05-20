@@ -2,36 +2,38 @@ import random
 from pathlib import Path
 from typing import Any
 
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.insurance.generators.insurance_coverage_generator import InsuranceCoverageGenerator
 from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
 
 
-class InsuranceProductGenerator(BaseDomainGenerator):
+class InsuranceProductGenerator(DatasetAwareDomainGenerator):
     """Generator for insurance product data."""
 
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        seeded_mode: bool | None = None,
+    ):
         """Initialize the insurance product generator.
 
         Args:
             dataset: The country code to use for data generation
+            rng: Optional seeded random instance for deterministic output.
+            seeded_mode: Whether to operate in seeded/deterministic mode.
         """
-        self._dataset = dataset or "US"
-        self._rng: random.Random = rng or random.Random()
-        self._insurance_coverage_generator = InsuranceCoverageGenerator(dataset=dataset, rng=self._rng)
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        self._insurance_coverage_generator = InsuranceCoverageGenerator(
+            dataset=self._dataset,
+            rng=self._rng,
+            seeded_mode=self._seeded_mode,
+        )
         self._last_product_type: str | None = None
 
     @property
     def insurance_coverage_generator(self) -> InsuranceCoverageGenerator:
         return self._insurance_coverage_generator
-
-    @property
-    def dataset(self) -> str:
-        return self._dataset
-
-    @property
-    def rng(self) -> random.Random:
-        return self._rng
 
     def get_random_product(self) -> dict[str, Any]:
         #  centralized weighted loading via loaders with base filename only

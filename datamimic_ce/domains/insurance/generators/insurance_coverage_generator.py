@@ -2,22 +2,28 @@ import random
 from pathlib import Path
 from typing import Any
 
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class InsuranceCoverageGenerator(BaseDomainGenerator):
+class InsuranceCoverageGenerator(DatasetAwareDomainGenerator):
     """Generator for insurance coverage data."""
 
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        seeded_mode: bool | None = None,
+    ):
         """Initialize the insurance coverage generator.
 
         Args:
             dataset: The country code to use for data generation
+            rng: Optional seeded random instance for deterministic output.
+            seeded_mode: Whether to operate in seeded/deterministic mode.
         """
-        self._dataset = dataset or "US"
-        self._rng: random.Random = rng or random.Random()
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
         self._last_coverage_code: str | None = None
         self._last_product_code: str | None = None
         self._last_min_coverage: str | None = None

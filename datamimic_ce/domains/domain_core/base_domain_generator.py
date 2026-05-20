@@ -79,6 +79,15 @@ class BaseDomainGenerator:
     def seeded_mode(self) -> bool:
         return self._seeded_mode
 
+    def _derive_rng(self) -> random.Random:
+        """Spawn a deterministic child RNG from the current RNG state.
+
+        Use when constructing nested generators that need an independent but
+        reproducible stream.  Call sites are unchanged; subclass copies of
+        this method should be deleted.
+        """
+        return random.Random(self._rng.randrange(2**63))
+
 
 class DatasetAwareDomainGenerator(BaseDomainGenerator):
     """Domain generator with a normalised dataset code.

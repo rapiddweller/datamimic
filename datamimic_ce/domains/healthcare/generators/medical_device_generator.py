@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
@@ -14,48 +14,40 @@ if TYPE_CHECKING:
 import datetime
 import random
 from pathlib import Path
-from typing import Any
 
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
-from datamimic_ce.domains.domain_core.runtime import now_utc_naive
+from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class MedicalDeviceGenerator(BaseDomainGenerator):
+class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
     def __init__(
         self,
         dataset: str | None = None,
         rng: random.Random | None = None,
         demographic_config: DemographicConfig | None = None,
         reference_now: datetime.datetime | None = None,
+        seeded_mode: bool | None = None,
     ):
-        self._dataset = (dataset or "US").upper()  #  normalize once so we always map to _{dataset}.csv inputs
-        self._rng: random.Random = rng or random.Random()
-        self._reference_now: datetime.datetime = reference_now or now_utc_naive()
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
         #  thread demographic constraints to person details used in usage logs/technicians
         if demographic_config is None:
             from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
 
             demographic_config = _DC()
         self._person_generator = PersonGenerator(
-            dataset=self._dataset, demographic_config=demographic_config, rng=self._rng
+            dataset=self._dataset,
+            demographic_config=demographic_config,
+            rng=self._rng,
+            seeded_mode=self._seeded_mode,
         )
         self._last_manufacturer: str | None = None
 
     @property
-    def dataset(self) -> str:
-        return self._dataset
-
-    @property
     def person_generator(self) -> PersonGenerator:
         return self._person_generator
-
-    @property
-    def rng(self) -> random.Random:
-        return self._rng
 
     # Date helpers to keep model pure and deterministic
     def generate_manufacture_date(self) -> str:
@@ -390,7 +382,3 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         if self._rng.random() < 0.1:
             return ""
         return self._rng.choices(values, weights=w, k=1)[0]
-
-    def _derive_rng(self) -> random.Random:
-        # Fork deterministic child RNGs so seeded medical device descriptors replay without cross-coupling draws.
-        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()

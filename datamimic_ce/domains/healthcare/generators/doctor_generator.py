@@ -22,13 +22,13 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class DoctorGenerator(BaseDomainGenerator):
+class DoctorGenerator(DatasetAwareDomainGenerator):
     """Generate doctor data."""
 
     def __init__(
@@ -37,10 +37,9 @@ class DoctorGenerator(BaseDomainGenerator):
         rng: random.Random | None = None,
         demographic_config: DemographicConfig | None = None,
         demographic_sampler: DemographicSampler | None = None,
+        seeded_mode: bool | None = None,
     ):
-        #  normalize dataset to ISO-3166 alpha-2 and keep lookup consistent
-        self._dataset = (dataset or "US").upper()
-        self._rng: random.Random = rng or random.Random()
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
         from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
 
         demo = demographic_config if demographic_config is not None else _DC()
@@ -49,9 +48,14 @@ class DoctorGenerator(BaseDomainGenerator):
             demographic_config=demo,
             demographic_sampler=demographic_sampler,
             rng=self._rng,
+            seeded_mode=self._seeded_mode,
             min_age=25,
         )
-        self._hospital_generator = HospitalGenerator(dataset=self._dataset, rng=self._rng)
+        self._hospital_generator = HospitalGenerator(
+            dataset=self._dataset,
+            rng=self._rng,
+            seeded_mode=self._seeded_mode,
+        )
         self._last_specialty: str | None = None
         self._last_med_school: str | None = None
         self._last_grad_year: int | None = None
@@ -63,10 +67,6 @@ class DoctorGenerator(BaseDomainGenerator):
     @property
     def hospital_generator(self) -> HospitalGenerator:
         return self._hospital_generator
-
-    @property
-    def rng(self) -> random.Random:
-        return self._rng
 
     def generate_specialty(self) -> str:
         """Generate a medical specialty.
