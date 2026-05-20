@@ -54,7 +54,7 @@ class Order(BaseEntity):
         from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
 
         return PrefixedIdGenerator(
-            "ORD", "[A-Z0-9]{8}", separator="", rng=getattr(self._order_generator, "_rng", None)
+            "ORD", "[A-Z0-9]{8}", separator="", rng=self._order_generator.rng
         ).generate()
 
     @property
@@ -69,7 +69,7 @@ class Order(BaseEntity):
         from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
 
         return PrefixedIdGenerator(
-            "USER", "[A-Z0-9]{8}", separator="", rng=getattr(self._order_generator, "_rng", None)
+            "USER", "[A-Z0-9]{8}", separator="", rng=self._order_generator.rng
         ).generate()
 
     @property

@@ -55,7 +55,7 @@ class Product(BaseEntity):
         from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
 
         return PrefixedIdGenerator(
-            "PROD", "[A-Z0-9]{8}", separator="", rng=getattr(self._product_generator, "_rng", None)
+            "PROD", "[A-Z0-9]{8}", separator="", rng=self._product_generator.rng
         ).generate()
 
     @property

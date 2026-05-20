@@ -46,12 +46,12 @@ class Bank(BaseEntity):
         ds = getattr(self._bank_generator, "dataset", "US").upper()
         # Basic 8-char BIC: 4 letters bank + 2-letter country + 2 alnum location
         pattern = f"[A-Z]{{4}}{ds}[A-Z0-9]{{2}}"
-        return StringGenerator.rnd_str_from_regex(pattern, rng=self._bank_generator._rng)
+        return StringGenerator.rnd_str_from_regex(pattern, rng=self._bank_generator.rng)
 
     @property
     @property_cache
     def bin(self) -> str:
-        return StringGenerator.rnd_str_from_regex("[0-9]{4}", rng=self._bank_generator._rng)
+        return StringGenerator.rnd_str_from_regex("[0-9]{4}", rng=self._bank_generator.rng)
 
     @property
     @property_cache
@@ -66,8 +66,7 @@ class Bank(BaseEntity):
         # bic/bin/swift_code — without it the phone falls back to wall-clock-seeded
         # Random and breaks Service replay.
         ds = getattr(self._bank_generator, "dataset", "US")
-        rng = getattr(self._bank_generator, "_rng", None)
-        return PhoneNumberGenerator(dataset=ds, rng=rng).generate()
+        return PhoneNumberGenerator(dataset=ds, rng=self._bank_generator.rng).generate()
 
     def to_dict(self) -> dict[str, Any]:
         return {
