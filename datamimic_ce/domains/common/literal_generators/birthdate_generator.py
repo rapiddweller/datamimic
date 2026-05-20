@@ -94,6 +94,6 @@ class BirthdateGenerator(ClockAnchoredDomainGenerator):
         Returns:
             age (int): calculated age (hour, minute, second, microsecond in datetime object equal 0 as default)
         """
-        today = reference_now or now_utc_naive()
+        today = reference_now if reference_now is not None else now_utc_naive()
         age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
         return age

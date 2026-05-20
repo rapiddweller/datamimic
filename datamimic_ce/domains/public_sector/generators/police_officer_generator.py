@@ -9,11 +9,13 @@ if TYPE_CHECKING:
 
 from pathlib import Path
 
+import datetime
+
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
@@ -22,7 +24,7 @@ from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class PoliceOfficerGenerator(DatasetAwareDomainGenerator):
+class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
     """Generate police officer data."""
 
     def __init__(
@@ -32,6 +34,7 @@ class PoliceOfficerGenerator(DatasetAwareDomainGenerator):
         demographic_config: DemographicConfig | None = None,
         demographic_sampler: DemographicSampler | None = None,
         seeded_mode: bool | None = None,
+        reference_now: datetime.datetime | None = None,
     ):
         """Initialize the police officer generator.
 
@@ -39,8 +42,9 @@ class PoliceOfficerGenerator(DatasetAwareDomainGenerator):
             dataset: The dataset to use for data generation
             rng: Optional seeded random instance for deterministic output.
             seeded_mode: Whether to operate in seeded/deterministic mode.
+            reference_now: Optional fixed datetime anchor for deterministic mode.
         """
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
         from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
 
         demo = demographic_config if demographic_config is not None else _DC()
@@ -86,20 +90,17 @@ class PoliceOfficerGenerator(DatasetAwareDomainGenerator):
     #  Centralize date generation to keep model pure and deterministic
     def generate_hire_date(self, age: int) -> str:
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
-        from datamimic_ce.domains.domain_core.runtime import now_utc_naive
 
-        now = now_utc_naive()
+        now = self._reference_now
         # Minimum age to join: 21. Years of service cannot exceed age-21 and cap at 30
         max_years = max(0, min(30, age - 21))
         years_of_service = self._rng.randint(0, max_years)
-        min_dt = (now - __import__("datetime").timedelta(days=(years_of_service + 1) * 365)).strftime(
+        min_dt = (now - datetime.timedelta(days=(years_of_service + 1) * 365)).strftime(
             "%Y-%m-%d %H:%M:%S"
         )
-        max_dt = (now - __import__("datetime").timedelta(days=years_of_service * 365)).strftime("%Y-%m-%d %H:%M:%S")
+        max_dt = (now - datetime.timedelta(days=years_of_service * 365)).strftime("%Y-%m-%d %H:%M:%S")
         dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
-        import datetime as _dt
-
-        assert isinstance(dt, _dt.datetime)
+        assert isinstance(dt, datetime.datetime)
         return dt.strftime("%Y-%m-%d")
 
     def get_rank(self) -> str:

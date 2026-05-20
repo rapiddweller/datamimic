@@ -94,9 +94,7 @@ class MedicalDevice(BaseEntity):
             A string representing a serial number.
         """
         # Format: MFG-YYYY-XXXXXXXX
-        from datamimic_ce.domains.domain_core.runtime import now_utc_naive
-
-        year = self._medical_device_generator.rng.randint(2010, now_utc_naive().year)
+        year = self._medical_device_generator.rng.randint(2010, self._medical_device_generator.reference_now.year)
         rng = self._medical_device_generator.rng
         alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         random_part = "".join(rng.choice(alphabet) for _ in range(8))

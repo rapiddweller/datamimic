@@ -140,9 +140,7 @@ class AdministrationOffice(BaseEntity):
         Returns:
             The founding year.
         """
-        from datamimic_ce.domains.domain_core.runtime import now_utc_naive
-
-        current_year = now_utc_naive().year
+        current_year = self._administration_office_generator.reference_now.year
         office_type = self.type
 
         # Different ranges based on type

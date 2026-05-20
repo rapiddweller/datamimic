@@ -10,22 +10,24 @@ Hospital generator utilities.
 This module provides utility functions for generating hospital data.
 """
 
+import datetime
 import random
 from pathlib import Path
 
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 
 
-class HospitalGenerator(DatasetAwareDomainGenerator):
+class HospitalGenerator(ClockAnchoredDomainGenerator):
     def __init__(
         self,
         dataset: str | None = None,
         rng: random.Random | None = None,
         seeded_mode: bool | None = None,
+        reference_now: datetime.datetime | None = None,
     ) -> None:
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
             rng=self._derive_rng() if rng is not None else None,

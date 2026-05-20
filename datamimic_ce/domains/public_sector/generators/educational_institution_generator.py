@@ -1,13 +1,14 @@
+import datetime
 import random
 from pathlib import Path
 
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 
 
-class EducationalInstitutionGenerator(DatasetAwareDomainGenerator):
+class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
     """Generator for educational institution data."""
 
     def __init__(
@@ -15,6 +16,7 @@ class EducationalInstitutionGenerator(DatasetAwareDomainGenerator):
         dataset: str | None = None,
         rng: random.Random | None = None,
         seeded_mode: bool | None = None,
+        reference_now: datetime.datetime | None = None,
     ):
         """Initialize the educational institution generator.
 
@@ -22,8 +24,9 @@ class EducationalInstitutionGenerator(DatasetAwareDomainGenerator):
             dataset: The country code to use for data generation
             rng: Optional seeded random instance for deterministic output.
             seeded_mode: Whether to operate in seeded/deterministic mode.
+            reference_now: Optional fixed datetime anchor for deterministic mode.
         """
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
         # Derive deterministic RNG streams so seeded institutions keep nested contact details stable.
         self._address_generator = AddressGenerator(
             dataset=self._dataset,

@@ -18,17 +18,18 @@ if TYPE_CHECKING:
     from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
     from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 
+import datetime
 import random
 from pathlib import Path
 
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class DoctorGenerator(DatasetAwareDomainGenerator):
+class DoctorGenerator(ClockAnchoredDomainGenerator):
     """Generate doctor data."""
 
     def __init__(
@@ -38,8 +39,9 @@ class DoctorGenerator(DatasetAwareDomainGenerator):
         demographic_config: DemographicConfig | None = None,
         demographic_sampler: DemographicSampler | None = None,
         seeded_mode: bool | None = None,
+        reference_now: datetime.datetime | None = None,
     ):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
         from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
 
         demo = demographic_config if demographic_config is not None else _DC()
@@ -140,9 +142,7 @@ class DoctorGenerator(DatasetAwareDomainGenerator):
 
     # Helper to pick a graduation year with anti-repetition
     def pick_graduation_year(self, age: int, *, now_year: int | None = None) -> int:
-        from datamimic_ce.domains.domain_core.runtime import now_utc_naive
-
-        year_now = now_year or now_utc_naive().year
+        year_now = now_year if now_year is not None else self._reference_now.year
         min_after = 0
         max_after = max(0, min(45, age - 25))
         years_after = self._rng.randint(min_after, max_after)

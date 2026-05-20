@@ -14,11 +14,13 @@ import random
 from pathlib import Path
 from typing import TypeVar
 
+import datetime
+
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
 from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
@@ -29,7 +31,7 @@ from datamimic_ce.utils.file_util import FileUtil
 T = TypeVar("T")  # Define a type variable for generic typing
 
 
-class AdministrationOfficeGenerator(DatasetAwareDomainGenerator):
+class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
     """Generator for administration office data."""
 
     def __init__(
@@ -37,6 +39,7 @@ class AdministrationOfficeGenerator(DatasetAwareDomainGenerator):
         dataset: str | None = None,
         rng: random.Random | None = None,
         seeded_mode: bool | None = None,
+        reference_now: datetime.datetime | None = None,
     ):
         """Initialize the administration office generator.
 
@@ -44,8 +47,9 @@ class AdministrationOfficeGenerator(DatasetAwareDomainGenerator):
             dataset: The country code to use for data generation
             rng: Optional seeded random instance for deterministic output.
             seeded_mode: Whether to operate in seeded/deterministic mode.
+            reference_now: Optional fixed datetime anchor for deterministic mode.
         """
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
         # Derive child RNGs so seeded administration offices replay deterministic nested attributes.
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
@@ -169,9 +173,7 @@ class AdministrationOfficeGenerator(DatasetAwareDomainGenerator):
 
     # Helper: founding year based on office type ranges (deterministic via rng)
     def pick_founding_year(self, office_type: str, *, now_year: int | None = None) -> int:
-        from datamimic_ce.domains.domain_core.runtime import now_utc_naive
-
-        year = now_year or now_utc_naive().year
+        year = now_year if now_year is not None else self._reference_now.year
         if "Federal" in office_type:
             min_age, max_age = 20, 200
         elif "State" in office_type:

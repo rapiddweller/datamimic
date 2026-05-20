@@ -121,9 +121,7 @@ class Hospital(BaseEntity):
         Returns:
             The year the hospital was founded.
         """
-        from datamimic_ce.domains.domain_core.runtime import now_utc_naive
-
-        current_year = now_utc_naive().year
+        current_year = self._hospital_generator.reference_now.year
 
         # Most hospitals were founded in the last 150 years
         return self._hospital_generator.rng.randint(current_year - 150, current_year - 5)
