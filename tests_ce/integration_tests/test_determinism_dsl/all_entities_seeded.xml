@@ -1,6 +1,6 @@
 <setup multiprocessing="0">
-    <!-- DSL determinism contract: every registered entity, seeded, must replay
-         identically across two runs (see test_determinism_dsl.py). -->
+    <!-- AUTO-GENERATED from the entity registry by build_all_entities_seeded_xml(). -->
+    <!-- Do not edit by hand; regenerate via test_determinism_dsl.py (see module docstring). -->
     <generate name="address" count="3" target="">
         <variable name="e" entity="Address" dataset="US" rngSeed="42"/>
         <key name="street" script="e.street"/>

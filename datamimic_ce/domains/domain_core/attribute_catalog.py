@@ -71,18 +71,6 @@ def group(name: str, description: str, children: Iterable[FieldSpec], *, optiona
     return FieldSpec(name=name, py_type=dict, description=description, optional=optional, children=tuple(children))
 
 
-def spec_to_dict(spec: FieldSpec) -> dict[str, object]:
-    """Render a FieldSpec (recursively) into a JSON-serialisable dict."""
-    payload: dict[str, object] = {
-        "name": spec.name,
-        "type": spec.data_type,
-        "description": spec.description,
-    }
-    if spec.children:
-        payload["children"] = [spec_to_dict(child) for child in spec.children]
-    return payload
-
-
 # --- Shared surfaces (SPOT) -------------------------------------------------
 
 ADDRESS_FIELDS: tuple[FieldSpec, ...] = (

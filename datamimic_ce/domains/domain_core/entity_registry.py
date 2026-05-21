@@ -9,7 +9,7 @@
 Discovers ``BaseDomainService`` subclasses across ``datamimic_ce.domains.*``
 so the DSL can resolve ``entity="Person"`` to a service class without a
 hand-maintained mapping. Each entity also carries its declared attribute
-specs for introspection (``describe_entity``).
+specs so the schema-consistency gate can check them.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from types import ModuleType
 
-from datamimic_ce.domains.domain_core.attribute_catalog import FieldSpec, spec_to_dict
+from datamimic_ce.domains.domain_core.attribute_catalog import FieldSpec
 from datamimic_ce.domains.domain_core.base_domain_service import BaseDomainService
 
 _DOMAINS_PREFIX = "datamimic_ce.domains."
@@ -33,10 +33,6 @@ class EntitySpec:
     service_cls: type[BaseDomainService]
     module: str
     attributes: tuple[FieldSpec, ...]
-
-    @property
-    def service_path(self) -> str:
-        return f"{self.module}.{self.service_cls.__name__}"
 
 
 _ENTITY_REGISTRY: dict[str, EntitySpec] = {}
@@ -76,9 +72,6 @@ def _iter_service_modules(root_pkg: ModuleType) -> Iterable[ModuleType]:
 
 
 def _entity_name_for(cls: type[BaseDomainService]) -> str:
-    pinned = getattr(cls, "ENTITY_NAME", None)
-    if pinned:
-        return pinned
     name = cls.__name__
     return name[:-7] if name.endswith("Service") else name
 
@@ -104,7 +97,6 @@ def _aliases_for(cls: type[BaseDomainService], entity_name: str) -> set[str]:
     names = {entity_name, service_name, f"{module}.{service_name}"}
     if module.startswith(_DOMAINS_PREFIX):
         names.add(f"{module[len(_DOMAINS_PREFIX):]}.{service_name}")
-    names.update(getattr(cls, "ALIASES", ()) or ())
     return {name for name in names if name}
 
 
@@ -118,11 +110,6 @@ def list_entity_specs() -> tuple[EntitySpec, ...]:
         seen.add(spec.service_cls)
         ordered.append(spec)
     return tuple(ordered)
-
-
-def list_entity_names() -> list[str]:
-    _ensure_loaded()
-    return sorted(_ENTITY_REGISTRY.keys())
 
 
 def get_entity_spec(name: str) -> EntitySpec | None:
@@ -142,15 +129,3 @@ def get_entity_spec(name: str) -> EntitySpec | None:
 def get_entity_service_class(name: str) -> type[BaseDomainService] | None:
     spec = get_entity_spec(name)
     return spec.service_cls if spec else None
-
-
-def describe_entity(name: str) -> dict[str, object] | None:
-    """Return a serialisable description of an entity and its attributes."""
-    spec = get_entity_spec(name)
-    if spec is None:
-        return None
-    return {
-        "entity": spec.entity,
-        "service": spec.service_path,
-        "attributes": [spec_to_dict(attr) for attr in spec.attributes],
-    }

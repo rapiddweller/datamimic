@@ -68,11 +68,6 @@ def _iter_literal_generator_modules(root_pkg: ModuleType) -> Iterable[ModuleType
             yield importlib.import_module(mod_name)
 
 
-def get_generator_class(name: str) -> type | None:
-    _ensure_loaded()
-    return _REGISTRY.get(name)
-
-
 def generator_namespace() -> dict[str, type]:
     """Return a name->class map for use as an eval namespace in the DSL engine."""
     _ensure_loaded()
