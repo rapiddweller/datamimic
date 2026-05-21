@@ -19,7 +19,7 @@ class CityService(BaseDomainService[City]):
 
     def __init__(
         self,
-        dataset: str = "US",
+        dataset: str | None = None,
         rng: random.Random | None = None,
     ):
         super().__init__(CityGenerator(dataset=dataset, rng=rng), City)

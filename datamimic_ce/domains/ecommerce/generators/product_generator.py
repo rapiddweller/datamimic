@@ -29,7 +29,7 @@ class ProductGenerator(DatasetAwareDomainGenerator):
 
     def __init__(
         self,
-        dataset: str = "US",
+        dataset: str | None = None,
         min_price: float = 0.99,
         max_price: float = 999.99,
         rng: random.Random | None = None,

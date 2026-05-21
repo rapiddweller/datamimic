@@ -11,7 +11,7 @@ from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_d
 class OrderGenerator(ClockAnchoredDomainGenerator):
     def __init__(
         self,
-        dataset: str = "US",
+        dataset: str | None = None,
         rng: random.Random | None = None,
         reference_now: dt.datetime | None = None,
     ):

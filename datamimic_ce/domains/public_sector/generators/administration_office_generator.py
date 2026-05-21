@@ -262,7 +262,8 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
         # Build domain via dataset-driven DomainGenerator to avoid static TLD mappings
         from datamimic_ce.domains.common.literal_generators.domain_generator import DomainGenerator
 
-        domain = DomainGenerator(dataset=self._dataset, rng=self._derive_rng()).generate().lower()
+        domain_generator = DomainGenerator(dataset=self._dataset, rng=self._derive_rng())
+        domain = domain_generator.generate().lower()
         return f"https://www.{domain}"
 
     # Helper: email builder from dataset roles; local-part from role slug

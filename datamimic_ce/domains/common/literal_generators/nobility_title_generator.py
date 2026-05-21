@@ -29,17 +29,11 @@ class NobilityTitleGenerator(BaseLiteralGenerator):
         self._gender = gender
         self._noble_quota = noble_quota if noble_quota is not None else 0.001
 
-        allowed = {"DE", "GB", "ES", "FR", "IT", "US"}
-        normalized_dataset = normalize_dataset(dataset)
-        if normalized_dataset not in allowed:
-            normalized_dataset = "US"  #  default to US titles when dataset-specific data is unavailable
-
-        male_file_path = dataset_path(
-            "common", "person", f"nobTitle_male_{normalized_dataset}.csv", start=Path(__file__)
-        )
-        female_file_path = dataset_path(
-            "common", "person", f"nobTitle_female_{normalized_dataset}.csv", start=Path(__file__)
-        )
+        # dataset_path auto-falls back to the _US file when a dataset-specific
+        # nobility-title file is absent, so no allowlist is needed here.
+        country = normalize_dataset(dataset)
+        male_file_path = dataset_path("common", "person", f"nobTitle_male_{country}.csv", start=Path(__file__))
+        female_file_path = dataset_path("common", "person", f"nobTitle_female_{country}.csv", start=Path(__file__))
 
         self._male_values, self._male_weights = FileUtil.read_wgt_file(file_path=male_file_path)
         self._female_values, self._female_weights = FileUtil.read_wgt_file(file_path=female_file_path)

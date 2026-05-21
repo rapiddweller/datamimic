@@ -24,7 +24,7 @@ class PhoneNumberGenerator(DatasetAwareDomainGenerator):
 
     def __init__(
         self,
-        dataset: str | None = "US",
+        dataset: str | None = None,
         area_code: str | None = None,
         is_mobile: bool = False,
         rng: random.Random | None = None,

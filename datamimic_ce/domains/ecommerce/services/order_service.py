@@ -25,8 +25,6 @@ class OrderService(BaseDomainService[Order]):
         rng: random.Random | None = None,
         reference_now: dt.datetime | None = None,
     ):
-        #  Prefer generator to own normalization. Pass through when provided,
-        # fallback to "US" for backward compatibility with generator signature.
         super().__init__(
             OrderGenerator(dataset, rng=rng, reference_now=reference_now),
             Order,
