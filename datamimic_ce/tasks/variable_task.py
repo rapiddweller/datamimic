@@ -39,7 +39,7 @@ def _constructor_params(cls: type) -> frozenset[str]:
     import inspect
 
     try:
-        return frozenset(inspect.signature(cls.__init__).parameters)
+        return frozenset(inspect.signature(cls).parameters)
     except (TypeError, ValueError):
         return frozenset()
 

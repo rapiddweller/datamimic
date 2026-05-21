@@ -105,7 +105,11 @@ class PersonGenerator(DatasetAwareDomainGenerator):
             noble_quota=noble_quota,
             rng=self._derive_rng(),
         )
-        self._demographic_rng = self._derive_rng() if demographic_sampler is not None else Random()
+        # Used directly for sampling (not threaded to a child that self-seeds), so it
+        # must always be a concrete Random: a derived one when seeded, fresh otherwise.
+        self._demographic_rng: Random = (
+            (self._derive_rng() or Random()) if demographic_sampler is not None else Random()
+        )
 
     def reserve_demographic_sample(self) -> DemographicSample:
         if self._demographic_sampler is None:
