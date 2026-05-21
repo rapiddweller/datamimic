@@ -6,6 +6,8 @@ from datamimic_ce.domains.common.generators.address_generator import AddressGene
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
 from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
+from datamimic_ce.domains.utils.dataset_path import dataset_path
+from datamimic_ce.utils.file_util import FileUtil
 
 
 class OrderGenerator(ClockAnchoredDomainGenerator):
@@ -34,6 +36,27 @@ class OrderGenerator(ClockAnchoredDomainGenerator):
     def address_generator(self) -> AddressGenerator:
         return self._address_generator
 
+    def _pick_from_weighted_csv(self, *path: str, value_col: str, weight_col: str = "weight") -> str:
+        """Read a weighted CSV (dataset-aware) and return one value picked by weight."""
+        file_path = dataset_path("ecommerce", *path, start=Path(__file__))
+        header, rows = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
+        w_idx = header.get(weight_col)
+        v_idx = header.get(value_col)
+        if w_idx is None or v_idx is None:
+            # Fallback: derive the generic (non-dataset) filename from the last path segment.
+            base = path[-1]  # e.g. "order_statuses_US.csv"
+            # Strip the dataset suffix to get the canonical fallback filename.
+            stem, ext = base.rsplit(".", 1)
+            # The stem looks like "<name>_<dataset>"; drop the trailing "_<dataset>" part.
+            generic_stem = "_".join(stem.split("_")[:-1])
+            fallback = f"{generic_stem}.{ext}"
+            values, weights = load_weighted_values_try_dataset(
+                "ecommerce", fallback, dataset=self._dataset, start=Path(__file__)
+            )
+            return pick_one_weighted(self._rng, values, weights)
+        choice = self._rng.choices(rows, weights=[float(r[w_idx]) for r in rows], k=1)[0]
+        return choice[v_idx]
+
     #  Centralize date generation; models stay pure and RNG boundaries are clear
     def generate_order_date(self) -> dt.datetime:
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
@@ -46,75 +69,27 @@ class OrderGenerator(ClockAnchoredDomainGenerator):
         return val
 
     def get_order_status(self) -> str:
-        from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.utils.file_util import FileUtil
-
-        file_path = dataset_path("ecommerce", f"order_statuses_{self._dataset}.csv", start=Path(__file__))
-        header, rows = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
-        w_idx = header.get("weight")
-        v_idx = header.get("status")
-        if w_idx is None or v_idx is None:
-            # fallback to headerless interpretation if structure unexpected
-            values, weights = load_weighted_values_try_dataset(
-                "ecommerce", "order_statuses.csv", dataset=self._dataset, start=Path(__file__)
-            )
-            return pick_one_weighted(self._rng, values, weights)
-        choice = self._rng.choices(rows, weights=[float(r[w_idx]) for r in rows], k=1)[0]
-        return choice[v_idx]
+        return self._pick_from_weighted_csv(
+            f"order_statuses_{self._dataset}.csv", value_col="status"
+        )
 
     def get_payment_method(self) -> str:
-        from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.utils.file_util import FileUtil
-
-        file_path = dataset_path("ecommerce", f"payment_methods_{self._dataset}.csv", start=Path(__file__))
-        header, rows = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
-        w_idx = header.get("weight")
-        v_idx = header.get("method")
-        if w_idx is None or v_idx is None:
-            values, weights = load_weighted_values_try_dataset(
-                "ecommerce", "payment_methods.csv", dataset=self._dataset, start=Path(__file__)
-            )
-            return pick_one_weighted(self._rng, values, weights)
-        choice = self._rng.choices(rows, weights=[float(r[w_idx]) for r in rows], k=1)[0]
-        return choice[v_idx]
+        return self._pick_from_weighted_csv(
+            f"payment_methods_{self._dataset}.csv", value_col="method"
+        )
 
     def get_shipping_method(self) -> str:
-        from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.utils.file_util import FileUtil
-
-        file_path = dataset_path("ecommerce", f"shipping_methods_{self._dataset}.csv", start=Path(__file__))
-        header, rows = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
-        w_idx = header.get("weight")
-        v_idx = header.get("method")
-        if w_idx is None or v_idx is None:
-            values, weights = load_weighted_values_try_dataset(
-                "ecommerce", "shipping_methods.csv", dataset=self._dataset, start=Path(__file__)
-            )
-            return pick_one_weighted(self._rng, values, weights)
-        choice = self._rng.choices(rows, weights=[float(r[w_idx]) for r in rows], k=1)[0]
-        return choice[v_idx]
+        return self._pick_from_weighted_csv(
+            f"shipping_methods_{self._dataset}.csv", value_col="method"
+        )
 
     def get_currency_code(self) -> str:
-        from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.utils.file_util import FileUtil
-
-        file_path = dataset_path("ecommerce", f"currencies_{self._dataset}.csv", start=Path(__file__))
-        header, rows = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
-        w_idx = header.get("weight")
-        v_idx = header.get("code")
-        if w_idx is None or v_idx is None:
-            values, weights = load_weighted_values_try_dataset(
-                "ecommerce", "currencies.csv", dataset=self._dataset, start=Path(__file__)
-            )
-            return pick_one_weighted(self._rng, values, weights)
-        choice = self._rng.choices(rows, weights=[float(r[w_idx]) for r in rows], k=1)[0]
-        return choice[v_idx]
+        return self._pick_from_weighted_csv(
+            f"currencies_{self._dataset}.csv", value_col="code"
+        )
 
     def get_shipping_amount(self, shipping_method: str) -> float:
         # Load method rows, then pick bounds for the selected method
-        from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.utils.file_util import FileUtil
-
         file_path = dataset_path("ecommerce", f"shipping_methods_{self._dataset}.csv", start=Path(__file__))
         header_dict, rows = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
         idx_method = header_dict["method"]
