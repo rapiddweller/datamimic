@@ -22,7 +22,7 @@ from datamimic_ce.domains.common.literal_generators.phone_number_generator impor
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.utils.dataset_loader import (
     load_weighted_values_try_dataset,
-    pick_one_weighted,
+    pick_one_weighted_no_repeat,
 )
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
@@ -98,10 +98,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
             dataset=self._dataset,
             start=Path(__file__),
         )
-        choice = pick_one_weighted(self._rng, values, weights)
-        # simple anti-repeat: redraw once if same and >1 options
-        if self._last_office_type == choice and len(values) > 1:
-            choice = pick_one_weighted(self._rng, values, weights)
+        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_office_type)
         self._last_office_type = choice
         return choice
 
@@ -114,12 +111,9 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
             dataset=self._dataset,
             start=Path(__file__),
         )
-        pick = pick_one_weighted(self._rng, values, weights).lower()
-        # minimal anti-repeat redraw
-        if self._last_jurisdiction and pick == str(self._last_jurisdiction).lower() and len(values) > 1:
-            pick = pick_one_weighted(self._rng, values, weights).lower()
+        pick = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_jurisdiction)
         self._last_jurisdiction = pick
-        return pick
+        return pick.lower()
 
     # Helper: build office name using dataset patterns (US fallback handled by dataset_path)
     def build_office_name(self, city: str, state: str, office_type: str, jurisdiction: str) -> str:

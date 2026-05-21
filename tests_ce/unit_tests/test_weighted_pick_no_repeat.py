@@ -20,14 +20,23 @@ WEIGHTS_SINGLE = [1.0]
 
 # (a) Never returns last when ≥2 distinct values
 def test_no_repeat_never_returns_last_over_many_seeds() -> None:
-    """Over 200 different seeds the result must never equal last."""
-    for seed in range(200):
+    """Across seeds the result must never equal last (guarantee, not probability)."""
+    for seed in range(50):
         rng = random.Random(seed)
         for last in VALUES_MULTI:
             result = pick_one_weighted_no_repeat(rng, VALUES_MULTI, WEIGHTS_MULTI, last=last)
-            assert result != last, (
-                f"seed={seed}: got {result!r} == last={last!r}; helper must exclude last"
-            )
+            assert result != last, f"seed={seed}: got {result!r} == last={last!r}; helper must exclude last"
+
+
+# (a') Duplicate entries of the same value must not crash and must not repeat last
+def test_no_repeat_duplicate_values_do_not_crash() -> None:
+    """Distinct-value guard: ["A","A"] with last="A" has no alternative -> returns "A"."""
+    rng = random.Random(3)
+    assert pick_one_weighted_no_repeat(rng, ["A", "A"], [1.0, 1.0], last="A") == "A"
+    # But a real alternative behind duplicate entries is still reachable and never repeats.
+    for seed in range(50):
+        result = pick_one_weighted_no_repeat(random.Random(seed), ["A", "A", "B"], [1.0, 1.0, 1.0], last="A")
+        assert result == "B"
 
 
 # (b) Deterministic for a fixed seed

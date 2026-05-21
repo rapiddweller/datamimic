@@ -4,9 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import inspect
 from abc import ABC
-from pathlib import Path
 from typing import Generic, TypeVar
 
 from datamimic_ce.domains.domain_core.attribute_catalog import FieldSpec
@@ -30,6 +28,8 @@ class BaseDomainService(ABC, Generic[T]):
     introspect it.
     """
 
+    # Dataset-file glob patterns (with a ``{CC}`` placeholder) required by this
+    # entity; override per service. Empty => supported_datasets() returns set().
     DATASET_PATTERNS: tuple[str, ...] = ()
 
     def __init__(self, data_generator: BaseDomainGenerator, model_cls: type[T]):
@@ -44,7 +44,7 @@ class BaseDomainService(ABC, Generic[T]):
     @classmethod
     def supported_datasets(cls) -> set[str]:
         """Return ISO dataset codes supported by all required datasets for this domain."""
-        return compute_supported_datasets(cls.DATASET_PATTERNS, start=Path(inspect.getfile(cls)))
+        return compute_supported_datasets(cls.DATASET_PATTERNS)
 
     def generate(self) -> T:
         """

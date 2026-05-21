@@ -33,10 +33,11 @@ def pick_one_weighted_no_repeat(
     Falls back to the full pool when *last* is None, not present in *values*,
     or only one distinct value exists.
     """
-    if last is not None and last in values and len(values) > 1:
-        pool = [(v, w) for v, w in zip(values, weights, strict=False) if v != last]
-        p_vals, p_wgts = zip(*pool, strict=False)
-        return rng.choices(list(p_vals), weights=list(p_wgts), k=1)[0]
+    if last is not None and len(set(values)) > 1:
+        pool = [(v, w) for v, w in zip(values, weights, strict=True) if v != last]
+        if pool:
+            p_vals, p_wgts = zip(*pool, strict=True)
+            return rng.choices(list(p_vals), weights=list(p_wgts), k=1)[0]
     return rng.choices(list(values), weights=list(weights), k=1)[0]
 
 

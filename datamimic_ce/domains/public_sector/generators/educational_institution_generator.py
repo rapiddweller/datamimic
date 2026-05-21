@@ -59,6 +59,7 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
     def pick_level(self, institution_type: str, *, start: Path) -> str:
         import csv
 
+        from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
         from datamimic_ce.domains.utils.dataset_path import dataset_path
 
         path = dataset_path("public_sector", "education", f"levels_{self._dataset}.csv", start=start)
@@ -75,13 +76,8 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
             items = levels_by_pattern.get(pattern)
             if not items:
                 return None
-            # Avoid immediate repetition when possible
-            if self._last_level and len(items) > 1:
-                pool = [(v, w) for (v, w) in items if v != self._last_level]
-                values, weights = zip(*pool, strict=False)
-            else:
-                values, weights = zip(*items, strict=False)
-            return self._rng.choices(list(values), weights=list(weights), k=1)[0]
+            values, weights = zip(*items, strict=True)
+            return pick_one_weighted_no_repeat(self._rng, list(values), list(weights), last=self._last_level)
 
         for patt in ("University", "College", "Vocational", "Special", "School"):
             if patt in institution_type:
@@ -125,15 +121,17 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
 
     # Helper: pick institution type from dataset with weighted values
     def pick_institution_type(self, *, start: Path) -> str:
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
+        from datamimic_ce.domains.utils.dataset_loader import (
+            load_weighted_values_try_dataset,
+            pick_one_weighted_no_repeat,
+        )
 
         values, weights = load_weighted_values_try_dataset(
             "public_sector", "education", "institution_types.csv", dataset=self._dataset, start=start
         )
-        choice = pick_one_weighted(self._rng, values, weights)
-        last = getattr(self, "_last_institution_type", None)
-        if last == choice and len(values) > 1:
-            choice = pick_one_weighted(self._rng, values, weights)
+        choice = pick_one_weighted_no_repeat(
+            self._rng, values, weights, last=getattr(self, "_last_institution_type", None)
+        )
         self._last_institution_type = choice
         return choice
 
