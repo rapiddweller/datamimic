@@ -15,7 +15,13 @@ from datetime import UTC, datetime
 from typing import Final
 
 DETERMINISTIC_ANCHOR: Final[datetime] = datetime(2025, 1, 1, 12, 0, 0)
-"""Fixed "now" used in seeded mode. Internal — exposed via resolve_clock()."""
+"""The fixed "now" used in seeded mode.
+
+The exact value is arbitrary — only its stability matters. It is chosen as a
+clean, recent, timezone-neutral instant (midday on a year boundary) so that
+"now"-derived fields (age, founding year, expiry dates) compute to realistic
+values. Changing it would change every seeded run's date-derived output, so
+treat it as a frozen constant. Internal — read via resolve_clock()."""
 
 
 def now_utc_naive() -> datetime:

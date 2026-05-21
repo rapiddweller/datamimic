@@ -22,29 +22,31 @@ import secrets
 
 def resolve_rng(
     *,
-    seed: int | None = None,
     rng: random.Random | None = None,
     seeded_mode: bool | None = None,
 ) -> tuple[random.Random, bool]:
     """Resolve a canonical ``(rng, seeded_mode)`` pair for a generator.
 
+    Two channels, kept separate:
+
+    * ``rng`` is the state-carrier / transport.
+    * ``seeded_mode`` is the policy. Passing an ``rng`` alone does NOT
+      imply deterministic mode.
+
     Precedence:
 
-    * ``seed`` (explicit) → always seeded; an injected ``seeded_mode=False``
-      does not veto an explicit seed.
-    * explicit ``seeded_mode`` → that wins; ``seeded_mode=True`` requires
-      either ``seed`` or ``rng`` (no silent wall-clock fallback to mode).
-    * lone ``rng`` → transport only; mode is ``False``.
+    * explicit ``seeded_mode`` wins. ``seeded_mode=True`` requires an
+      ``rng`` (deterministic mode must not silently fall back to
+      wall-clock); ``seeded_mode=False`` returns a CSPRNG-seeded Random.
+    * lone ``rng`` → transport only, mode ``False``.
     * nothing → fresh non-deterministic Random, mode ``False``.
     """
-    if seed is not None:
-        return (rng if rng is not None else random.Random(seed)), True
     if seeded_mode is not None:
         if rng is not None:
             return rng, seeded_mode
         if seeded_mode:
             raise ValueError(
-                "resolve_rng(seeded_mode=True) requires seed= or rng= "
+                "resolve_rng(seeded_mode=True) requires rng= "
                 "(deterministic mode must not fall back to wall-clock)."
             )
         return random.Random(secrets.randbits(64)), False

@@ -29,21 +29,15 @@ from datamimic_ce.domains.domain_core.runtime.clock import DETERMINISTIC_ANCHOR
 # ---------- resolve_rng ----------------------------------------------------
 
 
-def test_resolve_rng_seed_implies_seeded_mode() -> None:
-    a_rng, a_mode = resolve_rng(seed=42)
-    b_rng, b_mode = resolve_rng(seed=42)
+def test_resolve_rng_seeded_rng_is_reproducible() -> None:
+    a_rng, a_mode = resolve_rng(rng=random.Random(42), seeded_mode=True)
+    b_rng, b_mode = resolve_rng(rng=random.Random(42), seeded_mode=True)
     assert a_mode is True and b_mode is True
     assert [a_rng.random() for _ in range(5)] == [b_rng.random() for _ in range(5)]
 
 
-def test_resolve_rng_seed_wins_over_explicit_unseeded_mode() -> None:
-    """An explicit seed must not be vetoed by seeded_mode=False."""
-    rng, mode = resolve_rng(seed=42, seeded_mode=False)
-    assert mode is True
-
-
 def test_resolve_rng_seeded_mode_true_without_source_raises() -> None:
-    with pytest.raises(ValueError, match="requires seed= or rng="):
+    with pytest.raises(ValueError, match="requires rng="):
         resolve_rng(seeded_mode=True)
 
 
@@ -106,8 +100,9 @@ def test_resolve_clock_live_returns_recent_naive_utc() -> None:
 def test_resolve_rng_byte_identical_across_python_invocations() -> None:
     """Deterministic mode must survive process restarts."""
     script = (
+        "import random;"
         "from datamimic_ce.domains.domain_core.runtime import resolve_rng;"
-        "r, _ = resolve_rng(seed=42);"
+        "r, _ = resolve_rng(rng=random.Random(42), seeded_mode=True);"
         "print(','.join(f'{r.random():.18f}' for _ in range(5)))"
     )
     out_a = subprocess.check_output([sys.executable, "-c", script], text=True).strip()

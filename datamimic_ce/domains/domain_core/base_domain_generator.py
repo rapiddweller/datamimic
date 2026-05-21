@@ -62,13 +62,10 @@ class BaseDomainGenerator:
     def __init__(
         self,
         *,
-        seed: int | None = None,
         rng: random.Random | None = None,
         seeded_mode: bool | None = None,
     ) -> None:
-        self._rng, self._seeded_mode = resolve_rng(
-            seed=seed, rng=rng, seeded_mode=seeded_mode
-        )
+        self._rng, self._seeded_mode = resolve_rng(rng=rng, seeded_mode=seeded_mode)
 
     @property
     def rng(self) -> random.Random:
@@ -100,11 +97,10 @@ class DatasetAwareDomainGenerator(BaseDomainGenerator):
         self,
         *,
         dataset: str | None = None,
-        seed: int | None = None,
         rng: random.Random | None = None,
         seeded_mode: bool | None = None,
     ) -> None:
-        super().__init__(seed=seed, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(rng=rng, seeded_mode=seeded_mode)
         self._dataset = normalize_dataset(dataset)
 
     @property
@@ -127,14 +123,11 @@ class ClockAnchoredDomainGenerator(DatasetAwareDomainGenerator):
         self,
         *,
         dataset: str | None = None,
-        seed: int | None = None,
         rng: random.Random | None = None,
         seeded_mode: bool | None = None,
         reference_now: datetime | None = None,
     ) -> None:
-        super().__init__(
-            dataset=dataset, seed=seed, rng=rng, seeded_mode=seeded_mode
-        )
+        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
         self._reference_now: datetime = (
             reference_now if reference_now is not None
             else resolve_clock(deterministic=self._seeded_mode)

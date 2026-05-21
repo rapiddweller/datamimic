@@ -32,9 +32,9 @@ from datamimic_ce.domains.domain_core.runtime.clock import DETERMINISTIC_ANCHOR
 # ---------- BaseDomainGenerator -------------------------------------------
 
 
-def test_base_seed_yields_seeded_mode_and_reproducible_rng() -> None:
-    a = BaseDomainGenerator(seed=42)
-    b = BaseDomainGenerator(seed=42)
+def test_base_seeded_rng_yields_seeded_mode_and_reproducible_rng() -> None:
+    a = BaseDomainGenerator(rng=random.Random(42), seeded_mode=True)
+    b = BaseDomainGenerator(rng=random.Random(42), seeded_mode=True)
     assert a.seeded_mode is True
     assert [a.rng.random() for _ in range(5)] == [b.rng.random() for _ in range(5)]
 
@@ -55,7 +55,7 @@ def test_normalize_dataset(given: str | None, expected: str) -> None:
 
 
 def test_dataset_aware_carries_rng_and_dataset() -> None:
-    g = DatasetAwareDomainGenerator(seed=42, dataset="de")
+    g = DatasetAwareDomainGenerator(rng=random.Random(42), seeded_mode=True, dataset="de")
     assert g.seeded_mode is True
     assert g.dataset == "DE"
 
@@ -64,7 +64,8 @@ def test_dataset_aware_carries_rng_and_dataset() -> None:
 
 
 def test_clock_anchored_seeded_uses_deterministic_anchor() -> None:
-    assert ClockAnchoredDomainGenerator(seed=42).reference_now == DETERMINISTIC_ANCHOR
+    g = ClockAnchoredDomainGenerator(rng=random.Random(42), seeded_mode=True)
+    assert g.reference_now == DETERMINISTIC_ANCHOR
 
 
 def test_clock_anchored_unseeded_uses_live_now() -> None:
@@ -75,7 +76,8 @@ def test_clock_anchored_unseeded_uses_live_now() -> None:
 
 def test_clock_anchored_caller_reference_now_wins() -> None:
     custom = datetime(2030, 6, 15, 9, 0, 0)
-    assert ClockAnchoredDomainGenerator(seed=42, reference_now=custom).reference_now == custom
+    g = ClockAnchoredDomainGenerator(rng=random.Random(42), seeded_mode=True, reference_now=custom)
+    assert g.reference_now == custom
 
 
 def test_clock_anchored_reference_now_is_frozen_at_construction() -> None:
@@ -91,7 +93,7 @@ def test_clock_anchored_reference_now_is_frozen_at_construction() -> None:
     [BaseDomainGenerator, DatasetAwareDomainGenerator, ClockAnchoredDomainGenerator],
 )
 def test_seeded_mode_true_without_source_raises(cls: type) -> None:
-    with pytest.raises(ValueError, match="requires seed= or rng="):
+    with pytest.raises(ValueError, match="requires rng="):
         cls(seeded_mode=True)
 
 
