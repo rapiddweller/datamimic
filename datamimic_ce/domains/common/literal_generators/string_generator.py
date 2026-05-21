@@ -7,10 +7,32 @@
 import random
 import re
 import string
+from collections.abc import Iterator
+from contextlib import contextmanager
 
 import exrex  # type: ignore
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+
+
+@contextmanager
+def _exrex_using(rng: random.Random | None) -> Iterator[None]:
+    """Make exrex draw from ``rng`` for the duration of the block.
+
+    exrex binds ``random.choice``/``random.randint`` at import and exposes no
+    RNG parameter, so the only injection seam is its module globals. We swap
+    them for the block and restore afterwards. No-op when ``rng`` is None.
+    Not thread-safe — CE generation is single-threaded per process.
+    """
+    if rng is None:
+        yield
+        return
+    orig_choice, orig_randint = exrex.choice, exrex.randint
+    exrex.choice, exrex.randint = rng.choice, rng.randint
+    try:
+        yield
+    finally:
+        exrex.choice, exrex.randint = orig_choice, orig_randint
 
 
 class StringGenerator(BaseLiteralGenerator):
@@ -85,20 +107,7 @@ class StringGenerator(BaseLiteralGenerator):
 
     @staticmethod
     def rnd_str_from_regex(pattern: str, rng: random.Random | None = None) -> str:
-        pattern = r"" + pattern
-        if rng is not None:
-            # exrex has no RNG-injection API — it binds random.choice/randint at import.
-            # Swap them for the caller's rng around the call, then restore (single-threaded).
-            _orig_choice = exrex.choice
-            _orig_randint = exrex.randint
-            exrex.choice = rng.choice
-            exrex.randint = rng.randint
-            try:
-                result = exrex.getone(pattern, 1)
-            finally:
-                exrex.choice = _orig_choice
-                exrex.randint = _orig_randint
-        else:
+        with _exrex_using(rng):
             result = exrex.getone(pattern, 1)
         if result is None:
             raise ValueError(f"Cannot generate string from regex pattern: {pattern}")
