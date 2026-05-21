@@ -54,7 +54,9 @@ class Product(BaseEntity):
         #  use shared PrefixedIdGenerator for prefixed ID without separator
         from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
 
-        return PrefixedIdGenerator("PROD", "[A-Z0-9]{8}", separator="").generate()
+        return PrefixedIdGenerator(
+            "PROD", "[A-Z0-9]{8}", separator="", rng=self._product_generator.rng
+        ).generate()
 
     @property
     @property_cache
@@ -152,7 +154,7 @@ class Product(BaseEntity):
         brand_code = self.brand[:3].upper()
         category_code = self.category[:3].upper()
         #  use common StringGenerator for numeric segment
-        random_code = StringGenerator.rnd_str_from_regex("[0-9]{6}")
+        random_code = StringGenerator.rnd_str_from_regex("[0-9]{6}", rng=self._product_generator.rng)
 
         return f"{brand_code}-{category_code}-{random_code}"
 

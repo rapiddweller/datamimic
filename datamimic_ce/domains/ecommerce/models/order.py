@@ -40,7 +40,7 @@ class Order(BaseEntity):
     @property
     def dataset(self) -> str:
         """Expose dataset from generator."""
-        return self._order_generator.dataset.upper()  #  ensure downstream lookups hit _{dataset}.csv assets
+        return self._order_generator.dataset  #  property is already normalised/upper from the generator
 
     @property
     @property_cache
@@ -53,7 +53,9 @@ class Order(BaseEntity):
         #  use shared PrefixedIdGenerator for prefixed ID without separator
         from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
 
-        return PrefixedIdGenerator("ORD", "[A-Z0-9]{8}", separator="").generate()
+        return PrefixedIdGenerator(
+            "ORD", "[A-Z0-9]{8}", separator="", rng=self._order_generator.rng
+        ).generate()
 
     @property
     @property_cache
@@ -66,7 +68,9 @@ class Order(BaseEntity):
         #  use shared PrefixedIdGenerator for prefixed ID without separator
         from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
 
-        return PrefixedIdGenerator("USER", "[A-Z0-9]{8}", separator="").generate()
+        return PrefixedIdGenerator(
+            "USER", "[A-Z0-9]{8}", separator="", rng=self._order_generator.rng
+        ).generate()
 
     @property
     @property_cache
@@ -237,7 +241,7 @@ class Order(BaseEntity):
             # Generate a coupon code if there's a discount (delegate to generator)
             prefix = self._order_generator.pick_coupon_prefix()
             #  use shared StringGenerator for code part
-            code = StringGenerator.rnd_str_from_regex("[A-Z0-9]{6}")
+            code = StringGenerator.rnd_str_from_regex("[A-Z0-9]{6}", rng=self._order_generator.rng)
             return f"{prefix}{code}"
         return None
 
@@ -273,14 +277,14 @@ class Order(BaseEntity):
         return {
             "order_id": self.order_id,
             "user_id": self.user_id,
-            "product_list": self.product_list,
+            "product_list": [product.to_dict() for product in self.product_list],
             "total_amount": self.total_amount,
             "date": self.date,
             "status": self.status,
             "payment_method": self.payment_method,
             "shipping_method": self.shipping_method,
-            "shipping_address": self.shipping_address,
-            "billing_address": self.billing_address,
+            "shipping_address": self.shipping_address.to_dict(),
+            "billing_address": self.billing_address.to_dict(),
             "currency": self.currency,
             "tax_amount": self.tax_amount,
             "shipping_amount": self.shipping_amount,

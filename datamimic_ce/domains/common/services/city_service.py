@@ -4,9 +4,27 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import random
+
 from datamimic_ce.domains.common.generators.city_generator import CityGenerator
 from datamimic_ce.domains.common.models.city import City
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
+
+CITY_SCHEMA = EntitySchema(
+    "City",
+    (
+        field("name", str, "City name."),
+        field("postal_code", str, "Postal or ZIP code."),
+        field("area_code", str, "Telephone area code."),
+        field("state", str, "State, province, or region."),
+        field("language", str, "Primary language.", optional=True),
+        field("population", int, "Population count.", optional=True),
+        field("name_extension", str, "City name extension or suffix."),
+        field("country", str, "Human-readable country name."),
+        field("country_code", str, "ISO 3166-1 alpha-2 country code."),
+    ),
+)
 
 
 class CityService(BaseDomainService[City]):
@@ -15,8 +33,16 @@ class CityService(BaseDomainService[City]):
     This class provides methods for creating, retrieving, and managing city data.
     """
 
-    def __init__(self, dataset: str = "US"):
-        super().__init__(CityGenerator(dataset), City)
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+    ):
+        super().__init__(CityGenerator(dataset=dataset, rng=rng), City)
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return CITY_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

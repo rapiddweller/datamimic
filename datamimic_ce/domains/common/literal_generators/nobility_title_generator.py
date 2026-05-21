@@ -7,12 +7,12 @@
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class NobilityTitleGenerator(BaseLiteralGenerator):
+class NobilityTitleGenerator(DatasetAwareDomainGenerator):
     """
     Generate random nobility title
     """
@@ -24,20 +24,15 @@ class NobilityTitleGenerator(BaseLiteralGenerator):
         noble_quota: float | None = None,
         rng: random.Random | None = None,
     ):
+        super().__init__(dataset=dataset, rng=rng)
         self._gender = gender
         self._noble_quota = noble_quota if noble_quota is not None else 0.001
-        self._rng: random.Random = rng or random.Random()
 
-        allowed = {"DE", "GB", "ES", "FR", "IT", "US"}
-        normalized_dataset = (dataset or "US").upper()
-        if normalized_dataset not in allowed:
-            normalized_dataset = "US"  #  default to US titles when dataset-specific data is unavailable
-
-        male_file_path = dataset_path(
-            "common", "person", f"nobTitle_male_{normalized_dataset}.csv", start=Path(__file__)
-        )
+        # dataset_path auto-falls back to the _US file when a dataset-specific
+        # nobility-title file is absent, so no allowlist is needed here.
+        male_file_path = dataset_path("common", "person", f"nobTitle_male_{self._dataset}.csv", start=Path(__file__))
         female_file_path = dataset_path(
-            "common", "person", f"nobTitle_female_{normalized_dataset}.csv", start=Path(__file__)
+            "common", "person", f"nobTitle_female_{self._dataset}.csv", start=Path(__file__)
         )
 
         self._male_values, self._male_weights = FileUtil.read_wgt_file(file_path=male_file_path)

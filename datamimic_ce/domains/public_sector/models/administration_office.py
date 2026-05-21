@@ -11,7 +11,6 @@ This module provides the AdministrationOffice entity model for generating
 realistic public administration office data.
 """
 
-import datetime
 from pathlib import Path
 from typing import Any
 
@@ -141,7 +140,7 @@ class AdministrationOffice(BaseEntity):
         Returns:
             The founding year.
         """
-        current_year = datetime.datetime.now().year
+        current_year = self._administration_office_generator.reference_now.year
         office_type = self.type
 
         # Different ranges based on type
@@ -426,5 +425,5 @@ class AdministrationOffice(BaseEntity):
             "services": self.services,
             "departments": self.departments,
             "leadership": self.leadership,
-            "address": self.address,
+            "address": self.address.to_dict(),
         }

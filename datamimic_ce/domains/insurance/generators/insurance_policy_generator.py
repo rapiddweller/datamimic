@@ -10,13 +10,13 @@ from pathlib import Path
 
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.insurance.generators.insurance_company_generator import InsuranceCompanyGenerator
 from datamimic_ce.domains.insurance.generators.insurance_coverage_generator import InsuranceCoverageGenerator
 from datamimic_ce.domains.insurance.generators.insurance_product_generator import InsuranceProductGenerator
 
 
-class InsurancePolicyGenerator(BaseDomainGenerator):
+class InsurancePolicyGenerator(DatasetAwareDomainGenerator):
     """Generator for insurance policy data."""
 
     def __init__(
@@ -29,33 +29,34 @@ class InsurancePolicyGenerator(BaseDomainGenerator):
 
         Args:
             dataset: The country code to use for data generation
+            rng: Optional seeded random instance for deterministic output.
         """
-        self._dataset = dataset or "US"
-        self._rng: random.Random = rng or random.Random()
-        self._insurance_company_generator = InsuranceCompanyGenerator(dataset=dataset, rng=self._rng)
-        self._insurance_product_generator = InsuranceProductGenerator(dataset=dataset, rng=self._rng)
-        self._insurance_coverage_generator = InsuranceCoverageGenerator(dataset=dataset, rng=self._rng)
+        super().__init__(dataset=dataset, rng=rng)
+        self._insurance_company_generator = InsuranceCompanyGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng(),
+        )
+        self._insurance_product_generator = InsuranceProductGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng(),
+        )
+        self._insurance_coverage_generator = InsuranceCoverageGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng(),
+        )
         #  Thread demographic constraints and RNG to person generation used by policy holder
         if demographic_config is None:
             from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
 
             demographic_config = _DC()
-        self._person_generator = PersonGenerator(dataset=dataset, rng=self._rng, demographic_config=demographic_config)
+        self._person_generator = PersonGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng(),
+            demographic_config=demographic_config,
+        )
         self._datetime_generator = DateTimeGenerator(random=True, rng=self._derive_rng())
         # Track last picks to avoid immediate repetition in tests without rerun plugin
         self._last_status: str | None = None
-
-    @property
-    def dataset(self) -> str:
-        return self._dataset
-
-    @property
-    def rng(self) -> random.Random:
-        return self._rng
-
-    def _derive_rng(self) -> random.Random:
-        # Derive deterministic child RNGs so seeded policies replay across runs without cross-talk.
-        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
 
     @property
     def insurance_company_generator(self) -> InsuranceCompanyGenerator:

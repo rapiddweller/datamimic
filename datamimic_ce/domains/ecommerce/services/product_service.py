@@ -4,9 +4,33 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import random
+
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
 from datamimic_ce.domains.ecommerce.models.product import Product
+
+PRODUCT_SCHEMA = EntitySchema(
+    "Product",
+    (
+        field("product_id", str, "Unique product identifier."),
+        field("name", str, "Product name."),
+        field("description", str, "Product description."),
+        field("price", float, "Product price."),
+        field("category", str, "Product category."),
+        field("brand", str, "Product brand."),
+        field("sku", str, "Stock keeping unit."),
+        field("condition", str, "Product condition."),
+        field("availability", str, "Availability status."),
+        field("currency", str, "Price currency code."),
+        field("weight", float, "Product weight."),
+        field("dimensions", str, "Product dimensions."),
+        field("color", str, "Product color."),
+        field("rating", float, "Average customer rating."),
+        field("tags", list, "Product tags."),
+    ),
+)
 
 
 class ProductService(BaseDomainService[Product]):
@@ -16,13 +40,23 @@ class ProductService(BaseDomainService[Product]):
     including creating products, filtering products, and formatting outputs.
     """
 
-    def __init__(self, dataset: str | None = None, min_price: float = 0.99, max_price: float = 999.99):
-        #  Prefer generator to own normalization. Pass through when provided,
-        # fallback to "US" for backward compatibility with generator signature.
+    def __init__(
+        self,
+        dataset: str | None = None,
+        min_price: float = 0.99,
+        max_price: float = 999.99,
+        rng: random.Random | None = None,
+    ):
         super().__init__(
-            ProductGenerator(dataset=dataset or "US", min_price=min_price, max_price=max_price),
+            ProductGenerator(
+                dataset=dataset, min_price=min_price, max_price=max_price, rng=rng
+            ),
             Product,
         )
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return PRODUCT_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

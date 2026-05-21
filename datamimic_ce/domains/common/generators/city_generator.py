@@ -9,25 +9,29 @@ import random as _random
 from pathlib import Path
 from typing import Any
 
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class CityGenerator(BaseDomainGenerator):
+class CityGenerator(DatasetAwareDomainGenerator):
     """Generator for city data.
 
     This class generates random city data from the dataset.
     """
 
-    def __init__(self, dataset: str | None = None, rng: _random.Random | None = None):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: _random.Random | None = None,
+    ):
         """Initialize the CityGenerator.
 
         Args:
             dataset: The dataset to use for generating cities.
+            rng: Optional seeded random instance for deterministic output.
         """
-        self._dataset = (dataset or "US").upper()  #  normalize dataset once for consistent file lookups
-        self._rng: _random.Random = rng or _random.Random()
+        super().__init__(dataset=dataset, rng=rng)
         self._country_name = None
         self._city_data = None
         self._last_state: str | None = None
@@ -93,9 +97,6 @@ class CityGenerator(BaseDomainGenerator):
         else:
             random_index = self._rng.randint(0, len(city_data) - 1)
             city_row = city_data[random_index]
-
-        # Load state data
-        # state_dict = self._load_state_data()
 
         # Load country name
         country_name = self._get_country_name()

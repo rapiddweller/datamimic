@@ -5,9 +5,23 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+import random
+
 from datamimic_ce.domains.common.generators.country_generator import CountryGenerator
 from datamimic_ce.domains.common.models.country import Country
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
+
+COUNTRY_SCHEMA = EntitySchema(
+    "Country",
+    (
+        field("iso_code", str, "ISO 3166-1 alpha-2 country code."),
+        field("name", str, "Human-readable country name."),
+        field("default_language_locale", str, "Default language locale."),
+        field("phone_code", str, "International dialing code."),
+        field("population", str, "Population count."),
+    ),
+)
 
 
 class CountryService(BaseDomainService[Country]):
@@ -16,8 +30,16 @@ class CountryService(BaseDomainService[Country]):
     This class provides methods for creating, retrieving, and managing country data.
     """
 
-    def __init__(self, dataset: str | None = None):
-        super().__init__(CountryGenerator(dataset), Country)
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+    ):
+        super().__init__(CountryGenerator(dataset=dataset, rng=rng), Country)
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return COUNTRY_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

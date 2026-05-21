@@ -37,7 +37,7 @@ class AcademicTitleGenerator(BaseLiteralGenerator):
         #  Build path via dataset_path to avoid duplicated 'domain_data'
         file_path = dataset_path(*parts, start=Path(__file__))
         self._values, self._weights = self._load_academy_csv(file_path)
-        self._rng: random.Random = rng or random.Random()
+        super().__init__(rng=rng)
 
     def generate(self) -> str | None:
         """

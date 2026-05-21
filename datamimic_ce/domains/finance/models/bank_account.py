@@ -53,7 +53,7 @@ class BankAccount(BaseEntity):
             n = int(digits)
             return n % 97
 
-        template = f"{self._bank_account_generator.dataset.upper()}00{self.bank_code}{self.account_number.zfill(10)}"
+        template = f"{self._bank_account_generator.dataset}00{self.bank_code}{self.account_number.zfill(10)}"
         remainer = checksum(template)
         pp = str(98 - remainer).zfill(2)
         return template[:2] + pp + template[4:]

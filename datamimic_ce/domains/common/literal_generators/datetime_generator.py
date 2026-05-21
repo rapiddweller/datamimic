@@ -12,10 +12,10 @@ import calendar
 import random as _random
 from datetime import date, datetime, time, timedelta
 
-from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 
 
-class DateTimeGenerator(BaseLiteralGenerator):
+class DateTimeGenerator(ClockAnchoredDomainGenerator):
     # Define mode of DateGenerator
     _CUSTOM_DATETIME_MODE = "custom"
     _RANDOM_DATETIME_MODE = "random"
@@ -45,9 +45,14 @@ class DateTimeGenerator(BaseLiteralGenerator):
         second_granularity: int | None = None,
         seed: int | None = None,
         rng: _random.Random | None = None,
+        reference_now: datetime | None = None,
     ):
-        # Allow callers to inject their rng so rngSeed descriptors replay deterministically.
-        self._rng = rng or _random.Random(seed)
+        # DateTimeGenerator exposes seed= as a DSL convenience (e.g.
+        # DateTimeGenerator(..., seed=42)). Convert it to a seeded rng here so
+        # the base class detects a non-None rng and marks the instance seeded.
+        if seed is not None and rng is None:
+            rng = _random.Random(seed)
+        super().__init__(rng=rng, reference_now=reference_now)
 
         # format and weights
         self._input_format = input_format if input_format else "%Y-%m-%d %H:%M:%S"
@@ -336,8 +341,8 @@ class DateTimeGenerator(BaseLiteralGenerator):
                 self._month_choices, self._month_choice_weights = self._build_month_choice_distribution()
             return
 
-        # Handle datetime.now()
-        self._result = datetime.now()
+        # current-mode resolves to the anchored clock, not live now, for determinism
+        self._result = self._reference_now
         self._mode = self._CURRENT_DATETIME_MODE
 
     def generate(self) -> datetime | str:

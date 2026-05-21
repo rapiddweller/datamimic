@@ -9,16 +9,15 @@ import string
 from pathlib import Path
 
 from datamimic_ce.domains.common.literal_generators.company_name_generator import CompanyNameGenerator
-from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class DomainGenerator(BaseLiteralGenerator):
+class DomainGenerator(DatasetAwareDomainGenerator):
     def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
         """Generate random domain data for the requested dataset."""
-        self._dataset = (dataset or "US").upper()  #  enforce ISO code so we always hit suffixed CSVs
-        self._rng: random.Random = rng or random.Random()
+        super().__init__(dataset=dataset, rng=rng)
         web_path = dataset_path("common", "net", f"webmailDomain_{self._dataset}.csv", start=Path(__file__))
         tld_path = dataset_path("common", "net", f"tld_{self._dataset}.csv", start=Path(__file__))
 
@@ -28,7 +27,7 @@ class DomainGenerator(BaseLiteralGenerator):
 
         self._company_name: str | None = None
         # Share the deterministic RNG so seeded email/domain combos remain reproducible end-to-end.
-        self._company_name_generator = CompanyNameGenerator(rng=self._rng)
+        self._company_name_generator = CompanyNameGenerator(rng=self._derive_rng())
 
     def generate(self) -> str:
         """

@@ -3,25 +3,28 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
 from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
 
 
-class OrderGenerator(BaseDomainGenerator):
-    def __init__(self, dataset: str = "US", rng: random.Random | None = None):
-        self._dataset = dataset.upper()  #  normalize for consistent dataset file suffixes
-        self._rng: random.Random = rng or random.Random()
-        self._product_generator = ProductGenerator(dataset=dataset, rng=self._rng)
+class OrderGenerator(ClockAnchoredDomainGenerator):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        reference_now: dt.datetime | None = None,
+    ):
+        super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
+        self._product_generator = ProductGenerator(
+            dataset=self._dataset,
+            rng=self._derive_rng(),
+        )
         # Share deterministic RNG to nested address fields so seeded orders replay.
         self._address_generator = AddressGenerator(
-            dataset=dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            dataset=self._dataset,
+            rng=self._derive_rng(),
         )
-
-    @property
-    def dataset(self) -> str:
-        return self._dataset
 
     @property
     def product_generator(self) -> ProductGenerator:
@@ -31,19 +34,11 @@ class OrderGenerator(BaseDomainGenerator):
     def address_generator(self) -> AddressGenerator:
         return self._address_generator
 
-    @property
-    def rng(self) -> random.Random:
-        return self._rng
-
-    def _derive_rng(self) -> random.Random:
-        # Spawn deterministic child RNGs so seeded orders replay without cross-coupling randomness.
-        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
-
     #  Centralize date generation; models stay pure and RNG boundaries are clear
     def generate_order_date(self) -> dt.datetime:
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 
-        now = dt.datetime.now()
+        now = self._reference_now
         min_dt = (now - dt.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = now.strftime("%Y-%m-%d %H:%M:%S")
         val = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()

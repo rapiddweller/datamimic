@@ -6,10 +6,10 @@
 
 import random
 
-from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 
 
-class PhoneNumberGenerator(BaseLiteralGenerator):
+class PhoneNumberGenerator(DatasetAwareDomainGenerator):
     """
     Generator for random phone numbers.
 
@@ -24,7 +24,7 @@ class PhoneNumberGenerator(BaseLiteralGenerator):
 
     def __init__(
         self,
-        dataset: str | None = "US",
+        dataset: str | None = None,
         area_code: str | None = None,
         is_mobile: bool = False,
         rng: random.Random | None = None,
@@ -36,13 +36,12 @@ class PhoneNumberGenerator(BaseLiteralGenerator):
             area_code: Specific area code to use (optional)
             is_mobile: Whether to generate a mobile number
         """
-        self._dataset = (dataset or "US").upper()
-        self._rng: random.Random = rng or random.Random()
+        super().__init__(dataset=dataset, rng=rng)
         self._is_mobile = is_mobile
 
         from datamimic_ce.domains.common.generators import CountryGenerator
 
-        country_generator = CountryGenerator(dataset=self._dataset)
+        country_generator = CountryGenerator(dataset=self._dataset, rng=self._derive_rng())
         country_data = country_generator.get_country_by_iso_code(self._dataset)
         self._country_code = country_data[2]
 
@@ -53,7 +52,7 @@ class PhoneNumberGenerator(BaseLiteralGenerator):
         else:
             from datamimic_ce.domains.common.generators import CityGenerator
 
-            self._city_generator = CityGenerator(dataset=self._dataset, rng=self._rng)
+            self._city_generator = CityGenerator(dataset=self._dataset, rng=self._derive_rng())
 
     def generate(self) -> str:
         """Generate a random phone number.

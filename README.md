@@ -157,12 +157,13 @@ Developers and data engineers who need deterministic synthetic data generation o
 
 Most test data tools produce random output. That breaks regression tests, audit trails, and cross-team reproducibility.
 
-**DATAMIMIC's determinism contract:**
+**DATAMIMIC's determinism contract (CE):**
 
-- Same seed + same model = byte-identical output, every run, every machine
-- Frozen clocks + canonical hashing = stable temporal context
-- UUIDv5 namespaces = reproducible entity identifiers
-- Provenance hash on every output = re-executable lineage
+- **Same seed + same model = byte-identical output**, every run, every machine. Holds at three layers: the `generate_domain` facade, every domain service called directly, and every literal generator that accepts an `rng=` argument. Verified per-service on every CI run via [`tests_ce/architecture/test_service_replay_determinism.py`](tests_ce/architecture/test_service_replay_determinism.py).
+- **Provenance hash on every facade output** = re-executable lineage. Same input → same `determinism_proof.content_hash`, always.
+- **UUIDv5 entity identifiers** = stable across runs and machines.
+- **Single wall-clock SPOT** (`now_utc_naive()`); raw `datetime.now()` is forbidden in production code and the clock-drift architecture gate fails CI on any reintroduction.
+- **RNG/clock runtime SPOTs** in `datamimic_ce/domains/domain_core/runtime/`: `resolve_rng`, `spawn_rng`, `derive_child_seed`, `resolve_clock`. Mirrors EE's ADR-030 / ADR-031 contract vocabulary.
 
 ```python
 from datamimic_ce.domains.facade import generate_domain
@@ -177,8 +178,36 @@ request = {
 }
 
 response = generate_domain(request)
-# Same input → same output, always, everywhere
+# response["determinism_proof"]["content_hash"] is stable across runs.
 ```
+
+Direct service use is equally deterministic when given a seeded RNG:
+
+```python
+import random
+from datamimic_ce.domains.finance.services import CreditCardService
+
+# Same seeded Random → byte-identical CreditCard across runs.
+card_a = CreditCardService(rng=random.Random(42)).generate()
+card_b = CreditCardService(rng=random.Random(42)).generate()
+assert card_a.bic == card_b.bic and card_a.card_number == card_b.card_number
+```
+
+### Determinism contract — CE vs EE
+
+| Scope | CE | Enterprise Platform |
+|---|---|---|
+| **Facade** (`generate_domain` registered domains) | ✅ byte-identical, CI-gated | ✅ byte-identical |
+| **Domain services** (direct use with seeded `rng=...`) | ✅ byte-identical, CI-gated | ✅ byte-identical |
+| **Literal generators** (with seeded `rng=...`) | ✅ byte-identical | ✅ byte-identical |
+| **RNG / clock runtime SPOTs** | ✅ `resolve_rng`, `spawn_rng`, `now_utc_naive`, `resolve_clock` | ✅ ADR-030 / 031 |
+| **Architecture gates in CI** | ✅ facade replay + service replay (every service) + clock drift | ✅ 5+ gates (RNG ownership, clock drift, DSL eval, seeded-mode propagation, dataset SPOT) |
+| **Custom XML pipelines** | ⚠️ best-effort | ✅ byte-identical |
+| **Multi-system coordinated execution** (Oracle + MongoDB + Kafka in one run) | — | ✅ byte-identical end-to-end |
+| **Seeded vs unseeded pseudonymization** (deterministic clock anchor vs CSPRNG live-clock) | — | ✅ |
+| **Threat-led / TLPT-grade audit evidence** (full ADR-030 enforcement, per-stage execution logging) | — | ✅ |
+
+CE delivers contract-enforced determinism for the synthetic-data generation surface (facade, services, generators). The Enterprise Platform extends the same contract across the full pipeline — custom XML descriptors, multi-system writes with referential integrity, the seeded/unseeded pseudonymization modes — and adds the five drift-gates that lock the contract end-to-end for regulated deployments.
 
 ---
 
@@ -337,7 +366,7 @@ anyio.run(main)
 
 Most teams adopt CE for one of three reasons. EE is not required for any of them.
 
-**1. Reproducible test data for CI/CD pipelines.** Same seed → byte-identical output across machines. Regression tests stop being flaky because the input data is stable across runs.
+**1. Reproducible test data for CI/CD pipelines.** Pin a seed against the `generate_domain` facade — or hand a seeded `random.Random` to any domain service — and you get byte-identical output across runs and machines. Both layers are gated on every CI run by [`tests_ce/architecture/`](tests_ce/architecture/). Regression tests stop being flaky because the input data is stable across runs.
 
 ```python
 from datamimic_ce.domains.facade import generate_domain

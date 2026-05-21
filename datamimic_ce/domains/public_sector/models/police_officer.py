@@ -188,7 +188,7 @@ class PoliceOfficer(BaseEntity):
         """
         # Calculate years of service based on hire date
         hire_date = datetime.datetime.strptime(self.hire_date, "%Y-%m-%d")
-        current_date = datetime.datetime.now()
+        current_date = self._police_officer_generator.reference_now
         return (current_date - hire_date).days // 365
 
     @property
@@ -277,5 +277,5 @@ class PoliceOfficer(BaseEntity):
             "shift": self.shift,
             "email": self.email,
             "phone": self.phone,
-            "address": self.address,
+            "address": self.address.to_dict(),
         }

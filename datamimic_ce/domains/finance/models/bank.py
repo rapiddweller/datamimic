@@ -42,16 +42,15 @@ class Bank(BaseEntity):
     @property
     @property_cache
     def bic(self) -> str:
-        #  embed dataset country code (US/DE) into BIC pattern for consistency
-        ds = getattr(self._bank_generator, "dataset", "US").upper()
         # Basic 8-char BIC: 4 letters bank + 2-letter country + 2 alnum location
-        pattern = f"[A-Z]{{4}}{ds}[A-Z0-9]{{2}}"
-        return StringGenerator.rnd_str_from_regex(pattern)
+        country = self._bank_generator.dataset
+        pattern = f"[A-Z]{{4}}{country}[A-Z0-9]{{2}}"
+        return StringGenerator.rnd_str_from_regex(pattern, rng=self._bank_generator.rng)
 
     @property
     @property_cache
     def bin(self) -> str:
-        return StringGenerator.rnd_str_from_regex("[0-9]{4}")
+        return StringGenerator.rnd_str_from_regex("[0-9]{4}", rng=self._bank_generator.rng)
 
     @property
     @property_cache
@@ -61,9 +60,9 @@ class Bank(BaseEntity):
         Returns:
             A formatted phone number string.
         """
-        #  use shared PhoneNumberGenerator with dataset for consistent formatting
-        ds = getattr(self._bank_generator, "dataset", "US")
-        return PhoneNumberGenerator(dataset=ds).generate()
+        return PhoneNumberGenerator(
+            dataset=self._bank_generator.dataset, rng=self._bank_generator.rng
+        ).generate()
 
     def to_dict(self) -> dict[str, Any]:
         return {

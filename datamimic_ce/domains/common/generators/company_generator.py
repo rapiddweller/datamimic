@@ -13,42 +13,37 @@ from datamimic_ce.domains.common.literal_generators.company_name_generator impor
 from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.common.literal_generators.sector_generator import SectorGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class CompanyGenerator(BaseDomainGenerator):
+class CompanyGenerator(DatasetAwareDomainGenerator):
     """Generator for company-related attributes.
 
     Provides methods to generate company-related attributes such as
     company names, emails, URLs, and other information.
     """
 
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
-        #  normalize dataset for consistent `_CC.csv` lookups
-        self._dataset = (dataset or "US").upper()
-        self._rng: random.Random = rng or random.Random()
-        self._company_name_generator = CompanyNameGenerator()
-        self._email_address_generator = EmailAddressGenerator(dataset=self._dataset)
-        self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset)
-        self._address_generator = AddressGenerator(dataset=self._dataset)
-        self._sector_generator = SectorGenerator(dataset=self._dataset)
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+    ):
+        super().__init__(dataset=dataset, rng=rng)
+        self._company_name_generator = CompanyNameGenerator(rng=self._derive_rng())
+        self._email_address_generator = EmailAddressGenerator(
+            dataset=self._dataset, rng=self._derive_rng()
+        )
+        self._phone_number_generator = PhoneNumberGenerator(
+            dataset=self._dataset, rng=self._derive_rng()
+        )
+        self._address_generator = AddressGenerator(
+            dataset=self._dataset, rng=self._derive_rng()
+        )
+        self._sector_generator = SectorGenerator(dataset=self._dataset, rng=self._derive_rng())
         self._legal_dataset = self._dataset
         self._last_legal_form: str | None = None
-
-    @property
-    def dataset(self) -> str:
-        """Get the dataset.
-
-        Returns:
-            The dataset.
-        """
-        return self._dataset
-
-    @property
-    def rng(self) -> random.Random:
-        return self._rng
 
     @property
     def company_name_generator(self) -> CompanyNameGenerator:

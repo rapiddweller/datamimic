@@ -7,43 +7,11 @@
 import ast
 import uuid
 
-from faker import Faker
-
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.domains.common.literal_generators.academic_title_generator import AcademicTitleGenerator
-from datamimic_ce.domains.common.literal_generators.birthdate_generator import BirthdateGenerator
-from datamimic_ce.domains.common.literal_generators.boolean_generator import BooleanGenerator
-from datamimic_ce.domains.common.literal_generators.cnpj_generator import CNPJGenerator
-from datamimic_ce.domains.common.literal_generators.color_generators import ColorGenerator
-from datamimic_ce.domains.common.literal_generators.company_name_generator import CompanyNameGenerator
-from datamimic_ce.domains.common.literal_generators.cpf_generator import CPFGenerator
-from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
-from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
-from datamimic_ce.domains.common.literal_generators.department_name_generator import DepartmentNameGenerator
-from datamimic_ce.domains.common.literal_generators.domain_generator import DomainGenerator
-from datamimic_ce.domains.common.literal_generators.ean_generator import EANGenerator
-from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
-from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
-from datamimic_ce.domains.common.literal_generators.float_generator import FloatGenerator
-from datamimic_ce.domains.common.literal_generators.gender_generator import GenderGenerator
-from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
-from datamimic_ce.domains.common.literal_generators.global_increment_generator import GlobalIncrementGenerator
-from datamimic_ce.domains.common.literal_generators.hash_generator import HashGenerator
 from datamimic_ce.domains.common.literal_generators.increment_generator import IncrementGenerator
-from datamimic_ce.domains.common.literal_generators.integer_generator import IntegerGenerator
-from datamimic_ce.domains.common.literal_generators.nobility_title_generator import NobilityTitleGenerator
-from datamimic_ce.domains.common.literal_generators.password_generator import PasswordGenerator
-from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.common.literal_generators.sector_generator import SectorGenerator
-from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
-from datamimic_ce.domains.common.literal_generators.ssn_generator import SSNGenerator
-from datamimic_ce.domains.common.literal_generators.street_name_generator import StreetNameGenerator
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
-from datamimic_ce.domains.common.literal_generators.token_generator import TokenGenerator
-from datamimic_ce.domains.common.literal_generators.url_generator import UrlGenerator
-from datamimic_ce.domains.common.literal_generators.uuid_generator import UUIDGenerator
+from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.statement import Statement
 
@@ -60,50 +28,9 @@ class GeneratorUtil:
         Args:
             context (Context): The context in which the generators are used.
         """
-        # Define all available generators
-        self._class_dict = {
-            # Basic Generators
-            "IncrementGenerator": IncrementGenerator,
-            "DateTimeGenerator": DateTimeGenerator,
-            "IntegerGenerator": IntegerGenerator,
-            "StringGenerator": StringGenerator,
-            "FloatGenerator": FloatGenerator,
-            "BooleanGenerator": BooleanGenerator,
-            "DataFakerGenerator": DataFakerGenerator,
-            "GlobalIncrementGenerator": GlobalIncrementGenerator,
-            # Identity and Personal Information
-            "SSNGenerator": SSNGenerator,
-            "CNPJGenerator": CNPJGenerator,
-            "CPFGenerator": CPFGenerator,
-            "EANGenerator": EANGenerator,
-            "GenderGenerator": GenderGenerator,
-            "BirthdateGenerator": BirthdateGenerator,
-            "PhoneNumberGenerator": PhoneNumberGenerator,
-            # Names and Titles
-            "FamilyNameGenerator": FamilyNameGenerator,
-            "GivenNameGenerator": GivenNameGenerator,
-            "AcademicTitleGenerator": AcademicTitleGenerator,
-            "NobilityTitleGenerator": NobilityTitleGenerator,
-            # Business and Organization
-            "CompanyNameGenerator": CompanyNameGenerator,
-            "DepartmentNameGenerator": DepartmentNameGenerator,
-            "SectorGenerator": SectorGenerator,
-            # Internet and Web
-            "EmailAddressGenerator": EmailAddressGenerator,
-            "DomainGenerator": DomainGenerator,
-            "UrlGenerator": UrlGenerator,
-            # Location
-            "StreetNameGenerator": StreetNameGenerator,
-            # Security
-            "UUIDGenerator": UUIDGenerator,
-            "HashGenerator": HashGenerator,
-            "TokenGenerator": TokenGenerator,
-            "PasswordGenerator": PasswordGenerator,
-            # Visual and Design
-            "ColorGenerator": ColorGenerator,
-            # Healthcare
-            "SequenceTableGenerator": SequenceTableGenerator,
-        }
+        # All DSL-exposable generators, auto-discovered from the
+        # literal_generators packages (no hand-maintained list).
+        self._class_dict = generator_namespace()
         self._context = context
 
     def get_supported_generators(self) -> dict[str, list[str]]:
@@ -412,49 +339,3 @@ class GeneratorUtil:
         # If the uuid_string is a valid hex code, but an invalid uuid4,
         # the UUID.__init__ will convert it to a valid uuid4. This is bad for validation purposes.
         return val.hex == input_string.replace("-", "")
-
-    @staticmethod
-    def faker_generator(
-        method: str,
-        locale: str | None = "en_US",
-        args: str | list | None = None,
-        kwargs: dict | None = None,
-    ):
-        """
-        Generate fake data using the Faker library.
-
-        Args:
-            method (str): The Faker method to use.
-            locale (Optional[str]): The locale for the Faker instance. Defaults to "en_US".
-            args (Optional[Union[str, list]]): The positional arguments for the Faker method.
-            kwargs (Optional[dict]): The keyword arguments for the Faker method.
-
-        Returns:
-            Any: The generated fake data.
-        """
-        faker = Faker(locale)
-        # validation support methods
-        not_support_method = [
-            "seed",
-            "seed_instance",
-            "seed_locale",
-            "provider",
-            "get_providers",
-            "add_provider",
-        ]
-        if method in not_support_method or method.startswith("_"):
-            raise ValueError(f"Faker method '{method}' is not supported")
-        # check worked methods
-        faker_method = getattr(faker, method, "method does not exist")
-        if faker_method == "method does not exist" or not callable(faker_method):
-            raise ValueError(f"Wrong Faker method: {method} does not exist")
-        # generate data
-        if args and kwargs:
-            result = faker_method(*args, **kwargs)
-        elif args:
-            result = faker_method(*args)
-        elif kwargs:
-            result = faker_method(**kwargs)
-        else:
-            result = faker_method()
-        return result

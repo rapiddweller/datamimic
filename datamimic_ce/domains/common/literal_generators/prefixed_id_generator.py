@@ -4,6 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import random
+
 from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
@@ -17,11 +19,18 @@ class PrefixedIdGenerator(BaseLiteralGenerator):
     - prefix="ORD", body_pattern="[A-Z0-9]{8}", separator=""  -> "ORD7ZG2QH4C"
     """
 
-    def __init__(self, prefix: str, body_pattern: str, separator: str = "-") -> None:
+    def __init__(
+        self,
+        prefix: str,
+        body_pattern: str,
+        separator: str = "-",
+        rng: random.Random | None = None,
+    ) -> None:
+        super().__init__(rng=rng)
         self._prefix = prefix
         self._body_pattern = body_pattern
         self._sep = separator
 
     def generate(self) -> str:
-        body = StringGenerator.rnd_str_from_regex(self._body_pattern)
+        body = StringGenerator.rnd_str_from_regex(self._body_pattern, rng=self._rng)
         return f"{self._prefix}{self._sep}{body}"

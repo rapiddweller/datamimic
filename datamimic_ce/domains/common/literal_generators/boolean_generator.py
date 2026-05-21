@@ -32,13 +32,13 @@ class BooleanGenerator(BaseLiteralGenerator):
             ValueError: Probability prob_true of BooleanGenerator must be in [0.0, 1.0] range,
             but got invalid value {prob_true}.
         """
+        super().__init__(rng=rng)
         if not (0.0 <= prob_true <= 1.0):
             raise ValueError(
                 f"Probability prob_true of BooleanGenerator must be in [0.0, 1.0] range, "
                 f"but got invalid value {prob_true}."
             )
         self.prob_true = prob_true
-        self._rng = rng or random.Random()
 
     def generate(self) -> bool:
         """

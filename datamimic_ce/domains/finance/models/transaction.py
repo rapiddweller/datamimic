@@ -48,7 +48,7 @@ class Transaction(BaseEntity):
         Returns:
             A unique identifier for the transaction.
         """
-        return StringGenerator.rnd_str_from_regex("[A-Z0-9]{16}")
+        return StringGenerator.rnd_str_from_regex("[A-Z0-9]{16}", rng=self._transaction_generator.rng)
 
     @property
     @property_cache

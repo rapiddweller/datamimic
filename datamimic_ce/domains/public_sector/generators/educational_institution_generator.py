@@ -1,35 +1,42 @@
+import datetime
 import random
 from pathlib import Path
 
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.common.literal_generators.email_address_generator import EmailAddressGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 
 
-class EducationalInstitutionGenerator(BaseDomainGenerator):
+class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
     """Generator for educational institution data."""
 
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        reference_now: datetime.datetime | None = None,
+    ):
         """Initialize the educational institution generator.
 
         Args:
             dataset: The country code to use for data generation
+            rng: Optional seeded random instance for deterministic output.
+            reference_now: Optional fixed datetime anchor for deterministic mode.
         """
-        self._dataset = (dataset or "US").upper()  #  share a normalized dataset across all child generators
-        self._rng = rng or random.Random()  #  deterministic RNG injection point
+        super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         # Derive deterministic RNG streams so seeded institutions keep nested contact details stable.
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._phone_number_generator = PhoneNumberGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._email_generator = EmailAddressGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         # Track last chosen level to reduce immediate repetition across entities
         self._last_level: str | None = None
@@ -46,18 +53,6 @@ class EducationalInstitutionGenerator(BaseDomainGenerator):
     @property
     def email_generator(self) -> EmailAddressGenerator:
         return self._email_generator
-
-    @property
-    def dataset(self) -> str:
-        return self._dataset
-
-    @property
-    def rng(self) -> random.Random:
-        return self._rng
-
-    def _derive_rng(self) -> random.Random:
-        # Fork deterministic child RNGs so seeded institutions replay without cross-coupling randomness.
-        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
 
     #  centralize level picking so we can avoid immediate repetition while
     # staying dataset-driven. The model calls into this helper.
@@ -174,6 +169,6 @@ class EducationalInstitutionGenerator(BaseDomainGenerator):
         spec_vals, _ = load_weighted_values_try_dataset(
             "public_sector", "education", f"facilities_{cat}.csv", dataset=self._dataset, start=start
         )
-        all_fac = list(set(list(common_vals) + list(spec_vals)))
+        all_fac = list(dict.fromkeys(list(common_vals) + list(spec_vals)))
         k = self._rng.randint(5, min(15, len(all_fac)))
         return sorted(self._rng.sample(all_fac, k))

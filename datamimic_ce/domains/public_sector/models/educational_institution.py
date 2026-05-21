@@ -11,7 +11,6 @@ This module provides the EducationalInstitution entity model for generating
 realistic educational institution data.
 """
 
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -170,7 +169,7 @@ class EducationalInstitution(BaseEntity):
         Returns:
             The founding year.
         """
-        current_year = datetime.now().year
+        current_year = self._educational_institution_generator.reference_now.year
         min_age = 5  # Minimum age for a school
         max_age = 200  # Maximum age for a school (oldest universities)
 
@@ -354,5 +353,5 @@ class EducationalInstitution(BaseEntity):
             "programs": self.programs,
             "accreditations": self.accreditations,
             "facilities": self.facilities,
-            "address": self.address,
+            "address": self.address.to_dict(),
         }

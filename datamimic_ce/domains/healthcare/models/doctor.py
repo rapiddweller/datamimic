@@ -198,7 +198,7 @@ class Doctor(BaseEntity):
         Returns:
             The number of years of experience.
         """
-        current_year = datetime.datetime.now().year
+        current_year = self._doctor_generator.reference_now.year
         return current_year - self.graduation_year
 
     @property
@@ -297,7 +297,7 @@ class Doctor(BaseEntity):
             "birthdate": self.birthdate,
             "age": self.age,
             "specialty": self.specialty,
-            "hospital": self.hospital,
+            "hospital": self.hospital.to_dict(),
             "medical_school": self.medical_school,
             "graduation_year": self.graduation_year,
             "years_of_experience": self.years_of_experience,
@@ -306,5 +306,5 @@ class Doctor(BaseEntity):
             "office_hours": self.office_hours,
             "email": self.email,
             "phone": self.phone,
-            "address": self.address,
+            "address": self.address.to_dict(),
         }
