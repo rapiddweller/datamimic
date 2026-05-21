@@ -16,17 +16,18 @@ Three tiers, picked by what the generator actually needs:
   transaction date, …). Anchored once at construction so all year-derived
   fields on a single entity are mutually consistent.
 
-Child generators are constructed by explicitly threading ``rng``,
-``seeded_mode``, and ``dataset`` from parent to child::
+Determinism is a single channel: pass a ``rng`` and the run is
+deterministic (seeded); pass nothing and it is not. There is no separate
+``seeded_mode`` flag — "was an rng supplied" is the policy. Nested
+generators are constructed by threading :meth:`_derive_rng`::
 
-    self._child = ChildGenerator(
-        dataset=self._dataset,
-        rng=self._rng,
-        seeded_mode=self._seeded_mode,
-    )
+    self._child = ChildGenerator(dataset=self._dataset, rng=self._derive_rng())
 
-Subclasses access randomness through ``self.rng`` (a real
-:class:`random.Random`) — no wrapper methods.
+In a seeded run ``_derive_rng`` forks a reproducible child RNG; in an
+unseeded run it returns ``None`` so the child seeds itself from the wall
+clock — keeping the child's mode identical to the parent's.
+
+Subclasses access randomness through ``self.rng`` — no wrapper methods.
 """
 
 from __future__ import annotations
@@ -34,10 +35,7 @@ from __future__ import annotations
 import random
 from datetime import datetime
 
-from datamimic_ce.domains.domain_core.runtime import (
-    resolve_clock,
-    resolve_rng,
-)
+from datamimic_ce.domains.domain_core.runtime import resolve_clock
 
 DEFAULT_DATASET = "US"
 
@@ -54,35 +52,31 @@ def normalize_dataset(dataset: str | None) -> str:
 class BaseDomainGenerator:
     """RNG-owning base for all CE domain generators.
 
-    Subclasses must call ``super().__init__(rng=rng, seeded_mode=seeded_mode)``
-    (and pass ``seed=`` if exposing it) so the resolved RNG / mode pair is
-    stored on the instance.
+    Subclasses must call ``super().__init__(rng=rng)``. Passing a ``rng``
+    marks the instance seeded (deterministic); passing ``None`` makes it
+    unseeded with a fresh wall-clock-seeded Random.
     """
 
-    def __init__(
-        self,
-        *,
-        rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
-    ) -> None:
-        self._rng, self._seeded_mode = resolve_rng(rng=rng, seeded_mode=seeded_mode)
+    def __init__(self, *, rng: random.Random | None = None) -> None:
+        self._seeded: bool = rng is not None
+        self._rng: random.Random = rng if rng is not None else random.Random()
 
     @property
     def rng(self) -> random.Random:
         return self._rng
 
     @property
-    def seeded_mode(self) -> bool:
-        return self._seeded_mode
+    def seeded(self) -> bool:
+        return self._seeded
 
-    def _derive_rng(self) -> random.Random:
-        """Spawn a deterministic child RNG from the current RNG state.
+    def _derive_rng(self) -> random.Random | None:
+        """Fork a child RNG that inherits this generator's determinism.
 
-        Use when constructing nested generators that need an independent but
-        reproducible stream.  Call sites are unchanged; subclass copies of
-        this method should be deleted.
+        Seeded → a reproducible child Random derived from the parent state.
+        Unseeded → ``None`` so the child seeds itself from the wall clock,
+        keeping the child in the same (unseeded) mode as the parent.
         """
-        return random.Random(self._rng.randrange(2**63))
+        return random.Random(self._rng.randrange(2**63)) if self._seeded else None
 
 
 class DatasetAwareDomainGenerator(BaseDomainGenerator):
@@ -98,9 +92,8 @@ class DatasetAwareDomainGenerator(BaseDomainGenerator):
         *,
         dataset: str | None = None,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
     ) -> None:
-        super().__init__(rng=rng, seeded_mode=seeded_mode)
+        super().__init__(rng=rng)
         self._dataset = normalize_dataset(dataset)
 
     @property
@@ -124,13 +117,12 @@ class ClockAnchoredDomainGenerator(DatasetAwareDomainGenerator):
         *,
         dataset: str | None = None,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
         reference_now: datetime | None = None,
     ) -> None:
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng)
         self._reference_now: datetime = (
             reference_now if reference_now is not None
-            else resolve_clock(deterministic=self._seeded_mode)
+            else resolve_clock(deterministic=self._seeded)
         )
 
     @property
