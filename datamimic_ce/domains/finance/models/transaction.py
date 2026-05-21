@@ -228,9 +228,6 @@ class Transaction(BaseEntity):
         }
 
         if self.account:
-            result["account"] = {
-                "account_number": self.account.account_number,
-                "account_type": self.account.account_type,
-            }
+            result["account"] = self.account.to_dict()
 
         return result
