@@ -19,6 +19,7 @@ class CPFGenerator(BaseLiteralGenerator):
     """
 
     def __init__(self, rng: random.Random | None = None) -> None:
+        super().__init__(rng=rng)
         self._gen = DataFakerGenerator(method="cpf", locale="pt_BR", rng=rng)
 
     def generate(self) -> str:

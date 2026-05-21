@@ -10,6 +10,7 @@ Hospital service.
 This module provides the HospitalService class for generating and managing hospital data.
 """
 
+from datetime import datetime
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
@@ -45,8 +46,13 @@ class HospitalService(BaseDomainService[Hospital]):
     and retrieving hospitals with specific characteristics.
     """
 
-    def __init__(self, dataset: str | None = None, rng: Random | None = None):
-        super().__init__(HospitalGenerator(dataset=dataset, rng=rng), Hospital)
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: Random | None = None,
+        reference_now: datetime | None = None,
+    ):
+        super().__init__(HospitalGenerator(dataset=dataset, rng=rng, reference_now=reference_now), Hospital)
 
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:

@@ -40,7 +40,8 @@ class BirthdateGenerator(ClockAnchoredDomainGenerator):
             min_age (int): minimum age value (inclusively).
             max_age (int): maximum age value (inclusively).
             rng: Optional seeded random instance for deterministic output.
-            reference_now: Optional fixed datetime to use as "today". Defaults to live UTC.
+            reference_now: Optional fixed datetime to use as "today". Defaults to the
+                resolved clock — the deterministic anchor when seeded, else live UTC.
 
         Throws:
             ValueError: if min_age is higher than max_age

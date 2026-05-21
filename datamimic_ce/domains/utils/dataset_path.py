@@ -17,8 +17,20 @@ resolution function so paths are easy to maintain and extend (e.g., env override
 
 DOMAIN_DATA_DIRNAME = "domain_data"
 
-# Track which dataset codes we already logged fallback for, to avoid log spam
+# Track which dataset codes we already logged fallback for, to avoid log spam.
+# This is process-global state: in a long-lived worker the once-per-code
+# suppression persists across runs. Call ``reset_dataset_fallback_log()`` to
+# clear it when a fresh run should re-emit the warnings.
 _logged_dataset_fallbacks: set[str] = set()
+
+
+def reset_dataset_fallback_log() -> None:
+    """Clear the once-per-code US-fallback log suppression.
+
+    Useful for long-lived processes (or tests) that need each run to start with
+    a clean slate rather than inheriting suppression from an earlier run.
+    """
+    _logged_dataset_fallbacks.clear()
 
 
 def _strict_dataset_mode() -> bool:

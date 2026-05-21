@@ -16,6 +16,7 @@ attribute.
 
 from __future__ import annotations
 
+import inspect
 import json
 from datetime import date, datetime
 from random import Random
@@ -27,6 +28,8 @@ from datamimic_ce.domains.common.services.city_service import CityService
 from datamimic_ce.domains.common.services.company_service import CompanyService
 from datamimic_ce.domains.common.services.country_service import CountryService
 from datamimic_ce.domains.common.services.person_service import PersonService
+from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
+from datamimic_ce.domains.domain_core.entity_registry import list_entity_specs
 
 # All CE domain services that wrap a single entity. Listed explicitly so a
 # missing service is a visible PR change, not a discovery side-effect.
@@ -144,8 +147,10 @@ def test_service_replay_byte_identical_under_seeded_rng(service_cls: type) -> No
     out_b = _normalise(b.generate())
 
     # Use JSON for an order-independent diff that still shows the divergent keys.
-    serialised_a = json.dumps(out_a, sort_keys=True, default=str)
-    serialised_b = json.dumps(out_b, sort_keys=True, default=str)
+    # No ``default=`` fallback: a non-serialisable value must fail loudly rather
+    # than be coerced to a string that could hide a real divergence.
+    serialised_a = json.dumps(out_a, sort_keys=True)
+    serialised_b = json.dumps(out_b, sort_keys=True)
 
     if serialised_a != serialised_b:
         # Find the diverging keys so a regression is debuggable in CI logs.
@@ -178,4 +183,54 @@ def test_service_replay_diverges_under_different_seeds(service_cls: type) -> Non
     assert out_a != out_b, (
         f"{service_cls.__name__} produced identical output under different seeds — "
         f"its RNG path is not wired through."
+    )
+
+
+def test_replay_gate_covers_every_registered_service() -> None:
+    """The hand-listed services must equal the auto-discovered registry.
+
+    Without this cross-check a newly added service silently skips the
+    byte-stability gate — exactly the regression class this gate guards.
+    """
+    discovered = {spec.service_cls for spec in list_entity_specs()}
+    listed = set(SERVICES_WITHOUT_DATASET)
+    missing = sorted(c.__name__ for c in discovered - listed)
+    extra = sorted(c.__name__ for c in listed - discovered)
+    assert not missing, (
+        f"Services discovered by the registry but missing from the replay gate: {missing}. "
+        f"Add them to SERVICES_WITHOUT_DATASET so their determinism is pinned."
+    )
+    assert not extra, f"Services listed in the replay gate but not discoverable by the registry: {extra}."
+
+
+@pytest.mark.parametrize("service_cls", SERVICES_WITHOUT_DATASET, ids=lambda c: c.__name__)
+def test_every_service_accepts_rng(service_cls: type) -> None:
+    """Every entity service must accept ``rng``.
+
+    ``VariableTask`` injects the task RNG by signature inspection, so a service
+    that omits the parameter is silently left unseeded — a determinism gap that
+    no value-comparison test would surface on its own.
+    """
+    params = inspect.signature(service_cls.__init__).parameters
+    assert "rng" in params, (
+        f"{service_cls.__name__} does not accept 'rng'; it cannot be seeded and the "
+        f"DSL determinism contract cannot be applied to it."
+    )
+
+
+@pytest.mark.parametrize("service_cls", SERVICES_WITHOUT_DATASET, ids=lambda c: c.__name__)
+def test_clock_anchored_services_expose_reference_now(service_cls: type) -> None:
+    """A service wrapping a clock-anchored generator must expose ``reference_now``.
+
+    Otherwise its date fields silently follow the wall clock and cannot be
+    frozen, so two runs on different machines/seconds diverge — invisibly to
+    the seeded replay test above, which never varies the clock.
+    """
+    service = _instantiate(service_cls, rng=Random(SEED))
+    if not isinstance(service._data_generator, ClockAnchoredDomainGenerator):
+        pytest.skip(f"{service_cls.__name__} is not clock-anchored")
+    params = inspect.signature(service_cls.__init__).parameters
+    assert "reference_now" in params, (
+        f"{service_cls.__name__} wraps a clock-anchored generator but does not accept "
+        f"'reference_now'; its date fields cannot be frozen and will drift across runs."
     )

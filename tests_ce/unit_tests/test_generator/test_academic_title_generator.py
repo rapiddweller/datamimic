@@ -58,14 +58,14 @@ class TestAcademicTitleGenerator:
         assert generator_3._quota == 0.5
 
     def test_invalid_dataset(self, caplog):
-        from datamimic_ce.domains.utils.dataset_path import _logged_dataset_fallbacks
+        from datamimic_ce.domains.utils.dataset_path import reset_dataset_fallback_log
         from datamimic_ce.logger import logger as dm_logger
 
         # The US-fallback is logged once per process per dataset code, and a prior
         # full-engine run leaves the DATAMIMIC logger with propagate=False (so
         # caplog, which captures via root propagation, would miss it). Reset both
         # so this assertion is independent of test ordering.
-        _logged_dataset_fallbacks.discard("SV")
+        reset_dataset_fallback_log()
         prev_propagate = dm_logger.propagate
         dm_logger.propagate = True
         try:

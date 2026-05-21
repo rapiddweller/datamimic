@@ -15,7 +15,7 @@ An :class:`EntitySchema` bundles the ordered fields of one entity. Services
 expose their schema's fields through ``BaseDomainService.attribute_specs`` so
 the entity registry can introspect each entity by name.
 
-Reusable groups (address, contact) are defined here once and composed by
+Reusable groups (e.g. address) are defined here once and composed by
 entities, so shared surfaces never drift.
 """
 
@@ -99,10 +99,3 @@ ADDRESS_FIELDS: tuple[FieldSpec, ...] = (
 def address_group(name: str = "address", description: str = "Structured postal address fields.") -> FieldSpec:
     """A reusable nested address field (shipping_address, billing_address, …)."""
     return group(name, description, ADDRESS_FIELDS)
-
-
-CONTACT_FIELDS: tuple[FieldSpec, ...] = (
-    field("phone", str, "Contact phone number."),
-    field("mobile_phone", str, "Mobile contact number."),
-    field("email", str, "Primary email address."),
-)

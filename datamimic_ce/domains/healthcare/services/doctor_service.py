@@ -65,6 +65,7 @@ class DoctorService(BaseDomainService[Doctor]):
         demographic_config: DemographicConfig | None = None,
         demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
+        reference_now: datetime | None = None,
     ) -> None:
         super().__init__(
             DoctorGenerator(
@@ -72,6 +73,7 @@ class DoctorService(BaseDomainService[Doctor]):
                 rng=rng,
                 demographic_config=demographic_config,
                 demographic_sampler=demographic_sampler,
+                reference_now=reference_now,
             ),
             Doctor,
         )

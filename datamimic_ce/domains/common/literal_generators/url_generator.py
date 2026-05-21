@@ -21,6 +21,7 @@ class UrlGenerator(BaseLiteralGenerator):
         schemes: list[str] | None = None,
         rng: random.Random | None = None,
     ) -> None:
+        super().__init__(rng=rng)
         self._gen = DataFakerGenerator(locale=locale, method="url", schemes=schemes, rng=rng)
 
     def generate(self) -> str:

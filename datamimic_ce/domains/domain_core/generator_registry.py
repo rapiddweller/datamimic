@@ -73,11 +73,6 @@ def get_generator_class(name: str) -> type | None:
     return _REGISTRY.get(name)
 
 
-def list_generator_names() -> list[str]:
-    _ensure_loaded()
-    return sorted(_REGISTRY.keys())
-
-
 def generator_namespace() -> dict[str, type]:
     """Return a name->class map for use as an eval namespace in the DSL engine."""
     _ensure_loaded()

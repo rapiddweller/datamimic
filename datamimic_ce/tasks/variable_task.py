@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import inspect
 from collections.abc import Iterator
 from typing import Any, Final
 
@@ -36,8 +37,6 @@ from datamimic_ce.utils.string_util import StringUtil
 
 def _constructor_params(cls: type) -> frozenset[str]:
     """Names accepted by ``cls.__init__`` — used to inject only supported kwargs."""
-    import inspect
-
     try:
         return frozenset(inspect.signature(cls).parameters)
     except (TypeError, ValueError):

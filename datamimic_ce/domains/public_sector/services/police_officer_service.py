@@ -10,6 +10,7 @@ Police officer service.
 This module provides a service for working with PoliceOfficer entities.
 """
 
+from datetime import datetime
 from random import Random
 
 from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
@@ -63,6 +64,7 @@ class PoliceOfficerService(BaseDomainService[PoliceOfficer]):
         demographic_config: DemographicConfig | None = None,
         demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
+        reference_now: datetime | None = None,
     ):
         super().__init__(
             PoliceOfficerGenerator(
@@ -70,6 +72,7 @@ class PoliceOfficerService(BaseDomainService[PoliceOfficer]):
                 rng=rng,
                 demographic_config=demographic_config,
                 demographic_sampler=demographic_sampler,
+                reference_now=reference_now,
             ),
             PoliceOfficer,
         )

@@ -38,7 +38,8 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         Args:
             dataset: The dataset code to use (e.g., 'US', 'DE'). Defaults to 'US'.
             rng: Optional seeded random instance for deterministic output.
-            reference_now: Optional fixed datetime to use as "now". Defaults to live UTC.
+            reference_now: Optional fixed datetime to use as "now". Defaults to the
+                resolved clock — the deterministic anchor when seeded, else live UTC.
         """
         super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         # Keep reference IDs deterministic when rngSeed is supplied via descriptors.

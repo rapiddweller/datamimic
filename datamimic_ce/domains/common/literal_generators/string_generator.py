@@ -44,6 +44,7 @@ class StringGenerator(BaseLiteralGenerator):
         unique: bool = False,
         prefix: str | None = None,
         suffix: str | None = None,
+        rng: random.Random | None = None,
     ):
         self._char_set = (
             char_set
@@ -79,19 +80,22 @@ class StringGenerator(BaseLiteralGenerator):
                 f"Cannot generate unique string with length {self._max_len} "
                 f"from character set of size {len(self._char_set)}"
             )
-        super().__init__()
+        super().__init__(rng=rng)
 
     def generate(self) -> str:
         try:
             # regex
             if any(c in self._char_set for c in ".^$*+?{}[]|()"):
                 compiled_regex = re.compile(self._char_set)
-                char_set_list = list(set(compiled_regex.findall(string.printable)))
+                # sorted(): set iteration order is hash-randomised across
+                # processes, so an unsorted candidate list breaks cross-process
+                # byte-stability even with a seeded rng.
+                char_set_list = sorted(set(compiled_regex.findall(string.printable)))
             else:
                 # simple character
-                char_set_list = list(set(self._char_set))
+                char_set_list = sorted(set(self._char_set))
         except re.error:
-            char_set_list = list(set(self._char_set))
+            char_set_list = sorted(set(self._char_set))
 
         # If unique, ensure each character only appears once
         if self.unique:

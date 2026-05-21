@@ -41,7 +41,7 @@ class PhoneNumberGenerator(DatasetAwareDomainGenerator):
 
         from datamimic_ce.domains.common.generators import CountryGenerator
 
-        country_generator = CountryGenerator(dataset=self._dataset)
+        country_generator = CountryGenerator(dataset=self._dataset, rng=self._derive_rng())
         country_data = country_generator.get_country_by_iso_code(self._dataset)
         self._country_code = country_data[2]
 

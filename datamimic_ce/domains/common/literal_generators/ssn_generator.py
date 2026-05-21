@@ -13,6 +13,7 @@ from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralG
 
 class SSNGenerator(BaseLiteralGenerator):
     def __init__(self, locale: str | None = "en_US", rng: random.Random | None = None) -> None:
+        super().__init__(rng=rng)
         self._gen = DataFakerGenerator(method="ssn", locale=locale, rng=rng)
 
     def generate(self) -> Any:
