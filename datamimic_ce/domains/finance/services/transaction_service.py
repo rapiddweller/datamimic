@@ -44,6 +44,7 @@ TRANSACTION_SCHEMA = EntitySchema(
                 field("account_number", str, "Account number."),
                 field("account_type", str, "Account type."),
             ),
+            optional=True,
         ),
     ),
 )

@@ -8,8 +8,12 @@
 
 The seeded-replay contract is described as a readable DATAMIMIC DSL model
 (``all_entities_seeded.xml``): every registered domain entity is generated with
-an ``rngSeed`` and a handful of scalar fields. Running the same model twice must
-yield byte-identical output per ``<generate>`` block.
+an ``rngSeed`` and a handful of scalar fields. Entities with a non-optional
+grouped field (e.g. a structured address) also expose one nested scalar via a
+script (``e.address.street``), so the contract covers nested attribute access
+through the model — which resolves via the entity's properties and is
+independent of how ``to_dict()`` serialises that nested record. Running the same
+model twice must yield byte-identical output per ``<generate>`` block.
 
 The model is GENERATED from the entity registry (``build_all_entities_seeded_xml``)
 and the generated text is committed so a reviewer can read it top-to-bottom. A
@@ -50,11 +54,33 @@ def _scalar_leaf_fields(spec: EntitySpec) -> list:
     ]
 
 
+def _nested_scalar_keys(spec: EntitySpec) -> list[tuple[str, str]]:
+    """``(key_name, script)`` pairs for one scalar child of each group field.
+
+    Exercises nested attribute access through the *model* (``e.address.street``),
+    which resolves via the entity's properties and is independent of how
+    ``to_dict()`` serialises the nested record. Returns ``[]`` when the entity
+    has no grouped field.
+    """
+    pairs: list[tuple[str, str]] = []
+    for grp in (f for f in spec.attributes if f.children and not f.optional):
+        child = next(
+            (c for c in grp.children if isinstance(c.py_type, type) and issubclass(c.py_type, _SCALAR_TYPES)),
+            None,
+        )
+        if child is not None:
+            pairs.append((f"{grp.name}_{child.name}", f"e.{grp.name}.{child.name}"))
+    return pairs
+
+
 def build_all_entities_seeded_xml() -> str:
     """Render the seeded-replay DSL model from the entity registry.
 
     One ``<generate>`` block per registered entity (sorted by name), each seeded
     with ``rngSeed`` and exposing the first few scalar fields from its schema.
+    Entities with a grouped field (e.g. a structured address) additionally expose
+    one nested scalar (``e.address.street``) so the contract also covers nested
+    attribute access through the model.
     """
     lines = [
         '<setup multiprocessing="0">',
@@ -68,6 +94,7 @@ def build_all_entities_seeded_xml() -> str:
         lines.append(f'    <generate name="{spec.entity.lower()}" count="3" target="">')
         lines.append(f'        <variable name="e" entity="{spec.entity}" dataset="US" rngSeed="{SEED}"/>')
         lines.extend(f'        <key name="{f.name}" script="e.{f.name}"/>' for f in keys)
+        lines.extend(f'        <key name="{name}" script="{script}"/>' for name, script in _nested_scalar_keys(spec))
         lines.append("    </generate>")
     lines.append("</setup>")
     return "\n".join(lines) + "\n"

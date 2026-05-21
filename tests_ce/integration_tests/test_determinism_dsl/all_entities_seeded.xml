@@ -12,6 +12,7 @@
         <key name="office_id" script="e.office_id"/>
         <key name="name" script="e.name"/>
         <key name="type" script="e.type"/>
+        <key name="address_street" script="e.address.street"/>
     </generate>
     <generate name="bank" count="3" target="">
         <variable name="e" entity="Bank" dataset="US" rngSeed="42"/>
@@ -54,12 +55,14 @@
         <key name="doctor_id" script="e.doctor_id"/>
         <key name="npi_number" script="e.npi_number"/>
         <key name="license_number" script="e.license_number"/>
+        <key name="address_street" script="e.address.street"/>
     </generate>
     <generate name="educationalinstitution" count="3" target="">
         <variable name="e" entity="EducationalInstitution" dataset="US" rngSeed="42"/>
         <key name="institution_id" script="e.institution_id"/>
         <key name="name" script="e.name"/>
         <key name="type" script="e.type"/>
+        <key name="address_street" script="e.address.street"/>
     </generate>
     <generate name="hospital" count="3" target="">
         <variable name="e" entity="Hospital" dataset="US" rngSeed="42"/>
@@ -108,6 +111,8 @@
         <key name="order_id" script="e.order_id"/>
         <key name="user_id" script="e.user_id"/>
         <key name="total_amount" script="e.total_amount"/>
+        <key name="shipping_address_street" script="e.shipping_address.street"/>
+        <key name="billing_address_street" script="e.billing_address.street"/>
     </generate>
     <generate name="patient" count="3" target="">
         <variable name="e" entity="Patient" dataset="US" rngSeed="42"/>
@@ -126,6 +131,7 @@
         <key name="officer_id" script="e.officer_id"/>
         <key name="badge_number" script="e.badge_number"/>
         <key name="given_name" script="e.given_name"/>
+        <key name="address_street" script="e.address.street"/>
     </generate>
     <generate name="product" count="3" target="">
         <variable name="e" entity="Product" dataset="US" rngSeed="42"/>
