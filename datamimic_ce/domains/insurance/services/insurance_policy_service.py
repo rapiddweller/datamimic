@@ -10,7 +10,7 @@ Insurance Policy Service.
 This module provides service functions for generating and managing insurance policies.
 """
 
-from datetime import datetime
+from datetime import date
 from random import Random
 
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
@@ -29,10 +29,10 @@ INSURANCE_POLICY_SCHEMA = EntitySchema(
         field("coverages", list, "Coverage entries on the policy."),
         field("premium", float, "Premium amount."),
         field("premium_frequency", str, "Premium payment frequency."),
-        field("start_date", datetime, "Policy start date."),
-        field("end_date", datetime, "Policy end date."),
+        field("start_date", date, "Policy start date."),
+        field("end_date", date, "Policy end date."),
         field("status", str, "Policy status."),
-        field("created_date", datetime, "Policy creation date."),
+        field("created_date", date, "Policy creation date."),
     ),
 )
 

@@ -34,7 +34,7 @@ POLICE_OFFICER_SCHEMA = EntitySchema(
         field("family_name", str, "Last (family) name."),
         field("full_name", str, "Full display name."),
         field("gender", str, "Gender."),
-        field("birthdate", str, "Date of birth."),
+        field("birthdate", datetime, "Date of birth."),
         field("age", int, "Age in years."),
         field("rank", str, "Officer rank."),
         field("department", str, "Department."),

@@ -7,8 +7,6 @@
 import ast
 import uuid
 
-from faker import Faker
-
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
@@ -341,49 +339,3 @@ class GeneratorUtil:
         # If the uuid_string is a valid hex code, but an invalid uuid4,
         # the UUID.__init__ will convert it to a valid uuid4. This is bad for validation purposes.
         return val.hex == input_string.replace("-", "")
-
-    @staticmethod
-    def faker_generator(
-        method: str,
-        locale: str | None = "en_US",
-        args: str | list | None = None,
-        kwargs: dict | None = None,
-    ):
-        """
-        Generate fake data using the Faker library.
-
-        Args:
-            method (str): The Faker method to use.
-            locale (Optional[str]): The locale for the Faker instance. Defaults to "en_US".
-            args (Optional[Union[str, list]]): The positional arguments for the Faker method.
-            kwargs (Optional[dict]): The keyword arguments for the Faker method.
-
-        Returns:
-            Any: The generated fake data.
-        """
-        faker = Faker(locale)
-        # validation support methods
-        not_support_method = [
-            "seed",
-            "seed_instance",
-            "seed_locale",
-            "provider",
-            "get_providers",
-            "add_provider",
-        ]
-        if method in not_support_method or method.startswith("_"):
-            raise ValueError(f"Faker method '{method}' is not supported")
-        # check worked methods
-        faker_method = getattr(faker, method, "method does not exist")
-        if faker_method == "method does not exist" or not callable(faker_method):
-            raise ValueError(f"Wrong Faker method: {method} does not exist")
-        # generate data
-        if args and kwargs:
-            result = faker_method(*args, **kwargs)
-        elif args:
-            result = faker_method(*args)
-        elif kwargs:
-            result = faker_method(**kwargs)
-        else:
-            result = faker_method()
-        return result

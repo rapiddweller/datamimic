@@ -169,6 +169,6 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
         spec_vals, _ = load_weighted_values_try_dataset(
             "public_sector", "education", f"facilities_{cat}.csv", dataset=self._dataset, start=start
         )
-        all_fac = list(set(list(common_vals) + list(spec_vals)))
+        all_fac = list(dict.fromkeys(list(common_vals) + list(spec_vals)))
         k = self._rng.randint(5, min(15, len(all_fac)))
         return sorted(self._rng.sample(all_fac, k))

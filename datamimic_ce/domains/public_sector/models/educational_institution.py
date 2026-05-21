@@ -353,5 +353,5 @@ class EducationalInstitution(BaseEntity):
             "programs": self.programs,
             "accreditations": self.accreditations,
             "facilities": self.facilities,
-            "address": self.address,
+            "address": self.address.to_dict(),
         }

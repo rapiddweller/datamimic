@@ -57,9 +57,6 @@ class EntitySchema:
     entity: str
     fields: tuple[FieldSpec, ...]
 
-    def field_names(self) -> tuple[str, ...]:
-        return tuple(f.name for f in self.fields)
-
 
 def field(name: str, py_type: PyType, description: str, *, optional: bool = False) -> FieldSpec:
     """Build a leaf field spec."""

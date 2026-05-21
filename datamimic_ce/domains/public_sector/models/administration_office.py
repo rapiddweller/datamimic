@@ -425,5 +425,5 @@ class AdministrationOffice(BaseEntity):
             "services": self.services,
             "departments": self.departments,
             "leadership": self.leadership,
-            "address": self.address,
+            "address": self.address.to_dict(),
         }

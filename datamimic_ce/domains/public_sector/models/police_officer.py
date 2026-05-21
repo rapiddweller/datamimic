@@ -277,5 +277,5 @@ class PoliceOfficer(BaseEntity):
             "shift": self.shift,
             "email": self.email,
             "phone": self.phone,
-            "address": self.address,
+            "address": self.address.to_dict(),
         }
