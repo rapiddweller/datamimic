@@ -14,16 +14,14 @@ class InsuranceCoverageGenerator(DatasetAwareDomainGenerator):
         self,
         dataset: str | None = None,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
     ):
         """Initialize the insurance coverage generator.
 
         Args:
             dataset: The country code to use for data generation
             rng: Optional seeded random instance for deterministic output.
-            seeded_mode: Whether to operate in seeded/deterministic mode.
         """
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng)
         self._last_coverage_code: str | None = None
         self._last_product_code: str | None = None
         self._last_min_coverage: str | None = None

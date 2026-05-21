@@ -33,9 +33,8 @@ class ProductGenerator(DatasetAwareDomainGenerator):
         min_price: float = 0.99,
         max_price: float = 999.99,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng)
         self._min_price = min(min_price, max_price)
         self._max_price = max(min_price, max_price)
 

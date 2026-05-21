@@ -22,9 +22,8 @@ class CountryService(BaseDomainService[Country]):
         self,
         dataset: str | None = None,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(CountryGenerator(dataset=dataset, rng=rng, seeded_mode=seeded_mode), Country)
+        super().__init__(CountryGenerator(dataset=dataset, rng=rng), Country)
 
     @staticmethod
     def supported_datasets() -> set[str]:

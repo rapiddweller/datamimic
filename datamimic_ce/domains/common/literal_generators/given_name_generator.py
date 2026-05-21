@@ -22,9 +22,8 @@ class GivenNameGenerator(DatasetAwareDomainGenerator):
         dataset: str | None = None,
         gender: str | None = None,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng)
         self._gender = gender
         self._last_given: str | None = None
 

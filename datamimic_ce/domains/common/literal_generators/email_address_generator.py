@@ -25,9 +25,8 @@ class EmailAddressGenerator(DatasetAwareDomainGenerator):
         given_name: str | None = None,
         family_name: str | None = None,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng)
         self._given_name = given_name
         self._given_name_generator = (
             GivenNameGenerator(dataset=self._dataset, rng=self._derive_rng()) if given_name is None else None

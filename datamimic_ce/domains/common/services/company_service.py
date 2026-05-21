@@ -23,9 +23,8 @@ class CompanyService(BaseDomainService[Company]):
         self,
         dataset: str | None = None,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(CompanyGenerator(dataset=dataset, rng=rng, seeded_mode=seeded_mode), Company)
+        super().__init__(CompanyGenerator(dataset=dataset, rng=rng), Company)
 
     @staticmethod
     def supported_datasets() -> set[str]:

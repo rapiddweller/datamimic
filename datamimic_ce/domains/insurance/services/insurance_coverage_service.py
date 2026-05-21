@@ -20,9 +20,9 @@ from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCo
 class InsuranceCoverageService(BaseDomainService[InsuranceCoverage]):
     """Service for generating and managing insurance company coverages."""
 
-    def __init__(self, dataset: str | None = None, rng: Random | None = None, seeded_mode: bool | None = None):
+    def __init__(self, dataset: str | None = None, rng: Random | None = None):
         super().__init__(
-            InsuranceCoverageGenerator(dataset=dataset, rng=rng, seeded_mode=seeded_mode), InsuranceCoverage
+            InsuranceCoverageGenerator(dataset=dataset, rng=rng), InsuranceCoverage
         )
 
     @staticmethod

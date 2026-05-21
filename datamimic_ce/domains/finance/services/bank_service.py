@@ -12,8 +12,8 @@ from datamimic_ce.domains.finance.models.bank import Bank
 
 
 class BankService(BaseDomainService[Bank]):
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None, seeded_mode: bool | None = None):
-        super().__init__(BankGenerator(dataset, rng=rng, seeded_mode=seeded_mode), Bank)
+    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
+        super().__init__(BankGenerator(dataset, rng=rng), Bank)
 
     @staticmethod
     def supported_datasets() -> set[str]:

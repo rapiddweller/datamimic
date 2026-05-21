@@ -40,7 +40,7 @@ class Order(BaseEntity):
     @property
     def dataset(self) -> str:
         """Expose dataset from generator."""
-        return self._order_generator.dataset.upper()  #  ensure downstream lookups hit _{dataset}.csv assets
+        return self._order_generator.dataset  #  property is already normalised/upper from the generator
 
     @property
     @property_cache

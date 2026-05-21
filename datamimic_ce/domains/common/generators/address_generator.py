@@ -25,24 +25,22 @@ class AddressGenerator(DatasetAwareDomainGenerator):
         self,
         dataset: str | None = None,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
     ):
         """Initialize the AddressGenerator.
 
         Args:
             dataset: The dataset to use for generating addresses.
             rng: Optional seeded random instance for deterministic output.
-            seeded_mode: Whether to operate in seeded/deterministic mode.
         """
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng)
 
         # Init sub-generators
-        self._city_generator = CityGenerator(dataset=self._dataset, rng=self._rng, seeded_mode=self._seeded_mode)
-        self._country_generator = CountryGenerator(dataset=self._dataset, rng=self._rng, seeded_mode=self._seeded_mode)
-        self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset, rng=self._rng)
-        self._company_name_generator = CompanyNameGenerator(rng=self._rng)
+        self._city_generator = CityGenerator(dataset=self._dataset, rng=self._derive_rng())
+        self._country_generator = CountryGenerator(dataset=self._dataset, rng=self._derive_rng())
+        self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset, rng=self._derive_rng())
+        self._company_name_generator = CompanyNameGenerator(rng=self._derive_rng())
         # Lazy initialization of street name generator
-        self._street_name_generator = StreetNameGenerator(dataset=self._dataset, rng=self._rng)
+        self._street_name_generator = StreetNameGenerator(dataset=self._dataset, rng=self._derive_rng())
 
     @property
     def city_generator(self) -> CityGenerator:

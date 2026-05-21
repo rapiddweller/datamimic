@@ -21,9 +21,8 @@ class CityService(BaseDomainService[City]):
         self,
         dataset: str = "US",
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(CityGenerator(dataset=dataset, rng=rng, seeded_mode=seeded_mode), City)
+        super().__init__(CityGenerator(dataset=dataset, rng=rng), City)
 
     @staticmethod
     def supported_datasets() -> set[str]:

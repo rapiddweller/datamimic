@@ -17,8 +17,8 @@ class FamilyNameGenerator(DatasetAwareDomainGenerator):
     Generate random family name
     """
 
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None, seeded_mode: bool | None = None):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
+        super().__init__(dataset=dataset, rng=rng)
 
         try:
             file_path = dataset_path("common", "person", f"familyName_{self._dataset}.csv", start=Path(__file__))

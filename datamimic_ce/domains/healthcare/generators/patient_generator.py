@@ -40,16 +40,14 @@ class PatientGenerator(DatasetAwareDomainGenerator):
         demographic_config: DemographicConfig | None = None,
         demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng)
         self._demographic_config = (demographic_config or DemographicConfig()).with_defaults()
         self._person_generator = PersonGenerator(
             dataset=self._dataset,
             demographic_config=self._demographic_config,
             demographic_sampler=demographic_sampler,
-            rng=self._rng,
-            seeded_mode=self._seeded_mode,
+            rng=self._derive_rng(),
         )
         self._demographic_sampler = demographic_sampler
         # Fan out deterministic RNG so seeded patient cohorts remain reproducible across dependent literals.

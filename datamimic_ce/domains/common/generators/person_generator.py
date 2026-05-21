@@ -46,9 +46,8 @@ class PersonGenerator(DatasetAwareDomainGenerator):
         demographic_config: DemographicConfig | None = None,
         demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng)
         self._demographic_sampler = demographic_sampler
         # Normalize demographic overrides once to keep SPOT and reuse downstream.
         resolved_config = (demographic_config or DemographicConfig()).with_defaults(
@@ -86,7 +85,6 @@ class PersonGenerator(DatasetAwareDomainGenerator):
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
             rng=self._derive_rng(),
-            seeded_mode=self._seeded_mode,
         )
         self._demographic_config = resolved_config
         self._birth_min = self._demographic_config.age_min if self._demographic_config.age_min is not None else min_age
@@ -96,7 +94,6 @@ class PersonGenerator(DatasetAwareDomainGenerator):
             min_age=self._birth_min,
             max_age=self._birth_max,
             rng=self._derive_rng(),
-            seeded_mode=self._seeded_mode,
         )
         self._academic_title_generator = AcademicTitleGenerator(
             dataset=self._dataset,
@@ -121,7 +118,7 @@ class PersonGenerator(DatasetAwareDomainGenerator):
 
     def generate_birthdate_for_age(self, age: int) -> datetime:
         # Dedicated generator keeps demographic birthdates independent from other literal draws.
-        generator = BirthdateGenerator(min_age=age, max_age=age, rng=self._derive_rng(), seeded_mode=self._seeded_mode)
+        generator = BirthdateGenerator(min_age=age, max_age=age, rng=self._derive_rng())
         return generator.generate()
 
     @property

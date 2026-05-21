@@ -18,10 +18,9 @@ class BankAccountService(BaseDomainService[BankAccount]):
         dataset: str | None = None,
         rng: random.Random | None = None,
         reference_now: dt.datetime | None = None,
-        seeded_mode: bool | None = None,
     ):
         super().__init__(
-            BankAccountGenerator(dataset=dataset, rng=rng, reference_now=reference_now, seeded_mode=seeded_mode),
+            BankAccountGenerator(dataset=dataset, rng=rng, reference_now=reference_now),
             BankAccount,
         )
 

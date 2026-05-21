@@ -27,9 +27,8 @@ class CreditCardGenerator(DatasetAwareDomainGenerator):
         dataset: str | None = None,
         rng: random.Random | None = None,
         demographic_config: DemographicConfig | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng)
         #  ensure person data (names/emails/phones) follow the selected dataset (DE/US)
         if demographic_config is None:
             from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
@@ -37,15 +36,13 @@ class CreditCardGenerator(DatasetAwareDomainGenerator):
             demographic_config = _DC()
         self._person_generator = PersonGenerator(
             dataset=self._dataset,
-            rng=self._rng,
-            seeded_mode=self._seeded_mode,
+            rng=self._derive_rng(),
             demographic_config=demographic_config,
         )
         self._date_generator = DateTimeGenerator(random=True, rng=self._derive_rng())
         self._bank_account_generator = BankAccountGenerator(
             dataset=self._dataset,
-            rng=self._rng,
-            seeded_mode=self._seeded_mode,
+            rng=self._derive_rng(),
         )
         self._card_types_cache: list[tuple] | None = None
         self._card_specs: dict | None = None

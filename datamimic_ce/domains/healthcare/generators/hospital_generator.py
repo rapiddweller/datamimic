@@ -24,14 +24,12 @@ class HospitalGenerator(ClockAnchoredDomainGenerator):
         self,
         dataset: str | None = None,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
         reference_now: datetime.datetime | None = None,
     ) -> None:
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
+        super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
             rng=self._derive_rng(),
-            seeded_mode=self._seeded_mode,
         )
         self._phone_number_generator = PhoneNumberGenerator(
             dataset=self._dataset,

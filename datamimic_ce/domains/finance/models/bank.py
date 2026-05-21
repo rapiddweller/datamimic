@@ -43,7 +43,7 @@ class Bank(BaseEntity):
     @property_cache
     def bic(self) -> str:
         #  embed dataset country code (US/DE) into BIC pattern for consistency
-        ds = getattr(self._bank_generator, "dataset", "US").upper()
+        ds = self._bank_generator.dataset
         # Basic 8-char BIC: 4 letters bank + 2-letter country + 2 alnum location
         pattern = f"[A-Z]{{4}}{ds}[A-Z0-9]{{2}}"
         return StringGenerator.rnd_str_from_regex(pattern, rng=self._bank_generator.rng)

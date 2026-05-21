@@ -24,30 +24,25 @@ class InsurancePolicyGenerator(DatasetAwareDomainGenerator):
         dataset: str | None = None,
         rng: random.Random | None = None,
         demographic_config: DemographicConfig | None = None,
-        seeded_mode: bool | None = None,
     ):
         """Initialize the insurance policy generator.
 
         Args:
             dataset: The country code to use for data generation
             rng: Optional seeded random instance for deterministic output.
-            seeded_mode: Whether to operate in seeded/deterministic mode.
         """
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng)
         self._insurance_company_generator = InsuranceCompanyGenerator(
             dataset=self._dataset,
-            rng=self._rng,
-            seeded_mode=self._seeded_mode,
+            rng=self._derive_rng(),
         )
         self._insurance_product_generator = InsuranceProductGenerator(
             dataset=self._dataset,
-            rng=self._rng,
-            seeded_mode=self._seeded_mode,
+            rng=self._derive_rng(),
         )
         self._insurance_coverage_generator = InsuranceCoverageGenerator(
             dataset=self._dataset,
-            rng=self._rng,
-            seeded_mode=self._seeded_mode,
+            rng=self._derive_rng(),
         )
         #  Thread demographic constraints and RNG to person generation used by policy holder
         if demographic_config is None:
@@ -56,11 +51,10 @@ class InsurancePolicyGenerator(DatasetAwareDomainGenerator):
             demographic_config = _DC()
         self._person_generator = PersonGenerator(
             dataset=self._dataset,
-            rng=self._rng,
-            seeded_mode=self._seeded_mode,
+            rng=self._derive_rng(),
             demographic_config=demographic_config,
         )
-        self._datetime_generator = DateTimeGenerator(random=True, rng=self._derive_rng(), seeded_mode=self._seeded_mode)
+        self._datetime_generator = DateTimeGenerator(random=True, rng=self._derive_rng())
         # Track last picks to avoid immediate repetition in tests without rerun plugin
         self._last_status: str | None = None
 

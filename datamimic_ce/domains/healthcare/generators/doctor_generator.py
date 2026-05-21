@@ -38,10 +38,9 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
         rng: random.Random | None = None,
         demographic_config: DemographicConfig | None = None,
         demographic_sampler: DemographicSampler | None = None,
-        seeded_mode: bool | None = None,
         reference_now: datetime.datetime | None = None,
     ):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
+        super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
 
         demo = demographic_config if demographic_config is not None else _DC()
@@ -49,14 +48,12 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
             dataset=self._dataset,
             demographic_config=demo,
             demographic_sampler=demographic_sampler,
-            rng=self._rng,
-            seeded_mode=self._seeded_mode,
+            rng=self._derive_rng(),
             min_age=25,
         )
         self._hospital_generator = HospitalGenerator(
             dataset=self._dataset,
-            rng=self._rng,
-            seeded_mode=self._seeded_mode,
+            rng=self._derive_rng(),
         )
         self._last_specialty: str | None = None
         self._last_med_school: str | None = None

@@ -24,10 +24,9 @@ class TransactionService(BaseDomainService[Transaction]):
         dataset: str | None = None,
         rng: random.Random | None = None,
         reference_now: dt.datetime | None = None,
-        seeded_mode: bool | None = None,
     ):
         super().__init__(
-            TransactionGenerator(dataset=dataset, rng=rng, reference_now=reference_now, seeded_mode=seeded_mode),
+            TransactionGenerator(dataset=dataset, rng=rng, reference_now=reference_now),
             Transaction,
         )
 

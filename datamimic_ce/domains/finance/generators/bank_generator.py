@@ -16,9 +16,8 @@ class BankGenerator(DatasetAwareDomainGenerator):
         self,
         dataset: str | None = None,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng)
         # Track last pick to avoid immediate repetition in single process
         self._last_bank_name: str | None = None
 

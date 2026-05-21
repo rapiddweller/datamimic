@@ -27,9 +27,8 @@ class MedicalProcedureGenerator(DatasetAwareDomainGenerator):
         self,
         dataset: str | None = None,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng)
         self._last_specialty: str | None = None
         self._last_recovery_time: int | None = None
 

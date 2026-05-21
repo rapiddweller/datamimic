@@ -32,7 +32,6 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
         rng: random.Random | None = None,
         demographic_config: DemographicConfig | None = None,
         demographic_sampler: DemographicSampler | None = None,
-        seeded_mode: bool | None = None,
         reference_now: datetime.datetime | None = None,
     ):
         """Initialize the police officer generator.
@@ -40,10 +39,9 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
         Args:
             dataset: The dataset to use for data generation
             rng: Optional seeded random instance for deterministic output.
-            seeded_mode: Whether to operate in seeded/deterministic mode.
             reference_now: Optional fixed datetime anchor for deterministic mode.
         """
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
+        super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
 
         demo = demographic_config if demographic_config is not None else _DC()
@@ -51,15 +49,13 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
             dataset=self._dataset,
             demographic_config=demo,
             demographic_sampler=demographic_sampler,
-            rng=self._rng,
-            seeded_mode=self._seeded_mode,
+            rng=self._derive_rng(),
             min_age=21,
         )
         # Hand child generators a derived RNG so seeded officers replay consistently across runs.
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
             rng=self._derive_rng(),
-            seeded_mode=self._seeded_mode,
         )
         self._phone_number_generator = PhoneNumberGenerator(
             dataset=self._dataset,

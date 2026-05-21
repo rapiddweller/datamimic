@@ -26,9 +26,9 @@ class EducationalInstitutionService(BaseDomainService[EducationalInstitution]):
     EducationalInstitution entities.
     """
 
-    def __init__(self, dataset: str | None = None, rng: Random | None = None, seeded_mode: bool | None = None):
+    def __init__(self, dataset: str | None = None, rng: Random | None = None):
         super().__init__(
-            EducationalInstitutionGenerator(dataset=dataset, rng=rng, seeded_mode=seeded_mode), EducationalInstitution
+            EducationalInstitutionGenerator(dataset=dataset, rng=rng), EducationalInstitution
         )
 
     @staticmethod

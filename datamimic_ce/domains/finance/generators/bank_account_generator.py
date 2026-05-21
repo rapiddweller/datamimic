@@ -21,13 +21,11 @@ class BankAccountGenerator(ClockAnchoredDomainGenerator):
         dataset: str | None = None,
         rng: random.Random | None = None,
         reference_now: datetime.datetime | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
+        super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         self._bank_generator = BankGenerator(
             dataset=self._dataset,
-            rng=self._rng,
-            seeded_mode=self._seeded_mode,
+            rng=self._derive_rng(),
         )
         # Seed Faker with a derived RNG so account numbers replay under rngSeed-configured descriptors.
         self._account_number_generator = DataFakerGenerator(

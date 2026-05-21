@@ -15,9 +15,9 @@ from datamimic_ce.utils.file_util import FileUtil
 
 
 class DomainGenerator(DatasetAwareDomainGenerator):
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None, seeded_mode: bool | None = None):
+    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
         """Generate random domain data for the requested dataset."""
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng)
         web_path = dataset_path("common", "net", f"webmailDomain_{self._dataset}.csv", start=Path(__file__))
         tld_path = dataset_path("common", "net", f"tld_{self._dataset}.csv", start=Path(__file__))
 
@@ -27,7 +27,7 @@ class DomainGenerator(DatasetAwareDomainGenerator):
 
         self._company_name: str | None = None
         # Share the deterministic RNG so seeded email/domain combos remain reproducible end-to-end.
-        self._company_name_generator = CompanyNameGenerator(rng=self._rng)
+        self._company_name_generator = CompanyNameGenerator(rng=self._derive_rng())
 
     def generate(self) -> str:
         """

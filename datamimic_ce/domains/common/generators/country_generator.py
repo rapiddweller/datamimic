@@ -26,9 +26,8 @@ class CountryGenerator(DatasetAwareDomainGenerator):
         self,
         dataset: str | None = None,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
+        super().__init__(dataset=dataset, rng=rng)
 
     def load_country_data(self):
         """Load country data from CSV file.

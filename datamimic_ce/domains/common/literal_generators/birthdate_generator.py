@@ -34,7 +34,6 @@ class BirthdateGenerator(ClockAnchoredDomainGenerator):
         max_age: int = 100,
         rng: Random | None = None,
         reference_now: datetime | None = None,
-        seeded_mode: bool | None = None,
     ) -> None:
         """
         Parameters:
@@ -42,12 +41,11 @@ class BirthdateGenerator(ClockAnchoredDomainGenerator):
             max_age (int): maximum age value (inclusively).
             rng: Optional seeded random instance for deterministic output.
             reference_now: Optional fixed datetime to use as "today". Defaults to live UTC.
-            seeded_mode: Optional flag for deterministic seeded mode.
 
         Throws:
             ValueError: if min_age is higher than max_age
         """
-        super().__init__(rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
+        super().__init__(rng=rng, reference_now=reference_now)
         if min_age > max_age:
             raise ValueError("max_age must higher than or equals min_age")
         today = self._reference_now

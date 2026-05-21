@@ -29,20 +29,19 @@ class CompanyGenerator(DatasetAwareDomainGenerator):
         self,
         dataset: str | None = None,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode)
-        self._company_name_generator = CompanyNameGenerator(rng=self._rng)
+        super().__init__(dataset=dataset, rng=rng)
+        self._company_name_generator = CompanyNameGenerator(rng=self._derive_rng())
         self._email_address_generator = EmailAddressGenerator(
-            dataset=self._dataset, rng=self._rng, seeded_mode=self._seeded_mode
+            dataset=self._dataset, rng=self._derive_rng()
         )
         self._phone_number_generator = PhoneNumberGenerator(
-            dataset=self._dataset, rng=self._rng, seeded_mode=self._seeded_mode
+            dataset=self._dataset, rng=self._derive_rng()
         )
         self._address_generator = AddressGenerator(
-            dataset=self._dataset, rng=self._rng, seeded_mode=self._seeded_mode
+            dataset=self._dataset, rng=self._derive_rng()
         )
-        self._sector_generator = SectorGenerator(dataset=self._dataset, rng=self._rng)
+        self._sector_generator = SectorGenerator(dataset=self._dataset, rng=self._derive_rng())
         self._legal_dataset = self._dataset
         self._last_legal_form: str | None = None
 

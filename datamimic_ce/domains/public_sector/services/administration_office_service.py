@@ -24,9 +24,9 @@ class AdministrationOfficeService(BaseDomainService[AdministrationOffice]):
     AdministrationOffice entities.
     """
 
-    def __init__(self, dataset: str | None = None, rng: Random | None = None, seeded_mode: bool | None = None):
+    def __init__(self, dataset: str | None = None, rng: Random | None = None):
         super().__init__(
-            AdministrationOfficeGenerator(dataset=dataset, rng=rng, seeded_mode=seeded_mode), AdministrationOffice
+            AdministrationOfficeGenerator(dataset=dataset, rng=rng), AdministrationOffice
         )
 
     @staticmethod

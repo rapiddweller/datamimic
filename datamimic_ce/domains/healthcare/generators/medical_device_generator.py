@@ -29,9 +29,8 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         rng: random.Random | None = None,
         demographic_config: DemographicConfig | None = None,
         reference_now: datetime.datetime | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
+        super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         #  thread demographic constraints to person details used in usage logs/technicians
         if demographic_config is None:
             from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
@@ -40,8 +39,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         self._person_generator = PersonGenerator(
             dataset=self._dataset,
             demographic_config=demographic_config,
-            rng=self._rng,
-            seeded_mode=self._seeded_mode,
+            rng=self._derive_rng(),
         )
         self._last_manufacturer: str | None = None
 

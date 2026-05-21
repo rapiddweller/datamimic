@@ -14,19 +14,16 @@ class OrderGenerator(ClockAnchoredDomainGenerator):
         dataset: str = "US",
         rng: random.Random | None = None,
         reference_now: dt.datetime | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
+        super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         self._product_generator = ProductGenerator(
             dataset=self._dataset,
-            rng=self._rng,
-            seeded_mode=self._seeded_mode,
+            rng=self._derive_rng(),
         )
         # Share deterministic RNG to nested address fields so seeded orders replay.
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
             rng=self._derive_rng(),
-            seeded_mode=self._seeded_mode,
         )
 
     @property

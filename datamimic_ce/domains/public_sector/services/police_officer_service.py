@@ -32,13 +32,11 @@ class PoliceOfficerService(BaseDomainService[PoliceOfficer]):
         demographic_config: DemographicConfig | None = None,
         demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
-        seeded_mode: bool | None = None,
     ):
         super().__init__(
             PoliceOfficerGenerator(
                 dataset=dataset,
                 rng=rng,
-                seeded_mode=seeded_mode,
                 demographic_config=demographic_config,
                 demographic_sampler=demographic_sampler,
             ),

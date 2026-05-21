@@ -15,9 +15,8 @@ class AddressService(BaseDomainService[Address]):
         self,
         dataset: str | None = None,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
     ):
-        super().__init__(AddressGenerator(dataset=dataset, rng=rng, seeded_mode=seeded_mode), Address)
+        super().__init__(AddressGenerator(dataset=dataset, rng=rng), Address)
 
     @staticmethod
     def supported_datasets() -> set[str]:

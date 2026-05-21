@@ -32,7 +32,6 @@ class PersonService(BaseDomainService[Person]):
         rng: Random | None = None,
         noble_quota: float = 0.001,
         academic_title_quota: float = 0.5,
-        seeded_mode: bool | None = None,
     ):
         resolved_config = (demographic_config or DemographicConfig()).with_defaults(
             default_age_min=min_age,
@@ -55,7 +54,6 @@ class PersonService(BaseDomainService[Person]):
                 # Thread descriptor-level overrides for noble/title quotas into the generator for determinism.
                 noble_quota=noble_quota,
                 academic_title_quota=academic_title_quota,
-                seeded_mode=seeded_mode,
             ),
             Person,
         )

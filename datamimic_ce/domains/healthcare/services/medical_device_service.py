@@ -26,7 +26,6 @@ class MedicalDeviceService(BaseDomainService[MedicalDevice]):
         demographic_config: DemographicConfig | None = None,
         rng: Random | None = None,
         reference_now: dt.datetime | None = None,
-        seeded_mode: bool | None = None,
     ):
         """Initialize the MedicalDeviceService.
 
@@ -35,7 +34,6 @@ class MedicalDeviceService(BaseDomainService[MedicalDevice]):
             demographic_config: Optional demographic configuration.
             rng: Optional seeded random instance for deterministic output.
             reference_now: Optional fixed datetime to use as "now".
-            seeded_mode: Whether to operate in seeded/deterministic mode.
         """
         super().__init__(
             MedicalDeviceGenerator(
@@ -43,7 +41,6 @@ class MedicalDeviceService(BaseDomainService[MedicalDevice]):
                 demographic_config=demographic_config,
                 rng=rng,
                 reference_now=reference_now,
-                seeded_mode=seeded_mode,
             ),
             MedicalDevice,
         )

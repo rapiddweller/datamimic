@@ -45,17 +45,14 @@ class DateTimeGenerator(ClockAnchoredDomainGenerator):
         second_granularity: int | None = None,
         seed: int | None = None,
         rng: _random.Random | None = None,
-        seeded_mode: bool | None = None,
         reference_now: datetime | None = None,
     ):
         # DateTimeGenerator exposes seed= as a DSL convenience (e.g.
-        # DateTimeGenerator(..., seed=42)). Convert it to a seeded rng here —
-        # the runtime contract upstream is rng/seeded_mode only.
+        # DateTimeGenerator(..., seed=42)). Convert it to a seeded rng here so
+        # the base class detects a non-None rng and marks the instance seeded.
         if seed is not None and rng is None:
             rng = _random.Random(seed)
-            if seeded_mode is None:
-                seeded_mode = True
-        super().__init__(rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
+        super().__init__(rng=rng, reference_now=reference_now)
 
         # format and weights
         self._input_format = input_format if input_format else "%Y-%m-%d %H:%M:%S"

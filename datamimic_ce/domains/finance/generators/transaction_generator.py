@@ -32,7 +32,6 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         dataset: str | None = None,
         rng: random.Random | None = None,
         reference_now: dt.datetime | None = None,
-        seeded_mode: bool | None = None,
     ):
         """Initialize the transaction generator.
 
@@ -40,9 +39,8 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
             dataset: The dataset code to use (e.g., 'US', 'DE'). Defaults to 'US'.
             rng: Optional seeded random instance for deterministic output.
             reference_now: Optional fixed datetime to use as "now". Defaults to live UTC.
-            seeded_mode: Whether to operate in seeded/deterministic mode.
         """
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
+        super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         # Keep reference IDs deterministic when rngSeed is supplied via descriptors.
         self._reference_generator = DataFakerGenerator(
             "uuid4",

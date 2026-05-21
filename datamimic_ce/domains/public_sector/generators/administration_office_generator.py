@@ -37,7 +37,6 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
         self,
         dataset: str | None = None,
         rng: random.Random | None = None,
-        seeded_mode: bool | None = None,
         reference_now: datetime.datetime | None = None,
     ):
         """Initialize the administration office generator.
@@ -45,15 +44,13 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
         Args:
             dataset: The country code to use for data generation
             rng: Optional seeded random instance for deterministic output.
-            seeded_mode: Whether to operate in seeded/deterministic mode.
             reference_now: Optional fixed datetime anchor for deterministic mode.
         """
-        super().__init__(dataset=dataset, rng=rng, seeded_mode=seeded_mode, reference_now=reference_now)
+        super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         # Derive child RNGs so seeded administration offices replay deterministic nested attributes.
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
             rng=self._derive_rng(),
-            seeded_mode=self._seeded_mode,
         )
         self._phone_number_generator = PhoneNumberGenerator(
             dataset=self._dataset,
