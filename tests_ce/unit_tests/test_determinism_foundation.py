@@ -6,14 +6,12 @@ This file covers the clock primitives and cross-process byte-stability.
 
 from __future__ import annotations
 
-import random
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from datamimic_ce.domains.domain_core.runtime import now_utc_naive, resolve_clock
 from datamimic_ce.domains.domain_core.runtime.clock import DETERMINISTIC_ANCHOR
-
 
 # ---------- now_utc_naive / resolve_clock ----------------------------------
 
@@ -21,12 +19,12 @@ from datamimic_ce.domains.domain_core.runtime.clock import DETERMINISTIC_ANCHOR
 def test_now_utc_naive_returns_naive_utc() -> None:
     ts = now_utc_naive()
     assert ts.tzinfo is None
-    delta = abs((ts - datetime.now(timezone.utc).replace(tzinfo=None)).total_seconds())
+    delta = abs((ts - datetime.now(UTC).replace(tzinfo=None)).total_seconds())
     assert delta < 5.0
 
 
 def test_deterministic_anchor_is_stable_and_naive() -> None:
-    assert DETERMINISTIC_ANCHOR == datetime(2025, 1, 1, 12, 0, 0)
+    assert datetime(2025, 1, 1, 12, 0, 0) == DETERMINISTIC_ANCHOR
     assert DETERMINISTIC_ANCHOR.tzinfo is None
 
 
@@ -37,7 +35,7 @@ def test_resolve_clock_deterministic_returns_anchor() -> None:
 def test_resolve_clock_live_returns_recent_naive_utc() -> None:
     ts = resolve_clock(deterministic=False)
     assert ts.tzinfo is None
-    delta = abs((ts - datetime.now(timezone.utc).replace(tzinfo=None)).total_seconds())
+    delta = abs((ts - datetime.now(UTC).replace(tzinfo=None)).total_seconds())
     assert delta < 5.0
 
 

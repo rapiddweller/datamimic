@@ -76,29 +76,35 @@ def _slug(name: str) -> str:
     return re.sub(r"\W", "_", name)
 
 
-def _candidate_nested_paths(field: str, value: object):
-    """Yield ``(name_suffix, script_expr)`` candidates for one nested field.
+def _first(items: list[str]) -> str | None:
+    return items[0] if items else None
 
-    Reflects how a DSL script reaches a scalar inside a sub-structure:
-    sub-objects via attribute access (``e.address.street``), plain data dicts
-    via item access (``e.office_hours['Monday']``), and lists via ``[0]``.
+
+def _nested_path(field: str, value: object) -> tuple[str, str] | None:
+    """The ``(name, script_expr)`` reaching one scalar inside a nested field.
+
+    Reflects how a DSL script navigates a sub-structure: sub-objects via attribute
+    access (``e.address.street``), plain data dicts via item access
+    (``e.office_hours['Monday']``), and lists via ``[0]``. Returns ``None`` for a
+    field with no reachable scalar (e.g. an empty list).
     """
     if _is_entity_obj(value):
-        for s in _scalar_subkeys(value):
-            yield f"{field}_{s}", f"e.{field}.{s}"
-    elif isinstance(value, dict):
-        for s in _scalar_subkeys(value):
-            yield f"{field}_{_slug(s)}", f"e.{field}[{s!r}]"
-    elif isinstance(value, list) and value:
+        s = _first(_scalar_subkeys(value))
+        return (f"{field}_{s}", f"e.{field}.{s}") if s else None
+    if isinstance(value, dict):
+        s = _first(_scalar_subkeys(value))
+        return (f"{field}_{_slug(s)}", f"e.{field}[{s!r}]") if s else None
+    if isinstance(value, list) and value:
         item = value[0]
         if _is_entity_obj(item):
-            for s in _scalar_subkeys(item):
-                yield f"{field}_0_{s}", f"e.{field}[0].{s}"
-        elif isinstance(item, dict):
-            for s in _scalar_subkeys(item):
-                yield f"{field}_0_{_slug(s)}", f"e.{field}[0][{s!r}]"
-        elif _is_scalar(item):
-            yield f"{field}_0", f"e.{field}[0]"
+            s = _first(_scalar_subkeys(item))
+            return (f"{field}_0_{s}", f"e.{field}[0].{s}") if s else None
+        if isinstance(item, dict):
+            s = _first(_scalar_subkeys(item))
+            return (f"{field}_0_{_slug(s)}", f"e.{field}[0][{s!r}]") if s else None
+        if _is_scalar(item):
+            return f"{field}_0", f"e.{field}[0]"
+    return None
 
 
 def _failing_keys(spec: EntitySpec, keys: list[tuple[str, str]]) -> set[str]:
@@ -145,7 +151,7 @@ def _entity_keys(spec: EntitySpec) -> list[tuple[str, str]]:
         if not isinstance(value, dict | list):
             continue
         prop = getattr(sample, field, value)  # scripts reach the property, not the serialised value
-        candidate = next(iter(_candidate_nested_paths(field, prop)), None)
+        candidate = _nested_path(field, prop)
         if candidate is not None:
             nested.append(candidate)
 

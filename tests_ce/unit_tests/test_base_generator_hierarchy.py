@@ -28,7 +28,6 @@ from datamimic_ce.domains.domain_core.base_domain_generator import (
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.domain_core.runtime.clock import DETERMINISTIC_ANCHOR
 
-
 # ---------- BaseDomainGenerator -------------------------------------------
 
 
@@ -94,7 +93,9 @@ def test_clock_anchored_caller_reference_now_wins() -> None:
 
 def test_clock_anchored_reference_now_is_frozen_at_construction() -> None:
     g = ClockAnchoredDomainGenerator()
-    assert g.reference_now is g.reference_now  # same identity on repeated reads
+    anchored = g.reference_now
+    # A second read must return the value captured at construction, not recompute "now".
+    assert g.reference_now is anchored
 
 
 # ---------- BaseLiteralGenerator ------------------------------------------

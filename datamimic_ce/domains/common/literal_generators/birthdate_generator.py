@@ -79,18 +79,17 @@ class BirthdateGenerator(ClockAnchoredDomainGenerator):
     def reset(self) -> None:
         pass
 
-    def convert_birthdate_to_age(self, birth_date: datetime, reference_now: datetime | None = None) -> int:
+    def convert_birthdate_to_age(self, birth_date: datetime) -> int:
         """
-        age are calculated from given birthday and today
-        (today value depends on system time and change over time, not fixed).
+        age is calculated from the given birthdate and the generator's anchor
+        ("today" — the deterministic anchor when seeded, else live UTC at construction).
 
         Args:
             birth_date: The birthdate to calculate age from.
-            reference_now: Optional fixed datetime to use as "today". Defaults to the generator anchor.
 
         Returns:
             age (int): calculated age (hour, minute, second, microsecond in datetime object equal 0 as default)
         """
-        today = reference_now if reference_now is not None else self._reference_now
+        today = self._reference_now
         age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
         return age

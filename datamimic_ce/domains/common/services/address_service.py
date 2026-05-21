@@ -3,18 +3,12 @@ import random
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
+from datamimic_ce.domains.domain_core.attribute_catalog import ADDRESS_FIELDS, EntitySchema, FieldSpec, field
 
 ADDRESS_SCHEMA = EntitySchema(
     "Address",
     (
-        field("street", str, "Street or thoroughfare name."),
-        field("house_number", str, "House or building number."),
-        field("city", str, "City or locality name."),
-        field("state", str, "State, province, or region."),
-        field("postal_code", str, "Postal or ZIP code."),
-        field("country", str, "Human-readable country name."),
-        field("country_code", str, "ISO 3166-1 alpha-2 country code."),
+        *ADDRESS_FIELDS,
         field("phone", str, "Landline phone number."),
         field("mobile_phone", str, "Mobile phone number."),
         field("fax", str, "Fax number."),
