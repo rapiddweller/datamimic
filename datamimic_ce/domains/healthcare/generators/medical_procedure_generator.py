@@ -124,19 +124,12 @@ class MedicalProcedureGenerator(DatasetAwareDomainGenerator):
 
     def generate_specialty(self) -> str:
         """Generate a medical specialty (dataset-driven)."""
+        from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
+
         file_path = dataset_path("healthcare", "medical", f"specialties_{self._dataset}.csv", start=Path(__file__))
         wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
-        # avoid immediate repetition when possible
-        if self._last_specialty is not None and len(loaded_data) > 1:
-            pool = [
-                (row["specialty"], float(w))
-                for row, w in zip(loaded_data, wgt, strict=False)
-                if row["specialty"] != self._last_specialty
-            ]
-            values, weights = zip(*pool, strict=False)
-            choice = self._rng.choices(list(values), weights=list(weights), k=1)[0]
-        else:
-            choice = self._rng.choices(loaded_data, weights=wgt, k=1)[0]["specialty"]
+        values = [row["specialty"] for row in loaded_data]
+        choice = pick_one_weighted_no_repeat(self._rng, values, wgt, last=self._last_specialty)
         self._last_specialty = choice
         return choice
 
