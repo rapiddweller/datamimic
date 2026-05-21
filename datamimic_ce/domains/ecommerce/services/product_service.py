@@ -7,9 +7,30 @@
 import random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
 from datamimic_ce.domains.ecommerce.models.product import Product
+
+PRODUCT_SCHEMA = EntitySchema(
+    "Product",
+    (
+        field("product_id", str, "Unique product identifier."),
+        field("name", str, "Product name."),
+        field("description", str, "Product description."),
+        field("price", float, "Product price."),
+        field("category", str, "Product category."),
+        field("brand", str, "Product brand."),
+        field("sku", str, "Stock keeping unit."),
+        field("condition", str, "Product condition."),
+        field("availability", str, "Availability status."),
+        field("currency", str, "Price currency code."),
+        field("weight", float, "Product weight."),
+        field("dimensions", str, "Product dimensions."),
+        field("color", str, "Product color."),
+        field("rating", float, "Average customer rating."),
+        field("tags", list, "Product tags."),
+    ),
+)
 
 
 class ProductService(BaseDomainService[Product]):
@@ -34,24 +55,8 @@ class ProductService(BaseDomainService[Product]):
         )
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        return specs(
-            ("product_id", "str", "Unique product identifier."),
-            ("name", "str", "Product name."),
-            ("description", "str", "Product description."),
-            ("price", "float", "Product price."),
-            ("category", "str", "Product category."),
-            ("brand", "str", "Product brand."),
-            ("sku", "str", "Stock keeping unit."),
-            ("condition", "str", "Product condition."),
-            ("availability", "str", "Availability status."),
-            ("currency", "str", "Price currency code."),
-            ("weight", "float", "Product weight."),
-            ("dimensions", "str", "Product dimensions."),
-            ("color", "str", "Product color."),
-            ("rating", "float", "Average customer rating."),
-            ("tags", "list", "Product tags."),
-        )
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return PRODUCT_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

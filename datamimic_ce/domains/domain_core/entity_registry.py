@@ -21,7 +21,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from types import ModuleType
 
-from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, spec_to_dict
+from datamimic_ce.domains.domain_core.attribute_catalog import FieldSpec, spec_to_dict
 from datamimic_ce.domains.domain_core.base_domain_service import BaseDomainService
 
 _DOMAINS_PREFIX = "datamimic_ce.domains."
@@ -32,7 +32,7 @@ class EntitySpec:
     entity: str
     service_cls: type[BaseDomainService]
     module: str
-    attributes: tuple[AttributeSpec, ...]
+    attributes: tuple[FieldSpec, ...]
 
     @property
     def service_path(self) -> str:

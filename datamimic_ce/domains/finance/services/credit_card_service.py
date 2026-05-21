@@ -4,13 +4,36 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+from datetime import datetime
 from random import Random
 
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.finance.generators.credit_card_generator import CreditCardGenerator
 from datamimic_ce.domains.finance.models.credit_card import CreditCard
+
+CREDIT_CARD_SCHEMA = EntitySchema(
+    "CreditCard",
+    (
+        field("card_type", str, "Card type (e.g. Visa, Mastercard)."),
+        field("card_number", str, "Full card number."),
+        field("card_provider", str, "Card network provider."),
+        field("card_holder", str, "Cardholder name."),
+        field("expiration_date", datetime, "Card expiration date."),
+        field("cvv", str, "Card verification value."),
+        field("cvc_number", str, "Card verification code."),
+        field("is_active", bool, "Whether the card is active."),
+        field("credit_limit", float, "Credit limit amount."),
+        field("current_balance", float, "Current outstanding balance."),
+        field("issue_date", datetime, "Card issue date."),
+        field("bank_name", str, "Issuing bank name."),
+        field("bank_code", str, "Issuing bank code."),
+        field("bic", str, "Bank identifier code (BIC)."),
+        field("bin", str, "Bank identification number (BIN)."),
+        field("iban", str, "International bank account number."),
+    ),
+)
 
 
 class CreditCardService(BaseDomainService[CreditCard]):
@@ -28,25 +51,8 @@ class CreditCardService(BaseDomainService[CreditCard]):
         )
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        return specs(
-            ("card_type", "str", "Card type (e.g. Visa, Mastercard)."),
-            ("card_number", "str", "Full card number."),
-            ("card_provider", "str", "Card network provider."),
-            ("card_holder", "str", "Cardholder name."),
-            ("expiration_date", "datetime", "Card expiration date."),
-            ("cvv", "str", "Card verification value."),
-            ("cvc_number", "str", "Card verification code."),
-            ("is_active", "bool", "Whether the card is active."),
-            ("credit_limit", "float", "Credit limit amount."),
-            ("current_balance", "float", "Current outstanding balance."),
-            ("issue_date", "datetime", "Card issue date."),
-            ("bank_name", "str", "Issuing bank name."),
-            ("bank_code", "str", "Issuing bank code."),
-            ("bic", "str", "Bank identifier code (BIC)."),
-            ("bin", "str", "Bank identification number (BIN)."),
-            ("iban", "str", "International bank account number."),
-        )
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return CREDIT_CARD_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

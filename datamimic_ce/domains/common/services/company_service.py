@@ -11,7 +11,27 @@ import random
 from datamimic_ce.domains.common.generators.company_generator import CompanyGenerator
 from datamimic_ce.domains.common.models.company import Company
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
+
+COMPANY_SCHEMA = EntitySchema(
+    "Company",
+    (
+        field("short_name", str, "Short company name."),
+        field("sector", str, "Business sector.", optional=True),
+        field("email", str, "Company email address."),
+        field("url", str, "Company website URL.", optional=True),
+        field("phone_number", str, "General phone number.", optional=True),
+        field("office_phone", str, "Office phone number.", optional=True),
+        field("fax", str, "Fax number.", optional=True),
+        field("street", str, "Street or thoroughfare name."),
+        field("house_number", str, "House or building number."),
+        field("city", str, "City or locality name."),
+        field("state", str, "State, province, or region.", optional=True),
+        field("zip_code", str, "Postal or ZIP code."),
+        field("country", str, "Human-readable country name."),
+        field("country_code", str, "ISO 3166-1 alpha-2 country code."),
+    ),
+)
 
 
 class CompanyService(BaseDomainService[Company]):
@@ -28,23 +48,8 @@ class CompanyService(BaseDomainService[Company]):
         super().__init__(CompanyGenerator(dataset=dataset, rng=rng), Company)
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        return specs(
-            ("short_name", "str", "Short company name."),
-            ("sector", "str | None", "Business sector."),
-            ("email", "str", "Company email address."),
-            ("url", "str | None", "Company website URL."),
-            ("phone_number", "str | None", "General phone number."),
-            ("office_phone", "str | None", "Office phone number."),
-            ("fax", "str | None", "Fax number."),
-            ("street", "str", "Street or thoroughfare name."),
-            ("house_number", "str", "House or building number."),
-            ("city", "str", "City or locality name."),
-            ("state", "str | None", "State, province, or region."),
-            ("zip_code", "str", "Postal or ZIP code."),
-            ("country", "str", "Human-readable country name."),
-            ("country_code", "str", "ISO 3166-1 alpha-2 country code."),
-        )
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return COMPANY_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

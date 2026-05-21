@@ -12,11 +12,41 @@ This module provides utility methods for working with Transaction entities.
 
 import datetime as dt
 import random
+from datetime import datetime
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, group, specs
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field, group
 from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
 from datamimic_ce.domains.finance.models.transaction import Transaction
+
+TRANSACTION_SCHEMA = EntitySchema(
+    "Transaction",
+    (
+        field("transaction_id", str, "Unique transaction identifier."),
+        field("transaction_date", datetime, "Date and time of the transaction."),
+        field("amount", float, "Transaction amount."),
+        field("transaction_type", str, "Transaction type."),
+        field("description", str, "Transaction description."),
+        field("reference_number", str, "Reference number."),
+        field("status", str, "Transaction status."),
+        field("currency", str, "Currency code."),
+        field("currency_symbol", str, "Currency symbol."),
+        field("merchant_name", str, "Merchant name."),
+        field("merchant_category", str, "Merchant category."),
+        field("location", str, "Transaction location."),
+        field("is_international", bool, "Whether the transaction is international."),
+        field("channel", str, "Transaction channel."),
+        field("direction", str, "Transaction direction (debit/credit)."),
+        group(
+            "account",
+            "Associated account summary (present when an account is linked).",
+            (
+                field("account_number", str, "Account number."),
+                field("account_type", str, "Account type."),
+            ),
+        ),
+    ),
+)
 
 
 class TransactionService(BaseDomainService[Transaction]):
@@ -32,34 +62,8 @@ class TransactionService(BaseDomainService[Transaction]):
         )
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        return (
-            *specs(
-                ("transaction_id", "str", "Unique transaction identifier."),
-                ("transaction_date", "datetime", "Date and time of the transaction."),
-                ("amount", "float", "Transaction amount."),
-                ("transaction_type", "str", "Transaction type."),
-                ("description", "str", "Transaction description."),
-                ("reference_number", "str", "Reference number."),
-                ("status", "str", "Transaction status."),
-                ("currency", "str", "Currency code."),
-                ("currency_symbol", "str", "Currency symbol."),
-                ("merchant_name", "str", "Merchant name."),
-                ("merchant_category", "str", "Merchant category."),
-                ("location", "str", "Transaction location."),
-                ("is_international", "bool", "Whether the transaction is international."),
-                ("channel", "str", "Transaction channel."),
-                ("direction", "str", "Transaction direction (debit/credit)."),
-            ),
-            group(
-                "account",
-                "Associated account summary (present when an account is linked).",
-                specs(
-                    ("account_number", "str", "Account number."),
-                    ("account_type", "str", "Account type."),
-                ),
-            ),
-        )
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return TRANSACTION_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

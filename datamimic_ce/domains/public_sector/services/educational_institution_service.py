@@ -14,15 +14,35 @@ from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.domain_core.attribute_catalog import (
-    ADDRESS_GROUP_SPEC,
-    AttributeSpec,
-    group,
-    specs,
+    EntitySchema,
+    FieldSpec,
+    address_group,
+    field,
 )
 from datamimic_ce.domains.public_sector.generators.educational_institution_generator import (
     EducationalInstitutionGenerator,
 )
 from datamimic_ce.domains.public_sector.models.educational_institution import EducationalInstitution
+
+EDUCATIONAL_INSTITUTION_SCHEMA = EntitySchema(
+    "EducationalInstitution",
+    (
+        field("institution_id", str, "Unique institution identifier."),
+        field("name", str, "Institution name."),
+        field("type", str, "Institution type."),
+        field("level", str, "Education level."),
+        field("founding_year", int, "Year the institution was founded."),
+        field("student_count", int, "Number of students."),
+        field("staff_count", int, "Number of staff."),
+        field("website", str, "Website URL."),
+        field("email", str, "Email address."),
+        field("phone", str, "Phone number."),
+        field("programs", list, "Programs offered."),
+        field("accreditations", list, "Accreditations held."),
+        field("facilities", list, "Available facilities."),
+        address_group("address", "Structured institution address."),
+    ),
+)
 
 
 class EducationalInstitutionService(BaseDomainService[EducationalInstitution]):
@@ -38,25 +58,8 @@ class EducationalInstitutionService(BaseDomainService[EducationalInstitution]):
         )
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        return (
-            *specs(
-                ("institution_id", "str", "Unique institution identifier."),
-                ("name", "str", "Institution name."),
-                ("type", "str", "Institution type."),
-                ("level", "str", "Education level."),
-                ("founding_year", "int", "Year the institution was founded."),
-                ("student_count", "int", "Number of students."),
-                ("staff_count", "int", "Number of staff."),
-                ("website", "str", "Website URL."),
-                ("email", "str", "Email address."),
-                ("phone", "str", "Phone number."),
-                ("programs", "list", "Programs offered."),
-                ("accreditations", "list", "Accreditations held."),
-                ("facilities", "list", "Available facilities."),
-            ),
-            group("address", "Structured institution address.", ADDRESS_GROUP_SPEC.children),
-        )
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return EDUCATIONAL_INSTITUTION_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

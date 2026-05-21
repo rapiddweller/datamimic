@@ -6,16 +6,39 @@
 
 import datetime as dt
 import random
+from datetime import datetime
 
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.domain_core.attribute_catalog import (
-    ADDRESS_GROUP_SPEC,
-    AttributeSpec,
-    group,
-    specs,
+    EntitySchema,
+    FieldSpec,
+    address_group,
+    field,
 )
 from datamimic_ce.domains.ecommerce.generators.order_generator import OrderGenerator
 from datamimic_ce.domains.ecommerce.models.order import Order
+
+ORDER_SCHEMA = EntitySchema(
+    "Order",
+    (
+        field("order_id", str, "Unique order identifier."),
+        field("user_id", str, "Identifier of the ordering user."),
+        field("product_list", list, "List of ordered products."),
+        field("total_amount", float, "Order total amount."),
+        field("date", datetime, "Order date and time."),
+        field("status", str, "Order status."),
+        field("payment_method", str, "Payment method."),
+        field("shipping_method", str, "Shipping method."),
+        address_group("shipping_address", "Structured shipping address."),
+        address_group("billing_address", "Structured billing address."),
+        field("currency", str, "Order currency code."),
+        field("tax_amount", float, "Tax amount."),
+        field("shipping_amount", float, "Shipping cost."),
+        field("discount_amount", float, "Discount amount."),
+        field("coupon_code", str, "Applied coupon code, if any.", optional=True),
+        field("notes", str, "Order notes, if any.", optional=True),
+    ),
+)
 
 
 class OrderService(BaseDomainService[Order]):
@@ -37,29 +60,8 @@ class OrderService(BaseDomainService[Order]):
         )
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        return (
-            *specs(
-                ("order_id", "str", "Unique order identifier."),
-                ("user_id", "str", "Identifier of the ordering user."),
-                ("product_list", "list", "List of ordered products."),
-                ("total_amount", "float", "Order total amount."),
-                ("date", "datetime", "Order date and time."),
-                ("status", "str", "Order status."),
-                ("payment_method", "str", "Payment method."),
-                ("shipping_method", "str", "Shipping method."),
-            ),
-            group("shipping_address", "Structured shipping address.", ADDRESS_GROUP_SPEC.children),
-            group("billing_address", "Structured billing address.", ADDRESS_GROUP_SPEC.children),
-            *specs(
-                ("currency", "str", "Order currency code."),
-                ("tax_amount", "float", "Tax amount."),
-                ("shipping_amount", "float", "Shipping cost."),
-                ("discount_amount", "float", "Discount amount."),
-                ("coupon_code", "str | None", "Applied coupon code, if any."),
-                ("notes", "str | None", "Order notes, if any."),
-            ),
-        )
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return ORDER_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

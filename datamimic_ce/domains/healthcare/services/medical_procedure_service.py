@@ -13,9 +13,29 @@ This module provides the MedicalProcedureService class for generating and managi
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.healthcare.generators.medical_procedure_generator import MedicalProcedureGenerator
 from datamimic_ce.domains.healthcare.models.medical_procedure import MedicalProcedure
+
+MEDICAL_PROCEDURE_SCHEMA = EntitySchema(
+    "MedicalProcedure",
+    (
+        field("procedure_id", str, "Unique procedure identifier."),
+        field("procedure_code", str, "Internal procedure code."),
+        field("cpt_code", str, "CPT billing code."),
+        field("name", str, "Procedure name."),
+        field("description", str, "Procedure description."),
+        field("category", str, "Procedure category."),
+        field("specialty", str, "Associated medical specialty."),
+        field("duration_minutes", int, "Typical duration in minutes."),
+        field("cost", float, "Procedure cost."),
+        field("requires_anesthesia", bool, "Whether anesthesia is required."),
+        field("is_surgical", bool, "Whether the procedure is surgical."),
+        field("is_diagnostic", bool, "Whether the procedure is diagnostic."),
+        field("is_preventive", bool, "Whether the procedure is preventive."),
+        field("recovery_time_days", int, "Typical recovery time in days."),
+    ),
+)
 
 
 class MedicalProcedureService(BaseDomainService[MedicalProcedure]):
@@ -29,23 +49,8 @@ class MedicalProcedureService(BaseDomainService[MedicalProcedure]):
         super().__init__(MedicalProcedureGenerator(dataset=dataset, rng=rng), MedicalProcedure)
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        return specs(
-            ("procedure_id", "str", "Unique procedure identifier."),
-            ("procedure_code", "str", "Internal procedure code."),
-            ("cpt_code", "str", "CPT billing code."),
-            ("name", "str", "Procedure name."),
-            ("description", "str", "Procedure description."),
-            ("category", "str", "Procedure category."),
-            ("specialty", "str", "Associated medical specialty."),
-            ("duration_minutes", "int", "Typical duration in minutes."),
-            ("cost", "float", "Procedure cost."),
-            ("requires_anesthesia", "bool", "Whether anesthesia is required."),
-            ("is_surgical", "bool", "Whether the procedure is surgical."),
-            ("is_diagnostic", "bool", "Whether the procedure is diagnostic."),
-            ("is_preventive", "bool", "Whether the procedure is preventive."),
-            ("recovery_time_days", "int", "Typical recovery time in days."),
-        )
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return MEDICAL_PROCEDURE_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

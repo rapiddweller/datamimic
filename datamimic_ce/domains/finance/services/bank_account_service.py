@@ -6,11 +6,29 @@
 
 import datetime as dt
 import random
+from datetime import datetime
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
+
+BANK_ACCOUNT_SCHEMA = EntitySchema(
+    "BankAccount",
+    (
+        field("account_number", str, "Account number."),
+        field("iban", str, "International bank account number."),
+        field("account_type", str, "Account type."),
+        field("balance", float, "Current account balance."),
+        field("currency", str, "Account currency code."),
+        field("created_date", datetime, "Account creation date."),
+        field("last_transaction_date", datetime, "Date of the last transaction."),
+        field("bank_name", str, "Bank name."),
+        field("bank_code", str, "Bank code."),
+        field("bic", str, "Bank identifier code (BIC)."),
+        field("bin", str, "Bank identification number (BIN)."),
+    ),
+)
 
 
 class BankAccountService(BaseDomainService[BankAccount]):
@@ -26,20 +44,8 @@ class BankAccountService(BaseDomainService[BankAccount]):
         )
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        return specs(
-            ("account_number", "str", "Account number."),
-            ("iban", "str", "International bank account number."),
-            ("account_type", "str", "Account type."),
-            ("balance", "float", "Current account balance."),
-            ("currency", "str", "Account currency code."),
-            ("created_date", "datetime", "Account creation date."),
-            ("last_transaction_date", "datetime", "Date of the last transaction."),
-            ("bank_name", "str", "Bank name."),
-            ("bank_code", "str", "Bank code."),
-            ("bic", "str", "Bank identifier code (BIC)."),
-            ("bin", "str", "Bank identification number (BIN)."),
-        )
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return BANK_ACCOUNT_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

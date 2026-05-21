@@ -10,19 +10,46 @@ Doctor service.
 This module provides a service for working with Doctor entities.
 """
 
+from datetime import datetime
 from random import Random
 
 from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.domain_core.attribute_catalog import (
-    ADDRESS_GROUP_SPEC,
-    AttributeSpec,
-    group,
-    specs,
+    EntitySchema,
+    FieldSpec,
+    address_group,
+    field,
 )
 from datamimic_ce.domains.healthcare.generators.doctor_generator import DoctorGenerator
 from datamimic_ce.domains.healthcare.models.doctor import Doctor
+
+DOCTOR_SCHEMA = EntitySchema(
+    "Doctor",
+    (
+        field("doctor_id", str, "Unique doctor identifier."),
+        field("npi_number", str, "National provider identifier."),
+        field("license_number", str, "Medical license number."),
+        field("given_name", str, "First (given) name."),
+        field("family_name", str, "Last (family) name."),
+        field("full_name", str, "Full display name."),
+        field("gender", str, "Gender."),
+        field("birthdate", datetime, "Date of birth."),
+        field("age", int, "Age in years."),
+        field("specialty", str, "Medical specialty."),
+        field("hospital", dict, "Affiliated hospital details."),
+        field("medical_school", str, "Medical school attended."),
+        field("graduation_year", int, "Year of graduation."),
+        field("years_of_experience", int, "Years of professional experience."),
+        field("certifications", list, "Professional certifications."),
+        field("accepting_new_patients", bool, "Whether accepting new patients."),
+        field("office_hours", dict, "Office hours by day."),
+        field("email", str, "Email address."),
+        field("phone", str, "Phone number."),
+        address_group("address", "Structured practice address."),
+    ),
+)
 
 
 class DoctorService(BaseDomainService[Doctor]):
@@ -50,31 +77,8 @@ class DoctorService(BaseDomainService[Doctor]):
         )
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        return (
-            *specs(
-                ("doctor_id", "str", "Unique doctor identifier."),
-                ("npi_number", "str", "National provider identifier."),
-                ("license_number", "str", "Medical license number."),
-                ("given_name", "str", "First (given) name."),
-                ("family_name", "str", "Last (family) name."),
-                ("full_name", "str", "Full display name."),
-                ("gender", "str", "Gender."),
-                ("birthdate", "datetime", "Date of birth."),
-                ("age", "int", "Age in years."),
-                ("specialty", "str", "Medical specialty."),
-                ("hospital", "dict", "Affiliated hospital details."),
-                ("medical_school", "str", "Medical school attended."),
-                ("graduation_year", "int", "Year of graduation."),
-                ("years_of_experience", "int", "Years of professional experience."),
-                ("certifications", "list", "Professional certifications."),
-                ("accepting_new_patients", "bool", "Whether accepting new patients."),
-                ("office_hours", "dict", "Office hours by day."),
-                ("email", "str", "Email address."),
-                ("phone", "str", "Phone number."),
-            ),
-            group("address", "Structured practice address.", ADDRESS_GROUP_SPEC.children),
-        )
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return DOCTOR_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

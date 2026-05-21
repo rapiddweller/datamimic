@@ -10,13 +10,31 @@ Insurance Policy Service.
 This module provides service functions for generating and managing insurance policies.
 """
 
+from datetime import datetime
 from random import Random
 
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.insurance.generators.insurance_policy_generator import InsurancePolicyGenerator
 from datamimic_ce.domains.insurance.models.insurance_policy import InsurancePolicy
+
+INSURANCE_POLICY_SCHEMA = EntitySchema(
+    "InsurancePolicy",
+    (
+        field("id", str, "Unique policy identifier."),
+        field("company", dict, "Issuing insurance company."),
+        field("product", dict, "Insured product."),
+        field("policy_holder", dict, "Policy holder details."),
+        field("coverages", list, "Coverage entries on the policy."),
+        field("premium", float, "Premium amount."),
+        field("premium_frequency", str, "Premium payment frequency."),
+        field("start_date", datetime, "Policy start date."),
+        field("end_date", datetime, "Policy end date."),
+        field("status", str, "Policy status."),
+        field("created_date", datetime, "Policy creation date."),
+    ),
+)
 
 
 class InsurancePolicyService(BaseDomainService[InsurancePolicy]):
@@ -45,20 +63,8 @@ class InsurancePolicyService(BaseDomainService[InsurancePolicy]):
         )
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        return specs(
-            ("id", "str", "Unique policy identifier."),
-            ("company", "dict", "Issuing insurance company."),
-            ("product", "dict", "Insured product."),
-            ("policy_holder", "dict", "Policy holder details."),
-            ("coverages", "list", "Coverage entries on the policy."),
-            ("premium", "float", "Premium amount."),
-            ("premium_frequency", "str", "Premium payment frequency."),
-            ("start_date", "datetime", "Policy start date."),
-            ("end_date", "datetime", "Policy end date."),
-            ("status", "str", "Policy status."),
-            ("created_date", "datetime", "Policy creation date."),
-        )
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return INSURANCE_POLICY_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

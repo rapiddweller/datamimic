@@ -7,9 +7,22 @@
 import random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
 from datamimic_ce.domains.finance.models.bank import Bank
+
+BANK_SCHEMA = EntitySchema(
+    "Bank",
+    (
+        field("name", str, "Bank name."),
+        field("swift_code", str, "SWIFT code."),
+        field("routing_number", str, "Routing number."),
+        field("bank_code", str, "Bank code."),
+        field("bic", str, "Bank identifier code (BIC)."),
+        field("bin", str, "Bank identification number (BIN)."),
+        field("customer_service_phone", str, "Customer service phone number."),
+    ),
+)
 
 
 class BankService(BaseDomainService[Bank]):
@@ -17,16 +30,8 @@ class BankService(BaseDomainService[Bank]):
         super().__init__(BankGenerator(dataset, rng=rng), Bank)
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        return specs(
-            ("name", "str", "Bank name."),
-            ("swift_code", "str", "SWIFT code."),
-            ("routing_number", "str", "Routing number."),
-            ("bank_code", "str", "Bank code."),
-            ("bic", "str", "Bank identifier code (BIC)."),
-            ("bin", "str", "Bank identification number (BIN)."),
-            ("customer_service_phone", "str", "Customer service phone number."),
-        )
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return BANK_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

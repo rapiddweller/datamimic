@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+from datetime import datetime
 from random import Random
 
 from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
@@ -12,7 +13,27 @@ from datamimic_ce.domains.common.generators.person_generator import PersonGenera
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
+
+PERSON_SCHEMA = EntitySchema(
+    "Person",
+    (
+        field("birthdate", datetime, "Date of birth."),
+        field("given_name", str, "First (given) name."),
+        field("family_name", str, "Last (family) name."),
+        field("full_name", str, "Full display name."),
+        field("gender", str, "Gender."),
+        field("name", str, "Name with titles and salutation."),
+        field("age", int, "Age in years."),
+        field("email", str, "Primary email address."),
+        field("phone", str, "Landline phone number."),
+        field("mobile_phone", str, "Mobile phone number."),
+        field("academic_title", str, "Academic title, if any.", optional=True),
+        field("salutation", str, "Salutation form."),
+        field("nobility_title", str, "Nobility title, if any.", optional=True),
+        field("transaction_profile", (str, dict), "Spending/transaction behaviour profile.", optional=True),
+    ),
+)
 
 
 class PersonService(BaseDomainService[Person]):
@@ -60,23 +81,8 @@ class PersonService(BaseDomainService[Person]):
         )
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        return specs(
-            ("birthdate", "datetime", "Date of birth."),
-            ("given_name", "str", "First (given) name."),
-            ("family_name", "str", "Last (family) name."),
-            ("full_name", "str", "Full display name."),
-            ("gender", "str", "Gender."),
-            ("name", "str", "Name with titles and salutation."),
-            ("age", "int", "Age in years."),
-            ("email", "str", "Primary email address."),
-            ("phone", "str", "Landline phone number."),
-            ("mobile_phone", "str", "Mobile phone number."),
-            ("academic_title", "str | None", "Academic title, if any."),
-            ("salutation", "str", "Salutation form."),
-            ("nobility_title", "str | None", "Nobility title, if any."),
-            ("transaction_profile", "str | dict | None", "Spending/transaction behaviour profile."),
-        )
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return PERSON_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

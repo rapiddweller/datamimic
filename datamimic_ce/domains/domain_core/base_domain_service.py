@@ -8,7 +8,7 @@
 from abc import ABC
 from typing import ClassVar, Generic, TypeVar
 
-from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec
+from datamimic_ce.domains.domain_core.attribute_catalog import FieldSpec
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.domain_core.base_entity import BaseEntity
 
@@ -38,8 +38,8 @@ class BaseDomainService(ABC, Generic[T]):
         self._model_cls = model_cls
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        """Return the attributes this entity exposes. Override per service."""
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        """Return the schema fields this entity exposes. Override per service."""
         return ()
 
     def generate(self) -> T:

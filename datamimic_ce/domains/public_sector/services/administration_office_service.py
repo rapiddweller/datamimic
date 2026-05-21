@@ -14,13 +14,34 @@ from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.domain_core.attribute_catalog import (
-    ADDRESS_GROUP_SPEC,
-    AttributeSpec,
-    group,
-    specs,
+    EntitySchema,
+    FieldSpec,
+    address_group,
+    field,
 )
 from datamimic_ce.domains.public_sector.generators.administration_office_generator import AdministrationOfficeGenerator
 from datamimic_ce.domains.public_sector.models.administration_office import AdministrationOffice
+
+ADMINISTRATION_OFFICE_SCHEMA = EntitySchema(
+    "AdministrationOffice",
+    (
+        field("office_id", str, "Unique office identifier."),
+        field("name", str, "Office name."),
+        field("type", str, "Office type."),
+        field("jurisdiction", str, "Jurisdiction served."),
+        field("founding_year", int, "Year the office was founded."),
+        field("staff_count", int, "Number of staff."),
+        field("annual_budget", float, "Annual budget."),
+        field("hours_of_operation", dict, "Operating hours by day."),
+        field("website", str, "Website URL."),
+        field("email", str, "Email address."),
+        field("phone", str, "Phone number."),
+        field("services", list, "Services offered."),
+        field("departments", list, "Departments within the office."),
+        field("leadership", dict, "Leadership roles and names."),
+        address_group("address", "Structured office address."),
+    ),
+)
 
 
 class AdministrationOfficeService(BaseDomainService[AdministrationOffice]):
@@ -36,26 +57,8 @@ class AdministrationOfficeService(BaseDomainService[AdministrationOffice]):
         )
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        return (
-            *specs(
-                ("office_id", "str", "Unique office identifier."),
-                ("name", "str", "Office name."),
-                ("type", "str", "Office type."),
-                ("jurisdiction", "str", "Jurisdiction served."),
-                ("founding_year", "int", "Year the office was founded."),
-                ("staff_count", "int", "Number of staff."),
-                ("annual_budget", "float", "Annual budget."),
-                ("hours_of_operation", "dict", "Operating hours by day."),
-                ("website", "str", "Website URL."),
-                ("email", "str", "Email address."),
-                ("phone", "str", "Phone number."),
-                ("services", "list", "Services offered."),
-                ("departments", "list", "Departments within the office."),
-                ("leadership", "dict", "Leadership roles and names."),
-            ),
-            group("address", "Structured office address.", ADDRESS_GROUP_SPEC.children),
-        )
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return ADMINISTRATION_OFFICE_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

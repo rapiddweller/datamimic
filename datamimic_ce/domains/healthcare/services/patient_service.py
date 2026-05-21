@@ -10,14 +10,42 @@ Patient service.
 This module provides the PatientService class for generating and managing patient data.
 """
 
+from datetime import datetime
 from random import Random
 
 from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.healthcare.generators.patient_generator import PatientGenerator
 from datamimic_ce.domains.healthcare.models.patient import Patient
+
+PATIENT_SCHEMA = EntitySchema(
+    "Patient",
+    (
+        field("patient_id", str, "Unique patient identifier."),
+        field("medical_record_number", str, "Medical record number."),
+        field("ssn", str, "Social security number."),
+        field("given_name", str, "First (given) name."),
+        field("family_name", str, "Last (family) name."),
+        field("full_name", str, "Full display name."),
+        field("gender", str, "Gender."),
+        field("birthdate", datetime, "Date of birth."),
+        field("age", int, "Age in years."),
+        field("blood_type", str, "Blood type."),
+        field("height_cm", float, "Height in centimetres."),
+        field("weight_kg", float, "Weight in kilograms."),
+        field("bmi", float, "Body mass index."),
+        field("allergies", list, "Known allergies."),
+        field("medications", list, "Current medications."),
+        field("conditions", list, "Diagnosed conditions."),
+        field("emergency_contact", dict, "Emergency contact details."),
+        field("insurance_provider", str, "Insurance provider name."),
+        field("insurance_policy_number", str, "Insurance policy number."),
+        field("transaction_profile", (str, dict), "Spending/transaction behaviour profile.", optional=True),
+        field("primary_doctor", dict, "Primary doctor details (present when assigned)."),
+    ),
+)
 
 
 class PatientService(BaseDomainService[Patient]):
@@ -46,30 +74,8 @@ class PatientService(BaseDomainService[Patient]):
         )
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        return specs(
-            ("patient_id", "str", "Unique patient identifier."),
-            ("medical_record_number", "str", "Medical record number."),
-            ("ssn", "str", "Social security number."),
-            ("given_name", "str", "First (given) name."),
-            ("family_name", "str", "Last (family) name."),
-            ("full_name", "str", "Full display name."),
-            ("gender", "str", "Gender."),
-            ("birthdate", "datetime", "Date of birth."),
-            ("age", "int", "Age in years."),
-            ("blood_type", "str", "Blood type."),
-            ("height_cm", "float", "Height in centimetres."),
-            ("weight_kg", "float", "Weight in kilograms."),
-            ("bmi", "float", "Body mass index."),
-            ("allergies", "list", "Known allergies."),
-            ("medications", "list", "Current medications."),
-            ("conditions", "list", "Diagnosed conditions."),
-            ("emergency_contact", "dict", "Emergency contact details."),
-            ("insurance_provider", "str", "Insurance provider name."),
-            ("insurance_policy_number", "str", "Insurance policy number."),
-            ("transaction_profile", "str | dict | None", "Spending/transaction behaviour profile."),
-            ("primary_doctor", "dict", "Primary doctor details (present when assigned)."),
-        )
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return PATIENT_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

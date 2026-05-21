@@ -13,9 +13,21 @@ This module provides service functions for generating and managing insurance com
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
-from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.insurance.generators.insurance_coverage_generator import InsuranceCoverageGenerator
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
+
+INSURANCE_COVERAGE_SCHEMA = EntitySchema(
+    "InsuranceCoverage",
+    (
+        field("name", str, "Coverage name."),
+        field("code", str, "Coverage code."),
+        field("product_code", str, "Associated product code."),
+        field("description", str, "Coverage description."),
+        field("min_coverage", str, "Minimum coverage amount."),
+        field("max_coverage", str, "Maximum coverage amount."),
+    ),
+)
 
 
 class InsuranceCoverageService(BaseDomainService[InsuranceCoverage]):
@@ -27,15 +39,8 @@ class InsuranceCoverageService(BaseDomainService[InsuranceCoverage]):
         )
 
     @classmethod
-    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
-        return specs(
-            ("name", "str", "Coverage name."),
-            ("code", "str", "Coverage code."),
-            ("product_code", "str", "Associated product code."),
-            ("description", "str", "Coverage description."),
-            ("min_coverage", "str", "Minimum coverage amount."),
-            ("max_coverage", "str", "Maximum coverage amount."),
-        )
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return INSURANCE_COVERAGE_SCHEMA.fields
 
     @staticmethod
     def supported_datasets() -> set[str]:

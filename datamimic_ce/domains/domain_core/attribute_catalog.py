@@ -4,15 +4,19 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""Attribute metadata for domain entities.
+"""Schema as the single source of truth for entity fields and types.
 
-An :class:`AttributeSpec` describes one field a domain entity exposes (the
-columns a DSL ``<generate>`` can read via ``entity.<attr>``). Services declare
-their attributes through ``BaseDomainService.attribute_specs`` so the entity
-registry can introspect and document each entity by name.
+A :class:`FieldSpec` describes one field an entity exposes using its **real
+Python type** (``str``, ``int``, ``datetime`` …). The human/JSON type string is
+*derived* from that type — the type is declared once, never duplicated as a
+brittle string literal.
 
-Reusable group specs (address, contact) live here as the single source of
-truth — multiple entities share those surfaces and must not drift.
+An :class:`EntitySchema` bundles the ordered fields of one entity. Services
+expose their schema's fields through ``BaseDomainService.attribute_specs`` so
+the entity registry can introspect each entity by name.
+
+Reusable groups (address, contact) are defined here once and composed by
+entities, so shared surfaces never drift.
 """
 
 from __future__ import annotations
@@ -20,32 +24,55 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 
+# A field's real type: a single type, or a tuple for unions (e.g. (str, dict)).
+PyType = type | tuple[type, ...]
+
 
 @dataclass(frozen=True)
-class AttributeSpec:
-    """Immutable description of an entity attribute."""
+class FieldSpec:
+    """One entity field, typed by its real Python type."""
 
     name: str
-    data_type: str
+    py_type: PyType
     description: str
-    children: tuple[AttributeSpec, ...] = ()
+    optional: bool = False
+    children: tuple[FieldSpec, ...] = ()
+
+    @property
+    def data_type(self) -> str:
+        """Type string DERIVED from the real type — the type lives only once."""
+        if self.children:
+            base = "dict"
+        elif isinstance(self.py_type, tuple):
+            base = " | ".join(t.__name__ for t in self.py_type)
+        else:
+            base = self.py_type.__name__
+        return f"{base} | None" if self.optional else base
 
 
-def specs(*pairs: tuple[str, str, str]) -> tuple[AttributeSpec, ...]:
-    """Build a tuple of leaf specs from ``(name, type, description)`` triples.
+@dataclass(frozen=True)
+class EntitySchema:
+    """Ordered field schema for one entity — the canonical field/type source."""
 
-    Keeps per-service declarations terse and uniform.
-    """
-    return tuple(AttributeSpec(name, data_type, description) for name, data_type, description in pairs)
+    entity: str
+    fields: tuple[FieldSpec, ...]
 
-
-def group(name: str, description: str, children: Iterable[AttributeSpec]) -> AttributeSpec:
-    """Build a nested (dict-valued) attribute spec, e.g. a structured address."""
-    return AttributeSpec(name, "dict", description, tuple(children))
+    def field_names(self) -> tuple[str, ...]:
+        return tuple(f.name for f in self.fields)
 
 
-def spec_to_dict(spec: AttributeSpec) -> dict[str, object]:
-    """Render an AttributeSpec (recursively) into a JSON-serialisable dict."""
+def field(name: str, py_type: PyType, description: str, *, optional: bool = False) -> FieldSpec:
+    """Build a leaf field spec."""
+    return FieldSpec(name=name, py_type=py_type, description=description, optional=optional)
+
+
+def group(name: str, description: str, children: Iterable[FieldSpec], *, optional: bool = False) -> FieldSpec:
+    """Build a nested (dict-valued) field spec, e.g. a structured address."""
+    return FieldSpec(name=name, py_type=dict, description=description, optional=optional, children=tuple(children))
+
+
+def spec_to_dict(spec: FieldSpec) -> dict[str, object]:
+    """Render a FieldSpec (recursively) into a JSON-serialisable dict."""
     payload: dict[str, object] = {
         "name": spec.name,
         "type": spec.data_type,
@@ -58,20 +85,24 @@ def spec_to_dict(spec: AttributeSpec) -> dict[str, object]:
 
 # --- Shared surfaces (SPOT) -------------------------------------------------
 
-ADDRESS_SPECS: tuple[AttributeSpec, ...] = specs(
-    ("street", "str", "Street or thoroughfare name."),
-    ("house_number", "str", "House or building number."),
-    ("city", "str", "City or locality name."),
-    ("state", "str", "State, province, or region."),
-    ("postal_code", "str", "Postal or ZIP code."),
-    ("country", "str", "Human-readable country name."),
-    ("country_code", "str", "ISO 3166-1 alpha-2 country code."),
+ADDRESS_FIELDS: tuple[FieldSpec, ...] = (
+    field("street", str, "Street or thoroughfare name."),
+    field("house_number", str, "House or building number."),
+    field("city", str, "City or locality name."),
+    field("state", str, "State, province, or region."),
+    field("postal_code", str, "Postal or ZIP code."),
+    field("country", str, "Human-readable country name."),
+    field("country_code", str, "ISO 3166-1 alpha-2 country code."),
 )
 
-ADDRESS_GROUP_SPEC = group("address", "Structured postal address fields.", ADDRESS_SPECS)
 
-CONTACT_SPECS: tuple[AttributeSpec, ...] = specs(
-    ("phone", "str", "Contact phone number."),
-    ("mobile_phone", "str", "Mobile contact number."),
-    ("email", "str", "Primary email address."),
+def address_group(name: str = "address", description: str = "Structured postal address fields.") -> FieldSpec:
+    """A reusable nested address field (shipping_address, billing_address, …)."""
+    return group(name, description, ADDRESS_FIELDS)
+
+
+CONTACT_FIELDS: tuple[FieldSpec, ...] = (
+    field("phone", str, "Contact phone number."),
+    field("mobile_phone", str, "Mobile contact number."),
+    field("email", str, "Primary email address."),
 )
