@@ -277,7 +277,7 @@ class Order(BaseEntity):
         return {
             "order_id": self.order_id,
             "user_id": self.user_id,
-            "product_list": self.product_list,
+            "product_list": [product.to_dict() for product in self.product_list],
             "total_amount": self.total_amount,
             "date": self.date,
             "status": self.status,
