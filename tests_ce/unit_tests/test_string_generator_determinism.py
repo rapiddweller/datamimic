@@ -16,7 +16,12 @@ We keep only the regex-sampler-specific invariants here:
 
 import random
 
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
+import pytest
+
+from datamimic_ce.domains.common.literal_generators.string_generator import (
+    StringGenerator,
+    _exrex_using,
+)
 
 
 def test_seeded_rng_makes_regex_sampling_deterministic() -> None:
@@ -38,5 +43,47 @@ def test_exrex_module_state_is_restored_after_seeded_call() -> None:
 
     choice_before, randint_before = exrex.choice, exrex.randint
     StringGenerator.rnd_str_from_regex(r"[A-Z]{4}", rng=random.Random(99))
+    assert exrex.choice is choice_before
+    assert exrex.randint is randint_before
+
+
+def test_exrex_using_swaps_only_within_the_block() -> None:
+    """Inside the context exrex draws from the supplied rng; outside, the
+    original module globals are in place."""
+    import exrex  # type: ignore
+
+    rng = random.Random(7)
+    choice_before, randint_before = exrex.choice, exrex.randint
+
+    with _exrex_using(rng):
+        assert exrex.choice == rng.choice
+        assert exrex.randint == rng.randint
+
+    assert exrex.choice is choice_before
+    assert exrex.randint is randint_before
+
+
+def test_exrex_using_restores_state_when_body_raises() -> None:
+    """Restoration must survive an exception in the wrapped call — this is the
+    invariant the try/finally (now the context manager) exists to guarantee."""
+    import exrex  # type: ignore
+
+    choice_before, randint_before = exrex.choice, exrex.randint
+
+    with pytest.raises(RuntimeError), _exrex_using(random.Random(1)):
+        raise RuntimeError("boom inside the seam")
+
+    assert exrex.choice is choice_before
+    assert exrex.randint is randint_before
+
+
+def test_exrex_using_none_is_a_true_noop() -> None:
+    """rng=None must not touch exrex's module globals at all."""
+    import exrex  # type: ignore
+
+    choice_before, randint_before = exrex.choice, exrex.randint
+    with _exrex_using(None):
+        assert exrex.choice is choice_before
+        assert exrex.randint is randint_before
     assert exrex.choice is choice_before
     assert exrex.randint is randint_before
