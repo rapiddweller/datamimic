@@ -30,7 +30,7 @@ class ProductService(BaseDomainService[Product]):
         # fallback to "US" for backward compatibility with generator signature.
         super().__init__(
             ProductGenerator(
-                dataset=dataset or "US", min_price=min_price, max_price=max_price, rng=rng, seeded_mode=seeded_mode
+                dataset=dataset, min_price=min_price, max_price=max_price, rng=rng, seeded_mode=seeded_mode
             ),
             Product,
         )

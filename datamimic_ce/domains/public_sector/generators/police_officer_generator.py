@@ -58,16 +58,16 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
         # Hand child generators a derived RNG so seeded officers replay consistently across runs.
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
             seeded_mode=self._seeded_mode,
         )
         self._phone_number_generator = PhoneNumberGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._email_address_generator = EmailAddressGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
 
     @property

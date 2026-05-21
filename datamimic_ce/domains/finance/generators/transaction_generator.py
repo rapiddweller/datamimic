@@ -46,7 +46,7 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         # Keep reference IDs deterministic when rngSeed is supplied via descriptors.
         self._reference_generator = DataFakerGenerator(
             "uuid4",
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         # Cache structures: map key -> (header_dict, rows)
         self._transaction_data: dict[str, tuple[dict[str, int], list[tuple[object, ...]]]] = {}

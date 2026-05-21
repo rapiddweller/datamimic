@@ -65,27 +65,27 @@ class PersonGenerator(DatasetAwareDomainGenerator):
         self._gender_generator = GenderGenerator(
             female_quota=female_quota,
             other_gender_quota=other_gender_quota,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._given_name_generator = GivenNameGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._family_name_generator = FamilyNameGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._email_generator = EmailAddressGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._phone_generator = PhoneNumberGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
             seeded_mode=self._seeded_mode,
         )
         self._demographic_config = resolved_config
@@ -95,20 +95,20 @@ class PersonGenerator(DatasetAwareDomainGenerator):
         self._birthdate_generator = BirthdateGenerator(
             min_age=self._birth_min,
             max_age=self._birth_max,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
             seeded_mode=self._seeded_mode,
         )
         self._academic_title_generator = AcademicTitleGenerator(
             dataset=self._dataset,
             quota=academic_title_quota,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._nobility_title_generator = NobilityTitleGenerator(
             dataset=self._dataset,
             noble_quota=noble_quota,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
-        self._demographic_rng = self._derive_rng() if demographic_sampler is not None and rng is not None else Random()
+        self._demographic_rng = self._derive_rng() if demographic_sampler is not None else Random()
 
     def reserve_demographic_sample(self) -> DemographicSample:
         if self._demographic_sampler is None:

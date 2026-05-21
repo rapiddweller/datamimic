@@ -9,7 +9,6 @@ from random import Random
 
 from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
-from datamimic_ce.domains.domain_core.runtime import now_utc_naive
 
 
 class BirthdateGenerator(ClockAnchoredDomainGenerator):
@@ -58,7 +57,7 @@ class BirthdateGenerator(ClockAnchoredDomainGenerator):
         self._min_birthdate = datetime(today.year - max_age - 1, today.month, today.day) + timedelta(days=1)
         self._max_birthdate = datetime(today.year - min_age, today.month, today.day)
         # Derive a dedicated RNG for date sampling so seeded runs stay reproducible without cross-coupling streams.
-        date_rng = Random(self._rng.randrange(2**63)) if rng is not None else Random()
+        date_rng = self._derive_rng()
         self._date_generator = DateTimeGenerator(
             min=str(self._min_birthdate),
             max=str(self._max_birthdate),
@@ -81,19 +80,18 @@ class BirthdateGenerator(ClockAnchoredDomainGenerator):
     def reset(self) -> None:
         pass
 
-    @staticmethod
-    def convert_birthdate_to_age(birth_date: datetime, reference_now: datetime | None = None) -> int:
+    def convert_birthdate_to_age(self, birth_date: datetime, reference_now: datetime | None = None) -> int:
         """
         age are calculated from given birthday and today
         (today value depends on system time and change over time, not fixed).
 
         Args:
             birth_date: The birthdate to calculate age from.
-            reference_now: Optional fixed datetime to use as "today". Defaults to live UTC.
+            reference_now: Optional fixed datetime to use as "today". Defaults to the generator anchor.
 
         Returns:
             age (int): calculated age (hour, minute, second, microsecond in datetime object equal 0 as default)
         """
-        today = reference_now if reference_now is not None else now_utc_naive()
+        today = reference_now if reference_now is not None else self._reference_now
         age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
         return age

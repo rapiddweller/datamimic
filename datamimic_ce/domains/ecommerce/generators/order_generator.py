@@ -25,7 +25,7 @@ class OrderGenerator(ClockAnchoredDomainGenerator):
         # Share deterministic RNG to nested address fields so seeded orders replay.
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
             seeded_mode=self._seeded_mode,
         )
 

@@ -30,16 +30,16 @@ class EducationalInstitutionGenerator(ClockAnchoredDomainGenerator):
         # Derive deterministic RNG streams so seeded institutions keep nested contact details stable.
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
             seeded_mode=self._seeded_mode,
         )
         self._phone_number_generator = PhoneNumberGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._email_generator = EmailAddressGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         # Track last chosen level to reduce immediate repetition across entities
         self._last_level: str | None = None

@@ -52,20 +52,20 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
         # Derive child RNGs so seeded administration offices replay deterministic nested attributes.
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
             seeded_mode=self._seeded_mode,
         )
         self._phone_number_generator = PhoneNumberGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._family_name_generator = FamilyNameGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._given_name_generator = GivenNameGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         # Track last office type to avoid immediate repetition in successive generations
         self._last_office_type: str | None = None
@@ -171,8 +171,8 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
         )
 
     # Helper: founding year based on office type ranges (deterministic via rng)
-    def pick_founding_year(self, office_type: str, *, now_year: int | None = None) -> int:
-        year = now_year if now_year is not None else self._reference_now.year
+    def pick_founding_year(self, office_type: str) -> int:
+        year = self._reference_now.year
         if "Federal" in office_type:
             min_age, max_age = 20, 200
         elif "State" in office_type:

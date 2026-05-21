@@ -55,15 +55,15 @@ class PatientGenerator(DatasetAwareDomainGenerator):
         # Fan out deterministic RNG so seeded patient cohorts remain reproducible across dependent literals.
         self._family_name_generator = FamilyNameGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._given_name_generator = GivenNameGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._phone_number_generator = PhoneNumberGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         # Track last blood type to reduce immediate repetition in tests
         self._last_blood_type: str | None = None

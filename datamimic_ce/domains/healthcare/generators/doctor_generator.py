@@ -141,8 +141,8 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
         return picks
 
     # Helper to pick a graduation year with anti-repetition
-    def pick_graduation_year(self, age: int, *, now_year: int | None = None) -> int:
-        year_now = now_year if now_year is not None else self._reference_now.year
+    def pick_graduation_year(self, age: int) -> int:
+        year_now = self._reference_now.year
         min_after = 0
         max_after = max(0, min(45, age - 25))
         years_after = self._rng.randint(min_after, max_after)

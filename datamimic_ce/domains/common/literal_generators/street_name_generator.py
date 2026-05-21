@@ -7,6 +7,7 @@
 import random
 from pathlib import Path
 
+from datamimic_ce.domains.domain_core.base_domain_generator import normalize_dataset
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
@@ -18,8 +19,7 @@ class StreetNameGenerator(BaseLiteralGenerator):
     """
 
     def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
-        dataset = dataset or "US"
-        street_code = dataset.upper()[:2]
+        street_code = normalize_dataset(dataset)[:2]
 
         # Prepare file path
         file_path = dataset_path("common", "street", f"street_{street_code}.csv", start=Path(__file__))
