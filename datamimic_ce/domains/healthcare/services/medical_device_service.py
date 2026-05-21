@@ -9,6 +9,7 @@ from random import Random
 
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
 from datamimic_ce.domains.healthcare.generators.medical_device_generator import MedicalDeviceGenerator
 from datamimic_ce.domains.healthcare.models.medical_device import MedicalDevice
 
@@ -43,6 +44,26 @@ class MedicalDeviceService(BaseDomainService[MedicalDevice]):
                 reference_now=reference_now,
             ),
             MedicalDevice,
+        )
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return specs(
+            ("device_id", "str", "Unique device identifier."),
+            ("device_type", "str", "Device type."),
+            ("manufacturer", "str", "Manufacturer name."),
+            ("model_number", "str", "Model number."),
+            ("serial_number", "str", "Serial number."),
+            ("manufacture_date", "str", "Manufacture date."),
+            ("expiration_date", "str", "Expiration date."),
+            ("last_maintenance_date", "str", "Date of last maintenance."),
+            ("next_maintenance_date", "str", "Date of next scheduled maintenance."),
+            ("status", "str", "Device status."),
+            ("location", "str", "Device location."),
+            ("assigned_to", "str", "Person or unit the device is assigned to."),
+            ("specifications", "dict", "Technical specifications."),
+            ("usage_logs", "list", "Usage log entries."),
+            ("maintenance_history", "list", "Maintenance history entries."),
         )
 
     @staticmethod

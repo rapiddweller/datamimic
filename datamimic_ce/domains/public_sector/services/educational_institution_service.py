@@ -13,6 +13,12 @@ This module provides a service for working with EducationalInstitution entities.
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import (
+    ADDRESS_GROUP_SPEC,
+    AttributeSpec,
+    group,
+    specs,
+)
 from datamimic_ce.domains.public_sector.generators.educational_institution_generator import (
     EducationalInstitutionGenerator,
 )
@@ -29,6 +35,27 @@ class EducationalInstitutionService(BaseDomainService[EducationalInstitution]):
     def __init__(self, dataset: str | None = None, rng: Random | None = None):
         super().__init__(
             EducationalInstitutionGenerator(dataset=dataset, rng=rng), EducationalInstitution
+        )
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return (
+            *specs(
+                ("institution_id", "str", "Unique institution identifier."),
+                ("name", "str", "Institution name."),
+                ("type", "str", "Institution type."),
+                ("level", "str", "Education level."),
+                ("founding_year", "int", "Year the institution was founded."),
+                ("student_count", "int", "Number of students."),
+                ("staff_count", "int", "Number of staff."),
+                ("website", "str", "Website URL."),
+                ("email", "str", "Email address."),
+                ("phone", "str", "Phone number."),
+                ("programs", "list", "Programs offered."),
+                ("accreditations", "list", "Accreditations held."),
+                ("facilities", "list", "Available facilities."),
+            ),
+            group("address", "Structured institution address.", ADDRESS_GROUP_SPEC.children),
         )
 
     @staticmethod

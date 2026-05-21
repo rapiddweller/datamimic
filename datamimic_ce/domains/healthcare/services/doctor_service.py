@@ -15,6 +15,12 @@ from random import Random
 from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import (
+    ADDRESS_GROUP_SPEC,
+    AttributeSpec,
+    group,
+    specs,
+)
 from datamimic_ce.domains.healthcare.generators.doctor_generator import DoctorGenerator
 from datamimic_ce.domains.healthcare.models.doctor import Doctor
 
@@ -41,6 +47,33 @@ class DoctorService(BaseDomainService[Doctor]):
                 demographic_sampler=demographic_sampler,
             ),
             Doctor,
+        )
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return (
+            *specs(
+                ("doctor_id", "str", "Unique doctor identifier."),
+                ("npi_number", "str", "National provider identifier."),
+                ("license_number", "str", "Medical license number."),
+                ("given_name", "str", "First (given) name."),
+                ("family_name", "str", "Last (family) name."),
+                ("full_name", "str", "Full display name."),
+                ("gender", "str", "Gender."),
+                ("birthdate", "datetime", "Date of birth."),
+                ("age", "int", "Age in years."),
+                ("specialty", "str", "Medical specialty."),
+                ("hospital", "dict", "Affiliated hospital details."),
+                ("medical_school", "str", "Medical school attended."),
+                ("graduation_year", "int", "Year of graduation."),
+                ("years_of_experience", "int", "Years of professional experience."),
+                ("certifications", "list", "Professional certifications."),
+                ("accepting_new_patients", "bool", "Whether accepting new patients."),
+                ("office_hours", "dict", "Office hours by day."),
+                ("email", "str", "Email address."),
+                ("phone", "str", "Phone number."),
+            ),
+            group("address", "Structured practice address.", ADDRESS_GROUP_SPEC.children),
         )
 
     @staticmethod

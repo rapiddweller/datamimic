@@ -9,6 +9,7 @@ import random
 from datamimic_ce.domains.common.generators.city_generator import CityGenerator
 from datamimic_ce.domains.common.models.city import City
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
 
 
 class CityService(BaseDomainService[City]):
@@ -23,6 +24,20 @@ class CityService(BaseDomainService[City]):
         rng: random.Random | None = None,
     ):
         super().__init__(CityGenerator(dataset=dataset, rng=rng), City)
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return specs(
+            ("name", "str", "City name."),
+            ("postal_code", "str", "Postal or ZIP code."),
+            ("area_code", "str", "Telephone area code."),
+            ("state", "str", "State, province, or region."),
+            ("language", "str | None", "Primary language."),
+            ("population", "int | None", "Population count."),
+            ("name_extension", "str", "City name extension or suffix."),
+            ("country", "str", "Human-readable country name."),
+            ("country_code", "str", "ISO 3166-1 alpha-2 country code."),
+        )
 
     @staticmethod
     def supported_datasets() -> set[str]:

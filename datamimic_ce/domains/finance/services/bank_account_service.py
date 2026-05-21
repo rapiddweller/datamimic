@@ -8,6 +8,7 @@ import datetime as dt
 import random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
 from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
 
@@ -22,6 +23,22 @@ class BankAccountService(BaseDomainService[BankAccount]):
         super().__init__(
             BankAccountGenerator(dataset=dataset, rng=rng, reference_now=reference_now),
             BankAccount,
+        )
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return specs(
+            ("account_number", "str", "Account number."),
+            ("iban", "str", "International bank account number."),
+            ("account_type", "str", "Account type."),
+            ("balance", "float", "Current account balance."),
+            ("currency", "str", "Account currency code."),
+            ("created_date", "datetime", "Account creation date."),
+            ("last_transaction_date", "datetime", "Date of the last transaction."),
+            ("bank_name", "str", "Bank name."),
+            ("bank_code", "str", "Bank code."),
+            ("bic", "str", "Bank identifier code (BIC)."),
+            ("bin", "str", "Bank identification number (BIN)."),
         )
 
     @staticmethod

@@ -13,6 +13,7 @@ This module provides service functions for generating and managing insurance com
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
 from datamimic_ce.domains.insurance.generators.insurance_coverage_generator import InsuranceCoverageGenerator
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
 
@@ -23,6 +24,17 @@ class InsuranceCoverageService(BaseDomainService[InsuranceCoverage]):
     def __init__(self, dataset: str | None = None, rng: Random | None = None):
         super().__init__(
             InsuranceCoverageGenerator(dataset=dataset, rng=rng), InsuranceCoverage
+        )
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return specs(
+            ("name", "str", "Coverage name."),
+            ("code", "str", "Coverage code."),
+            ("product_code", "str", "Associated product code."),
+            ("description", "str", "Coverage description."),
+            ("min_coverage", "str", "Minimum coverage amount."),
+            ("max_coverage", "str", "Maximum coverage amount."),
         )
 
     @staticmethod

@@ -13,6 +13,7 @@ This module provides the MedicalProcedureService class for generating and managi
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
 from datamimic_ce.domains.healthcare.generators.medical_procedure_generator import MedicalProcedureGenerator
 from datamimic_ce.domains.healthcare.models.medical_procedure import MedicalProcedure
 
@@ -26,6 +27,25 @@ class MedicalProcedureService(BaseDomainService[MedicalProcedure]):
 
     def __init__(self, dataset: str | None = None, rng: Random | None = None):
         super().__init__(MedicalProcedureGenerator(dataset=dataset, rng=rng), MedicalProcedure)
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return specs(
+            ("procedure_id", "str", "Unique procedure identifier."),
+            ("procedure_code", "str", "Internal procedure code."),
+            ("cpt_code", "str", "CPT billing code."),
+            ("name", "str", "Procedure name."),
+            ("description", "str", "Procedure description."),
+            ("category", "str", "Procedure category."),
+            ("specialty", "str", "Associated medical specialty."),
+            ("duration_minutes", "int", "Typical duration in minutes."),
+            ("cost", "float", "Procedure cost."),
+            ("requires_anesthesia", "bool", "Whether anesthesia is required."),
+            ("is_surgical", "bool", "Whether the procedure is surgical."),
+            ("is_diagnostic", "bool", "Whether the procedure is diagnostic."),
+            ("is_preventive", "bool", "Whether the procedure is preventive."),
+            ("recovery_time_days", "int", "Typical recovery time in days."),
+        )
 
     @staticmethod
     def supported_datasets() -> set[str]:

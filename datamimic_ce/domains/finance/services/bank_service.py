@@ -7,6 +7,7 @@
 import random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
 from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
 from datamimic_ce.domains.finance.models.bank import Bank
 
@@ -14,6 +15,18 @@ from datamimic_ce.domains.finance.models.bank import Bank
 class BankService(BaseDomainService[Bank]):
     def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
         super().__init__(BankGenerator(dataset, rng=rng), Bank)
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return specs(
+            ("name", "str", "Bank name."),
+            ("swift_code", "str", "SWIFT code."),
+            ("routing_number", "str", "Routing number."),
+            ("bank_code", "str", "Bank code."),
+            ("bic", "str", "Bank identifier code (BIC)."),
+            ("bin", "str", "Bank identification number (BIN)."),
+            ("customer_service_phone", "str", "Customer service phone number."),
+        )
 
     @staticmethod
     def supported_datasets() -> set[str]:

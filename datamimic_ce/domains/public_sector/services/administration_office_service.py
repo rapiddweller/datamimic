@@ -13,6 +13,12 @@ This module provides a service for working with AdministrationOffice entities.
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import (
+    ADDRESS_GROUP_SPEC,
+    AttributeSpec,
+    group,
+    specs,
+)
 from datamimic_ce.domains.public_sector.generators.administration_office_generator import AdministrationOfficeGenerator
 from datamimic_ce.domains.public_sector.models.administration_office import AdministrationOffice
 
@@ -27,6 +33,28 @@ class AdministrationOfficeService(BaseDomainService[AdministrationOffice]):
     def __init__(self, dataset: str | None = None, rng: Random | None = None):
         super().__init__(
             AdministrationOfficeGenerator(dataset=dataset, rng=rng), AdministrationOffice
+        )
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return (
+            *specs(
+                ("office_id", "str", "Unique office identifier."),
+                ("name", "str", "Office name."),
+                ("type", "str", "Office type."),
+                ("jurisdiction", "str", "Jurisdiction served."),
+                ("founding_year", "int", "Year the office was founded."),
+                ("staff_count", "int", "Number of staff."),
+                ("annual_budget", "float", "Annual budget."),
+                ("hours_of_operation", "dict", "Operating hours by day."),
+                ("website", "str", "Website URL."),
+                ("email", "str", "Email address."),
+                ("phone", "str", "Phone number."),
+                ("services", "list", "Services offered."),
+                ("departments", "list", "Departments within the office."),
+                ("leadership", "dict", "Leadership roles and names."),
+            ),
+            group("address", "Structured office address.", ADDRESS_GROUP_SPEC.children),
         )
 
     @staticmethod

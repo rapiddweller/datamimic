@@ -14,6 +14,7 @@ import datetime as dt
 import random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, group, specs
 from datamimic_ce.domains.finance.generators.transaction_generator import TransactionGenerator
 from datamimic_ce.domains.finance.models.transaction import Transaction
 
@@ -28,6 +29,36 @@ class TransactionService(BaseDomainService[Transaction]):
         super().__init__(
             TransactionGenerator(dataset=dataset, rng=rng, reference_now=reference_now),
             Transaction,
+        )
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return (
+            *specs(
+                ("transaction_id", "str", "Unique transaction identifier."),
+                ("transaction_date", "datetime", "Date and time of the transaction."),
+                ("amount", "float", "Transaction amount."),
+                ("transaction_type", "str", "Transaction type."),
+                ("description", "str", "Transaction description."),
+                ("reference_number", "str", "Reference number."),
+                ("status", "str", "Transaction status."),
+                ("currency", "str", "Currency code."),
+                ("currency_symbol", "str", "Currency symbol."),
+                ("merchant_name", "str", "Merchant name."),
+                ("merchant_category", "str", "Merchant category."),
+                ("location", "str", "Transaction location."),
+                ("is_international", "bool", "Whether the transaction is international."),
+                ("channel", "str", "Transaction channel."),
+                ("direction", "str", "Transaction direction (debit/credit)."),
+            ),
+            group(
+                "account",
+                "Associated account summary (present when an account is linked).",
+                specs(
+                    ("account_number", "str", "Account number."),
+                    ("account_type", "str", "Account type."),
+                ),
+            ),
         )
 
     @staticmethod

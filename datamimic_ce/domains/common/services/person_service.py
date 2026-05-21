@@ -12,6 +12,7 @@ from datamimic_ce.domains.common.generators.person_generator import PersonGenera
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
 
 
 class PersonService(BaseDomainService[Person]):
@@ -56,6 +57,25 @@ class PersonService(BaseDomainService[Person]):
                 academic_title_quota=academic_title_quota,
             ),
             Person,
+        )
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return specs(
+            ("birthdate", "datetime", "Date of birth."),
+            ("given_name", "str", "First (given) name."),
+            ("family_name", "str", "Last (family) name."),
+            ("full_name", "str", "Full display name."),
+            ("gender", "str", "Gender."),
+            ("name", "str", "Name with titles and salutation."),
+            ("age", "int", "Age in years."),
+            ("email", "str", "Primary email address."),
+            ("phone", "str", "Landline phone number."),
+            ("mobile_phone", "str", "Mobile phone number."),
+            ("academic_title", "str | None", "Academic title, if any."),
+            ("salutation", "str", "Salutation form."),
+            ("nobility_title", "str | None", "Nobility title, if any."),
+            ("transaction_profile", "str | dict | None", "Spending/transaction behaviour profile."),
         )
 
     @staticmethod

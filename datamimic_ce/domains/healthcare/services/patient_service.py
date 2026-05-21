@@ -15,6 +15,7 @@ from random import Random
 from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
 from datamimic_ce.domains.healthcare.generators.patient_generator import PatientGenerator
 from datamimic_ce.domains.healthcare.models.patient import Patient
 
@@ -42,6 +43,32 @@ class PatientService(BaseDomainService[Patient]):
                 rng=rng,
             ),
             Patient,
+        )
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return specs(
+            ("patient_id", "str", "Unique patient identifier."),
+            ("medical_record_number", "str", "Medical record number."),
+            ("ssn", "str", "Social security number."),
+            ("given_name", "str", "First (given) name."),
+            ("family_name", "str", "Last (family) name."),
+            ("full_name", "str", "Full display name."),
+            ("gender", "str", "Gender."),
+            ("birthdate", "datetime", "Date of birth."),
+            ("age", "int", "Age in years."),
+            ("blood_type", "str", "Blood type."),
+            ("height_cm", "float", "Height in centimetres."),
+            ("weight_kg", "float", "Weight in kilograms."),
+            ("bmi", "float", "Body mass index."),
+            ("allergies", "list", "Known allergies."),
+            ("medications", "list", "Current medications."),
+            ("conditions", "list", "Diagnosed conditions."),
+            ("emergency_contact", "dict", "Emergency contact details."),
+            ("insurance_provider", "str", "Insurance provider name."),
+            ("insurance_policy_number", "str", "Insurance policy number."),
+            ("transaction_profile", "str | dict | None", "Spending/transaction behaviour profile."),
+            ("primary_doctor", "dict", "Primary doctor details (present when assigned)."),
         )
 
     @staticmethod

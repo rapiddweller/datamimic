@@ -6,8 +6,9 @@
 
 
 from abc import ABC
-from typing import Generic, TypeVar
+from typing import ClassVar, Generic, TypeVar
 
+from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.domain_core.base_entity import BaseEntity
 
@@ -20,11 +21,26 @@ class BaseDomainService(ABC, Generic[T]):
 
     This class provides the interface and common functionality for domain-specific
     services that generate and manipulate domain entities.
+
+    Subclasses are discovered by name through the entity registry. The DSL-facing
+    name is derived from the class name (``PersonService`` -> ``Person``); override
+    ``ENTITY_NAME`` to pin it and ``ALIASES`` to add alternates. ``attribute_specs``
+    declares the fields the entity exposes so the registry can introspect it.
     """
+
+    #: Pin the DSL entity name; defaults to the class name without the "Service" suffix.
+    ENTITY_NAME: ClassVar[str | None] = None
+    #: Extra names that should also resolve to this service.
+    ALIASES: ClassVar[tuple[str, ...]] = ()
 
     def __init__(self, data_generator: BaseDomainGenerator, model_cls: type[T]):
         self._data_generator = data_generator
         self._model_cls = model_cls
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        """Return the attributes this entity exposes. Override per service."""
+        return ()
 
     def generate(self) -> T:
         """

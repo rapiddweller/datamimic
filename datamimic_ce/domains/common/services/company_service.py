@@ -11,6 +11,7 @@ import random
 from datamimic_ce.domains.common.generators.company_generator import CompanyGenerator
 from datamimic_ce.domains.common.models.company import Company
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
 
 
 class CompanyService(BaseDomainService[Company]):
@@ -25,6 +26,25 @@ class CompanyService(BaseDomainService[Company]):
         rng: random.Random | None = None,
     ):
         super().__init__(CompanyGenerator(dataset=dataset, rng=rng), Company)
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return specs(
+            ("short_name", "str", "Short company name."),
+            ("sector", "str | None", "Business sector."),
+            ("email", "str", "Company email address."),
+            ("url", "str | None", "Company website URL."),
+            ("phone_number", "str | None", "General phone number."),
+            ("office_phone", "str | None", "Office phone number."),
+            ("fax", "str | None", "Fax number."),
+            ("street", "str", "Street or thoroughfare name."),
+            ("house_number", "str", "House or building number."),
+            ("city", "str", "City or locality name."),
+            ("state", "str | None", "State, province, or region."),
+            ("zip_code", "str", "Postal or ZIP code."),
+            ("country", "str", "Human-readable country name."),
+            ("country_code", "str", "ISO 3166-1 alpha-2 country code."),
+        )
 
     @staticmethod
     def supported_datasets() -> set[str]:

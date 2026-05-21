@@ -10,6 +10,7 @@ import random
 from datamimic_ce.domains.common.generators.country_generator import CountryGenerator
 from datamimic_ce.domains.common.models.country import Country
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
 
 
 class CountryService(BaseDomainService[Country]):
@@ -24,6 +25,16 @@ class CountryService(BaseDomainService[Country]):
         rng: random.Random | None = None,
     ):
         super().__init__(CountryGenerator(dataset=dataset, rng=rng), Country)
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return specs(
+            ("iso_code", "str", "ISO 3166-1 alpha-2 country code."),
+            ("name", "str", "Human-readable country name."),
+            ("default_language_locale", "str", "Default language locale."),
+            ("phone_code", "str", "International dialing code."),
+            ("population", "str", "Population count."),
+        )
 
     @staticmethod
     def supported_datasets() -> set[str]:

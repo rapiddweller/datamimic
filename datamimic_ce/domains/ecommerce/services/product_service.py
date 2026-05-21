@@ -7,6 +7,7 @@
 import random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
 from datamimic_ce.domains.ecommerce.models.product import Product
 
@@ -30,6 +31,26 @@ class ProductService(BaseDomainService[Product]):
                 dataset=dataset, min_price=min_price, max_price=max_price, rng=rng
             ),
             Product,
+        )
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return specs(
+            ("product_id", "str", "Unique product identifier."),
+            ("name", "str", "Product name."),
+            ("description", "str", "Product description."),
+            ("price", "float", "Product price."),
+            ("category", "str", "Product category."),
+            ("brand", "str", "Product brand."),
+            ("sku", "str", "Stock keeping unit."),
+            ("condition", "str", "Product condition."),
+            ("availability", "str", "Availability status."),
+            ("currency", "str", "Price currency code."),
+            ("weight", "float", "Product weight."),
+            ("dimensions", "str", "Product dimensions."),
+            ("color", "str", "Product color."),
+            ("rating", "float", "Average customer rating."),
+            ("tags", "list", "Product tags."),
         )
 
     @staticmethod

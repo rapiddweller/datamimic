@@ -13,6 +13,7 @@ This module provides the HospitalService class for generating and managing hospi
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import AttributeSpec, specs
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
 from datamimic_ce.domains.healthcare.models.hospital import Hospital
 
@@ -26,6 +27,25 @@ class HospitalService(BaseDomainService[Hospital]):
 
     def __init__(self, dataset: str | None = None, rng: Random | None = None):
         super().__init__(HospitalGenerator(dataset=dataset, rng=rng), Hospital)
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return specs(
+            ("hospital_id", "str", "Unique hospital identifier."),
+            ("name", "str", "Hospital name."),
+            ("type", "str", "Hospital type."),
+            ("departments", "list", "Departments offered."),
+            ("services", "list", "Services offered."),
+            ("bed_count", "int", "Number of beds."),
+            ("staff_count", "int", "Number of staff."),
+            ("founding_year", "int", "Year founded."),
+            ("accreditation", "list", "Accreditations held."),
+            ("emergency_services", "bool", "Whether emergency services are offered."),
+            ("teaching_status", "bool", "Whether it is a teaching hospital."),
+            ("website", "str", "Website URL."),
+            ("phone", "str", "Phone number."),
+            ("email", "str", "Email address."),
+        )
 
     @staticmethod
     def supported_datasets() -> set[str]:

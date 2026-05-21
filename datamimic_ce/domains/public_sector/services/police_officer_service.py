@@ -15,6 +15,12 @@ from random import Random
 from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import (
+    ADDRESS_GROUP_SPEC,
+    AttributeSpec,
+    group,
+    specs,
+)
 from datamimic_ce.domains.public_sector.generators.police_officer_generator import PoliceOfficerGenerator
 from datamimic_ce.domains.public_sector.models.police_officer import PoliceOfficer
 
@@ -41,6 +47,32 @@ class PoliceOfficerService(BaseDomainService[PoliceOfficer]):
                 demographic_sampler=demographic_sampler,
             ),
             PoliceOfficer,
+        )
+
+    @classmethod
+    def attribute_specs(cls) -> tuple[AttributeSpec, ...]:
+        return (
+            *specs(
+                ("officer_id", "str", "Unique officer identifier."),
+                ("badge_number", "str", "Badge number."),
+                ("given_name", "str", "First (given) name."),
+                ("family_name", "str", "Last (family) name."),
+                ("full_name", "str", "Full display name."),
+                ("gender", "str", "Gender."),
+                ("birthdate", "str", "Date of birth."),
+                ("age", "int", "Age in years."),
+                ("rank", "str", "Officer rank."),
+                ("department", "str", "Department."),
+                ("unit", "str", "Assigned unit."),
+                ("hire_date", "str", "Date of hire."),
+                ("years_of_service", "int", "Years of service."),
+                ("certifications", "list", "Professional certifications."),
+                ("languages", "list", "Languages spoken."),
+                ("shift", "str", "Assigned shift."),
+                ("email", "str", "Email address."),
+                ("phone", "str", "Phone number."),
+            ),
+            group("address", "Structured officer address.", ADDRESS_GROUP_SPEC.children),
         )
 
     @staticmethod
