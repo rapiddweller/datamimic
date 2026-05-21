@@ -11,6 +11,7 @@ from pathlib import Path
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
+from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -77,18 +78,9 @@ class BankAccountGenerator(ClockAnchoredDomainGenerator):
     def get_bank_account_types(self) -> str:
         file_path = dataset_path("finance", f"account_types_{self.dataset}.csv", start=Path(__file__))
         account_types_data = FileUtil.read_csv_to_list_of_tuples_without_header(file_path)[1:]
+        values = [row[0] for row in account_types_data]
         weights = [float(item[1]) for item in account_types_data]
-        # Avoid immediate repetition
-        if self._last_account_type is not None and len(account_types_data) > 1:
-            pool = [
-                (row, w)
-                for row, w in zip(account_types_data, weights, strict=False)
-                if row[0] != self._last_account_type
-            ]
-            rows, wgts = zip(*pool, strict=False)
-            choice = self._rng.choices(list(rows), weights=list(wgts), k=1)[0][0]
-        else:
-            choice = self._rng.choices(account_types_data, weights=weights, k=1)[0][0]
+        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_account_type)
         self._last_account_type = choice
         return choice
 
@@ -107,13 +99,6 @@ class BankAccountGenerator(ClockAnchoredDomainGenerator):
             weight_idx = len(header) - 1 if len(header) > 1 else None
         weights = [1.0 for _ in rows] if weight_idx is None else [float(row[weight_idx]) for row in rows]
         codes = [row[code_idx] for row in rows]
-        # Avoid immediate repetition
-        if self._last_currency is not None and len(codes) > 1:
-            pool = [(code, w) for code, w in zip(codes, weights, strict=False) if code != self._last_currency]
-            if pool:
-                codes_filtered, weights_filtered = zip(*pool, strict=False)
-                codes = list(codes_filtered)
-                weights = list(weights_filtered)
-        choice = self._rng.choices(list(codes), weights=list(weights), k=1)[0]
+        choice = pick_one_weighted_no_repeat(self._rng, codes, weights, last=self._last_currency)
         self._last_currency = choice
         return choice

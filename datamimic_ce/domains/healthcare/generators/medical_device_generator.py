@@ -17,7 +17,11 @@ from pathlib import Path
 
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
+from datamimic_ce.domains.utils.dataset_loader import (
+    load_weighted_values_try_dataset,
+    pick_one_weighted,
+    pick_one_weighted_no_repeat,
+)
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -100,13 +104,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         loaded_data = FileUtil.read_weight_csv(file_path)
         values: list[str] = [str(v) for v in loaded_data[0].tolist() if v is not None]
         weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
-        # avoid immediate repetition when possible
-        if self._last_manufacturer in values and len(values) > 1:
-            pool = [(v, float(w)) for v, w in zip(values, weights, strict=False) if v != self._last_manufacturer]
-            p_vals, p_w = zip(*pool, strict=False)
-            choice = self._rng.choices(list(p_vals), weights=list(p_w), k=1)[0]
-        else:
-            choice = self._rng.choices(values, weights=weights, k=1)[0]
+        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_manufacturer)
         self._last_manufacturer = choice
         return choice
 

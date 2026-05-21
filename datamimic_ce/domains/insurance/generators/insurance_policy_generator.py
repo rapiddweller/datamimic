@@ -103,17 +103,14 @@ class InsurancePolicyGenerator(DatasetAwareDomainGenerator):
         return pick_one_weighted(self._rng, values, weights)
 
     def pick_status(self, *, start_path: Path) -> str:
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
+        from datamimic_ce.domains.utils.dataset_loader import (
+            load_weighted_values_try_dataset,
+            pick_one_weighted_no_repeat,
+        )
 
         values, weights = load_weighted_values_try_dataset(
             "insurance", "policy", "statuses.csv", dataset=self._dataset, start=start_path
         )
-        last = getattr(self, "_last_status", None)
-        if last in values and len(values) > 1:
-            pool = [(v, w) for v, w in zip(values, weights, strict=False) if v != last]
-            vals, wgts = zip(*pool, strict=False)
-            choice = pick_one_weighted(self._rng, list(vals), list(wgts))
-        else:
-            choice = pick_one_weighted(self._rng, values, weights)
+        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_status)
         self._last_status = choice
         return choice

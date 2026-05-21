@@ -16,17 +16,28 @@ the tiny bits to keep domain generators clean and consistent.
 """
 
 
-def load_weighted_values(*relative: str | Path, start: Path) -> tuple[Sequence[str], Sequence[float]]:
-    """Load a simple 2-column weighted CSV under domain_data.
-
-    Returns (values, weights).
-    """
-    path = dataset_path(*map(str, relative), start=start)
-    return FileUtil.read_wgt_file(path)
-
-
 def pick_one_weighted(rng: random.Random, values: Sequence[str], weights: Sequence[float]) -> str:
     return rng.choices(values, weights=weights, k=1)[0]
+
+
+def pick_one_weighted_no_repeat(
+    rng: random.Random,
+    values: Sequence[str],
+    weights: Sequence[float],
+    *,
+    last: str | None,
+) -> str:
+    """Pick one value by weight, excluding *last* when ≥2 distinct values exist.
+
+    Guarantees non-repetition by filter-and-renormalise (not retry).
+    Falls back to the full pool when *last* is None, not present in *values*,
+    or only one distinct value exists.
+    """
+    if last is not None and last in values and len(values) > 1:
+        pool = [(v, w) for v, w in zip(values, weights, strict=False) if v != last]
+        p_vals, p_wgts = zip(*pool, strict=False)
+        return rng.choices(list(p_vals), weights=list(p_wgts), k=1)[0]
+    return rng.choices(list(values), weights=list(weights), k=1)[0]
 
 
 def sample_weighted_no_replacement(
