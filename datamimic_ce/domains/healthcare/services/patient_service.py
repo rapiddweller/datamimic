@@ -73,21 +73,14 @@ class PatientService(BaseDomainService[Patient]):
             Patient,
         )
 
+    DATASET_PATTERNS = (
+        "healthcare/medical/blood_types_{CC}.csv",
+        "healthcare/medical/emergency_relationships_{CC}.csv",
+        "healthcare/medical/allergies_{CC}.csv",
+        "healthcare/medical/medications_{CC}.csv",
+        "healthcare/medical/insurance_providers_{CC}.csv",
+    )
+
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return PATIENT_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        patterns = [
-            "healthcare/medical/blood_types_{CC}.csv",
-            "healthcare/medical/emergency_relationships_{CC}.csv",
-            "healthcare/medical/allergies_{CC}.csv",
-            "healthcare/medical/medications_{CC}.csv",
-            "healthcare/medical/insurance_providers_{CC}.csv",
-        ]
-        return compute_supported_datasets(patterns, start=Path(__file__))

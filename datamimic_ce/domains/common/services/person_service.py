@@ -80,19 +80,12 @@ class PersonService(BaseDomainService[Person]):
             Person,
         )
 
+    DATASET_PATTERNS = (
+        "common/person/givenName_male_{CC}.csv",
+        "common/person/givenName_female_{CC}.csv",
+        "common/person/familyName_{CC}.csv",
+    )
+
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return PERSON_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        patterns = [
-            "common/person/givenName_male_{CC}.csv",
-            "common/person/givenName_female_{CC}.csv",
-            "common/person/familyName_{CC}.csv",
-        ]
-        return compute_supported_datasets(patterns, start=Path(__file__))

@@ -64,24 +64,11 @@ class EducationalInstitutionService(BaseDomainService[EducationalInstitution]):
             EducationalInstitution,
         )
 
+    DATASET_PATTERNS = (
+        "public_sector/education/institution_types_{CC}.csv",
+        "public_sector/education/levels_{CC}.csv",
+    )
+
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return EDUCATIONAL_INSTITUTION_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        """Return ISO dataset codes supported by core required datasets.
-
-        We use a minimal set that guarantees generation works. Additional
-        files (programs, accreditations, facilities) are available for
-        the same codes in this repository.
-        """
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        patterns = [
-            "public_sector/education/institution_types_{CC}.csv",
-            "public_sector/education/levels_{CC}.csv",
-        ]
-        return compute_supported_datasets(patterns, start=Path(__file__))

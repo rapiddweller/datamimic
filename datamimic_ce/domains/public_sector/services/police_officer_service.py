@@ -77,26 +77,14 @@ class PoliceOfficerService(BaseDomainService[PoliceOfficer]):
             PoliceOfficer,
         )
 
+    DATASET_PATTERNS = (
+        "public_sector/police/ranks_{CC}.csv",
+        "public_sector/police/departments_{CC}.csv",
+        "public_sector/police/languages_{CC}.csv",
+        "public_sector/police/certifications_{CC}.csv",
+        "public_sector/police/shifts_{CC}.csv",
+    )
+
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return POLICE_OFFICER_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        """Return ISO dataset codes supported by core required datasets.
-
-        WHY: Keep dataset discovery consistent and DRY across services by
-        intersecting required file sets under `domain_data`.
-        """
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        patterns = [
-            "public_sector/police/ranks_{CC}.csv",
-            "public_sector/police/departments_{CC}.csv",
-            "public_sector/police/languages_{CC}.csv",
-            "public_sector/police/certifications_{CC}.csv",
-            "public_sector/police/shifts_{CC}.csv",
-        ]
-        return compute_supported_datasets(patterns, start=Path(__file__))

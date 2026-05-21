@@ -10,9 +10,8 @@ Transaction Service.
 This module provides utility methods for working with Transaction entities.
 """
 
-import datetime as dt
-import random
 from datetime import datetime
+from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field, group
@@ -51,11 +50,27 @@ TRANSACTION_SCHEMA = EntitySchema(
 
 
 class TransactionService(BaseDomainService[Transaction]):
+    DATASET_PATTERNS = (
+        "finance/transaction/transaction_types_{CC}.csv",
+        "finance/transaction/categories_{CC}.csv",
+        "finance/transaction/merchants_{CC}.csv",
+        "finance/transaction/description_templates_{CC}.csv",
+        "finance/transaction/amount_ranges_{CC}.csv",
+        "finance/transaction/transaction_type_modifiers_{CC}.csv",
+        "finance/transaction/status_{CC}.csv",
+        "finance/transaction/channels_{CC}.csv",
+        "finance/transaction/currency_mapping_{CC}.csv",
+        # City dataset lives under common; needed for location generation
+        "common/city/city_{CC}.csv",
+        # Currencies are shared in ecommerce; used for symbol lookup
+        "ecommerce/currencies_{CC}.csv",
+    )
+
     def __init__(
         self,
         dataset: str | None = None,
-        rng: random.Random | None = None,
-        reference_now: dt.datetime | None = None,
+        rng: Random | None = None,
+        reference_now: datetime | None = None,
     ):
         super().__init__(
             TransactionGenerator(dataset=dataset, rng=rng, reference_now=reference_now),
@@ -65,26 +80,3 @@ class TransactionService(BaseDomainService[Transaction]):
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return TRANSACTION_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        patterns = [
-            "finance/transaction/transaction_types_{CC}.csv",
-            "finance/transaction/categories_{CC}.csv",
-            "finance/transaction/merchants_{CC}.csv",
-            "finance/transaction/description_templates_{CC}.csv",
-            "finance/transaction/amount_ranges_{CC}.csv",
-            "finance/transaction/transaction_type_modifiers_{CC}.csv",
-            "finance/transaction/status_{CC}.csv",
-            "finance/transaction/channels_{CC}.csv",
-            "finance/transaction/currency_mapping_{CC}.csv",
-            # City dataset lives under common; needed for location generation
-            "common/city/city_{CC}.csv",
-            # Currencies are shared in ecommerce; used for symbol lookup
-            "ecommerce/currencies_{CC}.csv",
-        ]
-        return compute_supported_datasets(patterns, start=Path(__file__))

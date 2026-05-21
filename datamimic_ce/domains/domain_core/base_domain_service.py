@@ -4,13 +4,15 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-
+import inspect
 from abc import ABC
+from pathlib import Path
 from typing import Generic, TypeVar
 
 from datamimic_ce.domains.domain_core.attribute_catalog import FieldSpec
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.domain_core.base_entity import BaseEntity
+from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
 
 T = TypeVar("T", bound=BaseEntity)
 
@@ -28,6 +30,8 @@ class BaseDomainService(ABC, Generic[T]):
     introspect it.
     """
 
+    DATASET_PATTERNS: tuple[str, ...] = ()
+
     def __init__(self, data_generator: BaseDomainGenerator, model_cls: type[T]):
         self._data_generator = data_generator
         self._model_cls = model_cls
@@ -36,6 +40,11 @@ class BaseDomainService(ABC, Generic[T]):
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         """Return the schema fields this entity exposes. Override per service."""
         return ()
+
+    @classmethod
+    def supported_datasets(cls) -> set[str]:
+        """Return ISO dataset codes supported by all required datasets for this domain."""
+        return compute_supported_datasets(cls.DATASET_PATTERNS, start=Path(inspect.getfile(cls)))
 
     def generate(self) -> T:
         """

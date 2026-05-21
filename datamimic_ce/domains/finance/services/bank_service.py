@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import random
+from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
@@ -26,17 +26,11 @@ BANK_SCHEMA = EntitySchema(
 
 
 class BankService(BaseDomainService[Bank]):
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
-        super().__init__(BankGenerator(dataset, rng=rng), Bank)
+    DATASET_PATTERNS = ("finance/bank/banks_{CC}.csv",)
+
+    def __init__(self, dataset: str | None = None, rng: Random | None = None):
+        super().__init__(BankGenerator(dataset=dataset, rng=rng), Bank)
 
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return BANK_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        return compute_supported_datasets(["finance/bank/banks_{CC}.csv"], start=Path(__file__))

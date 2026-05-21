@@ -6,7 +6,7 @@
 
 # from typing import List, Dict, Any, Optional
 
-import random
+from random import Random
 
 from datamimic_ce.domains.common.generators.company_generator import CompanyGenerator
 from datamimic_ce.domains.common.models.company import Company
@@ -40,27 +40,20 @@ class CompanyService(BaseDomainService[Company]):
     This class provides methods for creating, retrieving, and managing company data.
     """
 
+    DATASET_PATTERNS = (
+        "common/organization/sector_{CC}.csv",
+        "common/organization/legalForm_{CC}.csv",
+        "common/net/webmailDomain_{CC}.csv",
+        "common/net/tld_{CC}.csv",
+    )
+
     def __init__(
         self,
         dataset: str | None = None,
-        rng: random.Random | None = None,
+        rng: Random | None = None,
     ):
         super().__init__(CompanyGenerator(dataset=dataset, rng=rng), Company)
 
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return COMPANY_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        patterns = [
-            "common/organization/sector_{CC}.csv",
-            "common/organization/legalForm_{CC}.csv",
-            "common/net/webmailDomain_{CC}.csv",
-            "common/net/tld_{CC}.csv",
-        ]
-        return compute_supported_datasets(patterns, start=Path(__file__))
