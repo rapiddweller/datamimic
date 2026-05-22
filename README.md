@@ -291,10 +291,12 @@ In CE, PII fields are identified and modeled manually in the XML pipeline:
 
 ```xml
 <setup>
-  <generate name="customers" source="customer_export" target="customer_test">
-    <!-- Seeded synthetic stand-ins overwrite each PII field. rngSeed on the
-         <variable> makes the run reproducible; drop rngSeed for the
-         privacy-maximized (non-deterministic) mode. -->
+  <generate name="customers" source="customer_export" target="customer_test" distribution="ordered">
+    <!-- distribution="ordered" reads the source in a stable order — required so the
+         Nth source row maps to the same seeded synthetic value on every run. The
+         default ("random") shuffles non-deterministically and would break it.
+         rngSeed on the <variable> makes the synthetic values reproducible; drop
+         rngSeed for the privacy-maximized (non-deterministic) mode. -->
     <variable name="p"   entity="Person"      dataset="DE" rngSeed="42" />
     <variable name="acc" entity="BankAccount" dataset="DE" rngSeed="42" />
 
