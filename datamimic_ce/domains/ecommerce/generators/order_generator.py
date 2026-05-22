@@ -5,7 +5,11 @@ from pathlib import Path
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.ecommerce.generators.product_generator import ProductGenerator
-from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
+from datamimic_ce.domains.utils.dataset_loader import (
+    load_weighted_values_try_dataset,
+    pick_one_weighted,
+    pick_weighted_from_headered_csv,
+)
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -37,18 +41,9 @@ class OrderGenerator(ClockAnchoredDomainGenerator):
         return self._address_generator
 
     def _pick_from_weighted_csv(self, *path: str, value_col: str, weight_col: str = "weight") -> str:
-        """Read a weighted CSV (dataset-aware) and return one value picked by weight."""
+        """Pick one value by weight from an ecommerce headered CSV (dataset-aware)."""
         file_path = dataset_path("ecommerce", *path, start=Path(__file__))
-        header, rows = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
-        w_idx = header.get(weight_col)
-        v_idx = header.get(value_col)
-        if w_idx is None or v_idx is None:
-            raise ValueError(
-                f"{file_path} is missing required column(s): "
-                f"value_col={value_col!r}, weight_col={weight_col!r} (header columns: {sorted(header)})"
-            )
-        choice = self._rng.choices(rows, weights=[float(r[w_idx]) for r in rows], k=1)[0]
-        return choice[v_idx]
+        return pick_weighted_from_headered_csv(self._rng, file_path, value_col=value_col, weight_col=weight_col)
 
     #  Centralize date generation; models stay pure and RNG boundaries are clear
     def generate_order_date(self) -> dt.datetime:

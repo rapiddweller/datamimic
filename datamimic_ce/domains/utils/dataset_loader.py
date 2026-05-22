@@ -41,6 +41,26 @@ def pick_one_weighted_no_repeat(
     return rng.choices(list(values), weights=list(weights), k=1)[0]
 
 
+def pick_weighted_from_headered_csv(
+    rng: random.Random, file_path: Path, *, value_col: str, weight_col: str = "weight"
+) -> str:
+    """Pick one value (by weight) from a headered CSV's named value column.
+
+    For CSVs that carry a header row and more than the bare ``value,weight`` shape
+    that :func:`load_weighted_values` expects. Raises if a required column is absent.
+    """
+    header, rows = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, ",")
+    w_idx = header.get(weight_col)
+    v_idx = header.get(value_col)
+    if w_idx is None or v_idx is None:
+        raise ValueError(
+            f"{file_path} is missing required column(s): "
+            f"value_col={value_col!r}, weight_col={weight_col!r} (header columns: {sorted(header)})"
+        )
+    choice = rng.choices(rows, weights=[float(r[w_idx]) for r in rows], k=1)[0]
+    return choice[v_idx]
+
+
 def sample_weighted_no_replacement(
     rng: random.Random, values: Sequence[str], weights: Sequence[float], k: int
 ) -> list[str]:
