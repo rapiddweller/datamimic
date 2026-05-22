@@ -16,7 +16,7 @@ from datamimic_ce.contexts.demographic_context import DemographicContext
 from datamimic_ce.converter.converter import Converter
 from datamimic_ce.converter.custom_converter import CustomConverter
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.domains.domain_core.runtime import spawn_rng
+from datamimic_ce.domains.domain_core.runtime import derive_child_seed, spawn_rng
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
@@ -424,12 +424,16 @@ class SetupContext(Context):
         return self._clients.get(client_id)
 
     def get_distribution_seed(self) -> int:
+        """Seed for source shuffling (``distribution="random"``).
+
+        Deterministic when the model sets ``<setup rngSeed>`` — derived from the
+        run's root RNG, so a seeded random read replays identically. Without a
+        setup seed it returns a fresh per-run seed from the task id
+        (non-deterministic, the privacy-maximized default).
         """
-        Get distribution seed from task_id.
-        Always return new seed on each call.
-        :return:
-        """
-        # Return new seed on each call
+        if self._root_rng is not None:
+            return derive_child_seed(self._root_rng)
+        # Unseeded run: return a new seed on each call
         if self._current_seed is not None:
             self._current_seed += 1
         # If init seed is not set, calculate seed from task_id

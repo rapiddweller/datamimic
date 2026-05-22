@@ -1,0 +1,6 @@
+<setup>
+    <!-- No setup seed: distribution="random" is non-deterministic (privacy-maximized). -->
+    <generate name="rows" source="source.csv" target="" distribution="random">
+        <key name="id" script="id" />
+    </generate>
+</setup>
