@@ -254,6 +254,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         from random import Random
 
         from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+        from datamimic_ce.domains.domain_core.runtime import spawn_rng
 
         entity_class_name, kwargs = StringUtil.parse_constructor_string(entity_name)
         # Inject dataset if not explicitly provided in constructor
@@ -287,7 +288,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             demo_cfg = demographic_context.overrides
         if rng_obj is None and demographic_context is not None:
             # Derive entity-level RNGs from the demographics root seed to keep sampling reproducible.
-            rng_obj = Random(demographic_context.rng.randrange(2**63))
+            rng_obj = spawn_rng(demographic_context.rng)
         if rng_obj is None:
             # Fall back to the model-wide <setup seed> root; None if no seed was given.
             rng_obj = ctx.root.derive_seeded_rng()

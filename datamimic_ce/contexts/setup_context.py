@@ -16,6 +16,7 @@ from datamimic_ce.contexts.demographic_context import DemographicContext
 from datamimic_ce.converter.converter import Converter
 from datamimic_ce.converter.custom_converter import CustomConverter
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.runtime import spawn_rng
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
@@ -102,7 +103,7 @@ class SetupContext(Context):
         Returns ``None`` when no ``<setup seed>`` was given, so the caller stays
         unseeded (wall-clock random).
         """
-        return Random(self._root_rng.randrange(2**63)) if self._root_rng is not None else None
+        return spawn_rng(self._root_rng) if self._root_rng is not None else None
 
     def __deepcopy__(self, memo):
         """
