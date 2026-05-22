@@ -91,7 +91,7 @@ class Product(BaseEntity):
         adjective = self._product_generator.get_product_data_by_data_type("product_adjectives")
         noun = self._product_generator.get_product_data_by_data_type(f"product_nouns_{category}")
         if not noun:
-            noun = "Product"
+            raise ValueError(f"No product nouns for category {category!r} (data type 'product_nouns_{category}')")
 
         #  deterministic RNG via generator; avoid module random
         patterns = (

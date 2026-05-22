@@ -21,7 +21,10 @@ from datamimic_ce.domains.common.literal_generators.given_name_generator import 
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
+from datamimic_ce.domains.utils.dataset_loader import (
+    load_weighted_values_try_dataset,
+    pick_one_weighted_no_repeat,
+)
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -87,10 +90,7 @@ class PatientGenerator(DatasetAwareDomainGenerator):
         values, weights = load_weighted_values_try_dataset(
             "healthcare", "medical", "blood_types.csv", dataset=self._dataset, start=start
         )
-        choice = pick_one_weighted(self._rng, values, weights)
-        last = getattr(self, "_last_blood_type", None)
-        if last == choice and len(values) > 1:
-            choice = pick_one_weighted(self._rng, values, weights)
+        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_blood_type)
         self._last_blood_type = choice
         return choice
 

@@ -59,7 +59,7 @@ class PersonService(BaseDomainService[Person]):
             default_age_min=min_age,
             default_age_max=max_age,
         )
-        #  Keep backward-compatible defaults while centralizing overrides in one object.
+        # Bridge int | None -> int for the generator (with_defaults already filled these).
         min_age_resolved = resolved_config.age_min if resolved_config.age_min is not None else min_age
         max_age_resolved = resolved_config.age_max if resolved_config.age_max is not None else max_age
         super().__init__(
@@ -80,19 +80,12 @@ class PersonService(BaseDomainService[Person]):
             Person,
         )
 
+    DATASET_PATTERNS = (
+        "common/person/givenName_male_{CC}.csv",
+        "common/person/givenName_female_{CC}.csv",
+        "common/person/familyName_{CC}.csv",
+    )
+
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return PERSON_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        patterns = [
-            "common/person/givenName_male_{CC}.csv",
-            "common/person/givenName_female_{CC}.csv",
-            "common/person/familyName_{CC}.csv",
-        ]
-        return compute_supported_datasets(patterns, start=Path(__file__))

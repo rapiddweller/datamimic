@@ -381,9 +381,13 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 setup_ctx = ctx
                 while isinstance(setup_ctx, GenIterContext):
                     setup_ctx = setup_ctx.parent
-                if isinstance(setup_ctx, SetupContext):
-                    variable_prefix = self.statement.variable_prefix or setup_ctx.default_variable_prefix
-                    variable_suffix = self.statement.variable_suffix or setup_ctx.default_variable_suffix
+                if not isinstance(setup_ctx, SetupContext):
+                    raise ValueError(
+                        f"<variable> '{self._statement.name}': expected a SetupContext at the root of the "
+                        f"context chain, got {type(setup_ctx).__name__}"
+                    )
+                variable_prefix = self.statement.variable_prefix or setup_ctx.default_variable_prefix
+                variable_suffix = self.statement.variable_suffix or setup_ctx.default_variable_suffix
                 # Evaluate source script
                 value = TaskUtil.evaluate_file_script_template(ctx, value, variable_prefix, variable_suffix)
             else:

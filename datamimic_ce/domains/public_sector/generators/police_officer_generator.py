@@ -18,6 +18,7 @@ from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchored
 from datamimic_ce.domains.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
+    pick_one_weighted_no_repeat,
 )
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
@@ -120,14 +121,9 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
         loaded_weights, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
         values = [row.get("department_id") for row in loaded_data]
 
-        #  reduce immediate repetition while staying deterministic
-        def pick() -> str:
-            return self._rng.choices(values, weights=loaded_weights, k=1)[0]
-
-        val = pick()
-        last = getattr(self, "_last_department", None)
-        if last == val:
-            val = pick()
+        val = pick_one_weighted_no_repeat(
+            self._rng, values, loaded_weights, last=getattr(self, "_last_department", None)
+        )
         self._last_department = val
         return val
 
@@ -169,9 +165,8 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
         file_path = dataset_path("public_sector", "police", f"departments_{self._dataset}.csv", start=Path(__file__))
         loaded_weights, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
         values = [row.get("department_id") for row in loaded_data]
-        val = self._rng.choices(values, weights=loaded_weights, k=1)[0]
-        last = getattr(self, "_last_unit", None)
-        if last == val and len(values) > 1:
-            val = self._rng.choices(values, weights=loaded_weights, k=1)[0]
+        val = pick_one_weighted_no_repeat(
+            self._rng, values, loaded_weights, last=getattr(self, "_last_unit", None)
+        )
         self._last_unit = val
         return val

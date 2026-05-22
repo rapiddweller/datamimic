@@ -36,14 +36,8 @@ class InsuranceCompanyService(BaseDomainService[InsuranceCompany]):
     def __init__(self, dataset: str | None = None, rng: Random | None = None):
         super().__init__(InsuranceCompanyGenerator(dataset=dataset, rng=rng), InsuranceCompany)
 
+    DATASET_PATTERNS = ("insurance/companies_{CC}.csv",)
+
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return INSURANCE_COMPANY_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        return compute_supported_datasets(["insurance/companies_{CC}.csv"], start=Path(__file__))

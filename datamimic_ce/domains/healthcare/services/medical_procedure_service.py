@@ -48,19 +48,12 @@ class MedicalProcedureService(BaseDomainService[MedicalProcedure]):
     def __init__(self, dataset: str | None = None, rng: Random | None = None):
         super().__init__(MedicalProcedureGenerator(dataset=dataset, rng=rng), MedicalProcedure)
 
+    DATASET_PATTERNS = (
+        "healthcare/medical/procedure_name_patterns_{CC}.csv",
+        "healthcare/medical/specialties_{CC}.csv",
+        "healthcare/medical/procedure_categories_{CC}.csv",
+    )
+
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return MEDICAL_PROCEDURE_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        patterns = [
-            "healthcare/medical/procedure_name_patterns_{CC}.csv",
-            "healthcare/medical/specialties_{CC}.csv",
-            "healthcare/medical/procedure_categories_{CC}.csv",
-        ]
-        return compute_supported_datasets(patterns, start=Path(__file__))

@@ -46,8 +46,8 @@ class ProductGenerator(DatasetAwareDomainGenerator):
         base_s = pick_one_weighted(self._rng, list(values), list(weights))
         try:
             base = float(base_s)
-        except (TypeError, ValueError):
-            base = 3.0
+        except (TypeError, ValueError) as e:
+            raise ValueError(f"Non-numeric rating value {base_s!r} in rating_weights_{self._dataset}.csv") from e
         if self._rng.random() < 0.5:
             base -= 0.5
         return max(1.0, base)

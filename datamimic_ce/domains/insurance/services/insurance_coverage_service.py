@@ -38,14 +38,8 @@ class InsuranceCoverageService(BaseDomainService[InsuranceCoverage]):
             InsuranceCoverageGenerator(dataset=dataset, rng=rng), InsuranceCoverage
         )
 
+    DATASET_PATTERNS = ("insurance/coverages_{CC}.csv",)
+
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return INSURANCE_COVERAGE_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        return compute_supported_datasets(["insurance/coverages_{CC}.csv"], start=Path(__file__))

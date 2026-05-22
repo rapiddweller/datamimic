@@ -37,6 +37,8 @@ CREDIT_CARD_SCHEMA = EntitySchema(
 
 
 class CreditCardService(BaseDomainService[CreditCard]):
+    DATASET_PATTERNS = ("finance/credit_card/card_types_{CC}.csv",)
+
     def __init__(
         self,
         dataset: str | None = None,
@@ -53,11 +55,3 @@ class CreditCardService(BaseDomainService[CreditCard]):
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return CREDIT_CARD_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        return compute_supported_datasets(["finance/credit_card/card_types_{CC}.csv"], start=Path(__file__))

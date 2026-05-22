@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import datetime as dt
+from datetime import datetime
 from random import Random
 
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
@@ -47,7 +47,7 @@ class MedicalDeviceService(BaseDomainService[MedicalDevice]):
         dataset: str | None = None,
         demographic_config: DemographicConfig | None = None,
         rng: Random | None = None,
-        reference_now: dt.datetime | None = None,
+        reference_now: datetime | None = None,
     ):
         """Initialize the MedicalDeviceService.
 
@@ -67,20 +67,13 @@ class MedicalDeviceService(BaseDomainService[MedicalDevice]):
             MedicalDevice,
         )
 
+    DATASET_PATTERNS = (
+        "healthcare/medical/device_types_{CC}.csv",
+        "healthcare/medical/manufacturers_{CC}.csv",
+        "healthcare/medical/device_statuses_{CC}.csv",
+        "healthcare/medical/locations_{CC}.csv",
+    )
+
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return MEDICAL_DEVICE_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        patterns = [
-            "healthcare/medical/device_types_{CC}.csv",
-            "healthcare/medical/manufacturers_{CC}.csv",
-            "healthcare/medical/device_statuses_{CC}.csv",
-            "healthcare/medical/locations_{CC}.csv",
-        ]
-        return compute_supported_datasets(patterns, start=Path(__file__))

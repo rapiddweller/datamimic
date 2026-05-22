@@ -59,6 +59,8 @@ class DoctorService(BaseDomainService[Doctor]):
     Doctor entities.
     """
 
+    DATASET_PATTERNS = ("healthcare/medical/specialties_{CC}.csv",)
+
     def __init__(
         self,
         dataset: str | None = None,
@@ -81,11 +83,3 @@ class DoctorService(BaseDomainService[Doctor]):
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return DOCTOR_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        return compute_supported_datasets(["healthcare/medical/specialties_{CC}.csv"], start=Path(__file__))

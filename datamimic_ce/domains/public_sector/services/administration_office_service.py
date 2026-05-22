@@ -63,32 +63,20 @@ class AdministrationOfficeService(BaseDomainService[AdministrationOffice]):
             AdministrationOffice,
         )
 
+    DATASET_PATTERNS = (
+        "public_sector/administration/office_types_{CC}.csv",
+        "public_sector/administration/jurisdictions_{CC}.csv",
+        "public_sector/administration/name_patterns_{CC}.csv",
+        "public_sector/administration/roles_{CC}.csv",
+        "public_sector/administration/agencies_{CC}.csv",
+        "public_sector/administration/weekdays_{CC}.csv",
+        "public_sector/administration/open_times_{CC}.csv",
+        "public_sector/administration/close_times_{CC}.csv",
+        "public_sector/administration/extended_close_times_{CC}.csv",
+        "public_sector/administration/saturday_open_times_{CC}.csv",
+        "public_sector/administration/saturday_close_times_{CC}.csv",
+    )
+
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return ADMINISTRATION_OFFICE_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        """Return ISO dataset codes supported by all required datasets for this domain.
-
-        WHY: Tests and callers may need to know which datasets are fully covered
-        without relying on fallbacks.
-        """
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        patterns = [
-            "public_sector/administration/office_types_{CC}.csv",
-            "public_sector/administration/jurisdictions_{CC}.csv",
-            "public_sector/administration/name_patterns_{CC}.csv",
-            "public_sector/administration/roles_{CC}.csv",
-            "public_sector/administration/agencies_{CC}.csv",
-            "public_sector/administration/weekdays_{CC}.csv",
-            "public_sector/administration/open_times_{CC}.csv",
-            "public_sector/administration/close_times_{CC}.csv",
-            "public_sector/administration/extended_close_times_{CC}.csv",
-            "public_sector/administration/saturday_open_times_{CC}.csv",
-            "public_sector/administration/saturday_close_times_{CC}.csv",
-        ]
-        return compute_supported_datasets(patterns, start=Path(__file__))

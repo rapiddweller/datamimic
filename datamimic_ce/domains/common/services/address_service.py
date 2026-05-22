@@ -1,4 +1,4 @@
-import random
+from random import Random
 
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.common.models.address import Address
@@ -24,26 +24,19 @@ class AddressService(BaseDomainService[Address]):
     This class provides methods for creating, retrieving, and managing address data.
     """
 
+    DATASET_PATTERNS = (
+        "common/city/city_{CC}.csv",
+        "common/country_{CC}.csv",
+        "common/street/street_{CC}.csv",
+    )
+
     def __init__(
         self,
         dataset: str | None = None,
-        rng: random.Random | None = None,
+        rng: Random | None = None,
     ):
         super().__init__(AddressGenerator(dataset=dataset, rng=rng), Address)
 
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return ADDRESS_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        patterns = [
-            "common/city/city_{CC}.csv",
-            "common/country_{CC}.csv",
-            "common/street/street_{CC}.csv",
-        ]
-        return compute_supported_datasets(patterns, start=Path(__file__))

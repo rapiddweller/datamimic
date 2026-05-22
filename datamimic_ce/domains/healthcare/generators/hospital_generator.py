@@ -77,18 +77,15 @@ class HospitalGenerator(ClockAnchoredDomainGenerator):
         return pattern.format(city=city, state=state)
 
     def get_hospital_type(self):
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.utils.dataset_loader import (
+            load_weighted_values_try_dataset,
+            pick_one_weighted_no_repeat,
+        )
 
         values, w = load_weighted_values_try_dataset(
             "healthcare", "hospital", "hospital_types.csv", dataset=self._dataset, start=Path(__file__)
         )
-        # avoid immediate repetition when possible
-        if self._last_type in values and len(values) > 1:
-            pool = [(v, float(wi)) for v, wi in zip(values, w, strict=False) if v != self._last_type]
-            p_vals, p_w = zip(*pool, strict=False)
-            choice = self._rng.choices(list(p_vals), weights=list(p_w), k=1)[0]
-        else:
-            choice = self._rng.choices(values, weights=w, k=1)[0]
+        choice = pick_one_weighted_no_repeat(self._rng, values, w, last=self._last_type)
         self._last_type = choice
         return choice
 

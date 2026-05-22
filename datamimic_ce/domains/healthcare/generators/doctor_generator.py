@@ -25,6 +25,7 @@ from pathlib import Path
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
+from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -76,13 +77,8 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
         file_path = dataset_path("healthcare", "medical", f"specialties_{self._dataset}.csv", start=Path(__file__))
         wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
         values = [item["specialty"] for item in loaded_data]
-        # Avoid immediate repetition
-        if self._last_specialty in values and len(values) > 1:
-            pool = [(v, float(w)) for v, w in zip(values, wgt, strict=False) if v != self._last_specialty]
-            vals, wgts = zip(*pool, strict=False)
-            choice = self._rng.choices(list(vals), weights=list(wgts))[0]
-        else:
-            choice = self._rng.choices(values, weights=wgt)[0]
+        weights = [float(w) for w in wgt]
+        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_specialty)
         self._last_specialty = choice
         return choice
 
@@ -106,13 +102,8 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
                 # final fallback: US institutions if present
                 inst_us = dataset_path("healthcare", "medical", "institutions_US.csv", start=Path(__file__))
                 values, w = FileUtil.read_wgt_file(inst_us)
-        # Avoid immediate repetition when possible
-        if self._last_med_school in values and len(values) > 1:
-            pool = [(v, float(wi)) for v, wi in zip(values, w, strict=False) if v != self._last_med_school]
-            p_vals, p_w = zip(*pool, strict=False)
-            choice = self._rng.choices(list(p_vals), weights=list(p_w), k=1)[0]
-        else:
-            choice = self._rng.choices(values, weights=w, k=1)[0]
+        weights = [float(wi) for wi in w]
+        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_med_school)
         self._last_med_school = choice
         return choice
 

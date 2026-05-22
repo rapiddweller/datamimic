@@ -62,19 +62,12 @@ class InsurancePolicyService(BaseDomainService[InsurancePolicy]):
             InsurancePolicy,
         )
 
+    DATASET_PATTERNS = (
+        "insurance/policy/premium_buckets_{CC}.csv",
+        "insurance/policy/premium_frequencies_{CC}.csv",
+        "insurance/policy/statuses_{CC}.csv",
+    )
+
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return INSURANCE_POLICY_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        patterns = [
-            "insurance/policy/premium_buckets_{CC}.csv",
-            "insurance/policy/premium_frequencies_{CC}.csv",
-            "insurance/policy/statuses_{CC}.csv",
-        ]
-        return compute_supported_datasets(patterns, start=Path(__file__))

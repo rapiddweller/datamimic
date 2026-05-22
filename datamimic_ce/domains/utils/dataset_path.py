@@ -33,7 +33,7 @@ def reset_dataset_fallback_log() -> None:
     _logged_dataset_fallbacks.clear()
 
 
-def _strict_dataset_mode() -> bool:
+def is_strict_dataset_mode() -> bool:
     """Return True when strict dataset mode is enabled.
 
     In strict mode (env `DATAMIMIC_STRICT_DATASET`), dataset fallbacks are
@@ -43,12 +43,6 @@ def _strict_dataset_mode() -> bool:
     if not val:
         return False
     return val not in ("0", "false", "False")
-
-
-def is_strict_dataset_mode() -> bool:
-    """Public helper so callers can respect strict dataset mode."""
-
-    return _strict_dataset_mode()
 
 
 def repo_root(start: Path | None = None) -> Path:
@@ -69,11 +63,15 @@ def repo_root(start: Path | None = None) -> Path:
         if (ancestor / "pyproject.toml").exists():
             return ancestor
 
-    # Fallback to previous assumption to avoid breaking callers
+    # Last resort: the conventional package depth. If even that is out of range the
+    # file is not inside a recognisable project tree -> fail clearly instead of
+    # silently returning the filesystem root.
     try:
         return cur.parents[3]
-    except IndexError:
-        return cur.anchor and Path(cur.anchor) or cur.parents[-1]
+    except IndexError as e:
+        raise RuntimeError(
+            f"Cannot determine repository root from {cur} (no pyproject.toml found in any ancestor)"
+        ) from e
 
 
 def domain_data_root(start: Path | None = None) -> Path:
@@ -120,7 +118,7 @@ def dataset_path(*relative: str | os.PathLike[str], start: Path | None = None) -
     if parts:
         last = parts[-1]
         m = re.match(r"^(?P<stem>.+)_(?P<cc>[A-Z]{2})(?P<ext>\.[A-Za-z0-9._-]+)$", last)
-        if m and not path.exists() and not _strict_dataset_mode():
+        if m and not path.exists() and not is_strict_dataset_mode():
             cc = m.group("cc").upper()
             if cc != "US":
                 fallback_name = f"{m.group('stem')}_US{m.group('ext')}"

@@ -103,11 +103,7 @@ class Person(BaseEntity):
     @property
     @property_cache
     def name(self) -> str:
-        """Get the name of the person.
-
-        Returns:
-            The name of the person.
-        """
+        """Alias of ``full_name``."""
         return self.full_name
 
     @property

@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-import random
+from random import Random
 
 from datamimic_ce.domains.common.generators.country_generator import CountryGenerator
 from datamimic_ce.domains.common.models.country import Country
@@ -30,21 +30,15 @@ class CountryService(BaseDomainService[Country]):
     This class provides methods for creating, retrieving, and managing country data.
     """
 
+    DATASET_PATTERNS = ("common/country_{CC}.csv",)
+
     def __init__(
         self,
         dataset: str | None = None,
-        rng: random.Random | None = None,
+        rng: Random | None = None,
     ):
         super().__init__(CountryGenerator(dataset=dataset, rng=rng), Country)
 
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return COUNTRY_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        return compute_supported_datasets(["common/country_{CC}.csv"], start=Path(__file__))

@@ -54,18 +54,11 @@ class HospitalService(BaseDomainService[Hospital]):
     ):
         super().__init__(HospitalGenerator(dataset=dataset, rng=rng, reference_now=reference_now), Hospital)
 
+    DATASET_PATTERNS = (
+        "healthcare/hospital/hospital_types_{CC}.csv",
+        "healthcare/hospital/name_patterns_{CC}.csv",
+    )
+
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return HOSPITAL_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        patterns = [
-            "healthcare/hospital/hospital_types_{CC}.csv",
-            "healthcare/hospital/name_patterns_{CC}.csv",
-        ]
-        return compute_supported_datasets(patterns, start=Path(__file__))

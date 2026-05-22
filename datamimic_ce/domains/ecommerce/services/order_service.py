@@ -4,9 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import datetime as dt
-import random
 from datetime import datetime
+from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
 from datamimic_ce.domains.domain_core.attribute_catalog import (
@@ -48,34 +47,27 @@ class OrderService(BaseDomainService[Order]):
     including creating orders, filtering orders, and formatting outputs.
     """
 
+    DATASET_PATTERNS = (
+        "ecommerce/order_statuses_{CC}.csv",
+        "ecommerce/payment_methods_{CC}.csv",
+        "ecommerce/shipping_methods_{CC}.csv",
+        "ecommerce/currencies_{CC}.csv",
+        # Additional order assets used by generator helpers
+        "ecommerce/order/coupon_prefixes_{CC}.csv",
+        "ecommerce/order/notes_{CC}.csv",
+    )
+
     def __init__(
         self,
         dataset: str | None = None,
-        rng: random.Random | None = None,
-        reference_now: dt.datetime | None = None,
+        rng: Random | None = None,
+        reference_now: datetime | None = None,
     ):
         super().__init__(
-            OrderGenerator(dataset, rng=rng, reference_now=reference_now),
+            OrderGenerator(dataset=dataset, rng=rng, reference_now=reference_now),
             Order,
         )
 
     @classmethod
     def attribute_specs(cls) -> tuple[FieldSpec, ...]:
         return ORDER_SCHEMA.fields
-
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        patterns = [
-            "ecommerce/order_statuses_{CC}.csv",
-            "ecommerce/payment_methods_{CC}.csv",
-            "ecommerce/shipping_methods_{CC}.csv",
-            "ecommerce/currencies_{CC}.csv",
-            # Additional order assets used by generator helpers
-            "ecommerce/order/coupon_prefixes_{CC}.csv",
-            "ecommerce/order/notes_{CC}.csv",
-        ]
-        return compute_supported_datasets(patterns, start=Path(__file__))
