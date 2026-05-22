@@ -1,0 +1,7 @@
+<setup rngSeed="42">
+    <!-- Seeded random source read: distribution="random" shuffles, but <setup rngSeed>
+         makes the shuffle reproducible across runs. -->
+    <generate name="rows" source="source.csv" target="" distribution="random">
+        <key name="id" script="id" />
+    </generate>
+</setup>

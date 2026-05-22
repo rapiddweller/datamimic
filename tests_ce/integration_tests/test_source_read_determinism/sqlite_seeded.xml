@@ -1,0 +1,10 @@
+<setup rngSeed="42">
+    <!-- Seeded random SQLite source read: distribution="random" shuffles the rows,
+         but <setup rngSeed> makes the shuffle reproducible across runs. -->
+    <database id="detdb" database="det_items_db" dbms="sqlite"/>
+    <execute uri="script/setup_det_items.scr.sql" target="detdb"/>
+    <generate name="rows" source="detdb" selector="SELECT id FROM det_items ORDER BY id"
+              distribution="random" target="">
+        <key name="id" script="str(id)"/>
+    </generate>
+</setup>

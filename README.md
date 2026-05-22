@@ -162,6 +162,7 @@ Most test data tools produce random output. That breaks regression tests, audit 
 
 - **Same seed + same model = byte-identical output**, every run, every machine. Holds at three layers: the `generate_domain` facade, every domain service called directly, and every literal generator that accepts an `rng=` argument. Verified per-service on every CI run via [`tests_ce/architecture/test_service_replay_determinism.py`](tests_ce/architecture/test_service_replay_determinism.py).
 - **DSL-level seeding (entities):** `<setup rngSeed="N">` makes the whole model deterministic — every seed-less `<variable entity="…">` derives a reproducible child RNG from it, and `<variable rngSeed="…">` overrides it for that block (no seed anywhere → wall-clock random). Verified by [`tests_ce/integration_tests/test_determinism_seed_scenarios`](tests_ce/integration_tests/test_determinism_seed_scenarios). Deterministic DSL-level seeding of standalone literal generators (`<key generator="…">`) is an **Enterprise (EE) feature**; in CE such generators are seeded only when used directly from Python with `rng=`.
+- **Source reads:** `distribution="ordered"` reads a data source in stable file order; `distribution="random"` shuffles but replays identically when `<setup rngSeed>` is set (without a seed the shuffle is non-deterministic by design, for privacy-maximized one-time deliveries). Deterministic shuffling across distributed / multi-process execution is EE.
 - **Provenance hash on every facade output** = re-executable lineage. Same input → same `determinism_proof.content_hash`, always.
 - **UUIDv5 entity identifiers** = stable across runs and machines.
 - **Single wall-clock SPOT** (`now_utc_naive()`); raw `datetime.now()` is forbidden in production code and the clock-drift architecture gate fails CI on any reintroduction.
@@ -204,7 +205,7 @@ assert card_a.bic == card_b.bic and card_a.card_number == card_b.card_number
 | **Facade** (`generate_domain` registered domains) | ✅ byte-identical, CI-gated | ✅ byte-identical |
 | **Domain services** (direct use with seeded `rng=...`) | ✅ byte-identical, CI-gated | ✅ byte-identical |
 | **Literal generators** (with seeded `rng=...`) | ✅ byte-identical | ✅ byte-identical |
-| **RNG / clock runtime SPOTs** | ✅ `resolve_rng`, `spawn_rng`, `now_utc_naive`, `resolve_clock` | ✅ ADR-030 / 031 |
+| **RNG / clock runtime SPOTs** | ✅ `spawn_rng`, `now_utc_naive`, `resolve_clock` | ✅ ADR-030 / 031 |
 | **Architecture gates in CI** | ✅ facade replay + service replay (every service) + clock drift | ✅ 5+ gates (RNG ownership, clock drift, DSL eval, seeded-mode propagation, dataset SPOT) |
 | **Custom XML pipelines** | ⚠️ best-effort | ✅ byte-identical |
 | **Multi-system coordinated execution** (Oracle + MongoDB + Kafka in one run) | — | ✅ byte-identical end-to-end |
@@ -238,11 +239,12 @@ patient_age = fake.random_int(1, 99)
 conditions  = [fake.word()]
 # "25-year-old with Alzheimer's" — meaningless for any real test
 
-# DATAMIMIC — domain-aware, deterministic
+# DATAMIMIC — domain-aware, deterministic with a seed
+import random
 from datamimic_ce.domains.healthcare.services import PatientService
-patient = PatientService().generate()
+patient = PatientService(rng=random.Random(42)).generate()
 print(f"{patient.full_name}, {patient.age}, {patient.conditions}")
-# "Shirley Thompson, 72, ['Diabetes', 'Hypertension']" — every time
+# Age-appropriate, domain-consistent — and identical every run with a fixed seed
 ```
 
 ---
@@ -256,21 +258,23 @@ pip install datamimic-ce
 ### Healthcare domain
 
 ```python
+import random
 from datamimic_ce.domains.healthcare.services import PatientService
 
-patient = PatientService().generate()
+patient = PatientService(rng=random.Random(42)).generate()
 print(patient.full_name, patient.age, patient.conditions)
-# Age-appropriate conditions, demographically realistic, deterministic
+# Age-appropriate conditions, demographically realistic; deterministic with a seed
 ```
 
 ### Finance domain
 
 ```python
+import random
 from datamimic_ce.domains.finance.services import BankAccountService
 
-account = BankAccountService().generate()
+account = BankAccountService(rng=random.Random(42)).generate()
 print(account.account_number, account.balance)
-# Balance-consistent, locale-correct, reproducible
+# Balance-consistent, locale-correct; reproducible with a seed
 ```
 
 ### Pseudonymization — CE (manual model)
@@ -288,14 +292,35 @@ In CE, PII fields are identified and modeled manually in the XML pipeline:
 
 ```xml
 <setup>
-  <generate name="customers" source="customer_export" target="customer_test">
-    <key name="first_name"  converter="Mask" />
-    <key name="email"       converter="anonymize_email" />
-    <key name="iban"        converter="generate_iban" dataset="DE" rngSeed="42" />
-    <key name="birth_date"  converter="shift_date" shiftDays="90" />
+  <generate name="customers" source="customer_export" target="customer_test" distribution="ordered">
+    <!-- distribution="ordered" reads the source in a stable order — required so the
+         Nth source row maps to the same seeded synthetic value on every run. The
+         default ("random") shuffles non-deterministically and would break it.
+         rngSeed on the <variable> makes the synthetic values reproducible; drop
+         rngSeed for the privacy-maximized (non-deterministic) mode. -->
+    <variable name="p"   entity="Person"      dataset="DE" rngSeed="42" />
+    <variable name="acc" entity="BankAccount" dataset="DE" rngSeed="42" />
+
+    <key name="first_name" script="p.given_name" />
+    <key name="last_name"  script="p.family_name" />
+    <key name="email"      script="p.email" />
+    <key name="iban"       script="acc.iban" />
+    <key name="birth_date" script="p.birthdate" />
   </generate>
 </setup>
 ```
+
+Built-in converters can additionally transform a key's value — e.g. irreversibly
+hash the original instead of replacing it, or partially mask it:
+
+```xml
+<key name="email" script="p.email" converter="Hash('sha256','hex')" />
+<key name="iban"  script="acc.iban" converter="MiddleMask(8, 4)" />
+```
+
+Available converters: `Mask`, `MiddleMask(start, end)`, `CutLength(n)`,
+`Hash(type, format[, salt])`, `DateFormat(fmt)`, `Append`, `UpperCase`,
+`LowerCase`, `Date2Timestamp`, `Timestamp2Date`.
 
 ```bash
 datamimic run ./pseudonymize-customers/datamimic.xml
