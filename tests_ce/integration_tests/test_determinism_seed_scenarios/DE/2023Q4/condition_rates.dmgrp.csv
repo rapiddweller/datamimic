@@ -1,0 +1,5 @@
+dataset,version,condition,sex,age_min,age_max,prevalence
+DE,2023Q4,Diabetes,F,65,100,0.19
+DE,2023Q4,Diabetes,M,65,100,0.22
+DE,2023Q4,Hypertension,,40,64,0.27
+DE,2023Q4,Hypertension,,65,100,0.48

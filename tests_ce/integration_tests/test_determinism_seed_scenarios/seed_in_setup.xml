@@ -1,0 +1,12 @@
+<setup>
+    <!-- Scenario 1: seed in setup only.
+         The <demographics rngSeed> seeds a root RNG; variables WITHOUT their own
+         rngSeed derive a reproducible child RNG from it. Two runs must be identical. -->
+    <demographics dataset="DE" version="2023Q4" dir="DE/2023Q4" rngSeed="42"/>
+    <generate name="patients" count="3" target="">
+        <variable name="p" entity="Patient" dataset="DE"/>
+        <key name="age" script="p.age"/>
+        <key name="ssn" script="p.ssn"/>
+        <key name="record" script="p.medical_record_number"/>
+    </generate>
+</setup>
