@@ -1,0 +1,173 @@
+<setup multiprocessing="0" rngSeed="42">
+    <!-- AUTO-GENERATED from the entity registry by build_all_entities_seeded_xml(). -->
+    <!-- Do not edit by hand; regenerate via test_determinism_dsl.py (see module docstring). -->
+    <generate name="address" count="3" target="">
+        <variable name="e" entity="Address" dataset="US" rngSeed="99"/>
+        <key name="street" script="e.street"/>
+        <key name="house_number" script="e.house_number"/>
+        <key name="city" script="e.city"/>
+    </generate>
+    <generate name="administrationoffice" count="3" target="">
+        <variable name="e" entity="AdministrationOffice" dataset="US" rngSeed="99"/>
+        <key name="office_id" script="e.office_id"/>
+        <key name="name" script="e.name"/>
+        <key name="type" script="e.type"/>
+        <key name="hours_of_operation_Monday" script="e.hours_of_operation['Monday']"/>
+        <key name="services_0" script="e.services[0]"/>
+        <key name="departments_0" script="e.departments[0]"/>
+        <key name="address_street" script="e.address.street"/>
+    </generate>
+    <generate name="bank" count="3" target="">
+        <variable name="e" entity="Bank" dataset="US" rngSeed="99"/>
+        <key name="name" script="e.name"/>
+        <key name="swift_code" script="e.swift_code"/>
+        <key name="routing_number" script="e.routing_number"/>
+    </generate>
+    <generate name="bankaccount" count="3" target="">
+        <variable name="e" entity="BankAccount" dataset="US" rngSeed="99"/>
+        <key name="account_number" script="e.account_number"/>
+        <key name="iban" script="e.iban"/>
+        <key name="account_type" script="e.account_type"/>
+    </generate>
+    <generate name="city" count="3" target="">
+        <variable name="e" entity="City" dataset="US" rngSeed="99"/>
+        <key name="name" script="e.name"/>
+        <key name="postal_code" script="e.postal_code"/>
+        <key name="area_code" script="e.area_code"/>
+    </generate>
+    <generate name="company" count="3" target="">
+        <variable name="e" entity="Company" dataset="US" rngSeed="99"/>
+        <key name="short_name" script="e.short_name"/>
+        <key name="sector" script="e.sector"/>
+        <key name="email" script="e.email"/>
+    </generate>
+    <generate name="country" count="3" target="">
+        <variable name="e" entity="Country" dataset="US" rngSeed="99"/>
+        <key name="iso_code" script="e.iso_code"/>
+        <key name="name" script="e.name"/>
+        <key name="default_language_locale" script="e.default_language_locale"/>
+    </generate>
+    <generate name="creditcard" count="3" target="">
+        <variable name="e" entity="CreditCard" dataset="US" rngSeed="99"/>
+        <key name="card_type" script="e.card_type"/>
+        <key name="card_number" script="e.card_number"/>
+        <key name="card_provider" script="e.card_provider"/>
+    </generate>
+    <generate name="doctor" count="3" target="">
+        <variable name="e" entity="Doctor" dataset="US" rngSeed="99"/>
+        <key name="doctor_id" script="e.doctor_id"/>
+        <key name="npi_number" script="e.npi_number"/>
+        <key name="license_number" script="e.license_number"/>
+        <key name="hospital_hospital_id" script="e.hospital.hospital_id"/>
+        <key name="certifications_0" script="e.certifications[0]"/>
+        <key name="office_hours_Monday" script="e.office_hours['Monday']"/>
+        <key name="address_street" script="e.address.street"/>
+    </generate>
+    <generate name="educationalinstitution" count="3" target="">
+        <variable name="e" entity="EducationalInstitution" dataset="US" rngSeed="99"/>
+        <key name="institution_id" script="e.institution_id"/>
+        <key name="name" script="e.name"/>
+        <key name="type" script="e.type"/>
+        <key name="programs_0" script="e.programs[0]"/>
+        <key name="accreditations_0" script="e.accreditations[0]"/>
+        <key name="facilities_0" script="e.facilities[0]"/>
+        <key name="address_street" script="e.address.street"/>
+    </generate>
+    <generate name="hospital" count="3" target="">
+        <variable name="e" entity="Hospital" dataset="US" rngSeed="99"/>
+        <key name="hospital_id" script="e.hospital_id"/>
+        <key name="name" script="e.name"/>
+        <key name="type" script="e.type"/>
+        <key name="departments_0" script="e.departments[0]"/>
+        <key name="services_0" script="e.services[0]"/>
+        <key name="accreditation_0" script="e.accreditation[0]"/>
+    </generate>
+    <generate name="insurancecompany" count="3" target="">
+        <variable name="e" entity="InsuranceCompany" dataset="US" rngSeed="99"/>
+        <key name="id" script="e.id"/>
+        <key name="name" script="e.name"/>
+        <key name="code" script="e.code"/>
+    </generate>
+    <generate name="insurancecoverage" count="3" target="">
+        <variable name="e" entity="InsuranceCoverage" dataset="US" rngSeed="99"/>
+        <key name="name" script="e.name"/>
+        <key name="code" script="e.code"/>
+        <key name="product_code" script="e.product_code"/>
+    </generate>
+    <generate name="insurancepolicy" count="3" target="">
+        <variable name="e" entity="InsurancePolicy" dataset="US" rngSeed="99"/>
+        <key name="id" script="e.id"/>
+        <key name="premium" script="e.premium"/>
+        <key name="premium_frequency" script="e.premium_frequency"/>
+        <key name="company_id" script="e.company.id"/>
+        <key name="product_id" script="e.product.id"/>
+        <key name="policy_holder_birthdate" script="e.policy_holder.birthdate"/>
+        <key name="coverages_0_name" script="e.coverages[0].name"/>
+    </generate>
+    <generate name="insuranceproduct" count="3" target="">
+        <variable name="e" entity="InsuranceProduct" dataset="US" rngSeed="99"/>
+        <key name="id" script="e.id"/>
+        <key name="type" script="e.type"/>
+        <key name="code" script="e.code"/>
+        <key name="coverages_0_name" script="e.coverages[0].name"/>
+    </generate>
+    <generate name="medicaldevice" count="3" target="">
+        <variable name="e" entity="MedicalDevice" dataset="US" rngSeed="99"/>
+        <key name="device_id" script="e.device_id"/>
+        <key name="device_type" script="e.device_type"/>
+        <key name="manufacturer" script="e.manufacturer"/>
+        <key name="specifications_power_supply" script="e.specifications['power_supply']"/>
+        <key name="usage_logs_0_date" script="e.usage_logs[0]['date']"/>
+        <key name="maintenance_history_0_date" script="e.maintenance_history[0]['date']"/>
+    </generate>
+    <generate name="medicalprocedure" count="3" target="">
+        <variable name="e" entity="MedicalProcedure" dataset="US" rngSeed="99"/>
+        <key name="procedure_id" script="e.procedure_id"/>
+        <key name="procedure_code" script="e.procedure_code"/>
+        <key name="cpt_code" script="e.cpt_code"/>
+    </generate>
+    <generate name="order" count="3" target="">
+        <variable name="e" entity="Order" dataset="US" rngSeed="99"/>
+        <key name="order_id" script="e.order_id"/>
+        <key name="user_id" script="e.user_id"/>
+        <key name="total_amount" script="e.total_amount"/>
+        <key name="product_list_0_product_id" script="e.product_list[0].product_id"/>
+        <key name="shipping_address_street" script="e.shipping_address.street"/>
+        <key name="billing_address_street" script="e.billing_address.street"/>
+    </generate>
+    <generate name="patient" count="3" target="">
+        <variable name="e" entity="Patient" dataset="US" rngSeed="99"/>
+        <key name="patient_id" script="e.patient_id"/>
+        <key name="medical_record_number" script="e.medical_record_number"/>
+        <key name="ssn" script="e.ssn"/>
+        <key name="emergency_contact_name" script="e.emergency_contact['name']"/>
+    </generate>
+    <generate name="person" count="3" target="">
+        <variable name="e" entity="Person" dataset="US" rngSeed="99"/>
+        <key name="birthdate" script="e.birthdate"/>
+        <key name="given_name" script="e.given_name"/>
+        <key name="family_name" script="e.family_name"/>
+    </generate>
+    <generate name="policeofficer" count="3" target="">
+        <variable name="e" entity="PoliceOfficer" dataset="US" rngSeed="99"/>
+        <key name="officer_id" script="e.officer_id"/>
+        <key name="badge_number" script="e.badge_number"/>
+        <key name="given_name" script="e.given_name"/>
+        <key name="certifications_0" script="e.certifications[0]"/>
+        <key name="languages_0" script="e.languages[0]"/>
+        <key name="address_street" script="e.address.street"/>
+    </generate>
+    <generate name="product" count="3" target="">
+        <variable name="e" entity="Product" dataset="US" rngSeed="99"/>
+        <key name="product_id" script="e.product_id"/>
+        <key name="name" script="e.name"/>
+        <key name="description" script="e.description"/>
+        <key name="tags_0" script="e.tags[0]"/>
+    </generate>
+    <generate name="transaction" count="3" target="">
+        <variable name="e" entity="Transaction" dataset="US" rngSeed="99"/>
+        <key name="transaction_id" script="e.transaction_id"/>
+        <key name="transaction_date" script="e.transaction_date"/>
+        <key name="amount" script="e.amount"/>
+    </generate>
+</setup>

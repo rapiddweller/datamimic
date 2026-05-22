@@ -92,6 +92,10 @@ class KeyVariableTask:
                 ) from None
             self._mode = self._VALUES_MODE
         elif self._statement.generator is not None:
+            # NOTE: a literal <key generator="..."> is created without an injected
+            # seed, so it is NOT bound to <setup rngSeed>. Deterministic DSL-level
+            # seeding of literal key generators is an Enterprise (EE) feature; CE
+            # determinism covers entity generation (<setup rngSeed> / <variable rngSeed>).
             # Try to init generator with or without args.
             try:
                 self._generator = GeneratorUtil(ctx).create_generator(

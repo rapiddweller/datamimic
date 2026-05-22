@@ -35,7 +35,7 @@ from __future__ import annotations
 import random
 from datetime import datetime
 
-from datamimic_ce.domains.domain_core.runtime import resolve_clock
+from datamimic_ce.domains.domain_core.runtime import resolve_clock, spawn_rng
 
 DEFAULT_DATASET = "US"
 
@@ -76,7 +76,7 @@ class BaseDomainGenerator:
         Unseeded → ``None`` so the child seeds itself from the wall clock,
         keeping the child in the same (unseeded) mode as the parent.
         """
-        return random.Random(self._rng.randrange(2**63)) if self._seeded else None
+        return spawn_rng(self._rng) if self._seeded else None
 
 
 class DatasetAwareDomainGenerator(BaseDomainGenerator):
