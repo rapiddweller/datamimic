@@ -63,11 +63,15 @@ def repo_root(start: Path | None = None) -> Path:
         if (ancestor / "pyproject.toml").exists():
             return ancestor
 
-    # Fallback to previous assumption to avoid breaking callers
+    # Last resort: the conventional package depth. If even that is out of range the
+    # file is not inside a recognisable project tree -> fail clearly instead of
+    # silently returning the filesystem root.
     try:
         return cur.parents[3]
-    except IndexError:
-        return cur.anchor and Path(cur.anchor) or cur.parents[-1]
+    except IndexError as e:
+        raise RuntimeError(
+            f"Cannot determine repository root from {cur} (no pyproject.toml found in any ancestor)"
+        ) from e
 
 
 def domain_data_root(start: Path | None = None) -> Path:

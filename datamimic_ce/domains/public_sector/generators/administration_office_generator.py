@@ -89,6 +89,15 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
     def given_name_generator(self) -> GivenNameGenerator:
         return self._given_name_generator
 
+    @property
+    def last_hours_signature(self) -> tuple[tuple[str, str], ...] | None:
+        """Signature of the previously generated hours, for cross-entity anti-repeat."""
+        return self._last_hours_signature
+
+    @last_hours_signature.setter
+    def last_hours_signature(self, sig: tuple[tuple[str, str], ...]) -> None:
+        self._last_hours_signature = sig
+
     # Helper: pick office type from dataset using weighted values with anti-repeat
     def pick_office_type(self) -> str:
         values, weights = load_weighted_values_try_dataset(
@@ -174,17 +183,25 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
             min_age, max_age = 5, 75
         return year - self._rng.randint(min_age, max_age)
 
-    # Helper: pick staff count deterministically by office type
+    # Helper: pick staff count deterministically by office type, avoiding an
+    # immediate repeat across consecutive entities (state owned here, not in the model).
     def pick_staff_count(self, office_type: str) -> int:
-        if "Federal" in office_type:
-            return self._rng.randint(50, 500)
-        if "State" in office_type:
-            return self._rng.randint(30, 300)
-        if "County" in office_type:
-            return self._rng.randint(20, 150)
-        if "Municipal" in office_type or "City" in office_type:
-            return self._rng.randint(10, 100)
-        return self._rng.randint(5, 75)
+        def draw() -> int:
+            if "Federal" in office_type:
+                return self._rng.randint(50, 500)
+            if "State" in office_type:
+                return self._rng.randint(30, 300)
+            if "County" in office_type:
+                return self._rng.randint(20, 150)
+            if "Municipal" in office_type or "City" in office_type:
+                return self._rng.randint(10, 100)
+            return self._rng.randint(5, 75)
+
+        val = draw()
+        if val == self._last_staff_count:
+            val = draw()
+        self._last_staff_count = val
+        return val
 
     # Helper: services from agencies dataset
     def pick_services(self, *, start: Path) -> list[str]:

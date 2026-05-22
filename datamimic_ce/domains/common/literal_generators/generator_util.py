@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import ast
+import inspect
 import uuid
 
 from datamimic_ce.contexts.context import Context
@@ -194,10 +195,13 @@ class GeneratorUtil:
                         f"Cannot create generator '{class_name}' from string '{generator_str}' using evaluate: {e_eval}"
                     ) from e_eval
             else:
-                if class_name in ["EmailAddressGenerator", "FamilyNameGenerator", "GivenNameGenerator"]:
-                    result = cls(dataset=self._context.root.default_dataset)
-                else:
-                    result = cls()
+                # Inject the context dataset into any generator whose constructor
+                # accepts it (no hand-maintained allowlist that silently omits new ones).
+                try:
+                    accepts_dataset = "dataset" in inspect.signature(cls).parameters
+                except (TypeError, ValueError):
+                    accepts_dataset = False
+                result = cls(dataset=self._context.root.default_dataset) if accepts_dataset else cls()
             if isinstance(result, IncrementGenerator):
                 if hasattr(result, "add_pagination") and callable(result.add_pagination):
                     result.add_pagination(pagination=pagination)

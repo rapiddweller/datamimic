@@ -299,14 +299,12 @@ class Patient(BaseEntity):
 
     @property
     def primary_doctor(self):
-        """Get the patient's primary doctor.
+        """The patient's primary doctor — an external-only relationship.
 
-        Returns:
-            The patient's primary doctor.
+        Returns None unless a doctor was explicitly assigned via the setter; it is
+        never auto-generated, so this is a plain cache lookup (not @property_cache).
         """
-        if "primary_doctor" in self._field_cache:
-            return self._field_cache["primary_doctor"]
-        return None
+        return self._field_cache.get("primary_doctor")
 
     @primary_doctor.setter
     def primary_doctor(self, value):

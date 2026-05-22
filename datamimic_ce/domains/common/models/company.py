@@ -76,9 +76,7 @@ class Company(BaseEntity):
             The full name of the company
         """
         legal_form = self.legal_form
-        builder = []
-        if self.short_name is not None:
-            builder.append(self.short_name)
+        builder = [self.short_name]
         if self.sector is not None:
             builder.append(self.sector)
         if legal_form is not None:

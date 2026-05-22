@@ -59,7 +59,7 @@ class PersonService(BaseDomainService[Person]):
             default_age_min=min_age,
             default_age_max=max_age,
         )
-        #  Keep backward-compatible defaults while centralizing overrides in one object.
+        # Bridge int | None -> int for the generator (with_defaults already filled these).
         min_age_resolved = resolved_config.age_min if resolved_config.age_min is not None else min_age
         max_age_resolved = resolved_config.age_max if resolved_config.age_max is not None else max_age
         super().__init__(
