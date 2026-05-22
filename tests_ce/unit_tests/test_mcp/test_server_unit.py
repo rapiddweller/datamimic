@@ -57,6 +57,22 @@ def test_generate_impl_forwards_payload(monkeypatch) -> None:
     assert forwarded["locale"] == "en_US"
 
 
+def test_generate_impl_is_deterministic() -> None:
+    """In-process proof of the MCP determinism claim (no socket transport).
+
+    Same args -> identical determinism_proof.content_hash and items; a different
+    seed -> a different hash.
+    """
+    args = GenerateArgs(domain="person", locale="en_US", seed=42, count=3)
+    first = generate_impl(args)
+    second = generate_impl(args)
+    assert first["determinism_proof"]["content_hash"] == second["determinism_proof"]["content_hash"]
+    assert first["items"] == second["items"]
+
+    other = generate_impl(GenerateArgs(domain="person", locale="en_US", seed=99, count=3))
+    assert other["determinism_proof"]["content_hash"] != first["determinism_proof"]["content_hash"]
+
+
 @pytest.mark.anyio
 async def test_api_key_middleware_rejects_invalid_token(anyio_backend) -> None:
     middleware = _APIKeyMiddleware(_noop_app, "secret")

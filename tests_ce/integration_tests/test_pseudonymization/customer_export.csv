@@ -1,0 +1,6 @@
+first_name,email,iban,birth_date
+User1,user1@acme.com,DE000000000000000001,1991-01-01
+User2,user2@acme.com,DE000000000000000002,1992-01-02
+User3,user3@acme.com,DE000000000000000003,1993-01-03
+User4,user4@acme.com,DE000000000000000004,1994-01-04
+User5,user5@acme.com,DE000000000000000005,1995-01-05

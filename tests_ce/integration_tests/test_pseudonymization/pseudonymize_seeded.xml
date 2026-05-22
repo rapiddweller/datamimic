@@ -1,0 +1,14 @@
+<setup rngSeed="42">
+    <!-- README pseudonymization pattern: read a controlled export in stable order
+         (distribution="ordered") and overwrite each PII field with a seeded
+         synthetic stand-in. rngSeed makes the run reproducible. -->
+    <generate name="customers" source="customer_export.csv" target="" distribution="ordered">
+        <variable name="p"   entity="Person"      dataset="DE" rngSeed="42" />
+        <variable name="acc" entity="BankAccount" dataset="DE" rngSeed="42" />
+        <key name="first_name" script="p.given_name" />
+        <key name="last_name"  script="p.family_name" />
+        <key name="email"      script="p.email" />
+        <key name="iban"       script="acc.iban" />
+        <key name="birth_date" script="p.birthdate" />
+    </generate>
+</setup>
