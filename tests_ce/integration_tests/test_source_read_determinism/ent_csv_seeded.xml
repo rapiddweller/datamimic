@@ -1,0 +1,8 @@
+<setup rngSeed="42" defaultSeparator=",">
+    <!-- Seeded random read of an .ent.csv source via <generate source>:
+         distribution="random" shuffles, but <setup rngSeed> makes the
+         shuffle reproducible across runs. CSV columns (id, name) are
+         automatically included in every output row. -->
+    <generate name="rows" source="data/people.ent.csv" target="" distribution="random">
+    </generate>
+</setup>

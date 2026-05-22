@@ -1,0 +1,7 @@
+<setup defaultSeparator=",">
+    <!-- No setup seed: distribution="random" on an .ent.csv source is non-deterministic
+         (privacy-maximized default). CSV columns (id, name) are automatically
+         included in every output row. -->
+    <generate name="rows" source="data/people.ent.csv" target="" distribution="random">
+    </generate>
+</setup>
