@@ -23,6 +23,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_NAME,
     ATTR_OUT_DATE_FORMAT,
     ATTR_PATTERN,
+    ATTR_RNG_SEED,
     ATTR_SCRIPT,
     ATTR_SELECTOR,
     ATTR_SEPARATOR,
@@ -70,7 +71,7 @@ class VariableModel(BaseModel):
     age_max: int | None = Field(None, alias="ageMax")
     conditions_include: str | None = Field(None, alias="conditionsInclude")
     conditions_exclude: str | None = Field(None, alias="conditionsExclude")
-    rng_seed: int | None = Field(None, alias="rngSeed")
+    rng_seed: int | None = Field(None, alias=ATTR_RNG_SEED)
 
     @model_validator(mode="before")
     @classmethod
@@ -109,7 +110,7 @@ class VariableModel(BaseModel):
                 "ageMax",
                 "conditionsInclude",
                 "conditionsExclude",
-                "rngSeed",
+                ATTR_RNG_SEED,
             },
         )
 

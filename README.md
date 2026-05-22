@@ -167,6 +167,8 @@ Most test data tools produce random output. That breaks regression tests, audit 
 - **Single wall-clock SPOT** (`now_utc_naive()`); raw `datetime.now()` is forbidden in production code and the clock-drift architecture gate fails CI on any reintroduction.
 - **RNG/clock runtime SPOTs** in `datamimic_ce/domains/domain_core/runtime/`: `spawn_rng` (reproducible child-RNG derivation), `now_utc_naive`, and `resolve_clock`. Mirrors EE's ADR-030 / ADR-031 contract vocabulary.
 
+**The Enterprise Platform (EE) goes further:** beyond the CE contract, EE makes the whole execution environment deterministic — a configurable/frozen wall-clock (not just CE's fixed anchor), DSL-level seeding of literal `<key generator>` generators, and deterministic `SAFE_GLOBALS` plus the Python `random` functions, so sandboxed script expressions and any stdlib `random` call replay identically as well.
+
 ```python
 from datamimic_ce.domains.facade import generate_domain
 
