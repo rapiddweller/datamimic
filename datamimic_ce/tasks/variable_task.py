@@ -290,7 +290,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             # Derive entity-level RNGs from the demographics root seed to keep sampling reproducible.
             rng_obj = spawn_rng(demographic_context.rng)
         if rng_obj is None:
-            # Fall back to the model-wide <setup seed> root; None if no seed was given.
+            # Fall back to the model-wide <setup rngSeed> root; None if no seed was given.
             rng_obj = ctx.root.derive_seeded_rng()
         demographic_sampler = demographic_context.sampler if demographic_context is not None else None
         # Build from the last parsed VariableTask (self is not accessible in staticmethod); use closure via locals()

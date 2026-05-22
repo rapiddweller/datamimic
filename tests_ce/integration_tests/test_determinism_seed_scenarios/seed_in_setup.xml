@@ -1,6 +1,6 @@
-<setup seed="42">
+<setup rngSeed="42">
     <!-- Scenario 1: seed at setup level only.
-         <setup seed> makes the whole model deterministic: every variable without
+         <setup rngSeed> makes the whole model deterministic: every variable without
          its own rngSeed derives a reproducible child RNG from this root.
          Two runs must be byte-identical. -->
     <generate name="people" count="4" target="">

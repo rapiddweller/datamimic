@@ -92,7 +92,7 @@ class SetupContext(Context):
         self._current_seed = current_seed
         self._task_exporters: dict[str, dict[str, Any]] = {}
         self._demographic_context = demographic_context
-        # Model-wide determinism root (<setup seed="...">). Variables/keys without
+        # Model-wide determinism root (<setup rngSeed="...">). Variables/keys without
         # their own seed derive a reproducible child RNG from this; None => unseeded.
         self._root_seed = seed
         self._root_rng: Random | None = Random(seed) if seed is not None else None
@@ -100,7 +100,7 @@ class SetupContext(Context):
     def derive_seeded_rng(self) -> Random | None:
         """Fork a reproducible child RNG from the model-wide root seed.
 
-        Returns ``None`` when no ``<setup seed>`` was given, so the caller stays
+        Returns ``None`` when no ``<setup rngSeed>`` was given, so the caller stays
         unseeded (wall-clock random).
         """
         return spawn_rng(self._root_rng) if self._root_rng is not None else None

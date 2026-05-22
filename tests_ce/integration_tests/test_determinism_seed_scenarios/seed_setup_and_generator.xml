@@ -1,7 +1,7 @@
-<setup seed="42">
+<setup rngSeed="42">
     <!-- Scenario 2: seed at setup level AND at the generator (variable) level.
          The 'overridden' block carries its own rngSeed, which must WIN over the
-         <setup seed>; the 'derived' block has no own seed and must follow the
+         <setup rngSeed>; the 'derived' block has no own seed and must follow the
          setup seed. The test proves this by re-running with a different setup
          seed: 'overridden' stays identical, 'derived' changes. -->
     <generate name="overridden" count="4" target="">

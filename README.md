@@ -53,7 +53,7 @@ CE and EE are **not the same engine with a feature flag**. They share the DSL an
 | Capability | Community Edition (CE) | Enterprise Platform (EE) |
 |---|---|---|
 | Deterministic data generation | ✅ | ✅ |
-| Deterministic seeding in the DSL | ✅ entities (`<setup seed>`, `<variable rngSeed>`) | ✅ entities + standalone literal `<key generator>` |
+| Deterministic seeding in the DSL | ✅ entities (`<setup rngSeed>`, `<variable rngSeed>`) | ✅ entities + standalone literal `<key generator>` |
 | **Pseudonymization — seeded** *(GDPR Art. 4(5); supports Art. 25 / Art. 32)* | ✅ manual model | ✅ automated via DataWorkbench |
 | **Pseudonymization — non-seeded (privacy-maximized)** | ✅ manual model | ✅ automated via DataWorkbench |
 | Python API + XML pipelines | ✅ | ✅ |
@@ -161,7 +161,7 @@ Most test data tools produce random output. That breaks regression tests, audit 
 **DATAMIMIC's determinism contract (CE):**
 
 - **Same seed + same model = byte-identical output**, every run, every machine. Holds at three layers: the `generate_domain` facade, every domain service called directly, and every literal generator that accepts an `rng=` argument. Verified per-service on every CI run via [`tests_ce/architecture/test_service_replay_determinism.py`](tests_ce/architecture/test_service_replay_determinism.py).
-- **DSL-level seeding (entities):** `<setup seed="N">` makes the whole model deterministic — every seed-less `<variable entity="…">` derives a reproducible child RNG from it, and `<variable rngSeed="…">` overrides it for that block (no seed anywhere → wall-clock random). Verified by [`tests_ce/integration_tests/test_determinism_seed_scenarios`](tests_ce/integration_tests/test_determinism_seed_scenarios). Deterministic DSL-level seeding of standalone literal generators (`<key generator="…">`) is an **Enterprise (EE) feature**; in CE such generators are seeded only when used directly from Python with `rng=`.
+- **DSL-level seeding (entities):** `<setup rngSeed="N">` makes the whole model deterministic — every seed-less `<variable entity="…">` derives a reproducible child RNG from it, and `<variable rngSeed="…">` overrides it for that block (no seed anywhere → wall-clock random). Verified by [`tests_ce/integration_tests/test_determinism_seed_scenarios`](tests_ce/integration_tests/test_determinism_seed_scenarios). Deterministic DSL-level seeding of standalone literal generators (`<key generator="…">`) is an **Enterprise (EE) feature**; in CE such generators are seeded only when used directly from Python with `rng=`.
 - **Provenance hash on every facade output** = re-executable lineage. Same input → same `determinism_proof.content_hash`, always.
 - **UUIDv5 entity identifiers** = stable across runs and machines.
 - **Single wall-clock SPOT** (`now_utc_naive()`); raw `datetime.now()` is forbidden in production code and the clock-drift architecture gate fails CI on any reintroduction.

@@ -27,7 +27,7 @@ class SetupStatement(CompositeStatement):
             self._default_line_separator = ast.literal_eval(f"'{model.default_line_separator}'")
         self._default_variable_prefix = model.default_variable_prefix
         self._default_variable_suffix = model.default_variable_suffix
-        self._seed = model.seed
+        self._rng_seed = model.rng_seed
 
     @property
     def use_mp(self) -> bool | None:
@@ -70,5 +70,5 @@ class SetupStatement(CompositeStatement):
         return self._default_variable_suffix
 
     @property
-    def seed(self) -> int | None:
-        return self._seed
+    def rng_seed(self) -> int | None:
+        return self._rng_seed

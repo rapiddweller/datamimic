@@ -25,7 +25,7 @@ class DemographicsTask(SetupSubTask):
         if self._statement.rng_seed is not None:
             rng = Random(self._statement.rng_seed)
         else:
-            # Inherit the model-wide <setup seed> when the block has no own rngSeed.
+            # Inherit the model-wide <setup rngSeed> when the block has no own rngSeed.
             rng = ctx.derive_seeded_rng() or Random()
         demographic_context = DemographicContext(
             profile_id=profile.profile_id,

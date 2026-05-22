@@ -6,7 +6,7 @@
 
 """Determinism contract verified at the DSL level across three seeding scenarios.
 
-The DSL seed hierarchy (most specific wins): ``<setup seed>`` is the model-wide
+The DSL seed hierarchy (most specific wins): ``<setup rngSeed>`` is the model-wide
 root from which seed-less variables derive child RNGs; ``<variable rngSeed>``
 overrides it for that block. This pins the three combinations the README's
 "same seed + same model = byte-identical output" claim depends on:
@@ -33,7 +33,7 @@ def _run(test_dir: Path, filename: str) -> dict:
 
 
 def test_seed_in_setup_is_deterministic() -> None:
-    """A setup-level (demographics) seed makes seed-less variables replay identically."""
+    """A setup-level seed makes seed-less variables replay identically."""
     first = _run(_TEST_DIR, "seed_in_setup.xml")
     second = _run(_TEST_DIR, "seed_in_setup.xml")
     assert first, "expected at least one generated block"
@@ -49,13 +49,13 @@ def test_seed_setup_and_generator_is_deterministic() -> None:
 def test_variable_seed_overrides_setup_seed(tmp_path: Path) -> None:
     """The variable's rngSeed wins over the setup seed.
 
-    Re-run the same model with a *different* <setup seed>: the block whose variable
+    Re-run the same model with a *different* <setup rngSeed>: the block whose variable
     carries its own rngSeed must be unchanged, while the block that only derives
     from the setup seed must change.
     """
     model = (_TEST_DIR / "seed_setup_and_generator.xml").read_text()
     (tmp_path / "seed_42.xml").write_text(model)
-    (tmp_path / "seed_777.xml").write_text(model.replace('seed="42"', 'seed="777"'))
+    (tmp_path / "seed_777.xml").write_text(model.replace('rngSeed="42"', 'rngSeed="777"'))
 
     a = _run(tmp_path, "seed_42.xml")
     b = _run(tmp_path, "seed_777.xml")
