@@ -204,7 +204,7 @@ assert card_a.bic == card_b.bic and card_a.card_number == card_b.card_number
 | **Facade** (`generate_domain` registered domains) | ✅ byte-identical, CI-gated | ✅ byte-identical |
 | **Domain services** (direct use with seeded `rng=...`) | ✅ byte-identical, CI-gated | ✅ byte-identical |
 | **Literal generators** (with seeded `rng=...`) | ✅ byte-identical | ✅ byte-identical |
-| **RNG / clock runtime SPOTs** | ✅ `resolve_rng`, `spawn_rng`, `now_utc_naive`, `resolve_clock` | ✅ ADR-030 / 031 |
+| **RNG / clock runtime SPOTs** | ✅ `spawn_rng`, `now_utc_naive`, `resolve_clock` | ✅ ADR-030 / 031 |
 | **Architecture gates in CI** | ✅ facade replay + service replay (every service) + clock drift | ✅ 5+ gates (RNG ownership, clock drift, DSL eval, seeded-mode propagation, dataset SPOT) |
 | **Custom XML pipelines** | ⚠️ best-effort | ✅ byte-identical |
 | **Multi-system coordinated execution** (Oracle + MongoDB + Kafka in one run) | — | ✅ byte-identical end-to-end |
@@ -238,11 +238,12 @@ patient_age = fake.random_int(1, 99)
 conditions  = [fake.word()]
 # "25-year-old with Alzheimer's" — meaningless for any real test
 
-# DATAMIMIC — domain-aware, deterministic
+# DATAMIMIC — domain-aware, deterministic with a seed
+import random
 from datamimic_ce.domains.healthcare.services import PatientService
-patient = PatientService().generate()
+patient = PatientService(rng=random.Random(42)).generate()
 print(f"{patient.full_name}, {patient.age}, {patient.conditions}")
-# "Shirley Thompson, 72, ['Diabetes', 'Hypertension']" — every time
+# Age-appropriate, domain-consistent — and identical every run with a fixed seed
 ```
 
 ---
@@ -256,21 +257,23 @@ pip install datamimic-ce
 ### Healthcare domain
 
 ```python
+import random
 from datamimic_ce.domains.healthcare.services import PatientService
 
-patient = PatientService().generate()
+patient = PatientService(rng=random.Random(42)).generate()
 print(patient.full_name, patient.age, patient.conditions)
-# Age-appropriate conditions, demographically realistic, deterministic
+# Age-appropriate conditions, demographically realistic; deterministic with a seed
 ```
 
 ### Finance domain
 
 ```python
+import random
 from datamimic_ce.domains.finance.services import BankAccountService
 
-account = BankAccountService().generate()
+account = BankAccountService(rng=random.Random(42)).generate()
 print(account.account_number, account.balance)
-# Balance-consistent, locale-correct, reproducible
+# Balance-consistent, locale-correct; reproducible with a seed
 ```
 
 ### Pseudonymization — CE (manual model)
@@ -289,13 +292,32 @@ In CE, PII fields are identified and modeled manually in the XML pipeline:
 ```xml
 <setup>
   <generate name="customers" source="customer_export" target="customer_test">
-    <key name="first_name"  converter="Mask" />
-    <key name="email"       converter="anonymize_email" />
-    <key name="iban"        converter="generate_iban" dataset="DE" rngSeed="42" />
-    <key name="birth_date"  converter="shift_date" shiftDays="90" />
+    <!-- Seeded synthetic stand-ins overwrite each PII field. rngSeed on the
+         <variable> makes the run reproducible; drop rngSeed for the
+         privacy-maximized (non-deterministic) mode. -->
+    <variable name="p"   entity="Person"      dataset="DE" rngSeed="42" />
+    <variable name="acc" entity="BankAccount" dataset="DE" rngSeed="42" />
+
+    <key name="first_name" script="p.given_name" />
+    <key name="last_name"  script="p.family_name" />
+    <key name="email"      script="p.email" />
+    <key name="iban"       script="acc.iban" />
+    <key name="birth_date" script="p.birthdate" />
   </generate>
 </setup>
 ```
+
+Built-in converters can additionally transform a key's value — e.g. irreversibly
+hash the original instead of replacing it, or partially mask it:
+
+```xml
+<key name="email" script="p.email" converter="Hash('sha256','hex')" />
+<key name="iban"  script="acc.iban" converter="MiddleMask(8, 4)" />
+```
+
+Available converters: `Mask`, `MiddleMask(start, end)`, `CutLength(n)`,
+`Hash(type, format[, salt])`, `DateFormat(fmt)`, `Append`, `UpperCase`,
+`LowerCase`, `Date2Timestamp`, `Timestamp2Date`.
 
 ```bash
 datamimic run ./pseudonymize-customers/datamimic.xml
