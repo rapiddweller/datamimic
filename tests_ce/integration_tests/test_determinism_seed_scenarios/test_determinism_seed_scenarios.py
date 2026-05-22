@@ -6,15 +6,17 @@
 
 """Determinism contract verified at the DSL level across three seeding scenarios.
 
-The DSL seed hierarchy (most specific wins): ``<setup rngSeed>`` is the model-wide
-root from which seed-less variables derive child RNGs; ``<variable rngSeed>``
-overrides it for that block. This pins the three combinations the README's
-"same seed + same model = byte-identical output" claim depends on:
+Each scenario runs the FULL registry-driven model — every entity and a
+representative scalar of every attribute and sub-structure — produced by the
+shared ``build_all_entities_seeded_xml`` builder, so the contract is exercised
+over the complete entity surface, not a hand-picked subset. Seeding is varied via
+the builder's ``setup_seed`` / ``variable_seed`` knobs:
 
-1. ``seed_in_setup``        — setup seed only            -> two runs identical.
-2. ``seed_setup_and_generator`` — setup seed + variable  -> identical, and the
-   variable seed OVERRIDES the setup seed (proven by re-seeding the setup).
-3. ``no_seed``              — no seed anywhere           -> two runs differ.
+1. setup seed only        (``<setup rngSeed>``, no per-variable seed) -> identical.
+2. setup + variable seed  (per-variable ``rngSeed`` overrides the setup root):
+   the variable seed wins (re-seeding the setup leaves output unchanged), while a
+   seed-less variable follows the setup seed.
+3. no seed anywhere       -> two runs differ (wall-clock random).
 """
 
 from __future__ import annotations
@@ -22,50 +24,40 @@ from __future__ import annotations
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+from tests_ce.integration_tests.dsl_model_builder import build_all_entities_seeded_xml
 
-_TEST_DIR = Path(__file__).resolve().parent
 
-
-def _run(test_dir: Path, filename: str) -> dict:
-    engine = DataMimicTest(test_dir=test_dir, filename=filename, capture_test_result=True)
+def _run(tmp_path: Path, xml: str, name: str) -> dict:
+    model = tmp_path / f"{name}.xml"
+    model.write_text(xml)
+    engine = DataMimicTest(test_dir=tmp_path, filename=model.name, capture_test_result=True)
     engine.test_with_timer()
     return engine.capture_result()
 
 
-def test_seed_in_setup_is_deterministic() -> None:
-    """A setup-level seed makes seed-less variables replay identically."""
-    first = _run(_TEST_DIR, "seed_in_setup.xml")
-    second = _run(_TEST_DIR, "seed_in_setup.xml")
-    assert first, "expected at least one generated block"
-    assert first == second
-
-
-def test_seed_setup_and_generator_is_deterministic() -> None:
-    first = _run(_TEST_DIR, "seed_setup_and_generator.xml")
-    second = _run(_TEST_DIR, "seed_setup_and_generator.xml")
+def test_setup_seed_makes_the_full_model_deterministic(tmp_path: Path) -> None:
+    """`<setup rngSeed>` alone: every seed-less variable replays identically."""
+    xml = build_all_entities_seeded_xml(setup_seed=42, variable_seed=None)
+    first = _run(tmp_path, xml, "run_a")
+    second = _run(tmp_path, xml, "run_b")
+    assert first, "expected the full model to produce entity blocks"
     assert first == second
 
 
 def test_variable_seed_overrides_setup_seed(tmp_path: Path) -> None:
-    """The variable's rngSeed wins over the setup seed.
+    """A per-variable rngSeed wins over the setup seed; a seed-less one follows it."""
+    overridden_42 = _run(tmp_path, build_all_entities_seeded_xml(setup_seed=42, variable_seed=99), "ov42")
+    overridden_777 = _run(tmp_path, build_all_entities_seeded_xml(setup_seed=777, variable_seed=99), "ov777")
+    assert overridden_42 == overridden_777, "variable rngSeed must override the setup seed (setup change ignored)"
 
-    Re-run the same model with a *different* <setup rngSeed>: the block whose variable
-    carries its own rngSeed must be unchanged, while the block that only derives
-    from the setup seed must change.
-    """
-    model = (_TEST_DIR / "seed_setup_and_generator.xml").read_text()
-    (tmp_path / "seed_42.xml").write_text(model)
-    (tmp_path / "seed_777.xml").write_text(model.replace('rngSeed="42"', 'rngSeed="777"'))
-
-    a = _run(tmp_path, "seed_42.xml")
-    b = _run(tmp_path, "seed_777.xml")
-
-    assert a["overridden"] == b["overridden"], "variable rngSeed must override the setup seed"
-    assert a["derived"] != b["derived"], "a seed-less variable must follow the setup seed"
+    derived_42 = _run(tmp_path, build_all_entities_seeded_xml(setup_seed=42, variable_seed=None), "dv42")
+    derived_777 = _run(tmp_path, build_all_entities_seeded_xml(setup_seed=777, variable_seed=None), "dv777")
+    assert derived_42 != derived_777, "a seed-less variable must follow the setup seed (setup change shows)"
 
 
-def test_no_seed_is_random() -> None:
-    """With no seed at all, two runs must differ (wall-clock seeded)."""
-    first = _run(_TEST_DIR, "no_seed.xml")
-    second = _run(_TEST_DIR, "no_seed.xml")
+def test_no_seed_is_random(tmp_path: Path) -> None:
+    """No setup seed and no per-variable seed: two runs of the full model differ."""
+    xml = build_all_entities_seeded_xml(setup_seed=None, variable_seed=None)
+    first = _run(tmp_path, xml, "run_a")
+    second = _run(tmp_path, xml, "run_b")
     assert first != second
