@@ -1,6 +1,6 @@
 <setup>
-    <!-- Scenario 3: no seed anywhere. No <demographics> root seed and no per-variable
-         rngSeed, so each entity seeds itself from the wall clock. Two runs must DIFFER. -->
+    <!-- Scenario 3: no seed anywhere. No <setup seed> and no per-variable rngSeed,
+         so each entity seeds itself from the wall clock. Two runs must DIFFER. -->
     <generate name="people" count="5" target="">
         <variable name="p" entity="Person" dataset="US"/>
         <key name="given_name" script="p.given_name"/>

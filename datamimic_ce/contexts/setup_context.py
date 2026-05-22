@@ -7,6 +7,7 @@
 import copy
 import uuid
 from pathlib import Path
+from random import Random
 from typing import Any
 
 from datamimic_ce.clients.database_client import Client
@@ -51,6 +52,7 @@ class SetupContext(Context):
         default_source_scripted: bool | None = None,
         report_logging: bool = True,
         demographic_context: DemographicContext | None = None,
+        seed: int | None = None,
     ):
         # SetupContext is always its root_context
         super().__init__(self)
@@ -89,6 +91,18 @@ class SetupContext(Context):
         self._current_seed = current_seed
         self._task_exporters: dict[str, dict[str, Any]] = {}
         self._demographic_context = demographic_context
+        # Model-wide determinism root (<setup seed="...">). Variables/keys without
+        # their own seed derive a reproducible child RNG from this; None => unseeded.
+        self._root_seed = seed
+        self._root_rng: Random | None = Random(seed) if seed is not None else None
+
+    def derive_seeded_rng(self) -> Random | None:
+        """Fork a reproducible child RNG from the model-wide root seed.
+
+        Returns ``None`` when no ``<setup seed>`` was given, so the caller stays
+        unseeded (wall-clock random).
+        """
+        return Random(self._root_rng.randrange(2**63)) if self._root_rng is not None else None
 
     def __deepcopy__(self, memo):
         """
@@ -129,6 +143,7 @@ class SetupContext(Context):
             report_logging=copy.deepcopy(self._report_logging),
             current_seed=self._current_seed,
             demographic_context=copy.deepcopy(self._demographic_context, memo),
+            seed=self._root_seed,
         )
 
     def _deepcopy_clients(self, memo):

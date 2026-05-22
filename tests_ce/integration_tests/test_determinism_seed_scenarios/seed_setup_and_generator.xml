@@ -1,18 +1,17 @@
-<setup>
-    <!-- Scenario 2: seed in setup AND in the generator (variable).
+<setup seed="42">
+    <!-- Scenario 2: seed at setup level AND at the generator (variable) level.
          The 'overridden' block carries its own rngSeed, which must WIN over the
-         setup (demographics) seed; the 'derived' block has no own seed and must
-         follow the setup seed. The test proves this by re-running with a different
-         demographics seed: 'overridden' stays identical, 'derived' changes. -->
-    <demographics dataset="DE" version="2023Q4" dir="DE/2023Q4" rngSeed="42"/>
-    <generate name="overridden" count="3" target="">
-        <variable name="p" entity="Patient" dataset="DE" rngSeed="99"/>
-        <key name="ssn" script="p.ssn"/>
-        <key name="record" script="p.medical_record_number"/>
+         <setup seed>; the 'derived' block has no own seed and must follow the
+         setup seed. The test proves this by re-running with a different setup
+         seed: 'overridden' stays identical, 'derived' changes. -->
+    <generate name="overridden" count="4" target="">
+        <variable name="p" entity="Person" dataset="US" rngSeed="99"/>
+        <key name="given_name" script="p.given_name"/>
+        <key name="family_name" script="p.family_name"/>
     </generate>
-    <generate name="derived" count="3" target="">
-        <variable name="q" entity="Patient" dataset="DE"/>
-        <key name="ssn" script="q.ssn"/>
-        <key name="record" script="q.medical_record_number"/>
+    <generate name="derived" count="4" target="">
+        <variable name="q" entity="Person" dataset="US"/>
+        <key name="given_name" script="q.given_name"/>
+        <key name="family_name" script="q.family_name"/>
     </generate>
 </setup>

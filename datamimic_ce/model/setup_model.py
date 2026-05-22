@@ -33,6 +33,7 @@ class SetupModel(BaseModel):
     report_logging: bool | None = Field(None, alias=ATTR_REPORT_LOGGING)
     default_variable_prefix: str | None = Field(None, alias=ATTR_DEFAULT_VARIABLE_PREFIX)
     default_variable_suffix: str | None = Field(None, alias=ATTR_DEFAULT_VARIABLE_SUFFIX)
+    seed: int | None = Field(None, alias="seed")
 
     @model_validator(mode="before")
     @classmethod
@@ -50,5 +51,6 @@ class SetupModel(BaseModel):
                 ATTR_DEFAULT_VARIABLE_PREFIX,
                 ATTR_DEFAULT_VARIABLE_SUFFIX,
                 ATTR_REPORT_LOGGING,
+                "seed",
             },
         )
