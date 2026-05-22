@@ -33,7 +33,7 @@ def reset_dataset_fallback_log() -> None:
     _logged_dataset_fallbacks.clear()
 
 
-def _strict_dataset_mode() -> bool:
+def is_strict_dataset_mode() -> bool:
     """Return True when strict dataset mode is enabled.
 
     In strict mode (env `DATAMIMIC_STRICT_DATASET`), dataset fallbacks are
@@ -43,12 +43,6 @@ def _strict_dataset_mode() -> bool:
     if not val:
         return False
     return val not in ("0", "false", "False")
-
-
-def is_strict_dataset_mode() -> bool:
-    """Public helper so callers can respect strict dataset mode."""
-
-    return _strict_dataset_mode()
 
 
 def repo_root(start: Path | None = None) -> Path:
@@ -120,7 +114,7 @@ def dataset_path(*relative: str | os.PathLike[str], start: Path | None = None) -
     if parts:
         last = parts[-1]
         m = re.match(r"^(?P<stem>.+)_(?P<cc>[A-Z]{2})(?P<ext>\.[A-Za-z0-9._-]+)$", last)
-        if m and not path.exists() and not _strict_dataset_mode():
+        if m and not path.exists() and not is_strict_dataset_mode():
             cc = m.group("cc").upper()
             if cc != "US":
                 fallback_name = f"{m.group('stem')}_US{m.group('ext')}"

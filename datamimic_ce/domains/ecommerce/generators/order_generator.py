@@ -43,17 +43,10 @@ class OrderGenerator(ClockAnchoredDomainGenerator):
         w_idx = header.get(weight_col)
         v_idx = header.get(value_col)
         if w_idx is None or v_idx is None:
-            # Fallback: derive the generic (non-dataset) filename from the last path segment.
-            base = path[-1]  # e.g. "order_statuses_US.csv"
-            # Strip the dataset suffix to get the canonical fallback filename.
-            stem, ext = base.rsplit(".", 1)
-            # The stem looks like "<name>_<dataset>"; drop the trailing "_<dataset>" part.
-            generic_stem = "_".join(stem.split("_")[:-1])
-            fallback = f"{generic_stem}.{ext}"
-            values, weights = load_weighted_values_try_dataset(
-                "ecommerce", fallback, dataset=self._dataset, start=Path(__file__)
+            raise ValueError(
+                f"{file_path} is missing required column(s): "
+                f"value_col={value_col!r}, weight_col={weight_col!r} (header columns: {sorted(header)})"
             )
-            return pick_one_weighted(self._rng, values, weights)
         choice = self._rng.choices(rows, weights=[float(r[w_idx]) for r in rows], k=1)[0]
         return choice[v_idx]
 
