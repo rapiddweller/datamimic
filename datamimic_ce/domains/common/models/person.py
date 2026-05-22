@@ -103,11 +103,7 @@ class Person(BaseEntity):
     @property
     @property_cache
     def name(self) -> str:
-        """Backward-compatible alias of ``full_name`` (identical value).
-
-        Kept as a separate field because the public API and schema expose both
-        ``name`` and ``full_name``.
-        """
+        """Alias of ``full_name``."""
         return self.full_name
 
     @property
