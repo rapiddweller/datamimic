@@ -96,8 +96,9 @@ class OrderGenerator(ClockAnchoredDomainGenerator):
                 except ValueError as e:
                     raise ValueError("Invalid shipping cost bounds") from e
                 return round(self._rng.uniform(min(lo, hi), max(lo, hi)), 2)
-        # If not found, default minimal cost
-        return 0.0
+        raise ValueError(
+            f"Shipping method {shipping_method!r} not found in shipping_methods_{self._dataset}.csv"
+        )
 
     def pick_coupon_prefix(self) -> str:
         values, weights = load_weighted_values_try_dataset(

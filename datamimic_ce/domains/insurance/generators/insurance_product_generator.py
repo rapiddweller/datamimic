@@ -76,5 +76,5 @@ class InsuranceProductGenerator(DatasetAwareDomainGenerator):
         val = pick_one_weighted(self._rng, list(values), list(weights))
         try:
             return int(val)
-        except (TypeError, ValueError):
-            return 1
+        except (TypeError, ValueError) as e:
+            raise ValueError(f"Non-integer coverage count {val!r} in coverage_counts_{self._dataset}.csv") from e

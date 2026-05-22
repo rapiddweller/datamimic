@@ -90,8 +90,10 @@ class InsurancePolicyGenerator(DatasetAwareDomainGenerator):
             lo_s, hi_s = bucket.split("-", 1)
             lo = float(lo_s)
             hi = float(hi_s)
-        except ValueError:
-            lo, hi = 100.0, 1000.0
+        except ValueError as e:
+            raise ValueError(
+                f"Invalid premium bucket {bucket!r} (expected 'lo-hi') in premium_buckets_{self._dataset}.csv"
+            ) from e
         return round(self._rng.uniform(min(lo, hi), max(lo, hi)), 2)
 
     def pick_premium_frequency(self, *, start_path: Path) -> str:

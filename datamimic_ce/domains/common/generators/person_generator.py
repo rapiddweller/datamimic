@@ -177,4 +177,9 @@ class PersonGenerator(DatasetAwareDomainGenerator):
         salutation_file_path = dataset_path("common", "person", f"salutation_{self._dataset}.csv", start=Path(__file__))
         header_dict, data = FileUtil.read_csv_to_dict_of_tuples_with_header(salutation_file_path, delimiter=",")
 
-        return data[0][header_dict[gender]] if gender in header_dict else ""
+        if gender not in header_dict:
+            raise ValueError(
+                f"Gender column {gender!r} not found in salutation_{self._dataset}.csv "
+                f"(columns: {sorted(header_dict)})"
+            )
+        return data[0][header_dict[gender]]

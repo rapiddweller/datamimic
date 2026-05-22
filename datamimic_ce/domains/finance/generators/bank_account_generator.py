@@ -87,17 +87,16 @@ class BankAccountGenerator(ClockAnchoredDomainGenerator):
     def get_currency(self) -> str:
         file_path = dataset_path("ecommerce", f"currencies_{self.dataset}.csv", start=Path(__file__))
         raw_rows = FileUtil.read_csv_to_list_of_tuples_without_header(file_path)
-        if not raw_rows or len(raw_rows) == 1:
-            return "USD"
+        if len(raw_rows) <= 1:
+            raise ValueError(f"{file_path} has no data rows")
         header = raw_rows[0]
         rows = raw_rows[1:]
         header_map = {str(col).strip().lower(): idx for idx, col in enumerate(header)}
-        weight_idx = header_map.get("weight")
-        code_idx = header_map.get("code", 0)
-        # accommodate datasets that only expose code+weight without extra columns.
-        if weight_idx is None:
-            weight_idx = len(header) - 1 if len(header) > 1 else None
-        weights = [1.0 for _ in rows] if weight_idx is None else [float(row[weight_idx]) for row in rows]
+        if "code" not in header_map or "weight" not in header_map:
+            raise ValueError(f"{file_path} is missing 'code'/'weight' columns (header: {list(header)})")
+        code_idx = header_map["code"]
+        weight_idx = header_map["weight"]
+        weights = [float(row[weight_idx]) for row in rows]
         codes = [row[code_idx] for row in rows]
         choice = pick_one_weighted_no_repeat(self._rng, codes, weights, last=self._last_currency)
         self._last_currency = choice

@@ -173,45 +173,16 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         if category is None:
             category = self.get_merchant_category()
 
-        # Prevent infinite recursion with a fallback
-        recursion_guard = getattr(self, "_merchant_recursion_count", 0)
-        if recursion_guard > 3:
-            # If we've recursed too many times, return a generic merchant name
-            return f"{category} Shop"
+        if "merchants" not in self._transaction_data:
+            header_dict, loaded_data = self._load_data_file(f"merchants_{self._dataset}.csv", "transaction")
+            self._transaction_data["merchants"] = (header_dict, loaded_data)
 
-        # Set recursion guard
-        self._merchant_recursion_count = recursion_guard + 1
-
-        try:
-            if "merchants" not in self._transaction_data:
-                header_dict, loaded_data = self._load_data_file(f"merchants_{self._dataset}.csv", "transaction")
-                self._transaction_data["merchants"] = (header_dict, loaded_data)
-
-            header_dict, loaded_data = self._transaction_data["merchants"]
-
-            # Filter merchants by category
-            filtered_data = [row for row in loaded_data if row[header_dict["category"]] == category]
-
-            if filtered_data:
-                merchant_data = self._weighted_choice(filtered_data, header_dict)
-                self._merchant_recursion_count = 0  # Reset recursion counter
-                return str(merchant_data[header_dict["merchant_name"]])
-            else:
-                # If no merchants found for the category, try with a new random category
-                # But don't recurse infinitely if no merchants exist at all
-                if recursion_guard < 3:
-                    new_category = self.get_merchant_category()
-                    # Avoid recursion with the same category
-                    if new_category != category:
-                        return self.get_merchant_name(new_category)
-
-                # Fallback if recursion limit reached or same category
-                self._merchant_recursion_count = 0  # Reset recursion counter
-                return f"{category} Merchant"
-        except (FileNotFoundError, KeyError, IndexError, ValueError):
-            # Narrow exception scope; do not mask unrelated errors
-            self._merchant_recursion_count = 0
-            return f"{category} Merchant"
+        header_dict, loaded_data = self._transaction_data["merchants"]
+        filtered_data = [row for row in loaded_data if row[header_dict["category"]] == category]
+        if not filtered_data:
+            raise ValueError(f"No merchants for category {category!r} in merchants_{self._dataset}.csv")
+        merchant_data = self._weighted_choice(filtered_data, header_dict)
+        return str(merchant_data[header_dict["merchant_name"]])
 
     def get_status(self) -> str:
         """Generate a random transaction status.
@@ -321,16 +292,14 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         code_idx = currency_header["code"]
         filtered_currency = [row for row in currency_data if row[code_idx] == currency_code]
 
-        if filtered_currency:
-            currency_info = filtered_currency[0]
-            return {
-                "code": currency_code,
-                "name": str(currency_info[currency_header["name"]]),
-                "symbol": str(currency_info[currency_header["symbol"]]),
-            }
-        else:
-            # Fallback if currency details not found
-            return {"code": currency_code, "name": f"{currency_code} Currency", "symbol": currency_code}
+        if not filtered_currency:
+            raise ValueError(f"Currency code {currency_code!r} not found in currencies_{self._dataset}.csv")
+        currency_info = filtered_currency[0]
+        return {
+            "code": currency_code,
+            "name": str(currency_info[currency_header["name"]]),
+            "symbol": str(currency_info[currency_header["symbol"]]),
+        }
 
     def get_description_template(self, transaction_type: str) -> str:
         """Get description template for transaction type.
@@ -356,12 +325,13 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         else:
             # Try to find generic template
             generic_data = [row for row in loaded_data if row[header_dict["transaction_type"]] == "Generic"]
-            if generic_data:
-                template_data = self._weighted_choice(generic_data, header_dict)
-                return str(template_data[header_dict["template"]])
-            else:
-                # Last resort - use transaction type with merchant
-                return f"{transaction_type} - {{}}"
+            if not generic_data:
+                raise ValueError(
+                    f"No description template for transaction_type {transaction_type!r} and no 'Generic' row "
+                    f"in description_templates_{self._dataset}.csv"
+                )
+            template_data = self._weighted_choice(generic_data, header_dict)
+            return str(template_data[header_dict["template"]])
 
     def generate_description(self, transaction_type: str, merchant_name: str) -> str:
         """Generate a transaction description based on type and merchant.
@@ -395,15 +365,13 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         category_idx = header_dict["category"]
         filtered_data = [row for row in loaded_data if row[category_idx] == category]
 
-        if filtered_data:
-            # Use first matching category (should be only one)
-            category_data = filtered_data[0]
-            min_amount = float(str(category_data[header_dict["min_amount"]]))
-            max_amount = float(str(category_data[header_dict["max_amount"]]))
-            return min_amount, max_amount
-        else:
-            # Default range if category not found
-            return 10.0, 200.0
+        if not filtered_data:
+            raise ValueError(f"Category {category!r} not found in amount_ranges_{self._dataset}.csv")
+        # Use first matching category (should be only one)
+        category_data = filtered_data[0]
+        min_amount = float(str(category_data[header_dict["min_amount"]]))
+        max_amount = float(str(category_data[header_dict["max_amount"]]))
+        return min_amount, max_amount
 
     def get_transaction_type_modifier(self, transaction_type: str) -> float:
         """Get amount modifier for a specific transaction type.
@@ -433,13 +401,14 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
             and row[type_idx] == transaction_type
         ]
 
-        if filtered_data:
-            # Use first matching transaction type (should be only one)
-            type_data = filtered_data[0]
-            return float(str(type_data[header_dict["modifier"]]))
-        else:
-            # Default modifier if type not found
-            return 1.0
+        if not filtered_data:
+            raise ValueError(
+                f"Transaction type {transaction_type!r} not found in "
+                f"transaction_type_modifiers_{self._dataset}.csv"
+            )
+        # Use first matching transaction type (should be only one)
+        type_data = filtered_data[0]
+        return float(str(type_data[header_dict["modifier"]]))
 
     def generate_amount(self, category: str, transaction_type: str) -> float:
         """Generate a random transaction amount based on category and type.
