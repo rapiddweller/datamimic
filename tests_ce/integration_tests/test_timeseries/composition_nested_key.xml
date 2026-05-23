@@ -1,0 +1,15 @@
+<setup>
+    <!-- Composition with <nestedKey>: the ts namespace from the outer time-
+         series iterator must be reachable inside the nested dict's keys. -->
+    <generate name="rows"
+              start="2026-01-01T00:00:00+00:00"
+              end="2026-01-01T00:00:03+00:00"
+              interval="PT1S"
+              target="">
+        <key name="step" script="ts.step"/>
+        <nestedKey name="meta" type="dict">
+            <key name="iso_now" script="ts.now.isoformat()"/>
+            <key name="second"  script="ts.now.second"/>
+        </nestedKey>
+    </generate>
+</setup>

@@ -1,0 +1,12 @@
+<setup>
+    <!-- Negative test: end <= start. The two values are both valid ISO 8601 datetimes
+         in isolation; the failure must mention both attribute names so the user knows
+         which one to fix. -->
+    <generate name="rows"
+              start="2026-01-08T00:00:00+00:00"
+              end="2026-01-01T00:00:00+00:00"
+              interval="PT1H"
+              target="">
+        <key name="timestamp" script="ts.now.isoformat()"/>
+    </generate>
+</setup>

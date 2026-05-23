@@ -1,0 +1,14 @@
+<setup>
+    <!-- Proof that the same primitive serves a non-IoT use case. Three "tickers"
+         driven by ts.series, no sensor vocabulary anywhere. -->
+    <generate name="ticks"
+              count="3"
+              start="2026-01-01T09:30:00+00:00"
+              end="2026-01-01T10:00:00+00:00"
+              interval="PT5M"
+              target="">
+        <key name="timestamp" script="ts.now.isoformat()"/>
+        <key name="symbol"    script="['AAPL','MSFT','GOOG'][ts.series]"/>
+        <key name="price"     script="100 + ts.step * 0.25"/>
+    </generate>
+</setup>

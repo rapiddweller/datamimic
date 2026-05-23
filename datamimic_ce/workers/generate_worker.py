@@ -189,12 +189,20 @@ class GenerateWorker:
         product_holder: dict[str, list] = {}
         result = []
 
+        # Parsed once per page when in time-series mode; None otherwise.
+        ts_config = stmt.get_time_series_config()
+
         # 3: Modify/Generate data by executing sub-tasks
         for idx in range(processed_data_count):
             # Create sub-context for each product record creation
             ctx = GenIterContext(context, stmt.name)
             # Get current worker_id from outermost gen_stmt
             ctx.worker_id = worker_id
+
+            # Time-series mode: expose `ts` namespace (now/step/series) in the script context.
+            # Use the global index (page_start + idx) so series/step are stable across chunks.
+            if ts_config is not None:
+                ctx.current_variables["ts"] = ts_config.at(page_start + idx)
 
             # Set current product to the product from data source if building from datasource
             if build_from_source:

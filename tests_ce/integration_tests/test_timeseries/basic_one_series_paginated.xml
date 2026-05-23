@@ -1,0 +1,16 @@
+<setup>
+    <!-- Same DSL as basic_one_series.xml but with an explicit small pageSize.
+         Tested against basic_one_series.xml to assert pagination invariance:
+         output must be byte-identical regardless of page boundaries. -->
+    <generate name="rows"
+              start="2026-01-01T00:00:00+00:00"
+              end="2026-01-02T00:00:00+00:00"
+              interval="PT1H"
+              pageSize="5"
+              target="">
+        <key name="timestamp" script="ts.now.isoformat()"/>
+        <key name="step"      script="ts.step"/>
+        <key name="series"    script="ts.series"/>
+        <key name="hour"      script="ts.now.hour"/>
+    </generate>
+</setup>

@@ -1,0 +1,11 @@
+<setup>
+    <!-- Negative test: `interval` does not match ISO 8601 duration grammar.
+         User wrote "1h" instead of "PT1H" - common mistake. -->
+    <generate name="rows"
+              start="2026-01-01T00:00:00+00:00"
+              end="2026-01-02T00:00:00+00:00"
+              interval="1h"
+              target="">
+        <key name="timestamp" script="ts.now.isoformat()"/>
+    </generate>
+</setup>

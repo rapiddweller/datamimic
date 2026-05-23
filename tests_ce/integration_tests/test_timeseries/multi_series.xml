@@ -1,0 +1,15 @@
+<setup>
+    <!-- Three series, each 6 ticks long. Total rows = 3 * 6 = 18.
+         Loop order is contiguous per series: series 0 then series 1 then series 2. -->
+    <generate name="rows"
+              count="3"
+              start="2026-01-01T00:00:00+00:00"
+              end="2026-01-01T06:00:00+00:00"
+              interval="PT1H"
+              target="">
+        <key name="timestamp" script="ts.now.isoformat()"/>
+        <key name="step"      script="ts.step"/>
+        <key name="series"    script="ts.series"/>
+        <key name="series_id" script="f'series_{ts.series:03d}'"/>
+    </generate>
+</setup>
