@@ -1,0 +1,12 @@
+<setup>
+    <!-- PT1S interval. 30-second window = 30 ticks. -->
+    <generate name="rows"
+              from="2026-01-01T00:00:00+00:00"
+              to="2026-01-01T00:00:30+00:00"
+              interval="PT1S"
+              target="">
+        <key name="timestamp" script="ts.now.isoformat()"/>
+        <key name="step"      script="ts.step"/>
+        <key name="second"    script="ts.now.second"/>
+    </generate>
+</setup>

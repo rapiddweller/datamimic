@@ -30,6 +30,9 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
+# ISO 8601 duration subset: weeks/days/hours/minutes/seconds.
+# Seconds accept fractional values (e.g. PT0.001S = 1 ms, PT0.000001S = 1 us),
+# limited by Python's microsecond-precision timedelta.
 _ISO_DURATION_RE = re.compile(
     r"^P"
     r"(?:(?P<w>\d+)W)?"
@@ -37,7 +40,7 @@ _ISO_DURATION_RE = re.compile(
     r"(?:T"
     r"(?:(?P<h>\d+)H)?"
     r"(?:(?P<m>\d+)M)?"
-    r"(?:(?P<s>\d+)S)?"
+    r"(?:(?P<s>\d+(?:\.\d+)?)S)?"
     r")?$"
 )
 
@@ -48,21 +51,33 @@ def _parse_iso_datetime(value: str) -> datetime:
 
 
 def _parse_iso_duration(value: str) -> timedelta:
-    """Parse a subset of ISO 8601 durations (weeks/days/hours/minutes/seconds)."""
+    """Parse a subset of ISO 8601 durations (weeks/days/hours/minutes/seconds).
+
+    Seconds accept fractional values down to Python's microsecond limit;
+    sub-microsecond intervals (e.g. nanoseconds) are not representable in
+    ``datetime.timedelta`` and are rejected with a clear error.
+    """
     match = _ISO_DURATION_RE.match(value)
     if not match:
         raise ValueError(f"Invalid ISO 8601 duration: {value!r}")
-    parts = {k: int(v) if v else 0 for k, v in match.groupdict().items()}
-    delta = timedelta(
-        weeks=parts["w"],
-        days=parts["d"],
-        hours=parts["h"],
-        minutes=parts["m"],
-        seconds=parts["s"],
+    groups = match.groupdict()
+    # Compute the input duration in seconds (float) before constructing the
+    # timedelta -- otherwise sub-microsecond inputs round to zero and we can't
+    # distinguish "user wrote 0" from "user wrote a value below our resolution".
+    total = (
+        int(groups["w"] or 0) * 604_800
+        + int(groups["d"] or 0) * 86_400
+        + int(groups["h"] or 0) * 3_600
+        + int(groups["m"] or 0) * 60
+        + float(groups["s"] or 0)
     )
-    if delta.total_seconds() <= 0:
+    if total <= 0:
         raise ValueError(f"ISO 8601 duration must be positive: {value!r}")
-    return delta
+    if total < 1e-6:
+        raise ValueError(
+            f"ISO 8601 duration below 1us is not representable in datetime.timedelta: {value!r}"
+        )
+    return timedelta(seconds=total)
 
 
 @dataclass(frozen=True)

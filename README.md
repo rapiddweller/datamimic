@@ -393,7 +393,7 @@ Guarantees:
 
 * **Prefix-stable by construction** — the first N ticks of series 0 are byte-identical regardless of total window length, because each row's `ts.now` is a pure function of `from + interval * step`.
 * **Loop order is contiguous per series** — series 0's full sequence, then series 1's, etc. Makes downstream grouping trivial.
-* **Strict ISO 8601** — `from`/`to` parsed via `datetime.fromisoformat` (Z-suffix supported); `interval` as `PT1H`, `PT15M`, `PT5S`, `P1D`, `P1W`, `P1DT12H`. No custom format strings.
+* **Strict ISO 8601** — `from`/`to` parsed via `datetime.fromisoformat` (Z-suffix supported); `interval` as `PT1H`, `PT15M`, `PT5S`, `P1D`, `P1W`, `P1DT12H`. Sub-second resolution via fractional seconds: `PT0.001S` = 1 ms, `PT0.000001S` = 1 µs (Python `datetime.timedelta` floor; sub-microsecond intervals are rejected with a clear error).
 * **Naming caveat** — a `<key name="ts">` would shadow the namespace (`current_product` overrides `current_variables` in script scope). Use a different column name, e.g. `timestamp`.
 
 Composes with the existing `<variable>` mechanism for multi-source merges — e.g. join each tick with a sensor-metadata CSV via `<variable source="meta.csv" cyclic="True">` inside the same `<generate>`. See `tests_ce/integration_tests/test_timeseries/` for committed DSL fixtures + proofs.

@@ -130,6 +130,41 @@ def test_log_stream_without_id_column() -> None:
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# Interval resolution: seconds, milliseconds, microseconds (datetime.timedelta limit)
+# ---------------------------------------------------------------------------
+
+
+def test_interval_seconds() -> None:
+    rows = _run("interval_seconds.xml")
+    assert len(rows) == 30
+    assert [r["second"] for r in rows] == list(range(30))
+
+
+def test_interval_milliseconds() -> None:
+    """PT0.001S = 1 ms via ISO 8601 fractional seconds (no separate ms symbol)."""
+    rows = _run("interval_milliseconds.xml")
+    assert len(rows) == 50
+    # 1 ms in microseconds = 1000; step n -> microsecond = n * 1000.
+    assert [r["micro"] for r in rows] == [n * 1000 for n in range(50)]
+
+
+def test_interval_microseconds_is_finest_supported_resolution() -> None:
+    """PT0.000001S = 1 us. Below this, datetime.timedelta cannot represent the delta."""
+    rows = _run("interval_microseconds.xml")
+    assert len(rows) == 20
+    assert [r["micro"] for r in rows] == list(range(20))
+
+
+def test_sub_microsecond_interval_rejected() -> None:
+    """Nanosecond-scale intervals are not representable in datetime.timedelta -> clear error."""
+    with pytest.raises(ValueError) as exc:
+        _run("invalid_subus_interval.xml")
+    assert "1us" in str(exc.value) or "microseconds" in str(exc.value) or "below 1" in str(exc.value), (
+        f"expected error to mention the microsecond floor, got: {exc.value}"
+    )
+
+
 def test_partial_window_raises() -> None:
     """`interval` alone (without from/to) must be rejected at parse time."""
     with pytest.raises(ValueError) as exc:
