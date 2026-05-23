@@ -37,6 +37,10 @@ from datamimic_ce.constants.attribute_constants import (
 )
 from datamimic_ce.model.model_util import ModelUtil
 
+# The three attributes that activate time-series mode on <generate>. They must
+# all be present together; the validators below enforce the all-or-none rule.
+_TIMESERIES_ATTRS: frozenset[str] = frozenset({ATTR_FROM, ATTR_TO, ATTR_INTERVAL})
+
 
 class GenerateModel(BaseModel):
     name: str
@@ -62,11 +66,9 @@ class GenerateModel(BaseModel):
     num_process: int | None = Field(None, alias=ATTR_NUM_PROCESS)
     script: str | None = Field(None, alias=ATTR_SCRIPT)
     mp_platform: str | None = Field(None, alias=ATTR_MP_PLATFORM)
-    # Time-series iterator: ISO 8601 from/to/interval. When `interval` is set,
-    # the generate loop yields count_entities * ticks_per_series rows and the
-    # script context gets a `ts` namespace (now/step/series).
-    from_: str | None = Field(None, alias=ATTR_FROM)
-    to: str | None = None
+    # Time-series iterator (ISO 8601 from/to/interval). See _TIMESERIES_ATTRS.
+    start: str | None = Field(None, alias=ATTR_FROM)
+    end: str | None = Field(None, alias=ATTR_TO)
     interval: str | None = None
 
     @model_validator(mode="before")
@@ -106,13 +108,11 @@ class GenerateModel(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_timeseries_window(cls, values: dict):
-        """`interval` requires both `from` and `to`; `from`/`to` require `interval`."""
-        present = {k for k in (ATTR_FROM, ATTR_TO, ATTR_INTERVAL) if k in values}
-        if present and present != {ATTR_FROM, ATTR_TO, ATTR_INTERVAL}:
-            missing = {ATTR_FROM, ATTR_TO, ATTR_INTERVAL} - present
-            raise ValueError(
-                f"Time-series attributes must be set together; missing: {sorted(missing)}"
-            )
+        """`from`/`to`/`interval` must be set together — all or none."""
+        present = _TIMESERIES_ATTRS & values.keys()
+        if present and present != _TIMESERIES_ATTRS:
+            missing = _TIMESERIES_ATTRS - present
+            raise ValueError(f"Time-series attributes must be set together; missing: {sorted(missing)}")
         return values
 
     @model_validator(mode="before")
@@ -120,7 +120,7 @@ class GenerateModel(BaseModel):
     def validate_count_and_source(cls, values: dict):
         # In time-series mode count is optional (default 1 series); otherwise enforce the
         # existing rule that count is required unless source/script supplies the length.
-        if ATTR_INTERVAL in values:
+        if _TIMESERIES_ATTRS & values.keys():
             return values
         return ModelUtil.check_exist_count(values=values)
 

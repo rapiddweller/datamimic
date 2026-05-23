@@ -20,7 +20,6 @@ from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.tasks.generate_task import GenerateTask
 from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.logging_util import gen_timer
-from datamimic_ce.utils.timeseries import ticks_per_series, ts_at
 
 
 class GenerateWorker:
@@ -190,12 +189,8 @@ class GenerateWorker:
         product_holder: dict[str, list] = {}
         result = []
 
-        # Precompute ticks_per_series once for time-series mode (None otherwise).
-        ts_ticks = (
-            ticks_per_series(stmt.from_, stmt.to, stmt.interval)  # type: ignore[arg-type]
-            if stmt.interval is not None
-            else None
-        )
+        # Parsed once per page when in time-series mode; None otherwise.
+        ts_config = stmt.time_series_config()
 
         # 3: Modify/Generate data by executing sub-tasks
         for idx in range(processed_data_count):
@@ -206,10 +201,8 @@ class GenerateWorker:
 
             # Time-series mode: expose `ts` namespace (now/step/series) in the script context.
             # Use the global index (page_start + idx) so series/step are stable across chunks.
-            if ts_ticks is not None:
-                ctx.current_variables["ts"] = ts_at(
-                    page_start + idx, ts_ticks, stmt.from_, stmt.interval  # type: ignore[arg-type]
-                )
+            if ts_config is not None:
+                ctx.current_variables["ts"] = ts_config.at(page_start + idx)
 
             # Set current product to the product from data source if building from datasource
             if build_from_source:

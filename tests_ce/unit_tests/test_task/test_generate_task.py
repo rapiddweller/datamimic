@@ -137,9 +137,10 @@ class TestGenerateTask:
         statement._separator = ","
         statement._storage_id = "custom-storage-id"
         statement.export_uri = "s3://export-bucket"
-        statement.from_ = None
-        statement.to = None
+        statement.start = None
+        statement.end = None
         statement.interval = None
+        statement.time_series_config.return_value = None
 
         # Configure methods
         statement.get_int_count.return_value = statement._count

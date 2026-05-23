@@ -13,6 +13,7 @@ from datamimic_ce.model.generate_model import GenerateModel
 from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.statements.statement_util import StatementUtil
+from datamimic_ce.utils.timeseries import TimeSeriesConfig
 
 
 class GenerateStatement(CompositeStatement):
@@ -41,8 +42,8 @@ class GenerateStatement(CompositeStatement):
         self._num_process = model.num_process
         self._script = model.script
         self._mp_platform = model.mp_platform
-        self._from = model.from_
-        self._to = model.to
+        self._start = model.start
+        self._end = model.end
         self._interval = model.interval
 
     @property
@@ -163,16 +164,27 @@ class GenerateStatement(CompositeStatement):
         return self._mp_platform
 
     @property
-    def from_(self) -> str | None:
-        return self._from
+    def start(self) -> str | None:
+        return self._start
 
     @property
-    def to(self) -> str | None:
-        return self._to
+    def end(self) -> str | None:
+        return self._end
 
     @property
     def interval(self) -> str | None:
         return self._interval
+
+    def time_series_config(self) -> TimeSeriesConfig | None:
+        """Parsed ``from``/``to``/``interval``; ``None`` when not in time-series mode.
+
+        Callers branch on the result instead of inspecting ``interval`` directly,
+        so the predicate and the parsing live in one place.
+        """
+        if self._interval is None:
+            return None
+        # The GenerateModel validator guarantees start and end are set when interval is.
+        return TimeSeriesConfig.parse(self._start, self._end, self._interval)  # type: ignore[arg-type]
 
     def contain_mongodb_upsert(self, setup_context: SetupContext) -> bool:
         """

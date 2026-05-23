@@ -42,23 +42,17 @@ _ISO_DURATION_RE = re.compile(
 )
 
 
-def parse_iso_datetime(value: str) -> datetime:
+def _parse_iso_datetime(value: str) -> datetime:
     """Parse an ISO 8601 datetime, accepting the ``Z`` UTC suffix on Python 3.10."""
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
-def parse_iso_duration(value: str) -> timedelta:
-    """Parse a (subset of) ISO 8601 duration into a ``timedelta``.
-
-    Supports weeks/days/hours/minutes/seconds. Months and years are intentionally
-    not supported -- they are not constant-length durations.
-    """
+def _parse_iso_duration(value: str) -> timedelta:
+    """Parse a subset of ISO 8601 durations (weeks/days/hours/minutes/seconds)."""
     match = _ISO_DURATION_RE.match(value)
     if not match:
         raise ValueError(f"Invalid ISO 8601 duration: {value!r}")
     parts = {k: int(v) if v else 0 for k, v in match.groupdict().items()}
-    if not any(parts.values()):
-        raise ValueError(f"Empty ISO 8601 duration: {value!r}")
     delta = timedelta(
         weeks=parts["w"],
         days=parts["d"],
@@ -71,17 +65,6 @@ def parse_iso_duration(value: str) -> timedelta:
     return delta
 
 
-def ticks_per_series(from_value: str, to_value: str, interval_value: str) -> int:
-    """Number of ticks in the half-open window ``[from, to)`` at ``interval``."""
-    start = parse_iso_datetime(from_value)
-    end = parse_iso_datetime(to_value)
-    step = parse_iso_duration(interval_value)
-    if end <= start:
-        raise ValueError(f"'to' ({to_value}) must be after 'from' ({from_value})")
-    span_seconds = (end - start).total_seconds()
-    return int(span_seconds // step.total_seconds())
-
-
 @dataclass(frozen=True)
 class TimeSeriesNamespace:
     """Per-iteration view exposed as ``ts`` in the script context."""
@@ -91,14 +74,35 @@ class TimeSeriesNamespace:
     series: int
 
 
-def ts_at(global_idx: int, ticks_per_series_: int, from_value: str, interval_value: str) -> TimeSeriesNamespace:
-    """Compute the ``ts`` namespace for a given global iteration index.
+@dataclass(frozen=True)
+class TimeSeriesConfig:
+    """Parsed ``<generate from/to/interval>`` attributes.
 
-    Loop order is contiguous-per-series: series 0 steps 0..N-1, then series 1, etc.
-    This guarantees the "first-N-stable" property: the first ticks of series 0
-    are byte-identical regardless of total window length.
+    Built once per ``<generate>`` and reused for every iteration so the ISO
+    strings are not re-parsed in the hot loop.
     """
-    series = global_idx // ticks_per_series_
-    step = global_idx % ticks_per_series_
-    now = parse_iso_datetime(from_value) + parse_iso_duration(interval_value) * step
-    return TimeSeriesNamespace(now=now, step=step, series=series)
+
+    start: datetime
+    interval: timedelta
+    ticks_per_series: int
+
+    @classmethod
+    def parse(cls, from_value: str, to_value: str, interval_value: str) -> TimeSeriesConfig:
+        start = _parse_iso_datetime(from_value)
+        end = _parse_iso_datetime(to_value)
+        interval = _parse_iso_duration(interval_value)
+        if end <= start:
+            raise ValueError(f"'to' ({to_value!r}) must be after 'from' ({from_value!r})")
+        ticks = int((end - start).total_seconds() // interval.total_seconds())
+        return cls(start=start, interval=interval, ticks_per_series=ticks)
+
+    def at(self, global_idx: int) -> TimeSeriesNamespace:
+        """Compute the ``ts`` namespace for a given global iteration index.
+
+        Loop order is contiguous-per-series: series 0 steps 0..N-1, then series 1, etc.
+        This guarantees the "first-N-stable" property: the first ticks of series 0
+        are byte-identical regardless of total window length.
+        """
+        series = global_idx // self.ticks_per_series
+        step = global_idx % self.ticks_per_series
+        return TimeSeriesNamespace(now=self.start + self.interval * step, step=step, series=series)

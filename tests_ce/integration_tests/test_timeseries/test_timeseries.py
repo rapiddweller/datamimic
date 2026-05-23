@@ -132,7 +132,7 @@ def test_log_stream_without_id_column() -> None:
 
 def test_partial_window_raises() -> None:
     """`interval` alone (without from/to) must be rejected at parse time."""
-    with pytest.raises(Exception) as exc:
+    with pytest.raises(ValueError) as exc:
         _run("invalid_partial_window.xml")
     msg = str(exc.value)
     assert "from" in msg or "to" in msg, f"expected helpful error mentioning missing attrs, got: {msg}"
