@@ -15,6 +15,8 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_CYCLIC,
     ATTR_DISTRIBUTION,
     ATTR_EXPORT_URI,
+    ATTR_FROM,
+    ATTR_INTERVAL,
     ATTR_MP_PLATFORM,
     ATTR_MULTIPROCESSING,
     ATTR_NAME,
@@ -28,6 +30,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_SOURCE_URI,
     ATTR_STORAGE_ID,
     ATTR_TARGET,
+    ATTR_TO,
     ATTR_TYPE,
     ATTR_VARIABLE_PREFIX,
     ATTR_VARIABLE_SUFFIX,
@@ -59,6 +62,12 @@ class GenerateModel(BaseModel):
     num_process: int | None = Field(None, alias=ATTR_NUM_PROCESS)
     script: str | None = Field(None, alias=ATTR_SCRIPT)
     mp_platform: str | None = Field(None, alias=ATTR_MP_PLATFORM)
+    # Time-series iterator: ISO 8601 from/to/interval. When `interval` is set,
+    # the generate loop yields count_entities * ticks_per_series rows and the
+    # script context gets a `ts` namespace (now/step/series).
+    from_: str | None = Field(None, alias=ATTR_FROM)
+    to: str | None = None
+    interval: str | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -88,12 +97,31 @@ class GenerateModel(BaseModel):
                 ATTR_NUM_PROCESS,
                 ATTR_SCRIPT,
                 ATTR_MP_PLATFORM,
+                ATTR_FROM,
+                ATTR_TO,
+                ATTR_INTERVAL,
             },
         )
 
     @model_validator(mode="before")
     @classmethod
+    def validate_timeseries_window(cls, values: dict):
+        """`interval` requires both `from` and `to`; `from`/`to` require `interval`."""
+        present = {k for k in (ATTR_FROM, ATTR_TO, ATTR_INTERVAL) if k in values}
+        if present and present != {ATTR_FROM, ATTR_TO, ATTR_INTERVAL}:
+            missing = {ATTR_FROM, ATTR_TO, ATTR_INTERVAL} - present
+            raise ValueError(
+                f"Time-series attributes must be set together; missing: {sorted(missing)}"
+            )
+        return values
+
+    @model_validator(mode="before")
+    @classmethod
     def validate_count_and_source(cls, values: dict):
+        # In time-series mode count is optional (default 1 series); otherwise enforce the
+        # existing rule that count is required unless source/script supplies the length.
+        if ATTR_INTERVAL in values:
+            return values
         return ModelUtil.check_exist_count(values=values)
 
     @model_validator(mode="before")

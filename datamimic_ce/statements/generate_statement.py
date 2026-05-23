@@ -41,6 +41,9 @@ class GenerateStatement(CompositeStatement):
         self._num_process = model.num_process
         self._script = model.script
         self._mp_platform = model.mp_platform
+        self._from = model.from_
+        self._to = model.to
+        self._interval = model.interval
 
     @property
     def name(self) -> str:
@@ -158,6 +161,18 @@ class GenerateStatement(CompositeStatement):
     @property
     def mp_platform(self) -> str | None:
         return self._mp_platform
+
+    @property
+    def from_(self) -> str | None:
+        return self._from
+
+    @property
+    def to(self) -> str | None:
+        return self._to
+
+    @property
+    def interval(self) -> str | None:
+        return self._interval
 
     def contain_mongodb_upsert(self, setup_context: SetupContext) -> bool:
         """

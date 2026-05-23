@@ -26,6 +26,7 @@ from datamimic_ce.statements.statement import Statement
 from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.logging_util import gen_timer
+from datamimic_ce.utils.timeseries import ticks_per_series
 
 
 class GenerateTask(CommonSubTask):
@@ -53,6 +54,17 @@ class GenerateTask(CommonSubTask):
         # Scan statements to check data source length (and cyclic)
         # Only scan on outermost gen_stmt
         self._scan_data_source(context, self._statement)
+
+        # Time-series mode: total rows = count_series * ticks_per_series.
+        # `count` is optional here and defaults to 1 series.
+        if self._statement.interval is not None:
+            series_count = self._statement.get_int_count(context) or 1
+            ticks = ticks_per_series(
+                self._statement.from_,  # type: ignore[arg-type]
+                self._statement.to,  # type: ignore[arg-type]
+                self._statement.interval,
+            )
+            return series_count * ticks
 
         # Get count from statement
         count = self._statement.get_int_count(context)

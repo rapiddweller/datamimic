@@ -1,0 +1,6 @@
+<setup>
+    <!-- Negative test: interval without from/to must fail parser validation. -->
+    <generate name="rows" interval="PT1H" target="">
+        <key name="ts" script="ts.now.isoformat()"/>
+    </generate>
+</setup>

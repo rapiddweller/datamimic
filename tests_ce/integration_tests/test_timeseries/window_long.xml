@@ -1,0 +1,12 @@
+<setup>
+    <!-- 7 day window. The first 24 rows of this must equal all 24 rows of
+         window_short.xml. This is the prefix-stability guarantee. -->
+    <generate name="rows"
+              from="2026-01-01T00:00:00+00:00"
+              to="2026-01-08T00:00:00+00:00"
+              interval="PT1H"
+              target="">
+        <key name="timestamp" script="ts.now.isoformat()"/>
+        <key name="step"      script="ts.step"/>
+    </generate>
+</setup>
