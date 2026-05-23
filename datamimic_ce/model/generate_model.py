@@ -37,8 +37,6 @@ from datamimic_ce.constants.attribute_constants import (
 )
 from datamimic_ce.model.model_util import ModelUtil
 
-# The three attributes that activate time-series mode on <generate>. They must
-# all be present together; the validators below enforce the all-or-none rule.
 _TIMESERIES_ATTRS: frozenset[str] = frozenset({ATTR_START, ATTR_END, ATTR_INTERVAL})
 
 

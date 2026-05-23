@@ -190,7 +190,7 @@ class GenerateWorker:
         result = []
 
         # Parsed once per page when in time-series mode; None otherwise.
-        ts_config = stmt.time_series_config()
+        ts_config = stmt.get_time_series_config()
 
         # 3: Modify/Generate data by executing sub-tasks
         for idx in range(processed_data_count):

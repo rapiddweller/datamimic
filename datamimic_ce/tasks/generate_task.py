@@ -56,7 +56,7 @@ class GenerateTask(CommonSubTask):
 
         # Time-series mode: total rows = count_series * ticks_per_series.
         # `count` is optional here and defaults to 1 series.
-        ts_config = self._statement.time_series_config()
+        ts_config = self._statement.get_time_series_config()
         if ts_config is not None:
             series_count = self._statement.get_int_count(context) or 1
             return series_count * ts_config.ticks_per_series

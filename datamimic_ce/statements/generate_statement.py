@@ -175,16 +175,17 @@ class GenerateStatement(CompositeStatement):
     def interval(self) -> str | None:
         return self._interval
 
-    def time_series_config(self) -> TimeSeriesConfig | None:
-        """Parsed ``from``/``to``/``interval``; ``None`` when not in time-series mode.
+    def get_time_series_config(self) -> TimeSeriesConfig | None:
+        """Parsed ``start``/``end``/``interval``; ``None`` when not in time-series mode.
 
         Callers branch on the result instead of inspecting ``interval`` directly,
         so the predicate and the parsing live in one place.
         """
         if self._interval is None:
             return None
-        # The GenerateModel validator guarantees start and end are set when interval is.
-        return TimeSeriesConfig.parse(self._start, self._end, self._interval)  # type: ignore[arg-type]
+        # GenerateModel validator guarantees start and end are non-None when interval is.
+        assert self._start is not None and self._end is not None
+        return TimeSeriesConfig.parse(self._start, self._end, self._interval)
 
     def contain_mongodb_upsert(self, setup_context: SetupContext) -> bool:
         """

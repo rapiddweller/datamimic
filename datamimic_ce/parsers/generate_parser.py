@@ -57,15 +57,23 @@ class GenerateParser(StatementParser):
 
         gen_stmt.sub_statements = sub_stmt_list
 
-        # Reject <variable name="ts"> inside a time-series <generate>: it would shadow
-        # the ts.now/ts.step/ts.series namespace exposed by the time-series iterator.
         if gen_stmt.interval is not None:
-            for sub in sub_stmt_list:
-                if isinstance(sub, VariableStatement) and sub.name == _TIMESERIES_RESERVED_NAME:
-                    raise ValueError(
-                        f"<variable name={_TIMESERIES_RESERVED_NAME!r}> is not allowed inside a "
-                        f"time-series <generate>: 'ts' is reserved for the time-iterator namespace "
-                        f"(ts.now/ts.step/ts.series). Rename the variable, e.g. 'ts_meta'."
-                    )
+            self._check_no_reserved_ts_variable(sub_stmt_list)
 
         return gen_stmt
+
+    @staticmethod
+    def _check_no_reserved_ts_variable(sub_stmt_list: list[Statement]) -> None:
+        """Reject ``<variable name="ts">`` inside a time-series ``<generate>``.
+
+        The user's variable would shadow the time-iterator's ``ts`` namespace
+        (``ts.now``/``ts.step``/``ts.series``) at script-eval time, so we
+        surface this at parse time with a rename hint.
+        """
+        for sub in sub_stmt_list:
+            if isinstance(sub, VariableStatement) and sub.name == _TIMESERIES_RESERVED_NAME:
+                raise ValueError(
+                    f"<variable name={_TIMESERIES_RESERVED_NAME!r}> is not allowed inside a "
+                    f"time-series <generate>: 'ts' is reserved for the time-iterator namespace "
+                    f"(ts.now/ts.step/ts.series). Rename the variable, e.g. 'ts_meta'."
+                )

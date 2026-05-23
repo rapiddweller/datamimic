@@ -29,7 +29,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-import isodate
+import isodate  # type: ignore[import-untyped]
 
 
 @dataclass(frozen=True)
