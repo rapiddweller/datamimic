@@ -393,10 +393,11 @@ Guarantees:
 
 * **Prefix-stable by construction** — the first N ticks of series 0 are byte-identical regardless of total window length, because each row's `ts.now` is a pure function of `start + interval * step`.
 * **Loop order is contiguous per series** — series 0's full sequence, then series 1's, etc. Makes downstream grouping trivial.
-* **Strict ISO 8601** — `start`/`end` parsed via `datetime.fromisoformat` (Z-suffix supported); `interval` as `PT1H`, `PT15M`, `PT5S`, `P1D`, `P1W`, `P1DT12H`. Sub-second resolution via fractional seconds: `PT0.001S` = 1 ms, `PT0.000001S` = 1 µs (Python `datetime.timedelta` floor; sub-microsecond intervals are rejected with a clear error).
-* **Naming caveat** — a `<key name="ts">` would shadow the namespace (`current_product` overrides `current_variables` in script scope). Use a different column name, e.g. `timestamp`.
+* **Strict ISO 8601** — `start`/`end` via `datetime.fromisoformat` (Z-suffix supported); `interval` via the [`isodate`](https://pypi.org/project/isodate/) library (`PT1H`, `PT15M`, `PT5S`, `P1D`, `P1W`, `P1DT12H`, fractional seconds for sub-second precision). Resolution: `PT0.001S` = 1 ms, `PT0.000001S` = 1 µs (Python `datetime.timedelta` microsecond floor; sub-µs intervals and constant-length-undefined units like months/years are rejected with a clear error).
+* **`count` is orthogonal**, not overloaded — it means "outer-loop iterations of this `<generate>`" in **all** modes (same as nested `<generate count=…>`). In time-series mode each outer iteration is one series of N ticks, so total rows = `count × ticks_per_series`. Default `count="1"` keeps single-series fixtures terse.
+* **Naming caveat** — a `<key name="ts">` output column would shadow the namespace (`current_product` overrides `current_variables` in script scope), and a `<variable name="ts">` is rejected at parse time. Use a different name, e.g. `timestamp` for the column.
 
-Composes with the existing `<variable>` mechanism for multi-source merges — e.g. join each tick with a sensor-metadata CSV via `<variable source="meta.csv" cyclic="True">` inside the same `<generate>`. See `tests_ce/integration_tests/test_timeseries/` for committed DSL fixtures + proofs.
+Composes with the existing `<variable>` mechanism for multi-source merges (e.g. join each tick with a sensor-metadata CSV via `<variable source="meta.csv" cyclic="True">` inside the same `<generate>`), with `<key condition="...">` filtering, and with `<nestedKey>` sub-scopes — the `ts` namespace is visible everywhere a `<key script>` runs. See `tests_ce/integration_tests/test_timeseries/` for committed DSL fixtures + proofs (including pagination invariance).
 
 ---
 

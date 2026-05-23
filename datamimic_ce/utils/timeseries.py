@@ -26,23 +26,10 @@ column name for the timestamp, e.g. ``<key name="timestamp" script="ts.now.isofo
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-# ISO 8601 duration subset: weeks/days/hours/minutes/seconds.
-# Seconds accept fractional values (e.g. PT0.001S = 1 ms, PT0.000001S = 1 us),
-# limited by Python's microsecond-precision timedelta.
-_ISO_DURATION_RE = re.compile(
-    r"^P"
-    r"(?:(?P<w>\d+)W)?"
-    r"(?:(?P<d>\d+)D)?"
-    r"(?:T"
-    r"(?:(?P<h>\d+)H)?"
-    r"(?:(?P<m>\d+)M)?"
-    r"(?:(?P<s>\d+(?:\.\d+)?)S)?"
-    r")?$"
-)
+import isodate
 
 
 @dataclass(frozen=True)
@@ -104,30 +91,20 @@ class TimeSeriesConfig:
 
     @staticmethod
     def _parse_duration(value: str) -> timedelta:
-        match = _ISO_DURATION_RE.match(value)
-        if not match:
+        try:
+            delta = isodate.parse_duration(value)
+        except isodate.ISO8601Error as exc:
             raise ValueError(
                 f"<generate interval=...> must be an ISO 8601 duration "
                 f"(e.g. 'PT1H', 'PT15M', 'P1D', 'PT0.001S' for ms), got {value!r}"
-            )
-        groups = match.groupdict()
-        # Compute the input duration in seconds (float) before constructing the
-        # timedelta -- otherwise sub-microsecond inputs round to zero and we can't
-        # distinguish "user wrote 0" from "user wrote a value below our resolution".
-        total = (
-            int(groups["w"] or 0) * 604_800
-            + int(groups["d"] or 0) * 86_400
-            + int(groups["h"] or 0) * 3_600
-            + int(groups["m"] or 0) * 60
-            + float(groups["s"] or 0)
-        )
-        if total <= 0:
+            ) from exc
+        # isodate.parse_duration may return Duration (months/years); we don't accept those
+        # because they don't map to a constant-length timedelta. Equally, sub-microsecond
+        # inputs (PT0.0000001S etc.) round down to timedelta(0) -- treat both the same way.
+        if not isinstance(delta, timedelta) or delta <= timedelta(0):
             raise ValueError(
-                f"<generate interval=...> must be a positive ISO 8601 duration, got {value!r}"
+                f"<generate interval=...> must be a positive duration of at least 1us "
+                f"(datetime.timedelta microsecond floor; months/years are not constant-length "
+                f"and not supported); got {value!r}"
             )
-        if total < 1e-6:
-            raise ValueError(
-                f"<generate interval=...> below 1us is not representable in datetime.timedelta "
-                f"(microsecond floor); got {value!r}"
-            )
-        return timedelta(seconds=total)
+        return delta

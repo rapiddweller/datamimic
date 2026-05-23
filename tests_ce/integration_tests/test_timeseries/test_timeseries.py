@@ -157,12 +157,10 @@ def test_interval_microseconds_is_finest_supported_resolution() -> None:
 
 
 def test_sub_microsecond_interval_rejected() -> None:
-    """Nanosecond-scale intervals are not representable in datetime.timedelta -> clear error."""
+    """Nanosecond-scale intervals round to timedelta(0); error must mention the microsecond floor."""
     with pytest.raises(ValueError) as exc:
         _run("invalid_subus_interval.xml")
-    assert "1us" in str(exc.value) or "microseconds" in str(exc.value) or "below 1" in str(exc.value), (
-        f"expected error to mention the microsecond floor, got: {exc.value}"
-    )
+    assert "1us" in str(exc.value), f"expected error to mention the microsecond floor, got: {exc.value}"
 
 
 def test_partial_window_raises() -> None:
@@ -210,3 +208,60 @@ def test_end_before_start_error_mentions_both_attrs() -> None:
         _run("invalid_end_before_start.xml")
     msg = str(exc.value)
     assert "start" in msg and "end" in msg, f"ordering error must reference both attrs: {msg}"
+
+
+def test_ts_variable_name_is_reserved_in_timeseries_mode() -> None:
+    """`<variable name="ts">` shadows the time-iterator namespace at script-eval
+    time. The parser must reject it up front with a message naming the rule."""
+    with pytest.raises(ValueError) as exc:
+        _run("invalid_ts_variable_collision.xml")
+    msg = str(exc.value)
+    assert "ts" in msg, f"error must name the reserved variable: {msg}"
+    assert "reserved" in msg or "time-iterator" in msg or "time-series" in msg, (
+        f"error must explain why 'ts' is rejected: {msg}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Pagination invariance: page boundaries must not perturb output
+# ---------------------------------------------------------------------------
+
+
+def test_pagination_does_not_affect_output() -> None:
+    """Same DSL run with a small pageSize produces byte-identical output to the
+    default pageSize. Without this, splitting a long series across pages could
+    desynchronise series/step (worker computes them from the global index)."""
+    default_paging = _run("basic_one_series.xml")
+    small_paging = _run("basic_one_series_paginated.xml")
+    assert default_paging == small_paging, (
+        "page boundaries must not perturb time-series output -- this would break "
+        "the prefix-stability and contiguous-per-series guarantees"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Composition with other DSL constructs: the ts namespace must reach them
+# ---------------------------------------------------------------------------
+
+
+def test_composes_with_key_condition() -> None:
+    """ts.* available inside a <key condition="..."> expression."""
+    rows = _run("composition_condition.xml")
+    assert len(rows) == 6
+    assert [r["step"] for r in rows] == list(range(6))
+    # Even-step rows include `even_only`, odd rows omit it.
+    for r in rows:
+        if r["step"] % 2 == 0:
+            assert "even_only" in r and r["even_only"] == r["step"]
+        else:
+            assert "even_only" not in r or r["even_only"] is None
+
+
+def test_composes_with_nested_key() -> None:
+    """ts.* reaches inside a <nestedKey> sub-scope."""
+    rows = _run("composition_nested_key.xml")
+    assert len(rows) == 3
+    for i, r in enumerate(rows):
+        assert r["step"] == i
+        assert r["meta"]["second"] == i
+        assert r["meta"]["iso_now"].endswith(f"00:00:0{i}+00:00")

@@ -12,6 +12,12 @@ from datamimic_ce.model.generate_model import GenerateModel
 from datamimic_ce.parsers.statement_parser import StatementParser
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.statement import Statement
+from datamimic_ce.statements.variable_statement import VariableStatement
+
+# Name reserved by the time-series iterator for its per-iteration namespace
+# (ts.now/ts.step/ts.series). A user-defined <variable name="ts"> would shadow
+# it at script-eval time, so we reject it up front when in time-series mode.
+_TIMESERIES_RESERVED_NAME = "ts"
 
 
 class GenerateParser(StatementParser):
@@ -50,4 +56,16 @@ class GenerateParser(StatementParser):
         )
 
         gen_stmt.sub_statements = sub_stmt_list
+
+        # Reject <variable name="ts"> inside a time-series <generate>: it would shadow
+        # the ts.now/ts.step/ts.series namespace exposed by the time-series iterator.
+        if gen_stmt.interval is not None:
+            for sub in sub_stmt_list:
+                if isinstance(sub, VariableStatement) and sub.name == _TIMESERIES_RESERVED_NAME:
+                    raise ValueError(
+                        f"<variable name={_TIMESERIES_RESERVED_NAME!r}> is not allowed inside a "
+                        f"time-series <generate>: 'ts' is reserved for the time-iterator namespace "
+                        f"(ts.now/ts.step/ts.series). Rename the variable, e.g. 'ts_meta'."
+                    )
+
         return gen_stmt
