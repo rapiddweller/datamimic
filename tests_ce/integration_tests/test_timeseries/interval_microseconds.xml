@@ -2,8 +2,8 @@
     <!-- PT0.000001S = 1 us. 20 us window = 20 ticks. This is the finest
          resolution that datetime.timedelta can represent. -->
     <generate name="rows"
-              from="2026-01-01T00:00:00+00:00"
-              to="2026-01-01T00:00:00.000020+00:00"
+              start="2026-01-01T00:00:00+00:00"
+              end="2026-01-01T00:00:00.000020+00:00"
               interval="PT0.000001S"
               target="">
         <key name="timestamp" script="ts.now.isoformat()"/>

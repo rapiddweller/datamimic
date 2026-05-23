@@ -6,11 +6,11 @@
 
 """Time-series iteration helper for the ``<generate>`` element.
 
-Activated by ``from``/``to``/``interval`` attributes on ``<generate>``. Strict
+Activated by ``start``/``end``/``interval`` attributes on ``<generate>``. Strict
 ISO 8601 inputs:
 
-* ``from``, ``to`` -- ISO 8601 datetime (``2026-01-01T00:00:00Z`` etc.)
-* ``interval``    -- ISO 8601 duration (``PT1H``, ``PT15M``, ``P1D``, ``P1DT12H``)
+* ``start``, ``end`` -- ISO 8601 datetime (``2026-01-01T00:00:00Z`` etc.)
+* ``interval``      -- ISO 8601 duration (``PT1H``, ``PT15M``, ``P1D``, ``PT0.001S``)
 
 Exposes a ``ts`` namespace in the script context per iteration:
 
@@ -45,41 +45,6 @@ _ISO_DURATION_RE = re.compile(
 )
 
 
-def _parse_iso_datetime(value: str) -> datetime:
-    """Parse an ISO 8601 datetime, accepting the ``Z`` UTC suffix on Python 3.10."""
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
-
-
-def _parse_iso_duration(value: str) -> timedelta:
-    """Parse a subset of ISO 8601 durations (weeks/days/hours/minutes/seconds).
-
-    Seconds accept fractional values down to Python's microsecond limit;
-    sub-microsecond intervals (e.g. nanoseconds) are not representable in
-    ``datetime.timedelta`` and are rejected with a clear error.
-    """
-    match = _ISO_DURATION_RE.match(value)
-    if not match:
-        raise ValueError(f"Invalid ISO 8601 duration: {value!r}")
-    groups = match.groupdict()
-    # Compute the input duration in seconds (float) before constructing the
-    # timedelta -- otherwise sub-microsecond inputs round to zero and we can't
-    # distinguish "user wrote 0" from "user wrote a value below our resolution".
-    total = (
-        int(groups["w"] or 0) * 604_800
-        + int(groups["d"] or 0) * 86_400
-        + int(groups["h"] or 0) * 3_600
-        + int(groups["m"] or 0) * 60
-        + float(groups["s"] or 0)
-    )
-    if total <= 0:
-        raise ValueError(f"ISO 8601 duration must be positive: {value!r}")
-    if total < 1e-6:
-        raise ValueError(
-            f"ISO 8601 duration below 1us is not representable in datetime.timedelta: {value!r}"
-        )
-    return timedelta(seconds=total)
-
-
 @dataclass(frozen=True)
 class TimeSeriesNamespace:
     """Per-iteration view exposed as ``ts`` in the script context."""
@@ -91,7 +56,7 @@ class TimeSeriesNamespace:
 
 @dataclass(frozen=True)
 class TimeSeriesConfig:
-    """Parsed ``<generate from/to/interval>`` attributes.
+    """Parsed ``<generate start/end/interval>`` attributes.
 
     Built once per ``<generate>`` and reused for every iteration so the ISO
     strings are not re-parsed in the hot loop.
@@ -102,22 +67,67 @@ class TimeSeriesConfig:
     ticks_per_series: int
 
     @classmethod
-    def parse(cls, from_value: str, to_value: str, interval_value: str) -> TimeSeriesConfig:
-        start = _parse_iso_datetime(from_value)
-        end = _parse_iso_datetime(to_value)
-        interval = _parse_iso_duration(interval_value)
-        if end <= start:
-            raise ValueError(f"'to' ({to_value!r}) must be after 'from' ({from_value!r})")
-        ticks = int((end - start).total_seconds() // interval.total_seconds())
-        return cls(start=start, interval=interval, ticks_per_series=ticks)
+    def parse(cls, start: str, end: str, interval: str) -> TimeSeriesConfig:
+        start_dt = cls._parse_datetime(start, "start")
+        end_dt = cls._parse_datetime(end, "end")
+        interval_td = cls._parse_duration(interval)
+        if end_dt <= start_dt:
+            raise ValueError(
+                f"<generate end=...> must be after <generate start=...>; "
+                f"got start={start!r}, end={end!r}"
+            )
+        ticks = int((end_dt - start_dt).total_seconds() // interval_td.total_seconds())
+        return cls(start=start_dt, interval=interval_td, ticks_per_series=ticks)
 
     def at(self, global_idx: int) -> TimeSeriesNamespace:
-        """Compute the ``ts`` namespace for a given global iteration index.
+        """``ts`` namespace for one iteration.
 
         Loop order is contiguous-per-series: series 0 steps 0..N-1, then series 1, etc.
-        This guarantees the "first-N-stable" property: the first ticks of series 0
-        are byte-identical regardless of total window length.
+        This guarantees first-N-stability: the first ticks of series 0 are byte-
+        identical regardless of total window length.
         """
         series = global_idx // self.ticks_per_series
         step = global_idx % self.ticks_per_series
         return TimeSeriesNamespace(now=self.start + self.interval * step, step=step, series=series)
+
+    @staticmethod
+    def _parse_datetime(value: str, attr: str) -> datetime:
+        # `Z` is valid ISO 8601 UTC but fromisoformat only accepts it from Python 3.11;
+        # normalise so this works on 3.10 too.
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ValueError(
+                f"<generate {attr}=...> must be an ISO 8601 datetime "
+                f"(e.g. '2026-01-01T00:00:00Z' or '2026-01-01'), got {value!r}"
+            ) from exc
+
+    @staticmethod
+    def _parse_duration(value: str) -> timedelta:
+        match = _ISO_DURATION_RE.match(value)
+        if not match:
+            raise ValueError(
+                f"<generate interval=...> must be an ISO 8601 duration "
+                f"(e.g. 'PT1H', 'PT15M', 'P1D', 'PT0.001S' for ms), got {value!r}"
+            )
+        groups = match.groupdict()
+        # Compute the input duration in seconds (float) before constructing the
+        # timedelta -- otherwise sub-microsecond inputs round to zero and we can't
+        # distinguish "user wrote 0" from "user wrote a value below our resolution".
+        total = (
+            int(groups["w"] or 0) * 604_800
+            + int(groups["d"] or 0) * 86_400
+            + int(groups["h"] or 0) * 3_600
+            + int(groups["m"] or 0) * 60
+            + float(groups["s"] or 0)
+        )
+        if total <= 0:
+            raise ValueError(
+                f"<generate interval=...> must be a positive ISO 8601 duration, got {value!r}"
+            )
+        if total < 1e-6:
+            raise ValueError(
+                f"<generate interval=...> below 1us is not representable in datetime.timedelta "
+                f"(microsecond floor); got {value!r}"
+            )
+        return timedelta(seconds=total)

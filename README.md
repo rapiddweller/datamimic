@@ -58,7 +58,7 @@ CE and EE are **not the same engine with a feature flag**. They share the DSL an
 | **Pseudonymization — non-seeded (privacy-maximized)** | ✅ manual model | ✅ automated via DataWorkbench |
 | Python API + XML pipelines | ✅ | ✅ |
 | Domain models: Finance, Healthcare, Demographics | ✅ | ✅ |
-| Time-series generation (`<generate from/to/interval>`, ISO 8601, prefix-stable) | ✅ | ✅ |
+| Time-series generation (`<generate start/end/interval>`, ISO 8601, prefix-stable) | ✅ | ✅ |
 | MCP server for AI agent integration | ✅ | ✅ |
 | CLI + local execution | ✅ | ✅ |
 | **Scale** | millions of records via Python multiprocessing (and optional Ray) | **designed for billion-record workloads** — Rust fastpath, optimised multi-process execution, and keyset/manifest building on top of the shared Ray distribution layer |
@@ -354,7 +354,7 @@ datamimic run ./patient-scenario/datamimic.xml
 
 ### Time-series generation — CE
 
-Any `<generate>` becomes a time-series loop when given strict ISO 8601 `from`/`to`/`interval` attributes. Per iteration the script context exposes a `ts` namespace:
+Any `<generate>` becomes a time-series loop when given strict ISO 8601 `start`/`end`/`interval` attributes. Per iteration the script context exposes a `ts` namespace:
 
 | Variable | Type | Meaning |
 |---|---|---|
@@ -368,8 +368,8 @@ Output column names — including whether to even emit a timestamp or series-id 
 <setup>
   <!-- Stock ticks: three symbols, 5-min interval, 30-min window -->
   <generate name="ticks" count="3"
-            from="2026-01-01T09:30:00+00:00"
-            to="2026-01-01T10:00:00+00:00"
+            start="2026-01-01T09:30:00+00:00"
+            end="2026-01-01T10:00:00+00:00"
             interval="PT5M"
             target="ticks.csv">
     <key name="timestamp" script="ts.now.isoformat()"/>
@@ -379,8 +379,8 @@ Output column names — including whether to even emit a timestamp or series-id 
 
   <!-- Sensor with diurnal seasonality, single series (count defaults to 1) -->
   <generate name="readings"
-            from="2026-01-01T00:00:00+00:00"
-            to="2026-01-08T00:00:00+00:00"
+            start="2026-01-01T00:00:00+00:00"
+            end="2026-01-08T00:00:00+00:00"
             interval="PT1H"
             target="readings.csv">
     <key name="timestamp" script="ts.now.isoformat()"/>
@@ -391,9 +391,9 @@ Output column names — including whether to even emit a timestamp or series-id 
 
 Guarantees:
 
-* **Prefix-stable by construction** — the first N ticks of series 0 are byte-identical regardless of total window length, because each row's `ts.now` is a pure function of `from + interval * step`.
+* **Prefix-stable by construction** — the first N ticks of series 0 are byte-identical regardless of total window length, because each row's `ts.now` is a pure function of `start + interval * step`.
 * **Loop order is contiguous per series** — series 0's full sequence, then series 1's, etc. Makes downstream grouping trivial.
-* **Strict ISO 8601** — `from`/`to` parsed via `datetime.fromisoformat` (Z-suffix supported); `interval` as `PT1H`, `PT15M`, `PT5S`, `P1D`, `P1W`, `P1DT12H`. Sub-second resolution via fractional seconds: `PT0.001S` = 1 ms, `PT0.000001S` = 1 µs (Python `datetime.timedelta` floor; sub-microsecond intervals are rejected with a clear error).
+* **Strict ISO 8601** — `start`/`end` parsed via `datetime.fromisoformat` (Z-suffix supported); `interval` as `PT1H`, `PT15M`, `PT5S`, `P1D`, `P1W`, `P1DT12H`. Sub-second resolution via fractional seconds: `PT0.001S` = 1 ms, `PT0.000001S` = 1 µs (Python `datetime.timedelta` floor; sub-microsecond intervals are rejected with a clear error).
 * **Naming caveat** — a `<key name="ts">` would shadow the namespace (`current_product` overrides `current_variables` in script scope). Use a different column name, e.g. `timestamp`.
 
 Composes with the existing `<variable>` mechanism for multi-source merges — e.g. join each tick with a sensor-metadata CSV via `<variable source="meta.csv" cyclic="True">` inside the same `<generate>`. See `tests_ce/integration_tests/test_timeseries/` for committed DSL fixtures + proofs.

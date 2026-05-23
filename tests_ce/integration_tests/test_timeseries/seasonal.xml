@@ -2,8 +2,8 @@
     <!-- 24h sinusoidal seasonality computed purely from ts.now.hour.
          Mathematical, deterministic by construction. Mid-day should be > midnight. -->
     <generate name="rows"
-              from="2026-01-01T00:00:00+00:00"
-              to="2026-01-02T00:00:00+00:00"
+              start="2026-01-01T00:00:00+00:00"
+              end="2026-01-02T00:00:00+00:00"
               interval="PT1H"
               target="">
         <key name="timestamp" script="ts.now.isoformat()"/>

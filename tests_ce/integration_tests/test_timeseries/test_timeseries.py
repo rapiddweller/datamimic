@@ -166,8 +166,47 @@ def test_sub_microsecond_interval_rejected() -> None:
 
 
 def test_partial_window_raises() -> None:
-    """`interval` alone (without from/to) must be rejected at parse time."""
+    """`interval` alone (without start/end) must be rejected at parse time."""
     with pytest.raises(ValueError) as exc:
         _run("invalid_partial_window.xml")
     msg = str(exc.value)
-    assert "from" in msg or "to" in msg, f"expected helpful error mentioning missing attrs, got: {msg}"
+    assert "start" in msg or "end" in msg, f"expected helpful error mentioning missing attrs, got: {msg}"
+
+
+# Each error message must mention BOTH the offending DSL attribute name AND the offending value,
+# so a user looking at the error can find the line in their XML and see what they typed.
+
+
+def test_bad_start_datetime_error_mentions_attr_and_value() -> None:
+    with pytest.raises(ValueError) as exc:
+        _run("invalid_bad_start.xml")
+    msg = str(exc.value)
+    assert "start" in msg, f"error must mention the offending attribute (start): {msg}"
+    assert "not-a-datetime" in msg, f"error must echo the offending value: {msg}"
+    assert "ISO 8601" in msg, f"error must hint at the expected format: {msg}"
+
+
+def test_bad_end_datetime_error_mentions_attr_and_value() -> None:
+    with pytest.raises(ValueError) as exc:
+        _run("invalid_bad_end.xml")
+    msg = str(exc.value)
+    assert "end" in msg, f"error must mention the offending attribute (end): {msg}"
+    assert "January 8th, 2026" in msg, f"error must echo the offending value: {msg}"
+
+
+def test_bad_interval_error_mentions_attr_and_value_and_example() -> None:
+    """A user writing '1h' instead of 'PT1H' is a very common mistake; the error
+    must point them at the correct ISO 8601 syntax."""
+    with pytest.raises(ValueError) as exc:
+        _run("invalid_bad_interval.xml")
+    msg = str(exc.value)
+    assert "interval" in msg, f"error must mention the offending attribute (interval): {msg}"
+    assert "1h" in msg, f"error must echo the offending value: {msg}"
+    assert "PT1H" in msg, f"error must show a canonical example so the user can fix it: {msg}"
+
+
+def test_end_before_start_error_mentions_both_attrs() -> None:
+    with pytest.raises(ValueError) as exc:
+        _run("invalid_end_before_start.xml")
+    msg = str(exc.value)
+    assert "start" in msg and "end" in msg, f"ordering error must reference both attrs: {msg}"

@@ -14,8 +14,8 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_COUNT,
     ATTR_CYCLIC,
     ATTR_DISTRIBUTION,
+    ATTR_END,
     ATTR_EXPORT_URI,
-    ATTR_FROM,
     ATTR_INTERVAL,
     ATTR_MP_PLATFORM,
     ATTR_MULTIPROCESSING,
@@ -28,9 +28,9 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_SOURCE,
     ATTR_SOURCE_SCRIPTED,
     ATTR_SOURCE_URI,
+    ATTR_START,
     ATTR_STORAGE_ID,
     ATTR_TARGET,
-    ATTR_TO,
     ATTR_TYPE,
     ATTR_VARIABLE_PREFIX,
     ATTR_VARIABLE_SUFFIX,
@@ -39,7 +39,7 @@ from datamimic_ce.model.model_util import ModelUtil
 
 # The three attributes that activate time-series mode on <generate>. They must
 # all be present together; the validators below enforce the all-or-none rule.
-_TIMESERIES_ATTRS: frozenset[str] = frozenset({ATTR_FROM, ATTR_TO, ATTR_INTERVAL})
+_TIMESERIES_ATTRS: frozenset[str] = frozenset({ATTR_START, ATTR_END, ATTR_INTERVAL})
 
 
 class GenerateModel(BaseModel):
@@ -66,9 +66,9 @@ class GenerateModel(BaseModel):
     num_process: int | None = Field(None, alias=ATTR_NUM_PROCESS)
     script: str | None = Field(None, alias=ATTR_SCRIPT)
     mp_platform: str | None = Field(None, alias=ATTR_MP_PLATFORM)
-    # Time-series iterator (ISO 8601 from/to/interval). See _TIMESERIES_ATTRS.
-    start: str | None = Field(None, alias=ATTR_FROM)
-    end: str | None = Field(None, alias=ATTR_TO)
+    # Time-series iterator (ISO 8601 start/end/interval). See _TIMESERIES_ATTRS.
+    start: str | None = None
+    end: str | None = None
     interval: str | None = None
 
     @model_validator(mode="before")
@@ -99,8 +99,8 @@ class GenerateModel(BaseModel):
                 ATTR_NUM_PROCESS,
                 ATTR_SCRIPT,
                 ATTR_MP_PLATFORM,
-                ATTR_FROM,
-                ATTR_TO,
+                ATTR_START,
+                ATTR_END,
                 ATTR_INTERVAL,
             },
         )
@@ -108,7 +108,7 @@ class GenerateModel(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_timeseries_window(cls, values: dict):
-        """`from`/`to`/`interval` must be set together — all or none."""
+        """`start`/`end`/`interval` must be set together — all or none."""
         present = _TIMESERIES_ATTRS & values.keys()
         if present and present != _TIMESERIES_ATTRS:
             missing = _TIMESERIES_ATTRS - present
