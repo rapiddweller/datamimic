@@ -1,18 +1,14 @@
 # DATAMIMIC 3.0.0
 
-_Release date: 2026-05-23 · Previous release: [2.2.0](https://github.com/rapiddweller/datamimic/releases/tag/2.2.0) · 8 PRs (#129–#136)_
+_Release date: 2026-05-23 · Previous release: [2.2.0](https://github.com/rapiddweller/datamimic/releases/tag/2.2.0)_
 
-Three themes:
-
-1. **Determinism is now a contract, not a promise.** Same seed + same model = byte-identical output, locked in by architecture gates.
-2. **Time-series generation as a first-class DSL primitive** — domain-agnostic, deterministic-by-construction, prefix-stable.
-3. **CE cleanup** — DRY/SPOT/YAGNI pass, silent fallbacks turned into clear errors.
+DATAMIMIC 3.0.0 adds a new **time-series generator** to the DSL, makes seeded runs **truly byte-identical** (including source-based pseudonymization), and turns several silent failure modes into clear errors. Plus an honest pass over the README.
 
 ---
 
-## ✨ Time-series generation on `<generate>` (#136)
+## ✨ Time-series generation — `<generate start/end/interval>`
 
-A `<generate>` becomes a time-series loop the moment you add ISO 8601 `start` / `end` / `interval`. Per iteration the script context exposes a `ts` namespace:
+Any `<generate>` becomes a time-series loop the moment you add ISO 8601 `start`, `end`, and `interval`. Per iteration the script context exposes a `ts` namespace:
 
 | Variable | Type | Meaning |
 |---|---|---|
@@ -22,7 +18,9 @@ A `<generate>` becomes a time-series loop the moment you add ISO 8601 `start` / 
 
 ```xml
 <generate name="ticks" count="3"
-          start="2026-01-01T09:30:00Z" end="2026-01-01T10:00:00Z" interval="PT5M"
+          start="2026-01-01T09:30:00Z"
+          end="2026-01-01T10:00:00Z"
+          interval="PT5M"
           target="ticks.csv">
   <key name="timestamp" script="ts.now.isoformat()"/>
   <key name="symbol"    script="['AAPL','MSFT','GOOG'][ts.series]"/>
@@ -30,73 +28,83 @@ A `<generate>` becomes a time-series loop the moment you add ISO 8601 `start` / 
 </generate>
 ```
 
-**Design guarantees:**
+**What it guarantees you, the user:**
 
-- **Prefix-stable by construction** — the first N ticks of series 0 are byte-identical regardless of total window length (each `ts.now` is a pure function of `start + interval * step`).
-- **Contiguous loop order per series** — series 0 in full, then series 1, etc. Trivial downstream grouping.
-- **Pagination-invariant** — `pageSize` cannot perturb output.
+- **Prefix-stable** — the first N ticks of a series are byte-identical no matter how long you make the total window. Lengthen the window without invalidating your fixtures.
+- **Contiguous per series** — series 0 in full, then series 1, etc. Downstream grouping is trivial.
+- **Pagination-invariant** — `pageSize` cannot perturb output. Big windows split safely across pages.
 - **`count` is orthogonal** — still means outer-loop iterations; total rows = `count × ticks_per_series`. Default `count="1"` keeps single-series fixtures terse.
-- **Strict ISO 8601** — `PT1H`, `PT15M`, `PT0.001S` (1 ms), `PT0.000001S` (1 µs floor), `P1D`, `P1W`. Months/years and sub-µs intervals rejected with a clear error.
-- **Helpful error messages** — every parse error names the offending attribute, echoes the bad value, and shows a canonical example (e.g. `interval="1h"` → error suggests `PT1H`).
-- **Composes** with `<key condition>`, `<nestedKey>`, and `<variable source="…">` — the `ts` namespace is visible wherever a script runs. `<variable name="ts">` is rejected at parse time to prevent shadowing.
+- **Strict ISO 8601** — `PT1H`, `PT15M`, `PT0.001S` (1 ms), `PT0.000001S` (1 µs, the floor), `P1D`, `P1W`. Months/years and sub-µs intervals are rejected with a clear error.
+- **Helpful errors** — every parse error names the offending attribute, echoes your value, and shows a canonical example (e.g. writing `interval="1h"` tells you to use `PT1H`).
+- **Composes** with `<key condition>`, `<nestedKey>`, and `<variable source="…">`. The `ts` namespace is visible wherever a script runs.
 
-One primitive serves IoT readings, financial ticks, log streams, smart meters — no per-domain code. Proven by 15 committed DSL fixtures + 18 tests in `tests_ce/integration_tests/test_timeseries/`.
-
----
-
-## 🔒 Determinism contract (#132, #134, #135)
-
-| | What changed |
-|---|---|
-| **Single signal** | A generator is seeded iff an `rng` is supplied; `None` → wall-clock. The old `seeded_mode` flag and a `Random(0)`-treated-as-unseeded bug are gone. |
-| **Clock SPOT** | `runtime/clock.now_utc_naive()` is the only sanctioned wall-clock read; seeded runs use a frozen `DETERMINISTIC_ANCHOR`. AST gate forbids raw `datetime.now()` in CE prod code. |
-| **Generator hierarchy** | `BaseDomainGenerator` (RNG) → `DatasetAwareDomainGenerator` (normalized dataset) → `ClockAnchoredDomainGenerator` (frozen clock, anchored once per entity so all date fields stay mutually consistent). |
-| **Schema as SoT** | Typed `EntitySchema` / `FieldSpec` — JSON type string is *derived*, not duplicated. Schema-consistency gate checks `emitted ⊆ declared` and that types match runtime. |
-| **DSL** | New `<setup rngSeed>` propagates a reproducible child RNG to every seed-less `<variable entity="…">`; `<variable rngSeed>` overrides; consistent attribute name at every level. |
-| **Source reads** | `distribution="random"` now derives its shuffle seed from `<setup rngSeed>`, so seeded runs replay source order identically across CSV, `.ent.csv`, JSON, SQLite, and cascading `<nestedKey>`. Unseeded behaviour unchanged. |
-| **Gates** | Clock-drift, schema-consistency, service-replay, facade-determinism, DSL-replay, and a sync-checked `all_entities_seeded.xml` generated from the registry — new entities can't skip. |
-
-Three committed full-model DSL scenarios pin the contract (`seed_in_setup.xml`, `seed_setup_and_generator.xml`, `no_seed.xml`).
+One primitive serves IoT readings, financial ticks, log streams, smart meters — no per-domain code.
 
 ---
 
-## 🛠 CE cleanup (#133)
+## ✨ Model-wide DSL seed — `<setup rngSeed>`
 
-- **SPOT**: `supported_datasets()` lifted from 23 services into `BaseDomainService`; `pick_one_weighted_no_repeat` (filter-and-renormalise — *guarantees* non-repetition) replaces 5 divergent implementations, two of which could still repeat.
-- **Silent fabrications → `ValueError`** naming the offending file/key: `transaction_generator` (merchant, amount range, type modifier, currency symbol, description template), `order.get_shipping_amount`, product rating / insurance premium / coverage count, product nouns, `bank_account` currency, person salutation, `repo_root`.
-- **`to_dict()`** now serializes nested model objects as dicts (matching `InsurancePolicy.coverages` and every other model): `Order.shipping_address`, `Order.billing_address`, `Order.product_list`, `Doctor.hospital`, `Transaction.account`.
-- **VN datasets** conformed to the parser contract — these were silently producing garbage before.
-- **Dead API removed**: `EntitySchema.field_names`, `GeneratorUtil.faker_generator` / `get_supported_generators` / `get_all_generator_names`, registry `describe_entity` / `list_entity_names` / `service_path`, `attribute_catalog.spec_to_dict`, generator `get_generator_class`, `BaseDomainService` override hooks, `is_strict_dataset_mode` wrapper.
+A single seed at the root of `<setup>` propagates a reproducible child RNG to every seed-less `<variable entity="…">` in the model. Per-block `<variable rngSeed>` still overrides. No seed anywhere = wall-clock random (unchanged).
+
+```xml
+<setup rngSeed="42">
+  <variable name="p" entity="Person"/>   <!-- inherits the seed -->
+  <variable name="q" entity="Person" rngSeed="99"/>   <!-- overrides -->
+</setup>
+```
+
+Consistent attribute name at every level: `<setup rngSeed>`, `<variable rngSeed>`, `<demographics rngSeed>`.
+
+## ✨ Seeded source reads are now deterministic
+
+`distribution="random"` shuffles a data source. Previously, even under a seed, the shuffle order changed every run — silently breaking reproducibility for source-based pseudonymization. Under `<setup rngSeed>`, the shuffle now replays identically across CSV, `.ent.csv`, JSON, SQLite, and cascading `<nestedKey>` reads. Unseeded behaviour is unchanged (privacy-maximized by design).
+
+Combine with `distribution="ordered"` for a stable file-order read.
+
+## 🔒 Determinism, end-to-end
+
+Seeded runs are now **byte-identical across machines and runs** at all three layers: the `generate_domain` facade, every domain service called directly, and every literal generator with a seeded `rng=`. Wall-clock reads in CE prod code are caught by a CI gate, so future changes can't silently drift the clock.
+
+**What this means in practice:** you can put a `content_hash` from a CE run into a regression test, and it stays green forever — until a real data change moves it.
+
+CE is single-process-deterministic. Distributed / multi-process deterministic shuffling remains an Enterprise Platform feature.
 
 ---
 
-## ⚠️ Breaking changes (upgrade in this order)
+## 🛠 Improvements you'll notice
 
-1. **`<setup seed>` → `<setup rngSeed>`** (and per-block `<variable rngSeed>`, `<demographics rngSeed>`).
-2. **Schema types corrected**: `PoliceOfficer.birthdate` → `datetime` (was `str`); `InsurancePolicy` date fields → `date` (were `datetime`).
-3. **`to_dict()` shape**: previously-nested model objects are now dicts (see #133 list above).
-4. **Silent fallbacks now raise `ValueError`** (see #133 list above). US dataset / country fallbacks and empty `routing_number` for non-US locales are intentionally retained.
-5. **Removed dead APIs** (see #133 list above).
-6. **Determinism plumbing**: if you constructed generators relying on `seeded_mode`, pass an explicit `rng=Random(seed)` instead. `Random(0)` is now correctly seeded.
+- **Clearer errors instead of silent garbage.** Several generators used to fabricate plausible-but-wrong data when a dataset file or key was missing. They now raise a `ValueError` naming the file/key — you find the typo immediately instead of debugging suspicious numbers later. Affects `transaction_generator`, `order.get_shipping_amount`, product rating, insurance premium, coverage count, product nouns, `bank_account` currency, person salutation.
+- **No more accidental repeats.** The "pick weighted, avoid immediate repeat" behaviour is now guaranteed (it had two implementations that could still repeat under specific weights).
+- **`to_dict()` is consistent.** Nested model fields are now serialized as dicts on `Order` (shipping/billing address, product list), `Doctor.hospital`, and `Transaction.account`. They previously emitted raw model objects — `InsurancePolicy.coverages` was the only one doing the right thing. JSON consumers now see a uniform shape.
+- **VN datasets fixed.** Several rows produced corrupt data due to schema mismatches and are now correct.
+- **README rewritten.** Compliance framing tightened to what we can actually back ("audit evidence support" rather than "compliance layer"), CE vs EE boundary explicit, the pseudonymization example is now runnable (the old one referenced converters and attributes that don't exist).
 
----
+## ⚠️ Breaking changes (upgrade order)
 
-## 📦 Build, CI, docs
+1. **Rename `<setup seed>` → `<setup rngSeed>`** (and any `<variable seed>` → `<variable rngSeed>`).
+2. **Schema types corrected**: `PoliceOfficer.birthdate` is now `datetime` (was `str`); `InsurancePolicy` date fields are now `date` (were `datetime`). Update consumers that pinned the old types.
+3. **`to_dict()` shape**: nested model fields are now dicts on `Order`, `Doctor`, and `Transaction` (see above). Update anything that called `.field` on the result.
+4. **Silent fallbacks now raise**: see the list above. If you were relying on a fabricated value, supply the missing data or catch the error.
+5. **`seeded_mode` flag removed** from the Python API. Pass `rng=Random(seed)` to mark a generator as seeded. `Random(0)` is now correctly recognised as seeded (it used to be treated as unseeded).
+6. **Removed unused helpers**: `EntitySchema.field_names`, `GeneratorUtil.faker_generator` / `get_supported_generators` / `get_all_generator_names`, registry `describe_entity` / `list_entity_names` / `service_path`, `attribute_catalog.spec_to_dict`.
 
-- **GitHub Actions on Node 24** (#129) — Makefile and `datamimic_ce/mcp/cli.py` adjustments alongside.
-- **TestPyPI auto-uploads removed** (#130) — tags still publish to prod PyPI via the `release` job. (The package's PyPI distribution name was changed in the same PR; that change was unintentional and is not a deliberate part of this release.)
-- **README** (#131, #135): compliance framing tightened ("audit evidence support" not "compliance layer"), SWIFT CSP caveat, EE-only bullets marked, CE/EE columns added to "Supported systems", CE domains 3 → 6, CLI reference 3 → 8 verified commands, pseudonymization example is now runnable, determinism section honest about the real runtime SPOTs.
+US dataset / country fallbacks and empty `routing_number` for non-US locales are intentionally retained.
 
----
+## 🐛 Notable fixes
 
-## Known gaps (out of scope)
+- `Random(0)` is now correctly recognised as a seeded RNG (was treated as unseeded).
+- `Transaction.account` is correctly marked optional.
+- Set-ordering leak in educational-institution selection (was `PYTHONHASHSEED`-dependent).
 
-- **Multiprocessing determinism** (`numProcess > 1`) still re-seeds each worker from the same base seed without an index offset — CE remains single-process-deterministic; cross-process is the EE differentiator.
-- Other-locale data incomplete: `categories_{FR,GB,ES}.csv`, `product_nouns_*_VN.csv`, `administration_office` DE phone field. Predate 3.0.0; surfaced by the new clear errors in #133.
+## 📦 Build & CI
 
-## Verification
+- GitHub Actions on Node 24.
+- TestPyPI auto-uploads have been removed; tags continue to publish to prod PyPI.
 
-`ruff` clean · `mypy` clean (pre-existing optional `ray` aside) · ~1350 in-process tests green · determinism DSL models byte-identical · time-series prefix-stable and pagination-invariant. Only failing tests are environment-bound `external_service_tests` and one MCP socket test — unrelated.
+## Known gaps
+
+- **Multi-process determinism** (`numProcess > 1`) is single-process-deterministic only; cross-process deterministic shuffling remains an Enterprise Platform feature.
+- Locale data still incomplete: `categories_{FR,GB,ES}.csv`, `product_nouns_*_VN.csv`, DE `administration_office` phone field. Predate 3.0.0 — surfaced by the new errors.
 
 ---
 

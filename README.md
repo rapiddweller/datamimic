@@ -167,7 +167,7 @@ Most test data tools produce random output. That breaks regression tests, audit 
 - **Provenance hash on every facade output** = re-executable lineage. Same input → same `determinism_proof.content_hash`, always.
 - **UUIDv5 entity identifiers** = stable across runs and machines.
 - **Single wall-clock SPOT** (`now_utc_naive()`); raw `datetime.now()` is forbidden in production code and the clock-drift architecture gate fails CI on any reintroduction.
-- **RNG/clock runtime SPOTs** in `datamimic_ce/domains/domain_core/runtime/`: `spawn_rng` (reproducible child-RNG derivation), `now_utc_naive`, and `resolve_clock`. Mirrors EE's ADR-030 / ADR-031 contract vocabulary.
+- **RNG/clock runtime SPOTs** in `datamimic_ce/domains/domain_core/runtime/`: `spawn_rng` (reproducible child-RNG derivation), `now_utc_naive`, and `resolve_clock`. The same contract vocabulary the Enterprise Platform enforces end-to-end.
 
 **The Enterprise Platform (EE) goes further:** beyond the CE contract, EE makes the whole execution environment deterministic — a configurable/frozen wall-clock (not just CE's fixed anchor), DSL-level seeding of literal `<key generator>` generators, and deterministic `SAFE_GLOBALS` plus the Python `random` functions, so sandboxed script expressions and any stdlib `random` call replay identically as well.
 
@@ -206,12 +206,12 @@ assert card_a.bic == card_b.bic and card_a.card_number == card_b.card_number
 | **Facade** (`generate_domain` registered domains) | ✅ byte-identical, CI-gated | ✅ byte-identical |
 | **Domain services** (direct use with seeded `rng=...`) | ✅ byte-identical, CI-gated | ✅ byte-identical |
 | **Literal generators** (with seeded `rng=...`) | ✅ byte-identical | ✅ byte-identical |
-| **RNG / clock runtime SPOTs** | ✅ `spawn_rng`, `now_utc_naive`, `resolve_clock` | ✅ ADR-030 / 031 |
+| **RNG / clock runtime SPOTs** | ✅ `spawn_rng`, `now_utc_naive`, `resolve_clock` | ✅ same contract, enforced end-to-end |
 | **Architecture gates in CI** | ✅ facade replay + service replay (every service) + clock drift | ✅ 5+ gates (RNG ownership, clock drift, DSL eval, seeded-mode propagation, dataset SPOT) |
 | **Custom XML pipelines** | ⚠️ best-effort | ✅ byte-identical |
 | **Multi-system coordinated execution** (Oracle + MongoDB + Kafka in one run) | — | ✅ byte-identical end-to-end |
 | **Seeded vs unseeded pseudonymization** (deterministic clock anchor vs CSPRNG live-clock) | — | ✅ |
-| **Threat-led / TLPT-grade audit evidence** (full ADR-030 enforcement, per-stage execution logging) | — | ✅ |
+| **Threat-led / TLPT-grade audit evidence** (full contract enforcement, per-stage execution logging) | — | ✅ |
 
 CE delivers contract-enforced determinism for the synthetic-data generation surface (facade, services, generators). The Enterprise Platform extends the same contract across the full pipeline — custom XML descriptors, multi-system writes with referential integrity, the seeded/unseeded pseudonymization modes — and adds the five drift-gates that lock the contract end-to-end for regulated deployments.
 
