@@ -81,12 +81,10 @@ CE is single-process-deterministic. Distributed / multi-process deterministic sh
 
 ## ⚠️ Breaking changes (upgrade order)
 
-1. **Rename `<setup seed>` → `<setup rngSeed>`** (and any `<variable seed>` → `<variable rngSeed>`).
-2. **Schema types corrected**: `PoliceOfficer.birthdate` is now `datetime` (was `str`); `InsurancePolicy` date fields are now `date` (were `datetime`). Update consumers that pinned the old types.
-3. **`to_dict()` shape**: nested model fields are now dicts on `Order`, `Doctor`, and `Transaction` (see above). Update anything that called `.field` on the result.
-4. **Silent fallbacks now raise**: see the list above. If you were relying on a fabricated value, supply the missing data or catch the error.
-5. **`seeded_mode` flag removed** from the Python API. Pass `rng=Random(seed)` to mark a generator as seeded. `Random(0)` is now correctly recognised as seeded (it used to be treated as unseeded).
-6. **Removed unused helpers**: `EntitySchema.field_names`, `GeneratorUtil.faker_generator` / `get_supported_generators` / `get_all_generator_names`, registry `describe_entity` / `list_entity_names` / `service_path`, `attribute_catalog.spec_to_dict`.
+1. **Schema types corrected**: `PoliceOfficer.birthdate` is now `datetime` (was `str`); `InsurancePolicy` date fields are now `date` (were `datetime`). Update consumers that pinned the old types.
+2. **`to_dict()` shape**: nested model fields are now dicts on `Order`, `Doctor`, and `Transaction` (see above). Update anything that called `.field` on the result.
+3. **Silent fallbacks now raise**: see the list above. If you were relying on a fabricated value, supply the missing data or catch the error.
+4. **Removed unused helpers**: `EntitySchema.field_names`, `GeneratorUtil.faker_generator` / `get_supported_generators` / `get_all_generator_names`, registry `describe_entity` / `list_entity_names` / `service_path`, `attribute_catalog.spec_to_dict`.
 
 US dataset / country fallbacks and empty `routing_number` for non-US locales are intentionally retained.
 
