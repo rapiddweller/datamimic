@@ -101,6 +101,15 @@ def test_no_seed_is_random() -> None:
     assert first != second
 
 
+def test_dsl_constructs_replay_identically() -> None:
+    """Hand-written model exercising null_quota / values / type-fallback /
+    nestedKey count-bounds replays byte-for-byte under <setup rngSeed>."""
+    first = _run(_TEST_DIR, "dsl_constructs_seeded.xml")
+    second = _run(_TEST_DIR, "dsl_constructs_seeded.xml")
+    assert first, "expected dsl_constructs_seeded.xml to produce entity blocks"
+    assert first == second
+
+
 if __name__ == "__main__":
     for name, kwargs in SCENARIOS.items():
         (_TEST_DIR / name).write_text(build_all_entities_seeded_xml(**kwargs))

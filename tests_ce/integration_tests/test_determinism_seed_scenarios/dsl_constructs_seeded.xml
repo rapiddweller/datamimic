@@ -1,0 +1,23 @@
+<setup multiprocessing="0" rngSeed="42">
+    <!-- Hand-written determinism scenario covering DSL constructs that are NOT entity-driven. -->
+    <!-- Each construct here previously had a determinism gap that has since been closed; -->
+    <!-- this model guards against silent regressions in: -->
+    <!--   * <key nullQuota=...>       — Bernoulli null/value mix -->
+    <!--   * <key values=...>          — values-mode pick -->
+    <!--   * <key type="int">          — type-fallback path (no script/generator/values) -->
+    <!--   * <key type="string">       — string-fallback path -->
+    <!--   * <nestedKey minCount/maxCount> — count-randomized nesting -->
+    <!-- <reference> is intentionally omitted here: it requires a paired source row -->
+    <!-- context that doesn't fit this minimal scenario. No CE replay coverage for it -->
+    <!-- yet — file as a follow-up if regressions appear. -->
+    <generate name="constructs" count="8" target="">
+        <variable name="e" entity="Person" dataset="US"/>
+        <key name="maybe_name" nullQuota="0.3" script="e.given_name"/>
+        <key name="bucket" values="'a','b','c'"/>
+        <key name="filler_int" type="int"/>
+        <key name="filler_str" type="string"/>
+        <nestedKey name="items" type="list" minCount="1" maxCount="5">
+            <key name="i" type="int"/>
+        </nestedKey>
+    </generate>
+</setup>
