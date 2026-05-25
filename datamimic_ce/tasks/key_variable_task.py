@@ -216,7 +216,7 @@ class KeyVariableTask:
         elif self._mode == self._PATTERN_MODE:
             if self._statement.pattern is None:
                 raise ValueError(f"Pattern is missing for <{self._element_tag}> '{self._statement.name}'")
-            value = StringGenerator.rnd_str_from_regex(self._statement.pattern)
+            value = StringGenerator.rnd_str_from_regex(self._statement.pattern, rng=ctx.rng)
         elif self._mode == self._RANDOM_MODE:
             value = TaskUtil.generate_random_value_based_on_type(self._statement.type, rng=ctx.rng)
         else:
