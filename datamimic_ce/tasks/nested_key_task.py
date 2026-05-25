@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
-import random
 
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE_LIST
 from datamimic_ce.contexts.context import Context
@@ -13,6 +12,7 @@ from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.domains.domain_core.runtime import resolve_rng
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.tasks.element_task import ElementTask
@@ -355,12 +355,13 @@ class NestedKeyTask(GenSubTask):
         if count is None and min_count is None and max_count is None:
             return None
 
+        rng = resolve_rng(context)
         if min_count is None:
-            return random.randint(max(0, max_count - 5), max_count)
+            return rng.randint(max(0, max_count - 5), max_count)
         elif max_count is None:
-            return random.randint(min_count, min_count + 5)
+            return rng.randint(min_count, min_count + 5)
         else:
-            return random.randint(min_count, max_count)
+            return rng.randint(min_count, max_count)
 
     def _post_convert(self, value):
         """

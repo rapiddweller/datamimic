@@ -25,6 +25,7 @@ from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntityDataSource
+from datamimic_ce.domains.domain_core.runtime import resolve_rng
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
@@ -81,6 +82,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 self._weighted_data_source = WeightedEntityDataSource(
                     file_path=descriptor_dir / source_str,
                     separator=separator,
+                    rng=resolve_rng(ctx),
                     weight_column_name=statement.weight_column,
                 )
                 self._mode = self._WEIGHTED_ENTITY_MODE

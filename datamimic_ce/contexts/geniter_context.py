@@ -4,7 +4,12 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import random
+from random import Random
+from typing import Any
+
 from datamimic_ce.contexts.context import Context
+from datamimic_ce.domains.domain_core.runtime import spawn_rng
 from datamimic_ce.utils.dict_util import dict_nested_update
 
 
@@ -14,13 +19,36 @@ class GenIterContext(Context):
     Must be sub-context of SetupContext or another GenerateContext.
     """
 
-    def __init__(self, parent: Context, current_name: str):
+    def __init__(self, parent: Context, current_name: str, rng: Random | None = None):
         super().__init__(parent.root)
         self._parent = parent
         self._current_name = current_name
         self._current_product: dict = {}
         self._current_variables: dict = {}
         self._worker_id: int | None = None
+        self._rng: Random | None = self._fork_rng_from_parent(parent, rng)
+
+    @staticmethod
+    def _fork_rng_from_parent(parent: Context, explicit: Random | None) -> Random | None:
+        # Intentionally NOT runtime.resolve_rng: we fork ONCE per iter at
+        # construction so sibling iters get independent reproducible streams.
+        # resolve_rng is call-time and would return the parent's already-resolved
+        # rng, collapsing all iters onto the same stream — do not merge.
+        if explicit is not None:
+            return explicit
+        if isinstance(parent, GenIterContext) and parent._rng is not None:
+            return spawn_rng(parent._rng)
+        root = parent.root
+        derive = getattr(root, "derive_seeded_rng", None)
+        if callable(derive):
+            return derive()
+        return None
+
+    @property
+    def rng(self) -> Any:
+        """Always usable: a seeded ``Random`` child of ``<setup rngSeed>``, or the
+        ``random`` module for wall-clock unseeded runs. Same callable API either way."""
+        return self._rng if self._rng is not None else random
 
     @property
     def current_name(self) -> str:

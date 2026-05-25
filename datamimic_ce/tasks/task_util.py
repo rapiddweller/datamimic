@@ -3,7 +3,6 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-import random
 import re
 import string
 from typing import Any
@@ -524,17 +523,21 @@ class TaskUtil:
 
     @staticmethod
     def generate_random_value_based_on_type(
-        data_type: str | None = None,
+        data_type: str | None,
+        *,
+        rng: Any,
     ) -> str | int | bool | float:
+        # ``rng`` is required: callers must inject a context-resolved RNG via
+        # ``resolve_rng(ctx)`` so seeded runs propagate fully.
         if data_type == DATA_TYPE_STRING:
             min_len = 0
             max_len = 20
-            return "".join(random.choice(string.ascii_letters) for _ in range(random.randint(min_len, max_len)))
+            return "".join(rng.choice(string.ascii_letters) for _ in range(rng.randint(min_len, max_len)))
         elif data_type == DATA_TYPE_INT:
-            return random.randint(0, 100)
+            return rng.randint(0, 100)
         elif data_type == DATA_TYPE_FLOAT:
-            return random.uniform(0, 100)
+            return rng.uniform(0, 100)
         elif data_type == DATA_TYPE_BOOL:
-            return random.choice((True, False))
+            return rng.choice((True, False))
         else:
             raise ValueError(f"Cannot generate random value for data type {data_type}")

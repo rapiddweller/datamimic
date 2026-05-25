@@ -4,8 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import random
 from pathlib import Path
+from typing import Any
 
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -41,11 +41,20 @@ class WeightedEntityDataSource:
         file_path (str): file path of "entity.wgt.ent.csv", check Example for format detail of this file type
     """
 
-    def __init__(self, file_path: Path, separator: str, weight_column_name: str | None = None):
+    def __init__(
+        self,
+        file_path: Path,
+        separator: str,
+        rng: Any,
+        weight_column_name: str | None = None,
+    ):
         weight_column = weight_column_name or "weight"
         self._weights, self._data_dict_list = FileUtil.read_csv_having_weight_column(
             file_path, weight_column, separator
         )
+        # Explicit RNG injection (no silent stdlib fallback) so <setup rngSeed>
+        # propagates fully to weighted entity source reads.
+        self._rng = rng
 
     def generate(self) -> dict:
         """
@@ -54,4 +63,4 @@ class WeightedEntityDataSource:
         Returns:
             entity (Dict): generated entity as dict
         """
-        return random.choices(self._data_dict_list, weights=self._weights, k=1)[0]
+        return self._rng.choices(self._data_dict_list, weights=self._weights, k=1)[0]

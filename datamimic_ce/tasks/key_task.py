@@ -4,8 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import random
-
 from datamimic_ce.constants.attribute_constants import (
     ATTR_CONSTANT,
     ATTR_GENERATOR,
@@ -20,6 +18,7 @@ from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
+from datamimic_ce.domains.domain_core.runtime import resolve_rng
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.tasks.element_task import ElementTask
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
@@ -71,7 +70,8 @@ class KeyTask(KeyVariableTask, GenSubTask):
         )
 
         if condition:
-            if self.statement.null_quota and random.random() < self.statement.null_quota:
+            rng = resolve_rng(ctx)
+            if self.statement.null_quota and rng.random() < self.statement.null_quota:
                 value = None
             else:
                 value = self._generate_value(ctx)

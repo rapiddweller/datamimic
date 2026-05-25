@@ -4,13 +4,13 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import random
 from collections.abc import Iterator
 
 from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.domains.domain_core.runtime import resolve_rng
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.tasks.task import GenSubTask
 
@@ -29,6 +29,7 @@ class ReferenceTask(GenSubTask):
         """
         Generate data for element "reference" by retrieving values from an RDBMS data source.
         """
+        rng = resolve_rng(ctx)
         if self._iterator is None:
             # Get RDBMS client
             client = ctx.root.clients.get(self.statement.source)
@@ -52,15 +53,15 @@ class ReferenceTask(GenSubTask):
                         f"Cannot generate {sample_size} unique values - only {len(dataset)} available for "
                         f"{self._statement.name}"
                     )
-                sampled_data = random.sample(dataset, sample_size)
+                sampled_data = rng.sample(dataset, sample_size)
                 self._iterator = iter(sampled_data)
             else:
                 # For non-unique values, we can sample with replacement
                 if self._pagination is not None:
-                    sampled_data = [random.choice(dataset) for _ in range(self._pagination.limit)]
+                    sampled_data = [rng.choice(dataset) for _ in range(self._pagination.limit)]
                     self._iterator = iter(sampled_data)
                 else:
-                    self._iterator = iter([random.choice(dataset)])
+                    self._iterator = iter([rng.choice(dataset)])
 
         # Get next value, reinitialize if exhausted
         try:
