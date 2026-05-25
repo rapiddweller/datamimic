@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
-import random
 import uuid
 from pathlib import Path
 from random import Random
@@ -17,7 +16,7 @@ from datamimic_ce.contexts.demographic_context import DemographicContext
 from datamimic_ce.converter.converter import Converter
 from datamimic_ce.converter.custom_converter import CustomConverter
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.domains.domain_core.runtime import derive_child_seed, spawn_rng
+from datamimic_ce.domains.domain_core.runtime import derive_child_seed, or_module, spawn_rng
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
@@ -117,8 +116,7 @@ class SetupContext(Context):
         ``random`` module when unseeded). Use :attr:`rng` for call-time access
         instead.
         """
-        derived = self.derive_seeded_rng()
-        return derived if derived is not None else random
+        return or_module(self.derive_seeded_rng())
 
     @property
     def rng(self) -> Any:

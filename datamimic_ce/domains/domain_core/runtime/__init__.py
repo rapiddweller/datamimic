@@ -17,6 +17,8 @@ Primitives (rng):
 * :func:`derive_child_seed` — draw a reproducible child seed (int) from a parent RNG.
 * :func:`ensure_rng` — return ``rng`` if not None, else a fresh ``Random()``.
   Used at instance boundaries that must own a concrete ``Random``.
+* :func:`or_module` — return ``rng`` if not None, else the ``random`` module.
+  Used at call-time accessors so callers don't branch on None.
 * :func:`with_rng` — seed-driven entry point used by service-layer code
   (re-exported from ``datamimic_ce.domains.determinism`` so the SPOT is
   one search address).
@@ -33,12 +35,13 @@ from datamimic_ce.domains.domain_core.runtime.clock import (
     now_utc_naive,
     resolve_clock,
 )
-from datamimic_ce.domains.domain_core.runtime.rng import derive_child_seed, ensure_rng, spawn_rng
+from datamimic_ce.domains.domain_core.runtime.rng import derive_child_seed, ensure_rng, or_module, spawn_rng
 
 __all__ = [
     "derive_child_seed",
     "ensure_rng",
     "now_utc_naive",
+    "or_module",
     "resolve_clock",
     "spawn_rng",
     "with_rng",

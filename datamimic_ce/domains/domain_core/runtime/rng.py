@@ -7,7 +7,9 @@ root seed, demographic sampling).
 
 from __future__ import annotations
 
+import random
 from random import Random
+from typing import Any
 
 
 def derive_child_seed(parent: Random) -> int:
@@ -28,3 +30,16 @@ def ensure_rng(rng: Random | None) -> Random:
     means "give me my own wall-clock instance".
     """
     return rng if rng is not None else Random()
+
+
+def or_module(rng: Random | None) -> Any:
+    """Return ``rng`` if not None, else the ``random`` module.
+
+    Sister of :func:`ensure_rng`. Use at call-time accessors that need a
+    usable callable API without forcing callers to branch on ``None``:
+    callers say ``ctx.rng.choice(...)`` and don't care whether ``ctx.rng``
+    is a seeded ``Random`` or the wall-clock ``random`` module. Distinct
+    from :func:`ensure_rng` (which gives a fresh ``Random()`` instance);
+    use that at instance boundaries that must OWN a Random.
+    """
+    return rng if rng is not None else random

@@ -4,13 +4,12 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import random
 from random import Random
 from typing import Any
 
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.domains.domain_core.runtime import spawn_rng
+from datamimic_ce.domains.domain_core.runtime import or_module, spawn_rng
 from datamimic_ce.utils.dict_util import dict_nested_update
 
 
@@ -46,7 +45,7 @@ class GenIterContext(Context):
     def rng(self) -> Any:
         """Always usable: a seeded ``Random`` child of ``<setup rngSeed>``, or the
         ``random`` module for wall-clock unseeded runs. Same callable API either way."""
-        return self._rng if self._rng is not None else random
+        return or_module(self._rng)
 
     @property
     def current_name(self) -> str:
