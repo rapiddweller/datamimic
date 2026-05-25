@@ -4,12 +4,13 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import random
 from random import Random
 from typing import Any
 
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.domains.domain_core.runtime import or_module, spawn_rng
+from datamimic_ce.domains.domain_core.runtime import spawn_rng
 from datamimic_ce.utils.dict_util import dict_nested_update
 
 
@@ -30,9 +31,7 @@ class GenIterContext(Context):
 
     @staticmethod
     def _fork_rng_from_parent(parent: Context, explicit: Random | None) -> Random | None:
-        # One-time fork at iter construction so sibling iters get independent
-        # reproducible streams. Distinct from call-time access (ctx.rng), which
-        # returns the already-resolved rng without forking.
+        # Fork once per iter so siblings get independent reproducible streams.
         if explicit is not None:
             return explicit
         if isinstance(parent, GenIterContext):
@@ -43,9 +42,8 @@ class GenIterContext(Context):
 
     @property
     def rng(self) -> Any:
-        """Always usable: a seeded ``Random`` child of ``<setup rngSeed>``, or the
-        ``random`` module for wall-clock unseeded runs. Same callable API either way."""
-        return or_module(self._rng)
+        """Seeded ``Random`` or the ``random`` module (same callable API)."""
+        return self._rng if self._rng is not None else random
 
     @property
     def current_name(self) -> str:

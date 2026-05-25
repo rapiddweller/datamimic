@@ -35,7 +35,7 @@ from __future__ import annotations
 import random
 from datetime import datetime
 
-from datamimic_ce.domains.domain_core.runtime import ensure_rng, resolve_clock, spawn_rng
+from datamimic_ce.domains.domain_core.runtime import resolve_clock, spawn_rng
 
 DEFAULT_DATASET = "US"
 
@@ -59,7 +59,7 @@ class BaseDomainGenerator:
 
     def __init__(self, *, rng: random.Random | None = None) -> None:
         self._seeded: bool = rng is not None
-        self._rng: random.Random = ensure_rng(rng)
+        self._rng: random.Random = rng if rng is not None else random.Random()
 
     @property
     def rng(self) -> random.Random:

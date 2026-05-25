@@ -10,7 +10,6 @@ from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.domains.common.demographics.loader import load_demographic_profile
 from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
-from datamimic_ce.domains.domain_core.runtime import ensure_rng
 from datamimic_ce.statements.demographics_statement import DemographicsStatement
 from datamimic_ce.tasks.task import SetupSubTask
 
@@ -27,7 +26,8 @@ class DemographicsTask(SetupSubTask):
             rng = Random(self._statement.rng_seed)
         else:
             # Inherit the model-wide <setup rngSeed> when the block has no own rngSeed.
-            rng = ensure_rng(ctx.derive_seeded_rng())
+            derived = ctx.derive_seeded_rng()
+            rng = derived if derived is not None else Random()
         demographic_context = DemographicContext(
             profile_id=profile.profile_id,
             sampler=sampler,
