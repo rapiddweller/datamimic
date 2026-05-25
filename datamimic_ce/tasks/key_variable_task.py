@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import ast
-import random
 from abc import abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timedelta
@@ -113,13 +112,10 @@ class KeyVariableTask:
             if not source.endswith("wgt.csv"):
                 raise ValueError(f"Data source of attribute '{self._statement.name}' must be type of: 'wgt.csv'")
             separator = self._statement.separator or ctx.default_separator
-            # Construction-time rng: derive from <setup rngSeed> if seeded, else
-            # the random module (same API).
-            seeded = ctx.derive_seeded_rng()
             self._generator = WeightedDataSource(
                 file_path=ctx.descriptor_dir / source,
                 separator=separator,
-                rng=seeded if seeded is not None else random,
+                rng=ctx.seeded_rng_or_module(),
             )
             self._mode = self._GENERATOR_MODE
         elif self._statement.pattern is not None:

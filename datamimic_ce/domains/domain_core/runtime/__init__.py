@@ -11,25 +11,35 @@ Two channels, one rule each:
   module when it returns ``None``. Two sites in the codebase; intentionally
   inlined, no helper.
 
-Primitives:
+Primitives (rng):
 
+* :func:`spawn_rng` — fork a reproducible child RNG from a parent ``Random``.
 * :func:`derive_child_seed` — draw a reproducible child seed (int) from a parent RNG.
-* :func:`spawn_rng` — fork a reproducible child RNG from a parent (built on
-  :func:`derive_child_seed`; used by generators, the setup root seed, and demographics).
+* :func:`ensure_rng` — return ``rng`` if not None, else a fresh ``Random()``.
+  Used at instance boundaries that must own a concrete ``Random``.
+* :func:`with_rng` — seed-driven entry point used by service-layer code
+  (re-exported from ``datamimic_ce.domains.determinism`` so the SPOT is
+  one search address).
+
+Primitives (clock):
+
 * :func:`now_utc_naive` — the only sanctioned wall-clock read in CE.
 * :func:`resolve_clock` — returns the deterministic anchor or live UTC,
   anchored once at construction time.
 """
 
+from datamimic_ce.domains.determinism import with_rng
 from datamimic_ce.domains.domain_core.runtime.clock import (
     now_utc_naive,
     resolve_clock,
 )
-from datamimic_ce.domains.domain_core.runtime.rng import derive_child_seed, spawn_rng
+from datamimic_ce.domains.domain_core.runtime.rng import derive_child_seed, ensure_rng, spawn_rng
 
 __all__ = [
     "derive_child_seed",
+    "ensure_rng",
     "now_utc_naive",
     "resolve_clock",
     "spawn_rng",
+    "with_rng",
 ]

@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import inspect
-import random
 from collections.abc import Iterator
 from typing import Any, Final
 
@@ -79,13 +78,10 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             separator = statement.separator or ctx.default_separator
             # Load data from weighted entity file
             if source_str.endswith(".wgt.ent.csv"):
-                # Construction-time rng: derive from <setup rngSeed> if seeded, else
-                # the random module (same API).
-                seeded = ctx.derive_seeded_rng()
                 self._weighted_data_source = WeightedEntityDataSource(
                     file_path=descriptor_dir / source_str,
                     separator=separator,
-                    rng=seeded if seeded is not None else random,
+                    rng=ctx.seeded_rng_or_module(),
                     weight_column_name=statement.weight_column,
                 )
                 self._mode = self._WEIGHTED_ENTITY_MODE

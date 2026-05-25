@@ -23,6 +23,7 @@ from datamimic_ce.domains.common.literal_generators.nobility_title_generator imp
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.domain_core.runtime import ensure_rng
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -107,9 +108,8 @@ class PersonGenerator(DatasetAwareDomainGenerator):
         )
         # Used directly for sampling (not threaded to a child that self-seeds), so it
         # must always be a concrete Random: a derived one when seeded, fresh otherwise.
-        # ``is not None`` (never ``or``): a seeded Random(0) is falsy in rare states.
         derived_rng = self._derive_rng() if demographic_sampler is not None else None
-        self._demographic_rng: Random = derived_rng if derived_rng is not None else Random()
+        self._demographic_rng: Random = ensure_rng(derived_rng)
 
     def reserve_demographic_sample(self) -> DemographicSample:
         if self._demographic_sampler is None:

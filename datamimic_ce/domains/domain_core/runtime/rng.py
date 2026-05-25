@@ -18,3 +18,13 @@ def derive_child_seed(parent: Random) -> int:
 def spawn_rng(parent: Random) -> Random:
     """Fork a reproducible child ``Random`` from ``parent``."""
     return Random(derive_child_seed(parent))
+
+
+def ensure_rng(rng: Random | None) -> Random:
+    """Return ``rng`` if not None, else a fresh wall-clock ``Random()``.
+
+    Use at the boundary where a class needs to own a ``Random`` instance
+    (not the module): caller-supplied rng marks the run seeded, ``None``
+    means "give me my own wall-clock instance".
+    """
+    return rng if rng is not None else Random()

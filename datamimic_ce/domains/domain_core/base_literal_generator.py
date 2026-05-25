@@ -21,6 +21,8 @@ from __future__ import annotations
 import random
 from abc import ABC, abstractmethod
 
+from datamimic_ce.domains.domain_core.runtime import ensure_rng
+
 
 class BaseLiteralGenerator(ABC):
     """Base for atomic literal generators that need only an RNG."""
@@ -30,9 +32,7 @@ class BaseLiteralGenerator(ABC):
     cache_in_root: bool = True
 
     def __init__(self, *, rng: random.Random | None = None) -> None:
-        # ``rng is not None`` — must NOT use ``or`` because Random(0) is falsy
-        # in rare states and would be silently replaced with a wall-clock seed.
-        self._rng: random.Random = rng if rng is not None else random.Random()
+        self._rng: random.Random = ensure_rng(rng)
 
     @property
     def rng(self) -> random.Random:

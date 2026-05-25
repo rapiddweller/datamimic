@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
+import random
 import uuid
 from pathlib import Path
 from random import Random
@@ -104,6 +105,17 @@ class SetupContext(Context):
         unseeded (wall-clock random).
         """
         return spawn_rng(self._root_rng) if self._root_rng is not None else None
+
+    def seeded_rng_or_module(self) -> Any:
+        """Construction-time rng with module fallback.
+
+        For builders called under a ``SetupContext`` that need an rng NOW
+        (e.g. ``WeightedDataSource`` / ``WeightedEntityDataSource`` ctors).
+        Returns a seeded child of ``<setup rngSeed>`` when present, else the
+        ``random`` module (same callable API as a ``Random`` instance).
+        """
+        derived = self.derive_seeded_rng()
+        return derived if derived is not None else random
 
     def __deepcopy__(self, memo):
         """
