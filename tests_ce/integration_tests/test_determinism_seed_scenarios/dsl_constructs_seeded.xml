@@ -1,21 +1,23 @@
-<setup multiprocessing="0" rngSeed="42">
+<setup multiprocessing="0" rngSeed="42" defaultSeparator=",">
     <!-- Hand-written determinism scenario covering DSL constructs that are NOT entity-driven. -->
     <!-- Each construct here previously had a determinism gap that has since been closed; -->
     <!-- this model guards against silent regressions in: -->
-    <!--   * <key nullQuota=...>       — Bernoulli null/value mix -->
-    <!--   * <key values=...>          — values-mode pick -->
-    <!--   * <key type="int">          — type-fallback path (no script/generator/values) -->
-    <!--   * <key type="string">       — string-fallback path -->
-    <!--   * <nestedKey minCount/maxCount> — count-randomized nesting -->
-    <!-- <reference> is intentionally omitted here: it requires a paired source row -->
-    <!-- context that doesn't fit this minimal scenario. No CE replay coverage for it -->
-    <!-- yet — file as a follow-up if regressions appear. -->
+    <!--   * <key nullQuota=...>            — Bernoulli null/value mix             (key_task) -->
+    <!--   * <key values=...>               — values-mode pick                     (key_variable_task) -->
+    <!--   * <key type="int">/<type="str"> — type-fallback path                   (task_util) -->
+    <!--   * <nestedKey minCount/maxCount>  — count-randomized nesting             (nested_key_task) -->
+    <!--   * <key source="*.wgt.csv">       — WeightedDataSource pick              (key_variable_task ctor) -->
+    <!--   * <variable source="*.wgt.ent.csv"> — WeightedEntityDataSource pick     (variable_task ctor) -->
+    <!-- <reference> requires an RDBMS client setup; deferred to its own scenario. -->
     <generate name="constructs" count="8" target="">
         <variable name="e" entity="Person" dataset="US"/>
+        <variable name="picked" source="data/people.wgt.ent.csv"/>
         <key name="maybe_name" nullQuota="0.3" script="e.given_name"/>
         <key name="bucket" values="'a','b','c'"/>
         <key name="filler_int" type="int"/>
         <key name="filler_str" type="string"/>
+        <key name="active" type="bool" source="data/active.wgt.csv"/>
+        <key name="picked_name" script="picked.name"/>
         <nestedKey name="items" type="list" minCount="1" maxCount="5">
             <key name="i" type="int"/>
         </nestedKey>
