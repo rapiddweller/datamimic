@@ -136,7 +136,7 @@ class KeyVariableTask:
     def statement(self) -> KeyStatement | VariableStatement | ElementStatement:
         return self._statement
 
-    def _generate_value(self, ctx: GenIterContext):
+    def _generate_value(self, ctx: GenIterContext | SetupContext):
         """
         Generate data based on generation mode
         :param ctx:

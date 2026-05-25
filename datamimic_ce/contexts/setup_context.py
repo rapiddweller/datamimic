@@ -97,6 +97,8 @@ class SetupContext(Context):
         # their own seed derive a reproducible child RNG from this; None => unseeded.
         self._root_seed = seed
         self._root_rng: Random | None = Random(seed) if seed is not None else None
+        # Cached call-time rng — populated lazily on first ``.rng`` access.
+        self._call_rng: Any = None
 
     def derive_seeded_rng(self) -> Random | None:
         """Fork a reproducible child RNG from the model-wide root seed.
@@ -107,15 +109,30 @@ class SetupContext(Context):
         return spawn_rng(self._root_rng) if self._root_rng is not None else None
 
     def seeded_rng_or_module(self) -> Any:
-        """Construction-time rng with module fallback.
+        """Construction-time rng with module fallback (forks fresh on every call).
 
-        For builders called under a ``SetupContext`` that need an rng NOW
-        (e.g. ``WeightedDataSource`` / ``WeightedEntityDataSource`` ctors).
-        Returns a seeded child of ``<setup rngSeed>`` when present, else the
-        ``random`` module (same callable API as a ``Random`` instance).
+        For builders that install an rng into a long-lived object — e.g.
+        ``WeightedDataSource`` / ``WeightedEntityDataSource`` ctors. Each call
+        derives a NEW seeded child of ``<setup rngSeed>`` (or returns the
+        ``random`` module when unseeded). Use :attr:`rng` for call-time access
+        instead.
         """
         derived = self.derive_seeded_rng()
         return derived if derived is not None else random
+
+    @property
+    def rng(self) -> Any:
+        """Call-time rng for code executing under this SetupContext (e.g. a
+        top-level ``<variable>``). Cached: the same instance across calls so
+        consecutive draws share state, matching :attr:`GenIterContext.rng`.
+
+        With this property, ``ctx.rng`` is the single call-time channel
+        regardless of whether ``ctx`` is a ``SetupContext`` or a
+        ``GenIterContext``.
+        """
+        if self._call_rng is None:
+            self._call_rng = self.seeded_rng_or_module()
+        return self._call_rng
 
     def __deepcopy__(self, memo):
         """
