@@ -9,6 +9,7 @@ from random import Random
 from typing import Any
 
 from datamimic_ce.contexts.context import Context
+from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.domains.domain_core.runtime import spawn_rng
 from datamimic_ce.utils.dict_util import dict_nested_update
 
@@ -30,18 +31,15 @@ class GenIterContext(Context):
 
     @staticmethod
     def _fork_rng_from_parent(parent: Context, explicit: Random | None) -> Random | None:
-        # Intentionally NOT runtime.resolve_rng: we fork ONCE per iter at
-        # construction so sibling iters get independent reproducible streams.
-        # resolve_rng is call-time and would return the parent's already-resolved
-        # rng, collapsing all iters onto the same stream — do not merge.
+        # One-time fork at iter construction so sibling iters get independent
+        # reproducible streams. Distinct from call-time access (ctx.rng), which
+        # returns the already-resolved rng without forking.
         if explicit is not None:
             return explicit
-        if isinstance(parent, GenIterContext) and parent._rng is not None:
-            return spawn_rng(parent._rng)
-        root = parent.root
-        derive = getattr(root, "derive_seeded_rng", None)
-        if callable(derive):
-            return derive()
+        if isinstance(parent, GenIterContext):
+            return spawn_rng(parent._rng) if parent._rng is not None else None
+        if isinstance(parent, SetupContext):
+            return parent.derive_seeded_rng()
         return None
 
     @property

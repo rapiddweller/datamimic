@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import inspect
+import random
 from collections.abc import Iterator
 from typing import Any, Final
 
@@ -25,7 +26,6 @@ from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntityDataSource
-from datamimic_ce.domains.domain_core.runtime import resolve_rng
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
@@ -79,10 +79,13 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             separator = statement.separator or ctx.default_separator
             # Load data from weighted entity file
             if source_str.endswith(".wgt.ent.csv"):
+                # Construction-time rng: derive from <setup rngSeed> if seeded, else
+                # the random module (same API).
+                seeded = ctx.derive_seeded_rng()
                 self._weighted_data_source = WeightedEntityDataSource(
                     file_path=descriptor_dir / source_str,
                     separator=separator,
-                    rng=resolve_rng(ctx),
+                    rng=seeded if seeded is not None else random,
                     weight_column_name=statement.weight_column,
                 )
                 self._mode = self._WEIGHTED_ENTITY_MODE

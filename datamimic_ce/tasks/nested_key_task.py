@@ -12,7 +12,6 @@ from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
-from datamimic_ce.domains.domain_core.runtime import resolve_rng
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.tasks.element_task import ElementTask
@@ -340,7 +339,7 @@ class NestedKeyTask(GenSubTask):
 
         return result
 
-    def _determine_nestedkey_length(self, context: Context) -> int | None:
+    def _determine_nestedkey_length(self, context: GenIterContext) -> int | None:
         """
         Determine nestedkey length based on count, minCount and maxCount
 
@@ -355,7 +354,7 @@ class NestedKeyTask(GenSubTask):
         if count is None and min_count is None and max_count is None:
             return None
 
-        rng = resolve_rng(context)
+        rng = context.rng
         if min_count is None:
             return rng.randint(max(0, max_count - 5), max_count)
         elif max_count is None:

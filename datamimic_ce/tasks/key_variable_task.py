@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import ast
+import random
 from abc import abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timedelta
@@ -20,7 +21,6 @@ from datamimic_ce.data_sources.weighted_data_source import WeightedDataSource
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
 from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
-from datamimic_ce.domains.domain_core.runtime import resolve_rng
 from datamimic_ce.statements.element_statement import ElementStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.variable_statement import VariableStatement
@@ -113,10 +113,13 @@ class KeyVariableTask:
             if not source.endswith("wgt.csv"):
                 raise ValueError(f"Data source of attribute '{self._statement.name}' must be type of: 'wgt.csv'")
             separator = self._statement.separator or ctx.default_separator
+            # Construction-time rng: derive from <setup rngSeed> if seeded, else
+            # the random module (same API).
+            seeded = ctx.derive_seeded_rng()
             self._generator = WeightedDataSource(
                 file_path=ctx.descriptor_dir / source,
                 separator=separator,
-                rng=resolve_rng(ctx),
+                rng=seeded if seeded is not None else random,
             )
             self._mode = self._GENERATOR_MODE
         elif self._statement.pattern is not None:
@@ -137,7 +140,7 @@ class KeyVariableTask:
     def statement(self) -> KeyStatement | VariableStatement | ElementStatement:
         return self._statement
 
-    def _generate_value(self, ctx: Context):
+    def _generate_value(self, ctx: GenIterContext):
         """
         Generate data based on generation mode
         :param ctx:
@@ -181,8 +184,7 @@ class KeyVariableTask:
             )
         elif self._mode == self._VALUES_MODE:
             # Return None if self._values is None
-            rng = resolve_rng(ctx)
-            value = None if self._values is None else rng.choice(self._values)
+            value = None if self._values is None else ctx.rng.choice(self._values)
         elif self._mode == self._LAZY_GENERATOR_MODE:
             # Try to init generator again in first task execution
             self._generator = (
@@ -220,8 +222,7 @@ class KeyVariableTask:
                 raise ValueError(f"Pattern is missing for <{self._element_tag}> '{self._statement.name}'")
             value = StringGenerator.rnd_str_from_regex(self._statement.pattern)
         elif self._mode == self._RANDOM_MODE:
-            rng = resolve_rng(ctx)
-            value = TaskUtil.generate_random_value_based_on_type(self._statement.type, rng=rng)
+            value = TaskUtil.generate_random_value_based_on_type(self._statement.type, rng=ctx.rng)
         else:
             raise RuntimeError(f"Cannot find data generation mode for <{self._element_tag}> '{self._statement.name}'")
 

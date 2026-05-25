@@ -4,11 +4,13 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import random
 import unittest
+from random import Random
 from unittest.mock import MagicMock
 
 from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.contexts.context import Context
+from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.tasks.reference_task import ReferenceTask
@@ -23,7 +25,10 @@ class TestReferenceTask(unittest.TestCase):
         self.statement.name = "test_name"
         self.pagination = MagicMock(spec=DataSourcePagination)
         self.pagination.limit = 2
-        self.context = MagicMock(spec=Context)
+        self.context = MagicMock(spec=GenIterContext)
+        # ReferenceTask reads ctx.rng directly; the random module exposes the
+        # same callable API as a Random instance, so it works as a drop-in.
+        self.context.rng = random
         self.rdbms_client = MagicMock(spec=RdbmsClient)
         self.context.root.clients.get.return_value = self.rdbms_client
 
@@ -95,6 +100,30 @@ class TestReferenceTask(unittest.TestCase):
             task.execute(self.context)
 
         self.assertIn("Cannot generate 5 unique values - only 3 available", str(context.exception))
+
+    def test_seeded_rng_makes_reference_replay_identically(self):
+        """<reference> picks must replay byte-identically when ctx.rng is seeded.
+
+        Stands in for a full DSL-level reference scenario (which requires RDBMS
+        scaffolding). Locks in that ReferenceTask honours ctx.rng for both the
+        unique (rng.sample) and non-unique (rng.choice) paths.
+        """
+        dataset = list(range(20))
+        self.rdbms_client.get_random_rows_by_column.return_value = dataset
+
+        def _collect(unique: bool) -> list:
+            self.statement.unique = unique
+            picks: list = []
+            for _ in range(2):
+                self.context.rng = Random(42)
+                task = ReferenceTask(self.statement, self.pagination)
+                picks.append(task.execute(self.context))
+            return picks
+
+        unique_picks = _collect(True)
+        self.assertEqual(unique_picks[0], unique_picks[1])
+        non_unique_picks = _collect(False)
+        self.assertEqual(non_unique_picks[0], non_unique_picks[1])
 
     def test_execute_with_context_field_addition(self):
         """Test execution with context that supports field addition."""

@@ -527,8 +527,8 @@ class TaskUtil:
         *,
         rng: Any,
     ) -> str | int | bool | float:
-        # ``rng`` is required: callers must inject a context-resolved RNG via
-        # ``resolve_rng(ctx)`` so seeded runs propagate fully.
+        # ``rng`` is required: callers inject the GenIterContext's rng so
+        # seeded runs propagate fully.
         if data_type == DATA_TYPE_STRING:
             min_len = 0
             max_len = 20

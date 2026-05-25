@@ -23,14 +23,14 @@ the ``Random`` class itself is allowed (that's instance use).
 
 The allow-list captures intentional exceptions:
 
-* ``rng.py`` — the SPOT itself; ``random`` module is the legitimate
-  unseeded fallback returned by ``resolve_rng``.
+* ``rng.py`` — the SPOT itself; defines the forking primitives.
 * ``geniter_context.py`` — its ``.rng`` property returns the ``random``
-  module when unseeded (intentional duck-typed API).
+  module when unseeded (so call-time callers don't branch on None).
 
 Adding a new ``random.X(...)`` callsite means either (a) routing it
-through ``resolve_rng(ctx)`` / a ``Random`` instance, or (b) adding the
-file to the allow-list with a comment explaining why.
+through ``ctx.rng`` (call time) / ``setup_ctx.derive_seeded_rng()``
+(construction time) / a ``Random`` instance, or (b) adding the file to
+the allow-list with a comment explaining why.
 """
 
 from __future__ import annotations
@@ -46,10 +46,10 @@ PROD_ROOT = Path(__file__).resolve().parents[2] / "datamimic_ce"
 # small; every entry is a discipline exception that future reviewers
 # should verify still applies.
 ALLOWLIST: set[str] = {
-    # SPOT itself: resolve_rng() returns the random module as the unseeded fallback.
+    # SPOT itself: defines spawn_rng / derive_child_seed forking primitives.
     "datamimic_ce/domains/domain_core/runtime/rng.py",
     # GenIterContext.rng returns the random module when no seed is set
-    # (intentional duck-typed API consumed by resolve_rng).
+    # so call-time callers can use a single API without branching on None.
     "datamimic_ce/contexts/geniter_context.py",
     # PasswordGenerator deliberately uses secrets.choice for the character
     # picks; the final random.shuffle is the same intent (unpredictable
@@ -130,8 +130,9 @@ def test_no_raw_random_module_in_production(module_path: Path) -> None:
     pytest.fail(
         f"RNG SPOT violation — {rel} draws from the bare random module:\n"
         f"{formatted}\n\n"
-        f"Use datamimic_ce.domains.domain_core.runtime.resolve_rng(ctx) or a "
-        f"Random instance instead, or add {rel!r} to the allow-list in "
+        f"Use ctx.rng (call time), setup_ctx.derive_seeded_rng() "
+        f"(construction time), or a Random instance instead, or add "
+        f"{rel!r} to the allow-list in "
         f"tests_ce/architecture/test_random_drift_gate.py with a comment "
         f"explaining why."
     )
