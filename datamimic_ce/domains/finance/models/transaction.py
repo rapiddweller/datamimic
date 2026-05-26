@@ -48,7 +48,7 @@ class Transaction(BaseEntity):
         Returns:
             A unique identifier for the transaction.
         """
-        return StringGenerator.rnd_str_from_regex("[A-Z0-9]{16}")
+        return StringGenerator.rnd_str_from_regex("[A-Z0-9]{16}", rng=self._transaction_generator.rng)
 
     @property
     @property_cache
@@ -228,9 +228,6 @@ class Transaction(BaseEntity):
         }
 
         if self.account:
-            result["account"] = {
-                "account_number": self.account.account_number,
-                "account_type": self.account.account_type,
-            }
+            result["account"] = self.account.to_dict()
 
         return result

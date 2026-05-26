@@ -10,6 +10,7 @@ Administration office generator utilities.
 This module provides utility functions for generating administration office data.
 """
 
+import datetime
 import random
 from pathlib import Path
 from typing import TypeVar
@@ -18,10 +19,10 @@ from datamimic_ce.domains.common.generators.address_generator import AddressGene
 from datamimic_ce.domains.common.literal_generators.family_name_generator import FamilyNameGenerator
 from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.utils.dataset_loader import (
     load_weighted_values_try_dataset,
-    pick_one_weighted,
+    pick_one_weighted_no_repeat,
 )
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
@@ -29,33 +30,39 @@ from datamimic_ce.utils.file_util import FileUtil
 T = TypeVar("T")  # Define a type variable for generic typing
 
 
-class AdministrationOfficeGenerator(BaseDomainGenerator):
+class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
     """Generator for administration office data."""
 
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        reference_now: datetime.datetime | None = None,
+    ):
         """Initialize the administration office generator.
 
         Args:
             dataset: The country code to use for data generation
+            rng: Optional seeded random instance for deterministic output.
+            reference_now: Optional fixed datetime anchor for deterministic mode.
         """
-        self._dataset = (dataset or "US").upper()  #  propagate normalized dataset to dependent generators
-        self._rng = rng or random.Random()  #  deterministic RNG injection point
+        super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         # Derive child RNGs so seeded administration offices replay deterministic nested attributes.
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._phone_number_generator = PhoneNumberGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._family_name_generator = FamilyNameGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._given_name_generator = GivenNameGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         # Track last office type to avoid immediate repetition in successive generations
         self._last_office_type: str | None = None
@@ -83,16 +90,13 @@ class AdministrationOfficeGenerator(BaseDomainGenerator):
         return self._given_name_generator
 
     @property
-    def dataset(self) -> str:
-        return self._dataset
+    def last_hours_signature(self) -> tuple[tuple[str, str], ...] | None:
+        """Signature of the previously generated hours, for cross-entity anti-repeat."""
+        return self._last_hours_signature
 
-    @property
-    def rng(self) -> random.Random:
-        return self._rng
-
-    def _derive_rng(self) -> random.Random:
-        # Spawn deterministic child RNGs so seeded offices replay consistently without sharing streams.
-        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
+    @last_hours_signature.setter
+    def last_hours_signature(self, sig: tuple[tuple[str, str], ...]) -> None:
+        self._last_hours_signature = sig
 
     # Helper: pick office type from dataset using weighted values with anti-repeat
     def pick_office_type(self) -> str:
@@ -103,10 +107,7 @@ class AdministrationOfficeGenerator(BaseDomainGenerator):
             dataset=self._dataset,
             start=Path(__file__),
         )
-        choice = pick_one_weighted(self._rng, values, weights)
-        # simple anti-repeat: redraw once if same and >1 options
-        if self._last_office_type == choice and len(values) > 1:
-            choice = pick_one_weighted(self._rng, values, weights)
+        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_office_type)
         self._last_office_type = choice
         return choice
 
@@ -119,12 +120,9 @@ class AdministrationOfficeGenerator(BaseDomainGenerator):
             dataset=self._dataset,
             start=Path(__file__),
         )
-        pick = pick_one_weighted(self._rng, values, weights).lower()
-        # minimal anti-repeat redraw
-        if self._last_jurisdiction and pick == str(self._last_jurisdiction).lower() and len(values) > 1:
-            pick = pick_one_weighted(self._rng, values, weights).lower()
+        pick = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_jurisdiction)
         self._last_jurisdiction = pick
-        return pick
+        return pick.lower()
 
     # Helper: build office name using dataset patterns (US fallback handled by dataset_path)
     def build_office_name(self, city: str, state: str, office_type: str, jurisdiction: str) -> str:
@@ -173,8 +171,8 @@ class AdministrationOfficeGenerator(BaseDomainGenerator):
         )
 
     # Helper: founding year based on office type ranges (deterministic via rng)
-    def pick_founding_year(self, office_type: str, *, now_year: int | None = None) -> int:
-        year = now_year or __import__("datetime").datetime.now().year
+    def pick_founding_year(self, office_type: str) -> int:
+        year = self._reference_now.year
         if "Federal" in office_type:
             min_age, max_age = 20, 200
         elif "State" in office_type:
@@ -185,17 +183,25 @@ class AdministrationOfficeGenerator(BaseDomainGenerator):
             min_age, max_age = 5, 75
         return year - self._rng.randint(min_age, max_age)
 
-    # Helper: pick staff count deterministically by office type
+    # Helper: pick staff count deterministically by office type, avoiding an
+    # immediate repeat across consecutive entities (state owned here, not in the model).
     def pick_staff_count(self, office_type: str) -> int:
-        if "Federal" in office_type:
-            return self._rng.randint(50, 500)
-        if "State" in office_type:
-            return self._rng.randint(30, 300)
-        if "County" in office_type:
-            return self._rng.randint(20, 150)
-        if "Municipal" in office_type or "City" in office_type:
-            return self._rng.randint(10, 100)
-        return self._rng.randint(5, 75)
+        def draw() -> int:
+            if "Federal" in office_type:
+                return self._rng.randint(50, 500)
+            if "State" in office_type:
+                return self._rng.randint(30, 300)
+            if "County" in office_type:
+                return self._rng.randint(20, 150)
+            if "Municipal" in office_type or "City" in office_type:
+                return self._rng.randint(10, 100)
+            return self._rng.randint(5, 75)
+
+        val = draw()
+        if val == self._last_staff_count:
+            val = draw()
+        self._last_staff_count = val
+        return val
 
     # Helper: services from agencies dataset
     def pick_services(self, *, start: Path) -> list[str]:
@@ -267,7 +273,8 @@ class AdministrationOfficeGenerator(BaseDomainGenerator):
         # Build domain via dataset-driven DomainGenerator to avoid static TLD mappings
         from datamimic_ce.domains.common.literal_generators.domain_generator import DomainGenerator
 
-        domain = DomainGenerator(dataset=self._dataset, rng=self._rng).generate().lower()
+        domain_generator = DomainGenerator(dataset=self._dataset, rng=self._derive_rng())
+        domain = domain_generator.generate().lower()
         return f"https://www.{domain}"
 
     # Helper: email builder from dataset roles; local-part from role slug

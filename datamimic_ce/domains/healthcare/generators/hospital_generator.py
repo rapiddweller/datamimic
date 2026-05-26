@@ -10,37 +10,32 @@ Hospital generator utilities.
 This module provides utility functions for generating hospital data.
 """
 
+import datetime
 import random
 from pathlib import Path
 
 from datamimic_ce.domains.common.generators.address_generator import AddressGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 
 
-class HospitalGenerator(BaseDomainGenerator):
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None) -> None:
-        #  normalize dataset to ISO upper-case to map to suffixed CSVs consistently
-        self._dataset = (dataset or "US").upper()
-        self._rng: random.Random = rng or random.Random()
+class HospitalGenerator(ClockAnchoredDomainGenerator):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+        reference_now: datetime.datetime | None = None,
+    ) -> None:
+        super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._phone_number_generator = PhoneNumberGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._last_type: str | None = None
-
-    @property
-    def dataset(self) -> str:
-        """Get the dataset.
-
-        Returns:
-            The dataset.
-        """
-        return self._dataset
 
     @property
     def address_generator(self) -> AddressGenerator:
@@ -59,14 +54,6 @@ class HospitalGenerator(BaseDomainGenerator):
             The phone number generator.
         """
         return self._phone_number_generator
-
-    @property
-    def rng(self) -> random.Random:
-        return self._rng
-
-    def _derive_rng(self) -> random.Random:
-        # Spawn child RNGs so seeded hospitals can replay deterministically without coupling downstream draws.
-        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()
 
     def generate_hospital_name(self, city: str, state: str) -> str:
         """Generate a hospital name based on location.
@@ -90,18 +77,15 @@ class HospitalGenerator(BaseDomainGenerator):
         return pattern.format(city=city, state=state)
 
     def get_hospital_type(self):
-        from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset
+        from datamimic_ce.domains.utils.dataset_loader import (
+            load_weighted_values_try_dataset,
+            pick_one_weighted_no_repeat,
+        )
 
         values, w = load_weighted_values_try_dataset(
             "healthcare", "hospital", "hospital_types.csv", dataset=self._dataset, start=Path(__file__)
         )
-        # avoid immediate repetition when possible
-        if self._last_type in values and len(values) > 1:
-            pool = [(v, float(wi)) for v, wi in zip(values, w, strict=False) if v != self._last_type]
-            p_vals, p_w = zip(*pool, strict=False)
-            choice = self._rng.choices(list(p_vals), weights=list(p_w), k=1)[0]
-        else:
-            choice = self._rng.choices(values, weights=w, k=1)[0]
+        choice = pick_one_weighted_no_repeat(self._rng, values, w, last=self._last_type)
         self._last_type = choice
         return choice
 

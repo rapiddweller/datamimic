@@ -19,8 +19,8 @@ class ColorGenerator(BaseLiteralGenerator):
         Args:
             format_type (str): The color format to generate. Options: 'hex', 'rgb', 'name'
         """
+        super().__init__(rng=rng)
         self._format = format_type.lower()
-        self._rng: random.Random = rng or random.Random()
         self._color_names = [
             "red",
             "green",

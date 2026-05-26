@@ -1,0 +1,13 @@
+<setup>
+    <!-- PT0.001S = 1 ms. 50 ms window = 50 ticks. ISO 8601 represents
+         milliseconds via fractional seconds; there is no separate "ms" symbol. -->
+    <generate name="rows"
+              start="2026-01-01T00:00:00+00:00"
+              end="2026-01-01T00:00:00.050000+00:00"
+              interval="PT0.001S"
+              target="">
+        <key name="timestamp" script="ts.now.isoformat()"/>
+        <key name="step"      script="ts.step"/>
+        <key name="micro"     script="ts.now.microsecond"/>
+    </generate>
+</setup>

@@ -16,6 +16,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_IN_DATE_FORMAT,
     ATTR_LOCALE,
     ATTR_OUT_DATE_FORMAT,
+    ATTR_RNG_SEED,
     ATTR_SCRIPT,
     ATTR_SELECTOR,
     ATTR_SEPARATOR,
@@ -129,7 +130,7 @@ class ModelUtil:
                 "ageMax",
                 "conditionsInclude",
                 "conditionsExclude",
-                "rngSeed",
+                ATTR_RNG_SEED,
             ],
         )
 

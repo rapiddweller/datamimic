@@ -1,0 +1,10 @@
+<setup>
+    <!-- Negative test: `end` is malformed (missing time component AND wrong format). -->
+    <generate name="rows"
+              start="2026-01-01T00:00:00+00:00"
+              end="January 8th, 2026"
+              interval="PT1H"
+              target="">
+        <key name="timestamp" script="ts.now.isoformat()"/>
+    </generate>
+</setup>

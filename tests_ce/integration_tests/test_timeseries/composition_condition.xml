@@ -1,0 +1,14 @@
+<setup>
+    <!-- Composition with the existing <key condition="..."> mechanism: the ts
+         namespace must be available inside condition expressions, and the
+         time-series loop must drive the iteration normally. Even-step rows get
+         an `even_only` field; odd rows omit it. -->
+    <generate name="rows"
+              start="2026-01-01T00:00:00+00:00"
+              end="2026-01-01T00:00:06+00:00"
+              interval="PT1S"
+              target="">
+        <key name="step"      script="ts.step"/>
+        <key name="even_only" script="ts.step" condition="ts.step % 2 == 0"/>
+    </generate>
+</setup>

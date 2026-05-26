@@ -17,16 +17,18 @@ from __future__ import annotations
 import random
 from pathlib import Path
 
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class MedicalProcedureGenerator(BaseDomainGenerator):
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
-        #  normalize once so we consistently resolve _{CC}.csv files
-        self._dataset = (dataset or "US").upper()
-        self._rng: random.Random = rng or random.Random()
+class MedicalProcedureGenerator(DatasetAwareDomainGenerator):
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+    ):
+        super().__init__(dataset=dataset, rng=rng)
         self._last_specialty: str | None = None
         self._last_recovery_time: int | None = None
 
@@ -122,19 +124,12 @@ class MedicalProcedureGenerator(BaseDomainGenerator):
 
     def generate_specialty(self) -> str:
         """Generate a medical specialty (dataset-driven)."""
+        from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
+
         file_path = dataset_path("healthcare", "medical", f"specialties_{self._dataset}.csv", start=Path(__file__))
         wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
-        # avoid immediate repetition when possible
-        if self._last_specialty is not None and len(loaded_data) > 1:
-            pool = [
-                (row["specialty"], float(w))
-                for row, w in zip(loaded_data, wgt, strict=False)
-                if row["specialty"] != self._last_specialty
-            ]
-            values, weights = zip(*pool, strict=False)
-            choice = self._rng.choices(list(values), weights=list(weights), k=1)[0]
-        else:
-            choice = self._rng.choices(loaded_data, weights=wgt, k=1)[0]["specialty"]
+        values = [row["specialty"] for row in loaded_data]
+        choice = pick_one_weighted_no_repeat(self._rng, values, wgt, last=self._last_specialty)
         self._last_specialty = choice
         return choice
 
@@ -157,7 +152,3 @@ class MedicalProcedureGenerator(BaseDomainGenerator):
             val = self._rng.choice(candidates)
         self._last_recovery_time = val
         return val
-
-    @property
-    def rng(self) -> random.Random:
-        return self._rng

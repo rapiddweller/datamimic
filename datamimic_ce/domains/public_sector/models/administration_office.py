@@ -11,7 +11,6 @@ This module provides the AdministrationOffice entity model for generating
 realistic public administration office data.
 """
 
-import datetime
 from pathlib import Path
 from typing import Any
 
@@ -141,7 +140,7 @@ class AdministrationOffice(BaseEntity):
         Returns:
             The founding year.
         """
-        current_year = datetime.datetime.now().year
+        current_year = self._administration_office_generator.reference_now.year
         office_type = self.type
 
         # Different ranges based on type
@@ -171,30 +170,7 @@ class AdministrationOffice(BaseEntity):
         Returns:
             The number of staff members.
         """
-        office_type = self.type
-
-        # Staff size ranges based on office type
-        def pick() -> int:
-            rng = self._administration_office_generator.rng
-            if "Federal" in office_type:
-                return rng.randint(50, 500)
-            elif "State" in office_type:
-                return rng.randint(30, 300)
-            elif "County" in office_type:
-                return rng.randint(20, 150)
-            elif "Municipal" in office_type or "City" in office_type:
-                return rng.randint(10, 100)
-            else:
-                return rng.randint(5, 75)
-
-        gen = self._administration_office_generator
-        val = pick()
-        last = getattr(gen, "_last_staff_count", None)
-        if last == val:
-            # try one more draw to reduce equality chance
-            val = pick()
-        gen._last_staff_count = val
-        return val
+        return self._administration_office_generator.pick_staff_count(self.type)
 
     @property
     @property_cache
@@ -286,8 +262,7 @@ class AdministrationOffice(BaseEntity):
         # Reduce chance of identical hours across consecutive entities
         sig = tuple(sorted(hours.items()))
         gen = self._administration_office_generator
-        last_sig = getattr(gen, "_last_hours_signature", None)
-        if last_sig == sig:
+        if gen.last_hours_signature == sig:
             # Nudge schedule by adding or changing an extended day or Saturday hours
             # Prefer adding an extended day if not already present
             candidates = [d for d, v in hours.items() if v != "Closed"]
@@ -301,7 +276,7 @@ class AdministrationOffice(BaseEntity):
                 saturday_close = rng.choices(sat_closes, weights=sat_close_w, k=1)[0]
                 hours["Saturday"] = f"{saturday_open} - {saturday_close}"
             sig = tuple(sorted(hours.items()))
-        gen._last_hours_signature = sig
+        gen.last_hours_signature = sig
         return hours
 
     @property
@@ -426,5 +401,5 @@ class AdministrationOffice(BaseEntity):
             "services": self.services,
             "departments": self.departments,
             "leadership": self.leadership,
-            "address": self.address,
+            "address": self.address.to_dict(),
         }

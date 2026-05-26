@@ -1,0 +1,6 @@
+<setup rngSeed="42">
+    <!-- Seeded random read of a .json source: shuffle is reproducible across runs. -->
+    <generate name="rows" source="data/people.json" target="" distribution="random">
+        <key name="id" script="id" />
+    </generate>
+</setup>

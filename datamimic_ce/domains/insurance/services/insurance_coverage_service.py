@@ -13,20 +13,33 @@ This module provides service functions for generating and managing insurance com
 from random import Random
 
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import EntitySchema, FieldSpec, field
 from datamimic_ce.domains.insurance.generators.insurance_coverage_generator import InsuranceCoverageGenerator
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
+
+INSURANCE_COVERAGE_SCHEMA = EntitySchema(
+    "InsuranceCoverage",
+    (
+        field("name", str, "Coverage name."),
+        field("code", str, "Coverage code."),
+        field("product_code", str, "Associated product code."),
+        field("description", str, "Coverage description."),
+        field("min_coverage", str, "Minimum coverage amount."),
+        field("max_coverage", str, "Maximum coverage amount."),
+    ),
+)
 
 
 class InsuranceCoverageService(BaseDomainService[InsuranceCoverage]):
     """Service for generating and managing insurance company coverages."""
 
     def __init__(self, dataset: str | None = None, rng: Random | None = None):
-        super().__init__(InsuranceCoverageGenerator(dataset=dataset, rng=rng), InsuranceCoverage)
+        super().__init__(
+            InsuranceCoverageGenerator(dataset=dataset, rng=rng), InsuranceCoverage
+        )
 
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
+    DATASET_PATTERNS = ("insurance/coverages_{CC}.csv",)
 
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        return compute_supported_datasets(["insurance/coverages_{CC}.csv"], start=Path(__file__))
+    @classmethod
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return INSURANCE_COVERAGE_SCHEMA.fields

@@ -7,10 +7,29 @@
 import random
 import re
 import string
+from collections.abc import Iterator
+from contextlib import contextmanager
 
 import exrex  # type: ignore
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+
+
+@contextmanager
+def _exrex_using(rng: random.Random) -> Iterator[None]:
+    """Make exrex draw from ``rng`` for the duration of the block.
+
+    exrex binds ``random.choice``/``random.randint`` at import and exposes no
+    RNG parameter, so the only injection seam is its module globals. We swap
+    them for the block and restore afterwards. Not thread-safe — CE generation
+    is single-threaded per process.
+    """
+    orig_choice, orig_randint = exrex.choice, exrex.randint
+    exrex.choice, exrex.randint = rng.choice, rng.randint
+    try:
+        yield
+    finally:
+        exrex.choice, exrex.randint = orig_choice, orig_randint
 
 
 class StringGenerator(BaseLiteralGenerator):
@@ -22,6 +41,7 @@ class StringGenerator(BaseLiteralGenerator):
         unique: bool = False,
         prefix: str | None = None,
         suffix: str | None = None,
+        rng: random.Random | None = None,
     ):
         self._char_set = (
             char_set
@@ -57,19 +77,22 @@ class StringGenerator(BaseLiteralGenerator):
                 f"Cannot generate unique string with length {self._max_len} "
                 f"from character set of size {len(self._char_set)}"
             )
-        self._rng: random.Random = random.Random()
+        super().__init__(rng=rng)
 
     def generate(self) -> str:
         try:
             # regex
             if any(c in self._char_set for c in ".^$*+?{}[]|()"):
                 compiled_regex = re.compile(self._char_set)
-                char_set_list = list(set(compiled_regex.findall(string.printable)))
+                # sorted(): set iteration order is hash-randomised across
+                # processes, so an unsorted candidate list breaks cross-process
+                # byte-stability even with a seeded rng.
+                char_set_list = sorted(set(compiled_regex.findall(string.printable)))
             else:
                 # simple character
-                char_set_list = list(set(self._char_set))
+                char_set_list = sorted(set(self._char_set))
         except re.error:
-            char_set_list = list(set(self._char_set))
+            char_set_list = sorted(set(self._char_set))
 
         # If unique, ensure each character only appears once
         if self.unique:
@@ -84,9 +107,9 @@ class StringGenerator(BaseLiteralGenerator):
         return self.prefix + "".join(result) + self.suffix
 
     @staticmethod
-    def rnd_str_from_regex(pattern: str) -> str:
-        pattern = r"" + pattern
-        result = exrex.getone(pattern, 1)
+    def rnd_str_from_regex(pattern: str, *, rng: random.Random) -> str:
+        with _exrex_using(rng):
+            result = exrex.getone(pattern, 1)
         if result is None:
             raise ValueError(f"Cannot generate string from regex pattern: {pattern}")
         return result

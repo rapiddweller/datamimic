@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+import random
 import re
 
 import pytest
@@ -51,3 +52,13 @@ class TestStringGenerator:
             ValueError, match=re.escape("Cannot generate unique string with length 9 from character set of size 5")
         ):
             StringGenerator(char_set="[a-b]", min_len=5, max_len=9, unique=True).generate()
+
+    def test_seeded_string_generator_replays_identically(self):
+        """Same seed must yield byte-identical output (the determinism contract)."""
+
+        def draw(seed: int) -> list[str]:
+            gen = StringGenerator(min_len=4, max_len=12, char_set="[a-zA-Z0-9]", rng=random.Random(seed))
+            return [gen.generate() for _ in range(10)]
+
+        assert draw(42) == draw(42)
+        assert draw(1) != draw(999999)

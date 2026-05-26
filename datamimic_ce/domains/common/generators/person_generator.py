@@ -22,12 +22,12 @@ from datamimic_ce.domains.common.literal_generators.given_name_generator import 
 from datamimic_ce.domains.common.literal_generators.nobility_title_generator import NobilityTitleGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class PersonGenerator(BaseDomainGenerator):
+class PersonGenerator(DatasetAwareDomainGenerator):
     """Generator for person-related attributes.
 
     Provides methods to generate person-related attributes such as
@@ -47,8 +47,7 @@ class PersonGenerator(BaseDomainGenerator):
         demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
     ):
-        self._dataset = dataset or "US"
-        self._rng: Random = rng or Random()
+        super().__init__(dataset=dataset, rng=rng)
         self._demographic_sampler = demographic_sampler
         # Normalize demographic overrides once to keep SPOT and reuse downstream.
         resolved_config = (demographic_config or DemographicConfig()).with_defaults(
@@ -65,27 +64,27 @@ class PersonGenerator(BaseDomainGenerator):
         self._gender_generator = GenderGenerator(
             female_quota=female_quota,
             other_gender_quota=other_gender_quota,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._given_name_generator = GivenNameGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._family_name_generator = FamilyNameGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._email_generator = EmailAddressGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._phone_generator = PhoneNumberGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._address_generator = AddressGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._demographic_config = resolved_config
         self._birth_min = self._demographic_config.age_min if self._demographic_config.age_min is not None else min_age
@@ -94,23 +93,22 @@ class PersonGenerator(BaseDomainGenerator):
         self._birthdate_generator = BirthdateGenerator(
             min_age=self._birth_min,
             max_age=self._birth_max,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._academic_title_generator = AcademicTitleGenerator(
             dataset=self._dataset,
             quota=academic_title_quota,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._nobility_title_generator = NobilityTitleGenerator(
             dataset=self._dataset,
             noble_quota=noble_quota,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
-        self._demographic_rng = self._derive_rng() if demographic_sampler is not None and rng is not None else Random()
-
-    def _derive_rng(self) -> Random:
-        # Spawn child RNGs from the base seed so seeded descriptors replay without entangling independent draws.
-        return Random(self._rng.randrange(2**63)) if isinstance(self._rng, Random) else Random()
+        # Used directly for sampling (not threaded to a child that self-seeds), so it
+        # must always be a concrete Random: a derived one when seeded, fresh otherwise.
+        derived_rng = self._derive_rng() if demographic_sampler is not None else None
+        self._demographic_rng: Random = derived_rng if derived_rng is not None else Random()
 
     def reserve_demographic_sample(self) -> DemographicSample:
         if self._demographic_sampler is None:
@@ -178,4 +176,9 @@ class PersonGenerator(BaseDomainGenerator):
         salutation_file_path = dataset_path("common", "person", f"salutation_{self._dataset}.csv", start=Path(__file__))
         header_dict, data = FileUtil.read_csv_to_dict_of_tuples_with_header(salutation_file_path, delimiter=",")
 
-        return data[0][header_dict[gender]] if gender in header_dict else ""
+        if gender not in header_dict:
+            raise ValueError(
+                f"Gender column {gender!r} not found in salutation_{self._dataset}.csv "
+                f"(columns: {sorted(header_dict)})"
+            )
+        return data[0][header_dict[gender]]

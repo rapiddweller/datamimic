@@ -5,8 +5,10 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
+import random
 import uuid
 from pathlib import Path
+from random import Random
 from typing import Any
 
 from datamimic_ce.clients.database_client import Client
@@ -15,6 +17,7 @@ from datamimic_ce.contexts.demographic_context import DemographicContext
 from datamimic_ce.converter.converter import Converter
 from datamimic_ce.converter.custom_converter import CustomConverter
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.runtime import derive_child_seed, spawn_rng
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
@@ -51,6 +54,7 @@ class SetupContext(Context):
         default_source_scripted: bool | None = None,
         report_logging: bool = True,
         demographic_context: DemographicContext | None = None,
+        seed: int | None = None,
     ):
         # SetupContext is always its root_context
         super().__init__(self)
@@ -81,6 +85,8 @@ class SetupContext(Context):
         self._generators = generators or {}
         self._global_variables = {} if global_variables is None else global_variables
         self._num_process = num_process
+        self._process_id: int | None = None
+        self._global_increment_registry: Any = None
         self._default_variable_prefix = default_variable_prefix
         self._default_variable_suffix = default_variable_suffix
         # IMPORTANT: do not set default bool value to default_source_scripted for config propagation
@@ -89,6 +95,29 @@ class SetupContext(Context):
         self._current_seed = current_seed
         self._task_exporters: dict[str, dict[str, Any]] = {}
         self._demographic_context = demographic_context
+        # Model-wide determinism root (<setup rngSeed="...">). Variables/keys without
+        # their own seed derive a reproducible child RNG from this; None => unseeded.
+        self._root_seed = seed
+        self._root_rng: Random | None = Random(seed) if seed is not None else None
+        # Cached call-time rng — populated lazily on first ``.rng`` access.
+        self._call_rng: Any = None
+
+    def derive_seeded_rng(self) -> Random | None:
+        """Fork a reproducible child RNG from the model-wide root seed.
+
+        Returns ``None`` when no ``<setup rngSeed>`` was given, so the caller stays
+        unseeded (wall-clock random).
+        """
+        return spawn_rng(self._root_rng) if self._root_rng is not None else None
+
+    @property
+    def rng(self) -> Any:
+        """Cached call-time rng. Mirrors ``GenIterContext.rng`` so ``ctx.rng``
+        works whether ``ctx`` is a SetupContext or a GenIterContext."""
+        if self._call_rng is None:
+            derived = self.derive_seeded_rng()
+            self._call_rng = derived if derived is not None else random
+        return self._call_rng
 
     def __deepcopy__(self, memo):
         """
@@ -129,6 +158,7 @@ class SetupContext(Context):
             report_logging=copy.deepcopy(self._report_logging),
             current_seed=self._current_seed,
             demographic_context=copy.deepcopy(self._demographic_context, memo),
+            seed=self._root_seed,
         )
 
     def _deepcopy_clients(self, memo):
@@ -355,6 +385,15 @@ class SetupContext(Context):
         self._num_process = value
 
     @property
+    def process_id(self) -> int | None:
+        """Worker id when the run is split across multiple processes; ``None`` otherwise."""
+        return self._process_id
+
+    @process_id.setter
+    def process_id(self, value: int | None) -> None:
+        self._process_id = value
+
+    @property
     def default_variable_prefix(self) -> str:
         return self._default_variable_prefix
 
@@ -408,12 +447,16 @@ class SetupContext(Context):
         return self._clients.get(client_id)
 
     def get_distribution_seed(self) -> int:
+        """Seed for source shuffling (``distribution="random"``).
+
+        Deterministic when the model sets ``<setup rngSeed>`` — derived from the
+        run's root RNG, so a seeded random read replays identically. Without a
+        setup seed it returns a fresh per-run seed from the task id
+        (non-deterministic, the privacy-maximized default).
         """
-        Get distribution seed from task_id.
-        Always return new seed on each call.
-        :return:
-        """
-        # Return new seed on each call
+        if self._root_rng is not None:
+            return derive_child_seed(self._root_rng)
+        # Unseeded run: return a new seed on each call
         if self._current_seed is not None:
             self._current_seed += 1
         # If init seed is not set, calculate seed from task_id

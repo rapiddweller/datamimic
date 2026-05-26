@@ -1,0 +1,13 @@
+<setup>
+    <!-- Negative test: <variable name="ts"> is reserved in time-series mode.
+         Must error at parse time with a message naming 'ts' and pointing
+         the user to rename their variable. -->
+    <generate name="rows"
+              start="2026-01-01T00:00:00+00:00"
+              end="2026-01-01T03:00:00+00:00"
+              interval="PT1H"
+              target="">
+        <variable name="ts" entity="Person"/>
+        <key name="timestamp" script="ts.now.isoformat()"/>
+    </generate>
+</setup>

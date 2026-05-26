@@ -10,13 +10,46 @@ Doctor service.
 This module provides a service for working with Doctor entities.
 """
 
+from datetime import datetime
 from random import Random
 
 from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core import BaseDomainService
+from datamimic_ce.domains.domain_core.attribute_catalog import (
+    EntitySchema,
+    FieldSpec,
+    address_group,
+    field,
+)
 from datamimic_ce.domains.healthcare.generators.doctor_generator import DoctorGenerator
 from datamimic_ce.domains.healthcare.models.doctor import Doctor
+
+DOCTOR_SCHEMA = EntitySchema(
+    "Doctor",
+    (
+        field("doctor_id", str, "Unique doctor identifier."),
+        field("npi_number", str, "National provider identifier."),
+        field("license_number", str, "Medical license number."),
+        field("given_name", str, "First (given) name."),
+        field("family_name", str, "Last (family) name."),
+        field("full_name", str, "Full display name."),
+        field("gender", str, "Gender."),
+        field("birthdate", datetime, "Date of birth."),
+        field("age", int, "Age in years."),
+        field("specialty", str, "Medical specialty."),
+        field("hospital", dict, "Affiliated hospital details."),
+        field("medical_school", str, "Medical school attended."),
+        field("graduation_year", int, "Year of graduation."),
+        field("years_of_experience", int, "Years of professional experience."),
+        field("certifications", list, "Professional certifications."),
+        field("accepting_new_patients", bool, "Whether accepting new patients."),
+        field("office_hours", dict, "Office hours by day."),
+        field("email", str, "Email address."),
+        field("phone", str, "Phone number."),
+        address_group("address", "Structured practice address."),
+    ),
+)
 
 
 class DoctorService(BaseDomainService[Doctor]):
@@ -26,29 +59,27 @@ class DoctorService(BaseDomainService[Doctor]):
     Doctor entities.
     """
 
+    DATASET_PATTERNS = ("healthcare/medical/specialties_{CC}.csv",)
+
     def __init__(
         self,
         dataset: str | None = None,
         demographic_config: DemographicConfig | None = None,
         demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
+        reference_now: datetime | None = None,
     ) -> None:
-        import random as _r
-
         super().__init__(
             DoctorGenerator(
                 dataset=dataset,
-                rng=rng or _r.Random(),
+                rng=rng,
                 demographic_config=demographic_config,
                 demographic_sampler=demographic_sampler,
+                reference_now=reference_now,
             ),
             Doctor,
         )
 
-    @staticmethod
-    def supported_datasets() -> set[str]:
-        from pathlib import Path
-
-        from datamimic_ce.domains.utils.supported_datasets import compute_supported_datasets
-
-        return compute_supported_datasets(["healthcare/medical/specialties_{CC}.csv"], start=Path(__file__))
+    @classmethod
+    def attribute_specs(cls) -> tuple[FieldSpec, ...]:
+        return DOCTOR_SCHEMA.fields

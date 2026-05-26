@@ -59,9 +59,6 @@ class SequenceTableGenerator(BaseLiteralGenerator):
             raise ValueError(f"Statement type {type(stmt).__name__} must have 'database' attribute")
         self._source_name = stmt.database
 
-        # Get database client safely
-        if not hasattr(context.root, "clients"):
-            raise AttributeError("Context root must have 'clients' attribute")
         rdbms_client = context.root.clients.get(self._source_name)
         if rdbms_client is None:
             raise ValueError(f"No database client found for source: {self._source_name}")
@@ -73,13 +70,8 @@ class SequenceTableGenerator(BaseLiteralGenerator):
 
         # Initialize sequence with process-safe range
         try:
-            # Get process information from context
-            total_processes = context.root.num_process or 1 if hasattr(context.root, "num_process") else 1
-
-            if hasattr(context.root, "process_id"):
-                self._process_id = context.root.process_id
-            else:
-                self._process_id = 0
+            total_processes = context.root.num_process or 1
+            self._process_id = context.root.process_id or 0
 
             total_count = int(root_gen_stmt.count)
 

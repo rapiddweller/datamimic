@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
@@ -14,51 +14,48 @@ if TYPE_CHECKING:
 import datetime
 import random
 from pathlib import Path
-from typing import Any
 
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
+from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
+from datamimic_ce.domains.utils.dataset_loader import (
+    load_weighted_values_try_dataset,
+    pick_one_weighted,
+    pick_one_weighted_no_repeat,
+)
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class MedicalDeviceGenerator(BaseDomainGenerator):
+class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
     def __init__(
         self,
         dataset: str | None = None,
         rng: random.Random | None = None,
         demographic_config: DemographicConfig | None = None,
+        reference_now: datetime.datetime | None = None,
     ):
-        self._dataset = (dataset or "US").upper()  #  normalize once so we always map to _{dataset}.csv inputs
-        self._rng: random.Random = rng or random.Random()
+        super().__init__(dataset=dataset, rng=rng, reference_now=reference_now)
         #  thread demographic constraints to person details used in usage logs/technicians
         if demographic_config is None:
             from datamimic_ce.domains.common.models.demographic_config import DemographicConfig as _DC
 
             demographic_config = _DC()
         self._person_generator = PersonGenerator(
-            dataset=self._dataset, demographic_config=demographic_config, rng=self._rng
+            dataset=self._dataset,
+            demographic_config=demographic_config,
+            rng=self._derive_rng(),
         )
         self._last_manufacturer: str | None = None
-
-    @property
-    def dataset(self) -> str:
-        return self._dataset
 
     @property
     def person_generator(self) -> PersonGenerator:
         return self._person_generator
 
-    @property
-    def rng(self) -> random.Random:
-        return self._rng
-
     # Date helpers to keep model pure and deterministic
     def generate_manufacture_date(self) -> str:
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 
-        now = datetime.datetime.now()
+        now = self._reference_now
         min_dt = (now - datetime.timedelta(days=3650)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = (now - datetime.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
         dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
@@ -68,7 +65,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
     def generate_expiration_date(self) -> str:
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 
-        now = datetime.datetime.now()
+        now = self._reference_now
         min_dt = (now + datetime.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = (now + datetime.timedelta(days=1825)).strftime("%Y-%m-%d %H:%M:%S")
         dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
@@ -78,7 +75,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
     def generate_last_maintenance_date(self) -> str:
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 
-        now = datetime.datetime.now()
+        now = self._reference_now
         min_dt = (now - datetime.timedelta(days=180)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = now.strftime("%Y-%m-%d %H:%M:%S")
         dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
@@ -88,7 +85,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
     def generate_next_maintenance_date(self) -> str:
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 
-        now = datetime.datetime.now()
+        now = self._reference_now
         min_dt = (now + datetime.timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = (now + datetime.timedelta(days=180)).strftime("%Y-%m-%d %H:%M:%S")
         dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
@@ -107,13 +104,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         loaded_data = FileUtil.read_weight_csv(file_path)
         values: list[str] = [str(v) for v in loaded_data[0].tolist() if v is not None]
         weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
-        # avoid immediate repetition when possible
-        if self._last_manufacturer in values and len(values) > 1:
-            pool = [(v, float(w)) for v, w in zip(values, weights, strict=False) if v != self._last_manufacturer]
-            p_vals, p_w = zip(*pool, strict=False)
-            choice = self._rng.choices(list(p_vals), weights=list(p_w), k=1)[0]
-        else:
-            choice = self._rng.choices(values, weights=weights, k=1)[0]
+        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_manufacturer)
         self._last_manufacturer = choice
         return choice
 
@@ -171,7 +162,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         # Start date for logs (between 1 and 2 years ago)
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 
-        now = datetime.datetime.now()
+        now = self._reference_now
         min_dt = (now - datetime.timedelta(days=730)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = (now - datetime.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
         current_date = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
@@ -182,8 +173,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
             days_forward = self._rng.randint(5, 60)
             current_date += datetime.timedelta(days=days_forward)
 
-            # Skip if we've gone past today
-            if current_date > datetime.datetime.now():
+            if current_date > now:
                 break
 
             # Generate a log entry
@@ -270,7 +260,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         # Start date for maintenance (between 1 and 3 years ago)
         from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 
-        now = datetime.datetime.now()
+        now = self._reference_now
         min_dt = (now - datetime.timedelta(days=1095)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = (now - datetime.timedelta(days=365)).strftime("%Y-%m-%d %H:%M:%S")
         current_date = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
@@ -281,8 +271,7 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
             days_forward = self._rng.randint(30, 180)
             current_date += datetime.timedelta(days=days_forward)
 
-            # Skip if we've gone past today
-            if current_date > datetime.datetime.now():
+            if current_date > now:
                 break
 
             # Generate a maintenance record
@@ -387,7 +376,3 @@ class MedicalDeviceGenerator(BaseDomainGenerator):
         if self._rng.random() < 0.1:
             return ""
         return self._rng.choices(values, weights=w, k=1)[0]
-
-    def _derive_rng(self) -> random.Random:
-        # Fork deterministic child RNGs so seeded medical device descriptors replay without cross-coupling draws.
-        return random.Random(self._rng.randrange(2**63)) if isinstance(self._rng, random.Random) else random.Random()

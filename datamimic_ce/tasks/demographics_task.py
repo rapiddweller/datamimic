@@ -22,7 +22,12 @@ class DemographicsTask(SetupSubTask):
         directory = Path(self._statement.directory)
         profile = load_demographic_profile(directory, self._statement.dataset, self._statement.version)
         sampler = DemographicSampler(profile)
-        rng = Random(self._statement.rng_seed) if self._statement.rng_seed is not None else Random()
+        if self._statement.rng_seed is not None:
+            rng = Random(self._statement.rng_seed)
+        else:
+            # Inherit the model-wide <setup rngSeed> when the block has no own rngSeed.
+            derived = ctx.derive_seeded_rng()
+            rng = derived if derived is not None else Random()
         demographic_context = DemographicContext(
             profile_id=profile.profile_id,
             sampler=sampler,

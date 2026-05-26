@@ -14,7 +14,9 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_COUNT,
     ATTR_CYCLIC,
     ATTR_DISTRIBUTION,
+    ATTR_END,
     ATTR_EXPORT_URI,
+    ATTR_INTERVAL,
     ATTR_MP_PLATFORM,
     ATTR_MULTIPROCESSING,
     ATTR_NAME,
@@ -26,6 +28,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_SOURCE,
     ATTR_SOURCE_SCRIPTED,
     ATTR_SOURCE_URI,
+    ATTR_START,
     ATTR_STORAGE_ID,
     ATTR_TARGET,
     ATTR_TYPE,
@@ -33,6 +36,8 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VARIABLE_SUFFIX,
 )
 from datamimic_ce.model.model_util import ModelUtil
+
+_TIMESERIES_ATTRS: frozenset[str] = frozenset({ATTR_START, ATTR_END, ATTR_INTERVAL})
 
 
 class GenerateModel(BaseModel):
@@ -59,6 +64,10 @@ class GenerateModel(BaseModel):
     num_process: int | None = Field(None, alias=ATTR_NUM_PROCESS)
     script: str | None = Field(None, alias=ATTR_SCRIPT)
     mp_platform: str | None = Field(None, alias=ATTR_MP_PLATFORM)
+    # Time-series iterator (ISO 8601 start/end/interval). See _TIMESERIES_ATTRS.
+    start: str | None = None
+    end: str | None = None
+    interval: str | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -88,12 +97,29 @@ class GenerateModel(BaseModel):
                 ATTR_NUM_PROCESS,
                 ATTR_SCRIPT,
                 ATTR_MP_PLATFORM,
+                ATTR_START,
+                ATTR_END,
+                ATTR_INTERVAL,
             },
         )
 
     @model_validator(mode="before")
     @classmethod
+    def validate_timeseries_window(cls, values: dict):
+        """`start`/`end`/`interval` must be set together — all or none."""
+        present = _TIMESERIES_ATTRS & values.keys()
+        if present and present != _TIMESERIES_ATTRS:
+            missing = _TIMESERIES_ATTRS - present
+            raise ValueError(f"Time-series attributes must be set together; missing: {sorted(missing)}")
+        return values
+
+    @model_validator(mode="before")
+    @classmethod
     def validate_count_and_source(cls, values: dict):
+        # In time-series mode count is optional (default 1 series); otherwise enforce the
+        # existing rule that count is required unless source/script supplies the length.
+        if _TIMESERIES_ATTRS & values.keys():
+            return values
         return ModelUtil.check_exist_count(values=values)
 
     @model_validator(mode="before")

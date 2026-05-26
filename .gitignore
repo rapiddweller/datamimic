@@ -86,3 +86,7 @@ test_artifacts/
 
 .cursor
 /.coveragerc
+
+# Local AI assistant scratchpads (do not check in)
+CLAUDE.md
+.claude/

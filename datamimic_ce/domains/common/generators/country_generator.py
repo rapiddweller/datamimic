@@ -9,22 +9,25 @@ import random
 from pathlib import Path
 from typing import Any
 
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.logger import logger
 from datamimic_ce.utils.file_util import FileUtil
 
 
-class CountryGenerator(BaseDomainGenerator):
+class CountryGenerator(DatasetAwareDomainGenerator):
     """Generator for country-related attributes.
 
     Provides methods to generate country-related attributes such as
     ISO code, name, default language locale, phone code, and population.
     """
 
-    def __init__(self, dataset: str | None = None, rng: random.Random | None = None):
-        self._dataset = (dataset or "US").upper()  #  lock dataset to ISO code so we can pick suffixed CSVs
-        self._rng: random.Random = rng or random.Random()
+    def __init__(
+        self,
+        dataset: str | None = None,
+        rng: random.Random | None = None,
+    ):
+        super().__init__(dataset=dataset, rng=rng)
 
     def load_country_data(self):
         """Load country data from CSV file.

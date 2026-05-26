@@ -20,8 +20,11 @@ from datamimic_ce.domains.common.literal_generators.family_name_generator import
 from datamimic_ce.domains.common.literal_generators.given_name_generator import GivenNameGenerator
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
-from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import load_weighted_values_try_dataset, pick_one_weighted
+from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.utils.dataset_loader import (
+    load_weighted_values_try_dataset,
+    pick_one_weighted_no_repeat,
+)
 from datamimic_ce.domains.utils.dataset_path import dataset_path
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -30,7 +33,7 @@ _CONDITION_DATA_DIR = dataset_path("healthcare", "medical", start=Path(__file__)
 _EMERGENCY_RELATIONSHIP_DIR = dataset_path("healthcare", "medical", start=Path(__file__))
 
 
-class PatientGenerator(BaseDomainGenerator):
+class PatientGenerator(DatasetAwareDomainGenerator):
     # Cache for loaded emergency relationship distributions per dataset
     _emergency_relationship_cache: dict[str, tuple[list[str], list[float]]] = {}
 
@@ -41,28 +44,27 @@ class PatientGenerator(BaseDomainGenerator):
         demographic_sampler: DemographicSampler | None = None,
         rng: Random | None = None,
     ):
-        self._dataset = dataset or "US"
-        self._rng: Random = rng or Random()
+        super().__init__(dataset=dataset, rng=rng)
         self._demographic_config = (demographic_config or DemographicConfig()).with_defaults()
         self._person_generator = PersonGenerator(
             dataset=self._dataset,
             demographic_config=self._demographic_config,
             demographic_sampler=demographic_sampler,
-            rng=self._rng,
+            rng=self._derive_rng(),
         )
         self._demographic_sampler = demographic_sampler
         # Fan out deterministic RNG so seeded patient cohorts remain reproducible across dependent literals.
         self._family_name_generator = FamilyNameGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._given_name_generator = GivenNameGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         self._phone_number_generator = PhoneNumberGenerator(
             dataset=self._dataset,
-            rng=self._derive_rng() if rng is not None else None,
+            rng=self._derive_rng(),
         )
         # Track last blood type to reduce immediate repetition in tests
         self._last_blood_type: str | None = None
@@ -82,28 +84,13 @@ class PatientGenerator(BaseDomainGenerator):
 
         return self._demographic_config
 
-    @property
-    def dataset(self) -> str:
-        return self._dataset
-
-    @property
-    def rng(self) -> Random:
-        return self._rng
-
-    def _derive_rng(self) -> Random:
-        # Spawn child RNGs from the base seed so seeded cohorts remain reproducible without sharing streams.
-        return Random(self._rng.randrange(2**63)) if isinstance(self._rng, Random) else Random()
-
     # Helper: pick blood type with anti-repeat
     def pick_blood_type(self, *, start_path: str | None = None) -> str:
         start = Path(start_path) if start_path else Path(__file__)
         values, weights = load_weighted_values_try_dataset(
             "healthcare", "medical", "blood_types.csv", dataset=self._dataset, start=start
         )
-        choice = pick_one_weighted(self._rng, values, weights)
-        last = getattr(self, "_last_blood_type", None)
-        if last == choice and len(values) > 1:
-            choice = pick_one_weighted(self._rng, values, weights)
+        choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_blood_type)
         self._last_blood_type = choice
         return choice
 

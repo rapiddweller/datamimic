@@ -1,0 +1,11 @@
+<setup defaultSeparator=",">
+    <!-- Cascading unseeded: no setup seed, so each nestedKey shuffle call
+         returns a fresh per-run seed — the full nested structure differs
+         between runs (privacy-maximized default). -->
+    <generate name="outer" count="3" target="">
+        <key name="oid" generator="IncrementGenerator" />
+        <nestedKey name="children" type="list" count="4"
+                   source="data/people.ent.csv" distribution="random">
+        </nestedKey>
+    </generate>
+</setup>

@@ -1,0 +1,14 @@
+<setup>
+    <!-- A log stream without an explicit ID column: the user simply doesn't
+         emit a <key name="series"> field. The ts namespace is available in
+         the script context but only rendered into output if a <key> uses it. -->
+    <generate name="logs"
+              start="2026-01-01T00:00:00+00:00"
+              end="2026-01-01T00:10:00+00:00"
+              interval="PT1M"
+              target="">
+        <key name="timestamp" script="ts.now.isoformat()"/>
+        <key name="level"     script="['INFO','WARN','ERROR'][ts.step % 3]"/>
+        <key name="message"   script="f'request {ts.step}'"/>
+    </generate>
+</setup>

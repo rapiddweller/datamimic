@@ -4,7 +4,9 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import inspect
 from collections.abc import Iterator
+from random import Random
 from typing import Any, Final
 
 from datamimic_ce.clients.database_client import DatabaseClient
@@ -32,6 +34,14 @@ from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.domain_class_util import DomainClassUtil
 from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.string_util import StringUtil
+
+
+def _constructor_params(cls: type) -> frozenset[str]:
+    """Names accepted by ``cls.__init__`` — used to inject only supported kwargs."""
+    try:
+        return frozenset(inspect.signature(cls).parameters)
+    except (TypeError, ValueError):
+        return frozenset()
 
 
 class VariableTask(KeyVariableTask, CommonSubTask):
@@ -69,9 +79,11 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             separator = statement.separator or ctx.default_separator
             # Load data from weighted entity file
             if source_str.endswith(".wgt.ent.csv"):
+                seeded = ctx.derive_seeded_rng()
                 self._weighted_data_source = WeightedEntityDataSource(
                     file_path=descriptor_dir / source_str,
                     separator=separator,
+                    rng=seeded if seeded is not None else Random(),
                     weight_column_name=statement.weight_column,
                 )
                 self._mode = self._WEIGHTED_ENTITY_MODE
@@ -242,9 +254,8 @@ class VariableTask(KeyVariableTask, CommonSubTask):
     def _get_entity_generator(
         ctx: Context, entity_name: str, locale: str, dataset: str, count: int, statement: VariableStatement
     ):
-        from random import Random
-
         from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
+        from datamimic_ce.domains.domain_core.runtime import spawn_rng
 
         entity_class_name, kwargs = StringUtil.parse_constructor_string(entity_name)
         # Inject dataset if not explicitly provided in constructor
@@ -278,93 +289,34 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             demo_cfg = demographic_context.overrides
         if rng_obj is None and demographic_context is not None:
             # Derive entity-level RNGs from the demographics root seed to keep sampling reproducible.
-            rng_obj = Random(demographic_context.rng.randrange(2**63))
+            rng_obj = spawn_rng(demographic_context.rng)
+        if rng_obj is None:
+            # Fall back to the model-wide <setup rngSeed> root; None if no seed was given.
+            rng_obj = ctx.root.derive_seeded_rng()
         demographic_sampler = demographic_context.sampler if demographic_context is not None else None
         # Build from the last parsed VariableTask (self is not accessible in staticmethod); use closure via locals()
 
-        # Check if entity_class_name contains dots indicating a domain path
-        if "." in entity_class_name:
-            # For domain paths like "common.models.Company"
-            # Create instance directly using the class factory util
-            return DomainClassUtil.create_instance(f"datamimic_ce.domains.{entity_class_name}", **kwargs)
-        else:
-            # For simple names like "Company", use the entity mapping
-            # Complete mapping of all entities across domain_test
-            entity_mappings = {
-                # Common domain entities
-                "Company": "common.services.CompanyService",
-                "Person": "common.services.PersonService",
-                "Address": "common.services.AddressService",
-                "City": "common.services.CityService",
-                "Country": "common.services.CountryService",
-                # Finance domain entities
-                "CreditCard": "finance.services.CreditCardService",
-                "Bank": "finance.services.BankService",
-                "BankAccount": "finance.services.BankAccountService",
-                "Transaction": "finance.services.TransactionService",
-                # Ecommerce domain entities
-                "Product": "ecommerce.services.ProductService",
-                "Order": "ecommerce.services.OrderService",
-                # Healthcare domain entities
-                "Patient": "healthcare.services.PatientService",
-                "Doctor": "healthcare.services.DoctorService",
-                "Hospital": "healthcare.services.HospitalService",
-                "MedicalDevice": "healthcare.services.MedicalDeviceService",
-                "MedicalProcedure": "healthcare.services.MedicalProcedureService",
-                # Insurance domain entities (new domain)
-                "InsuranceCompany": "insurance.services.InsuranceCompanyService",
-                "InsurancePolicy": "insurance.services.InsurancePolicyService",
-                "InsuranceProduct": "insurance.services.InsuranceProductService",
-                "InsuranceCoverage": "insurance.services.InsuranceCoverageService",
-                # Public Sector domain entities (new domain)
-                "AdministrationOffice": "public_sector.services.AdministrationOfficeService",
-                "EducationalInstitution": "public_sector.services.EducationalInstitutionService",
-                "PoliceOfficer": "public_sector.services.PoliceOfficerService",
-            }
+        # Resolve the service class by name through the entity registry
+        # (auto-discovered). Fall back to an explicit dotted module path such
+        # as "common.models.Company" for callers that bypass the registry.
+        from datamimic_ce.domains.domain_core.entity_registry import get_entity_service_class
 
-            # Use the mapping to create the entity
-            if entity_class_name in entity_mappings:
-                domain_entity_path = entity_mappings[entity_class_name]
-                # Only attach demographic_config/rng for supported services
-                supported_demographic_entities = {
-                    "Patient",
-                    "Doctor",
-                    "PoliceOfficer",
-                    "Person",
-                }
-                config_enabled_entities = supported_demographic_entities | {
-                    "InsurancePolicy",
-                    "MedicalDevice",
-                    "CreditCard",
-                }
-                if demo_cfg is not None and entity_class_name in config_enabled_entities:
-                    kwargs.setdefault("demographic_config", demo_cfg)
-                if demographic_sampler is not None and entity_class_name in supported_demographic_entities:
-                    # Thread pure sampler through to entities that know how to consume demographics.
-                    kwargs.setdefault("demographic_sampler", demographic_sampler)
-                if rng_obj is not None and entity_class_name in {
-                    "Patient",
-                    "Doctor",
-                    "Hospital",
-                    "MedicalProcedure",
-                    "MedicalDevice",
-                    "PoliceOfficer",
-                    "AdministrationOffice",
-                    "EducationalInstitution",
-                    "InsuranceCompany",
-                    "InsurancePolicy",
-                    "InsuranceProduct",
-                    "InsuranceCoverage",
-                    "Person",
-                    "CreditCard",
-                }:
-                    kwargs["rng"] = rng_obj
-                return DomainClassUtil.create_instance(f"datamimic_ce.domains.{domain_entity_path}", **kwargs)
-            else:
-                # If no mapping exists, entity is not supported
-                raise ValueError(f"Entity '{entity_name}' is not supported in the domain architecture.")
+        entity_cls = get_entity_service_class(entity_class_name)
+        if entity_cls is None:
+            if "." in entity_class_name:
+                return DomainClassUtil.create_instance(f"datamimic_ce.domains.{entity_class_name}", **kwargs)
+            raise ValueError(f"Entity '{entity_name}' is not supported in the domain architecture.")
 
-        # No more fallback to legacy entities - fully committed to domain-based architecture
+        # Only inject the optional demographic/rng knobs the constructor accepts —
+        # determined from the signature, not a hand-maintained per-entity list.
+        accepted = _constructor_params(entity_cls)
+        if demo_cfg is not None and "demographic_config" in accepted:
+            kwargs.setdefault("demographic_config", demo_cfg)
+        if demographic_sampler is not None and "demographic_sampler" in accepted:
+            kwargs.setdefault("demographic_sampler", demographic_sampler)
+        if rng_obj is not None and "rng" in accepted:
+            kwargs["rng"] = rng_obj
+        return entity_cls(**kwargs)
 
     def execute(self, ctx: Context) -> None:
         """
@@ -434,9 +386,13 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 setup_ctx = ctx
                 while isinstance(setup_ctx, GenIterContext):
                     setup_ctx = setup_ctx.parent
-                if isinstance(setup_ctx, SetupContext):
-                    variable_prefix = self.statement.variable_prefix or setup_ctx.default_variable_prefix
-                    variable_suffix = self.statement.variable_suffix or setup_ctx.default_variable_suffix
+                if not isinstance(setup_ctx, SetupContext):
+                    raise ValueError(
+                        f"<variable> '{self._statement.name}': expected a SetupContext at the root of the "
+                        f"context chain, got {type(setup_ctx).__name__}"
+                    )
+                variable_prefix = self.statement.variable_prefix or setup_ctx.default_variable_prefix
+                variable_suffix = self.statement.variable_suffix or setup_ctx.default_variable_suffix
                 # Evaluate source script
                 value = TaskUtil.evaluate_file_script_template(ctx, value, variable_prefix, variable_suffix)
             else:

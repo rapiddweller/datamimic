@@ -18,6 +18,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_MULTIPROCESSING,
     ATTR_NUM_PROCESS,
     ATTR_REPORT_LOGGING,
+    ATTR_RNG_SEED,
 )
 from datamimic_ce.model.model_util import ModelUtil
 
@@ -33,6 +34,7 @@ class SetupModel(BaseModel):
     report_logging: bool | None = Field(None, alias=ATTR_REPORT_LOGGING)
     default_variable_prefix: str | None = Field(None, alias=ATTR_DEFAULT_VARIABLE_PREFIX)
     default_variable_suffix: str | None = Field(None, alias=ATTR_DEFAULT_VARIABLE_SUFFIX)
+    rng_seed: int | None = Field(None, alias=ATTR_RNG_SEED)
 
     @model_validator(mode="before")
     @classmethod
@@ -50,5 +52,6 @@ class SetupModel(BaseModel):
                 ATTR_DEFAULT_VARIABLE_PREFIX,
                 ATTR_DEFAULT_VARIABLE_SUFFIX,
                 ATTR_REPORT_LOGGING,
+                ATTR_RNG_SEED,
             },
         )

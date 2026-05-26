@@ -1,0 +1,11 @@
+<setup>
+    <!-- Negative test: `start` is not a parseable ISO 8601 datetime.
+         Error must name the offending attribute and value. -->
+    <generate name="rows"
+              start="not-a-datetime"
+              end="2026-01-02T00:00:00+00:00"
+              interval="PT1H"
+              target="">
+        <key name="timestamp" script="ts.now.isoformat()"/>
+    </generate>
+</setup>

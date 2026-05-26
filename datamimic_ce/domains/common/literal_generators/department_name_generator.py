@@ -36,7 +36,7 @@ class DepartmentNameGenerator(BaseLiteralGenerator):
             ]
         elif locale not in sp_locale:
             logger.info(f"Department name does not support locale '{locale}'. Change to department_en data")
-        self._rng: random.Random = rng or random.Random()
+        super().__init__(rng=rng)
 
     def generate(self) -> str:
         return self._rng.choice(self._department_data)

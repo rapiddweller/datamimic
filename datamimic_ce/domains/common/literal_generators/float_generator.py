@@ -14,13 +14,13 @@ class FloatGenerator(BaseLiteralGenerator):
     def __init__(
         self, min: float = 0, max: float = 10, granularity: float = 0.1, rng: random.Random | None = None
     ) -> None:
+        super().__init__(rng=rng)
         if min > max:
             raise ValueError(f"Failed when init FloatGenerator because min({min}) > max({max})")
 
         self._min = min
         self._max = max
         self._granularity = granularity
-        self._rng: random.Random = rng or random.Random()
 
     def generate(self) -> float:
         # Generate a random floating-point number within the adjusted range

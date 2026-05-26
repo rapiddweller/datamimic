@@ -70,7 +70,7 @@ class Address(BaseEntity):
 
     @property
     @property_cache
-    def country_data(self) -> str:
+    def country_data(self) -> tuple[str, ...]:
         return self._address_generator.country_generator.get_country_by_iso_code(self.country_code)
 
     @property
