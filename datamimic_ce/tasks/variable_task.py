@@ -6,6 +6,7 @@
 
 import inspect
 from collections.abc import Iterator
+from random import Random
 from typing import Any, Final
 
 from datamimic_ce.clients.database_client import DatabaseClient
@@ -78,9 +79,11 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             separator = statement.separator or ctx.default_separator
             # Load data from weighted entity file
             if source_str.endswith(".wgt.ent.csv"):
+                seeded = ctx.derive_seeded_rng()
                 self._weighted_data_source = WeightedEntityDataSource(
                     file_path=descriptor_dir / source_str,
                     separator=separator,
+                    rng=seeded if seeded is not None else Random(),
                     weight_column_name=statement.weight_column,
                 )
                 self._mode = self._WEIGHTED_ENTITY_MODE
@@ -251,8 +254,6 @@ class VariableTask(KeyVariableTask, CommonSubTask):
     def _get_entity_generator(
         ctx: Context, entity_name: str, locale: str, dataset: str, count: int, statement: VariableStatement
     ):
-        from random import Random
-
         from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
         from datamimic_ce.domains.domain_core.runtime import spawn_rng
 

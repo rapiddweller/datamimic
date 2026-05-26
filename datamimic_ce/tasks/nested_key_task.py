@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
-import random
 
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE_LIST
 from datamimic_ce.contexts.context import Context
@@ -355,12 +354,13 @@ class NestedKeyTask(GenSubTask):
         if count is None and min_count is None and max_count is None:
             return None
 
+        rng = context.rng
         if min_count is None:
-            return random.randint(max(0, max_count - 5), max_count)
+            return rng.randint(max(0, max_count - 5), max_count)
         elif max_count is None:
-            return random.randint(min_count, min_count + 5)
+            return rng.randint(min_count, min_count + 5)
         else:
-            return random.randint(min_count, max_count)
+            return rng.randint(min_count, max_count)
 
     def _post_convert(self, value):
         """

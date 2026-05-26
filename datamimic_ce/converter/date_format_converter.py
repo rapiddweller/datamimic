@@ -10,18 +10,12 @@ from datamimic_ce.converter.converter import Converter
 
 
 class DateFormatConverter(Converter):
-    """
-    Convert string data to lower case
-    """
-
     def __init__(self, format_str: str):
         self._format = format_str
 
-    def convert(self, value: datetime) -> datetime:
+    def convert(self, value: datetime) -> str:
         if not isinstance(value, datetime):
             raise ValueError(
-                f"Converter DateFormat expect datatype 'datetime', but got value {value} "
-                f"with invalid datatype {type(value)}"
+                f"DateFormat converter expects datetime, got {type(value).__name__}: {value!r}"
             )
-        formatted_datetime = value.strftime(self._format)
-        return datetime.strptime(formatted_datetime, self._format)
+        return value.strftime(self._format)

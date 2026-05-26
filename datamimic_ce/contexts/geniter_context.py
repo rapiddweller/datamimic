@@ -4,7 +4,13 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import random
+from random import Random
+from typing import Any
+
 from datamimic_ce.contexts.context import Context
+from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.domains.domain_core.runtime import spawn_rng
 from datamimic_ce.utils.dict_util import dict_nested_update
 
 
@@ -14,13 +20,27 @@ class GenIterContext(Context):
     Must be sub-context of SetupContext or another GenerateContext.
     """
 
-    def __init__(self, parent: Context, current_name: str):
+    def __init__(self, parent: Context, current_name: str, rng: Random | None = None):
         super().__init__(parent.root)
         self._parent = parent
         self._current_name = current_name
         self._current_product: dict = {}
         self._current_variables: dict = {}
         self._worker_id: int | None = None
+        # Fork once per iter so siblings get independent reproducible streams.
+        if rng is not None:
+            self._rng: Random | None = rng
+        elif isinstance(parent, GenIterContext):
+            self._rng = spawn_rng(parent._rng) if parent._rng is not None else None
+        elif isinstance(parent, SetupContext):
+            self._rng = parent.derive_seeded_rng()
+        else:
+            self._rng = None
+
+    @property
+    def rng(self) -> Any:
+        """Seeded ``Random`` or the ``random`` module (same callable API)."""
+        return self._rng if self._rng is not None else random
 
     @property
     def current_name(self) -> str:

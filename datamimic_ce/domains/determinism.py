@@ -88,6 +88,13 @@ class RandomLike(random.Random):
 
 
 def with_rng(seed: int) -> RandomLike:
+    """Seed-driven rng entry point used by service-layer code.
+
+    Lives here next to the seed helpers (``derive_seed`` / ``mix_seed``) but is
+    also re-exported from ``datamimic_ce.domains.domain_core.runtime`` so
+    callers searching the rng SPOT find one address. ``spawn_rng(parent)``
+    in ``runtime.rng`` is the fork-from-parent counterpart.
+    """
     rng = RandomLike()
     rng.seed(seed, version=2)
     return rng

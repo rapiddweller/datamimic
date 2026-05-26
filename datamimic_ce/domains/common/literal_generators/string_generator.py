@@ -16,17 +16,14 @@ from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralG
 
 
 @contextmanager
-def _exrex_using(rng: random.Random | None) -> Iterator[None]:
+def _exrex_using(rng: random.Random) -> Iterator[None]:
     """Make exrex draw from ``rng`` for the duration of the block.
 
     exrex binds ``random.choice``/``random.randint`` at import and exposes no
     RNG parameter, so the only injection seam is its module globals. We swap
-    them for the block and restore afterwards. No-op when ``rng`` is None.
-    Not thread-safe — CE generation is single-threaded per process.
+    them for the block and restore afterwards. Not thread-safe — CE generation
+    is single-threaded per process.
     """
-    if rng is None:
-        yield
-        return
     orig_choice, orig_randint = exrex.choice, exrex.randint
     exrex.choice, exrex.randint = rng.choice, rng.randint
     try:
@@ -110,7 +107,7 @@ class StringGenerator(BaseLiteralGenerator):
         return self.prefix + "".join(result) + self.suffix
 
     @staticmethod
-    def rnd_str_from_regex(pattern: str, rng: random.Random | None = None) -> str:
+    def rnd_str_from_regex(pattern: str, *, rng: random.Random) -> str:
         with _exrex_using(rng):
             result = exrex.getone(pattern, 1)
         if result is None:

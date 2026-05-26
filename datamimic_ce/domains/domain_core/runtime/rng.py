@@ -1,8 +1,6 @@
-"""RNG derivation SPOT for CE determinism.
+"""RNG forking SPOT.
 
-A single place for the "fork a reproducible child RNG from a parent" operation,
-so seeded runs derive child RNGs the same way everywhere (generators, the setup
-root seed, demographic sampling).
+One place for the "fork a reproducible child RNG from a parent" operation.
 """
 
 from __future__ import annotations

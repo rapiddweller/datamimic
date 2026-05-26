@@ -118,7 +118,7 @@ class PoliceOfficer(BaseEntity):
 
     @property
     @property_cache
-    def birthdate(self) -> str:
+    def birthdate(self) -> datetime.datetime:
         """Get the officer's date of birth.
 
         Returns:

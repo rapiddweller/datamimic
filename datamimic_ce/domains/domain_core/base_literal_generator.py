@@ -30,8 +30,6 @@ class BaseLiteralGenerator(ABC):
     cache_in_root: bool = True
 
     def __init__(self, *, rng: random.Random | None = None) -> None:
-        # ``rng is not None`` — must NOT use ``or`` because Random(0) is falsy
-        # in rare states and would be silently replaced with a wall-clock seed.
         self._rng: random.Random = rng if rng is not None else random.Random()
 
     @property

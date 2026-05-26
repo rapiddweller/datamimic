@@ -4,8 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import random
-
 from datamimic_ce.constants.attribute_constants import (
     ATTR_CONSTANT,
     ATTR_GENERATOR,
@@ -71,7 +69,7 @@ class KeyTask(KeyVariableTask, GenSubTask):
         )
 
         if condition:
-            if self.statement.null_quota and random.random() < self.statement.null_quota:
+            if self.statement.null_quota and ctx.rng.random() < self.statement.null_quota:
                 value = None
             else:
                 value = self._generate_value(ctx)

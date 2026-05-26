@@ -6,9 +6,9 @@
 
 import copy
 import itertools
-import random
 from collections.abc import Iterable, Iterator
 from pathlib import Path
+from random import Random
 
 import xmltodict
 from sqlalchemy.exc import OperationalError, ProgrammingError
@@ -253,10 +253,10 @@ class DataSourceRegistry:
         # Check if amount of returned data is enough
         # Extend data until len of result is larger than page len and higher than end_idx
         while len(res) <= end_idx - start_idx or len(res) < (start_idx % source_len) + end_idx - start_idx:
-            # Get shuffled data from datasource
-            random.seed(current_seed)
+            # Get shuffled data from datasource (local RNG; no global side-effect)
+            shuffle_rng = Random(current_seed)
             shuffle_data = list(data)
-            random.shuffle(shuffle_data)
+            shuffle_rng.shuffle(shuffle_data)
 
             # Append shuffled data to result
             res.extend(shuffle_data)

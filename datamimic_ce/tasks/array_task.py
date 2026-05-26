@@ -48,8 +48,9 @@ class ArrayTask(GenSubTask):
         if not count:
             return None
 
+        rng = parent_context.rng
         value: list[str | int | bool | float] = [
-            TaskUtil.generate_random_value_based_on_type(array_type) for _ in range(count)
+            TaskUtil.generate_random_value_based_on_type(array_type, rng=rng) for _ in range(count)
         ]
         # Add field "array" into current product
         parent_context.add_current_product_field(self._statement.name, value)

@@ -1,15 +1,7 @@
 """Runtime SPOTs for CE determinism.
 
-RNG ownership lives on :class:`BaseDomainGenerator` (a supplied ``rng`` marks a
-run seeded); there is no resolve-rng helper. The only shared RNG primitive is the
-child-derivation below.
-
-* :func:`derive_child_seed` — draw a reproducible child seed (int) from a parent RNG.
-* :func:`spawn_rng` — fork a reproducible child RNG from a parent (built on
-  :func:`derive_child_seed`; used by generators, the setup root seed, and demographics).
-* :func:`now_utc_naive` — the only sanctioned wall-clock read in CE.
-* :func:`resolve_clock` — returns the deterministic anchor or live UTC,
-  anchored once at construction time.
+* :func:`spawn_rng` / :func:`derive_child_seed` — fork a reproducible child RNG.
+* :func:`now_utc_naive` / :func:`resolve_clock` — sanctioned wall-clock reads.
 """
 
 from datamimic_ce.domains.domain_core.runtime.clock import (

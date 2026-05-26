@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
+import random
 import uuid
 from pathlib import Path
 from random import Random
@@ -84,6 +85,8 @@ class SetupContext(Context):
         self._generators = generators or {}
         self._global_variables = {} if global_variables is None else global_variables
         self._num_process = num_process
+        self._process_id: int | None = None
+        self._global_increment_registry: Any = None
         self._default_variable_prefix = default_variable_prefix
         self._default_variable_suffix = default_variable_suffix
         # IMPORTANT: do not set default bool value to default_source_scripted for config propagation
@@ -96,6 +99,8 @@ class SetupContext(Context):
         # their own seed derive a reproducible child RNG from this; None => unseeded.
         self._root_seed = seed
         self._root_rng: Random | None = Random(seed) if seed is not None else None
+        # Cached call-time rng — populated lazily on first ``.rng`` access.
+        self._call_rng: Any = None
 
     def derive_seeded_rng(self) -> Random | None:
         """Fork a reproducible child RNG from the model-wide root seed.
@@ -104,6 +109,15 @@ class SetupContext(Context):
         unseeded (wall-clock random).
         """
         return spawn_rng(self._root_rng) if self._root_rng is not None else None
+
+    @property
+    def rng(self) -> Any:
+        """Cached call-time rng. Mirrors ``GenIterContext.rng`` so ``ctx.rng``
+        works whether ``ctx`` is a SetupContext or a GenIterContext."""
+        if self._call_rng is None:
+            derived = self.derive_seeded_rng()
+            self._call_rng = derived if derived is not None else random
+        return self._call_rng
 
     def __deepcopy__(self, memo):
         """
@@ -369,6 +383,15 @@ class SetupContext(Context):
     @num_process.setter
     def num_process(self, value) -> None:
         self._num_process = value
+
+    @property
+    def process_id(self) -> int | None:
+        """Worker id when the run is split across multiple processes; ``None`` otherwise."""
+        return self._process_id
+
+    @process_id.setter
+    def process_id(self, value: int | None) -> None:
+        self._process_id = value
 
     @property
     def default_variable_prefix(self) -> str:

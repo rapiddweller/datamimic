@@ -1,0 +1,27 @@
+<setup multiprocessing="0" rngSeed="42" defaultSeparator=",">
+    <!-- Hand-written determinism scenario covering DSL constructs that are NOT entity-driven. -->
+    <!-- Each construct here previously had a determinism gap that has since been closed; -->
+    <!-- this model guards against silent regressions in: -->
+    <!--   * <key nullQuota=...>            — Bernoulli null/value mix             (key_task) -->
+    <!--   * <key values=...>               — values-mode pick                     (key_variable_task) -->
+    <!--   * <key type="int">/<type="str"> — type-fallback path                   (task_util) -->
+    <!--   * <key pattern="...">            — regex/exrex pick                     (string_generator + key_variable_task) -->
+    <!--   * <nestedKey minCount/maxCount>  — count-randomized nesting             (nested_key_task) -->
+    <!--   * <key source="*.wgt.csv">       — WeightedDataSource pick              (key_variable_task ctor) -->
+    <!--   * <variable source="*.wgt.ent.csv"> — WeightedEntityDataSource pick     (variable_task ctor) -->
+    <!-- <reference> requires an RDBMS client setup; deferred to its own scenario. -->
+    <generate name="constructs" count="8" target="">
+        <variable name="e" entity="Person" dataset="US"/>
+        <variable name="picked" source="data/people.wgt.ent.csv"/>
+        <key name="maybe_name" nullQuota="0.3" script="e.given_name"/>
+        <key name="bucket" values="'a','b','c'"/>
+        <key name="filler_int" type="int"/>
+        <key name="filler_str" type="string"/>
+        <key name="code" pattern="[A-Z0-9]{6}"/>
+        <key name="active" type="bool" source="data/active.wgt.csv"/>
+        <key name="picked_name" script="picked.name"/>
+        <nestedKey name="items" type="list" minCount="1" maxCount="5">
+            <key name="i" type="int"/>
+        </nestedKey>
+    </generate>
+</setup>
