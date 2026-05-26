@@ -9,6 +9,7 @@ from random import Random
 
 from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.contexts.context import Context
+from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.tasks.task import GenSubTask
@@ -33,7 +34,7 @@ class ReferenceTask(GenSubTask):
         except StopIteration:
             self._iterator = None
             return self.execute(ctx)
-        if hasattr(ctx, "add_current_product_field"):
+        if isinstance(ctx, GenIterContext):
             ctx.add_current_product_field(self._statement.name, value)
         return value
 
