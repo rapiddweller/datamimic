@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from pathlib import Path
-from typing import Any
+from random import Random
 
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -45,7 +45,7 @@ class WeightedEntityDataSource:
         self,
         file_path: Path,
         separator: str,
-        rng: Any,
+        rng: Random,
         weight_column_name: str | None = None,
     ):
         weight_column = weight_column_name or "weight"

@@ -27,18 +27,15 @@ class GenIterContext(Context):
         self._current_product: dict = {}
         self._current_variables: dict = {}
         self._worker_id: int | None = None
-        self._rng: Random | None = self._fork_rng_from_parent(parent, rng)
-
-    @staticmethod
-    def _fork_rng_from_parent(parent: Context, explicit: Random | None) -> Random | None:
         # Fork once per iter so siblings get independent reproducible streams.
-        if explicit is not None:
-            return explicit
-        if isinstance(parent, GenIterContext):
-            return spawn_rng(parent._rng) if parent._rng is not None else None
-        if isinstance(parent, SetupContext):
-            return parent.derive_seeded_rng()
-        return None
+        if rng is not None:
+            self._rng: Random | None = rng
+        elif isinstance(parent, GenIterContext):
+            self._rng = spawn_rng(parent._rng) if parent._rng is not None else None
+        elif isinstance(parent, SetupContext):
+            self._rng = parent.derive_seeded_rng()
+        else:
+            self._rng = None
 
     @property
     def rng(self) -> Any:

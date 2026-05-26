@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from pathlib import Path
+from random import Random
 from typing import Any
 
 from datamimic_ce.utils.file_util import FileUtil
@@ -15,7 +16,7 @@ class WeightedDataSource:
     Generate data from weighted data source (.wgt.csv)
     """
 
-    def __init__(self, file_path: Path, separator: str, rng: Any):
+    def __init__(self, file_path: Path, separator: str, rng: Random):
         self._file_path = file_path
         # read_csv and replace empty value as None instead of the default nan.
         # nan when convert into Json cause invalid json format where None become null which is still valid.
@@ -29,7 +30,7 @@ class WeightedDataSource:
         Get a random choice from dataframe with weight
         """
         try:
-            return self._rng.choices(self._df[0], weights=self._df[1], k=1)[0]
+            return self._rng.choices(list(self._df[0]), weights=list(self._df[1]), k=1)[0]
         except Exception as err:
             raise ValueError(
                 f"Cannot get data from csv file '{self._file_path}', please check file path or separator again: {err}"

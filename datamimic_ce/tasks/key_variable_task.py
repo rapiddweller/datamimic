@@ -5,10 +5,10 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import ast
-import random
 from abc import abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timedelta
+from random import Random
 
 import numpy
 
@@ -116,7 +116,7 @@ class KeyVariableTask:
             self._generator = WeightedDataSource(
                 file_path=ctx.descriptor_dir / source,
                 separator=separator,
-                rng=seeded if seeded is not None else random,
+                rng=seeded if seeded is not None else Random(),
             )
             self._mode = self._GENERATOR_MODE
         elif self._statement.pattern is not None:
