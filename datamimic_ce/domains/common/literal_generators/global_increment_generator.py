@@ -36,7 +36,7 @@ class GlobalIncrementGenerator(BaseLiteralGenerator):
 
     def __init__(self, qualified_key, context):
         self.qualified_key = qualified_key
-        if not hasattr(context.root, "_global_increment_registry"):
+        if context.root._global_increment_registry is None:
             context.root._global_increment_registry = GlobalIncrementRegistry()
         self._registry = context.root._global_increment_registry
         if qualified_key not in self._registry.counters:

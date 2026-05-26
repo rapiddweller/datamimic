@@ -85,6 +85,8 @@ class SetupContext(Context):
         self._generators = generators or {}
         self._global_variables = {} if global_variables is None else global_variables
         self._num_process = num_process
+        self._process_id: int | None = None
+        self._global_increment_registry: Any = None
         self._default_variable_prefix = default_variable_prefix
         self._default_variable_suffix = default_variable_suffix
         # IMPORTANT: do not set default bool value to default_source_scripted for config propagation
@@ -381,6 +383,15 @@ class SetupContext(Context):
     @num_process.setter
     def num_process(self, value) -> None:
         self._num_process = value
+
+    @property
+    def process_id(self) -> int | None:
+        """Worker id when the run is split across multiple processes; ``None`` otherwise."""
+        return self._process_id
+
+    @process_id.setter
+    def process_id(self, value: int | None) -> None:
+        self._process_id = value
 
     @property
     def default_variable_prefix(self) -> str:
