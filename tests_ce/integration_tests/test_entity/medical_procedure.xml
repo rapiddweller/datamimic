@@ -1,4 +1,4 @@
-<setup>
+<setup rngSeed="1">
     <!-- Medical Procedure Entity -->
     <echo>Running MedicalProcedureEntity</echo>
     <generate name="medical_procedures" count="10" target="LogExporter">
