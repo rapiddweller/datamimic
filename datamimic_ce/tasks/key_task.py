@@ -54,7 +54,7 @@ class KeyTask(KeyVariableTask, GenSubTask):
     def statement(self) -> KeyStatement:
         return self._statement
 
-    def execute(self, ctx: GenIterContext) -> None:
+    def execute(self, ctx: Context) -> None:
         """
         Generate data for element "attribute"
         If 'type' element is not specified, then default type of generated data is string

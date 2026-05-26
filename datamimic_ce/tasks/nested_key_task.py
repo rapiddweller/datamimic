@@ -339,7 +339,7 @@ class NestedKeyTask(GenSubTask):
 
         return result
 
-    def _determine_nestedkey_length(self, context: GenIterContext) -> int | None:
+    def _determine_nestedkey_length(self, context: Context) -> int | None:
         """
         Determine nestedkey length based on count, minCount and maxCount
 

@@ -14,7 +14,6 @@ import numpy
 
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
 from datamimic_ce.contexts.context import Context
-from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.weighted_data_source import WeightedDataSource
@@ -130,7 +129,7 @@ class KeyVariableTask:
             raise ValueError(f"Cannot init generation mode for element '{self.statement.name}'")
 
     @abstractmethod
-    def execute(self, ctx: Context | GenIterContext | SetupContext) -> None:
+    def execute(self, ctx: Context) -> None:
         pass
 
     @property
@@ -138,7 +137,7 @@ class KeyVariableTask:
     def statement(self) -> KeyStatement | VariableStatement | ElementStatement:
         return self._statement
 
-    def _generate_value(self, ctx: GenIterContext | SetupContext):
+    def _generate_value(self, ctx: Context):
         """
         Generate data based on generation mode
         :param ctx:

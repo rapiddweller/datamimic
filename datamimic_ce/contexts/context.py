@@ -20,8 +20,8 @@ import re
 import statistics
 import types
 import uuid
-from abc import ABC
-from typing import TYPE_CHECKING
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -84,7 +84,7 @@ SPECIAL_FUNCTION = {
 }
 
 
-class Context(ABC):  # noqa: B024
+class Context(ABC):
     def __init__(self, root_context: SetupContext):  # noqa: F821
         self._root = root_context
         self._statement_start_times: dict[str, float] = {}
@@ -92,6 +92,11 @@ class Context(ABC):  # noqa: B024
     @property
     def root(self) -> SetupContext:  # noqa: F821
         return self._root
+
+    @property
+    @abstractmethod
+    def rng(self) -> Any:
+        """The rng for randomness driven by this context (Random or random module)."""
 
     @property
     def statement_start_times(self) -> dict[str, float]:

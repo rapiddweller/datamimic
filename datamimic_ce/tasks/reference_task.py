@@ -7,7 +7,7 @@
 from collections.abc import Iterator
 
 from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.contexts.geniter_context import GenIterContext
+from datamimic_ce.contexts.context import Context
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.tasks.task import GenSubTask
@@ -23,7 +23,7 @@ class ReferenceTask(GenSubTask):
     def statement(self) -> ReferenceStatement:
         return self._statement
 
-    def execute(self, ctx: GenIterContext):
+    def execute(self, ctx: Context):
         """
         Generate data for element "reference" by retrieving values from an RDBMS data source.
         """
