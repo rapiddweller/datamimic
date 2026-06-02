@@ -216,6 +216,25 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
+      - name: Diagnose click/typer install
+        run: |
+          . .venv/bin/activate
+          uv run python -c "
+          import click, typer, inspect
+          from typer.testing import CliRunner
+          print('click', click.__file__)
+          print('typer', typer.__file__)
+          print('typer.testing', __import__('typer.testing', fromlist=['_']).__file__)
+          import importlib.metadata as md
+          print('click version:', md.version('click'))
+          print('typer version:', md.version('typer'))
+          r = CliRunner()
+          print('mro:', type(r).__mro__)
+          print('hasattr isolated_filesystem:', hasattr(r, 'isolated_filesystem'))
+          print('CliRunner attrs containing iso:', [a for a in dir(r) if 'iso' in a.lower()])
+          "
+          uv pip list | grep -iE 'click|typer'
+        shell: bash
       - name: Run functional tests with coverage
         run: |
           . .venv/bin/activate
