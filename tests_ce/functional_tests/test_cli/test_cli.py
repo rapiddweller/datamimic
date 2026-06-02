@@ -27,14 +27,13 @@ class TestCLI:
         assert "Config File" in result.output
         assert "Log Level" in result.output
 
-    def test_validate_descriptor_failure(self):
+    def test_validate_descriptor_failure(self, tmp_path, monkeypatch):
         """Test failed XML descriptor validation"""
-        with runner.isolated_filesystem():
-            with open("invalid.xml", "w") as f:
-                f.write("<invalid>")
-            result = runner.invoke(app, ["validate", "invalid.xml"])
-            assert result.exit_code == 1
-            assert "validation failed" in result.output.lower()
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "invalid.xml").write_text("<invalid>")
+        result = runner.invoke(app, ["validate", "invalid.xml"])
+        assert result.exit_code == 1
+        assert "validation failed" in result.output.lower()
 
     def test_validate_nonexistent_file(self):
         """Test validation of non-existent file"""
@@ -74,14 +73,11 @@ class TestCLI:
         assert result.exit_code == 1
         assert "not found" in result.output.lower()
 
-    def test_run_with_environment_variables(self):
+    def test_run_with_environment_variables(self, tmp_path, monkeypatch):
         """Test run command respects environment variables"""
-        with (
-            runner.isolated_filesystem(),
-            patch.dict(os.environ, {"DATAMIMIC_CONFIG": "./config.yml"}),
-        ):
-            with open("test.xml", "w") as f:
-                f.write("<setup></setup>")
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "test.xml").write_text("<setup></setup>")
+        with patch.dict(os.environ, {"DATAMIMIC_CONFIG": "./config.yml"}):
             result = runner.invoke(app, ["run", "test.xml"])
             assert result.exit_code == 0
 
@@ -123,29 +119,24 @@ class TestCLI:
         assert result.exit_code == 1
         assert "Invalid descriptor file path:" in result.output
 
-    def test_run_executes_with_valid_descriptor(self):
-        with runner.isolated_filesystem():
-            with open("valid_descriptor.xml", "w") as f:
-                f.write("<setup></setup>")
-            result = runner.invoke(app, ["run", "valid_descriptor.xml"])
-            assert result.exit_code == 0
+    def test_run_executes_with_valid_descriptor(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "valid_descriptor.xml").write_text("<setup></setup>")
+        result = runner.invoke(app, ["run", "valid_descriptor.xml"])
+        assert result.exit_code == 0
 
     @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
-    def test_init_creates_project_with_default_target(self, mock_create_structure, tmp_path):
+    def test_init_creates_project_with_default_target(self, mock_create_structure, tmp_path, monkeypatch):
         """Test project initialization in the current directory"""
-        with runner.isolated_filesystem():
-            project_name = "test-project"
-            result = runner.invoke(app, ["init", project_name])
+        monkeypatch.chdir(tmp_path)
+        project_name = "test-project"
+        result = runner.invoke(app, ["init", project_name])
 
-            project_dir = Path.cwd() / project_name
-            try:
-                assert result.exit_code == 0
-                assert project_dir.exists(), "Project directory not created"
-                mock_create_structure.assert_called_once_with(project_dir)
-                assert "created successfully" in result.output
-            finally:
-                if project_dir.exists():
-                    shutil.rmtree(project_dir)
+        project_dir = tmp_path / project_name
+        assert result.exit_code == 0
+        assert project_dir.exists(), "Project directory not created"
+        mock_create_structure.assert_called_once_with(project_dir)
+        assert "created successfully" in result.output
 
     @patch("datamimic_ce.utils.file_util.FileUtil.create_project_structure")
     def test_init_creates_project_with_custom_target(self, mock_create_structure, tmp_path):
