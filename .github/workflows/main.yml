@@ -69,7 +69,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: .venv
-          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Check version
         run: |
           uv --version
@@ -101,7 +101,7 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: .venv
-          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run mypy
         run: |
           . .venv/bin/activate
@@ -126,7 +126,7 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: .venv
-          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run ruff
         run: |
           . .venv/bin/activate
@@ -185,7 +185,7 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: .venv
-          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run unit tests with coverage
         run: |
           . .venv/bin/activate
@@ -215,7 +215,7 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: .venv
-          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run functional tests with coverage
         run: |
           . .venv/bin/activate
@@ -245,7 +245,7 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: .venv
-          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run integration tests with coverage
         run: |
           . .venv/bin/activate
@@ -329,7 +329,7 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: .venv
-          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run external service tests with coverage
         run: |
           . .venv/bin/activate
@@ -359,7 +359,7 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: .venv
-          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run factory tests
         run: |
           . .venv/bin/activate
@@ -389,7 +389,7 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: .venv
-          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml') }}
+          key: ${{ runner.os }}-python-${{ hashFiles('./pyproject.toml', './uv.lock') }}
       - name: Run api tests
         run: |
           . .venv/bin/activate
