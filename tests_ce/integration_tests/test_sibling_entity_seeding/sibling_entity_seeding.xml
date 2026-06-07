@@ -1,0 +1,32 @@
+<setup rngSeed="42" multiprocessing="0">
+    <!--
+      Two same-type sibling entity variables in one <generate>, with NO
+      per-variable seed. Each <variable entity="..."> forks an INDEPENDENT
+      child RNG from the <setup rngSeed> root, so the siblings must draw
+      distinct streams (not the all-identical-siblings failure mode).
+    -->
+    <generate name="siblings" count="5" target="">
+        <variable name="a" entity="Person" dataset="US"/>
+        <variable name="b" entity="Person" dataset="US"/>
+        <key name="a_given" script="a.given_name"/>
+        <key name="a_family" script="a.family_name"/>
+        <key name="b_given" script="b.given_name"/>
+        <key name="b_family" script="b.family_name"/>
+    </generate>
+    <!--
+      Per-variable rngSeed overrides: equal seeds reproduce the same stream;
+      a different seed yields a different stream. The override is independent
+      of the sibling's position (forking order) in the <generate>.
+    -->
+    <generate name="overrides" count="5" target="">
+        <variable name="p" entity="Person" dataset="US" rngSeed="7"/>
+        <variable name="q" entity="Person" dataset="US" rngSeed="7"/>
+        <variable name="r" entity="Person" dataset="US" rngSeed="13"/>
+        <key name="p_given" script="p.given_name"/>
+        <key name="p_family" script="p.family_name"/>
+        <key name="q_given" script="q.given_name"/>
+        <key name="q_family" script="q.family_name"/>
+        <key name="r_given" script="r.given_name"/>
+        <key name="r_family" script="r.family_name"/>
+    </generate>
+</setup>
