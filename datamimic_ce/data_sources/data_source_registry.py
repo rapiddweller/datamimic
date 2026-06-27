@@ -282,18 +282,17 @@ class DataSourceRegistry:
         CUMULATED selects with a bell-weighted index (with replacement). Single dispatch shared
         by <variable>, <generate> and <nestedKey>."""
         if distribution == SourceDistribution.CUMULATED:
-            return DataSourceRegistry.get_cumulated_data(data, pagination, cyclic, seed)
+            return DataSourceRegistry.get_cumulated_data(data, pagination, seed)  # cyclic n/a: never runs out
         return DataSourceRegistry.get_shuffled_data_with_cyclic(data, pagination, cyclic, seed)
 
     @staticmethod
-    def get_cumulated_data(
-        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None, seed: int
-    ) -> list:
+    def get_cumulated_data(data: Iterable, pagination: DataSourcePagination | None, seed: int) -> list:
         """Benerator ``distribution="cumulated"`` row selection: sample row indices with a
         bell shape (mean = middle of the load order) WITH replacement.
 
         Sibling of ``get_shuffled_data_with_cyclic`` (shuffle = permutation, no replacement).
-        ``cyclic`` is irrelevant here — with-replacement sampling never runs out.
+        No ``cyclic`` parameter — with-replacement sampling never runs out, so wrap-around is
+        meaningless.
         """
         rows = list(data)
         source_len = len(rows)

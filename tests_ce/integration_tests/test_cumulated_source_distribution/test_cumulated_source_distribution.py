@@ -100,16 +100,16 @@ class TestGetCumulatedDataPagination:
         from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 
         data = list(range(27))
-        whole = DataSourceRegistry.get_cumulated_data(data, DataSourcePagination(0, 100), False, seed=7)
-        page1 = DataSourceRegistry.get_cumulated_data(data, DataSourcePagination(0, 40), False, seed=7)
-        page2 = DataSourceRegistry.get_cumulated_data(data, DataSourcePagination(40, 60), False, seed=7)
+        whole = DataSourceRegistry.get_cumulated_data(data, DataSourcePagination(0, 100), seed=7)
+        page1 = DataSourceRegistry.get_cumulated_data(data, DataSourcePagination(0, 40), seed=7)
+        page2 = DataSourceRegistry.get_cumulated_data(data, DataSourcePagination(40, 60), seed=7)
         assert page1 + page2 == whole
 
     def test_empty_source(self):
         from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
         from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 
-        assert DataSourceRegistry.get_cumulated_data([], DataSourcePagination(0, 10), False, seed=1) == []
+        assert DataSourceRegistry.get_cumulated_data([], DataSourcePagination(0, 10), seed=1) == []
 
 
 class TestSourceDistributionCoerce:
