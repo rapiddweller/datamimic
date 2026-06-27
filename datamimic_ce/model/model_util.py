@@ -267,13 +267,3 @@ class ModelUtil:
             raise ValueError(f"must be string of digits or script, but get: '{value}'")
         return value
 
-    @staticmethod
-    def check_valid_distribution(value) -> str:
-        """
-        Check if value is valid distribution
-        :param value:
-        :return:
-        """
-        if value not in ("random", "ordered"):
-            raise ValueError(f"must be 'random' or 'ordered', but get: '{value}'")
-        return value

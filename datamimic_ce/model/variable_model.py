@@ -218,10 +218,5 @@ class VariableModel(BaseModel):
         """
         return ModelUtil.check_valid_pattern(value)
 
-    @field_validator("distribution")
-    @classmethod
-    def validate_distribution(cls, value):
-        """
-        Validate attribute "distribution"
-        """
-        return ModelUtil.check_valid_distribution(value)
+    # NOTE: no distribution validator here — <variable> accepts random/ordered/cumulated,
+    # which VariableStatement enforces via SourceDistribution.coerce at construction.

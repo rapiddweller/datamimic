@@ -26,6 +26,7 @@ from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntityDataSource
+from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
@@ -68,8 +69,9 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         seed: int
         file_data: list[dict[str, Any]] | None = None
         self._random_items_iterator = None
-        is_random_distribution = self.statement.distribution in ("random", None)
-        if is_random_distribution:
+        # Only ORDERED paginates sequentially; RANDOM and CUMULATED load all rows.
+        loads_all = self.statement.distribution != SourceDistribution.ORDERED
+        if loads_all:
             # Use task_id as seed for random distribution
             seed = ctx.root.get_distribution_seed()
 
@@ -118,14 +120,10 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                         suffix=self._suffix,
                     )
                     # Select data from database and shuffle
-                    if is_random_distribution:
+                    if loads_all:
                         self._mode = self._RANDOM_DISTRIBUTION_MODE
                         selected_data = client.get_by_page_with_query(selector)
-                        self._random_items_iterator = iter(
-                            DataSourceRegistry.get_shuffled_data_with_cyclic(
-                                selected_data, pagination, statement.cyclic, seed
-                            )
-                        )
+                        self._random_items_iterator = self._distributed_iter(selected_data, pagination, seed)
                     else:
                         # global variable (setup variable, out of generate_stmt scope) don't need pagination and cyclic
                         if self._statement.is_global_variable:
@@ -151,12 +149,8 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                         if source_str.endswith("csv")
                         else FileUtil.read_json_to_list(descriptor_dir / source_str)
                     )
-                    if is_random_distribution:
-                        self._random_items_iterator = iter(
-                            DataSourceRegistry.get_shuffled_data_with_cyclic(
-                                file_data, pagination, statement.cyclic, seed
-                            )
-                        )
+                    if loads_all:
+                        self._random_items_iterator = self._distributed_iter(file_data, pagination, seed)
                         self._mode = self._RANDOM_DISTRIBUTION_MODE
                     else:
                         self._iterator = DataSourceRegistry.get_cyclic_data_iterator(
@@ -186,7 +180,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                         memstore = ctx.memstore_manager.get_memstore(source_str)
                         file_data = (
                             memstore.get_all_data_by_type(product_type)
-                            if is_random_distribution
+                            if loads_all
                             else memstore.get_data_by_type(product_type, pagination, statement.cyclic)
                         )
                     # Get data from script in lazy mode
@@ -197,15 +191,9 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                         self._iterator = None
                         self._mode = self._LAZY_ITERATOR_MODE
                     else:
-                        if is_random_distribution:
+                        if loads_all:
                             self._random_items_iterator = (
-                                iter(
-                                    DataSourceRegistry.get_shuffled_data_with_cyclic(
-                                        file_data, pagination, statement.cyclic, seed
-                                    )
-                                )
-                                if file_data is not None
-                                else None
+                                self._distributed_iter(file_data, pagination, seed) if file_data is not None else None
                             )
                             self._mode = self._RANDOM_DISTRIBUTION_MODE
                         else:
@@ -318,6 +306,15 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             kwargs["rng"] = rng_obj
         return entity_cls(**kwargs)
 
+    def _distributed_iter(self, data, pagination, seed):
+        """Iterator over loaded rows for the load-all distributions (random shuffle /
+        cumulated bell). Consumed via ``_random_items_iterator``."""
+        return iter(
+            DataSourceRegistry.get_distributed_data(
+                data, pagination, self._statement.cyclic, seed, self._statement.distribution
+            )
+        )
+
     def execute(self, ctx: Context) -> None:
         """
         Generate data for element <variable>
@@ -345,20 +342,15 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             value = next(self._random_items_iterator)
         elif self._mode == self._LAZY_ITERATOR_MODE:
             if isinstance(self._statement, VariableStatement):
-                is_random_distribution = self._statement.distribution in ("random", None)
+                loads_all = self._statement.distribution != SourceDistribution.ORDERED
             else:
-                is_random_distribution = False
+                loads_all = False
             if self._statement.source is None:
                 return None
             file_data = ctx.evaluate_python_expression(self._statement.source)
-            if is_random_distribution:
-                self._random_items_iterator = iter(
-                    DataSourceRegistry.get_shuffled_data_with_cyclic(
-                        file_data,
-                        self._pagination,
-                        self.statement.cyclic,
-                        ctx.root.get_distribution_seed(),
-                    )
+            if loads_all:
+                self._random_items_iterator = self._distributed_iter(
+                    file_data, self._pagination, ctx.root.get_distribution_seed()
                 )
                 self._mode = self._RANDOM_DISTRIBUTION_MODE
                 if self._random_items_iterator is None:

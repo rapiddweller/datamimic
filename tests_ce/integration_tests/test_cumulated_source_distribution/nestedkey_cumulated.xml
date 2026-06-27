@@ -1,0 +1,11 @@
+<setup rngSeed="42">
+    <!-- cumulated on <nestedKey source>: each nested list is filled with bell-weighted
+         picks from the source, reproducible under <setup rngSeed>. -->
+    <memstore id="mem"/>
+    <generate name="source_rows" count="27" target="mem">
+        <key name="v" type="int" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="outer" count="50" target="">
+        <nestedKey name="items" source="mem" type="source_rows" distribution="cumulated" count="10"/>
+    </generate>
+</setup>

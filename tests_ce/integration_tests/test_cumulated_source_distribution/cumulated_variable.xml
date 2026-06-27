@@ -1,0 +1,9 @@
+<setup rngSeed="42" defaultSeparator=",">
+    <!-- Benerator distribution="cumulated" on a <variable> source: rows are selected
+         with a bell-weighted index (middle of the load order favored), WITH replacement.
+         <setup rngSeed> makes the selection reproducible. -->
+    <generate name="picks" count="6000" target="">
+        <variable name="row" source="rows.csv" distribution="cumulated"/>
+        <key name="v" script="row.v"/>
+    </generate>
+</setup>

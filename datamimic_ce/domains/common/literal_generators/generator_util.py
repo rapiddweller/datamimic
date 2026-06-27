@@ -12,6 +12,7 @@ from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.domains.common.literal_generators.increment_generator import IncrementGenerator
 from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
+from datamimic_ce.enums.distribution_enums import NumberDistribution
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.statement import Statement
 
@@ -182,8 +183,10 @@ class GeneratorUtil:
                 # A shallow copy is sufficient here and avoids recursion issues
                 # with certain generator classes like ``SequenceTableGenerator``.
                 local_ns = self._class_dict.copy()
-                # Instanz-Namespaces getrennt halten, um Typkonflikte zu vermeiden
-                local_ns_inst = {"context": self._context, "self": self}
+                # Instanz-Namespaces getrennt halten, um Typkonflikte zu vermeiden.
+                # NumberDistribution so the DSL can pass the real enum type, not a magic string,
+                # e.g. IntegerGenerator(min=1, max=27, distribution=NumberDistribution.CUMULATED).
+                local_ns_inst = {"context": self._context, "self": self, "NumberDistribution": NumberDistribution}
                 try:
                     result = self._context.evaluate_python_expression(generator_str, {**local_ns, **local_ns_inst})
                 except (ValueError, SyntaxError, NameError, TypeError) as e_eval:

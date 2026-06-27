@@ -12,6 +12,7 @@ from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.tasks.element_task import ElementTask
@@ -142,12 +143,12 @@ class NestedKeyTask(GenSubTask):
                     raise ValueError(f"Failed when execute script of element '{self._statement.name}'") from e
         elif self._statement.source:
             result = self._load_data_from_source(parent_context)
-            is_random_distribution = self._statement.distribution in ("random", None)
-            # Shuffle data if distribution is random
-            if is_random_distribution:
-                # Use task_id as seed for random distribution
+            # Reorder rows for random (shuffle) / cumulated (bell); ordered keeps source order
+            if self._statement.distribution != SourceDistribution.ORDERED:
                 seed = parent_context.root.get_distribution_seed()
-                result = DataSourceRegistry.get_shuffled_data_with_cyclic(result, None, self._statement.cyclic, seed)
+                result = DataSourceRegistry.get_distributed_data(
+                    result, None, self._statement.cyclic, seed, self._statement.distribution
+                )
         else:
             raise ValueError(f"Cannot load original data for <nestedKey> '{self._statement.name}'")
 

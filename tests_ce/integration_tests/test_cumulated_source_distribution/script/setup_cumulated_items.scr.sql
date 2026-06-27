@@ -1,0 +1,31 @@
+-- IMPORTANT: SQLite uses semicolons to split commands.
+-- 27 distinct rows (v = 0..26) so cumulated row-selection forms a visible bell.
+DROP TABLE IF EXISTS cumulated_items;
+CREATE TABLE IF NOT EXISTS cumulated_items (v INTEGER PRIMARY KEY);
+INSERT INTO cumulated_items (v) VALUES (0);
+INSERT INTO cumulated_items (v) VALUES (1);
+INSERT INTO cumulated_items (v) VALUES (2);
+INSERT INTO cumulated_items (v) VALUES (3);
+INSERT INTO cumulated_items (v) VALUES (4);
+INSERT INTO cumulated_items (v) VALUES (5);
+INSERT INTO cumulated_items (v) VALUES (6);
+INSERT INTO cumulated_items (v) VALUES (7);
+INSERT INTO cumulated_items (v) VALUES (8);
+INSERT INTO cumulated_items (v) VALUES (9);
+INSERT INTO cumulated_items (v) VALUES (10);
+INSERT INTO cumulated_items (v) VALUES (11);
+INSERT INTO cumulated_items (v) VALUES (12);
+INSERT INTO cumulated_items (v) VALUES (13);
+INSERT INTO cumulated_items (v) VALUES (14);
+INSERT INTO cumulated_items (v) VALUES (15);
+INSERT INTO cumulated_items (v) VALUES (16);
+INSERT INTO cumulated_items (v) VALUES (17);
+INSERT INTO cumulated_items (v) VALUES (18);
+INSERT INTO cumulated_items (v) VALUES (19);
+INSERT INTO cumulated_items (v) VALUES (20);
+INSERT INTO cumulated_items (v) VALUES (21);
+INSERT INTO cumulated_items (v) VALUES (22);
+INSERT INTO cumulated_items (v) VALUES (23);
+INSERT INTO cumulated_items (v) VALUES (24);
+INSERT INTO cumulated_items (v) VALUES (25);
+INSERT INTO cumulated_items (v) VALUES (26);
