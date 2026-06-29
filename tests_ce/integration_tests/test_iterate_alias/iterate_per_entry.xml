@@ -1,0 +1,12 @@
+<setup rngSeed="7" defaultSeparator=",">
+    <!-- The classic use case: iterate over a list and, for each entry, generate child
+         data linked to that entry. The inner <generate> references the outer iterate's
+         field directly by name (here: customer). -->
+    <iterate name="customers" source="customers.csv" distribution="ordered" count="3" target="">
+        <key name="customer" script="name"/>
+        <generate name="orders" count="2">
+            <key name="order_for" script="customer"/>
+            <key name="seq" type="int" generator="IncrementGenerator"/>
+        </generate>
+    </iterate>
+</setup>

@@ -1,0 +1,10 @@
+<setup rngSeed="7" defaultSeparator=",">
+    <!-- <iterate> is a human-readable alias of <generate>. Same source, same ordered
+         distribution -> the two products must be identical row for row. -->
+    <generate name="via_generate" source="rows.csv" distribution="ordered" count="10" target="">
+        <key name="v" script="v"/>
+    </generate>
+    <iterate name="via_iterate" source="rows.csv" distribution="ordered" count="10" target="">
+        <key name="v" script="v"/>
+    </iterate>
+</setup>
