@@ -5,6 +5,8 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+from decimal import Decimal
+
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.statements.array_statement import ArrayStatement
@@ -49,7 +51,7 @@ class ArrayTask(GenSubTask):
             return None
 
         rng = parent_context.rng
-        value: list[str | int | bool | float] = [
+        value: list[str | int | bool | float | Decimal] = [
             TaskUtil.generate_random_value_based_on_type(array_type, rng=rng) for _ in range(count)
         ]
         # Add field "array" into current product

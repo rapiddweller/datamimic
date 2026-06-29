@@ -1,0 +1,10 @@
+<setup rngSeed="7">
+    <generate name="payments" count="50" target="">
+        <!-- type="decimal" converts the generator output to exact Decimal (str bridge,
+             no binary-float drift). FloatGenerator+granularity is enough; no special
+             decimal generator is needed. -->
+        <key name="amount" type="decimal" generator="FloatGenerator(min=0, max=1000, granularity=0.01)"/>
+        <!-- bare type="decimal" (no generator) -> random Decimal, fixed 2dp default. -->
+        <key name="fee" type="decimal"/>
+    </generate>
+</setup>

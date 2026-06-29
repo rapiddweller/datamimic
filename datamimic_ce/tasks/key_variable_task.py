@@ -8,11 +8,18 @@ import ast
 from abc import abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timedelta
+from decimal import Decimal
 from random import Random
 
 import numpy
 
-from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
+from datamimic_ce.constants.data_type_constants import (
+    DATA_TYPE_BOOL,
+    DATA_TYPE_DECIMAL,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_INT,
+    DATA_TYPE_STRING,
+)
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
@@ -56,6 +63,7 @@ class KeyVariableTask:
             DATA_TYPE_STRING,
             DATA_TYPE_INT,
             DATA_TYPE_FLOAT,
+            DATA_TYPE_DECIMAL,
             DATA_TYPE_BOOL,
             "NoneType",
         }
@@ -287,6 +295,9 @@ class KeyVariableTask:
             return int(value)
         elif data_type == DATA_TYPE_FLOAT:
             return float(value)
+        elif data_type == DATA_TYPE_DECIMAL:
+            # str() so a float value (e.g. 8.2) doesn't re-introduce binary float error
+            return Decimal(str(value))
         elif data_type == DATA_TYPE_BOOL:
             if value == "" or value is None:
                 return None
