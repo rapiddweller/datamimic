@@ -28,3 +28,4 @@ EL_CONDITION = "condition"
 EL_ELSE_IF = "else-if"
 EL_ELSE = "else"
 EL_DEMOGRAPHICS = "demographics"
+EL_COMMENT = "comment"  # Benerator documentation element, ignored (no-op) wherever it appears

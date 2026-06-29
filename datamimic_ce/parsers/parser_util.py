@@ -14,6 +14,7 @@ from datamimic_ce.config import settings
 from datamimic_ce.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
 from datamimic_ce.constants.element_constants import (
     EL_ARRAY,
+    EL_COMMENT,
     EL_CONDITION,
     EL_DATABASE,
     EL_DEMOGRAPHICS,
@@ -224,6 +225,9 @@ class ParserUtil:
         copied_props = copy.deepcopy(properties) if properties else {}
 
         for child_ele in element:
+            # <comment> is a Benerator documentation element: ignored, produces no statement.
+            if child_ele.tag == EL_COMMENT:
+                continue
             parser = ParserUtil._get_parser_by_element(child_ele, copied_props)
             # TODO: add more child-element-able parsers such as
             #  attribute, reference, part,... (i.e. elements which have attribute 'name')
