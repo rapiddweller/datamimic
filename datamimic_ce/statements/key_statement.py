@@ -24,6 +24,7 @@ class KeyStatement(CompositeStatement):
         self._separator = model.separator
         self._type = model.type
         self._values = model.values
+        self._weights = model.weights
         self._default_value = model.default_value
         self._null_quota = model.null_quota
         self._pattern = model.pattern
@@ -43,6 +44,10 @@ class KeyStatement(CompositeStatement):
     @property
     def values(self):
         return self._values
+
+    @property
+    def weights(self):
+        return self._weights
 
     @property
     def script(self):
