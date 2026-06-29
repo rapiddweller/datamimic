@@ -1,0 +1,6 @@
+<setup rngSeed="7">
+    <generate name="people" count="3" target="">
+        <key name="i" generator="IncrementGenerator()"/>
+        <key name="label" constant="x"/>
+    </generate>
+</setup>

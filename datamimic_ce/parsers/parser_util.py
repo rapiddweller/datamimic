@@ -14,6 +14,7 @@ from datamimic_ce.config import settings
 from datamimic_ce.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
 from datamimic_ce.constants.element_constants import (
     EL_ARRAY,
+    EL_COMMENT,
     EL_CONDITION,
     EL_DATABASE,
     EL_DEMOGRAPHICS,
@@ -24,6 +25,7 @@ from datamimic_ce.constants.element_constants import (
     EL_EXECUTE,
     EL_GENERATE,
     EL_GENERATOR,
+    EL_ID,
     EL_IF,
     EL_INCLUDE,
     EL_ITEM,
@@ -104,6 +106,7 @@ class ParserUtil:
             },
             EL_NESTED_KEY: {
                 EL_KEY,
+                EL_ID,
                 EL_VARIABLE,
                 EL_NESTED_KEY,
                 EL_EXECUTE,
@@ -118,6 +121,7 @@ class ParserUtil:
                 EL_GENERATE,
                 EL_ITERATE,
                 EL_KEY,
+                EL_ID,
                 EL_VARIABLE,
                 EL_REFERENCE,
                 EL_NESTED_KEY,
@@ -128,7 +132,7 @@ class ParserUtil:
                 EL_INCLUDE,
             },
             EL_INCLUDE: {EL_SETUP},
-            EL_ITEM: {EL_KEY, EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ELEMENT},
+            EL_ITEM: {EL_KEY, EL_ID, EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ELEMENT},
             EL_KEY: {EL_ELEMENT},
             EL_LIST: {EL_ITEM},
             EL_IF: None,
@@ -155,7 +159,7 @@ class ParserUtil:
             from datamimic_ce.parsers.generate_parser import GenerateParser
 
             return GenerateParser(element, properties)
-        elif tag == EL_KEY:
+        elif tag in (EL_KEY, EL_ID):
             from datamimic_ce.parsers.key_parser import KeyParser
 
             return KeyParser(element, properties)
@@ -221,6 +225,9 @@ class ParserUtil:
         copied_props = copy.deepcopy(properties) if properties else {}
 
         for child_ele in element:
+            # <comment> is a Benerator documentation element: ignored, produces no statement.
+            if child_ele.tag == EL_COMMENT:
+                continue
             parser = ParserUtil._get_parser_by_element(child_ele, copied_props)
             # TODO: add more child-element-able parsers such as
             #  attribute, reference, part,... (i.e. elements which have attribute 'name')

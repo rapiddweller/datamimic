@@ -12,7 +12,7 @@ from xml.etree.ElementTree import Element
 from pydantic import BaseModel, ValidationError
 
 from datamimic_ce.constants.attribute_constants import ATTR_ID, ATTR_NAME
-from datamimic_ce.constants.element_constants import EL_DATABASE, EL_MONGODB
+from datamimic_ce.constants.element_constants import EL_COMMENT, EL_DATABASE, EL_MONGODB
 from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.statement import Statement
 
@@ -120,13 +120,15 @@ class StatementParser(ABC):
         # Return if valid_sub_ele_set has not been set
         if self._valid_sub_elements is None:
             return
-        if len(self._valid_sub_elements) == 0 and len(self._element) > 0:
+        # <comment> is an ignored documentation element accepted in any context.
+        non_comment_children = [child for child in self._element if child.tag != EL_COMMENT]
+        if len(self._valid_sub_elements) == 0 and len(non_comment_children) > 0:
             raise ValueError(
                 f"""Element <{self._element.tag}>{
                     " inside element " + f"'{composite_stmt.name}'" if composite_stmt is not None else ""
                 } does not accept any sub-elements"""
             )
-        for child in self._element:
+        for child in non_comment_children:
             if child.tag not in self._valid_sub_elements:
                 raise ValueError(
                     f"Element <{self._element.tag}> get invalid child <{child.tag}>"
