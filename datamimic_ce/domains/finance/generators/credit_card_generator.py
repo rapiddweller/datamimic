@@ -80,9 +80,12 @@ class CreditCardGenerator(DatasetAwareDomainGenerator):
         # columns: type,prefix,length,cvv_length,weight
         weights = [float(r[4]) for r in rows]
         chosen = self._rng.choices(rows, weights=weights, k=1)[0]
+        # 'prefix' may list alternative BINs pipe-separated (e.g. AMEX "34|37"); pick one
+        # so the card number is a clean numeric payload.
+        prefix = self._rng.choice(str(chosen[1]).split("|"))
         self._card_specs = {
             "type": chosen[0],
-            "prefix": str(chosen[1]),
+            "prefix": prefix,
             "length": int(chosen[2]),
             "cvv_length": int(chosen[3]),
         }

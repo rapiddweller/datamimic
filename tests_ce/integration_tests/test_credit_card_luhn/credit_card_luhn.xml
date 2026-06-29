@@ -1,0 +1,7 @@
+<setup rngSeed="42">
+    <!-- Every generated card number must satisfy the Luhn (ISO/IEC 7812-1) checksum. -->
+    <generate name="cards" count="50" target="">
+        <variable name="cc" entity="CreditCard"/>
+        <key name="card_number" script="cc.card_number"/>
+    </generate>
+</setup>
