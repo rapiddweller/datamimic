@@ -19,6 +19,7 @@ from datamimic_ce.domains.domain_core.property_cache import property_cache
 from datamimic_ce.domains.finance.generators.credit_card_generator import CreditCardGenerator
 from datamimic_ce.domains.finance.models.bank import Bank
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
+from datamimic_ce.utils.luhn_util import luhn_check_digit
 
 
 class CreditCard(BaseEntity):
@@ -54,13 +55,14 @@ class CreditCard(BaseEntity):
         prefix = specs.get("prefix", "")
         total_len = specs.get("length", 16)
         remaining = max(0, total_len - len(prefix))
-        if remaining > 0:
-            # Use generator RNG instead of global exrex RNG so rngSeed descriptors replay.
-            digits = [str(self._credit_card_generator.rng.randint(0, 9)) for _ in range(remaining)]
-            suffix = "".join(digits)
-        else:
-            suffix = ""
-        return f"{prefix}{suffix}"
+        if remaining == 0:
+            #  degenerate spec: prefix fills the whole length, no room for a check digit
+            return prefix
+        # Fill all but the last position randomly (generator RNG so rngSeed descriptors
+        # replay), then set the last digit to the Luhn check digit (ISO/IEC 7812-1).
+        random_digits = "".join(str(self._credit_card_generator.rng.randint(0, 9)) for _ in range(remaining - 1))
+        payload = f"{prefix}{random_digits}"
+        return f"{payload}{luhn_check_digit(payload)}"
 
     @property
     @property_cache
