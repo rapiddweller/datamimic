@@ -5,11 +5,18 @@
 # For questions and support, contact: info@rapiddweller.com
 import re
 import string
+from decimal import Decimal
 from typing import Any
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
+from datamimic_ce.constants.data_type_constants import (
+    DATA_TYPE_BOOL,
+    DATA_TYPE_DECIMAL,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_INT,
+    DATA_TYPE_STRING,
+)
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
@@ -526,7 +533,7 @@ class TaskUtil:
         data_type: str | None,
         *,
         rng: Any,
-    ) -> str | int | bool | float:
+    ) -> str | int | bool | float | Decimal:
         # ``rng`` is required: callers inject the GenIterContext's rng so
         # seeded runs propagate fully.
         if data_type == DATA_TYPE_STRING:
@@ -537,6 +544,9 @@ class TaskUtil:
             return rng.randint(0, 100)
         elif data_type == DATA_TYPE_FLOAT:
             return rng.uniform(0, 100)
+        elif data_type == DATA_TYPE_DECIMAL:
+            # ponytail: fixed 2dp default for bare type="decimal"; use a DecimalGenerator for other scales
+            return Decimal(str(round(rng.uniform(0, 100), 2)))
         elif data_type == DATA_TYPE_BOOL:
             return rng.choice((True, False))
         else:
