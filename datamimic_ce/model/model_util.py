@@ -15,6 +15,8 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_GENERATOR,
     ATTR_IN_DATE_FORMAT,
     ATTR_LOCALE,
+    ATTR_MAX_COUNT,
+    ATTR_MIN_COUNT,
     ATTR_OUT_DATE_FORMAT,
     ATTR_RNG_SEED,
     ATTR_SCRIPT,
@@ -50,10 +52,30 @@ class ModelUtil:
         :param values:
         :return:
         """
-        if all(attr not in values for attr in [ATTR_SOURCE, ATTR_SCRIPT, ATTR_COUNT]):
+        if all(attr not in values for attr in [ATTR_SOURCE, ATTR_SCRIPT, ATTR_COUNT, ATTR_MIN_COUNT, ATTR_MAX_COUNT]):
             raise ValueError(
                 f"Missing attribute '{ATTR_COUNT}' ('{ATTR_COUNT}' might be optional "
                 f"in case '{ATTR_SOURCE} and {ATTR_SCRIPT} are not defined')"
+            )
+        return values
+
+    @staticmethod
+    def check_min_max_count(values: dict, element_tag: str) -> dict:
+        """count and minCount/maxCount are mutually exclusive; minCount must not exceed maxCount.
+        Shared by <generate> and <nestedKey>."""
+        key_set = set(values.keys())
+        if ATTR_COUNT in key_set:
+            if ATTR_MIN_COUNT in key_set or ATTR_MAX_COUNT in key_set:
+                raise ValueError(
+                    f"'{ATTR_MIN_COUNT}' and '{ATTR_MAX_COUNT}' must not be defined "
+                    f"when '{ATTR_COUNT}' exists in <{element_tag}>"
+                )
+        elif (
+            ATTR_MIN_COUNT in key_set and ATTR_MAX_COUNT in key_set and values[ATTR_MIN_COUNT] > values[ATTR_MAX_COUNT]
+        ):
+            raise ValueError(
+                f"'{ATTR_MIN_COUNT}' value ({values[ATTR_MIN_COUNT]}) "
+                f"must be less than or equal to '{ATTR_MAX_COUNT}' value ({values[ATTR_MAX_COUNT]})"
             )
         return values
 
@@ -266,4 +288,3 @@ class ModelUtil:
         if not value.isdigit() and re.match(r"^\{[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_]+)*\}$", value) is None:
             raise ValueError(f"must be string of digits or script, but get: '{value}'")
         return value
-

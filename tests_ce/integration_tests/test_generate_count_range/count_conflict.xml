@@ -1,0 +1,6 @@
+<setup rngSeed="42">
+    <!-- count and minCount/maxCount are mutually exclusive -> must fail at parse. -->
+    <generate name="items" count="5" minCount="3" maxCount="7" target="">
+        <key name="v" constant="x"/>
+    </generate>
+</setup>

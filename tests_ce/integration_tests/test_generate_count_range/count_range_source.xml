@@ -1,0 +1,7 @@
+<setup rngSeed="42" defaultSeparator=",">
+    <!-- minCount/maxCount with a source: read a random N rows in [3, 7] from the
+         source (same source handling as a fixed count=N). -->
+    <generate name="picked" minCount="3" maxCount="7" source="rows.csv" distribution="ordered" target="">
+        <key name="v" script="v"/>
+    </generate>
+</setup>
