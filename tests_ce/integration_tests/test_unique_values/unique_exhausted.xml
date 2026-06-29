@@ -1,0 +1,6 @@
+<setup rngSeed="5">
+    <!-- 6 rows but only 3 unique values -> must fail loudly. -->
+    <generate name="x" count="6" target="">
+        <key name="code" values="'A','B','C'" unique="true"/>
+    </generate>
+</setup>

@@ -34,6 +34,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_STORAGE_ID,
     ATTR_TARGET,
     ATTR_TYPE,
+    ATTR_UNIQUE,
     ATTR_VARIABLE_PREFIX,
     ATTR_VARIABLE_SUFFIX,
 )
@@ -50,6 +51,7 @@ class GenerateModel(BaseModel):
     max_count: int | None = Field(None, alias=ATTR_MAX_COUNT)
     source: str | None = None
     cyclic: bool | None = None
+    unique: bool | None = None
     type: str | None = None
     selector: str | None = None
     separator: str | None = None
@@ -85,6 +87,7 @@ class GenerateModel(BaseModel):
                 ATTR_MIN_COUNT,
                 ATTR_MAX_COUNT,
                 ATTR_CYCLIC,
+                ATTR_UNIQUE,
                 ATTR_NAME,
                 ATTR_SELECTOR,
                 ATTR_SEPARATOR,
@@ -109,6 +112,11 @@ class GenerateModel(BaseModel):
                 ATTR_INTERVAL,
             },
         )
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_unique_constraints(cls, values: dict):
+        return ModelUtil.check_unique_constraints(values)
 
     @model_validator(mode="before")
     @classmethod

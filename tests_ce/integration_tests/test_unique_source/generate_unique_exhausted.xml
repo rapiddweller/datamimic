@@ -1,0 +1,4 @@
+<setup rngSeed="9">
+    <!-- 8 rows from 5 distinct source values -> strict error. -->
+    <generate name="people" source="codes.csv" unique="true" count="8" target=""/>
+</setup>

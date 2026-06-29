@@ -1,0 +1,4 @@
+<setup rngSeed="9">
+    <!-- MP + dups: 12 source rows (8 distinct), 4 workers -> 8 distinct, no cross-worker overlap. -->
+    <generate name="people" source="codes_mp.csv" unique="true" count="8" numProcess="4" target=""/>
+</setup>

@@ -25,6 +25,7 @@ from datamimic_ce.statements.statement import Statement
 from datamimic_ce.utils.distribution_sampling import cumulated_index
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.utils.unique_sampling import unique_values
 
 
 class DataSourceRegistry:
@@ -284,6 +285,23 @@ class DataSourceRegistry:
         if distribution == SourceDistribution.CUMULATED:
             return DataSourceRegistry.get_cumulated_data(data, pagination, seed)  # cyclic n/a: never runs out
         return DataSourceRegistry.get_shuffled_data_with_cyclic(data, pagination, cyclic, seed)
+
+    @staticmethod
+    def get_unique_data(data: Iterable, pagination: DataSourcePagination | None, seed: int, label: str) -> list:
+        """Select distinct rows without replacement: dedupe + shuffle, then return the page
+        window. Sibling of get_cumulated_data; the unique counterpart of the random/cumulated
+        selection. All pages/workers share ``seed`` -> one global deduped order -> each takes a
+        disjoint window -> unique holds across pages AND ray workers. Strict: raises rather than
+        silently under-generate when the window exceeds the distinct pool."""
+        distinct = unique_values(data, Random(seed))
+        if pagination is None:
+            return distinct
+        end = pagination.skip + pagination.limit
+        if end > len(distinct):
+            raise ValueError(
+                f"Cannot generate {end} unique values for {label}: only {len(distinct)} distinct available"
+            )
+        return distinct[pagination.skip : end]
 
     @staticmethod
     def get_cumulated_data(data: Iterable, pagination: DataSourcePagination | None, seed: int) -> list:

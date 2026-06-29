@@ -6,6 +6,8 @@
 
 import re
 
+from pydantic import TypeAdapter, ValidationError
+
 from datamimic_ce.constants.attribute_constants import (
     ATTR_COUNT,
     ATTR_CYCLIC,
@@ -25,12 +27,26 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_SOURCE,
     ATTR_SOURCE_SCRIPTED,
     ATTR_TYPE,
+    ATTR_UNIQUE,
     ATTR_VALUES,
     ATTR_WEIGHT_COLUMN,
     ATTR_WEIGHTS,
 )
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_STRING
 from datamimic_ce.utils.string_util import StringUtil
+
+# Parse XML bool attributes exactly like the pydantic bool fields do, so a "before"
+# cross-field check can never disagree with the coerced value (e.g. unique="yes").
+_BOOL_ADAPTER = TypeAdapter(bool)
+
+
+def _attr_true(value: object) -> bool:
+    if value is None:
+        return False
+    try:
+        return _BOOL_ADAPTER.validate_python(value)
+    except ValidationError:
+        return False
 
 
 class ModelUtil:
@@ -66,6 +82,21 @@ class ModelUtil:
         """'weights' is the companion of 'values' — it is meaningless on its own."""
         if ATTR_WEIGHTS in values and ATTR_VALUES not in values:
             raise ValueError(f"'{ATTR_WEIGHTS}' is only allowed together with '{ATTR_VALUES}'")
+        return values
+
+    @staticmethod
+    def check_unique_constraints(values: dict) -> dict:
+        """'unique' draws distinct values without replacement from a finite pool — an
+        inline 'values' set or a 'source'. It is incompatible with 'weights' (no weighted
+        sampling without replacement) and with 'cyclic' (no-repeat vs repeat)."""
+        if not _attr_true(values.get(ATTR_UNIQUE)):
+            return values
+        if ATTR_VALUES not in values and ATTR_SOURCE not in values:
+            raise ValueError(f"'{ATTR_UNIQUE}' requires '{ATTR_VALUES}' or '{ATTR_SOURCE}' (a finite pool)")
+        if ATTR_WEIGHTS in values:
+            raise ValueError(f"'{ATTR_UNIQUE}' cannot be combined with '{ATTR_WEIGHTS}'")
+        if _attr_true(values.get(ATTR_CYCLIC)):
+            raise ValueError(f"'{ATTR_UNIQUE}' cannot be combined with '{ATTR_CYCLIC}' (no-repeat vs repeat)")
         return values
 
     @staticmethod

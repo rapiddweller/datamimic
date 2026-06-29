@@ -24,6 +24,7 @@ from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.statements.statement_util import StatementUtil
+from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.logging_util import gen_timer
@@ -162,6 +163,16 @@ class GenerateTask(CommonSubTask):
         for exporter_str in stmt.targets:
             if ".delete" in exporter_str:
                 return 1
+
+        # A unique INLINE <key/variable values> samples via a per-task iterator that parallel
+        # workers would each restart, emitting overlapping values -> serialize. Source-backed
+        # unique (<variable source>, <generate source>) is page-sliced in the registry and stays
+        # multiprocessing-safe, so it is not forced here.
+        if any(
+            isinstance(child, KeyStatement | VariableStatement) and child.unique and child.values is not None
+            for child in stmt.sub_statements
+        ):
+            return 1
 
         # Get number of workers from statement, setup context, or default to 1
         current_setup_context = context

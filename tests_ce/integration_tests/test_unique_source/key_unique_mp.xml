@@ -1,0 +1,6 @@
+<setup rngSeed="9">
+    <!-- MP + dup values: {a,b,c,d,e} distinct; unique forces single-process -> 5 distinct. -->
+    <generate name="people" count="5" numProcess="4" target="">
+        <key name="code" values="'a','a','b','c','c','d','e'" unique="true"/>
+    </generate>
+</setup>

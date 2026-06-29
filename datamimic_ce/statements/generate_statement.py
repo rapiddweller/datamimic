@@ -26,6 +26,7 @@ class GenerateStatement(CompositeStatement):
         self._max_count = model.max_count
         self._source = model.source
         self._cyclic = model.cyclic
+        self._unique = model.unique
         self._source_script = model.source_scripted
         self._type = model.type
         self._selector = model.selector
@@ -69,6 +70,10 @@ class GenerateStatement(CompositeStatement):
     @count.setter
     def count(self, value):
         self._count = value
+
+    @property
+    def unique(self) -> bool | None:
+        return self._unique
 
     @property
     def min_count(self) -> int | None:
