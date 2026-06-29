@@ -25,7 +25,9 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_SOURCE,
     ATTR_SOURCE_SCRIPTED,
     ATTR_TYPE,
+    ATTR_VALUES,
     ATTR_WEIGHT_COLUMN,
+    ATTR_WEIGHTS,
 )
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_STRING
 from datamimic_ce.utils.string_util import StringUtil
@@ -57,6 +59,13 @@ class ModelUtil:
                 f"Missing attribute '{ATTR_COUNT}' ('{ATTR_COUNT}' might be optional "
                 f"in case '{ATTR_SOURCE} and {ATTR_SCRIPT} are not defined')"
             )
+        return values
+
+    @staticmethod
+    def check_weights_require_values(values: dict) -> dict:
+        """'weights' is the companion of 'values' — it is meaningless on its own."""
+        if ATTR_WEIGHTS in values and ATTR_VALUES not in values:
+            raise ValueError(f"'{ATTR_WEIGHTS}' is only allowed together with '{ATTR_VALUES}'")
         return values
 
     @staticmethod

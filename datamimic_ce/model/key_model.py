@@ -28,6 +28,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VALUES,
     ATTR_VARIABLE_PREFIX,
     ATTR_VARIABLE_SUFFIX,
+    ATTR_WEIGHTS,
 )
 from datamimic_ce.constants.data_type_constants import (
     DATA_TYPE_BOOL,
@@ -46,6 +47,7 @@ class KeyModel(BaseModel):
     selector: str | None = None
     separator: str | None = None
     values: str | None = None
+    weights: str | None = None
     script: str | None = None
     generator: str | None = None
     constant: str | None = None
@@ -73,6 +75,7 @@ class KeyModel(BaseModel):
                 ATTR_SELECTOR,
                 ATTR_SEPARATOR,
                 ATTR_VALUES,
+                ATTR_WEIGHTS,
                 ATTR_SCRIPT,
                 ATTR_GENERATOR,
                 ATTR_CONSTANT,
@@ -89,6 +92,11 @@ class KeyModel(BaseModel):
                 ATTR_VARIABLE_SUFFIX,
             },
         )
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_weights_require_values(cls, values: dict):
+        return ModelUtil.check_weights_require_values(values)
 
     @model_validator(mode="before")
     @classmethod

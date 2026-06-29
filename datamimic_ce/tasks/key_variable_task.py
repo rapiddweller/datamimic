@@ -97,6 +97,7 @@ class KeyVariableTask:
                     f"'values' element of <{self._element_tag}> '{self._statement.name}' "
                     f"is invalid: {self._statement.values}"
                 ) from None
+            self._weights = self._parse_weights(self._values)
             self._mode = self._VALUES_MODE
         elif self._statement.generator is not None:
             # NOTE: a literal <key generator="..."> is created without an injected
@@ -188,8 +189,13 @@ class KeyVariableTask:
                 suffix=self._suffix,
             )
         elif self._mode == self._VALUES_MODE:
-            # Return None if self._values is None
-            value = None if self._values is None else ctx.rng.choice(self._values)
+            # Return None if self._values is None; weighted pick when 'weights' given.
+            if self._values is None:
+                value = None
+            elif self._weights:
+                value = ctx.rng.choices(self._values, weights=self._weights, k=1)[0]
+            else:
+                value = ctx.rng.choice(self._values)
         elif self._mode == self._LAZY_GENERATOR_MODE:
             # Try to init generator again in first task execution
             self._generator = (
@@ -268,6 +274,27 @@ class KeyVariableTask:
             ) from e
 
         return value
+
+    def _parse_weights(self, values):
+        """Parse the 'weights' companion of 'values' into floats, validating the count.
+        Returns None when no weights are given (uniform pick)."""
+        if self._statement.weights is None:
+            return None
+        try:
+            parsed = ast.literal_eval(self._statement.weights)
+            if not isinstance(parsed, Iterable):
+                parsed = (parsed,)
+            weights = [float(w) for w in parsed]
+        except (SyntaxError, ValueError, TypeError):
+            raise ValueError(
+                f"'weights' of <{self._element_tag}> '{self._statement.name}' is invalid: {self._statement.weights}"
+            ) from None
+        if values is not None and len(weights) != len(values):
+            raise ValueError(
+                f"'weights' ({len(weights)}) must match 'values' ({len(values)}) length "
+                f"for <{self._element_tag}> '{self._statement.name}'"
+            )
+        return weights
 
     def _convert_to_type(self, data_type: str, value):
         """

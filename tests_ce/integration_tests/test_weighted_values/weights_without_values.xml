@@ -1,0 +1,6 @@
+<setup rngSeed="13">
+    <!-- 'weights' without 'values' is meaningless -> must fail. -->
+    <generate name="x" count="1" target="">
+        <key name="grade" weights="0.1, 0.3"/>
+    </generate>
+</setup>

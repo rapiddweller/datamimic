@@ -35,6 +35,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VARIABLE_PREFIX,
     ATTR_VARIABLE_SUFFIX,
     ATTR_WEIGHT_COLUMN,
+    ATTR_WEIGHTS,
 )
 from datamimic_ce.model.model_util import ModelUtil
 
@@ -57,6 +58,7 @@ class VariableModel(BaseModel):
     out_date_format: str | None = Field(None, alias=ATTR_OUT_DATE_FORMAT)
     converter: str | None = None
     values: str | None = None
+    weights: str | None = None
     constant: str | None = None
     iteration_selector: str | None = Field(None, alias=ATTR_ITERATION_SELECTOR)
     default_value: str | None = Field(None, alias=ATTR_DEFAULT_VALUE)
@@ -97,6 +99,7 @@ class VariableModel(BaseModel):
                 ATTR_CONVERTER,
                 ATTR_CONSTANT,
                 ATTR_VALUES,
+                ATTR_WEIGHTS,
                 ATTR_ITERATION_SELECTOR,
                 ATTR_DEFAULT_VALUE,
                 ATTR_PATTERN,
@@ -113,6 +116,11 @@ class VariableModel(BaseModel):
                 ATTR_RNG_SEED,
             },
         )
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_weights_require_values(cls, values: dict):
+        return ModelUtil.check_weights_require_values(values)
 
     @model_validator(mode="before")
     @classmethod

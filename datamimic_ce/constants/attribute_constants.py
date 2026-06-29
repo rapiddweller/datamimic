@@ -83,3 +83,4 @@ ATTR_INTERVAL: Final = "interval"
 ATTR_FROM: Final = "from"
 ATTR_TO: Final = "to"
 ATTR_WEIGHT: Final = "weight"
+ATTR_WEIGHTS: Final = "weights"  # companion of 'values': relative weights for inline weighted pick

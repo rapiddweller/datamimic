@@ -1,0 +1,7 @@
+<setup rngSeed="13">
+    <!-- inline weighted value pick: 'weights' is the companion of 'values'.
+         Weights are relative (need not sum to 1). Seed-bound via ctx.rng. -->
+    <generate name="people" count="600" target="">
+        <key name="grade" values="'A','B','C'" weights="0.1, 0.3, 0.6"/>
+    </generate>
+</setup>

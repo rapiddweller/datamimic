@@ -36,6 +36,7 @@ class VariableStatement(Statement):
         self._separator = model.separator
         self._type = model.type
         self._values = model.values
+        self._weights = model.weights
         self._weight_column = model.weight_column
         self._iteration_selector = model.iteration_selector
         self._default_value = model.default_value
@@ -124,6 +125,10 @@ class VariableStatement(Statement):
     @property
     def values(self):
         return self._values
+
+    @property
+    def weights(self):
+        return self._weights
 
     @property
     def iteration_selector(self) -> str | None:
