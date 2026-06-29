@@ -1,0 +1,10 @@
+<setup rngSeed="42">
+    <!-- Cascading: each parent row gets its OWN random child count in [2, 4],
+         re-rolled per parent via the shared context rng. -->
+    <generate name="orders" count="3" target="">
+        <key name="oid" generator="IncrementGenerator()"/>
+        <generate name="lines" minCount="2" maxCount="4" target="">
+            <key name="sku" constant="s"/>
+        </generate>
+    </generate>
+</setup>

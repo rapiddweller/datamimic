@@ -17,6 +17,8 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_END,
     ATTR_EXPORT_URI,
     ATTR_INTERVAL,
+    ATTR_MAX_COUNT,
+    ATTR_MIN_COUNT,
     ATTR_MP_PLATFORM,
     ATTR_MULTIPROCESSING,
     ATTR_NAME,
@@ -35,6 +37,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VARIABLE_PREFIX,
     ATTR_VARIABLE_SUFFIX,
 )
+from datamimic_ce.constants.element_constants import EL_GENERATE
 from datamimic_ce.model.model_util import ModelUtil
 
 _TIMESERIES_ATTRS: frozenset[str] = frozenset({ATTR_START, ATTR_END, ATTR_INTERVAL})
@@ -43,6 +46,8 @@ _TIMESERIES_ATTRS: frozenset[str] = frozenset({ATTR_START, ATTR_END, ATTR_INTERV
 class GenerateModel(BaseModel):
     name: str
     count: str | None = None
+    min_count: int | None = Field(None, alias=ATTR_MIN_COUNT)
+    max_count: int | None = Field(None, alias=ATTR_MAX_COUNT)
     source: str | None = None
     cyclic: bool | None = None
     type: str | None = None
@@ -77,6 +82,8 @@ class GenerateModel(BaseModel):
             valid_attributes={
                 ATTR_TARGET,
                 ATTR_COUNT,
+                ATTR_MIN_COUNT,
+                ATTR_MAX_COUNT,
                 ATTR_CYCLIC,
                 ATTR_NAME,
                 ATTR_SELECTOR,
@@ -121,6 +128,11 @@ class GenerateModel(BaseModel):
         if _TIMESERIES_ATTRS & values.keys():
             return values
         return ModelUtil.check_exist_count(values=values)
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_min_max_count(cls, values: dict):
+        return ModelUtil.check_min_max_count(values, EL_GENERATE)
 
     @model_validator(mode="before")
     @classmethod

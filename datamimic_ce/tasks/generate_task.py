@@ -23,6 +23,7 @@ from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.statement import Statement
+from datamimic_ce.statements.statement_util import StatementUtil
 from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.logging_util import gen_timer
@@ -61,8 +62,14 @@ class GenerateTask(CommonSubTask):
             series_count = self._statement.get_int_count(context) or 1
             return series_count * ts_config.ticks_per_series
 
-        # Get count from statement
-        count = self._statement.get_int_count(context)
+        # Get count from statement: explicit count, or a random value within the
+        # minCount/maxCount range (seed-bound via context.rng). Same resolution as <nestedKey>.
+        count = StatementUtil.resolve_count(
+            self._statement.get_int_count(context),
+            self._statement.min_count,
+            self._statement.max_count,
+            context.rng,
+        )
 
         # Set length of data source if count is not defined explicitly in statement
         if count is None:

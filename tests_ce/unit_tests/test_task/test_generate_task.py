@@ -132,6 +132,8 @@ class TestGenerateTask:
         statement.variable_suffix = "test_suffix"
         statement.distribution = "uniform"
         statement.converter = "json"
+        statement.min_count = None
+        statement.max_count = None
         statement._count = 1000
         statement._source_uri = "mongodb://localhost:27017"
         statement._separator = ","

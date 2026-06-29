@@ -22,6 +22,8 @@ class GenerateStatement(CompositeStatement):
         name = model.name
         super().__init__(name, parent_stmt)
         self._count = model.count
+        self._min_count = model.min_count
+        self._max_count = model.max_count
         self._source = model.source
         self._cyclic = model.cyclic
         self._source_script = model.source_scripted
@@ -67,6 +69,14 @@ class GenerateStatement(CompositeStatement):
     @count.setter
     def count(self, value):
         self._count = value
+
+    @property
+    def min_count(self) -> int | None:
+        return self._min_count
+
+    @property
+    def max_count(self) -> int | None:
+        return self._max_count
 
     def get_int_count(self, ctx: Context):
         """

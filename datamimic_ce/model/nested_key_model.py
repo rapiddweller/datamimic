@@ -26,6 +26,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VARIABLE_SUFFIX,
 )
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_LIST
+from datamimic_ce.constants.element_constants import EL_NESTED_KEY
 from datamimic_ce.model.model_util import ModelUtil
 
 
@@ -89,25 +90,7 @@ class NestedKeyModel(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_min_max_count(cls, values: dict):
-        key_set = set(values.keys())
-        if ATTR_COUNT in key_set:
-            # Not allow minCount or maxCount is defined with count
-            if ATTR_MIN_COUNT in key_set or ATTR_MAX_COUNT in key_set:
-                raise ValueError(
-                    f"'{ATTR_MIN_COUNT}' and '{ATTR_MAX_COUNT}' must not be defined "
-                    f"when '{ATTR_COUNT}' exists in <nestedKey>"
-                )
-        else:
-            if (
-                ATTR_MIN_COUNT in key_set
-                and ATTR_MAX_COUNT in key_set
-                and (values[ATTR_MIN_COUNT] > values[ATTR_MAX_COUNT])
-            ):
-                raise ValueError(
-                    f"'{ATTR_MIN_COUNT}' value ({values[ATTR_MIN_COUNT]}) "
-                    f"must be less than or equal to '{ATTR_MAX_COUNT}' value ({values[ATTR_MAX_COUNT]})"
-                )
-        return values
+        return ModelUtil.check_min_max_count(values, EL_NESTED_KEY)
 
     @model_validator(mode="before")
     @classmethod

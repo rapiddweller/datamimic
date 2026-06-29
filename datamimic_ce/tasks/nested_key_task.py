@@ -14,6 +14,7 @@ from datamimic_ce.data_sources.data_source_pagination import DataSourcePaginatio
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
+from datamimic_ce.statements.statement_util import StatementUtil
 from datamimic_ce.tasks.element_task import ElementTask
 from datamimic_ce.tasks.task import GenSubTask
 from datamimic_ce.tasks.task_util import TaskUtil
@@ -346,21 +347,7 @@ class NestedKeyTask(GenSubTask):
         :return:
         """
         count = self._statement.get_int_count(context)
-        min_count = self._statement.min_count
-        max_count = self._statement.max_count
-
-        if count is not None:
-            return count
-        if count is None and min_count is None and max_count is None:
-            return None
-
-        rng = context.rng
-        if min_count is None:
-            return rng.randint(max(0, max_count - 5), max_count)
-        elif max_count is None:
-            return rng.randint(min_count, min_count + 5)
-        else:
-            return rng.randint(min_count, max_count)
+        return StatementUtil.resolve_count(count, self._statement.min_count, self._statement.max_count, context.rng)
 
     def _post_convert(self, value):
         """

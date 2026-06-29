@@ -1,0 +1,6 @@
+<setup rngSeed="42">
+    <!-- minCount/maxCount: random row count in [3, 7] per run, seed-bound. -->
+    <generate name="items" minCount="3" maxCount="7" target="">
+        <key name="v" constant="x"/>
+    </generate>
+</setup>
