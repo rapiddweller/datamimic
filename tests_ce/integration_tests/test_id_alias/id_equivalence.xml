@@ -1,0 +1,11 @@
+<setup rngSeed="7" defaultSeparator=",">
+    <!-- <id> is a human-readable alias of <key> (marks an identifier field). Same value
+         mechanism -> via_id must equal via_key. Also: <id name="id" generator="..."> is the
+         common Benerator id pattern (e.g. a DB sequence). -->
+    <generate name="rows" count="5" target="">
+        <variable name="n" constant="42"/>
+        <id name="via_id" script="n"/>
+        <key name="via_key" script="n"/>
+        <id name="seq" type="int" generator="IncrementGenerator"/>
+    </generate>
+</setup>
