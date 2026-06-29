@@ -45,6 +45,17 @@ def test_iterate_nested_in_generate():
     assert [c["v"] for c in children] == ["0", "1"] * 3  # ordered -> first 2 rows each time
 
 
+def test_iterate_list_then_generate_per_entry():
+    """Classic pattern: iterate over a list, and for each entry generate child data
+    linked to that entry (the inner <generate> references the outer field by name)."""
+    res = _run("iterate_per_entry.xml")
+    assert [c["customer"] for c in res["customers"]] == ["Alice", "Bob", "Carol"]
+    orders = res["orders"]
+    assert len(orders) == 6  # 3 customers x 2 orders each
+    assert [o["order_for"] for o in orders] == ["Alice", "Alice", "Bob", "Bob", "Carol", "Carol"]
+    assert [o["seq"] for o in orders] == [1, 2, 1, 2, 1, 2]  # inner counter restarts per entry
+
+
 def test_sourceless_iterate_rejected():
     # <iterate> is the source-driven alias; without a source it must fail at parse.
     with pytest.raises(Exception, match="iterate.*requires.*source"):
