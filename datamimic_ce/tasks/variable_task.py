@@ -26,7 +26,6 @@ from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntityDataSource
-from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
@@ -51,7 +50,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
     _ENTITY_MODE: Final = "entity_builder"
     _WEIGHTED_ENTITY_MODE: Final = "weighted_entity"
     _ITERATION_SELECTOR_MODE: Final = "iteration_selector"
-    _RANDOM_DISTRIBUTION_MODE: Final = "random_distribution"
+    _FULL_LOAD_MODE: Final = "full_load"
     _LAZY_ITERATOR_MODE: Final = "lazy_iterator"
 
     def __init__(
@@ -68,11 +67,10 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         descriptor_dir = ctx.root.descriptor_dir
         seed: int
         file_data: list[dict[str, Any]] | None = None
-        self._random_items_iterator = None
+        self._full_load_iterator = None
         # Only ORDERED paginates sequentially; RANDOM and CUMULATED load all rows.
-        loads_all = self.statement.distribution != SourceDistribution.ORDERED
+        loads_all = self.statement.distribution.loads_all
         if loads_all:
-            # Use task_id as seed for random distribution
             seed = ctx.root.get_distribution_seed()
 
         # Try to init generation mode of VariableTask
@@ -121,9 +119,9 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                     )
                     # Select data from database and shuffle
                     if loads_all:
-                        self._mode = self._RANDOM_DISTRIBUTION_MODE
+                        self._mode = self._FULL_LOAD_MODE
                         selected_data = client.get_by_page_with_query(selector)
-                        self._random_items_iterator = self._distributed_iter(selected_data, pagination, seed)
+                        self._full_load_iterator = self._distributed_iter(selected_data, pagination, seed)
                     else:
                         # global variable (setup variable, out of generate_stmt scope) don't need pagination and cyclic
                         if self._statement.is_global_variable:
@@ -150,8 +148,8 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                         else FileUtil.read_json_to_list(descriptor_dir / source_str)
                     )
                     if loads_all:
-                        self._random_items_iterator = self._distributed_iter(file_data, pagination, seed)
-                        self._mode = self._RANDOM_DISTRIBUTION_MODE
+                        self._full_load_iterator = self._distributed_iter(file_data, pagination, seed)
+                        self._mode = self._FULL_LOAD_MODE
                     else:
                         self._iterator = DataSourceRegistry.get_cyclic_data_iterator(
                             data=file_data,
@@ -192,10 +190,10 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                         self._mode = self._LAZY_ITERATOR_MODE
                     else:
                         if loads_all:
-                            self._random_items_iterator = (
+                            self._full_load_iterator = (
                                 self._distributed_iter(file_data, pagination, seed) if file_data is not None else None
                             )
-                            self._mode = self._RANDOM_DISTRIBUTION_MODE
+                            self._mode = self._FULL_LOAD_MODE
                         else:
                             self._iterator = iter(file_data) if file_data is not None else None
                             self._mode = self._ITERATOR_MODE
@@ -308,7 +306,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
 
     def _distributed_iter(self, data, pagination, seed):
         """Iterator over loaded rows for the load-all distributions (random shuffle /
-        cumulated bell). Consumed via ``_random_items_iterator``."""
+        cumulated bell). Consumed via ``_full_load_iterator``."""
         return iter(
             DataSourceRegistry.get_distributed_data(
                 data, pagination, self._statement.cyclic, seed, self._statement.distribution
@@ -336,26 +334,26 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 suffix=self._suffix,
             )
             value = self._client.get_by_page_with_query(selector)
-        elif self._mode == self._RANDOM_DISTRIBUTION_MODE:
-            if self._random_items_iterator is None:
-                raise StopIteration(f"No more random items to iterate for statement: {self._statement.name}")
-            value = next(self._random_items_iterator)
+        elif self._mode == self._FULL_LOAD_MODE:
+            if self._full_load_iterator is None:
+                raise StopIteration(f"No more rows to iterate for statement: {self._statement.name}")
+            value = next(self._full_load_iterator)
         elif self._mode == self._LAZY_ITERATOR_MODE:
             if isinstance(self._statement, VariableStatement):
-                loads_all = self._statement.distribution != SourceDistribution.ORDERED
+                loads_all = self._statement.distribution.loads_all
             else:
                 loads_all = False
             if self._statement.source is None:
                 return None
             file_data = ctx.evaluate_python_expression(self._statement.source)
             if loads_all:
-                self._random_items_iterator = self._distributed_iter(
+                self._full_load_iterator = self._distributed_iter(
                     file_data, self._pagination, ctx.root.get_distribution_seed()
                 )
-                self._mode = self._RANDOM_DISTRIBUTION_MODE
-                if self._random_items_iterator is None:
-                    raise StopIteration("No more random items to iterate for statement: " + self._statement.name)
-                value = next(self._random_items_iterator)
+                self._mode = self._FULL_LOAD_MODE
+                if self._full_load_iterator is None:
+                    raise StopIteration("No more rows to iterate for statement: " + self._statement.name)
+                value = next(self._full_load_iterator)
             else:
                 self._iterator = DataSourceRegistry.get_cyclic_data_iterator(
                     data=file_data,
@@ -372,7 +370,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             if self._mode in [
                 VariableTask._ITERATOR_MODE,
                 VariableTask._WEIGHTED_ENTITY_MODE,
-                VariableTask._RANDOM_DISTRIBUTION_MODE,
+                VariableTask._FULL_LOAD_MODE,
             ]:
                 # Default variable prefix and suffix
                 setup_ctx = ctx

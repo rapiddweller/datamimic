@@ -13,7 +13,6 @@ from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
-from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.exporter_util import ExporterUtil
 from datamimic_ce.logger import logger, setup_logger
@@ -143,7 +142,7 @@ class GenerateWorker:
         # Determined page of data source to load.
         # RANDOM (shuffle) and CUMULATED (bell) need ALL rows loaded first (no pagination);
         # ORDERED reads page by page.
-        loads_all = False if TaskUtil.is_source_ml_model(stmt) else stmt.distribution != SourceDistribution.ORDERED
+        loads_all = False if TaskUtil.is_source_ml_model(stmt) else stmt.distribution.loads_all
         if loads_all:
             # Don't paginate the load — need all rows before shuffle/cumulated selection
             load_start_idx = None
@@ -229,7 +228,7 @@ class GenerateWorker:
                                 inner_generate_key = key.split("|", 1)[-1].strip()
                                 ctx.current_variables[inner_generate_key] = value
                     else:
-                        task.execute(ctx)  # type: ignore[attr-defined]
+                        task.execute(ctx)
                 # Post-process product by applying converters
                 for converter in converter_list:
                     ctx.current_product = converter.convert(ctx.current_product)

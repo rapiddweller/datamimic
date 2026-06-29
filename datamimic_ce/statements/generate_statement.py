@@ -35,8 +35,7 @@ class GenerateStatement(CompositeStatement):
         self._storage_id = model.storage_id or "default-datamimic-minio"
         self._mp = model.multiprocessing
         self._export_uri = model.export_uri
-        # Real type at the boundary (absent = RANDOM). <generate> allows only RANDOM/ORDERED
-        # (cumulated rejected at parse by the model validator).
+        # Real type at the boundary (absent = RANDOM). <generate> accepts random/ordered/cumulated.
         self._distribution = SourceDistribution.coerce(model.distribution)
         self._variable_prefix = model.variable_prefix
         self._variable_suffix = model.variable_suffix

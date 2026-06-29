@@ -10,18 +10,18 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 from random import Random
 
-import xmltodict
+import xmltodict  # type: ignore[import-untyped]
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.statement import Statement
-from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.utils.distribution_sampling import cumulated_index
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
