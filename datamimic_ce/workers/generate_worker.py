@@ -228,7 +228,7 @@ class GenerateWorker:
                                 inner_generate_key = key.split("|", 1)[-1].strip()
                                 ctx.current_variables[inner_generate_key] = value
                     else:
-                        task.execute(ctx)
+                        task.execute(ctx)  # type: ignore[attr-defined]
                 # Post-process product by applying converters
                 for converter in converter_list:
                     ctx.current_product = converter.convert(ctx.current_product)

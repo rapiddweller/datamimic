@@ -10,7 +10,7 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 from random import Random
 
-import xmltodict  # type: ignore[import-untyped]
+import xmltodict
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
