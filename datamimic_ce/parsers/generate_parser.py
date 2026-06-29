@@ -7,7 +7,7 @@
 from pathlib import Path
 from xml.etree.ElementTree import Element
 
-from datamimic_ce.constants.element_constants import EL_GENERATE
+from datamimic_ce.constants.element_constants import EL_GENERATE, EL_ITERATE
 from datamimic_ce.model.generate_model import GenerateModel
 from datamimic_ce.parsers.statement_parser import StatementParser
 from datamimic_ce.statements.generate_statement import GenerateStatement
@@ -22,8 +22,12 @@ _TIMESERIES_RESERVED_NAME = "ts"
 
 class GenerateParser(StatementParser):
     """
-    Parse element "generate" into GenerateStatement
+    Parse element "generate" (or its alias "iterate") into GenerateStatement
     """
+
+    # <iterate> is a human-readable alias of <generate>: same parser, model, statement
+    # and valid sub-elements. The dispatch in ParserUtil routes both tags here.
+    _VALID_TAGS = frozenset({EL_GENERATE, EL_ITERATE})
 
     def __init__(
         self,
@@ -33,8 +37,13 @@ class GenerateParser(StatementParser):
         super().__init__(
             element,
             properties,
-            valid_element_tag=EL_GENERATE,
+            valid_element_tag=EL_GENERATE,  # sub-elements resolve under <generate> for both tags
         )
+
+    def _validate_element_tag(self) -> None:
+        """Accept both <generate> and its alias <iterate> (base only checks a single tag)."""
+        if self._element.tag not in self._VALID_TAGS:
+            raise ValueError(f"Expect element tag '{EL_GENERATE}' or '{EL_ITERATE}', but got '{self._element.tag}'")
 
     def parse(self, descriptor_dir: Path, parent_stmt: Statement, lazy_parse: bool = False) -> GenerateStatement:
         """
@@ -44,6 +53,11 @@ class GenerateParser(StatementParser):
         from datamimic_ce.parsers.parser_util import ParserUtil
 
         model = self.validate_attributes(GenerateModel)
+
+        # <iterate> is the source-driven alias: it must iterate something. Reject a
+        # sourceless <iterate> at parse — use <generate> for purely synthetic data.
+        if self._element.tag == EL_ITERATE and not model.source:
+            raise ValueError("<iterate> requires a 'source' to iterate over; use <generate> for synthetic data")
 
         # Parse sub elements
 

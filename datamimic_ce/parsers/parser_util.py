@@ -27,6 +27,7 @@ from datamimic_ce.constants.element_constants import (
     EL_IF,
     EL_INCLUDE,
     EL_ITEM,
+    EL_ITERATE,
     EL_KEY,
     EL_LIST,
     EL_MEMSTORE,
@@ -91,6 +92,7 @@ class ParserUtil:
             EL_SETUP: {
                 EL_MONGODB,
                 EL_GENERATE,
+                EL_ITERATE,
                 EL_DATABASE,
                 EL_INCLUDE,
                 EL_MEMSTORE,
@@ -114,6 +116,7 @@ class ParserUtil:
             EL_CONDITION: {EL_IF, EL_ELSE_IF, EL_ELSE},
             EL_GENERATE: {
                 EL_GENERATE,
+                EL_ITERATE,
                 EL_KEY,
                 EL_VARIABLE,
                 EL_REFERENCE,
@@ -148,7 +151,7 @@ class ParserUtil:
             from datamimic_ce.parsers.mongodb_parser import MongoDBParser
 
             return MongoDBParser(element, properties)
-        elif tag == EL_GENERATE:
+        elif tag in (EL_GENERATE, EL_ITERATE):
             from datamimic_ce.parsers.generate_parser import GenerateParser
 
             return GenerateParser(element, properties)

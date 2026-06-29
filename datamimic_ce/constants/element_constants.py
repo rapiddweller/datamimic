@@ -7,6 +7,7 @@
 EL_SETUP = "setup"
 EL_MONGODB = "mongodb"
 EL_GENERATE = "generate"
+EL_ITERATE = "iterate"  # human-readable alias of <generate> (source-driven intent), same parser/model/statement
 EL_DATABASE = "database"
 EL_KEY = "key"
 EL_VARIABLE = "variable"
