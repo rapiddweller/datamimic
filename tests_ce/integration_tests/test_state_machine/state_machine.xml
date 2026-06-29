@@ -1,0 +1,18 @@
+<setup>
+    <!-- Define the lifecycle once, reuse it by name across generates. -->
+    <state-machine id="orderLifecycle" start="open">
+        <transition from="open" to="paid"/>
+        <transition from="paid" to="shipped" weight="0.9"/>
+        <transition from="paid" to="cancelled" weight="0.1"/>
+        <transition from="shipped" to="delivered"/>
+    </state-machine>
+
+    <generate name="orders" count="300" target="">
+        <key name="status" generator="orderLifecycle"/>
+    </generate>
+
+    <!-- reuse: a second generate gets its OWN independent walk -->
+    <generate name="more" count="40" target="">
+        <key name="status" generator="orderLifecycle"/>
+    </generate>
+</setup>

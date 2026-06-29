@@ -64,6 +64,7 @@ from datamimic_ce.statements.memstore_statement import MemstoreStatement
 from datamimic_ce.statements.mongodb_statement import MongoDBStatement
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
+from datamimic_ce.statements.state_machine_statement import StateMachineStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.array_task import ArrayTask
@@ -152,6 +153,10 @@ class TaskUtil:
             return ElementTask(ctx, stmt)  # type: ignore[return-value]
         elif isinstance(stmt, GeneratorStatement):
             return GeneratorTask(stmt)
+        elif isinstance(stmt, StateMachineStatement):
+            from datamimic_ce.tasks.state_machine_task import StateMachineTask
+
+            return StateMachineTask(stmt)
         else:
             raise ValueError(f"Cannot created task for statement {stmt.__class__.__name__}")
 

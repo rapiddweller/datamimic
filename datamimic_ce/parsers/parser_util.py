@@ -37,6 +37,8 @@ from datamimic_ce.constants.element_constants import (
     EL_NESTED_KEY,
     EL_REFERENCE,
     EL_SETUP,
+    EL_STATE_MACHINE,
+    EL_TRANSITION,
     EL_VARIABLE,
 )
 from datamimic_ce.logger import logger
@@ -58,6 +60,7 @@ from datamimic_ce.parsers.list_parser import ListParser
 from datamimic_ce.parsers.memstore_parser import MemstoreParser
 from datamimic_ce.parsers.nested_key_parser import NestedKeyParser
 from datamimic_ce.parsers.reference_parser import ReferenceParser
+from datamimic_ce.parsers.state_machine_parser import StateMachineParser
 from datamimic_ce.parsers.variable_parser import VariableParser
 from datamimic_ce.statements.array_statement import ArrayStatement
 from datamimic_ce.statements.composite_statement import CompositeStatement
@@ -103,7 +106,9 @@ class ParserUtil:
                 EL_VARIABLE,
                 EL_GENERATOR,
                 EL_DEMOGRAPHICS,
+                EL_STATE_MACHINE,
             },
+            EL_STATE_MACHINE: {EL_TRANSITION},
             EL_NESTED_KEY: {
                 EL_KEY,
                 EL_ID,
@@ -201,6 +206,8 @@ class ParserUtil:
             from datamimic_ce.parsers.demographics_parser import DemographicsParser
 
             return DemographicsParser(element, properties)
+        elif tag == EL_STATE_MACHINE:
+            return StateMachineParser(element, properties)
         else:
             raise ValueError(f"Cannot get parser for element <{tag}>")
 
@@ -248,7 +255,8 @@ class ParserUtil:
                     | ReferenceParser
                     | ArrayParser
                     | EchoParser
-                    | GeneratorParser,
+                    | GeneratorParser
+                    | StateMachineParser,
                 ):
                     stmt = parser.parse()
                 elif isinstance(parser, KeyParser):

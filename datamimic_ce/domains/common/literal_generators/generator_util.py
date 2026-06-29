@@ -11,6 +11,10 @@ from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.domains.common.literal_generators.increment_generator import IncrementGenerator
+from datamimic_ce.domains.common.literal_generators.state_transition_generator import (
+    StateMachineDef,
+    StateTransitionGenerator,
+)
 from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
 from datamimic_ce.enums.distribution_enums import NumberDistribution
 from datamimic_ce.logger import logger
@@ -73,6 +77,20 @@ class GeneratorUtil:
                 class_name = class_name_candidate.strip()
             else:
                 class_name = generator_str.strip()
+
+            # A <state-machine id="..."> registers a definition under its id; each
+            # generator="<id>" reference builds its own stateful walk from it. Seed the
+            # walk from <setup rngSeed> so the named state machine replays deterministically
+            # (derive_seeded_rng returns None without rngSeed -> wall-clock random).
+            machine_def = self._context.root.generators.get(class_name)
+            if isinstance(machine_def, StateMachineDef):
+                generator = StateTransitionGenerator(
+                    machine_def.rules,
+                    start=machine_def.start,
+                    rng=self._context.root.derive_seeded_rng(),
+                )
+                self._context.root.generators[cache_key] = generator  # per-field reuse across rows
+                return generator
 
             # Get generator class
             cls = self._class_dict.get(class_name)
