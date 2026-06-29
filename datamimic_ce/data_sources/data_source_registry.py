@@ -17,10 +17,12 @@ from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.statement import Statement
+from datamimic_ce.utils.distribution_sampling import cumulated_index
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
 
@@ -267,6 +269,49 @@ class DataSourceRegistry:
 
         start_idx_cap = start_idx % source_len
         return res[start_idx_cap : start_idx_cap + end_idx - start_idx]
+
+    @staticmethod
+    def get_distributed_data(
+        data: Iterable,
+        pagination: DataSourcePagination | None,
+        cyclic: bool | None,
+        seed: int,
+        distribution: SourceDistribution,
+    ) -> list:
+        """Reorder loaded rows for a non-ORDERED distribution: RANDOM shuffles (permutation),
+        CUMULATED selects with a bell-weighted index (with replacement). Single dispatch shared
+        by <variable>, <generate> and <nestedKey>."""
+        if distribution == SourceDistribution.CUMULATED:
+            return DataSourceRegistry.get_cumulated_data(data, pagination, seed)  # cyclic n/a: never runs out
+        return DataSourceRegistry.get_shuffled_data_with_cyclic(data, pagination, cyclic, seed)
+
+    @staticmethod
+    def get_cumulated_data(data: Iterable, pagination: DataSourcePagination | None, seed: int) -> list:
+        """Benerator ``distribution="cumulated"`` row selection: sample row indices with a
+        bell shape (mean = middle of the load order) WITH replacement.
+
+        Sibling of ``get_shuffled_data_with_cyclic`` (shuffle = permutation, no replacement).
+        No ``cyclic`` parameter — with-replacement sampling never runs out, so wrap-around is
+        meaningless.
+        """
+        rows = list(data)
+        source_len = len(rows)
+        if source_len == 0:
+            return []
+
+        if pagination is None:
+            start_idx, end_idx = 0, source_len
+        else:
+            start_idx = pagination.skip
+            end_idx = pagination.skip + pagination.limit
+        span = end_idx - start_idx
+
+        # One seeded RNG drives a single continuous draw sequence, so paginated batches
+        # stay consistent (page 2 continues page 1). ponytail: O(start_idx + span) draws;
+        # fine for typical skips, revisit only if huge offsets show up.
+        rng = Random(seed)
+        picks = [rows[cumulated_index(rng, source_len - 1)] for _ in range(start_idx + span)]
+        return picks[start_idx:]
 
     @staticmethod
     def load_csv_file(

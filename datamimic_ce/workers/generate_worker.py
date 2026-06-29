@@ -139,13 +139,12 @@ class GenerateWorker:
         processed_data_count = page_end - page_start
         pagination = DataSourcePagination(skip=page_start, limit=processed_data_count)
 
-        # Determined page of data source to load
-        # If distribution is random, load all data before shuffle, which means no pagination (or, pagination=None)
-        # If distribution is not random, load data by pagination
-        is_random_distribution = False if TaskUtil.is_source_ml_model(stmt) else stmt.distribution in ("random", None)
-        if is_random_distribution:
-            # Use task_id as seed for random distribution
-            # Don't use pagination for random distribution to load all data before shuffle
+        # Determined page of data source to load.
+        # RANDOM (shuffle) and CUMULATED (bell) need ALL rows loaded first (no pagination);
+        # ORDERED reads page by page.
+        loads_all = False if TaskUtil.is_source_ml_model(stmt) else stmt.distribution.loads_all
+        if loads_all:
+            # Don't paginate the load — need all rows before shuffle/cumulated selection
             load_start_idx = None
             load_end_idx = None
             load_pagination: DataSourcePagination | None = None
@@ -179,11 +178,13 @@ class GenerateWorker:
             load_pagination,
         )
 
-        # Shuffle source data if distribution is random
-        if is_random_distribution:
+        # Reorder loaded rows for random (shuffle) / cumulated (bell); ordered is left as-is
+        if loads_all:
             seed = root_context.get_distribution_seed()
-            # Use original pagination for shuffling
-            source_data = DataSourceRegistry.get_shuffled_data_with_cyclic(source_data, pagination, stmt.cyclic, seed)
+            # Use original pagination for the reorder
+            source_data = DataSourceRegistry.get_distributed_data(
+                source_data, pagination, stmt.cyclic, seed, stmt.distribution
+            )
 
         # Store temp result
         product_holder: dict[str, list] = {}

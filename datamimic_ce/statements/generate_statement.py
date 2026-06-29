@@ -8,6 +8,7 @@ from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.constants.convention_constants import NAME_SEPARATOR
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.logger import logger
 from datamimic_ce.model.generate_model import GenerateModel
 from datamimic_ce.statements.composite_statement import CompositeStatement
@@ -34,7 +35,8 @@ class GenerateStatement(CompositeStatement):
         self._storage_id = model.storage_id or "default-datamimic-minio"
         self._mp = model.multiprocessing
         self._export_uri = model.export_uri
-        self._distribution = model.distribution
+        # Real type at the boundary (absent = RANDOM). <generate> accepts random/ordered/cumulated.
+        self._distribution = SourceDistribution.coerce(model.distribution)
         self._variable_prefix = model.variable_prefix
         self._variable_suffix = model.variable_suffix
         self._converter = model.converter
@@ -132,7 +134,7 @@ class GenerateStatement(CompositeStatement):
         return self._export_uri
 
     @property
-    def distribution(self) -> str | None:
+    def distribution(self) -> SourceDistribution:
         return self._distribution
 
     @property

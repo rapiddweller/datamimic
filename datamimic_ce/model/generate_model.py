@@ -147,10 +147,5 @@ class GenerateModel(BaseModel):
     def validate_count(cls, value):
         return ModelUtil.check_is_digit_or_script(value=value)
 
-    @field_validator("distribution")
-    @classmethod
-    def validate_distribution(cls, value):
-        """
-        Validate attribute "distribution"
-        """
-        return ModelUtil.check_valid_distribution(value)
+    # NOTE: no distribution validator — GenerateStatement validates via
+    # SourceDistribution.coerce (random/ordered/cumulated) at construction.

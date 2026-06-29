@@ -163,3 +163,6 @@ class NestedKeyModel(BaseModel):
     @classmethod
     def validate_name(cls, value):
         return ModelUtil.check_not_empty(value=value)
+
+    # NOTE: no distribution validator — NestedKeyStatement validates via
+    # SourceDistribution.coerce (random/ordered/cumulated) at construction.
