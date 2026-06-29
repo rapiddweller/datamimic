@@ -1,0 +1,6 @@
+<setup>
+    <!-- 'open' has no '->' : an invalid transition spec must fail loudly. -->
+    <generate name="x" count="1" target="">
+        <key name="s" generator="StateTransitionGenerator('open')"/>
+    </generate>
+</setup>
