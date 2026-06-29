@@ -1,0 +1,15 @@
+<setup rngSeed="42" defaultSeparator=",">
+    <!-- Consumer coverage: <nestedKey source=memstore> honors all three distributions.
+         IncrementGenerator seeds v = 1..27 into the memstore; each outer row gets a
+         nested list of 10 picks per distribution. Shape (bell) is proven on the
+         <variable>/<generate> cells; here we lock run + range + determinism. -->
+    <memstore id="mem"/>
+    <generate name="rows" count="27" target="mem">
+        <key name="v" type="int" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="outer" count="50" target="">
+        <nestedKey name="ordered" source="mem" type="rows" distribution="ordered" count="10"/>
+        <nestedKey name="random" source="mem" type="rows" distribution="random" count="10"/>
+        <nestedKey name="cumulated" source="mem" type="rows" distribution="cumulated" count="10"/>
+    </generate>
+</setup>

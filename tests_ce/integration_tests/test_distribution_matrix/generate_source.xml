@@ -1,0 +1,13 @@
+<setup rngSeed="42" defaultSeparator=",">
+    <!-- Consumer coverage: <generate source=CSV> honors all three distributions
+         (rows.csv, v = 0..26). Benerator's most common iteration pattern. -->
+    <generate name="ordered" source="rows.csv" distribution="ordered" count="27" target="">
+        <key name="v" script="v"/>
+    </generate>
+    <generate name="random" source="rows.csv" distribution="random" count="27" target="">
+        <key name="v" script="v"/>
+    </generate>
+    <generate name="cumulated" source="rows.csv" distribution="cumulated" count="6000" target="">
+        <key name="v" script="v"/>
+    </generate>
+</setup>

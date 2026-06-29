@@ -1,8 +1,0 @@
-<setup rngSeed="42" defaultSeparator=",">
-    <!-- cumulated on <generate source> (Benerator's most common iteration pattern):
-         rows are emitted with a bell-weighted index over the load order, reproducible
-         under <setup rngSeed>. -->
-    <generate name="picks" source="rows.csv" distribution="cumulated" count="6000" target="">
-        <key name="v" script="v"/>
-    </generate>
-</setup>

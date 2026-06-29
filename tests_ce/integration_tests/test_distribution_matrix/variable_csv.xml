@@ -1,0 +1,17 @@
+<setup rngSeed="42" defaultSeparator=",">
+    <!-- Distribution matrix: <variable source=CSV> × {ordered, random, cumulated}.
+         Source rows.csv holds v = 0..26. ordered = source order, random = seeded
+         permutation, cumulated = bell over the load order (with replacement). -->
+    <generate name="ordered" count="27" target="">
+        <variable name="row" source="rows.csv" distribution="ordered"/>
+        <key name="v" script="row.v"/>
+    </generate>
+    <generate name="random" count="27" target="">
+        <variable name="row" source="rows.csv" distribution="random"/>
+        <key name="v" script="row.v"/>
+    </generate>
+    <generate name="cumulated" count="6000" target="">
+        <variable name="row" source="rows.csv" distribution="cumulated"/>
+        <key name="v" script="row.v"/>
+    </generate>
+</setup>

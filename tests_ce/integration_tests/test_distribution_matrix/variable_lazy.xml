@@ -1,0 +1,17 @@
+<setup rngSeed="42" defaultSeparator=",">
+    <!-- <variable source=python-expression> × {ordered, random, cumulated}. The source is
+         neither file nor client nor memstore, so it takes the lazy/script branch
+         (LAZY_ITERATOR_MODE); the inline list yields v = 0..26. -->
+    <generate name="ordered" count="27" target="">
+        <variable name="row" source="[{'v': i} for i in range(27)]" distribution="ordered"/>
+        <key name="v" script="row.v"/>
+    </generate>
+    <generate name="random" count="27" target="">
+        <variable name="row" source="[{'v': i} for i in range(27)]" distribution="random"/>
+        <key name="v" script="row.v"/>
+    </generate>
+    <generate name="cumulated" count="6000" target="">
+        <variable name="row" source="[{'v': i} for i in range(27)]" distribution="cumulated"/>
+        <key name="v" script="row.v"/>
+    </generate>
+</setup>
