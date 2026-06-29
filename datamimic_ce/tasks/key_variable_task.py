@@ -30,6 +30,7 @@ from datamimic_ce.domains.common.literal_generators.string_generator import Stri
 from datamimic_ce.statements.element_statement import ElementStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.variable_statement import VariableStatement
+from datamimic_ce.utils.unique_sampling import unique_value_iter
 
 
 class KeyVariableTask:
@@ -58,6 +59,8 @@ class KeyVariableTask:
         self._converter_list = TaskUtil.create_converter_list(ctx, statement.converter)
 
         self._mode: str | None = None
+        # Lazily-built distinct-value iterator for unique="true" (sampling without replacement).
+        self._unique_iter = None
 
         self._simple_type_set = {
             DATA_TYPE_STRING,
@@ -118,6 +121,13 @@ class KeyVariableTask:
                 self._mode = self._LAZY_GENERATOR_MODE
         elif self._statement.source is not None:
             source = self._statement.source
+            if self._statement.unique:
+                # <key source> is a weighted csv (with replacement); unique source pools
+                # are a <variable source unique> feature.
+                raise ValueError(
+                    f"'unique' is not supported on a <{self._element_tag}> 'source'; "
+                    f"use a <variable source ... unique=\"true\"> or inline 'values'"
+                )
             if not source.endswith("wgt.csv"):
                 raise ValueError(f"Data source of attribute '{self._statement.name}' must be type of: 'wgt.csv'")
             separator = self._statement.separator or ctx.default_separator
@@ -189,9 +199,12 @@ class KeyVariableTask:
                 suffix=self._suffix,
             )
         elif self._mode == self._VALUES_MODE:
-            # Return None if self._values is None; weighted pick when 'weights' given.
+            # None if no values; unique = distinct per row (no replacement); weighted pick
+            # when 'weights' given; otherwise a uniform random pick.
             if self._values is None:
                 value = None
+            elif self._statement.unique:
+                value = self._next_unique_value(ctx)
             elif self._weights:
                 value = ctx.rng.choices(self._values, weights=self._weights, k=1)[0]
             else:
@@ -274,6 +287,15 @@ class KeyVariableTask:
             ) from e
 
         return value
+
+    def _next_unique_value(self, ctx):
+        """Emit a distinct value per call (sampling 'values' without replacement,
+        seeded via ctx.rng). Shared with <variable source unique> via unique_value_iter."""
+        if self._unique_iter is None:
+            self._unique_iter = unique_value_iter(
+                self._values, ctx.rng, f"<{self._element_tag}> '{self._statement.name}'"
+            )
+        return next(self._unique_iter)
 
     def _parse_weights(self, values):
         """Parse the 'weights' companion of 'values' into floats, validating the count.

@@ -31,6 +31,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_SOURCE_SCRIPTED,
     ATTR_STRING,
     ATTR_TYPE,
+    ATTR_UNIQUE,
     ATTR_VALUES,
     ATTR_VARIABLE_PREFIX,
     ATTR_VARIABLE_SUFFIX,
@@ -59,6 +60,7 @@ class VariableModel(BaseModel):
     converter: str | None = None
     values: str | None = None
     weights: str | None = None
+    unique: bool | None = None
     constant: str | None = None
     iteration_selector: str | None = Field(None, alias=ATTR_ITERATION_SELECTOR)
     default_value: str | None = Field(None, alias=ATTR_DEFAULT_VALUE)
@@ -100,6 +102,7 @@ class VariableModel(BaseModel):
                 ATTR_CONSTANT,
                 ATTR_VALUES,
                 ATTR_WEIGHTS,
+                ATTR_UNIQUE,
                 ATTR_ITERATION_SELECTOR,
                 ATTR_DEFAULT_VALUE,
                 ATTR_PATTERN,
@@ -121,6 +124,11 @@ class VariableModel(BaseModel):
     @classmethod
     def validate_weights_require_values(cls, values: dict):
         return ModelUtil.check_weights_require_values(values)
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_unique_constraints(cls, values: dict):
+        return ModelUtil.check_unique_constraints(values)
 
     @model_validator(mode="before")
     @classmethod

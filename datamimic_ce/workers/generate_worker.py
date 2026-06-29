@@ -142,7 +142,8 @@ class GenerateWorker:
         # Determined page of data source to load.
         # RANDOM (shuffle) and CUMULATED (bell) need ALL rows loaded first (no pagination);
         # ORDERED reads page by page.
-        loads_all = False if TaskUtil.is_source_ml_model(stmt) else stmt.distribution.loads_all
+        # unique also needs the whole pool (dedupe + sample without replacement).
+        loads_all = False if TaskUtil.is_source_ml_model(stmt) else (stmt.distribution.loads_all or bool(stmt.unique))
         if loads_all:
             # Don't paginate the load — need all rows before shuffle/cumulated selection
             load_start_idx = None
@@ -178,13 +179,18 @@ class GenerateWorker:
             load_pagination,
         )
 
-        # Reorder loaded rows for random (shuffle) / cumulated (bell); ordered is left as-is
+        # Reorder loaded rows for random (shuffle) / cumulated (bell) / unique (distinct,
+        # no replacement); ordered is left as-is. All page-window slicing lives in the registry.
         if loads_all:
             seed = root_context.get_distribution_seed()
-            # Use original pagination for the reorder
-            source_data = DataSourceRegistry.get_distributed_data(
-                source_data, pagination, stmt.cyclic, seed, stmt.distribution
-            )
+            if stmt.unique:
+                source_data = DataSourceRegistry.get_unique_data(
+                    source_data, pagination, seed, f"<generate> '{stmt.name}'"
+                )
+            else:
+                source_data = DataSourceRegistry.get_distributed_data(
+                    source_data, pagination, stmt.cyclic, seed, stmt.distribution
+                )
 
         # Store temp result
         product_holder: dict[str, list] = {}

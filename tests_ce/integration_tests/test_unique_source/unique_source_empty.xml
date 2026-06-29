@@ -1,0 +1,7 @@
+<setup rngSeed="9">
+    <!-- unlucky data: empty source (header only) + unique -> strict error, not silent zero. -->
+    <generate name="x" count="3" target="">
+        <variable name="row" source="codes_empty.csv" unique="true"/>
+        <key name="code" script="row.code"/>
+    </generate>
+</setup>

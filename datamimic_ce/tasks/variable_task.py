@@ -69,7 +69,8 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         file_data: list[dict[str, Any]] | None = None
         self._full_load_iterator = None
         # Only ORDERED paginates sequentially; RANDOM and CUMULATED load all rows.
-        loads_all = self.statement.distribution.loads_all
+        # unique also needs the whole pool (dedupe + sample without replacement).
+        loads_all = self.statement.distribution.loads_all or bool(self.statement.unique)
         if loads_all:
             seed = ctx.root.get_distribution_seed()
 
@@ -305,8 +306,13 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         return entity_cls(**kwargs)
 
     def _distributed_iter(self, data, pagination, seed):
-        """Iterator over loaded rows for the load-all distributions (random shuffle /
-        cumulated bell). Consumed via ``_full_load_iterator``."""
+        """Iterator over loaded rows for the load-all selections: random shuffle /
+        cumulated bell / unique (distinct, no replacement). All page-window slicing lives
+        in the registry, so unique stays multiprocessing-safe. Consumed via ``_full_load_iterator``."""
+        if self._statement.unique:
+            return iter(
+                DataSourceRegistry.get_unique_data(data, pagination, seed, f"<variable> '{self._statement.name}'")
+            )
         return iter(
             DataSourceRegistry.get_distributed_data(
                 data, pagination, self._statement.cyclic, seed, self._statement.distribution

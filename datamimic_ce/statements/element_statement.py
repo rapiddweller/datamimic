@@ -25,6 +25,7 @@ class ElementStatement(Statement):
         self._type = model.type
         self._values = model.values
         self._weights = model.weights
+        self._unique = model.unique
         self._default_value = model.default_value
         self._pattern = model.pattern
         self._variable_prefix = model.variable_prefix
@@ -46,6 +47,10 @@ class ElementStatement(Statement):
     @property
     def weights(self):
         return self._weights
+
+    @property
+    def unique(self):
+        return self._unique
 
     @property
     def script(self):

@@ -1,0 +1,7 @@
+<setup rngSeed="5">
+    <!-- unique pick from a finite value set: each row gets a DISTINCT value
+         (sampling without replacement), seed-bound. -->
+    <generate name="people" count="5" target="">
+        <key name="code" values="'A','B','C','D','E'" unique="true"/>
+    </generate>
+</setup>
