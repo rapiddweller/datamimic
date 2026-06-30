@@ -364,7 +364,10 @@ class RdbmsClient(DatabaseClient):
             columns = [table.c[name] for name in column_names]
             # Fetch the full column set; the reference task does the distinct/with-replacement
             # sampling deterministically via ctx.rng. (Limiting before dedupe would under-count
-            # the distinct pool — the cause of spurious 'insufficient unique values' errors.)
+            # the distinct pool — the cause of spurious 'insufficient unique values' errors;
+            # DB-side ORDER BY random() would break ctx.rng reproducibility.)
+            # ponytail: fetch-all suits reference/lookup tables; a huge source wants SELECT DISTINCT
+            # or DB-side sampling — an EE-scale concern, not CE's determinism-first reference path.
             return [tuple(row) for row in conn.execute(select(*columns)).fetchall()]
 
     def insert(self, table_name: str, data_list: list):
