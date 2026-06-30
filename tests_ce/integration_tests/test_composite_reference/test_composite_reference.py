@@ -64,6 +64,34 @@ def test_legacy_single_field_reference_still_works():
     assert {r["aisle"] for r in rows} == {"A", "B", "C"}  # distinct aisles (deduped)
 
 
+# --- Referential integrity against a SPARSE parent (the real-world composite-FK challenge) ---
+# Web research framing: "referential integrity holds across the tuple, not on either column
+# alone ... producers that generate columns independently break this without noticing."
+# The full-grid fixtures above can't prove this (every cross is valid); a sparse parent can.
+
+_VALID_PAIRS = {("EU", "E1"), ("EU", "E2"), ("US", "U1"), ("US", "U2"), ("US", "U3")}
+
+
+def test_composite_fk_tuple_integrity_against_sparse_parent():
+    # 30 children, fan-out (one-to-many) onto 5 sparse parent rows.
+    rows = _run("fk_integrity.xml", gen="orders")
+    pairs = {(r["region"], r["code"]) for r in rows}
+    # Every (region, code) is a REAL parent row — never an invented cross like ('EU','U1').
+    assert pairs <= _VALID_PAIRS
+    # The columns are NOT generated independently: EU never carries a US code, and vice versa.
+    assert not any(r["region"] == "EU" and r["code"].startswith("U") for r in rows)
+    assert not any(r["region"] == "US" and r["code"].startswith("E") for r in rows)
+    assert len(rows) == 30  # fan-out: far more children than the 5 distinct parents
+
+
+def test_composite_fk_unique_assignment_no_double_booking():
+    # unique="true" -> each parent tuple assigned at most once (1:1 slot assignment).
+    rows = _run("fk_unique_assignment.xml", gen="assignments")
+    pairs = [(r["region"], r["code"]) for r in rows]
+    assert len(pairs) == len(set(pairs)) == 5  # no double-booking
+    assert set(pairs) == _VALID_PAIRS  # the whole sparse parent, each exactly once
+
+
 def test_composite_unique_holds_under_multiprocessing():
     # CE policy: a composite unique <reference> is a global constraint -> forced single-process,
     # so it stays distinct even when numProcess > 1 (scaling these is an EE feature).
