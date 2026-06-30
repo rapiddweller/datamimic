@@ -42,6 +42,10 @@ _TEST_DIR = Path(__file__).resolve().parent
 # (model file, base offset of the 27 source values)
 SOURCE_CASES = [
     ("variable_csv.xml", 0),
+    # Same source/distributions but pageSize < count: the distribution invariants (permutation,
+    # bell) must still hold ACROSS pages — a stable per-statement seed makes random/cumulated/unique
+    # paginate consistently instead of re-shuffling / re-belling per page.
+    ("variable_csv_paged.xml", 0),
     ("variable_json.xml", 0),
     ("variable_sqlite.xml", 0),
     ("variable_memstore.xml", 1),
@@ -106,3 +110,4 @@ def test_nested_key_all_distributions():
     res2 = _run("nestedkey_source.xml")
     for product in ("ordered", "random", "cumulated"):
         assert _nested_vals(res, product) == _nested_vals(res2, product)
+

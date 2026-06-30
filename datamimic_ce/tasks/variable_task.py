@@ -72,7 +72,8 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         # unique also needs the whole pool (dedupe + sample without replacement).
         loads_all = self.statement.distribution.loads_all or bool(self.statement.unique)
         if loads_all:
-            seed = ctx.root.get_distribution_seed()
+            # Stable per-statement seed so random / cumulated / unique stay consistent across pages.
+            seed = ctx.root.stable_distribution_seed(self.statement.full_name)
 
         # Try to init generation mode of VariableTask
         if statement.source is not None:

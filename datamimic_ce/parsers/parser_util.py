@@ -23,6 +23,7 @@ from datamimic_ce.constants.element_constants import (
     EL_ELSE,
     EL_ELSE_IF,
     EL_EXECUTE,
+    EL_FIELD,
     EL_GENERATE,
     EL_GENERATOR,
     EL_ID,
@@ -109,6 +110,7 @@ class ParserUtil:
                 EL_STATE_MACHINE,
             },
             EL_STATE_MACHINE: {EL_TRANSITION},
+            EL_REFERENCE: {EL_FIELD},
             EL_NESTED_KEY: {
                 EL_KEY,
                 EL_ID,
@@ -252,13 +254,16 @@ class ParserUtil:
                     MemstoreParser
                     | ExecuteParser
                     | IncludeParser
-                    | ReferenceParser
                     | ArrayParser
                     | EchoParser
                     | GeneratorParser
                     | StateMachineParser,
                 ):
                     stmt = parser.parse()
+                elif isinstance(parser, ReferenceParser):
+                    # Pass the parent so the reference's full_name is a unique path (e.g.
+                    # "orders|slot"), not a bare name that collides across <generate>s.
+                    stmt = parser.parse(parent_stmt=parent_stmt)
                 elif isinstance(parser, KeyParser):
                     stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
                 elif isinstance(parser, ConditionParser):

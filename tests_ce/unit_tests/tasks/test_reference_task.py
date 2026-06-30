@@ -22,13 +22,19 @@ class TestReferenceTask(unittest.TestCase):
         self.statement.source = "test_source"
         self.statement.source_type = "test_type"
         self.statement.source_key = "test_key"
+        self.statement.source_keys = ["test_key"]
+        self.statement.targets = ["test_name"]
+        self.statement.is_composite = False
         self.statement.name = "test_name"
         self.pagination = MagicMock(spec=DataSourcePagination)
         self.pagination.limit = 2
+        self.pagination.skip = 0
         self.context = MagicMock(spec=GenIterContext)
         # ReferenceTask reads ctx.rng directly; the random module exposes the
         # same callable API as a Random instance, so it works as a drop-in.
         self.context.rng = random
+        # unique selection routes via DataSourceRegistry.get_unique_data (stable per-statement seed).
+        self.context.root.stable_distribution_seed.return_value = 42
         self.rdbms_client = MagicMock(spec=RdbmsClient)
         self.context.root.clients.get.return_value = self.rdbms_client
 
@@ -54,7 +60,7 @@ class TestReferenceTask(unittest.TestCase):
 
     def test_execute_empty_dataset(self):
         """Test execution with empty dataset."""
-        self.rdbms_client.get_random_rows_by_column.return_value = []
+        self.rdbms_client.get_random_rows_by_columns.return_value = []
         task = ReferenceTask(self.statement)
 
         with self.assertRaises(ValueError) as context:
@@ -66,7 +72,7 @@ class TestReferenceTask(unittest.TestCase):
         """Test execution with unique values requirement."""
         self.statement.unique = True
         dataset = [1, 2, 3, 4, 5]
-        self.rdbms_client.get_random_rows_by_column.return_value = dataset
+        self.rdbms_client.get_random_rows_by_columns.return_value = [(v,) for v in dataset]
         task = ReferenceTask(self.statement, self.pagination)
 
         # First execution
@@ -82,7 +88,7 @@ class TestReferenceTask(unittest.TestCase):
         """Test execution without unique values requirement."""
         self.statement.unique = False
         dataset = [1, 2, 3]
-        self.rdbms_client.get_random_rows_by_column.return_value = dataset
+        self.rdbms_client.get_random_rows_by_columns.return_value = [(v,) for v in dataset]
         task = ReferenceTask(self.statement)
 
         result = task.execute(self.context)
@@ -93,13 +99,13 @@ class TestReferenceTask(unittest.TestCase):
         self.statement.unique = True
         self.pagination.limit = 5
         dataset = [1, 2, 3]  # Only 3 values available
-        self.rdbms_client.get_random_rows_by_column.return_value = dataset
+        self.rdbms_client.get_random_rows_by_columns.return_value = [(v,) for v in dataset]
         task = ReferenceTask(self.statement, self.pagination)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(ValueError) as context:
             task.execute(self.context)
 
-        self.assertIn("Cannot generate 5 unique values - only 3 available", str(context.exception))
+        self.assertIn("Cannot generate 5 unique values", str(context.exception))
 
     def test_seeded_rng_makes_reference_replay_identically(self):
         """<reference> picks must replay byte-identically when ctx.rng is seeded.
@@ -109,7 +115,7 @@ class TestReferenceTask(unittest.TestCase):
         unique (rng.sample) and non-unique (rng.choice) paths.
         """
         dataset = list(range(20))
-        self.rdbms_client.get_random_rows_by_column.return_value = dataset
+        self.rdbms_client.get_random_rows_by_columns.return_value = [(v,) for v in dataset]
 
         def _collect(unique: bool) -> list:
             self.statement.unique = unique
@@ -129,7 +135,7 @@ class TestReferenceTask(unittest.TestCase):
         """Test execution with context that supports field addition."""
         self.statement.unique = False
         dataset = [42]
-        self.rdbms_client.get_random_rows_by_column.return_value = dataset
+        self.rdbms_client.get_random_rows_by_columns.return_value = [(v,) for v in dataset]
         self.context.add_current_product_field = MagicMock()
 
         task = ReferenceTask(self.statement)

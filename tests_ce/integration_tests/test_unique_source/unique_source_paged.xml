@@ -1,0 +1,7 @@
+<setup rngSeed="9">
+    <!-- unique distinct rows from a csv source (random order, no replacement). -->
+    <generate pageSize="2" name="people" count="5" target="">
+        <variable name="row" source="codes.csv" unique="true"/>
+        <key name="code" script="row.code"/>
+    </generate>
+</setup>

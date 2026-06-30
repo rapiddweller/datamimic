@@ -293,8 +293,8 @@ class DataSourceRegistry:
     ) -> list[Any]:
         """Select distinct rows without replacement: dedupe + shuffle, then return the page
         window. Sibling of get_cumulated_data; the unique counterpart of the random/cumulated
-        selection. All pages/workers share ``seed`` -> one global deduped order -> each takes a
-        disjoint window -> unique holds across pages AND ray workers. Strict: raises rather than
+        selection. All pages share ``seed`` (stable per statement) -> one global deduped order ->
+        each takes a disjoint window -> unique holds across pages. Strict: raises rather than
         silently under-generate when the window exceeds the distinct pool."""
         distinct = unique_values(data, Random(seed))
         if pagination is None:
@@ -328,7 +328,7 @@ class DataSourceRegistry:
         span = end_idx - start_idx
 
         # One seeded RNG drives a single continuous draw sequence, so paginated batches
-        # stay consistent (page 2 continues page 1). ponytail: O(start_idx + span) draws;
+        # stay consistent (page 2 continues page 1). O(start_idx + span) draws;
         # fine for typical skips, revisit only if huge offsets show up.
         rng = Random(seed)
         picks = [rows[cumulated_index(rng, source_len - 1)] for _ in range(start_idx + span)]
