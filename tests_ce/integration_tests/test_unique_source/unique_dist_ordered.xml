@@ -1,0 +1,7 @@
+<setup rngSeed="9">
+    <!-- unique implies random order -> distribution="ordered" must be rejected. -->
+    <generate name="x" count="3" target="">
+        <variable name="row" source="codes.csv" unique="true" distribution="ordered"/>
+        <key name="code" script="row.code"/>
+    </generate>
+</setup>

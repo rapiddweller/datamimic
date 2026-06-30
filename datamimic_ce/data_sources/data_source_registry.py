@@ -9,6 +9,7 @@ import itertools
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 from random import Random
+from typing import Any
 
 import xmltodict
 from sqlalchemy.exc import OperationalError, ProgrammingError
@@ -287,7 +288,9 @@ class DataSourceRegistry:
         return DataSourceRegistry.get_shuffled_data_with_cyclic(data, pagination, cyclic, seed)
 
     @staticmethod
-    def get_unique_data(data: Iterable, pagination: DataSourcePagination | None, seed: int, label: str) -> list:
+    def get_unique_data(
+        data: Iterable[Any], pagination: DataSourcePagination | None, seed: int, label: str
+    ) -> list[Any]:
         """Select distinct rows without replacement: dedupe + shuffle, then return the page
         window. Sibling of get_cumulated_data; the unique counterpart of the random/cumulated
         selection. All pages/workers share ``seed`` -> one global deduped order -> each takes a
