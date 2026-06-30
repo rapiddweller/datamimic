@@ -93,3 +93,11 @@ def test_key_unique_holds_across_workers():
     codes = _run("key_unique_mp.xml")
     assert len(codes) == 5
     assert set(codes) == {"a", "b", "c", "d", "e"}
+
+
+def test_variable_source_unique_holds_across_pages():
+    # count(5) > pageSize(2) -> 3 pages. The full unique pool is cached once, so distinctness
+    # holds across pages (regression for the per-page-seed cross-page bug in sub-tasks).
+    codes = _run("unique_source_paged.xml")
+    assert len(codes) == 5
+    assert set(codes) == {"A", "B", "C", "D", "E"}

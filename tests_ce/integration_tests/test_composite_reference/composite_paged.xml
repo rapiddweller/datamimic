@@ -1,0 +1,12 @@
+<setup rngSeed="42">
+    <database id="refdb" database="ref_paged_db" dbms="sqlite"/>
+    <execute uri="script/setup_slots.scr.sql" target="refdb"/>
+    <!-- count(6) > pageSize(2) -> 3 pages. The full unique sequence is cached once, so distinct
+         tuples hold ACROSS pages (regression for the per-page-seed cross-page bug). -->
+    <generate name="events" count="6" pageSize="2" target="">
+        <reference name="slot" source="refdb" sourceType="slots" unique="true">
+            <field target="aisle" sourceKey="aisle"/>
+            <field target="bin"   sourceKey="bin"/>
+        </reference>
+    </generate>
+</setup>

@@ -92,6 +92,14 @@ def test_composite_fk_unique_assignment_no_double_booking():
     assert set(pairs) == _VALID_PAIRS  # the whole sparse parent, each exactly once
 
 
+def test_composite_unique_holds_across_pages():
+    # count(6) > pageSize(2): the full unique sequence is cached once, so distinctness holds
+    # across pages (regression for the per-page-seed cross-page bug).
+    rows = _run("composite_paged.xml")
+    tuples = [(r["aisle"], r["bin"]) for r in rows]
+    assert len(set(tuples)) == 6
+
+
 def test_composite_unique_holds_under_multiprocessing():
     # CE policy: a composite unique <reference> is a global constraint -> forced single-process,
     # so it stays distinct even when numProcess > 1 (scaling these is an EE feature).

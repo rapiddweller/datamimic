@@ -61,6 +61,9 @@ class SetupContext(Context):
         self._descriptor_dir = descriptor_dir
         self._clients = {} if clients is None else clients
         self._data_source_len = {} if data_source_len is None else data_source_len
+        # Per-statement full unique sequence (dedupe+shuffle), built once and reused across pages
+        # so unique="true" holds across pages, not just within one. Held in memory for the run.
+        self._unique_pool_cache: dict[str, list] = {}
         self._properties = {} if properties is None else properties
         self._memstore_manager = memstore_manager
         self._namespace = {} if namespace is None else namespace
@@ -279,6 +282,10 @@ class SetupContext(Context):
     @property
     def data_source_len(self):
         return self._data_source_len
+
+    @property
+    def unique_pool_cache(self) -> dict[str, list]:
+        return self._unique_pool_cache
 
     @property
     def properties(self):

@@ -287,13 +287,29 @@ class DataSourceRegistry:
         return DataSourceRegistry.get_shuffled_data_with_cyclic(data, pagination, cyclic, seed)
 
     @staticmethod
-    def get_unique_data(data: Iterable, pagination: DataSourcePagination | None, seed: int, label: str) -> list:
+    def get_unique_data(
+        data: Iterable,
+        pagination: DataSourcePagination | None,
+        seed: int,
+        label: str,
+        cache: dict[str, list] | None = None,
+        cache_key: str | None = None,
+    ) -> list:
         """Select distinct rows without replacement: dedupe + shuffle, then return the page
         window. Sibling of get_cumulated_data; the unique counterpart of the random/cumulated
-        selection. All pages/workers share ``seed`` -> one global deduped order -> each takes a
-        disjoint window -> unique holds across pages AND ray workers. Strict: raises rather than
-        silently under-generate when the window exceeds the distinct pool."""
-        distinct = unique_values(data, Random(seed))
+        selection. Strict: raises rather than silently under-generate when the window exceeds
+        the distinct pool.
+
+        When ``cache``/``cache_key`` are given, the full deduped+shuffled sequence is built once
+        and reused across pages — so a sub-task whose per-page seed/data are not stable (e.g.
+        <variable>/<reference> source unique) still takes disjoint windows and stays unique
+        across pages. Without a cache, all pages must share ``seed`` (the worker-level path)."""
+        if cache is not None and cache_key in cache:
+            distinct = cache[cache_key]
+        else:
+            distinct = unique_values(data, Random(seed))
+            if cache is not None and cache_key is not None:
+                cache[cache_key] = distinct
         if pagination is None:
             return distinct
         end = pagination.skip + pagination.limit
