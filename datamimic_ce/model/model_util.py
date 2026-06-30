@@ -13,6 +13,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_CYCLIC,
     ATTR_DATASET,
     ATTR_DEFAULT_VALUE,
+    ATTR_DISTRIBUTION,
     ATTR_ENTITY,
     ATTR_GENERATOR,
     ATTR_IN_DATE_FORMAT,
@@ -33,6 +34,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_WEIGHTS,
 )
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_STRING
+from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.utils.string_util import StringUtil
 
 # Parse XML bool attributes exactly like the pydantic bool fields do, so a "before"
@@ -86,9 +88,10 @@ class ModelUtil:
 
     @staticmethod
     def check_unique_constraints(values: dict) -> dict:
-        """'unique' draws distinct values without replacement from a finite pool — an
-        inline 'values' set or a 'source'. It is incompatible with 'weights' (no weighted
-        sampling without replacement) and with 'cyclic' (no-repeat vs repeat)."""
+        """'unique' draws distinct values without replacement from a finite pool — an inline
+        'values' set or a 'source'. It implies distinct random order, so it only combines with
+        distribution='random' (the default) and is incompatible with 'weights' (no weighted
+        sampling without replacement), 'cyclic' and ordered/cumulated (no-repeat vs repeat/bell)."""
         if not _attr_true(values.get(ATTR_UNIQUE)):
             return values
         if ATTR_VALUES not in values and ATTR_SOURCE not in values:
@@ -97,6 +100,12 @@ class ModelUtil:
             raise ValueError(f"'{ATTR_UNIQUE}' cannot be combined with '{ATTR_WEIGHTS}'")
         if _attr_true(values.get(ATTR_CYCLIC)):
             raise ValueError(f"'{ATTR_UNIQUE}' cannot be combined with '{ATTR_CYCLIC}' (no-repeat vs repeat)")
+        distribution = SourceDistribution.coerce(values.get(ATTR_DISTRIBUTION))
+        if distribution is not SourceDistribution.RANDOM:
+            raise ValueError(
+                f"'{ATTR_UNIQUE}' only combines with distribution='{SourceDistribution.RANDOM.value}' "
+                f"(it implies distinct random order), not '{distribution.value}'"
+            )
         return values
 
     @staticmethod
