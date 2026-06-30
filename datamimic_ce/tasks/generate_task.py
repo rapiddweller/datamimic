@@ -22,6 +22,7 @@ from datamimic_ce.logger import logger
 from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.key_statement import KeyStatement
+from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.statements.statement_util import StatementUtil
 from datamimic_ce.statements.variable_statement import VariableStatement
@@ -148,6 +149,18 @@ class GenerateTask(CommonSubTask):
                 GenerateTask._scan_data_source(ctx, child_stmt)
 
     @staticmethod
+    def _is_global_constraint(stmt: Statement) -> bool:
+        """A cross-row constraint CE serialises (single-process): a unique <generate>/<key>/
+        <variable>, or a unique or composite <reference>. Multiprocess scaling is an EE feature."""
+        if isinstance(stmt, GenerateStatement):
+            return bool(stmt.unique)
+        if isinstance(stmt, KeyStatement | VariableStatement):
+            return bool(stmt.unique)
+        if isinstance(stmt, ReferenceStatement):
+            return bool(stmt.unique) or stmt.is_composite
+        return False
+
+    @staticmethod
     def _determine_num_workers(context: GenIterContext | SetupContext, stmt: GenerateStatement) -> int:
         """
         Determine number of Ray workers for multiprocessing. Default to 1 if not specified.
@@ -164,16 +177,6 @@ class GenerateTask(CommonSubTask):
             if ".delete" in exporter_str:
                 return 1
 
-        # A unique INLINE <key/variable values> samples via a per-task iterator that parallel
-        # workers would each restart, emitting overlapping values -> serialize. Source-backed
-        # unique (<variable source>, <generate source>) is page-sliced in the registry and stays
-        # multiprocessing-safe, so it is not forced here.
-        if any(
-            isinstance(child, KeyStatement | VariableStatement) and child.unique and child.values is not None
-            for child in stmt.sub_statements
-        ):
-            return 1
-
         # Get number of workers from statement, setup context, or default to 1
         current_setup_context = context
         while not isinstance(current_setup_context, SetupContext):
@@ -186,7 +189,32 @@ class GenerateTask(CommonSubTask):
         else:
             num_workers = 1
 
-        return num_workers
+        # CE single-process policy for cross-row constraints (unique / composite).
+        forced = GenerateTask._apply_single_process_policy(stmt, num_workers)
+        return forced if forced is not None else num_workers
+
+    @staticmethod
+    def _apply_single_process_policy(stmt: GenerateStatement, requested_workers: int) -> int | None:
+        """CE policy: 'unique' and 'composite' are global cross-row constraints (no value/tuple
+        repeats across the whole run). Parallel workers would each restart the constraint and emit
+        overlaps, so CE serialises them (single-process); multiprocess scaling of these is an
+        Enterprise feature. Single source of truth for the policy decision AND its user-facing log.
+
+        Returns 1 when the policy applies (logging once when it overrides a multiprocess request),
+        otherwise None (no constraint -> caller keeps the requested worker count).
+        """
+        constrained = GenerateTask._is_global_constraint(stmt) or any(
+            GenerateTask._is_global_constraint(child) for child in stmt.sub_statements
+        )
+        if not constrained:
+            return None
+        if requested_workers > 1:
+            logger.info(
+                f"<generate> '{stmt.name}': 'unique'/'composite' is a global cross-row constraint — "
+                f"CE runs it single-process ({requested_workers} requested workers ignored). "
+                f"Multiprocess scaling of these is an Enterprise (EE) feature."
+            )
+        return 1
 
     def execute(
         self,

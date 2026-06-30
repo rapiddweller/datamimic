@@ -8,6 +8,7 @@ unique="true" draws distinct multi-column tuples (the EE concept/syntax ported t
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import pytest
@@ -61,3 +62,31 @@ def test_legacy_single_field_reference_still_works():
     rows = _run("legacy_single.xml", gen="x")
     assert len(rows) == 3
     assert {r["aisle"] for r in rows} == {"A", "B", "C"}  # distinct aisles (deduped)
+
+
+def test_composite_unique_holds_under_multiprocessing():
+    # CE policy: a composite unique <reference> is a global constraint -> forced single-process,
+    # so it stays distinct even when numProcess > 1 (scaling these is an EE feature).
+    rows = _run("composite_mp.xml")
+    tuples = [(r["aisle"], r["bin"]) for r in rows]
+    assert len(set(tuples)) == 6
+
+
+def test_policy_logs_single_process_override():
+    # The CE single-process policy informs the user (testable log) when it overrides a
+    # multiprocess request (composite_mp.xml asks for numProcess=4). The DATAMIMIC logger has
+    # its own handler (propagate=False), so capture by attaching directly to it.
+    messages: list[str] = []
+
+    class _Capture(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            messages.append(record.getMessage())
+
+    handler = _Capture()
+    dm_logger = logging.getLogger("DATAMIMIC")
+    dm_logger.addHandler(handler)
+    try:
+        _run("composite_mp.xml")
+    finally:
+        dm_logger.removeHandler(handler)
+    assert any("single-process" in m and "Enterprise" in m for m in messages)
