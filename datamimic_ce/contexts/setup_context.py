@@ -61,9 +61,9 @@ class SetupContext(Context):
         self._descriptor_dir = descriptor_dir
         self._clients = {} if clients is None else clients
         self._data_source_len = {} if data_source_len is None else data_source_len
-        # Per-statement full unique sequence (dedupe+shuffle), built once and reused across pages
-        # so unique="true" holds across pages, not just within one. Held in memory for the run.
-        self._unique_pool_cache: dict[str, list] = {}
+        # Per-statement distribution seed, computed once and reused across a statement's pages so
+        # paginated sub-task selection (random / cumulated / unique) stays globally consistent.
+        self._distribution_seed_cache: dict[str | None, int] = {}
         self._properties = {} if properties is None else properties
         self._memstore_manager = memstore_manager
         self._namespace = {} if namespace is None else namespace
@@ -283,9 +283,6 @@ class SetupContext(Context):
     def data_source_len(self):
         return self._data_source_len
 
-    @property
-    def unique_pool_cache(self) -> dict[str, list]:
-        return self._unique_pool_cache
 
     @property
     def properties(self):
@@ -452,6 +449,16 @@ class SetupContext(Context):
         :return:
         """
         return self._clients.get(client_id)
+
+    def stable_distribution_seed(self, key: str | None) -> int:
+        """A distribution seed that stays constant across a statement's pages (cached by ``key``,
+        the statement full_name — a unique path per statement, so distinct statements never collide).
+        A sub-task is rebuilt per page, so calling get_distribution_seed() directly would draw a
+        different seed each page and break paginated random / cumulated / unique selection.
+        Computed once via get_distribution_seed()."""
+        if key not in self._distribution_seed_cache:
+            self._distribution_seed_cache[key] = self.get_distribution_seed()
+        return self._distribution_seed_cache[key]
 
     def get_distribution_seed(self) -> int:
         """Seed for source shuffling (``distribution="random"``).

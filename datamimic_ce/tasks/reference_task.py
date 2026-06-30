@@ -59,15 +59,10 @@ class ReferenceTask(GenSubTask):
         non-unique reference picks with replacement (a foreign key may repeat the same row), which
         has no registry counterpart, so it stays here."""
         if self._statement.unique:
-            # Cache the full deduped sequence (built once) so distinctness holds across pages,
-            # not just within one — the per-page seed is not stable for a sub-task.
+            # Stable per-statement seed so distinctness holds across pages, not just within one.
+            seed = ctx.root.stable_distribution_seed(self._statement.full_name)
             return DataSourceRegistry.get_unique_data(
-                records,
-                self._pagination,
-                ctx.root.get_distribution_seed(),
-                f"<reference> '{self._statement.name}'",
-                cache=ctx.root.unique_pool_cache,
-                cache_key=self._statement.full_name,
+                records, self._pagination, seed, f"<reference> '{self._statement.name}'"
             )
         size = self._pagination.limit if self._pagination is not None else 1
         return [ctx.rng.choice(records) for _ in range(size)]

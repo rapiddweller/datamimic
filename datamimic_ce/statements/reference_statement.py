@@ -19,8 +19,10 @@ class ReferenceField:
 
 
 class ReferenceStatement(Statement):
-    def __init__(self, model: ReferenceModel, fields: list[ReferenceField]):
-        super().__init__(model.name, None)
+    def __init__(self, model: ReferenceModel, fields: list[ReferenceField], parent_stmt: Statement | None = None):
+        # Pass the parent so full_name is a path (e.g. "orders|slot"), unique per statement —
+        # two same-named references in different <generate>s must not share a cache key.
+        super().__init__(model.name, parent_stmt)
         self._source = model.source
         self._source_type = model.source_type
         self._unique = model.unique

@@ -33,8 +33,8 @@ class TestReferenceTask(unittest.TestCase):
         # ReferenceTask reads ctx.rng directly; the random module exposes the
         # same callable API as a Random instance, so it works as a drop-in.
         self.context.rng = random
-        # unique selection routes via DataSourceRegistry.get_unique_data (seed-driven).
-        self.context.root.get_distribution_seed.return_value = 42
+        # unique selection routes via DataSourceRegistry.get_unique_data (stable per-statement seed).
+        self.context.root.stable_distribution_seed.return_value = 42
         self.rdbms_client = MagicMock(spec=RdbmsClient)
         self.context.root.clients.get.return_value = self.rdbms_client
 

@@ -71,10 +71,9 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         # Only ORDERED paginates sequentially; RANDOM and CUMULATED load all rows.
         # unique also needs the whole pool (dedupe + sample without replacement).
         loads_all = self.statement.distribution.loads_all or bool(self.statement.unique)
-        # Shared cache so a unique pool is deduped+shuffled once and reused across pages.
-        self._unique_cache = ctx.root.unique_pool_cache
         if loads_all:
-            seed = ctx.root.get_distribution_seed()
+            # Stable per-statement seed so random / cumulated / unique stay consistent across pages.
+            seed = ctx.root.stable_distribution_seed(self.statement.full_name)
 
         # Try to init generation mode of VariableTask
         if statement.source is not None:
@@ -313,14 +312,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         in the registry, so unique stays multiprocessing-safe. Consumed via ``_full_load_iterator``."""
         if self._statement.unique:
             return iter(
-                DataSourceRegistry.get_unique_data(
-                    data,
-                    pagination,
-                    seed,
-                    f"<variable> '{self._statement.name}'",
-                    cache=self._unique_cache,
-                    cache_key=self._statement.full_name,
-                )
+                DataSourceRegistry.get_unique_data(data, pagination, seed, f"<variable> '{self._statement.name}'")
             )
         return iter(
             DataSourceRegistry.get_distributed_data(

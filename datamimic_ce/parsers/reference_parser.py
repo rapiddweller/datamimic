@@ -11,6 +11,7 @@ from datamimic_ce.model.reference_field_model import ReferenceFieldModel
 from datamimic_ce.model.reference_model import ReferenceModel
 from datamimic_ce.parsers.statement_parser import StatementParser
 from datamimic_ce.statements.reference_statement import ReferenceField, ReferenceStatement
+from datamimic_ce.statements.statement import Statement
 
 
 class ReferenceParser(StatementParser):
@@ -19,7 +20,7 @@ class ReferenceParser(StatementParser):
     def __init__(self, element: Element, properties: dict):
         super().__init__(element, properties, valid_element_tag=EL_REFERENCE)
 
-    def parse(self) -> ReferenceStatement:
+    def parse(self, parent_stmt: Statement) -> ReferenceStatement:
         model = self.validate_attributes(ReferenceModel)
         fields = self._parse_fields()
         name = model.name
@@ -32,7 +33,7 @@ class ReferenceParser(StatementParser):
         # Normalise the legacy single-field form to one ReferenceField.
         if not fields:
             fields = [ReferenceField(target=name, source_key=str(model.source_key))]
-        return ReferenceStatement(model, fields)
+        return ReferenceStatement(model, fields, parent_stmt)
 
     def _parse_fields(self) -> list[ReferenceField]:
         fields: list[ReferenceField] = []
