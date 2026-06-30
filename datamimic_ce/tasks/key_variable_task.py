@@ -6,10 +6,11 @@
 
 import ast
 from abc import abstractmethod
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from datetime import datetime, timedelta
 from decimal import Decimal
 from random import Random
+from typing import Any
 
 import numpy
 
@@ -60,7 +61,7 @@ class KeyVariableTask:
 
         self._mode: str | None = None
         # Lazily-built distinct-value iterator for unique="true" (sampling without replacement).
-        self._unique_iter = None
+        self._unique_iter: Iterator[Any] | None = None
 
         self._simple_type_set = {
             DATA_TYPE_STRING,
@@ -288,7 +289,7 @@ class KeyVariableTask:
 
         return value
 
-    def _next_unique_value(self, ctx):
+    def _next_unique_value(self, ctx: Context) -> Any:
         """Emit a distinct value per call (sampling 'values' without replacement,
         seeded via ctx.rng). Shared with <variable source unique> via unique_value_iter."""
         if self._unique_iter is None:

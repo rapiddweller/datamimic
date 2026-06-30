@@ -57,6 +57,13 @@ def test_empty_source_raises_not_silent_zero():
         _run("unique_source_empty.xml", gen="x")
 
 
+@pytest.mark.parametrize("dist", ["ordered", "cumulated"])
+def test_unique_only_combines_with_random_distribution(dist):
+    # unique implies distinct random order -> ordered/cumulated are rejected (not silently overridden).
+    with pytest.raises(Exception, match="unique|distribution"):
+        _run(f"unique_dist_{dist}.xml", gen="x")
+
+
 # --- <generate source unique="true"> : distinct entities straight from the source ---
 
 
