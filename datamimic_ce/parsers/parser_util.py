@@ -23,6 +23,7 @@ from datamimic_ce.constants.element_constants import (
     EL_ELSE,
     EL_ELSE_IF,
     EL_EXECUTE,
+    EL_FIELD,
     EL_GENERATE,
     EL_GENERATOR,
     EL_ID,
@@ -109,6 +110,7 @@ class ParserUtil:
                 EL_STATE_MACHINE,
             },
             EL_STATE_MACHINE: {EL_TRANSITION},
+            EL_REFERENCE: {EL_FIELD},
             EL_NESTED_KEY: {
                 EL_KEY,
                 EL_ID,

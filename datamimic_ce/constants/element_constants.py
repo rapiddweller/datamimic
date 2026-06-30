@@ -31,3 +31,4 @@ EL_DEMOGRAPHICS = "demographics"
 EL_COMMENT = "comment"  # Benerator documentation element, ignored (no-op) wherever it appears
 EL_STATE_MACHINE = "state-machine"  # named, reusable weighted state machine (builds StateTransitionGenerator)
 EL_TRANSITION = "transition"  # one weighted edge of a <state-machine>
+EL_FIELD = "field"  # one source-column -> target-field mapping of a composite <reference>

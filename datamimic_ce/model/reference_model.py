@@ -20,7 +20,8 @@ from datamimic_ce.model.model_util import ModelUtil
 class ReferenceModel(BaseModel):
     name: str
     source: str
-    source_key: str = Field(alias=ATTR_SOURCE_KEY)
+    # Optional legacy single-field shortcut; composite references use <field> children instead.
+    source_key: str | None = Field(default=None, alias=ATTR_SOURCE_KEY)
     source_type: str = Field(alias=ATTR_SOURCE_TYPE)
     unique: bool | None = None
 
@@ -38,7 +39,7 @@ class ReferenceModel(BaseModel):
             },
         )
 
-    @field_validator("name", "source", "source_type", "source_key")
+    @field_validator("name", "source", "source_type")
     @classmethod
     def validate_not_none(cls, value):
         return ModelUtil.check_not_empty(value=value)

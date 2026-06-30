@@ -352,46 +352,20 @@ class RdbmsClient(DatabaseClient):
         # Handle both SQLAlchemy 1.x and 2.x Row objects
         return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
 
-    def get_random_rows_by_column(
-        self,
-        table_name: str,
-        column_name: str,
-        pagination: DataSourcePagination | None,
-        unique: bool,
-    ) -> list:
-        """
-        Get column data for reference
-        :param count:
-        :param table_name:
-        :param column_name:
-        :return:
-        """
+    def get_random_rows_by_columns(self, table_name: str, column_names: list[str]) -> list[tuple]:
+        """Fetch the given columns for a <reference>, preserving row-tuple integrity. The
+        reference task does the distinct/with-replacement sampling deterministically via
+        ctx.rng (so the full column set is returned, not a pre-limited slice)."""
         engine = self._create_engine()
 
         with engine.connect() as conn:
             actual_table_name = self._get_actual_table_name(table_name)
             table = self._get_metadata(engine).tables[actual_table_name]
-
-            # Get number of random rows from table
-            if self._credential.dbms == "mssql":
-                order_func = func.newid()
-            elif self._credential.dbms == "oracle":
-                order_func = func.dbms_random.value()
-            else:
-                order_func = func.random()
-
-            if pagination and hasattr(pagination, "skip") and hasattr(pagination, "limit"):
-                query = (
-                    select(table.c[column_name]).offset(pagination.skip).limit(pagination.limit)
-                    if unique
-                    else select(table.c[column_name]).order_by(order_func)
-                )
-            else:
-                query = select(table.c[column_name])
-
-            random_rows = conn.execute(query).fetchall()
-
-            return [row[0] for row in random_rows]
+            columns = [table.c[name] for name in column_names]
+            # Fetch the full column set; the reference task does the distinct/with-replacement
+            # sampling deterministically via ctx.rng. (Limiting before dedupe would under-count
+            # the distinct pool — the cause of spurious 'insufficient unique values' errors.)
+            return [tuple(row) for row in conn.execute(select(*columns)).fetchall()]
 
     def insert(self, table_name: str, data_list: list):
         """
