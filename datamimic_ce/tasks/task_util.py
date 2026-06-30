@@ -550,7 +550,7 @@ class TaskUtil:
         elif data_type == DATA_TYPE_FLOAT:
             return rng.uniform(0, 100)
         elif data_type == DATA_TYPE_DECIMAL:
-            # ponytail: fixed 2dp default for bare type="decimal"; use a DecimalGenerator for other scales
+            # fixed 2dp default for bare type="decimal"; use a DecimalGenerator for other scales
             return Decimal(str(round(rng.uniform(0, 100), 2)))
         elif data_type == DATA_TYPE_BOOL:
             return rng.choice((True, False))

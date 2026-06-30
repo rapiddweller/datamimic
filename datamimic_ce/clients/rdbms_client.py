@@ -366,7 +366,7 @@ class RdbmsClient(DatabaseClient):
             # ORDER BY the selected columns (NOT random): a stable input order so the seeded
             # shuffle in get_unique_data is reproducible run-to-run. ORDER BY random() would
             # destroy that reproducibility.
-            # ponytail: fetch-all + sort suits reference/lookup tables; a huge source wants
+            # fetch-all + sort suits reference/lookup tables; a huge source would want
             # SELECT DISTINCT or DB-side sampling — an EE-scale concern, not CE's reference path.
             return [tuple(row) for row in conn.execute(select(*columns).order_by(*columns)).fetchall()]
 

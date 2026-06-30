@@ -325,7 +325,7 @@ class DataSourceRegistry:
         span = end_idx - start_idx
 
         # One seeded RNG drives a single continuous draw sequence, so paginated batches
-        # stay consistent (page 2 continues page 1). ponytail: O(start_idx + span) draws;
+        # stay consistent (page 2 continues page 1). O(start_idx + span) draws;
         # fine for typical skips, revisit only if huge offsets show up.
         rng = Random(seed)
         picks = [rows[cumulated_index(rng, source_len - 1)] for _ in range(start_idx + span)]

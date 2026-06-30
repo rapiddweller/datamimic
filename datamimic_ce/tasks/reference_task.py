@@ -59,7 +59,7 @@ class ReferenceTask(GenSubTask):
         non-unique reference picks with replacement (a foreign key may repeat the same row), which
         has no registry counterpart, so it stays here."""
         if self._statement.unique:
-            # ponytail: distinctness holds within a page, not across pages — the per-page seed
+            # Limitation: distinctness holds within a page, not across pages — the per-page seed
             # advances, same pre-existing limitation as <variable source unique>. The default
             # pageSize (>= count up to 10k) keeps it single-page; cross-page paging is a separate fix.
             return DataSourceRegistry.get_unique_data(
