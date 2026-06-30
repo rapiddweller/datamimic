@@ -353,22 +353,22 @@ class RdbmsClient(DatabaseClient):
         return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
 
     def get_random_rows_by_columns(self, table_name: str, column_names: list[str]) -> list[tuple]:
-        """Fetch the given columns for a <reference>, preserving row-tuple integrity. The
-        reference task does the distinct/with-replacement sampling deterministically via
-        ctx.rng (so the full column set is returned, not a pre-limited slice)."""
+        """Fetch the given columns for a <reference> in a stable order, preserving row-tuple
+        integrity. The reference task does the distinct/with-replacement sampling deterministically
+        via DataSourceRegistry.get_unique_data / ctx.rng (so the full column set is returned, not a
+        pre-limited slice)."""
         engine = self._create_engine()
 
         with engine.connect() as conn:
             actual_table_name = self._get_actual_table_name(table_name)
             table = self._get_metadata(engine).tables[actual_table_name]
             columns = [table.c[name] for name in column_names]
-            # Fetch the full column set; the reference task does the distinct/with-replacement
-            # sampling deterministically via ctx.rng. (Limiting before dedupe would under-count
-            # the distinct pool — the cause of spurious 'insufficient unique values' errors;
-            # DB-side ORDER BY random() would break ctx.rng reproducibility.)
-            # ponytail: fetch-all suits reference/lookup tables; a huge source wants SELECT DISTINCT
-            # or DB-side sampling — an EE-scale concern, not CE's determinism-first reference path.
-            return [tuple(row) for row in conn.execute(select(*columns)).fetchall()]
+            # ORDER BY the selected columns (NOT random): a stable input order so the seeded
+            # shuffle in get_unique_data is reproducible run-to-run. ORDER BY random() would
+            # destroy that reproducibility.
+            # ponytail: fetch-all + sort suits reference/lookup tables; a huge source wants
+            # SELECT DISTINCT or DB-side sampling — an EE-scale concern, not CE's reference path.
+            return [tuple(row) for row in conn.execute(select(*columns).order_by(*columns)).fetchall()]
 
     def insert(self, table_name: str, data_list: list):
         """

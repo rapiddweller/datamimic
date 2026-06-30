@@ -28,10 +28,13 @@ class TestReferenceTask(unittest.TestCase):
         self.statement.name = "test_name"
         self.pagination = MagicMock(spec=DataSourcePagination)
         self.pagination.limit = 2
+        self.pagination.skip = 0
         self.context = MagicMock(spec=GenIterContext)
         # ReferenceTask reads ctx.rng directly; the random module exposes the
         # same callable API as a Random instance, so it works as a drop-in.
         self.context.rng = random
+        # unique selection routes via DataSourceRegistry.get_unique_data (seed-driven).
+        self.context.root.get_distribution_seed.return_value = 42
         self.rdbms_client = MagicMock(spec=RdbmsClient)
         self.context.root.clients.get.return_value = self.rdbms_client
 
@@ -99,10 +102,10 @@ class TestReferenceTask(unittest.TestCase):
         self.rdbms_client.get_random_rows_by_columns.return_value = [(v,) for v in dataset]
         task = ReferenceTask(self.statement, self.pagination)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(ValueError) as context:
             task.execute(self.context)
 
-        self.assertIn("Cannot generate 5 unique values - only 3 available", str(context.exception))
+        self.assertIn("Cannot generate 5 unique values", str(context.exception))
 
     def test_seeded_rng_makes_reference_replay_identically(self):
         """<reference> picks must replay byte-identically when ctx.rng is seeded.

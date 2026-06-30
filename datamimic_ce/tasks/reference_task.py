@@ -5,16 +5,15 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from collections.abc import Iterator
-from random import Random
 from typing import Any
 
 from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.tasks.task import GenSubTask
-from datamimic_ce.utils.unique_sampling import unique_values
 
 
 class ReferenceTask(GenSubTask):
@@ -52,17 +51,19 @@ class ReferenceTask(GenSubTask):
             raise ValueError(f"No data found for reference {self._statement.name}")
         # Map each source row tuple to a {target: value} record.
         records = [dict(zip(self._statement.targets, row, strict=True)) for row in rows]
-        return iter(self._sample(records, ctx.rng))
+        return iter(self._select(records, ctx))
 
-    def _sample(self, records: list[dict[str, Any]], rng: Random) -> list[dict[str, Any]]:
-        size = self._pagination.limit if self._pagination is not None else 1
+    def _select(self, records: list[dict[str, Any]], ctx: Context) -> list[dict[str, Any]]:
+        """Distinct combinations route through the shared DataSourceRegistry.get_unique_data — the
+        same SPOT as <variable>/<generate> unique (dedupe + shuffle + page window + strict). A
+        non-unique reference picks with replacement (a foreign key may repeat the same row), which
+        has no registry counterpart, so it stays here."""
         if self._statement.unique:
-            # Distinct combinations without replacement (dedupe + shuffle); strict on exhaustion.
-            distinct = unique_values(records, rng)
-            if size > len(distinct):
-                raise RuntimeError(
-                    f"Cannot generate {size} unique values - only {len(distinct)} available for "
-                    f"{self._statement.name}"
-                )
-            return distinct[:size]
-        return [rng.choice(records) for _ in range(size)]
+            # ponytail: distinctness holds within a page, not across pages — the per-page seed
+            # advances, same pre-existing limitation as <variable source unique>. The default
+            # pageSize (>= count up to 10k) keeps it single-page; cross-page paging is a separate fix.
+            return DataSourceRegistry.get_unique_data(
+                records, self._pagination, ctx.root.get_distribution_seed(), f"<reference> '{self._statement.name}'"
+            )
+        size = self._pagination.limit if self._pagination is not None else 1
+        return [ctx.rng.choice(records) for _ in range(size)]
