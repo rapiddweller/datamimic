@@ -126,3 +126,16 @@ def test_policy_logs_single_process_override():
     finally:
         dm_logger.removeHandler(handler)
     assert any("single-process" in m and "Enterprise" in m for m in messages)
+
+
+@pytest.mark.parametrize(
+    "filename,match",
+    [
+        ("ref_field_and_sourcekey.xml", "sourceKey"),  # sourceKey attr XOR <field> children
+        ("ref_bare.xml", "sourceKey"),  # neither sourceKey nor <field>
+        ("ref_duplicate_sourcekey.xml", "duplicate"),  # two <field> share a sourceKey
+    ],
+)
+def test_composite_reference_invalid_raises(filename, match):
+    with pytest.raises(Exception, match=match):
+        _run(filename, gen="x")
