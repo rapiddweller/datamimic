@@ -140,12 +140,37 @@ class KeyVariableTask:
             self._mode = self._GENERATOR_MODE
         elif self._statement.pattern is not None:
             self._mode = self._PATTERN_MODE
+        elif (range_gen := self._numeric_range_generator()) is not None:
+            # native min/max[/granularity] on a numeric <key> -> synthesize the literal generator and reuse
+            # create_generator's seeding + caching (instead of forcing a generator="IntegerGenerator(...)" string)
+            self._generator = GeneratorUtil(ctx).create_generator(
+                range_gen, self._statement, self._pagination, key=self._statement.full_name
+            )
+            self._mode = self._GENERATOR_MODE
         # IMPORTANT: always put this condition at the end
         # because this mode should only be active after checking all other ones
         elif self._statement.type is not None:
             self._mode = self._RANDOM_MODE
         else:
             raise ValueError(f"Cannot init generation mode for element '{self.statement.name}'")
+
+    def _numeric_range_generator(self) -> str | None:
+        """Native ``min``/``max``[/``granularity``] on a numeric <key> -> an IntegerGenerator/FloatGenerator
+        string, so the field reads as ``<key type="int" min="1" max="9"/>`` instead of a generator string.
+        Returns None when it does not apply (not a KeyStatement, no range, or a non-numeric type)."""
+        stmt = self._statement
+        if not isinstance(stmt, KeyStatement) or (stmt.min is None and stmt.max is None):
+            return None
+        if stmt.type == DATA_TYPE_INT:
+            cls = "IntegerGenerator"
+        elif stmt.type in (DATA_TYPE_FLOAT, DATA_TYPE_DECIMAL):
+            cls = "FloatGenerator"
+        else:
+            return None
+        args = [f"{k}={v}" for k, v in (("min", stmt.min), ("max", stmt.max)) if v is not None]
+        if cls == "FloatGenerator" and stmt.granularity is not None:
+            args.append(f"granularity={stmt.granularity}")
+        return f"{cls}({', '.join(args)})"
 
     @abstractmethod
     def execute(self, ctx: Context) -> None:

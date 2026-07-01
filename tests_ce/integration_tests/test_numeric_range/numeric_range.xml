@@ -1,0 +1,7 @@
+<setup rngSeed="7">
+    <!-- native min/max/granularity on numeric fields (no generator="IntegerGenerator(...)" string needed) -->
+    <generate name="product" count="20" target="">
+        <key name="qty" type="int" min="1" max="10"/>
+        <key name="price" type="float" min="0.0" max="100.0" granularity="0.01"/>
+    </generate>
+</setup>

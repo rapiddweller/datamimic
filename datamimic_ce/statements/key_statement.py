@@ -23,6 +23,9 @@ class KeyStatement(CompositeStatement):
         self._source = model.source
         self._separator = model.separator
         self._type = model.type
+        self._min = model.min
+        self._max = model.max
+        self._granularity = model.granularity
         self._values = model.values
         self._weights = model.weights
         self._unique = model.unique
@@ -41,6 +44,18 @@ class KeyStatement(CompositeStatement):
     @property
     def type(self):
         return self._type
+
+    @property
+    def min(self) -> str | None:
+        return self._min
+
+    @property
+    def max(self) -> str | None:
+        return self._max
+
+    @property
+    def granularity(self) -> str | None:
+        return self._granularity
 
     @property
     def values(self):
