@@ -1,5 +1,0 @@
-<setup rngSeed="7">
-    <generate name="g" count="5" target="">
-        <key name="n" type="int" generator="IntegerGenerator(min=1000, max=9999)"/>
-    </generate>
-</setup>

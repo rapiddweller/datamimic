@@ -1,0 +1,4 @@
+<setup rngSeed="7"><generate name="g" count="8" numProcess="1" target="">
+    <key name="n" type="int" generator="IntegerGenerator(min=1000, max=9999)"/>
+    <key name="f" type="float" generator="FloatGenerator(min=0.0, max=1.0)"/>
+</generate></setup>
