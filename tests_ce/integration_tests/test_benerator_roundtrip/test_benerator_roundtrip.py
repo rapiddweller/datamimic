@@ -42,3 +42,15 @@ def test_converted_numbers_demo_generates_in_datamimic():
         assert 0.0 <= v <= 10.0
         # granularity 0.01 -> at most 2 decimal places
         assert Decimal(str(v)) == Decimal(str(v)).quantize(Decimal("0.01"))
+
+
+def test_converted_features_demo_generates_in_datamimic():
+    """roundtrip_features.datamimic.xml is the converter output of roundtrip_features.ben.xml, exercising
+    the newer mappings end-to-end: <setting> -> <variable>, <execute type="shell"> -> inline
+    <execute type="bash">, consumer="ConsoleExporter" -> target, and <while test> -> <while condition>."""
+    rows = _run("roundtrip_features.datamimic.xml", gen="account")
+    assert len(rows) == 2
+    # the <while> compound-growth loop ran to convergence (1000 -> >2000 at 10% p.a. = 8 years)
+    for r in rows:
+        assert r["years"] == 8
+        assert r["balance"] > 2000
