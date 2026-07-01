@@ -18,6 +18,9 @@ class IncrementGenerator(BaseLiteralGenerator):
     # meant to be local to the statement using them.
     cache_in_root = False
 
+    # Position-deterministic (does not draw on the rng), so it stays reproducible across workers.
+    multiprocess_safe = True
+
     def __init__(self, start: int = 1, end: int = 9223372036854775807, step: int = 1):
         if step <= 0:
             raise ValueError("Step must be a positive integer.")

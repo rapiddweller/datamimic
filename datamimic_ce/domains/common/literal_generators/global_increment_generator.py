@@ -34,6 +34,9 @@ class GlobalIncrementGenerator(BaseLiteralGenerator):
     cross-process shared registry.
     """
 
+    # Worker-coordinated increment (no rng draw), so it stays reproducible across workers.
+    multiprocess_safe = True
+
     def __init__(self, qualified_key, context):
         self.qualified_key = qualified_key
         if context.root._global_increment_registry is None:

@@ -15,6 +15,8 @@ point used by the generate task.
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.key_statement import KeyStatement
@@ -43,13 +45,16 @@ def _has_delete_target(stmt: GenerateStatement, seeded: bool) -> bool:
     return any(".delete" in target for target in stmt.targets)
 
 
-# Literal generators that are multiprocess-safe by design (they do not draw on the seeded rng).
-_MP_SAFE_GENERATORS = ("IncrementGenerator", "SequenceTableGenerator", "GlobalIncrementGenerator")
-
-
 def _has_seeded_random_generator(stmt: Statement) -> bool:
-    gen = getattr(stmt, "generator", None)
-    return isinstance(gen, str) and not any(safe in gen for safe in _MP_SAFE_GENERATORS)
+    """True for a literal generator=... that draws on the rng. The generator CLASS is the source of
+    truth: a BaseLiteralGenerator declares multiprocess_safe (guaranteed by the base class). An unknown
+    or non-literal generator is treated as rng-driven (conservative -> single-process)."""
+    if not isinstance(stmt, KeyStatement | VariableStatement) or not isinstance(stmt.generator, str):
+        return False
+    cls = generator_namespace().get(stmt.generator.split("(", 1)[0].strip())
+    if cls is not None and issubclass(cls, BaseLiteralGenerator):
+        return not cls.multiprocess_safe
+    return True
 
 
 def _seeded_order_dependent(stmt: GenerateStatement, seeded: bool) -> bool:
@@ -60,7 +65,7 @@ def _seeded_order_dependent(stmt: GenerateStatement, seeded: bool) -> bool:
         return False
     if stmt.source is not None and stmt.distribution.loads_all:
         return True
-    return _has_seeded_random_generator(stmt) or any(_has_seeded_random_generator(c) for c in stmt.sub_statements)
+    return any(_has_seeded_random_generator(child) for child in stmt.sub_statements)
 
 
 @dataclass(frozen=True)
