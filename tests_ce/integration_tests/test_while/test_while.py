@@ -55,13 +55,13 @@ def _luhn_ok(number: int) -> bool:
     return checksum % 10 == 0
 
 
-def test_while_luhn_rejection_sampling_yields_valid_pans():
-    # rejection sampling — step each source value up to the next Luhn-valid PAN (a payment-testing staple)
-    pans = [r["pan"] for r in _run("while_luhn_rejection.xml", gen="cards")]
+def test_while_steps_to_next_luhn_valid_pan():
+    # search — step each source value up (+1) to the next Luhn-valid PAN (a payment-testing staple)
+    pans = [r["pan"] for r in _run("while_luhn_next_valid.xml", gen="cards")]
     assert len(pans) == 6
     assert all(_luhn_ok(p) for p in pans)
     # deterministic: same run, same PANs (DATAMIMIC's core promise)
-    assert pans == [r["pan"] for r in _run("while_luhn_rejection.xml", gen="cards")]
+    assert pans == [r["pan"] for r in _run("while_luhn_next_valid.xml", gen="cards")]
 
 
 def test_while_compound_growth_counts_iterations():

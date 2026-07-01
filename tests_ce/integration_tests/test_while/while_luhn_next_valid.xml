@@ -13,7 +13,7 @@ def luhn_ok(number):
     return checksum % 10 == 0
 </execute>
     <generate name="cards" source="luhn_bases.csv" distribution="ordered" count="6" target="">
-        <!-- rejection sampling: start from the deterministic source value, step up to the next Luhn-valid PAN -->
+        <!-- search: start from the source value and step up (+1) to the next Luhn-valid PAN -->
         <key name="pan" script="int(base)"/>
         <while condition="not luhn_ok(pan)"><key name="pan" script="pan + 1"/></while>
     </generate>
