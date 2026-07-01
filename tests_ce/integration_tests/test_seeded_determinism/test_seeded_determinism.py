@@ -8,6 +8,8 @@ worker-count-dependent generation so the output does not depend on the machine's
 
 from pathlib import Path
 
+import pytest
+
 from datamimic_ce.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
@@ -90,3 +92,26 @@ def test_seeded_domain_generators_reproducible_and_core_count_independent():
     assert single == [(r["given"], r["email"], r["phone"]) for r in _run("domain_generators.xml")]
     multi = [(r["given"], r["email"], r["phone"]) for r in _run("domain_generators_mp.xml")]
     assert multi == single
+
+
+# --- the symmetric check: WITHOUT a seed, generation must be random (two runs differ) -----------------
+
+
+@pytest.mark.parametrize(
+    "filename,keys",
+    [
+        ("unseeded_integer.xml", ["n"]),  # literal random generator
+        ("unseeded_domain.xml", ["given", "email"]),  # domain generators (names/emails)
+        ("unseeded_entity.xml", ["v"]),  # entity field (<key values>)
+        ("unseeded_source.xml", ["v"]),  # shuffled <generate source>
+    ],
+)
+def test_unseeded_generation_is_random(filename, keys):
+    """Same run-twice-and-compare principle as the determinism tests, inverted: with NO <setup rngSeed>,
+    two runs must DIFFER (10+ samples so a coincidental match is negligible). Guards against a seed
+    leaking in and silently making 'random' output fixed."""
+
+    def run():
+        return [tuple(r[k] for k in keys) for r in _run(filename)]
+
+    assert run() != run()
