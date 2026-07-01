@@ -354,8 +354,10 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 return None
             file_data = ctx.evaluate_python_expression(self._statement.source)
             if loads_all:
+                # Stable per-statement seed (like __init__ above) so a paginated script source stays
+                # consistent across pages for random / cumulated / unique.
                 self._full_load_iterator = self._distributed_iter(
-                    file_data, self._pagination, ctx.root.get_distribution_seed()
+                    file_data, self._pagination, ctx.root.stable_distribution_seed(self._statement.full_name)
                 )
                 self._mode = self._FULL_LOAD_MODE
                 if self._full_load_iterator is None:
