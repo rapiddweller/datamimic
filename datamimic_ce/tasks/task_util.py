@@ -67,6 +67,7 @@ from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.state_machine_statement import StateMachineStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.statements.variable_statement import VariableStatement
+from datamimic_ce.statements.while_statement import WhileStatement
 from datamimic_ce.tasks.array_task import ArrayTask
 from datamimic_ce.tasks.database_task import DatabaseTask
 from datamimic_ce.tasks.echo_task import EchoTask
@@ -135,6 +136,10 @@ class TaskUtil:
             from datamimic_ce.tasks.condition_task import ConditionTask
 
             return ConditionTask(stmt)
+        elif isinstance(stmt, WhileStatement):
+            from datamimic_ce.tasks.while_task import WhileTask
+
+            return WhileTask(stmt)
         elif isinstance(stmt, DemographicsStatement):
             from datamimic_ce.tasks.demographics_task import DemographicsTask
 

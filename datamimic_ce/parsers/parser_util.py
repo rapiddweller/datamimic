@@ -41,6 +41,7 @@ from datamimic_ce.constants.element_constants import (
     EL_STATE_MACHINE,
     EL_TRANSITION,
     EL_VARIABLE,
+    EL_WHILE,
 )
 from datamimic_ce.logger import logger
 from datamimic_ce.parsers.array_parser import ArrayParser
@@ -63,6 +64,7 @@ from datamimic_ce.parsers.nested_key_parser import NestedKeyParser
 from datamimic_ce.parsers.reference_parser import ReferenceParser
 from datamimic_ce.parsers.state_machine_parser import StateMachineParser
 from datamimic_ce.parsers.variable_parser import VariableParser
+from datamimic_ce.parsers.while_parser import WhileParser
 from datamimic_ce.statements.array_statement import ArrayStatement
 from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.condition_statement import ConditionStatement
@@ -71,6 +73,7 @@ from datamimic_ce.statements.include_statement import IncludeStatement
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.setup_statement import SetupStatement
 from datamimic_ce.statements.statement import Statement
+from datamimic_ce.statements.while_statement import WhileStatement
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -87,6 +90,8 @@ class ParserUtil:
             return EL_NESTED_KEY
         elif isinstance(stmt, GenerateStatement):
             return EL_GENERATE
+        elif isinstance(stmt, WhileStatement):
+            return EL_WHILE
         else:
             raise ValueError(f"Cannot get element tag for statement {stmt.__class__.__name__}")
 
@@ -122,6 +127,7 @@ class ParserUtil:
                 EL_ELEMENT,
                 EL_ARRAY,
                 EL_CONDITION,
+                EL_WHILE,
             },
             EL_CONDITION: {EL_IF, EL_ELSE_IF, EL_ELSE},
             EL_GENERATE: {
@@ -136,6 +142,7 @@ class ParserUtil:
                 EL_ARRAY,
                 EL_ECHO,
                 EL_CONDITION,
+                EL_WHILE,
                 EL_INCLUDE,
             },
             EL_INCLUDE: {EL_SETUP},
@@ -145,6 +152,7 @@ class ParserUtil:
             EL_IF: None,
             EL_ELSE_IF: None,
             EL_ELSE: None,
+            EL_WHILE: None,
         }
 
         return valid_sub_element_dict.get(ele_tag, set())
@@ -192,6 +200,8 @@ class ParserUtil:
             return IfParser(element, properties)
         elif tag == EL_CONDITION:
             return ConditionParser(element, properties)
+        elif tag == EL_WHILE:
+            return WhileParser(element, properties)
         elif tag == EL_ELSE_IF:
             return ElseIfParser(element, properties)
         elif tag == EL_ELSE:
@@ -266,7 +276,7 @@ class ParserUtil:
                     stmt = parser.parse(parent_stmt=parent_stmt)
                 elif isinstance(parser, KeyParser):
                     stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
-                elif isinstance(parser, ConditionParser):
+                elif isinstance(parser, ConditionParser | WhileParser):
                     stmt = parser.parse(
                         descriptor_dir=descriptor_dir, parent_stmt=cast(CompositeStatement, parent_stmt)
                     )
