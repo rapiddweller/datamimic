@@ -5,6 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import ast
+import functools
+import inspect
+import random
 import uuid
 
 from datamimic_ce.contexts.context import Context
@@ -15,11 +18,25 @@ from datamimic_ce.domains.common.literal_generators.state_transition_generator i
     StateMachineDef,
     StateTransitionGenerator,
 )
+from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
 from datamimic_ce.enums.distribution_enums import NumberDistribution
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.statement import Statement
+
+
+@functools.cache  # a class's __init__ signature is static
+def _is_rng_generator(obj: type) -> bool:
+    """A generator class that owns a *seedable* rng: an rng-driven literal/domain generator whose __init__
+    takes an ``rng`` kwarg. Increment/sequence generators subclass the base but override __init__ without
+    ``rng`` (they don't draw on it), so they are excluded — passing rng to them would raise."""
+    return issubclass(obj, BaseLiteralGenerator | BaseDomainGenerator) and "rng" in inspect.signature(obj).parameters
+
+
+def _bind_rng(obj: object, rng: random.Random) -> object:
+    """Construct-time seeding: wrap an rng-driven generator class so it is built with the seeded rng."""
+    return functools.partial(obj, rng=rng) if isinstance(obj, type) and _is_rng_generator(obj) else obj
 
 
 class GeneratorUtil:
@@ -197,6 +214,12 @@ class GeneratorUtil:
                     ) from e_dt_parse
             # --- End DateTimeGenerator special parsing ---
 
+            # Seed at CONSTRUCTION under <setup rngSeed>: an rng-driven generator (literal OR domain) must
+            # receive the seeded rng in __init__ so a COMPOSITE domain generator threads it to the children
+            # it builds there (post-construction rebinding cannot reach already-built children). Without a
+            # seed, derive_seeded_rng() returns None and generators keep their own wall-clock rng.
+            seeded_rng = self._context.root.derive_seeded_rng()
+
             # Fallback: evaluate_python_expression for other generators with params
             if "(" in generator_str:
                 # A shallow copy is sufficient here and avoids recursion issues
@@ -206,8 +229,11 @@ class GeneratorUtil:
                 # NumberDistribution so the DSL can pass the real enum type, not a magic string,
                 # e.g. IntegerGenerator(min=1, max=27, distribution=NumberDistribution.CUMULATED).
                 local_ns_inst = {"context": self._context, "self": self, "NumberDistribution": NumberDistribution}
+                namespace = {**local_ns, **local_ns_inst}
+                if seeded_rng is not None:
+                    namespace = {name: _bind_rng(obj, seeded_rng) for name, obj in namespace.items()}
                 try:
-                    result = self._context.evaluate_python_expression(generator_str, {**local_ns, **local_ns_inst})
+                    result = self._context.evaluate_python_expression(generator_str, namespace)
                 except (ValueError, SyntaxError, NameError, TypeError) as e_eval:
                     logger.error(
                         f"Error evaluating generator string '{generator_str}' with evaluate_python_expression: {e_eval}"
@@ -216,10 +242,11 @@ class GeneratorUtil:
                         f"Cannot create generator '{class_name}' from string '{generator_str}' using evaluate: {e_eval}"
                     ) from e_eval
             else:
+                seed_kw = {"rng": seeded_rng} if seeded_rng is not None and _is_rng_generator(cls) else {}
                 if class_name in ["EmailAddressGenerator", "FamilyNameGenerator", "GivenNameGenerator"]:
-                    result = cls(dataset=self._context.root.default_dataset)
+                    result = cls(dataset=self._context.root.default_dataset, **seed_kw)
                 else:
-                    result = cls()
+                    result = cls(**seed_kw)
             if isinstance(result, IncrementGenerator):
                 if hasattr(result, "add_pagination") and callable(result.add_pagination):
                     result.add_pagination(pagination=pagination)
@@ -227,14 +254,6 @@ class GeneratorUtil:
                     logger.warning(f"Generator {class_name} is IncrementGenerator but lacks add_pagination method.")
             if result is None:
                 raise ValueError(f"Failed to create generator for '{generator_str}': result is None.")
-
-            # Bind a per-field seeded rng so a literal random generator (IntegerGenerator, FloatGenerator, ...)
-            # replays deterministically under <setup rngSeed>. Without a seed, derive_seeded_rng() returns
-            # None and the generator keeps its own wall-clock rng (unseeded = random, by design).
-            if isinstance(result, BaseLiteralGenerator):
-                seeded_rng = self._context.root.derive_seeded_rng()
-                if seeded_rng is not None:
-                    result.rng = seeded_rng
 
             # Decide whether to cache the generator instance globally. Generators
             # can opt out by defining ``cache_in_root = False``.

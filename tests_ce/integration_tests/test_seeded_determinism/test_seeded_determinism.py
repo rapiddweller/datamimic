@@ -79,3 +79,14 @@ def test_seeded_entity_generation_core_count_independent():
     multi = _col("entity_values_mp.xml", "v")
     assert multi == single
     assert single == _col("entity_values.xml", "v")  # and stable run to run
+
+
+def test_seeded_domain_generators_reproducible_and_core_count_independent():
+    """The flagship case: realistic-entity generators — a leaf domain generator (GivenName) AND composite
+    ones (Email, Phone, which thread their rng to child generators at construction) — must replay
+    identically under a seed, run to run AND regardless of worker count. This is the test that the earlier
+    literal-only determinism suite missed."""
+    single = [(r["given"], r["email"], r["phone"]) for r in _run("domain_generators.xml")]
+    assert single == [(r["given"], r["email"], r["phone"]) for r in _run("domain_generators.xml")]
+    multi = [(r["given"], r["email"], r["phone"]) for r in _run("domain_generators_mp.xml")]
+    assert multi == single
