@@ -25,6 +25,34 @@ def _col(filename: str, key: str) -> list:
     return [row[key] for row in _run(filename)]
 
 
+def _run_twice(filename: str, keys: list[str]) -> tuple[list, list]:
+    """The determinism primitive: run the SAME model TWICE (two independent engine runs) and return both
+    projections. A seeded model must return equal results; an unseeded one must differ."""
+
+    def project() -> list:
+        return [tuple(r[k] for k in keys) for r in _run(filename)]
+
+    return project(), project()
+
+
+# Every seeded model, run TWICE and compared — the explicit "reproducible across two runs" check that
+# answers 'where is each model executed twice?': here, one row per model, first-run == second-run.
+@pytest.mark.parametrize(
+    "filename,keys",
+    [
+        ("int_generator.xml", ["n"]),  # literal IntegerGenerator
+        ("float_generator.xml", ["f"]),  # literal FloatGenerator
+        ("two_generators.xml", ["n", "f"]),  # two literal generators, independent per-field rng
+        ("source_random.xml", ["v"]),  # shuffled <generate source>
+        ("entity_values.xml", ["v"]),  # entity field (<key values>)
+        ("domain_generators.xml", ["given", "email", "phone"]),  # domain generators (names/email/phone)
+    ],
+)
+def test_seeded_model_is_reproducible_across_two_runs(filename, keys):
+    first, second = _run_twice(filename, keys)
+    assert first == second
+
+
 # --- literal random generators are seed-reproducible -------------------------------------------------
 
 
@@ -107,11 +135,8 @@ def test_seeded_domain_generators_reproducible_and_core_count_independent():
     ],
 )
 def test_unseeded_generation_is_random(filename, keys):
-    """Same run-twice-and-compare principle as the determinism tests, inverted: with NO <setup rngSeed>,
+    """Same _run_twice-and-compare primitive as the determinism tests, inverted: with NO <setup rngSeed>,
     two runs must DIFFER (10+ samples so a coincidental match is negligible). Guards against a seed
     leaking in and silently making 'random' output fixed."""
-
-    def run():
-        return [tuple(r[k] for k in keys) for r in _run(filename)]
-
-    assert run() != run()
+    first, second = _run_twice(filename, keys)
+    assert first != second
