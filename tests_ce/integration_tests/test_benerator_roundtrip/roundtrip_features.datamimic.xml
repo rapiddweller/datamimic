@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <setup>
-  <variable constant="1.1" name="rate"/>
+  <variable name="rate" script="1.1"/>
   <execute type="bash">echo converter-roundtrip-ok</execute>
   <generate count="2" name="account" target="ConsoleExporter">
     <key name="balance" script="1000.0"/>
     <key name="years" script="0"/>
     <while condition="balance &lt; 2000">
-      <key name="balance" script="balance * 1.1"/>
+      <key name="balance" script="balance * rate"/>
       <key name="years" script="years + 1"/>
     </while>
   </generate>
