@@ -7,6 +7,8 @@
 import logging
 from pathlib import Path
 
+import pytest
+
 from datamimic_ce.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
@@ -48,3 +50,16 @@ def test_inline_bash_runs_and_warns_about_determinism():
 
     assert len(rows) == 1
     assert any("determinism" in m and "bash" in m for m in messages)
+
+
+@pytest.mark.parametrize(
+    "filename,match",
+    [
+        ("exec_uri_and_inline.xml", "exactly one"),  # uri AND inline code
+        ("exec_neither.xml", "exactly one"),  # neither uri nor inline code
+        ("exec_invalid_type.xml", "must be one of"),  # type="js"
+    ],
+)
+def test_inline_execute_invalid_raises(filename, match):
+    with pytest.raises(Exception, match=match):
+        _run(filename)

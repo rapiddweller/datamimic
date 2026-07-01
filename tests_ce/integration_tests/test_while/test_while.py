@@ -29,3 +29,15 @@ def test_while_loops_until_condition_false():
 def test_while_max_iterations_raises_on_infinite_loop():
     with pytest.raises(Exception, match="max_iterations"):
         _run("while_cap.xml")
+
+
+@pytest.mark.parametrize(
+    "filename,match",
+    [
+        ("while_no_condition.xml", "condition"),  # required attribute missing
+        ("while_empty_condition.xml", "empty"),  # condition=""
+    ],
+)
+def test_while_invalid_condition_raises(filename, match):
+    with pytest.raises(Exception, match=match):
+        _run(filename)
