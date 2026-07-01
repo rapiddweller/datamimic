@@ -1,0 +1,9 @@
+<setup>
+    <database id="db" database="inline_sql_db" dbms="sqlite"/>
+    <!-- inline sql: create + seed a table, then read it back via a variable -->
+    <execute type="sql" target="db">DROP TABLE IF EXISTS t; CREATE TABLE t (n INTEGER); INSERT INTO t (n) VALUES (5);</execute>
+    <generate name="g" count="1" target="">
+        <variable name="row" source="db" selector="SELECT n FROM t"/>
+        <key name="v" script="row.n"/>
+    </generate>
+</setup>

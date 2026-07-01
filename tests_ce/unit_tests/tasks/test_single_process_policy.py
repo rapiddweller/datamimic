@@ -52,6 +52,16 @@ def test_no_constraint_keeps_requested_workers():
     assert resolve_single_process(plain, requested_workers=4) is None
 
 
+def test_seeded_generate_forces_single_process():
+    # nearly all seeded generation is worker-count-dependent, so any seeded <generate> runs single-process
+    assert resolve_single_process(_gen(), requested_workers=4, seeded=True) == 1
+
+
+def test_unseeded_generate_keeps_requested_workers():
+    # no rngSeed -> determinism is not requested -> keep multiprocess
+    assert resolve_single_process(_gen(), requested_workers=4, seeded=False) is None
+
+
 def test_logs_once_on_override_with_ee_hint():
     messages: list[str] = []
 

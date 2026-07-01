@@ -51,6 +51,9 @@ SOURCE_CASES = [
     ("variable_memstore.xml", 1),
     ("variable_lazy.xml", 0),
     ("generate_source.xml", 0),
+    # <generate source> paged (pageSize < count): the worker-level selection must use a stable
+    # per-statement seed too, else random/cumulated/unique repeat/miss values across pages.
+    ("generate_source_paged.xml", 0),
 ]
 
 

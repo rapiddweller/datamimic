@@ -182,7 +182,9 @@ class GenerateWorker:
         # Reorder loaded rows for random (shuffle) / cumulated (bell) / unique (distinct,
         # no replacement); ordered is left as-is. All page-window slicing lives in the registry.
         if loads_all:
-            seed = root_context.get_distribution_seed()
+            # Stable per-statement seed so random / cumulated / unique select the SAME global order on
+            # every page (and every worker) -> disjoint page windows -> consistent across pages.
+            seed = root_context.stable_distribution_seed(stmt.full_name)
             if stmt.unique:
                 source_data = DataSourceRegistry.get_unique_data(
                     source_data, pagination, seed, f"<generate> '{stmt.name}'"

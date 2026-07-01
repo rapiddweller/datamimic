@@ -1,0 +1,5 @@
+<setup>
+    <generate name="x" count="1" target="">
+        <reference name="slot" source="refdb" sourceType="slots"/>
+    </generate>
+</setup>

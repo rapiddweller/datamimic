@@ -167,7 +167,7 @@ class GenerateTask(CommonSubTask):
         else:
             num_workers = 1
 
-        forced = resolve_single_process(stmt, num_workers)
+        forced = resolve_single_process(stmt, num_workers, current_setup_context.is_seeded)
         return forced if forced is not None else num_workers
 
     def execute(
