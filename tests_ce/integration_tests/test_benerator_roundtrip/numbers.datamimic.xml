@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<setup defaultDataset="US" defaultLocale="en_US">
+  <generate count="100" name="numbers" target="">
+    <key name="int_max_10" type="int"/>
+    <key generator="FloatGenerator(min=0.0, max=10.0, granularity=0.01)" name="double_001" type="float"/>
+    <key generator="FloatGenerator(min=0.0, max=10.0, granularity=0.1)" name="double_01" type="float"/>
+    <key generator="FloatGenerator(min=0.0, max=10.0, granularity=0.25)" name="double_025" type="float"/>
+    <key generator="FloatGenerator(min=0.0, max=10.0, granularity=0.33)" name="double_033" type="float"/>
+    <key generator="FloatGenerator(min=0.0, max=10.0, granularity=0.5)" name="double_05" type="float"/>
+    <key generator="FloatGenerator(max=10.0, granularity=0.5)" name="double_only_max" type="float"/>
+    <key generator="FloatGenerator(min=10.0, granularity=0.5)" name="double_only_min" type="float"/>
+  </generate>
+</setup>
