@@ -1,0 +1,11 @@
+<setup rngSeed="9">
+    <!-- Benerator-style camelCase field access on a DATAMIMIC entity resolves to the snake_case field -->
+    <generate name="g" count="5" target="">
+        <variable name="p" entity="Person"/>
+        <variable name="a" entity="Address"/>
+        <key name="given" script="p.givenName"/>
+        <key name="bday" script="p.birthDate"/>
+        <key name="full" script="p.givenName + ' ' + p.familyName"/>
+        <key name="house" script="a.houseNumber"/>
+    </generate>
+</setup>
