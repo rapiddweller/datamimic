@@ -36,6 +36,11 @@ class BaseLiteralGenerator(ABC):
     def rng(self) -> random.Random:
         return self._rng
 
+    @rng.setter
+    def rng(self, value: random.Random) -> None:
+        # Lets the caller rebind a literal generator to a seeded rng (<setup rngSeed>) after construction.
+        self._rng = value
+
     @abstractmethod
     def generate(self):
         """Generate a random literal value."""

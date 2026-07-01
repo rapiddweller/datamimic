@@ -35,12 +35,19 @@ def _is_global_constraint(stmt: Statement) -> bool:
     return False
 
 
-def _uses_global_constraint(stmt: GenerateStatement) -> bool:
+def _uses_global_constraint(stmt: GenerateStatement, seeded: bool) -> bool:
     return _is_global_constraint(stmt) or any(_is_global_constraint(child) for child in stmt.sub_statements)
 
 
-def _has_delete_target(stmt: GenerateStatement) -> bool:
+def _has_delete_target(stmt: GenerateStatement, seeded: bool) -> bool:
     return any(".delete" in target for target in stmt.targets)
+
+
+def _seeded(stmt: GenerateStatement, seeded: bool) -> bool:
+    """Under <setup rngSeed> nearly all generation draws on a per-worker rng that restarts per worker,
+    so the output depends on the core count. CE runs any seeded generate single-process to keep it
+    reproducible regardless of machine; EE distributes seeded generation deterministically."""
+    return seeded
 
 
 @dataclass(frozen=True)
@@ -48,7 +55,7 @@ class SingleProcessPolicy:
     """One feature CE serialises. ``ee_scalable`` adds the Enterprise upgrade hint to the log."""
 
     feature: str
-    applies: Callable[[GenerateStatement], bool]
+    applies: Callable[[GenerateStatement, bool], bool]
     reason: str
     ee_scalable: bool
 
@@ -67,17 +74,23 @@ POLICIES: tuple[SingleProcessPolicy, ...] = (
         reason="delete operations run sequentially",
         ee_scalable=False,
     ),
+    SingleProcessPolicy(
+        feature="seeded",
+        applies=_seeded,
+        reason="rngSeed is set — seeded generation runs single-process to stay reproducible across machines",
+        ee_scalable=True,
+    ),
 )
 
 _EE_HINT = " Multiprocess scaling of this is an Enterprise (EE) feature."
 
 
-def resolve_single_process(stmt: GenerateStatement, requested_workers: int) -> int | None:
+def resolve_single_process(stmt: GenerateStatement, requested_workers: int, seeded: bool = False) -> int | None:
     """Return 1 if any single-process policy applies to ``stmt`` (logging once when it overrides
     a multiprocess request, with the EE recommendation where the feature is EE-scalable), else
-    None so the caller keeps ``requested_workers``."""
+    None so the caller keeps ``requested_workers``. ``seeded`` = a <setup rngSeed> is in effect."""
     for policy in POLICIES:
-        if not policy.applies(stmt):
+        if not policy.applies(stmt, seeded):
             continue
         if requested_workers > 1:
             hint = _EE_HINT if policy.ee_scalable else ""
