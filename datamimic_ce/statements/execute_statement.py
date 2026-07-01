@@ -9,9 +9,11 @@ from datamimic_ce.statements.statement import Statement
 
 
 class ExecuteStatement(Statement):
-    def __init__(self, model: ExecuteModel):
+    def __init__(self, model: ExecuteModel, exec_type: str, code: str | None = None):
         self._uri = model.uri
         self._target = model.target
+        self._type = exec_type  # resolved: python | bash | sql
+        self._code = code  # inline code (None when a uri script file is used)
 
     @property
     def uri(self):
@@ -20,3 +22,11 @@ class ExecuteStatement(Statement):
     @property
     def target(self):
         return self._target
+
+    @property
+    def type(self) -> str:
+        return self._type
+
+    @property
+    def code(self) -> str | None:
+        return self._code
