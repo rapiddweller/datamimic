@@ -41,3 +41,31 @@ def test_while_max_iterations_raises_on_infinite_loop():
 def test_while_invalid_condition_raises(filename, match):
     with pytest.raises(Exception, match=match):
         _run(filename)
+
+
+def _luhn_ok(number: int) -> bool:
+    digits = [int(c) for c in str(number)]
+    checksum = 0
+    for i, d in enumerate(reversed(digits)):
+        if i % 2 == 1:
+            d = d * 2
+            if d > 9:
+                d -= 9
+        checksum += d
+    return checksum % 10 == 0
+
+
+def test_while_luhn_rejection_sampling_yields_valid_pans():
+    # rejection sampling — step each source value up to the next Luhn-valid PAN (a payment-testing staple)
+    pans = [r["pan"] for r in _run("while_luhn_rejection.xml", gen="cards")]
+    assert len(pans) == 6
+    assert all(_luhn_ok(p) for p in pans)
+    # deterministic: same run, same PANs (DATAMIMIC's core promise)
+    assert pans == [r["pan"] for r in _run("while_luhn_rejection.xml", gen="cards")]
+
+
+def test_while_compound_growth_counts_iterations():
+    # iterative accumulation — years for a balance to double at 10% p.a. (1000 -> >2000)
+    row = _run("while_compound_growth.xml", gen="accounts")[0]
+    assert row["years"] == 8
+    assert row["balance"] > 2000

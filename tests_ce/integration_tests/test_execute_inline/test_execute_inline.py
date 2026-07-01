@@ -63,3 +63,14 @@ def test_inline_bash_runs_and_warns_about_determinism():
 def test_inline_execute_invalid_raises(filename, match):
     with pytest.raises(Exception, match=match):
         _run(filename)
+
+
+def test_multiline_block_defines_reusable_helper():
+    # a multi-line <execute type="python"> block defines a function that generation calls per row
+    assert [r["net"] for r in _run("exec_multiline_block.xml")] == [81.0, 81.0]
+
+
+def test_malformed_multiline_python_raises_with_hint():
+    # a broken block becomes a DATAMIMIC error pointing to <while>/<condition>/a .py file, not a raw traceback
+    with pytest.raises(Exception, match="could not be parsed"):
+        _run("exec_bad_multiline.xml")

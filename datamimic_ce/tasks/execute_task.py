@@ -69,8 +69,17 @@ class ExecuteTask(SetupSubTask):
             raise RuntimeError(f"<execute type='bash'> failed (exit {result.returncode}): {result.stderr.strip()}")
 
     def _eval_python(self, ctx: Context, python_code: str) -> None:
-        """Evaluate inline/uri Python (flat statements; use <while>/<condition> or a .py file for blocks)."""
-        updated_ns = ctx.root.eval_namespace(self._normalize_python(python_code))
+        """Evaluate inline/uri Python. Multi-line blocks work once dedented, but a malformed block yields a
+        raw IndentationError/SyntaxError — turn that into a DATAMIMIC error that says what to do instead."""
+        try:
+            updated_ns = ctx.root.eval_namespace(self._normalize_python(python_code))
+        except SyntaxError as e:  # IndentationError is a SyntaxError
+            src = self._statement.uri or "inline code"
+            raise ValueError(
+                f"<execute type='python'> ({src}) could not be parsed: {e.msg} (line {e.lineno}). Inline Python "
+                f"must be valid, consistently-indented code — for a real block, keep control flow in "
+                f"<while>/<condition> and put complex logic in a .py file referenced via uri=."
+            ) from e
         ctx.root.namespace.update(updated_ns)
         if isinstance(ctx, GenIterContext) and updated_ns:
             ctx.current_variables.update(updated_ns)
