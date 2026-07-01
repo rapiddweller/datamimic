@@ -70,3 +70,12 @@ def test_seeded_source_random_core_count_independent():
     single = _col("source_random.xml", "v")
     multi = _col("source_random_mp.xml", "v")
     assert multi == single
+
+
+def test_seeded_entity_generation_core_count_independent():
+    # <key values=...> (weighted choice) draws on the per-row rng — not a literal generator or a source,
+    # yet must still be reproducible regardless of core count. numProcess=4 == numProcess=1.
+    single = _col("entity_values.xml", "v")
+    multi = _col("entity_values_mp.xml", "v")
+    assert multi == single
+    assert single == _col("entity_values.xml", "v")  # and stable run to run

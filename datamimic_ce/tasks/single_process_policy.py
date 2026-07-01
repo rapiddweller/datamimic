@@ -15,8 +15,6 @@ point used by the generate task.
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.key_statement import KeyStatement
@@ -45,27 +43,11 @@ def _has_delete_target(stmt: GenerateStatement, seeded: bool) -> bool:
     return any(".delete" in target for target in stmt.targets)
 
 
-def _has_seeded_random_generator(stmt: Statement) -> bool:
-    """True for a literal generator=... that draws on the rng. The generator CLASS is the source of
-    truth: a BaseLiteralGenerator declares multiprocess_safe (guaranteed by the base class). An unknown
-    or non-literal generator is treated as rng-driven (conservative -> single-process)."""
-    if not isinstance(stmt, KeyStatement | VariableStatement) or not isinstance(stmt.generator, str):
-        return False
-    cls = generator_namespace().get(stmt.generator.split("(", 1)[0].strip())
-    if cls is not None and issubclass(cls, BaseLiteralGenerator):
-        return not cls.multiprocess_safe
-    return True
-
-
-def _seeded_order_dependent(stmt: GenerateStatement, seeded: bool) -> bool:
-    """Under <setup rngSeed>, a feature whose per-row result depends on the worker count — a shuffled or
-    cumulated <generate source>, or a seeded random literal generator — must run single-process so the
-    output replays identically regardless of core count (EE distributes these deterministically)."""
-    if not seeded:
-        return False
-    if stmt.source is not None and stmt.distribution.loads_all:
-        return True
-    return any(_has_seeded_random_generator(child) for child in stmt.sub_statements)
+def _seeded(stmt: GenerateStatement, seeded: bool) -> bool:
+    """Under <setup rngSeed> nearly all generation draws on a per-worker rng that restarts per worker,
+    so the output depends on the core count. CE runs any seeded generate single-process to keep it
+    reproducible regardless of machine; EE distributes seeded generation deterministically."""
+    return seeded
 
 
 @dataclass(frozen=True)
@@ -93,9 +75,9 @@ POLICIES: tuple[SingleProcessPolicy, ...] = (
         ee_scalable=False,
     ),
     SingleProcessPolicy(
-        feature="seeded-ordering",
-        applies=_seeded_order_dependent,
-        reason="rngSeed is set with a worker-count-dependent selection (shuffled/cumulated source or seeded generator)",
+        feature="seeded",
+        applies=_seeded,
+        reason="rngSeed is set — seeded generation runs single-process to stay reproducible across machines",
         ee_scalable=True,
     ),
 )

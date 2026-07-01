@@ -29,11 +29,6 @@ class BaseLiteralGenerator(ABC):
     # ``cache_in_root = False`` in subclasses to opt out of global caching.
     cache_in_root: bool = True
 
-    # rng-driven output depends on the per-worker rng split, so under <setup rngSeed> these must run
-    # single-process (see single_process_policy). Position-deterministic generators (increment/sequence)
-    # override this to True.
-    multiprocess_safe: bool = False
-
     def __init__(self, *, rng: random.Random | None = None) -> None:
         self._rng: random.Random = rng if rng is not None else random.Random()
 

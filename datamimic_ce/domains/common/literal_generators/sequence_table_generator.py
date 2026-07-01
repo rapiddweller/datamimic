@@ -32,9 +32,6 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         _process_id: Current process ID for multi-process safety
     """
 
-    # Position-deterministic (sequence rows, no rng draw), so it stays reproducible across workers.
-    multiprocess_safe = True
-
     def __init__(
         self,
         context: Context,
