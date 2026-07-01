@@ -26,6 +26,8 @@ class KeyStatement(CompositeStatement):
         self._min = model.min
         self._max = model.max
         self._granularity = model.granularity
+        self._min_length = model.min_length
+        self._max_length = model.max_length
         self._values = model.values
         self._weights = model.weights
         self._unique = model.unique
@@ -56,6 +58,14 @@ class KeyStatement(CompositeStatement):
     @property
     def granularity(self) -> str | None:
         return self._granularity
+
+    @property
+    def min_length(self) -> str | None:
+        return self._min_length
+
+    @property
+    def max_length(self) -> str | None:
+        return self._max_length
 
     @property
     def values(self):

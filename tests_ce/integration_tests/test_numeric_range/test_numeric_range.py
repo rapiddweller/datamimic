@@ -18,5 +18,10 @@ def test_native_numeric_range_respects_bounds_and_type():
     assert all(round(r["price"], 2) == r["price"] for r in rows)  # granularity 0.01
 
 
+def test_native_string_length_respects_bounds():
+    rows = _run()
+    assert all(isinstance(r["code"], str) and 4 <= len(r["code"]) <= 8 for r in rows)  # minLength/maxLength
+
+
 def test_native_numeric_range_is_seeded_reproducible():
     assert [(r["qty"], r["price"]) for r in _run()] == [(r["qty"], r["price"]) for r in _run()]
