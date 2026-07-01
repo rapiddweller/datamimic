@@ -46,6 +46,7 @@ def _run_twice(filename: str, keys: list[str]) -> tuple[list, list]:
         ("source_random.xml", ["v"]),  # shuffled <generate source>
         ("entity_values.xml", ["v"]),  # entity field (<key values>)
         ("domain_generators.xml", ["given", "email", "phone"]),  # domain generators (names/email/phone)
+        ("datetime_generator.xml", ["d"]),  # DateTimeGenerator (seed threaded through its special parsing)
     ],
 )
 def test_seeded_model_is_reproducible_across_two_runs(filename, keys):
@@ -132,6 +133,7 @@ def test_seeded_domain_generators_reproducible_and_core_count_independent():
         ("unseeded_domain.xml", ["given", "email"]),  # domain generators (names/emails)
         ("unseeded_entity.xml", ["v"]),  # entity field (<key values>)
         ("unseeded_source.xml", ["v"]),  # shuffled <generate source>
+        ("unseeded_datetime.xml", ["d"]),  # DateTimeGenerator without a seed
     ],
 )
 def test_unseeded_generation_is_random(filename, keys):

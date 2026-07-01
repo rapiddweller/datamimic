@@ -201,6 +201,11 @@ class GeneratorUtil:
                                 logger.warning(
                                     f"Positional args are not processed for DateTimeGenerator string: {generator_str}"
                                 )
+                            # Seed at construction under <setup rngSeed> (this branch bypasses the eval-path
+                            # rng binding below), unless the DSL already pinned seed=/rng= explicitly.
+                            dt_rng = self._context.root.derive_seeded_rng()
+                            if dt_rng is not None and not {"rng", "seed"} & parsed_constructor_args.keys():
+                                parsed_constructor_args["rng"] = dt_rng
                             result = cls(**parsed_constructor_args)
                             # Use unified cache key for consistency with global cache
                             self._context.root.generators[cache_key] = result
