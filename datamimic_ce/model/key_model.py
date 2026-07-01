@@ -14,7 +14,12 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_DATABASE,
     ATTR_DEFAULT_VALUE,
     ATTR_GENERATOR,
+    ATTR_GRANULARITY,
     ATTR_IN_DATE_FORMAT,
+    ATTR_MAX,
+    ATTR_MAX_LENGTH,
+    ATTR_MIN,
+    ATTR_MIN_LENGTH,
     ATTR_NAME,
     ATTR_NULL_QUOTA,
     ATTR_OUT_DATE_FORMAT,
@@ -44,6 +49,11 @@ from datamimic_ce.model.model_util import ModelUtil
 class KeyModel(BaseModel):
     name: str
     type: str | None = None
+    min: str | None = None
+    max: str | None = None
+    granularity: str | None = None
+    min_length: str | None = Field(None, alias=ATTR_MIN_LENGTH)
+    max_length: str | None = Field(None, alias=ATTR_MAX_LENGTH)
     source: str | None = None
     selector: str | None = None
     separator: str | None = None
@@ -73,6 +83,11 @@ class KeyModel(BaseModel):
             valid_attributes={
                 ATTR_NAME,
                 ATTR_TYPE,
+                ATTR_MIN,
+                ATTR_MAX,
+                ATTR_GRANULARITY,
+                ATTR_MIN_LENGTH,
+                ATTR_MAX_LENGTH,
                 ATTR_SOURCE,
                 ATTR_SELECTOR,
                 ATTR_SEPARATOR,

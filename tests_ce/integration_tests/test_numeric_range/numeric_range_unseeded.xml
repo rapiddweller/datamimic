@@ -1,0 +1,7 @@
+<setup>
+    <!-- no rngSeed: the same native-range fields must be RANDOM (two runs differ) -->
+    <generate name="product" count="20" target="">
+        <key name="qty" type="int" min="1" max="1000000"/>
+        <key name="code" type="string" minLength="8" maxLength="12"/>
+    </generate>
+</setup>
