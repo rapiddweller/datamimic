@@ -1,0 +1,1 @@
+<setup><generate name="g" count="10" numProcess="1" target=""><key name="n" type="int" generator="IntegerGenerator(min=1,max=1000000)"/></generate></setup>
