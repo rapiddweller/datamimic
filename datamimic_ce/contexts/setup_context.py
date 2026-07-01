@@ -114,6 +114,11 @@ class SetupContext(Context):
         return spawn_rng(self._root_rng) if self._root_rng is not None else None
 
     @property
+    def is_seeded(self) -> bool:
+        """True when a model-wide <setup rngSeed> was given (determinism is expected)."""
+        return self._root_rng is not None
+
+    @property
     def rng(self) -> Any:
         """Cached call-time rng. Mirrors ``GenIterContext.rng`` so ``ctx.rng``
         works whether ``ctx`` is a SetupContext or a GenIterContext."""

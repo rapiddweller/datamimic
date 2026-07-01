@@ -104,10 +104,9 @@ class KeyVariableTask:
             self._weights = self._parse_weights(self._values)
             self._mode = self._VALUES_MODE
         elif self._statement.generator is not None:
-            # NOTE: a literal <key generator="..."> is created without an injected
-            # seed, so it is NOT bound to <setup rngSeed>. Deterministic DSL-level
-            # seeding of literal key generators is an Enterprise (EE) feature; CE
-            # determinism covers entity generation (<setup rngSeed> / <variable rngSeed>).
+            # A literal <key generator="..."> is bound to <setup rngSeed> inside create_generator
+            # (a seeded rng is injected), so it replays deterministically; the single-process policy
+            # keeps that reproducible across machines. Without a seed it stays wall-clock random.
             # Try to init generator with or without args.
             try:
                 self._generator = GeneratorUtil(ctx).create_generator(

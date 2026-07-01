@@ -15,6 +15,7 @@ from datamimic_ce.domains.common.literal_generators.state_transition_generator i
     StateMachineDef,
     StateTransitionGenerator,
 )
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
 from datamimic_ce.enums.distribution_enums import NumberDistribution
 from datamimic_ce.logger import logger
@@ -226,6 +227,14 @@ class GeneratorUtil:
                     logger.warning(f"Generator {class_name} is IncrementGenerator but lacks add_pagination method.")
             if result is None:
                 raise ValueError(f"Failed to create generator for '{generator_str}': result is None.")
+
+            # Bind a per-field seeded rng so a literal random generator (IntegerGenerator, FloatGenerator, ...)
+            # replays deterministically under <setup rngSeed>. Without a seed, derive_seeded_rng() returns
+            # None and the generator keeps its own wall-clock rng (unseeded = random, by design).
+            if isinstance(result, BaseLiteralGenerator):
+                seeded_rng = self._context.root.derive_seeded_rng()
+                if seeded_rng is not None:
+                    result.rng = seeded_rng
 
             # Decide whether to cache the generator instance globally. Generators
             # can opt out by defining ``cache_in_root = False``.
