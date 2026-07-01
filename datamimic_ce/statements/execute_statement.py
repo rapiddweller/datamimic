@@ -10,6 +10,7 @@ from datamimic_ce.statements.statement import Statement
 
 class ExecuteStatement(Statement):
     def __init__(self, model: ExecuteModel, exec_type: str, code: str | None = None):
+        super().__init__(name=None, parent_stmt=None)  # setup-level: no name/parent, but honor the base contract
         self._uri = model.uri
         self._target = model.target
         self._type = exec_type  # resolved: python | bash | sql
