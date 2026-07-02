@@ -1,0 +1,8 @@
+<setup>
+    <!-- Read source rows (columns x,y,z) and echo them; row count is driven by the source. -->
+    <generate name="rows" source="fixture.xlsx" distribution="ordered" target="">
+        <key name="rx" script="x"/>
+        <key name="ry" script="y"/>
+        <key name="rz" script="z"/>
+    </generate>
+</setup>
