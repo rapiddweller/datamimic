@@ -122,7 +122,8 @@ class Context(ABC):
             data_dict.update(current_context.root.properties)
 
         # Update data_dict with current context's variables and products
-        data_dict.update(self.get_content_variables_products(current_context))
+        content_tree = self.get_content_variables_products(current_context)
+        data_dict.update(content_tree)
 
         # Evaluate python expression, use dict of products and variables as local namespace
         # Convert namespace dict to dotable dict
@@ -130,11 +131,19 @@ class Context(ABC):
             if isinstance(value, dict):
                 data_dict[key] = DotableDict(value)
 
-        # `this` = the current content scope (this.field == field), so a script can address the record it
-        # belongs to explicitly. Mirrors the DATAMIMIC EE `this` alias; bound last so it always reflects the
-        # live current_variables/current_product (sibling fields generated so far are visible via this.*).
+        # Canonical scope aliases, mirroring DATAMIMIC EE (bound only when not already a user name):
+        #  - `this`: the current content scope, so `this.field` == bare `field` (essential in nested
+        #    scopes where a bare sibling name is wrapped under the scope name and does not resolve).
+        #  - `parent`: the immediate parent generate/nestedKey scope.
+        #  - `root`: the full merged content tree from the outermost scope down (root.<field> / root.<name>.<field>).
         if "this" not in data_dict:
             data_dict["this"] = DotableDict(self._current_scope())
+        if "parent" not in data_dict:
+            parent_scope = self._parent_scope()
+            if parent_scope:
+                data_dict["parent"] = DotableDict(parent_scope)
+        if "root" not in data_dict:
+            data_dict["root"] = DotableDict(dict(content_tree))
 
         # Evaluate expression
         try:
@@ -230,6 +239,18 @@ class Context(ABC):
             return {**self.current_variables, **self.current_product}
         if isinstance(self, SetupContext):
             return {**self.namespace, **self.global_variables}
+        return {}
+
+    def _parent_scope(self) -> dict:
+        """The immediate parent scope for the ``parent`` alias: the parent generate/nestedKey's
+        variables + products. Empty when there is no enclosing generate scope (top-level = setup parent)."""
+        from datamimic_ce.contexts.geniter_context import GenIterContext
+
+        if not isinstance(self, GenIterContext):
+            return {}
+        parent = self.parent
+        if isinstance(parent, GenIterContext):
+            return {**parent.current_variables, **parent.current_product}
         return {}
 
     @staticmethod
