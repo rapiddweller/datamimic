@@ -48,6 +48,7 @@ from datamimic_ce.statements.array_statement import ArrayStatement
 from datamimic_ce.statements.condition_statement import ConditionStatement
 from datamimic_ce.statements.database_statement import DatabaseStatement
 from datamimic_ce.statements.demographics_statement import DemographicsStatement
+from datamimic_ce.statements.assert_statement import AssertStatement
 from datamimic_ce.statements.echo_statement import EchoStatement
 from datamimic_ce.statements.element_statement import ElementStatement
 from datamimic_ce.statements.else_if_statement import ElseIfStatement
@@ -154,6 +155,10 @@ class TaskUtil:
             return ElseTask(stmt)
         elif isinstance(stmt, EchoStatement):
             return EchoTask(stmt)
+        elif isinstance(stmt, AssertStatement):
+            from datamimic_ce.tasks.assert_task import AssertTask
+
+            return AssertTask(stmt)
         elif isinstance(stmt, ElementStatement):
             return ElementTask(ctx, stmt)  # type: ignore[return-value]
         elif isinstance(stmt, GeneratorStatement):
