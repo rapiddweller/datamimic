@@ -26,6 +26,8 @@ class ReferenceStatement(Statement):
         self._source = model.source
         self._source_type = model.source_type
         self._unique = model.unique
+        self._distribution = model.distribution
+        self._cyclic = model.cyclic
         # Always >= 1: a legacy 'sourceKey' is normalised to a single field by the parser.
         self._fields = fields
 
@@ -45,6 +47,14 @@ class ReferenceStatement(Statement):
     @property
     def unique(self):
         return self._unique
+
+    @property
+    def distribution(self) -> str | None:
+        return self._distribution
+
+    @property
+    def cyclic(self) -> bool | None:
+        return self._cyclic
 
     @property
     def fields(self) -> list[ReferenceField]:
