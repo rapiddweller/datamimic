@@ -1,0 +1,7 @@
+<setup>
+    <!-- a broken echo placeholder (unknown name) must not kill the run -->
+    <echo>this references {does_not_exist} and must only warn</echo>
+    <generate name="g" count="2" target="">
+        <key name="v" constant="ok"/>
+    </generate>
+</setup>
