@@ -42,6 +42,7 @@ from datamimic_ce.exporters.json_exporter import JsonExporter
 from datamimic_ce.exporters.memstore import Memstore
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.exporters.txt_exporter import TXTExporter
+from datamimic_ce.exporters.xlsx_exporter import XLSXExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.array_statement import ArrayStatement
@@ -489,7 +490,7 @@ class TaskUtil:
                     exporter.consume(
                         (json_product[0], xml_result[stmt.full_name]), stmt.full_name, exporter_state_manager
                     )
-                elif isinstance(exporter, JsonExporter | TXTExporter | CSVExporter):
+                elif isinstance(exporter, JsonExporter | TXTExporter | CSVExporter | XLSXExporter):
                     exporter.consume(json_product, stmt.full_name, exporter_state_manager)
                 else:
                     exporter.consume(json_product)

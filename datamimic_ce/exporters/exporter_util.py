@@ -24,6 +24,7 @@ from datamimic_ce.constants.exporter_constants import (
     EXPORTER_LOG_EXPORTER,
     EXPORTER_TEST_RESULT_EXPORTER,
     EXPORTER_TXT,
+    EXPORTER_XLSX,
     EXPORTER_XML,
 )
 from datamimic_ce.contexts.setup_context import SetupContext
@@ -35,6 +36,7 @@ from datamimic_ce.exporters.json_exporter import JsonExporter
 from datamimic_ce.exporters.log_exporter import LogExporter
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.exporters.txt_exporter import TXTExporter
+from datamimic_ce.exporters.xlsx_exporter import XLSXExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
@@ -315,6 +317,9 @@ class ExporterUtil:
             )
         elif name == EXPORTER_XML:
             return XMLExporter(setup_context, product_name, chunk_size, root_element, item_element, encoding)
+        elif name == EXPORTER_XLSX:
+            sheet_name = exporter_params_dict.get("sheet_name")
+            return XLSXExporter(setup_context, product_name, chunk_size, sheet_name, encoding)
         elif name == EXPORTER_TXT:
             return TXTExporter(setup_context, product_name, chunk_size, delimiter, line_terminator, encoding)
         elif name == EXPORTER_TEST_RESULT_EXPORTER:
@@ -329,7 +334,7 @@ class ExporterUtil:
         else:
             raise ValueError(
                 f"Target not found: {name}, please check the target name again. "
-                f"Expected: {EXPORTER_JSON}, {EXPORTER_CSV}, {EXPORTER_XML}, "
+                f"Expected: {EXPORTER_JSON}, {EXPORTER_CSV}, {EXPORTER_XML}, {EXPORTER_XLSX}, "
                 f"{EXPORTER_TXT}, {EXPORTER_TEST_RESULT_EXPORTER}, {EXPORTER_JSON_SINGLE}, "
                 f"{EXPORTER_CONSOLE_EXPORTER}, {EXPORTER_LOG_EXPORTER}, "
                 f"or client {list(setup_context.clients.keys())} "
