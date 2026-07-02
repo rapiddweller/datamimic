@@ -1,0 +1,15 @@
+<setup>
+    <database id="db" database="sql_crud_delete_db" dbms="sqlite"/>
+    <execute type="sql" target="db">
+        DROP TABLE IF EXISTS customers;
+        CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT, tier TEXT);
+        INSERT INTO customers VALUES (1, 'a', 'bronze');
+        INSERT INTO customers VALUES (2, 'b', 'bronze');
+        INSERT INTO customers VALUES (3, 'c', 'silver');
+        INSERT INTO customers VALUES (4, 'd', 'silver');
+        INSERT INTO customers VALUES (5, 'e', 'gold');
+    </execute>
+    <!-- delete the bronze rows by primary key -->
+    <generate name="customers" source="db" selector="SELECT id FROM customers WHERE tier = 'bronze'" target="db.delete"/>
+    <generate name="check" source="db" selector="SELECT id FROM customers ORDER BY id" distribution="ordered" target=""/>
+</setup>
