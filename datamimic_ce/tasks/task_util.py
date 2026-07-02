@@ -70,6 +70,7 @@ from datamimic_ce.statements.statement import Statement
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.statements.while_statement import WhileStatement
 from datamimic_ce.tasks.array_task import ArrayTask
+from datamimic_ce.tasks.assert_task import AssertTask
 from datamimic_ce.tasks.database_task import DatabaseTask
 from datamimic_ce.tasks.echo_task import EchoTask
 from datamimic_ce.tasks.element_task import ElementTask
@@ -156,8 +157,6 @@ class TaskUtil:
         elif isinstance(stmt, EchoStatement):
             return EchoTask(stmt)
         elif isinstance(stmt, AssertStatement):
-            from datamimic_ce.tasks.assert_task import AssertTask
-
             return AssertTask(stmt)
         elif isinstance(stmt, ElementStatement):
             return ElementTask(ctx, stmt)  # type: ignore[return-value]
