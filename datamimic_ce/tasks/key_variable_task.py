@@ -115,7 +115,9 @@ class KeyVariableTask:
                     self._statement.generator,
                     self._statement,
                     self._pagination,
-                    key=self._statement.full_name,
+                    # full_name alone collides when same-named keys sit in different <condition>
+                    # branches with different generators - include the generator expression.
+                    key=f"{self._statement.full_name}|{self._statement.generator}",
                 )
                 self._mode = self._GENERATOR_MODE
             # If init generator failed while creating task, try to lazy-init in the first task execution
@@ -146,7 +148,8 @@ class KeyVariableTask:
             # native min/max[/granularity] or minLength/maxLength on a typed <key> -> synthesize the literal
             # generator and reuse create_generator's seeding + caching (instead of a generator="..." string)
             self._generator = GeneratorUtil(ctx).create_generator(
-                range_gen, self._statement, self._pagination, key=self._statement.full_name
+                # see above: disambiguate same-named keys across <condition> branches
+                range_gen, self._statement, self._pagination, key=f"{self._statement.full_name}|{range_gen}"
             )
             self._mode = self._GENERATOR_MODE
         # IMPORTANT: always put this condition at the end
@@ -257,7 +260,7 @@ class KeyVariableTask:
                     self._statement.generator,
                     self.statement,
                     self._pagination,
-                    key=self._statement.full_name,
+                    key=f"{self._statement.full_name}|{self._statement.generator}",
                 )
                 if self._statement.generator is not None
                 else None
@@ -276,7 +279,7 @@ class KeyVariableTask:
                     self._statement.generator,
                     self.statement,
                     self._pagination,
-                    key=self._statement.full_name,
+                    key=f"{self._statement.full_name}|{self._statement.generator}",
                 )
             value = self._generator.generate() if self._generator is not None else None
             # Convert numpy.bool_ to bool for being compatible with consumer (db,...)
