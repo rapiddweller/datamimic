@@ -166,8 +166,11 @@ class RdbmsClient(DatabaseClient):
         :param data_list: List of dictionaries representing rows to be processed.
         :return: The transformed data list.
         """
-        # Get the list of columns where None values should be converted to NULL
-        none_as_null_col = [col.strip() for col in getattr(self._credential, "none_as_null_col", "").split(",")]
+        # Get the list of columns where None values should be converted to NULL.
+        # Filter empties: "".split(",") is [""] and would inject a bogus ''-keyed column into every row.
+        none_as_null_col = [
+            col.strip() for col in getattr(self._credential, "none_as_null_col", "").split(",") if col.strip()
+        ]
         # Convert None values to SQLAlchemy NULL
         if len(none_as_null_col) > 0:
             for idx, data_dict in enumerate(data_list):
@@ -393,6 +396,71 @@ class RdbmsClient(DatabaseClient):
                 connection.execute(table.insert(), data_list)
             except Exception as err:
                 raise RuntimeError(f"Error when writing data to RDBMS: {err}") from err
+
+    def _table_and_pk(self, engine, table_name: str):
+        """Reflected table + its primary-key column names. update/upsert/delete key on the PK;
+        a table without one is a configuration error (never silently fall back to insert)."""
+        table = self._get_metadata(engine).tables[self._get_actual_table_name(table_name)]
+        pk = [c.name for c in table.primary_key.columns]
+        if not pk:
+            raise ValueError(
+                f"Table '{table_name}' has no primary key - update/upsert/delete need one to match rows"
+            )
+        return table, pk
+
+    @staticmethod
+    def _pk_clause(table, row: dict, pk: list[str], table_name: str, operation: str):
+        missing = [k for k in pk if k not in row]
+        if missing:
+            raise ValueError(f"{operation} on '{table_name}' requires primary-key value(s) {missing} in each record")
+        return [table.c[k] == row[k] for k in pk]
+
+    def update(self, table_name: str, data_list: list) -> int:
+        """UPDATE each record by primary key; returns the number of matched rows.
+        Row-by-row statements: test-data volumes, not a bulk path."""
+        if not data_list:
+            return 0
+        engine = self._create_engine()
+        table, pk = self._table_and_pk(engine, table_name)
+        matched = 0
+        with engine.begin() as connection:
+            for row in self._apply_global_json_config(data_list):
+                values = {k: v for k, v in row.items() if k not in pk}
+                if not values:
+                    raise ValueError(f"update on '{table_name}' has no non-key columns to set")
+                clause = self._pk_clause(table, row, pk, table_name, "update")
+                matched += connection.execute(table.update().where(*clause).values(**values)).rowcount
+        return matched
+
+    def upsert(self, table_name: str, data_list: list) -> None:
+        """UPDATE by primary key, INSERT the rows that matched nothing."""
+        if not data_list:
+            return
+        engine = self._create_engine()
+        table, pk = self._table_and_pk(engine, table_name)
+        with engine.begin() as connection:
+            for row in self._apply_global_json_config(data_list):
+                clause = self._pk_clause(table, row, pk, table_name, "upsert")
+                values = {k: v for k, v in row.items() if k not in pk}
+                if values:
+                    exists = connection.execute(table.update().where(*clause).values(**values)).rowcount > 0
+                else:  # all-PK row: nothing to update, just ensure presence
+                    exists = connection.execute(select(table.c[pk[0]]).where(*clause)).first() is not None
+                if not exists:
+                    connection.execute(table.insert(), [row])
+
+    def delete(self, table_name: str, data_list: list) -> int:
+        """DELETE each record by primary key; returns the number of deleted rows."""
+        if not data_list:
+            return 0
+        engine = self._create_engine()
+        table, pk = self._table_and_pk(engine, table_name)
+        deleted = 0
+        with engine.begin() as connection:
+            for row in self._apply_global_json_config(data_list):
+                clause = self._pk_clause(table, row, pk, table_name, "delete")
+                deleted += connection.execute(table.delete().where(*clause)).rowcount
+        return deleted
 
     def _get_actual_table_name(self, table_name: str) -> str:
         """
