@@ -74,6 +74,21 @@ class FileUtil:
         return processed_data
 
     @staticmethod
+    def read_xlsx_to_dict_list(file_path: Path, sheet_name: str | None = None) -> list[dict]:
+        """Read the first row of an .xlsx sheet as the header and each following row as a dict."""
+        from openpyxl import load_workbook
+
+        workbook = load_workbook(file_path, read_only=True, data_only=True)
+        sheet = workbook[sheet_name] if sheet_name else workbook.active
+        if sheet is None:
+            return []  # no sheet -> empty source
+        rows = sheet.iter_rows(values_only=True)
+        header = next(rows, None)
+        if header is None:
+            return []  # empty sheet is an empty source, not a crash
+        return [dict(zip(header, row, strict=False)) for row in rows]
+
+    @staticmethod
     def read_weight_csv(file_path: Path, separator: str = ",", encoding="utf-8") -> DataFrame:
         """
         Read none_header, 2_columns, weight csv

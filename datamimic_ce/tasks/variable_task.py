@@ -143,12 +143,15 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                         self._mode = self._ITERATOR_MODE
             else:
                 # Load data from csv or json file
-                if source_str.endswith("csv") or source_str.endswith("json"):
-                    file_data = (
-                        FileUtil.read_csv_to_dict_list(file_path=descriptor_dir / source_str, separator=separator)
-                        if source_str.endswith("csv")
-                        else FileUtil.read_json_to_list(descriptor_dir / source_str)
-                    )
+                if source_str.endswith(("csv", "json", "xlsx")):
+                    if source_str.endswith("csv"):
+                        file_data = FileUtil.read_csv_to_dict_list(
+                            file_path=descriptor_dir / source_str, separator=separator
+                        )
+                    elif source_str.endswith("xlsx"):
+                        file_data = FileUtil.read_xlsx_to_dict_list(descriptor_dir / source_str)
+                    else:
+                        file_data = FileUtil.read_json_to_list(descriptor_dir / source_str)
                     if loads_all:
                         self._full_load_iterator = self._distributed_iter(file_data, pagination, seed)
                         self._mode = self._FULL_LOAD_MODE

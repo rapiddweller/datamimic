@@ -365,6 +365,11 @@ class TaskUtil:
                     )
                 except Exception as e:
                     logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
+        # Load data from XLSX
+        elif source_str.endswith(".xlsx"):
+            source_data = DataSourceRegistry.load_xlsx_file(
+                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
+            )
         # Load data from XML
         elif source_str.endswith(".xml"):
             source_data = DataSourceRegistry.load_xml_file(
