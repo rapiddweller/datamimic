@@ -39,6 +39,8 @@ class DataSourceRegistry:
         # Load source data from file
         if key.endswith(".csv"):
             return FileUtil.read_csv_to_dict_list(Path(key), csv_separator)
+        elif key.endswith(".xlsx"):
+            return FileUtil.read_xlsx_to_dict_list(Path(key))
         elif key.endswith(".json"):
             json_data = FileUtil.read_json(Path(key))
             if isinstance(json_data, list):
@@ -102,7 +104,7 @@ class DataSourceRegistry:
 
             # Check if source is data source file or database collection/table
             # 2.1: Check if datasource is csv file
-            if source_str.endswith(".csv") or source_str.endswith(".json") or source_str.endswith(".xml"):
+            if source_str.endswith((".csv", ".json", ".xml", ".xlsx")):
                 ds_len = len(
                     DataSourceRegistry._get_source(
                         str(root_ctx.descriptor_dir / source_str),
@@ -402,6 +404,19 @@ class DataSourceRegistry:
             else None
         )
         return DataSourceRegistry.get_cyclic_data_list(data=file_data, cyclic=cyclic, pagination=pagination)
+
+    @staticmethod
+    def load_xlsx_file(file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None) -> list[dict]:
+        """Load an .xlsx sheet (first row = header) as a paginated, optionally cyclic list of dicts."""
+        file_data = DataSourceRegistry._get_source(str(file_path))
+        pagination = (
+            DataSourcePagination(start_idx, end_idx - start_idx)
+            if (start_idx is not None and end_idx is not None)
+            else None
+        )
+        return DataSourceRegistry.get_cyclic_data_list(
+            data=file_data, cyclic=cyclic if cyclic is not None else False, pagination=pagination
+        )
 
     @staticmethod
     def load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None) -> list[dict]:

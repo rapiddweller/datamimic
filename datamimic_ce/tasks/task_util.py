@@ -42,6 +42,7 @@ from datamimic_ce.exporters.json_exporter import JsonExporter
 from datamimic_ce.exporters.memstore import Memstore
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.exporters.txt_exporter import TXTExporter
+from datamimic_ce.exporters.xlsx_exporter import XLSXExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.array_statement import ArrayStatement
@@ -364,6 +365,11 @@ class TaskUtil:
                     )
                 except Exception as e:
                     logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
+        # Load data from XLSX
+        elif source_str.endswith(".xlsx"):
+            source_data = DataSourceRegistry.load_xlsx_file(
+                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
+            )
         # Load data from XML
         elif source_str.endswith(".xml"):
             source_data = DataSourceRegistry.load_xml_file(
@@ -489,7 +495,7 @@ class TaskUtil:
                     exporter.consume(
                         (json_product[0], xml_result[stmt.full_name]), stmt.full_name, exporter_state_manager
                     )
-                elif isinstance(exporter, JsonExporter | TXTExporter | CSVExporter):
+                elif isinstance(exporter, JsonExporter | TXTExporter | CSVExporter | XLSXExporter):
                     exporter.consume(json_product, stmt.full_name, exporter_state_manager)
                 else:
                     exporter.consume(json_product)

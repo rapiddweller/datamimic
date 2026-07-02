@@ -7,6 +7,7 @@
 import csv
 import json
 import shutil
+import zipfile
 from pathlib import Path
 
 import numpy as np
@@ -72,6 +73,39 @@ class FileUtil:
         header = raw_data[0]
         processed_data = [dict(zip(header, row, strict=False)) for row in raw_data[1:]]
         return processed_data
+
+    @staticmethod
+    def read_xlsx_to_dict_list(file_path: Path, sheet_name: str | None = None) -> list[dict]:
+        """Read the first row of an .xlsx sheet as the header and each following row as a dict.
+
+        Robust to real-world sheets: an empty sheet/file yields []; blank header cells are not turned
+        into ``None``-keyed columns; a row shorter than the header pads missing cells with ``None`` and
+        cells past the last header column are ignored. A file that is not a valid .xlsx raises a clear
+        ValueError rather than a bare BadZipFile.
+        """
+        from openpyxl import load_workbook
+        from openpyxl.utils.exceptions import InvalidFileException
+
+        try:
+            workbook = load_workbook(file_path, read_only=True, data_only=True)
+        except (InvalidFileException, zipfile.BadZipFile, KeyError) as e:
+            raise ValueError(f"Invalid XLSX file '{file_path}': {e}") from e
+
+        try:
+            sheet = workbook[sheet_name] if sheet_name else workbook.active
+        except KeyError as e:
+            raise ValueError(f"XLSX file '{file_path}' has no sheet named '{sheet_name}'") from e
+        if sheet is None:
+            return []  # no sheet -> empty source
+
+        rows = sheet.iter_rows(values_only=True)
+        header = next(rows, None)
+        if header is None:
+            return []  # empty sheet is an empty source, not a crash
+        # Real columns = non-blank header cells, keyed by their column position (skip blank headers so
+        # openpyxl's rectangular row padding never produces a None-keyed column).
+        columns = [(idx, str(name)) for idx, name in enumerate(header) if name is not None]
+        return [{name: (row[idx] if idx < len(row) else None) for idx, name in columns} for row in rows]
 
     @staticmethod
     def read_weight_csv(file_path: Path, separator: str = ",", encoding="utf-8") -> DataFrame:

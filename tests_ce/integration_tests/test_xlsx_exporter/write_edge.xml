@@ -1,0 +1,10 @@
+<setup rngSeed="3">
+    <!-- Write edge cases: None cell and a nested dict (a non-scalar cell must be stringified). -->
+    <generate name="edge" count="3" target="XLSX">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="maybe_null" script="None"/>
+        <nestedKey name="nested" type="dict">
+            <key name="inner" constant="7"/>
+        </nestedKey>
+    </generate>
+</setup>
