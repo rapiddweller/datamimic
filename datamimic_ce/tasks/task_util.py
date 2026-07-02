@@ -32,6 +32,7 @@ from datamimic_ce.converter.lower_case_converter import LowerCaseConverter
 from datamimic_ce.converter.mask_converter import MaskConverter
 from datamimic_ce.converter.middle_mask_converter import MiddleMaskConverter
 from datamimic_ce.converter.remove_none_or_empty_element_converter import RemoveNoneOrEmptyElementConverter
+from datamimic_ce.converter.substring_converter import SubstringConverter
 from datamimic_ce.converter.timestamp2date_converter import Timestamp2DateConverter
 from datamimic_ce.converter.upper_case_converter import UpperCaseConverter
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
@@ -269,6 +270,7 @@ class TaskUtil:
                             ConverterEnum.Mask.value: MaskConverter,
                             ConverterEnum.MiddleMask.value: MiddleMaskConverter,
                             ConverterEnum.CutLength.value: CutLengthConverter,
+                            ConverterEnum.Substring.value: SubstringConverter,
                             ConverterEnum.Append.value: AppendConverter,
                             ConverterEnum.Hash.value: HashConverter,
                             ConverterEnum.JavaHash.value: JavaHashConverter,

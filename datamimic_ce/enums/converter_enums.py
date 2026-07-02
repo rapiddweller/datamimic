@@ -14,6 +14,7 @@ class ConverterEnum(Enum):
     Mask = "Mask"
     MiddleMask = "MiddleMask"
     CutLength = "CutLength"
+    Substring = "Substring"
     Append = "Append"
     Hash = "Hash"
     Timestamp2Date = "Timestamp2Date"
