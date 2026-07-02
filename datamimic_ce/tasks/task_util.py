@@ -45,10 +45,10 @@ from datamimic_ce.exporters.txt_exporter import TXTExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.array_statement import ArrayStatement
+from datamimic_ce.statements.assert_statement import AssertStatement
 from datamimic_ce.statements.condition_statement import ConditionStatement
 from datamimic_ce.statements.database_statement import DatabaseStatement
 from datamimic_ce.statements.demographics_statement import DemographicsStatement
-from datamimic_ce.statements.assert_statement import AssertStatement
 from datamimic_ce.statements.echo_statement import EchoStatement
 from datamimic_ce.statements.element_statement import ElementStatement
 from datamimic_ce.statements.else_if_statement import ElseIfStatement

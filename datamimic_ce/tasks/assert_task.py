@@ -28,7 +28,13 @@ class AssertTask(CommonSubTask):
 
     def execute(self, ctx: Context) -> None:
         condition = self._statement.condition
-        if bool(ctx.evaluate_python_expression(condition)):
+        try:
+            passed = bool(ctx.evaluate_python_expression(condition))
+        except Exception as err:
+            # A broken expression (typo'd field, syntax error) must name the assert, not surface
+            # as a bare NameError from deep inside the evaluator.
+            raise ValueError(f"<assert> condition '{condition}' failed to evaluate: {err}") from err
+        if passed:
             return
         parts = [f"<assert> failed: condition '{condition}' is not true"]
         if self._statement.message:

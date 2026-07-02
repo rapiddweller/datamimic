@@ -34,3 +34,8 @@ def test_assert_setup_level_holds():
 def test_assert_setup_level_violation_fails():
     with pytest.raises(Exception, match=r"setup invariant broken"):
         _run("assert_setup_violated.xml")
+
+
+def test_assert_broken_expression_names_the_assert():
+    with pytest.raises(Exception, match=r"<assert> condition 'ixd == 1' failed to evaluate"):
+        _run("assert_bad_expression.xml")
