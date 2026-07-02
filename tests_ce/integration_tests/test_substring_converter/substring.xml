@@ -1,0 +1,10 @@
+<setup>
+    <!-- Substring(start[, end]) - python slice semantics, negatives count from the end.
+         Substring(-4) = last four characters: the classic anonymization tail-extract. -->
+    <generate name="g" count="1" target="">
+        <key name="full" constant="0049-171-2635861"/>
+        <key name="last4" script="full" converter="Substring(-4)"/>
+        <key name="area" script="full" converter="Substring(5, 8)"/>
+        <key name="from2" script="full" converter="Substring(2)"/>
+    </generate>
+</setup>
