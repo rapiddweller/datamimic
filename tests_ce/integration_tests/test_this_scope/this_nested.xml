@@ -1,0 +1,28 @@
+<setup rngSeed="13">
+    <!-- Scope aliases at every depth:
+         this   = current scope (this.field == the current record's own field)
+         parent = the immediate enclosing generate/nestedKey scope
+         root   = the full tree from the outermost scope (root.<field> / root.<name>.<field>)
+         In a NESTED scope a bare sibling name is wrapped under the scope name and does NOT resolve,
+         so this./parent./root. are the way to reach fields across levels. -->
+    <generate name="company" count="2" target="">
+        <key name="cid" generator="IncrementGenerator"/>
+        <key name="cbase" script="cid * 100"/>
+        <key name="c_self" script="this.cid"/>            <!-- this = company scope -->
+        <key name="c_root" script="root.cid"/>            <!-- root at top == this here -->
+
+        <nestedKey name="dept" type="dict">
+            <key name="did" script="1"/>
+            <key name="d_self" script="this.did"/>        <!-- this = dept scope: own sibling -->
+            <key name="d_parent" script="parent.cbase"/>  <!-- parent = company scope -->
+            <key name="d_root" script="root.cbase"/>      <!-- root = outermost company -->
+
+            <nestedKey name="team" type="dict">
+                <key name="tid" script="99"/>
+                <key name="t_self" script="this.tid"/>          <!-- this = team scope -->
+                <key name="t_parent" script="parent.did"/>      <!-- parent = dept scope -->
+                <key name="t_root" script="root.cid"/>          <!-- root = outermost company -->
+            </nestedKey>
+        </nestedKey>
+    </generate>
+</setup>
