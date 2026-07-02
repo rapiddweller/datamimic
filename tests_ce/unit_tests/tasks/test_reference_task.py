@@ -26,6 +26,9 @@ class TestReferenceTask(unittest.TestCase):
         self.statement.targets = ["test_name"]
         self.statement.is_composite = False
         self.statement.name = "test_name"
+        # No selection modifier: default with-replacement path (spec-mocked attrs are truthy otherwise).
+        self.statement.distribution = None
+        self.statement.cyclic = None
         self.pagination = MagicMock(spec=DataSourcePagination)
         self.pagination.limit = 2
         self.pagination.skip = 0
