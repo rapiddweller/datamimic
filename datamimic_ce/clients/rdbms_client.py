@@ -403,14 +403,14 @@ class RdbmsClient(DatabaseClient):
         table = self._get_metadata(engine).tables[self._get_actual_table_name(table_name)]
         pk = [c.name for c in table.primary_key.columns]
         if not pk:
-            raise ValueError(
-                f"Table '{table_name}' has no primary key - update/upsert/delete need one to match rows"
-            )
+            raise ValueError(f"Table '{table_name}' has no primary key - update/upsert/delete need one to match rows")
         return table, pk
 
     @staticmethod
     def _pk_clause(table, row: dict, pk: list[str], table_name: str, operation: str):
-        missing = [k for k in pk if k not in row]
+        # None counts as missing: 'pk = NULL' never matches in SQL, so update would silently
+        # touch nothing and upsert would insert a NULL-keyed row.
+        missing = [k for k in pk if row.get(k) is None]
         if missing:
             raise ValueError(f"{operation} on '{table_name}' requires primary-key value(s) {missing} in each record")
         return [table.c[k] == row[k] for k in pk]
