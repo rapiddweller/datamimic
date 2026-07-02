@@ -1,0 +1,29 @@
+<setup rngSeed="13">
+    <!-- Deeply nested: generate > nestedKey(dict) > nestedKey(dict), and generate > generate(list).
+         In a NESTED scope, sibling fields are wrapped under the scope name and are NOT visible by bare
+         name - `this.<field>` is the clean way to address the current scope's own fields at every depth.
+         The outermost <generate> (setup parent) still exposes its fields flat. -->
+    <generate name="company" count="2" target="">
+        <key name="cid" generator="IncrementGenerator"/>
+        <key name="cbase" script="cid * 100"/>
+        <key name="c_self" script="this.cid"/>            <!-- this = company scope -->
+
+        <nestedKey name="dept" type="dict">
+            <key name="did" script="this.cbase_missing_ok if False else 1"/>  <!-- seed a field -->
+            <key name="d_self" script="this.did"/>        <!-- this = dept scope: own sibling -->
+            <key name="d_from_company" script="cbase"/>    <!-- outermost company field is flat-visible -->
+
+            <nestedKey name="team" type="dict">
+                <key name="tid" script="99"/>
+                <key name="t_self" script="this.tid"/>     <!-- this = team scope: own sibling -->
+                <key name="t_from_company" script="cbase"/> <!-- still sees the flat outermost field -->
+            </nestedKey>
+        </nestedKey>
+
+        <generate name="staff" count="2" target="">
+            <key name="sidx" generator="IncrementGenerator"/>
+            <key name="slabel" script="this.sidx * 1000"/>  <!-- nested generate: own sibling via this.* -->
+            <key name="s_self" script="this.slabel"/>       <!-- this = staff row scope -->
+        </generate>
+    </generate>
+</setup>

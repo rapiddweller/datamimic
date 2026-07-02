@@ -130,6 +130,12 @@ class Context(ABC):
             if isinstance(value, dict):
                 data_dict[key] = DotableDict(value)
 
+        # `this` = the current content scope (this.field == field), so a script can address the record it
+        # belongs to explicitly. Mirrors the DATAMIMIC EE `this` alias; bound last so it always reflects the
+        # live current_variables/current_product (sibling fields generated so far are visible via this.*).
+        if "this" not in data_dict:
+            data_dict["this"] = DotableDict(self._current_scope())
+
         # Evaluate expression
         try:
             result = eval(expr, SAFE_GLOBALS, data_dict)
@@ -212,6 +218,19 @@ class Context(ABC):
         except Exception as e:
             #  Keep error reporting consistent; avoid extra stdout noise from traceback.print_exc()
             raise ValueError(f"Failed while evaluate '{expr}': {str(e)}") from e
+
+    def _current_scope(self) -> dict:
+        """The current content scope for the ``this`` alias: ``this.field`` resolves to the same value as
+        bare ``field``. In a generate/iterate that is the record's variables + products (products win on a
+        name clash); at setup level it is the setup namespace + global variables."""
+        from datamimic_ce.contexts.geniter_context import GenIterContext
+        from datamimic_ce.contexts.setup_context import SetupContext
+
+        if isinstance(self, GenIterContext):
+            return {**self.current_variables, **self.current_product}
+        if isinstance(self, SetupContext):
+            return {**self.namespace, **self.global_variables}
+        return {}
 
     @staticmethod
     def get_content_variables_products(current_context: Context) -> dict:
