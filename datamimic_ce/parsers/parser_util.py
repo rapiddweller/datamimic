@@ -14,6 +14,7 @@ from datamimic_ce.config import settings
 from datamimic_ce.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
 from datamimic_ce.constants.element_constants import (
     EL_ARRAY,
+    EL_ASSERT,
     EL_COMMENT,
     EL_CONDITION,
     EL_DATABASE,
@@ -45,6 +46,7 @@ from datamimic_ce.constants.element_constants import (
 )
 from datamimic_ce.logger import logger
 from datamimic_ce.parsers.array_parser import ArrayParser
+from datamimic_ce.parsers.assert_parser import AssertParser
 from datamimic_ce.parsers.condition_parser import ConditionParser
 from datamimic_ce.parsers.database_parser import DatabaseParser
 from datamimic_ce.parsers.echo_parser import EchoParser
@@ -113,6 +115,7 @@ class ParserUtil:
                 EL_GENERATOR,
                 EL_DEMOGRAPHICS,
                 EL_STATE_MACHINE,
+                EL_ASSERT,
             },
             EL_STATE_MACHINE: {EL_TRANSITION},
             EL_REFERENCE: {EL_FIELD},
@@ -128,6 +131,7 @@ class ParserUtil:
                 EL_ARRAY,
                 EL_CONDITION,
                 EL_WHILE,
+                EL_ASSERT,
             },
             EL_CONDITION: {EL_IF, EL_ELSE_IF, EL_ELSE},
             EL_GENERATE: {
@@ -144,6 +148,7 @@ class ParserUtil:
                 EL_CONDITION,
                 EL_WHILE,
                 EL_INCLUDE,
+                EL_ASSERT,
             },
             EL_INCLUDE: {EL_SETUP},
             EL_ITEM: {EL_KEY, EL_ID, EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ELEMENT},
@@ -202,6 +207,8 @@ class ParserUtil:
             return ConditionParser(element, properties)
         elif tag == EL_WHILE:
             return WhileParser(element, properties)
+        elif tag == EL_ASSERT:
+            return AssertParser(element, properties)
         elif tag == EL_ELSE_IF:
             return ElseIfParser(element, properties)
         elif tag == EL_ELSE:
@@ -267,7 +274,8 @@ class ParserUtil:
                     | ArrayParser
                     | EchoParser
                     | GeneratorParser
-                    | StateMachineParser,
+                    | StateMachineParser
+                    | AssertParser,
                 ):
                     stmt = parser.parse()
                 elif isinstance(parser, ReferenceParser):

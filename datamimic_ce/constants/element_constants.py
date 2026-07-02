@@ -33,3 +33,4 @@ EL_STATE_MACHINE = "state-machine"  # named, reusable weighted state machine (bu
 EL_TRANSITION = "transition"  # one weighted edge of a <state-machine>
 EL_FIELD = "field"  # one source-column -> target-field mapping of a composite <reference>
 EL_WHILE = "while"  # repeat child statements while a condition holds (per-row loop)
+EL_ASSERT = "assert"  # fail the run when a condition does not hold (per record in <generate>, once under <setup>)

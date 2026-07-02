@@ -45,6 +45,7 @@ from datamimic_ce.exporters.txt_exporter import TXTExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.array_statement import ArrayStatement
+from datamimic_ce.statements.assert_statement import AssertStatement
 from datamimic_ce.statements.condition_statement import ConditionStatement
 from datamimic_ce.statements.database_statement import DatabaseStatement
 from datamimic_ce.statements.demographics_statement import DemographicsStatement
@@ -69,6 +70,7 @@ from datamimic_ce.statements.statement import Statement
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.statements.while_statement import WhileStatement
 from datamimic_ce.tasks.array_task import ArrayTask
+from datamimic_ce.tasks.assert_task import AssertTask
 from datamimic_ce.tasks.database_task import DatabaseTask
 from datamimic_ce.tasks.echo_task import EchoTask
 from datamimic_ce.tasks.element_task import ElementTask
@@ -154,6 +156,8 @@ class TaskUtil:
             return ElseTask(stmt)
         elif isinstance(stmt, EchoStatement):
             return EchoTask(stmt)
+        elif isinstance(stmt, AssertStatement):
+            return AssertTask(stmt)
         elif isinstance(stmt, ElementStatement):
             return ElementTask(ctx, stmt)  # type: ignore[return-value]
         elif isinstance(stmt, GeneratorStatement):
