@@ -1,0 +1,8 @@
+<setup>
+    <!-- computed count: the record volume is described by the model, not hardcoded -->
+    <variable name="customers" script="4"/>
+    <variable name="orders_per_customer" script="3"/>
+    <generate name="orders" count="{customers * orders_per_customer}" target="">
+        <key name="i" generator="IncrementGenerator"/>
+    </generate>
+</setup>
