@@ -3,6 +3,7 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
+import base64
 import csv
 import os
 from pathlib import Path
@@ -72,6 +73,12 @@ class CSVExporter(UnifiedBufferedExporter):
                 if write_header and self.fieldnames:
                     writer.writeheader()
                 for record in data:
+                    if any(isinstance(v, bytes | bytearray) for v in record.values()):
+                        # binary cell -> base64 text (csv would otherwise write the b'...' repr)
+                        record = {
+                            k: base64.b64encode(v).decode("ascii") if isinstance(v, bytes | bytearray) else v
+                            for k, v in record.items()
+                        }
                     writer.writerow(record)
             logger.debug(f"Wrote {len(data)} records to buffer file: {buffer_file}")
         except Exception as e:

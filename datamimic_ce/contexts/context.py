@@ -75,6 +75,7 @@ SAFE_GLOBALS = {
     "oct": oct,
     "type": type,
     "hashlib": __import__("hashlib"),
+    "base64": __import__("base64"),  # pair a binary payload with its b64/hex form in the DSL
     "__builtins__": None,
 }
 

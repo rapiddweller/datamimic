@@ -15,6 +15,7 @@ from typing import Any
 import numpy
 
 from datamimic_ce.constants.data_type_constants import (
+    DATA_TYPE_BINARY,
     DATA_TYPE_BOOL,
     DATA_TYPE_DECIMAL,
     DATA_TYPE_FLOAT,
@@ -64,6 +65,7 @@ class KeyVariableTask:
         self._unique_iter: Iterator[Any] | None = None
 
         self._simple_type_set = {
+            DATA_TYPE_BINARY,
             DATA_TYPE_STRING,
             DATA_TYPE_INT,
             DATA_TYPE_FLOAT,
@@ -113,7 +115,9 @@ class KeyVariableTask:
                     self._statement.generator,
                     self._statement,
                     self._pagination,
-                    key=self._statement.full_name,
+                    # full_name alone collides when same-named keys sit in different <condition>
+                    # branches with different generators - include the generator expression.
+                    key=f"{self._statement.full_name}|{self._statement.generator}",
                 )
                 self._mode = self._GENERATOR_MODE
             # If init generator failed while creating task, try to lazy-init in the first task execution
@@ -144,7 +148,8 @@ class KeyVariableTask:
             # native min/max[/granularity] or minLength/maxLength on a typed <key> -> synthesize the literal
             # generator and reuse create_generator's seeding + caching (instead of a generator="..." string)
             self._generator = GeneratorUtil(ctx).create_generator(
-                range_gen, self._statement, self._pagination, key=self._statement.full_name
+                # see above: disambiguate same-named keys across <condition> branches
+                range_gen, self._statement, self._pagination, key=f"{self._statement.full_name}|{range_gen}"
             )
             self._mode = self._GENERATOR_MODE
         # IMPORTANT: always put this condition at the end
@@ -165,6 +170,14 @@ class KeyVariableTask:
         if stmt.type == DATA_TYPE_STRING and (stmt.min_length is not None or stmt.max_length is not None):
             lens = (("min_len", stmt.min_length), ("max_len", stmt.max_length))
             return f"StringGenerator({', '.join(f'{k}={v}' for k, v in lens if v is not None)})"
+        if stmt.type == DATA_TYPE_BINARY:
+            # bare type="binary" also routes here (default 1..16 bytes), so it gets seeding + caching
+            args = [
+                f"{k}={v}" for k, v in (("min_len", stmt.min_length), ("max_len", stmt.max_length)) if v is not None
+            ]
+            if stmt.mime_type is not None:
+                args.append(f"mime_type='{stmt.mime_type}'")
+            return f"BinaryGenerator({', '.join(args)})"
         if stmt.min is None and stmt.max is None:
             return None
         if stmt.type == DATA_TYPE_INT:
@@ -247,7 +260,7 @@ class KeyVariableTask:
                     self._statement.generator,
                     self.statement,
                     self._pagination,
-                    key=self._statement.full_name,
+                    key=f"{self._statement.full_name}|{self._statement.generator}",
                 )
                 if self._statement.generator is not None
                 else None
@@ -266,7 +279,7 @@ class KeyVariableTask:
                     self._statement.generator,
                     self.statement,
                     self._pagination,
-                    key=self._statement.full_name,
+                    key=f"{self._statement.full_name}|{self._statement.generator}",
                 )
             value = self._generator.generate() if self._generator is not None else None
             # Convert numpy.bool_ to bool for being compatible with consumer (db,...)
@@ -378,6 +391,15 @@ class KeyVariableTask:
         elif data_type == DATA_TYPE_DECIMAL:
             # str() so a float value (e.g. 8.2) doesn't re-introduce binary float error
             return Decimal(str(value))
+        elif data_type == DATA_TYPE_BINARY:
+            if isinstance(value, bytes | bytearray):
+                return bytes(value)
+            if isinstance(value, str):
+                return value.encode("utf-8")  # cast-to-type, like int()/str() for the other types
+            raise ValueError(
+                f"<{self._element_tag}> '{self._statement.name}' type='binary' cannot convert "
+                f"value of type '{type(value).__name__}' - expected bytes or str"
+            )
         elif data_type == DATA_TYPE_BOOL:
             if value == "" or value is None:
                 return None

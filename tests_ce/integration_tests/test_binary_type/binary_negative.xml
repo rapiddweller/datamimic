@@ -1,0 +1,5 @@
+<setup>
+    <generate name="g" count="1" target="">
+        <key name="bad" type="binary" minLength="-3" maxLength="4"/>
+    </generate>
+</setup>

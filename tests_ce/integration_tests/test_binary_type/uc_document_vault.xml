@@ -1,0 +1,42 @@
+<setup rngSeed="2026">
+    <!-- USE CASE: document-vault / KYC-intake testing.
+         A document table as banks and DMS systems model it: BLOB content plus mime type, size and
+         content hash. The stubs carry real magic bytes, so upload validators and MIME sniffers accept
+         them; the sha256 column stays consistent with the payload; the DB gets raw bytes while the
+         JSON export carries base64 - all described in the DSL, no Python glue. -->
+    <database id="vault" database="uc_document_vault_db" dbms="sqlite"/>
+    <execute type="sql" target="vault">
+        DROP TABLE IF EXISTS documents;
+        CREATE TABLE documents (
+            doc_id INTEGER PRIMARY KEY,
+            mime_type TEXT NOT NULL,
+            content BLOB NOT NULL,
+            content_sha256 TEXT NOT NULL,
+            size_bytes INTEGER NOT NULL
+        );
+    </execute>
+
+    <generate name="documents" count="10" target="vault,JSON">
+        <key name="doc_id" generator="IncrementGenerator"/>
+        <variable name="kind" values="'application/pdf','image/png','image/jpeg'"/>
+        <key name="mime_type" script="kind"/>
+        <condition>
+            <if condition="kind == 'application/pdf'">
+                <key name="content" type="binary" mimeType="application/pdf" minLength="256" maxLength="2048"/>
+            </if>
+            <else-if condition="kind == 'image/png'">
+                <key name="content" type="binary" mimeType="image/png" minLength="128" maxLength="1024"/>
+            </else-if>
+            <else>
+                <key name="content" type="binary" mimeType="image/jpeg" minLength="128" maxLength="1024"/>
+            </else>
+        </condition>
+        <key name="content_sha256" script="hashlib.sha256(content).hexdigest()"/>
+        <key name="size_bytes" script="len(content)"/>
+        <assert condition="size_bytes &gt;= 128" message="document below the modeled minimum size"/>
+    </generate>
+
+    <generate name="verify" source="vault" selector="SELECT doc_id, content, content_sha256 FROM documents ORDER BY doc_id" distribution="ordered" target="">
+        <key name="hash_ok" script="hashlib.sha256(content).hexdigest() == content_sha256"/>
+    </generate>
+</setup>

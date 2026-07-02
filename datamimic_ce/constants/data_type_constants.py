@@ -9,5 +9,6 @@ DATA_TYPE_INT = "int"
 DATA_TYPE_FLOAT = "float"
 DATA_TYPE_DECIMAL = "decimal"  # exact Decimal (money / high precision); scale set by granularity
 DATA_TYPE_BOOL = "bool"
+DATA_TYPE_BINARY = "binary"  # random bytes; base64 at file-export boundaries, raw bytes to DBs
 DATA_TYPE_LIST = "list"
 DATA_TYPE_DICT = "dict"

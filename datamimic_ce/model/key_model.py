@@ -18,6 +18,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_IN_DATE_FORMAT,
     ATTR_MAX,
     ATTR_MAX_LENGTH,
+    ATTR_MIME_TYPE,
     ATTR_MIN,
     ATTR_MIN_LENGTH,
     ATTR_NAME,
@@ -37,6 +38,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_WEIGHTS,
 )
 from datamimic_ce.constants.data_type_constants import (
+    DATA_TYPE_BINARY,
     DATA_TYPE_BOOL,
     DATA_TYPE_DECIMAL,
     DATA_TYPE_FLOAT,
@@ -53,6 +55,7 @@ class KeyModel(BaseModel):
     max: str | None = None
     granularity: str | None = None
     min_length: str | None = Field(None, alias=ATTR_MIN_LENGTH)
+    mime_type: str | None = Field(None, alias=ATTR_MIME_TYPE)
     max_length: str | None = Field(None, alias=ATTR_MAX_LENGTH)
     source: str | None = None
     selector: str | None = None
@@ -86,6 +89,7 @@ class KeyModel(BaseModel):
                 ATTR_MIN,
                 ATTR_MAX,
                 ATTR_GRANULARITY,
+                ATTR_MIME_TYPE,
                 ATTR_MIN_LENGTH,
                 ATTR_MAX_LENGTH,
                 ATTR_SOURCE,
@@ -207,6 +211,7 @@ class KeyModel(BaseModel):
                 DATA_TYPE_FLOAT,
                 DATA_TYPE_DECIMAL,
                 DATA_TYPE_BOOL,
+                DATA_TYPE_BINARY,
             },
         )
 
