@@ -11,6 +11,7 @@ from typing import Any
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.constants.data_type_constants import (
+    DATA_TYPE_BINARY,
     DATA_TYPE_BOOL,
     DATA_TYPE_DECIMAL,
     DATA_TYPE_FLOAT,
@@ -569,5 +570,7 @@ class TaskUtil:
             return Decimal(str(round(rng.uniform(0, 100), 2)))
         elif data_type == DATA_TYPE_BOOL:
             return rng.choice((True, False))
+        elif data_type == DATA_TYPE_BINARY:
+            return rng.randbytes(rng.randint(1, 16))  # same default range as BinaryGenerator
         else:
             raise ValueError(f"Cannot generate random value for data type {data_type}")

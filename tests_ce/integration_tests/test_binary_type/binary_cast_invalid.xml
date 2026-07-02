@@ -1,0 +1,6 @@
+<setup>
+    <!-- an int cannot become binary: hard error, no silent coercion -->
+    <generate name="g" count="1" target="">
+        <key name="bad" type="binary" script="12345"/>
+    </generate>
+</setup>

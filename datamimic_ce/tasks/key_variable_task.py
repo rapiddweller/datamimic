@@ -15,6 +15,7 @@ from typing import Any
 import numpy
 
 from datamimic_ce.constants.data_type_constants import (
+    DATA_TYPE_BINARY,
     DATA_TYPE_BOOL,
     DATA_TYPE_DECIMAL,
     DATA_TYPE_FLOAT,
@@ -64,6 +65,7 @@ class KeyVariableTask:
         self._unique_iter: Iterator[Any] | None = None
 
         self._simple_type_set = {
+            DATA_TYPE_BINARY,
             DATA_TYPE_STRING,
             DATA_TYPE_INT,
             DATA_TYPE_FLOAT,
@@ -165,6 +167,10 @@ class KeyVariableTask:
         if stmt.type == DATA_TYPE_STRING and (stmt.min_length is not None or stmt.max_length is not None):
             lens = (("min_len", stmt.min_length), ("max_len", stmt.max_length))
             return f"StringGenerator({', '.join(f'{k}={v}' for k, v in lens if v is not None)})"
+        if stmt.type == DATA_TYPE_BINARY:
+            # bare type="binary" also routes here (default 1..16 bytes), so it gets seeding + caching
+            lens = (("min_len", stmt.min_length), ("max_len", stmt.max_length))
+            return f"BinaryGenerator({', '.join(f'{k}={v}' for k, v in lens if v is not None)})"
         if stmt.min is None and stmt.max is None:
             return None
         if stmt.type == DATA_TYPE_INT:
@@ -378,6 +384,15 @@ class KeyVariableTask:
         elif data_type == DATA_TYPE_DECIMAL:
             # str() so a float value (e.g. 8.2) doesn't re-introduce binary float error
             return Decimal(str(value))
+        elif data_type == DATA_TYPE_BINARY:
+            if isinstance(value, bytes | bytearray):
+                return bytes(value)
+            if isinstance(value, str):
+                return value.encode("utf-8")  # cast-to-type, like int()/str() for the other types
+            raise ValueError(
+                f"<{self._element_tag}> '{self._statement.name}' type='binary' cannot convert "
+                f"value of type '{type(value).__name__}' - expected bytes or str"
+            )
         elif data_type == DATA_TYPE_BOOL:
             if value == "" or value is None:
                 return None

@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+import base64
 import json
 from datetime import date, datetime
 from pathlib import Path
@@ -60,6 +61,8 @@ class XLSXExporter(UnifiedBufferedExporter):
     def _json_default(value: Any) -> str:
         if isinstance(value, datetime | date):
             return value.isoformat()
+        if isinstance(value, bytes | bytearray):
+            return base64.b64encode(value).decode("ascii")  # binary cell -> base64 text
         return str(value)
 
     @staticmethod

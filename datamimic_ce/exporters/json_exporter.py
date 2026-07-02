@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 from datetime import datetime
@@ -18,6 +19,8 @@ class DateTimeEncoder(json.JSONEncoder):
             return o.isoformat()
         elif isinstance(o, ObjectId):
             return str(o)
+        elif isinstance(o, bytes | bytearray):
+            return base64.b64encode(o).decode("ascii")  # binary field -> base64 text
         return super().default(o)
 
 

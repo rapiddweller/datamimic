@@ -37,6 +37,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_WEIGHTS,
 )
 from datamimic_ce.constants.data_type_constants import (
+    DATA_TYPE_BINARY,
     DATA_TYPE_BOOL,
     DATA_TYPE_DECIMAL,
     DATA_TYPE_FLOAT,
@@ -207,6 +208,7 @@ class KeyModel(BaseModel):
                 DATA_TYPE_FLOAT,
                 DATA_TYPE_DECIMAL,
                 DATA_TYPE_BOOL,
+                DATA_TYPE_BINARY,
             },
         )
 
