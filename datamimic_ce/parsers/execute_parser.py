@@ -25,9 +25,12 @@ class ExecuteParser(StatementParser):
         model = self.validate_attributes(ExecuteModel)
         code = self._element.text
         has_inline = bool(code and code.strip())
-        # Exactly one of a script file (uri) or inline code.
-        if bool(model.uri) == has_inline:
-            raise ValueError("<execute> requires exactly one of 'uri' (a script file) or inline code")
+        # Exactly one source of code: a script file (uri), inline code, or a script expression.
+        if [bool(model.uri), has_inline, bool(model.script)].count(True) != 1:
+            raise ValueError(
+                "<execute> requires exactly one of 'uri' (a script file), inline code, "
+                "or 'script' (an expression evaluating to the code)"
+            )
         exec_type = self._resolve_type(model)
         return ExecuteStatement(model, exec_type=exec_type, code=code if has_inline else None)
 

@@ -31,21 +31,32 @@ class ExecuteTask(SetupSubTask):
         if exec_type == "python":
             self._eval_python(ctx, code)
         elif exec_type == "sql":
-            self._run_sql(ctx, code)
+            # script= already produced the final statement - re-interpolating would mangle braces in it
+            self._run_sql(ctx, code, interpolate=self._statement.script is None)
         elif exec_type == "bash":
             self._run_bash(ctx, code)
 
     def _resolve_code(self, ctx: Context) -> str:
-        """Inline code, or the content of the uri script file (relative to the descriptor dir)."""
+        """Inline code, the content of the uri script file, or - with script= - the evaluated
+        expression itself (its value IS the code, e.g. a <variable string=\"...__var__...\"> DDL)."""
         if self._statement.uri:
             return (ctx.root.descriptor_dir / self._statement.uri).read_text()
+        if self._statement.script is not None:
+            value = ctx.evaluate_python_expression(self._statement.script)
+            if not isinstance(value, str):
+                raise ValueError(
+                    f"<execute script='{self._statement.script}'> must evaluate to a string of "
+                    f"{self._statement.type} code, got {type(value).__name__}"
+                )
+            return value
         return self._statement.code or ""
 
-    def _run_sql(self, ctx: Context, content: str) -> None:
-        # f-string interpolation so the SQL may reference descriptor variables (e.g. {table}).
-        escaped_text = content.replace("'", "\\'").replace('"', '\\"')
-        evaluated_content = ctx.evaluate_python_expression(f"f'''{escaped_text}'''")
-        ctx.root.clients[self._statement.target].execute_sql_script(evaluated_content)
+    def _run_sql(self, ctx: Context, content: str, interpolate: bool = True) -> None:
+        # f-string interpolation so inline SQL may reference descriptor variables (e.g. {table}).
+        if interpolate:
+            escaped_text = content.replace("'", "\\'").replace('"', '\\"')
+            content = ctx.evaluate_python_expression(f"f'''{escaped_text}'''")
+        ctx.root.clients[self._statement.target].execute_sql_script(content)
 
     def _run_bash(self, ctx: Context, code: str) -> None:
         """Run a shell command. VERBATIM — no variable interpolation, so no generated data flows into the
