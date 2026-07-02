@@ -1,0 +1,8 @@
+<setup>
+    <!-- Unseeded random read: must still be a valid permutation of the source, just not
+         reproducible run-to-run (no <setup rngSeed>). -->
+    <generate name="rows" source="people_fixture_large.xlsx" distribution="random" pageSize="5" target="">
+        <key name="who" script="name"/>
+        <key name="idx" script="score"/>
+    </generate>
+</setup>
