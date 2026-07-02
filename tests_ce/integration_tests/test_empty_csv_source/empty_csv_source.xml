@@ -1,0 +1,4 @@
+<setup>
+    <!-- an empty CSV is an empty source: zero records, not an IndexError -->
+    <generate name="g" source="empty.csv" target=""/>
+</setup>
