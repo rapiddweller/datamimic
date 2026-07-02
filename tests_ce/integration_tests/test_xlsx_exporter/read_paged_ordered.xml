@@ -1,0 +1,8 @@
+<setup>
+    <!-- Larger ordered read split into multiple pages (pageSize < source length): page windows
+         must still concatenate back into the original source order. -->
+    <generate name="rows" source="people_fixture_large.xlsx" distribution="ordered" pageSize="5" target="">
+        <key name="who" script="name"/>
+        <key name="idx" script="score"/>
+    </generate>
+</setup>

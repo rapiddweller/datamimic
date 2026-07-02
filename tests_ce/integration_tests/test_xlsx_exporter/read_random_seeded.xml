@@ -1,0 +1,7 @@
+<setup rngSeed="42">
+    <!-- Seeded random read, paged: same seed must replay the identical shuffled order every run. -->
+    <generate name="rows" source="people_fixture_large.xlsx" distribution="random" pageSize="5" target="">
+        <key name="who" script="name"/>
+        <key name="idx" script="score"/>
+    </generate>
+</setup>

@@ -1,6 +1,6 @@
 <setup>
     <!-- read rows from an .xlsx source (first row = header) and echo the columns -->
-    <generate name="rows" source="people_fixture.xlsx" target="">
+    <generate name="rows" source="people_fixture.xlsx" distribution="ordered" target="">
         <key name="who" script="name"/>
         <key name="doubled" script="score * 2"/>
     </generate>

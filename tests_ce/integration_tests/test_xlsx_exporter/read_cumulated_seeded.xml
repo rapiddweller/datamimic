@@ -1,0 +1,8 @@
+<setup rngSeed="42">
+    <!-- Seeded cumulated (bell-weighted, with replacement) read: count > source length, so the
+         middle rows must come up more often than the edge rows. Deterministic under rngSeed. -->
+    <generate name="rows" source="people_fixture_large.xlsx" distribution="cumulated" count="200" target="">
+        <key name="who" script="name"/>
+        <key name="idx" script="score"/>
+    </generate>
+</setup>
