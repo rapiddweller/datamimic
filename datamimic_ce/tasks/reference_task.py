@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import itertools
 from collections.abc import Iterator
 from typing import Any
 
@@ -31,7 +32,18 @@ class ReferenceTask(GenSubTask):
     def execute(self, ctx: Context):
         """Generate a (composite) reference record from an RDBMS data source."""
         if self._iterator is None:
-            self._iterator = self._init_iterator(ctx)
+            if self._pagination is None and self._has_selection_modifier():
+                # Without a page window the task may be rebuilt per record (nested in
+                # <condition>/<while>), so the rotation lives in the root context — an endless
+                # cycle over the selected order — instead of dying with the task instance.
+                key = f"<reference>-cycle|{self._statement.full_name}"
+                shared = ctx.root.generators.get(key)
+                if shared is None:
+                    shared = itertools.cycle(self._init_iterator(ctx))
+                    ctx.root.generators[key] = shared
+                self._iterator = shared
+            else:
+                self._iterator = self._init_iterator(ctx)
         try:
             record = next(self._iterator)
         except StopIteration:
@@ -42,6 +54,15 @@ class ReferenceTask(GenSubTask):
                 ctx.add_current_product_field(target, value)
         # Legacy single-field references return the scalar; composite ones return the record.
         return record[self._statement.targets[0]] if not self._statement.is_composite else record
+
+    def _has_selection_modifier(self) -> bool:
+        """True when distribution/cyclic explicitly shape the selection (vs. the random default)."""
+        stmt = self._statement
+        if stmt.cyclic:
+            return True
+        return stmt.distribution is not None and SourceDistribution.coerce(stmt.distribution) is not (
+            SourceDistribution.RANDOM
+        )
 
     def _init_iterator(self, ctx: Context) -> Iterator[dict[str, Any]]:
         client = ctx.root.clients.get(self.statement.source)
@@ -65,21 +86,27 @@ class ReferenceTask(GenSubTask):
             # Stable per-statement seed so distinctness holds across pages, not just within one.
             seed = ctx.root.stable_distribution_seed(stmt.full_name)
             return DataSourceRegistry.get_unique_data(records, self._pagination, seed, f"<reference> '{stmt.name}'")
-        if stmt.distribution is not None or stmt.cyclic:
+        distribution = SourceDistribution.coerce(stmt.distribution)
+        if (stmt.distribution is not None and distribution is not SourceDistribution.RANDOM) or stmt.cyclic:
             seed = ctx.root.stable_distribution_seed(stmt.full_name)
-            distribution = SourceDistribution.coerce(stmt.distribution)
             # Bare cyclic="true" means Benerator's sequential wrap-around, i.e. ordered + cyclic.
             if distribution is SourceDistribution.ORDERED or (stmt.distribution is None and stmt.cyclic):
                 return self._ordered(records)
             return DataSourceRegistry.get_distributed_data(records, self._pagination, stmt.cyclic, seed, distribution)
+        # Default AND explicit distribution="random": pick with replacement (documented FK semantics).
         size = self._pagination.limit if self._pagination is not None else 1
         return [ctx.rng.choice(records) for _ in range(size)]
 
     def _ordered(self, records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Rows in source order; cyclic wraps around, non-cyclic raises when the page outruns the
         pool (strict like unique — never silently under-generate)."""
-        start = self._pagination.skip if self._pagination is not None else 0
-        size = self._pagination.limit if self._pagination is not None else 1
+        if self._pagination is None:
+            # No page window (e.g. a reference nested in <if>/<while>): serve the full order; the
+            # iterator wraps on reset, so rotation still advances instead of pinning to row 0.
+            # Strictness needs a window, so the non-cyclic overrun check only runs when paginated.
+            return records
+        start = self._pagination.skip
+        size = self._pagination.limit
         if self._statement.cyclic:
             return [records[(start + i) % len(records)] for i in range(size)]
         if start + size > len(records):

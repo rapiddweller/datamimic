@@ -51,3 +51,9 @@ def test_cumulated_reference_bell_shaped_and_reproducible():
 def test_unique_with_cyclic_is_a_parse_error():
     with pytest.raises(Exception, match=r"unique.*cyclic|cyclic.*unique"):
         _run("ref_unique_cyclic_invalid.xml")
+
+
+def test_cyclic_reference_nested_in_condition_still_rotates():
+    # Nested tasks get pagination=None: rotation must advance, not pin to row 0.
+    ids = [r["fk"] for r in _run("ref_cyclic_nested.xml")]
+    assert ids == [1, 2, 3, 4, 1, 2]
