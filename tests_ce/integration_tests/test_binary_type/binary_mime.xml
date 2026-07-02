@@ -1,0 +1,12 @@
+<setup rngSeed="99">
+    <!-- MIME-sniffable binary stubs: correct magic header (+ trailer where the format has one),
+         random payload in between - passes upload validators / file-type sniffers. -->
+    <generate name="g" count="3" target="">
+        <key name="pdf" type="binary" mimeType="application/pdf" minLength="64" maxLength="128"/>
+        <key name="png" type="binary" mimeType="image/png" minLength="64" maxLength="64"/>
+        <key name="jpeg" type="binary" mimeType="image/jpeg" minLength="64" maxLength="64"/>
+        <key name="zip" type="binary" mimeType="application/zip" minLength="64" maxLength="64"/>
+        <key name="gif" type="binary" mimeType="image/gif" minLength="64" maxLength="64"/>
+        <key name="gzip" type="binary" mimeType="application/gzip" minLength="64" maxLength="64"/>
+    </generate>
+</setup>

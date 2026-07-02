@@ -1,0 +1,9 @@
+<setup rngSeed="5">
+    <!-- the payload+checksum pairing pain point, solved purely in the DSL:
+         hashlib and base64 are available in script expressions -->
+    <generate name="g" count="4" target="">
+        <key name="payload" type="binary" minLength="32" maxLength="32"/>
+        <key name="sha256" script="hashlib.sha256(payload).hexdigest()"/>
+        <key name="b64" script="base64.b64encode(payload).decode('ascii')"/>
+    </generate>
+</setup>

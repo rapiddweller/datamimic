@@ -169,8 +169,12 @@ class KeyVariableTask:
             return f"StringGenerator({', '.join(f'{k}={v}' for k, v in lens if v is not None)})"
         if stmt.type == DATA_TYPE_BINARY:
             # bare type="binary" also routes here (default 1..16 bytes), so it gets seeding + caching
-            lens = (("min_len", stmt.min_length), ("max_len", stmt.max_length))
-            return f"BinaryGenerator({', '.join(f'{k}={v}' for k, v in lens if v is not None)})"
+            args = [
+                f"{k}={v}" for k, v in (("min_len", stmt.min_length), ("max_len", stmt.max_length)) if v is not None
+            ]
+            if stmt.mime_type is not None:
+                args.append(f"mime_type='{stmt.mime_type}'")
+            return f"BinaryGenerator({', '.join(args)})"
         if stmt.min is None and stmt.max is None:
             return None
         if stmt.type == DATA_TYPE_INT:
