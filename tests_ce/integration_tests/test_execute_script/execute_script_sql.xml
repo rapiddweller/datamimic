@@ -1,0 +1,9 @@
+<setup>
+    <!-- the schema-drop use case: describe the DDL with <variable string="...__var__..."> and
+         execute the assembled statement via <execute script=...> - no string concatenation -->
+    <database id="db" database="exec_script_db" dbms="sqlite"/>
+    <variable name="table_name" constant="tenant_orders"/>
+    <variable name="ddl" string="DROP TABLE IF EXISTS __table_name__; CREATE TABLE __table_name__ (id INTEGER PRIMARY KEY, note TEXT); INSERT INTO __table_name__ VALUES (1, 'a'), (2, 'b');"/>
+    <execute type="sql" target="db" script="ddl"/>
+    <generate name="rows" source="db" selector="SELECT id, note FROM tenant_orders ORDER BY id" distribution="ordered" target=""/>
+</setup>

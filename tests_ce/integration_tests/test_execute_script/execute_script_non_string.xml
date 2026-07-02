@@ -1,0 +1,5 @@
+<setup>
+    <database id="db" database="exec_script_bad_db" dbms="sqlite"/>
+    <variable name="not_code" script="42"/>
+    <execute type="sql" target="db" script="not_code"/>
+</setup>

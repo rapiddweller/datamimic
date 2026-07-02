@@ -15,6 +15,7 @@ class ExecuteStatement(Statement):
         self._target = model.target
         self._type = exec_type  # resolved: python | bash | sql
         self._code = code  # inline code (None when a uri script file is used)
+        self._script = model.script  # expression whose evaluated value is the code
 
     @property
     def uri(self):
@@ -31,3 +32,7 @@ class ExecuteStatement(Statement):
     @property
     def code(self) -> str | None:
         return self._code
+
+    @property
+    def script(self) -> str | None:
+        return self._script
