@@ -1,0 +1,8 @@
+<setup rngSeed="11">
+    <database id="refdb" database="ref_dist_db" dbms="sqlite"/>
+    <execute uri="script/setup_items.scr.sql" target="refdb"/>
+    <!-- ordered, within the pool: the first 3 rows in stable source order -->
+    <generate name="events" count="3" target="">
+        <reference name="fk" source="refdb" sourceType="items" sourceKey="id" distribution="ordered"/>
+    </generate>
+</setup>

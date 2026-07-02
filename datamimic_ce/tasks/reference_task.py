@@ -12,6 +12,7 @@ from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.tasks.task import GenSubTask
 
@@ -55,14 +56,35 @@ class ReferenceTask(GenSubTask):
 
     def _select(self, records: list[dict[str, Any]], ctx: Context) -> list[dict[str, Any]]:
         """Distinct combinations route through the shared DataSourceRegistry.get_unique_data — the
-        same SPOT as <variable>/<generate> unique (dedupe + shuffle + page window + strict). A
-        non-unique reference picks with replacement (a foreign key may repeat the same row), which
-        has no registry counterpart, so it stays here."""
-        if self._statement.unique:
+        same SPOT as <variable>/<generate> unique (dedupe + shuffle + page window + strict). An
+        explicit distribution/cyclic routes through the shared distribution dispatch. The default
+        (no modifier) picks with replacement (a foreign key may repeat the same row), which has no
+        registry counterpart, so it stays here."""
+        stmt = self._statement
+        if stmt.unique:
             # Stable per-statement seed so distinctness holds across pages, not just within one.
-            seed = ctx.root.stable_distribution_seed(self._statement.full_name)
-            return DataSourceRegistry.get_unique_data(
-                records, self._pagination, seed, f"<reference> '{self._statement.name}'"
-            )
+            seed = ctx.root.stable_distribution_seed(stmt.full_name)
+            return DataSourceRegistry.get_unique_data(records, self._pagination, seed, f"<reference> '{stmt.name}'")
+        if stmt.distribution is not None or stmt.cyclic:
+            seed = ctx.root.stable_distribution_seed(stmt.full_name)
+            distribution = SourceDistribution.coerce(stmt.distribution)
+            # Bare cyclic="true" means Benerator's sequential wrap-around, i.e. ordered + cyclic.
+            if distribution is SourceDistribution.ORDERED or (stmt.distribution is None and stmt.cyclic):
+                return self._ordered(records)
+            return DataSourceRegistry.get_distributed_data(records, self._pagination, stmt.cyclic, seed, distribution)
         size = self._pagination.limit if self._pagination is not None else 1
         return [ctx.rng.choice(records) for _ in range(size)]
+
+    def _ordered(self, records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Rows in source order; cyclic wraps around, non-cyclic raises when the page outruns the
+        pool (strict like unique — never silently under-generate)."""
+        start = self._pagination.skip if self._pagination is not None else 0
+        size = self._pagination.limit if self._pagination is not None else 1
+        if self._statement.cyclic:
+            return [records[(start + i) % len(records)] for i in range(size)]
+        if start + size > len(records):
+            raise ValueError(
+                f"<reference> '{self._statement.name}' distribution='ordered' needs {start + size} rows "
+                f'but the source has only {len(records)} (use cyclic="true" to wrap around)'
+            )
+        return records[start : start + size]
