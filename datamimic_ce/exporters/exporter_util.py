@@ -308,13 +308,6 @@ class ExporterUtil:
         # format-specific options from params. Adding a common setting touches only ExporterConfig;
         # adding an exporter touches only _BUFFERED_EXPORTERS.
         if name in _BUFFERED_EXPORTERS:
-            params = dict(exporter_params_dict)
-            # CSV fieldnames may arrive as a string literal
-            if isinstance(params.get("fieldnames"), str):
-                try:
-                    params["fieldnames"] = ast.literal_eval(params["fieldnames"])
-                except Exception as e:
-                    raise ValueError(f"Error parsing fieldnames {params['fieldnames']}: {e}") from e
             config = ExporterConfig(
                 setup_context=setup_context,
                 product_name=product_name,
@@ -322,7 +315,7 @@ class ExporterUtil:
                 encoding=exporter_params_dict.get("encoding"),
                 export_uri=export_uri,
             )
-            return _BUFFERED_EXPORTERS[name](config, params)
+            return _BUFFERED_EXPORTERS[name](config, exporter_params_dict)
 
         if name == EXPORTER_CONSOLE_EXPORTER:
             return ConsoleExporter()

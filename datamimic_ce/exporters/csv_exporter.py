@@ -3,6 +3,7 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
+import ast
 import base64
 import csv
 import os
@@ -20,8 +21,14 @@ class CSVExporter(UnifiedBufferedExporter):
 
     def __init__(self, config: ExporterConfig, params: dict):
         setup_context = config.setup_context
-        self.fieldnames = params.get("fieldnames") or []
-        self._task_id = setup_context.task_id
+        fieldnames = params.get("fieldnames")
+        # fieldnames may arrive as a string literal from the DSL target params
+        if isinstance(fieldnames, str):
+            try:
+                fieldnames = ast.literal_eval(fieldnames)
+            except Exception as e:
+                raise ValueError(f"Error parsing fieldnames {fieldnames}: {e}") from e
+        self.fieldnames = fieldnames or []
         # Retrieve delimiter/quoting from params or use setup defaults
         self.delimiter = params.get("delimiter") or setup_context.default_separator or ","
         self.quotechar = params.get("quotechar") or '"'

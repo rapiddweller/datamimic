@@ -32,7 +32,6 @@ class JsonExporter(UnifiedBufferedExporter):
 
     def __init__(self, config: ExporterConfig, params: dict):
         self.use_ndjson = params.get("use_ndjson")
-        self._task_id = config.setup_context.task_id
         super().__init__("json", config)
         logger.info(f"JsonExporter initialized with chunk size {config.chunk_size} and NDJSON: {self.use_ndjson}")
 
