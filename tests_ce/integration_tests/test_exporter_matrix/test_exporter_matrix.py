@@ -95,3 +95,32 @@ def test_every_registered_buffered_exporter_round_trips():
             assert sorted(ids) == list(range(1, _COUNT + 1)), f"{name}: wrong ids {sorted(ids)}"
     finally:
         shutil.rmtree(_DIR / "output", ignore_errors=True)
+
+
+def test_write_read_roundtrip_through_every_pagination_mode():
+    """Write a JSON file, read it back as a source with cyclic/pageSize/distribution/unique.
+    All asserts are seed-independent (wraparound order, permutation blocks, distinctness)."""
+    shutil.rmtree(_DIR / "output", ignore_errors=True)
+    try:
+        engine = DataMimicTest(test_dir=_DIR, filename="roundtrip.xml", capture_test_result=True)
+        engine.test_with_timer()
+        result = engine.capture_result()
+
+        src = list(range(1, 7))  # 6 source rows
+
+        # ordered + cyclic: exact wraparound sequence across the 4 pages
+        assert [r["id"] for r in result["ordered_cyclic"]] == src * 2 + [1, 2, 3]
+
+        # random + cyclic: each source-length block of the global sequence is a permutation
+        rand = [r["id"] for r in result["random_cyclic"]]
+        assert len(rand) == 15
+        assert sorted(rand[0:6]) == src and sorted(rand[6:12]) == src
+        assert len(set(rand[12:15])) == 3
+
+        # unique across pages: every source row exactly once
+        assert sorted(r["id"] for r in result["unique_pages"]) == src
+
+        # not cyclic: more requested than available -> stops at the 6 source rows, in order
+        assert [r["id"] for r in result["exhausted"]] == src
+    finally:
+        shutil.rmtree(_DIR / "output", ignore_errors=True)

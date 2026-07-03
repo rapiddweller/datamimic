@@ -1,0 +1,25 @@
+<setup defaultSeparator=",">
+    <!-- write 6 rows, then read the file back as a source through every pagination mode.
+         Each top-level generate finalizes its artifacts before the next one starts,
+         so the JSON exists when the readers run. -->
+    <generate name="seed_rows" count="6" exportUri="roundtrip_out" target="JSON">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+
+    <!-- ordered + cyclic across pages (pageSize 4, count 15 over 6 rows): exact wraparound.
+         distribution MUST be explicit: absent defaults to RANDOM. -->
+    <generate name="ordered_cyclic" source="output/roundtrip_out/seed_rows.json" cyclic="True"
+              distribution="ordered" count="15" pageSize="4" target="ConsoleExporter"/>
+
+    <!-- random + cyclic: shuffle batches wrap seamlessly across page boundaries -->
+    <generate name="random_cyclic" source="output/roundtrip_out/seed_rows.json" cyclic="True"
+              distribution="random" count="15" pageSize="4" target="ConsoleExporter"/>
+
+    <!-- unique across pages from the file -->
+    <generate name="unique_pages" source="output/roundtrip_out/seed_rows.json" unique="True"
+              count="6" pageSize="4" target="ConsoleExporter"/>
+
+    <!-- NOT cyclic: count 15 asks for more than the 6 source rows -> stops at 6, no wrap -->
+    <generate name="exhausted" source="output/roundtrip_out/seed_rows.json"
+              distribution="ordered" count="15" pageSize="4" target="ConsoleExporter"/>
+</setup>
