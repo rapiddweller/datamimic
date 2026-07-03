@@ -35,6 +35,7 @@ class VariableStatement(Statement):
         self._selector = model.selector
         self._separator = model.separator
         self._type = model.type
+        self._source_entity = model.source_entity
         self._values = model.values
         self._weights = model.weights
         self._unique = model.unique
@@ -70,6 +71,10 @@ class VariableStatement(Statement):
     @property
     def type(self) -> str | None:
         return self._type
+
+    @property
+    def source_entity(self) -> str | None:
+        return self._source_entity
 
     @property
     def cyclic(self) -> bool | None:

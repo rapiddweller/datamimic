@@ -28,6 +28,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_SELECTOR,
     ATTR_SEPARATOR,
     ATTR_SOURCE,
+    ATTR_SOURCE_ENTITY,
     ATTR_SOURCE_SCRIPTED,
     ATTR_STRING,
     ATTR_TYPE,
@@ -45,6 +46,8 @@ class VariableModel(BaseModel):
     name: str
     type: str | None = None
     source: str | None = None
+    # Explicit physical entity to read (sourceEntity -> type -> name). See resolve_source_entity.
+    source_entity: str | None = Field(None, alias=ATTR_SOURCE_ENTITY)
     selector: str | None = None
     separator: str | None = None
     cyclic: bool | None = None
@@ -86,6 +89,7 @@ class VariableModel(BaseModel):
                 ATTR_NAME,
                 ATTR_TYPE,
                 ATTR_SOURCE,
+                ATTR_SOURCE_ENTITY,
                 ATTR_SELECTOR,
                 ATTR_SOURCE_SCRIPTED,
                 ATTR_SEPARATOR,

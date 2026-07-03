@@ -1,0 +1,8 @@
+<setup>
+    <database id="db" dbms="sqlite" database="target_entity_db"/>
+    <execute target="db" type="sql">DROP TABLE IF EXISTS customers; CREATE TABLE customers (n INTEGER)</execute>
+    <!-- statement name is 'gen', but targetEntity routes the write to table 'customers' -->
+    <generate name="gen" count="3" targetEntity="customers" target="db">
+        <key name="n" constant="7"/>
+    </generate>
+</setup>

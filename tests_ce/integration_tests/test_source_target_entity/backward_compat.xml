@@ -1,0 +1,8 @@
+<setup>
+    <database id="db" dbms="sqlite" database="bc_db"/>
+    <execute target="db" type="sql">DROP TABLE IF EXISTS orders; CREATE TABLE orders (n INTEGER)</execute>
+    <!-- no targetEntity: 'type' still routes the write (existing behaviour, unchanged) -->
+    <generate name="gen" type="orders" count="2" target="db">
+        <key name="n" constant="9"/>
+    </generate>
+</setup>

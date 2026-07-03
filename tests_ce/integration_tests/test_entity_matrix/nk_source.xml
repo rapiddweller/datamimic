@@ -1,0 +1,7 @@
+<setup>
+    <generate name="orders" count="2" target="">
+        <!-- nestedKey source = FILE (single entity); type = STRUCTURE marker (list), NOT a table.
+             sourceEntity does not apply here - the entity resolver must not touch this. -->
+        <nestedKey name="lines" source="items.json" type="list"/>
+    </generate>
+</setup>

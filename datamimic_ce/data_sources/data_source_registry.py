@@ -23,6 +23,7 @@ from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.statement import Statement
+from datamimic_ce.statements.statement_util import StatementUtil
 from datamimic_ce.utils.distribution_sampling import cumulated_index
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
@@ -113,7 +114,9 @@ class DataSourceRegistry:
                 )
             # 2.4: Check if datasource is memstore
             elif root_ctx.memstore_manager.contain(source_str) and hasattr(stmt, "type"):
-                ds_len = root_ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(stmt.type or stmt.name)
+                ds_len = root_ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(
+                    StatementUtil.resolve_source_entity(stmt)
+                )
             elif root_ctx.get_client_by_id(source_str) is not None:
                 client = root_ctx.get_client_by_id(source_str)
                 if client is None:
@@ -152,8 +155,8 @@ class DataSourceRegistry:
                                 f"with iterationSelector '{stmt.iteration_selector}'"
                             )
                             return
-                    elif hasattr(stmt, "type") and stmt.type is not None:
-                        ds_len = client.count_table_length(table_name=str(stmt.type) or str(stmt.name))
+                    elif hasattr(stmt, "type") and (stmt.source_entity is not None or stmt.type is not None):
+                        ds_len = client.count_table_length(table_name=StatementUtil.resolve_source_entity(stmt))
 
                 elif isinstance(client, MongoDBClient) and hasattr(stmt, "selector") and hasattr(stmt, "type"):
                     if stmt.selector is not None:
@@ -161,9 +164,9 @@ class DataSourceRegistry:
                             ds_len = client.count_query_length(stmt.selector)
                         except ValueError:
                             return
-                    elif stmt.type is not None:
+                    elif (collection := StatementUtil.resolve_source_collection(stmt)) is not None:
                         try:
-                            ds_len = client.count(collection_name=stmt.type)
+                            ds_len = client.count(collection_name=collection)
                         except ValueError:
                             return
                     elif hasattr(stmt, "iteration_selector") and stmt.iteration_selector is not None:

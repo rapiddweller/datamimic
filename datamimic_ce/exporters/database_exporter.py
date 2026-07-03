@@ -46,7 +46,9 @@ class DatabaseExporter(Exporter):
 
     @staticmethod
     def _table_name(name: str, rest: list) -> str:
-        # A type="..." attribute overrides the generate name as the target table (same as consume).
-        if rest and isinstance(rest[0], dict):
-            return rest[0].get("type", name)
-        return name
+        # targetEntity -> type -> name (see StatementUtil.resolve_target_entity).
+        from datamimic_ce.statements.statement_util import StatementUtil
+
+        return StatementUtil.resolve_target_entity_from_metadata(
+            name, rest[0] if rest and isinstance(rest[0], dict) else None
+        )

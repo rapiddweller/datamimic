@@ -1,0 +1,7 @@
+<setup>
+    <database id="db" dbms="sqlite" database="matrix_upd"/>
+    <execute target="db" type="sql">DROP TABLE IF EXISTS customers; CREATE TABLE customers (id INTEGER PRIMARY KEY, tier TEXT); INSERT INTO customers VALUES (1,'bronze'),(2,'bronze')</execute>
+    <generate name="gen" source="db" selector="SELECT id, tier FROM customers" targetEntity="customers" target="db.update">
+        <key name="tier" constant="gold"/>
+    </generate>
+</setup>

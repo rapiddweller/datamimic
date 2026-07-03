@@ -10,6 +10,11 @@ from typing import Any
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
+from datamimic_ce.constants.attribute_constants import (
+    META_SELECTOR,
+    META_TARGET_ENTITY,
+    META_TYPE,
+)
 from datamimic_ce.constants.data_type_constants import (
     DATA_TYPE_BINARY,
     DATA_TYPE_BOOL,
@@ -70,6 +75,7 @@ from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.state_machine_statement import StateMachineStatement
 from datamimic_ce.statements.statement import Statement
+from datamimic_ce.statements.statement_util import StatementUtil
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.statements.while_statement import WhileStatement
 from datamimic_ce.tasks.array_task import ArrayTask
@@ -386,7 +392,7 @@ class TaskUtil:
         # Load data from in-memory memstore
         elif root_context.memstore_manager.contain(source_str):
             source_data = root_context.memstore_manager.get_memstore(source_str).get_data_by_type(
-                stmt.type or stmt.name, load_pagination, stmt.cyclic
+                StatementUtil.resolve_source_entity(stmt), load_pagination, stmt.cyclic
             )
         # Load data from client (MongoDB, RDBMS,...)
         elif root_context.clients.get(source_str) is not None:
@@ -396,11 +402,12 @@ class TaskUtil:
                 if stmt.selector:
                     selector = TaskUtil.evaluate_selector_script(root_context, stmt)
                     source_data = client.get_by_page_with_query(query=selector, pagination=load_pagination)
-                elif stmt.type:
-                    source_data = client.get_by_page_with_type(collection_name=stmt.type, pagination=load_pagination)
+                elif (collection := StatementUtil.resolve_source_collection(stmt)) is not None:
+                    source_data = client.get_by_page_with_type(collection_name=collection, pagination=load_pagination)
                 else:
                     raise ValueError(
-                        "MongoDB source requires at least attribute 'type', 'selector' or 'iterationSelector'"
+                        "MongoDB source requires at least attribute 'sourceEntity', 'type', 'selector' "
+                        "or 'iterationSelector'"
                     )
                 # Init empty product for upsert MongoDB in case no record found by query
                 if (
@@ -416,7 +423,7 @@ class TaskUtil:
                     source_data = client.get_by_page_with_query(original_query=selector, pagination=load_pagination)
                 else:
                     source_data = client.get_by_page_with_type(
-                        table_name=stmt.type or stmt.name,
+                        table_name=StatementUtil.resolve_source_entity(stmt),
                         pagination=load_pagination,
                     )
             else:
@@ -448,12 +455,17 @@ class TaskUtil:
 
         # Wrap product key and value into a tuple
         # for iterate database may have key, value, and other statement attribute info
-        if getattr(stmt, "selector", False):
-            json_product = (stmt.name, json_result, {"selector": stmt.selector})
-        elif getattr(stmt, "type", False):
-            json_product = (stmt.name, json_result, {"type": stmt.type})
-        else:
-            json_product = (stmt.name, json_result)  # type: ignore[assignment]
+        # Carry every routing hint that is set (not mutually exclusive): targetEntity/type name the
+        # write collection/table, selector carries the query. A Mongo upsert needs BOTH the collection
+        # (targetEntity) AND the filter (selector), so they must not shadow each other.
+        metadata: dict = {}
+        if stmt.target_entity:
+            metadata[META_TARGET_ENTITY] = stmt.target_entity
+        if stmt.selector:
+            metadata[META_SELECTOR] = stmt.selector
+        if stmt.type:
+            metadata[META_TYPE] = stmt.type
+        json_product = (stmt.name, json_result, metadata) if metadata else (stmt.name, json_result)
 
         # Create a unique cache key incorporating task_id and statement details
         exporters_cache_key = stmt.full_name

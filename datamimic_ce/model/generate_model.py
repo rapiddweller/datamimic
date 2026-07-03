@@ -28,11 +28,13 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_SELECTOR,
     ATTR_SEPARATOR,
     ATTR_SOURCE,
+    ATTR_SOURCE_ENTITY,
     ATTR_SOURCE_SCRIPTED,
     ATTR_SOURCE_URI,
     ATTR_START,
     ATTR_STORAGE_ID,
     ATTR_TARGET,
+    ATTR_TARGET_ENTITY,
     ATTR_TYPE,
     ATTR_UNIQUE,
     ATTR_VARIABLE_PREFIX,
@@ -57,6 +59,10 @@ class GenerateModel(BaseModel):
     separator: str | None = None
     source_scripted: bool | None = Field(None, alias=ATTR_SOURCE_SCRIPTED)
     target: str | None = None
+    # Explicit physical entity to read/write (table/collection). Precedence: sourceEntity/targetEntity
+    # -> type -> name; absent -> existing behaviour. See StatementUtil.resolve_source/target_entity.
+    source_entity: str | None = Field(None, alias=ATTR_SOURCE_ENTITY)
+    target_entity: str | None = Field(None, alias=ATTR_TARGET_ENTITY)
     page_size: int | None = Field(None, alias=ATTR_PAGE_SIZE)
     source_uri: str | None = Field(None, alias=ATTR_SOURCE_URI)
     container: str | None = None
@@ -92,6 +98,8 @@ class GenerateModel(BaseModel):
                 ATTR_SELECTOR,
                 ATTR_SEPARATOR,
                 ATTR_SOURCE,
+                ATTR_SOURCE_ENTITY,
+                ATTR_TARGET_ENTITY,
                 ATTR_SOURCE_SCRIPTED,
                 ATTR_TYPE,
                 ATTR_PAGE_SIZE,
@@ -117,6 +125,22 @@ class GenerateModel(BaseModel):
     @classmethod
     def validate_unique_constraints(cls, values: dict):
         return ModelUtil.check_unique_constraints(values)
+
+    @field_validator("source_entity", "target_entity")
+    @classmethod
+    def _entity_not_blank(cls, value: str | None) -> str | None:
+        """A physical entity name must be meaningful: strip it, and reject blank (a real user error -
+        an empty sourceEntity/targetEntity means the user forgot the value, not "use the default")."""
+        if value is None:
+            return None
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("sourceEntity/targetEntity must not be blank")
+        # targetEntity becomes a file basename for file exporters; path separators would escape the
+        # output directory. An entity is a single table/collection/basename, never a path.
+        if "/" in stripped or "\\" in stripped or ".." in stripped:
+            raise ValueError(f"sourceEntity/targetEntity must be a plain entity name, not a path: '{stripped}'")
+        return stripped
 
     @model_validator(mode="before")
     @classmethod

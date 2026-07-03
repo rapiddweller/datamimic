@@ -1,0 +1,9 @@
+<setup>
+    <memstore id="mem"/>
+    <!-- seed memstore under entity 'lineitems' (targetEntity) -->
+    <generate name="seed" count="2" targetEntity="lineitems" target="mem"><key name="sku" constant="A"/></generate>
+    <!-- nestedKey reads the memstore entity via sourceEntity (routed through the same resolver) -->
+    <generate name="orders" count="2" target="">
+        <nestedKey name="lines" source="mem" sourceEntity="lineitems" />
+    </generate>
+</setup>

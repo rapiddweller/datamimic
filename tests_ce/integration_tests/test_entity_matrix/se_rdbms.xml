@@ -1,0 +1,5 @@
+<setup>
+    <database id="db" dbms="sqlite" database="matrix_se_rdbms"/>
+    <execute target="db" type="sql">DROP TABLE IF EXISTS seeded; CREATE TABLE seeded (n INTEGER); INSERT INTO seeded VALUES (1),(2),(3),(4)</execute>
+    <iterate name="reader" source="db" sourceEntity="seeded" target=""/>
+</setup>

@@ -322,8 +322,12 @@ class GenerateTask(CommonSubTask):
     def export_memstore(setup_context: SetupContext, current_stmt: GenerateStatement, merged_result: dict[str, list]):
         for current_exporter_str in current_stmt.targets:
             if setup_context.memstore_manager.contain(current_exporter_str):
+                # targetEntity -> type -> name keys the memstore, symmetric with the sourceEntity read.
+                entity = StatementUtil.resolve_target_entity(
+                    current_stmt.target_entity, current_stmt.type, current_stmt.name
+                )
                 setup_context.memstore_manager.get_memstore(current_exporter_str).consume(
-                    (current_stmt.name, merged_result[current_stmt.full_name])
+                    (entity, merged_result[current_stmt.full_name])
                 )
                 # Export to memstore only once
                 break
