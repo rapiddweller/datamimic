@@ -56,6 +56,10 @@ class TestPageProcess:
         assert src_ids == list(range(1, 13))
         assert sorted(r["id"] for r in result["rand_pages"]) == src_ids
         assert sorted(r["id"] for r in result["uniq_pages"]) == src_ids
+        # cumulated samples WITH replacement: full count, every pick from the source
+        cum_ids = [r["id"] for r in result["cum_pages"]]
+        assert len(cum_ids) == 12
+        assert set(cum_ids) <= set(src_ids)
 
     def test_memstore_survives_pagination_without_test_mode(self):
         """Production mode (no test capture) prunes per-page accumulation to

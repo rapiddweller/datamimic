@@ -86,9 +86,9 @@ class GenerateWorker:
         if isinstance(context, SetupContext) and not root_context.test_mode:
             keep_keys = GenerateWorker._memstore_product_keys(root_context, stmt)
 
-        # Chunk-scoped source reader: owns the loads_all pool caching and hands each
-        # page its window (see ChunkSourceReader) — the worker only iterates pages.
-        source_reader = ChunkSourceReader(context, stmt)
+        # Chunk-scoped source reader: loads + orders the source once per chunk and hands
+        # each page its window (see ChunkSourceReader) — the worker only iterates pages.
+        source_reader = ChunkSourceReader(context, stmt, chunk_start, chunk_end)
 
         # Generate and consume product by page
         for page_index, page_tuple in enumerate(index_chunk):

@@ -14,4 +14,8 @@
     <!-- unique over 3 pages: no duplicates across page boundaries -->
     <generate name="uniq_pages" source="mem" type="src" unique="True" count="12" pageSize="5"
               target="ConsoleExporter"/>
+
+    <!-- cumulated over 3 pages: with-replacement picks from ONE continuous draw sequence -->
+    <generate name="cum_pages" source="mem" type="src" distribution="cumulated" count="12" pageSize="5"
+              target="ConsoleExporter"/>
 </setup>

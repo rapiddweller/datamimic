@@ -22,19 +22,34 @@ class ChunkSourceReader:
     ALL rows (random/cumulated shuffle, unique dedupe) versus reading page windows
     directly (ordered) — so the worker only iterates pages.
 
-    For loads_all distributions the full pool is loaded ONCE per chunk and cached:
-    reloading per page costs one full query per page and, if the source mutates
-    between pages, silently breaks the disjoint-window guarantee (same seed over
-    different data).
+    For loads_all distributions the pool is loaded and ordered ONCE per chunk on the
+    first page; pages then slice their window out of the chunk's order:
+
+    * one full source query per chunk instead of one per page (a source mutating
+      between pages would silently break the disjoint-window guarantee — same seed
+      over different data),
+    * one O(pool) shuffle/draw per chunk instead of one per page,
+    * after ordering, only the chunk-sized order stays retained — the pool is
+      released. The transient full load itself is inherent to selecting from ALL
+      rows; a spill-to-disk/keyset scheme would be the next step if pools outgrow
+      worker RAM.
     """
 
-    def __init__(self, context: "SetupContext | GenIterContext", stmt: "GenerateStatement"):
+    def __init__(
+        self,
+        context: "SetupContext | GenIterContext",
+        stmt: "GenerateStatement",
+        chunk_start: int,
+        chunk_end: int,
+    ):
         # Lazy import: tasks imports data_sources at module level (same pattern as
         # DataSourceRegistry's TaskUtil import).
         from datamimic_ce.tasks.task_util import TaskUtil
 
         self._context = context
         self._stmt = stmt
+        self._chunk_start = chunk_start
+        self._chunk_end = chunk_end
         root = context.root
         self._source_scripted = (
             stmt.source_script if stmt.source_script is not None else bool(root.default_source_scripted)
@@ -43,21 +58,21 @@ class ChunkSourceReader:
         self._loads_all = (
             False if TaskUtil.is_source_ml_model(stmt) else (stmt.distribution.loads_all or bool(stmt.unique))
         )
-        # Full pool for loads_all distributions, loaded on first page: (rows, build_from_source)
-        self._pool: tuple[list, bool] | None = None
+        # Chunk-wide selection for loads_all distributions, ordered on first page.
+        self._chunk_order: list | None = None
+        self._build_from_source = True
 
     def read_page(self, page_start: int, page_end: int) -> tuple[list, bool]:
         """Rows for the page window [page_start, page_end) plus the build_from_source flag.
 
         ORDERED pushes the window down to the loader (skip/limit query, file slice);
-        random/cumulated/unique select the window from ONE stable global order of the
-        cached pool — every page (and every worker) sees the same order, so the
-        disjoint windows are complete and duplicate-free together.
+        random/cumulated/unique slice the window out of ONE stable chunk order —
+        every chunk selects from the same seeded global sequence, so the disjoint
+        windows are complete and duplicate-free together (across pages AND workers).
         """
         from datamimic_ce.tasks.task_util import TaskUtil
 
         stmt = self._stmt
-        pagination = DataSourcePagination(skip=page_start, limit=page_end - page_start)
 
         if not self._loads_all:
             return TaskUtil.gen_task_load_data_from_source_or_script(
@@ -68,19 +83,30 @@ class ChunkSourceReader:
                 self._source_scripted,
                 page_start,
                 page_end,
-                pagination,
+                DataSourcePagination(skip=page_start, limit=page_end - page_start),
             )
 
-        if self._pool is None:
-            self._pool = TaskUtil.gen_task_load_data_from_source_or_script(
+        if self._chunk_order is None:
+            pool, self._build_from_source = TaskUtil.gen_task_load_data_from_source_or_script(
                 self._context, stmt, stmt.source, self._separator, self._source_scripted, None, None, None
             )
-        pool, build_from_source = self._pool
+            # Stable per-statement seed -> identical global sequence in every chunk/worker;
+            # each chunk keeps only its own window of it.
+            seed = self._context.root.stable_distribution_seed(stmt.full_name)
+            chunk_pagination = DataSourcePagination(
+                skip=self._chunk_start, limit=self._chunk_end - self._chunk_start
+            )
+            if stmt.unique:
+                self._chunk_order = DataSourceRegistry.get_unique_data(
+                    pool, chunk_pagination, seed, f"<generate> '{stmt.name}'"
+                )
+            else:
+                self._chunk_order = DataSourceRegistry.get_distributed_data(
+                    pool, chunk_pagination, stmt.cyclic, seed, stmt.distribution
+                )
+            # pool goes out of scope here — retained memory is chunk-sized
 
-        # Stable per-statement seed -> identical global order on every page/worker.
-        seed = self._context.root.stable_distribution_seed(stmt.full_name)
-        if stmt.unique:
-            rows = DataSourceRegistry.get_unique_data(pool, pagination, seed, f"<generate> '{stmt.name}'")
-        else:
-            rows = DataSourceRegistry.get_distributed_data(pool, pagination, stmt.cyclic, seed, stmt.distribution)
-        return rows, build_from_source
+        return (
+            self._chunk_order[page_start - self._chunk_start : page_end - self._chunk_start],
+            self._build_from_source,
+        )
