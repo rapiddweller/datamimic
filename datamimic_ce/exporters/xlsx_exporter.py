@@ -11,7 +11,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
-from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.exporters.exporter_config import ExporterConfig
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.logger import logger
 
@@ -24,25 +24,10 @@ class XLSXExporter(UnifiedBufferedExporter):
     values are flattened to their string form, since a spreadsheet cell holds a scalar.
     """
 
-    def __init__(
-        self,
-        setup_context: SetupContext,
-        product_name: str,
-        chunk_size: int | None,
-        sheet_name: str | None,
-        encoding: str | None,
-        export_uri: str | None = None,
-    ):
-        self.sheet_name = sheet_name or "data"
-        super().__init__(
-            exporter_type="xlsx",
-            setup_context=setup_context,
-            product_name=product_name,
-            chunk_size=chunk_size,
-            encoding=encoding,
-            export_uri=export_uri,
-        )
-        logger.info(f"XLSXExporter initialized with chunk size {chunk_size}, sheet '{self.sheet_name}'")
+    def __init__(self, config: ExporterConfig, params: dict):
+        self.sheet_name = params.get("sheet_name") or "data"
+        super().__init__("xlsx", config)
+        logger.info(f"XLSXExporter initialized with chunk size {config.chunk_size}, sheet '{self.sheet_name}'")
 
     def get_file_extension(self) -> str:
         return "xlsx"

@@ -3,12 +3,13 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
+import ast
 import base64
 import csv
 import os
 from pathlib import Path
 
-from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.exporters.exporter_config import ExporterConfig
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.logger import logger
 
@@ -18,39 +19,26 @@ class CSVExporter(UnifiedBufferedExporter):
     Export generated data to CSV saved on Minio server
     """
 
-    def __init__(
-        self,
-        setup_context: SetupContext,
-        product_name: str,
-        chunk_size: int | None,
-        fieldnames: list[str] | None,
-        delimiter: str | None,
-        quotechar: str | None,
-        quoting: int | None,
-        line_terminator: str | None,
-        encoding: str | None,
-        export_uri: str | None = None,
-    ):
-        # Remove singleton pattern and initialize instance variables
+    def __init__(self, config: ExporterConfig, params: dict):
+        setup_context = config.setup_context
+        fieldnames = params.get("fieldnames")
+        # fieldnames may arrive as a string literal from the DSL target params
+        if isinstance(fieldnames, str):
+            try:
+                fieldnames = ast.literal_eval(fieldnames)
+            except Exception as e:
+                raise ValueError(f"Error parsing fieldnames {fieldnames}: {e}") from e
         self.fieldnames = fieldnames or []
-        self._task_id = setup_context.task_id
-
-        # Retrieve encoding and delimiter from setup_context or use defaults
-        self.delimiter = delimiter or setup_context.default_separator or ","
-        self.quotechar = quotechar or '"'
-        self.quoting = quoting or csv.QUOTE_MINIMAL
-        self.line_terminator = line_terminator or setup_context.default_line_separator or os.linesep or "\n"
-
-        super().__init__(
-            exporter_type="csv",
-            setup_context=setup_context,
-            product_name=product_name,
-            chunk_size=chunk_size,
-            encoding=encoding,
-            export_uri=export_uri,
+        # Retrieve delimiter/quoting from params or use setup defaults
+        self.delimiter = params.get("delimiter") or setup_context.default_separator or ","
+        self.quotechar = params.get("quotechar") or '"'
+        self.quoting = params.get("quoting") or csv.QUOTE_MINIMAL
+        self.line_terminator = (
+            params.get("line_terminator") or setup_context.default_line_separator or os.linesep or "\n"
         )
+        super().__init__("csv", config)
         logger.info(
-            f"CSVExporter initialized with chunk size {chunk_size}, fieldnames '{fieldnames}', "
+            f"CSVExporter initialized with chunk size {config.chunk_size}, fieldnames '{self.fieldnames}', "
             f"encoding '{self._encoding}', delimiter '{self.delimiter}'"
         )
 

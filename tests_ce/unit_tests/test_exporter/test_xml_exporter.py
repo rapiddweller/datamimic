@@ -8,7 +8,7 @@ from pathlib import Path
 
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.xml_exporter import XMLExporter  # Adjust the import path as necessary
-from tests_ce.unit_tests.test_exporter.exporter_test_util import generate_mock_data, MockSetupContext
+from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContext, generate_mock_data, make_exporter
 
 
 class TestXMLExporter(unittest.TestCase):
@@ -20,7 +20,7 @@ class TestXMLExporter(unittest.TestCase):
         self.setup_context.descriptor_dir = self.tmp_dir_path
         self.setup_context.properties = {}
 
-        self.exporter = XMLExporter(
+        self.exporter = make_exporter(XMLExporter, 
             setup_context=self.setup_context,
             product_name="test_product",
             chunk_size=1000,
@@ -148,7 +148,7 @@ class TestXMLExporter(unittest.TestCase):
             records = root.findall(f".//{self.exporter.item_element}")
             total_items += len(records)
             # Verify each record's content
-            for record, data in zip(records, special_data):
+            for record, data in zip(records, special_data, strict=False):
                 for key, value in data.items():
                     self.assertEqual(record.find(key).text, str(value))
 

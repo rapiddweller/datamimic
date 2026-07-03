@@ -5,11 +5,12 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import json
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 from xml.sax.saxutils import quoteattr
 
-from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.exporters.exporter_config import ExporterConfig
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.logger import logger
 
@@ -23,24 +24,12 @@ class DbUnitExporter(UnifiedBufferedExporter):
     chunk buffer accumulates records as JSON lines; the ``<dataset>`` is written once at finalize.
     """
 
-    def __init__(
-        self,
-        setup_context: SetupContext,
-        product_name: str,
-        chunk_size: int | None,
-        encoding: str | None,
-    ):
+    def __init__(self, config: ExporterConfig, params: dict):
         # the row element name = the physical table/entity being written
-        self._table = product_name
+        self._table = config.product_name
         # A dbunit dataset is a whole document; chunking would split one table across several partial
         # <dataset> files. Force a single file (ignore chunk_size).
-        super().__init__(
-            exporter_type="dbunit",
-            setup_context=setup_context,
-            product_name=product_name,
-            chunk_size=None,
-            encoding=encoding,
-        )
+        super().__init__("dbunit", replace(config, chunk_size=None))
         logger.info(f"DbUnitExporter initialized for table '{self._table}'")
 
     def get_file_extension(self) -> str:

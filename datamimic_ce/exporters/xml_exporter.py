@@ -12,7 +12,7 @@ from typing import Any
 import xmltodict
 from lxml import etree
 
-from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.exporters.exporter_config import ExporterConfig
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.logger import logger
 
@@ -29,39 +29,13 @@ class XMLExporter(UnifiedBufferedExporter):
     Supports chunking and handles data conversion to XML format.
     """
 
-    def __init__(
-        self,
-        setup_context: SetupContext,
-        product_name: str,
-        chunk_size: int | None,
-        root_element: str | None,
-        item_element: str | None,
-        encoding: str | None,
-        export_uri: str | None = None,
-    ):
-        """
-        Initializes the XMLExporter.
-
-        Parameters:
-            setup_context (SetupContext): The setup context containing configurations.
-            chunk_size (int, optional): Number of records per chunk. Defaults to None.
-            root_element (str, optional): The root element name for the XML. Defaults to 'list'.
-            item_element (str, optional): The element name for each item. Defaults to 'item'.
-        """
-        # Initialize instance variables
-        self.root_element = root_element or "list"
-        self.item_element = item_element or "item"
-
-        super().__init__(
-            exporter_type="xml",
-            setup_context=setup_context,
-            product_name=product_name,
-            chunk_size=chunk_size,
-            encoding=encoding,
-            export_uri=export_uri,
-        )
+    def __init__(self, config: ExporterConfig, params: dict):
+        """Initialize the XMLExporter. root_element/item_element default to 'list'/'item'."""
+        self.root_element = params.get("root_element") or "list"
+        self.item_element = params.get("item_element") or "item"
+        super().__init__("xml", config)
         logger.info(
-            f"XMLExporter initialized with chunk size {chunk_size}, root element '{self.root_element}', "
+            f"XMLExporter initialized with chunk size {config.chunk_size}, root element '{self.root_element}', "
             f"item element '{self.item_element}', encoding '{self.encoding}'"
         )
 

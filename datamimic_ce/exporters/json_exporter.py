@@ -6,7 +6,7 @@ from pathlib import Path
 
 from bson import ObjectId
 
-from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.exporters.exporter_config import ExporterConfig
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.logger import logger
 
@@ -30,23 +30,10 @@ class JsonExporter(UnifiedBufferedExporter):
     Supports chunking and format configuration.
     """
 
-    def __init__(
-        self,
-        setup_context: SetupContext,
-        product_name: str,
-        # page_info: MultiprocessingPageInfo,
-        chunk_size: int | None,
-        use_ndjson: bool | None,
-        encoding: str | None,
-        export_uri: str | None = None,
-    ):
-        self.use_ndjson = use_ndjson
-        self._task_id = setup_context.task_id
-        super().__init__(
-            "json", setup_context, product_name, chunk_size=chunk_size, encoding=encoding, export_uri=export_uri
-        )
-
-        logger.info(f"JsonExporter initialized with chunk size {chunk_size} and NDJSON format: {use_ndjson}")
+    def __init__(self, config: ExporterConfig, params: dict):
+        self.use_ndjson = params.get("use_ndjson")
+        super().__init__("json", config)
+        logger.info(f"JsonExporter initialized with chunk size {config.chunk_size} and NDJSON: {self.use_ndjson}")
 
     def _write_data_to_buffer(self, data: list[dict], worker_id: int, chunk_idx: int) -> None:
         """Writes data to the current buffer file in NDJSON format."""
