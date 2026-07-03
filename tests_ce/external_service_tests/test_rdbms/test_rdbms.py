@@ -54,5 +54,8 @@ class TestRdbms:
         test_engine.test_with_timer()
 
     def test_sqlite(self):
-        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_sqlite.xml")
+        test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_sqlite.xml", capture_test_result=True)
         test_engine.test_with_timer()
+        result = test_engine.capture_result()
+        # zero-match relational read must still yield an empty product (count == 0 path)
+        assert result["no_customer"] == []

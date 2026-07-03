@@ -23,4 +23,8 @@
         <key name="language" values="'german','english','vietnamese'"/>
         <reference name="customer_id" source="sourceDB" sourceType="CUSTOMER" sourceKey="id"/>
     </generate>
+
+    <!-- zero-match relational read: count 0 via RdbmsClient.count_query_length -> empty product, not a missing key -->
+    <generate name="no_customer" source="sourceDB" selector="SELECT * FROM CUSTOMER WHERE id = -1"
+              target="ConsoleExporter"/>
 </setup>

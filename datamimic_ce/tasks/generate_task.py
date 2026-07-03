@@ -198,9 +198,17 @@ class GenerateTask(CommonSubTask):
                 count = self._determine_count(context)
                 timer_result["records_count"] = count
 
-                # Early return if count is 0
+                # Count 0: no worker runs, no page is exported — but the product must still
+                # be registered (empty) with the lazy exporters, otherwise its key silently
+                # vanishes from test capture and memstore reads. No data crosses processes.
                 if count == 0:
-                    return {self.statement.full_name: []}
+                    empty_result = self._build_empty_products(self.statement)
+                    if isinstance(context, SetupContext):
+                        if context.test_mode:
+                            for product_name, product_records in empty_result.items():
+                                context.root.test_result_exporter.consume((product_name, product_records))
+                        self.export_memstore(context, self.statement, empty_result)
+                    return empty_result
 
                 # Calculate page size for processing by page
                 page_size = self._calculate_default_page_size(count)
@@ -317,6 +325,16 @@ class GenerateTask(CommonSubTask):
                 # Shutdown Ray if initialized
                 if is_ray_initialized and _ray_mod is not None:
                     _ray_mod.shutdown()
+
+    @staticmethod
+    def _build_empty_products(stmt: GenerateStatement) -> dict[str, list]:
+        """Empty product entry for stmt and every nested <generate> (count == 0 path),
+        so export_memstore's recursion and test asserts never hit a missing key."""
+        products: dict[str, list] = {stmt.full_name: []}
+        for sub_stmt in stmt.sub_statements:
+            if isinstance(sub_stmt, GenerateStatement):
+                products.update(GenerateTask._build_empty_products(sub_stmt))
+        return products
 
     @staticmethod
     def export_memstore(setup_context: SetupContext, current_stmt: GenerateStatement, merged_result: dict[str, list]):

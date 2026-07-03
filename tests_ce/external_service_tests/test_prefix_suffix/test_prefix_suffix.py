@@ -68,3 +68,7 @@ class TestPrefixSuffix:
         for bob in bob_data:
             assert bob["user_id"] in bob_id_set
             assert bob["user_name"] == "Bob"
+
+        # Edge case: a filter matching nothing (count == 0) must still yield an
+        # empty product, not a missing key. Deterministic — no name is "Nobody".
+        assert result["nobody_data"] == []
