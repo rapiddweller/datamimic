@@ -10,6 +10,11 @@ from typing import Any
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
+from datamimic_ce.constants.attribute_constants import (
+    META_SELECTOR,
+    META_TARGET_ENTITY,
+    META_TYPE,
+)
 from datamimic_ce.constants.data_type_constants import (
     DATA_TYPE_BINARY,
     DATA_TYPE_BOOL,
@@ -455,11 +460,11 @@ class TaskUtil:
         # (targetEntity) AND the filter (selector), so they must not shadow each other.
         metadata: dict = {}
         if stmt.target_entity:
-            metadata["target_entity"] = stmt.target_entity
+            metadata[META_TARGET_ENTITY] = stmt.target_entity
         if stmt.selector:
-            metadata["selector"] = stmt.selector
+            metadata[META_SELECTOR] = stmt.selector
         if stmt.type:
-            metadata["type"] = stmt.type
+            metadata[META_TYPE] = stmt.type
         json_product = (stmt.name, json_result, metadata) if metadata else (stmt.name, json_result)
 
         # Create a unique cache key incorporating task_id and statement details

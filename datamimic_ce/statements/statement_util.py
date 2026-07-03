@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 import re
 
+from datamimic_ce.constants.attribute_constants import META_TARGET_ENTITY, META_TYPE
 from datamimic_ce.contexts.context import Context
 
 
@@ -38,7 +39,7 @@ class StatementUtil:
     def resolve_target_entity_from_metadata(name: str, metadata: dict | None) -> str:
         """resolve_target_entity for an exporter that only has the product metadata, not the statement."""
         md = metadata or {}
-        return StatementUtil.resolve_target_entity(md.get("target_entity"), md.get("type"), name)
+        return StatementUtil.resolve_target_entity(md.get(META_TARGET_ENTITY), md.get(META_TYPE), name)
 
     @staticmethod
     def parse_consumer(consumer_string: str | None) -> set[str]:

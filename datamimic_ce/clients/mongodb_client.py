@@ -13,6 +13,7 @@ from pymongo import MongoClient, UpdateOne
 
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.connection_config.mongodb_connection_config import MongoDBConnectionConfig
+from datamimic_ce.constants.attribute_constants import META_SELECTOR, META_TARGET_ENTITY, META_TYPE
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 
 
@@ -203,16 +204,16 @@ class MongoDBClient(DatabaseClient):
         :param data:
         :return: The number of documents matched for an update.
         """
-        if "target_entity" in query:
-            collection_name = query.get("target_entity")
-        elif "selector" in query:
-            value = query.get("selector")
+        if META_TARGET_ENTITY in query:
+            collection_name = query.get(META_TARGET_ENTITY)
+        elif META_SELECTOR in query:
+            value = query.get(META_SELECTOR)
             if value is None or value.isspace():
                 raise ValueError("Syntax error: selector is not found")
             find_query = self._decompose_find_query(value)
             collection_name = find_query.get("find")
-        elif "type" in query:
-            collection_name = query.get("type")
+        elif META_TYPE in query:
+            collection_name = query.get(META_TYPE)
         else:
             raise ValueError("'targetEntity', 'type' or 'selector' statement's attribute is missing")
         if data:
@@ -236,10 +237,10 @@ class MongoDBClient(DatabaseClient):
         :return: merged data
         """
         # targetEntity/type name the collection; the selector (if any) still provides the match filter.
-        collection_name = selector_dict.get("target_entity") or selector_dict.get("type")
+        collection_name = selector_dict.get(META_TARGET_ENTITY) or selector_dict.get(META_TYPE)
         filter_query: dict = {}
-        if "selector" in selector_dict:
-            selector_value = selector_dict.get("selector")
+        if META_SELECTOR in selector_dict:
+            selector_value = selector_dict.get(META_SELECTOR)
             if selector_value is None or selector_value.isspace():
                 raise ValueError("Syntax error: selector is not found")
             find_query = self._decompose_find_query(selector_value)
@@ -382,16 +383,16 @@ class MongoDBClient(DatabaseClient):
         :param query:
         :param data:
         """
-        if "target_entity" in query:
-            collection_name = query.get("target_entity")
-        elif "selector" in query:
-            selector_value = query.get("selector")
+        if META_TARGET_ENTITY in query:
+            collection_name = query.get(META_TARGET_ENTITY)
+        elif META_SELECTOR in query:
+            selector_value = query.get(META_SELECTOR)
             if selector_value is None or selector_value.isspace():
                 raise ValueError("Syntax error: selector is not found")
             find_query = self._decompose_find_query(selector_value)
             collection_name = find_query.get("find")
-        elif "type" in query:
-            collection_name = query.get("type")
+        elif META_TYPE in query:
+            collection_name = query.get(META_TYPE)
         else:
             raise ValueError("'targetEntity', 'type' or 'selector' statement's attribute is missing")
 
