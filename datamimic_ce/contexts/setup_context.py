@@ -478,14 +478,17 @@ class SetupContext(Context):
         # Unseeded run: return a new seed on each call
         if self._current_seed is not None:
             self._current_seed += 1
-        # If init seed is not set, calculate seed from task_id
+        # If init seed is not set, calculate seed from task_id.
+        # Full 2**63 space (matches derive_child_seed): a small modulus (was % 1000)
+        # makes two unseeded runs collide at 1/modulus — seen as flaky
+        # "unseeded must differ" determinism tests in CI.
         else:
             try:
                 # Try to convert UUID task into int seed
-                self._current_seed = uuid.UUID(self._task_id).int % 1000
+                self._current_seed = uuid.UUID(self._task_id).int % (2**63)
             except ValueError as err:
                 # If task_id is not a valid UUID, hash the string
                 logger.warning(f"Invalid task_id '{self._task_id}': {err}")
-                self._current_seed = hash(self._task_id) % 1000
+                self._current_seed = hash(self._task_id) % (2**63)
 
         return self._current_seed
