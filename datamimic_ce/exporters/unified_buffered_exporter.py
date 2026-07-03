@@ -45,6 +45,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         product_name: str,
         chunk_size: int | None,
         encoding: str | None,
+        export_uri: str | None = None,
     ):
         if chunk_size is not None and chunk_size <= 0:
             raise ValueError("Chunk size must be a positive integer or None for unlimited size.")
@@ -56,6 +57,8 @@ class UnifiedBufferedExporter(Exporter, ABC):
         self._task_id = setup_context.task_id  # Task ID for tracking
         self._descriptor_dir = setup_context.descriptor_dir  # Directory for storing temp files
         self._chunk_size = chunk_size  # Max entities per chunk
+        # exportUri: a validated output-directory prefix; falls back to the task_id dir when unset.
+        self._export_uri = export_uri
 
     @property
     def encoding(self) -> str:
@@ -211,7 +214,9 @@ class UnifiedBufferedExporter(Exporter, ABC):
         """
         logger.info(f"Saving exported result for product {self.product_name}")
 
-        exporter_dir_path = self._descriptor_dir / "output" / self._task_id
+        # exportUri names the output subdirectory (EE parity: prefix replaces the task_id dir); default
+        # keeps the task_id dir so concurrent runs stay isolated.
+        exporter_dir_path = self._descriptor_dir / "output" / (self._export_uri or self._task_id)
 
         # Handle existing directory by adding version number
 

@@ -1,0 +1,3 @@
+<setup>
+    <generate name="rows" count="3" target="CSV" exportUri="reports/2026"><key name="n" constant="1"/></generate>
+</setup>

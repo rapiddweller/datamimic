@@ -142,6 +142,12 @@ class GenerateModel(BaseModel):
             raise ValueError(f"sourceEntity/targetEntity must be a plain entity name, not a path: '{stripped}'")
         return stripped
 
+    @field_validator("export_uri")
+    @classmethod
+    def _normalize_export_uri(cls, value: str | None) -> str | None:
+        """exportUri is a safe local output-directory prefix (see ModelUtil.normalize_export_uri)."""
+        return ModelUtil.normalize_export_uri(value)
+
     @model_validator(mode="before")
     @classmethod
     def validate_timeseries_window(cls, values: dict):
