@@ -136,6 +136,10 @@ class GenerateModel(BaseModel):
         stripped = value.strip()
         if not stripped:
             raise ValueError("sourceEntity/targetEntity must not be blank")
+        # targetEntity becomes a file basename for file exporters; path separators would escape the
+        # output directory. An entity is a single table/collection/basename, never a path.
+        if "/" in stripped or "\\" in stripped or ".." in stripped:
+            raise ValueError(f"sourceEntity/targetEntity must be a plain entity name, not a path: '{stripped}'")
         return stripped
 
     @model_validator(mode="before")

@@ -27,7 +27,7 @@ def _clean():
 def _table_rows(database: str, table: str) -> int:
     cfg = RdbmsConnectionConfig(dbms="sqlite", database=database, host=None, port=None,
                                 user=None, password=None, db_schema=None)
-    return len(RdbmsClient(cfg, task_id="t").get(f"SELECT n FROM {table}"))
+    return RdbmsClient(cfg, task_id="t").get(f"SELECT COUNT(*) FROM {table}")[0][0]
 
 
 def _run(filename: str) -> DataMimicTest:
@@ -71,7 +71,30 @@ def test_target_entity_file_exporter(fmt, ext):
         _clean()
 
 
-# ---- sourceEntity: READ routes from the physical entity, not the statement name 'reader' ----
+# ---- targetEntity for RDBMS write OPERATIONS (update/delete), statement name 'gen' != table ----
+
+def test_target_entity_rdbms_update():
+    _clean()
+    try:
+        _run("te_rdbms_update.xml")
+        cfg = RdbmsConnectionConfig(dbms="sqlite", database="matrix_upd", host=None, port=None,
+                                    user=None, password=None, db_schema=None)
+        rows = RdbmsClient(cfg, task_id="t").get("SELECT tier FROM customers")
+        assert [r[0] for r in rows] == ["gold", "gold"]  # targetEntity routed the UPDATE
+    finally:
+        _clean()
+
+
+def test_target_entity_rdbms_delete():
+    _clean()
+    try:
+        _run("te_rdbms_delete.xml")
+        assert _table_rows("matrix_del", "customers") == 0  # targetEntity routed the DELETE
+    finally:
+        _clean()
+
+
+# ---- sourceEntity: READ routes from the physical entity, not the statement name ----
 
 def test_source_entity_rdbms():
     _clean()
@@ -80,3 +103,40 @@ def test_source_entity_rdbms():
         assert sorted(r["n"] for r in engine.capture_result()["reader"]) == [1, 2, 3, 4]
     finally:
         _clean()
+
+
+def test_source_entity_variable_rdbms():
+    _clean()
+    try:
+        engine = _run("se_variable.xml")
+        # the <variable sourceEntity='people'> must read the seeded table, not statement name 'p'
+        assert sorted(r["n"] for r in engine.capture_result()["out"]) == [5, 6, 7]
+    finally:
+        _clean()
+
+
+def test_source_entity_on_single_entity_file_is_ignored_not_fatal():
+    _clean()
+    try:
+        engine = _run("se_file_ignored.xml")  # sourceEntity on a flat csv must not crash
+        assert len(engine.capture_result()["rows"]) == 3
+    finally:
+        _clean()
+
+
+def test_nested_key_source_is_file_only_and_type_stays_a_structure_marker():
+    # Way A: a <nestedKey source=file type=list> reads a file (single entity) and type='list' is the
+    # STRUCTURE marker, not a table. The entity resolver (sourceEntity->type->name) must not touch it -
+    # each order gets the 2-item list, not a lookup of a 'list' entity.
+    _clean()
+    try:
+        rows = _run("nk_source.xml").capture_result()["orders"]
+        assert all(len(r["lines"]) == 2 for r in rows)
+    finally:
+        _clean()
+
+
+def test_target_entity_rejects_a_path():
+    # targetEntity is a plain entity name, never a path - a '/' or '..' would escape the output dir.
+    with pytest.raises(Exception, match=r"not a path"):
+        _run("te_path.xml")

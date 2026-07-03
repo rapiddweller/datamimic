@@ -203,7 +203,9 @@ class MongoDBClient(DatabaseClient):
         :param data:
         :return: The number of documents matched for an update.
         """
-        if "selector" in query:
+        if "target_entity" in query:
+            collection_name = query.get("target_entity")
+        elif "selector" in query:
             value = query.get("selector")
             if value is None or value.isspace():
                 raise ValueError("Syntax error: selector is not found")
@@ -212,7 +214,7 @@ class MongoDBClient(DatabaseClient):
         elif "type" in query:
             collection_name = query.get("type")
         else:
-            raise ValueError("'type' or 'selector' statement's attribute is missing")
+            raise ValueError("'targetEntity', 'type' or 'selector' statement's attribute is missing")
         if data:
             if collection_name is None or collection_name.isspace():
                 raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
@@ -233,18 +235,18 @@ class MongoDBClient(DatabaseClient):
         :param updated_data:
         :return: merged data
         """
+        # targetEntity/type name the collection; the selector (if any) still provides the match filter.
+        collection_name = selector_dict.get("target_entity") or selector_dict.get("type")
+        filter_query: dict = {}
         if "selector" in selector_dict:
             selector_value = selector_dict.get("selector")
             if selector_value is None or selector_value.isspace():
                 raise ValueError("Syntax error: selector is not found")
             find_query = self._decompose_find_query(selector_value)
-            collection_name = find_query.get("find")
+            collection_name = collection_name or find_query.get("find")
             filter_query = find_query["filter"]
-        # TODO: handle upsert for mongodb having no attribute selector
-        # elif "type" in selector_dict:
-        #     collection_name = selector_dict.get("type")
-        else:
-            raise ValueError("'type' or 'selector' statement's attribute is missing")
+        elif collection_name is None:
+            raise ValueError("'targetEntity', 'type' or 'selector' statement's attribute is missing")
         # query = self._decompose_find_query(selector)
 
         # Merge updated_data and filter query
@@ -380,7 +382,9 @@ class MongoDBClient(DatabaseClient):
         :param query:
         :param data:
         """
-        if "selector" in query:
+        if "target_entity" in query:
+            collection_name = query.get("target_entity")
+        elif "selector" in query:
             selector_value = query.get("selector")
             if selector_value is None or selector_value.isspace():
                 raise ValueError("Syntax error: selector is not found")
@@ -389,7 +393,7 @@ class MongoDBClient(DatabaseClient):
         elif "type" in query:
             collection_name = query.get("type")
         else:
-            raise ValueError("'type' or 'selector' statement's attribute is missing")
+            raise ValueError("'targetEntity', 'type' or 'selector' statement's attribute is missing")
 
         if collection_name is None or collection_name.isspace():
             raise ValueError(f"Syntax error: collection name '{collection_name}' not found")

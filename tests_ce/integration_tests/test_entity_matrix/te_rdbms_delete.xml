@@ -1,0 +1,5 @@
+<setup>
+    <database id="db" dbms="sqlite" database="matrix_del"/>
+    <execute target="db" type="sql">DROP TABLE IF EXISTS customers; CREATE TABLE customers (id INTEGER PRIMARY KEY); INSERT INTO customers VALUES (1),(2),(3)</execute>
+    <generate name="gen" source="db" selector="SELECT id FROM customers" targetEntity="customers" target="db.delete"/>
+</setup>

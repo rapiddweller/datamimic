@@ -451,16 +451,17 @@ class TaskUtil:
 
         # Wrap product key and value into a tuple
         # for iterate database may have key, value, and other statement attribute info
-        # targetEntity/type route the write to their physical table/collection (see
-        # StatementUtil.resolve_target_entity); selector carries the read query.
+        # Carry every routing hint that is set (not mutually exclusive): targetEntity/type name the
+        # write collection/table, selector carries the query. A Mongo upsert needs BOTH the collection
+        # (targetEntity) AND the filter (selector), so they must not shadow each other.
+        metadata: dict = {}
         if stmt.target_entity:
-            json_product = (stmt.name, json_result, {"target_entity": stmt.target_entity})
-        elif stmt.selector:
-            json_product = (stmt.name, json_result, {"selector": stmt.selector})
-        elif stmt.type:
-            json_product = (stmt.name, json_result, {"type": stmt.type})
-        else:
-            json_product = (stmt.name, json_result)  # type: ignore[assignment]
+            metadata["target_entity"] = stmt.target_entity
+        if stmt.selector:
+            metadata["selector"] = stmt.selector
+        if stmt.type:
+            metadata["type"] = stmt.type
+        json_product = (stmt.name, json_result, metadata) if metadata else (stmt.name, json_result)
 
         # Create a unique cache key incorporating task_id and statement details
         exporters_cache_key = stmt.full_name

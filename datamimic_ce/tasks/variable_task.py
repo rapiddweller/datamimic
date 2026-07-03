@@ -27,6 +27,7 @@ from datamimic_ce.data_sources.data_source_pagination import DataSourcePaginatio
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntityDataSource
 from datamimic_ce.logger import logger
+from datamimic_ce.statements.statement_util import StatementUtil
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
 from datamimic_ce.tasks.task import CommonSubTask
@@ -173,13 +174,13 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                                 f"Cannot get data from source '{source_str}' of <variable> '{statement.name}'"
                             ) from None
 
-                        # in case of dbms product_type reflects the table name
-                        product_type = statement.type or statement.name
+                        # in case of dbms product_type reflects the table name (sourceEntity -> type -> name)
+                        product_type = StatementUtil.resolve_source_entity(statement)
                         # TODO: check if pagination is needed
                         file_data = client.get_by_page_with_type(product_type) if product_type is not None else None
                     # Get data from memstore
                     elif ctx.memstore_manager.contain(source_str):
-                        product_type = statement.type or statement.name
+                        product_type = StatementUtil.resolve_source_entity(statement)
                         memstore = ctx.memstore_manager.get_memstore(source_str)
                         file_data = (
                             memstore.get_all_data_by_type(product_type)
