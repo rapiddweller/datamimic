@@ -1,11 +1,13 @@
 from datamimic_ce.constants.exporter_constants import (
     EXPORTER_CSV,
+    EXPORTER_DBUNIT,
     EXPORTER_JSON,
     EXPORTER_TXT,
     EXPORTER_XLSX,
     EXPORTER_XML,
 )
 from datamimic_ce.exporters.csv_exporter import CSVExporter
+from datamimic_ce.exporters.dbunit_exporter import DbUnitExporter
 from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
 from datamimic_ce.exporters.json_exporter import JsonExporter
 from datamimic_ce.exporters.txt_exporter import TXTExporter
@@ -21,6 +23,7 @@ def test_registry_maps_every_buffered_target_to_its_class():
         EXPORTER_XML: XMLExporter,
         EXPORTER_XLSX: XLSXExporter,
         EXPORTER_TXT: TXTExporter,
+        EXPORTER_DBUNIT: DbUnitExporter,
     } == _BUFFERED_EXPORTERS
 
 

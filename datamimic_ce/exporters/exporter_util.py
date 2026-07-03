@@ -22,7 +22,6 @@ from datamimic_ce.constants.exporter_constants import (
     EXPORTER_CSV,
     EXPORTER_DBUNIT,
     EXPORTER_JSON,
-    EXPORTER_JSON_SINGLE,
     EXPORTER_LOG_EXPORTER,
     EXPORTER_TEST_RESULT_EXPORTER,
     EXPORTER_TXT,
@@ -33,6 +32,7 @@ from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.console_exporter import ConsoleExporter
 from datamimic_ce.exporters.csv_exporter import CSVExporter
 from datamimic_ce.exporters.database_exporter import DatabaseExporter
+from datamimic_ce.exporters.dbunit_exporter import DbUnitExporter
 from datamimic_ce.exporters.exporter import Exporter
 from datamimic_ce.exporters.exporter_config import ExporterConfig
 from datamimic_ce.exporters.json_exporter import JsonExporter
@@ -54,6 +54,7 @@ _BUFFERED_EXPORTERS: dict[str, _BufferedExporterFactory] = {
     EXPORTER_XML: XMLExporter,
     EXPORTER_XLSX: XLSXExporter,
     EXPORTER_TXT: TXTExporter,
+    EXPORTER_DBUNIT: DbUnitExporter,
 }
 
 
@@ -327,12 +328,6 @@ class ExporterUtil:
             return ConsoleExporter()
         elif name == EXPORTER_LOG_EXPORTER:
             return LogExporter()
-        elif name == EXPORTER_DBUNIT:
-            from datamimic_ce.exporters.dbunit_exporter import DbUnitExporter
-
-            return DbUnitExporter(
-                setup_context, product_name, exporter_params_dict.get("chunk_size"), exporter_params_dict.get("encoding")
-            )
         elif name == EXPORTER_TEST_RESULT_EXPORTER:
             return setup_context.test_result_exporter
         elif name in setup_context.clients:
@@ -345,8 +340,7 @@ class ExporterUtil:
         else:
             raise ValueError(
                 f"Target not found: {name}, please check the target name again. "
-                f"Expected: {EXPORTER_JSON}, {EXPORTER_CSV}, {EXPORTER_XML}, {EXPORTER_XLSX}, "
-                f"{EXPORTER_TXT}, {EXPORTER_TEST_RESULT_EXPORTER}, {EXPORTER_JSON_SINGLE}, "
+                f"Expected: {', '.join(_BUFFERED_EXPORTERS)}, {EXPORTER_TEST_RESULT_EXPORTER}, "
                 f"{EXPORTER_CONSOLE_EXPORTER}, {EXPORTER_LOG_EXPORTER}, "
                 f"or client {list(setup_context.clients.keys())} "
                 f"or memstore {setup_context.memstore_manager.get_memstores_list()}"
