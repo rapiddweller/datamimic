@@ -9,6 +9,7 @@ import base64
 import json
 import re
 import uuid
+from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
@@ -33,14 +34,27 @@ from datamimic_ce.exporters.console_exporter import ConsoleExporter
 from datamimic_ce.exporters.csv_exporter import CSVExporter
 from datamimic_ce.exporters.database_exporter import DatabaseExporter
 from datamimic_ce.exporters.exporter import Exporter
+from datamimic_ce.exporters.exporter_config import ExporterConfig
 from datamimic_ce.exporters.json_exporter import JsonExporter
 from datamimic_ce.exporters.log_exporter import LogExporter
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.exporters.txt_exporter import TXTExporter
+from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.exporters.xlsx_exporter import XLSXExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
+
+# Registry of buffered file exporters: target name -> class. Every concrete exporter takes the uniform
+# (ExporterConfig, params) constructor; adding one is a single entry here, not a new factory branch.
+_BufferedExporterFactory = Callable[[ExporterConfig, dict], UnifiedBufferedExporter]
+_BUFFERED_EXPORTERS: dict[str, _BufferedExporterFactory] = {
+    EXPORTER_CSV: CSVExporter,
+    EXPORTER_JSON: JsonExporter,
+    EXPORTER_XML: XMLExporter,
+    EXPORTER_XLSX: XLSXExporter,
+    EXPORTER_TXT: TXTExporter,
+}
 
 
 def custom_serializer(obj: Any) -> Any:
@@ -289,56 +303,36 @@ class ExporterUtil:
         if name is None or name == "":
             return None
 
-        chunk_size = exporter_params_dict.get("chunk_size")
-        use_ndjson = exporter_params_dict.get("use_ndjson")
-        fieldnames = exporter_params_dict.get("fieldnames")
-        delimiter = exporter_params_dict.get("delimiter")
-        quotechar = exporter_params_dict.get("quotechar")
-        quoting = exporter_params_dict.get("quoting")
-        line_terminator = exporter_params_dict.get("line_terminator")
-        root_element = exporter_params_dict.get("root_element")
-        item_element = exporter_params_dict.get("item_element")
-        encoding = exporter_params_dict.get("encoding")
-        if fieldnames is not None and isinstance(fieldnames, str):
-            try:
-                fieldnames = ast.literal_eval(fieldnames)
-            except Exception as e:
-                raise ValueError(f"Error parsing fieldnames {fieldnames}: {e}") from e
+        # A buffered file exporter: build the shared config once and let the class pull its own
+        # format-specific options from params. Adding a common setting touches only ExporterConfig;
+        # adding an exporter touches only _BUFFERED_EXPORTERS.
+        if name in _BUFFERED_EXPORTERS:
+            params = dict(exporter_params_dict)
+            # CSV fieldnames may arrive as a string literal
+            if isinstance(params.get("fieldnames"), str):
+                try:
+                    params["fieldnames"] = ast.literal_eval(params["fieldnames"])
+                except Exception as e:
+                    raise ValueError(f"Error parsing fieldnames {params['fieldnames']}: {e}") from e
+            config = ExporterConfig(
+                setup_context=setup_context,
+                product_name=product_name,
+                chunk_size=exporter_params_dict.get("chunk_size"),
+                encoding=exporter_params_dict.get("encoding"),
+                export_uri=export_uri,
+            )
+            return _BUFFERED_EXPORTERS[name](config, params)
 
-        elif name == EXPORTER_CONSOLE_EXPORTER:
+        if name == EXPORTER_CONSOLE_EXPORTER:
             return ConsoleExporter()
         elif name == EXPORTER_LOG_EXPORTER:
             return LogExporter()
-        elif name == EXPORTER_JSON:
-            return JsonExporter(setup_context, product_name, chunk_size, use_ndjson, encoding, export_uri=export_uri)
-        elif name == EXPORTER_CSV:
-            return CSVExporter(
-                setup_context,
-                product_name,
-                chunk_size,
-                fieldnames,
-                delimiter,
-                quotechar,
-                quoting,
-                line_terminator,
-                encoding,
-                export_uri=export_uri,
-            )
-        elif name == EXPORTER_XML:
-            return XMLExporter(
-                setup_context, product_name, chunk_size, root_element, item_element, encoding, export_uri=export_uri
-            )
-        elif name == EXPORTER_XLSX:
-            sheet_name = exporter_params_dict.get("sheet_name")
-            return XLSXExporter(setup_context, product_name, chunk_size, sheet_name, encoding, export_uri=export_uri)
-        elif name == EXPORTER_TXT:
-            return TXTExporter(
-                setup_context, product_name, chunk_size, delimiter, line_terminator, encoding, export_uri=export_uri
-            )
         elif name == EXPORTER_DBUNIT:
             from datamimic_ce.exporters.dbunit_exporter import DbUnitExporter
 
-            return DbUnitExporter(setup_context, product_name, chunk_size, encoding)
+            return DbUnitExporter(
+                setup_context, product_name, exporter_params_dict.get("chunk_size"), exporter_params_dict.get("encoding")
+            )
         elif name == EXPORTER_TEST_RESULT_EXPORTER:
             return setup_context.test_result_exporter
         elif name in setup_context.clients:

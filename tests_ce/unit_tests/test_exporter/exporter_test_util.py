@@ -16,3 +16,17 @@ class MockSetupContext:
     def get_client_by_id(self, client_id):
         # Return a dummy client or data, replace MagicMock dependency
         return {"id": client_id, "data": "mock_client_data"}
+
+
+def make_exporter(cls, *, setup_context, product_name, chunk_size=None, encoding=None, export_uri=None, **params):
+    """Construct a buffered exporter from the old flat kwargs via the new ExporterConfig ctor."""
+    from datamimic_ce.exporters.exporter_config import ExporterConfig
+
+    config = ExporterConfig(
+        setup_context=setup_context,
+        product_name=product_name,
+        chunk_size=chunk_size,
+        encoding=encoding,
+        export_uri=export_uri,
+    )
+    return cls(config, params)

@@ -16,7 +16,7 @@
 import os
 from pathlib import Path
 
-from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.exporters.exporter_config import ExporterConfig
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.logger import logger
 
@@ -27,37 +27,16 @@ class TXTExporter(UnifiedBufferedExporter):
     Supports chunking and can handle custom separators.
     """
 
-    def __init__(
-        self,
-        setup_context: SetupContext,
-        product_name: str,
-        chunk_size: int | None,
-        separator: str | None,
-        line_terminator: str | None,
-        encoding: str | None,
-        export_uri: str | None = None,
-    ):
-        """
-        Initializes the TXTExporter.
-
-        Parameters:
-            setup_context (SetupContext): The setup context containing configurations.
-            chunk_size (int, optional): Number of records per chunk. Defaults to None.
-            separator (str, optional): Separator to use between fields. Defaults to ':'.
-            line_terminator (str, optional): Line terminator to use. Defaults to system's default.
-            encoding (str, optional): Encoding to use. Defaults to 'utf-8'.
-        """
-        # Initialize instance variables
-        self.separator = separator or setup_context.default_separator or ":"
-        self.line_terminator = line_terminator or setup_context.default_line_separator or os.linesep or "\n"
-
-        # Pass encoding via kwargs to the base class
-
-        super().__init__(
-            "txt", setup_context, product_name, chunk_size=chunk_size, encoding=encoding, export_uri=export_uri
+    def __init__(self, config: ExporterConfig, params: dict):
+        """Initialize the TXTExporter. separator defaults to ':', line_terminator to the system default."""
+        setup_context = config.setup_context
+        self.separator = params.get("separator") or setup_context.default_separator or ":"
+        self.line_terminator = (
+            params.get("line_terminator") or setup_context.default_line_separator or os.linesep or "\n"
         )
+        super().__init__("txt", config)
         logger.info(
-            f"TXTExporter initialized with chunk size {chunk_size}, separator '{self.separator}', "
+            f"TXTExporter initialized with chunk size {config.chunk_size}, separator '{self.separator}', "
             f"encoding '{self.encoding}', line terminator '{self.line_terminator}'"
         )
 

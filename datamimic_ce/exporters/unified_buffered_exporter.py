@@ -4,8 +4,8 @@ import time
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.exporter import Exporter
+from datamimic_ce.exporters.exporter_config import ExporterConfig
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.logger import logger
 
@@ -38,27 +38,20 @@ class UnifiedBufferedExporter(Exporter, ABC):
     MAX_RETRIES = 3
     RETRY_DELAY = 0.1  # seconds
 
-    def __init__(
-        self,
-        exporter_type: str,
-        setup_context: SetupContext,
-        product_name: str,
-        chunk_size: int | None,
-        encoding: str | None,
-        export_uri: str | None = None,
-    ):
-        if chunk_size is not None and chunk_size <= 0:
+    def __init__(self, exporter_type: str, config: ExporterConfig):
+        if config.chunk_size is not None and config.chunk_size <= 0:
             raise ValueError("Chunk size must be a positive integer or None for unlimited size.")
 
+        setup_context = config.setup_context
         self._exporter_type = exporter_type
-        self.product_name = product_name  # Name of the product being exported
-        self._encoding = encoding or setup_context.default_encoding or "utf-8"
+        self.product_name = config.product_name  # Name of the product being exported
+        self._encoding = config.encoding or setup_context.default_encoding or "utf-8"
         self._mp = setup_context.use_mp  # Multiprocessing flag
         self._task_id = setup_context.task_id  # Task ID for tracking
         self._descriptor_dir = setup_context.descriptor_dir  # Directory for storing temp files
-        self._chunk_size = chunk_size  # Max entities per chunk
+        self._chunk_size = config.chunk_size  # Max entities per chunk
         # exportUri: a validated output-directory prefix; falls back to the task_id dir when unset.
-        self._export_uri = export_uri
+        self._export_uri = config.export_uri
 
     @property
     def encoding(self) -> str:
