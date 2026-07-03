@@ -282,6 +282,8 @@ class ExporterUtil:
         from datamimic_ce.statements.statement_util import StatementUtil
 
         product_name = StatementUtil.resolve_target_entity(gen_stmt.target_entity, None, gen_stmt.name)
+        # exportUri (validated at parse time) is the output-directory prefix for file exporters.
+        export_uri = gen_stmt.export_uri
 
         if name is None or name == "":
             return None
@@ -307,7 +309,7 @@ class ExporterUtil:
         elif name == EXPORTER_LOG_EXPORTER:
             return LogExporter()
         elif name == EXPORTER_JSON:
-            return JsonExporter(setup_context, product_name, chunk_size, use_ndjson, encoding)
+            return JsonExporter(setup_context, product_name, chunk_size, use_ndjson, encoding, export_uri=export_uri)
         elif name == EXPORTER_CSV:
             return CSVExporter(
                 setup_context,
@@ -319,14 +321,19 @@ class ExporterUtil:
                 quoting,
                 line_terminator,
                 encoding,
+                export_uri=export_uri,
             )
         elif name == EXPORTER_XML:
-            return XMLExporter(setup_context, product_name, chunk_size, root_element, item_element, encoding)
+            return XMLExporter(
+                setup_context, product_name, chunk_size, root_element, item_element, encoding, export_uri=export_uri
+            )
         elif name == EXPORTER_XLSX:
             sheet_name = exporter_params_dict.get("sheet_name")
-            return XLSXExporter(setup_context, product_name, chunk_size, sheet_name, encoding)
+            return XLSXExporter(setup_context, product_name, chunk_size, sheet_name, encoding, export_uri=export_uri)
         elif name == EXPORTER_TXT:
-            return TXTExporter(setup_context, product_name, chunk_size, delimiter, line_terminator, encoding)
+            return TXTExporter(
+                setup_context, product_name, chunk_size, delimiter, line_terminator, encoding, export_uri=export_uri
+            )
         elif name == EXPORTER_TEST_RESULT_EXPORTER:
             return setup_context.test_result_exporter
         elif name in setup_context.clients:

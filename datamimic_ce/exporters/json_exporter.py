@@ -38,10 +38,13 @@ class JsonExporter(UnifiedBufferedExporter):
         chunk_size: int | None,
         use_ndjson: bool | None,
         encoding: str | None,
+        export_uri: str | None = None,
     ):
         self.use_ndjson = use_ndjson
         self._task_id = setup_context.task_id
-        super().__init__("json", setup_context, product_name, chunk_size=chunk_size, encoding=encoding)
+        super().__init__(
+            "json", setup_context, product_name, chunk_size=chunk_size, encoding=encoding, export_uri=export_uri
+        )
 
         logger.info(f"JsonExporter initialized with chunk size {chunk_size} and NDJSON format: {use_ndjson}")
 

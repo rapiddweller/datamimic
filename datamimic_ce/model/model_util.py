@@ -53,6 +53,30 @@ def _attr_true(value: object) -> bool:
 
 class ModelUtil:
     @staticmethod
+    def normalize_export_uri(value: str | None) -> str | None:
+        """Validate + normalize an exportUri into a safe local output-directory prefix.
+
+        Mirrors DATAMIMIC EE's exportUri policy (prefix only, never a full path/URL): a string,
+        no surrounding whitespace, not empty, no URL scheme, no backslash, no control chars - plus a
+        traversal guard ('..'), since CE resolves it under the local output/ directory and it must not
+        escape. Leading/trailing slashes are stripped. Returns None when unset.
+        """
+        if value is None:
+            return None
+        if value != value.strip() or not value.strip():
+            raise ValueError("exportUri must not be empty or padded with whitespace")
+        cleaned = value.strip()
+        if "://" in cleaned:
+            raise ValueError(f"exportUri must be a path prefix, not a URL: '{cleaned}'")
+        if "\\" in cleaned:
+            raise ValueError(f"exportUri must use '/' separators, not backslashes: '{cleaned}'")
+        if any(ord(ch) < 32 for ch in cleaned):
+            raise ValueError("exportUri must not contain control characters")
+        if ".." in cleaned.split("/"):
+            raise ValueError(f"exportUri must not traverse with '..': '{cleaned}'")
+        return cleaned.strip("/")
+
+    @staticmethod
     def check_valid_attributes(values: dict, valid_attributes: set[str]) -> dict:
         """
         Check if element's attributes are in valid attributes set

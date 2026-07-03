@@ -31,6 +31,7 @@ class XLSXExporter(UnifiedBufferedExporter):
         chunk_size: int | None,
         sheet_name: str | None,
         encoding: str | None,
+        export_uri: str | None = None,
     ):
         self.sheet_name = sheet_name or "data"
         super().__init__(
@@ -39,6 +40,7 @@ class XLSXExporter(UnifiedBufferedExporter):
             product_name=product_name,
             chunk_size=chunk_size,
             encoding=encoding,
+            export_uri=export_uri,
         )
         logger.info(f"XLSXExporter initialized with chunk size {chunk_size}, sheet '{self.sheet_name}'")
 
