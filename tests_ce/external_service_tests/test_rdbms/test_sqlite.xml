@@ -27,4 +27,7 @@
     <!-- zero-match relational read: count 0 via RdbmsClient.count_query_length -> empty product, not a missing key -->
     <generate name="no_customer" source="sourceDB" selector="SELECT * FROM CUSTOMER WHERE id = -1"
               target="ConsoleExporter"/>
+
+    <!-- multi-page ordered read: 20 rows / pageSize 7 -> 3 pages with disjoint windows -->
+    <generate name="customer_pages" source="sourceDB" type="CUSTOMER" pageSize="7" target="ConsoleExporter"/>
 </setup>

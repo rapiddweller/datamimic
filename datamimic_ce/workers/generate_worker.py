@@ -11,12 +11,14 @@ import dill  # type: ignore[import-untyped]
 from datamimic_ce.config import settings
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.data_sources.chunk_source_reader import ChunkSourceReader
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.exporter_util import ExporterUtil
 from datamimic_ce.logger import logger, setup_logger
+from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.generate_statement import GenerateStatement
+from datamimic_ce.statements.statement import Statement
 from datamimic_ce.tasks.generate_task import GenerateTask
 from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.logging_util import gen_timer
@@ -76,15 +78,17 @@ class GenerateWorker:
             "page_count": 0,  # Track number of pages processed
         }
 
-        # Determine if memstore exporter is available
-        has_memstore_exporter = any(
-            [
-                ("." not in exporter_str)
-                and ("(" not in exporter_str)
-                and context.root.memstore_manager.contain(exporter_str)
-                for exporter_str in stmt.targets
-            ]
-        )
+        # Keys the outermost run must accumulate across pages: everything in test mode,
+        # otherwise only products a memstore consumes at the end of the run
+        # (export_memstore). Anything else would pile up in RAM page after page — and
+        # cross process boundaries in mp mode — only to be discarded.
+        keep_keys: set[str] | None = None
+        if isinstance(context, SetupContext) and not root_context.test_mode:
+            keep_keys = GenerateWorker._memstore_product_keys(root_context, stmt)
+
+        # Chunk-scoped source reader: owns the loads_all pool caching and hands each
+        # page its window (see ChunkSourceReader) — the worker only iterates pages.
+        source_reader = ChunkSourceReader(context, stmt)
 
         # Generate and consume product by page
         for page_index, page_tuple in enumerate(index_chunk):
@@ -95,7 +99,7 @@ class GenerateWorker:
                 timer_result["records_count"] = page_end - page_start
                 # Generate product
                 result_dict = GenerateWorker._generate_product_by_page_in_single_process(
-                    context, stmt, page_start, page_end, worker_id
+                    context, stmt, page_start, page_end, worker_id, source_reader
                 )
 
             with gen_timer("export", root_context.report_logging, stmt.full_name) as timer_result:
@@ -103,18 +107,30 @@ class GenerateWorker:
                 # Export product by page
                 TaskUtil.export_product_by_page(context.root, stmt, result_dict, exporter_state_manager)
 
-            # Determine list of keys to be returned
-            return_keys_set = set(result_dict.keys())
-            # Do not return current statement if not in test mode and memstore exporter is not available
-            # TODO: Currently always return inner generate_stmt keys for using as variable, need to improve
-            if isinstance(context, SetupContext) and not context.root.test_mode and not has_memstore_exporter:
-                return_keys_set.remove(stmt.full_name)
-
-            # Collect result for later capturing
-            for key in list(return_keys_set):
-                result[key] = result.get(key, []) + result_dict.get(key, [])
+            # Collect result for later capturing (keep_keys None -> keep everything)
+            for key in result_dict.keys() if keep_keys is None else keep_keys & result_dict.keys():
+                result[key] = result.get(key, []) + result_dict[key]
 
         return result
+
+    @staticmethod
+    def _memstore_product_keys(root_context: SetupContext, statement: GenerateStatement) -> set[str]:
+        """full_names of statement + nested <generate>s whose targets include a memstore —
+        the only products the end-of-run lazy export (export_memstore) consumes."""
+        memstore_manager = root_context.memstore_manager
+        keys: set[str] = set()
+
+        def _walk(stmt: Statement) -> None:
+            if isinstance(stmt, GenerateStatement) and any(
+                "." not in t and "(" not in t and memstore_manager.contain(t) for t in stmt.targets
+            ):
+                keys.add(stmt.full_name)
+            if isinstance(stmt, CompositeStatement):
+                for sub in stmt.sub_statements:
+                    _walk(sub)
+
+        _walk(statement)
+        return keys
 
     @staticmethod
     def _generate_product_by_page_in_single_process(
@@ -123,6 +139,7 @@ class GenerateWorker:
         page_start: int,
         page_end: int,
         worker_id: int,
+        source_reader: ChunkSourceReader,
     ) -> dict[str, list]:
         """
         (IMPORTANT: Only to be used as Ray multiprocessing function)
@@ -131,6 +148,8 @@ class GenerateWorker:
         2. Load data source (if any)
         3. Modify/Generate data by executing sub-tasks
 
+        :param source_reader: chunk-scoped reader handing this page its source window
+            (ordered: paged load; random/cumulated/unique: window of the cached pool).
         :return: Dictionary with generated products.
         """
         root_context: SetupContext = context.root
@@ -138,21 +157,6 @@ class GenerateWorker:
         # Determine number of data to be processed
         processed_data_count = page_end - page_start
         pagination = DataSourcePagination(skip=page_start, limit=processed_data_count)
-
-        # Determined page of data source to load.
-        # RANDOM (shuffle) and CUMULATED (bell) need ALL rows loaded first (no pagination);
-        # ORDERED reads page by page.
-        # unique also needs the whole pool (dedupe + sample without replacement).
-        loads_all = False if TaskUtil.is_source_ml_model(stmt) else (stmt.distribution.loads_all or bool(stmt.unique))
-        if loads_all:
-            # Don't paginate the load — need all rows before shuffle/cumulated selection
-            load_start_idx = None
-            load_end_idx = None
-            load_pagination: DataSourcePagination | None = None
-        else:
-            load_start_idx = page_start
-            load_end_idx = page_end
-            load_pagination = pagination
 
         # Extract converter list for post-processing
         converter_list = TaskUtil.create_converter_list(context, stmt.converter)
@@ -162,37 +166,13 @@ class GenerateWorker:
             TaskUtil.get_task_by_statement(root_context, child_stmt, pagination) for child_stmt in stmt.sub_statements
         ]
 
-        # 2: Load data source from file, database, memory, Kafka, etc.
+        # 2: Load this page's window of the data source (file, database, memory, ...)
+        source_data, build_from_source = source_reader.read_page(page_start, page_end)
+
+        # Used below to lazily evaluate scripted source templates after sub-tasks ran
         source_scripted = (
             stmt.source_script if stmt.source_script is not None else bool(root_context.default_source_scripted)
         )
-        separator = stmt.separator or root_context.default_separator
-
-        source_data, build_from_source = TaskUtil.gen_task_load_data_from_source_or_script(
-            context,
-            stmt,
-            stmt.source,
-            separator,
-            source_scripted,
-            load_start_idx,
-            load_end_idx,
-            load_pagination,
-        )
-
-        # Reorder loaded rows for random (shuffle) / cumulated (bell) / unique (distinct,
-        # no replacement); ordered is left as-is. All page-window slicing lives in the registry.
-        if loads_all:
-            # Stable per-statement seed so random / cumulated / unique select the SAME global order on
-            # every page (and every worker) -> disjoint page windows -> consistent across pages.
-            seed = root_context.stable_distribution_seed(stmt.full_name)
-            if stmt.unique:
-                source_data = DataSourceRegistry.get_unique_data(
-                    source_data, pagination, seed, f"<generate> '{stmt.name}'"
-                )
-            else:
-                source_data = DataSourceRegistry.get_distributed_data(
-                    source_data, pagination, stmt.cyclic, seed, stmt.distribution
-                )
 
         # Store temp result
         product_holder: dict[str, list] = {}

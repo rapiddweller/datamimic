@@ -59,3 +59,5 @@ class TestRdbms:
         result = test_engine.capture_result()
         # zero-match relational read must still yield an empty product (count == 0 path)
         assert result["no_customer"] == []
+        # multi-page ordered read: disjoint page windows -> complete, no duplicates
+        assert sorted(c["id"] for c in result["customer_pages"]) == list(range(1, 21))
