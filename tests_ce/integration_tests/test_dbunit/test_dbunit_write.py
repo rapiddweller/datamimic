@@ -66,3 +66,13 @@ def test_round_trip_of_the_real_benerator_shop_dataset():
         assert reread == original
     finally:
         _clean()
+
+
+def test_zero_records_writes_no_file_and_does_not_crash():
+    # consistent with every buffered exporter: 0 records -> nothing flushed, no file, no error
+    _clean()
+    try:
+        DataMimicTest(test_dir=_DIR, filename="write_empty.xml", capture_test_result=True).test_with_timer()
+        assert not list((_DIR / "output").rglob("empty*.dbunit.xml"))
+    finally:
+        _clean()

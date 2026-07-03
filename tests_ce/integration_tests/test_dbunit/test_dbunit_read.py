@@ -26,11 +26,11 @@ def test_reads_one_table_from_the_real_shop_dataset():
     assert cats[0]["name"] == "Food"
 
 
-def test_ragged_rows_keep_their_own_columns_null_is_an_absent_attribute():
+def test_columns_are_unified_absent_attribute_becomes_a_null_cell():
     cats = FileUtil.read_dbunit_to_dict_list(_SHOP, "db_category")
-    # top-level category has no parent_id (NULL = absent attribute)
-    assert "parent_id" not in cats[0]
-    # a child category carries parent_id
+    # column sensing: every row carries every column; the top-level category's absent parent_id is NULL
+    assert cats[0]["parent_id"] is None
+    # a child category carries the real value
     assert cats[1]["parent_id"] == "FOOD"
 
 
@@ -41,8 +41,8 @@ def test_xml_special_chars_unicode_and_empty_string_are_preserved():
     assert accounts[0]["name"] == "A & B <Ltd>"        # entities decoded
     assert accounts[0]["note"] == 'quote:"x"'
     assert accounts[1]["name"] == "Ünïcödé Ω"          # unicode
-    assert accounts[1]["note"] == ""                   # empty string kept (distinct from absent)
-    assert "note" not in accounts[2]                   # absent attribute stays absent (NULL)
+    assert accounts[1]["note"] == ""                   # present empty string kept ""
+    assert accounts[2]["note"] is None                 # absent attribute -> NULL cell (distinct from "")
     assert accounts[0]["zip"] == "01234"               # leading zero kept as string, not coerced
 
 

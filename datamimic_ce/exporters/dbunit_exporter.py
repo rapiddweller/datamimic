@@ -32,11 +32,13 @@ class DbUnitExporter(UnifiedBufferedExporter):
     ):
         # the row element name = the physical table/entity being written
         self._table = product_name
+        # A dbunit dataset is a whole document; chunking would split one table across several partial
+        # <dataset> files. Force a single file (ignore chunk_size).
         super().__init__(
             exporter_type="dbunit",
             setup_context=setup_context,
             product_name=product_name,
-            chunk_size=chunk_size,
+            chunk_size=None,
             encoding=encoding,
         )
         logger.info(f"DbUnitExporter initialized for table '{self._table}'")
