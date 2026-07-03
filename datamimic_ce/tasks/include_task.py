@@ -33,9 +33,11 @@ class IncludeTask(CommonSubTask):
         :return:
         """
         uri = self.statement.uri
-        # Evaluate uri if it is a python expression
-        if uri.startswith("{") and uri.endswith("}"):
-            uri = ctx.evaluate_python_expression(uri[1:-1])
+        # A dynamic uri interpolates {var} f-string style against the context (dynamic include), so
+        # a path like "{database}/shop.{database}.properties" resolves to "h2/shop.h2.properties".
+        if "{" in uri:
+            escaped = uri.replace("'", "\\'").replace('"', '\\"')
+            uri = ctx.evaluate_python_expression(f"f'''{escaped}'''")
 
         if isinstance(ctx, SetupContext):
             self._execute_with_setup_context(ctx, uri)
