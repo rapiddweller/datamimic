@@ -70,6 +70,7 @@ from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.state_machine_statement import StateMachineStatement
 from datamimic_ce.statements.statement import Statement
+from datamimic_ce.statements.statement_util import StatementUtil
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.statements.while_statement import WhileStatement
 from datamimic_ce.tasks.array_task import ArrayTask
@@ -386,7 +387,7 @@ class TaskUtil:
         # Load data from in-memory memstore
         elif root_context.memstore_manager.contain(source_str):
             source_data = root_context.memstore_manager.get_memstore(source_str).get_data_by_type(
-                stmt.type or stmt.name, load_pagination, stmt.cyclic
+                StatementUtil.resolve_source_entity(stmt), load_pagination, stmt.cyclic
             )
         # Load data from client (MongoDB, RDBMS,...)
         elif root_context.clients.get(source_str) is not None:
@@ -396,11 +397,13 @@ class TaskUtil:
                 if stmt.selector:
                     selector = TaskUtil.evaluate_selector_script(root_context, stmt)
                     source_data = client.get_by_page_with_query(query=selector, pagination=load_pagination)
-                elif stmt.type:
-                    source_data = client.get_by_page_with_type(collection_name=stmt.type, pagination=load_pagination)
+                elif stmt.source_entity or stmt.type:
+                    collection = str(stmt.source_entity or stmt.type)
+                    source_data = client.get_by_page_with_type(collection_name=collection, pagination=load_pagination)
                 else:
                     raise ValueError(
-                        "MongoDB source requires at least attribute 'type', 'selector' or 'iterationSelector'"
+                        "MongoDB source requires at least attribute 'sourceEntity', 'type', 'selector' "
+                        "or 'iterationSelector'"
                     )
                 # Init empty product for upsert MongoDB in case no record found by query
                 if (
@@ -416,7 +419,7 @@ class TaskUtil:
                     source_data = client.get_by_page_with_query(original_query=selector, pagination=load_pagination)
                 else:
                     source_data = client.get_by_page_with_type(
-                        table_name=stmt.type or stmt.name,
+                        table_name=StatementUtil.resolve_source_entity(stmt),
                         pagination=load_pagination,
                     )
             else:
@@ -448,9 +451,13 @@ class TaskUtil:
 
         # Wrap product key and value into a tuple
         # for iterate database may have key, value, and other statement attribute info
-        if getattr(stmt, "selector", False):
+        # targetEntity/type route the write to their physical table/collection (see
+        # StatementUtil.resolve_target_entity); selector carries the read query.
+        if stmt.target_entity:
+            json_product = (stmt.name, json_result, {"target_entity": stmt.target_entity})
+        elif stmt.selector:
             json_product = (stmt.name, json_result, {"selector": stmt.selector})
-        elif getattr(stmt, "type", False):
+        elif stmt.type:
             json_product = (stmt.name, json_result, {"type": stmt.type})
         else:
             json_product = (stmt.name, json_result)  # type: ignore[assignment]

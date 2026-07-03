@@ -10,6 +10,27 @@ from datamimic_ce.contexts.context import Context
 
 class StatementUtil:
     @staticmethod
+    def resolve_source_entity(stmt) -> str:
+        """Physical entity to READ (table/collection): sourceEntity -> type -> name.
+
+        sourceEntity is the explicit override; without it CE keeps its existing 'type or name'
+        behaviour, so existing descriptors are unaffected.
+        """
+        return stmt.source_entity or stmt.type or stmt.name
+
+    @staticmethod
+    def resolve_target_entity(name: str, metadata: dict | None) -> str:
+        """Physical entity to WRITE (table/collection): targetEntity -> type -> name.
+
+        Resolved from the product metadata an exporter receives (the statement itself is not
+        available there). Without targetEntity/type it falls back to the product name = existing
+        behaviour.
+        """
+        if metadata:
+            return metadata.get("target_entity") or metadata.get("type") or name
+        return name
+
+    @staticmethod
     def parse_consumer(consumer_string: str | None) -> set[str]:
         """
         Parse the 'consumer' attribute into a set of consumers.

@@ -15,10 +15,14 @@ class MongoDBExporter(Exporter):
 
     def consume(self, product) -> None:
         """Write data into MongoDB database"""
+        from datamimic_ce.statements.statement_util import StatementUtil
+
         temp_product = copy.deepcopy(product)
-        name = temp_product[0]
+        # targetEntity -> type -> name routes the write to its collection (same as the RDBMS exporter).
+        metadata = temp_product[2] if len(temp_product) > 2 else None
+        collection = StatementUtil.resolve_target_entity(temp_product[0], metadata)
         data = temp_product[1]
-        self._client.insert(name, data, False)
+        self._client.insert(collection, data, False)
 
     def update(self, product: tuple) -> int:
         """

@@ -29,6 +29,8 @@ class GenerateStatement(CompositeStatement):
         self._unique = model.unique
         self._source_script = model.source_scripted
         self._type = model.type
+        self._source_entity = model.source_entity
+        self._target_entity = model.target_entity
         self._selector = model.selector
         self._separator = model.separator
         self._targets: set[str] = StatementUtil.parse_consumer(model.target)
@@ -107,6 +109,14 @@ class GenerateStatement(CompositeStatement):
     @property
     def type(self) -> str | None:
         return self._type
+
+    @property
+    def source_entity(self) -> str | None:
+        return self._source_entity
+
+    @property
+    def target_entity(self) -> str | None:
+        return self._target_entity
 
     @property
     def selector(self) -> str | None:

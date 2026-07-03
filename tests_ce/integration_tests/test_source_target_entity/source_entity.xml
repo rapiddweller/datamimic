@@ -1,0 +1,7 @@
+<setup>
+    <database id="db" dbms="sqlite" database="source_entity_db"/>
+    <execute target="db" type="sql">DROP TABLE IF EXISTS people; CREATE TABLE people (n INTEGER); INSERT INTO people VALUES (1),(2),(3),(4)</execute>
+    <!-- statement name 'reader' differs from the table; sourceEntity routes the READ to 'people'.
+         Iterated source columns pass through as the product. -->
+    <iterate name="reader" source="db" sourceEntity="people" target=""/>
+</setup>

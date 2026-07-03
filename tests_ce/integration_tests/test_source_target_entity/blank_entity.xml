@@ -1,0 +1,5 @@
+<setup>
+    <generate name="g" count="1" targetEntity="   " target="">
+        <key name="x" constant="1"/>
+    </generate>
+</setup>
