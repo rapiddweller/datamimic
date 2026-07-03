@@ -35,9 +35,6 @@ class GenerateStatement(CompositeStatement):
         self._separator = model.separator
         self._targets: set[str] = StatementUtil.parse_consumer(model.target)
         self._page_size = model.page_size
-        self._source_uri = model.source_uri
-        self._container = model.container
-        self._storage_id = model.storage_id or "default-datamimic-minio"
         self._mp = model.multiprocessing
         self._export_uri = model.export_uri
         # Real type at the boundary (absent = RANDOM). <generate> accepts random/ordered/cumulated.
@@ -45,7 +42,6 @@ class GenerateStatement(CompositeStatement):
         self._variable_prefix = model.variable_prefix
         self._variable_suffix = model.variable_suffix
         self._converter = model.converter
-        self._bucket = model.bucket
         self._num_process = model.num_process
         self._script = model.script
         self._mp_platform = model.mp_platform
@@ -139,18 +135,6 @@ class GenerateStatement(CompositeStatement):
         return self._page_size
 
     @property
-    def source_uri(self) -> str | None:
-        return self._source_uri
-
-    @property
-    def container(self) -> str | None:
-        return self._container
-
-    @property
-    def storage_id(self) -> str | None:
-        return self._storage_id
-
-    @property
     def multiprocessing(self) -> bool | None:
         return self._mp
 
@@ -173,10 +157,6 @@ class GenerateStatement(CompositeStatement):
     @property
     def converter(self) -> str | None:
         return self._converter
-
-    @property
-    def bucket(self) -> str | None:
-        return self._bucket
 
     @property
     def num_process(self) -> int | None:
