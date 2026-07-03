@@ -1,0 +1,9 @@
+<setup defaultSeparator=",">
+    <!-- ONE generate -> EVERY registered buffered exporter. The matrix test reads each
+         format back; a new registry entry without a matrix reader fails the gate. -->
+    <generate name="matrix_rows" count="10" exportUri="matrix_out"
+              target="CSV,JSON,XML,XLSX,TXT,DbUnit">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" script="'row_' + str(id)"/>
+    </generate>
+</setup>
