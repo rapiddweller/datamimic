@@ -19,16 +19,20 @@ class StatementUtil:
         return stmt.source_entity or stmt.type or stmt.name
 
     @staticmethod
-    def resolve_target_entity(name: str, metadata: dict | None) -> str:
-        """Physical entity to WRITE (table/collection): targetEntity -> type -> name.
+    def resolve_target_entity(target_entity: str | None, type_: str | None, name: str) -> str:
+        """Physical entity to WRITE (table/collection/basename): targetEntity -> type -> name.
 
-        Resolved from the product metadata an exporter receives (the statement itself is not
-        available there). Without targetEntity/type it falls back to the product name = existing
-        behaviour.
+        The single write-entity resolver, used by every target family (RDBMS/MongoDB exporters,
+        the file-exporter basename, the memstore key). Callers pass type_=None where their family
+        never routed by type (file basenames), so behaviour is unchanged without targetEntity.
         """
-        if metadata:
-            return metadata.get("target_entity") or metadata.get("type") or name
-        return name
+        return target_entity or type_ or name
+
+    @staticmethod
+    def resolve_target_entity_from_metadata(name: str, metadata: dict | None) -> str:
+        """resolve_target_entity for an exporter that only has the product metadata, not the statement."""
+        md = metadata or {}
+        return StatementUtil.resolve_target_entity(md.get("target_entity"), md.get("type"), name)
 
     @staticmethod
     def parse_consumer(consumer_string: str | None) -> set[str]:

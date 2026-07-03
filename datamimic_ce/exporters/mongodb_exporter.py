@@ -20,7 +20,7 @@ class MongoDBExporter(Exporter):
         temp_product = copy.deepcopy(product)
         # targetEntity -> type -> name routes the write to its collection (same as the RDBMS exporter).
         metadata = temp_product[2] if len(temp_product) > 2 else None
-        collection = StatementUtil.resolve_target_entity(temp_product[0], metadata)
+        collection = StatementUtil.resolve_target_entity_from_metadata(temp_product[0], metadata)
         data = temp_product[1]
         self._client.insert(collection, data, False)
 

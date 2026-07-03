@@ -276,7 +276,12 @@ class ExporterUtil:
         :param exporter_params_dict:
         :return:
         """
-        product_name = gen_stmt.name
+        # targetEntity names the physical output entity (file basename here; table/collection in the
+        # store exporters) - one explicit override, honoured across every target family. type_=None:
+        # a file basename never routed by 'type', so behaviour is unchanged without targetEntity.
+        from datamimic_ce.statements.statement_util import StatementUtil
+
+        product_name = StatementUtil.resolve_target_entity(gen_stmt.target_entity, None, gen_stmt.name)
 
         if name is None or name == "":
             return None

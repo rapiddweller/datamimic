@@ -1,0 +1,5 @@
+<setup>
+    <memstore id="mem"/>
+    <generate name="gen" count="3" targetEntity="routed" target="mem"><key name="n" constant="1"/></generate>
+    <iterate name="back" source="mem" sourceEntity="routed" target=""/>
+</setup>
