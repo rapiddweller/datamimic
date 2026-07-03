@@ -20,6 +20,7 @@ class NestedKeyStatement(CompositeStatement):
         self._type = model.type
         self._count = model.count
         self._source = model.source
+        self._source_entity = model.source_entity
         self._source_script = model.source_script
         self._cyclic = model.cyclic
         self._separator = model.separator
@@ -54,6 +55,10 @@ class NestedKeyStatement(CompositeStatement):
     @property
     def source(self):
         return self._source
+
+    @property
+    def source_entity(self) -> str | None:
+        return self._source_entity
 
     @property
     def source_script(self):

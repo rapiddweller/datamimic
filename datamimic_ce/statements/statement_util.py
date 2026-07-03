@@ -11,12 +11,18 @@ from datamimic_ce.contexts.context import Context
 class StatementUtil:
     @staticmethod
     def resolve_source_entity(stmt) -> str:
-        """Physical entity to READ (table/collection): sourceEntity -> type -> name.
-
-        sourceEntity is the explicit override; without it CE keeps its existing 'type or name'
-        behaviour, so existing descriptors are unaffected.
+        """Physical entity to READ where a name fallback is valid (RDBMS table, memstore type):
+        sourceEntity -> type -> name. The single resolver for the name-fallback read families.
         """
         return stmt.source_entity or stmt.type or stmt.name
+
+    @staticmethod
+    def resolve_source_collection(stmt) -> str | None:
+        """Physical entity to READ where the statement name is NOT a valid fallback (MongoDB requires
+        an explicit collection): sourceEntity -> type, else None (the caller raises). The single
+        resolver for the explicit-only read families.
+        """
+        return stmt.source_entity or stmt.type
 
     @staticmethod
     def resolve_target_entity(target_entity: str | None, type_: str | None, name: str) -> str:

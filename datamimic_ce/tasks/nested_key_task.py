@@ -253,8 +253,9 @@ class NestedKeyTask(GenSubTask):
 
         # handle memstore source
         elif parent_context.root.memstore_manager.contain(source_str) and isinstance(parent_context, GenIterContext):
+            # memstore read: sourceEntity -> type -> name, same resolver as generate/iterate/variable.
             list_value = parent_context.root.memstore_manager.get_memstore(source_str).get_data_by_type(
-                self._statement.type, None, self._statement.cyclic
+                StatementUtil.resolve_source_entity(self._statement), None, self._statement.cyclic
             )
 
             result = self._modify_nestedkey_data_list(parent_context, list_value)

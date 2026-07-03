@@ -20,6 +20,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_SCRIPT,
     ATTR_SEPARATOR,
     ATTR_SOURCE,
+    ATTR_SOURCE_ENTITY,
     ATTR_SOURCE_SCRIPTED,
     ATTR_TYPE,
     ATTR_VARIABLE_PREFIX,
@@ -33,6 +34,7 @@ from datamimic_ce.model.model_util import ModelUtil
 class NestedKeyModel(BaseModel):
     name: str
     type: str | None = None
+    source_entity: str | None = Field(None, alias=ATTR_SOURCE_ENTITY)
     count: str | None = None
     source: str | None = None
     source_script: bool | None = Field(None, alias=ATTR_SOURCE_SCRIPTED)
@@ -58,6 +60,7 @@ class NestedKeyModel(BaseModel):
                 ATTR_TYPE,
                 ATTR_COUNT,
                 ATTR_SOURCE,
+                ATTR_SOURCE_ENTITY,
                 ATTR_SOURCE_SCRIPTED,
                 ATTR_CYCLIC,
                 ATTR_SEPARATOR,

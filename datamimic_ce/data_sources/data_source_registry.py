@@ -164,9 +164,9 @@ class DataSourceRegistry:
                             ds_len = client.count_query_length(stmt.selector)
                         except ValueError:
                             return
-                    elif stmt.source_entity is not None or stmt.type is not None:
+                    elif (collection := StatementUtil.resolve_source_collection(stmt)) is not None:
                         try:
-                            ds_len = client.count(collection_name=stmt.source_entity or stmt.type)
+                            ds_len = client.count(collection_name=collection)
                         except ValueError:
                             return
                     elif hasattr(stmt, "iteration_selector") and stmt.iteration_selector is not None:

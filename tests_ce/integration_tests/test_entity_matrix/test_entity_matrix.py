@@ -124,14 +124,25 @@ def test_source_entity_on_single_entity_file_is_ignored_not_fatal():
         _clean()
 
 
-def test_nested_key_source_is_file_only_and_type_stays_a_structure_marker():
-    # Way A: a <nestedKey source=file type=list> reads a file (single entity) and type='list' is the
-    # STRUCTURE marker, not a table. The entity resolver (sourceEntity->type->name) must not touch it -
-    # each order gets the 2-item list, not a lookup of a 'list' entity.
+def test_nested_key_file_source_type_is_a_structure_marker():
+    # A <nestedKey source=file type=list>: source is a file, type='list' is the STRUCTURE marker.
+    # Each order gets the 2-item list read from the file.
     _clean()
     try:
         rows = _run("nk_source.xml").capture_result()["orders"]
         assert all(len(r["lines"]) == 2 for r in rows)
+    finally:
+        _clean()
+
+
+def test_nested_key_memstore_source_honours_sourceentity():
+    # nestedKey is NOT file-only: it also reads a memstore. sourceEntity='lineitems' names the memstore
+    # entity while type='list' stays the structure marker - the two are cleanly separated, and the
+    # memstore read goes through the SAME resolve_source_entity as generate/iterate/variable.
+    _clean()
+    try:
+        rows = _run("nk_memstore.xml").capture_result()["orders"]
+        assert all(len(r["lines"]) == 2 for r in rows)  # each order got the 2 seeded lineitems
     finally:
         _clean()
 

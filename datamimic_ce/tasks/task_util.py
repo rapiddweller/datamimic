@@ -397,8 +397,7 @@ class TaskUtil:
                 if stmt.selector:
                     selector = TaskUtil.evaluate_selector_script(root_context, stmt)
                     source_data = client.get_by_page_with_query(query=selector, pagination=load_pagination)
-                elif stmt.source_entity or stmt.type:
-                    collection = str(stmt.source_entity or stmt.type)
+                elif (collection := StatementUtil.resolve_source_collection(stmt)) is not None:
                     source_data = client.get_by_page_with_type(collection_name=collection, pagination=load_pagination)
                 else:
                     raise ValueError(
