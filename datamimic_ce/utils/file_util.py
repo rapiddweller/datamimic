@@ -19,6 +19,32 @@ from datamimic_ce.utils.file_content_storage import FileContentStorage
 
 class FileUtil:
     @staticmethod
+    def read_dbunit_to_dict_list(path: Path, table: str) -> list[dict[str, str]]:
+        """Read one table from a dbunit flat-XML dataset.
+
+        Flat XML: every child of <dataset> is a row, the element name is the table, its attributes are
+        the columns (rows of one table may carry different columns - "ragged"; an absent attribute is a
+        NULL, a present empty string is ""). A dataset holds many tables, so `table` selects one.
+
+        A DOCTYPE/DTD reference is ignored, never fetched (offline + XXE-safe): ElementTree does not
+        resolve external entities.
+        """
+        import xml.etree.ElementTree as ET  # noqa: N817 - stdlib parser, no external-entity resolution
+
+        try:
+            root = ET.parse(str(path)).getroot()
+        except ET.ParseError as e:
+            raise ValueError(f"dbunit dataset '{path}' is not well-formed XML: {e}") from e
+        # dbunit's root is <dataset>; anything else is not a dataset
+        if root.tag != "dataset":
+            raise ValueError(f"dbunit dataset '{path}' must have a <dataset> root, got <{root.tag}>")
+        rows = [dict(child.attrib) for child in root if child.tag == table]
+        if not rows:
+            available = sorted({child.tag for child in root})
+            raise ValueError(f"dbunit dataset '{path}' has no rows for table '{table}'; available: {available}")
+        return rows
+
+    @staticmethod
     def parse_properties(path: Path, encoding="utf-8") -> dict[str, str]:
         """
         Parse properties from file then save into a dict

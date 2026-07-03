@@ -19,6 +19,7 @@ from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_CSV,
+    EXPORTER_DBUNIT,
     EXPORTER_JSON,
     EXPORTER_JSON_SINGLE,
     EXPORTER_LOG_EXPORTER,
@@ -334,6 +335,10 @@ class ExporterUtil:
             return TXTExporter(
                 setup_context, product_name, chunk_size, delimiter, line_terminator, encoding, export_uri=export_uri
             )
+        elif name == EXPORTER_DBUNIT:
+            from datamimic_ce.exporters.dbunit_exporter import DbUnitExporter
+
+            return DbUnitExporter(setup_context, product_name, chunk_size, encoding)
         elif name == EXPORTER_TEST_RESULT_EXPORTER:
             return setup_context.test_result_exporter
         elif name in setup_context.clients:
