@@ -20,6 +20,38 @@ from datamimic_ce.connection_config.rdbms_connection_config import RdbmsConnecti
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.logger import logger
 
+# SQLAlchemy create_engine kwargs DATAMIMIC forwards (pooling/behavior). Anything else in the
+# connection config is either connection identity (see _CONNECTION_IDENTITY, used to build the URL)
+# or a vendor knob that create_engine would reject.
+_ENGINE_KWARGS = {
+    "echo",
+    "echo_pool",
+    "pool_size",
+    "max_overflow",
+    "pool_timeout",
+    "pool_recycle",
+    "pool_pre_ping",
+    "connect_args",
+    "isolation_level",
+    "execution_options",
+    "encoding",
+    "future",
+}
+# Connection identity used to build the URL (not passed as an engine kwarg) - dropping these is expected.
+_CONNECTION_IDENTITY = {
+    "dbms",
+    "database",
+    "host",
+    "port",
+    "user",
+    "password",
+    "db_schema",
+    "id",
+    "environment",
+    "system",
+    "none_as_null_col",
+}
+
 
 class RdbmsClient(DatabaseClient):
     def __init__(self, credential: RdbmsConnectionConfig, task_id: str | None = None):
@@ -27,23 +59,14 @@ class RdbmsClient(DatabaseClient):
         self._engine = None
         self._task_id = task_id
 
-        # Prepare sqlalchemy engine kwargs, also remove datamimic-specific kwargs
-        self._engine_kwargs = credential.get_connection_config()
-        # Remove datamimic-specific kwargs
-        not_engine_kwargs = [
-            "dbms",
-            "database",
-            "host",
-            "port",
-            "user",
-            "password",
-            "db_schema",
-            "id",
-            "environment",
-            "system",
-            "none_as_null_col",
-        ]
-        self._engine_kwargs = {k: v for k, v in self._engine_kwargs.items() if k not in not_engine_kwargs}
+        # Keep only real SQLAlchemy create_engine kwargs. The connection config allows extra keys
+        # (env files carry connection identity like dbms/host plus vendor knobs such as Benerator's
+        # clean/catalog/quoteTableNames); anything not a create_engine parameter would raise, so allowlist.
+        all_config = credential.get_connection_config()
+        self._engine_kwargs = {k: v for k, v in all_config.items() if k in _ENGINE_KWARGS}
+        dropped = set(all_config) - set(self._engine_kwargs) - _CONNECTION_IDENTITY
+        if dropped:
+            logger.debug(f"Ignored non-engine connection keys: {', '.join(sorted(dropped))}")
         # Set default values for some kwargs
         self._engine_kwargs["echo"] = self._engine_kwargs.get("echo", False)
         self._engine_kwargs["pool_size"] = self._engine_kwargs.get("pool_size", 20)
