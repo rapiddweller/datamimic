@@ -151,3 +151,13 @@ def test_target_entity_rejects_a_path():
     # targetEntity is a plain entity name, never a path - a '/' or '..' would escape the output dir.
     with pytest.raises(Exception, match=r"not a path"):
         _run("te_path.xml")
+
+
+def test_source_entity_variable_memstore():
+    # covers the variable + memstore read path (variable_task) via sourceEntity
+    _clean()
+    try:
+        engine = _run("se_variable_memstore.xml")
+        assert len(engine.capture_result()["out"]) == 3
+    finally:
+        _clean()
