@@ -1,0 +1,5 @@
+<setup rngSeed="1">
+    <condition><generate name="a" count="1" target="ConsoleExporter"/></condition>
+    <memstore id="mem"><key name="x" constant="1"/></memstore>
+    <generate name="b" count="1" target="ConsoleExporter"><key name="y" constant="1"/></generate>
+</setup>

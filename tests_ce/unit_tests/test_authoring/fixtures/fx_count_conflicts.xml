@@ -1,0 +1,4 @@
+<setup rngSeed="1">
+    <generate name="a" count="5" minCount="1" maxCount="9" target="ConsoleExporter"><key name="x" constant="1"/></generate>
+    <generate name="b" count="abc" target="ConsoleExporter"><key name="x" constant="1"/></generate>
+</setup>

@@ -71,6 +71,8 @@ class NestedKeyModel(BaseModel):
                 ATTR_DEFAULT_VALUE,
                 ATTR_DISTRIBUTION,
                 ATTR_CONVERTER,
+                ATTR_VARIABLE_PREFIX,
+                ATTR_VARIABLE_SUFFIX,
             },
         )
 

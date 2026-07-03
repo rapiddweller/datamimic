@@ -1,0 +1,5 @@
+<setup rngSeed="1">
+    <generate name="a" count="3" target="ConsoleExporter">
+        <key name="x" unique="True"/>
+    </generate>
+</setup>

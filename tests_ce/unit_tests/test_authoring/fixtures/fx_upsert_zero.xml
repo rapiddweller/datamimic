@@ -1,0 +1,4 @@
+<setup rngSeed="1">
+    <mongodb id="mongodb"/>
+    <generate name="a" count="0" source="mongodb" selector="find: 'c', filter: {}" target="mongodb.upsert"/>
+</setup>
