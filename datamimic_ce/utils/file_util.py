@@ -19,6 +19,40 @@ from datamimic_ce.utils.file_content_storage import FileContentStorage
 
 class FileUtil:
     @staticmethod
+    def read_dbunit_to_dict_list(path: Path, table: str) -> list[dict[str, str | None]]:
+        """Read one table from a dbunit flat-XML dataset.
+
+        Flat XML: every child of <dataset> is a row, the element name is the table, its attributes are
+        the columns. A dataset holds many tables, so `table` selects one. Rows of one table may carry
+        different columns ("ragged") - an absent attribute is a NULL, a present empty string is "". The
+        result unifies the columns across the table (column sensing, like DbUnit >= 2.3): every row
+        carries every column, an absent one filled with None. This gives faithful table semantics (a
+        NULL cell, not a missing key) and lets a batch RDBMS insert see a uniform column set.
+
+        Security: a value with XML character entities is decoded. ElementTree does NOT fetch external
+        DTDs, but it DOES expand internal entities - dbunit files are trusted local fixtures, not
+        untrusted input; do not point this at attacker-controlled XML.
+        """
+        import xml.etree.ElementTree as ET  # noqa: N817
+
+        try:
+            root = ET.parse(str(path)).getroot()
+        except ET.ParseError as e:
+            raise ValueError(f"dbunit dataset '{path}' is not well-formed XML: {e}") from e
+        # dbunit's root is <dataset>; anything else is not a dataset
+        if root.tag != "dataset":
+            raise ValueError(f"dbunit dataset '{path}' must have a <dataset> root, got <{root.tag}>")
+        raw = [child.attrib for child in root if child.tag == table]
+        if not raw:
+            available = sorted({child.tag for child in root})
+            raise ValueError(f"dbunit dataset '{path}' has no rows for table '{table}'; available: {available}")
+        # column sensing: union of columns in first-appearance order, absent -> None
+        columns: dict[str, None] = {}
+        for attrib in raw:
+            columns.update(dict.fromkeys(attrib))
+        return [{col: attrib.get(col) for col in columns} for attrib in raw]
+
+    @staticmethod
     def parse_properties(path: Path, encoding="utf-8") -> dict[str, str]:
         """
         Parse properties from file then save into a dict

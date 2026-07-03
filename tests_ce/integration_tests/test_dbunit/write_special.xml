@@ -1,0 +1,5 @@
+<setup>
+    <generate name="gen" count="1" targetEntity="acct" target="DbUnit">
+        <key name="name" constant='A &amp; B &lt;Ltd&gt; "q"'/>
+    </generate>
+</setup>

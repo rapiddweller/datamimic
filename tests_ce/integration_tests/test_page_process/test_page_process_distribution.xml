@@ -1,0 +1,21 @@
+<setup>
+    <memstore id="mem"/>
+
+    <!-- 12 source rows -->
+    <generate name="src" count="12" target="mem">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+
+    <!-- random over 3 pages (pageSize 5): pages must select disjoint windows of ONE
+         global shuffle - together a permutation of the source, no dupes, no gaps -->
+    <generate name="rand_pages" source="mem" type="src" distribution="random" count="12" pageSize="5"
+              target="ConsoleExporter"/>
+
+    <!-- unique over 3 pages: no duplicates across page boundaries -->
+    <generate name="uniq_pages" source="mem" type="src" unique="True" count="12" pageSize="5"
+              target="ConsoleExporter"/>
+
+    <!-- cumulated over 3 pages: with-replacement picks from ONE continuous draw sequence -->
+    <generate name="cum_pages" source="mem" type="src" distribution="cumulated" count="12" pageSize="5"
+              target="ConsoleExporter"/>
+</setup>

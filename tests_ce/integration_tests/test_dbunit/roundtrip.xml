@@ -1,0 +1,3 @@
+<setup>
+    <generate name="account" source="data/complex.dbunit.xml" sourceEntity="account" distribution="ordered" targetEntity="account" target="DbUnit"/>
+</setup>

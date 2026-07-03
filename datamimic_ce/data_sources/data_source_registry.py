@@ -104,8 +104,15 @@ class DataSourceRegistry:
             # 2: Get source info from ctx client (e.g. checking if it is SQL, MongoDB or CSV source)
 
             # Check if source is data source file or database collection/table
+            # dbunit dataset: one table's row count (checked before the generic .xml branch below).
+            if source_str.endswith(".dbunit.xml"):
+                ds_len = len(
+                    FileUtil.read_dbunit_to_dict_list(
+                        root_ctx.descriptor_dir / source_str, StatementUtil.resolve_source_entity(stmt)
+                    )
+                )
             # 2.1: Check if datasource is csv file
-            if source_str.endswith((".csv", ".json", ".xml", ".xlsx")):
+            elif source_str.endswith((".csv", ".json", ".xml", ".xlsx")):
                 ds_len = len(
                     DataSourceRegistry._get_source(
                         str(root_ctx.descriptor_dir / source_str),

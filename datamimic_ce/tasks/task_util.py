@@ -43,13 +43,10 @@ from datamimic_ce.converter.upper_case_converter import UpperCaseConverter
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.enums.converter_enums import ConverterEnum
-from datamimic_ce.exporters.csv_exporter import CSVExporter
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
-from datamimic_ce.exporters.json_exporter import JsonExporter
 from datamimic_ce.exporters.memstore import Memstore
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
-from datamimic_ce.exporters.txt_exporter import TXTExporter
-from datamimic_ce.exporters.xlsx_exporter import XLSXExporter
+from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.array_statement import ArrayStatement
@@ -89,6 +86,7 @@ from datamimic_ce.tasks.memstore_task import MemstoreTask
 from datamimic_ce.tasks.mongodb_task import MongoDBTask
 from datamimic_ce.tasks.reference_task import ReferenceTask
 from datamimic_ce.tasks.task import Task
+from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.object_util import ObjectUtil
 
 
@@ -379,6 +377,12 @@ class TaskUtil:
             source_data = DataSourceRegistry.load_xlsx_file(
                 root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
             )
+        # Load one table from a dbunit dataset (checked BEFORE .xml - a .dbunit.xml also ends with .xml).
+        # sourceEntity/type selects the table (resolve_source_entity).
+        elif source_str.endswith(".dbunit.xml"):
+            source_data = FileUtil.read_dbunit_to_dict_list(
+                root_context.descriptor_dir / source_str, StatementUtil.resolve_source_entity(stmt)
+            )
         # Load data from XML
         elif source_str.endswith(".xml"):
             source_data = DataSourceRegistry.load_xml_file(
@@ -510,7 +514,9 @@ class TaskUtil:
                     exporter.consume(
                         (json_product[0], xml_result[stmt.full_name]), stmt.full_name, exporter_state_manager
                     )
-                elif isinstance(exporter, JsonExporter | TXTExporter | CSVExporter | XLSXExporter):
+                elif isinstance(exporter, UnifiedBufferedExporter):
+                    # every buffered exporter (JSON/CSV/TXT/XLSX/DbUnit/...) shares this consume
+                    # signature; dispatch on the base class so new ones work without editing this list.
                     exporter.consume(json_product, stmt.full_name, exporter_state_manager)
                 else:
                     exporter.consume(json_product)
@@ -554,14 +560,6 @@ class TaskUtil:
                 else:
                     res[key] = value
         return res
-
-    @staticmethod
-    def is_source_ml_model(stmt: GenerateStatement):
-        """
-        check if source is model train by ml-train or not
-        """
-        # Always False in CE cause this is an EE feature
-        return False
 
     @staticmethod
     def generate_random_value_based_on_type(

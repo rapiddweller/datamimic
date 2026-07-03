@@ -198,9 +198,17 @@ class GenerateTask(CommonSubTask):
                 count = self._determine_count(context)
                 timer_result["records_count"] = count
 
-                # Early return if count is 0
+                # Count 0: no worker runs, no page is exported — but the product must still
+                # be registered (empty) with the lazy exporters, otherwise its key silently
+                # vanishes from test capture and memstore reads. No data crosses processes.
+                # (export_memstore tolerates missing nested keys itself.)
                 if count == 0:
-                    return {self.statement.full_name: []}
+                    empty_result: dict[str, list] = {self.statement.full_name: []}
+                    if isinstance(context, SetupContext):
+                        if context.test_mode:
+                            context.root.test_result_exporter.consume((self.statement.full_name, []))
+                        self.export_memstore(context, self.statement, empty_result)
+                    return empty_result
 
                 # Calculate page size for processing by page
                 page_size = self._calculate_default_page_size(count)
@@ -326,14 +334,27 @@ class GenerateTask(CommonSubTask):
                 entity = StatementUtil.resolve_target_entity(
                     current_stmt.target_entity, current_stmt.type, current_stmt.name
                 )
+                # A nested generate that never executed (condition never fired, outer count 0)
+                # leaves no product: consume empty so downstream memstore reads see the
+                # entity with 0 rows instead of a missing key.
                 setup_context.memstore_manager.get_memstore(current_exporter_str).consume(
-                    (entity, merged_result[current_stmt.full_name])
+                    (entity, merged_result.get(current_stmt.full_name, []))
                 )
                 # Export to memstore only once
                 break
-        for sub_stmt in current_stmt.sub_statements:
+        GenerateTask._export_memstore_children(setup_context, current_stmt, merged_result)
+
+    @staticmethod
+    def _export_memstore_children(
+        setup_context: SetupContext, stmt: CompositeStatement, merged_result: dict[str, list]
+    ):
+        """Descend to nested <generate>s, passing THROUGH composite wrappers such as
+        <condition>/<if> — a memstore target inside a condition must still be consumed."""
+        for sub_stmt in stmt.sub_statements:
             if isinstance(sub_stmt, GenerateStatement):
                 GenerateTask.export_memstore(setup_context, sub_stmt, merged_result)
+            elif isinstance(sub_stmt, CompositeStatement):
+                GenerateTask._export_memstore_children(setup_context, sub_stmt, merged_result)
 
     @staticmethod
     def finalize_temp_files_chunks(context: SetupContext, stmt: GenerateStatement):

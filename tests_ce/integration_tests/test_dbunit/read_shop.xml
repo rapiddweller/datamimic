@@ -1,0 +1,3 @@
+<setup>
+    <iterate name="cats" source="data/shop.dbunit.xml" sourceEntity="db_category" distribution="ordered" target=""/>
+</setup>

@@ -1,0 +1,3 @@
+<setup>
+    <generate name="gen" count="0" targetEntity="empty" target="DbUnit"><key name="x" constant="1"/></generate>
+</setup>

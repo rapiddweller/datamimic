@@ -1,0 +1,18 @@
+<setup>
+    <memstore id="mem"/>
+
+    <!-- memstore target INSIDE a condition wrapper: the end-of-run memstore export
+         must pass through <condition>/<if> to reach it -->
+    <generate name="outer" count="10" target="ConsoleExporter">
+        <key name="idx" generator="IncrementGenerator"/>
+        <condition>
+            <if condition="idx % 2 == 0">
+                <generate name="evens" count="1" target="mem">
+                    <key name="val" script="idx"/>
+                </generate>
+            </if>
+        </condition>
+    </generate>
+
+    <generate name="from_mem" source="mem" type="evens" target="ConsoleExporter"/>
+</setup>
