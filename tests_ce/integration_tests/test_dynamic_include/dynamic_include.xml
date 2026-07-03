@@ -1,0 +1,8 @@
+<setup>
+    <!-- the include path is assembled from a variable: {database}/shop.{database}.properties -->
+    <variable name="database" constant="h2"/>
+    <include uri="{database}/shop.{database}.properties"/>
+    <generate name="g" count="{product_count}" target="">
+        <key name="r" script="region"/>
+    </generate>
+</setup>
