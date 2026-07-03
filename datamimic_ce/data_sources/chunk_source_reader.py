@@ -42,10 +42,6 @@ class ChunkSourceReader:
         chunk_start: int,
         chunk_end: int,
     ):
-        # Lazy import: tasks imports data_sources at module level (same pattern as
-        # DataSourceRegistry's TaskUtil import).
-        from datamimic_ce.tasks.task_util import TaskUtil
-
         self._context = context
         self._stmt = stmt
         self._chunk_start = chunk_start
@@ -55,9 +51,7 @@ class ChunkSourceReader:
             stmt.source_script if stmt.source_script is not None else bool(root.default_source_scripted)
         )
         self._separator = stmt.separator or root.default_separator
-        self._loads_all = (
-            False if TaskUtil.is_source_ml_model(stmt) else (stmt.distribution.loads_all or bool(stmt.unique))
-        )
+        self._loads_all = stmt.distribution.loads_all or bool(stmt.unique)
         # Chunk-wide selection for loads_all distributions, ordered on first page.
         self._chunk_order: list | None = None
         self._build_from_source = True

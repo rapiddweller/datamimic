@@ -562,14 +562,6 @@ class TaskUtil:
         return res
 
     @staticmethod
-    def is_source_ml_model(stmt: GenerateStatement):
-        """
-        check if source is model train by ml-train or not
-        """
-        # Always False in CE cause this is an EE feature
-        return False
-
-    @staticmethod
     def generate_random_value_based_on_type(
         data_type: str | None,
         *,
