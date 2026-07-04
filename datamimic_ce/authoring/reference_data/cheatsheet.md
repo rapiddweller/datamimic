@@ -111,6 +111,7 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 | a unique id | `generator="IncrementGenerator"` |
 | a coded string (SKU, code) | `pattern="[A-Z]{3}-[0-9]{4}"` |
 | a list of sub-records | `<nestedKey type="list" minCount= maxCount=>` with child `<key>`s |
+| a binary blob / BLOB (image, key material) | `type="binary" minLength= maxLength="16"`; add `mimeType="image/png"` to prefix a real magic-number header (MIME-sniffable). Seeded → reproducible. DBs store bytes natively; file targets render the byte repr. |
 | a computed value | `script="age * 2"` (any python over fields/variables) |
 
 ## Sources & credentials
