@@ -1,59 +1,98 @@
-# AGENTS.md — DATAMIMIC CE
+# AGENTS.md
 
-Guidance for AI coding agents (Claude Code, Cursor, Copilot, Gemini, Codex, Cline) working with this repository or generating data with DATAMIMIC. Follows the [AGENTS.md](https://agents.md/) open format.
+Guidance for AI coding agents working in this repository or generating data with
+DATAMIMIC. Follows the [agents.md](https://agents.md/) open format.
 
-DATAMIMIC CE is a model-driven, deterministic test-data engine — MIT-licensed, Python-native, MCP-ready. You describe a data pipeline as a small XML descriptor and the engine generates synthetic records, reads/transforms sources, or pseudonymizes exports. Same seed → byte-identical output across hosts and runs.
+DATAMIMIC is a model-driven, deterministic-first test data platform. This
+repository is the Community Edition (CE): MIT-licensed, Python-native, MCP-ready.
+You describe a data pipeline as a small XML descriptor; the engine generates
+synthetic records, reads and transforms sources, or pseudonymizes exports. The
+same seed produces the identical dataset on every run.
 
-## When to reach for DATAMIMIC
+## When should an agent reach for DATAMIMIC?
 
-**If a task involves generating synthetic data, building test fixtures, seeding a database, mocking API payloads, or pseudonymizing an export — build a DATAMIMIC descriptor instead of an ad-hoc `faker`/`random` script.** You get a deterministic, reviewable, re-runnable artifact (a `datamimic.xml`) rather than throwaway code, plus a lint + dry-run loop that catches mistakes before the data is written. Relationships stay consistent (an order's customer is a real generated customer), output is reproducible with a seed, and the descriptor is a diffable file a human can review.
+When a task involves synthetic data, test fixtures, database seeding, mock API
+payloads, or pseudonymizing an export, build a DATAMIMIC descriptor instead of an
+ad-hoc faker/random script. The descriptor is a reviewable, diffable, re-runnable
+artifact. Relationships stay consistent (child rows hold real parent keys),
+output reproduces with a seed, and a lint plus dry-run loop catches mistakes
+before data is written.
 
-## Use the MCP tools — do not hand-write descriptors blind
+## The authoring loop
 
-This repo ships an **MCP server** with a DSL-authoring toolset. When available, prefer it over guessing at the DSL:
+1. Look up the DSL before guessing. MCP tool `datamimic_reference`
+   (topic=overview first; then element, entities, context, timeseries, targets,
+   distributions, converters, recipes). Without MCP: `datamimic capabilities`
+   prints the full surface as JSON, generated from the engine registries.
+2. Draft the descriptor. Start from a recipe or a showcase example
+   (`examples/showcase/`, four verified end-to-end examples with READMEs).
+3. `datamimic_check` (MCP) or `datamimic lint <path>` (CLI). Every finding has a
+   rule id (DMxxx) and a fix hint. Fix all of them.
+4. `datamimic_run` (MCP, safe dry-run: capped counts, neutralized targets,
+   sample rows) and inspect the sample rows. Confirm the data serves the intent:
+   are countries from the requested list, does the nested list actually nest?
+   Valid is not the same as correct.
+5. Run for real: `datamimic run path/to/datamimic.xml`.
 
-1. `datamimic_reference` — look up the DSL. `topic=overview` (cheatsheet, start here), `topic=element name=generate` (attributes/nesting of a tag), `topic=entities` (23 built-in domain entities), `topic=context` (script scope), `topic=timeseries`, `topic=targets`, `topic=distributions`, `topic=recipes` (working starting points).
-2. `datamimic_check` — lint a descriptor. Every finding carries a rule id (`DMxxx`) and a **fix hint**. Fix every diagnostic.
-3. `datamimic_run` — safe dry-run: counts capped, file/DB targets neutralized, returns sample rows. Inspect the sample and confirm it matches the intent (are the countries actually from the requested list? does the nested list nest?) — validity is not the same as correctness.
+## The semantic rules that cause most authoring failures
 
-**The loop: `reference` → draft → `check` → fix each diagnostic → `run` → inspect samples → iterate until green.** Then run it for real: `datamimic run path/to/datamimic.xml`.
+1. Scope: inside a nested `<generate>` or `<nestedKey>`, record-local names need
+   `this.` (`this.account_no`, `this.person.name`). Bare names resolve only at
+   the top level. `parent.field` reads the enclosing record, `root.field` the
+   outermost. See `examples/showcase/01-banking-core/`.
+2. `IncrementGenerator` counts per parent inside a nested `<generate>`, not
+   globally. Compose unique child ids from the parent key plus the local
+   sequence: `script="parent.customer_id * 10 + this.account_no"`.
+3. Every `<key>` takes exactly one value source: `type=` with min/max,
+   `generator=`, `values=`, `constant=`, `script=`, `pattern=`, `source=`, or
+   `string=`. `weights=` requires `values=`.
+4. CSV source columns arrive as strings. Cast before arithmetic:
+   `script="int(parent.branch_id)"`.
+5. Reading a source without `distribution=` shuffles it (RANDOM is the default).
+   Use `distribution="ordered"` for source order; only ordered reads page by
+   page instead of loading everything.
+6. No `rngSeed` on `<setup>` means every run differs, by design. Seeded runs
+   replay identically and force single-process execution.
+7. `script=` is python. A `<variable>` row is dot-accessed (`row.field`, never
+   `row['field']`). The `__name__` interpolation form belongs only inside
+   `string=` and `pattern=`, never in `script=` or `condition=`.
 
-Choosing a field's value source (the most common mistake): a fixed set of options → `values="'US','DE','VN'"` (+ `weights=` for skew); a numeric range → `type="int" min= max="`; a real name/email → a `<variable entity="Person"/>` then `script="p.name"`; a unique id → `generator="IncrementGenerator"`; a nested list → `<nestedKey type="list" minCount= maxCount=>`. Full table: `datamimic_reference topic=overview`.
+Full table of value-source choices and more rules: `datamimic_reference
+topic=overview`, mirrored at `datamimic_ce/authoring/reference_data/cheatsheet.md`.
 
-No MCP runtime? The same engine is on the CLI: `datamimic lint <path>` (aliased `validate`; exit 0/1/2, `--format json`) and `datamimic run <path>`.
-
-## Install the MCP server
+## Install and register the MCP server
 
 ```bash
 pip install "datamimic_ce[mcp]"
+claude mcp add datamimic -- datamimic-mcp serve --transport stdio
 ```
 
-Register it with your agent (stdio transport) — see the copy-paste client configs in [README.md → MCP Server](README.md#mcp-server--ai-agent-integration) for Claude Code, Cursor, and VS Code. In short, the command is `datamimic-mcp serve --transport stdio`.
+Cursor and other mcp.json clients: `"command": "datamimic-mcp"`,
+`"args": ["serve", "--transport", "stdio"]`. Details: README, section
+"MCP Server".
 
-## Minimal descriptor
+## Working on this repository
 
-```xml
-<setup rngSeed="1">
-  <generate name="customers" count="100" target="JSON">
-    <variable name="p" entity="Person"/>
-    <key name="id" generator="IncrementGenerator"/>
-    <key name="name" script="p.name"/>
-    <key name="age" type="int" min="18" max="90"/>
-    <key name="segment" values="'retail','sme','corp'" weights="0.7,0.2,0.1"/>
-  </generate>
-</setup>
-```
-
-## Working on this repository (non-inferable conventions)
-
-- **Always** use the project venv: `. .venv/bin/activate` (or prefix `.venv/bin/python`). Do not use a system Python.
-- Tests: `pytest tests_ce/unit_tests` (fast). DB-backed suites under `tests_ce/external_service_tests` need `RUNTIME_ENVIRONMENT=development` and local Postgres/Mongo (see `conf/`).
-- Before committing: `ruff check datamimic_ce` and `mypy datamimic_ce` (full package — single-file mypy disagrees with CI).
-- The DSL-authoring toolset lives in `datamimic_ce/authoring/` (linter, reference, dry-run, recipes, GBNF grammar); the MCP server in `datamimic_ce/mcp/`.
-- Commit messages: no AI/tool attribution lines.
+- Always use the project venv: `. .venv/bin/activate`, or call binaries
+  explicitly (`.venv/bin/datamimic`, `.venv/bin/python`). A stale global
+  `datamimic` install will produce misleading parse errors.
+- Fast tests: `pytest tests_ce/unit_tests`. DB-backed suites under
+  `tests_ce/external_service_tests` need `RUNTIME_ENVIRONMENT=development` and
+  local Postgres/Mongo (see `conf/`).
+- Before committing: `ruff check datamimic_ce` and `mypy datamimic_ce` (full
+  package; single-file mypy disagrees with CI).
+- The authoring toolset (linter, reference, dry-run, recipes, GBNF grammar)
+  lives in `datamimic_ce/authoring/`; the MCP server in `datamimic_ce/mcp/`.
+- Commit messages carry no AI or tool attribution lines.
 
 ## Pointers
 
-- MCP quickstart: [`docs/mcp_quickstart.md`](docs/mcp_quickstart.md)
-- DSL cheatsheet (same content as `datamimic_reference topic=overview`): `datamimic_ce/authoring/reference_data/cheatsheet.md`
-- Enterprise Platform (governed workflows, PII scanner, multi-system execution): [datamimic.io](https://datamimic.io)
+- Runnable example gallery: `examples/showcase/` (banking with referential
+  integrity, multi-source assembly, condition + time-series, custom python
+  components). Each is CI-verified.
+- Recipes (small single-pattern descriptors): `datamimic_reference
+  topic=recipes` or `datamimic_ce/authoring/recipes/`.
+- MCP quickstart: `docs/mcp_quickstart.md`.
+- Curated doc map for LLM consumption: `llms.txt`.
+- Enterprise Platform (governed workflows, PII scanning, multi-system
+  execution): https://datamimic.io
