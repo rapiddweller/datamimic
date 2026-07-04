@@ -157,3 +157,51 @@ class GenerateArgs(BaseModel):
 
 
 __all__ = ["GenerateArgs", "MAX_COUNT"]
+
+
+class CheckArgs(BaseModel):
+    """Arguments for the ``datamimic_check`` MCP tool (DSL linting)."""
+
+    xml: str | None = Field(None, description="Inline descriptor XML (preferred for agents)")
+    path: str | None = Field(None, description="Path to a descriptor file on the server's filesystem")
+    response_format: str = Field("concise", pattern="^(concise|detailed)$")
+    max_diagnostics: int = Field(50, ge=1, le=200)
+
+    @model_validator(mode="after")
+    def _exactly_one_input(self) -> CheckArgs:
+        if (self.xml is None) == (self.path is None):
+            raise ValueError("Provide exactly one of 'xml' (inline descriptor) or 'path' (file)")
+        return self
+
+
+class RunArgs(BaseModel):
+    """Arguments for the ``datamimic_run`` MCP tool (safe dry-run)."""
+
+    xml: str | None = Field(None, description="Inline descriptor XML (preferred for agents)")
+    path: str | None = Field(None, description="Path to a descriptor file on the server's filesystem")
+    sample_rows: int = Field(5, ge=1, le=50)
+    max_count: int = Field(10, ge=1, le=1000, description="Per top-level <generate> record cap")
+    allow_side_effects: bool = Field(
+        False, description="Keep file/DB targets and allow <execute> (default: neutralized)"
+    )
+    timeout_seconds: int = Field(30, ge=1, le=120)
+    response_format: str = Field("concise", pattern="^(concise|detailed)$")
+
+    @model_validator(mode="after")
+    def _exactly_one_input(self) -> RunArgs:
+        if (self.xml is None) == (self.path is None):
+            raise ValueError("Provide exactly one of 'xml' (inline descriptor) or 'path' (file)")
+        return self
+
+
+class ReferenceArgs(BaseModel):
+    """Arguments for the ``datamimic_reference`` MCP tool (DSL knowledge lookup)."""
+
+    topic: str = Field(
+        "overview",
+        pattern="^(overview|element|generators|targets|distributions|recipes|recipe)$",
+        description="What to look up; start with 'overview'",
+    )
+    name: str | None = Field(
+        None, description="Element tag (topic=element), recipe id (topic=recipe) or generator filter"
+    )
