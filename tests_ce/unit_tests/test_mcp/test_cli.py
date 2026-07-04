@@ -2,11 +2,19 @@ from __future__ import annotations
 
 # WHY: These tests prove CLI option parsing works without relying on Typer's
 # Literal support. We validate behavior using Enums and avoid I/O by mocking.
-
-from importlib import import_module
-from types import ModuleType
+#
+# WHY monkeypatch names on the already-imported `datamimic_ce.mcp.cli` module
+# instead of faking `sys.modules["datamimic_ce.mcp.server"]` before importing:
+# `datamimic_ce.mcp.cli` binds `create_server`/`build_sse_app` at its own
+# import time (`from datamimic_ce.mcp.server import ...`). If anything else in
+# the test session has already imported `datamimic_ce.mcp.cli` (e.g. another
+# test module doing `from datamimic_ce.mcp.cli import app`), that binding is
+# already cached — re-importing via `sys.modules` substitution does not
+# rebind it, and this test would silently start the real FastMCP server.
+# Patching the names directly on the cached module is robust to import order.
 from typer.testing import CliRunner
 
+from datamimic_ce.mcp import cli as cli_mod
 
 runner = CliRunner()
 
@@ -22,27 +30,9 @@ class _FakeServer:
 def test_cli_transport_stdio_invokes_server_run(monkeypatch) -> None:
     fake = _FakeServer()
 
-    # Install a fake server module before importing the CLI to avoid optional deps
-    fake_server = ModuleType("datamimic_ce.mcp.server")
-    fake_server.HTTP_MIDDLEWARE_ATTR = "_datamimic_http_middleware"  # type: ignore[attr-defined]
-
-    def _fake_create_server(api_key=None):  # noqa: ANN001
-        return fake
-
-    def _fake_build_sse_app(server, middleware):  # noqa: ANN001
-        return object()
-
-    fake_server.create_server = _fake_create_server  # type: ignore[attr-defined]
-    fake_server.build_sse_app = _fake_build_sse_app  # type: ignore[attr-defined]
-    fake_server.mount_mcp = lambda *a, **k: None  # type: ignore[attr-defined]
-
-    monkeypatch.setitem(
-        __import__("sys").modules,
-        "datamimic_ce.mcp.server",
-        fake_server,
-    )
-
-    cli_mod = import_module("datamimic_ce.mcp.cli")
+    monkeypatch.setattr(cli_mod, "create_server", lambda api_key=None: fake)
+    monkeypatch.setattr(cli_mod, "HTTP_MIDDLEWARE_ATTR", "_datamimic_http_middleware")
+    monkeypatch.setattr(cli_mod, "build_sse_app", lambda server, middleware: object())
 
     # Ensure uvicorn.run isn't called in stdio mode
     uvicorn_called = {"count": 0}
@@ -62,27 +52,9 @@ def test_cli_transport_stdio_invokes_server_run(monkeypatch) -> None:
 def test_cli_transport_sse_invokes_uvicorn_with_params(monkeypatch) -> None:
     fake = _FakeServer()
 
-    # Install a fake server module before importing the CLI to avoid optional deps
-    fake_server = ModuleType("datamimic_ce.mcp.server")
-    fake_server.HTTP_MIDDLEWARE_ATTR = "_datamimic_http_middleware"  # type: ignore[attr-defined]
-
-    def _fake_create_server(api_key=None):  # noqa: ANN001
-        return fake
-
-    def _fake_build_sse_app(server, middleware):  # noqa: ANN001
-        return object()
-
-    fake_server.create_server = _fake_create_server  # type: ignore[attr-defined]
-    fake_server.build_sse_app = _fake_build_sse_app  # type: ignore[attr-defined]
-    fake_server.mount_mcp = lambda *a, **k: None  # type: ignore[attr-defined]
-
-    monkeypatch.setitem(
-        __import__("sys").modules,
-        "datamimic_ce.mcp.server",
-        fake_server,
-    )
-
-    cli_mod = import_module("datamimic_ce.mcp.cli")
+    monkeypatch.setattr(cli_mod, "create_server", lambda api_key=None: fake)
+    monkeypatch.setattr(cli_mod, "HTTP_MIDDLEWARE_ATTR", "_datamimic_http_middleware")
+    monkeypatch.setattr(cli_mod, "build_sse_app", lambda server, middleware: object())
 
     captured = {}
 

@@ -26,7 +26,7 @@ export DATAMIMIC_MCP_PORT=8765
 # Optional API key gate – clients must send the same token via `Authorization: Bearer` or `X-API-Key`
 export DATAMIMIC_MCP_API_KEY=changeme
 
-datamimic-mcp
+datamimic-mcp serve
 ```
 
 Environment variables override the Typer command options so deployments can be tuned without altering scripts:
@@ -43,7 +43,7 @@ Environment variables override the Typer command options so deployments can be t
 mcpServers:
   datamimic:
     command: datamimic-mcp
-    args: ["--host", "127.0.0.1", "--port", "8765"]
+    args: ["serve", "--host", "127.0.0.1", "--port", "8765"]
     env:
       DATAMIMIC_MCP_API_KEY: changeme
 ```
@@ -55,7 +55,7 @@ mcpServers:
   "mcpServers": {
     "datamimic": {
       "command": "datamimic-mcp",
-      "args": ["--host", "127.0.0.1", "--port", "8765"],
+      "args": ["serve", "--host", "127.0.0.1", "--port", "8765"],
       "env": {
         "DATAMIMIC_MCP_HOST": "127.0.0.1",
         "DATAMIMIC_MCP_PORT": "8765"
