@@ -111,7 +111,8 @@ ELEMENT_MODEL_MAP: dict[str, type[BaseModel] | None] = {
     EL_ASSERT: AssertModel,
 }
 
-# Tags accepted as <generate>/<key> aliases map onto the same schema; expose canonical names.
+# Tags accepted as <generate>/<key> aliases map onto the same schema (attributes AND
+# nesting rules); expose canonical names.
 ALIASES: dict[str, str] = {EL_ITERATE: EL_GENERATE, EL_ID: EL_KEY}
 
 
@@ -165,7 +166,9 @@ def build_schema_index() -> SchemaIndex:
     parents: dict[str, set[str]] = {tag: set() for tag in ELEMENT_MODEL_MAP}
     children_map: dict[str, set[str] | None] = {}
     for tag in ELEMENT_MODEL_MAP:
-        allowed = ParserUtil.get_valid_sub_elements_set_by_tag(tag)
+        # aliases (<iterate>/<id>) share the canonical element's nesting rules —
+        # the engine normalizes via the statement TYPE, so the raw-tag lookup would miss
+        allowed = ParserUtil.get_valid_sub_elements_set_by_tag(ALIASES.get(tag, tag))
         children_map[tag] = set(allowed) if allowed is not None else None
         if allowed:
             for child in allowed:

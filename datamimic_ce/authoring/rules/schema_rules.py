@@ -152,7 +152,9 @@ class MissingRequiredAttribute(Rule):
         for element in ctx.iter():
             tag = str(element.tag)
             schema = ctx.schemas.get(tag)
-            if schema is None or schema.model is None:
+            # open_attrs models (<database>/<mongodb>) get their required credentials
+            # fulfilled from conf/{env}.env.properties — not from XML attributes
+            if schema is None or schema.model is None or schema.open_attrs:
                 continue
             for spec in schema.attributes.values():
                 if spec.required and spec.name not in element.attrib:
