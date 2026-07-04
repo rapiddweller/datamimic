@@ -95,6 +95,27 @@ def test_db_descriptor_lints_without_spurious_credential_error() -> None:
     )
     assert not lint_source(broken).ok
 
+    # a MISSING STRUCTURAL attr (<database> without dbms) shares the credential
+    # message but must NOT be suppressed — it is a real error, not an env concern.
+    missing_dbms = (
+        '<setup rngSeed="1"><database id="db" system="mongodb"/>'
+        '<generate name="g" count="1" source="db" selector="find: \'c\', filter: {}" '
+        'target="ConsoleExporter"/></setup>'
+    )
+    assert not lint_source(missing_dbms).ok
+
+
+def test_dry_run_never_crashes_on_parse_error() -> None:
+    from datamimic_ce.authoring.dryrun import dry_run_source
+
+    # A descriptor whose engine re-parse raises must yield a diagnostic, not crash the tool.
+    result = dry_run_source(
+        '<setup rngSeed="1"><database id="db" system="mongodb"/>'
+        '<generate name="g" count="1" source="db" selector="find: \'c\', filter: {}" '
+        'target="ConsoleExporter"/></setup>'
+    )
+    assert not result.ok and result.diagnostics
+
 
 def test_clean_descriptor_is_ok() -> None:
     result = lint_descriptor(_FIXTURES / "fx_clean.xml")

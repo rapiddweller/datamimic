@@ -235,7 +235,13 @@ def _execute(
     from datamimic_ce.parsers.descriptor_parser import DescriptorParser
 
     # Refusal gate: <execute> runs arbitrary SQL/scripts — never silently in a dry-run.
-    if not allow_side_effects and _contains_execute(DescriptorParser.parse(path, None)):
+    # The parse can raise (e.g. lint suppressed a credential error) — map it to DM002,
+    # never let it crash the tool.
+    try:
+        has_execute = _contains_execute(DescriptorParser.parse(path, None))
+    except Exception as err:
+        return _run_error(RULE_RUNTIME_ERROR, f"Dry-run failed: {err}", _runtime_hint(err), lint)
+    if not allow_side_effects and has_execute:
         return _run_error(
             RULE_SIDE_EFFECT_REFUSAL,
             "Descriptor contains <execute> (arbitrary SQL/script) — refusing the dry-run.",
