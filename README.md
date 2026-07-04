@@ -29,7 +29,7 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 - **Pseudonymize** staging/QA exports — deterministic (seeded) or privacy-maximized (non-seeded) field transformation; PII fields identified and modeled manually in the XML pipeline
 - **Execute** single-system pipelines against PostgreSQL · MySQL · Oracle · MS SQL · SQLite · MongoDB · CSV · JSON · XML
 - **Emit provenance** — append-only execution logs and per-output content hash for audit re-execution
-- **Serve agents** — bundled MCP server exposing `generate` as a deterministic tool for AI/LLM tooling
+- **Serve agents** — bundled MCP server with the full authoring loop (`datamimic_reference` DSL lookup, `datamimic_check` lint with fix hints, `datamimic_run` safe dry-run) plus the deterministic `generate` tool
 
 **The Enterprise Platform adds:**
 
@@ -41,6 +41,157 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 - **On-premise / air-gapped deployment** — podman-compose or Helm, with consulting-led rollout
 
 > Deployed in regulated EU banking environments for deterministic test data across Oracle, MongoDB, and Kafka pipelines. Reference customers available under NDA — see also [datamimic.io case studies](https://datamimic.io).
+
+---
+
+## AI agents: author, validate, and run data models (MCP)
+
+DATAMIMIC CE ships a Model Context Protocol (MCP) server that Claude Code, Cursor, and any MCP-compatible agent can call. The working loop: look up the DSL with `datamimic_reference`, author a descriptor, lint it with `datamimic_check` (every finding has a rule id and a fix hint), dry-run it with `datamimic_run` (capped counts, sample rows, optional `smoke_export`), then run for real with `datamimic run`. [`AGENTS.md`](AGENTS.md) routes agents working in a checkout of this repo; [`examples/showcase/`](examples/showcase/) holds four verified end-to-end examples to start from.
+
+```bash
+pip install "datamimic_ce[mcp]"
+```
+
+### Register with your coding agent (stdio)
+
+**Claude Code** — one command:
+
+```bash
+claude mcp add datamimic -- datamimic-mcp serve --transport stdio
+```
+
+**Cursor / Claude Desktop / any `mcp.json` client** — add to the config (`.cursor/mcp.json`, or the project-level `.mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "datamimic": {
+      "command": "datamimic-mcp",
+      "args": ["serve", "--transport", "stdio"]
+    }
+  }
+}
+```
+
+**VS Code** (`.vscode/mcp.json`) uses the same `command`/`args` under a `servers` key. For a networked/shared server instead of stdio, run `datamimic-mcp serve --transport sse` (honours `DATAMIMIC_MCP_HOST` / `PORT` / `API_KEY`).
+
+The server ships the **DSL authoring toolset (AI linter)**: `datamimic_reference` (cheatsheet, element schemas, recipes), `datamimic_check` (aggregated diagnostics — every finding has a rule id and a fix hint) and `datamimic_run` (safe dry-run with capped counts, neutralized targets and sample rows). Agents draft a descriptor, lint it, dry-run it and iterate until green — the resulting XML is a reviewable, deterministic artifact instead of a black-box generation. Without MCP, the `datamimic capabilities` CLI prints the same DSL surface as JSON, generated from the engine registries.
+
+📘 Full guide: [`docs/mcp_quickstart.md`](docs/mcp_quickstart.md)
+
+### Prompts to paste into your agent
+
+The configuration above wires the MCP server into your tool. The three prompts below are different: paste them as-is into the chat of an agent that already has file and shell access (Claude Code, Cursor, Copilot, Gemini CLI). The agent then does the install, authoring, and verification itself.
+
+**1. Set up DATAMIMIC**
+
+```text
+Install DATAMIMIC CE and register its MCP server with this tool.
+
+1. Run: pip install "datamimic_ce[mcp]"
+2. Register the MCP server. If this tool supports `claude mcp add`, run:
+   claude mcp add datamimic -- datamimic-mcp serve --transport stdio
+   Otherwise add the stdio equivalent to this tool's MCP config file (for
+   example .cursor/mcp.json or .vscode/mcp.json):
+   {
+     "mcpServers": {
+       "datamimic": {
+         "command": "datamimic-mcp",
+         "args": ["serve", "--transport", "stdio"]
+       }
+     }
+   }
+3. Verify the MCP server: call the datamimic_reference tool with
+   topic=overview and show me the first few lines of the result.
+4. Verify the CLI: run `datamimic version` and show me the output.
+
+Report both verification results before doing anything else.
+```
+
+**2. Generate test data**
+
+```text
+Generate a test dataset of 100 customers using DATAMIMIC.
+
+Requirements:
+- 100 records, one Person each, with an incrementing integer id.
+- Realistic name and email, generated from the Person entity, not
+  hand-rolled faker calls.
+- Age between 18 and 90.
+- A "segment" field with at least two values, unevenly weighted (mostly
+  "retail", some "business").
+- Write the output as JSON.
+
+Steps:
+1. If you are working inside a checkout of the datamimic repository, read
+   AGENTS.md first. It explains the DSL authoring loop.
+2. Author a DATAMIMIC XML descriptor for this dataset.
+3. Validate it with the datamimic_check MCP tool (or `datamimic lint <path>`
+   if MCP is not available). Fix every finding before moving on.
+4. Dry-run it with the datamimic_run MCP tool and inspect the sample rows
+   it returns. Confirm ages are in range and the segment split looks
+   weighted, not uniform.
+5. Run it for real: `datamimic run <path-to-descriptor>`.
+6. Tell me where the JSON output landed and show me one sample record.
+```
+
+**3. Seed a relational dataset**
+
+```text
+Seed a relational dataset with referential integrity: customers, accounts,
+transactions.
+
+Follow the pattern in examples/showcase/01-banking-core in the datamimic
+repository: customers get an incrementing id; each customer gets 1-3
+accounts that carry the real customer id as a foreign key; each account
+gets several transactions that carry both the account id and, two hops up,
+the owning customer id.
+
+Requirements:
+- Set rngSeed on <setup> so the dataset is reproducible.
+- Every account_id referenced by a transaction must exist in the accounts
+  output.
+- Every customer_id referenced by an account, and by a transaction, must
+  exist in the customers output.
+
+Steps:
+1. Read examples/showcase/01-banking-core/datamimic.xml and its README as
+   the reference pattern.
+2. Author your own descriptor for the customers/accounts/transactions
+   shape above.
+3. Validate with datamimic_check (or `datamimic lint`), then dry-run with
+   datamimic_run and inspect the sample rows.
+4. Run for real with `datamimic run`.
+5. Before declaring this done, load the generated JSON files and confirm
+   every foreign key resolves: every account's customer_id exists in
+   customers, every transaction's account_id exists in accounts. Show me
+   the check you ran and its result.
+```
+
+### Deterministic domain generation (JSON facade)
+
+Descriptor authoring is the primary workflow; the `generate` tool is a secondary interface that returns structured JSON payloads for a domain without a descriptor.
+
+Agents can call `generate` with a domain, seed, count, and locale and receive deterministic, provenance-hashed output — making DATAMIMIC the natural test data runtime for agent-driven workflows.
+
+```python
+import anyio, json
+from fastmcp.client import Client
+from datamimic_ce.mcp.models import GenerateArgs
+from datamimic_ce.mcp.server import create_server
+
+async def main():
+    args = GenerateArgs(domain="person", locale="en_US", seed=42, count=2)
+    payload = args.model_dump(mode="python")
+    async with Client(create_server()) as c:
+        a = await c.call_tool("generate", {"args": payload})
+        b = await c.call_tool("generate", {"args": payload})
+        # Determinism proof: identical hashes across calls
+        assert (json.loads(a[0].text)["determinism_proof"]["content_hash"]
+             == json.loads(b[0].text)["determinism_proof"]["content_hash"])
+
+anyio.run(main)
+```
 
 ---
 
@@ -398,153 +549,6 @@ Guarantees:
 * **Naming caveat** — a `<key name="ts">` output column would shadow the namespace (`current_product` overrides `current_variables` in script scope), and a `<variable name="ts">` is rejected at parse time. Use a different name, e.g. `timestamp` for the column.
 
 Composes with the existing `<variable>` mechanism for multi-source merges (e.g. join each tick with a sensor-metadata CSV via `<variable source="meta.csv" cyclic="True">` inside the same `<generate>`), with `<key condition="...">` filtering, and with `<nestedKey>` sub-scopes — the `ts` namespace is visible everywhere a `<key script>` runs. See `tests_ce/integration_tests/test_timeseries/` for committed DSL fixtures + proofs (including pagination invariance).
-
----
-
-## MCP Server — AI Agent Integration
-
-DATAMIMIC CE ships with a Model Context Protocol (MCP) server, making it directly callable from AI agents, Claude, Cursor, and any MCP-compatible runtime. Agents that also work in a checkout of this repo should read [`AGENTS.md`](AGENTS.md) — it routes them into the tools below.
-
-```bash
-pip install "datamimic_ce[mcp]"
-```
-
-### Register with your coding agent (stdio)
-
-**Claude Code** — one command:
-
-```bash
-claude mcp add datamimic -- datamimic-mcp serve --transport stdio
-```
-
-**Cursor / Claude Desktop / any `mcp.json` client** — add to the config (`.cursor/mcp.json`, or the project-level `.mcp.json`):
-
-```json
-{
-  "mcpServers": {
-    "datamimic": {
-      "command": "datamimic-mcp",
-      "args": ["serve", "--transport", "stdio"]
-    }
-  }
-}
-```
-
-**VS Code** (`.vscode/mcp.json`) uses the same `command`/`args` under a `servers` key. For a networked/shared server instead of stdio, run `datamimic-mcp serve --transport sse` (honours `DATAMIMIC_MCP_HOST` / `PORT` / `API_KEY`).
-
-Agents can call `generate` with a domain, seed, count, and locale and receive deterministic, provenance-hashed output — making DATAMIMIC the natural test data runtime for agent-driven workflows.
-
-The server also ships the **DSL authoring toolset (AI linter)**: `datamimic_reference` (cheatsheet, element schemas, recipes), `datamimic_check` (aggregated diagnostics — every finding has a rule id and a fix hint) and `datamimic_run` (safe dry-run with capped counts, neutralized targets and sample rows). Agents draft a descriptor, lint it, dry-run it and iterate until green — the resulting XML is a reviewable, deterministic artifact instead of a black-box generation.
-
-```python
-import anyio, json
-from fastmcp.client import Client
-from datamimic_ce.mcp.models import GenerateArgs
-from datamimic_ce.mcp.server import create_server
-
-async def main():
-    args = GenerateArgs(domain="person", locale="en_US", seed=42, count=2)
-    payload = args.model_dump(mode="python")
-    async with Client(create_server()) as c:
-        a = await c.call_tool("generate", {"args": payload})
-        b = await c.call_tool("generate", {"args": payload})
-        # Determinism proof: identical hashes across calls
-        assert (json.loads(a[0].text)["determinism_proof"]["content_hash"]
-             == json.loads(b[0].text)["determinism_proof"]["content_hash"])
-
-anyio.run(main)
-```
-
-📘 Full guide: [`docs/mcp_quickstart.md`](docs/mcp_quickstart.md)
-
-### Prompts to paste into your agent
-
-The configuration above wires the MCP server into your tool. The three prompts below are different: paste them as-is into the chat of an agent that already has file and shell access (Claude Code, Cursor, Copilot, Gemini CLI). The agent then does the install, authoring, and verification itself.
-
-**1. Set up DATAMIMIC**
-
-```text
-Install DATAMIMIC CE and register its MCP server with this tool.
-
-1. Run: pip install "datamimic_ce[mcp]"
-2. Register the MCP server. If this tool supports `claude mcp add`, run:
-   claude mcp add datamimic -- datamimic-mcp serve --transport stdio
-   Otherwise add the stdio equivalent to this tool's MCP config file (for
-   example .cursor/mcp.json or .vscode/mcp.json):
-   {
-     "mcpServers": {
-       "datamimic": {
-         "command": "datamimic-mcp",
-         "args": ["serve", "--transport", "stdio"]
-       }
-     }
-   }
-3. Verify the MCP server: call the datamimic_reference tool with
-   topic=overview and show me the first few lines of the result.
-4. Verify the CLI: run `datamimic version` and show me the output.
-
-Report both verification results before doing anything else.
-```
-
-**2. Generate test data**
-
-```text
-Generate a test dataset of 100 customers using DATAMIMIC.
-
-Requirements:
-- 100 records, one Person each, with an incrementing integer id.
-- Realistic name and email, generated from the Person entity, not
-  hand-rolled faker calls.
-- Age between 18 and 90.
-- A "segment" field with at least two values, unevenly weighted (mostly
-  "retail", some "business").
-- Write the output as JSON.
-
-Steps:
-1. If you are working inside a checkout of the datamimic repository, read
-   AGENTS.md first. It explains the DSL authoring loop.
-2. Author a DATAMIMIC XML descriptor for this dataset.
-3. Validate it with the datamimic_check MCP tool (or `datamimic lint <path>`
-   if MCP is not available). Fix every finding before moving on.
-4. Dry-run it with the datamimic_run MCP tool and inspect the sample rows
-   it returns. Confirm ages are in range and the segment split looks
-   weighted, not uniform.
-5. Run it for real: `datamimic run <path-to-descriptor>`.
-6. Tell me where the JSON output landed and show me one sample record.
-```
-
-**3. Seed a relational dataset**
-
-```text
-Seed a relational dataset with referential integrity: customers, accounts,
-transactions.
-
-Follow the pattern in examples/showcase/01-banking-core in the datamimic
-repository: customers get an incrementing id; each customer gets 1-3
-accounts that carry the real customer id as a foreign key; each account
-gets several transactions that carry both the account id and, two hops up,
-the owning customer id.
-
-Requirements:
-- Set rngSeed on <setup> so the dataset is reproducible.
-- Every account_id referenced by a transaction must exist in the accounts
-  output.
-- Every customer_id referenced by an account, and by a transaction, must
-  exist in the customers output.
-
-Steps:
-1. Read examples/showcase/01-banking-core/datamimic.xml and its README as
-   the reference pattern.
-2. Author your own descriptor for the customers/accounts/transactions
-   shape above.
-3. Validate with datamimic_check (or `datamimic lint`), then dry-run with
-   datamimic_run and inspect the sample rows.
-4. Run for real with `datamimic run`.
-5. Before declaring this done, load the generated JSON files and confirm
-   every foreign key resolves: every account's customer_id exists in
-   customers, every transaction's account_id exists in accounts. Show me
-   the check you ran and its result.
-```
 
 ---
 
