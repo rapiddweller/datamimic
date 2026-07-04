@@ -5,10 +5,13 @@ This section provides detailed API documentation for using DATAMIMIC in your app
 ## Contents
 
 - [Command Line Interface](cli.md) - Documentation for the DATAMIMIC CLI
-- [XML Configuration](xml-config.md) - Reference for XML-based configuration
-- [Python SDK](python-sdk.md) - Comprehensive Python API documentation
-- [Extension APIs](extensions.md) - APIs for extending DATAMIMIC functionality
 - [DateTime Generator](datetime_generator.md) - Full guide for weighted, deterministic, and DSL sugar usage
+- [MCP Quickstart](../mcp_quickstart.md) - MCP server and DSL authoring tools for AI agents
+
+> Note: XML configuration, the Python SDK, and extension APIs are not yet broken out into
+> standalone reference pages here; see the [Developer Guide](../developer_guide.md) and
+> [Domain-Driven Framework](../data-domains/README.md) docs for the Python surface, and the
+> [official online documentation](https://docs.datamimic.io/) for the full XML schema reference.
 
 ## Getting Started
 
@@ -28,6 +31,8 @@ The DATAMIMIC API can be utilized in multiple ways:
 datamimic version                    # Display version information
 datamimic init <project-name>        # Initialize a new project
 datamimic run <descriptor.xml>       # Run a data generation descriptor
+datamimic lint <descriptor.xml>      # Lint descriptor: schema, semantics, best practices
+datamimic capabilities                # Print the DSL surface as JSON
 datamimic demo list                  # List available demos
 datamimic demo create <demo-name>    # Create a specific demo
 ```
@@ -102,17 +107,15 @@ customer = factory.create()
 
 ## Advanced Topics
 
-- [Custom Generator Development](extensions.md#custom-generators)
-- [Domain-Specific Modeling](xml-config.md#domain-modeling)
-- [Integration Patterns](python-sdk.md#integration)
-- [Security Best Practices](extensions.md#security)
+See [Advanced Topics](../advanced/advanced-topics.md) for custom generators, database
+integration, and performance optimization; and the
+[official online documentation](https://docs.datamimic.io/) for XML domain modeling and
+extension development guides.
 
 ## API Reference Links
 
 - [CLI Command Reference](cli.md)
-- [XML Schema Reference](xml-config.md)
-- [Python API Reference](python-sdk.md)
-- [Extension Development Guide](extensions.md)
+- [MCP Quickstart](../mcp_quickstart.md)
 
 ## Support & Resources
 

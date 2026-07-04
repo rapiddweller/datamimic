@@ -22,6 +22,15 @@ targets stripped. Counts: top-level digit counts are capped; source-driven
 generates get an explicit capped count (which also bypasses the DB
 count_query_length path); {script} counts cannot be capped pre-context and
 rely on the timeout.
+
+smoke_export (opt-in) closes the export-layer gap: stripping file targets also
+hides crashes that only happen at write time (e.g. a value the JSON encoder
+rejects). With smoke_export=True the captured rows are pushed through each
+FILE exporter that was stripped from that product's targets, writing into a
+TemporaryDirectory that vanishes afterwards — no artifacts, no descriptor-dir
+writes. ConsoleExporter/LogExporter (stdio safety) and client/DB targets are
+never smoked. A failing exporter surfaces as a DM002 diagnostic, not an
+exception.
 """
 
 import tempfile
@@ -64,6 +73,13 @@ _MAX_PRODUCTS = 20  # generate statements per descriptor are few; a generous cap
 # actionable fix hints so a runtime crash teaches the fix (critical for the agent
 # lint->fix loop — a weak model cannot recover from "Dry-run failed: <traceback>").
 # (substring in str(err)) -> hint
+_SCOPE_HINT = (
+    "A script references a name that is not in scope. Inside a nested <generate>/"
+    "<nestedKey>, record-local names need this. (this.my_key, this.my_var) — bare names "
+    "only resolve at the top level; use parent.field / root.field for enclosing records. "
+    "Also check the name is defined earlier and note CSV columns arrive as strings "
+    "(cast: int(parent.col))."
+)
 _RUNTIME_HINTS: tuple[tuple[str, str], ...] = (
     (
         "is empty in memstore",
@@ -76,11 +92,11 @@ _RUNTIME_HINTS: tuple[tuple[str, str], ...] = (
         "source= names an undeclared client/memstore. Declare <memstore id>/<database id>/"
         "<mongodb id> with that id, or point source= at a real data file.",
     ),
-    (
-        "have undefined",
-        "A script references a name that is not a field or <variable> in scope. Define a "
-        "<variable name=...> first, or use a field that exists on the record.",
-    ),
+    # undefined-name family: the engine now names the identifier (NameError/AttributeError
+    # path); "have undefined" is kept for the remaining TypeError structure errors.
+    ("is not defined in this scope", _SCOPE_HINT),
+    ("cannot find attribute", _SCOPE_HINT),
+    ("have undefined", _SCOPE_HINT),
     (
         "file not found",
         "An <include>/source path does not exist relative to the descriptor. Fix the path "
@@ -138,11 +154,44 @@ def _contains_execute(root_stmt: object) -> bool:
     return _walk(root_stmt)
 
 
-def neutralize_for_dry_run(root_stmt: object, *, max_count: int, allow_side_effects: bool) -> None:
-    """Statement transformer: cap counts, keep only memstore targets, force 1 process."""
+# One stripped file target of a product: (exporter name in the registry, ctor params).
+_FileTarget = tuple[str, dict[str, object]]
+# product full_name -> (file basename, its stripped file targets)
+_StrippedTargets = dict[str, tuple[str, list[_FileTarget]]]
+
+
+def _parse_buffered_targets(targets: set[str]) -> list[_FileTarget]:
+    """The subset of raw target strings that are buffered FILE exporters, parsed to
+    (name, params). Membership in the exporter registry is the dispatch — memstores,
+    clients, Console/Log never appear there, so they can never be smoked."""
+    from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS, ExporterUtil
+
+    parsed: list[_FileTarget] = []
+    for raw in sorted(targets):
+        try:
+            entries = ExporterUtil.parse_function_string(raw)
+        except ValueError:
+            continue  # malformed target string — the engine's own path reports it
+        for entry in entries:
+            if entry["function_name"] in _BUFFERED_EXPORTERS:
+                parsed.append((entry["function_name"], entry.get("params") or {}))
+    return parsed
+
+
+def neutralize_for_dry_run(
+    root_stmt: object,
+    *,
+    max_count: int,
+    allow_side_effects: bool,
+    stripped_file_targets: _StrippedTargets | None = None,
+) -> None:
+    """Statement transformer: cap counts, keep only memstore targets, force 1 process.
+    When a collector dict is given, the FILE targets removed from each product are
+    recorded so smoke_export can replay the captured rows through them afterwards."""
     from datamimic_ce.statements.composite_statement import CompositeStatement
     from datamimic_ce.statements.generate_statement import GenerateStatement
     from datamimic_ce.statements.setup_statement import SetupStatement
+    from datamimic_ce.statements.statement_util import StatementUtil
 
     assert isinstance(root_stmt, SetupStatement)
     memstores = _memstore_ids(root_stmt)
@@ -151,6 +200,12 @@ def neutralize_for_dry_run(root_stmt: object, *, max_count: int, allow_side_effe
     def _neutralize(stmt: object, top_level: bool) -> None:
         if isinstance(stmt, GenerateStatement):
             if not allow_side_effects:
+                if stripped_file_targets is not None:
+                    file_targets = _parse_buffered_targets(stmt.targets - memstores)
+                    if file_targets:
+                        # same basename resolution as the real exporter factory
+                        basename = StatementUtil.resolve_target_entity(stmt.target_entity, None, stmt.name)
+                        stripped_file_targets[stmt.full_name] = (basename, file_targets)
                 stmt.targets = {t for t in stmt.targets if t in memstores}
             stmt.num_process = 1
             if top_level:
@@ -167,6 +222,82 @@ def neutralize_for_dry_run(root_stmt: object, *, max_count: int, allow_side_effe
         _neutralize(stmt, top_level=True)
 
 
+def _smoke_setup_context(tmp_dir: Path):
+    """Minimal engine context for smoke writes: every value an exporter reads from it
+    is a default; descriptor_dir points at the throwaway tmp dir so buffer files can
+    never land next to the real descriptor."""
+    from datamimic_ce.contexts.setup_context import SetupContext
+    from datamimic_ce.exporters.test_result_exporter import TestResultExporter
+    from datamimic_ce.product_storage.memstore_manager import MemstoreManager
+
+    return SetupContext(
+        memstore_manager=MemstoreManager(),
+        task_id=f"smoke_{uuid.uuid4().hex}",
+        test_mode=False,
+        test_result_exporter=TestResultExporter(),
+        default_separator=",",
+        default_locale="en_US",
+        default_dataset="US",
+        use_mp=False,
+        descriptor_dir=tmp_dir,
+        num_process=1,
+        default_variable_prefix="__",
+        default_variable_suffix="__",
+        default_line_separator=None,
+    )
+
+
+def _smoke_export(captured: dict[str, list[object]], stripped: _StrippedTargets) -> list[Diagnostic]:
+    """Replay the captured rows through each stripped file exporter inside a temp dir
+    (write + finalize — the two phases where serialization crashes live). The tempdir
+    context manager guarantees zero artifacts. Failures become DM002 diagnostics."""
+    from datamimic_ce.constants.convention_constants import NAME_SEPARATOR
+    from datamimic_ce.exporters.exporter_config import ExporterConfig
+    from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
+    from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
+
+    diagnostics: list[Diagnostic] = []
+    with tempfile.TemporaryDirectory(prefix="datamimic_smoke_") as tmp:
+        smoke_ctx = _smoke_setup_context(Path(tmp))
+        for full_name, (basename, file_targets) in sorted(stripped.items()):
+            # TestResultExporter stores nested products under the full_name MINUS its
+            # first segment ("customers|accounts" -> "accounts") — mirror that here.
+            capture_key = full_name.split(NAME_SEPARATOR, 1)[-1] if NAME_SEPARATOR in full_name else full_name
+            rows = [row for row in captured.get(capture_key, []) if isinstance(row, dict)]
+            if not rows:
+                continue
+            for exporter_name, params in file_targets:
+                try:
+                    config = ExporterConfig(
+                        setup_context=smoke_ctx,
+                        product_name=basename,
+                        chunk_size=None,
+                        encoding=None,
+                        export_uri=None,
+                    )
+                    exporter = _BUFFERED_EXPORTERS[exporter_name](config, dict(params))
+                    exporter.consume((basename, rows), full_name, ExporterStateManager(worker_id=1))
+                    exporter.finalize_chunks(1)
+                except Exception as err:
+                    diagnostics.append(
+                        Diagnostic(
+                            rule=RULE_RUNTIME_ERROR,
+                            severity=Severity.ERROR,
+                            message=f"{exporter_name} smoke export failed for '{full_name}': {err}",
+                            fix_hint=(
+                                f"A generated value cannot be written by the {exporter_name} exporter "
+                                "(the error names the offending type). Cast the field in the DSL "
+                                f'(e.g. type="string" or script="str(...)"), or drop {exporter_name} '
+                                "from target=."
+                            ),
+                            element="generate",
+                            path="/setup",
+                            name=full_name,
+                        )
+                    )
+    return diagnostics
+
+
 def dry_run(
     path: Path,
     *,
@@ -174,8 +305,11 @@ def dry_run(
     sample_rows: int = 5,
     allow_side_effects: bool = False,
     timeout_seconds: int = 30,
+    smoke_export: bool = False,
 ) -> DryRunResult:
-    """Lint first (errors stop before execution), then execute neutralized and capture."""
+    """Lint first (errors stop before execution), then execute neutralized and capture.
+    smoke_export additionally replays captured rows through the stripped file exporters
+    in a temp dir, catching export-layer crashes the plain dry-run cannot see."""
     lint = lint_descriptor(path)
     if not lint.ok:
         return DryRunResult(ok=False, stage="lint", lint=lint, diagnostics=lint.diagnostics)
@@ -186,6 +320,7 @@ def dry_run(
         allow_side_effects=allow_side_effects,
         timeout_seconds=timeout_seconds,
         lint=lint,
+        smoke_export=smoke_export,
     )
 
 
@@ -196,6 +331,7 @@ def dry_run_source(
     sample_rows: int = 5,
     allow_side_effects: bool = False,
     timeout_seconds: int = 30,
+    smoke_export: bool = False,
 ) -> DryRunResult:
     """Dry-run inline descriptor XML in a temp dir (relative resources not resolvable)."""
     lint = lint_source(xml)
@@ -211,13 +347,23 @@ def dry_run_source(
             allow_side_effects=allow_side_effects,
             timeout_seconds=timeout_seconds,
             lint=lint,
+            smoke_export=smoke_export,
         )
 
 
 def _clip_value(value: object, max_chars: int = 200) -> object:
-    if not isinstance(value, str):
-        return value if isinstance(value, int | float | bool | type(None)) else str(value)
-    return value if len(value) <= max_chars else value[: max_chars - 1] + "…"
+    """Clip strings but PRESERVE dict/list structure. Agents verify intent by inspecting
+    the sample ("is reviews a list of objects with a rating?"); stringifying nested
+    structures would make that check impossible."""
+    if isinstance(value, str):
+        return value if len(value) <= max_chars else value[: max_chars - 1] + "…"
+    if isinstance(value, int | float | bool | type(None)):
+        return value
+    if isinstance(value, dict):  # includes DotableDict rows from nestedKey/entity output
+        return {str(k): _clip_value(v, max_chars) for k, v in value.items()}
+    if isinstance(value, list | tuple):
+        return [_clip_value(v, max_chars) for v in value]
+    return str(value)  # datetime, Decimal, custom objects -> readable leaf
 
 
 def _execute(
@@ -228,6 +374,7 @@ def _execute(
     allow_side_effects: bool,
     timeout_seconds: int,
     lint: LintResult,
+    smoke_export: bool = False,
 ) -> DryRunResult:
     from functools import partial
 
@@ -250,12 +397,17 @@ def _execute(
             element="execute",
         )
 
+    # smoke_export needs to know WHICH file targets were stripped from each product.
+    stripped: _StrippedTargets | None = {} if smoke_export else None
     engine = DataMimic(
         descriptor_path=path,
         task_id=f"dryrun_{uuid.uuid4().hex}",
         test_mode=True,
         statement_transformer=partial(
-            neutralize_for_dry_run, max_count=max_count, allow_side_effects=allow_side_effects
+            neutralize_for_dry_run,
+            max_count=max_count,
+            allow_side_effects=allow_side_effects,
+            stripped_file_targets=stripped,
         ),
     )
 
@@ -276,6 +428,10 @@ def _execute(
     timing_ms = int((time.perf_counter() - started) * 1000)
 
     captured = engine.capture_test_result() or {}
+    # Opt-in export smoke: replay captured rows through the stripped file exporters.
+    smoke_diags: list[Diagnostic] = []
+    if stripped:
+        smoke_diags = _smoke_export(captured, stripped)
     products: list[DryRunProduct] = []
     for name, rows in captured.items():
         sample = [
@@ -302,11 +458,11 @@ def _execute(
             )
         )
     return DryRunResult(
-        ok=True,
+        ok=not smoke_diags,  # a smoke-export failure means the real run WOULD crash at export
         stage="run",
         timing_ms=timing_ms,
         products=products[:_MAX_PRODUCTS],
         products_truncated=max(0, len(products) - _MAX_PRODUCTS),
         lint=lint,
-        diagnostics=zero_rows,
+        diagnostics=[*smoke_diags, *zero_rows],
     )

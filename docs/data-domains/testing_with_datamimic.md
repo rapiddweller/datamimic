@@ -74,7 +74,8 @@ from datamimic_ce.domains.healthcare.services.patient_service import PatientServ
 class TestPatientProcessing(unittest.TestCase):
     def test_with_deterministic_data(self):
         # Create service with a fixed seed for reproducible results
-        patient_service = PatientService(seed=12345)
+        from random import Random
+        patient_service = PatientService(rng=Random(12345))
         
         # This will generate the same patient data every time
         patient = patient_service.generate()
@@ -88,7 +89,7 @@ DATAMIMIC is perfect for mocking API responses:
 
 ```python
 from unittest.mock import patch
-from datamimic_ce.domains.financial.services.bank_account_service import BankAccountService
+from datamimic_ce.domains.finance.services.bank_account_service import BankAccountService
 
 class TestBankAPI:
     @patch('your_app.services.bank_api.get_account_details')
@@ -110,14 +111,15 @@ Generate specific edge cases for thorough testing:
 
 ```python
 from datamimic_ce.domains.healthcare.services.patient_service import PatientService
+from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 
 # Generate elderly patients for testing age-specific rules
-elderly_patient_service = PatientService(min_age=65, max_age=100)
+elderly_patient_service = PatientService(demographic_config=DemographicConfig(age_min=65, age_max=100))
 elderly_patients = elderly_patient_service.generate_batch(5)
 
 # Test with specific conditions
 cardiac_patient_service = PatientService(
-    conditions=["Coronary Artery Disease", "Hypertension"]
+    demographic_config=DemographicConfig(conditions_include=frozenset(["Coronary Artery Disease", "Hypertension"]))
 )
 cardiac_patient = cardiac_patient_service.generate()
 ```
@@ -197,9 +199,10 @@ Use DATAMIMIC to generate synthetic datasets that closely resemble your producti
 # Configure distribution parameters based on production statistics
 patient_service = PatientService(
     dataset="US",
-    female_quota=0.52,  # Matches our production gender distribution
-    min_age=30,         # Matches our customer demographic
-    max_age=75          # Matches our customer demographic
+    demographic_config=DemographicConfig(
+        age_min=30,  # Matches our customer demographic
+        age_max=75,  # Matches our customer demographic
+    ),
 )
 
 # Generate a large dataset for testing

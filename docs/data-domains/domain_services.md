@@ -63,7 +63,7 @@ print(f"Medications: {', '.join(patient.medications)}")
 ### Financial Services
 
 ```python
-from datamimic_ce.domains.financial.services.bank_account_service import BankAccountService
+from datamimic_ce.domains.finance.services.bank_account_service import BankAccountService
 
 # Generate bank account data
 account_service = BankAccountService()
@@ -73,7 +73,7 @@ account = account_service.generate()
 print(f"Account Number: {account.account_number}")
 print(f"Account Type: {account.account_type}")
 print(f"Balance: ${account.balance:.2f}")
-print(f"Transactions: {len(account.transactions)}")
+print(f"IBAN: {account.iban}")
 ```
 
 ## Using Country-Specific Data
@@ -111,7 +111,7 @@ patients = patient_service.generate_batch(20)
 # Associate patients with hospital
 for patient in patients:
     print(f"Patient {patient.full_name} admitted to {hospital.name}")
-    print(f"Department: {hospital.departments[0].name}")
+    print(f"Department: {hospital.departments[0]}")
 ```
 
 ## Best Practices

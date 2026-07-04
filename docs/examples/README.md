@@ -8,9 +8,16 @@ This section contains verified examples for using DATAMIMIC in various practical
 - [Healthcare Data Generation](healthcare_generation.md) - Create realistic healthcare data
 - [DateTime Generator](datetime_generator.md) - Weighted, deterministic, and DSL sugar
 
+## DSL Showcase Gallery
+
+For end-to-end, runnable XML descriptor examples (multi-table referential
+integrity, CSV assembly, conditional branching, time series, custom Python
+generators/converters), see the top-level [`examples/showcase/`](../../examples/showcase/)
+gallery. Each example is seeded and verified by CI.
+
 ## Upcoming Examples
 
-We are working on additional examples for:
+We are working on additional Python API examples for:
 
 - Finance data generation
 - Insurance data generation

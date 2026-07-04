@@ -1,0 +1,37 @@
+# DATAMIMIC Community Edition
+
+> DATAMIMIC is a model-driven, deterministic-first test data platform. The
+> Community Edition is the open-source engine: describe a data pipeline as a
+> small XML descriptor and generate synthetic records, transform sources, or
+> pseudonymize exports. The same seed produces the identical dataset on every
+> run. Python-native, MIT-licensed, with an MCP server for AI agents.
+
+Agents working in a checkout should read AGENTS.md first; it carries the
+authoring loop and the semantic rules that cause most failures.
+
+## Authoring the DSL
+
+- [Agent guide](AGENTS.md): when to use DATAMIMIC, the lint plus dry-run loop, the top semantic rules
+- [DSL cheatsheet](datamimic_ce/authoring/reference_data/cheatsheet.md): elements, value sources, scope, gotchas, one page
+- [MCP quickstart](docs/mcp_quickstart.md): install and register the MCP server (datamimic_check, datamimic_run, datamimic_reference tools)
+- Capability manifest: run `datamimic capabilities` for the live JSON list of elements, attributes, generators, entities, converters, targets, distributions
+
+## Runnable examples
+
+- [Showcase gallery](examples/showcase/README.md): four verified end-to-end examples
+- [Banking with referential integrity](examples/showcase/01-banking-core/README.md): customers, accounts, transactions, two-hop foreign keys
+- [Multi-source assembly](examples/showcase/02-multi-source-assembly/README.md): CSV source plus generated fields plus lookup join
+- [Conditions and time-series](examples/showcase/03-orchestration-timeseries/README.md): if/else-if/else branching, start/end/interval with the ts namespace
+- [Custom python components](examples/showcase/04-python-seam/README.md): custom generator, custom converter, plain-script postprocessing
+- Recipes: `datamimic_ce/authoring/recipes/` holds small single-pattern descriptors
+- [DSL authoring benchmark](benchmarks/dsl-authoring/README.md): measures how reliably agents author correct descriptors; the diagnostics loop beats any static prompt
+
+## Project
+
+- [README](README.md): what CE contains, CE vs Enterprise Platform, determinism contract
+- [Contributing](CONTRIBUTING.md)
+
+## Optional
+
+- [Developer guide](docs/developer_guide.md)
+- [Data domains](docs/data-domains): built-in domain documentation

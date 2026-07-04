@@ -129,6 +129,7 @@ def run_impl(args: RunArgs) -> dict[str, Any]:
         sample_rows=args.sample_rows,
         allow_side_effects=args.allow_side_effects,
         timeout_seconds=args.timeout_seconds,
+        smoke_export=args.smoke_export,
     )
     result = dry_run_source(args.xml, **kwargs) if args.xml is not None else dry_run(Path(str(args.path)), **kwargs)
     detailed = args.response_format == "detailed"
@@ -183,7 +184,9 @@ def create_server(*, api_key: str | None = None) -> FastMCP:
     async def datamimic_run(args: RunArgs) -> dict[str, Any]:
         """Safely dry-run a descriptor: counts capped, file/DB targets neutralized
         (memstores kept), lint gate first. Returns per-product sample rows to verify
-        the generated data looks right."""
+        the generated data looks right. smoke_export=true additionally test-writes
+        the captured rows through each stripped file exporter in a temp dir (no
+        artifacts) to catch export-time serialization crashes before a real run."""
         return run_impl(args)
 
     @server.tool("datamimic_reference")
@@ -191,8 +194,8 @@ def create_server(*, api_key: str | None = None) -> FastMCP:
         """Look up DATAMIMIC DSL knowledge: topic=overview (cheatsheet, start here),
         element (attributes/nesting for a tag), generators, entities (name=Person for
         its fields), context (this/parent/root script scope), timeseries (start/end/
-        interval + ts.now/step/series), targets, distributions, recipes, recipe (full
-        descriptor by id)."""
+        interval + ts.now/step/series), targets, distributions, converters (masking/
+        formatting), recipes, recipe (full descriptor by id)."""
         return reference_impl(args)
 
     http_middleware = _build_http_middleware(api_key)

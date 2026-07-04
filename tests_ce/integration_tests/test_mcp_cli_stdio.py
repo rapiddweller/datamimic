@@ -36,7 +36,7 @@ async def test_cli_stdio_generate_roundtrip() -> None:
     # Spawn the real CLI as a subprocess with stdio transport
     transport = PythonStdioTransport(
         script_path="datamimic_ce/mcp/cli.py",
-        args=["--transport", "stdio"],
+        args=["serve", "--transport", "stdio"],
         python_cmd=sys.executable,
     )
 
@@ -80,7 +80,7 @@ async def test_cli_stdio_dsl_check_and_run() -> None:
     neutralized by the dry-run) — a successful roundtrip IS the proof."""
     transport = PythonStdioTransport(
         script_path="datamimic_ce/mcp/cli.py",
-        args=["--transport", "stdio"],
+        args=["serve", "--transport", "stdio"],
         python_cmd=sys.executable,
     )
     descriptor = (

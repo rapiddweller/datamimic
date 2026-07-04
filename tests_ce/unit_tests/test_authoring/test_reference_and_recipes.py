@@ -61,6 +61,33 @@ def test_reference_timeseries_documents_ts_namespace() -> None:
         assert token in text
 
 
+def test_reference_converters_derived_from_enum() -> None:
+    from datamimic_ce.enums.converter_enums import ConverterEnum
+
+    text = reference("converters")
+    for member in ConverterEnum:
+        assert member.value in text  # SPOT: every engine converter is documented
+    assert "Converter" in text and "execute" in text  # the custom-extension seam
+
+
+def test_capabilities_manifest_matches_registries() -> None:
+    from datamimic_ce.authoring.reference import capabilities_manifest
+    from datamimic_ce.enums.converter_enums import ConverterEnum
+    from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
+
+    manifest = capabilities_manifest()
+    # SPOT: every section mirrors its live registry, nothing invented
+    assert set(manifest["elements"]) == build_schema_index().tags
+    assert manifest["aliases"] == ALIASES
+    assert set(manifest["converters"]) == {m.value for m in ConverterEnum}
+    assert set(manifest["targets"]["file_exporters"]) == set(_BUFFERED_EXPORTERS)
+    assert "IncrementGenerator" in manifest["generators"]
+    assert "Person" in manifest["entities"]
+    gen = manifest["elements"]["generate"]
+    assert gen["attributes"]["name"]["required"] is True
+    assert "key" in gen["children"]
+
+
 def test_gate3_cheatsheet_elements_exist_in_schema() -> None:
     index = build_schema_index()
     known = index.tags | {"comment"}

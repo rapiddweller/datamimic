@@ -76,8 +76,18 @@ SAFE_GLOBALS = {
     "type": type,
     "hashlib": __import__("hashlib"),
     "base64": __import__("base64"),  # pair a binary payload with its b64/hex form in the DSL
-    "__builtins__": None,
+    # Empty dict (not None) still blocks every builtin, but an unresolvable name now raises a
+    # proper NameError carrying the identifier instead of TypeError('NoneType' not subscriptable)
+    # — evaluate_python_expression turns that into an error saying WHICH name is missing.
+    "__builtins__": {},
 }
+
+# The number-one authoring trap: bare record-local names only resolve at the top level.
+# Appended to undefined-name errors so the failure itself teaches the scope rule.
+_SCOPE_GUIDANCE = (
+    "record-local names need this. inside nested <generate>/<nestedKey>; "
+    "use parent./root. for enclosing records"
+)
 
 # List of special functions that define in SAFE_GLOBALS
 SPECIAL_FUNCTION = {
@@ -163,6 +173,21 @@ class Context(ABC):
                 )
             else:
                 return result
+        except NameError as e:
+            # Same exception TYPE as before (ValueError) — only the message improves:
+            # name the missing identifier and teach the scope rule.
+            missing = e.name if e.name is not None else str(e)
+            raise ValueError(
+                f"Failed while evaluate '{expr}': name '{missing}' is not defined in this scope; {_SCOPE_GUIDANCE}"
+            ) from e
+        except AttributeError as e:
+            # DotableDict raises this for a missing field on this./parent./root. (str(e)
+            # already names it: "Cannot find attribute 'x'"); native ones carry e.name.
+            missing_attr = f"missing attribute '{e.name}'" if e.name is not None else str(e)
+            raise ValueError(f"Failed while evaluate '{expr}': {missing_attr}; {_SCOPE_GUIDANCE}") from e
+        except KeyError as e:
+            missing_key = e.args[0] if e.args else str(e)
+            raise ValueError(f"Failed while evaluate '{expr}': missing key {missing_key!r}") from e
         except TypeError as e:
             raise ValueError(f"Failed while evaluate '{expr}': '{expr}' have undefined item or wrong structure") from e
         except SyntaxError as e:

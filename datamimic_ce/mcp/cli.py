@@ -23,6 +23,17 @@ from datamimic_ce.mcp.server import (
 
 app = typer.Typer(help="Run the DataMimic MCP server")
 
+
+@app.callback()
+def _root() -> None:
+    """Keep `serve` as an explicit subcommand.
+
+    WHY: with a single @app.command() Typer collapses the app onto that command,
+    which silently breaks the documented `datamimic-mcp serve ...` form (and every
+    MCP client config carrying ["serve", ...] in its args). The no-op callback
+    forces subcommand routing so the public interface stays stable.
+    """
+
 _DEFAULT_HOST = "127.0.0.1"
 _DEFAULT_PORT = 8765
 

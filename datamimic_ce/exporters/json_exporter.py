@@ -1,7 +1,8 @@
 import base64
 import json
 import os
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 from pathlib import Path
 
 from bson import ObjectId
@@ -12,11 +13,13 @@ from datamimic_ce.logger import logger
 
 
 class DateTimeEncoder(json.JSONEncoder):
-    """Custom JSON encoder that converts datetime objects to ISO format."""
+    """Custom JSON encoder for engine value types the stdlib encoder rejects."""
 
     def default(self, o):
-        if isinstance(o, datetime):
+        if isinstance(o, datetime | date):  # datetime is a date subclass; both isoformat
             return o.isoformat()
+        elif isinstance(o, Decimal):  # <key type="decimal"> is a first-class DSL type
+            return float(o)
         elif isinstance(o, ObjectId):
             return str(o)
         elif isinstance(o, bytes | bytearray):

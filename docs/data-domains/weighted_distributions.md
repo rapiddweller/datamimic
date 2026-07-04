@@ -25,7 +25,7 @@ DATAMIMIC addresses this problem by using weighted distributions based on real-w
 
 In DATAMIMIC, blood types are distributed according to their real frequencies:
 
-From `datamimic_ce/domain_data/healthcare/medical/blood_types_US.csv`:
+From `datamimic_ce/domains/domain_data/healthcare/medical/blood_types_US.csv`:
 ```
 O+, 38
 A+, 34
@@ -54,6 +54,8 @@ Literal generators are the building blocks of DATAMIMIC's weighted distribution 
 For example, the `GenderGenerator` class:
 
 ```python
+# Simplified sketch. The shipped GenderGenerator is rng-injected
+# (datamimic_ce/domains/common/literal_generators/gender_generator.py).
 class GenderGenerator(BaseLiteralGenerator):
     def __init__(self, female_quota: float = None, other_gender_quota: float = None):
         # Calculate distributions
