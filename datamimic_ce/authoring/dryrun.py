@@ -59,6 +59,52 @@ class DryRunResult(BaseModel):
 
 _MAX_PRODUCTS = 20  # generate statements per descriptor are few; a generous cap
 
+# Engine runtime errors are opaque stack traces. Map their stable signatures to
+# actionable fix hints so a runtime crash teaches the fix (critical for the agent
+# lint->fix loop — a weak model cannot recover from "Dry-run failed: <traceback>").
+# (substring in str(err)) -> hint
+_RUNTIME_HINTS: tuple[tuple[str, str], ...] = (
+    (
+        "is empty in memstore",
+        "A <generate>/<iterate> reads a memstore product that no earlier statement wrote. "
+        "Add a <generate target=\"<memstoreId>\"> whose name matches this type=/sourceType= "
+        "and place it BEFORE the reader.",
+    ),
+    (
+        "cannot find data source",
+        "source= names an undeclared client/memstore. Declare <memstore id>/<database id>/"
+        "<mongodb id> with that id, or point source= at a real data file.",
+    ),
+    (
+        "have undefined",
+        "A script references a name that is not a field or <variable> in scope. Define a "
+        "<variable name=...> first, or use a field that exists on the record.",
+    ),
+    (
+        "file not found",
+        "An <include>/source path does not exist relative to the descriptor. Fix the path "
+        "or create the file.",
+    ),
+    (
+        "connection",
+        "Check DB connectivity and the conf/{environment}.env.properties convention "
+        "(keys {system}.{db|mongo}.{attr}).",
+    ),
+    (
+        "Evaluation error",
+        "A script/count expression is malformed. count= is digits or {python_expr} (no "
+        "'script:' prefix); script= is a plain Python expression.",
+    ),
+)
+
+
+def _runtime_hint(err: Exception) -> str:
+    text = str(err).lower()
+    for signature, hint in _RUNTIME_HINTS:
+        if signature.lower() in text:
+            return hint
+    return "Fix the reported runtime error; lint the descriptor for earlier detection."
+
 
 def _run_error(
     rule: str, message: str, fix_hint: str, lint: LintResult, *, element: str = "setup"
@@ -219,14 +265,7 @@ def _execute(
                 lint,
             )
         except Exception as err:  # engine raises plain ValueError/Exception — map to DM002
-            connecting = "connect" in str(err).lower() or "connection" in str(err).lower()
-            hint = (
-                "Check DB connectivity and the conf/{environment}.env.properties convention "
-                "(keys {system}.{db|mongo}.{attr})."
-                if connecting
-                else "Fix the reported runtime error; lint the descriptor for earlier detection."
-            )
-            return _run_error(RULE_RUNTIME_ERROR, f"Dry-run failed: {err}", hint, lint)
+            return _run_error(RULE_RUNTIME_ERROR, f"Dry-run failed: {err}", _runtime_hint(err), lint)
     timing_ms = int((time.perf_counter() - started) * 1000)
 
     captured = engine.capture_test_result() or {}

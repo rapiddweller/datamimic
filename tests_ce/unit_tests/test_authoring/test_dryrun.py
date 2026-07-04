@@ -60,3 +60,23 @@ def test_dry_run_maps_runtime_error_to_dm002() -> None:
     assert not result.ok and result.stage == "run"
     assert [d.rule for d in result.diagnostics] == ["DM002"]
     assert result.diagnostics[0].fix_hint
+
+
+def test_dm002_runtime_errors_carry_actionable_hints() -> None:
+    """Runtime crashes must teach the fix, not just echo the traceback — the loop
+    depends on it. Each signature maps to a specific hint, not the generic fallback."""
+    empty_memstore = """<setup rngSeed="1"><memstore id="mem"/>
+        <iterate name="r" source="mem" type="nope" distribution="ordered" count="3" target="ConsoleExporter"/>
+    </setup>"""
+    result = dry_run_source(empty_memstore)
+    assert not result.ok
+    hint = result.diagnostics[0].fix_hint
+    assert "memstore" in hint.lower() and "before" in hint.lower()
+    assert "Fix the reported runtime error" not in hint  # not the generic fallback
+
+    bad_script = """<setup rngSeed="1">
+        <generate name="o" count="3" target="ConsoleExporter"><key name="x" script="ghost * 3"/></generate>
+    </setup>"""
+    result2 = dry_run_source(bad_script)
+    assert not result2.ok
+    assert "variable" in result2.diagnostics[0].fix_hint.lower()
