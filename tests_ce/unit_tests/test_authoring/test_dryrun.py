@@ -35,6 +35,24 @@ def test_dry_run_caps_counts_strips_targets_keeps_memstore(tmp_path: Path, monke
     assert not list(tmp_path.rglob("*.csv")) and not list(tmp_path.rglob("output"))
 
 
+def test_dry_run_sample_preserves_nested_structure() -> None:
+    # Agents verify intent from the sample ("is reviews a LIST of dicts with a rating?").
+    # Nested structures must survive as dict/list, never be stringified.
+    xml = """<setup rngSeed="1">
+        <generate name="products" count="5" target="JSON">
+            <key name="sku" pattern="[A-Z]{3}-[0-9]{4}"/>
+            <nestedKey name="reviews" type="list" minCount="2" maxCount="2">
+                <key name="rating" type="int" min="1" max="5"/>
+            </nestedKey>
+        </generate>
+    </setup>"""
+    result = dry_run_source(xml, max_count=5, sample_rows=2)
+    assert result.ok, [d.message for d in result.diagnostics]
+    row = result.products[0].sample[0]
+    assert isinstance(row["reviews"], list) and len(row["reviews"]) == 2
+    assert isinstance(row["reviews"][0], dict) and 1 <= row["reviews"][0]["rating"] <= 5
+
+
 def test_dry_run_lint_gate_blocks_broken_descriptor() -> None:
     result = dry_run_source("<setup><generate name='a' pagesize='5' target='ConsoleExporter'/></setup>")
     assert not result.ok and result.stage == "lint"
@@ -95,4 +113,6 @@ def test_dm002_runtime_errors_carry_actionable_hints() -> None:
     </setup>"""
     result2 = dry_run_source(bad_script)
     assert not result2.ok
-    assert "variable" in result2.diagnostics[0].fix_hint.lower()
+    # the hint must teach the scope rule (this./parent.), the top real-world cause
+    hint2 = result2.diagnostics[0].fix_hint
+    assert "this." in hint2 and "parent." in hint2

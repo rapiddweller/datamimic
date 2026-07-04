@@ -144,6 +144,20 @@ def validate(
     _lint(descriptor_path, output_format="text", fail_on="error", max_diagnostics=200)
 
 
+@app.command("capabilities", help="Print the DSL surface as JSON: elements, generators, entities, converters, targets.")
+def capabilities():
+    """Machine-readable capability manifest, derived live from the engine registries.
+
+    For agents without an MCP runtime: the same knowledge `datamimic_reference` serves
+    interactively, in one queryable JSON document that cannot drift from the code.
+    """
+    import json
+
+    from datamimic_ce.authoring.reference import capabilities_manifest
+
+    typer.echo(json.dumps(capabilities_manifest(), indent=2, default=str))
+
+
 @demo_app.command("info")
 def demo_info(
     demo_name: str = DEMO_NAME,

@@ -194,6 +194,52 @@ def distributions_reference() -> str:
     )
 
 
+def converters_reference() -> str:
+    from datamimic_ce.enums.converter_enums import ConverterEnum
+
+    names = ", ".join(sorted(member.value for member in ConverterEnum))
+    return (
+        "# Converters (converter= on <key>/<variable>; chain with ';')\n"
+        f"Built-in: {names}\n"
+        "- Applied to the field value after generation, e.g. "
+        "<key name=\"email\" script=\"p.email\" converter=\"Mask\"/>\n"
+        "- Arguments use constructor syntax: converter=\"CutLength(10)\" or \"Append('_test')\"\n"
+        "- Custom: subclass datamimic_ce.converter.converter.Converter in a .py file, load it "
+        "with <execute uri=\"script/my_converters.scr.py\"/>, then converter=\"MyConverter()\" "
+        "(same mechanism for custom generators)."
+    )
+
+
+def capabilities_manifest() -> dict[str, Any]:
+    """Machine-readable DSL surface, derived live from the engine registries — cannot drift."""
+    from datamimic_ce.enums.converter_enums import ConverterEnum
+    from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
+
+    index = build_schema_index()
+    elements: dict[str, Any] = {}
+    for tag, schema in sorted(index.elements.items()):
+        elements[tag] = {
+            "attributes": {
+                spec.name: {"required": spec.required, "type": spec.annotation}
+                for spec in sorted(schema.attributes.values(), key=lambda s: s.name)
+            },
+            "children": sorted(schema.allowed_children) if schema.allowed_children is not None else "any",
+        }
+    return {
+        "elements": elements,
+        "aliases": dict(ALIASES),
+        "generators": sorted(known_generator_names()),
+        "entities": sorted(_entity_specs()),
+        "converters": sorted(member.value for member in ConverterEnum),
+        "targets": {
+            "file_exporters": sorted(_BUFFERED_EXPORTERS),
+            "built_ins": [EXPORTER_CONSOLE_EXPORTER, EXPORTER_LOG_EXPORTER],
+            "declared_ids": "any <memstore>/<database>/<mongodb> id; client write ops: <id>.update/.upsert/.delete",
+        },
+        "distributions": [member.value for member in SourceDistribution],
+    }
+
+
 @lru_cache(maxsize=1)
 def _recipes_index() -> dict[str, list[dict[str, Any]]]:
     raw = (resources.files("datamimic_ce.authoring") / "recipes" / "recipes.toml").read_text(encoding="utf-8")
@@ -241,6 +287,8 @@ def reference(topic: str, name: str | None = None) -> str:
         return targets_reference()
     if topic == "distributions":
         return distributions_reference()
+    if topic == "converters":
+        return converters_reference()
     if topic == "recipes":
         return list_recipes()
     if topic == "recipe":
@@ -249,5 +297,5 @@ def reference(topic: str, name: str | None = None) -> str:
         return load_recipe(name)
     raise ValueError(
         f"Unknown topic '{topic}'. Topics: overview, element, generators, entities, context, "
-        "timeseries, targets, distributions, recipes, recipe"
+        "timeseries, targets, distributions, converters, recipes, recipe"
     )

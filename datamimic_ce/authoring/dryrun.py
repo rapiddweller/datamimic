@@ -78,8 +78,11 @@ _RUNTIME_HINTS: tuple[tuple[str, str], ...] = (
     ),
     (
         "have undefined",
-        "A script references a name that is not a field or <variable> in scope. Define a "
-        "<variable name=...> first, or use a field that exists on the record.",
+        "A script references a name that is not in scope. Inside a nested <generate>/"
+        "<nestedKey>, record-local names need this. (this.my_key, this.my_var) — bare names "
+        "only resolve at the top level; use parent.field / root.field for enclosing records. "
+        "Also check the name is defined earlier and note CSV columns arrive as strings "
+        "(cast: int(parent.col)).",
     ),
     (
         "file not found",
@@ -215,9 +218,18 @@ def dry_run_source(
 
 
 def _clip_value(value: object, max_chars: int = 200) -> object:
-    if not isinstance(value, str):
-        return value if isinstance(value, int | float | bool | type(None)) else str(value)
-    return value if len(value) <= max_chars else value[: max_chars - 1] + "…"
+    """Clip strings but PRESERVE dict/list structure. Agents verify intent by inspecting
+    the sample ("is reviews a list of objects with a rating?"); stringifying nested
+    structures would make that check impossible."""
+    if isinstance(value, str):
+        return value if len(value) <= max_chars else value[: max_chars - 1] + "…"
+    if isinstance(value, int | float | bool | type(None)):
+        return value
+    if isinstance(value, dict):  # includes DotableDict rows from nestedKey/entity output
+        return {str(k): _clip_value(v, max_chars) for k, v in value.items()}
+    if isinstance(value, list | tuple):
+        return [_clip_value(v, max_chars) for v in value]
+    return str(value)  # datetime, Decimal, custom objects -> readable leaf
 
 
 def _execute(

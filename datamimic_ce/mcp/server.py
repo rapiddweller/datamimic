@@ -191,8 +191,8 @@ def create_server(*, api_key: str | None = None) -> FastMCP:
         """Look up DATAMIMIC DSL knowledge: topic=overview (cheatsheet, start here),
         element (attributes/nesting for a tag), generators, entities (name=Person for
         its fields), context (this/parent/root script scope), timeseries (start/end/
-        interval + ts.now/step/series), targets, distributions, recipes, recipe (full
-        descriptor by id)."""
+        interval + ts.now/step/series), targets, distributions, converters (masking/
+        formatting), recipes, recipe (full descriptor by id)."""
         return reference_impl(args)
 
     http_middleware = _build_http_middleware(api_key)
