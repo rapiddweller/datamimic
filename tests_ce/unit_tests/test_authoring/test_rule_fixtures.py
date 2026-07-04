@@ -73,6 +73,51 @@ def test_dm401_validates_client_operation() -> None:
     assert _op_flagged("insert") and _op_flagged("frobnicate")  # typos / unsupported
 
 
+def test_dm315_increment_generator_fires_nested_only() -> None:
+    from datamimic_ce.authoring import lint_source
+
+    nested = (
+        '<setup rngSeed="1"><generate name="parents" count="5" target="ConsoleExporter">'
+        '<key name="pid" generator="IncrementGenerator"/>'
+        '<generate name="children" count="3" target="ConsoleExporter">'
+        '<key name="cid" generator="IncrementGenerator()"/>'
+        "</generate></generate></setup>"
+    )
+    diags = [d for d in lint_source(nested).diagnostics if d.rule == "DM315"]
+    # nested cid fires; top-level pid stays silent
+    assert [d.name for d in diags] == ["cid"]
+    assert "parent" in diags[0].fix_hint and "this." in diags[0].fix_hint
+
+    # keys inside <nestedKey> are per-record list items, not per-parent id sequences
+    nested_key = (
+        '<setup rngSeed="1"><generate name="g" count="5" target="ConsoleExporter">'
+        '<key name="id" generator="IncrementGenerator"/>'
+        '<nestedKey name="items" type="list" count="2">'
+        '<key name="seq" generator="IncrementGenerator"/></nestedKey>'
+        "</generate></setup>"
+    )
+    assert not [d for d in lint_source(nested_key).diagnostics if d.rule == "DM315"]
+
+
+def test_dm316_count_with_source_hints_the_silent_cap() -> None:
+    from datamimic_ce.authoring import lint_source
+
+    base = (
+        '<setup rngSeed="1"><memstore id="mem"/>'
+        '<generate name="seed" count="5" target="mem"><key name="x" constant="1"/></generate>'
+        '<iterate name="reader" source="mem" type="seed" distribution="ordered" '
+        'count="99" {extra}target="ConsoleExporter"/></setup>'
+    )
+    fired = lint_source(base.format(extra="")).diagnostics
+    assert any(d.rule == "DM316" and d.name == "reader" for d in fired)
+    # cyclic wraps the source — no silent cap, no hint
+    silent = lint_source(base.format(extra='cyclic="True" ')).diagnostics
+    assert not any(d.rule == "DM316" for d in silent)
+    # {script} counts are not literal digits — out of scope
+    scripted = lint_source(base.format(extra="").replace('count="99"', 'count="{5 * 3}"')).diagnostics
+    assert not any(d.rule == "DM316" for d in scripted)
+
+
 def test_db_descriptor_lints_without_spurious_credential_error() -> None:
     from datamimic_ce.authoring import lint_source
 

@@ -97,7 +97,33 @@ class GenerateTask(CommonSubTask):
             # Upsert one collection when no record found by query
             count = 1
 
+        self._warn_count_above_source(context, count)
+
         return count
+
+    def _warn_count_above_source(self, context: SetupContext | GenIterContext, count: int) -> None:
+        """An explicit digit count above the source length caps SILENTLY at the source
+        size when cyclic is off — warn so the underrun is visible before anyone counts
+        output rows. Top-level statements only (executed once => warned once); cumulated
+        samples with replacement and never runs out."""
+        from datamimic_ce.enums.distribution_enums import SourceDistribution
+
+        stmt = self._statement
+        if (
+            not isinstance(context, SetupContext)
+            or stmt.source is None
+            or not (isinstance(stmt.count, str) and stmt.count.isdigit())
+            or stmt.cyclic
+            or stmt.distribution == SourceDistribution.CUMULATED
+        ):
+            return
+        ds_len = context.root.data_source_len.get(stmt.full_name)
+        if ds_len is not None and count > ds_len:
+            logger.warning(
+                f"<generate> '{stmt.name}': count={count} exceeds the {ds_len} rows available from "
+                f"source '{stmt.source}' and cyclic is off — only {ds_len} rows will be generated. "
+                f'Set cyclic="True" to wrap the source, or drop count=.'
+            )
 
     def _calculate_default_page_size(self, entity_count: int) -> int:
         """

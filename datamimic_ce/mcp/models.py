@@ -184,6 +184,11 @@ class RunArgs(BaseModel):
     allow_side_effects: bool = Field(
         False, description="Keep file/DB targets and allow <execute> (default: neutralized)"
     )
+    smoke_export: bool = Field(
+        False,
+        description="Also push captured rows through the stripped FILE exporters in a temp dir "
+        "(no artifacts) to catch export-time serialization crashes",
+    )
     timeout_seconds: int = Field(30, ge=1, le=120)
     response_format: str = Field("concise", pattern="^(concise|detailed)$")
 

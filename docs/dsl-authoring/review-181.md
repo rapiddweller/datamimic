@@ -103,16 +103,38 @@ lint and a clean dry-run at small scale.
    design). Proposal: an opt-in `smoke_export=true` that writes one batch per
    file exporter into a temp dir and deletes it; would have caught the Decimal
    crash. Files: `authoring/dryrun.py` (neutralizer), `mcp/models.py`.
+   IMPLEMENTED: `smoke_export` on `dry_run()`/`dry_run_source()` and the
+   `datamimic_run` MCP tool replays captured rows through each stripped FILE
+   exporter (write + finalize) inside a TemporaryDirectory; a failure becomes a
+   DM002 diagnostic naming the exporter. Console/Log and client targets are
+   never smoked. Tested in `test_dryrun.py`, incl. the nested-product
+   capture-key mapping and the no-artifacts guarantee.
 2. **Engine scope errors should name the identifier.** `'expr' have undefined
    item or wrong structure` should become `name 'account_no' is not defined in
    this scope; record-local names need this.`. File:
    `datamimic_ce/contexts/context.py` (evaluate_python_expression).
+   IMPLEMENTED: `SAFE_GLOBALS["__builtins__"]` is now `{}` (not `None`), so a
+   missing name raises a real NameError instead of an opaque TypeError; the
+   ValueError message names the identifier and appends the this./parent./root.
+   scope guidance (exception type unchanged). AttributeError/KeyError from
+   scripts name the missing member/key too.
 3. **Lint rule for per-parent increment ids.** Flag
    `generator="IncrementGenerator"` on an id-like key inside a nested
    `<generate>` with a hint to the composite-key pattern. File:
    `authoring/rules/best_practice.py`.
+   IMPLEMENTED as DM315 (WARNING), structural match only: a bare
+   IncrementGenerator key whose nearest scope is a generate/iterate nested in
+   another generate/iterate. Keys inside `<nestedKey>` and top-level generates
+   stay silent. The local-sequence keys in shipped recipes/showcase carry the
+   warning by design; it restates the composite-key pattern they already
+   apply, and warnings do not gate lint ok.
 4. **Variable + literal generator combination** parses but yields nothing (see
    above). Wire it or reject it.
+   CORRECTION: the claim was wrong: `<variable generator="IncrementGenerator"/>`
+   evaluates fine (same generator path as `<key>`); the observed failure was a
+   bare record-local name inside a nested `<generate>` (`this.acc_seq` works;
+   the scope rule from item 2). Regression-pinned in
+   `test_dryrun.py::test_variable_literal_generator_evaluates_in_scripts`.
 5. **Includes are linted flat.** `<include uri>` targets are not followed;
    multi-file descriptors get partial coverage. File: `authoring/linter.py`.
 6. **`{script}` counts are uncappable in dry-run** (documented; timeout is the
@@ -154,6 +176,11 @@ Two gaps the test surfaced, kept honest:
    DM3xx hint when `count=` is combined with `source=` and no
    `cyclic`/`distribution`. Files: `datamimic_ce/tasks/generate_task.py`,
    `authoring/rules/best_practice.py`.
+   IMPLEMENTED, both halves: DM316 (HINT) fires on `source=` + literal digit
+   `count=` without `cyclic="True"` (cumulated excluded: with-replacement
+   never runs out); and `GenerateTask._warn_count_above_source` logs one
+   warning per top-level statement naming the statement, requested count and
+   actual source rows when the non-cyclic read would cap.
 
 ## Verification trail
 

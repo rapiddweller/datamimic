@@ -199,6 +199,64 @@ class InterpolationInScript(Rule):
                     )
 
 
+class IncrementCountsPerParentInNestedGenerate(Rule):
+    id = "DM315"
+    severity = Severity.WARNING
+
+    # bare literal forms only — IncrementGenerator(start=...) etc. is a deliberate choice
+    _INCREMENT_FORMS = ("IncrementGenerator", "IncrementGenerator()")
+
+    def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
+        for element in ctx.iter(EL_KEY, EL_ID):
+            generator = (element.get("generator") or "").strip()
+            if generator not in self._INCREMENT_FORMS:
+                continue
+            # Structural fact: the key's nearest enclosing scope is a generate/iterate
+            # (keys inside <nestedKey> are per-record lists, not per-parent id sequences)
+            # that itself sits inside another generate/iterate. <condition>/<if> wrappers
+            # are not scopes and pass through.
+            scopes = [
+                anc
+                for anc in element.iterancestors()
+                if isinstance(anc.tag, str) and anc.tag in (*_GENERATES, EL_NESTED_KEY)
+            ]
+            if scopes and scopes[0].tag in _GENERATES and any(anc.tag in _GENERATES for anc in scopes[1:]):
+                yield ctx.diag(
+                    type(self),
+                    element,
+                    "IncrementGenerator counts per parent inside a nested <generate>; "
+                    "ids will collide across parents.",
+                    "Compose the global id from the parent key plus the local sequence, "
+                    'e.g. script="parent.customer_id * 100 + this.line_no".',
+                )
+
+
+class CountWithSourceCapsSilently(Rule):
+    id = "DM316"
+    severity = Severity.HINT
+
+    def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
+        from datamimic_ce.enums.distribution_enums import SourceDistribution
+
+        for element in ctx.iter(*_GENERATES):
+            count = element.get("count")
+            if (
+                element.get("source") is not None
+                and count is not None
+                and count.isdigit()  # {script} counts are unknowable here
+                and not _is_true(element.get("cyclic"))
+                # cumulated samples WITH replacement — it never runs out, so no cap
+                and element.get("distribution") != SourceDistribution.CUMULATED.value
+            ):
+                yield ctx.diag(
+                    type(self),
+                    element,
+                    "count= above the source length caps silently at the source size "
+                    "(a non-cyclic read stops when the source is exhausted).",
+                    'Set cyclic="True" to wrap the source, or drop count= to consume it exactly once.',
+                )
+
+
 RULES: tuple[type[Rule], ...] = (
     DistributionDefaultsToRandom,
     NonOrderedLoadsWholeSource,
@@ -209,4 +267,6 @@ RULES: tuple[type[Rule], ...] = (
     PreferNativeNumericRange,
     PreferNativeStringLength,
     InterpolationInScript,
+    IncrementCountsPerParentInNestedGenerate,
+    CountWithSourceCapsSilently,
 )
