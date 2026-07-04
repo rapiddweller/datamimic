@@ -62,6 +62,22 @@ def test_dry_run_maps_runtime_error_to_dm002() -> None:
     assert result.diagnostics[0].fix_hint
 
 
+def test_dm004_flags_zero_row_output() -> None:
+    # An empty/mis-wired descriptor runs clean but generates nothing — surface it.
+    empty = dry_run_source("<setup></setup>")
+    assert empty.ok  # did not crash
+    assert [d.rule for d in empty.diagnostics] == ["DM004"]
+    assert empty.diagnostics[0].severity.value == "warning"
+
+    # a real descriptor that produces rows must NOT get DM004
+    real = dry_run_source(
+        '<setup rngSeed="1"><generate name="g" count="3" target="JSON">'
+        '<key name="id" generator="IncrementGenerator"/></generate></setup>'
+    )
+    assert real.ok and real.products[0].count == 3
+    assert not [d for d in real.diagnostics if d.rule == "DM004"]
+
+
 def test_dm002_runtime_errors_carry_actionable_hints() -> None:
     """Runtime crashes must teach the fix, not just echo the traceback — the loop
     depends on it. Each signature maps to a specific hint, not the generic fallback."""

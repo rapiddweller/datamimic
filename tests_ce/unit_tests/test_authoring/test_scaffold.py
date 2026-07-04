@@ -76,3 +76,12 @@ def test_unknown_kind_degrades_to_valid_constant() -> None:
     xml = render({"generates": [{"name": "g", "count": 2, "target": "JSON",
                                  "fields": [{"name": "f", "kind": "totally_made_up", "value": "x"}]}]})
     assert lint_source(xml).ok
+
+
+def test_render_rejects_malformed_spec_instead_of_emitting_empty() -> None:
+    # A weak model's off-schema JSON (e.g. {"kinds": [...]}) must raise, never
+    # silently render an empty <setup> that then dry-runs "ok" with no data.
+    for bad in ({}, {"generates": []}, {"kinds": [{"type": "increment"}]},
+                {"generates": [{"count": 5}]}):
+        with pytest.raises(ValueError):
+            render(bad)

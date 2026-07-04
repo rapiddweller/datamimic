@@ -119,7 +119,21 @@ def _uses_person(fields: list[dict[str, Any]]) -> bool:
 
 
 def render(spec: dict[str, Any]) -> str:
-    """Render a spec dict into a structurally-valid DATAMIMIC descriptor string."""
+    """Render a spec dict into a structurally-valid DATAMIMIC descriptor string.
+
+    Raises ValueError on a spec that does not match SPEC_JSON_SCHEMA's shape, so a
+    malformed spec is a clear error — never a silently-empty descriptor.
+    """
+    generates = spec.get("generates")
+    if not isinstance(generates, list) or not generates:
+        raise ValueError(
+            "spec needs a non-empty 'generates' list, e.g. "
+            "{'generates': [{'name': 'x', 'count': 10, 'fields': [{'name': 'id', 'kind': 'increment'}]}]}"
+        )
+    for gen in generates:
+        if not isinstance(gen, dict) or "name" not in gen or not isinstance(gen.get("fields"), list):
+            raise ValueError(f"each generate needs 'name' and a 'fields' list; got {gen!r}")
+
     seed = spec.get("seed")
     setup_open = f'<setup rngSeed="{int(seed)}">' if seed is not None else "<setup>"
     lines = [setup_open]

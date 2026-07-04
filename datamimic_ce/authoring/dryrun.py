@@ -38,6 +38,7 @@ from datamimic_ce.authoring.linter import lint_descriptor, lint_source
 
 RULE_RUNTIME_ERROR = "DM002"
 RULE_SIDE_EFFECT_REFUSAL = "DM003"
+RULE_EMPTY_OUTPUT = "DM004"
 
 
 class DryRunProduct(BaseModel):
@@ -279,6 +280,21 @@ def _execute(
             DryRunProduct(name=name, count=len(rows), sample=sample, truncated_rows=len(rows) > sample_rows)
         )
     products.sort(key=lambda p: p.name)
+    # A descriptor that generates nothing at all almost always means the author's
+    # intent didn't take (empty <setup>, missing/zero counts, a mis-shaped tree).
+    # Neither lint nor a crash catches it — surface it as a diagnostic.
+    zero_rows: list[Diagnostic] = []
+    if sum(p.count for p in products) == 0:
+        zero_rows.append(
+            Diagnostic(
+                rule=RULE_EMPTY_OUTPUT,
+                severity=Severity.WARNING,
+                message="The dry-run generated 0 rows across all products — the descriptor produces no data.",
+                fix_hint="Ensure a <generate> exists with a positive count (or a source that returns rows).",
+                element="setup",
+                path="/setup",
+            )
+        )
     return DryRunResult(
         ok=True,
         stage="run",
@@ -286,4 +302,5 @@ def _execute(
         products=products[:_MAX_PRODUCTS],
         products_truncated=max(0, len(products) - _MAX_PRODUCTS),
         lint=lint,
+        diagnostics=zero_rows,
     )
