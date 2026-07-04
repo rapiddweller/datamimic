@@ -119,6 +119,42 @@ lint and a clean dry-run at small scale.
    backstop). Subprocess isolation would also free the dry-run from the
    in-process GIL/timeout limitation.
 
+## The falsifiable test
+
+Definition of done for agent legibility: a fresh coding agent, given only the
+instruction "generate a realistic multi-table banking dataset with referential
+integrity" and this repository, must succeed from the repo's own docs and
+examples. Run on 2026-07-04 with a small model (Haiku 4.5), no other guidance.
+
+Result: PASS. The agent produced a seeded six-table descriptor (customers,
+accounts, transactions, account holders, statements, disputes) using the
+memstore-pipeline and script-FK-carry patterns from AGENTS.md and the showcase.
+Independent verification of its CSVs (not its self-report): unique keys, all
+FKs resolve, and relationship-level integrity holds, including
+transaction.customer_id == owner(transaction.account_id) two-hop and the
+dispute -> transaction -> account -> customer three-hop chain. Zero violations.
+
+Two gaps the test surfaced, kept honest:
+
+- The agent wrote `count="150"` (and 1200, 300) on source-driven generates over
+  a 50-row source without `cyclic`; the engine silently capped every table at
+  50 rows and the agent misattributed the cause to pagination. New issue 7
+  below.
+- Its self-report inflated ("251 records", "~2300 estimated"); the data was
+  right, the narrative was not. Independent verification of outputs remains
+  mandatory.
+
+## Issues left open (continued)
+
+7. **`count=` above source length caps silently without `cyclic`.** A
+   source-driven `<generate count="1200">` over 50 source rows yields 50 rows
+   and no warning. Lint cannot know source length; the dry-run caps counts
+   itself, so the underrun only shows at real scale. Best fix: an engine-level
+   warning when a source exhausts below an explicit count, plus a
+   DM3xx hint when `count=` is combined with `source=` and no
+   `cyclic`/`distribution`. Files: `datamimic_ce/tasks/generate_task.py`,
+   `authoring/rules/best_practice.py`.
+
 ## Verification trail
 
 - Full suites: `pytest tests_ce/unit_tests/test_authoring tests_ce/unit_tests/test_showcase
