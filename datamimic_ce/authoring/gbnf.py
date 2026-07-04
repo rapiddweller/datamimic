@@ -23,28 +23,18 @@ Targets and data types are derived from the engine registries so the grammar
 cannot drift from the DSL (SPOT).
 """
 
-from datamimic_ce.constants.data_type_constants import (
-    DATA_TYPE_DECIMAL,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
-    DATA_TYPE_STRING,
-)
+from datamimic_ce.constants.data_type_constants import DATA_TYPE_DECIMAL, DATA_TYPE_INT, DATA_TYPE_STRING
 from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
-
-
-def _alt(literals: list[str]) -> str:
-    """GBNF alternation of quoted string literals, e.g. '"JSON" | "CSV"'."""
-    return " | ".join(f'"\\"{lit}\\""' for lit in literals)
 
 
 def descriptor_grammar() -> str:
     """Return a GBNF grammar for structurally-valid DATAMIMIC descriptors."""
-    file_targets = sorted(_BUFFERED_EXPORTERS)  # CSV/JSON/XML/XLSX/TXT/DbUnit — real file exporters
+    # CSV/JSON/XML/XLSX/TXT/DbUnit — real file exporters, as a GBNF alternation of literals.
+    targets = " | ".join(f'"\\"{t}\\""' for t in sorted(_BUFFERED_EXPORTERS))
     return _GRAMMAR_TEMPLATE.format(
-        targets=_alt(file_targets),
+        targets=targets,
         int_type=DATA_TYPE_INT,
         decimal_type=DATA_TYPE_DECIMAL,
-        float_type=DATA_TYPE_FLOAT,
         string_type=DATA_TYPE_STRING,
     )
 

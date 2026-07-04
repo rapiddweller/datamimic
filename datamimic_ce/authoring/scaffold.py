@@ -20,7 +20,7 @@ from xml.sax.saxutils import quoteattr
 
 # Leaf field kinds (a single value); nested_list is a top-level-only container kind.
 _LEAF_KINDS = [
-    "increment", "person_name", "person_email", "int_range", "float_range",
+    "increment", "person_name", "person_email", "int_range",
     "decimal_range", "string_length", "values", "weighted", "pattern", "constant", "script",
 ]
 _FIELD_KINDS = [*_LEAF_KINDS, "nested_list"]
@@ -78,7 +78,7 @@ _KIND_ALIASES = {
     "name": "person_name", "fullname": "person_name", "full_name": "person_name", "person": "person_name",
     "email": "person_email",
     "int": "int_range", "integer": "int_range", "number": "int_range", "number_range": "int_range",
-    "float": "float_range", "decimal": "decimal_range", "money": "decimal_range",
+    "float": "decimal_range", "decimal": "decimal_range", "money": "decimal_range",
     "string": "string_length", "str": "string_length", "text": "string_length",
     "enum": "values", "choice": "values", "choices": "values", "categorical": "values", "category": "values",
     "weighted_values": "weighted", "weighted values": "weighted", "weighted_choice": "weighted",
@@ -149,8 +149,6 @@ def _render_field(field: dict[str, Any], indent: str) -> list[str]:
         return [f'{indent}<key {a} script="{_ENTITY_VAR}.email"/>']
     if kind == "int_range":
         return [f'{indent}<key {a} type="int" min="{int(field.get("min", 0))}" max="{int(field.get("max", 100))}"/>']
-    if kind == "float_range":
-        return [f'{indent}<key {a} type="float" min="{field.get("min", 0)}" max="{field.get("max", 1)}"/>']
     if kind == "decimal_range":
         return [f'{indent}<key {a} type="decimal" min="{field.get("min", 0)}" max="{field.get("max", 1000)}"/>']
     if kind == "string_length":
