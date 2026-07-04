@@ -25,7 +25,10 @@ from datamimic_ce.authoring.schema import ALIASES, ELEMENT_MODEL_MAP, build_sche
 
 # Gate 3: EE-only concepts must never leak into agent-facing content (CE has no
 # kafka/object-storage/dwh; 'bucket' was purged dead EE surface).
-_EE_TERMS = re.compile(r"kafka|minio|\bs3\b|object.storage|\bdwh\b|bucket", re.IGNORECASE)
+_EE_TERMS = re.compile(
+    r"kafka|minio|\bs3\b|object.storage|\bdwh\b|bucket|targetClient|storageId|sourceUri|mpPlatform",
+    re.IGNORECASE,
+)
 
 
 def _recipe_xml(recipe_id: str) -> str:
@@ -44,10 +47,18 @@ def test_cheatsheet_packaged_and_capped() -> None:
 
 
 def test_gate3_no_ee_terms_in_agent_content() -> None:
-    corpus = cheatsheet() + reference("targets") + reference("distributions") + reference("recipes")
+    corpus = "".join(
+        reference(t) for t in ("overview", "targets", "distributions", "context", "timeseries", "recipes")
+    )
     for recipe_id in _recipe_ids():
         corpus += _recipe_xml(recipe_id)
     assert not _EE_TERMS.search(corpus), _EE_TERMS.search(corpus)
+
+
+def test_reference_timeseries_documents_ts_namespace() -> None:
+    text = reference("timeseries")
+    for token in ("ts.now", "ts.step", "ts.series", "interval", "series"):
+        assert token in text
 
 
 def test_gate3_cheatsheet_elements_exist_in_schema() -> None:

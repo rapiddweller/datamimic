@@ -32,3 +32,11 @@ summary = "seeded run replays identically; ordered source reads; the determinism
 elements = ["setup", "generate", "key", "variable"]
 tags = ["determinism", "seed", "testing"]
 runnable = true
+
+[[recipe]]
+id = "time-series-events"
+title = "Time-series generation (start/end/interval + ts)"
+summary = "iterate over time; ts.now/ts.step/ts.series per tick; count = number of series"
+elements = ["setup", "generate", "key"]
+tags = ["time-series", "temporal", "events"]
+runnable = true

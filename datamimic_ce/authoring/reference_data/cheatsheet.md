@@ -56,6 +56,10 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
   Patient, …) — `topic=entities` lists them, `topic=entities name=Person` lists
   its fields. `<variable name="p" entity="Person" dataset="DE" locale="de"/>` then
   `script="p.email"`.
+- **Time-series** (`topic=timeseries`): `<generate start="..." end="..."
+  interval="PT1H">` (all-or-none) iterates over time; each tick exposes `ts.now`,
+  `ts.step`, `ts.series` to `script=`. `count` = number of series (rows =
+  count × ticks). Reproducible without a seed.
 
 ## Top gotchas (each maps to a lint rule)
 

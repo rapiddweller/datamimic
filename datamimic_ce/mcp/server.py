@@ -190,8 +190,9 @@ def create_server(*, api_key: str | None = None) -> FastMCP:
     async def datamimic_reference(args: ReferenceArgs) -> dict[str, Any]:
         """Look up DATAMIMIC DSL knowledge: topic=overview (cheatsheet, start here),
         element (attributes/nesting for a tag), generators, entities (name=Person for
-        its fields), context (this/parent/root script scope), targets, distributions,
-        recipes, recipe (full descriptor by id)."""
+        its fields), context (this/parent/root script scope), timeseries (start/end/
+        interval + ts.now/step/series), targets, distributions, recipes, recipe (full
+        descriptor by id)."""
         return reference_impl(args)
 
     http_middleware = _build_http_middleware(api_key)

@@ -199,7 +199,7 @@ class ReferenceArgs(BaseModel):
 
     topic: str = Field(
         "overview",
-        pattern="^(overview|element|generators|entities|context|targets|distributions|recipes|recipe)$",
+        pattern="^(overview|element|generators|entities|context|timeseries|targets|distributions|recipes|recipe)$",
         description="What to look up; start with 'overview'",
     )
     name: str | None = Field(

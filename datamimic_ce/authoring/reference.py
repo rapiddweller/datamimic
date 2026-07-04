@@ -159,6 +159,27 @@ def context_reference() -> str:
     )
 
 
+def timeseries_reference() -> str:
+    """<generate start/end/interval> time-series mode + the ts script namespace."""
+    return (
+        "# Time-series <generate start=... end=... interval=...>\n"
+        "- start/end are ISO datetimes, interval an ISO 8601 duration (PT1H, P1D). All three "
+        "together turn a <generate> into a time-series iterator; a partial set is a parse error, "
+        "and end must be after start.\n"
+        "- count = number of SERIES (default 1). Total rows = count x ticks_per_series, where "
+        "ticks_per_series = floor((end - start) / interval).\n"
+        "- Each tick exposes a read-only `ts` object to script= / condition=:\n"
+        "    ts.now    - datetime of this tick\n"
+        "    ts.step   - 0..ticks_per_series-1 within the current series\n"
+        "    ts.series - 0..count-1 (which series)\n"
+        "- ts.* is reproducible without rngSeed (time is deterministic). Avoid naming a "
+        "<variable> 'ts' in this mode.\n"
+        "- Example: <generate name=\"readings\" start=\"2025-01-01T00:00:00\" "
+        "end=\"2025-01-02T00:00:00\" interval=\"PT1H\" count=\"3\" target=\"JSON\">"
+        "<key name=\"at\" script=\"ts.now\"/><key name=\"sensor\" script=\"ts.series\"/></generate>"
+    )
+
+
 def distributions_reference() -> str:
     members = ", ".join(member.value for member in SourceDistribution)
     return (
@@ -214,6 +235,8 @@ def reference(topic: str, name: str | None = None) -> str:
         return entities_reference(name)
     if topic == "context":
         return context_reference()
+    if topic == "timeseries":
+        return timeseries_reference()
     if topic == "targets":
         return targets_reference()
     if topic == "distributions":
@@ -226,5 +249,5 @@ def reference(topic: str, name: str | None = None) -> str:
         return load_recipe(name)
     raise ValueError(
         f"Unknown topic '{topic}'. Topics: overview, element, generators, entities, context, "
-        "targets, distributions, recipes, recipe"
+        "timeseries, targets, distributions, recipes, recipe"
     )
