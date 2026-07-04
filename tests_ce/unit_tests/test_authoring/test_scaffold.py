@@ -78,6 +78,28 @@ def test_unknown_kind_degrades_to_valid_constant() -> None:
     assert lint_source(xml).ok
 
 
+def test_render_normalizes_model_key_drift() -> None:
+    # A local model's near-miss JSON (Ollama does not strictly enforce the schema):
+    # "generate" singular, "weighted_values" kind, a filename target, "type"/"field" aliases.
+    drifted = {
+        "generate": [{
+            "name": "customers", "count": 50, "target": "customer_data.json",
+            "fields": [
+                {"field": "id", "type": "id"},
+                {"name": "country", "kind": "weighted_values",
+                 "values": ["US", "DE"], "weights": [3, 1]},
+                {"name": "age", "kind": "int_range", "min": 18, "max": 90},
+            ],
+        }],
+    }
+    xml = render(drifted)
+    assert 'target="JSON"' in xml and "IncrementGenerator" in xml  # target + kind aliases resolved
+    result = lint_source(xml)
+    assert result.ok, [(d.rule, d.message) for d in result.diagnostics]
+    dr = dry_run_source(xml, max_count=3, sample_rows=1)
+    assert dr.ok and dr.products[0].count == 3
+
+
 def test_render_rejects_malformed_spec_instead_of_emitting_empty() -> None:
     # A weak model's off-schema JSON (e.g. {"kinds": [...]}) must raise, never
     # silently render an empty <setup> that then dry-runs "ok" with no data.

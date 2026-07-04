@@ -18,12 +18,36 @@ the author's job — but the linter now catches that.
 from typing import Any
 from xml.sax.saxutils import quoteattr
 
-# JSON schema the model fills (pass as Ollama `format=` / structured output).
-_FIELD_KINDS = [
+# Leaf field kinds (a single value); nested_list is a top-level-only container kind.
+_LEAF_KINDS = [
     "increment", "person_name", "person_email", "int_range", "float_range",
-    "decimal_range", "string_length", "values", "weighted", "pattern",
-    "constant", "script", "nested_list",
+    "decimal_range", "string_length", "values", "weighted", "pattern", "constant", "script",
 ]
+_FIELD_KINDS = [*_LEAF_KINDS, "nested_list"]
+
+
+def _field_schema(kinds: list[str], allow_children: bool) -> dict[str, Any]:
+    """One field object. FLAT (no $ref): a local constrained-decoding runtime — Ollama's
+    format=, llama.cpp's json-schema-to-GBNF — silently drops recursive $ref, so nesting is
+    inlined to a fixed depth (top field -> optional leaf children) instead of self-referencing."""
+    props: dict[str, Any] = {
+        "name": {"type": "string"},
+        "kind": {"type": "string", "enum": kinds},
+        "min": {"type": "number"},
+        "max": {"type": "number"},
+        "values": {"type": "array", "items": {"type": "string"}},
+        "weights": {"type": "array", "items": {"type": "number"}},
+        "pattern": {"type": "string"},
+        "value": {"type": "string"},
+        "script": {"type": "string"},
+    }
+    if allow_children:
+        # nested_list children are leaves only — one level of nesting, no recursion.
+        props["fields"] = {"type": "array", "items": _field_schema(_LEAF_KINDS, allow_children=False)}
+    return {"type": "object", "properties": props, "required": ["name", "kind"]}
+
+
+# JSON schema the model fills (pass as Ollama `format=` / structured output). No $ref.
 SPEC_JSON_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
@@ -36,34 +60,77 @@ SPEC_JSON_SCHEMA: dict[str, Any] = {
                     "name": {"type": "string"},
                     "count": {"type": "integer"},
                     "target": {"type": "string", "description": "e.g. JSON, CSV, or a memstore id"},
-                    "fields": {"type": "array", "items": {"$ref": "#/$defs/field"}},
+                    "fields": {"type": "array", "items": _field_schema(_FIELD_KINDS, allow_children=True)},
                 },
                 "required": ["name", "fields"],
             },
         },
     },
     "required": ["generates"],
-    "$defs": {
-        "field": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string"},
-                "kind": {"type": "string", "enum": _FIELD_KINDS},
-                "min": {"type": "number"},
-                "max": {"type": "number"},
-                "values": {"type": "array", "items": {"type": "string"}},
-                "weights": {"type": "array", "items": {"type": "number"}},
-                "pattern": {"type": "string"},
-                "value": {"type": "string"},
-                "script": {"type": "string"},
-                "fields": {"type": "array", "items": {"$ref": "#/$defs/field"}},
-            },
-            "required": ["name", "kind"],
-        }
-    },
 }
 
 _ENTITY_VAR = "_ent_person"  # single shared Person variable when person_* fields appear
+
+# Local constrained-decoding runtimes (Ollama format=) don't strictly enforce the schema —
+# models emit near-miss keys. Normalize the common drift so a semantically-correct spec renders.
+_KIND_ALIASES = {
+    "id": "increment", "auto": "increment", "sequence": "increment", "autoincrement": "increment",
+    "name": "person_name", "fullname": "person_name", "full_name": "person_name", "person": "person_name",
+    "email": "person_email",
+    "int": "int_range", "integer": "int_range", "number": "int_range", "number_range": "int_range",
+    "float": "float_range", "decimal": "decimal_range", "money": "decimal_range",
+    "string": "string_length", "str": "string_length", "text": "string_length",
+    "enum": "values", "choice": "values", "choices": "values", "categorical": "values", "category": "values",
+    "weighted_values": "weighted", "weighted values": "weighted", "weighted_choice": "weighted",
+    "regex": "pattern", "const": "constant", "fixed": "constant",
+    "expression": "script", "formula": "script", "computed": "script",
+    "nested": "nested_list", "list": "nested_list", "array": "nested_list", "object": "nested_list",
+}
+_FILE_TARGET = {".json": "JSON", ".csv": "CSV", ".xml": "XML", ".xlsx": "XLSX", ".txt": "TXT"}
+
+
+def _norm_kind(kind: object) -> str:
+    k = str(kind or "constant").strip().lower()
+    return k if k in _FIELD_KINDS else _KIND_ALIASES.get(k, "constant")
+
+
+def _norm_target(target: object) -> str:
+    t = str(target or "JSON").strip()
+    for ext, fmt in _FILE_TARGET.items():
+        if t.lower().endswith(ext):
+            return fmt
+    return t  # a format keyword, memstore id, or client id — leave as-is
+
+
+def _normalize(spec: dict[str, Any]) -> dict[str, Any]:
+    """Map a model's near-miss JSON onto the canonical spec shape (generate->generates,
+    weighted_values->weighted, 'x.json' target->JSON, kind/type & name/field aliases)."""
+    gens = spec.get("generates") or spec.get("generate") or spec.get("entities") or []
+    if isinstance(gens, dict):
+        gens = [gens]
+
+    def _field(f: dict[str, Any]) -> dict[str, Any]:
+        out = dict(f)
+        out["name"] = f.get("name") or f.get("field") or f.get("column") or "field"
+        out["kind"] = _norm_kind(f.get("kind") or f.get("type"))
+        children = f.get("fields") or f.get("children")
+        if children:
+            out["kind"] = "nested_list"
+            out["fields"] = [_field(c) for c in children if isinstance(c, dict)]
+        return out
+
+    norm_gens = []
+    for gen in gens:
+        if not isinstance(gen, dict):
+            continue
+        fields = gen.get("fields") or gen.get("keys") or gen.get("columns") or []
+        norm_gens.append({
+            "name": gen.get("name") or "data",
+            "count": gen.get("count"),
+            "target": _norm_target(gen.get("target")),
+            "fields": [_field(f) for f in fields if isinstance(f, dict)],
+        })
+    return {"seed": spec.get("seed"), "generates": norm_gens}
 
 
 def _quote_values(values: list[str]) -> str:
@@ -121,18 +188,16 @@ def _uses_person(fields: list[dict[str, Any]]) -> bool:
 def render(spec: dict[str, Any]) -> str:
     """Render a spec dict into a structurally-valid DATAMIMIC descriptor string.
 
-    Raises ValueError on a spec that does not match SPEC_JSON_SCHEMA's shape, so a
-    malformed spec is a clear error — never a silently-empty descriptor.
+    Tolerant of a model's near-miss key drift (see _normalize). Raises ValueError only
+    when there is genuinely no generate to render — never a silently-empty descriptor.
     """
-    generates = spec.get("generates")
-    if not isinstance(generates, list) or not generates:
+    spec = _normalize(spec)
+    generates = spec["generates"]
+    if not generates or not any(g["fields"] for g in generates):
         raise ValueError(
-            "spec needs a non-empty 'generates' list, e.g. "
+            "spec needs a non-empty 'generates' list with fields, e.g. "
             "{'generates': [{'name': 'x', 'count': 10, 'fields': [{'name': 'id', 'kind': 'increment'}]}]}"
         )
-    for gen in generates:
-        if not isinstance(gen, dict) or "name" not in gen or not isinstance(gen.get("fields"), list):
-            raise ValueError(f"each generate needs 'name' and a 'fields' list; got {gen!r}")
 
     seed = spec.get("seed")
     setup_open = f'<setup rngSeed="{int(seed)}">' if seed is not None else "<setup>"
