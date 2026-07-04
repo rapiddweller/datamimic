@@ -97,7 +97,7 @@ def known_generator_names() -> set[str]:
     return {line[2:].split("(", 1)[0] for line in generator_reference().splitlines() if line.startswith("- ")}
 
 
-def targets_reference(declared_clients: set[str] | None = None) -> str:
+def targets_reference() -> str:
     from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
 
     lines = [
@@ -108,8 +108,6 @@ def targets_reference(declared_clients: set[str] | None = None) -> str:
         "Declared ids: any <memstore id>, <database id>, <mongodb id> becomes a target name",
         "Client operations: <clientId>.upsert / <clientId>.delete (e.g. mongodb.upsert)",
     ]
-    if declared_clients:
-        lines.append(f"Declared in this descriptor: {', '.join(sorted(declared_clients))}")
     return "\n".join(lines)
 
 

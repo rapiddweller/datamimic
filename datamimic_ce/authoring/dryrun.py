@@ -57,6 +57,18 @@ class DryRunResult(BaseModel):
     diagnostics: list[Diagnostic] = Field(default_factory=list)
 
 
+_MAX_PRODUCTS = 20  # generate statements per descriptor are few; a generous cap
+
+
+def _run_error(
+    rule: str, message: str, fix_hint: str, lint: LintResult, *, element: str = "setup"
+) -> DryRunResult:
+    diag = Diagnostic(
+        rule=rule, severity=Severity.ERROR, message=message, fix_hint=fix_hint, element=element, path="/setup"
+    )
+    return DryRunResult(ok=False, stage="run", lint=lint, diagnostics=[diag])
+
+
 def _memstore_ids(root_stmt: object) -> set[str]:
     from datamimic_ce.statements.memstore_statement import MemstoreStatement
     from datamimic_ce.statements.setup_statement import SetupStatement
@@ -113,7 +125,6 @@ def dry_run(
     *,
     max_count: int = 10,
     sample_rows: int = 5,
-    max_products: int = 20,
     allow_side_effects: bool = False,
     timeout_seconds: int = 30,
 ) -> DryRunResult:
@@ -125,7 +136,6 @@ def dry_run(
         path,
         max_count=max_count,
         sample_rows=sample_rows,
-        max_products=max_products,
         allow_side_effects=allow_side_effects,
         timeout_seconds=timeout_seconds,
         lint=lint,
@@ -137,7 +147,6 @@ def dry_run_source(
     *,
     max_count: int = 10,
     sample_rows: int = 5,
-    max_products: int = 20,
     allow_side_effects: bool = False,
     timeout_seconds: int = 30,
 ) -> DryRunResult:
@@ -152,7 +161,6 @@ def dry_run_source(
             descriptor,
             max_count=max_count,
             sample_rows=sample_rows,
-            max_products=max_products,
             allow_side_effects=allow_side_effects,
             timeout_seconds=timeout_seconds,
             lint=lint,
@@ -160,13 +168,9 @@ def dry_run_source(
 
 
 def _clip_value(value: object, max_chars: int = 200) -> object:
-    text = value if isinstance(value, str) else None
-    if text is None:
-        try:
-            return value if isinstance(value, int | float | bool | type(None)) else str(value)
-        except Exception:
-            return repr(value)
-    return text if len(text) <= max_chars else text[: max_chars - 1] + "…"
+    if not isinstance(value, str):
+        return value if isinstance(value, int | float | bool | type(None)) else str(value)
+    return value if len(value) <= max_chars else value[: max_chars - 1] + "…"
 
 
 def _execute(
@@ -174,7 +178,6 @@ def _execute(
     *,
     max_count: int,
     sample_rows: int,
-    max_products: int,
     allow_side_effects: bool,
     timeout_seconds: int,
     lint: LintResult,
@@ -186,15 +189,13 @@ def _execute(
 
     # Refusal gate: <execute> runs arbitrary SQL/scripts — never silently in a dry-run.
     if not allow_side_effects and _contains_execute(DescriptorParser.parse(path, None)):
-        refusal = Diagnostic(
-            rule=RULE_SIDE_EFFECT_REFUSAL,
-            severity=Severity.ERROR,
-            message="Descriptor contains <execute> (arbitrary SQL/script) — refusing the dry-run.",
-            fix_hint="Re-run with allow_side_effects=true if the statement is safe to execute.",
+        return _run_error(
+            RULE_SIDE_EFFECT_REFUSAL,
+            "Descriptor contains <execute> (arbitrary SQL/script) — refusing the dry-run.",
+            "Re-run with allow_side_effects=true if the statement is safe to execute.",
+            lint,
             element="execute",
-            path="/setup",
         )
-        return DryRunResult(ok=False, stage="run", lint=lint, diagnostics=[refusal])
 
     engine = DataMimic(
         descriptor_path=path,
@@ -211,44 +212,21 @@ def _execute(
         try:
             future.result(timeout=timeout_seconds)
         except FutureTimeoutError:
-            return DryRunResult(
-                ok=False,
-                stage="run",
-                lint=lint,
-                diagnostics=[
-                    Diagnostic(
-                        rule=RULE_RUNTIME_ERROR,
-                        severity=Severity.ERROR,
-                        message=f"Dry-run exceeded {timeout_seconds}s and was abandoned.",
-                        fix_hint="Reduce counts/pageSize or raise timeout_seconds; check for "
-                        "unbounded {script} counts.",
-                        element="setup",
-                        path="/setup",
-                    )
-                ],
+            return _run_error(
+                RULE_RUNTIME_ERROR,
+                f"Dry-run exceeded {timeout_seconds}s and was abandoned.",
+                "Reduce counts/pageSize or raise timeout_seconds; check for unbounded {script} counts.",
+                lint,
             )
         except Exception as err:  # engine raises plain ValueError/Exception — map to DM002
+            connecting = "connect" in str(err).lower() or "connection" in str(err).lower()
             hint = (
                 "Check DB connectivity and the conf/{environment}.env.properties convention "
                 "(keys {system}.{db|mongo}.{attr})."
-                if "connect" in str(err).lower() or "connection" in str(err).lower()
+                if connecting
                 else "Fix the reported runtime error; lint the descriptor for earlier detection."
             )
-            return DryRunResult(
-                ok=False,
-                stage="run",
-                lint=lint,
-                diagnostics=[
-                    Diagnostic(
-                        rule=RULE_RUNTIME_ERROR,
-                        severity=Severity.ERROR,
-                        message=f"Dry-run failed: {err}",
-                        fix_hint=hint,
-                        element="setup",
-                        path="/setup",
-                    )
-                ],
-            )
+            return _run_error(RULE_RUNTIME_ERROR, f"Dry-run failed: {err}", hint, lint)
     timing_ms = int((time.perf_counter() - started) * 1000)
 
     captured = engine.capture_test_result() or {}
@@ -262,12 +240,11 @@ def _execute(
             DryRunProduct(name=name, count=len(rows), sample=sample, truncated_rows=len(rows) > sample_rows)
         )
     products.sort(key=lambda p: p.name)
-    truncated = max(0, len(products) - max_products)
     return DryRunResult(
         ok=True,
         stage="run",
         timing_ms=timing_ms,
-        products=products[:max_products],
-        products_truncated=truncated,
+        products=products[:_MAX_PRODUCTS],
+        products_truncated=max(0, len(products) - _MAX_PRODUCTS),
         lint=lint,
     )
