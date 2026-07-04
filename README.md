@@ -27,7 +27,7 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 
 - **Generate** fully synthetic, deterministic datasets — model-driven, no source data required
 - **Pseudonymize** staging/QA exports — deterministic (seeded) or privacy-maximized (non-seeded) field transformation; PII fields identified and modeled manually in the XML pipeline
-- **Execute** single-system pipelines against PostgreSQL · MySQL · Oracle · MS SQL · SQLite · MongoDB · CSV · JSON · XML
+- **Execute** single-system pipelines against PostgreSQL · MySQL · Oracle · MS SQL · SQLite · MongoDB · CSV · JSON · XML · XLSX · DbUnit
 - **Emit provenance** — append-only execution logs and per-output content hash for audit re-execution
 - **Serve agents** — bundled MCP server with the full authoring loop (`datamimic_reference` DSL lookup, `datamimic_check` lint with fix hints, `datamimic_run` safe dry-run) plus the deterministic `generate` tool
 
@@ -312,7 +312,7 @@ Most test data tools produce random output. That breaks regression tests, audit 
 
 **DATAMIMIC's determinism contract (CE):**
 
-- **Same seed + same model = byte-identical output**, every run, every machine. Holds at three layers: the `generate_domain` facade, every domain service called directly, and every literal generator that accepts an `rng=` argument. Verified per-service on every CI run via [`tests_ce/architecture/test_service_replay_determinism.py`](tests_ce/architecture/test_service_replay_determinism.py).
+- **Same engine version + same model + same seed = byte-identical output**, every run, every machine. Holds at three layers: the `generate_domain` facade, every domain service called directly, and every literal generator that accepts an `rng=` argument. Verified per-service on every CI run via [`tests_ce/architecture/test_service_replay_determinism.py`](tests_ce/architecture/test_service_replay_determinism.py).
 - **DSL-level seeding (entities):** `<setup rngSeed="N">` makes the whole model deterministic — every seed-less `<variable entity="…">` derives a reproducible child RNG from it, and `<variable rngSeed="…">` overrides it for that block (no seed anywhere → wall-clock random). Verified by [`tests_ce/integration_tests/test_determinism_seed_scenarios`](tests_ce/integration_tests/test_determinism_seed_scenarios). Deterministic DSL-level seeding of standalone literal generators (`<key generator="…">`) is an **Enterprise (EE) feature**; in CE such generators are seeded only when used directly from Python with `rng=`.
 - **Source reads:** `distribution="ordered"` reads a data source in stable file order; `distribution="random"` shuffles but replays identically when `<setup rngSeed>` is set (without a seed the shuffle is non-deterministic by design, for privacy-maximized one-time deliveries). Deterministic shuffling across distributed / multi-process execution is EE.
 - **Provenance hash on every facade output** = re-executable lineage. Same input → same `determinism_proof.content_hash`, always.
@@ -648,6 +648,8 @@ EE adds Kafka, EDIFACT, SWIFT MT, HL7 v2.x, and HL7 FHIR as additional targets �
 | SQLite | ✅ | ✅ | Lightweight CI/CD fixtures |
 | MongoDB | ✅ | ✅ | EE adds nested document generation |
 | CSV / JSON / XML | ✅ | ✅ | Flat file pipelines |
+| XLSX | ✅ | ✅ | Spreadsheet read + write (first row = header) |
+| DbUnit XML | ✅ | ✅ | `.dbunit.xml` dataset read + write |
 | Apache Kafka | — | ✅ | Real-time streaming, payment scenarios |
 | HL7 v2.x | — | ✅ | Test/training output via template engine |
 | HL7 FHIR | — | ✅ | Test/training output via template engine |
