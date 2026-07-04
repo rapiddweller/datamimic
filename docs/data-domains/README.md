@@ -21,11 +21,11 @@ DATAMIMIC implements several industry-specific domains:
 | Domain        | Description                                 | Key Entities                                        |
 |---------------|---------------------------------------------|-----------------------------------------------------|
 | Common        | Generally useful entities                   | Person, Address, Company, City, Country             |
-| Healthcare    | Medical and healthcare entities             | Patient, Doctor, Hospital, MedicalProcedure,        |
+| Healthcare    | Medical and healthcare entities             | Patient, Doctor, Hospital, MedicalProcedure, MedicalDevice |
 | Finance       | Financial services entities                 | BankAccount, Transaction, Bank, CreditCard          |
 | E-commerce    | Online shopping and retail                  | Product, Order                                      |
 | Insurance     | Insurance industry entities                 | Policy, Product, Company, Coverage                  |
-| Public Sector | Government and public administration        | Citizen, Agency, EducationalInstitution             |
+| Public Sector | Government and public administration        | AdministrationOffice, EducationalInstitution, PoliceOfficer |
 
 ## Quick Start Guide
 

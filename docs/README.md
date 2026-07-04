@@ -12,19 +12,46 @@ This project documentation focuses specifically on:
 
 ## Documentation Sections
 
-- [Core Concepts](#core-concepts)
-- [Getting Started](#getting-started)
-- [Domain-Driven Framework](data-domains/README.md)
-- [Examples](examples/README.md)
-  - DateTime Generator (weighted + DSL): examples/datetime_generator.md
-- [API Reference](api/README.md)
-- [Advanced Topics](advanced/advanced-topics.md)
-- [Controlling Generator Caching](generator_lifecycle.md)
-- [Developer Guide](developer_guide.md)
-- [Dataset Loading Standard](data-domains/datasets.md)
-- [Demographic Profiles](demographics.md)
-- [MCP Quickstart](mcp_quickstart.md) - MCP server + DSL authoring tools (lint/dry-run/reference) for AI agents
-- Seeding & Reproducibility: see Developer Guide ("Seeding & Reproducibility") and DateTime examples
+### Authoring with AI agents
+
+- [Agent guide](../AGENTS.md): repository instructions that teach a coding agent the DSL authoring loop.
+- [MCP Quickstart](mcp_quickstart.md): install and register the MCP server; the check/run/reference authoring tools.
+- [DSL cheatsheet](../datamimic_ce/authoring/reference_data/cheatsheet.md): one-page DSL syntax reference, the same content the MCP server serves.
+- [Showcase gallery](../examples/showcase/README.md): four runnable, seeded descriptor examples, verified by CI.
+- [DSL authoring benchmark](../benchmarks/dsl-authoring/README.md): harness that measures how reliably agents author correct descriptors.
+
+### Getting started
+
+- [Installation and first steps](#getting-started): install the package and generate your first entities.
+- [Command line interface](api/cli.md): run, lint, validate, capabilities, init, demo.
+
+### Data domains
+
+- [Domain-Driven Framework](data-domains/README.md): overview and quick start for the domain services.
+- [Domain framework architecture](data-domains/domain_overview.md): core components and design.
+- [Domain models](data-domains/domain_models.md): entity fields by domain.
+- [Domain services](data-domains/domain_services.md): service API usage.
+- [Weighted distributions](data-domains/weighted_distributions.md): how value distributions reflect real-world frequencies.
+- [Testing with DATAMIMIC](data-domains/testing_with_datamimic.md): synthetic data in unit and integration tests.
+- [Dataset loading standard](data-domains/datasets.md): file naming, loaders, strict mode.
+- [Demographic profiles](demographics.md): population priors via `.dmgrp.csv` bundles and the `<demographics>` element.
+- [Examples index](examples/README.md): Python API examples plus the showcase pointer.
+  - [Person generation](examples/person_generation.md)
+  - [Healthcare generation](examples/healthcare_generation.md)
+
+### API reference
+
+- [API reference index](api/README.md): CLI, Python surface, MCP pointers.
+- [DateTime generator reference](api/datetime_generator.md): parameters, weights, DSL sugar.
+- [DateTime generator examples](examples/datetime_generator.md): compact usage examples.
+
+### Advanced
+
+- [Developer guide](developer_guide.md): architecture, dataset loading, seeding, extension.
+- [Generator caching](generator_lifecycle.md): the `cache_in_root` flag and RNG injection.
+- [Advanced topics](advanced/advanced-topics.md): extension points and performance.
+- [Enterprise features](advanced/enterprise-features.md): capabilities of the Enterprise Edition.
+- Seeding and reproducibility: see the Developer Guide section "Seeding & Reproducibility" and the DateTime examples.
 
 ## Core Concepts
 
@@ -129,9 +156,9 @@ DATAMIMIC's domain-driven framework organizes synthetic data generation by indus
 
 - **Common Domain** - [Person](examples/person_generation.md), Address, Company
 - **Healthcare Domain** - [Patient](examples/healthcare_generation.md), Doctor, Hospital
-- **Finance Domain** - BankAccount, Transaction, Loan
-- **Insurance Domain** - Policy, Claim, Insured
-- **E-commerce Domain** - Product, Order, Customer
+- **Finance Domain** - BankAccount, Transaction, CreditCard, Bank
+- **Insurance Domain** - InsurancePolicy, InsuranceCompany, InsuranceProduct, InsuranceCoverage
+- **E-commerce Domain** - Product, Order
 
 See also the dataset loading rules in [Dataset Loading Standard](data-domains/datasets.md):
 - Use `dataset_path(...)` or lightweight loaders for all file access
