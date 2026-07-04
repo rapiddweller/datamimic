@@ -58,6 +58,21 @@ def test_every_fixture_produces_diagnostics() -> None:
         assert result.diagnostics, f"{fixture} should produce at least one diagnostic"
 
 
+def test_dm401_validates_client_operation() -> None:
+    from datamimic_ce.authoring import lint_source
+
+    def _op_flagged(op: str) -> bool:
+        xml = (
+            f'<setup rngSeed="1"><mongodb id="db"/>'
+            f'<generate name="g" count="3" source="db" selector="find: \'c\', filter: {{}}" '
+            f'target="db.{op}"/></setup>'
+        )
+        return any(d.rule == "DM401" for d in lint_source(xml).diagnostics)
+
+    assert not any(_op_flagged(op) for op in ("update", "upsert", "delete"))  # real ops (#165)
+    assert _op_flagged("insert") and _op_flagged("frobnicate")  # typos / unsupported
+
+
 def test_clean_descriptor_is_ok() -> None:
     result = lint_descriptor(_FIXTURES / "fx_clean.xml")
     errors = [d for d in result.diagnostics if d.severity.value == "error"]

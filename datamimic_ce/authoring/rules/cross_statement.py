@@ -41,6 +41,9 @@ _STATIC_TARGETS = {
     EXPORTER_LOG_EXPORTER,
     EXPORTER_TEST_RESULT_EXPORTER,
 }
+# Dotted <clientId>.<op> write operations the client exporters expose
+# (MongoDBExporter / DatabaseExporter methods; #165).
+_CLIENT_OPERATIONS = {"update", "upsert", "delete"}
 
 
 def _declared_ids(ctx: LintContext) -> tuple[set[str], set[str]]:
@@ -82,6 +85,16 @@ class UnknownTarget(Rule):
                             f'Declare <mongodb id="{base}"/> / <database id="{base}" .../> in <setup>, '
                             "or fix the target name.",
                         )
+                    else:
+                        operation = name.split(".", 1)[1]
+                        if operation not in _CLIENT_OPERATIONS:
+                            yield ctx.diag(
+                                type(self),
+                                element,
+                                f"Unknown client operation '{operation}' in target '{name}'.",
+                                f"Client write operations are: {', '.join(sorted(_CLIENT_OPERATIONS))} "
+                                "(e.g. mongodb.upsert). Plain 'clientId' writes/inserts.",
+                            )
                 elif name not in _STATIC_TARGETS and name not in clients and name not in memstores:
                     valid = sorted(_STATIC_TARGETS | clients | memstores)
                     yield ctx.diag(

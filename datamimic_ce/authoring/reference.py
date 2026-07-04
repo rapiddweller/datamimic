@@ -106,7 +106,8 @@ def targets_reference() -> str:
         "(exportUri= sets the output subdirectory)",
         f"Built-ins: {EXPORTER_CONSOLE_EXPORTER}, {EXPORTER_LOG_EXPORTER}, {EXPORTER_TEST_RESULT_EXPORTER}",
         "Declared ids: any <memstore id>, <database id>, <mongodb id> becomes a target name",
-        "Client operations: <clientId>.upsert / <clientId>.delete (e.g. mongodb.upsert)",
+        "Client write ops: <clientId>.update / .upsert / .delete (e.g. mongodb.upsert); "
+        "plain <clientId> inserts",
     ]
     return "\n".join(lines)
 
