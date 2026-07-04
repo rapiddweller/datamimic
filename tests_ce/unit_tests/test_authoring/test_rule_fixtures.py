@@ -39,6 +39,8 @@ EXPECTED: dict[str, set[str]] = {
     "fx_engine_fallback.xml": {"DM000"},
     "fx_script_interpolation.xml": {"DM314"},
     "fx_nestedkey_no_type.xml": {"DM216"},
+    "fx_unknown_source.xml": {"DM402"},
+    "fx_missing_include.xml": {"DM405"},
 }
 
 
