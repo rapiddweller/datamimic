@@ -73,6 +73,29 @@ def test_dm401_validates_client_operation() -> None:
     assert _op_flagged("insert") and _op_flagged("frobnicate")  # typos / unsupported
 
 
+def test_db_descriptor_lints_without_spurious_credential_error() -> None:
+    from datamimic_ce.authoring import lint_source
+
+    # A <variable source= selector=> reading a declared client is valid DSL; the linter
+    # must NOT reject it just because DB credentials aren't wired in the lint environment.
+    ok = (
+        '<setup rngSeed="1"><mongodb id="mongodb"/>'
+        '<generate name="g" count="5" distribution="ordered" target="ConsoleExporter">'
+        '<variable name="mongo_data" source="mongodb" selector="find: \'c\', filter: {}"/>'
+        '<key name="v" script="mongo_data.x"/></generate></setup>'
+    )
+    result = lint_source(ok)
+    assert result.ok, [(d.rule, d.message) for d in result.diagnostics]
+    assert not any(d.rule == "DM000" for d in result.diagnostics)
+
+    # but a real structural error in a DB descriptor is still caught by phase 2
+    broken = (
+        '<setup rngSeed="1"><mongodb id="m"/>'
+        '<generate name="g" count="1" target="ConsoleExporter"><key name="x" bogus="1"/></generate></setup>'
+    )
+    assert not lint_source(broken).ok
+
+
 def test_clean_descriptor_is_ok() -> None:
     result = lint_descriptor(_FIXTURES / "fx_clean.xml")
     errors = [d for d in result.diagnostics if d.severity.value == "error"]

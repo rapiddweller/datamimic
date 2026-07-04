@@ -17,6 +17,12 @@ from datamimic_ce.authoring.diagnostics import Diagnostic, Severity
 
 RULE_ENGINE_PARSE = "DM000"
 
+# The engine resolves <database>/<mongodb> credentials AT PARSE TIME from
+# conf/{env}.env.properties. That is an environment concern, not descriptor
+# validity — the linter has no conf and must not fail a structurally-correct
+# DB descriptor on it (dry-run surfaces real connectivity as DM002 instead).
+_CREDENTIAL_SIGNATURE = "make sure all required attributes are provided"
+
 
 def run_engine_parse(descriptor_path: Path) -> Diagnostic | None:
     """None when the engine accepts the descriptor, else one DM000 diagnostic."""
@@ -25,6 +31,8 @@ def run_engine_parse(descriptor_path: Path) -> Diagnostic | None:
     try:
         DescriptorParser.parse(descriptor_path, None)
     except (ValueError, FileNotFoundError) as err:
+        if _CREDENTIAL_SIGNATURE in str(err):
+            return None  # DB credentials are wired at run time, not a lint error
         return Diagnostic(
             rule=RULE_ENGINE_PARSE,
             severity=Severity.ERROR,

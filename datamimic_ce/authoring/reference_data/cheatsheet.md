@@ -21,8 +21,14 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 
 - `<setup>` is the root; top-level `<generate>` statements run in order.
 - `<generate name= count=>` produces records; `<key>` defines one field,
-  `<variable>` a per-record helper (not exported), `<nestedKey>`/`<list>`/`<array>`
-  build nested structures.
+  `<variable>` a per-record helper (not exported — it can also read a source:
+  `<variable name="row" source="db" selector="SELECT ..."/>` then `script="row.col"`),
+  `<nestedKey>`/`<list>`/`<array>` build nested structures.
+- **Cascading**: `<generate>`s nest inside `<generate>`s (the inner runs once per
+  outer record; read outer fields with `parent.field`), and `<nestedKey>`s nest
+  inside `<nestedKey>`s to any depth.
+- **XML shaping**: inside a `<key>`, child `<element>`s become sub-elements of that
+  key in XML output (`<key name="author"><element name="name" script="p.name"/></key>`).
 - `source=` reads existing data (`.csv`, `.json`, `.xlsx`, `.xml`, `.dbunit.xml`,
   a `<memstore>` id, or a `<database>`/`<mongodb>` id).
 - **`<generate>` vs `<iterate>`** — same engine element, different *intent*:
