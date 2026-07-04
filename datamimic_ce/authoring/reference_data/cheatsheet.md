@@ -56,10 +56,18 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
   Patient, …) — `topic=entities` lists them, `topic=entities name=Person` lists
   its fields. `<variable name="p" entity="Person" dataset="DE" locale="de"/>` then
   `script="p.email"`.
-- **Time-series** (`topic=timeseries`): `<generate start="..." end="..."
-  interval="PT1H">` (all-or-none) iterates over time; each tick exposes `ts.now`,
-  `ts.step`, `ts.series` to `script=`. `count` = number of series (rows =
-  count × ticks). Reproducible without a seed.
+- **Time-series** (`topic=timeseries`): iterate over time instead of a count —
+  `count` = number of series (rows = count × ticks); `ts.now`, `ts.step`,
+  `ts.series` are exposed to `script=`; reproducible without a seed:
+
+  ```xml
+  <generate name="readings" start="2025-01-01T00:00:00" end="2025-01-02T00:00:00"
+            interval="PT1H" count="2" target="JSON">
+      <key name="at" script="ts.now"/>
+      <key name="sensor" script="ts.series"/>
+      <key name="temp" type="float" min="15" max="30"/>
+  </generate>
+  ```
 
 ## Top gotchas (each maps to a lint rule)
 

@@ -457,6 +457,95 @@ anyio.run(main)
 
 📘 Full guide: [`docs/mcp_quickstart.md`](docs/mcp_quickstart.md)
 
+### Prompts to paste into your agent
+
+The configuration above wires the MCP server into your tool. The three prompts below are different: paste them as-is into the chat of an agent that already has file and shell access (Claude Code, Cursor, Copilot, Gemini CLI). The agent then does the install, authoring, and verification itself.
+
+**1. Set up DATAMIMIC**
+
+```text
+Install DATAMIMIC CE and register its MCP server with this tool.
+
+1. Run: pip install "datamimic_ce[mcp]"
+2. Register the MCP server. If this tool supports `claude mcp add`, run:
+   claude mcp add datamimic -- datamimic-mcp serve --transport stdio
+   Otherwise add the stdio equivalent to this tool's MCP config file (for
+   example .cursor/mcp.json or .vscode/mcp.json):
+   {
+     "mcpServers": {
+       "datamimic": {
+         "command": "datamimic-mcp",
+         "args": ["serve", "--transport", "stdio"]
+       }
+     }
+   }
+3. Verify the MCP server: call the datamimic_reference tool with
+   topic=overview and show me the first few lines of the result.
+4. Verify the CLI: run `datamimic version` and show me the output.
+
+Report both verification results before doing anything else.
+```
+
+**2. Generate test data**
+
+```text
+Generate a test dataset of 100 customers using DATAMIMIC.
+
+Requirements:
+- 100 records, one Person each, with an incrementing integer id.
+- Realistic name and email, generated from the Person entity, not
+  hand-rolled faker calls.
+- Age between 18 and 90.
+- A "segment" field with at least two values, unevenly weighted (mostly
+  "retail", some "business").
+- Write the output as JSON.
+
+Steps:
+1. If you are working inside a checkout of the datamimic repository, read
+   AGENTS.md first. It explains the DSL authoring loop.
+2. Author a DATAMIMIC XML descriptor for this dataset.
+3. Validate it with the datamimic_check MCP tool (or `datamimic lint <path>`
+   if MCP is not available). Fix every finding before moving on.
+4. Dry-run it with the datamimic_run MCP tool and inspect the sample rows
+   it returns. Confirm ages are in range and the segment split looks
+   weighted, not uniform.
+5. Run it for real: `datamimic run <path-to-descriptor>`.
+6. Tell me where the JSON output landed and show me one sample record.
+```
+
+**3. Seed a relational dataset**
+
+```text
+Seed a relational dataset with referential integrity: customers, accounts,
+transactions.
+
+Follow the pattern in examples/showcase/01-banking-core in the datamimic
+repository: customers get an incrementing id; each customer gets 1-3
+accounts that carry the real customer id as a foreign key; each account
+gets several transactions that carry both the account id and, two hops up,
+the owning customer id.
+
+Requirements:
+- Set rngSeed on <setup> so the dataset is reproducible.
+- Every account_id referenced by a transaction must exist in the accounts
+  output.
+- Every customer_id referenced by an account, and by a transaction, must
+  exist in the customers output.
+
+Steps:
+1. Read examples/showcase/01-banking-core/datamimic.xml and its README as
+   the reference pattern.
+2. Author your own descriptor for the customers/accounts/transactions
+   shape above.
+3. Validate with datamimic_check (or `datamimic lint`), then dry-run with
+   datamimic_run and inspect the sample rows.
+4. Run for real with `datamimic run`.
+5. Before declaring this done, load the generated JSON files and confirm
+   every foreign key resolves: every account's customer_id exists in
+   customers, every transaction's account_id exists in accounts. Show me
+   the check you ran and its result.
+```
+
 ---
 
 ## Where CE fits on its own
