@@ -1,0 +1,28 @@
+<!-- Multi-source assembly: one coherent dataset from three inputs.
+     1. A real CSV (branches) drives the outer <iterate>: every source column is
+        available to scripts and flows into the output row.
+     2. Generated fields (Person entity, weighted values) enrich each record.
+     3. An inline lookup table (a python dict in script=) joins the fee schedule.
+     The nested <generate> runs per branch, so every customer carries the real
+     branch_id and city of its branch: the join is correct by construction. -->
+<setup rngSeed="7">
+    <iterate name="branches" source="data/branches.csv" separator="|"
+             distribution="ordered" target="JSON" exportUri="output">
+        <key name="region_code" script="this.region.upper()"/>
+
+        <generate name="branch_customers" minCount="3" maxCount="5"
+                  target="JSON" exportUri="output">
+            <key name="customer_no" generator="IncrementGenerator"/>
+            <!-- CSV columns arrive as strings: cast before arithmetic -->
+            <key name="branch_id" script="int(parent.branch_id)"/>
+            <key name="customer_id" script="this.branch_id * 1000 + this.customer_no"/>
+            <key name="branch_city" script="parent.city"/>
+            <!-- inside a nested scope, variables too are addressed via this. -->
+            <variable name="person" entity="Person" dataset="DE" locale="de"/>
+            <key name="full_name" script="this.person.name"/>
+            <key name="segment" values="'retail','business'" weights="0.8,0.2"/>
+            <key name="monthly_fee_eur"
+                 script="{'retail': 4.90, 'business': 12.90}[this.segment]"/>
+        </generate>
+    </iterate>
+</setup>
