@@ -94,6 +94,10 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
    (DM213)
 10. Targets must exist: registry exporters, declared `<memstore>`/client ids, or
     `clientId.operation`. (DM401)
+11. **`IncrementGenerator` counts per parent** inside a nested `<generate>`;
+    compose unique child ids from the parent key + local sequence. (DM315)
+12. **`count=` above the source length caps silently** without
+    `cyclic="True"`. (DM316)
 
 ## Choosing a `<key>` value source (match the field's meaning)
 
@@ -112,7 +116,8 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 ## Sources & credentials
 
 - File sources resolve relative to the descriptor; type is inferred from the
-  extension (`.dbunit.xml` before `.xml`).
+  extension (`.dbunit.xml` before `.xml`). The default field separator is `|`;
+  reading a comma CSV needs `separator=","` (or `defaultSeparator=` on `<setup>`).
 - `<database id="db" system="postgresql" environment="local"/>` +
   `<mongodb id="mongo"/>` read credentials from `conf/{environment}.env.properties`
   with keys `{system}.{db|mongo}.{attr}` (e.g. `db.db.host`, `mongo.mongo.port`).
@@ -129,6 +134,8 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
   (`source= sourceType= sourceKey=`); `<field>` maps composite references.
 - `<include uri="part.xml"/>` splits descriptors; `.properties` includes load
   key=value pairs at parse time.
+- `<state-machine>` + `<transition>` generate weighted state progressions
+  (e.g. order lifecycles), reusable across `<generate>` blocks.
 - `<echo>` prints; `<comment>` is a no-op; `<memstore id>` declares an in-memory
   store; `<execute uri>` runs SQL/scripts against a client.
 - Entity fields resolve case/underscore-insensitively (`givenName` == `given_name`).
@@ -139,6 +146,7 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
    for details, `topic=recipes` for starting points.
 2. Draft the descriptor → `datamimic_check` → fix every diagnostic (each carries
    a fix_hint and rule id).
-3. `datamimic_run` (safe: counts capped, targets neutralized, memstores kept) →
-   inspect sample rows → iterate.
+3. `datamimic_run` (safe: counts capped, targets neutralized, memstores kept;
+   `smoke_export=true` also test-writes rows through the file exporters in a
+   temp dir to catch export-time crashes) → inspect sample rows → iterate.
 4. Ship the descriptor; run for real with `datamimic run path/to/datamimic.xml`.

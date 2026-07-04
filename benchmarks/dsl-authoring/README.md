@@ -167,9 +167,10 @@ picks its own naming.
   `branch_fk` check even if the join itself is correct. This is deliberately
   narrow rather than guessing at arbitrary field names.
 - `memstore_pipeline`'s check looks for any product with both a `value`-ish
-  and a `doubled`-ish key; a field literally named e.g. `doubled_value`
-  would match `find_key(row, "value")` first due to substring order and
-  give a false pairing. Not observed in practice, but possible.
+  and a `doubled`-ish key; a single field like `doubled_value` matches both
+  substrings, and the check skips that row (`dk == vk` guard) rather than
+  pairing a field with itself. A model whose only numeric fields collide
+  this way therefore scores 1, not a false 2.
 - `nested_reviews`' check is intentionally an existence check ("some
   rating in 1-5 exists somewhere in a nested list"), not a bounds check
   over every rating in every row: matching the stated task intent, not a

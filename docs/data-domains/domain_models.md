@@ -457,7 +457,7 @@ PoliceOfficer
 ├── family_name: str
 ├── full_name: str
 ├── gender: str
-├── birthdate: str
+├── birthdate: datetime
 ├── age: int
 ├── rank: str
 ├── department: str

@@ -1,5 +1,8 @@
 # Haiku 4.5 track (agentic conditions), 2026-07-04
 
+Raw scores and rule ids: `haiku-track-20260704.json` (grader-produced; the h1
+iteration counts in it are the agent's self-report, marked as such).
+
 Same 6 tasks as the Ollama matrix, run as agent conditions instead of single-shot
 prompts, graded independently by the controller with the same 0/1/2 scoring
 (lint, dry-run, intent). One adjudication: branch_fk H1 used a nested

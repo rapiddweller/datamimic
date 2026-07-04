@@ -54,6 +54,8 @@ Literal generators are the building blocks of DATAMIMIC's weighted distribution 
 For example, the `GenderGenerator` class:
 
 ```python
+# Simplified sketch. The shipped GenderGenerator is rng-injected
+# (datamimic_ce/domains/common/literal_generators/gender_generator.py).
 class GenderGenerator(BaseLiteralGenerator):
     def __init__(self, female_quota: float = None, other_gender_quota: float = None):
         # Calculate distributions

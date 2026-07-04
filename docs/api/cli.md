@@ -148,7 +148,7 @@ datamimic capabilities
 ```
 
 Prints a machine-readable JSON manifest of the DSL surface (elements,
-generators, entities, converters, targets), derived live from the engine
+aliases, generators, entities, converters, targets, distributions), derived live from the engine
 registries so it cannot drift from the code. Useful for agents without an MCP
 runtime; see the [MCP Quickstart](../mcp_quickstart.md) for the equivalent
 `datamimic_reference` MCP tool.
@@ -198,9 +198,9 @@ Output includes:
 
 The CLI behavior can be customized using environment variables:
 
-- `DATAMIMIC_CONFIG`: Path to custom configuration file
+- `DATAMIMIC_CONFIG`: shown by `datamimic info`; not read by `run`
 - `DATAMIMIC_OUTPUT_DIR`: Output directory shown by `datamimic info` (defaults to the current directory)
-- `DATAMIMIC_LOG_LEVEL`: Logging level (DEBUG|INFO|WARNING|ERROR)
+- `DATAMIMIC_LOG_LEVEL`: shown by `datamimic info`; `run` logs at INFO regardless
 
 ## Exit Codes
 

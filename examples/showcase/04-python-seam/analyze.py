@@ -1,9 +1,9 @@
 """Plain-python postprocessing: the right tool for reporting over generated data.
 Run after the engine: python analyze.py"""
 
-import glob
 import json
 from collections import Counter
+from pathlib import Path
 
 
 def exposure_by_bucket(rows: list[dict]) -> dict[str, int]:
@@ -14,7 +14,8 @@ def exposure_by_bucket(rows: list[dict]) -> dict[str, int]:
 
 
 if __name__ == "__main__":
-    files = glob.glob("output/**/cards.json", recursive=True)
-    rows = [r for f in files for r in json.load(open(f))]
-    assert rows, "run `datamimic run datamimic.xml` first"
+    # script-relative, so the command works from any working directory
+    files = sorted((Path(__file__).parent / "output").rglob("cards.json"))
+    rows = [r for f in files for r in json.loads(f.read_text())]
+    assert rows, "run `datamimic run examples/showcase/04-python-seam/datamimic.xml` first"
     print(f"{len(rows)} cards | exposure by risk bucket: {exposure_by_bucket(rows)}")

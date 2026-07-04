@@ -21,15 +21,16 @@ before data is written.
 ## The authoring loop
 
 1. Look up the DSL before guessing. MCP tool `datamimic_reference`
-   (topic=overview first; then element, entities, context, timeseries, targets,
-   distributions, converters, recipes). Without MCP: `datamimic capabilities`
+   (topic=overview first; then element, generators, entities, context, timeseries,
+   targets, distributions, converters, recipes, recipe). Without MCP: `datamimic capabilities`
    prints the full surface as JSON, generated from the engine registries.
 2. Draft the descriptor. Start from a recipe or a showcase example
    (`examples/showcase/`, four verified end-to-end examples with READMEs).
 3. `datamimic_check` (MCP) or `datamimic lint <path>` (CLI). Every finding has a
    rule id (DMxxx) and a fix hint. Fix all of them.
 4. `datamimic_run` (MCP, safe dry-run: capped counts, neutralized targets,
-   sample rows) and inspect the sample rows. Confirm the data serves the intent:
+   sample rows; smoke_export=true also test-writes the rows through the file
+   exporters in a temp dir to catch export-time crashes) and inspect the sample rows. Confirm the data serves the intent:
    are countries from the requested list, does the nested list actually nest?
    Valid is not the same as correct.
 5. Run for real: `datamimic run path/to/datamimic.xml`.
@@ -46,8 +47,9 @@ before data is written.
 3. Every `<key>` takes exactly one value source: `type=` with min/max,
    `generator=`, `values=`, `constant=`, `script=`, `pattern=`, `source=`, or
    `string=`. `weights=` requires `values=`.
-4. CSV source columns arrive as strings. Cast before arithmetic:
-   `script="int(parent.branch_id)"`.
+4. CSV source columns arrive as strings (cast before arithmetic:
+   `script="int(parent.branch_id)"`), and the default field separator is `|`,
+   not comma. Reading a comma CSV needs `separator=","`.
 5. Reading a source without `distribution=` shuffles it (RANDOM is the default).
    Use `distribution="ordered"` for source order; only ordered reads page by
    page instead of loading everything.
@@ -69,7 +71,7 @@ claude mcp add datamimic -- datamimic-mcp serve --transport stdio
 
 Cursor and other mcp.json clients: `"command": "datamimic-mcp"`,
 `"args": ["serve", "--transport", "stdio"]`. Details: README, section
-"MCP Server".
+"AI agents: author, validate, and run data models (MCP)".
 
 ## Working on this repository
 
@@ -78,7 +80,7 @@ Cursor and other mcp.json clients: `"command": "datamimic-mcp"`,
   `datamimic` install will produce misleading parse errors.
 - Fast tests: `pytest tests_ce/unit_tests`. DB-backed suites under
   `tests_ce/external_service_tests` need `RUNTIME_ENVIRONMENT=development` and
-  local Postgres/Mongo (see `conf/`).
+  local Postgres/Mongo (credentials: `local.env.properties` at the repo root).
 - Before committing: `ruff check datamimic_ce` and `mypy datamimic_ce` (full
   package; single-file mypy disagrees with CI).
 - The authoring toolset (linter, reference, dry-run, recipes, GBNF grammar)

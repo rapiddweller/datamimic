@@ -24,6 +24,7 @@ authoring loop and the semantic rules that cause most failures.
 - [Conditions and time-series](examples/showcase/03-orchestration-timeseries/README.md): if/else-if/else branching, start/end/interval with the ts namespace
 - [Custom python components](examples/showcase/04-python-seam/README.md): custom generator, custom converter, plain-script postprocessing
 - Recipes: `datamimic_ce/authoring/recipes/` holds small single-pattern descriptors
+- [DSL authoring benchmark](benchmarks/dsl-authoring/README.md): measures how reliably agents author correct descriptors; the diagnostics loop beats any static prompt
 
 ## Project
 

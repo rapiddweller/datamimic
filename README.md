@@ -470,7 +470,7 @@ hash the original instead of replacing it, or partially mask it:
 <key name="iban"  script="acc.iban" converter="MiddleMask(8, 4)" />
 ```
 
-Available converters: `Mask`, `MiddleMask(start, end)`, `CutLength(n)`,
+Available converters (13): `Mask`, `MiddleMask(start, end)`, `CutLength(n)`, `Substring(start, end)`, `JavaHash`, `RemoveNoneOrEmptyElement`,
 `Hash(type, format[, salt])`, `DateFormat(fmt)`, `Append`, `UpperCase`,
 `LowerCase`, `Date2Timestamp`, `Timestamp2Date`.
 
@@ -664,7 +664,8 @@ EE adds Kafka, EDIFACT, SWIFT MT, HL7 v2.x, and HL7 FHIR as additional targets â
 | **Insurance** | InsuranceCompany, InsuranceProduct, InsurancePolicy, InsuranceCoverage |
 | **E-commerce** | Order, Product |
 | **Public sector** | AdministrationOffice, EducationalInstitution, PoliceOfficer |
-| **Demographics** | Person (DE / US / VN locale packs), Address |
+| **Demographics** | Person (DE / US / VN locale packs), Address, City, Country |
+| **Common** | Company |
 
 All services are versioned and seeded; each generation emits a provenance hash suitable as evidence in audit reviews. Domain services can be used directly via constructor injection, or driven through the higher-level `generate_domain({...})` facade for seed/locale/clock/count parameterisation (currently supports `person`, `address`, `patient`, `doctor` at `v1`).
 
@@ -674,19 +675,19 @@ All services are versioned and seeded; each generation emits a provenance hash s
 
 ```bash
 # Initialize a new project
-datamimic init ./my-scenario
+datamimic init my-scenario
 
 # Lint a descriptor: schema, semantics, best practices â€” every finding carries
 # a rule id (DMxxx) and a fix hint. `validate` is an alias. Exit codes 0/1/2.
-datamimic lint ./my-scenario/datamimic.xml
-datamimic lint ./my-scenario/datamimic.xml --format json   # diagnostics v1, CI-friendly
+datamimic lint my-scenario/datamimic.xml
+datamimic lint my-scenario/datamimic.xml --format json   # diagnostics v1, CI-friendly
 
 # Run a scenario
-datamimic run ./my-scenario/datamimic.xml
+datamimic run my-scenario/datamimic.xml
 
 # Demos
 datamimic demo list
-datamimic demo create healthcare-example
+datamimic demo create demo-healthcare
 datamimic demo create --all --target ./my_demos
 
 # System and version info

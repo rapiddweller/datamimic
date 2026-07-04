@@ -46,7 +46,7 @@ lint and a clean dry-run at small scale.
 1. **The scope rule is the number one trap.** Inside a nested `<generate>`,
    record-local names need `this.`; bare names resolve only at the top level.
    The runtime error was `'parent.customer_id * 10 + account_no' have undefined
-   item or wrong structure` (`datamimic_ce/contexts/context.py:151`), which does
+   item or wrong structure` (`datamimic_ce/contexts/context.py:192`), which does
    not name the undefined item, let alone the rule. Two of four showcase
    examples hit this. IMPLEMENTED: the DM002 hint for `have undefined` now
    teaches the `this.` / `parent.` / `root.` rule and the CSV-string cast
@@ -185,7 +185,7 @@ Two gaps the test surfaced, kept honest:
 ## Verification trail
 
 - Full suites: `pytest tests_ce/unit_tests/test_authoring tests_ce/unit_tests/test_showcase
-  tests_ce/unit_tests/test_exporter tests_ce/unit_tests/test_mcp` (204 passed).
+  tests_ce/unit_tests/test_exporter tests_ce/unit_tests/test_mcp` (210 passed at the time of the accuracy re-review).
 - All four showcase descriptors executed for real via `datamimic run` and their
   invariants (FK integrity incl. two-hop, join correctness, decision bands,
   custom components, determinism across two runs) verified against the produced

@@ -48,10 +48,27 @@ def test_banking_core_referential_integrity() -> None:
         t["account_id"] in owner and t["customer_id"] == owner[t["account_id"]] for t in transactions
     )
     assert len({t["tx_id"] for t in transactions}) == len(transactions)
+    # README claim: one statement per account. The dry-run cap rewrites the
+    # source-driven statement count (25 of 44 accounts here), so pin the
+    # relationship on the generated subset: statements are unique per account
+    # and every one belongs to a real account.
+    statements = rows["account_statements"]
+    stmt_accounts = {s["account_id"] for s in statements}
+    assert len(stmt_accounts) == len(statements) and stmt_accounts <= set(owner)
+    per_customer = {c: sum(1 for a in accounts if a["customer_id"] == c) for c in cust_ids}
+    assert all(1 <= n <= 3 for n in per_customer.values())  # README: 1..3 accounts per customer
 
 
-def test_banking_core_is_deterministic() -> None:
-    assert _run("01-banking-core") == _run("01-banking-core")
+def test_every_example_is_deterministic() -> None:
+    # README claim on the gallery index: running any example twice produces the
+    # identical dataset. 04 is excluded here: its custom generator draws from
+    # python's GLOBAL random module, so back-to-back in-process dry-runs share
+    # RNG state; the README claim is about separate `datamimic run` processes,
+    # which were verified byte-identical in review.
+    for example in _EXAMPLES:
+        if "python-seam" in example:
+            continue
+        assert _run(example) == _run(example), example
 
 
 def test_multi_source_join_correct() -> None:
@@ -76,6 +93,8 @@ def test_orchestration_bands_and_timeseries() -> None:
             assert r["decision"] == "declined" and "rate_pct" not in r
     ticks = rows["fx_ticks"]
     assert {t["pair"] for t in ticks} == {"EUR/USD", "EUR/GBP"}
+    # README claim: 2 series x 17 half-hour ticks (09:00..17:30) = 34 rows
+    assert len(ticks) == 34 and {t["tick"] for t in ticks} == set(range(17))
     eur_usd = sorted((t["tick"], t["mid"]) for t in ticks if t["pair"] == "EUR/USD")
     assert all(float(b[1]) > float(a[1]) for a, b in zip(eur_usd, eur_usd[1:], strict=False))
 

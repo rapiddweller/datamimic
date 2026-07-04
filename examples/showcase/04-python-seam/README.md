@@ -16,7 +16,7 @@ and validation are ordinary code; the DSL does not trap you.
 
 ```bash
 datamimic run examples/showcase/04-python-seam/datamimic.xml
-python examples/showcase/04-python-seam/analyze.py   # run from this directory
+python examples/showcase/04-python-seam/analyze.py
 ```
 
 ## Where the seam sits
@@ -24,7 +24,7 @@ python examples/showcase/04-python-seam/analyze.py   # run from this directory
 | Concern | Tool |
 |---|---|
 | Structure, counts, relationships, reproducibility | DSL |
-| One field with domain logic (masked PAN, risk bucket) | custom class, 8 lines |
+| One field with domain logic (masked PAN, risk bucket) | a small custom class |
 | Per-record expressions | `script=` inline python |
 | Reporting over the output | plain python script |
 

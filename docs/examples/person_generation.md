@@ -132,24 +132,24 @@ person_json = json.dumps(person.to_dict(), cls=DatetimeEncoder, indent=2)
 print(person_json)
 ```
 
-Example output:
+Example output (`to_dict()` returns the flat person fields; the address is a
+separate entity, serialize `person.address` on its own if you need it):
 ```json
 {
-  "birthdate": "1976-03-15T14:22:18",
+  "salutation": "Mr.",
+  "academic_title": null,
+  "nobility_title": null,
   "given_name": "Robert",
   "family_name": "Suarez",
-  "gender": "male",
   "name": "Robert Suarez",
+  "full_name": "Mr. Robert Suarez",
+  "gender": "male",
+  "birthdate": "1976-03-15T14:22:18",
   "age": 48,
   "email": "robert_suarez@objectflash.ch",
   "phone": "+1-555-123-4567",
-  "address": {
-    "street": "Cedar Street",
-    "city": "Albany",
-    "state": "NY",
-    "zip": "12205",
-    "country": "United States"
-  }
+  "mobile_phone": "+1-555-987-6543",
+  "transaction_profile": null
 }
 ```
 

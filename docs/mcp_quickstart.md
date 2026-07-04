@@ -111,7 +111,7 @@ anyio.run(main)
 
 The `determinism_proof.content_hash` field and the canonical JSON comparisons will match across identical requests, ensuring byte-identical payloads for the same seed on the same DATAMIMIC version.
 
-### Payments domain example
+### Address domain example
 
 ```python
 args = GenerateArgs(domain="address", locale="de_DE", seed=7, count=1)
