@@ -93,6 +93,53 @@ result.
 - `P3_fewshot`: P0 plus one complete worked example (the
   `relational-parent-child` recipe XML).
 
+## Loop condition (the agentic comparison)
+
+```
+python benchmarks/dsl-authoring/bench.py --loop                          # all DEFAULT_MODELS, all tasks
+python benchmarks/dsl-authoring/bench.py --loop --models qwen2.5:7b --tasks branch_fk
+```
+
+Local models here have no native function calling, so the harness plays the
+agent loop for them: the model only ever sees chat messages, the harness runs
+the tools and feeds the results back.
+
+- Initial prompt: `P2_cheatsheet` (closest to what an agent gets from the
+  reference tool).
+- After each generation the harness extracts the XML and evaluates it. If it
+  is not intent-correct, the model gets a feedback message and one more try:
+  - lint errors: a compact diagnostics block (`- [rule] message | fix: hint`,
+    capped at 12 findings) plus the model's previous XML.
+  - lint clean but dry-run fails or 0 rows: the dry-run diagnostics, same
+    format.
+  - runs but intent check fails: one line restating the task intent
+    (`intent_text` in `TASKS`) plus the first generated sample row.
+
+  Every feedback ends with: return a corrected COMPLETE descriptor, output
+  only the XML.
+- Max 3 generations per task. The cell score is the score of the LAST
+  generation (0/1/2 as in the static conditions); `iterations` and
+  per-iteration score/rule ids/latency are recorded in the results JSON.
+- The conversation is multi-turn: the cheatsheet stays in context, each
+  attempt appends the assistant reply and the feedback. `num_ctx` is raised
+  to 16384 for loop calls.
+- Timeouts: a timeout before any generation marks the cell `timeout`; after
+  at least one generation, the last completed generation is scored and the
+  timeout noted. Two consecutive timed-out cells skip the model's remaining
+  cells.
+
+Loop results are written to `results/<timestamp>-loop.json`. To produce a
+combined `results/latest.md` with the loop column next to the static
+variants:
+
+```
+python benchmarks/dsl-authoring/bench.py --report results/<static>.json results/<loop>.json
+```
+
+The combined report adds, per model, a static-best vs loop comparison line
+and a loop-iterations histogram, plus a reference line to the Haiku track
+figures (`results/haiku-track-20260704.md`).
+
 ## Adding a model
 
 Add the Ollama model name to `--models` (or `DEFAULT_MODELS` in `bench.py`).

@@ -32,7 +32,10 @@ OLLAMA_URL = "http://localhost:11434/api/chat"
 TEMPERATURE = 0.2
 NUM_PREDICT = 1400
 NUM_CTX = 8192  # P2/P3 prompts run well past Ollama's default 2048/4096 context
+NUM_CTX_LOOP = 16384  # loop keeps the cheatsheet + 3 replies + feedback in context
 CALL_TIMEOUT_S = 300
+LOOP_MAX_ITERATIONS = 3
+LOOP_VARIANT = "loop"
 DRY_RUN_TIMEOUT_S = 45
 SAMPLE_ROWS = 60
 MAX_COUNT = 60
@@ -276,6 +279,10 @@ TASKS: list[dict[str, Any]] = [
             "and a country from the fixed list US, DE, VN weighted 0.5/0.3/0.2. Export JSON."
         ),
         "intent_check": check_weighted_country,
+        "intent_text": (
+            "every country value must be one of US, DE, VN (none outside that set) and a name "
+            "field must contain a real full name with a space in it"
+        ),
     },
     {
         "id": "nested_reviews",
@@ -284,6 +291,10 @@ TASKS: list[dict[str, Any]] = [
             "each with an integer rating 1-5. JSON."
         ),
         "intent_check": check_nested_reviews,
+        "intent_text": (
+            "some field must be a real list of review objects (a JSON array of dicts), each "
+            "containing an integer rating between 1 and 5"
+        ),
     },
     {
         "id": "reproducible_orders",
@@ -292,6 +303,10 @@ TASKS: list[dict[str, Any]] = [
             "total is a decimal. Same output every run. JSON."
         ),
         "intent_check": check_reproducible_orders,
+        "intent_text": (
+            "two runs must produce identical rows (seed the run with <setup rngSeed=...>) and "
+            "every status value must be exactly one of: new, paid, shipped"
+        ),
     },
     {
         "id": "memstore_pipeline",
@@ -300,6 +315,10 @@ TASKS: list[dict[str, Any]] = [
             "them back in order and adds doubled = value*2. JSON."
         ),
         "intent_check": check_memstore_pipeline,
+        "intent_text": (
+            "the second product must carry both the original value and a doubled field where "
+            "doubled == 2 * value on every row"
+        ),
     },
     {
         "id": "timeseries",
@@ -308,6 +327,10 @@ TASKS: list[dict[str, Any]] = [
             "number, temperature. JSON."
         ),
         "intent_check": check_timeseries,
+        "intent_text": (
+            "exactly 48 rows total (24 hours x 2 sensors), an hour index field reaching 23, and "
+            "exactly two distinct sensor numbers"
+        ),
     },
     {
         "id": "branch_fk",
@@ -316,6 +339,10 @@ TASKS: list[dict[str, Any]] = [
             "its branch's real branch_id and city. JSON."
         ),
         "intent_check": check_branch_fk,
+        "intent_text": (
+            "every customer must carry the branch_id AND the city of its own branch (the "
+            "customer's city equal to its branch's city, joined on branch_id)"
+        ),
     },
 ]
 
@@ -380,14 +407,22 @@ class OllamaTimeout(Exception):
     pass
 
 
-def call_ollama(model: str, prompt: str, *, timeout: int = CALL_TIMEOUT_S) -> tuple[str | None, int, str | None]:
-    """Returns (content, latency_ms, error). error is None on success."""
+def call_ollama(
+    model: str,
+    prompt: str | list[dict[str, str]],
+    *,
+    timeout: int = CALL_TIMEOUT_S,
+    num_ctx: int = NUM_CTX,
+) -> tuple[str | None, int, str | None]:
+    """Returns (content, latency_ms, error). error is None on success.
+    `prompt` is a single user message or a full chat message list (loop mode)."""
+    messages = [{"role": "user", "content": prompt}] if isinstance(prompt, str) else prompt
     body = {
         "model": model,
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": messages,
         "stream": False,
         "think": False,  # verified harmless on non-thinking models; required for gemma4:31b
-        "options": {"temperature": TEMPERATURE, "num_predict": NUM_PREDICT, "num_ctx": NUM_CTX},
+        "options": {"temperature": TEMPERATURE, "num_predict": NUM_PREDICT, "num_ctx": num_ctx},
     }
     req = urllib.request.Request(
         OLLAMA_URL,
@@ -435,34 +470,98 @@ def extract_setup(text: str) -> str | None:
     return frag.rstrip() + "\n</setup>"
 
 
-def score_generation(task: dict[str, Any], raw_reply: str) -> dict[str, Any]:
+_MAX_FEEDBACK_DIAGS = 12
+
+
+def _diag_lines(diagnostics: list) -> str:
+    """Compact `- [rule] message | fix: hint` block, capped to bound tokens."""
+    lines = [f"- [{d.rule}] {d.message} | fix: {d.fix_hint}" for d in diagnostics[:_MAX_FEEDBACK_DIAGS]]
+    dropped = len(diagnostics) - _MAX_FEEDBACK_DIAGS
+    if dropped > 0:
+        lines.append(f"- ... and {dropped} more findings of the same kinds")
+    return "\n".join(lines)
+
+
+def _feedback(problem_block: str, xml: str | None) -> str:
+    parts = [problem_block]
+    if xml is not None:
+        parts.append(f"Your previous descriptor:\n{xml}")
+    parts.append("Return a corrected COMPLETE descriptor (<setup> root). Output ONLY the XML.")
+    return "\n\n".join(parts)
+
+
+def evaluate_generation(task: dict[str, Any], raw_reply: str) -> dict[str, Any]:
+    """Score one generation and, when it is not intent-correct, build the feedback
+    message the loop condition sends back to the model. Keys: score, rule_ids,
+    detail, feedback (None when score is 2)."""
     xml = extract_setup(raw_reply)
     if xml is None:
-        return {"score": 0, "rule_ids": ["NO_XML"], "detail": "no <setup> block found in reply"}
+        return {
+            "score": 0,
+            "rule_ids": ["NO_XML"],
+            "detail": "no <setup> block found in reply",
+            "feedback": _feedback("No <setup> descriptor block was found in your reply.", None),
+        }
 
     lint = lint_source(xml)
     if not lint.ok:
-        rule_ids = sorted({d.rule for d in lint.diagnostics if d.severity == Severity.ERROR})
-        return {"score": 0, "rule_ids": rule_ids, "detail": f"lint: {lint.summary()}"}
+        errors = [d for d in lint.diagnostics if d.severity == Severity.ERROR]
+        rule_ids = sorted({d.rule for d in errors})
+        return {
+            "score": 0,
+            "rule_ids": rule_ids,
+            "detail": f"lint: {lint.summary()}",
+            "feedback": _feedback(f"The descriptor has lint errors:\n{_diag_lines(errors)}", xml),
+        }
 
     try:
         result = dry_run_source(xml, max_count=MAX_COUNT, sample_rows=SAMPLE_ROWS, timeout_seconds=DRY_RUN_TIMEOUT_S)
     except Exception as err:
-        return {"score": 0, "rule_ids": ["EXCEPTION"], "detail": f"dry_run_source raised: {err}"}
+        return {
+            "score": 0,
+            "rule_ids": ["EXCEPTION"],
+            "detail": f"dry_run_source raised: {err}",
+            "feedback": _feedback(f"Executing the descriptor failed: {err}", xml),
+        }
 
     total_rows = sum(p.count for p in result.products)
     if not result.ok or total_rows == 0:
         rule_ids = sorted({d.rule for d in result.diagnostics}) or ["DM000"]
-        return {"score": 0, "rule_ids": rule_ids, "detail": "dry-run failed or produced 0 rows"}
+        return {
+            "score": 0,
+            "rule_ids": rule_ids,
+            "detail": "dry-run failed or produced 0 rows",
+            "feedback": _feedback(
+                f"The descriptor runs into errors (a test run produced no usable data):\n"
+                f"{_diag_lines(result.diagnostics)}",
+                xml,
+            ),
+        }
 
     try:
         intent_ok = bool(task["intent_check"](xml, result))
     except Exception as err:
-        return {"score": 1, "rule_ids": [], "detail": f"intent check raised: {err}"}
+        return {"score": 1, "rule_ids": [], "detail": f"intent check raised: {err}", "feedback": None}
 
     if intent_ok:
-        return {"score": 2, "rule_ids": [], "detail": "intent check passed"}
-    return {"score": 1, "rule_ids": [], "detail": "runs but intent check failed"}
+        return {"score": 2, "rule_ids": [], "detail": "intent check passed", "feedback": None}
+
+    first_row: dict[str, Any] | None = next(iter(all_rows(result)), None)
+    row_note = f"\nFirst generated row: {json.dumps(first_row, default=str)[:400]}" if first_row else ""
+    return {
+        "score": 1,
+        "rule_ids": [],
+        "detail": "runs but intent check failed",
+        "feedback": _feedback(
+            f"The descriptor runs, but the output does not satisfy: {task['intent_text']}.{row_note}",
+            xml,
+        ),
+    }
+
+
+def score_generation(task: dict[str, Any], raw_reply: str) -> dict[str, Any]:
+    info = evaluate_generation(task, raw_reply)
+    return {k: info[k] for k in ("score", "rule_ids", "detail")}
 
 
 # --------------------------------------------------------------------------- #
@@ -637,6 +736,108 @@ def run_matrix(
 
 
 # --------------------------------------------------------------------------- #
+# Loop condition -- the harness IS the agent loop. Emulates an agentic
+# lint/dry-run tool loop for models without native function calling: the model
+# only ever sees chat messages; the harness runs the tools and feeds the
+# diagnostics back. Initial prompt is P2_cheatsheet (closest to what an agent
+# gets from the reference tool); up to LOOP_MAX_ITERATIONS generations.
+# --------------------------------------------------------------------------- #
+
+
+def run_loop_cell(model: str, task: dict[str, Any]) -> dict[str, Any]:
+    """One model x task loop cell. Returns the final cell dict (score of the
+    LAST generation, iterations used, per-iteration record, summed latency)."""
+    messages: list[dict[str, str]] = [{"role": "user", "content": _p2(task["prompt"])}]
+    iterations: list[dict[str, Any]] = []
+    final: dict[str, Any] = {"score": 0, "rule_ids": [], "detail": "no generation completed"}
+    total_latency = 0
+    timed_out = False
+
+    for attempt in range(1, LOOP_MAX_ITERATIONS + 1):
+        content, latency_ms, err = call_ollama(model, messages, num_ctx=NUM_CTX_LOOP)
+        total_latency += latency_ms
+        if err is not None:
+            timed_out = err == "timeout"
+            if not iterations:  # nothing to score at all
+                return {
+                    "score": "timeout" if timed_out else "error",
+                    "rule_ids": [],
+                    "detail": err,
+                    "iterations": 0,
+                    "iteration_details": [],
+                    "latency_ms": total_latency,
+                    "timed_out": timed_out,
+                }
+            final = dict(final)
+            final["detail"] = f"{final['detail']} (+ {err} at iteration {attempt})"
+            break
+
+        info = evaluate_generation(task, content or "")
+        iterations.append(
+            {"score": info["score"], "rule_ids": info["rule_ids"], "detail": info["detail"], "latency_ms": latency_ms}
+        )
+        final = {k: info[k] for k in ("score", "rule_ids", "detail")}
+        if info["feedback"] is None:  # intent-correct (or intent check itself broke) -- stop
+            break
+        messages.append({"role": "assistant", "content": content or ""})
+        messages.append({"role": "user", "content": info["feedback"]})
+
+    return {
+        **final,
+        "iterations": len(iterations),
+        "iteration_details": iterations,
+        "latency_ms": total_latency,
+        "timed_out": timed_out,
+    }
+
+
+def run_loop_matrix(models: list[str], tasks: list[dict[str, Any]], *, out_path: Path) -> list[dict[str, Any]]:
+    cells: list[dict[str, Any]] = []
+
+    def persist() -> None:
+        payload = {
+            "generated_at": datetime.now(UTC).isoformat(),
+            "condition": LOOP_VARIANT,
+            "initial_variant": "P2_cheatsheet",
+            "max_iterations": LOOP_MAX_ITERATIONS,
+            "models": models,
+            "tasks": [t["id"] for t in tasks],
+            "cells": cells,
+        }
+        out_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    for model in models:
+        consecutive_timeouts = 0
+        skip_rest = False
+        for task in tasks:
+            cell: dict[str, Any] = {"model": model, "variant": LOOP_VARIANT, "task": task["id"]}
+            if skip_rest:
+                cell.update(
+                    score="timeout",
+                    rule_ids=[],
+                    latency_ms=None,
+                    iterations=0,
+                    detail="skipped: 2 consecutive timeouts",
+                )
+                cells.append(cell)
+                persist()
+                continue
+
+            print(f"-> {model} / {LOOP_VARIANT} / {task['id']}", file=sys.stderr, flush=True)
+            result = run_loop_cell(model, task)
+            consecutive_timeouts = consecutive_timeouts + 1 if result.pop("timed_out") else 0
+            cell.update(result)
+            cells.append(cell)
+            print(f"   score={result['score']} iterations={result['iterations']}", file=sys.stderr)
+            persist()
+            if consecutive_timeouts >= 2:
+                print(f"   {model}: 2 consecutive timeouts, skipping remaining cells", file=sys.stderr)
+                skip_rest = True
+
+    return cells
+
+
+# --------------------------------------------------------------------------- #
 # Reporting
 # --------------------------------------------------------------------------- #
 
@@ -668,12 +869,35 @@ def render_report(
             lines.append("| " + " | ".join(row) + " |")
         lines.append("")
         totals = []
+        intent_by_variant: dict[str, int] = {}
         for variant in variants:
             vcells = [c for c in model_cells if c["variant"] == variant]
             intent_correct = sum(1 for c in vcells if c["score"] == 2)
             runs = sum(1 for c in vcells if c["score"] in (1, 2))
+            intent_by_variant[variant] = intent_correct
             totals.append(f"{variant}: intent-correct {intent_correct}/{len(tasks)}, runs {runs}/{len(tasks)}")
         lines.append(" | ".join(totals))
+        lines.append("")
+        static_variants = [v for v in variants if v != LOOP_VARIANT]
+        if LOOP_VARIANT in variants and static_variants and any(c["variant"] == LOOP_VARIANT for c in model_cells):
+            best_static = max(static_variants, key=lambda v: intent_by_variant[v])
+            lines.append(
+                f"Static best ({best_static}): intent-correct {intent_by_variant[best_static]}/{len(tasks)} "
+                f"vs loop: {intent_by_variant[LOOP_VARIANT]}/{len(tasks)}."
+            )
+            iteration_counts = sorted(
+                c.get("iterations", 0) for c in model_cells if c["variant"] == LOOP_VARIANT
+            )
+            histogram = ", ".join(
+                f"{n} iteration{'s' if n != 1 else ''}: {iteration_counts.count(n)} tasks"
+                for n in sorted(set(iteration_counts))
+            )
+            lines.append(f"Loop iterations used: {histogram}.")
+            lines.append("")
+    if LOOP_VARIANT in variants:
+        lines.append(
+            "Reference: Haiku 4.5 track (haiku-track-20260704.md): bare 0/6, tool loop 6/6 intent-correct."
+        )
         lines.append("")
     return "\n".join(lines)
 
@@ -691,6 +915,18 @@ def main() -> None:
     parser.add_argument(
         "--smoke", action="store_true", help="run a single cell: gemma4:31b / P1_intent_table / weighted_country"
     )
+    parser.add_argument(
+        "--loop",
+        action="store_true",
+        help="run the loop condition (P2 initial prompt, lint/dry-run feedback, max 3 generations per task)",
+    )
+    parser.add_argument(
+        "--report",
+        nargs="+",
+        default=None,
+        metavar="JSON",
+        help="no model calls: merge the given results JSONs and rewrite results/latest.md",
+    )
     parser.add_argument("--models", nargs="+", default=DEFAULT_MODELS)
     parser.add_argument("--variants", nargs="+", default=list(PROMPT_VARIANTS))
     parser.add_argument("--tasks", nargs="+", default=[t["id"] for t in TASKS])
@@ -701,9 +937,23 @@ def main() -> None:
         ok = run_selftest()
         sys.exit(0 if ok else 1)
 
+    if args.report:
+        cells = []
+        for path in args.report:
+            cells.extend(json.loads(Path(path).read_text(encoding="utf-8"))["cells"])
+        models = list(dict.fromkeys(c["model"] for c in cells))
+        present = {c["variant"] for c in cells}
+        variants = [v for v in [*PROMPT_VARIANTS, LOOP_VARIANT] if v in present]
+        tasks = [t for t in TASKS if t["id"] in {c["task"] for c in cells}]
+        report = render_report(cells, models, variants, tasks)
+        print(report)
+        (RESULTS_DIR / "latest.md").write_text(report, encoding="utf-8")
+        return
+
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    out_path = Path(args.out) if args.out else RESULTS_DIR / f"{timestamp}.json"
+    suffix = "-loop" if args.loop else ""
+    out_path = Path(args.out) if args.out else RESULTS_DIR / f"{timestamp}{suffix}.json"
 
     if args.smoke:
         models, variants, tasks = ["gemma4:31b"], ["P1_intent_table"], [TASKS_BY_ID["weighted_country"]]
@@ -712,10 +962,15 @@ def main() -> None:
         variants = args.variants
         tasks = [TASKS_BY_ID[t] for t in args.tasks]
 
-    cells = run_matrix(models, variants, tasks, out_path=out_path)
+    if args.loop:
+        cells = run_loop_matrix(models, tasks, out_path=out_path)
+        variants = [LOOP_VARIANT]
+    else:
+        cells = run_matrix(models, variants, tasks, out_path=out_path)
     report = render_report(cells, models, variants, tasks)
     print(report)
-    (RESULTS_DIR / "latest.md").write_text(report, encoding="utf-8")
+    if not args.loop:  # loop runs are merged into latest.md via --report, not on their own
+        (RESULTS_DIR / "latest.md").write_text(report, encoding="utf-8")
     print(f"\nresults json: {out_path}", file=sys.stderr)
 
 
