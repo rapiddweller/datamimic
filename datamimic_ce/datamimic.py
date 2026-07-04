@@ -7,6 +7,7 @@ import argparse
 import logging
 import os
 import uuid
+from collections.abc import Callable
 from pathlib import Path
 
 from datamimic_ce.factory.factory_config import FactoryConfig
@@ -37,6 +38,7 @@ class DataMimic:
         test_mode: bool = False,
         factory_config: FactoryConfig | None = None,
         args: argparse.Namespace | None = None,
+        statement_transformer: Callable[[SetupStatement], None] | None = None,
     ):
         """
         Initialize DataMimic with descriptor_path.
@@ -51,6 +53,9 @@ class DataMimic:
         self._platform_configs = platform_configs
         self._test_mode = test_mode
         self._factory_config = factory_config
+        # Generalized statement hook (same pattern as factory mode): applied to the parsed
+        # tree before execution. Used by authoring.dryrun to neutralize targets/cap counts.
+        self._statement_transformer = statement_transformer
         self._test_result_storage = TestResultExporter()
 
         # Initialize logging
@@ -125,6 +130,8 @@ class DataMimic:
             root_stmt = DescriptorParser.parse(self._descriptor_path, self._platform_props)
             if self._factory_config is not None:
                 self._validate_xml_model(root_stmt, self._factory_config)
+            if self._statement_transformer is not None:
+                self._statement_transformer(root_stmt)
 
             # Execute setup task
             setup_task = SetupTask(

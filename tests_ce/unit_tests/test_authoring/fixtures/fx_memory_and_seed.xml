@@ -1,0 +1,4 @@
+<setup>
+    <generate name="a" count="10" source="d.csv" target="ConsoleExporter"/>
+    <generate name="b" count="10" source="d.csv" distribution="random" target="ConsoleExporter"/>
+</setup>

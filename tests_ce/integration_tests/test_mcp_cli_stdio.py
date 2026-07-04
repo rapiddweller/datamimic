@@ -71,3 +71,34 @@ async def test_cli_stdio_generate_roundtrip() -> None:
         res = await client.read_resource("resource://datamimic/schemas/person/v1/request.json")
         assert res and res[0].text
         print("Schema snippet:", res[0].text[:120])
+
+
+@pytest.mark.anyio
+async def test_cli_stdio_dsl_check_and_run() -> None:
+    """The DSL authoring loop over the REAL stdio transport. Executing the engine in-process
+    must not corrupt the JSON-RPC frames on stdout (logs go to stderr, ConsoleExporter is
+    neutralized by the dry-run) — a successful roundtrip IS the proof."""
+    transport = PythonStdioTransport(
+        script_path="datamimic_ce/mcp/cli.py",
+        args=["--transport", "stdio"],
+        python_cmd=sys.executable,
+    )
+    descriptor = (
+        '<setup rngSeed="1"><memstore id="mem"/>'
+        '<generate name="users" count="50" target="mem,CSV,ConsoleExporter">'
+        '<key name="id" generator="IncrementGenerator"/></generate></setup>'
+    )
+    async with Client(transport) as client:
+        check = json.loads((await client.call_tool("datamimic_check", {"args": {"xml": descriptor}}))[0].text)
+        assert check["ok"] is True, check
+
+        run = json.loads(
+            (await client.call_tool("datamimic_run", {"args": {"xml": descriptor, "max_count": 5}}))[0].text
+        )
+        assert run["ok"] is True and run["stage"] == "run", run
+        assert run["products"][0]["count"] == 5  # capped from 50
+
+        ref = json.loads(
+            (await client.call_tool("datamimic_reference", {"args": {"topic": "recipes"}}))[0].text
+        )
+        assert ref["ok"] is True and "csv-to-json-pipeline" in ref["content"]

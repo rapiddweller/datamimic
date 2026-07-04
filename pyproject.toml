@@ -155,3 +155,9 @@ module = "datamimic_ce.mcp.*"
 follow_imports = "normal"
 disallow_any_generics = true
 no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = "datamimic_ce.authoring.*"
+follow_imports = "normal"
+disallow_any_generics = true
+no_implicit_optional = true

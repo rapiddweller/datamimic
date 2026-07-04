@@ -1,0 +1,42 @@
+# Curated DSL recipes served via datamimic_reference (topic=recipes|recipe).
+# CI lints every recipe to 0 errors and dry-runs the runnable ones — they cannot rot.
+
+[[recipe]]
+id = "csv-to-json-pipeline"
+title = "Read a CSV, derive fields, export JSON"
+summary = "iterate a CSV source in order, add derived/masked fields via script, write JSON"
+elements = ["iterate", "variable", "key", "generate"]
+tags = ["source", "transform", "export"]
+runnable = true
+
+[[recipe]]
+id = "relational-parent-child"
+title = "Parent/child records with foreign keys"
+summary = "customers with nested per-parent orders handed off through a memstore"
+elements = ["generate", "nestedKey", "memstore", "variable"]
+tags = ["relational", "nested", "memstore"]
+runnable = true
+
+[[recipe]]
+id = "nested-json-document"
+title = "Deeply nested JSON documents"
+summary = "nestedKey dict + list/item shapes for document stores"
+elements = ["generate", "nestedKey", "list", "item", "key"]
+tags = ["nested", "json", "document"]
+runnable = true
+
+[[recipe]]
+id = "deterministic-seeded-run"
+title = "Reproducible generation (rngSeed)"
+summary = "seeded run replays identically; ordered source reads; the determinism contract"
+elements = ["setup", "generate", "key", "variable"]
+tags = ["determinism", "seed", "testing"]
+runnable = true
+
+[[recipe]]
+id = "time-series-events"
+title = "Time-series generation (start/end/interval + ts)"
+summary = "iterate over time; ts.now/ts.step/ts.series per tick; count = number of series"
+elements = ["setup", "generate", "key"]
+tags = ["time-series", "temporal", "events"]
+runnable = true

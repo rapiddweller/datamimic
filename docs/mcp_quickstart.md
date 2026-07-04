@@ -133,3 +133,45 @@ Running the snippet twice with the same seed yields identical addresses. Switchi
 - `make typecheck`, `make lint`, and `make coverage` – convenience targets for the strict quality gates (mypy `--strict`, pylint ≥ 9.0, coverage ≥ 90%).
 
 Happy generating!
+
+## DSL authoring tools (AI linter)
+
+Three tools turn any MCP-capable agent (Claude Code, Cursor, Copilot) into a
+DATAMIMIC DSL author with a verify loop:
+
+| Tool | Purpose |
+|---|---|
+| `datamimic_reference` | DSL knowledge: `topic=overview` (cheatsheet, start here), `element` (+`name=generate`), `generators`, `targets`, `distributions`, `recipes`, `recipe` (+`name=<id>`) |
+| `datamimic_check` | Lint a descriptor (`xml=` inline or `path=`): aggregated diagnostics, each with a rule id (`DMxxx`), severity and a `fix_hint`. Iterate until `ok=true`. |
+| `datamimic_run` | Safe dry-run: lint gate first, counts capped (`max_count`), file/DB targets neutralized (memstores kept), returns per-product `sample` rows. `allow_side_effects=true` opts out. |
+
+Resources: `resource://datamimic/dsl/cheatsheet` and
+`resource://datamimic/dsl/recipes/{id}`.
+
+The agent loop: `reference` → draft → `check` → fix (hints tell you what to
+change) → `run` → inspect samples → ship. The same linter runs in CI via
+`datamimic lint <file> --format json` (exit codes: 0 clean, 1 findings, 2 error).
+
+### Register with agents (stdio)
+
+Claude Code:
+
+```bash
+claude mcp add datamimic -- datamimic-mcp --transport stdio
+```
+
+`.mcp.json` (Claude Code project scope) / `.cursor/mcp.json` (Cursor) /
+`.vscode/mcp.json` (VS Code):
+
+```json
+{
+  "mcpServers": {
+    "datamimic": {
+      "command": "datamimic-mcp",
+      "args": ["--transport", "stdio"]
+    }
+  }
+}
+```
+
+With `uvx` (no install): `"command": "uvx", "args": ["--from", "datamimic-ce[mcp]", "datamimic-mcp", "--transport", "stdio"]`.

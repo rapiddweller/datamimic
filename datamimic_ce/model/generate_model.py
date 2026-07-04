@@ -8,8 +8,6 @@
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import (
-    ATTR_BUCKET,
-    ATTR_CONTAINER,
     ATTR_CONVERTER,
     ATTR_COUNT,
     ATTR_CYCLIC,
@@ -30,9 +28,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_SOURCE,
     ATTR_SOURCE_ENTITY,
     ATTR_SOURCE_SCRIPTED,
-    ATTR_SOURCE_URI,
     ATTR_START,
-    ATTR_STORAGE_ID,
     ATTR_TARGET,
     ATTR_TARGET_ENTITY,
     ATTR_TYPE,
@@ -64,16 +60,12 @@ class GenerateModel(BaseModel):
     source_entity: str | None = Field(None, alias=ATTR_SOURCE_ENTITY)
     target_entity: str | None = Field(None, alias=ATTR_TARGET_ENTITY)
     page_size: int | None = Field(None, alias=ATTR_PAGE_SIZE)
-    source_uri: str | None = Field(None, alias=ATTR_SOURCE_URI)
-    container: str | None = None
-    storage_id: str | None = Field(None, alias=ATTR_STORAGE_ID)
     multiprocessing: bool | None = None
     export_uri: str | None = Field(None, alias=ATTR_EXPORT_URI)
     distribution: str | None = None
     variable_prefix: str | None = Field(None, alias=ATTR_VARIABLE_PREFIX)
     variable_suffix: str | None = Field(None, alias=ATTR_VARIABLE_SUFFIX)
     converter: str | None = None
-    bucket: str | None = Field(None, alias=ATTR_BUCKET)
     num_process: int | None = Field(None, alias=ATTR_NUM_PROCESS)
     script: str | None = Field(None, alias=ATTR_SCRIPT)
     mp_platform: str | None = Field(None, alias=ATTR_MP_PLATFORM)
@@ -103,9 +95,6 @@ class GenerateModel(BaseModel):
                 ATTR_SOURCE_SCRIPTED,
                 ATTR_TYPE,
                 ATTR_PAGE_SIZE,
-                ATTR_SOURCE_URI,
-                ATTR_CONTAINER,
-                ATTR_STORAGE_ID,
                 ATTR_MULTIPROCESSING,
                 ATTR_EXPORT_URI,
                 ATTR_DISTRIBUTION,

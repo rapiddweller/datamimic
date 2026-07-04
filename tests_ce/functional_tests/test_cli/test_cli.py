@@ -28,17 +28,17 @@ class TestCLI:
         assert "Log Level" in result.output
 
     def test_validate_descriptor_failure(self, tmp_path, monkeypatch):
-        """Test failed XML descriptor validation"""
+        """A broken descriptor lints with findings (validate is an alias of lint): exit 1."""
         monkeypatch.chdir(tmp_path)
         (tmp_path / "invalid.xml").write_text("<invalid>")
         result = runner.invoke(app, ["validate", "invalid.xml"])
         assert result.exit_code == 1
-        assert "validation failed" in result.output.lower()
+        assert "error" in result.output.lower()  # DM001 XML-not-well-formed
 
     def test_validate_nonexistent_file(self):
-        """Test validation of non-existent file"""
+        """A missing file is an operational error, not a finding: exit 2 (ESLint convention)."""
         result = runner.invoke(app, ["validate", "nonexistent.xml"])
-        assert result.exit_code == 1
+        assert result.exit_code == 2
         assert "file not found" in result.output.lower()
 
     def test_demo_list(self):

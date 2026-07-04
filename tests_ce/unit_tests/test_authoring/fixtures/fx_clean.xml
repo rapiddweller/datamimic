@@ -1,0 +1,7 @@
+<setup rngSeed="1">
+    <memstore id="mem"/>
+    <generate name="users" count="10" distribution="ordered" target="mem">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="age" type="int" min="18" max="99"/>
+    </generate>
+</setup>

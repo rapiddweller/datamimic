@@ -1,0 +1,22 @@
+<!-- Parent/child data: customers with per-parent orders, joined by foreign key.
+     The inner <generate> runs once PER customer; minCount/maxCount vary the order
+     count per parent. Handoff via <memstore> keeps it dry-run safe; swap the
+     memstore target for a <database id> to seed real tables. -->
+<setup rngSeed="1">
+    <memstore id="mem"/>
+
+    <generate name="customers" count="20" target="mem,JSON" exportUri="recipe_out">
+        <key name="id" generator="IncrementGenerator"/>
+        <variable name="person" entity="Person" dataset="US" locale="en"/>
+        <key name="full_name" script="person.name"/>
+        <key name="city" script="person.address.city"/>
+
+        <!-- child records: 1..4 orders per customer; parent keys are addressable directly -->
+        <generate name="orders" minCount="1" maxCount="4" target="mem,JSON" exportUri="recipe_out">
+            <key name="order_id" generator="IncrementGenerator"/>
+            <key name="customer_id" script="id"/>
+            <key name="amount" type="float" min="9.99" max="499.99"/>
+            <key name="status" values="'open','paid','shipped'" weights="0.2,0.5,0.3"/>
+        </generate>
+    </generate>
+</setup>

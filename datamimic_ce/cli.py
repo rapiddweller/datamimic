@@ -21,7 +21,6 @@ from datamimic_ce.utils.demo_util import demo_autocomplete, handle_demo
 from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.string_util import StringUtil
 from datamimic_ce.utils.version_util import get_datamimic_lib_version
-from datamimic_ce.utils.xml_util import XMLValidator
 
 app = typer.Typer(help="DATAMIMIC Command Line Interface.", rich_markup_mode="markdown")
 demo_app = typer.Typer(help="Manage demos")
@@ -98,28 +97,51 @@ def info():
     console.print(info_table)
 
 
-@app.command("validate", help="Validate an XML descriptor file.")
+def _lint(descriptor_path: Path, output_format: str, fail_on: str, max_diagnostics: int) -> None:
+    """Shared implementation for `lint` and its alias `validate` (ESLint-style exit codes:
+    0 = clean at/above the threshold, 1 = findings, 2 = file/internal error)."""
+    from datamimic_ce.authoring import Severity, lint_descriptor
+
+    if not descriptor_path.is_file():
+        typer.echo(f"Error: File not found: {descriptor_path}")
+        raise typer.Exit(2)
+    try:
+        result = lint_descriptor(descriptor_path, max_diagnostics=max_diagnostics)
+    except Exception as e:  # unexpected linter crash — distinct from findings
+        typer.echo(f"Lint error: {e}")
+        raise typer.Exit(2) from e
+
+    if output_format == "json":
+        typer.echo(result.model_dump_json(indent=2))
+    else:
+        for diag in result.diagnostics:
+            location = f"{descriptor_path}:{diag.line}" if diag.line else str(descriptor_path)
+            typer.echo(f"{location}  {diag.severity.value.upper():<7} {diag.rule}  {diag.message}")
+            typer.echo(f"    -> {diag.fix_hint}")
+        typer.echo(f"Summary: {result.summary()}" + (f" (+{result.truncated} truncated)" if result.truncated else ""))
+
+    fail_severities = {Severity.ERROR} if fail_on == "error" else {Severity.ERROR, Severity.WARNING}
+    failed = any(diag.severity in fail_severities for diag in result.diagnostics)
+    raise typer.Exit(1 if failed else 0)
+
+
+@app.command("lint", help="Lint a DATAMIMIC descriptor: schema, semantics, best practices.")
+def lint(
+    descriptor_path: Path = DESCRIPTOR_PATH,
+    output_format: str = typer.Option("text", "--format", "-f", help="text | json (diagnostics v1)"),
+    fail_on: str = typer.Option("error", "--fail-on", help="error | warning"),
+    max_diagnostics: int = typer.Option(200, "--max-diagnostics"),
+):
+    """Lint the descriptor and print diagnostics with fix hints."""
+    _lint(descriptor_path, output_format, fail_on, max_diagnostics)
+
+
+@app.command("validate", help="Validate an XML descriptor file (alias of `lint`).")
 def validate(
     descriptor_path: Path = DESCRIPTOR_PATH,
 ):
-    """Validate the syntax and structure of an XML descriptor file."""
-    try:
-        if not descriptor_path.is_file():
-            typer.echo(f"Error: File not found: {descriptor_path}")
-            raise typer.Exit(1)
-
-        validator = XMLValidator()
-        is_valid = validator.validate_descriptor(descriptor_path)
-
-        if is_valid:
-            typer.echo("Descriptor validation successful!")
-            raise typer.Exit(0)
-        else:
-            typer.echo("Descriptor validation failed!")
-            raise typer.Exit(1)
-    except Exception as e:
-        typer.echo(f"Validation error: {str(e)}")
-        raise typer.Exit(1) from e
+    """Validate the syntax and structure of an XML descriptor file (alias of `lint`)."""
+    _lint(descriptor_path, output_format="text", fail_on="error", max_diagnostics=200)
 
 
 @demo_app.command("info")

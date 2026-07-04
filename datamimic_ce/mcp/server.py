@@ -16,7 +16,7 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 
 from datamimic_ce.domains import facade
 from datamimic_ce.mcp import resources
-from datamimic_ce.mcp.models import GenerateArgs
+from datamimic_ce.mcp.models import CheckArgs, GenerateArgs, ReferenceArgs, RunArgs
 
 if TYPE_CHECKING:  # pragma: no cover - import hint for typing only
     from typing import Protocol
@@ -86,6 +86,77 @@ def generate_impl(args: GenerateArgs) -> dict[str, Any]:
     return facade.generate_domain(payload)
 
 
+def _diagnostic_dicts(diagnostics: list[Any], detailed: bool) -> list[dict[str, Any]]:
+    concise_fields = ("rule", "severity", "line", "message", "fix_hint")
+    out: list[dict[str, Any]] = []
+    for diag in diagnostics:
+        data = diag.model_dump()
+        data["message"] = data["message"][:300]
+        if not detailed:
+            data = {key: data[key] for key in concise_fields}
+        out.append(data)
+    return out
+
+
+def check_impl(args: CheckArgs) -> dict[str, Any]:
+    """Lint a DSL descriptor: aggregated diagnostics with fix hints (diagnostics v1)."""
+    # WHY lazy: the authoring package pulls the engine's parsers/models — keep server
+    # startup light and load on first tool use.
+    from pathlib import Path
+
+    from datamimic_ce.authoring import lint_descriptor, lint_source
+
+    if args.xml is not None:
+        result = lint_source(args.xml, max_diagnostics=args.max_diagnostics)
+    else:
+        result = lint_descriptor(Path(str(args.path)), max_diagnostics=args.max_diagnostics)
+    return {
+        "ok": result.ok,
+        "summary": result.summary(),
+        "diagnostics": _diagnostic_dicts(result.diagnostics, args.response_format == "detailed"),
+        "truncated": result.truncated,
+    }
+
+
+def run_impl(args: RunArgs) -> dict[str, Any]:
+    """Safe dry-run: lint gate, neutralized targets (memstores kept), capped counts."""
+    from pathlib import Path
+
+    from datamimic_ce.authoring.dryrun import dry_run, dry_run_source
+
+    kwargs: dict[str, Any] = dict(
+        max_count=args.max_count,
+        sample_rows=args.sample_rows,
+        allow_side_effects=args.allow_side_effects,
+        timeout_seconds=args.timeout_seconds,
+    )
+    result = dry_run_source(args.xml, **kwargs) if args.xml is not None else dry_run(Path(str(args.path)), **kwargs)
+    detailed = args.response_format == "detailed"
+    payload: dict[str, Any] = {
+        "ok": result.ok,
+        "stage": result.stage,
+        "timing_ms": result.timing_ms,
+        "products": [product.model_dump() for product in result.products],
+        "products_truncated": result.products_truncated,
+        "diagnostics": _diagnostic_dicts(result.diagnostics, detailed),
+    }
+    if detailed and result.lint is not None:
+        payload["lint_summary"] = result.lint.summary()
+    return payload
+
+
+def reference_impl(args: ReferenceArgs) -> dict[str, Any]:
+    """DSL reference lookup: cheatsheet, element schemas, generators, targets, recipes."""
+    from datamimic_ce.authoring.reference import reference
+
+    try:
+        text = reference(args.topic, args.name)
+    except ValueError as err:
+        # actionable error: the message lists the valid values
+        return {"ok": False, "error": str(err)}
+    return {"ok": True, "topic": args.topic, "name": args.name, "content": text}
+
+
 def create_server(*, api_key: str | None = None) -> FastMCP:
     """Create a FastMCP server exposing DataMimic generators."""
 
@@ -102,12 +173,60 @@ def create_server(*, api_key: str | None = None) -> FastMCP:
     async def generate(args: GenerateArgs) -> dict[str, Any]:
         return generate_impl(args)
 
+    @server.tool("datamimic_check")
+    async def datamimic_check(args: CheckArgs) -> dict[str, Any]:
+        """Lint a DATAMIMIC DSL descriptor. Returns aggregated diagnostics, each with a
+        rule id, severity and a fix_hint saying what to change. Iterate until ok=true."""
+        return check_impl(args)
+
+    @server.tool("datamimic_run")
+    async def datamimic_run(args: RunArgs) -> dict[str, Any]:
+        """Safely dry-run a descriptor: counts capped, file/DB targets neutralized
+        (memstores kept), lint gate first. Returns per-product sample rows to verify
+        the generated data looks right."""
+        return run_impl(args)
+
+    @server.tool("datamimic_reference")
+    async def datamimic_reference(args: ReferenceArgs) -> dict[str, Any]:
+        """Look up DATAMIMIC DSL knowledge: topic=overview (cheatsheet, start here),
+        element (attributes/nesting for a tag), generators, entities (name=Person for
+        its fields), context (this/parent/root script scope), timeseries (start/end/
+        interval + ts.now/step/series), targets, distributions, recipes, recipe (full
+        descriptor by id)."""
+        return reference_impl(args)
+
     http_middleware = _build_http_middleware(api_key)
     setattr(server, HTTP_MIDDLEWARE_ATTR, http_middleware)
 
     for schema in resources.iter_schema_resources():
         loader = _schema_loader(schema.domain, schema.version, schema.kind)
         server.resource(schema.uri, mime_type="application/schema+json")(loader)
+
+    def _cheatsheet_resource() -> str:
+        from datamimic_ce.authoring.reference import cheatsheet
+
+        return cheatsheet()
+
+    server.resource("resource://datamimic/dsl/cheatsheet", mime_type="text/markdown")(_cheatsheet_resource)
+
+    # One resource per curated recipe. Only the tiny toml index is read at startup;
+    # the descriptor XML loads lazily on access.
+    import tomllib
+    from importlib import resources as importlib_resources
+
+    recipes_dir = importlib_resources.files("datamimic_ce.authoring") / "recipes"
+    recipes_index = tomllib.loads((recipes_dir / "recipes.toml").read_text(encoding="utf-8"))
+
+    def _recipe_loader_factory(recipe_id: str) -> Callable[[], str]:
+        def load() -> str:
+            return (recipes_dir / f"{recipe_id}.xml").read_text(encoding="utf-8")
+
+        return load
+
+    for entry in recipes_index["recipe"]:
+        server.resource(f"resource://datamimic/dsl/recipes/{entry['id']}", mime_type="application/xml")(
+            _recipe_loader_factory(entry["id"])
+        )
 
     return server
 
@@ -174,5 +293,8 @@ __all__ = [
     "mount_mcp",
     "generate_impl",
     "list_domains_impl",
+    "check_impl",
+    "run_impl",
+    "reference_impl",
     "build_sse_app",
 ]
