@@ -199,9 +199,11 @@ class ReferenceArgs(BaseModel):
 
     topic: str = Field(
         "overview",
-        pattern="^(overview|element|generators|targets|distributions|recipes|recipe)$",
+        pattern="^(overview|element|generators|entities|context|targets|distributions|recipes|recipe)$",
         description="What to look up; start with 'overview'",
     )
     name: str | None = Field(
-        None, description="Element tag (topic=element), recipe id (topic=recipe) or generator filter"
+        None,
+        description="Element tag (topic=element), entity name (topic=entities), recipe id "
+        "(topic=recipe) or generator filter",
     )

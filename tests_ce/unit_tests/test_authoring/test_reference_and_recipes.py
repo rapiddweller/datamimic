@@ -81,6 +81,24 @@ def test_reference_targets_from_registry() -> None:
         assert target in text
 
 
+def test_reference_entities_enumerated_from_registry() -> None:
+    from datamimic_ce.domains.domain_core.entity_registry import list_entity_specs
+
+    listing = reference("entities")
+    for entity in (s.entity for s in list_entity_specs()):
+        assert entity in listing
+    person = reference("entities", "Person")
+    assert "given_name" in person and "email" in person
+    with pytest.raises(ValueError, match="Unknown entity"):
+        reference("entities", "NotAnEntity")
+
+
+def test_reference_context_documents_scope_aliases() -> None:
+    text = reference("context").lower()
+    for token in ("this.", "parent.", "root.", "bare name"):
+        assert token in text
+
+
 def test_every_recipe_lints_clean() -> None:
     for recipe_id in _recipe_ids():
         result = lint_source(_recipe_xml(recipe_id))

@@ -24,8 +24,11 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
   `<variable>` a per-record helper (not exported), `<nestedKey>`/`<list>`/`<array>`
   build nested structures.
 - `source=` reads existing data (`.csv`, `.json`, `.xlsx`, `.xml`, `.dbunit.xml`,
-  a `<memstore>` id, or a `<database>`/`<mongodb>` id). `<iterate>` is an alias of
-  `<generate>` for source-driven intent; `<id>` is an alias of `<key>`.
+  a `<memstore>` id, or a `<database>`/`<mongodb>` id).
+- **`<generate>` vs `<iterate>`** — same engine element, different *intent*:
+  use `<generate>` to CREATE records (write-only, or read-a-source-then-write);
+  use `<iterate>` when the point is to READ/enrich an existing source in place.
+  Same for `<id>` = a `<key>` that marks an identifier.
 - `target=` writes: file exporters (`CSV`, `JSON`, `XML`, `XLSX`, `TXT`, `DbUnit`),
   `ConsoleExporter`, a `<memstore>` id (in-memory pipeline handoff), a client id, or
   `clientId.upsert` / `clientId.delete`. `exportUri=` prefixes the output directory.
@@ -35,6 +38,18 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
   inside `string=`/`pattern=` (e.g. `string="__firstName___lastName__"`). A
   `<variable>` gives its result a dot-accessible object (`row['field']` fails,
   use `row.field`).
+- **Scope aliases in scripts** (see `topic=context`): `this.field` (current record,
+  == bare `field`; needed inside nested scopes), `parent.field` (enclosing
+  `<generate>`/`<nestedKey>` — a child reading its parent, e.g. `parent.id`),
+  `root.field` (outermost record).
+- **Nested structures**: `<nestedKey type="dict">` builds one nested object from
+  child `<key>`s; `<nestedKey type="list" minCount= maxCount=>` builds a list of
+  them. With `source=`/`script=` a nestedKey instead reads/enriches existing data.
+  Without `type` AND without `source`/`script` it builds nothing (DM216).
+- **Entities**: 23 built-in domain entities (Person, Company, Address, Order,
+  Patient, …) — `topic=entities` lists them, `topic=entities name=Person` lists
+  its fields. `<variable name="p" entity="Person" dataset="DE" locale="de"/>` then
+  `script="p.email"`.
 
 ## Top gotchas (each maps to a lint rule)
 
@@ -84,9 +99,7 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
   key=value pairs at parse time.
 - `<echo>` prints; `<comment>` is a no-op; `<memstore id>` declares an in-memory
   store; `<execute uri>` runs SQL/scripts against a client.
-- Entity data: `<variable name="p" entity="Person" dataset="DE" locale="de"/>`
-  then `script="p.given_name"` — fields resolve case-insensitively across
-  camelCase/snake_case.
+- Entity fields resolve case/underscore-insensitively (`givenName` == `given_name`).
 
 ## Verify loop for agents
 

@@ -189,7 +189,8 @@ def create_server(*, api_key: str | None = None) -> FastMCP:
     @server.tool("datamimic_reference")
     async def datamimic_reference(args: ReferenceArgs) -> dict[str, Any]:
         """Look up DATAMIMIC DSL knowledge: topic=overview (cheatsheet, start here),
-        element (attributes/nesting for a tag), generators, targets, distributions,
+        element (attributes/nesting for a tag), generators, entities (name=Person for
+        its fields), context (this/parent/root script scope), targets, distributions,
         recipes, recipe (full descriptor by id)."""
         return reference_impl(args)
 

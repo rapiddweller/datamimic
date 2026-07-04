@@ -111,6 +111,53 @@ def targets_reference() -> str:
     return "\n".join(lines)
 
 
+@lru_cache(maxsize=1)
+def _entity_specs() -> dict[str, Any]:
+    from datamimic_ce.domains.domain_core.entity_registry import list_entity_specs
+
+    return {spec.entity: spec for spec in list_entity_specs()}
+
+
+def entities_reference(name: str | None = None) -> str:
+    """Enumerate the built-in domain entities (entity="Name" on <variable>/<key>)."""
+    specs = _entity_specs()
+    if not name:
+        return (
+            "# Entities (use as <variable name=\"p\" entity=\"Person\" dataset=\"DE\" locale=\"de\"/> then "
+            "script=\"p.field\")\n"
+            + ", ".join(sorted(specs))
+            + "\n\nCall topic=entities name=<Entity> for its fields. Fields resolve case/underscore-"
+            "insensitively (givenName == given_name)."
+        )
+    spec = specs.get(name) or specs.get(name.capitalize())
+    if spec is None:
+        raise ValueError(f"Unknown entity '{name}'. Known: {', '.join(sorted(specs))}")
+    lines = [f"# entity=\"{spec.entity}\" fields (access via script=\"<var>.<field>\")"]
+    for field in spec.attributes:
+        opt = "?" if getattr(field, "optional", False) else ""
+        nested = " {…}" if getattr(field, "children", None) else ""
+        lines.append(f"- {field.name}{opt}: {field.py_type}{nested}")
+    return clip("\n".join(lines), 4000, " [truncated — see topic=entities for the full list]")
+
+
+def context_reference() -> str:
+    """Script/expression scope: fields by bare name plus the this/parent/root aliases."""
+    return (
+        "# Script scope (script=, condition=, count=\"{expr}\") — plain Python\n"
+        "- Fields and <variable>s of the CURRENT record are referenced by BARE name: "
+        "script=\"given_name\", script=\"age * 2\".\n"
+        "- `this.<field>`  — the current scope explicitly; `this.x` == bare `x`. Use it in a nested "
+        "<nestedKey>/<list> scope where a bare sibling name is wrapped under the scope name and would "
+        "not resolve.\n"
+        "- `parent.<field>` — the immediate parent <generate>/<nestedKey> scope (a child reading its "
+        "parent's fields, e.g. parent.customer_id).\n"
+        "- `root.<field>` / `root.<name>.<field>` — the outermost record's merged fields.\n"
+        "- A <variable> result is dot-accessed: person.given_name (NOT person['given_name'], NOT "
+        "__person__ — that is string= interpolation, see DM314).\n"
+        "- Properties from <include> .properties files are in scope by their key."
+    )
+
+
 def distributions_reference() -> str:
     members = ", ".join(member.value for member in SourceDistribution)
     return (
@@ -162,6 +209,10 @@ def reference(topic: str, name: str | None = None) -> str:
             matches = [line for line in text.splitlines() if name.lower() in line.lower()]
             return "\n".join(matches) if matches else f"No generator matching '{name}'."
         return text
+    if topic == "entities":
+        return entities_reference(name)
+    if topic == "context":
+        return context_reference()
     if topic == "targets":
         return targets_reference()
     if topic == "distributions":
@@ -173,6 +224,6 @@ def reference(topic: str, name: str | None = None) -> str:
             raise ValueError("topic=recipe needs name=<recipe id>. " + list_recipes())
         return load_recipe(name)
     raise ValueError(
-        f"Unknown topic '{topic}'. Topics: overview, element, generators, targets, distributions, "
-        "recipes, recipe"
+        f"Unknown topic '{topic}'. Topics: overview, element, generators, entities, context, "
+        "targets, distributions, recipes, recipe"
     )
