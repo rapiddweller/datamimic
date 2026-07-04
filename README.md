@@ -566,7 +566,7 @@ response = generate_domain({
     "seed": "ci-pipeline-42", "locale": "en_US",
     "clock": "2026-01-01T00:00:00Z",
 })
-# Same input → same output, every machine, every run.
+# Same engine version + same model + same seed + same worker count → same output, every machine, every run.
 ```
 
 **2. Deterministic data backend for AI agents and LLM tooling.** The bundled MCP server (`pip install datamimic-ce[mcp]`) exposes `generate` as an MCP tool. Agents call it with seed, locale, count; outputs ship with a `determinism_proof.content_hash` so the same call can be re-executed and verified later — useful for agent regression tests and for any workflow where the data the agent saw needs to be reconstructable.
