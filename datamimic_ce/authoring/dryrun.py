@@ -43,7 +43,7 @@ RULE_SIDE_EFFECT_REFUSAL = "DM003"
 class DryRunProduct(BaseModel):
     name: str
     count: int
-    sample: list[dict] = Field(default_factory=list)
+    sample: list[dict[str, object]] = Field(default_factory=list)
     truncated_rows: bool = False
 
 

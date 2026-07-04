@@ -416,6 +416,8 @@ datamimic-mcp
 
 Agents can call `generate` with a domain, seed, count, and locale and receive deterministic, provenance-hashed output — making DATAMIMIC the natural test data runtime for agent-driven workflows.
 
+The server also ships the **DSL authoring toolset (AI linter)**: `datamimic_reference` (cheatsheet, element schemas, recipes), `datamimic_check` (aggregated diagnostics — every finding has a rule id and a fix hint) and `datamimic_run` (safe dry-run with capped counts, neutralized targets and sample rows). Agents draft a descriptor, lint it, dry-run it and iterate until green — the resulting XML is a reviewable, deterministic artifact instead of a black-box generation.
+
 ```python
 import anyio, json
 from fastmcp.client import Client
@@ -563,8 +565,10 @@ All services are versioned and seeded; each generation emits a provenance hash s
 # Initialize a new project
 datamimic init ./my-scenario
 
-# Validate an XML descriptor without executing it
-datamimic validate ./my-scenario/datamimic.xml
+# Lint a descriptor: schema, semantics, best practices — every finding carries
+# a rule id (DMxxx) and a fix hint. `validate` is an alias. Exit codes 0/1/2.
+datamimic lint ./my-scenario/datamimic.xml
+datamimic lint ./my-scenario/datamimic.xml --format json   # diagnostics v1, CI-friendly
 
 # Run a scenario
 datamimic run ./my-scenario/datamimic.xml

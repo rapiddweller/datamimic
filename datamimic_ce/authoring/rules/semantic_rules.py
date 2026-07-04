@@ -34,7 +34,7 @@ def _model_util_diag(
     rule: type[Rule],
     ctx: LintContext,
     element: etree._Element,
-    check: Callable[[dict], dict],
+    check: "Callable[[dict[str, str]], object]",
     fix_hint: str,
 ) -> Diagnostic | None:
     """Run one engine-side ModelUtil check against the element's attributes."""
@@ -53,7 +53,7 @@ class CountBoundsConflict(Rule):
         for element in ctx.iter(*_GENERATES, EL_NESTED_KEY):
             tag = str(element.tag)
 
-            def check_bounds(values: dict, _tag: str = tag) -> dict:
+            def check_bounds(values: dict[str, str], _tag: str = tag) -> object:
                 return ModelUtil.check_min_max_count(values, _tag)
 
             diag = _model_util_diag(

@@ -14,6 +14,7 @@ import pkgutil
 import tomllib
 from functools import lru_cache
 from importlib import resources
+from typing import Any
 
 from datamimic_ce.authoring.schema import ALIASES, build_schema_index
 from datamimic_ce.constants.exporter_constants import (
@@ -127,7 +128,7 @@ def distributions_reference() -> str:
 
 
 @lru_cache(maxsize=1)
-def _recipes_index() -> dict:
+def _recipes_index() -> dict[str, list[dict[str, Any]]]:
     raw = (resources.files("datamimic_ce.authoring") / "recipes" / "recipes.toml").read_text(encoding="utf-8")
     return tomllib.loads(raw)
 
