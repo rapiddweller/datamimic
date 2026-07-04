@@ -87,6 +87,20 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 10. Targets must exist: registry exporters, declared `<memstore>`/client ids, or
     `clientId.operation`. (DM401)
 
+## Choosing a `<key>` value source (match the field's meaning)
+
+| The field is… | Use |
+|---|---|
+| a fixed set of options (country, status, category) | `values="'US','DE','VN'"` |
+| …the same, but weighted | `values="..." weights="0.5,0.3,0.2"` |
+| a whole number in a range | `type="int" min="18" max="90"` |
+| money / an exact decimal | `type="decimal" min="0" max="1000"` |
+| a real person's name / email | a `<variable entity="Person"/>` then `script="p.name"` / `script="p.email"` |
+| a unique id | `generator="IncrementGenerator"` |
+| a coded string (SKU, code) | `pattern="[A-Z]{3}-[0-9]{4}"` |
+| a list of sub-records | `<nestedKey type="list" minCount= maxCount=>` with child `<key>`s |
+| a computed value | `script="age * 2"` (any python over fields/variables) |
+
 ## Sources & credentials
 
 - File sources resolve relative to the descriptor; type is inferred from the
