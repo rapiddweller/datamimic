@@ -1,0 +1,6 @@
+<setup rngSeed="1">
+    <generate name="c" count="5" target="ConsoleExporter">
+        <variable name="person" entity="Person"/>
+        <key name="full_name" script="__person__.given_name + ' ' + __person__.family_name"/>
+    </generate>
+</setup>

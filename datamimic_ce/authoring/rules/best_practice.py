@@ -7,6 +7,7 @@
 """DM3xx — best-practice rules where the ENGINE STAYS SILENT and does something
 surprising. These are the linter's flagship rules: nothing else catches them."""
 
+import re
 from collections.abc import Iterable
 
 from datamimic_ce.authoring.diagnostics import Diagnostic, Severity
@@ -23,6 +24,12 @@ from datamimic_ce.constants.element_constants import (
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
 _SOURCE_READERS = (*_GENERATES, EL_VARIABLE, EL_NESTED_KEY, EL_REFERENCE)
+
+# A bare __name__ token (the string-interpolation syntax) used as an identifier —
+# not `.__dunder__` attribute access, which is legitimate Python.
+_INTERP_TOKEN = re.compile(r"(?<![\w.])__[A-Za-z]\w*__")
+# Attributes evaluated as Python expressions, where __var__ interpolation does NOT apply.
+_SCRIPT_ATTRS = ("script", "condition")
 
 
 def _is_true(value: str | None) -> bool:
@@ -172,6 +179,26 @@ class PreferNativeStringLength(Rule):
                 )
 
 
+class InterpolationInScript(Rule):
+    id = "DM314"
+    severity = Severity.ERROR  # a bare __name__ in a Python expression is a NameError at runtime
+
+    def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
+        for element in ctx.iter():
+            for attr in _SCRIPT_ATTRS:
+                value = element.get(attr)
+                if value and _INTERP_TOKEN.search(value):
+                    token = _INTERP_TOKEN.search(value).group()  # type: ignore[union-attr]
+                    yield ctx.diag(
+                        type(self),
+                        element,
+                        f"{attr}=\"...\" is a Python expression, but it contains {token} — that is the "
+                        "string-interpolation syntax (for string=/pattern=), not variable access.",
+                        f"In {attr}= use the bare variable name: "
+                        f"{token.strip('_')}.field, not {token}.field.",
+                    )
+
+
 RULES: tuple[type[Rule], ...] = (
     DistributionDefaultsToRandom,
     NonOrderedLoadsWholeSource,
@@ -181,4 +208,5 @@ RULES: tuple[type[Rule], ...] = (
     UpsertCoercesZeroCount,
     PreferNativeNumericRange,
     PreferNativeStringLength,
+    InterpolationInScript,
 )

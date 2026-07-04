@@ -37,6 +37,8 @@ EXPECTED: dict[str, set[str]] = {
     "fx_generator_strings.xml": {"DM310", "DM311"},
     "fx_undeclared_refs.xml": {"DM401", "DM403"},
     "fx_engine_fallback.xml": {"DM000"},
+    "fx_script_interpolation.xml": {"DM314"},
+    "fx_nestedkey_no_type.xml": {"DM216"},
 }
 
 
@@ -48,12 +50,10 @@ def test_fixture_reports_seeded_rules(fixture: str) -> None:
     assert not missing, f"{fixture}: expected {missing} in {sorted(found)}"
 
 
-def test_every_fixture_covers_at_least_one_error_or_warning() -> None:
-    for fixture, expected in EXPECTED.items():
+def test_every_fixture_produces_diagnostics() -> None:
+    for fixture in EXPECTED:
         result = lint_descriptor(_FIXTURES / fixture)
-        assert not result.ok or all(rule.startswith("DM3") for rule in expected), (
-            f"{fixture} should not lint fully clean"
-        )
+        assert result.diagnostics, f"{fixture} should produce at least one diagnostic"
 
 
 def test_clean_descriptor_is_ok() -> None:

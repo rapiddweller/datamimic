@@ -29,9 +29,12 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 - `target=` writes: file exporters (`CSV`, `JSON`, `XML`, `XLSX`, `TXT`, `DbUnit`),
   `ConsoleExporter`, a `<memstore>` id (in-memory pipeline handoff), a client id, or
   `clientId.upsert` / `clientId.delete`. `exportUri=` prefixes the output directory.
-- `script=` attributes evaluate Python; source rows are dot-accessed
-  (`row.field`, not `row['field']`). String interpolation in attributes uses
-  `__variableName__` placeholders.
+- `script=` attributes evaluate **Python**: reference a field or `<variable>` by
+  its **bare name** — `script="person.given_name"` or `script="age * 2"`. Do NOT
+  write `__person__` there; the `__name__` form is *only* for string interpolation
+  inside `string=`/`pattern=` (e.g. `string="__firstName___lastName__"`). A
+  `<variable>` gives its result a dot-accessible object (`row['field']` fails,
+  use `row.field`).
 
 ## Top gotchas (each maps to a lint rule)
 

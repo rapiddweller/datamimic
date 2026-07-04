@@ -217,6 +217,27 @@ class SourceCompanionsWithoutSource(Rule):
                 )
 
 
+class NestedKeyNeedsType(Rule):
+    id = "DM216"
+    severity = Severity.WARNING  # no-type is valid template-enrichment, but only if the field pre-exists
+
+    def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
+        for element in ctx.iter(EL_NESTED_KEY):
+            has_children = any(isinstance(child.tag, str) and child.tag != "comment" for child in element)
+            drives_data = any(element.get(a) is not None for a in ("type", "source", "script"))
+            if has_children and not drives_data:
+                # Engine falls into template-enrichment mode -> KeyError unless the record
+                # already carries a field of this name (rare, from a scripted source template).
+                yield ctx.diag(
+                    type(self),
+                    element,
+                    "<nestedKey> with child fields but no type/source/script builds nothing — the "
+                    "engine expects the field to already exist and raises KeyError otherwise.",
+                    'Add type="list" (with count/minCount/maxCount) for a list of records, or '
+                    'type="dict" for one nested object.',
+                )
+
+
 RULES: tuple[type[Rule], ...] = (
     CountBoundsConflict,
     CountRequired,
@@ -226,4 +247,5 @@ RULES: tuple[type[Rule], ...] = (
     CountDigitsOrScript,
     NestedKeyCyclicNeedsCount,
     SourceCompanionsWithoutSource,
+    NestedKeyNeedsType,
 )
