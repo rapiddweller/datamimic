@@ -403,16 +403,34 @@ Composes with the existing `<variable>` mechanism for multi-source merges (e.g. 
 
 ## MCP Server — AI Agent Integration
 
-DATAMIMIC CE ships with a Model Context Protocol (MCP) server, making it directly callable from AI agents, Claude, Cursor, and any MCP-compatible runtime.
+DATAMIMIC CE ships with a Model Context Protocol (MCP) server, making it directly callable from AI agents, Claude, Cursor, and any MCP-compatible runtime. Agents that also work in a checkout of this repo should read [`AGENTS.md`](AGENTS.md) — it routes them into the tools below.
 
 ```bash
-pip install datamimic-ce[mcp]
-
-export DATAMIMIC_MCP_HOST=127.0.0.1
-export DATAMIMIC_MCP_PORT=8765
-export DATAMIMIC_MCP_API_KEY=your-key
-datamimic-mcp
+pip install "datamimic_ce[mcp]"
 ```
+
+### Register with your coding agent (stdio)
+
+**Claude Code** — one command:
+
+```bash
+claude mcp add datamimic -- datamimic-mcp serve --transport stdio
+```
+
+**Cursor / Claude Desktop / any `mcp.json` client** — add to the config (`.cursor/mcp.json`, or the project-level `.mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "datamimic": {
+      "command": "datamimic-mcp",
+      "args": ["serve", "--transport", "stdio"]
+    }
+  }
+}
+```
+
+**VS Code** (`.vscode/mcp.json`) uses the same `command`/`args` under a `servers` key. For a networked/shared server instead of stdio, run `datamimic-mcp serve --transport sse` (honours `DATAMIMIC_MCP_HOST` / `PORT` / `API_KEY`).
 
 Agents can call `generate` with a domain, seed, count, and locale and receive deterministic, provenance-hashed output — making DATAMIMIC the natural test data runtime for agent-driven workflows.
 
