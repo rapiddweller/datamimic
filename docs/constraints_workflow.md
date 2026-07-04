@@ -1,5 +1,11 @@
 # Enhanced Synthetic Data Generation with Multi-layer Constraints
 
+> Status: removed. The `<sourceConstraints>`, `<mapping>`, and `<targetConstraints>` elements and
+> their backing task/model classes described below were removed from the engine (see the
+> "Remove obsolete models, parsers, and test cases" cleanup after DAT-474). None of these
+> elements exist in the current parser or element registry. This document is kept for historical
+> context only; do not use it as a reference for the current DSL.
+
 This document describes the three-layer constraints system implemented in DATAMIMIC for comprehensive control over synthetic data generation.
 
 ## Overview

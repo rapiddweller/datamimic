@@ -24,7 +24,7 @@ DATAMIMIC is built on three main architectural components:
 
 ### Dataset Loading (TL;DR)
 
-Follow the dataset standard in `docs/standards/datasets.md` for all file access:
+Follow the dataset standard in `docs/data-domains/datasets.md` for all file access:
 
 - Always resolve files via `dataset_path(...)` or the lightweight loaders in `datamimic_ce.utils.dataset_loader`.
 - Pass base filenames to loaders; the helper appends `_{CC}.csv` using the generator’s normalized dataset.

@@ -17,7 +17,9 @@ datamimic version                    # Display version information
 datamimic info                      # Show system and configuration details
 datamimic init <project-name>       # Initialize a new project
 datamimic run <descriptor.xml>      # Run a data generation descriptor
-datamimic validate <descriptor.xml>  # Validate XML descriptor and info.toml
+datamimic lint <descriptor.xml>     # Lint a descriptor: schema, semantics, best practices
+datamimic validate <descriptor.xml>  # Validate XML descriptor (alias of lint)
+datamimic capabilities               # Print the DSL surface as JSON (elements, generators, entities, converters, targets)
 ```
 
 ### Demo Management
@@ -39,8 +41,8 @@ datamimic demo info <demo-name>      # Show detailed demo information
 datamimic init <project-name> [OPTIONS]
 
 Options:
-  --target TEXT  Target directory for project creation
-  --force       Force creation even if directory exists
+  --target, -t TEXT  Target directory for project creation
+  --force, -f        Force creation even if directory exists
 ```
 
 Example:
@@ -94,28 +96,62 @@ datamimic run my-descriptor.xml --task-id task123
 datamimic run my-descriptor.xml --test-mode
 ```
 
-#### `validate` - Validate Descriptor
+#### `lint` - Lint a Descriptor
+
+```bash
+datamimic lint <descriptor.xml> [OPTIONS]
+
+Options:
+  --format, -f TEXT      text | json (diagnostics v1) [default: text]
+  --fail-on TEXT         error | warning [default: error]
+  --max-diagnostics INT  [default: 200]
+```
+
+Runs the DSL linter (schema, semantic, and best-practice rule checks) against the
+descriptor and prints diagnostics, each with a rule id (`DMxxx`), severity, and a
+`fix_hint` describing what to change.
+
+Exit codes: `0` when no diagnostic reaches the `--fail-on` threshold, `1` when one
+does, `2` when the file is missing or the linter itself errors.
+
+Example:
+
+```bash
+# Text output (default)
+datamimic lint my-descriptor.xml
+
+# JSON output for CI, capped at 50 diagnostics
+datamimic lint my-descriptor.xml --format json --max-diagnostics 50
+```
+
+#### `validate` - Validate Descriptor (alias of `lint`)
 
 ```bash
 datamimic validate <descriptor.xml>
 ```
 
-The validate command performs the following checks:
-- XML syntax validation
-- Required elements and attributes
-- Generate element structure
-- Variable and key definitions
-- info.toml validation (if present)
-  - Required fields: projectName, description, dependencies, usage
-  - Project name format
-  - Field types
+`validate` is a thin alias for `lint` with fixed defaults
+(`--format text --fail-on error --max-diagnostics 200`). It runs the same
+schema/semantic/best-practice checks as `lint`; it does not read or validate
+`info.toml`.
 
 Example:
 
 ```bash
-# Validate descriptor and info.toml
 datamimic validate my-descriptor.xml
 ```
+
+#### `capabilities` - Print the DSL Surface
+
+```bash
+datamimic capabilities
+```
+
+Prints a machine-readable JSON manifest of the DSL surface (elements,
+generators, entities, converters, targets), derived live from the engine
+registries so it cannot drift from the code. Useful for agents without an MCP
+runtime; see the [MCP Quickstart](../mcp_quickstart.md) for the equivalent
+`datamimic_reference` MCP tool.
 
 ### Demo Management
 
@@ -131,8 +167,9 @@ datamimic demo list
 datamimic demo create [OPTIONS] [DEMO_NAME]
 
 Options:
-  --all          Create all available demos
-  --target TEXT  Target directory for demo creation
+  --all              Create all available demos
+  --target, -t TEXT  Target directory for demo creation
+  --overwrite, -o    Overwrite existing files if they exist
 ```
 
 Example:
@@ -162,17 +199,19 @@ Output includes:
 The CLI behavior can be customized using environment variables:
 
 - `DATAMIMIC_CONFIG`: Path to custom configuration file
+- `DATAMIMIC_OUTPUT_DIR`: Output directory shown by `datamimic info` (defaults to the current directory)
 - `DATAMIMIC_LOG_LEVEL`: Logging level (DEBUG|INFO|WARNING|ERROR)
 
 ## Exit Codes
 
-The CLI uses the following exit codes:
+Most commands use `0` for success and `1` for a general error (e.g. `run` on a
+missing descriptor, `init` on an invalid project name).
 
-- `0`: Success
-- `1`: General error
-- `2`: Invalid arguments
-- `3`: Configuration error
-- `4`: Runtime error
+`lint`/`validate` use a distinct, ESLint-style scheme:
+
+- `0`: no diagnostic reached the `--fail-on` threshold
+- `1`: at least one diagnostic reached the `--fail-on` threshold
+- `2`: the descriptor file was not found, or the linter itself errored
 
 ## Best Practices
 
@@ -194,7 +233,7 @@ The CLI uses the following exit codes:
 4. **Error Handling**
    - Check validation errors carefully
    - Review XML syntax and structure
-   - Verify info.toml required fields
+   - Use `--format json` to feed diagnostics into other tooling
 
 ## Troubleshooting
 

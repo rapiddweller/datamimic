@@ -99,7 +99,7 @@ Each domain includes specialized services for generating entities:
 
 - **Common Domain**: `PersonService`, `AddressService`, `CompanyService`, `CountryService`, `CityService`
 - **Healthcare Domain**: `PatientService`, `DoctorService`, `HospitalService`, `MedicalProcedureService`, `MedicalDeviceService`
-- **Finance Domain**: `BankAccountService`, `TransactionService`, `CrediCardService`, `BankService`
+- **Finance Domain**: `BankAccountService`, `TransactionService`, `CreditCardService`, `BankService`
 - **E-commerce Domain**: `ProductService`, `OrderService`
 - **Insurance Domain**: `InsurancePolicyService`, `InsuranceCompanyService`, `InsuranceCoverageService`, `InsuranceProductService`
 

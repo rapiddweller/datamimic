@@ -25,7 +25,7 @@ DATAMIMIC addresses this problem by using weighted distributions based on real-w
 
 In DATAMIMIC, blood types are distributed according to their real frequencies:
 
-From `datamimic_ce/domain_data/healthcare/medical/blood_types_US.csv`:
+From `datamimic_ce/domains/domain_data/healthcare/medical/blood_types_US.csv`:
 ```
 O+, 38
 A+, 34

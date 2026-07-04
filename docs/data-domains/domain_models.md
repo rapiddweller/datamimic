@@ -57,6 +57,7 @@ Provides shared entities used across all domains:
 Person
 ├── given_name: str
 ├── family_name: str
+├── full_name: str
 ├── name: str
 ├── gender: str
 ├── age: int
@@ -65,6 +66,8 @@ Person
 ├── phone: str
 ├── mobile_phone: str
 ├── address: Address
+├── transaction_profile: str | dict[str, float] | None
+├── demographic_sample: DemographicSample
 ├── academic_title: str
 ├── salutation: str
 └── nobility_title: str
@@ -151,16 +154,24 @@ Patient
 ├── patient_id: str
 ├── medical_record_number: str
 ├── ssn: str
-├── gender: str
 ├── given_name: str
 ├── family_name: str
-├── date_of_birth: date
+├── full_name: str
+├── gender: str
+├── birthdate: datetime
+├── age: int
 ├── blood_type: str
+├── height_cm: float
+├── weight_kg: float
+├── bmi: float
 ├── allergies: List[str]
-├── conditions: List[str]
 ├── medications: List[str]
-├── emergency_contact: Person
-└── insurance_provider: str
+├── conditions: List[str]
+├── emergency_contact: dict
+├── insurance_provider: str
+├── insurance_policy_number: str
+├── primary_doctor: Doctor | None
+└── transaction_profile: str | dict[str, float] | None
 ```
 
 #### Doctor
@@ -168,26 +179,46 @@ Patient
 ```
 Doctor
 ├── doctor_id: str
+├── npi_number: str
 ├── license_number: str
-├── gender: str
 ├── given_name: str
 ├── family_name: str
+├── full_name: str
+├── gender: str
+├── birthdate: datetime
+├── age: int
 ├── specialty: str
-├── qualifications: List[str]
 ├── hospital: Hospital
-└── appointments: List[Appointment]
+├── medical_school: str
+├── graduation_year: int
+├── years_of_experience: int
+├── certifications: List[str]
+├── accepting_new_patients: bool
+├── office_hours: dict
+├── email: str
+├── phone: str
+└── address: Address
 ```
 
 #### Hospital
 
 ```
 Hospital
+├── hospital_id: str
 ├── name: str
-├── address: Address
+├── type: str
 ├── departments: List[str]
-├── capacity: int
+├── services: List[str]
+├── bed_count: int
 ├── staff_count: int
-└── specialties: List[str]
+├── founding_year: int
+├── accreditation: List[str]
+├── emergency_services: bool
+├── teaching_status: bool
+├── website: str
+├── phone: str
+├── email: str
+└── address: Address
 ```
 
 ### Finance Domain

@@ -18,10 +18,12 @@ This project documentation focuses specifically on:
 - [Examples](examples/README.md)
   - DateTime Generator (weighted + DSL): examples/datetime_generator.md
 - [API Reference](api/README.md)
-- [Advanced Topics](advanced/README.md)
+- [Advanced Topics](advanced/advanced-topics.md)
 - [Controlling Generator Caching](generator_lifecycle.md)
 - [Developer Guide](developer_guide.md)
-- [Dataset Loading Standard](standards/datasets.md)
+- [Dataset Loading Standard](data-domains/datasets.md)
+- [Demographic Profiles](demographics.md)
+- [MCP Quickstart](mcp_quickstart.md) - MCP server + DSL authoring tools (lint/dry-run/reference) for AI agents
 - Seeding & Reproducibility: see Developer Guide ("Seeding & Reproducibility") and DateTime examples
 
 ## Core Concepts
@@ -131,7 +133,7 @@ DATAMIMIC's domain-driven framework organizes synthetic data generation by indus
 - **Insurance Domain** - Policy, Claim, Insured
 - **E-commerce Domain** - Product, Order, Customer
 
-See also the dataset loading rules in [Dataset Loading Standard](standards/datasets.md):
+See also the dataset loading rules in [Dataset Loading Standard](data-domains/datasets.md):
 - Use `dataset_path(...)` or lightweight loaders for all file access
 - Pass base filenames (helpers append `_{CC}.csv`)
 - Keep I/O in generators, not models
@@ -166,7 +168,7 @@ DATAMIMIC offers advanced capabilities for power users:
 - Performance optimization
 - Database integration
 
-For detailed information on advanced topics, see the [Advanced Topics](advanced/README.md) documentation.
+For detailed information on advanced topics, see the [Advanced Topics](advanced/advanced-topics.md) documentation.
 
 For comprehensive information on the DATAMIMIC platform UI, advanced models, and enterprise capabilities, please visit our [official online documentation](https://docs.datamimic.io/).
 

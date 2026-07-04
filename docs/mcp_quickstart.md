@@ -109,7 +109,7 @@ async def main():
 anyio.run(main)
 ```
 
-The `determinism_proof.content_hash` field and the canonical JSON comparisons will match across identical requests, ensuring byte-identical payloads for the same seed lineage.
+The `determinism_proof.content_hash` field and the canonical JSON comparisons will match across identical requests, ensuring byte-identical payloads for the same seed on the same DATAMIMIC version.
 
 ### Payments domain example
 
@@ -141,9 +141,9 @@ DATAMIMIC DSL author with a verify loop:
 
 | Tool | Purpose |
 |---|---|
-| `datamimic_reference` | DSL knowledge: `topic=overview` (cheatsheet, start here), `element` (+`name=generate`), `generators`, `targets`, `distributions`, `recipes`, `recipe` (+`name=<id>`) |
+| `datamimic_reference` | DSL knowledge: `topic=overview` (cheatsheet, start here), `element` (+`name=generate`), `generators`, `entities` (+`name=Person` for its fields), `context` (this/parent/root script scope), `timeseries` (start/end/interval + ts.now/step/series), `targets`, `distributions`, `converters` (masking/formatting), `recipes`, `recipe` (+`name=<id>`) |
 | `datamimic_check` | Lint a descriptor (`xml=` inline or `path=`): aggregated diagnostics, each with a rule id (`DMxxx`), severity and a `fix_hint`. Iterate until `ok=true`. |
-| `datamimic_run` | Safe dry-run: lint gate first, counts capped (`max_count`), file/DB targets neutralized (memstores kept), returns per-product `sample` rows. `allow_side_effects=true` opts out. |
+| `datamimic_run` | Safe dry-run: lint gate first, counts capped (`max_count`), file/DB targets neutralized (memstores kept), returns per-product `sample` rows. `allow_side_effects=true` opts out. `smoke_export=true` additionally test-writes the captured rows through each stripped file exporter in a temp dir (no artifacts left behind) to catch export-time serialization crashes before a real run. |
 
 Resources: `resource://datamimic/dsl/cheatsheet` and
 `resource://datamimic/dsl/recipes/{id}`.
@@ -157,7 +157,7 @@ change) → `run` → inspect samples → ship. The same linter runs in CI via
 Claude Code:
 
 ```bash
-claude mcp add datamimic -- datamimic-mcp --transport stdio
+claude mcp add datamimic -- datamimic-mcp serve --transport stdio
 ```
 
 `.mcp.json` (Claude Code project scope) / `.cursor/mcp.json` (Cursor) /
@@ -168,10 +168,10 @@ claude mcp add datamimic -- datamimic-mcp --transport stdio
   "mcpServers": {
     "datamimic": {
       "command": "datamimic-mcp",
-      "args": ["--transport", "stdio"]
+      "args": ["serve", "--transport", "stdio"]
     }
   }
 }
 ```
 
-With `uvx` (no install): `"command": "uvx", "args": ["--from", "datamimic-ce[mcp]", "datamimic-mcp", "--transport", "stdio"]`.
+With `uvx` (no install): `"command": "uvx", "args": ["--from", "datamimic-ce[mcp]", "datamimic-mcp", "serve", "--transport", "stdio"]`.

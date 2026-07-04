@@ -99,9 +99,9 @@ print(f"VN Person: {vn_person.name}, {vn_person.address.country_code}")
 
 Example output:
 ```
-US Person: Robert Suarez, NY
-UK Person: Emma Wilson, London
-CA Person: Jacques Tremblay, ON
+US Person: Robert Suarez, US
+DE Person: Anna Müller, DE
+VN Person: Nguyen Van An, VN
 ```
 
 ## Exporting to Different Formats
@@ -160,9 +160,10 @@ You can customize the generation process by providing specific parameters:
 ```python
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 
-# Configure demographics (e.g., restrict age range; increase female quota)
-config = DemographicConfig(age_min=25, age_max=35, female_quota=0.8)
-person_service_custom = PersonService(dataset="US", demographic_config=config)
+# Restrict age range via DemographicConfig; female_quota is a PersonService constructor
+# argument, not part of DemographicConfig
+config = DemographicConfig(age_min=25, age_max=35)
+person_service_custom = PersonService(dataset="US", demographic_config=config, female_quota=0.8)
 custom_person = person_service_custom.generate()
 print(f"Custom Person: {custom_person.name}, {custom_person.age} years old, {custom_person.gender}")
 ```
@@ -197,12 +198,7 @@ svc_b = PersonService(dataset="US", rng=Random(123))
 assert svc_a.generate().to_dict() == svc_b.generate().to_dict()
 ```
 
-
-Example output:
-```
-Patient: Paul Riley, ID: PAT-13FDBE18
-Customer: Sarah Johnson, ID: CUST-A7C42F19
-```
+The assertion passes silently: both services produce identical output for the same seed.
 
 ## Processing Batch Data
 

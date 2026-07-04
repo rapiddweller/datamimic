@@ -63,7 +63,7 @@ print(f"Medications: {', '.join(patient.medications)}")
 ### Financial Services
 
 ```python
-from datamimic_ce.domains.financial.services.bank_account_service import BankAccountService
+from datamimic_ce.domains.finance.services.bank_account_service import BankAccountService
 
 # Generate bank account data
 account_service = BankAccountService()
