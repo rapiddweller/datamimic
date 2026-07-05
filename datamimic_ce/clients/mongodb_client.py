@@ -62,6 +62,17 @@ class MongoDBClient(DatabaseClient):
         elif isinstance(value, Mapping) and parts[0] in value:
             yield from MongoDBClient._values_at_path(value[parts[0]], parts[1:])
 
+    @staticmethod
+    def _shell_to_json(query: str) -> str:
+        """A MongoDB-shell-style selector -> a JSON string ``json.loads`` accepts. Benerator's mongo
+        selectors use shell syntax: single-quoted or BAREWORD object keys ($-operators, ``_id``,
+        projection fields) and a trailing ``cursor: {}``. Wrap first so the leading key has a
+        preceding ``{``; promote single quotes so quoted keys/strings are protected; then quote every
+        remaining unquoted bareword key. A value like ``"$total_price"`` is preceded by ``:`` (not
+        ``{``/``,``) and already quoted, so it is left untouched."""
+        s = "{" + query.replace("'", '"') + "}"
+        return re.sub(r'([{,]\s*)([$A-Za-z_][\w$]*)\s*:', r'\1"\2":', s)
+
     def _create_connection(self) -> MongoClient:
         ars = {
             "host": self._credential.host,
@@ -350,12 +361,8 @@ class MongoDBClient(DatabaseClient):
         :return: dict-keys: find, filter, projection
         """
         self._validate_query_command(query)
-        # change mongodb query into JSON string
-        input_query = query.replace("'", '"')
-        input_query = re.sub(r"\s*find\s*:", r'"find":', input_query)
-        input_query = re.sub(r"\s*filter\s*:", r'"filter":', input_query)
-        input_query = re.sub(r"\s*projection\s*:", r'"projection":', input_query)
-        input_query = f"{{{input_query}}}"
+        # change mongodb-shell query into a JSON string (bareword keys, $-operators, projection fields)
+        input_query = self._shell_to_json(query)
         # check and return query as dict
         try:
             result = json.loads(input_query)
@@ -375,11 +382,8 @@ class MongoDBClient(DatabaseClient):
         :return: dict-keys:  name, pipeline
         """
         self._validate_query_command(query)
-        # change mongodb query into JSON string
-        input_query = query.replace("'", '"')
-        input_query = re.sub(r"(?<!\")\s*aggregate\s*:(?!\")", r'"aggregate":', input_query)
-        input_query = re.sub(r"(?<!\")\s*pipeline\s*:(?!\")", r'"pipeline":', input_query)
-        input_query = f"{{{input_query}}}"
+        # change mongodb-shell query into a JSON string (bareword $-operators, _id, trailing cursor:{})
+        input_query = self._shell_to_json(query)
         # check and return query as dict
         try:
             result = json.loads(input_query)

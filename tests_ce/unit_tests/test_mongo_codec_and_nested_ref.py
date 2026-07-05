@@ -61,3 +61,37 @@ class TestMongoNestedReferencePath:
 
     def test_missing_path_yields_nothing(self):
         assert list(MongoDBClient._values_at_path(self._DOC, ["nope", "id"])) == []
+
+
+class TestMongoShellToJson:
+    """Benerator mongo selectors use shell syntax (bareword keys, $-operators, single quotes)."""
+
+    def test_find_with_bareword_projection(self):
+        import json
+
+        q = "find: 'db_product', filter: {}, projection: {_id: 0, ean_code: 1, price: 1}"
+        r = json.loads(MongoDBClient._shell_to_json(q))
+        assert r["find"] == "db_product"
+        assert r["projection"] == {"_id": 0, "ean_code": 1, "price": 1}
+
+    def test_aggregate_pipeline_with_unquoted_project_and_trailing_cursor(self):
+        import json
+
+        q = (
+            "'aggregate': 'db_order_item', pipeline: ["
+            "{'$match': {'order_id': {'$eq': 1000}}}, "
+            "{'$group': {'_id': 1000, 'sum': {'$sum': '$total_price'}}}, "
+            "{$project: {_id: 0, sum: 1}}], cursor: {} "
+        )
+        r = json.loads(MongoDBClient._shell_to_json(q))
+        assert r["aggregate"] == "db_order_item"
+        assert len(r["pipeline"]) == 3
+        assert r["pipeline"][2] == {"$project": {"_id": 0, "sum": 1}}
+        # a field-reference value keeps its $ and is not mangled into a key
+        assert r["pipeline"][1]["$group"]["sum"]["$sum"] == "$total_price"
+
+    def test_already_quoted_keys_untouched(self):
+        import json
+
+        r = json.loads(MongoDBClient._shell_to_json("find: 'c', filter: {'x': 1}, projection: {'y': 1}"))
+        assert r["filter"] == {"x": 1} and r["projection"] == {"y": 1}
