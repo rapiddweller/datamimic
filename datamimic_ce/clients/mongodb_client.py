@@ -112,6 +112,24 @@ class MongoDBClient(DatabaseClient):
                 raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
             return list(collection.find({}))
 
+    def get_random_rows_by_columns(self, collection_name: str, column_names: list[str]) -> list[tuple]:
+        """Fetch the given fields for a <reference> in a stable order, preserving row-tuple
+        integrity (same contract as RdbmsClient.get_random_rows_by_columns). Sorted server-side
+        on the selected fields (BSON total order): MongoDB's own $sample stage is NOT seedable
+        and may repeat documents, so the reference task does the deterministic sampling itself
+        via the seeded engine RNG over this stable order. A field missing on a document maps to
+        None, like an SQL NULL."""
+        if collection_name is None or collection_name.isspace():
+            raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
+        with self._create_connection() as conn:
+            collection = conn[self._credential.database][collection_name]
+            projection = dict.fromkeys(column_names, 1)
+            if "_id" not in column_names:
+                projection["_id"] = 0
+            sort_spec = [(name, 1) for name in column_names]
+            docs = collection.find({}, projection).sort(sort_spec)
+            return [tuple(doc.get(name) for name in column_names) for doc in docs]
+
     def count(self, collection_name: str) -> int:
         """
         Count number of documents in collection

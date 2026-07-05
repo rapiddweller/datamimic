@@ -8,6 +8,7 @@ import itertools
 from collections.abc import Iterator
 from typing import Any
 
+from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
@@ -30,7 +31,7 @@ class ReferenceTask(GenSubTask):
         return self._statement
 
     def execute(self, ctx: Context):
-        """Generate a (composite) reference record from an RDBMS data source."""
+        """Generate a (composite) reference record from an RDBMS or MongoDB data source."""
         if self._iterator is None:
             if self._pagination is None and self._has_selection_modifier():
                 # Without a page window the task may be rebuilt per record (nested in
@@ -66,8 +67,11 @@ class ReferenceTask(GenSubTask):
 
     def _init_iterator(self, ctx: Context) -> Iterator[dict[str, Any]]:
         client = ctx.root.clients.get(self.statement.source)
-        if not isinstance(client, RdbmsClient):
-            raise ValueError("Reference task currently only supports RDBMS data sources")
+        if not isinstance(client, RdbmsClient | MongoDBClient):
+            raise ValueError(
+                f"<reference> '{self._statement.name}': source '{self.statement.source}' is not a "
+                "<database> or <mongodb> client (RDBMS and MongoDB are supported)"
+            )
         rows = client.get_random_rows_by_columns(self.statement.source_type, self.statement.source_keys)
         if not rows:
             raise ValueError(f"No data found for reference {self._statement.name}")
