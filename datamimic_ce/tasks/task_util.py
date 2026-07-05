@@ -43,6 +43,7 @@ from datamimic_ce.converter.upper_case_converter import UpperCaseConverter
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.enums.converter_enums import ConverterEnum
+from datamimic_ce.enums.operation_enums import ExportOperation
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.memstore import Memstore
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
@@ -489,20 +490,27 @@ class TaskUtil:
         # deepest-first automatically. The operation itself comes from the same parsed
         # (exporter, operation) pairs the engine already built via ExporterUtil.parse_function_string
         # (see create_exporter_list) - not a re-parse of the raw target string.
-        own_targets_delete = any(operation == "delete" for _, operation in exporters["with_operation"])
+        own_targets_delete = any(
+            operation is ExportOperation.DELETE for _, operation in exporters["with_operation"]
+        )
 
         if own_targets_delete:
             for sub_stmt in stmt.sub_statements:
                 TaskUtil._export_nested_products_by_page(root_context, sub_stmt, xml_result, exporter_state_manager)
 
         # Use cached exporters
-        # Run exporters with operations first
+        # Run exporters with operations first. Operations are ExportOperation members (parsed
+        # once at the target boundary); dispatch is explicit per member — no getattr on a string.
         for exporter, operation in exporters["with_operation"]:
-            if isinstance(exporter, MongoDBExporter) and operation == "upsert":
+            if isinstance(exporter, MongoDBExporter) and operation is ExportOperation.UPSERT:
                 json_product = exporter.upsert(product=json_product)
-            elif hasattr(exporter, operation):
-                getattr(exporter, operation)(json_product)
-            else:
+            elif operation is ExportOperation.UPDATE:
+                exporter.update(json_product)
+            elif operation is ExportOperation.UPSERT:
+                exporter.upsert(json_product)
+            elif operation is ExportOperation.DELETE:
+                exporter.delete(json_product)
+            else:  # unreachable while ExportOperation has exactly these members
                 raise ValueError(f"Exporter does not support operation: {exporter}.{operation}")
 
         TaskUtil.exporter_without_operation(

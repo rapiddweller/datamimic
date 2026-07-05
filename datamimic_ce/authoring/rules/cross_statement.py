@@ -28,6 +28,7 @@ from datamimic_ce.constants.exporter_constants import (
     EXPORTER_LOG_EXPORTER,
     EXPORTER_TEST_RESULT_EXPORTER,
 )
+from datamimic_ce.enums.operation_enums import ExportOperation
 from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS, ExporterUtil
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
@@ -41,9 +42,9 @@ _STATIC_TARGETS = {
     EXPORTER_LOG_EXPORTER,
     EXPORTER_TEST_RESULT_EXPORTER,
 }
-# Dotted <clientId>.<op> write operations the client exporters expose
-# (MongoDBExporter / DatabaseExporter methods; #165).
-_CLIENT_OPERATIONS = {"update", "upsert", "delete"}
+# Dotted <clientId>.<op> write operations, derived from the engine's own enum so
+# this rule cannot drift from what the exporter boundary accepts (SPOT).
+_CLIENT_OPERATIONS = {op.value for op in ExportOperation}
 
 
 def _declared_ids(ctx: LintContext) -> tuple[set[str], set[str]]:

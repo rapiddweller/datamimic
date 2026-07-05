@@ -29,6 +29,7 @@ from datamimic_ce.constants.exporter_constants import (
     EXPORTER_XML,
 )
 from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.enums.operation_enums import ExportOperation
 from datamimic_ce.exporters.console_exporter import ConsoleExporter
 from datamimic_ce.exporters.csv_exporter import CSVExporter
 from datamimic_ce.exporters.database_exporter import DatabaseExporter
@@ -148,7 +149,7 @@ class ExporterUtil:
         setup_context: SetupContext,
         stmt: GenerateStatement,
         targets: list[str],
-    ) -> tuple[list[tuple[Exporter, str]], list[Exporter]]:
+    ) -> tuple[list[tuple[Exporter, ExportOperation]], list[Exporter]]:
         """
         Create list of consumers with and without operation from consumer string
 
@@ -175,7 +176,15 @@ class ExporterUtil:
             params = target.get("params") or {}
             # Handle consumer with operation
             if "." in exporter_name:
-                consumer_name, operation = exporter_name.split(".", 1)
+                consumer_name, operation_raw = exporter_name.split(".", 1)
+                try:
+                    operation = ExportOperation(operation_raw)
+                except ValueError:
+                    valid = ", ".join(op.value for op in ExportOperation)
+                    raise ValueError(
+                        f"Unknown client operation '{operation_raw}' in target '{exporter_name}'. "
+                        f"Valid operations: {valid}; a plain client id inserts."
+                    ) from None
                 client = setup_context.get_client_by_id(consumer_name)
                 consumer = ExporterUtil.create_exporter_from_client(client, consumer_name)
                 consumers_with_operation.append((consumer, operation))
