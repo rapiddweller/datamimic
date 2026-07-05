@@ -113,3 +113,24 @@ class TestMongoReferenceSortKey:
     def test_none_sorts_last(self):
         rows = [(5,), (None,), (1,)]
         assert sorted(rows, key=lambda row: tuple(MongoDBClient._sort_key(v) for v in row)) == [(1,), (5,), (None,)]
+
+
+class TestMongoQueryTypeDetection:
+    """The command key may be bareword OR quoted across Benerator selectors."""
+
+    def test_bareword_find(self):
+        assert MongoDBClient._check_query_type("find: 'c', filter: {}") == "find"
+
+    def test_quoted_aggregate(self):
+        # the shop-mongodb update selector single-quotes the key: 'aggregate': ...
+        q = "'aggregate': 'db_order_item', pipeline: [{'$match': {}}]"
+        assert MongoDBClient._check_query_type(q) == "aggregate"
+
+    def test_double_quoted_find(self):
+        assert MongoDBClient._check_query_type('"find": "c", filter: {}') == "find"
+
+    def test_unknown_command_rejected(self):
+        import pytest
+
+        with pytest.raises(ValueError, match="only support"):
+            MongoDBClient._check_query_type("delete: 'c'")

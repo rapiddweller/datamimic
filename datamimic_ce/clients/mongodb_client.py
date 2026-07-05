@@ -419,8 +419,8 @@ class MongoDBClient(DatabaseClient):
         """
         # validate find
         query = query.strip()
-        find_match = re.findall(r"find\s*:", query)
-        aggregate_match = re.findall(r"aggregate\s*:", query)
+        find_match = re.findall(r"""['\"]?find['\"]?\s*:""", query)
+        aggregate_match = re.findall(r"""['\"]?aggregate['\"]?\s*:""", query)
         if find_match and aggregate_match:
             raise ValueError("Error syntax, only one query type allow but found both 'find' and 'aggregate'")
         if find_match:
@@ -454,8 +454,10 @@ class MongoDBClient(DatabaseClient):
         Currently only support 'find' and 'aggregate'
         :param query:
         """
-        find_pattern = r"^\s*find\s*:"
-        aggregate_pattern = r"^\s*aggregate\s*:"
+        # the command key may be bareword or quoted: find:/'find':/"find": (both forms appear
+        # across Benerator shell selectors), so tolerate an optional surrounding quote
+        find_pattern = r"""^\s*['\"]?find['\"]?\s*:"""
+        aggregate_pattern = r"""^\s*['\"]?aggregate['\"]?\s*:"""
         is_find = re.match(find_pattern, query) is not None
         is_aggregate = re.match(aggregate_pattern, query) is not None
         if is_find:
