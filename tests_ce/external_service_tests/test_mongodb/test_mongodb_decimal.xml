@@ -1,6 +1,7 @@
-<!-- Decimal128 round-trip through MongoDB, plus the two shell-selector shapes that used to
-     break the JSON decomposer: a bareword find projection ({_id: 0, field: 1}) and an
-     aggregate pipeline with an unquoted operator key ({$group: ...}) and a trailing cursor: {}. -->
+<!-- Decimal128 round-trip through MongoDB, plus the shell-selector shapes that used to break:
+     a bareword find projection ({_id: 0, field: 1}), an aggregate pipeline with an unquoted
+     operator key ({$group: ...}) and a trailing cursor: {}, and - the mixed style the shop demo
+     actually uses - a quoted 'aggregate': command key sitting next to an unquoted find: below. -->
 <setup rngSeed="11">
     <mongodb id="mongodb"/>
 
@@ -23,10 +24,11 @@
         <key name="total" script="item.price * item.qty"/>
     </generate>
 
-    <!-- unquoted $group/$project operator keys + trailing cursor: {} -->
+    <!-- quoted 'aggregate': command key (the shop demo's actual style, inconsistent with the
+         unquoted find: selectors above) + unquoted $group/$project operator keys + trailing cursor: {} -->
     <generate name="check_total_agg" count="1" target="">
         <variable name="agg" source="mongodb"
-                  selector="aggregate: 'mongo_decimal_items',
+                  selector="'aggregate': 'mongo_decimal_items',
                             pipeline: [{$group: {_id: 1, grand_total: {$sum: '$price'}}}, {$project: {_id: 0, grand_total: 1}}],
                             cursor: {}"/>
         <key name="grand_total" script="agg.grand_total"/>
