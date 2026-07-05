@@ -1,6 +1,6 @@
 <setup rngSeed="3">
-    <database id="db" database="nested_insert_cond_db" dbms="sqlite"/>
-    <execute type="python" uri="script/setup_insert_condition.py"/>
+    <database id="db" database="nested_insert_db" dbms="sqlite"/>
+    <execute type="python" uri="script/setup_insert.py"/>
     <!-- Same proof as insert_order.xml, but the nested <generate> sits inside <condition><if>:
          TaskUtil._export_nested_products_by_page must walk through the composite wrapper to find
          it, not just direct GenerateStatement sub_statements. -->

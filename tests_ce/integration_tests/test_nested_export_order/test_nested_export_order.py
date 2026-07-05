@@ -10,8 +10,6 @@ generate_worker.GenerateWorker.generate_and_export_data_by_chunk) - a wrong writ
 run instead of merely producing a wrong assertion, so a broken ordering fails LOUDLY.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
