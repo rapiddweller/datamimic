@@ -12,8 +12,9 @@
     <generate name="cleanup" source="mongodb"
               selector="find: 'ref_mongo_customers', filter: {}" target="mongodb.delete"/>
 
-    <!-- seed 7 customers with known keys -->
-    <generate name="ref_mongo_customers" target="mongodb" count="7">
+    <!-- seed 12 customers with known keys: crosses the single/double-digit boundary, so the cyclic
+         check below only passes under a numeric sort (a lexicographic sort puts 10/11/12 before 2). -->
+    <generate name="ref_mongo_customers" target="mongodb" count="12">
         <key name="customer_id" generator="IncrementGenerator"/>
         <key name="tier" values="'retail','business'"/>
     </generate>
@@ -27,7 +28,7 @@
     <generate name="check_random" distribution="ordered" type="orders_random" source="mem" target=""/>
 
     <!-- ordered + cyclic: wrap the stable key order -->
-    <generate name="orders_cyclic" count="10" target="mem">
+    <generate name="orders_cyclic" count="15" target="mem">
         <key name="order_id" generator="IncrementGenerator"/>
         <reference name="customer_id" source="mongodb" sourceType="ref_mongo_customers"
                    sourceKey="customer_id" cyclic="true"/>
@@ -35,10 +36,31 @@
     <generate name="check_cyclic" distribution="ordered" type="orders_cyclic" source="mem" target=""/>
 
     <!-- unique: distinct keys, pool covers the count -->
-    <generate name="orders_unique" count="7" target="mem">
+    <generate name="orders_unique" count="12" target="mem">
         <key name="order_id" generator="IncrementGenerator"/>
         <reference name="customer_id" source="mongodb" sourceType="ref_mongo_customers"
                    sourceKey="customer_id" unique="true"/>
     </generate>
     <generate name="check_unique" distribution="ordered" type="orders_unique" source="mem" target=""/>
+
+    <!-- nested reference: sourceKey descends into an embedded sub-document (a converted <part>).
+         address_id = customer_id * 10 + seq makes every nested id globally unique and deterministic
+         without depending on IncrementGenerator's reset behavior across nestedKey iterations. -->
+    <generate name="cleanup_nested" source="mongodb"
+              selector="find: 'ref_mongo_customers_nested', filter: {}" target="mongodb.delete"/>
+
+    <generate name="ref_mongo_customers_nested" target="mongodb" count="3">
+        <key name="customer_id" generator="IncrementGenerator"/>
+        <nestedKey name="addresses" type="list" count="2">
+            <key name="seq" generator="IncrementGenerator"/>
+            <key name="address_id" script="parent.customer_id * 10 + this.seq"/>
+        </nestedKey>
+    </generate>
+
+    <generate name="orders_nested" count="6" target="mem">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <reference name="address_id" source="mongodb" sourceType="ref_mongo_customers_nested"
+                   sourceKey="addresses.address_id" cyclic="true"/>
+    </generate>
+    <generate name="check_nested" distribution="ordered" type="orders_nested" source="mem" target=""/>
 </setup>

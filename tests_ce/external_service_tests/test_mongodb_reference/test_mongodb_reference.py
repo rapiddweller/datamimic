@@ -14,7 +14,7 @@ from pathlib import Path
 from datamimic_ce.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
-_POOL = set(range(1, 8))  # seeded customer_ids 1..7
+_POOL = set(range(1, 13))  # seeded customer_ids 1..12 (crosses the single/double-digit boundary)
 
 
 def _run() -> dict:
@@ -30,12 +30,13 @@ def test_mongodb_reference_semantics():
     assert len(random_rows) == 30
     # every FK is a REAL seeded key (not invented, not None)
     assert all(row["customer_id"] in _POOL for row in random_rows)
-    # with replacement over 30 draws from 7 keys, repeats are certain
+    # with replacement over 30 draws from 12 keys, repeats are certain
     assert len({row["customer_id"] for row in random_rows}) < 30
 
     cyclic_rows = result["check_cyclic"]
-    # stable key order 1..7, wrapped: 1..7 then 1..3
-    assert [row["customer_id"] for row in cyclic_rows] == [1, 2, 3, 4, 5, 6, 7, 1, 2, 3]
+    # stable key order 1..12, wrapped: 1..12 then 1..3. Only holds under a numeric sort - a
+    # lexicographic sort would put 10/11/12 right after 1, before 2.
+    assert [row["customer_id"] for row in cyclic_rows] == [*range(1, 13), 1, 2, 3]
 
     unique_rows = result["check_unique"]
     assert {row["customer_id"] for row in unique_rows} == _POOL  # all distinct, pool exhausted
@@ -44,5 +45,16 @@ def test_mongodb_reference_semantics():
 def test_mongodb_reference_is_deterministic():
     first = _run()
     second = _run()
-    for product in ("check_random", "check_cyclic", "check_unique"):
-        assert [r["customer_id"] for r in first[product]] == [r["customer_id"] for r in second[product]], product
+    for product in ("check_random", "check_cyclic", "check_unique", "check_nested"):
+        key = "customer_id" if product != "check_nested" else "address_id"
+        assert [r[key] for r in first[product]] == [r[key] for r in second[product]], product
+
+
+def test_mongodb_reference_nested_path():
+    """A dotted sourceKey ('addresses.address_id') resolves a <reference> to an entity nested
+    inside a collection document (a converted Benerator <part>), unwinding the embedded list."""
+    result = _run()
+    nested_rows = result["check_nested"]
+    # 3 customers x 2 addresses = 6 real nested address ids; cyclic wraps the stable order exactly
+    # once since count == pool size.
+    assert [row["address_id"] for row in nested_rows] == [11, 12, 21, 22, 31, 32]
