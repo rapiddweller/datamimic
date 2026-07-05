@@ -496,6 +496,31 @@ class TaskUtil:
             exporter_state_manager,
         )
 
+        # A nested <generate> defers its page export to here (generate_worker skips it for
+        # GenIterContext): the parent's rows are written above, THEN the children's, so a child row
+        # with an FK to its parent never reaches the DB first. Recurses depth-first in document order.
+        # Limitation: delete-operation children would need child-first order; inserts dominate.
+        for sub_stmt in stmt.sub_statements:
+            TaskUtil._export_nested_products_by_page(root_context, sub_stmt, xml_result, exporter_state_manager)
+
+    @staticmethod
+    def _export_nested_products_by_page(
+        root_context: SetupContext,
+        sub_stmt,
+        xml_result: dict,
+        exporter_state_manager: ExporterStateManager,
+    ) -> None:
+        """Export a nested generate's page products (parent already written); walk through composite
+        statements (condition/if) so a generate inside them is not missed."""
+        from datamimic_ce.statements.composite_statement import CompositeStatement
+
+        if isinstance(sub_stmt, GenerateStatement):
+            if xml_result.get(sub_stmt.full_name):
+                TaskUtil.export_product_by_page(root_context, sub_stmt, xml_result, exporter_state_manager)
+        elif isinstance(sub_stmt, CompositeStatement):  # condition/if/else wrappers
+            for child in sub_stmt.sub_statements:
+                TaskUtil._export_nested_products_by_page(root_context, child, xml_result, exporter_state_manager)
+
     @staticmethod
     def exporter_without_operation(
         json_product: tuple,
