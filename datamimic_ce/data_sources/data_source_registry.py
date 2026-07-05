@@ -21,9 +21,11 @@ from datamimic_ce.data_sources.data_source_pagination import DataSourcePaginatio
 from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
+from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.statements.statement_util import StatementUtil
+from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.utils.distribution_sampling import cumulated_index
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
@@ -58,6 +60,17 @@ class DataSourceRegistry:
             raise ValueError(f"Data source '{key}' is not supported is not handled by DataSourceRegistry")
 
     @staticmethod
+    def data_source_cache_key(stmt: Statement) -> tuple[str | None, str | None]:
+        """Cache key for a statement's data-source length. Statements may SHARE a name (e.g. three
+        <iterate name='db_product'> feeding one table from different sources), so the key must
+        include the source - keyed by name alone, the second statement inherits the first one's
+        length and silently truncates its rows. A tuple key on real statement types, no string
+        concatenation, no duck-typing."""
+        if isinstance(stmt, GenerateStatement | VariableStatement | NestedKeyStatement):
+            return (stmt.full_name, stmt.source)
+        return (stmt.full_name, None)
+
+    @staticmethod
     def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) -> None:
         """
         Calculate length of data source then save into context
@@ -70,7 +83,7 @@ class DataSourceRegistry:
             return
 
         root_ctx = ctx.root
-        source_id: str | None = stmt.full_name
+        source_id: tuple[str | None, str | None] = DataSourceRegistry.data_source_cache_key(stmt)
         ds_len: int = 0
 
         # Check if data source length is already set

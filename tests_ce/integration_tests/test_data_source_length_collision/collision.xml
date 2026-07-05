@@ -1,0 +1,9 @@
+<!-- Two SAME-NAMED statements read different-length sources (the shop-demo shape:
+     several <iterate name="db_product"> fill one table from JSON, CSV, generate).
+     The data-source length cache must key on (statement, source): keyed by name
+     alone, the second statement inherits the first one's length (3) and silently
+     drops its 4th row (the Evian regression). -->
+<setup rngSeed="1">
+    <iterate name="products" source="data/products_a.csv" distribution="ordered" target=""/>
+    <iterate name="products" source="data/products_b.csv" distribution="ordered" target=""/>
+</setup>
