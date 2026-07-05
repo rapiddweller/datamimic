@@ -1,0 +1,36 @@
+<!-- Decimal128 round-trip through MongoDB, plus the two shell-selector shapes that used to
+     break the JSON decomposer: a bareword find projection ({_id: 0, field: 1}) and an
+     aggregate pipeline with an unquoted operator key ({$group: ...}) and a trailing cursor: {}. -->
+<setup rngSeed="11">
+    <mongodb id="mongodb"/>
+
+    <generate name="cleanup" source="mongodb" selector="find: 'mongo_decimal_items', filter: {}" target="mongodb.delete"/>
+
+    <generate name="mongo_decimal_items" target="mongodb" count="5">
+        <key name="item_id" generator="IncrementGenerator"/>
+        <key name="price" type="decimal" generator="FloatGenerator(min=1, max=100, granularity=0.01)"/>
+        <key name="qty" generator="IntegerGenerator(min=1, max=10)"/>
+    </generate>
+
+    <!-- bareword projection keys: _id, item_id, price, qty are all unquoted -->
+    <generate name="check_items" count="5" target="">
+        <variable name="item" source="mongodb"
+                  selector="find: 'mongo_decimal_items', filter: {}, projection: {_id: 0, item_id: 1, price: 1, qty: 1}"/>
+        <key name="item_id" script="item.item_id"/>
+        <key name="price" script="item.price"/>
+        <key name="qty" script="item.qty"/>
+        <!-- proves the read-back Decimal supports arithmetic (would raise on a stray Decimal128) -->
+        <key name="total" script="item.price * item.qty"/>
+    </generate>
+
+    <!-- unquoted $group/$project operator keys + trailing cursor: {} -->
+    <generate name="check_total_agg" count="1" target="">
+        <variable name="agg" source="mongodb"
+                  selector="aggregate: 'mongo_decimal_items',
+                            pipeline: [{$group: {_id: 1, grand_total: {$sum: '$price'}}}, {$project: {_id: 0, grand_total: 1}}],
+                            cursor: {}"/>
+        <key name="grand_total" script="agg.grand_total"/>
+    </generate>
+
+    <generate name="cleanup_after" source="mongodb" selector="find: 'mongo_decimal_items', filter: {}" target="mongodb.delete"/>
+</setup>
