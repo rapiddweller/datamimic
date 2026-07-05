@@ -191,9 +191,18 @@ class MongoDBClient(DatabaseClient):
         else:
             parts = column_names[0].split(".")
             rows = [(value,) for doc in docs for value in self._values_at_path(doc, parts)]
-        # Stable order so the reference task's seeded sampling is reproducible run-to-run
-        # (BSON has no Python-comparable total order across mixed types, so key on the repr).
-        return sorted(rows, key=lambda row: [str(v) for v in row])
+        # Stable order so the reference task's seeded sampling is reproducible run-to-run.
+        # Numbers sort numerically (not lexicographically: "10" must stay after "2"), everything
+        # else falls back to its string form; None sorts last, like an SQL NULL.
+        return sorted(rows, key=lambda row: tuple(self._sort_key(v) for v in row))
+
+    @staticmethod
+    def _sort_key(value: Any) -> tuple:
+        if value is None:
+            return (2, "")
+        if isinstance(value, int | float | Decimal):
+            return (0, float(value))
+        return (1, str(value))
 
     def count(self, collection_name: str) -> int:
         """
@@ -279,7 +288,9 @@ class MongoDBClient(DatabaseClient):
             data = [self._to_bson(d) for d in data]
             inserted_ids = collection.insert_many(data).inserted_ids
             # Retrieve all the inserted data
-            return list(collection.find({"_id": {"$in": inserted_ids}})) if is_update else None
+            if not is_update:
+                return None
+            return self._from_bson(list(collection.find({"_id": {"$in": inserted_ids}})))
 
     def update(self, query: dict, data: list) -> int:
         """
@@ -352,7 +363,9 @@ class MongoDBClient(DatabaseClient):
                     update = {"$set": doc}
                     collection.update_one(filter, update, upsert=True)
                 # Return updated data
-                return list(collection.find({"_id": {"$in": [doc["_id"] for doc in updated_data]}}))
+                return self._from_bson(
+                    list(collection.find({"_id": {"$in": [doc["_id"] for doc in updated_data]}}))
+                )
 
     def _decompose_find_query(self, query: str) -> dict:
         """

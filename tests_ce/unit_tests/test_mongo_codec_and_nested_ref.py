@@ -95,3 +95,21 @@ class TestMongoShellToJson:
 
         r = json.loads(MongoDBClient._shell_to_json("find: 'c', filter: {'x': 1}, projection: {'y': 1}"))
         assert r["filter"] == {"x": 1} and r["projection"] == {"y": 1}
+
+
+class TestMongoReferenceSortKey:
+    """Reference row order must stay numeric, not lexicographic ("10" before "2")."""
+
+    def test_multi_digit_ints_sort_numerically(self):
+        rows = [(10,), (2,), (1,), (11,), (3,)]
+        assert sorted(rows, key=lambda row: tuple(MongoDBClient._sort_key(v) for v in row)) == [
+            (1,),
+            (2,),
+            (3,),
+            (10,),
+            (11,),
+        ]
+
+    def test_none_sorts_last(self):
+        rows = [(5,), (None,), (1,)]
+        assert sorted(rows, key=lambda row: tuple(MongoDBClient._sort_key(v) for v in row)) == [(1,), (5,), (None,)]
