@@ -9,6 +9,7 @@ from datamimic_ce.constants.convention_constants import NAME_SEPARATOR
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.enums.distribution_enums import SourceDistribution
+from datamimic_ce.enums.operation_enums import ExportOperation
 from datamimic_ce.logger import logger
 from datamimic_ce.model.generate_model import GenerateModel
 from datamimic_ce.statements.composite_statement import CompositeStatement
@@ -207,8 +208,10 @@ class GenerateStatement(CompositeStatement):
         """
         for consumer_str in self._targets:
             if "." in consumer_str:
-                consumer, operation = consumer_str.split(".")
-                if operation == "upsert" and isinstance(setup_context.get_client_by_id(consumer), MongoDBClient):
+                consumer, operation = consumer_str.split(".", 1)
+                if operation == ExportOperation.UPSERT.value and isinstance(
+                    setup_context.get_client_by_id(consumer), MongoDBClient
+                ):
                     return True
         return False
 

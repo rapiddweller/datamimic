@@ -1,0 +1,17 @@
+<setup rngSeed="3">
+    <database id="db" database="nested_delete_db" dbms="sqlite"/>
+    <execute type="python" uri="script/setup_delete.py"/>
+    <!-- Phase 1: seed 8 users / 16 orders (same deterministic id scheme as insert_order.xml) into
+         a db that ALSO carries a BEFORE DELETE trigger on users (see script/setup_delete.py) -
+         phase 2 (delete_order_phase2.xml) reuses this same sqlite file. -->
+    <generate name="users" count="8" pageSize="4" targetEntity="users" target="db">
+        <key name="id" generator="IncrementGenerator"/>
+        <generate name="orders" count="2" targetEntity="orders" target="db">
+            <key name="seq" generator="IncrementGenerator"/>
+            <key name="user_id" script="parent.id"/>
+            <key name="id" script="this.user_id * 10 + this.seq"/>
+        </generate>
+    </generate>
+    <generate name="check_users" source="db" selector="SELECT id FROM users ORDER BY id" distribution="ordered" target=""/>
+    <generate name="check_orders" source="db" selector="SELECT id, user_id FROM orders ORDER BY id" distribution="ordered" target=""/>
+</setup>

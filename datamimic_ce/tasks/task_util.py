@@ -43,6 +43,7 @@ from datamimic_ce.converter.upper_case_converter import UpperCaseConverter
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.enums.converter_enums import ConverterEnum
+from datamimic_ce.enums.operation_enums import ExportOperation
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.memstore import Memstore
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
@@ -478,14 +479,38 @@ class TaskUtil:
         exporters = root_context.task_exporters[exporters_cache_key]
         exporters["page_count"] += 1
 
+        # A nested <generate> defers its page export to here (generate_worker skips it for
+        # GenIterContext): this statement's own rows and its children's are ordered relative to
+        # each other so neither direction of the FK constraint is violated:
+        # - insert/update/upsert (any operation but delete): own rows first, then children -
+        #   a child row's FK to the not-yet-existing parent would otherwise fail.
+        # - delete: children FIRST, then own rows - a child row's FK to this (still existing)
+        #   parent would otherwise block the parent's deletion.
+        # Each recursion level re-checks its OWN targets, so a cascade of nested deletes becomes
+        # deepest-first automatically. The operation itself comes from the same parsed
+        # (exporter, operation) pairs the engine already built via ExporterUtil.parse_function_string
+        # (see create_exporter_list) - not a re-parse of the raw target string.
+        own_targets_delete = any(
+            operation is ExportOperation.DELETE for _, operation in exporters["with_operation"]
+        )
+
+        if own_targets_delete:
+            for sub_stmt in stmt.sub_statements:
+                TaskUtil._export_nested_products_by_page(root_context, sub_stmt, xml_result, exporter_state_manager)
+
         # Use cached exporters
-        # Run exporters with operations first
+        # Run exporters with operations first. Operations are ExportOperation members (parsed
+        # once at the target boundary); dispatch is explicit per member — no getattr on a string.
         for exporter, operation in exporters["with_operation"]:
-            if isinstance(exporter, MongoDBExporter) and operation == "upsert":
+            if isinstance(exporter, MongoDBExporter) and operation is ExportOperation.UPSERT:
                 json_product = exporter.upsert(product=json_product)
-            elif hasattr(exporter, operation):
-                getattr(exporter, operation)(json_product)
-            else:
+            elif operation is ExportOperation.UPDATE:
+                exporter.update(json_product)
+            elif operation is ExportOperation.UPSERT:
+                exporter.upsert(json_product)
+            elif operation is ExportOperation.DELETE:
+                exporter.delete(json_product)
+            else:  # unreachable while ExportOperation has exactly these members
                 raise ValueError(f"Exporter does not support operation: {exporter}.{operation}")
 
         TaskUtil.exporter_without_operation(
@@ -495,6 +520,29 @@ class TaskUtil:
             exporters["without_operation"],
             exporter_state_manager,
         )
+
+        if not own_targets_delete:
+            for sub_stmt in stmt.sub_statements:
+                TaskUtil._export_nested_products_by_page(root_context, sub_stmt, xml_result, exporter_state_manager)
+
+    @staticmethod
+    def _export_nested_products_by_page(
+        root_context: SetupContext,
+        sub_stmt,
+        xml_result: dict,
+        exporter_state_manager: ExporterStateManager,
+    ) -> None:
+        """Export a nested generate's page products (own rows already handled by the caller, either
+        before or after this call - see export_product_by_page); walk through composite statements
+        (condition/if) so a generate inside them is not missed."""
+        from datamimic_ce.statements.composite_statement import CompositeStatement
+
+        if isinstance(sub_stmt, GenerateStatement):
+            if xml_result.get(sub_stmt.full_name):
+                TaskUtil.export_product_by_page(root_context, sub_stmt, xml_result, exporter_state_manager)
+        elif isinstance(sub_stmt, CompositeStatement):  # condition/if/else wrappers
+            for child in sub_stmt.sub_statements:
+                TaskUtil._export_nested_products_by_page(root_context, child, xml_result, exporter_state_manager)
 
     @staticmethod
     def exporter_without_operation(

@@ -104,8 +104,12 @@ class GenerateWorker:
 
             with gen_timer("export", root_context.report_logging, stmt.full_name) as timer_result:
                 timer_result["records_count"] = page_end - page_start
-                # Export product by page
-                TaskUtil.export_product_by_page(context.root, stmt, result_dict, exporter_state_manager)
+                # Export product by page. A NESTED generate (GenIterContext) defers to the enclosing
+                # statement's page export, which writes the parent's rows first and then recurses into
+                # the children (TaskUtil.export_product_by_page) - exporting here would land child rows
+                # in the DB before their parent exists and break child->parent FK constraints.
+                if not isinstance(context, GenIterContext):
+                    TaskUtil.export_product_by_page(context.root, stmt, result_dict, exporter_state_manager)
 
             # Collect result for later capturing (keep_keys None -> keep everything)
             for key in result_dict.keys() if keep_keys is None else keep_keys & result_dict.keys():
