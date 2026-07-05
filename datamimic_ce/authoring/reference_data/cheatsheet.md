@@ -37,7 +37,8 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
   Same for `<id>` = a `<key>` that marks an identifier.
 - `target=` writes: file exporters (`CSV`, `JSON`, `XML`, `XLSX`, `TXT`, `DbUnit`),
   `ConsoleExporter`, a `<memstore>` id (in-memory pipeline handoff), a client id, or
-  `clientId.upsert` / `clientId.delete`. `exportUri=` prefixes the output directory.
+  `clientId.upsert` / `clientId.update` / `clientId.delete` (SQL + MongoDB).
+  `exportUri=` prefixes the output directory (a path, not a URL; no `..`).
 - `script=` attributes evaluate **Python**: reference a field or `<variable>` by
   its **bare name** — `script="person.given_name"` or `script="age * 2"`. Do NOT
   write `__person__` there; the `__name__` form is *only* for string interpolation
@@ -111,6 +112,7 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 | a unique id | `generator="IncrementGenerator"` |
 | a coded string (SKU, code) | `pattern="[A-Z]{3}-[0-9]{4}"` |
 | a list of sub-records | `<nestedKey type="list" minCount= maxCount=>` with child `<key>`s |
+| a binary blob / BLOB (image, key material) | `type="binary" minLength= maxLength="16"`; add `mimeType="image/png"` to prefix a real magic-number header (MIME-sniffable). Seeded → reproducible. DBs store bytes natively; file targets render the byte repr. |
 | a computed value | `script="age * 2"` (any python over fields/variables) |
 
 ## Sources & credentials
