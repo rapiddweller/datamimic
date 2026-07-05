@@ -51,15 +51,17 @@ class TestReferenceTask(unittest.TestCase):
         task_with_pagination = ReferenceTask(self.statement, self.pagination)
         self.assertEqual(task_with_pagination._pagination, self.pagination)
 
-    def test_execute_non_rdbms_client(self):
-        """Test execution with non-RDBMS client."""
-        self.context.root.clients.get.return_value = MagicMock()  # Not an RdbmsClient
+    def test_execute_unsupported_client(self):
+        """A source that is neither an RDBMS nor a MongoDB client is rejected with a
+        message naming the reference and both supported client kinds."""
+        self.context.root.clients.get.return_value = MagicMock()  # neither Rdbms nor MongoDB
         task = ReferenceTask(self.statement)
 
         with self.assertRaises(ValueError) as context:
             task.execute(self.context)
 
-        self.assertEqual(str(context.exception), "Reference task currently only supports RDBMS data sources")
+        message = str(context.exception)
+        self.assertIn("RDBMS and MongoDB are supported", message)
 
     def test_execute_empty_dataset(self):
         """Test execution with empty dataset."""

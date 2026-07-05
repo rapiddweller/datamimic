@@ -1,0 +1,44 @@
+<!-- <reference> against a MongoDB collection: pull real foreign keys from documents.
+     Semantics mirror the RDBMS reference exactly (same task, same seeded selection):
+     default picks with replacement, ordered+cyclic wraps the stable key order,
+     unique draws distinct keys. MongoDB's own $sample stage is not seedable, so the
+     client fetches the key fields in a stable server-side sort and the seeded
+     engine RNG does the sampling. -->
+<setup rngSeed="7">
+    <memstore id="mem"/>
+    <mongodb id="mongodb"/>
+
+    <!-- reset the source collection -->
+    <generate name="cleanup" source="mongodb"
+              selector="find: 'ref_mongo_customers', filter: {}" target="mongodb.delete"/>
+
+    <!-- seed 7 customers with known keys -->
+    <generate name="ref_mongo_customers" target="mongodb" count="7">
+        <key name="customer_id" generator="IncrementGenerator"/>
+        <key name="tier" values="'retail','business'"/>
+    </generate>
+
+    <!-- default: pick with replacement, seeded -->
+    <generate name="orders_random" count="30" target="mem">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <reference name="customer_id" source="mongodb" sourceType="ref_mongo_customers"
+                   sourceKey="customer_id"/>
+    </generate>
+    <generate name="check_random" distribution="ordered" type="orders_random" source="mem" target=""/>
+
+    <!-- ordered + cyclic: wrap the stable key order -->
+    <generate name="orders_cyclic" count="10" target="mem">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <reference name="customer_id" source="mongodb" sourceType="ref_mongo_customers"
+                   sourceKey="customer_id" cyclic="true"/>
+    </generate>
+    <generate name="check_cyclic" distribution="ordered" type="orders_cyclic" source="mem" target=""/>
+
+    <!-- unique: distinct keys, pool covers the count -->
+    <generate name="orders_unique" count="7" target="mem">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <reference name="customer_id" source="mongodb" sourceType="ref_mongo_customers"
+                   sourceKey="customer_id" unique="true"/>
+    </generate>
+    <generate name="check_unique" distribution="ordered" type="orders_unique" source="mem" target=""/>
+</setup>
