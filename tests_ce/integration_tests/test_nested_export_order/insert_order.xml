@@ -1,0 +1,18 @@
+<setup rngSeed="3">
+    <database id="db" database="nested_insert_db" dbms="sqlite"/>
+    <execute type="python" uri="script/setup_insert.py"/>
+    <!-- 8 users over 2 pages (pageSize=4) each with 2 nested orders: a BEFORE INSERT trigger on
+         orders (see script/setup_insert.py) aborts the whole run if a child row's parent user
+         isn't in the db yet - proving TaskUtil.export_product_by_page writes the parent's page
+         before recursing into the nested <generate>. -->
+    <generate name="users" count="8" pageSize="4" targetEntity="users" target="db">
+        <key name="id" generator="IncrementGenerator"/>
+        <generate name="orders" count="2" targetEntity="orders" target="db">
+            <key name="seq" generator="IncrementGenerator"/>
+            <key name="user_id" script="parent.id"/>
+            <key name="id" script="this.user_id * 10 + this.seq"/>
+        </generate>
+    </generate>
+    <generate name="check_users" source="db" selector="SELECT id FROM users ORDER BY id" distribution="ordered" target=""/>
+    <generate name="check_orders" source="db" selector="SELECT id, user_id FROM orders ORDER BY id" distribution="ordered" target=""/>
+</setup>
