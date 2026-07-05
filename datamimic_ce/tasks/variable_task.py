@@ -131,7 +131,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                             file_data = client.get_by_page_with_query(selector)
                         # Get data source with pagination
                         else:
-                            len_data = ctx.data_source_len.get(statement.full_name)
+                            len_data = ctx.data_source_len.get(DataSourceRegistry.data_source_cache_key(statement))
                             if len_data is None:
                                 len_data = client.count_query_length(selector)
                             file_data = client.get_cyclic_data(

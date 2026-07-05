@@ -90,7 +90,7 @@ class GenerateTask(CommonSubTask):
                         "Using selector without count only supports DatabaseClient (MongoDB, Relational Database)"
                     )
             else:
-                count = root_context.data_source_len[self.statement.full_name]
+                count = root_context.data_source_len[DataSourceRegistry.data_source_cache_key(self.statement)]
 
         # Check if there is a special consumer (e.g., mongodb_upsert)
         if count == 0 and self.statement.contain_mongodb_upsert(root_context):
@@ -117,7 +117,7 @@ class GenerateTask(CommonSubTask):
             or stmt.distribution == SourceDistribution.CUMULATED
         ):
             return
-        ds_len = context.root.data_source_len.get(stmt.full_name)
+        ds_len = context.root.data_source_len.get(DataSourceRegistry.data_source_cache_key(stmt))
         if ds_len is not None and count > ds_len:
             logger.warning(
                 f"<generate> '{stmt.name}': count={count} exceeds the {ds_len} rows available from "
