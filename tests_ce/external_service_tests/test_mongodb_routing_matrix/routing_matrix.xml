@@ -1,0 +1,99 @@
+<!-- MongoDB collection-routing matrix.
+
+     WRITE (consume/update/upsert/delete): targetEntity -> type -> name, same precedence as the
+     RDBMS exporter (MongoDBExporter._routing). A selector resolves its OWN collection and must
+     never be shadowed by a mismatched statement name - the exact regression this fixture guards.
+
+     READ (source side): selector -> sourceEntity -> type. Deliberately NO name fallback (see
+     test_mongodb_missing_selector_and_type for the "none given" error case).
+-->
+<setup rngSeed="3">
+    <mongodb id="mongodb"/>
+
+    <!-- ============================================================
+         INSERT: name -> type -> targetEntity
+         ============================================================ -->
+    <generate name="rt_ins_by_name" source="mongodb" selector="find: 'rt_ins_by_name', filter: {}" target="mongodb.delete"/>
+    <generate name="rt_ins_by_name" target="mongodb" count="2">
+        <key name="tag" constant="a"/>
+    </generate>
+
+    <generate name="rt_ins_by_type_col" source="mongodb" selector="find: 'rt_ins_by_type_col', filter: {}" target="mongodb.delete"/>
+    <generate name="rt_ins_by_type_stmt" type="rt_ins_by_type_col" target="mongodb" count="2">
+        <key name="tag" constant="b"/>
+    </generate>
+
+    <generate name="rt_ins_by_te_col" source="mongodb" selector="find: 'rt_ins_by_te_col', filter: {}" target="mongodb.delete"/>
+    <generate name="rt_ins_by_te_stmt" type="wrong_col" targetEntity="rt_ins_by_te_col" target="mongodb" count="2">
+        <key name="tag" constant="c"/>
+    </generate>
+
+    <generate name="check_ins_name" source="mongodb" selector="find: 'rt_ins_by_name', filter: {}" target=""/>
+    <generate name="check_ins_type" source="mongodb" selector="find: 'rt_ins_by_type_col', filter: {}" target=""/>
+    <generate name="check_ins_te" source="mongodb" selector="find: 'rt_ins_by_te_col', filter: {}" target=""/>
+
+    <!-- ============================================================
+         UPDATE: name-only fallback (a non-mongo-sourced update, mirroring the real
+         "<iterate source='db' sourceEntity='db_order' target='db.update'>" gap)
+         ============================================================ -->
+    <generate name="rt_upd_name" source="mongodb" selector="find: 'rt_upd_name', filter: {}" target="mongodb.delete"/>
+    <generate name="rt_upd_name" target="mongodb" count="2">
+        <key name="_id" generator="IncrementGenerator"/>
+        <key name="tag" constant="seed"/>
+    </generate>
+    <!-- sourceEntity drives the READ; it is never added to write metadata (see
+         task_util.py:export_product_by_page), so the WRITE side has no type/targetEntity/selector
+         at all here and must fall back to the statement's own name -->
+    <generate name="rt_upd_name" sourceEntity="rt_upd_name" source="mongodb" target="mongodb.update">
+        <key name="tag" constant="updated"/>
+    </generate>
+    <generate name="check_upd_name" source="mongodb" selector="find: 'rt_upd_name', filter: {}" target=""/>
+
+    <!-- UPDATE: selector routes correctly even though the statement name does not match it -->
+    <generate name="rt_upd_sel_col" source="mongodb" selector="find: 'rt_upd_sel_col', filter: {}" target="mongodb.delete"/>
+    <generate name="rt_upd_sel_col" target="mongodb" count="2">
+        <key name="_id" generator="IncrementGenerator"/>
+        <key name="tag" constant="seed"/>
+    </generate>
+    <generate name="upd_step_named_differently" source="mongodb" selector="find: 'rt_upd_sel_col', filter: {}" target="mongodb.update">
+        <key name="tag" constant="updated"/>
+    </generate>
+    <generate name="check_upd_selector" source="mongodb" selector="find: 'rt_upd_sel_col', filter: {}" target=""/>
+
+    <!-- ============================================================
+         UPSERT: selector routes correctly (including the insert-new-doc path) even though the
+         statement name does not match it
+         ============================================================ -->
+    <generate name="rt_ups_sel_col" source="mongodb" selector="find: 'rt_ups_sel_col', filter: {}" target="mongodb.delete"/>
+    <generate name="ups_step_named_differently" source="mongodb"
+              selector="find: 'rt_ups_sel_col', filter: {'tag': 'nomatch'}"
+              target="mongodb.upsert">
+        <key name="tag" constant="upserted"/>
+    </generate>
+    <generate name="check_ups_selector" source="mongodb" selector="find: 'rt_ups_sel_col', filter: {}" target=""/>
+
+    <!-- ============================================================
+         DELETE: selector routes correctly even though the statement name does not match it
+         ============================================================ -->
+    <generate name="rt_del_sel_col" source="mongodb" selector="find: 'rt_del_sel_col', filter: {}" target="mongodb.delete"/>
+    <generate name="rt_del_sel_col" target="mongodb" count="3">
+        <key name="tag" constant="seed"/>
+    </generate>
+    <generate name="del_step_named_differently" source="mongodb" selector="find: 'rt_del_sel_col', filter: {}" target="mongodb.delete"/>
+    <generate name="check_del_selector" source="mongodb" selector="find: 'rt_del_sel_col', filter: {}" target=""/>
+
+    <!-- ============================================================
+         READ (source side): selector -> sourceEntity -> type; no name fallback
+         ============================================================ -->
+    <generate name="rt_read_col" source="mongodb" selector="find: 'rt_read_col', filter: {}" target="mongodb.delete"/>
+    <generate name="rt_read_col" target="mongodb" count="3">
+        <key name="tag" constant="x"/>
+    </generate>
+
+    <generate name="read_by_source_entity" sourceEntity="rt_read_col" type="wrong_col" source="mongodb" target=""/>
+    <generate name="read_by_type" type="rt_read_col" source="mongodb" target=""/>
+    <!-- type+selector together is a model-validation error ("Only one type or selector can be
+         defined in source"), so this only varies sourceEntity - still proves selector wins -->
+    <generate name="read_by_selector" sourceEntity="wrong_col_1"
+              source="mongodb" selector="find: 'rt_read_col', filter: {}" target=""/>
+</setup>
