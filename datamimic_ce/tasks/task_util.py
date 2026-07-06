@@ -344,6 +344,20 @@ class TaskUtil:
             else:
                 # Evaluate script in source
                 source_data = context.evaluate_python_expression(stmt.script)
+        elif source_str.endswith(".wgt.csv"):
+            # A ".wgt.csv" file is headerless (value|weight, no column names) - the plain CSV
+            # reader below would treat its first data row as a header, producing nonsense column
+            # names and one fewer row than the file has. Unlike ".wgt.ent.csv" (a normal headered
+            # CSV that merely has an extra "weight" column - reading it plainly is coherent, just
+            # unweighted), there is no coherent plain-CSV reading of this format at all. <key
+            # source="...wgt.csv"> already applies its weights correctly; <generate>-level
+            # weighted-entity sourcing is real work, not yet done - fail loudly instead of
+            # silently generating garbage.
+            raise ValueError(
+                f"<generate> '{stmt.full_name}': source '{source_str}' is a headerless weighted "
+                f"value|weight file - not supported at <generate>-level (only <key source=...> "
+                f"applies '.wgt.csv' weights today)"
+            )
         # Load data from CSV
         elif source_str.endswith(".csv"):
             source_data = DataSourceRegistry.load_csv_file(
