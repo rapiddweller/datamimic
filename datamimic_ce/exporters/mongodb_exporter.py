@@ -6,7 +6,7 @@
 import copy
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
-from datamimic_ce.constants.attribute_constants import META_TARGET_ENTITY
+from datamimic_ce.constants.attribute_constants import META_SELECTOR, META_TARGET_ENTITY
 from datamimic_ce.exporters.exporter import Exporter
 
 
@@ -19,15 +19,17 @@ class MongoDBExporter(Exporter):
         """The write data and a collection-routing dict for it. The collection follows the same
         precedence as the RDBMS exporter — targetEntity -> type -> name — so a CRUD write that only
         carries the statement name (e.g. a plain ``target="db.update"`` iterate) still resolves its
-        collection instead of demanding an explicit type/selector. Any existing metadata (a selector
-        filter) is preserved; the resolved collection is added as targetEntity when none was given."""
+        collection instead of demanding an explicit type/selector. A selector already resolves its
+        OWN collection (MongoDBClient.update/upsert/delete parse it), so the name-based fallback is
+        only injected when there is no selector - never override the filter's own target."""
         from datamimic_ce.statements.statement_util import StatementUtil
 
         temp_product = copy.deepcopy(product)
         name, data = temp_product[0], temp_product[1]
         metadata = temp_product[2] if len(temp_product) > 2 and isinstance(temp_product[2], dict) else {}
         routing = dict(metadata)
-        routing.setdefault(META_TARGET_ENTITY, StatementUtil.resolve_target_entity_from_metadata(name, metadata))
+        if META_TARGET_ENTITY not in routing and META_SELECTOR not in routing:
+            routing[META_TARGET_ENTITY] = StatementUtil.resolve_target_entity_from_metadata(name, metadata)
         return data, routing
 
     def consume(self, product) -> None:

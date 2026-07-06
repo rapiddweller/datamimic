@@ -25,8 +25,12 @@ class TestMongoCrudRouting:
         _, routing = MongoDBExporter._routing(("n", [], {META_TARGET_ENTITY: "explicit"}))
         assert routing[META_TARGET_ENTITY] == "explicit"
 
-    def test_selector_filter_preserved_alongside_resolved_collection(self):
-        _, routing = MongoDBExporter._routing(("db_order", [], {META_SELECTOR: "find: 'db_order', filter: {}"}))
-        # the selector survives (a filter) AND the collection is resolved from the name
+    def test_selector_collection_is_not_overridden_by_statement_name(self):
+        # statement name ("cleanup") deliberately differs from the selector's own collection
+        # ("db_order") - the common real-world idiom (a cleanup/delete step is named for what it
+        # does, not for the collection it targets). A name-based fallback must never shadow this:
+        # MongoDBClient.update/upsert/delete each resolve the collection from the selector
+        # themselves, and only fall through to targetEntity when no selector is present.
+        _, routing = MongoDBExporter._routing(("cleanup", [], {META_SELECTOR: "find: 'db_order', filter: {}"}))
         assert routing[META_SELECTOR] == "find: 'db_order', filter: {}"
-        assert routing[META_TARGET_ENTITY] == "db_order"
+        assert META_TARGET_ENTITY not in routing
