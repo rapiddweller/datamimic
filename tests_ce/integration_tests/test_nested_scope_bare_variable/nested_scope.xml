@@ -1,0 +1,14 @@
+<setup defaultDataset="US" defaultLocale="en_US">
+    <generate name="outer" count="1" target="JSON">
+        <variable name="tag" entity="Person"/>
+        <nestedKey name="inner" type="list" count="2">
+            <variable name="person" entity="Person"/>
+            <!-- BARE sibling variable in a nested scope must resolve (like a top-level generate) -->
+            <key name="salutation" script="person.salutation"/>
+            <!-- BARE access to an ANCESTOR scope variable must also resolve -->
+            <key name="outer_tag_family" script="tag.familyName"/>
+            <!-- QUALIFIED nested path via the wrapped scope must still resolve -->
+            <key name="qualified" script="inner.person.givenName"/>
+        </nestedKey>
+    </generate>
+</setup>

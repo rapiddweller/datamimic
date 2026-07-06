@@ -296,11 +296,14 @@ class Context(ABC):
             }
         # GenIterContext evaluate script
         else:
+            # 1) Nested wrapping tree (unchanged): each scope holds its child scope under the child's
+            #    name, so a qualified path like `orders.line_items.product.field` resolves; the
+            #    outermost scope's own vars land at the top level and the setup namespace/globals
+            #    merge in. `wrapped_scopes` collects the INNER scopes that got wrapped under a name.
+            wrapped_scopes: list = []
             while isinstance(current_context, GenIterContext):
                 parent_context = current_context.parent
-
                 if isinstance(parent_context, SetupContext):
-                    # Add current variable & product of outermost context
                     data_dict = {
                         **parent_context.namespace,
                         **parent_context.global_variables,
@@ -309,7 +312,6 @@ class Context(ABC):
                         **data_dict,
                     }
                     break
-                # Update current data_dict with current context variable & product
                 data_dict = {
                     current_context.current_name: {
                         **current_context.current_variables,
@@ -317,7 +319,15 @@ class Context(ABC):
                         **data_dict,
                     }
                 }
+                wrapped_scopes.append(current_context)
                 current_context = parent_context
+            # 2) Every wrapped inner scope's variables/products ALSO resolve by BARE name (the loop
+            #    only flattened the outermost). Applied outermost -> innermost so an inner scope
+            #    SHADOWS an outer one on a clash: a record-local name (a sibling <variable> feeding a
+            #    <key> script) resolves without a scope prefix at ANY nesting depth, exactly as it
+            #    does in a top-level <generate>. Qualified paths from step 1 stay intact.
+            for scope in reversed(wrapped_scopes):
+                data_dict = {**data_dict, **scope.current_variables, **scope.current_product}
 
         return data_dict
 
