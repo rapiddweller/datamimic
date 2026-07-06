@@ -85,8 +85,8 @@ SAFE_GLOBALS = {
 # The number-one authoring trap: bare record-local names only resolve at the top level.
 # Appended to undefined-name errors so the failure itself teaches the scope rule.
 _SCOPE_GUIDANCE = (
-    "record-local names need this. inside nested <generate>/<nestedKey>; "
-    "use parent./root. for enclosing records"
+    "a same-scope sibling resolves bare (or via this.) - check the name; "
+    "an ANCESTOR scope's name needs parent./root., it does not resolve bare"
 )
 
 # List of special functions that define in SAFE_GLOBALS

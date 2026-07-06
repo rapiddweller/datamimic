@@ -37,10 +37,14 @@ before data is written.
 
 ## The semantic rules that cause most authoring failures
 
-1. Scope: inside a nested `<generate>` or `<nestedKey>`, record-local names need
-   `this.` (`this.account_no`, `this.person.name`). Bare names resolve only at
-   the top level. `parent.field` reads the enclosing record, `root.field` the
-   outermost. See `examples/showcase/01-banking-core/`.
+1. Scope: inside a nested `<generate>` or `<nestedKey>`, a sibling in the SAME
+   scope resolves bare, same as `this.` (`this.account_no` and bare
+   `account_no` are equivalent there). An ANCESTOR scope's name still needs
+   `this.`/`parent.`/`root.` — it does not resolve bare from a descendant,
+   and if a descendant redeclares the same name, the ancestor's own bare
+   reference still wins (no silent shadowing). `parent.field` reads the
+   enclosing record, `root.field` the outermost. See
+   `examples/showcase/01-banking-core/`.
 2. `IncrementGenerator` counts per parent inside a nested `<generate>`, not
    globally. Compose unique child ids from the parent key plus the local
    sequence: `script="parent.customer_id * 10 + this.account_no"`.
