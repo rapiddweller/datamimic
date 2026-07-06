@@ -22,11 +22,15 @@ class Address(BaseEntity):
     def __init__(self, address_generator: AddressGenerator):
         super().__init__()
         self._address_generator = address_generator
+        # Resolved ONCE per address (region-group datasets draw a fresh country per address;
+        # a single concrete dataset always resolves to the same one) - every property below
+        # reads through this so city/phone/street/country all agree on the same country.
+        self._row = address_generator.resolve_row()
 
     @property
     @property_cache
     def street(self) -> str:
-        return self._address_generator.street_name_generator.generate()
+        return self._row.street_name_generator.generate()
 
     @property
     @property_cache
@@ -41,7 +45,7 @@ class Address(BaseEntity):
     @property
     @property_cache
     def city_data(self) -> dict[str, Any]:
-        return self._address_generator.city_generator.get_random_city()
+        return self._row.city_generator.get_random_city()
 
     @property
     @property_cache
@@ -71,7 +75,7 @@ class Address(BaseEntity):
     @property
     @property_cache
     def country_data(self) -> tuple[str, ...]:
-        return self._address_generator.country_generator.get_country_by_iso_code(self.country_code)
+        return self._row.country_generator.get_country_by_iso_code(self.country_code)
 
     @property
     @property_cache
@@ -81,32 +85,32 @@ class Address(BaseEntity):
     @property
     @property_cache
     def country_code(self) -> str:
-        return self._address_generator.dataset
+        return self._row.dataset
 
     @property
     @property_cache
     def phone(self) -> str:
-        return self._address_generator.phone_number_generator.generate()
+        return self._row.phone_number_generator.generate()
 
     @property
     @property_cache
     def mobile_phone(self) -> str:
-        return self._address_generator.phone_number_generator.generate()
+        return self._row.phone_number_generator.generate()
 
     @property
     @property_cache
     def office_phone(self) -> str:
-        return self._address_generator.phone_number_generator.generate()
+        return self._row.phone_number_generator.generate()
 
     @property
     @property_cache
     def private_phone(self) -> str:
-        return self._address_generator.phone_number_generator.generate()
+        return self._row.phone_number_generator.generate()
 
     @property
     @property_cache
     def fax(self) -> str:
-        return self._address_generator.phone_number_generator.generate()
+        return self._row.phone_number_generator.generate()
 
     @property
     @property_cache
