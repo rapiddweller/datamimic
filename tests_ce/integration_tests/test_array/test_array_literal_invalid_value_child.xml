@@ -1,0 +1,7 @@
+<setup>
+    <generate name="data" target="ConsoleExporter" count="1">
+        <array name="status_codes" type="literal">
+            <value/>
+        </array>
+    </generate>
+</setup>

@@ -14,6 +14,7 @@ EL_ID = "id"  # human-readable alias of <key> (marks an identifier field), same 
 EL_VARIABLE = "variable"
 EL_NESTED_KEY = "nestedKey"
 EL_ARRAY = "array"
+EL_VALUE = "value"  # <array type="literal"> child: <value constant="..."/>
 EL_INCLUDE = "include"
 EL_MEMSTORE = "memstore"
 EL_EXECUTE = "execute"

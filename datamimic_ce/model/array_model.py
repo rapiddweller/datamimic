@@ -9,8 +9,22 @@ from typing import Any
 from pydantic import BaseModel, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import ATTR_COUNT, ATTR_NAME, ATTR_SCRIPT, ATTR_TYPE
-from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
+from datamimic_ce.constants.data_type_constants import (
+    DATA_TYPE_BOOL,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_INT,
+    DATA_TYPE_LITERAL,
+    DATA_TYPE_STRING,
+)
 from datamimic_ce.model.model_util import ModelUtil
+
+ALLOWED_ARRAY_TYPES = {
+    DATA_TYPE_STRING,
+    DATA_TYPE_INT,
+    DATA_TYPE_BOOL,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_LITERAL,
+}
 
 
 class ArrayModel(BaseModel):
@@ -42,6 +56,12 @@ class ArrayModel(BaseModel):
         :return:
         """
         key_set = set(values.keys())
+        if values.get(ATTR_TYPE) == DATA_TYPE_LITERAL:
+            if ATTR_SCRIPT in key_set:
+                raise ValueError(f"'{ATTR_SCRIPT}' must not be defined with {ATTR_TYPE} '{DATA_TYPE_LITERAL}'")
+            if ATTR_COUNT in key_set:
+                raise ValueError(f"'{ATTR_COUNT}' must not be defined with {ATTR_TYPE} '{DATA_TYPE_LITERAL}'")
+            return values
         if ATTR_SCRIPT in key_set:
             if ATTR_COUNT in key_set or ATTR_TYPE in key_set:
                 raise ValueError(f"'{ATTR_COUNT}' and '{ATTR_TYPE}' must not be defined with {ATTR_SCRIPT}")
@@ -68,12 +88,7 @@ class ArrayModel(BaseModel):
         """
         return ModelUtil.check_valid_data_value(
             value=value,
-            valid_values={
-                DATA_TYPE_STRING,
-                DATA_TYPE_INT,
-                DATA_TYPE_BOOL,
-                DATA_TYPE_FLOAT,
-            },
+            valid_values=ALLOWED_ARRAY_TYPES,
         )
 
     @field_validator("name")

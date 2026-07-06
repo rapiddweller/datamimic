@@ -12,3 +12,4 @@ DATA_TYPE_BOOL = "bool"
 DATA_TYPE_BINARY = "binary"  # random bytes; base64 at file-export boundaries, raw bytes to DBs
 DATA_TYPE_LIST = "list"
 DATA_TYPE_DICT = "dict"
+DATA_TYPE_LITERAL = "literal"  # <array type="literal">: preserve <value constant=...> children exactly

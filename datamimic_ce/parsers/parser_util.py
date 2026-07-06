@@ -41,6 +41,7 @@ from datamimic_ce.constants.element_constants import (
     EL_SETUP,
     EL_STATE_MACHINE,
     EL_TRANSITION,
+    EL_VALUE,
     EL_VARIABLE,
     EL_WHILE,
 )
@@ -154,6 +155,9 @@ class ParserUtil:
             EL_ITEM: {EL_KEY, EL_ID, EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ELEMENT},
             EL_KEY: {EL_ELEMENT},
             EL_LIST: {EL_ITEM},
+            # <value> only valid inside type="literal" arrays; ArrayParser enforces that, not this
+            # generic tag-set (which only says "the tag is structurally allowed here").
+            EL_ARRAY: {EL_VALUE},
             EL_IF: None,
             EL_ELSE_IF: None,
             EL_ELSE: None,
