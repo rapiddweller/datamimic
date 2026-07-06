@@ -25,4 +25,18 @@
             </nestedKey>
         </nestedKey>
     </generate>
+
+    <!-- Real fixture this exact collision broke: tests_ce/functional_tests/test_sqlite (id +
+         simple_user.id) declares its OWN "id" both in the outer scope and in a directly nested one,
+         combining the ancestor's bare id with the nested scope's own id via its qualified name. The
+         nested scope's own bare variable must fill gaps, never override a name the ancestor already
+         provides bare - otherwise every row silently collapses onto the same id. -->
+    <generate name="self_vs_ancestor" count="1" target="JSON">
+        <variable name="id" constant="outer_id"/>
+        <nestedKey name="child" type="list" count="1">
+            <variable name="id" constant="child_id"/>
+            <key name="bare_id" script="id"/>
+            <key name="qualified_id" script="child.id"/>
+        </nestedKey>
+    </generate>
 </setup>

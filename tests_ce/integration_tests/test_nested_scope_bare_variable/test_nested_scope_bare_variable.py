@@ -40,3 +40,14 @@ def test_bare_variable_does_not_reach_up_past_self():
     engine = DataMimicTest(_dir, "nested_scope_reach_up.xml", capture_test_result=True)
     with pytest.raises(ValueError, match="not defined in this scope"):
         engine.test_with_timer()
+
+
+def test_own_bare_variable_does_not_override_ancestor_of_same_name():
+    """A scope's own bare variable fills gaps, it never overrides a name the ancestor already
+    provides bare (regression: tests_ce/functional_tests/test_sqlite's `id + simple_user.id`
+    silently collapsed onto the SAME id for every row once the nested scope's own 'id' started
+    winning bare resolution)."""
+    result = DataMimicTestFactory(_dir / "nested_scope.xml", "self_vs_ancestor").create()
+    child = result["child"][0]
+    assert child["bare_id"] == "outer_id"
+    assert child["qualified_id"] == "child_id"

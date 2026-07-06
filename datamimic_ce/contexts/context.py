@@ -323,12 +323,13 @@ class Context(ABC):
                 current_context = parent_context
             # The scope evaluating THIS script also resolves its own variables/products by bare
             # name, not only nested under its own scope name (mirrors what `this.` already exposes -
-            # a sibling <variable> feeding a <key> script in the same nested scope). Only self, not
-            # every ancestor: an ancestor's bare name still needs this./parent./root., so a name
-            # collision between scopes at different depths can't silently flip which value a bare
-            # reference resolves to.
+            # a sibling <variable> feeding a <key> script in the same nested scope). Self fills in
+            # names an ancestor doesn't already provide bare; an ancestor's own bare name always
+            # wins on a clash (`**data_dict` last), so a script combining an ancestor's and its own
+            # same-named variable (e.g. `id + simple_user.id`, a real fixture in this repo) keeps
+            # resolving bare `id` to the ancestor's, exactly as before this change.
             if not self_is_outermost and isinstance(self_context, GenIterContext):
-                data_dict = {**data_dict, **self_context.current_variables, **self_context.current_product}
+                data_dict = {**self_context.current_variables, **self_context.current_product, **data_dict}
 
         return data_dict
 
