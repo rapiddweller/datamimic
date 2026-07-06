@@ -93,6 +93,19 @@ from datamimic_ce.utils.object_util import ObjectUtil
 
 class TaskUtil:
     @staticmethod
+    def _wgt_csv_has_header(file_path, separator: str) -> bool:
+        """Whether a '.wgt.csv' file's first row is a header: its weight column isn't numeric
+        (same sniff FileUtil.read_weight_csv itself uses to skip an optional header row)."""
+        raw_data = FileUtil._read_raw_csv(file_path, separator, "utf-8")
+        if not raw_data or len(raw_data[0]) <= 1:
+            return False
+        try:
+            float(raw_data[0][1])
+            return False
+        except (TypeError, ValueError):
+            return True
+
+    @staticmethod
     def get_task_by_statement(
         ctx: SetupContext,
         stmt: Statement,
@@ -344,19 +357,23 @@ class TaskUtil:
             else:
                 # Evaluate script in source
                 source_data = context.evaluate_python_expression(stmt.script)
-        elif source_str.endswith(".wgt.csv"):
-            # A ".wgt.csv" file is headerless (value|weight, no column names) - the plain CSV
-            # reader below would treat its first data row as a header, producing nonsense column
-            # names and one fewer row than the file has. Unlike ".wgt.ent.csv" (a normal headered
-            # CSV that merely has an extra "weight" column - reading it plainly is coherent, just
-            # unweighted), there is no coherent plain-CSV reading of this format at all. <key
-            # source="...wgt.csv"> already applies its weights correctly; <generate>-level
-            # weighted-entity sourcing is real work, not yet done - fail loudly instead of
-            # silently generating garbage.
+        elif source_str.endswith(".wgt.csv") and not TaskUtil._wgt_csv_has_header(
+            root_context.descriptor_dir / source_str, separator
+        ):
+            # A HEADERLESS ".wgt.csv" file (value|weight, no column names) has no coherent plain-CSV
+            # reading at all - the reader below would treat its first data row as a header,
+            # producing nonsense column names and one fewer row than the file has. A HEADERED
+            # ".wgt.csv" falls through to the plain ".csv" branch below instead: like ".wgt.ent.csv"
+            # (a normal headered CSV that merely has an extra "weight" column), reading it plainly is
+            # coherent, just unweighted. <key source="...wgt.csv"> already applies weights correctly
+            # either way (FileUtil.read_weight_csv auto-detects the header); <generate>-level
+            # weighted-entity sourcing is real work, not yet done - fail loudly instead of silently
+            # generating garbage, but only where there IS no coherent fallback.
             raise ValueError(
                 f"<generate> '{stmt.full_name}': source '{source_str}' is a headerless weighted "
                 f"value|weight file - not supported at <generate>-level (only <key source=...> "
-                f"applies '.wgt.csv' weights today)"
+                f"applies '.wgt.csv' weights today; add a header row to read it as a plain, "
+                f"unweighted CSV instead)"
             )
         # Load data from CSV
         elif source_str.endswith(".csv"):
