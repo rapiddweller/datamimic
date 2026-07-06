@@ -7,7 +7,13 @@
 
 from decimal import Decimal
 
-from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
+from datamimic_ce.constants.data_type_constants import (
+    DATA_TYPE_BOOL,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_INT,
+    DATA_TYPE_LITERAL,
+    DATA_TYPE_STRING,
+)
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.statements.array_statement import ArrayStatement
 from datamimic_ce.tasks.task import GenSubTask
@@ -33,10 +39,16 @@ class ArrayTask(GenSubTask):
         :param parent_context:
         :return: None
         """
-        if self._statement.script:
+        if self._statement.type == DATA_TYPE_LITERAL:
+            self._execute_literal_generate(parent_context)
+        elif self._statement.script:
             self._execute_script_generate(parent_context)
         else:
             self._execute_type_generate(parent_context)
+
+    def _execute_literal_generate(self, parent_context: GenIterContext) -> None:
+        """Preserve literal array values exactly - no random generation, no script evaluation."""
+        parent_context.add_current_product_field(self._statement.name, list(self._statement.literal_values))
 
     def _execute_type_generate(self, parent_context: GenIterContext) -> None:
         """

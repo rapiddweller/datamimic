@@ -30,3 +30,17 @@ class TestArray:
     def test_array_script(self, test_dir: Path) -> None:
         test_engine = DataMimicTest(test_dir=test_dir, filename="test_array_script.xml")
         test_engine.test_with_timer()
+
+    def test_array_literal(self, test_dir: Path) -> None:
+        """type='literal' with <value constant=...> children preserves values exactly - no
+        random generation, no script evaluation (EE parity, docs/specs/model/elements/08-array.md)."""
+        test_engine = DataMimicTest(test_dir=test_dir, filename="test_array_literal.xml", capture_test_result=True)
+        test_engine.test_with_timer()
+        result = test_engine.capture_result()
+        assert result["data"][0]["status_codes"] == ["001", "002", "099"]
+
+    def test_array_literal_conflicting_attrs(self, test_dir: Path) -> None:
+        """'count'/'script' must not be defined together with type='literal'."""
+        test_engine = DataMimicTest(test_dir=test_dir, filename="test_array_literal_conflicting_attrs.xml")
+        with pytest.raises(ValueError):
+            test_engine.test_with_timer()

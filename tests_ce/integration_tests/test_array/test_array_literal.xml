@@ -1,0 +1,9 @@
+<setup multiprocessing="True" numProcess="2">
+    <generate name="data" target="ConsoleExporter" count="1">
+        <array name="status_codes" type="literal">
+            <value constant="001"/>
+            <value constant="002"/>
+            <value constant="099"/>
+        </array>
+    </generate>
+</setup>

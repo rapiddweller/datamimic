@@ -48,6 +48,7 @@ from datamimic_ce.constants.element_constants import (
     EL_SETUP,
     EL_STATE_MACHINE,
     EL_TRANSITION,
+    EL_VALUE,
     EL_VARIABLE,
     EL_WHILE,
 )
@@ -72,6 +73,7 @@ from datamimic_ce.model.reference_field_model import ReferenceFieldModel
 from datamimic_ce.model.reference_model import ReferenceModel
 from datamimic_ce.model.setup_model import SetupModel
 from datamimic_ce.model.state_machine_model import StateMachineModel
+from datamimic_ce.model.value_model import ValueModel
 from datamimic_ce.model.variable_model import VariableModel
 from datamimic_ce.model.while_model import WhileModel
 from datamimic_ce.parsers.parser_util import ParserUtil
@@ -88,6 +90,7 @@ ELEMENT_MODEL_MAP: dict[str, type[BaseModel] | None] = {
     EL_VARIABLE: VariableModel,
     EL_NESTED_KEY: NestedKeyModel,
     EL_ARRAY: ArrayModel,
+    EL_VALUE: ValueModel,  # <array type="literal"> child only
     EL_LIST: ListModel,
     EL_ITEM: ItemModel,
     EL_REFERENCE: ReferenceModel,

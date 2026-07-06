@@ -23,7 +23,7 @@ from pydantic import BaseModel
 
 from datamimic_ce.authoring.rules import ALL_RULES, best_practice, cross_statement, schema_rules, semantic_rules
 from datamimic_ce.authoring.schema import ELEMENT_MODEL_MAP, build_schema_index
-from datamimic_ce.constants.element_constants import EL_COMMENT, EL_FIELD, EL_SETUP, EL_TRANSITION
+from datamimic_ce.constants.element_constants import EL_COMMENT, EL_FIELD, EL_SETUP, EL_TRANSITION, EL_VALUE
 from datamimic_ce.model.model_util import ModelUtil
 from datamimic_ce.parsers.parser_util import ParserUtil
 
@@ -88,13 +88,14 @@ def test_gate1_allowlist_matches_model_fields(tag: str, model: type[BaseModel], 
 
 def test_gate2_dispatch_accepts_exactly_the_mapped_tags() -> None:
     # <setup> is the root (parsed by SetupParser directly); <transition> is parsed
-    # inside <state-machine>, <field> inside <reference> — none is dispatched standalone.
-    non_dispatchable = (EL_SETUP, EL_COMMENT, EL_TRANSITION, EL_FIELD)
+    # inside <state-machine>, <field> inside <reference>, <value> inside a literal
+    # <array> — none is dispatched standalone.
+    non_dispatchable = (EL_SETUP, EL_COMMENT, EL_TRANSITION, EL_FIELD, EL_VALUE)
     dispatchable = {tag for tag in ELEMENT_MODEL_MAP if tag not in non_dispatchable}
     for tag in sorted(dispatchable):
         parser = ParserUtil._get_parser_by_element(ET.Element(tag), properties=None)
         assert parser is not None, f"<{tag}> is in ELEMENT_MODEL_MAP but the engine cannot dispatch it"
-    for tag in (EL_TRANSITION, EL_FIELD, "definitely_not_an_element"):
+    for tag in (EL_TRANSITION, EL_FIELD, EL_VALUE, "definitely_not_an_element"):
         with pytest.raises(ValueError):
             ParserUtil._get_parser_by_element(ET.Element(tag), properties=None)
 
