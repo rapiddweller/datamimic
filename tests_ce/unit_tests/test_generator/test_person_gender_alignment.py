@@ -10,6 +10,7 @@ from random import Random
 import pytest
 
 from datamimic_ce.domains.common.demographics.sampler import DemographicSample
+from datamimic_ce.domains.common.generators.address_generator import AddressRow
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.common.models.person import Person
@@ -135,11 +136,17 @@ class _SentinelAddressGenerator:
     def __init__(self):
         self.dataset = "DE"
         self.rng = Random(11)
-        self.street_name_generator = _SentinelGenerator("Teststreet")
-        self.city_generator = _StaticCityGenerator()
-        self.country_generator = _StaticCountryGenerator()
-        self.phone_number_generator = _SentinelGenerator("+49-30-123456")
         self.company_name_generator = _SentinelGenerator("Example GmbH")
+        self._row = AddressRow(
+            dataset="DE",
+            city_generator=_StaticCityGenerator(),
+            country_generator=_StaticCountryGenerator(),
+            phone_number_generator=_SentinelGenerator("+49-30-123456"),
+            street_name_generator=_SentinelGenerator("Teststreet"),
+        )
+
+    def resolve_row(self) -> AddressRow:
+        return self._row
 
 
 class _StaticCityGenerator:
