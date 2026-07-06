@@ -85,8 +85,8 @@ SAFE_GLOBALS = {
 # The number-one authoring trap: bare record-local names only resolve at the top level.
 # Appended to undefined-name errors so the failure itself teaches the scope rule.
 _SCOPE_GUIDANCE = (
-    "record-local names need this. inside nested <generate>/<nestedKey>; "
-    "use parent./root. for enclosing records"
+    "a same-scope sibling resolves bare (or via this.) - check the name; "
+    "an ANCESTOR scope's name needs parent./root., it does not resolve bare"
 )
 
 # List of special functions that define in SAFE_GLOBALS
@@ -296,11 +296,14 @@ class Context(ABC):
             }
         # GenIterContext evaluate script
         else:
+            # Nested wrapping tree: each scope holds its child scope under the child's name, so a
+            # qualified path like `orders.line_items.product.field` resolves; the outermost scope's
+            # own vars land at the top level and the setup namespace/globals merge in.
+            self_context = current_context
+            self_is_outermost = False
             while isinstance(current_context, GenIterContext):
                 parent_context = current_context.parent
-
                 if isinstance(parent_context, SetupContext):
-                    # Add current variable & product of outermost context
                     data_dict = {
                         **parent_context.namespace,
                         **parent_context.global_variables,
@@ -308,8 +311,8 @@ class Context(ABC):
                         **current_context.current_product,
                         **data_dict,
                     }
+                    self_is_outermost = current_context is self_context
                     break
-                # Update current data_dict with current context variable & product
                 data_dict = {
                     current_context.current_name: {
                         **current_context.current_variables,
@@ -318,6 +321,15 @@ class Context(ABC):
                     }
                 }
                 current_context = parent_context
+            # The scope evaluating THIS script also resolves its own variables/products by bare
+            # name, not only nested under its own scope name (mirrors what `this.` already exposes -
+            # a sibling <variable> feeding a <key> script in the same nested scope). Self fills in
+            # names an ancestor doesn't already provide bare; an ancestor's own bare name always
+            # wins on a clash (`**data_dict` last), so a script combining an ancestor's and its own
+            # same-named variable (e.g. `id + simple_user.id`, a real fixture in this repo) keeps
+            # resolving bare `id` to the ancestor's, exactly as before this change.
+            if not self_is_outermost and isinstance(self_context, GenIterContext):
+                data_dict = {**self_context.current_variables, **self_context.current_product, **data_dict}
 
         return data_dict
 
