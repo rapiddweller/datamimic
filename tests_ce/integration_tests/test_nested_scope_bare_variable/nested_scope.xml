@@ -11,4 +11,18 @@
             <key name="qualified" script="inner.person.givenName"/>
         </nestedKey>
     </generate>
+
+    <!-- A scope's own bare variable must NOT shadow a same-named ancestor variable for a scope
+         that does not declare it itself: bare resolution stays "outermost wins" unless the
+         evaluating scope has its own declaration (this. semantics), so a name collision between
+         scopes at different depths can't silently flip which value a bare reference resolves to. -->
+    <generate name="collision" count="1" target="JSON">
+        <variable name="v" constant="outer_val"/>
+        <nestedKey name="mid" type="list" count="1">
+            <variable name="v" constant="mid_val"/>
+            <nestedKey name="leaf" type="list" count="1">
+                <key name="bare_v" script="v"/>
+            </nestedKey>
+        </nestedKey>
+    </generate>
 </setup>

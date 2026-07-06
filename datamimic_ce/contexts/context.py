@@ -296,11 +296,11 @@ class Context(ABC):
             }
         # GenIterContext evaluate script
         else:
-            # 1) Nested wrapping tree (unchanged): each scope holds its child scope under the child's
-            #    name, so a qualified path like `orders.line_items.product.field` resolves; the
-            #    outermost scope's own vars land at the top level and the setup namespace/globals
-            #    merge in. `wrapped_scopes` collects the INNER scopes that got wrapped under a name.
-            wrapped_scopes: list = []
+            # Nested wrapping tree: each scope holds its child scope under the child's name, so a
+            # qualified path like `orders.line_items.product.field` resolves; the outermost scope's
+            # own vars land at the top level and the setup namespace/globals merge in.
+            self_context = current_context
+            self_is_outermost = False
             while isinstance(current_context, GenIterContext):
                 parent_context = current_context.parent
                 if isinstance(parent_context, SetupContext):
@@ -311,6 +311,7 @@ class Context(ABC):
                         **current_context.current_product,
                         **data_dict,
                     }
+                    self_is_outermost = current_context is self_context
                     break
                 data_dict = {
                     current_context.current_name: {
@@ -319,15 +320,15 @@ class Context(ABC):
                         **data_dict,
                     }
                 }
-                wrapped_scopes.append(current_context)
                 current_context = parent_context
-            # 2) Every wrapped inner scope's variables/products ALSO resolve by BARE name (the loop
-            #    only flattened the outermost). Applied outermost -> innermost so an inner scope
-            #    SHADOWS an outer one on a clash: a record-local name (a sibling <variable> feeding a
-            #    <key> script) resolves without a scope prefix at ANY nesting depth, exactly as it
-            #    does in a top-level <generate>. Qualified paths from step 1 stay intact.
-            for scope in reversed(wrapped_scopes):
-                data_dict = {**data_dict, **scope.current_variables, **scope.current_product}
+            # The scope evaluating THIS script also resolves its own variables/products by bare
+            # name, not only nested under its own scope name (mirrors what `this.` already exposes -
+            # a sibling <variable> feeding a <key> script in the same nested scope). Only self, not
+            # every ancestor: an ancestor's bare name still needs this./parent./root., so a name
+            # collision between scopes at different depths can't silently flip which value a bare
+            # reference resolves to.
+            if not self_is_outermost and isinstance(self_context, GenIterContext):
+                data_dict = {**data_dict, **self_context.current_variables, **self_context.current_product}
 
         return data_dict
 
