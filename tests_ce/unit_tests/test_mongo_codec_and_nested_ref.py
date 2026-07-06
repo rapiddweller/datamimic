@@ -134,3 +134,43 @@ class TestMongoQueryTypeDetection:
 
         with pytest.raises(ValueError, match="only support"):
             MongoDBClient._check_query_type("delete: 'c'")
+
+    def test_nested_field_named_find_is_not_the_command(self):
+        # a real parse only looks at depth-0 keys; a substring-count regex would see two 'find's
+        q = "aggregate: 'c', pipeline: [{'$project': {find: 1}}]"
+        assert MongoDBClient._check_query_type(q) == "aggregate"
+
+
+class TestMongoTopLevelKeys:
+    """A single depth-aware pass over the selector replaces three independent regexes
+    (type sniffing, duplicate-key counting) that each separately guessed at quote style."""
+
+    def test_bareword_keys(self):
+        assert MongoDBClient._top_level_keys("find: 'c', filter: {}, projection: {}") == [
+            "find",
+            "filter",
+            "projection",
+        ]
+
+    def test_single_and_double_quoted_keys(self):
+        assert MongoDBClient._top_level_keys("'find': 'c', \"filter\": {}") == ["find", "filter"]
+
+    def test_nested_keys_are_not_top_level(self):
+        # 'find' and 'filter' inside the pipeline value must not count as top-level keys
+        q = "aggregate: 'c', pipeline: [{'$match': {'find': 1, 'filter': 2}}]"
+        assert MongoDBClient._top_level_keys(q) == ["aggregate", "pipeline"]
+
+    def test_duplicate_top_level_key_regardless_of_quote_style(self):
+        assert MongoDBClient._top_level_keys("find: 'a', 'find': 'b', filter: {}") == ["find", "find", "filter"]
+
+    def test_colon_and_comma_inside_quoted_value_are_not_structural(self):
+        # a string value containing ':' and ',' must not be mistaken for a key boundary
+        q = "find: 'c', filter: {'name': 'a, b: c'}, projection: {}"
+        assert MongoDBClient._top_level_keys(q) == ["find", "filter", "projection"]
+
+    def test_bracket_pipeline_value_does_not_leak_keys(self):
+        assert MongoDBClient._top_level_keys("aggregate: 'c', pipeline: [], cursor: {}") == [
+            "aggregate",
+            "pipeline",
+            "cursor",
+        ]

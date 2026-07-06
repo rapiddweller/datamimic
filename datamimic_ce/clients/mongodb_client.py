@@ -410,6 +410,36 @@ class MongoDBClient(DatabaseClient):
             raise ValueError(f"Wrong mongodb selector syntax: {query}, error: {err}") from err
 
     @staticmethod
+    def _top_level_keys(query: str) -> list[str]:
+        """Depth-0 keys of a mongo shell-style selector, in order of appearance. A single
+        quote/brace/bracket-aware pass, not a regex guessing at quote style: a key is bareword,
+        single-, or double-quoted, uniformly; a value's own colons/commas/braces (inside a quoted
+        string, or nested one level down in a filter/pipeline) never leak into the top level, so a
+        field literally named 'find' inside a nested value is never mistaken for the command key."""
+        keys: list[str] = []
+        depth = 0
+        quote_char: str | None = None
+        segment_start = 0
+        for i, c in enumerate(query):
+            if quote_char:
+                if c == quote_char:
+                    quote_char = None
+            elif c in "'\"":
+                quote_char = c
+            elif c in "{[":
+                depth += 1
+            elif c in "}]":
+                depth -= 1
+            elif depth == 0 and c == ":":
+                raw_key = query[segment_start:i].strip().lstrip(",").strip()
+                if len(raw_key) >= 2 and raw_key[0] == raw_key[-1] and raw_key[0] in "'\"":
+                    raw_key = raw_key[1:-1]
+                keys.append(raw_key)
+            elif depth == 0 and c == ",":
+                segment_start = i
+        return keys
+
+    @staticmethod
     def _validate_query_command(query: str):
         """
         validate query string
@@ -417,33 +447,25 @@ class MongoDBClient(DatabaseClient):
         'aggregate' query have elements: 'aggregate', 'pipeline'
         :param query:
         """
-        # validate find
         query = query.strip()
-        find_match = re.findall(r"""['\"]?find['\"]?\s*:""", query)
-        aggregate_match = re.findall(r"""['\"]?aggregate['\"]?\s*:""", query)
-        if find_match and aggregate_match:
+        keys = MongoDBClient._top_level_keys(query)
+        find_count = keys.count("find")
+        aggregate_count = keys.count("aggregate")
+        if find_count and aggregate_count:
             raise ValueError("Error syntax, only one query type allow but found both 'find' and 'aggregate'")
-        if find_match:
-            find_count = len(find_match) if find_match else 0
+        if find_count:
             if find_count > 1:
                 raise ValueError(f"Error syntax, only 1 'find' allow but found {find_count}")
-            # validate filter
-            filter_match = re.findall(r"filter\s*:", query)
-            filter_count = len(filter_match) if filter_match else 0
+            filter_count = keys.count("filter")
             if filter_count > 1:
                 raise ValueError(f"Error syntax, only 1 'filter' allow but found {filter_count}")
-            # validate projection
-            projection_match = re.findall(r"projection\s*:", query)
-            projection_count = len(projection_match) if projection_match else 0
+            projection_count = keys.count("projection")
             if projection_count > 1:
                 raise ValueError(f"Error syntax, only 1 'projection' allow but found {projection_count}")
-        elif aggregate_match:
-            aggregate_count = len(aggregate_match) if aggregate_match else 0
+        elif aggregate_count:
             if aggregate_count > 1:
                 raise ValueError(f"Error syntax, only 1 'aggregate' allow but found {aggregate_count}")
-            # validate pipeline
-            pipeline_match = re.findall(r"pipeline\s*:", query)
-            pipeline_count = len(pipeline_match) if pipeline_match else 0
+            pipeline_count = keys.count("pipeline")
             if pipeline_count > 1:
                 raise ValueError(f"Error syntax, only 1 'pipeline' allow but found {pipeline_count}")
 
@@ -454,15 +476,11 @@ class MongoDBClient(DatabaseClient):
         Currently only support 'find' and 'aggregate'
         :param query:
         """
-        # the command key may be bareword or quoted: find:/'find':/"find": (both forms appear
-        # across Benerator shell selectors), so tolerate an optional surrounding quote
-        find_pattern = r"""^\s*['\"]?find['\"]?\s*:"""
-        aggregate_pattern = r"""^\s*['\"]?aggregate['\"]?\s*:"""
-        is_find = re.match(find_pattern, query) is not None
-        is_aggregate = re.match(aggregate_pattern, query) is not None
-        if is_find:
+        keys = MongoDBClient._top_level_keys(query)
+        first_key = keys[0] if keys else None
+        if first_key == "find":
             return "find"
-        elif is_aggregate:
+        elif first_key == "aggregate":
             return "aggregate"
         else:
             raise ValueError(
