@@ -97,13 +97,7 @@ class TaskUtil:
         """Whether a '.wgt.csv' file's first row is a header: its weight column isn't numeric
         (same sniff FileUtil.read_weight_csv itself uses to skip an optional header row)."""
         raw_data = FileUtil._read_raw_csv(file_path, separator, "utf-8")
-        if not raw_data or len(raw_data[0]) <= 1:
-            return False
-        try:
-            float(raw_data[0][1])
-            return False
-        except (TypeError, ValueError):
-            return True
+        return bool(raw_data) and len(raw_data[0]) > 1 and not FileUtil._parses_as_float(raw_data[0][1])
 
     @staticmethod
     def get_task_by_statement(
