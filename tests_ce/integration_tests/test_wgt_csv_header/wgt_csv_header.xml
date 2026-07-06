@@ -1,0 +1,8 @@
+<setup>
+    <generate name="with_header" target="JSON" count="3000">
+        <key name="active" type="bool" source="data/active_with_header.wgt.csv"/>
+    </generate>
+    <generate name="no_header" target="JSON" count="3000">
+        <key name="active" type="bool" source="data/active_no_header.wgt.csv"/>
+    </generate>
+</setup>

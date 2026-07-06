@@ -142,13 +142,24 @@ class FileUtil:
         return [{name: (row[idx] if idx < len(row) else None) for idx, name in columns} for row in rows]
 
     @staticmethod
+    def _parses_as_float(value: str) -> bool:
+        try:
+            float(value)
+            return True
+        except (TypeError, ValueError):
+            return False
+
+    @staticmethod
     def read_weight_csv(file_path: Path, separator: str = ",", encoding="utf-8") -> DataFrame:
         """
-        Read none_header, 2_columns, weight csv
-        then return as DataFrame
+        Read a 2-column value|weight csv, header optional. Auto-detected: if the first row's
+        weight column doesn't parse as a number, it's a header row and gets skipped.
         """
         # Load file content from cache or file
         raw_data = FileUtil._read_raw_csv(file_path, separator, encoding)
+
+        if raw_data and len(raw_data[0]) > 1 and not FileUtil._parses_as_float(raw_data[0][1]):
+            raw_data = raw_data[1:]
 
         # Convert data to DataFrame, select only 2 columns (data and weight)
         df = pd.DataFrame(raw_data, columns=[0, 1])
