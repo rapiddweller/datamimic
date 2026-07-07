@@ -66,9 +66,16 @@ class Memstore(Exporter):
         self._storage[name] = self._storage.get(name, []) + data
 
     def sumEntityColumn(self, product_type: str, column: str):
-        """Sum a numeric column across all rows of one type (Benerator parity). Values are
-        coerced via float() - memstore rows sourced from CSV carry strings, not numbers."""
-        total = sum((float(row[column]) for row in self._storage.get(product_type, [])), 0.0)
+        """Sum a numeric column across all rows of one type (Benerator parity). Values are coerced via
+        float() - memstore rows sourced from CSV carry strings, not numbers. Non-numeric cells (a CSV
+        may carry stray values, e.g. a placeholder) are skipped, not fatal, matching Benerator's
+        lenient aggregation."""
+        total = 0.0
+        for row in self._storage.get(product_type, []):
+            try:
+                total += float(row[column])
+            except (TypeError, ValueError):
+                continue  # skip a non-numeric cell instead of aborting the whole sum
         return int(total) if total.is_integer() else total
 
     def entityCount(self, product_type: str) -> int:
