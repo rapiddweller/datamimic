@@ -17,6 +17,7 @@ from pathlib import Path
 from datamimic_ce.constants.exporter_constants import (
     EXPORTER_CSV,
     EXPORTER_DBUNIT,
+    EXPORTER_FIXED_WIDTH,
     EXPORTER_JSON,
     EXPORTER_TXT,
     EXPORTER_XLSX,
@@ -24,6 +25,7 @@ from datamimic_ce.constants.exporter_constants import (
 )
 from datamimic_ce.data_mimic_test import DataMimicTest
 from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
+from datamimic_ce.utils.file_util import FileUtil
 
 _DIR = Path(__file__).resolve().parent
 _OUT = _DIR / "output" / "matrix_out"
@@ -73,6 +75,10 @@ def _read_dbunit() -> list[int]:
     return [int(row.get("id")) for row in root if row.tag == "matrix_rows"]
 
 
+def _read_fixed_width() -> list[int]:
+    return [int(row["id"]) for row in FileUtil.read_fixed_width_to_dict_list(_file("fcw"))]
+
+
 _READERS = {
     EXPORTER_CSV: _read_csv,
     EXPORTER_JSON: _read_json,
@@ -80,6 +86,7 @@ _READERS = {
     EXPORTER_XLSX: _read_xlsx,
     EXPORTER_TXT: _read_txt,
     EXPORTER_DBUNIT: _read_dbunit,
+    EXPORTER_FIXED_WIDTH: _read_fixed_width,
 }
 
 

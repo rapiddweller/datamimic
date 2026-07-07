@@ -35,7 +35,7 @@ _GENERATES = (EL_GENERATE, EL_ITERATE)
 _SOURCE_READERS = (*_GENERATES, EL_VARIABLE, EL_NESTED_KEY)
 # Engine source dispatch (task_util.gen_task_load_data_from_source_or_script): a source is a
 # file (by extension), else a memstore/client id. `.dbunit.xml` is matched before `.xml`.
-_SOURCE_FILE_SUFFIXES = (".csv", ".json", ".xlsx", ".dbunit.xml", ".xml")
+_SOURCE_FILE_SUFFIXES = (".csv", ".json", ".xlsx", ".dbunit.xml", ".xml", ".fcw")
 _STATIC_TARGETS = {
     *_BUFFERED_EXPORTERS,
     EXPORTER_CONSOLE_EXPORTER,
@@ -147,7 +147,7 @@ class UnknownSource(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    f"source=\"{source}\" is neither a data file (.csv/.json/.xlsx/.xml/.dbunit.xml) "
+                    f"source=\"{source}\" is neither a data file (.csv/.json/.xlsx/.xml/.dbunit.xml/.fcw) "
                     "nor a declared <memstore>/<database>/<mongodb> id.",
                     f"{declared}Point source= at a real file, or declare the client/memstore with that id.",
                 )

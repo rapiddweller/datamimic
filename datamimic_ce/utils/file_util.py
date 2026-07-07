@@ -150,6 +150,65 @@ class FileUtil:
             return False
 
     @staticmethod
+    def parse_fixed_width_spec(spec: str) -> list[tuple[str, int, bool, str]]:
+        """Parse a Benerator-style fixed-width column spec: ``name[width]`` (left-aligned,
+        space-padded) or ``name[width r pad]`` (right-aligned, e.g. ``price[8r0]`` = width 8,
+        zero-padded). Returns ``(name, width, right_aligned, pad_char)`` per column, in order.
+        """
+        import re
+
+        fields = []
+        for token in spec.split(","):
+            token = token.strip()
+            match = re.fullmatch(r"(\w+)\[(\d+)(r)?(.)?\]", token)
+            if not match:
+                raise ValueError(f"Invalid fixed-width column spec token: '{token}' in '{spec}'")
+            name, width, right_flag, pad = match.groups()
+            right_aligned = right_flag is not None
+            pad_char = pad if pad is not None else ("0" if right_aligned else " ")
+            fields.append((name, int(width), right_aligned, pad_char))
+        return fields
+
+    @staticmethod
+    def read_fixed_width_to_dict_list(file_path: Path, spec: str | None = None) -> list[dict]:
+        """Read a fixed-width-column file into a list of dicts.
+
+        Self-describing by default (``spec=None``): the file's first line must be
+        ``# name[13],name2[30],...`` (the column spec as a comment) so the reader needs only the
+        path - the same convention ``FixedWidthExporter`` writes. Pass ``spec`` explicitly to read
+        a file that doesn't carry that header line.
+        """
+        lines = FileContentStorage.load_file_with_custom_func(
+            str(file_path), lambda: file_path.read_text(encoding="utf-8").splitlines()
+        )
+        if not lines:
+            return []  # an empty file is an empty source, not a crash
+
+        if spec is not None:
+            fields = FileUtil.parse_fixed_width_spec(spec)
+            data_lines = lines
+        else:
+            header = lines[0]
+            if not header.startswith("#"):
+                raise ValueError(
+                    f"Fixed-width file '{file_path}' has no '# name[width],...' spec header on its "
+                    f"first line - pass spec= explicitly to read a file without one"
+                )
+            fields = FileUtil.parse_fixed_width_spec(header[1:])
+            data_lines = lines[1:]
+
+        result = []
+        for line in data_lines:
+            row = {}
+            offset = 0
+            for name, width, right_aligned, pad_char in fields:
+                raw = line[offset : offset + width]
+                row[name] = raw.lstrip(pad_char) if right_aligned else raw.strip()
+                offset += width
+            result.append(row)
+        return result
+
+    @staticmethod
     def read_weight_csv(file_path: Path, separator: str = ",", encoding="utf-8") -> DataFrame:
         """
         Read a 2-column value|weight csv, header optional. Auto-detected: if the first row's
