@@ -18,6 +18,7 @@ from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.config import settings
 from datamimic_ce.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.domains.domain_core.base_entity import stringify_if_entity
 from datamimic_ce.logger import logger
 
 # SQLAlchemy create_engine kwargs DATAMIMIC forwards (pooling/behavior). Anything else in the
@@ -413,6 +414,11 @@ class RdbmsClient(DatabaseClient):
             return
 
         data_list = self._apply_global_json_config(data_list)
+        # A whole entity bound into a scalar column (Benerator's toString() idiom, e.g.
+        # <key script="person"> into a varchar field) has no driver-level binding otherwise -
+        # confirmed this raises hard today (sqlite3.ProgrammingError: type not supported), so
+        # this only turns a crash into a correct write, never changes behavior for what works now.
+        data_list = [{k: stringify_if_entity(v) for k, v in row.items()} for row in data_list]
 
         with engine.begin() as connection:
             try:

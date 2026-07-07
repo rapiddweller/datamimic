@@ -446,6 +446,12 @@ class SetupContext(Context):
         :return:
         """
         self._clients[client_id] = client
+        # Also bind by id into the script namespace (Benerator parity: <execute>/<variable script=>
+        # can reference a declared <database>/<mongodb> id directly, e.g. `db.something()`) - both
+        # eval_namespace (copies self._namespace wholesale) and evaluate_python_expression's scope
+        # building read from this same dict, so this covers both script-evaluation paths regardless
+        # of statement order.
+        self._namespace[client_id] = client
 
     def get_client_by_id(self, client_id: str):
         """

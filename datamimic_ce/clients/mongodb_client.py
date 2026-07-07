@@ -17,6 +17,7 @@ from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.constants.attribute_constants import META_SELECTOR, META_TARGET_ENTITY, META_TYPE
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.domains.domain_core.base_entity import stringify_if_entity
 
 
 class MongoDBClient(DatabaseClient):
@@ -30,6 +31,7 @@ class MongoDBClient(DatabaseClient):
         DATAMIMIC ``type="decimal"`` field round-trips through mongo."""
         if isinstance(value, Decimal):
             return Decimal128(value)
+        value = stringify_if_entity(value)  # whole entity bound to a field -> str(entity.to_dict())
         if isinstance(value, Mapping):
             return {k: MongoDBClient._to_bson(v) for k, v in value.items()}
         if isinstance(value, list):

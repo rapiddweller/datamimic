@@ -1,0 +1,15 @@
+<setup>
+    <database id="db" dbms="sqlite" database="output/remove_not_existing_ids.sqlite"/>
+    <execute uri="setup_ref.sql" target="db"/>
+    <memstore id="mem"/>
+
+    <generate name="t" count="3" target="mem">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+
+    <execute>mem.removeNotExistingIds('t', 'id', 'ref', db)</execute>
+
+    <generate name="result" count="1" target="JSON">
+        <array name="remaining_ids" script="sorted(r['id'] for r in mem.get_all_data_by_type('t'))"/>
+    </generate>
+</setup>

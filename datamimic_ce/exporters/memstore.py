@@ -64,3 +64,24 @@ class Memstore(Exporter):
         name = product[0]
         data = product[1]
         self._storage[name] = self._storage.get(name, []) + data
+
+    def sumEntityColumn(self, product_type: str, column: str):
+        """Sum a numeric column across all rows of one type (Benerator parity). Values are
+        coerced via float() - memstore rows sourced from CSV carry strings, not numbers."""
+        total = sum((float(row[column]) for row in self._storage.get(product_type, [])), 0.0)
+        return int(total) if total.is_integer() else total
+
+    def entityCount(self, product_type: str) -> int:
+        """Alias of get_data_len_by_type (Benerator's camelCase naming)."""
+        return self.get_data_len_by_type(product_type)
+
+    def removeNotExistingIds(self, product_type: str, id_col: str, ref_type: str, client) -> None:
+        """Keep only the rows of `product_type` whose `id_col` value exists in `ref_type` as read
+        from an RDBMS `client` (Benerator parity: an inner-join filter). Mutates the stored rows in
+        place - no return value, matching Benerator's imperative "remove" semantics. Both sides of
+        the id comparison are string-coerced: `client`'s column is DB-typed (e.g. int), memstore
+        rows sourced from CSV carry strings for the same logical id."""
+        existing = {str(row[0]) for row in client.get_random_rows_by_columns(ref_type, [id_col])}
+        self._storage[product_type] = [
+            r for r in self._storage.get(product_type, []) if str(r.get(id_col)) in existing
+        ]

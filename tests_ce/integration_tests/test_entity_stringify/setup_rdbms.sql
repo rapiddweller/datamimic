@@ -1,0 +1,1 @@
+CREATE TABLE t (id INTEGER, name VARCHAR(2000));
