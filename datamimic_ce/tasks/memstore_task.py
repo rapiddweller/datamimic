@@ -19,3 +19,7 @@ class MemstoreTask(SetupSubTask):
 
     def execute(self, ctx: Context):
         ctx.root.memstore_manager.add_memstore(self.statement.id)
+        # Bind by id into the script namespace (Benerator parity: <execute>/<variable script=>
+        # can reference `mem` directly, e.g. `mem.sumEntityColumn(...)`) - mirrors add_client's
+        # binding for <database>/<mongodb>.
+        ctx.root.namespace[self.statement.id] = ctx.root.memstore_manager.get_memstore(self.statement.id)

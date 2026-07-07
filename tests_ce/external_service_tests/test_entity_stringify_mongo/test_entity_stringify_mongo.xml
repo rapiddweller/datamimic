@@ -1,0 +1,10 @@
+<setup>
+    <mongodb id="mongodb"/>
+    <!-- clean slate: earlier runs leave documents behind otherwise -->
+    <generate name="t_cleanup" source="mongodb" selector="find: 't', filter: {}" target="mongodb.delete"/>
+    <generate name="t" count="1" target="mongodb">
+        <variable name="person" entity="Person"/>
+        <key name="name" script="person"/>
+    </generate>
+    <generate name="check" source="mongodb" selector="find: 't', filter: {}" target=""/>
+</setup>

@@ -1,0 +1,17 @@
+<setup>
+    <memstore id="mem"/>
+    <generate name="test_file" count="3" target="mem">
+        <key name="count" values="5,3,7"/>
+    </generate>
+
+    <execute>totalCount = mem.sumEntityColumn('test_file', 'count')</execute>
+
+    <generate name="te" count="{totalCount}" target="mem">
+        <key name="v" generator="IncrementGenerator"/>
+    </generate>
+
+    <generate name="result" count="1" target="JSON">
+        <key name="totalCount" script="totalCount"/>
+        <key name="teCount" script="mem.entityCount('te')"/>
+    </generate>
+</setup>

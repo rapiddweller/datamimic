@@ -1,0 +1,19 @@
+<setup>
+    <memstore id="mem"/>
+    <generate name="rows" count="5" target="mem">
+        <key name="v" generator="IncrementGenerator"/>
+    </generate>
+
+    <!-- mem accessed via <key script> BEFORE any <execute> ran - proves the binding does not
+         depend on eval_namespace's diff-writeback side effect (order-independent). -->
+    <generate name="before_execute" count="1" target="JSON">
+        <key name="count" script="mem.entityCount('rows')"/>
+    </generate>
+
+    <execute>marker = 1</execute>
+
+    <!-- mem accessed via <key script> AFTER an <execute> ran. -->
+    <generate name="after_execute" count="1" target="JSON">
+        <key name="count" script="mem.entityCount('rows')"/>
+    </generate>
+</setup>
