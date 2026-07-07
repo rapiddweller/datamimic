@@ -21,6 +21,7 @@ from datamimic_ce.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_CSV,
     EXPORTER_DBUNIT,
+    EXPORTER_FIXED_WIDTH,
     EXPORTER_JSON,
     EXPORTER_LOG_EXPORTER,
     EXPORTER_TEST_RESULT_EXPORTER,
@@ -36,6 +37,7 @@ from datamimic_ce.exporters.database_exporter import DatabaseExporter
 from datamimic_ce.exporters.dbunit_exporter import DbUnitExporter
 from datamimic_ce.exporters.exporter import Exporter
 from datamimic_ce.exporters.exporter_config import ExporterConfig
+from datamimic_ce.exporters.fixed_width_exporter import FixedWidthExporter
 from datamimic_ce.exporters.json_exporter import JsonExporter
 from datamimic_ce.exporters.log_exporter import LogExporter
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
@@ -56,6 +58,7 @@ _BUFFERED_EXPORTERS: dict[str, _BufferedExporterFactory] = {
     EXPORTER_XLSX: XLSXExporter,
     EXPORTER_TXT: TXTExporter,
     EXPORTER_DBUNIT: DbUnitExporter,
+    EXPORTER_FIXED_WIDTH: FixedWidthExporter,
 }
 
 

@@ -144,13 +144,15 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                         self._mode = self._ITERATOR_MODE
             else:
                 # Load data from csv or json file
-                if source_str.endswith(("csv", "json", "xlsx")):
+                if source_str.endswith(("csv", "json", "xlsx", "fcw")):
                     if source_str.endswith("csv"):
                         file_data = FileUtil.read_csv_to_dict_list(
                             file_path=descriptor_dir / source_str, separator=separator
                         )
                     elif source_str.endswith("xlsx"):
                         file_data = FileUtil.read_xlsx_to_dict_list(descriptor_dir / source_str)
+                    elif source_str.endswith("fcw"):
+                        file_data = FileUtil.read_fixed_width_to_dict_list(descriptor_dir / source_str)
                     else:
                         file_data = FileUtil.read_json_to_list(descriptor_dir / source_str)
                     if loads_all:

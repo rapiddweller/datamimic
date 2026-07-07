@@ -403,6 +403,11 @@ class TaskUtil:
             source_data = DataSourceRegistry.load_xlsx_file(
                 root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
             )
+        # Load data from a fixed-width column file
+        elif source_str.endswith(".fcw"):
+            source_data = DataSourceRegistry.load_fixed_width_file(
+                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
+            )
         # Load one table from a dbunit dataset (checked BEFORE .xml - a .dbunit.xml also ends with .xml).
         # sourceEntity/type selects the table (resolve_source_entity).
         elif source_str.endswith(".dbunit.xml"):
