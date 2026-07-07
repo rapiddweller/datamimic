@@ -104,7 +104,10 @@ class FileUtil:
         raw_data = FileUtil._read_raw_csv(file_path, separator, encoding)
         if not raw_data:
             return []  # an empty CSV is an empty source, not a crash
-        header = raw_data[0]
+        # Column names never carry meaningful surrounding whitespace; a padded/aligned CSV
+        # (e.g. Benerator entity CSVs: "ean_code     ,name    ,...") would otherwise produce
+        # keys like "name    " that a script's field access ("this.name") cannot resolve.
+        header = [col.strip() if isinstance(col, str) else col for col in raw_data[0]]
         processed_data = [dict(zip(header, row, strict=False)) for row in raw_data[1:]]
         return processed_data
 
