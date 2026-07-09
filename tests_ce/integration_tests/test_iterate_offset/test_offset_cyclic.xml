@@ -1,0 +1,3 @@
+<setup defaultSeparator=",">
+    <iterate name="rows" source="data/rows.csv" offset="2" cyclic="True" count="7" distribution="ordered" target="ConsoleExporter"/>
+</setup>

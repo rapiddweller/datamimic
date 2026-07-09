@@ -381,6 +381,7 @@ class TaskUtil:
                 source_scripted=source_scripted,
                 prefix=prefix,
                 suffix=suffix,
+                offset=stmt.offset,
             )
         # Load data from JSON
         elif source_str.endswith(".json"):
@@ -389,6 +390,7 @@ class TaskUtil:
                 stmt.cyclic,
                 load_start_idx,
                 load_end_idx,
+                offset=stmt.offset,
             )
             # if sourceScripted then evaluate python expression in json
             if source_scripted:
@@ -401,12 +403,12 @@ class TaskUtil:
         # Load data from XLSX
         elif source_str.endswith(".xlsx"):
             source_data = DataSourceRegistry.load_xlsx_file(
-                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
+                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx, offset=stmt.offset
             )
         # Load data from a fixed-width column file
         elif source_str.endswith(".fcw"):
             source_data = DataSourceRegistry.load_fixed_width_file(
-                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
+                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx, offset=stmt.offset
             )
         # Load one table from a dbunit dataset (checked BEFORE .xml - a .dbunit.xml also ends with .xml).
         # sourceEntity/type selects the table (resolve_source_entity).
@@ -414,10 +416,12 @@ class TaskUtil:
             source_data = FileUtil.read_dbunit_to_dict_list(
                 root_context.descriptor_dir / source_str, StatementUtil.resolve_source_entity(stmt)
             )
+            if stmt.offset:
+                source_data = source_data[stmt.offset :]
         # Load data from XML
         elif source_str.endswith(".xml"):
             source_data = DataSourceRegistry.load_xml_file(
-                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
+                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx, offset=stmt.offset
             )
             # if sourceScripted then evaluate python expression in json
             if source_scripted:
@@ -426,11 +430,21 @@ class TaskUtil:
                 )
         # Load data from in-memory memstore
         elif root_context.memstore_manager.contain(source_str):
+            if stmt.offset:
+                raise ValueError(
+                    f"<generate> '{stmt.full_name}': offset= is only supported for file sources, "
+                    f"not memstore '{source_str}'"
+                )
             source_data = root_context.memstore_manager.get_memstore(source_str).get_data_by_type(
                 StatementUtil.resolve_source_entity(stmt), load_pagination, stmt.cyclic
             )
         # Load data from client (MongoDB, RDBMS,...)
         elif root_context.clients.get(source_str) is not None:
+            if stmt.offset:
+                raise ValueError(
+                    f"<generate> '{stmt.full_name}': offset= is only supported for file sources, "
+                    f"not database client '{source_str}' - use a selector with an SQL/Mongo skip instead"
+                )
             client = root_context.clients.get(source_str)
             # Load data from MongoDB
             if isinstance(client, MongoDBClient):

@@ -21,6 +21,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_MULTIPROCESSING,
     ATTR_NAME,
     ATTR_NUM_PROCESS,
+    ATTR_OFFSET,
     ATTR_PAGE_SIZE,
     ATTR_SCRIPT,
     ATTR_SELECTOR,
@@ -49,6 +50,9 @@ class GenerateModel(BaseModel):
     max_count: int | None = Field(None, alias=ATTR_MAX_COUNT)
     source: str | None = None
     cyclic: bool | None = None
+    # Skip the first N source rows before any windowing (Benerator parity). File sources only;
+    # count default, cyclic wrap and page windows all operate on the post-offset region.
+    offset: int | None = None
     unique: bool | None = None
     type: str | None = None
     selector: str | None = None
@@ -85,6 +89,7 @@ class GenerateModel(BaseModel):
                 ATTR_MIN_COUNT,
                 ATTR_MAX_COUNT,
                 ATTR_CYCLIC,
+                ATTR_OFFSET,
                 ATTR_UNIQUE,
                 ATTR_NAME,
                 ATTR_SELECTOR,
@@ -114,6 +119,20 @@ class GenerateModel(BaseModel):
     @classmethod
     def validate_unique_constraints(cls, values: dict):
         return ModelUtil.check_unique_constraints(values)
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_offset_requires_source(cls, values: dict):
+        if ATTR_OFFSET in values and ATTR_SOURCE not in values:
+            raise ValueError("'offset' requires a 'source' - it skips the first N source rows")
+        return values
+
+    @field_validator("offset")
+    @classmethod
+    def validate_offset_non_negative(cls, value):
+        if value is not None and value < 0:
+            raise ValueError(f"'offset' must be >= 0, but got: {value}")
+        return value
 
     @field_validator("source_entity", "target_entity")
     @classmethod

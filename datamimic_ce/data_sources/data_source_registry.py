@@ -210,14 +210,23 @@ class DataSourceRegistry:
                 logger.warning(f"Data source '{source_str}' is not supported for length calculation")
                 return
 
-        # 3: Set length of data source
+        # 3: Set length of data source. offset= shrinks the available window - the count
+        # default and the count-above-source warning must both see the post-offset size.
+        if isinstance(stmt, GenerateStatement) and stmt.offset:
+            ds_len = max(0, ds_len - stmt.offset)
         root_ctx.data_source_len[source_id] = ds_len
 
     @staticmethod
-    def get_cyclic_data_list(data: Iterable, pagination: DataSourcePagination | None, cyclic: bool = False) -> list:
+    def get_cyclic_data_list(
+        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool = False, offset: int = 0
+    ) -> list:
         """
-        Get cyclic data from iterable data source
+        Get cyclic data from iterable data source. ``offset`` drops the first N rows BEFORE any
+        windowing, so page windows and a cyclic wrap both operate strictly on the post-offset
+        region (a wrap must never re-include skipped rows).
         """
+        if offset:
+            data = list(data)[offset:]
         if pagination is None:
             start_idx = 0
             end_idx = len(list(data))
@@ -372,6 +381,7 @@ class DataSourceRegistry:
         source_scripted: bool,
         prefix: str,
         suffix: str,
+        offset: int = 0,
     ) -> list[dict]:
         """
         Load CSV content from file with skip and limit.
@@ -382,6 +392,7 @@ class DataSourceRegistry:
         :param cyclic: Whether to cycle through data.
         :param start_idx: Starting index.
         :param end_idx: Ending index.
+        :param offset: Rows to drop from the start of the file before windowing.
         :return: List of dictionaries representing CSV rows.
         """
         cyclic = cyclic if cyclic is not None else False
@@ -392,7 +403,9 @@ class DataSourceRegistry:
             if (start_idx is not None and end_idx is not None)
             else None
         )
-        result = DataSourceRegistry.get_cyclic_data_list(data=file_data, cyclic=cyclic, pagination=pagination)
+        result = DataSourceRegistry.get_cyclic_data_list(
+            data=file_data, cyclic=cyclic, pagination=pagination, offset=offset
+        )
 
         # if sourceScripted then evaluate python expression in csv
         if source_scripted:
@@ -406,7 +419,9 @@ class DataSourceRegistry:
         return result
 
     @staticmethod
-    def load_json_file(file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None) -> list[dict]:
+    def load_json_file(
+        file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None, offset: int = 0
+    ) -> list[dict]:
         """
         Load JSON content from file using skip and limit.
 
@@ -414,6 +429,7 @@ class DataSourceRegistry:
         :param cyclic: Whether to cycle through data.
         :param start_idx: Starting index.
         :param end_idx: Ending index.
+        :param offset: Rows to drop from the start of the file before windowing.
         :return: List of dictionaries representing JSON objects.
         """
         cyclic = cyclic if cyclic is not None else False
@@ -428,10 +444,14 @@ class DataSourceRegistry:
             if (start_idx is not None and end_idx is not None)
             else None
         )
-        return DataSourceRegistry.get_cyclic_data_list(data=file_data, cyclic=cyclic, pagination=pagination)
+        return DataSourceRegistry.get_cyclic_data_list(
+            data=file_data, cyclic=cyclic, pagination=pagination, offset=offset
+        )
 
     @staticmethod
-    def load_xlsx_file(file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None) -> list[dict]:
+    def load_xlsx_file(
+        file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None, offset: int = 0
+    ) -> list[dict]:
         """Load an .xlsx sheet (first row = header) as a paginated, optionally cyclic list of dicts."""
         file_data = DataSourceRegistry._get_source(str(file_path))
         pagination = (
@@ -440,12 +460,12 @@ class DataSourceRegistry:
             else None
         )
         return DataSourceRegistry.get_cyclic_data_list(
-            data=file_data, cyclic=cyclic if cyclic is not None else False, pagination=pagination
+            data=file_data, cyclic=cyclic if cyclic is not None else False, pagination=pagination, offset=offset
         )
 
     @staticmethod
     def load_fixed_width_file(
-        file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None
+        file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None, offset: int = 0
     ) -> list[dict]:
         """Load a self-describing .fcw file as a paginated, optionally cyclic list of dicts."""
         file_data = DataSourceRegistry._get_source(str(file_path))
@@ -455,11 +475,13 @@ class DataSourceRegistry:
             else None
         )
         return DataSourceRegistry.get_cyclic_data_list(
-            data=file_data, cyclic=cyclic if cyclic is not None else False, pagination=pagination
+            data=file_data, cyclic=cyclic if cyclic is not None else False, pagination=pagination, offset=offset
         )
 
     @staticmethod
-    def load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None) -> list[dict]:
+    def load_xml_file(
+        file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None, offset: int = 0
+    ) -> list[dict]:
         """
         Load XML content from file using skip and limit.
 
@@ -467,6 +489,7 @@ class DataSourceRegistry:
         :param cyclic: Whether to cycle through data.
         :param start_idx: Starting index.
         :param end_idx: Ending index.
+        :param offset: Rows to drop from the start of the file before windowing.
         :return: List of dictionaries representing XML items.
         """
         cyclic = cyclic if cyclic is not None else False
@@ -494,7 +517,7 @@ class DataSourceRegistry:
             if (start_idx is not None and end_idx is not None)
             else None
         )
-        return DataSourceRegistry.get_cyclic_data_list(data=items, cyclic=cyclic, pagination=pagination)
+        return DataSourceRegistry.get_cyclic_data_list(data=items, cyclic=cyclic, pagination=pagination, offset=offset)
 
     @staticmethod
     def load_xml_file_with_operation(
