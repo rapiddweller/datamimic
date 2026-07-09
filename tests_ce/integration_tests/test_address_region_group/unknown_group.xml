@@ -1,0 +1,6 @@
+<setup>
+    <generate name="rows" count="1" target="ConsoleExporter">
+        <variable name="addr" entity="Address" dataset="atlantis"/>
+        <key name="country_code" script="addr.country_code"/>
+    </generate>
+</setup>
