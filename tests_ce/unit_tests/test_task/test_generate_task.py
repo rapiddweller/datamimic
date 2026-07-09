@@ -126,6 +126,7 @@ class TestGenerateTask:
         statement.multiprocessing = True
         statement.page_size = 10000
         statement.cyclic = True
+        statement.offset = 0
         statement.bucket = "test_bucket"
         statement.container = "test_container"
         statement.variable_prefix = "test_prefix"

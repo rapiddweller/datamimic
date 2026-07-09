@@ -27,6 +27,7 @@ class GenerateStatement(CompositeStatement):
         self._max_count = model.max_count
         self._source = model.source
         self._cyclic = model.cyclic
+        self._offset = model.offset
         self._unique = model.unique
         self._source_script = model.source_scripted
         self._type = model.type
@@ -98,6 +99,11 @@ class GenerateStatement(CompositeStatement):
     @property
     def cyclic(self) -> bool | None:
         return self._cyclic
+
+    @property
+    def offset(self) -> int:
+        """Rows to skip at the start of the source; 0 when not set."""
+        return self._offset or 0
 
     @property
     def source_script(self) -> bool | None:

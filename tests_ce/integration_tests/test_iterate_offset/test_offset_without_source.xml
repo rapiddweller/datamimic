@@ -1,0 +1,5 @@
+<setup>
+    <generate name="rows" count="3" offset="2" target="ConsoleExporter">
+        <key name="v" generator="IncrementGenerator"/>
+    </generate>
+</setup>

@@ -86,7 +86,11 @@ def generator_reference() -> str:
             if not (inspect.isclass(cls) and name.endswith("Generator") and cls.__module__ == module.__name__):
                 continue
             try:
-                params = [p for p in inspect.signature(cls.__init__).parameters if p not in ("self",)]
+                # context/stmt/qualified_key are engine-injected, never DSL-passable - listing
+                # them makes an agent write generator="SequenceTableGenerator(context=...)" and
+                # hit a ValueError
+                internal = ("self", "context", "stmt", "qualified_key")
+                params = [p for p in inspect.signature(cls.__init__).parameters if p not in internal]
             except (TypeError, ValueError):
                 params = []
             lines.append(f"- {name}({', '.join(params)})")

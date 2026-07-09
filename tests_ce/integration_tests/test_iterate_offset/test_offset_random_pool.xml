@@ -1,0 +1,5 @@
+<setup defaultSeparator=",">
+    <!-- default (random) distribution takes the loads_all/pool path: the offset must exclude
+         the skipped rows from the pool BEFORE the shuffle, not just shift a window -->
+    <iterate name="rows" source="data/rows.csv" offset="2" target="ConsoleExporter"/>
+</setup>

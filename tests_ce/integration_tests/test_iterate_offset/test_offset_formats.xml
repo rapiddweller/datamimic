@@ -1,0 +1,10 @@
+<setup defaultSeparator=",">
+    <!-- one iterate per file format: every loader's offset pass-through, same 5-row fixture -->
+    <iterate name="rows_json" source="data/rows.json" offset="2" distribution="ordered" target="ConsoleExporter"/>
+    <!-- xml/dbunit need explicit count: their raw source shape (dict / multi-table) has no
+         usable length default -->
+    <iterate name="rows_xml" source="data/rows.xml" offset="2" count="3" distribution="ordered" target="ConsoleExporter"/>
+    <iterate name="rows_fcw" source="data/rows.fcw" offset="2" distribution="ordered" target="ConsoleExporter"/>
+    <iterate name="rows_xlsx" source="data/rows.xlsx" offset="2" distribution="ordered" target="ConsoleExporter"/>
+    <iterate name="rows_dbunit" source="data/rows.dbunit.xml" offset="2" count="3" distribution="ordered" target="ConsoleExporter"/>
+</setup>
