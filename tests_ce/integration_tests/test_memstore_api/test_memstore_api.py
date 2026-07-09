@@ -26,6 +26,14 @@ def test_wgt_ent_csv_reads_via_iterate():
     assert {r["flag"] for r in rows} == {"true", "false"}
 
 
+def test_memstore_sum_skips_non_numeric_cells():
+    """Benerator-lenient aggregation, end to end: a CSV-sourced count column carrying a stray
+    non-numeric placeholder ('n/a') must not abort the sum - 5 + skip + 7 = 12."""
+    engine = DataMimicTest(_dir, "test_memstore_sum_lenient.xml", capture_test_result=True)
+    engine.test_with_timer()
+    assert engine.capture_result()["result"][0]["total"] == 12
+
+
 def test_memstore_accessible_by_id_before_and_after_execute():
     """mem is bound into the script namespace at <memstore> registration time, not only inside
     <execute> - so a <key script="mem...."> resolves it whether it runs BEFORE or AFTER any

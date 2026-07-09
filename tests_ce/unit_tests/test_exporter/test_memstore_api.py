@@ -8,6 +8,8 @@
 mem.sumEntityColumn/mem.entityCount/mem.removeNotExistingIds). No DSL entry point exists for these
 yet (that's the separate execute-namespace-binding fix) - unit-tested directly against the class."""
 
+import pytest
+
 from datamimic_ce.exporters.memstore import Memstore
 
 
@@ -31,6 +33,21 @@ def test_sum_entity_column_coerces_string_values():
 def test_sum_entity_column_missing_type_is_zero():
     mem = Memstore("mem")
     assert mem.sumEntityColumn("missing", "count") == 0
+
+
+def test_sum_entity_column_skips_non_numeric_cells():
+    # Benerator-lenient: a stray placeholder must not abort the aggregation
+    mem = Memstore("mem")
+    mem.consume(("t", [{"count": "5"}, {"count": "n/a"}, {"count": None}, {"count": "7"}]))
+    assert mem.sumEntityColumn("t", "count") == 12
+
+
+def test_sum_entity_column_missing_column_stays_fatal():
+    # leniency is per-CELL only; a wrong column NAME is a caller bug and must not sum to 0
+    mem = Memstore("mem")
+    mem.consume(("t", [{"count": "5"}]))
+    with pytest.raises(KeyError):
+        mem.sumEntityColumn("t", "amuont")
 
 
 def test_entity_count_is_an_alias_of_get_data_len_by_type():

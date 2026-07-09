@@ -1,0 +1,14 @@
+<setup rngSeed="7" multiprocessing="False">
+    <!-- small pool (ES/PT/AD) so 30 rows reliably show variety under the fixed seed -->
+    <generate name="iberia_rows" count="30" target="ConsoleExporter">
+        <variable name="addr" entity="Address" dataset="iberia"/>
+        <key name="country_code" script="addr.country_code"/>
+        <key name="city_country_code" script="addr.city_data['country_code']"/>
+    </generate>
+
+    <!-- region-group aliases resolve case-insensitively, like concrete datasets -->
+    <generate name="upper_rows" count="10" target="ConsoleExporter">
+        <variable name="addr" entity="Address" dataset="NORTH_AMERICA"/>
+        <key name="country_code" script="addr.country_code"/>
+    </generate>
+</setup>

@@ -1,0 +1,10 @@
+<setup defaultSeparator=",">
+    <memstore id="mem"/>
+    <iterate name="amounts" source="data/amounts.csv" target="mem"/>
+
+    <execute>total = mem.sumEntityColumn('amounts', 'count')</execute>
+
+    <generate name="result" count="1" target="ConsoleExporter">
+        <key name="total" script="total"/>
+    </generate>
+</setup>

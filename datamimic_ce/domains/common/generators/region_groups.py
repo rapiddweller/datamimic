@@ -53,4 +53,14 @@ REGION_GROUPS: dict[str, tuple[str, ...]] = {
         "UA",
         "VA",
     ),
+    # Sub-regions and other groupings, each code having an existing city_{CC}.csv in this repo.
+    "WESTERN_EUROPE": ("FR", "DE", "NL", "BE", "LU", "AT", "CH", "LI", "MC", "IE", "GB"),
+    "CENTRAL_EUROPE": ("DE", "PL", "CZ", "SK", "HU", "AT", "CH", "SI"),
+    "SOUTHERN_EUROPE": ("IT", "ES", "PT", "GR", "SM", "VA", "AD", "CY"),
+    "EASTERN_EUROPE": ("PL", "CZ", "SK", "HU", "RO", "BG", "UA", "RU", "HR", "SI", "BA", "AL", "EE", "LT", "LV"),
+    "NORTH_AMERICA": ("US", "CA"),
+    "OCEANIA": ("AU", "NZ"),
+    "FRENCH": ("FR", "BE", "CH", "LU", "MC", "CA"),
+    "IBERIA": ("ES", "PT", "AD"),
 }
+
