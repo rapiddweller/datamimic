@@ -1,0 +1,6 @@
+<setup multiprocessing="True" numProcess="2" defaultSeparator=",">
+    <!-- default (random) distribution across 2 worker chunks: the stable per-statement seed
+         gives every chunk the same global shuffled sequence over the POST-OFFSET pool; the
+         disjoint chunk windows must reassemble it completely and duplicate-free -->
+    <iterate name="rows" source="data/rows.csv" offset="2" count="3" target="ConsoleExporter"/>
+</setup>

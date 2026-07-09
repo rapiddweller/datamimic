@@ -45,6 +45,24 @@ def test_offset_excludes_skipped_rows_from_the_random_pool():
     assert sorted(_ids("test_offset_random_pool.xml")) == ["3", "4", "5"]
 
 
+def test_offset_stays_aligned_across_mp_worker_chunks():
+    """numProcess=2 splits count=4 into two worker chunks; both must shift by the SAME offset
+    (a per-worker re-application or omission would duplicate or drop rows at the chunk seam)."""
+    assert _ids("test_offset_mp.xml") == ["2", "3", "4", "5"]
+
+
+def test_offset_cyclic_mp_wraps_as_one_global_sequence():
+    """cyclic across 2 worker chunks: the global wrap sequence over the post-offset region
+    (3,4,5,3,4,5,3,4) must reassemble seamlessly from the per-chunk windows."""
+    assert _ids("test_offset_mp_cyclic.xml") == ["3", "4", "5", "3", "4", "5", "3", "4"]
+
+
+def test_offset_random_pool_mp_is_complete_and_duplicate_free():
+    """default (random) distribution across 2 worker chunks: the shuffled pool excludes the
+    skipped rows, and the disjoint chunk windows together are a permutation of the remainder."""
+    assert sorted(_ids("test_offset_mp_random.xml")) == ["3", "4", "5"]
+
+
 def test_offset_beyond_source_yields_zero_rows():
     engine = DataMimicTest(_dir, "test_offset_beyond_source.xml", capture_test_result=True)
     engine.test_with_timer()
