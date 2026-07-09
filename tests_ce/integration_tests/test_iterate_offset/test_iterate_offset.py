@@ -8,6 +8,7 @@
 offset shrinks the available window - the count default, cyclic wrap-around, and page windows
 all operate on the post-offset region (a cyclic wrap must never re-include skipped rows)."""
 
+import shutil
 from pathlib import Path
 
 import pytest
@@ -73,3 +74,39 @@ def test_offset_without_source_is_rejected():
     engine = DataMimicTest(_dir, "test_offset_without_source.xml", capture_test_result=True)
     with pytest.raises(ValueError, match="offset"):
         engine.test_with_timer()
+
+
+def test_offset_negative_is_rejected():
+    engine = DataMimicTest(_dir, "test_offset_negative.xml", capture_test_result=True)
+    with pytest.raises(ValueError, match="offset"):
+        engine.test_with_timer()
+
+
+def test_offset_applies_to_every_file_format():
+    """json/xml/fcw/xlsx/dbunit all funnel offset into the same windowing helper - one iterate
+    per format over the same 5-row fixture proves each loader's pass-through."""
+    engine = DataMimicTest(_dir, "test_offset_formats.xml", capture_test_result=True)
+    engine.test_with_timer()
+    result = engine.capture_result()
+    for product in ("rows_json", "rows_xml", "rows_fcw", "rows_xlsx", "rows_dbunit"):
+        assert [r["id"] for r in result[product]] == ["3", "4", "5"], product
+
+
+def test_offset_on_memstore_source_is_rejected():
+    engine = DataMimicTest(_dir, "test_offset_memstore_rejected.xml", capture_test_result=True)
+    with pytest.raises(ValueError, match="file sources"):
+        engine.test_with_timer()
+
+
+def test_offset_on_db_client_source_is_rejected():
+    output_dir = _dir / "output"
+    db_dirs = (_dir / "db", _dir.parents[2] / "db")
+    for d in (output_dir, *db_dirs):
+        shutil.rmtree(d, ignore_errors=True)
+    try:
+        engine = DataMimicTest(_dir, "test_offset_client_rejected.xml", capture_test_result=True)
+        with pytest.raises(ValueError, match="file sources"):
+            engine.test_with_timer()
+    finally:
+        for d in (output_dir, *db_dirs):
+            shutil.rmtree(d, ignore_errors=True)

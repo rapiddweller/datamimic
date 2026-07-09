@@ -52,7 +52,7 @@ class GenerateModel(BaseModel):
     cyclic: bool | None = None
     # Skip the first N source rows before any windowing (Benerator parity). File sources only;
     # count default, cyclic wrap and page windows all operate on the post-offset region.
-    offset: int | None = None
+    offset: int | None = Field(None, ge=0)
     unique: bool | None = None
     type: str | None = None
     selector: str | None = None
@@ -126,13 +126,6 @@ class GenerateModel(BaseModel):
         if ATTR_OFFSET in values and ATTR_SOURCE not in values:
             raise ValueError("'offset' requires a 'source' - it skips the first N source rows")
         return values
-
-    @field_validator("offset")
-    @classmethod
-    def validate_offset_non_negative(cls, value):
-        if value is not None and value < 0:
-            raise ValueError(f"'offset' must be >= 0, but got: {value}")
-        return value
 
     @field_validator("source_entity", "target_entity")
     @classmethod

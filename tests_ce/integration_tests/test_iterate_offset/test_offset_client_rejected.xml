@@ -1,0 +1,5 @@
+<setup>
+    <database id="db" dbms="sqlite" database="output/offset_client.sqlite"/>
+    <execute uri="setup_client.sql" target="db"/>
+    <iterate name="rows" source="db" type="t" offset="1" target="ConsoleExporter"/>
+</setup>
