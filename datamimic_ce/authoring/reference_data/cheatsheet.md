@@ -30,7 +30,9 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 - **XML shaping**: inside a `<key>`, child `<element>`s become sub-elements of that
   key in XML output (`<key name="author"><element name="name" script="p.name"/></key>`).
 - `source=` reads existing data (`.csv`, `.json`, `.xlsx`, `.xml`, `.dbunit.xml`,
-  a `<memstore>` id, or a `<database>`/`<mongodb>` id).
+  a `<memstore>` id, or a `<database>`/`<mongodb>` id). `offset="N"` skips the
+  first N source rows (file sources only — DB/memstore sources reject it; the
+  count default shrinks to the remainder and `cyclic` wraps within it).
 - **`<generate>` vs `<iterate>`** — same engine element, different *intent*:
   use `<generate>` to CREATE records (write-only, or read-a-source-then-write);
   use `<iterate>` when the point is to READ/enrich an existing source in place.
@@ -110,6 +112,7 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 | money / an exact decimal | `type="decimal" min="0" max="1000"` |
 | a real person's name / email | a `<variable entity="Person"/>` then `script="p.name"` / `script="p.email"` |
 | a unique id | `generator="IncrementGenerator"` |
+| an id from a real DB sequence | `<key database="db" generator="SequenceTableGenerator(sequence='schema.seq_name')"/>` — omit `sequence=` for the `{type}_{name}_seq` convention; a missing sequence is auto-created starting at 1 |
 | a coded string (SKU, code) | `pattern="[A-Z]{3}-[0-9]{4}"` |
 | a list of sub-records | `<nestedKey type="list" minCount= maxCount=>` with child `<key>`s |
 | a binary blob / BLOB (image, key material) | `type="binary" minLength= maxLength="16"`; add `mimeType="image/png"` to prefix a real magic-number header (MIME-sniffable). Seeded → reproducible. DBs store bytes natively; file targets render the byte repr. |
