@@ -1,10 +1,13 @@
 # DATAMIMIC CE 4.0.0 Release Notes
 
-DATAMIMIC CE 4.0.0 is the migration compatibility and reproducibility release.
-Descriptors from legacy CE projects can now be brought across with engine-level
-support for native DB sequences, fixed-width files, a scriptable memstore,
-weighted state machines, composite foreign keys, and the `<iterate>` / `<id>` /
-`<comment>` vocabulary. Alongside that compatibility work, seeded runs are now
+DATAMIMIC CE 4.0.0 is the Benerator migration compatibility and reproducibility
+release. Benerator CE remains maintained for existing projects; DATAMIMIC CE is
+the modern continuation for new descriptor work and for teams moving long-lived
+Benerator projects onto a Python-native, deterministic runtime. Descriptors from
+Benerator-style projects can now be brought across with engine-level support for
+native DB sequences, fixed-width files, a scriptable memstore, weighted state
+machines, composite foreign keys, and the `<iterate>` / `<id>` / `<comment>`
+vocabulary. Alongside that compatibility work, seeded runs are now
 machine-independent and reproducible. This is a breaking change for 3.x seeded
 golden files; see Migration Notes.
 
@@ -12,7 +15,7 @@ The release also adds XLSX, DbUnit, and fixed-width as first-class formats and
 ships a DSL authoring toolchain: linting, dry-run execution, scaffolding, an MCP
 server, and registry-derived reference data.
 
-## Migration Compatibility
+## Benerator Migration Compatibility
 
 ### `<iterate>`, `<id>`, and `<comment>`
 
@@ -41,8 +44,9 @@ This also fixes a single-process execution path that could generate zero rows.
 
 ### Fixed-width column files
 
-`.fcw` files are self-describing when read: the first line carries the column
-specification. DATAMIMIC can now read and write fixed-width files.
+Benerator-style `.fcw` files are self-describing when read: the first line
+carries the column specification. DATAMIMIC can now read and write fixed-width
+files.
 
 ```text
 # ean_code[13],name[30],price[8r0]
@@ -73,8 +77,9 @@ wrap-around, and shuffled pools all operate on the post-offset region.
 ### Scriptable memstore and client ids
 
 Declared `memstore`, `database`, and `mongodb` ids are available in `script=` and
-`<execute>` scopes. Memstore aggregation is lenient for non-numeric cells, and a
-whole entity bound into a scalar DB/Mongo field is stringified deterministically.
+`<execute>` scopes, matching the common Benerator migration shape. Memstore
+aggregation is lenient for non-numeric cells, and a whole entity bound into a
+scalar DB/Mongo field is stringified deterministically.
 
 ```xml
 <setup>
@@ -131,8 +136,8 @@ row, including DB and MongoDB sources.
 ### Value picks, counts, decimals, and numeric distributions
 
 Native attributes now cover weighted values, unique value picks, `minCount` /
-`maxCount`, exact decimals, bell-shaped numeric draws, and deterministic numeric
-range sequences.
+`maxCount`, exact decimals, Benerator-compatible bell-shaped numeric draws, and
+deterministic numeric range sequences.
 
 ```xml
 <generate name="txns" minCount="100" maxCount="200" target="CSV">
