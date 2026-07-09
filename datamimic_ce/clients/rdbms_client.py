@@ -518,8 +518,13 @@ class RdbmsClient(DatabaseClient):
         with self._create_engine().connect() as connection:
             transaction = connection.begin()
             try:
-                # Check if sequence exists in the specified schema
+                # Check if sequence exists in the specified schema. A dotted name
+                # ('zsv.t_angebote_id_seq', explicit sequence= from the DSL) carries its own
+                # schema - splitting here keeps every query below two-part; blindly prepending
+                # the credential schema would build malformed public.zsv.t_angebote_id_seq.
                 schema = self._credential.db_schema or "public"
+                if "." in sequence_name:
+                    schema, sequence_name = sequence_name.split(".", 1)
                 check_query = text(
                     "SELECT EXISTS (SELECT 1 FROM pg_sequences WHERE schemaname = :schema AND sequencename = :seq_name)"
                 )
@@ -551,6 +556,8 @@ class RdbmsClient(DatabaseClient):
             transaction = connection.begin()
             try:
                 schema = self._credential.db_schema or "public"
+                if "." in sequence_name:  # dotted name carries its own schema (see get_current_sequence_number)
+                    schema, sequence_name = sequence_name.split(".", 1)
                 # Use a transaction to ensure atomicity
                 query = text(
                     f"SELECT setval('{schema}.{sequence_name}', nextval('{schema}.{sequence_name}') + :increment)"
