@@ -61,6 +61,23 @@ def test_reference_timeseries_documents_ts_namespace() -> None:
         assert token in text
 
 
+def test_reference_distributions_documents_numeric_sequences() -> None:
+    from datamimic_ce.enums.distribution_enums import NumberDistribution
+
+    text = reference("distributions")
+    for member in NumberDistribution:
+        assert member.value in text
+    assert "multiprocessing" in text
+    assert "finite positional sequences" in text
+
+
+def test_cheatsheet_documents_numeric_sequence_distributions() -> None:
+    text = cheatsheet()
+    for token in ("step", "shuffle", "wedge", "bitreverse", "fibonacci", "padovan", "randomWalk"):
+        assert token in text
+    assert "worker-local iterator" in text
+
+
 def test_reference_converters_derived_from_enum() -> None:
     from datamimic_ce.enums.converter_enums import ConverterEnum
 
@@ -73,6 +90,7 @@ def test_reference_converters_derived_from_enum() -> None:
 def test_capabilities_manifest_matches_registries() -> None:
     from datamimic_ce.authoring.reference import capabilities_manifest
     from datamimic_ce.enums.converter_enums import ConverterEnum
+    from datamimic_ce.enums.distribution_enums import NumberDistribution, SourceDistribution
     from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
 
     manifest = capabilities_manifest()
@@ -81,6 +99,8 @@ def test_capabilities_manifest_matches_registries() -> None:
     assert manifest["aliases"] == ALIASES
     assert set(manifest["converters"]) == {m.value for m in ConverterEnum}
     assert set(manifest["targets"]["file_exporters"]) == set(_BUFFERED_EXPORTERS)
+    assert set(manifest["distributions"]) == {m.value for m in SourceDistribution}
+    assert set(manifest["numeric_distributions"]) == {m.value for m in NumberDistribution}
     assert "IncrementGenerator" in manifest["generators"]
     assert "Person" in manifest["entities"]
     gen = manifest["elements"]["generate"]

@@ -205,7 +205,10 @@ class ReferenceArgs(BaseModel):
     topic: str = Field(
         "overview",
         pattern="^(overview|element|generators|entities|context|timeseries|targets|distributions|converters|recipes|recipe)$",
-        description="What to look up; start with 'overview'",
+        description=(
+            "What to look up; start with 'overview'. Use 'distributions' for source reads "
+            "and numeric range key sequences."
+        ),
     )
     name: str | None = Field(
         None,

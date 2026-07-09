@@ -93,7 +93,12 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 8. Prefer native attributes over eval-strings:
    `type="int" min="1" max="9"` beats `generator="IntegerGenerator(min=1,max=9)"`;
    `minLength`/`maxLength` beat `StringGenerator(...)`; a bell-shaped draw is
-   `type="int" min= max= distribution="cumulated"` (numeric range keys only). (DM310, DM311)
+   `type="int" min= max= distribution="cumulated"` (numeric range keys only).
+   Numeric range keys also support finite deterministic sequences:
+   `step`, `increment`, `shuffle`, `wedge`, `bitreverse`, `fibonacci`,
+   `padovan`, plus `randomWalk`. Finite positional sequences end instead of
+   wrapping and are rejected under multiprocessing because worker-local iterator
+   state would duplicate values. (DM310, DM311)
 9. `<nestedKey cyclic="True">` requires a `count`; `<generate cyclic>` does not.
    (DM213)
 10. Targets must exist: registry exporters, declared `<memstore>`/client ids, or
@@ -111,6 +116,8 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 | …the same, but weighted | `values="..." weights="0.5,0.3,0.2"` |
 | a whole number in a range | `type="int" min="18" max="90"` |
 | money / an exact decimal | `type="decimal" min="0" max="1000"` |
+| a deterministic sequence over a numeric range | `type="int" min="1" max="100" distribution="step"`; use `shuffle`, `wedge`, `bitreverse`, `fibonacci`, or `padovan` for other finite orders |
+| a seeded bounded walk over a numeric range | `type="float" min="0" max="10" granularity="0.5" distribution="randomWalk"` |
 | a real person's name / email | a `<variable entity="Person"/>` then `script="p.name"` / `script="p.email"` |
 | a unique id | `generator="IncrementGenerator"` |
 | an id from a real DB sequence | `<key database="db" generator="SequenceTableGenerator(sequence='schema.seq_name')"/>` — omit `sequence=` for the `{type}_{name}_seq` convention; a missing sequence is auto-created starting at 1 |
