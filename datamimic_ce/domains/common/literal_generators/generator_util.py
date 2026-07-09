@@ -137,11 +137,19 @@ class GeneratorUtil:
                 return result
 
             if class_name == "SequenceTableGenerator":
-                result = cls(context=self._context, stmt=stmt)
+                # Optional explicit sequence name: SequenceTableGenerator(sequence='zsv.t_angebote_id_seq')
+                # (Benerator DBSequenceGenerator parity). ast-parsed like DateTimeGenerator below, but
+                # keyword-only and single-kwarg - anything else raises, args are never silently dropped.
+                parsed_sequence = GeneratorUtil._parse_sequence_kwarg(generator_str)
+                result = cls(context=self._context, stmt=stmt, sequence=parsed_sequence)
                 if pagination:
                     result.add_pagination(pagination=pagination)
-                # Use unified cache key (may differ from generator_str when a key is provided)
-                self._context.root.generators[cache_key] = result
+                    # Cache only generation-ready (paginated) instances. GenerateTask.pre_execute
+                    # builds its sub-tasks with pagination=None; caching that instance under the
+                    # same full_name|generator cache key the paginated page-tasks use later made
+                    # every single-process run hit _current=None -> StopIteration on the first
+                    # record -> 0 rows (only the numProcess=2 path had coverage, masking this).
+                    self._context.root.generators[cache_key] = result
                 return result
 
             # --- DateTimeGenerator special parsing ---
@@ -274,6 +282,47 @@ class GeneratorUtil:
                 raise ValueError(f"Cannot create generator '{current_class_name}'{element_name_str}: {e}") from e
             else:
                 raise
+
+    @staticmethod
+    def _parse_sequence_kwarg(generator_str: str) -> str | None:
+        """Extract the optional sequence='...' kwarg from a SequenceTableGenerator generator
+        string. Bare "SequenceTableGenerator" and empty "SequenceTableGenerator()" return None
+        (convention-derived name). Positional args, unknown kwargs, non-string values, and
+        malformed syntax all raise ValueError - this generator's args used to be silently
+        discarded, which is exactly the failure mode this replaces."""
+        if "(" not in generator_str:
+            return None
+        try:
+            module_node = ast.parse(generator_str)
+        except SyntaxError as e_syn:
+            raise ValueError(
+                f"Error parsing parameters for SequenceTableGenerator from '{generator_str}': {e_syn}"
+            ) from e_syn
+        if not (
+            module_node.body
+            and isinstance(module_node.body[0], ast.Expr)
+            and isinstance(module_node.body[0].value, ast.Call)
+            and isinstance(module_node.body[0].value.func, ast.Name)
+            and module_node.body[0].value.func.id == "SequenceTableGenerator"
+        ):
+            raise ValueError(f"Cannot parse SequenceTableGenerator arguments from '{generator_str}'")
+        call_node = module_node.body[0].value
+        if call_node.args:
+            raise ValueError(
+                f"SequenceTableGenerator does not accept positional arguments; "
+                f"use sequence='...' in '{generator_str}'"
+            )
+        parsed_sequence: str | None = None
+        for kw in call_node.keywords:
+            if kw.arg != "sequence":
+                raise ValueError(
+                    f"Unsupported keyword argument '{kw.arg}' for SequenceTableGenerator in "
+                    f"'{generator_str}'; only 'sequence' is supported"
+                )
+            if not isinstance(kw.value, ast.Constant) or not isinstance(kw.value.value, str):
+                raise ValueError(f"'sequence' must be a string literal in '{generator_str}'")
+            parsed_sequence = kw.value.value
+        return parsed_sequence
 
     @staticmethod
     def is_valid_uuid(input_string: str) -> bool:

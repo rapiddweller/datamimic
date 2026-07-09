@@ -1,0 +1,23 @@
+<setup>
+
+    <database id="sourceDB" system="postgresql" />
+
+    <execute uri="script/setup_explicit_sequence.scr.sql" target="sourceDB" />
+
+    <!-- Explicit unqualified name: lands in the credential schema (functional), NOT the
+         convention-derived explicit_plain_id_seq. -->
+    <generate name="plain_rows" type="explicit_plain" count="5" target="ConsoleExporter">
+        <key name="id" database="sourceDB" generator="SequenceTableGenerator(sequence='custom_seq_name')" />
+    </generate>
+
+    <!-- Schema-qualified name of a DBA-pre-created sequence (START 500) - the actual Benerator
+         migration shape (zsv.t_angebote_id_seq). Ids must come from the 500-region. -->
+    <generate name="qualified_rows" type="explicit_qualified" count="5" target="ConsoleExporter">
+        <key name="id" database="sourceDB" generator="SequenceTableGenerator(sequence='migrated_schema.legacy_seq')" />
+    </generate>
+
+    <!-- Catalog check: which of the expected/forbidden sequence names actually exist. -->
+    <generate name="seq_catalog" source="sourceDB"
+        selector="SELECT schemaname || '.' || sequencename AS seq FROM pg_sequences WHERE sequencename IN ('custom_seq_name', 'legacy_seq', 'explicit_plain_id_seq', 'explicit_qualified_id_seq')"
+        target="ConsoleExporter" />
+</setup>

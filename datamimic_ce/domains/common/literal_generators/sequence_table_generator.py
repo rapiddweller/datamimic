@@ -36,6 +36,7 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         self,
         context: Context,
         stmt: KeyStatement | VariableStatement,
+        sequence: str | None = None,
     ):
         """
         Initialize the sequence table generator.
@@ -43,6 +44,12 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         Args:
             context: Context object containing configuration and state
             stmt: Statement object containing sequence configuration
+            sequence: Optional explicit DB sequence name (e.g. 'zsv.t_angebote_id_seq' for a
+                schema-qualified native sequence - Benerator DBSequenceGenerator parity). When
+                None, falls back to the convention-derived f"{type}_{name}_seq". Caution: a
+                sequence that doesn't exist is still auto-created starting at 1, so a typo'd
+                explicit name silently mints a fresh sequence instead of erroring - against a
+                live table with real rows that means duplicate keys.
 
         Raises:
             ValueError: If required attributes are missing or invalid
@@ -53,6 +60,7 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         self._process_id: int | None = None
         self._current: int | None = None
         self._end: int | None = None
+        self._explicit_sequence_name = sequence or None  # "" falls back to convention too
 
         # Handle database attribute access safely
         if not hasattr(stmt, "database"):
@@ -63,10 +71,12 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         if rdbms_client is None:
             raise ValueError(f"No database client found for source: {self._source_name}")
 
-        # Get root generate statement safely
+        # Get root generate statement safely (stashed: the root of a key/variable cannot change
+        # over this instance's lifetime, so pre_execute reuses it instead of re-walking the tree)
         root_gen_stmt = self._stmt.get_root_generate_statement()
         if root_gen_stmt is None:
             raise ValueError("Root generate statement is required")
+        self._root_gen_stmt = root_gen_stmt
 
         # Initialize sequence with process-safe range
         try:
@@ -79,9 +89,7 @@ class SequenceTableGenerator(BaseLiteralGenerator):
             per_process_count = (total_count + total_processes - 1) // total_processes
 
             # Get current sequence and calculate process-specific range
-            current_seq = rdbms_client.get_current_sequence_number(
-                sequence_name=f"{root_gen_stmt.type}_{self._stmt.name}_seq"
-            )
+            current_seq = rdbms_client.get_current_sequence_number(sequence_name=self._resolve_sequence_name())
 
             # Calculate process-specific offset to avoid conflicts
             process_offset = self._process_id * per_process_count
@@ -94,6 +102,13 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         except Exception as e:
             raise ValueError(f"Failed to initialize sequence: {str(e)}") from e
 
+    def _resolve_sequence_name(self) -> str:
+        """Explicit sequence= name if given (e.g. a migrated Benerator DBSequenceGenerator name,
+        schema-qualified or not); otherwise the existing convention f"{type}_{name}_seq"."""
+        if self._explicit_sequence_name:
+            return self._explicit_sequence_name
+        return f"{self._root_gen_stmt.type}_{self._stmt.name}_seq"
+
     def pre_execute(self, context: Context) -> None:
         """
         Increase the sequence number in the database before execution.
@@ -105,16 +120,12 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         Raises:
             ValueError: If required statements or attributes are missing
         """
-        root_gen_stmt = self._stmt.get_root_generate_statement()
-        if root_gen_stmt is None:
-            raise ValueError("Root generate statement is required for pre_execute")
-
         rdbms_client = context.root.clients.get(self._source_name)
         if rdbms_client is None:
             raise ValueError(f"No database client found for source: {self._source_name}")
 
         rdbms_client.increase_sequence_number(
-            sequence_name=f"{root_gen_stmt.type}_{self._stmt.name}_seq", increment=root_gen_stmt.count
+            sequence_name=self._resolve_sequence_name(), increment=self._root_gen_stmt.count
         )
 
     def add_pagination(self, pagination: DataSourcePagination | None = None) -> None:
