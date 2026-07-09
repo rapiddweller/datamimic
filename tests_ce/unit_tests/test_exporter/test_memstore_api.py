@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""Memstore query API - Benerator parity (memstore/memstore.ben.xml uses
+"""Memstore query API - migration parity (the migrated memstore demo descriptor uses
 mem.sumEntityColumn/mem.entityCount/mem.removeNotExistingIds). No DSL entry point exists for these
 yet (that's the separate execute-namespace-binding fix) - unit-tested directly against the class."""
 
@@ -36,7 +36,7 @@ def test_sum_entity_column_missing_type_is_zero():
 
 
 def test_sum_entity_column_skips_non_numeric_cells():
-    # Benerator-lenient: a stray placeholder must not abort the aggregation
+    # legacy-lenient: a stray placeholder must not abort the aggregation
     mem = Memstore("mem")
     mem.consume(("t", [{"count": "5"}, {"count": "n/a"}, {"count": None}, {"count": "7"}]))
     assert mem.sumEntityColumn("t", "count") == 12

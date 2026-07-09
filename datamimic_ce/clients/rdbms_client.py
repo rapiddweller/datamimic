@@ -61,7 +61,7 @@ class RdbmsClient(DatabaseClient):
         self._task_id = task_id
 
         # Keep only real SQLAlchemy create_engine kwargs. The connection config allows extra keys
-        # (env files carry connection identity like dbms/host plus vendor knobs such as Benerator's
+        # (env files carry connection identity like dbms/host plus vendor knobs such as legacy
         # clean/catalog/quoteTableNames); anything not a create_engine parameter would raise, so allowlist.
         all_config = credential.get_connection_config()
         self._engine_kwargs = {k: v for k, v in all_config.items() if k in _ENGINE_KWARGS}
@@ -414,7 +414,7 @@ class RdbmsClient(DatabaseClient):
             return
 
         data_list = self._apply_global_json_config(data_list)
-        # A whole entity bound into a scalar column (Benerator's toString() idiom, e.g.
+        # A whole entity bound into a scalar column (the legacy toString() idiom, e.g.
         # <key script="person"> into a varchar field) has no driver-level binding otherwise -
         # confirmed this raises hard today (sqlite3.ProgrammingError: type not supported), so
         # this only turns a crash into a correct write, never changes behavior for what works now.

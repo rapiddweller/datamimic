@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""<comment> is an ignored Benerator documentation element.
+"""<comment> is an ignored documentation-only element (legacy DSL compatibility).
 
 Surface: engine (datamimic_ce). Proves a model with <comment> elements (at setup
 level and nested inside <generate>, between fields) parses (L1) and produces data

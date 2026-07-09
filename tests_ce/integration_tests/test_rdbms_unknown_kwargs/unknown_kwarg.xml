@@ -1,5 +1,5 @@
 <setup>
-    <!-- 'clean' is a Benerator connection knob carried in from a migrated env file;
+    <!-- 'clean' is a legacy connection knob carried in from a migrated env file;
          it must not reach SQLAlchemy's create_engine -->
     <database id="db" database="unknown_kwarg_db" dbms="sqlite" clean="true" quoteTableNames="true"/>
     <execute type="sql" target="db">DROP TABLE IF EXISTS t; CREATE TABLE t (n INTEGER); INSERT INTO t VALUES (5);</execute>

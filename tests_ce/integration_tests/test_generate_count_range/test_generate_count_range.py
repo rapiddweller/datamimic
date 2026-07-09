@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""minCount/maxCount on <generate> (Benerator-style random row count).
+"""minCount/maxCount on <generate> (legacy-style random row count).
 
 Surface: engine (datamimic_ce). Mirrors the existing <nestedKey> minCount/maxCount
 behaviour; count resolution is the single shared StatementUtil.resolve_count.

@@ -21,7 +21,7 @@ class TestSequenceTableGenerator:
         engine.capture_result()
 
     def test_sequence_table_generator_postgres_explicit_sequence_name(self):
-        """sequence='...' overrides the {type}_{name}_seq convention (Benerator
+        """sequence='...' overrides the {type}_{name}_seq convention (legacy-DSL
         DBSequenceGenerator parity): an unqualified explicit name lands in the credential
         schema, a schema-qualified one ('migrated_schema.legacy_seq') binds to the DBA
         pre-created sequence (START 500) instead of failing on a 3-part identifier or

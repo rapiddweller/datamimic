@@ -5,11 +5,13 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import random
+from collections.abc import Iterator
 from decimal import Decimal
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.enums.distribution_enums import NumberDistribution
 from datamimic_ce.utils.distribution_sampling import cumulated_index
+from datamimic_ce.utils.number_sequences import build_number_sequence
 
 
 class FloatGenerator(BaseLiteralGenerator):
@@ -31,8 +33,14 @@ class FloatGenerator(BaseLiteralGenerator):
         self._max = max
         self._granularity = granularity
         self._distribution = distribution
+        # see IntegerGenerator: sequence members walk a stateful iterator until exhausted
+        self._sequence: Iterator[int | float] | None = None
+        if distribution not in (NumberDistribution.UNIFORM, NumberDistribution.CUMULATED):
+            self._sequence = build_number_sequence(distribution, min, max, granularity, self._rng, integral=False)
 
     def generate(self) -> float:
+        if self._sequence is not None:
+            return float(next(self._sequence))
         granularity_decimal = Decimal(str(self._granularity))
 
         if self._distribution is NumberDistribution.CUMULATED:

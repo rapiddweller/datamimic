@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""Exact decimal generation (Benerator big_decimal -> exact money, no float drift).
+"""Exact decimal generation (legacy big_decimal -> exact money, no float drift).
 
 Surface: engine (datamimic_ce). L3 property proof: type="decimal" produces real
 Decimal values scaled to the granularity grid, with no binary-float artefact.

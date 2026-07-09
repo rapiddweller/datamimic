@@ -64,7 +64,7 @@ class TestMongoNestedReferencePath:
 
 
 class TestMongoShellToJson:
-    """Benerator mongo selectors use shell syntax (bareword keys, $-operators, single quotes)."""
+    """Migrated legacy mongo selectors use shell syntax (bareword keys, $-operators, single quotes)."""
 
     def test_find_with_bareword_projection(self):
         import json
@@ -116,7 +116,7 @@ class TestMongoReferenceSortKey:
 
 
 class TestMongoQueryTypeDetection:
-    """The command key may be bareword OR quoted across Benerator selectors."""
+    """The command key may be bareword OR quoted across migrated legacy selectors."""
 
     def test_bareword_find(self):
         assert MongoDBClient._check_query_type("find: 'c', filter: {}") == "find"

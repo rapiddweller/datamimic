@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""SequenceTableGenerator explicit sequence= name (Benerator parity: DBSequenceGenerator binds to
+"""SequenceTableGenerator explicit sequence= name (migration parity: DBSequenceGenerator binds to
 an arbitrarily DBA-named native sequence, e.g. 'zsv.t_angebote_id_seq' - not derivable from the
 {type}_{name}_seq convention). Unit-tested with a recording fake client (same precedent as
 test_generator_cache_behavior.py) because the assertion target is the literal string that reaches

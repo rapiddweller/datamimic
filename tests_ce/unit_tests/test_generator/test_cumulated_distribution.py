@@ -4,14 +4,11 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""L3 shape test for the Benerator 'cumulated' distribution on ranged numerics.
+"""L3 shape test for the legacy 'cumulated' distribution on ranged numerics.
 
 Surface: engine (datamimic_ce). Proves IntegerGenerator/FloatGenerator sample a
 symmetric bell (mean=midpoint, edges reachable but rarer than centre) when
-distribution='cumulated', matching com.rapiddweller.benerator's CumulatedLongGenerator.
-
-Deterministic because the rng is injected directly: the literal-generator DSL path
-is NOT bound to <setup rngSeed> (EE-only), so the shape contract is verified here in
+distribution='cumulated', matching the legacy cumulated number generators., so the shape contract is verified here in
 Python rather than in a seeded DSL model. The DSL fixture proves L1 (parses+runs) only.
 """
 
@@ -36,7 +33,7 @@ class TestCumulatedInteger:
     def test_mean_is_midpoint(self):
         gen = IntegerGenerator(min=0, max=50, distribution=NumberDistribution.CUMULATED, rng=random.Random(42))
         mean = sum(gen.generate() for _ in range(N)) / N
-        assert abs(mean - 25) < 1.0  # Benerator checkAverage(0, 50, 25)
+        assert abs(mean - 25) < 1.0  # legacy checkAverage(0, 50, 25)
 
     def test_symmetric_bell(self):
         lo, hi = 1, 27  # the dominant corpus case: number_of_items min=1 max=27
@@ -52,7 +49,7 @@ class TestCumulatedInteger:
                 assert 0.8 < c1 / c2 < 1.2
 
     def test_endpoints_reachable_narrow_range(self):
-        # Mirrors Benerator's checkDistribution(0, 5): on a narrow range both edges hit.
+        # Mirrors the legacy suite's checkDistribution(0, 5): on a narrow range both edges hit.
         # (On a wide range edges are ~(1/span)^5 -> effectively unreachable, by design.)
         lo, hi = 0, 5
         gen = IntegerGenerator(min=lo, max=hi, distribution=NumberDistribution.CUMULATED, rng=random.Random(7))

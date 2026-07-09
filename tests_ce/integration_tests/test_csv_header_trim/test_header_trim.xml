@@ -1,5 +1,5 @@
 <setup defaultSeparator=",">
-    <!-- padded/aligned headers (Benerator entity-CSV style): script field access must resolve
+    <!-- padded/aligned headers (migrated legacy entity-CSV style): script field access must resolve
          the CLEAN column name - before the trim, this.name failed with "name not defined" -->
     <iterate name="products" source="data/padded.csv" distribution="ordered" target="ConsoleExporter">
         <key name="clean_name" script="this.name"/>

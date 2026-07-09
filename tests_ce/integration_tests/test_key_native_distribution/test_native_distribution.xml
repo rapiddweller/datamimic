@@ -1,0 +1,9 @@
+<setup rngSeed="5">
+    <generate name="rows" count="400" target="ConsoleExporter">
+        <key name="score" type="int" min="1" max="100" distribution="cumulated"/>
+        <key name="price" type="float" min="0.5" max="99.5" granularity="0.5" distribution="cumulated"/>
+        <key name="amount" type="decimal" min="0.01" max="9.99" granularity="0.01" distribution="cumulated"/>
+        <key name="plain" type="int" min="1" max="100"/>
+        <key name="explicit_uniform" type="int" min="1" max="100" distribution="uniform"/>
+    </generate>
+</setup>

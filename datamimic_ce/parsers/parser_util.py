@@ -255,7 +255,7 @@ class ParserUtil:
         copied_props = copy.deepcopy(properties) if properties else {}
 
         for child_ele in element:
-            # <comment> is a Benerator documentation element: ignored, produces no statement.
+            # <comment> is a documentation-only element (legacy DSL compatibility): ignored, produces no statement.
             if child_ele.tag == EL_COMMENT:
                 continue
             parser = ParserUtil._get_parser_by_element(child_ele, copied_props)

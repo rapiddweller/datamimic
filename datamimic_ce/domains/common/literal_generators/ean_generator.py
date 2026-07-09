@@ -14,7 +14,7 @@ from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralG
 class EANGenerator(BaseLiteralGenerator):
     """EAN-13 codes via faker.
 
-    ``unique=True`` guarantees no repeated code across the generator's lifetime (Benerator
+    ``unique=True`` guarantees no repeated code across the generator's lifetime (legacy-DSL
     ``EANGenerator(unique)`` parity) - needed when the EAN is a primary key.
     """
 

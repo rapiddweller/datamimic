@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""CSV header whitespace trim, end to end: a padded/aligned CSV (Benerator entity-CSV style)
+"""CSV header whitespace trim, end to end: a padded/aligned CSV (migrated legacy entity-CSV style)
 must yield clean column KEYS so script field access resolves - while cell VALUES keep their
 whitespace untouched (trimming values would corrupt data; only the keys are structural)."""
 

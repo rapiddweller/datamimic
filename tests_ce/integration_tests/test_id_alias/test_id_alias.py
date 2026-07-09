@@ -8,7 +8,7 @@
 
 Surface: engine (datamimic_ce). Proves <id> parses (L1) and produces data identical
 to <key> (L3), including the common <id generator="IncrementGenerator"> pattern that
-Benerator descriptors use for sequence/DB-sequence identifiers.
+migrated legacy descriptors use for sequence/DB-sequence identifiers.
 """
 
 from __future__ import annotations

@@ -52,7 +52,7 @@ def test_mongodb_reference_is_deterministic():
 
 def test_mongodb_reference_nested_path():
     """A dotted sourceKey ('addresses.address_id') resolves a <reference> to an entity nested
-    inside a collection document (a converted Benerator <part>), unwinding the embedded list."""
+    inside a collection document (a converted legacy-DSL <part>), unwinding the embedded list."""
     result = _run()
     nested_rows = result["check_nested"]
     # 3 customers x 2 addresses = 6 real nested address ids; cyclic wraps the stable order exactly

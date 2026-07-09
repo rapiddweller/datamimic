@@ -189,6 +189,10 @@ class KeyVariableTask:
         args = [f"{k}={v}" for k, v in (("min", stmt.min), ("max", stmt.max)) if v is not None]
         if cls == "FloatGenerator" and stmt.granularity is not None:
             args.append(f"granularity={stmt.granularity}")
+        if stmt.distribution is not None:
+            # value validated against NumberDistribution at parse time (key_model); lookup by
+            # VALUE - member names differ from values for randomWalk/bitreverse
+            args.append(f"distribution=NumberDistribution('{stmt.distribution}')")
         return f"{cls}({', '.join(args)})"
 
     @abstractmethod

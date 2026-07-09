@@ -4,8 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""Binding a whole entity (<key script="person">) into a scalar RDBMS column - Benerator parity
-(Benerator's toString()). Confirmed empirically before this fix: sqlite3.ProgrammingError,
+"""Binding a whole entity (<key script="person">) into a scalar RDBMS column - migration parity
+(the legacy toString()). Confirmed empirically before this fix: sqlite3.ProgrammingError,
 'type Person is not supported' - so this is a pure improvement, not a behavior change with
 regression risk (nothing succeeds today for this input)."""
 

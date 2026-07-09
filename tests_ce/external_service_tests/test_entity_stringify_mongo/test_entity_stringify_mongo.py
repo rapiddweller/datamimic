@@ -4,8 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""Binding a whole entity (<key script="person">) into a scalar Mongo field - Benerator parity
-(Benerator's toString()). Confirmed empirically before this fix: bson.errors.InvalidDocument (a
+"""Binding a whole entity (<key script="person">) into a scalar Mongo field - migration parity
+(the legacy toString()). Confirmed empirically before this fix: bson.errors.InvalidDocument (a
 bare Person can't be BSON-encoded) - so this is a pure improvement, not a behavior change with
 regression risk."""
 

@@ -39,7 +39,7 @@ class BaseEntity(ABC):
         return cache
 
     def __getattr__(self, name: str) -> Any:
-        # Only runs when normal lookup misses: resolve a non-canonical field name (e.g. Benerator's camelCase
+        # Only runs when normal lookup misses: resolve a non-canonical field name (e.g. a legacy descriptor's camelCase
         # ``person.givenName``) to the entity's real snake_case field. Zero cost on the canonical path.
         if name.startswith("_"):
             raise AttributeError(name)
@@ -58,7 +58,7 @@ class BaseEntity(ABC):
 
 def stringify_if_entity(value: Any) -> Any:
     """A whole entity bound into a scalar column (e.g. `<key script="person">` into a varchar/
-    string field, Benerator's toString() idiom) has no sane driver-level representation - both the
+    string field, the legacy toString() idiom) has no sane driver-level representation - both the
     RDBMS and Mongo write paths call this first. `BaseEntity` defines no `__str__`, so a bare
     `str(value)` would write Python's default `<...Person object at 0x...>` (a non-deterministic
     memory address); `.to_dict()` is the one meaningful representation every entity provides."""

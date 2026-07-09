@@ -1,0 +1,32 @@
+<setup rngSeed="9" multiprocessing="False">
+    <!-- deterministic 5-value sequences over min=1..max=5 (exact order asserted) -->
+    <generate name="five" count="5" target="ConsoleExporter">
+        <key name="step" type="int" min="1" max="5" distribution="step"/>
+        <key name="increment" type="int" min="1" max="5" distribution="increment"/>
+        <key name="shuffle" type="int" min="1" max="5" distribution="shuffle"/>
+        <key name="wedge" type="int" min="1" max="5" distribution="wedge"/>
+    </generate>
+
+    <generate name="bitrev" count="8" target="ConsoleExporter">
+        <key name="v" type="int" min="0" max="7" distribution="bitreverse"/>
+    </generate>
+
+    <generate name="fib" count="12" target="ConsoleExporter">
+        <key name="v" type="int" min="0" max="100" distribution="fibonacci"/>
+    </generate>
+
+    <generate name="padovan" count="10" target="ConsoleExporter">
+        <key name="v" type="int" min="1" max="9" distribution="padovan"/>
+    </generate>
+
+    <generate name="walk" count="30" target="ConsoleExporter">
+        <key name="v" type="int" min="1" max="10" distribution="randomWalk"/>
+    </generate>
+
+    <!-- float grid: granularity defines the step width -->
+    <generate name="float_five" count="5" target="ConsoleExporter">
+        <key name="step" type="float" min="0.5" max="2.5" granularity="0.5" distribution="step"/>
+        <key name="wedge" type="float" min="0.5" max="2.5" granularity="0.5" distribution="wedge"/>
+        <key name="dec" type="decimal" min="0.01" max="0.05" granularity="0.01" distribution="step"/>
+    </generate>
+</setup>

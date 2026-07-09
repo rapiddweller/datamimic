@@ -244,6 +244,7 @@ class GenerateTask(CommonSubTask):
 
                 # Execute generate task by page in multiprocessing
                 if isinstance(context, SetupContext) and num_workers > 1:
+                    self._reject_positional_sequences_under_mp()
                     # Serialize context for Ray multiprocessing
                     copied_context = copy.deepcopy(context)
                     ns_funcs = {k: v for k, v in copied_context.root.namespace.items() if callable(v)}
@@ -418,6 +419,27 @@ class GenerateTask(CommonSubTask):
         for sub_stmt in stmt.sub_statements:
             if isinstance(sub_stmt, GenerateStatement):
                 GenerateTask.export_artifact_files(context, sub_stmt)
+
+    def _reject_positional_sequences_under_mp(self) -> None:
+        """A positional number sequence (step/shuffle/wedge/...) is a stateful iterator that
+        restarts in every worker process - two workers would emit the SAME values, silently
+        duplicating what the sequence guarantees to be unique. Fail loudly instead; drop
+        numProcess/multiprocessing (or the sequence) to proceed."""
+        from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES
+        from datamimic_ce.statements.key_statement import KeyStatement
+
+        for sub_stmt in self.statement.sub_statements:
+            if (
+                isinstance(sub_stmt, KeyStatement)
+                and sub_stmt.distribution is not None
+                and sub_stmt.distribution in POSITIONAL_NUMBER_SEQUENCES
+            ):
+                raise ValueError(
+                    f"<generate> '{self.statement.full_name}': distribution=\"{sub_stmt.distribution}\" on "
+                    f"key '{sub_stmt.name}' is a positional sequence and cannot run with multiprocessing - "
+                    f"each worker would restart it and emit duplicate values. Run single-process "
+                    f"(drop numProcess/multiprocessing) or use a per-row distribution."
+                )
 
     def pre_execute(self, context: Context):
         """

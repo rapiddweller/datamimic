@@ -13,7 +13,7 @@ class SubstringConverter(Converter):
     """Extract value[start:end] with python slice semantics (negatives count from the end).
 
     ``Substring(-4)`` = the last four characters — the classic anonymization tail-extract
-    (Benerator's ``SubstringExtractor(from, to)`` counterpart).
+    (the legacy ``SubstringExtractor(from, to)`` counterpart).
     """
 
     def __init__(self, start: int, end: int | None = None):

@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""Memstore API extensions unblocking memstore/memstore.ben.xml (Benerator parity)."""
+"""Memstore API extensions unblocking the migrated memstore demo descriptor (migration parity)."""
 
 import shutil
 from pathlib import Path
@@ -27,7 +27,7 @@ def test_wgt_ent_csv_reads_via_iterate():
 
 
 def test_memstore_sum_skips_non_numeric_cells():
-    """Benerator-lenient aggregation, end to end: a CSV-sourced count column carrying a stray
+    """legacy-lenient aggregation, end to end: a CSV-sourced count column carrying a stray
     non-numeric placeholder ('n/a') must not abort the sum - 5 + skip + 7 = 12."""
     engine = DataMimicTest(_dir, "test_memstore_sum_lenient.xml", capture_test_result=True)
     engine.test_with_timer()
@@ -49,7 +49,7 @@ def test_memstore_accessible_by_id_before_and_after_execute():
 def test_memstore_sum_feeds_a_subsequent_count():
     """mem.sumEntityColumn() inside <execute>, its result driving count="{totalCount}" on a later
     <generate>, and mem.entityCount() confirming it - the exact pipeline
-    memstore/memstore.ben.xml uses. values="5,3,7" picks randomly per row (not one-of-each), so
+    the migrated memstore demo uses. values="5,3,7" picks randomly per row (not one-of-each), so
     only the total's range is asserted, not an exact value - the point is internal consistency
     across the whole sum -> count -> generate -> recount pipeline."""
     engine = DataMimicTest(_dir, "test_memstore_sum_and_count.xml", capture_test_result=True)

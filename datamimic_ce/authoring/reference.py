@@ -185,7 +185,14 @@ def timeseries_reference() -> str:
 
 
 def distributions_reference() -> str:
+    from datamimic_ce.enums.distribution_enums import (
+        POSITIONAL_NUMBER_SEQUENCES,
+        NumberDistribution,
+    )
+
     members = ", ".join(member.value for member in SourceDistribution)
+    numeric = ", ".join(member.value for member in NumberDistribution)
+    finite_sequences = ", ".join(member.value for member in POSITIONAL_NUMBER_SEQUENCES)
     return (
         f"# distribution= on source reads ({members})\n"
         "- ABSENT defaults to RANDOM (shuffled permutation), NOT source order (DM301)\n"
@@ -194,7 +201,23 @@ def distributions_reference() -> str:
         "- cumulated: bell-weighted picks WITH replacement (middle of load order favored)\n"
         "- unique=\"True\": distinct rows without replacement; pool must cover the count\n"
         "- reproducibility: <setup rngSeed=\"N\"> replays identically and forces single process "
-        "(DM303/DM304); unseeded runs differ by design"
+        "(DM303/DM304); unseeded runs differ by design\n"
+        f"\n# distribution= on numeric range keys ({numeric})\n"
+        "- uniform: default per-row random draw across the numeric range\n"
+        "- cumulated: per-row bell-shaped draw (mean = midpoint), not a source read\n"
+        "- step/increment: min, min+d, min+2d, ... until max; finite, no wrapping\n"
+        "- shuffle: deterministic strided walk over the range grid; finite, unique until exhausted\n"
+        "- wedge: min, max, min+d, max-d, ... converging toward the middle; finite\n"
+        "- bitreverse: bit-reversed counter order over the range grid; finite\n"
+        "- fibonacci/padovan: recurrence values clipped to [min,max]; finite\n"
+        "- randomWalk: seeded bounded walk that starts at min and saturates at max\n"
+        f"- multiprocessing: finite positional sequences ({finite_sequences}) are rejected because "
+        "worker-local iterator state would duplicate values; use single-process or a per-row draw\n"
+        "- numeric range fields only (type int/float/decimal with min/max); type=\"string\" or a "
+        "missing range fails at parse time\n"
+        "- Examples: <key name=\"id\" type=\"int\" min=\"1\" max=\"100\" distribution=\"step\"/>; "
+        "<key name=\"amount\" type=\"decimal\" min=\"0.01\" max=\"9.99\" granularity=\"0.01\" "
+        "distribution=\"wedge\"/>"
     )
 
 
@@ -220,6 +243,7 @@ def converters_reference() -> str:
 def capabilities_manifest() -> dict[str, Any]:
     """Machine-readable DSL surface, derived live from the engine registries — cannot drift."""
     from datamimic_ce.enums.converter_enums import ConverterEnum
+    from datamimic_ce.enums.distribution_enums import NumberDistribution
     from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
 
     index = build_schema_index()
@@ -244,6 +268,7 @@ def capabilities_manifest() -> dict[str, Any]:
             "declared_ids": "any <memstore>/<database>/<mongodb> id; client write ops: <id>.update/.upsert/.delete",
         },
         "distributions": [member.value for member in SourceDistribution],
+        "numeric_distributions": [member.value for member in NumberDistribution],
     }
 
 
