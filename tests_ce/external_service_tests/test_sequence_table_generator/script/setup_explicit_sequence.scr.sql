@@ -1,5 +1,5 @@
 -- Explicit sequence= test setup: a non-default schema plus a DBA-pre-created sequence,
--- mirroring the Benerator migration case (zsv.t_angebote_id_seq: existing, arbitrarily named).
+-- mirroring the migrated legacy case (zsv.t_angebote_id_seq: existing, arbitrarily named).
 CREATE SCHEMA IF NOT EXISTS migrated_schema;
 
 -- Idempotency across test runs

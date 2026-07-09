@@ -45,7 +45,7 @@ class SequenceTableGenerator(BaseLiteralGenerator):
             context: Context object containing configuration and state
             stmt: Statement object containing sequence configuration
             sequence: Optional explicit DB sequence name (e.g. 'zsv.t_angebote_id_seq' for a
-                schema-qualified native sequence - Benerator DBSequenceGenerator parity). When
+                schema-qualified native sequence, as migrated legacy descriptors name them). When
                 None, falls back to the convention-derived f"{type}_{name}_seq". Caution: a
                 sequence that doesn't exist is still auto-created starting at 1, so a typo'd
                 explicit name silently mints a fresh sequence instead of erroring - against a
@@ -103,7 +103,7 @@ class SequenceTableGenerator(BaseLiteralGenerator):
             raise ValueError(f"Failed to initialize sequence: {str(e)}") from e
 
     def _resolve_sequence_name(self) -> str:
-        """Explicit sequence= name if given (e.g. a migrated Benerator DBSequenceGenerator name,
+        """Explicit sequence= name if given (e.g. a migrated legacy descriptor's DB sequence name,
         schema-qualified or not); otherwise the existing convention f"{type}_{name}_seq"."""
         if self._explicit_sequence_name:
             return self._explicit_sequence_name

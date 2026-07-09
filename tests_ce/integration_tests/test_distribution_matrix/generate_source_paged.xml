@@ -1,6 +1,6 @@
 <setup rngSeed="42" defaultSeparator=",">
     <!-- Consumer coverage: <generate pageSize="10" source=CSV> honors all three distributions
-         (rows.csv, v = 0..26). Benerator's most common iteration pattern. -->
+         (rows.csv, v = 0..26). the most common migrated iteration pattern. -->
     <generate pageSize="10" name="ordered" source="rows.csv" distribution="ordered" count="27" target="">
         <key name="v" script="v"/>
     </generate>

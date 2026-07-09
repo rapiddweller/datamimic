@@ -56,8 +56,8 @@ def test_round_trip_read_write_read_is_structurally_identical():
         _clean()
 
 
-def test_round_trip_of_the_real_benerator_shop_dataset():
-    # the real Benerator shop.dbunit.xml (28 categories, ragged parent_id) read -> DbUnit write -> read
+def test_round_trip_of_the_real_legacy_shop_dataset():
+    # the real legacy shop.dbunit.xml (28 categories, ragged parent_id) read -> DbUnit write -> read
     _clean()
     try:
         original = FileUtil.read_dbunit_to_dict_list(_DIR / "data" / "shop.dbunit.xml", "db_category")

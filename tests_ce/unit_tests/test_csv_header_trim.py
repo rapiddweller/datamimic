@@ -8,7 +8,7 @@ from datamimic_ce.utils.file_util import FileUtil
 
 
 def test_csv_header_whitespace_is_stripped(tmp_path):
-    # a padded/aligned CSV (Benerator entity CSVs look like this) must yield clean column keys,
+    # a padded/aligned CSV (migrated legacy entity CSVs look like this) must yield clean column keys,
     # so a script field access like this.name resolves.
     f = tmp_path / "padded.csv"
     f.write_text("ean_code     ,name              ,price\n8000353006386,Limoncello,9.85\n")

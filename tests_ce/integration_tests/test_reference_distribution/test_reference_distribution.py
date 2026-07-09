@@ -3,7 +3,7 @@
 # See LICENSE file for the full text of the license.
 
 """<reference> distribution/cyclic: ordered rotation, cumulated bell selection —
-the Benerator reference modifiers, reusing the shared SourceDistribution dispatch."""
+the legacy reference modifiers, reusing the shared SourceDistribution dispatch."""
 
 from __future__ import annotations
 

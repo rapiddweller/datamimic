@@ -4,8 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""Fixed-width (.fcw) column file support - Benerator parity (import_fixed_width.ben.xml,
-create_fixed_width.ben.xml). Self-describing: the file's first line is a '# name[width],...'
+"""Fixed-width (.fcw) column file support - migration parity with the migrated
+fixed-width demo descriptors. Self-describing: the file's first line is a '# name[width],...'
 column spec comment, so a plain <generate source="x.fcw"> needs no extra DSL attribute to read."""
 
 import shutil

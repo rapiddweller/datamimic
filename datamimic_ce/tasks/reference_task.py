@@ -93,7 +93,7 @@ class ReferenceTask(GenSubTask):
         distribution = SourceDistribution.coerce(stmt.distribution)
         if (stmt.distribution is not None and distribution is not SourceDistribution.RANDOM) or stmt.cyclic:
             seed = ctx.root.stable_distribution_seed(stmt.full_name)
-            # Bare cyclic="true" means Benerator's sequential wrap-around, i.e. ordered + cyclic.
+            # Bare cyclic="true" means sequential wrap-around (legacy DSL semantics), i.e. ordered + cyclic.
             if distribution is SourceDistribution.ORDERED or (stmt.distribution is None and stmt.cyclic):
                 return self._ordered(records)
             return DataSourceRegistry.get_distributed_data(records, self._pagination, stmt.cyclic, seed, distribution)

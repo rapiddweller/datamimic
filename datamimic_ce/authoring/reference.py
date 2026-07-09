@@ -200,7 +200,7 @@ def distributions_reference() -> str:
         "(DM303/DM304); unseeded runs differ by design\n"
         f"\n# distribution= on numeric range keys ({numeric})\n"
         "- <key type=\"int\" min=\"1\" max=\"100\" distribution=\"cumulated\"/> shapes the DRAW "
-        "(symmetric bell, mean = midpoint - Benerator's CumulatedLong/DoubleGenerator), not a "
+        "(symmetric bell, mean = midpoint), not a "
         "source read\n"
         "- numeric range fields only (type int/float/decimal with min/max); type=\"string\" or a "
         "missing range fails at parse time"

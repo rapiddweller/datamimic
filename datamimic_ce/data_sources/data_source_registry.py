@@ -344,7 +344,7 @@ class DataSourceRegistry:
 
     @staticmethod
     def get_cumulated_data(data: Iterable, pagination: DataSourcePagination | None, seed: int) -> list:
-        """Benerator ``distribution="cumulated"`` row selection: sample row indices with a
+        """``distribution="cumulated"`` row selection: sample row indices with a
         bell shape (mean = middle of the load order) WITH replacement.
 
         Sibling of ``get_shuffled_data_with_cyclic`` (shuffle = permutation, no replacement).

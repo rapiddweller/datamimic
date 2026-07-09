@@ -446,7 +446,7 @@ class SetupContext(Context):
         :return:
         """
         self._clients[client_id] = client
-        # Also bind by id into the script namespace (Benerator parity: <execute>/<variable script=>
+        # Also bind by id into the script namespace (migration parity: <execute>/<variable script=>
         # can reference a declared <database>/<mongodb> id directly, e.g. `db.something()`) - both
         # eval_namespace (copies self._namespace wholesale) and evaluate_python_expression's scope
         # building read from this same dict, so this covers both script-evaluation paths regardless

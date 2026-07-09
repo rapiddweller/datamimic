@@ -1,5 +1,5 @@
 <setup rngSeed="7">
-    <comment>Benerator-style documentation at setup level. Must be ignored.</comment>
+    <comment>Legacy-style documentation at setup level. Must be ignored.</comment>
     <generate name="people" count="3" target="">
         <comment>Comment inside generate, between fields.</comment>
         <key name="i" generator="IncrementGenerator()"/>

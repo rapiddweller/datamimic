@@ -105,7 +105,7 @@ class FileUtil:
         if not raw_data:
             return []  # an empty CSV is an empty source, not a crash
         # Column names never carry meaningful surrounding whitespace; a padded/aligned CSV
-        # (e.g. Benerator entity CSVs: "ean_code     ,name    ,...") would otherwise produce
+        # (e.g. migrated legacy entity CSVs: "ean_code     ,name    ,...") would otherwise produce
         # keys like "name    " that a script's field access ("this.name") cannot resolve.
         header = [col.strip() if isinstance(col, str) else col for col in raw_data[0]]
         processed_data = [dict(zip(header, row, strict=False)) for row in raw_data[1:]]
@@ -154,7 +154,7 @@ class FileUtil:
 
     @staticmethod
     def parse_fixed_width_spec(spec: str) -> list[tuple[str, int, bool, str]]:
-        """Parse a Benerator-style fixed-width column spec: ``name[width]`` (left-aligned,
+        """Parse a fixed-width column spec (legacy-DSL grammar): ``name[width]`` (left-aligned,
         space-padded) or ``name[width r pad]`` (right-aligned, e.g. ``price[8r0]`` = width 8,
         zero-padded). Returns ``(name, width, right_aligned, pad_char)`` per column, in order.
         """

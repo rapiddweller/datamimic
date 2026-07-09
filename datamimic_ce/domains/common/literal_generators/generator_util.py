@@ -138,7 +138,7 @@ class GeneratorUtil:
 
             if class_name == "SequenceTableGenerator":
                 # Optional explicit sequence name: SequenceTableGenerator(sequence='zsv.t_angebote_id_seq')
-                # (Benerator DBSequenceGenerator parity). ast-parsed like DateTimeGenerator below, but
+                # (explicitly named native DB sequences, migration parity). ast-parsed like DateTimeGenerator below, but
                 # keyword-only and single-kwarg - anything else raises, args are never silently dropped.
                 parsed_sequence = GeneratorUtil._parse_sequence_kwarg(generator_str)
                 result = cls(context=self._context, stmt=stmt, sequence=parsed_sequence)

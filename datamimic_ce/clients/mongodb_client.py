@@ -55,7 +55,7 @@ class MongoDBClient(DatabaseClient):
     def _values_at_path(value: Any, parts: list[str]):
         """All values reachable by descending a dotted field path; lists along the way unwind
         (one value per nested element). How a <reference> resolves an entity nested inside a
-        collection document (a converted Benerator <part>)."""
+        collection document (a converted legacy <part> element)."""
         if isinstance(value, list):
             for item in value:
                 yield from MongoDBClient._values_at_path(item, parts)
@@ -66,7 +66,7 @@ class MongoDBClient(DatabaseClient):
 
     @staticmethod
     def _shell_to_json(query: str) -> str:
-        """A MongoDB-shell-style selector -> a JSON string ``json.loads`` accepts. Benerator's mongo
+        """A MongoDB-shell-style selector -> a JSON string ``json.loads`` accepts. Legacy migrated mongo
         selectors use shell syntax: single-quoted or BAREWORD object keys ($-operators, ``_id``,
         projection fields) and a trailing ``cursor: {}``. Wrap first so the leading key has a
         preceding ``{``; promote single quotes so quoted keys/strings are protected; then quote every

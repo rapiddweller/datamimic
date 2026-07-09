@@ -50,7 +50,7 @@ class GenerateModel(BaseModel):
     max_count: int | None = Field(None, alias=ATTR_MAX_COUNT)
     source: str | None = None
     cyclic: bool | None = None
-    # Skip the first N source rows before any windowing (Benerator parity). File sources only;
+    # Skip the first N source rows before any windowing (migration parity). File sources only;
     # count default, cyclic wrap and page windows all operate on the post-offset region.
     offset: int | None = Field(None, ge=0)
     unique: bool | None = None

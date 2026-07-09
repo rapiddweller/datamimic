@@ -10,7 +10,7 @@ def _run():
     return engine.capture_result()["g"]
 
 
-def test_benerator_camelcase_fields_resolve_and_expressions_work():
+def test_legacy_camelcase_fields_resolve_and_expressions_work():
     rows = _run()
     assert len(rows) == 5
     assert all(r["given"] and r["house"] and r["bday"] for r in rows)  # givenName/houseNumber/birthDate

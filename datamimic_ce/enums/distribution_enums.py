@@ -8,15 +8,41 @@ from enum import StrEnum
 
 
 class NumberDistribution(StrEnum):
-    """Sampling distribution for ranged numeric generators (IntegerGenerator/FloatGenerator).
+    """Sampling distribution / sequence for ranged numeric generators (IntegerGenerator/
+    FloatGenerator), reachable natively via <key type="int" min= max= distribution="...">.
 
-    Referenced by name from the DSL generator string, e.g.
-    generator="IntegerGenerator(min=1, max=27, distribution=NumberDistribution.CUMULATED)".
-    CUMULATED mirrors Benerator's CumulatedLong/DoubleGenerator (symmetric bell, mean=midpoint).
+    UNIFORM/CUMULATED/RANDOM_WALK draw per row (rng-bound); the rest are
+    deterministic SEQUENCES - positional, unique until exhausted, and they END
+    (StopIteration) instead of wrapping. Positional sequences are single-process only:
+    multiprocessing chunks would restart the sequence per worker and emit duplicates,
+    so that combination is rejected loudly (see GenerateTask).
     """
 
     UNIFORM = "uniform"
-    CUMULATED = "cumulated"
+    CUMULATED = "cumulated"  # symmetric bell, mean = midpoint
+    STEP = "step"  # min, min+d, min+2d, ... (d = granularity; ends past max)
+    INCREMENT = "increment"  # legacy alias: step with d=1
+    RANDOM_WALK = "randomWalk"  # starts at min, random step in [1,2]*d per row, saturates at max
+    SHUFFLE = "shuffle"  # strided unique walk: 1,3,5,2,4 over 1..5 (stride 2), ends when covered
+    WEDGE = "wedge"  # min, max, min+d, max-d, ... converging on the middle, then ends
+    BIT_REVERSE = "bitreverse"  # bit-reversed counter order: 0,4,2,6,1,5,3,7 over 0..7
+    FIBONACCI = "fibonacci"  # recurrence values within [min,max]; ends when the next exceeds max
+    PADOVAN = "padovan"  # like fibonacci with a(n) = a(n-2) + a(n-3), seeds 1,1,1
+
+
+#: Deterministic positional sequences - unique-until-exhausted, restart per process, therefore
+#: rejected under multiprocessing (a worker chunk would replay the same values).
+POSITIONAL_NUMBER_SEQUENCES: frozenset[NumberDistribution] = frozenset(
+    {
+        NumberDistribution.STEP,
+        NumberDistribution.INCREMENT,
+        NumberDistribution.SHUFFLE,
+        NumberDistribution.WEDGE,
+        NumberDistribution.BIT_REVERSE,
+        NumberDistribution.FIBONACCI,
+        NumberDistribution.PADOVAN,
+    }
+)
 
 
 class SourceDistribution(StrEnum):

@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""offset= on <iterate>/<generate> (Benerator parity): skip the first N source rows. The
+"""offset= on <iterate>/<generate> (migration parity): skip the first N source rows. The
 offset shrinks the available window - the count default, cyclic wrap-around, and page windows
 all operate on the post-offset region (a cyclic wrap must never re-include skipped rows)."""
 

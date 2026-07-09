@@ -8,11 +8,10 @@ import random
 
 
 def cumulated_index(rng: random.Random, span: int) -> int:
-    """Benerator 'cumulated' sampler: index in [0, span] with a symmetric bell shape,
+    """'cumulated' sampler: index in [0, span] with a symmetric bell shape,
     mean = span/2, both endpoints reachable (rarely on wide spans).
 
-    Mean of 5 uniform draws (Irwin-Hall n=5); the +2 rounds the integer //5. Exactly
-    mirrors com.rapiddweller.benerator...CumulatedLongGenerator. Shared by the numeric
+    Mean of 5 uniform draws (Irwin-Hall n=5); the +2 rounds the integer //5. Shared by the numeric
     literal generators (value = min + index*granularity) and source-row selection
     (data[index]).
     """

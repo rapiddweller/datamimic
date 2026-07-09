@@ -1,4 +1,4 @@
-"""Native dbunit READ — TDD against the real Benerator shop.dbunit.xml plus an edge-case fixture.
+"""Native dbunit READ — TDD against the real legacy shop.dbunit.xml plus an edge-case fixture.
 
 dbunit flat XML: each child of <dataset> is a row, the element name is the table, attributes are the
 columns. A dataset holds MANY tables, so a reader picks ONE table (the entity to read).
@@ -15,7 +15,7 @@ _SHOP = _DATA / "shop.dbunit.xml"
 _COMPLEX = _DATA / "complex.dbunit.xml"
 
 
-# ---- happy path: real Benerator dataset ----
+# ---- happy path: real migrated dataset ----
 
 def test_reads_one_table_from_the_real_shop_dataset():
     cats = FileUtil.read_dbunit_to_dict_list(_SHOP, "db_category")

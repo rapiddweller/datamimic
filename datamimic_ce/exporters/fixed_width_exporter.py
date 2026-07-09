@@ -13,8 +13,8 @@ from datamimic_ce.utils.file_util import FileUtil
 
 
 class FixedWidthExporter(UnifiedBufferedExporter):
-    """Export generated data to a fixed-width column file (Benerator parity:
-    create_fixed_width.ben.xml). Writes the same '# name[width],...' spec header the reader
+    """Export generated data to a fixed-width column file (migration parity
+    with legacy fixed-width demo descriptors). Writes the same '# name[width],...' spec header the reader
     (FileUtil.read_fixed_width_to_dict_list) expects, so the written file round-trips through a
     plain <generate source="....fcw"> with zero extra plumbing."""
 
