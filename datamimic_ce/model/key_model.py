@@ -13,6 +13,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_CONVERTER,
     ATTR_DATABASE,
     ATTR_DEFAULT_VALUE,
+    ATTR_DISTRIBUTION,
     ATTR_GENERATOR,
     ATTR_GRANULARITY,
     ATTR_IN_DATE_FORMAT,
@@ -54,6 +55,9 @@ class KeyModel(BaseModel):
     min: str | None = None
     max: str | None = None
     granularity: str | None = None
+    # NumberDistribution for numeric range keys (type=int/float/decimal with min/max),
+    # e.g. distribution="cumulated" - the native form of IntegerGenerator(..., distribution=...)
+    distribution: str | None = None
     min_length: str | None = Field(None, alias=ATTR_MIN_LENGTH)
     mime_type: str | None = Field(None, alias=ATTR_MIME_TYPE)
     max_length: str | None = Field(None, alias=ATTR_MAX_LENGTH)
@@ -89,6 +93,7 @@ class KeyModel(BaseModel):
                 ATTR_MIN,
                 ATTR_MAX,
                 ATTR_GRANULARITY,
+                ATTR_DISTRIBUTION,
                 ATTR_MIME_TYPE,
                 ATTR_MIN_LENGTH,
                 ATTR_MAX_LENGTH,
@@ -129,6 +134,33 @@ class KeyModel(BaseModel):
     @classmethod
     def validate_additional_source_attributes(cls, values: dict):
         return ModelUtil.check_valid_additional_source_attributes(values=values)
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_distribution_requires_numeric_range(cls, values: dict):
+        """distribution= on a <key> shapes a NUMERIC RANGE draw (the native form of
+        IntegerGenerator/FloatGenerator's distribution kwarg) - anything else is a config
+        error to fail loudly on, never to silently ignore."""
+        if ATTR_DISTRIBUTION not in values:
+            return values
+        from datamimic_ce.enums.distribution_enums import NumberDistribution
+
+        value = values[ATTR_DISTRIBUTION]
+        valid = sorted(member.value for member in NumberDistribution)
+        if value not in valid:
+            raise ValueError(
+                f"unknown distribution '{value}' on <key> - numeric range keys support: {', '.join(valid)}"
+            )
+        if values.get(ATTR_TYPE) not in (DATA_TYPE_INT, DATA_TYPE_FLOAT, DATA_TYPE_DECIMAL):
+            raise ValueError(
+                f"'distribution' on a <key> shapes a numeric range and needs type=\"int\"/\"float\"/\"decimal\" "
+                f"with min/max, but got type=\"{values.get(ATTR_TYPE)}\""
+            )
+        if ATTR_MIN not in values and ATTR_MAX not in values:
+            raise ValueError(
+                "'distribution' on a <key> needs a range to shape - add min= and/or max="
+            )
+        return values
 
     @model_validator(mode="before")
     @classmethod

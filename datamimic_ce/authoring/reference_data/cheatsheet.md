@@ -92,7 +92,8 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
    works on DB clients. (DM205, DM211)
 8. Prefer native attributes over eval-strings:
    `type="int" min="1" max="9"` beats `generator="IntegerGenerator(min=1,max=9)"`;
-   `minLength`/`maxLength` beat `StringGenerator(...)`. (DM310, DM311)
+   `minLength`/`maxLength` beat `StringGenerator(...)`; a bell-shaped draw is
+   `type="int" min= max= distribution="cumulated"` (numeric range keys only). (DM310, DM311)
 9. `<nestedKey cyclic="True">` requires a `count`; `<generate cyclic>` does not.
    (DM213)
 10. Targets must exist: registry exporters, declared `<memstore>`/client ids, or

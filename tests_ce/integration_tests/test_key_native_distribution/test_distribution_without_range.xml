@@ -1,0 +1,5 @@
+<setup>
+    <generate name="rows" count="3" target="ConsoleExporter">
+        <key name="v" type="int" distribution="cumulated"/>
+    </generate>
+</setup>

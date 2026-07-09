@@ -185,7 +185,10 @@ def timeseries_reference() -> str:
 
 
 def distributions_reference() -> str:
+    from datamimic_ce.enums.distribution_enums import NumberDistribution
+
     members = ", ".join(member.value for member in SourceDistribution)
+    numeric = ", ".join(member.value for member in NumberDistribution)
     return (
         f"# distribution= on source reads ({members})\n"
         "- ABSENT defaults to RANDOM (shuffled permutation), NOT source order (DM301)\n"
@@ -194,7 +197,13 @@ def distributions_reference() -> str:
         "- cumulated: bell-weighted picks WITH replacement (middle of load order favored)\n"
         "- unique=\"True\": distinct rows without replacement; pool must cover the count\n"
         "- reproducibility: <setup rngSeed=\"N\"> replays identically and forces single process "
-        "(DM303/DM304); unseeded runs differ by design"
+        "(DM303/DM304); unseeded runs differ by design\n"
+        f"\n# distribution= on numeric range keys ({numeric})\n"
+        "- <key type=\"int\" min=\"1\" max=\"100\" distribution=\"cumulated\"/> shapes the DRAW "
+        "(symmetric bell, mean = midpoint - Benerator's CumulatedLong/DoubleGenerator), not a "
+        "source read\n"
+        "- numeric range fields only (type int/float/decimal with min/max); type=\"string\" or a "
+        "missing range fails at parse time"
     )
 
 

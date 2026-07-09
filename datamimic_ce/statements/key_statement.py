@@ -26,6 +26,7 @@ class KeyStatement(CompositeStatement):
         self._min = model.min
         self._max = model.max
         self._granularity = model.granularity
+        self._distribution = model.distribution
         self._min_length = model.min_length
         self._mime_type = model.mime_type
         self._max_length = model.max_length
@@ -59,6 +60,10 @@ class KeyStatement(CompositeStatement):
     @property
     def granularity(self) -> str | None:
         return self._granularity
+
+    @property
+    def distribution(self) -> str | None:
+        return self._distribution
 
     @property
     def min_length(self) -> str | None:
