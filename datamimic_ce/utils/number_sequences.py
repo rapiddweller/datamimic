@@ -15,7 +15,6 @@ held generator object cannot be copied/pickled - a cursor survives the copy at t
 position it had."""
 
 import random
-from collections.abc import Iterator
 from decimal import Decimal
 
 from datamimic_ce.enums.distribution_enums import NumberDistribution
@@ -27,7 +26,7 @@ def _grid_size(min_v: float, max_v: float, granularity: float) -> int:
     return int((Decimal(str(max_v)) - Decimal(str(min_v))) / Decimal(str(granularity))) + 1
 
 
-class _GridSequence(Iterator[int | float]):
+class _GridSequence:
     """Base: maps grid indices k -> values; subclasses advance a plain-int cursor."""
 
     def __init__(self, min_v: float, max_v: float, granularity: float, integral: bool):
@@ -43,9 +42,6 @@ class _GridSequence(Iterator[int | float]):
 
     def __iter__(self):
         return self
-
-    def __next__(self) -> int | float:
-        raise NotImplementedError
 
 
 class _StepSequence(_GridSequence):
@@ -152,9 +148,9 @@ class _RecurrenceSequence:
         self._min = min_v
         self._max = max_v
         if distribution is NumberDistribution.FIBONACCI:
-            self._window = [0, 1]
+            self._window = [0, 1]  # a(n) = a(n-1) + a(n-2)
             self._pending = [0, 1]
-        else:
+        else:  # PADOVAN: a(n) = a(n-2) + a(n-3), seeds 1, 1, 1
             self._window = [1, 1, 1]
             self._pending = [1, 1, 1]
         self._is_fibonacci = distribution is NumberDistribution.FIBONACCI
