@@ -8,6 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "datamimic_ce"
+description = "Deterministic synthetic test data generation and pseudonymization for Python, CI/CD, and AI agents."
 dynamic = ["version"]  # Version is determined dynamically via setuptools-scm
 authors = [{ name = "Rapiddweller Asia Co., Ltd.", email = "info@rapiddweller.com" }]
 readme = "README.md"
