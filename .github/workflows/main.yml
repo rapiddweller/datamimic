@@ -6,9 +6,20 @@ on:
       - development
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
+    # Docs-only changes don't need the pipeline. Path filters are NOT evaluated for
+    # tag pushes, so releases always run. cheatsheet.md is re-included: it ships in
+    # the package and is gate-tested (test_reference_and_recipes.py).
+    paths:
+      - '**'
+      - '!**.md'
+      - 'datamimic_ce/**.md'
   pull_request:
     branches:
       - '*'
+    paths:
+      - '**'
+      - '!**.md'
+      - 'datamimic_ce/**.md'
 
 env:
   RUNTIME_ENVIRONMENT: production
