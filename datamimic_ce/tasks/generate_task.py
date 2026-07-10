@@ -426,9 +426,16 @@ class GenerateTask(CommonSubTask):
         duplicating what the sequence guarantees to be unique. Fail loudly instead; drop
         numProcess/multiprocessing (or the sequence) to proceed."""
         from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES
+        from datamimic_ce.statements.composite_statement import CompositeStatement
         from datamimic_ce.statements.key_statement import KeyStatement
 
-        for sub_stmt in self.statement.sub_statements:
+        # The ENTIRE subtree runs inside the workers, so scan it fully - a sequence key nested
+        # in an inner <generate>/<nestedKey> duplicates just the same as a top-level one.
+        stack: list = list(self.statement.sub_statements)
+        while stack:
+            sub_stmt = stack.pop()
+            if isinstance(sub_stmt, CompositeStatement):
+                stack.extend(sub_stmt.sub_statements)
             if (
                 isinstance(sub_stmt, KeyStatement)
                 and sub_stmt.distribution is not None
