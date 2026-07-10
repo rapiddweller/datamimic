@@ -80,3 +80,13 @@ def test_positional_sequence_under_multiprocessing_is_rejected():
     engine = DataMimicTest(_dir, "test_sequence_mp_rejected.xml", capture_test_result=True)
     with pytest.raises(ValueError, match="(?i)positional sequence.*multiprocessing"):
         engine.test_with_timer()
+
+
+def test_positional_sequence_nested_under_multiprocessing_is_rejected():
+    """The whole subtree runs inside the workers - a sequence key inside a <nestedKey> duplicates
+    just the same as a top-level one, so the guard must scan the full subtree."""
+    import pytest
+
+    engine = DataMimicTest(_dir, "test_sequence_mp_rejected_nested.xml", capture_test_result=True)
+    with pytest.raises(ValueError, match="(?i)positional sequence.*multiprocessing"):
+        engine.test_with_timer()
