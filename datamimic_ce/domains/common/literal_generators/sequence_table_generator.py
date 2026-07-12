@@ -19,8 +19,20 @@ class SequenceTableGenerator(BaseLiteralGenerator):
 
     This generator manages sequence numbers for database tables, handling pagination
     and sequential number generation. It works with both KeyStatement and VariableStatement
-    types and is compatible with SQLAlchemy 2.x. The generator ensures thread and process
-    safety by reserving unique ranges for each process.
+    types and is compatible with SQLAlchemy 2.x. Each process reserves its own range via
+    context.root.process_id (wired in generate_worker.py's mp_preprocess - previously dead:
+    every worker read it as None/0, making the per-process offset a no-op; fixed and verified
+    under an uneven count/numProcess ratio, see tests_ce/external_service_tests/
+    test_sequence_table_generator/test_sequence_table_generator_postgres_uneven_multiprocess).
+
+    Multiprocess safety here is client-side range math (each worker computes its own offset,
+    not a server-side atomic block reservation): DATAMIMIC EE's equivalent generator instead
+    declares itself __parallel_safe__ = False outright ("reserves DB sequence ranges per
+    process") rather than relying on this pattern - i.e. EE's own engineering judgment is that
+    per-process client-side range math isn't worth trusting for its multiprocess guarantees.
+    This fix closes the definite bug (a completely inert safety mechanism) and is verified
+    under the tested scenarios, but inherits the same structural class EE opted out of; prefer
+    numProcess=1 for a large, correctness-critical run if in doubt.
 
     Attributes:
         _stmt: The statement (KeyStatement or VariableStatement) containing sequence configuration
@@ -87,6 +99,14 @@ class SequenceTableGenerator(BaseLiteralGenerator):
 
             # Calculate per-process count
             per_process_count = (total_count + total_processes - 1) // total_processes
+            # Every worker is allocated a UNIFORM per_process_count-sized slice (process_offset
+            # below), even when total_count doesn't divide evenly - e.g. count=13, numProcess=4
+            # gives per_process_count=4, i.e. a reserved block of 4*4=16, 3 more than the 13
+            # actually needed. pre_execute() must reserve that same rounded-up block (not raw
+            # total_count), or the last worker's assumed range overlaps the next run's - this
+            # wastes a few sequence values on the excess but keeps the per-process arithmetic
+            # simple and collision-free, rather than special-casing the uneven last chunk.
+            reserved_count = per_process_count * total_processes
 
             # Get current sequence and calculate process-specific range
             current_seq = rdbms_client.get_current_sequence_number(
@@ -97,7 +117,7 @@ class SequenceTableGenerator(BaseLiteralGenerator):
 
             # Calculate process-specific offset to avoid conflicts
             process_offset = self._process_id * per_process_count
-            self._start = current_seq - total_count + process_offset
+            self._start = current_seq - reserved_count + process_offset
 
             # Store process information for later use
             self._total_processes = total_processes
@@ -128,9 +148,12 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         if rdbms_client is None:
             raise ValueError(f"No database client found for source: {self._source_name}")
 
+        # Reserve the SAME rounded-up block __init__ assumed (per_process_count * total_processes,
+        # not the raw statement count) - keeps this in sync with the per-process offset arithmetic
+        # above for an uneven count/numProcess ratio (see the comment in __init__).
         rdbms_client.increase_sequence_number(
             sequence_name=self._resolve_sequence_name(),
-            increment=self._root_gen_stmt.count,
+            increment=self._per_process_count * self._total_processes,
             table_name=None if self._explicit_sequence_name else self._root_gen_stmt.type,
             column_name=None if self._explicit_sequence_name else self._stmt.name,
         )

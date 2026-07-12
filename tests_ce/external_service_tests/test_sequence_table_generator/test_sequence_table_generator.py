@@ -69,6 +69,41 @@ class TestSequenceTableGenerator:
         ids = [row["id"] for row in result["check"]]
         assert len(ids) == len(set(ids)), f"duplicate ids: {ids}"
 
+    def test_sequence_table_generator_postgres_uneven_multiprocess(self):
+        """Edge case: count=13 does not divide evenly across numProcess=4 (13 = 4+4+4+1).
+        Regression for a real bug found this session: SetupContext.process_id was never wired
+        to the actual multiprocessing worker index (generate_worker.py's mp_preprocess only used
+        worker_id for log naming) - every worker read process_id as None/0, so
+        SequenceTableGenerator's per-process offset (process_id * per_process_count) was always
+        a no-op. The only thing separating workers' ranges was the shared DB sequence's own
+        atomic advance, which isn't sufficient once ranges are supposed to be kept apart by an
+        offset that never applied - reproduced as a real duplicate-key collision, 5/5 runs,
+        before wiring context.root.process_id = worker_id - 1 in mp_preprocess. Also fixes a
+        second, smaller bug this exposed: pre_execute() reserved the raw statement count instead
+        of the same rounded-up per_process_count * total_processes block __init__ assumed."""
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="postgresql_uneven_mp_test.xml", capture_test_result=True
+        )
+        engine.test_with_timer()
+        result = engine.capture_result()
+
+        ids = [row["id"] for row in result["check"]]
+        assert len(ids) == 13
+        assert len(set(ids)) == 13, f"duplicate ids: {ids}"
+
+    def test_sequence_table_generator_mysql_uneven_multiprocess(self):
+        """Same process_id regression as the Postgres uneven-multiprocess test, exercised
+        against MySQL's AUTO_INCREMENT-integration path instead of a native sequence."""
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="mysql_uneven_mp_test.xml", capture_test_result=True
+        )
+        engine.test_with_timer()
+        result = engine.capture_result()
+
+        ids = [row["id"] for row in result["check"]]
+        assert len(ids) == 13
+        assert len(set(ids)) == 13, f"duplicate ids: {ids}"
+
     @pytest.mark.skip(
         reason="MSSQL native-sequence support was prototyped and pulled: SequenceTableGenerator "
         "is re-instantiated per page/scan-phase pass (existing engine behavior), and each "
