@@ -178,8 +178,9 @@ class VariableTask(KeyVariableTask, CommonSubTask):
 
                         # in case of dbms product_type reflects the table name (sourceEntity -> type -> name)
                         product_type = StatementUtil.resolve_source_entity(statement)
-                        # TODO: check if pagination is needed
-                        file_data = client.get_by_page_with_type(product_type) if product_type is not None else None
+                        file_data = (
+                            client.get_by_page_with_type(product_type, pagination) if product_type is not None else None
+                        )
                     # Get data from memstore
                     elif ctx.memstore_manager.contain(source_str):
                         product_type = StatementUtil.resolve_source_entity(statement)

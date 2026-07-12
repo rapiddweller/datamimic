@@ -92,10 +92,14 @@ class MongoDBClient(DatabaseClient):
 
         return MongoClient(**ars)
 
-    def get(self, query: str) -> list:
+    def get(self, query: str, pagination: DataSourcePagination | None = None) -> list:
         """
         Get documents from collection
         :param query:
+        :param pagination: when given and query_type is "find", pushed to MongoDB as a
+            server-side skip/limit on the cursor instead of materializing the whole result.
+            "aggregate" queries are unaffected: _query_aggregate_handler already returns a fully
+            materialized list, so there is no cursor here to slice server-side.
         :return:
         """
         with self._create_connection() as conn:
@@ -111,7 +115,10 @@ class MongoDBClient(DatabaseClient):
                     collection = db[collection_name]
                 else:
                     raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
-                return self._from_bson(list(collection.find(find_filter, find_projection)))
+                cursor = collection.find(find_filter, find_projection)
+                if pagination is not None:
+                    cursor = cursor.skip(pagination.skip).limit(pagination.limit)
+                return self._from_bson(list(cursor))
             elif query_type == "aggregate":
                 query_result = self._query_aggregate_handler(query=query, connection=conn)
                 return query_result
@@ -120,20 +127,19 @@ class MongoDBClient(DatabaseClient):
 
     def get_by_page_with_query(self, query: str, pagination: DataSourcePagination | None = None) -> list:
         """
-        Get documents from MongoDB collection when there is a query by pagination
+        Get documents from MongoDB collection when there is a query by pagination.
         :param query:
         :param pagination:
         :return:
         """
-        # TODO: cache queried result for better performance
-        docs = self.get(query)
         if pagination is None:
-            return docs
-        else:
-            skip = pagination.skip
-            limit = pagination.limit
-            result = docs[skip : (skip + limit)]
-            return result
+            return self.get(query)
+        docs = self.get(query, pagination)
+        if self._check_query_type(query=query) == "find":
+            return docs  # already skip/limit-ed server-side by get() - avoid re-slicing it
+        # "aggregate" queries aren't paginated by get() (already a fully materialized list) -
+        # same Python-side skip/limit fallback this method has always used for them.
+        return docs[pagination.skip : pagination.skip + pagination.limit]
 
     def get_by_page_with_type(self, collection_name: str, pagination: DataSourcePagination | None = None) -> list:
         """
@@ -142,20 +148,16 @@ class MongoDBClient(DatabaseClient):
         :param pagination:
         :return:
         """
-        # TODO: cache queried result for better performance
-        docs = self.get_documents_by_collection(collection_name)
-        if pagination is None:
-            return docs
-        else:
-            skip = pagination.skip
-            limit = pagination.limit
-            result = docs[skip : (skip + limit)]
-            return result
+        return self.get_documents_by_collection(collection_name, pagination)
 
-    def get_documents_by_collection(self, collection_name: str) -> list:
+    def get_documents_by_collection(
+        self, collection_name: str, pagination: DataSourcePagination | None = None
+    ) -> list:
         """
-        Get all documents in collection
+        Get documents in collection, optionally paginated server-side (skip/limit pushed to the
+        MongoDB cursor instead of loading the full collection into memory).
         :param collection_name:
+        :param pagination:
         :return:
         """
         with self._create_connection() as conn:
@@ -164,7 +166,10 @@ class MongoDBClient(DatabaseClient):
                 collection = db[collection_name]
             else:
                 raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
-            return self._from_bson(list(collection.find({})))
+            cursor = collection.find({})
+            if pagination is not None:
+                cursor = cursor.skip(pagination.skip).limit(pagination.limit)
+            return self._from_bson(list(cursor))
 
     def get_random_rows_by_columns(self, collection_name: str, column_names: list[str]) -> list[tuple]:
         """Fetch the given fields for a <reference> in a stable order, preserving row-tuple

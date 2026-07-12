@@ -1,0 +1,28 @@
+<setup>
+    <mongodb id="mongodb"/>
+
+    <!-- clear collection -->
+    <generate name="delete" source="mongodb" selector="find: 'mongo_pagination_happy', filter: {}" target="mongodb.delete">
+    </generate>
+
+    <!-- seed 20 docs -->
+    <generate name="mongo_pagination_happy" target="mongodb" count="20">
+        <key name="row_id" generator="IncrementGenerator"/>
+    </generate>
+
+    <!-- read back through 4 pages of 5 (pageSize=5, count=20) via <variable type=...
+         source=mongodb distribution="ordered">, the one distribution that does NOT load the
+         whole collection into memory first (loads_all=False) and instead calls
+         get_by_page_with_type per page. Before the fix, pagination wasn't threaded through
+         that call, so every page silently reloaded the SAME first rows of the full collection
+         instead of advancing - the union below would be a handful of duplicated ids instead of
+         the full, disjoint 1..20 range. -->
+    <generate name="page" count="20" pageSize="5">
+        <variable name="row" source="mongodb" type="mongo_pagination_happy" distribution="ordered"/>
+        <key name="row_id" script="row.row_id"/>
+    </generate>
+
+    <!-- cleanup -->
+    <generate name="cleanup" source="mongodb" selector="find: 'mongo_pagination_happy', filter: {}" target="mongodb.delete">
+    </generate>
+</setup>
