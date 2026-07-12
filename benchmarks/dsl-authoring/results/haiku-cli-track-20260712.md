@@ -85,6 +85,54 @@ more room. Result in `ollama-loop-retest-qwen3.5-9b.json`:
 | timeseries | 0 (oscillating DM105 <-> DM000, no narrowing) | 0, still oscillating on DM105 after 6 |
 | branch_fk | 0 (1 -> 3 -> 1 errors, cut off mid-fix) | 2, converged in 3 |
 
+## Tooling fixes from a two-agent Fable brainstorm, and a third re-test (2026-07-12, later same day)
+
+Dispatched two independent Fable-model agents to analyze (1) the DSL tooling/lint/cheatsheet
+and (2) the agentic loop/harness design, grounded in the actual failure traces above. Both
+found concrete, verified issues rather than generic advice; the harness-side findings (best-of-N
+vs last-of-N iteration selection, context-duplication risk after the 3->6 bump, thrash
+detection) are recorded for a follow-up, not yet implemented. Four DSL-tooling findings were
+implemented and verified same-session (commit `ae25f35`):
+
+1. **DM105 (`InvalidAttributeValue`) validated every `distribution=` against `SourceDistribution`
+   regardless of context.** `<key type="int" distribution="step">` is valid engine syntax (a
+   `NumberDistribution` numeric sequence, `key_model.py`'s own validator confirms it) but the
+   linter rejected it and its own fix-hint pointed at `random/ordered/cumulated` — which the
+   engine then rejects too. This is the exact `DM105 <-> DM000` oscillation `timeseries` got
+   stuck in above. Fixed: `<key>`/`<id>` now validate against `NumberDistribution`, everything
+   else keeps `SourceDistribution`.
+2. **DM105's `type=` rejection list gave datetime-shaped guesses no path forward.** Now hints
+   `generator="DateTimeGenerator"` / `script="ts.now"` instead of the scalar type list.
+3. **Same root cause hit `type=` on source-backed reads**: on `<variable>`/`<nestedKey>` with
+   `source=`, `type=` selects the producing statement's name
+   (`StatementUtil.resolve_source_entity`), not a scalar cast — DM105 was validating the
+   *correct* memstore-read syntax against the scalar type list and misfiring on it. `<key>`/`<id>`
+   never read a source (`key_task.py` ignores it) so they're still checked.
+4. **DM401/DM402's "declare a client/memstore with that id" hint never showed how** — now shows
+   the literal `<memstore id="..."/>` snippet. Cheatsheet gained a worked memstore round-trip
+   example (verified to lint + dry-run clean before landing).
+
+All four verified against the real lint/dry-run pipeline (not just read), full unit suite (633
+passed) and the benchmark self-test (all 7 golden descriptors still score 2) stayed green.
+
+**Third qwen3.5:9b retest, same 6 iterations, after the fix**
+(`ollama-loop-retest-qwen3.5-9b-after-tooling-fix.json`): **runs 2/6, intent-correct 2/6** —
+`memstore_pipeline` finally converged (0 -> 2, in just 2 iterations, exactly the task items 3-4
+targeted), but `weighted_country` and `branch_fk` — both 2/6 in the prior run — dropped to 0,
+and `timeseries` still failed, now on unrelated errors (`DM401`/`DM402` instead of the previous
+`DM105`/`DM000`). **This is not a clean before/after comparison**: `call_ollama` never passes a
+`seed=` to Ollama, so temperature=0.2 still samples a genuinely different completion on every
+run — three single-sample runs (@3, @6, @6-after-fix) are three different dice rolls, not a
+controlled A/B. The `memstore_pipeline` win is real and directly attributable (the fix targets
+exactly its failure mode, and it converged in 2 fast iterations instead of never). The
+`weighted_country`/`branch_fk` drops are very likely just re-sampling noise, not a fix-induced
+regression — neither task's final errors (`DM000` runtime, `DM103`/`DM104`/`DM107` unrelated
+schema mistakes) touch anything the fix changed, and the fix only relaxed/improved checks, it
+added no new stricter validation that could newly reject a previously-passing descriptor.
+**Open follow-up**: add `seed=` to `call_ollama` so before/after tooling comparisons are
+reproducible instead of single noisy samples; until then, treat any one-run local-model
+comparison in this file as directional, not conclusive.
+
 **runs 2/6 -> 3/6, intent-correct 1/6 -> 3/6** — a real, tripled improvement
 from a one-line constant change, not a full fix: branch_fk and
 weighted_country were genuinely making progress and just needed the room;
