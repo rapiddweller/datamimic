@@ -18,6 +18,6 @@
     <generate name="post-gen" type="sequence_table_generator" count="10" target="sourceDB">
         <key name="name" type="string" />
     </generate>
-    <generate name="check" type="sequence_table_generator" source="sourceDB"
+    <generate name="check" type="sequence_table_generator" source="sourceDB" count="30"
         target="ConsoleExporter" />
 </setup>

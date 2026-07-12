@@ -47,13 +47,35 @@ class TestSequenceTableGenerator:
         plain_ids = [row["id"] for row in result["plain_rows"]]
         assert len(plain_ids) == len(set(plain_ids)) == 5
 
-    @pytest.mark.skip(reason="MySQL is not supported in this version")
     def test_sequence_table_generator_mysql(self):
+        """MySQL has no freestanding sequence object - SequenceTableGenerator integrates
+        directly with the target table's own AUTO_INCREMENT counter (rdbms_client.py:
+        _advance_mysql_auto_increment), advanced atomically via MySQL's session-scoped
+        GET_LOCK/RELEASE_LOCK around a read-then-ALTER TABLE round trip. numProcess="2" in the
+        descriptor is deliberate: that's where a non-atomic advance would collide.
+
+        Only asserts no-duplicate-ids, not "exactly 30 rows exist": SequenceTableGenerator is
+        re-instantiated per page/scan-phase pass (existing engine behavior, confirmed present
+        for Postgres too - functional.sequence_table_generator ends up with 24 rows and a max id
+        of 35 there as well, not 30/30), and each throwaway instantiation's
+        get_current_sequence_number() call burns a value that's never used. That's a real,
+        pre-existing, dialect-independent gap in DATAMIMIC's own architecture, not something this
+        fix introduces or is scoped to close - the guarantee this fix owns is that whatever ids
+        DO get assigned are unique, which is what's asserted here."""
         engine = DataMimicTest(test_dir=self._test_dir, filename="mysql_test.xml", capture_test_result=True)
         engine.test_with_timer()
-        engine.capture_result()
+        result = engine.capture_result()
 
-    @pytest.mark.skip(reason="MSSQL is not supported in this version")
+        ids = [row["id"] for row in result["check"]]
+        assert len(ids) == len(set(ids)), f"duplicate ids: {ids}"
+
+    @pytest.mark.skip(
+        reason="MSSQL native-sequence support was prototyped and pulled: SequenceTableGenerator "
+        "is re-instantiated per page/scan-phase pass (existing engine behavior), and each "
+        "instantiation's get_current_sequence_number() call was observed to produce colliding id "
+        "ranges against MSSQL non-deterministically. Needs a fix to that interaction before this "
+        "can ship, not just a dialect-specific SQL port - see PR discussion."
+    )
     def test_sequence_table_generator_mssql(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="mssql_test.xml", capture_test_result=True)
         engine.test_with_timer()

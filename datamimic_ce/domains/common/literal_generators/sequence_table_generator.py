@@ -89,7 +89,11 @@ class SequenceTableGenerator(BaseLiteralGenerator):
             per_process_count = (total_count + total_processes - 1) // total_processes
 
             # Get current sequence and calculate process-specific range
-            current_seq = rdbms_client.get_current_sequence_number(sequence_name=self._resolve_sequence_name())
+            current_seq = rdbms_client.get_current_sequence_number(
+                sequence_name=self._resolve_sequence_name(),
+                table_name=None if self._explicit_sequence_name else self._root_gen_stmt.type,
+                column_name=None if self._explicit_sequence_name else self._stmt.name,
+            )
 
             # Calculate process-specific offset to avoid conflicts
             process_offset = self._process_id * per_process_count
@@ -125,7 +129,10 @@ class SequenceTableGenerator(BaseLiteralGenerator):
             raise ValueError(f"No database client found for source: {self._source_name}")
 
         rdbms_client.increase_sequence_number(
-            sequence_name=self._resolve_sequence_name(), increment=self._root_gen_stmt.count
+            sequence_name=self._resolve_sequence_name(),
+            increment=self._root_gen_stmt.count,
+            table_name=None if self._explicit_sequence_name else self._root_gen_stmt.type,
+            column_name=None if self._explicit_sequence_name else self._stmt.name,
         )
 
     def add_pagination(self, pagination: DataSourcePagination | None = None) -> None:

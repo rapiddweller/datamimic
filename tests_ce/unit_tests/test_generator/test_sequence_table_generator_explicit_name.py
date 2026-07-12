@@ -45,11 +45,13 @@ class RecordingRdbmsClient:
         self._seq = {}
         self.requested_names: list[str] = []
 
-    def get_current_sequence_number(self, sequence_name: str) -> int:
+    def get_current_sequence_number(self, sequence_name: str, table_name: str | None = None, column_name: str | None = None) -> int:
         self.requested_names.append(sequence_name)
         return self._seq.get(sequence_name, 1000)
 
-    def increase_sequence_number(self, sequence_name: str, increment: int) -> None:
+    def increase_sequence_number(
+        self, sequence_name: str, increment: int, table_name: str | None = None, column_name: str | None = None
+    ) -> None:
         self.requested_names.append(sequence_name)
         self._seq[sequence_name] = self._seq.get(sequence_name, 1000) + increment
 
