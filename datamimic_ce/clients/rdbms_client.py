@@ -638,10 +638,18 @@ class RdbmsClient(DatabaseClient):
         sequence= name has no MySQL object to bind to, so it's a clear error rather than a
         silently-wrong separate counter.
 
-        `UPDATE ... SET x = LAST_INSERT_ID(x + :increment)` is MySQL's atomic increment-and-read
-        idiom: the expression is evaluated under the row's write lock, and `LAST_INSERT_ID()` -
-        with no arguments - then reads back the session-local value that same statement just set,
-        safely under concurrent callers.
+        `information_schema.TABLES.AUTO_INCREMENT` alone is NOT reliable: it's served from
+        InnoDB's persistent statistics cache, refreshed only every `innodb_stats_auto_recalc`
+        threshold or `information_schema_stats_expiry` seconds (default 86400 = 24h). A plain
+        INSERT elsewhere doesn't force a refresh, so a stale read can return a LOWER value than
+        the table's real counter - handing out ids that collide with rows already inserted
+        by other means. `SET SESSION information_schema_stats_expiry = 0` forces this session's
+        read to bypass the cache and reflect the live value; it's session-scoped, so it doesn't
+        need any privilege beyond what this connection already has and doesn't affect other
+        sessions. GET_LOCK/RELEASE_LOCK are session-scoped advisory locks, independent of
+        transactions/DDL (ALTER TABLE ... AUTO_INCREMENT=n is DDL, not itself atomic against a
+        concurrent read-then-write), so they serialize concurrent callers around the whole
+        read-then-ALTER round trip safely.
         """
         if table_name is None or column_name is None:
             raise ValueError(
@@ -651,16 +659,12 @@ class RdbmsClient(DatabaseClient):
             )
         schema = self._credential.db_schema
         table = f"{schema}.{table_name}" if schema else table_name
-        # AUTO_INCREMENT lives in table metadata (information_schema), not in any row's data -
-        # there's no row to UPDATE, and ALTER TABLE ... AUTO_INCREMENT=n is DDL (not itself
-        # transactional/atomic against a concurrent read-then-write). GET_LOCK/RELEASE_LOCK are
-        # session-scoped advisory locks, independent of transactions/DDL, so they serialize
-        # concurrent callers around the read-then-ALTER round trip safely.
         lock_name = f"datamimic_seq_{schema}_{table_name}_{column_name}"[:64]
         acquired = connection.execute(text("SELECT GET_LOCK(:name, 30)"), {"name": lock_name}).scalar()
         if acquired != 1:
             raise RuntimeError(f"Could not acquire MySQL advisory lock for sequence '{sequence_name}' within 30s")
         try:
+            connection.execute(text("SET SESSION information_schema_stats_expiry = 0"))
             next_value = connection.execute(
                 text(
                     "SELECT AUTO_INCREMENT FROM information_schema.TABLES "
@@ -672,7 +676,14 @@ class RdbmsClient(DatabaseClient):
             connection.execute(text(f"ALTER TABLE {table} AUTO_INCREMENT = {next_value + int(increment)}"))
             return next_value
         finally:
-            connection.execute(text("SELECT RELEASE_LOCK(:name)"), {"name": lock_name})
+            try:
+                connection.execute(text("SELECT RELEASE_LOCK(:name)"), {"name": lock_name})
+            except Exception as release_err:
+                # Never let a lock-release failure mask the original error (or a successful
+                # result) from the try block above - just log it. The advisory lock is
+                # session-scoped anyway, so it's released automatically once this connection
+                # closes even if RELEASE_LOCK itself fails here.
+                logger.error(f"Failed to release MySQL advisory lock '{lock_name}': {release_err}")
 
 
     def __exit__(self, exc_type, exc_val, exc_tb):

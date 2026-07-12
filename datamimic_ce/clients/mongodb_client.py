@@ -115,6 +115,8 @@ class MongoDBClient(DatabaseClient):
                     collection = db[collection_name]
                 else:
                     raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
+                if pagination is not None and pagination.limit == 0:
+                    return []  # pymongo's .limit(0) means "no limit", not "empty" - guard explicitly
                 cursor = collection.find(find_filter, find_projection)
                 if pagination is not None:
                     cursor = cursor.skip(pagination.skip).limit(pagination.limit)
@@ -166,6 +168,8 @@ class MongoDBClient(DatabaseClient):
                 collection = db[collection_name]
             else:
                 raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
+            if pagination is not None and pagination.limit == 0:
+                return []  # pymongo's .limit(0) means "no limit", not "empty" - guard explicitly
             cursor = collection.find({})
             if pagination is not None:
                 cursor = cursor.skip(pagination.skip).limit(pagination.limit)
