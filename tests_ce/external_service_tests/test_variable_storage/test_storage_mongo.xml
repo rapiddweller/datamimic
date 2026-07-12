@@ -1,0 +1,32 @@
+<!-- <variable type=... / selector=... storage=...> matrix against MongoDB (15-row pool). Same
+     cell shape as test_storage_postgres.xml (spot-check both mongo entry points reach the same
+     storage logic as the RDBMS path). -->
+<setup rngSeed="7">
+    <mongodb id="mongodb" />
+
+    <generate name="del_storage_pool" source="mongodb" selector="find: 'mm_storage_pool', filter: {}" target="mongodb.delete" />
+    <generate name="mm_storage_pool" type="mm_storage_pool" target="mongodb" count="15">
+        <key name="row_id" generator="IncrementGenerator" />
+    </generate>
+
+    <generate name="data_type" count="5" target="">
+        <variable name="pool" source="mongodb" type="mm_storage_pool" storage="data" />
+        <key name="pool_len" script="len(pool)" />
+    </generate>
+
+    <generate name="value_type" count="5" target="">
+        <variable name="row" source="mongodb" type="mm_storage_pool" storage="value" />
+        <key name="row_id" script="row.row_id" />
+    </generate>
+
+    <generate name="iterator_cyclic_type" count="20" pageSize="5" target="">
+        <variable name="row" source="mongodb" type="mm_storage_pool" storage="iterator" cyclic="true" distribution="ordered" />
+        <key name="row_id" script="row.row_id" />
+    </generate>
+
+    <generate name="iterator_cyclic_selector" count="20" pageSize="5" target="">
+        <variable name="row" source="mongodb" storage="iterator" cyclic="true"
+                  selector="find: 'mm_storage_pool', filter: {}" />
+        <key name="row_id" script="row.row_id" />
+    </generate>
+</setup>

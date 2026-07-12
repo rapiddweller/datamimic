@@ -30,6 +30,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_SOURCE,
     ATTR_SOURCE_ENTITY,
     ATTR_SOURCE_SCRIPTED,
+    ATTR_STORAGE,
     ATTR_STRING,
     ATTR_TYPE,
     ATTR_UNIQUE,
@@ -73,6 +74,10 @@ class VariableModel(BaseModel):
     variable_prefix: str | None = Field(None, alias=ATTR_VARIABLE_PREFIX)
     variable_suffix: str | None = Field(None, alias=ATTR_VARIABLE_SUFFIX)
     string: str | None = Field(None, alias=ATTR_STRING)
+    # Storage strategy for a source-backed pool: "value" (always the pool's first row, fixed -
+    # distinct from the unset default, which advances one row per generated record), "data" (the
+    # whole materialized pool, same list every row), "iterator" (a position-indexed proxy).
+    storage: str | None = Field(None, alias=ATTR_STORAGE)
     # Demographic and RNG extensions for entity variables
     age_min: int | None = Field(None, alias="ageMin")
     age_max: int | None = Field(None, alias="ageMax")
@@ -115,6 +120,7 @@ class VariableModel(BaseModel):
                 ATTR_VARIABLE_PREFIX,
                 ATTR_VARIABLE_SUFFIX,
                 ATTR_STRING,
+                ATTR_STORAGE,
                 # Demographic + RNG extensions (entity/generator add-ons)
                 "ageMin",
                 "ageMax",
@@ -133,6 +139,11 @@ class VariableModel(BaseModel):
     @classmethod
     def validate_unique_constraints(cls, values: dict):
         return ModelUtil.check_unique_constraints(values)
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_storage_constraints(cls, values: dict):
+        return ModelUtil.check_storage_constraints(values)
 
     @model_validator(mode="before")
     @classmethod
@@ -227,6 +238,13 @@ class VariableModel(BaseModel):
     @classmethod
     def validate_name(cls, value):
         return ModelUtil.check_not_empty(value=value)
+
+    @field_validator("storage")
+    @classmethod
+    def validate_storage(cls, value):
+        if value is not None and value not in ("value", "data", "iterator"):
+            raise ValueError(f"'{ATTR_STORAGE}' must be one of 'value'/'data'/'iterator', got '{value}'")
+        return value
 
     @field_validator("pattern")
     @classmethod

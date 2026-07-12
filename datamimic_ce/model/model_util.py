@@ -17,6 +17,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_ENTITY,
     ATTR_GENERATOR,
     ATTR_IN_DATE_FORMAT,
+    ATTR_ITERATION_SELECTOR,
     ATTR_LOCALE,
     ATTR_MAX_COUNT,
     ATTR_MIN_COUNT,
@@ -27,6 +28,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_SEPARATOR,
     ATTR_SOURCE,
     ATTR_SOURCE_SCRIPTED,
+    ATTR_STORAGE,
     ATTR_TYPE,
     ATTR_UNIQUE,
     ATTR_VALUES,
@@ -130,6 +132,29 @@ class ModelUtil:
                 f"'{ATTR_UNIQUE}' only combines with distribution='{SourceDistribution.RANDOM.value}' "
                 f"(it implies distinct random order), not '{distribution.value}'"
             )
+        return values
+
+    @staticmethod
+    def check_storage_constraints(values: dict) -> dict:
+        """'storage' (value/data/iterator) exposes a materialized source POOL - it only makes
+        sense on a source-backed <variable> (not entity=/constant=/values=/script=/pattern=/
+        string=/generator=, none of which produce a pool). It's also incompatible with
+        iterationSelector (per-row dynamic re-query, no stable pool to index into - matches the
+        existing precedent that iterationSelector already ignores cyclic=/unique= too) and with a
+        weighted-entity source (.wgt.ent.csv - a distribution-sampling source, not a pool to
+        expose verbatim)."""
+        if ATTR_STORAGE not in values:
+            return values
+        if ATTR_SOURCE not in values:
+            raise ValueError(f"'{ATTR_STORAGE}' requires '{ATTR_SOURCE}' (it exposes a loaded source pool)")
+        if values.get(ATTR_ITERATION_SELECTOR) is not None:
+            raise ValueError(
+                f"'{ATTR_STORAGE}' cannot be combined with '{ATTR_ITERATION_SELECTOR}' "
+                "(no stable pool to index into - a fresh query runs per row)"
+            )
+        source = values.get(ATTR_SOURCE)
+        if isinstance(source, str) and source.endswith(".wgt.ent.csv"):
+            raise ValueError(f"'{ATTR_STORAGE}' cannot be combined with a weighted-entity source ('{source}')")
         return values
 
     @staticmethod

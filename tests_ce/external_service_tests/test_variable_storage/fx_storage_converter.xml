@@ -1,0 +1,7 @@
+<!-- Error case: storage= combined with a converter - not meaningful for a list/proxy value. -->
+<setup defaultSeparator=",">
+    <generate name="converter_storage" count="3" target="">
+        <variable name="row" source="data/products.ent.csv" storage="value" converter="UpperCase" distribution="ordered" />
+        <key name="ean_code" script="row.ean_code" />
+    </generate>
+</setup>

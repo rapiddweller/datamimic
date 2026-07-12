@@ -1,0 +1,12 @@
+<!-- Spot-check: <variable selector=... storage=...> reaches the same storage logic as type= -
+     full matrix already covered via test_storage_postgres.xml (same underlying pool table). -->
+<setup rngSeed="7">
+    <database id="dbPostgres" system="postgres" />
+    <execute uri="script/setup_postgresql.scr.sql" target="dbPostgres" />
+
+    <generate name="iterator_cyclic_selector" count="20" pageSize="5" target="">
+        <variable name="row" source="dbPostgres" storage="iterator" cyclic="true"
+                  selector="SELECT row_id, text FROM simple.storage_pool" />
+        <key name="row_id" script="row.row_id" />
+    </generate>
+</setup>

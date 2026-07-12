@@ -49,6 +49,7 @@ class VariableStatement(Statement):
         self._variable_prefix = model.variable_prefix
         self._variable_suffix = model.variable_suffix
         self._string = model.string
+        self._storage = model.storage
         # Demographic + RNG extensions
         self._age_min = model.age_min
         self._age_max = model.age_max
@@ -171,6 +172,10 @@ class VariableStatement(Statement):
     @property
     def string(self) -> str | None:
         return self._string
+
+    @property
+    def storage(self) -> str | None:
+        return self._storage
 
     # Demographic + RNG getters
     @property
