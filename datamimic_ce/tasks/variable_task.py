@@ -413,7 +413,9 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             self._mode = self._STORAGE_MODE
             return
         if loads_all:
-            self._full_load_iterator = self._distributed_iter(data, self._pagination, seed) if data is not None else None
+            self._full_load_iterator = (
+                self._distributed_iter(data, self._pagination, seed) if data is not None else None
+            )
             self._mode = self._FULL_LOAD_MODE
         else:
             self._iterator = iter(data) if data is not None else None
