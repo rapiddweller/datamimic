@@ -178,9 +178,27 @@ class VariableTask(KeyVariableTask, CommonSubTask):
 
                         # in case of dbms product_type reflects the table name (sourceEntity -> type -> name)
                         product_type = StatementUtil.resolve_source_entity(statement)
-                        file_data = (
-                            client.get_by_page_with_type(product_type, pagination) if product_type is not None else None
-                        )
+                        # loads_all (random/cumulated) needs the WHOLE table to sample/shuffle from -
+                        # passing pagination here would hand _distributed_iter just one page and
+                        # silently truncate output to a page's worth of rows (reproduced: pageSize=5,
+                        # count=20 produced only 5 rows).
+                        if product_type is None:
+                            file_data = None
+                        elif loads_all:
+                            file_data = client.get_by_page_with_type(product_type)
+                        elif statement.cyclic:
+                            # cyclic=true on distribution="ordered" needs to know the WHOLE pool to
+                            # wrap correctly - a DB-side skip/limit window just returns short
+                            # (reproduced: pool=7, count=11 -> only 7 rows, no wrap) since neither
+                            # get_by_page_with_type nor a plain iter() over its result knows how to
+                            # cycle. Mirrors what the memstore branch below already gets right
+                            # (memstore.get_data_by_type -> DataSourceRegistry.get_cyclic_data_list,
+                            # which also needs the full list) - same trade-off, same shared helper.
+                            file_data = DataSourceRegistry.get_cyclic_data_list(
+                                client.get_by_page_with_type(product_type), pagination, cyclic=True
+                            )
+                        else:
+                            file_data = client.get_by_page_with_type(product_type, pagination)
                     # Get data from memstore
                     elif ctx.memstore_manager.contain(source_str):
                         product_type = StatementUtil.resolve_source_entity(statement)

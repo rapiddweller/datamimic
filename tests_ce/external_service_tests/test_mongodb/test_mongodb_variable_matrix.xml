@@ -1,0 +1,84 @@
+<!-- <variable type=... source=mongodb> read matrix: every valid combination of
+     distribution x cyclic x unique x numProcess (SP/MP) that DATAMIMIC's own
+     ModelUtil.check_unique_constraints allows (unique only combines with the default
+     distribution="random" and cyclic="false" - see model_util.py). Each stage seeds/reads a
+     dedicated collection so results don't cross-contaminate.
+
+     Regression coverage: distribution="random"/"cumulated" (loads_all=True) must read the
+     WHOLE collection to sample/shuffle from, not just one page - variable_task.py used to pass
+     pagination into get_by_page_with_type() unconditionally, which handed loads_all reads only
+     one page's worth of rows and silently truncated output (reproduced: pageSize=5, count=20
+     produced only 5 rows; fixed to match the memstore branch's already-correct pattern). -->
+<setup>
+    <mongodb id="mongodb"/>
+
+    <!-- ===== random, SP, pageSize < count (regression fixture for the truncation bug) ===== -->
+    <generate name="del_random_sp" source="mongodb" selector="find: 'mm_random_sp', filter: {}" target="mongodb.delete"/>
+    <generate name="mm_random_sp" type="mm_random_sp" target="mongodb" count="20">
+        <key name="row_id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="random_sp" count="20" pageSize="5">
+        <variable name="row" source="mongodb" type="mm_random_sp" distribution="random"/>
+        <key name="row_id" script="row.row_id"/>
+    </generate>
+
+    <!-- ===== random, MP (numProcess=2), pageSize < count ===== -->
+    <generate name="del_random_mp" source="mongodb" selector="find: 'mm_random_mp', filter: {}" target="mongodb.delete"/>
+    <generate name="mm_random_mp" type="mm_random_mp" target="mongodb" count="20">
+        <key name="row_id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="random_mp" count="20" pageSize="5" numProcess="2">
+        <variable name="row" source="mongodb" type="mm_random_mp" distribution="random"/>
+        <key name="row_id" script="row.row_id"/>
+    </generate>
+
+    <!-- ===== cumulated, SP, pageSize < count ===== -->
+    <generate name="del_cumulated" source="mongodb" selector="find: 'mm_cumulated', filter: {}" target="mongodb.delete"/>
+    <generate name="mm_cumulated" type="mm_cumulated" target="mongodb" count="20">
+        <key name="row_id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="cumulated_sp" count="20" pageSize="5">
+        <variable name="row" source="mongodb" type="mm_cumulated" distribution="cumulated"/>
+        <key name="row_id" script="row.row_id"/>
+    </generate>
+
+    <!-- ===== ordered, MP (numProcess=2), uneven pageSize (17 not divisible by pageSize=5) ===== -->
+    <generate name="del_ordered_mp" source="mongodb" selector="find: 'mm_ordered_mp', filter: {}" target="mongodb.delete"/>
+    <generate name="mm_ordered_mp" type="mm_ordered_mp" target="mongodb" count="17">
+        <key name="row_id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="ordered_mp" count="17" pageSize="5" numProcess="2">
+        <variable name="row" source="mongodb" type="mm_ordered_mp" distribution="ordered"/>
+        <key name="row_id" script="row.row_id"/>
+    </generate>
+
+    <!-- ===== cyclic + random: count (25) exceeds pool (10), must wrap with repeats ===== -->
+    <generate name="del_cyclic_random" source="mongodb" selector="find: 'mm_cyclic_random', filter: {}" target="mongodb.delete"/>
+    <generate name="mm_cyclic_random" type="mm_cyclic_random" target="mongodb" count="10">
+        <key name="row_id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="cyclic_random" count="25">
+        <variable name="row" source="mongodb" type="mm_cyclic_random" distribution="random" cyclic="true"/>
+        <key name="row_id" script="row.row_id"/>
+    </generate>
+
+    <!-- ===== cyclic + ordered, paginated (pageSize=4), count (11) exceeds pool (7) ===== -->
+    <generate name="del_cyclic_ordered" source="mongodb" selector="find: 'mm_cyclic_ordered', filter: {}" target="mongodb.delete"/>
+    <generate name="mm_cyclic_ordered" type="mm_cyclic_ordered" target="mongodb" count="7">
+        <key name="row_id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="cyclic_ordered" count="11" pageSize="4">
+        <variable name="row" source="mongodb" type="mm_cyclic_ordered" distribution="ordered" cyclic="true"/>
+        <key name="row_id" script="row.row_id"/>
+    </generate>
+
+    <!-- ===== unique + random (the only distribution unique combines with): pool covers count ===== -->
+    <generate name="del_unique" source="mongodb" selector="find: 'mm_unique', filter: {}" target="mongodb.delete"/>
+    <generate name="mm_unique" type="mm_unique" target="mongodb" count="15">
+        <key name="row_id" generator="IncrementGenerator"/>
+    </generate>
+    <generate name="unique_random" count="15">
+        <variable name="row" source="mongodb" type="mm_unique" distribution="random" unique="true"/>
+        <key name="row_id" script="row.row_id"/>
+    </generate>
+</setup>
