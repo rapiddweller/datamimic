@@ -301,13 +301,20 @@ jobs:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
       mongo:
-        image: mongo:4.4
+        image: mongo:7.0
         env:
           MONGO_INITDB_ROOT_USERNAME: datamimic
           MONGO_INITDB_ROOT_PASSWORD: datamimic
         ports:
           - 27017:27017
-        options: --health-cmd "mongo --eval 'db.stats().ok'" --health-interval 10s --health-timeout 5s --health-retries 5
+        # mongo:7.0 images ship mongosh, not the legacy `mongo` shell (removed since the 6.0 images) -
+        # a health-cmd still calling `mongo` would never report healthy on this image. Also needs
+        # the root credentials: MONGO_INITDB_ROOT_USERNAME/PASSWORD enables auth mode, so an
+        # unauthenticated db.stats() now fails with "requires authentication" (verified locally).
+        options: >-
+          --health-cmd "mongosh --quiet -u datamimic -p datamimic --authenticationDatabase admin
+          --eval 'db.adminCommand({ping:1}).ok'"
+          --health-interval 10s --health-timeout 5s --health-retries 5
       mysql:
         image: mysql:8
         env:
@@ -319,27 +326,39 @@ jobs:
           - 3306:3306
         options: --health-cmd "mysqladmin ping -h localhost" --health-interval 10s --health-timeout 5s --health-retries 5
       mssql:
-        image: mcr.microsoft.com/mssql/server
+        # Pinned (was unpinned `mcr.microsoft.com/mssql/server`, i.e. `:latest` - a floating tag
+        # that silently changes CI's exact SQL Server version over time with no code change here).
+        image: mcr.microsoft.com/mssql/server:2022-latest
         env:
           DB_HOST: 'mssql'
           DB_PORT: '1433'
           DB_CONNECTION: 'mssql'
-          ACCEPT_EULA: Y,
+          ACCEPT_EULA: 'Y'
           SA_PASSWORD: P@ssword123
-      #        ports:
-      #          - 1433:1433
-      #        options: --health-cmd "sqlcmd -S localhost -U sa -P P@ssword123 -Q 'SELECT 1'" --health-interval 10s --health-timeout 5s --health-retries 5
+        ports:
+          - 1433:1433
+        # 2022 images ship mssql-tools18 (not the old mssql-tools/sqlcmd on PATH), and its ODBC 18
+        # driver requires -C to trust the container's self-signed certificate for a local connection.
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P P@ssword123 -Q 'SELECT 1' || exit 1"
+          --health-interval 10s --health-timeout 5s --health-retries 10
       oracle:
-        image: oracleinanutshell/oracle-xe-11g
+        # oracleinanutshell/oracle-xe-11g was a barely-maintained community image for Oracle 11g
+        # (EOL'd by Oracle in 2020) - slow and unreliable to start. gvenzl/oracle-free is the
+        # actively-maintained, CI-oriented image (built-in healthcheck.sh, fast startup) the
+        # python-oracledb driver's own docs point to; no registry auth needed (unlike Oracle's
+        # official container-registry.oracle.com images).
+        image: gvenzl/oracle-free:latest
         env:
-          ORACLE_ALLOW_REMOTE: 'true'
-          ORACLE_ENABLE_XDB: 'true'
-          ORACLE_PASSWORD: rootpassword
+          ORACLE_RANDOM_PASSWORD: 'true'
           ORACLE_DATABASE: rddb
           APP_USER: rdadm
           APP_USER_PASSWORD: rdpassword
         ports:
           - 1521:1521
+        options: >-
+          --health-cmd healthcheck.sh
+          --health-interval 10s --health-timeout 5s --health-retries 10
     container: python:3.11-slim-bookworm
     steps:
       - name: Setup git
