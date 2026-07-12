@@ -28,11 +28,31 @@ class SequenceTableGenerator(BaseLiteralGenerator):
     Multiprocess safety here is client-side range math (each worker computes its own offset,
     not a server-side atomic block reservation): DATAMIMIC EE's equivalent generator instead
     declares itself __parallel_safe__ = False outright ("reserves DB sequence ranges per
-    process") rather than relying on this pattern - i.e. EE's own engineering judgment is that
-    per-process client-side range math isn't worth trusting for its multiprocess guarantees.
-    This fix closes the definite bug (a completely inert safety mechanism) and is verified
-    under the tested scenarios, but inherits the same structural class EE opted out of; prefer
-    numProcess=1 for a large, correctness-critical run if in doubt.
+    process") rather than relying on this pattern for ANY dialect - i.e. EE's own engineering
+    judgment is that per-process client-side range math isn't worth trusting for its multiprocess
+    guarantees. CE's per-dialect reality, verified empirically this session, does NOT uniformly
+    match that pessimism:
+
+    - Postgres: rdbms_client.get_current_sequence_number/increase_sequence_number use the
+      dialect's own nextval/setval, single atomic server-side statements with no client-side
+      read-then-write round trip - genuinely safe under concurrent workers (confirmed 8/8
+      consecutive real-multiprocess runs of the uneven count/numProcess regression test, see
+      test_sequence_table_generator_postgres_uneven_multiprocess).
+    - MySQL: has no native sequence object, so increase_sequence_number emulates one via a
+      GET_LOCK-guarded read-AUTO_INCREMENT-then-ALTER-TABLE critical section
+      (_advance_mysql_auto_increment). This is exactly the class of client-side range math EE
+      opted out of, and it shows: reproduced as real duplicate-key collisions in ~2/3 of
+      isolated real-multiprocess runs of the uneven-ratio case (test_sequence_table_generator_
+      mysql_uneven_multiprocess, skipped - not a hypothetical, an observed failure rate). MySQL
+      sequence generation is single-process-only in CE, matching EE's judgment for this dialect;
+      prefer numProcess=1 for any MySQL-backed run.
+    - MSSQL/Oracle: native-sequence support was prototyped and pulled (see
+      get_current_sequence_number's docstring) - unsupported regardless of process count.
+
+    This fix (wiring context.root.process_id, previously dead) closes a definite bug either way -
+    before it, EVERY dialect's per-process offset was a no-op, so even Postgres's provably-atomic
+    nextval/setval couldn't have kept workers' ranges apart. The fix just doesn't retroactively
+    make MySQL's weaker mechanism trustworthy under real concurrency.
 
     Attributes:
         _stmt: The statement (KeyStatement or VariableStatement) containing sequence configuration

@@ -80,6 +80,49 @@ def test_cyclic_ordered_wraps_in_stable_order():
     assert ids == [*range(1, 8), 1, 2, 3, 4], ids
 
 
+def _run_selector() -> dict:
+    test_dir = Path(__file__).resolve().parent
+    engine = DataMimicTest(
+        test_dir=test_dir, filename="test_mongodb_selector_distribution_matrix.xml", capture_test_result=True
+    )
+    engine.test_with_timer()
+    return engine.capture_result()
+
+
+def test_selector_random_is_a_permutation():
+    """<variable selector=...> (not type=): default distribution="random" is a shuffle
+    (permutation, no replacement) - same DataSourceRegistry.get_distributed_data dispatch as
+    type=, exercised through the selector= entry point (client.get_by_page_with_query), which
+    had zero matrix coverage before this."""
+    result = _run_selector()
+    ids = [r["row_id"] for r in result["selector_random"]]
+    assert len(ids) == 15
+    assert set(ids) == set(range(1, 16)), f"expected a permutation of 1..15, got {sorted(ids)}"
+
+
+def test_selector_cyclic_random_wraps_with_repeats():
+    result = _run_selector()
+    ids = [r["row_id"] for r in result["selector_cyclic_random"]]
+    assert len(ids) == 30
+    assert set(ids) <= set(range(1, 16)), f"every id must come from the seeded 1..15 pool: {set(ids)}"
+    assert len(set(ids)) < 30, "count > pool with cyclic=true must produce repeats"
+
+
+def test_selector_cumulated_reads_full_pool():
+    result = _run_selector()
+    ids = [r["row_id"] for r in result["selector_cumulated"]]
+    assert len(ids) == 15
+    assert set(ids) <= set(range(1, 16)), f"every id must come from the seeded pool: {set(ids)}"
+    assert len(set(ids)) < 15, "bell-weighted with-replacement draw should not collapse to a full permutation"
+
+
+def test_selector_unique_draws_distinct_pool_exactly():
+    result = _run_selector()
+    ids = [r["row_id"] for r in result["selector_unique"]]
+    assert len(ids) == 15
+    assert set(ids) == set(range(1, 16)), f"expected all 15 pool values exactly once, got {sorted(ids)}"
+
+
 def test_unique_random_draws_distinct_pool_exactly():
     """unique="true" + distribution="random" (the only distribution unique is allowed to combine
     with per ModelUtil.check_unique_constraints): count == pool size, every value distinct."""

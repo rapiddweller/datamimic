@@ -229,3 +229,34 @@ class TestDataSourceCyclic:
             assert len(json_count_not_define) == json_source_len
             assert len(json_non_cyclic_product) == min(json_count, json_source_len)
             assert len(json_cyclic_product) == json_count
+
+    def test_variable_file_distribution_matrix(self):
+        """<variable source="....csv"> distribution x unique cells - previously untested;
+        only <generate source="....csv" cyclic=...> (test_csv_cyclic) and <variable> against
+        db/mongo sources were matrix-tested before this."""
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_variable_file_distribution_matrix.xml", capture_test_result=True
+        )
+        engine.test_with_timer()
+        result = engine.capture_result()
+
+        random_codes = [r["ean_code"] for r in result["var_file_random"]]
+        # default distribution="random" is a shuffle (permutation, no replacement): count == pool
+        assert len(random_codes) == 11
+        assert set(random_codes) == set(range(1, 12)), f"expected a permutation of 1..11, got {sorted(random_codes)}"
+
+        cyclic_random_codes = [r["ean_code"] for r in result["var_file_cyclic_random"]]
+        assert len(cyclic_random_codes) == 25
+        assert set(cyclic_random_codes) <= set(range(1, 12)), (
+            f"every ean_code must come from the seeded 1..11 pool: {set(cyclic_random_codes)}"
+        )
+        assert len(set(cyclic_random_codes)) < 25, "count > pool with cyclic=true must produce repeats"
+
+        cumulated_codes = [r["ean_code"] for r in result["var_file_cumulated"]]
+        assert len(cumulated_codes) == 11
+        assert set(cumulated_codes) <= set(range(1, 12))
+        assert len(set(cumulated_codes)) < 11, "bell-weighted with-replacement draw should not be a full permutation"
+
+        unique_codes = [r["ean_code"] for r in result["var_file_unique"]]
+        assert len(unique_codes) == 11
+        assert set(unique_codes) == set(range(1, 12)), f"expected all 11 pool values exactly once, got {sorted(unique_codes)}"

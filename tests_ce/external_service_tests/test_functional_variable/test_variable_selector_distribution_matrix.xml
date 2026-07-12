@@ -1,0 +1,57 @@
+<!-- <variable selector=...> distribution x unique matrix against a real RDBMS source.
+     Complements test_variable_with_selector_cyclic.xml (which already covers
+     distribution="ordered" x cyclic true/false) - the cells below were previously
+     completely untested for the selector= code path: distribution="random"/"cumulated"
+     (loads_all=True, routed through VariableTask._distributed_iter) and unique="true"
+     (routed through DataSourceRegistry.get_unique_data). Same shared distribution/unique
+     machinery already verified for <variable type=...> (test_mongodb_variable_matrix.xml)
+     and <reference> (test_rdbms_reference/), exercised here via the selector= entry point. -->
+<setup rngSeed="7">
+    <database id="dbPostgres" system="postgres"/>
+    <execute uri="script/setup_selector_distribution_matrix.sql" target="dbPostgres"/>
+
+    <!-- default distribution (random) is a shuffle (permutation, no replacement) - count == pool -->
+    <generate name="selector_random" count="15" target="ConsoleExporter">
+        <variable name="row" source="dbPostgres"
+                  selector="SELECT id, text FROM public.selector_distribution_matrix"/>
+        <key name="row_id" script="row.id"/>
+    </generate>
+
+    <!-- random + cyclic: count (30) > pool (15) wraps the shuffled order, forcing repeats -->
+    <generate name="selector_cyclic_random" count="30" target="ConsoleExporter">
+        <variable name="row" source="dbPostgres" cyclic="true"
+                  selector="SELECT id, text FROM public.selector_distribution_matrix"/>
+        <key name="row_id" script="row.id"/>
+    </generate>
+
+    <!-- cumulated: bell-weighted with replacement over the full 15-row pool -->
+    <generate name="selector_cumulated" count="15" target="ConsoleExporter">
+        <variable name="row" source="dbPostgres" distribution="cumulated"
+                  selector="SELECT id, text FROM public.selector_distribution_matrix"/>
+        <key name="row_id" script="row.id"/>
+    </generate>
+
+    <!-- unique: distinct rows, count == pool size, pool fully exhausted -->
+    <generate name="selector_unique" count="15" target="ConsoleExporter">
+        <variable name="row" source="dbPostgres" unique="true"
+                  selector="SELECT id, text FROM public.selector_distribution_matrix"/>
+        <key name="row_id" script="row.id"/>
+    </generate>
+
+    <!-- ===== spot-check: <variable type=...> against RDBMS (not mongo) hits the SAME
+         variable_task.py branch (elif product_type is not None: ...) already matrix-tested for
+         MongoDB in test_mongodb_variable_matrix.xml - confirms the loads_all/cyclic fix isn't
+         mongo-specific. pageSize (5) < count (15) reproduces the exact shape of the original
+         truncation bug (loads_all must ignore pageSize and read the whole table). ===== -->
+    <generate name="type_random_paged" count="15" pageSize="5" target="ConsoleExporter">
+        <variable name="row" source="dbPostgres" type="selector_distribution_matrix"/>
+        <key name="row_id" script="row.id"/>
+    </generate>
+
+    <!-- cyclic wraparound via type=, paginated: count (22) exceeds pool (15) -->
+    <generate name="type_cyclic_ordered" count="22" pageSize="6" target="ConsoleExporter">
+        <variable name="row" source="dbPostgres" type="selector_distribution_matrix"
+                  distribution="ordered" cyclic="true"/>
+        <key name="row_id" script="row.id"/>
+    </generate>
+</setup>

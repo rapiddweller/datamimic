@@ -1,0 +1,61 @@
+<!-- <reference> against a Postgres table: pull real foreign keys from rows.
+     Mirrors the MongoDB reference matrix exactly (same ReferenceTask, same seeded
+     selection) - RdbmsClient.get_random_rows_by_columns returns a stable ORDER BY the
+     selected columns (not ORDER BY random()), so the seeded shuffle in
+     DataSourceRegistry.get_unique_data/get_distributed_data is reproducible run-to-run. -->
+<setup rngSeed="7">
+    <database id="sourceDB" system="postgresql" />
+    <memstore id="mem" />
+
+    <execute uri="script/setup_postgresql.scr.sql" target="sourceDB" />
+
+    <!-- seed 12 customers with known keys: crosses the single/double-digit boundary, so the
+         cyclic check below only passes under a numeric sort (a lexicographic sort would put
+         10/11/12 before 2). -->
+    <generate name="ref_customers" target="sourceDB" count="12">
+        <key name="customer_id" generator="IncrementGenerator" />
+        <key name="tier" values="'retail','business'" />
+    </generate>
+
+    <!-- default: pick with replacement, seeded -->
+    <generate name="orders_random" count="30" target="mem">
+        <key name="order_id" generator="IncrementGenerator" />
+        <reference name="customer_id" source="sourceDB" sourceType="ref_customers"
+                   sourceKey="customer_id" />
+    </generate>
+    <generate name="check_random" distribution="ordered" type="orders_random" source="mem" target="" />
+
+    <!-- ordered + cyclic: wrap the stable key order -->
+    <generate name="orders_cyclic" count="15" target="mem">
+        <key name="order_id" generator="IncrementGenerator" />
+        <reference name="customer_id" source="sourceDB" sourceType="ref_customers"
+                   sourceKey="customer_id" cyclic="true" />
+    </generate>
+    <generate name="check_cyclic" distribution="ordered" type="orders_cyclic" source="mem" target="" />
+
+    <!-- unique: distinct keys, pool covers the count -->
+    <generate name="orders_unique" count="12" target="mem">
+        <key name="order_id" generator="IncrementGenerator" />
+        <reference name="customer_id" source="sourceDB" sourceType="ref_customers"
+                   sourceKey="customer_id" unique="true" />
+    </generate>
+    <generate name="check_unique" distribution="ordered" type="orders_unique" source="mem" target="" />
+
+    <!-- composite reference: multiple <field> children pull correlated columns from the SAME
+         source row as one tuple - region is deterministic from cust_id (odd -> north, even ->
+         south), so a correct composite fetch must always pair them consistently; an accidental
+         per-column independent sample would eventually mismatch them. -->
+    <generate name="ref_customers_composite" target="sourceDB" count="12">
+        <key name="cust_id" generator="IncrementGenerator" />
+        <key name="region" script="'north' if this.cust_id % 2 == 1 else 'south'" />
+    </generate>
+
+    <generate name="orders_composite" count="12" target="mem">
+        <key name="order_id" generator="IncrementGenerator" />
+        <reference name="cust_ref" source="sourceDB" sourceType="ref_customers_composite" unique="true">
+            <field target="cust_id" sourceKey="cust_id" />
+            <field target="region" sourceKey="region" />
+        </reference>
+    </generate>
+    <generate name="check_composite" distribution="ordered" type="orders_composite" source="mem" target="" />
+</setup>
