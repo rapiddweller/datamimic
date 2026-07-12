@@ -41,6 +41,7 @@ EXPECTED: dict[str, set[str]] = {
     "fx_nestedkey_no_type.xml": {"DM216"},
     "fx_unknown_source.xml": {"DM402"},
     "fx_missing_include.xml": {"DM405"},
+    "fx_selector_without_count.xml": {"DM211"},
 }
 
 

@@ -1,0 +1,4 @@
+<setup rngSeed="1">
+    <database id="db" system="sqlite"/>
+    <generate name="orders" source="db" selector="SELECT * FROM orders WHERE active=1" target="ConsoleExporter"/>
+</setup>
