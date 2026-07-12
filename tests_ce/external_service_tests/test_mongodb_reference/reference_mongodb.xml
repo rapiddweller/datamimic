@@ -35,13 +35,25 @@
     </generate>
     <generate name="check_cyclic" distribution="ordered" type="orders_cyclic" source="mem" target=""/>
 
-    <!-- unique: distinct keys, pool covers the count -->
+    <!-- unique: distinct keys, pool covers the count. customer_id comes from IncrementGenerator
+         (already distinct by construction), so this alone proves unique= is a harmless no-op
+         here, NOT that dedup collapses anything real - see orders_unique_dupes below. -->
     <generate name="orders_unique" count="12" target="mem">
         <key name="order_id" generator="IncrementGenerator"/>
         <reference name="customer_id" source="mongodb" sourceType="ref_mongo_customers"
                    sourceKey="customer_id" unique="true"/>
     </generate>
     <generate name="check_unique" distribution="ordered" type="orders_unique" source="mem" target=""/>
+
+    <!-- unique against a field with REAL duplicates (tier: 2 distinct values across 12 docs) -
+         proves dedup genuinely collapses repeats, not just that it leaves an already-distinct
+         pool (customer_id, above) alone. -->
+    <generate name="orders_unique_dupes" count="2" target="mem">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <reference name="tier" source="mongodb" sourceType="ref_mongo_customers"
+                   sourceKey="tier" unique="true"/>
+    </generate>
+    <generate name="check_unique_dupes" distribution="ordered" type="orders_unique_dupes" source="mem" target=""/>
 
     <!-- nested reference: sourceKey descends into an embedded sub-document (a converted <part>).
          address_id = customer_id * 10 + seq makes every nested id globally unique and deterministic
@@ -63,4 +75,29 @@
                    sourceKey="addresses.address_id" cyclic="true"/>
     </generate>
     <generate name="check_nested" distribution="ordered" type="orders_nested" source="mem" target=""/>
+
+    <!-- composite reference: multiple <field> children pull correlated columns from the SAME
+         source row as one tuple (not independently sampled per field) - region is deterministic
+         from customer_id (region = 'north' if id odd else 'south'), so a correct composite fetch
+         must always pair them consistently; an accidental per-column independent sample would
+         eventually mismatch them. -->
+    <generate name="cleanup_composite" source="mongodb"
+              selector="find: 'ref_mongo_customers_composite', filter: {}" target="mongodb.delete"/>
+
+    <generate name="ref_mongo_customers_composite" target="mongodb" count="12">
+        <key name="cust_id" generator="IncrementGenerator"/>
+        <key name="region" script="'north' if this.cust_id % 2 == 1 else 'south'"/>
+    </generate>
+
+    <generate name="orders_composite" count="12" target="mem">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <!-- composite <field> targets are written directly onto the current product (see
+             ReferenceTask.execute -> add_current_product_field per field), not nested under the
+             <reference name=...> - cust_id/region below come straight from this. -->
+        <reference name="cust_ref" source="mongodb" sourceType="ref_mongo_customers_composite" unique="true">
+            <field target="cust_id" sourceKey="cust_id"/>
+            <field target="region" sourceKey="region"/>
+        </reference>
+    </generate>
+    <generate name="check_composite" distribution="ordered" type="orders_composite" source="mem" target=""/>
 </setup>

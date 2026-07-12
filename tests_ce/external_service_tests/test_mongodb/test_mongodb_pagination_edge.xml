@@ -1,0 +1,25 @@
+<setup>
+    <mongodb id="mongodb"/>
+
+    <!-- clear collection -->
+    <generate name="delete" source="mongodb" selector="find: 'mongo_pagination_edge', filter: {}" target="mongodb.delete">
+    </generate>
+
+    <!-- seed 17 docs - deliberately NOT a multiple of pageSize=5, so the last page is partial
+         (5, 5, 5, 2) -->
+    <generate name="mongo_pagination_edge" target="mongodb" count="17">
+        <key name="row_id" generator="IncrementGenerator"/>
+    </generate>
+
+    <!-- same non-loads_all distribution as the happy-path case, but exercising the uneven
+         last-page boundary: must still yield exactly 1..17 once, not pad/duplicate the final
+         short page -->
+    <generate name="page" count="17" pageSize="5">
+        <variable name="row" source="mongodb" type="mongo_pagination_edge" distribution="ordered"/>
+        <key name="row_id" script="row.row_id"/>
+    </generate>
+
+    <!-- cleanup -->
+    <generate name="cleanup" source="mongodb" selector="find: 'mongo_pagination_edge', filter: {}" target="mongodb.delete">
+    </generate>
+</setup>

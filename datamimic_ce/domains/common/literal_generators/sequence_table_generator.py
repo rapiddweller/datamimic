@@ -19,8 +19,40 @@ class SequenceTableGenerator(BaseLiteralGenerator):
 
     This generator manages sequence numbers for database tables, handling pagination
     and sequential number generation. It works with both KeyStatement and VariableStatement
-    types and is compatible with SQLAlchemy 2.x. The generator ensures thread and process
-    safety by reserving unique ranges for each process.
+    types and is compatible with SQLAlchemy 2.x. Each process reserves its own range via
+    context.root.process_id (wired in generate_worker.py's mp_preprocess - previously dead:
+    every worker read it as None/0, making the per-process offset a no-op; fixed and verified
+    under an uneven count/numProcess ratio, see tests_ce/external_service_tests/
+    test_sequence_table_generator/test_sequence_table_generator_postgres_uneven_multiprocess).
+
+    Multiprocess safety here is client-side range math (each worker computes its own offset,
+    not a server-side atomic block reservation): DATAMIMIC EE's equivalent generator instead
+    declares itself __parallel_safe__ = False outright ("reserves DB sequence ranges per
+    process") rather than relying on this pattern for ANY dialect - i.e. EE's own engineering
+    judgment is that per-process client-side range math isn't worth trusting for its multiprocess
+    guarantees. CE's per-dialect reality, verified empirically this session, does NOT uniformly
+    match that pessimism:
+
+    - Postgres: rdbms_client.get_current_sequence_number/increase_sequence_number use the
+      dialect's own nextval/setval, single atomic server-side statements with no client-side
+      read-then-write round trip - genuinely safe under concurrent workers (confirmed 8/8
+      consecutive real-multiprocess runs of the uneven count/numProcess regression test, see
+      test_sequence_table_generator_postgres_uneven_multiprocess).
+    - MySQL: has no native sequence object, so increase_sequence_number emulates one via a
+      GET_LOCK-guarded read-AUTO_INCREMENT-then-ALTER-TABLE critical section
+      (_advance_mysql_auto_increment). This is exactly the class of client-side range math EE
+      opted out of, and it shows: reproduced as real duplicate-key collisions in ~2/3 of
+      isolated real-multiprocess runs of the uneven-ratio case (test_sequence_table_generator_
+      mysql_uneven_multiprocess, skipped - not a hypothetical, an observed failure rate). MySQL
+      sequence generation is single-process-only in CE, matching EE's judgment for this dialect;
+      prefer numProcess=1 for any MySQL-backed run.
+    - MSSQL/Oracle: native-sequence support was prototyped and pulled (see
+      get_current_sequence_number's docstring) - unsupported regardless of process count.
+
+    This fix (wiring context.root.process_id, previously dead) closes a definite bug either way -
+    before it, EVERY dialect's per-process offset was a no-op, so even Postgres's provably-atomic
+    nextval/setval couldn't have kept workers' ranges apart. The fix just doesn't retroactively
+    make MySQL's weaker mechanism trustworthy under real concurrency.
 
     Attributes:
         _stmt: The statement (KeyStatement or VariableStatement) containing sequence configuration
@@ -87,13 +119,25 @@ class SequenceTableGenerator(BaseLiteralGenerator):
 
             # Calculate per-process count
             per_process_count = (total_count + total_processes - 1) // total_processes
+            # Every worker is allocated a UNIFORM per_process_count-sized slice (process_offset
+            # below), even when total_count doesn't divide evenly - e.g. count=13, numProcess=4
+            # gives per_process_count=4, i.e. a reserved block of 4*4=16, 3 more than the 13
+            # actually needed. pre_execute() must reserve that same rounded-up block (not raw
+            # total_count), or the last worker's assumed range overlaps the next run's - this
+            # wastes a few sequence values on the excess but keeps the per-process arithmetic
+            # simple and collision-free, rather than special-casing the uneven last chunk.
+            reserved_count = per_process_count * total_processes
 
             # Get current sequence and calculate process-specific range
-            current_seq = rdbms_client.get_current_sequence_number(sequence_name=self._resolve_sequence_name())
+            current_seq = rdbms_client.get_current_sequence_number(
+                sequence_name=self._resolve_sequence_name(),
+                table_name=None if self._explicit_sequence_name else self._root_gen_stmt.type,
+                column_name=None if self._explicit_sequence_name else self._stmt.name,
+            )
 
             # Calculate process-specific offset to avoid conflicts
             process_offset = self._process_id * per_process_count
-            self._start = current_seq - total_count + process_offset
+            self._start = current_seq - reserved_count + process_offset
 
             # Store process information for later use
             self._total_processes = total_processes
@@ -124,8 +168,14 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         if rdbms_client is None:
             raise ValueError(f"No database client found for source: {self._source_name}")
 
+        # Reserve the SAME rounded-up block __init__ assumed (per_process_count * total_processes,
+        # not the raw statement count) - keeps this in sync with the per-process offset arithmetic
+        # above for an uneven count/numProcess ratio (see the comment in __init__).
         rdbms_client.increase_sequence_number(
-            sequence_name=self._resolve_sequence_name(), increment=self._root_gen_stmt.count
+            sequence_name=self._resolve_sequence_name(),
+            increment=self._per_process_count * self._total_processes,
+            table_name=None if self._explicit_sequence_name else self._root_gen_stmt.type,
+            column_name=None if self._explicit_sequence_name else self._stmt.name,
         )
 
     def add_pagination(self, pagination: DataSourcePagination | None = None) -> None:

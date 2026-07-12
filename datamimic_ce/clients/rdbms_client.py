@@ -146,15 +146,21 @@ class RdbmsClient(DatabaseClient):
                 self._engine = create_sqlite_engine(db_path)
 
             case "mssql":
-                # Create an MSSQL engine using the ODBC driver
-                self._engine = create_sqlalchemy_engine(
-                    "mssql+pyodbc",
-                    user,
-                    password,
-                    host,
-                    port,
-                    f"{db}?driver=ODBC+Driver+17+for+SQL+Server",
-                )
+                # ODBC Driver 17 (pyodbc) is the default; opt into the pure-Python pymssql/FreeTDS
+                # driver with driver="pymssql" on the <database> credential - no proprietary MS
+                # ODBC package to install, avoids the exact driver-install friction that pushed
+                # DATAMIMIC EE to make pymssql its own default (rdbms/url_builder.py).
+                if getattr(self._credential, "driver", None) == "pymssql":
+                    self._engine = create_sqlalchemy_engine("mssql+pymssql", user, password, host, port, db)
+                else:
+                    self._engine = create_sqlalchemy_engine(
+                        "mssql+pyodbc",
+                        user,
+                        password,
+                        host,
+                        port,
+                        f"{db}?driver=ODBC+Driver+17+for+SQL+Server",
+                    )
 
             case "oracle":
                 # Set OracleDB version and import the necessary module
@@ -331,7 +337,9 @@ class RdbmsClient(DatabaseClient):
             if pagination is None:
                 logger.info(f"page is None, get all data from table {actual_table_name}")
                 query = select(table)
-            elif self._credential.dbms == "mssql":
+            elif self._credential.dbms in ("mssql", "oracle"):
+                # both need an explicit ORDER BY for a stable OFFSET/FETCH - get_by_page_with_query
+                # already treats them symmetrically for the same reason.
                 ordering_column = table.primary_key.columns.values() if table.primary_key else [next(iter(table.c))]
                 query = select(table).order_by(*ordering_column).offset(pagination.skip).limit(pagination.limit)
             else:
@@ -509,36 +517,65 @@ class RdbmsClient(DatabaseClient):
 
         return f"{self._credential.db_schema}.{actual_table_name}" if self._credential.db_schema else actual_table_name
 
-    def get_current_sequence_number(self, sequence_name: str) -> int:
+    def _split_sequence_schema(self, sequence_name: str, default_schema: str) -> tuple[str, str]:
+        """A dotted name ('zsv.t_angebote_id_seq', explicit sequence= from the DSL) carries its
+        own schema - splitting here keeps every sequence query below two-part; blindly
+        prepending the credential schema would build a malformed 3-part identifier."""
+        if "." in sequence_name:
+            schema, sequence_name = sequence_name.split(".", 1)
+            return schema, sequence_name
+        return default_schema, sequence_name
+
+    def get_current_sequence_number(
+        self, sequence_name: str, table_name: str | None = None, column_name: str | None = None
+    ) -> int:
         """
-        Get the current value of a database sequence.
+        Get the current value of a database sequence: atomically advance it by 1 and return the
+        new value (same contract as Postgres nextval).
+
+        Supported for postgresql and mysql. mssql/oracle are not supported yet: prototyped with
+        native sequences, but SequenceTableGenerator is re-instantiated per page/scan-phase pass
+        (existing engine behavior) and each instantiation calls this side-effecting method, which
+        was observed to produce colliding id ranges against MSSQL non-deterministically - needs a
+        fix to that interaction, not just a dialect-specific SQL port.
         :param sequence_name: Name of the sequence
+        :param table_name: MySQL only - the target table (convention case, unset for an explicit
+            sequence= name). MySQL has no freestanding sequence object, so it integrates directly
+            with the target table's own AUTO_INCREMENT counter instead - the only way a
+            MySQL-backed id column stays coherent with plain (non-generator) inserts into the
+            same table, mirroring why Postgres's native sequence already works this way.
+        :param column_name: MySQL only - the target column (paired with table_name).
         :return: Current sequence number
         """
+        dbms = self._credential.dbms
         with self._create_engine().connect() as connection:
             transaction = connection.begin()
             try:
-                # Check if sequence exists in the specified schema. A dotted name
-                # ('zsv.t_angebote_id_seq', explicit sequence= from the DSL) carries its own
-                # schema - splitting here keeps every query below two-part; blindly prepending
-                # the credential schema would build malformed public.zsv.t_angebote_id_seq.
-                schema = self._credential.db_schema or "public"
-                if "." in sequence_name:
-                    schema, sequence_name = sequence_name.split(".", 1)
-                check_query = text(
-                    "SELECT EXISTS (SELECT 1 FROM pg_sequences WHERE schemaname = :schema AND sequencename = :seq_name)"
-                )
-                exists = connection.execute(check_query, {"schema": schema, "seq_name": sequence_name}).scalar()
-
-                if not exists:
-                    # Create sequence if it doesn't exist
-                    create_query = text(f"CREATE SEQUENCE IF NOT EXISTS {schema}.{sequence_name}")
-                    connection.execute(create_query)
-
-                # Get the next value from the sequence
-                query = text(f"SELECT nextval('{schema}.{sequence_name}')")
-                result = connection.execute(query)
-                current_value = result.scalar()
+                if dbms == "postgresql":
+                    schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
+                    exists = connection.execute(
+                        text(
+                            "SELECT EXISTS (SELECT 1 FROM pg_sequences "
+                            "WHERE schemaname = :schema AND sequencename = :seq_name)"
+                        ),
+                        {"schema": schema, "seq_name": seq},
+                    ).scalar()
+                    if not exists:
+                        connection.execute(text(f"CREATE SEQUENCE IF NOT EXISTS {schema}.{seq}"))
+                    current_value = connection.execute(text(f"SELECT nextval('{schema}.{seq}')")).scalar()
+                elif dbms == "mysql":
+                    current_value = self._advance_mysql_auto_increment(
+                        connection, sequence_name, table_name, column_name, 1
+                    )
+                else:
+                    # mssql/oracle: native-sequence support was prototyped and pulled - a
+                    # per-page/scan-phase re-instantiation of SequenceTableGenerator (existing
+                    # DATAMIMIC behavior, not new) calls this method multiple times per statement
+                    # with side-effecting advances, and the resulting id ranges were observed to
+                    # collide non-deterministically against MSSQL. Needs a fix to the range
+                    # arithmetic (or the scan-phase call pattern) before shipping, not just a
+                    # dialect-specific SQL port. See PR discussion.
+                    raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
                 transaction.commit()
                 return current_value
             except Exception as err:
@@ -546,28 +583,108 @@ class RdbmsClient(DatabaseClient):
                 logger.error(f"Failed to get current sequence number for {sequence_name}: {err}")
                 raise
 
-    def increase_sequence_number(self, sequence_name: str, increment: int = 1) -> None:
+    def increase_sequence_number(
+        self,
+        sequence_name: str,
+        increment: int = 1,
+        table_name: str | None = None,
+        column_name: str | None = None,
+    ) -> None:
         """
-        Increase the sequence number by a specified increment.
+        Atomically advance the sequence by `increment` (a single atomic statement/lock-scoped
+        update per dialect - never a read-current-value-then-write-it-back-in-Python round trip,
+        which would race under the concurrent, multiprocess callers this generator exists for).
         :param sequence_name: Name of the sequence
         :param increment: Increment value
+        :param table_name: MySQL only - see get_current_sequence_number.
+        :param column_name: MySQL only - see get_current_sequence_number.
         """
+        increment = int(increment)  # callers may pass a raw XML attribute string (e.g. count=)
+        dbms = self._credential.dbms
         with self._create_engine().connect() as connection:
             transaction = connection.begin()
             try:
-                schema = self._credential.db_schema or "public"
-                if "." in sequence_name:  # dotted name carries its own schema (see get_current_sequence_number)
-                    schema, sequence_name = sequence_name.split(".", 1)
-                # Use a transaction to ensure atomicity
-                query = text(
-                    f"SELECT setval('{schema}.{sequence_name}', nextval('{schema}.{sequence_name}') + :increment)"
-                )
-                connection.execute(query, {"increment": increment})
+                if dbms == "postgresql":
+                    schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
+                    connection.execute(
+                        text(f"SELECT setval('{schema}.{seq}', nextval('{schema}.{seq}') + :increment)"),
+                        {"increment": increment},
+                    )
+                elif dbms == "mysql":
+                    self._advance_mysql_auto_increment(connection, sequence_name, table_name, column_name, increment)
+                else:
+                    # See get_current_sequence_number - mssql/oracle native-sequence support
+                    # pulled pending a fix to the scan-phase re-instantiation interaction.
+                    raise ValueError(f"SequenceTableGenerator is not supported for dbms '{dbms}'")
                 transaction.commit()
             except Exception as err:
                 transaction.rollback()
                 logger.error(f"Failed to increase sequence number for {sequence_name}: {err}")
                 raise
+
+    def _advance_mysql_auto_increment(
+        self, connection, sequence_name: str, table_name: str | None, column_name: str | None, increment: int
+    ) -> int:
+        """MySQL has no freestanding sequence object (pre-MariaDB) - AUTO_INCREMENT is a
+        per-table column property, not an independently nameable thing. The only way a
+        MySQL-backed id column stays coherent with OTHER, non-generator inserts into the same
+        table (the same guarantee Postgres's native sequence gives for free, since a generator
+        there advances the exact object the column's own DEFAULT already points at)
+        is to advance that table's real AUTO_INCREMENT counter directly - not a separate,
+        unrelated counter table, which two independent counters could never keep in sync.
+
+        Only supported for the convention-derived case (table_name/column_name known - a bare
+        `generator="SequenceTableGenerator"`, no explicit sequence=): an explicit legacy
+        sequence= name has no MySQL object to bind to, so it's a clear error rather than a
+        silently-wrong separate counter.
+
+        `information_schema.TABLES.AUTO_INCREMENT` alone is NOT reliable: it's served from
+        InnoDB's persistent statistics cache, refreshed only every `innodb_stats_auto_recalc`
+        threshold or `information_schema_stats_expiry` seconds (default 86400 = 24h). A plain
+        INSERT elsewhere doesn't force a refresh, so a stale read can return a LOWER value than
+        the table's real counter - handing out ids that collide with rows already inserted
+        by other means. `SET SESSION information_schema_stats_expiry = 0` forces this session's
+        read to bypass the cache and reflect the live value; it's session-scoped, so it doesn't
+        need any privilege beyond what this connection already has and doesn't affect other
+        sessions. GET_LOCK/RELEASE_LOCK are session-scoped advisory locks, independent of
+        transactions/DDL (ALTER TABLE ... AUTO_INCREMENT=n is DDL, not itself atomic against a
+        concurrent read-then-write), so they serialize concurrent callers around the whole
+        read-then-ALTER round trip safely.
+        """
+        if table_name is None or column_name is None:
+            raise ValueError(
+                f"SequenceTableGenerator(sequence='{sequence_name}') is not supported for MySQL: MySQL has no "
+                "freestanding sequence object to bind an explicit name to. Omit sequence= to use the target "
+                "table's own AUTO_INCREMENT column instead."
+            )
+        schema = self._credential.db_schema
+        table = f"{schema}.{table_name}" if schema else table_name
+        lock_name = f"datamimic_seq_{schema}_{table_name}_{column_name}"[:64]
+        acquired = connection.execute(text("SELECT GET_LOCK(:name, 30)"), {"name": lock_name}).scalar()
+        if acquired != 1:
+            raise RuntimeError(f"Could not acquire MySQL advisory lock for sequence '{sequence_name}' within 30s")
+        try:
+            connection.execute(text("SET SESSION information_schema_stats_expiry = 0"))
+            next_value = connection.execute(
+                text(
+                    "SELECT AUTO_INCREMENT FROM information_schema.TABLES "
+                    "WHERE table_schema = :schema AND table_name = :table"
+                ),
+                {"schema": schema, "table": table_name},
+            ).scalar()
+            next_value = int(next_value or 1)
+            connection.execute(text(f"ALTER TABLE {table} AUTO_INCREMENT = {next_value + int(increment)}"))
+            return next_value
+        finally:
+            try:
+                connection.execute(text("SELECT RELEASE_LOCK(:name)"), {"name": lock_name})
+            except Exception as release_err:
+                # Never let a lock-release failure mask the original error (or a successful
+                # result) from the try block above - just log it. The advisory lock is
+                # session-scoped anyway, so it's released automatically once this connection
+                # closes even if RELEASE_LOCK itself fails here.
+                logger.error(f"Failed to release MySQL advisory lock '{lock_name}': {release_err}")
+
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._engine:

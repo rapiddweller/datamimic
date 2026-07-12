@@ -48,7 +48,10 @@ class TestRdbms:
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_mssql.xml")
         test_engine.test_with_timer()
 
-    @pytest.mark.skip(reason="Need to reconfigure the oracle connection")
+    @pytest.mark.skipif(
+        settings.RUNTIME_ENVIRONMENT == "development",
+        reason="This test can only test with stage postgres credential",
+    )
     def test_oracle(self):
         test_engine = DataMimicTest(test_dir=self._test_dir, filename="test_oracle.xml")
         test_engine.test_with_timer()

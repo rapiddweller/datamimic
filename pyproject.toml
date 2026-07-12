@@ -30,6 +30,7 @@ dependencies = [
     "pydantic-settings==2.7.1", # from pydantic_settings import BaseSettings - Used for settings management
     "pydantic[email]", # from pydantic import EmailStr - Used for email validation
     "pymongo==4.10.1", # import pymongo - Used for MongoDB connections
+    "pymssql==2.3.13", # import pymssql - pure-Python MSSQL driver, opt-in via <database driver="pymssql">
     "pyodbc==5.2.0", # import pyodbc - Used for ODBC connections
     "python-dotenv==1.0.1", # from dotenv import load_dotenv
     "requests==2.32.3", # import requests - Used for making HTTP requests

@@ -1,0 +1,26 @@
+<!-- <variable source="....csv" storage=...> matrix - a deliberate CE extension beyond EE (EE's
+     own storage= is non-functional for file sources, see plan). Reuses the existing 11-row
+     products.ent.csv fixture data (ean_code 1..11). numProcess doesn't apply here (file loading
+     is already single-shot) - this cell exists to prove storage= doesn't break the file path. -->
+<setup rngSeed="7" defaultSeparator=",">
+    <generate name="data_file" count="3" target="">
+        <variable name="pool" source="data/products.ent.csv" storage="data" distribution="ordered" />
+        <key name="pool_len" script="len(pool)" />
+    </generate>
+
+    <generate name="value_file" count="3" target="">
+        <variable name="row" source="data/products.ent.csv" storage="value" distribution="ordered" />
+        <key name="ean_code" script="int(row.ean_code)" />
+    </generate>
+
+    <generate name="iterator_cyclic_file" count="15" target="">
+        <variable name="row" source="data/products.ent.csv" storage="iterator" cyclic="true" distribution="ordered" />
+        <key name="ean_code" script="int(row.ean_code)" />
+    </generate>
+
+    <!-- non-cyclic: pool (11) < count (15), positions 11..14 exhaust -> None -->
+    <generate name="iterator_non_cyclic_file" count="15" target="">
+        <variable name="row" source="data/products.ent.csv" storage="iterator" cyclic="false" distribution="ordered" />
+        <key name="ean_code" script="int(row.ean_code) if row.ean_code is not None else None" />
+    </generate>
+</setup>

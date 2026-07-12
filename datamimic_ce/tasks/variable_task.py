@@ -20,7 +20,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VALUES,
 )
 from datamimic_ce.constants.element_constants import EL_VARIABLE
-from datamimic_ce.contexts.context import Context
+from datamimic_ce.contexts.context import Context, DotableDict
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
@@ -32,6 +32,7 @@ from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
 from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.tasks.task_util import TaskUtil
+from datamimic_ce.tasks.variable_iterator import VariableIterator
 from datamimic_ce.utils.domain_class_util import DomainClassUtil
 from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.string_util import StringUtil
@@ -53,6 +54,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
     _ITERATION_SELECTOR_MODE: Final = "iteration_selector"
     _FULL_LOAD_MODE: Final = "full_load"
     _LAZY_ITERATOR_MODE: Final = "lazy_iterator"
+    _STORAGE_MODE: Final = "storage"
 
     def __init__(
         self,
@@ -66,14 +68,47 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         )
         self._statement: VariableStatement = statement
         descriptor_dir = ctx.root.descriptor_dir
-        seed: int
+        # Always bound: _finalize_pool's non-storage tail now handles every branch (including
+        # "ordered", which never reads seed) with one shared call, so seed must be a valid
+        # argument even on the path that doesn't use it - real UnboundLocalError caught by the
+        # regression suite the first time this was written as a bare `seed: int` annotation.
+        seed: int = 0
         file_data: list[dict[str, Any]] | None = None
         self._full_load_iterator = None
+
+        # storage="value"/"data"/"iterator" exposes a materialized source pool instead of the
+        # default per-execute()-advancing scalar (see VariableIterator's docstring for the
+        # "iterator" contract). VariableModel already rejects storage combined with
+        # iterationSelector, a weighted-entity source, or no source= at all - the two remaining
+        # combinations that need runtime state to detect (not decidable from raw XML attributes
+        # alone) are checked here.
+        self._storage_mode = statement.storage
+        if self._storage_mode is not None:
+            if statement.is_global_variable:
+                raise ValueError(
+                    f"<variable> '{statement.name}': 'storage' is not supported on a global "
+                    "(setup-scope) variable - it has no per-row position to expose."
+                )
+            if self._source_script:
+                raise ValueError(
+                    f"<variable> '{statement.name}': 'storage' cannot be combined with sourceScripted "
+                    "(not meaningful for a list/proxy value)"
+                )
+            if statement.converter is not None:
+                raise ValueError(
+                    f"<variable> '{statement.name}': 'storage' cannot be combined with 'converter' "
+                    "(not meaningful for a list/proxy value)"
+                )
         # Only ORDERED paginates sequentially; RANDOM and CUMULATED load all rows.
         # unique also needs the whole pool (dedupe + sample without replacement).
         loads_all = self.statement.distribution.loads_all or bool(self.statement.unique)
-        if loads_all:
-            # Stable per-statement seed so random / cumulated / unique stay consistent across pages.
+        # storage= always needs the full pool materialized once, regardless of distribution's
+        # normal per-page pagination (pageSize is ignored) - independent of whether loads_all
+        # already implies a full read for this distribution.
+        force_full_pool = self._storage_mode is not None
+        if loads_all or force_full_pool:
+            # Stable per-statement seed so random / cumulated / unique stay consistent across pages
+            # (and, for storage=, across the one-time full-pool materialization).
             seed = ctx.root.stable_distribution_seed(self.statement.full_name)
 
         # Try to init generation mode of VariableTask
@@ -121,10 +156,9 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                         suffix=self._suffix,
                     )
                     # Select data from database and shuffle
-                    if loads_all:
-                        self._mode = self._FULL_LOAD_MODE
+                    if loads_all or force_full_pool:
                         selected_data = client.get_by_page_with_query(selector)
-                        self._full_load_iterator = self._distributed_iter(selected_data, pagination, seed)
+                        self._finalize_pool(selected_data, loads_all, seed)
                     else:
                         # global variable (setup variable, out of generate_stmt scope) don't need pagination and cyclic
                         if self._statement.is_global_variable:
@@ -155,9 +189,8 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                         file_data = FileUtil.read_fixed_width_to_dict_list(descriptor_dir / source_str)
                     else:
                         file_data = FileUtil.read_json_to_list(descriptor_dir / source_str)
-                    if loads_all:
-                        self._full_load_iterator = self._distributed_iter(file_data, pagination, seed)
-                        self._mode = self._FULL_LOAD_MODE
+                    if loads_all or force_full_pool:
+                        self._finalize_pool(file_data, loads_all, seed)
                     else:
                         self._iterator = DataSourceRegistry.get_cyclic_data_iterator(
                             data=file_data,
@@ -178,15 +211,38 @@ class VariableTask(KeyVariableTask, CommonSubTask):
 
                         # in case of dbms product_type reflects the table name (sourceEntity -> type -> name)
                         product_type = StatementUtil.resolve_source_entity(statement)
-                        # TODO: check if pagination is needed
-                        file_data = client.get_by_page_with_type(product_type) if product_type is not None else None
+                        # loads_all (random/cumulated) needs the WHOLE table to sample/shuffle from -
+                        # passing pagination here would hand _distributed_iter just one page and
+                        # silently truncate output to a page's worth of rows (reproduced: pageSize=5,
+                        # count=20 produced only 5 rows).
+                        if product_type is None:
+                            file_data = None
+                        elif loads_all or force_full_pool:
+                            # storage= (force_full_pool) needs the raw full pool, not a page
+                            # window - and NOT run through get_cyclic_data_list's page-length
+                            # pre-extension below (that would double-apply the wrap on top of
+                            # VariableIterator's own position % len(pool) modulo).
+                            file_data = client.get_by_page_with_type(product_type)
+                        elif statement.cyclic:
+                            # cyclic=true on distribution="ordered" needs to know the WHOLE pool to
+                            # wrap correctly - a DB-side skip/limit window just returns short
+                            # (reproduced: pool=7, count=11 -> only 7 rows, no wrap) since neither
+                            # get_by_page_with_type nor a plain iter() over its result knows how to
+                            # cycle. Mirrors what the memstore branch below already gets right
+                            # (memstore.get_data_by_type -> DataSourceRegistry.get_cyclic_data_list,
+                            # which also needs the full list) - same trade-off, same shared helper.
+                            file_data = DataSourceRegistry.get_cyclic_data_list(
+                                client.get_by_page_with_type(product_type), pagination, cyclic=True
+                            )
+                        else:
+                            file_data = client.get_by_page_with_type(product_type, pagination)
                     # Get data from memstore
                     elif ctx.memstore_manager.contain(source_str):
                         product_type = StatementUtil.resolve_source_entity(statement)
                         memstore = ctx.memstore_manager.get_memstore(source_str)
                         file_data = (
                             memstore.get_all_data_by_type(product_type)
-                            if loads_all
+                            if (loads_all or force_full_pool)
                             else memstore.get_data_by_type(product_type, pagination, statement.cyclic)
                         )
                     # Get data from script in lazy mode
@@ -194,17 +250,15 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                         is_lazy_source = True
 
                     if is_lazy_source:
+                        if force_full_pool:
+                            raise ValueError(
+                                f"<variable> '{statement.name}': 'storage' is not supported for a "
+                                "dynamic/script-evaluated source (no stable pool to materialize up front)"
+                            )
                         self._iterator = None
                         self._mode = self._LAZY_ITERATOR_MODE
                     else:
-                        if loads_all:
-                            self._full_load_iterator = (
-                                self._distributed_iter(file_data, pagination, seed) if file_data is not None else None
-                            )
-                            self._mode = self._FULL_LOAD_MODE
-                        else:
-                            self._iterator = iter(file_data) if file_data is not None else None
-                            self._mode = self._ITERATOR_MODE
+                        self._finalize_pool(file_data, loads_all, seed)
         elif statement.entity is not None:
             # Create entity builder
             locale = statement.locale or ctx.default_locale
@@ -326,6 +380,66 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             )
         )
 
+    def _storage_pool(self, data, seed) -> list:
+        """storage= counterpart of ``_distributed_iter``: same shaping (shuffle/cumulated/unique),
+        but the RAW, unwindowed full pool (pagination=None) - VariableIterator's own
+        ``position % len(pool)`` handles cyclic wrap at read time, so pre-extending the list here
+        (like the page-windowed ``_distributed_iter`` path does for a paginated page) would
+        double-apply the wrap."""
+        if self._statement.unique:
+            return DataSourceRegistry.get_unique_data(data, None, seed, f"<variable> '{self._statement.name}'")
+        return DataSourceRegistry.get_distributed_data(
+            data, None, self._statement.cyclic, seed, self._statement.distribution
+        )
+
+    def _finalize_pool(self, data, loads_all: bool, seed) -> None:
+        """Shared tail once a branch has produced its pool (``data``, still page-windowed unless
+        storage= forced a full read). Normal variables dispatch to the existing per-execute()
+        iterator/full_load behavior; storage= variables materialize ``self._data_list`` once
+        instead and switch to ``_STORAGE_MODE``. ``loads_all`` decides whether shaping
+        (_distributed_iter/_storage_pool) is needed - independent of whether storage= forced the
+        LOAD itself to ignore pagination (a storage= variable on an "ordered" distribution still
+        needs no shuffling, just the raw full list in load order)."""
+        if self._storage_mode is not None:
+            if data is None:
+                self._data_list = []
+            elif loads_all:
+                self._data_list = self._storage_pool(data, seed)
+            else:
+                self._data_list = list(data)
+            if self._storage_mode == "data":
+                self._data_list = [DotableDict(row) if isinstance(row, dict) else row for row in self._data_list]
+            self._storage_row_counter = 0
+            self._mode = self._STORAGE_MODE
+            return
+        if loads_all:
+            self._full_load_iterator = (
+                self._distributed_iter(data, self._pagination, seed) if data is not None else None
+            )
+            self._mode = self._FULL_LOAD_MODE
+        else:
+            self._iterator = iter(data) if data is not None else None
+            self._mode = self._ITERATOR_MODE
+
+    def _compute_storage_value(self):
+        """storage="data": the same materialized pool every generated row. storage="value": the
+        pool's first row, fixed, every generated row - a distinct behavior from the unset default
+        (which advances one row per execute() call), matching DATAMIMIC EE's contract exactly.
+        storage="iterator": a VariableIterator bound to this row's GLOBAL position
+        (self._pagination.skip is the page's true global row offset - see generate_worker.py's
+        per-page pagination construction - plus a per-task counter incremented once per
+        execute() call, which naturally resets every page since VariableTask is rebuilt fresh per
+        page). This gives correct SP==MP determinism for free: worker 2's page continues the
+        cyclic sequence exactly where worker 1's left off."""
+        if self._storage_mode == "data":
+            return self._data_list
+        if self._storage_mode == "value":
+            return self._data_list[0] if self._data_list else None
+        skip = self._pagination.skip if self._pagination is not None else 0
+        position = skip + self._storage_row_counter
+        self._storage_row_counter += 1
+        return VariableIterator(self._data_list, bool(self._statement.cyclic), position)
+
     def execute(self, ctx: Context) -> None:
         """
         Generate data for element <variable>
@@ -351,6 +465,8 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             if self._full_load_iterator is None:
                 raise StopIteration(f"No more rows to iterate for statement: {self._statement.name}")
             value = next(self._full_load_iterator)
+        elif self._mode == self._STORAGE_MODE:
+            value = self._compute_storage_value()
         elif self._mode == self._LAZY_ITERATOR_MODE:
             if isinstance(self._statement, VariableStatement):
                 loads_all = self._statement.distribution.loads_all

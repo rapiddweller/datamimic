@@ -99,3 +99,64 @@ class TestVariableFunctional:
                 assert ele.get("user_text") == "Name 2"
             elif ele.get("user_id") == 3:
                 assert ele.get("user_text") == "Name 3"
+
+        # unique= is likewise a no-op for iterationSelector (same reason cyclic is): every
+        # record re-runs the query fresh and gets the full 3-row result, never a distinct subset.
+        iteration_selector_unique = result["iteration_selector_unique"]
+        assert len(iteration_selector_unique) == 5
+        assert all(ele.get("row_count") == 3 for ele in iteration_selector_unique)
+
+    def test_variable_selector_distribution_matrix(self):
+        """<variable selector=...> distribution x unique cells not covered by
+        test_variable_with_selector_cyclic (which only exercises distribution="ordered")."""
+        engine = DataMimicTest(
+            test_dir=self._test_dir,
+            filename="test_variable_selector_distribution_matrix.xml",
+            capture_test_result=True,
+        )
+        engine.test_with_timer()
+        result = engine.capture_result()
+
+        random_ids = [r["row_id"] for r in result["selector_random"]]
+        # default distribution="random" is a shuffle (permutation, no replacement): count == pool
+        assert len(random_ids) == 15
+        assert set(random_ids) == set(range(1, 16)), f"expected a permutation of 1..15, got {sorted(random_ids)}"
+
+        cyclic_random_ids = [r["row_id"] for r in result["selector_cyclic_random"]]
+        assert len(cyclic_random_ids) == 30
+        assert set(cyclic_random_ids) <= set(range(1, 16)), (
+            f"every id must come from the seeded 1..15 pool: {set(cyclic_random_ids)}"
+        )
+        # cyclic=true wraps the shuffled order once count (30) exceeds the pool (15): repeats required
+        assert len(set(cyclic_random_ids)) < 30
+
+        cumulated_ids = [r["row_id"] for r in result["selector_cumulated"]]
+        assert len(cumulated_ids) == 15
+        assert set(cumulated_ids) <= set(range(1, 16)), f"every id must come from the seeded pool: {set(cumulated_ids)}"
+        # bell-weighted with replacement: a full 1..15 permutation would mean this collapsed to
+        # uniform-without-replacement instead of an actual weighted draw
+        assert len(set(cumulated_ids)) < 15
+
+        unique_ids = [r["row_id"] for r in result["selector_unique"]]
+        assert len(unique_ids) == 15
+        assert set(unique_ids) == set(range(1, 16)), f"expected all 15 pool values exactly once, got {sorted(unique_ids)}"
+
+        # unique against a column with real duplicates (category: 3 distinct values across 15
+        # rows) - proves dedup genuinely collapses repeats, not just that it leaves an
+        # already-distinct (PRIMARY KEY) pool alone like selector_unique above.
+        unique_dupes = [r["category"] for r in result["selector_unique_dupes"]]
+        assert len(unique_dupes) == 3
+        assert set(unique_dupes) == {"Cat1", "Cat2", "Cat3"}, unique_dupes
+
+        # spot-check: <variable type=...> against RDBMS hits the same variable_task.py branch
+        # already matrix-tested for MongoDB - pageSize (5) < count (15) is the exact shape of the
+        # original truncation bug (loads_all must ignore pageSize and read the whole table).
+        type_random_ids = [r["row_id"] for r in result["type_random_paged"]]
+        assert len(type_random_ids) == 15
+        assert set(type_random_ids) == set(range(1, 16)), (
+            f"expected the full 1..15 pool despite pageSize=5, got {sorted(type_random_ids)}"
+        )
+
+        type_cyclic_ids = [r["row_id"] for r in result["type_cyclic_ordered"]]
+        # stable order 1..15, wrapped: 1..15 then 1..7
+        assert type_cyclic_ids == [*range(1, 16), *range(1, 8)], type_cyclic_ids

@@ -1,0 +1,64 @@
+<!-- <variable type=... storage=...> matrix against a real Postgres table (15-row pool,
+     simple.storage_pool). pageSize (5) < count (20) makes the pagination-override
+     assertion discriminating: a bug here would silently limit storage="data"/"iterator"'s pool
+     to one page instead of the whole table. -->
+<setup rngSeed="7" numProcess="2">
+    <database id="dbPostgres" system="postgres" />
+    <execute uri="script/setup_postgresql.scr.sql" target="dbPostgres" />
+
+    <generate name="data_ordered" count="5" target="">
+        <variable name="pool" source="dbPostgres" type="storage_pool" storage="data" distribution="ordered" />
+        <key name="pool_len" script="len(pool)" />
+        <key name="first_id" script="pool[0].row_id" />
+    </generate>
+
+    <generate name="data_random" count="5" target="">
+        <variable name="pool" source="dbPostgres" type="storage_pool" storage="data" />
+        <key name="pool_len" script="len(pool)" />
+        <key name="first_id" script="pool[0].row_id" />
+    </generate>
+
+    <generate name="value_ordered" count="5" target="">
+        <variable name="row" source="dbPostgres" type="storage_pool" storage="value" distribution="ordered" />
+        <key name="row_id" script="row.row_id" />
+    </generate>
+
+    <generate name="value_random" count="5" target="">
+        <variable name="row" source="dbPostgres" type="storage_pool" storage="value" />
+        <key name="row_id" script="row.row_id" />
+    </generate>
+
+    <generate name="iterator_cyclic_ordered" count="20" pageSize="5" target="">
+        <variable name="row" source="dbPostgres" type="storage_pool" storage="iterator" cyclic="true" distribution="ordered" />
+        <key name="row_id" script="row.row_id" />
+    </generate>
+
+    <generate name="iterator_cyclic_random" count="20" pageSize="5" target="">
+        <variable name="row" source="dbPostgres" type="storage_pool" storage="iterator" cyclic="true" />
+        <key name="row_id" script="row.row_id" />
+    </generate>
+
+    <!-- non-cyclic: pool (15) < count (20), so positions 15..19 exhaust -> None -->
+    <generate name="iterator_non_cyclic" count="20" pageSize="5" target="">
+        <variable name="row" source="dbPostgres" type="storage_pool" storage="iterator" cyclic="false" distribution="ordered" />
+        <key name="row_id" script="row.row_id" />
+    </generate>
+
+    <!-- storage= + unique="true" on an already-distinct pool (row_id is PRIMARY KEY - proves
+         unique= is a harmless no-op here, NOT that dedup actually collapses anything). -->
+    <generate name="iterator_unique" count="15" pageSize="5" target="">
+        <variable name="row" source="dbPostgres" type="storage_pool" storage="iterator" unique="true" />
+        <key name="row_id" script="row.row_id" />
+    </generate>
+
+    <!-- storage= + unique="true" against a source with REAL duplicates (5 distinct categories,
+         each repeated 3x - see setup_postgresql.scr.sql's storage_pool_dupes; selector= reads
+         only the "category" column, so id's own uniqueness can't mask the duplication) - a
+         passing test here proves _storage_pool's get_unique_data branch genuinely collapses
+         repeats, count (5) < raw row count (15). -->
+    <generate name="iterator_unique_dupes" count="5" target="">
+        <variable name="row" source="dbPostgres" storage="iterator" unique="true"
+                  selector="SELECT category FROM simple.storage_pool_dupes" />
+        <key name="category" script="row.category" />
+    </generate>
+</setup>

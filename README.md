@@ -6,7 +6,7 @@
 >
 > 👉 **Enterprise Platform:** [datamimic.io](https://datamimic.io) &nbsp;|&nbsp; 📘 **Docs:** [docs.datamimic.io](https://docs.datamimic.io) &nbsp;|&nbsp; 📅 **Book a strategy call:** [datamimic.io/contact](https://datamimic.io/contact)
 >
-> 🤖 **AI agent?** Start at [`AGENTS.md`](AGENTS.md): register the MCP server, then author descriptors with the `datamimic_reference` → `datamimic_check` (lint) → `datamimic_run` (dry-run) loop. Verified end-to-end examples live in [`examples/showcase/`](examples/showcase/).
+> 🤖 **AI agent?** Start at [`AGENTS.md`](https://github.com/rapiddweller/datamimic/blob/development/AGENTS.md): register the MCP server, then author descriptors with the `datamimic_reference` → `datamimic_check` (lint) → `datamimic_run` (dry-run) loop. Verified end-to-end examples live in [`examples/showcase/`](https://github.com/rapiddweller/datamimic/tree/development/examples/showcase/).
 
 ---
 
@@ -14,8 +14,8 @@
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=coverage)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![MCP Ready](https://img.shields.io/badge/MCP-ready-8A2BE2.svg)](docs/mcp_quickstart.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/rapiddweller/datamimic/blob/development/LICENSE)
+[![MCP Ready](https://img.shields.io/badge/MCP-ready-8A2BE2.svg)](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md)
 
 ---
 
@@ -49,7 +49,7 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 
 ## AI agents: author, validate, and run data models (MCP)
 
-DATAMIMIC CE ships a Model Context Protocol (MCP) server that Claude Code, Cursor, and any MCP-compatible agent can call. The working loop: look up the DSL with `datamimic_reference`, author a descriptor, lint it with `datamimic_check` (every finding has a rule id and a fix hint), dry-run it with `datamimic_run` (capped counts, sample rows, optional `smoke_export`), then run for real with `datamimic run`. [`AGENTS.md`](AGENTS.md) routes agents working in a checkout of this repo; [`examples/showcase/`](examples/showcase/) holds four verified end-to-end examples to start from.
+DATAMIMIC CE ships a Model Context Protocol (MCP) server that Claude Code, Cursor, and any MCP-compatible agent can call. The working loop: look up the DSL with `datamimic_reference`, author a descriptor, lint it with `datamimic_check` (every finding has a rule id and a fix hint), dry-run it with `datamimic_run` (capped counts, sample rows, optional `smoke_export`), then run for real with `datamimic run`. [`AGENTS.md`](https://github.com/rapiddweller/datamimic/blob/development/AGENTS.md) routes agents working in a checkout of this repo; [`examples/showcase/`](https://github.com/rapiddweller/datamimic/tree/development/examples/showcase/) holds four verified end-to-end examples to start from.
 
 ```bash
 pip install "datamimic_ce[mcp]"
@@ -80,7 +80,7 @@ claude mcp add datamimic -- datamimic-mcp serve --transport stdio
 
 The server ships the **DSL authoring toolset (AI linter)**: `datamimic_reference` (cheatsheet, element schemas, recipes), `datamimic_check` (aggregated diagnostics — every finding has a rule id and a fix hint) and `datamimic_run` (safe dry-run with capped counts, neutralized targets and sample rows). Agents draft a descriptor, lint it, dry-run it and iterate until green — the resulting XML is a reviewable, deterministic artifact instead of a black-box generation. Without MCP, the `datamimic capabilities` CLI prints the same DSL surface as JSON, generated from the engine registries.
 
-📘 Full guide: [`docs/mcp_quickstart.md`](docs/mcp_quickstart.md)
+📘 Full guide: [`docs/mcp_quickstart.md`](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md)
 
 ### Prompts to paste into your agent
 
@@ -315,8 +315,8 @@ Most test data tools produce random output. That breaks regression tests, audit 
 
 **DATAMIMIC's determinism contract (CE):**
 
-- **Same engine version + same model + same seed = byte-identical output**, every run, every machine. Holds at three layers: the `generate_domain` facade, every domain service called directly, and every literal generator that accepts an `rng=` argument. Verified per-service on every CI run via [`tests_ce/architecture/test_service_replay_determinism.py`](tests_ce/architecture/test_service_replay_determinism.py).
-- **DSL-level seeding:** `<setup rngSeed="N">` makes the whole model deterministic — every seed-less `<variable entity="…">` derives a reproducible child RNG from it, and `<variable rngSeed="…">` overrides it for that block (no seed anywhere → wall-clock random). Verified by [`tests_ce/integration_tests/test_determinism_seed_scenarios`](tests_ce/integration_tests/test_determinism_seed_scenarios). As of 4.0.0 the same seed also reaches standalone literal generators (`<key generator="…">`), typed/pattern keys, `DateTimeGenerator`, and cross-page `unique` picks — machine-independently.
+- **Same engine version + same model + same seed = byte-identical output**, every run, every machine. Holds at three layers: the `generate_domain` facade, every domain service called directly, and every literal generator that accepts an `rng=` argument. Verified per-service on every CI run via [`tests_ce/architecture/test_service_replay_determinism.py`](https://github.com/rapiddweller/datamimic/blob/development/tests_ce/architecture/test_service_replay_determinism.py).
+- **DSL-level seeding:** `<setup rngSeed="N">` makes the whole model deterministic — every seed-less `<variable entity="…">` derives a reproducible child RNG from it, and `<variable rngSeed="…">` overrides it for that block (no seed anywhere → wall-clock random). Verified by [`tests_ce/integration_tests/test_determinism_seed_scenarios`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/integration_tests/test_determinism_seed_scenarios). As of 4.0.0 the same seed also reaches standalone literal generators (`<key generator="…">`), typed/pattern keys, `DateTimeGenerator`, and cross-page `unique` picks — machine-independently.
 - **Source reads:** `distribution="ordered"` reads a data source in stable file order; `distribution="random"` shuffles but replays identically when `<setup rngSeed>` is set (without a seed the shuffle is non-deterministic by design, for privacy-maximized one-time deliveries). Deterministic shuffling across distributed / multi-process execution is EE.
 - **Provenance hash on every facade output** = re-executable lineage. Same input → same `determinism_proof.content_hash`, always.
 - **UUIDv5 entity identifiers** = stable across runs and machines.
@@ -559,7 +559,7 @@ Composes with the existing `<variable>` mechanism for multi-source merges (e.g. 
 
 Most teams adopt CE for one of three reasons. EE is not required for any of them.
 
-**1. Reproducible test data for CI/CD pipelines.** Pin a seed against the `generate_domain` facade — or hand a seeded `random.Random` to any domain service — and you get byte-identical output across runs and machines. Both layers are gated on every CI run by [`tests_ce/architecture/`](tests_ce/architecture/). Regression tests stop being flaky because the input data is stable across runs.
+**1. Reproducible test data for CI/CD pipelines.** Pin a seed against the `generate_domain` facade — or hand a seeded `random.Random` to any domain service — and you get byte-identical output across runs and machines. Both layers are gated on every CI run by [`tests_ce/architecture/`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/architecture/). Regression tests stop being flaky because the input data is stable across runs.
 
 ```python
 from datamimic_ce.domains.facade import generate_domain
@@ -708,8 +708,8 @@ datamimic version
 | Resource | Link |
 |---|---|
 | Full documentation | [docs.datamimic.io](https://docs.datamimic.io) |
-| MCP quickstart | [docs/mcp_quickstart.md](docs/mcp_quickstart.md) |
-| Developer guide | [docs/developer_guide.md](docs/developer_guide.md) |
+| MCP quickstart | [docs/mcp_quickstart.md](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md) |
+| Developer guide | [docs/developer_guide.md](https://github.com/rapiddweller/datamimic/blob/development/docs/developer_guide.md) |
 | Enterprise platform | [datamimic.io](https://datamimic.io) |
 | GitHub Discussions | [Discussions](https://github.com/rapiddweller/datamimic/discussions) |
 | Issue tracker | [Issues](https://github.com/rapiddweller/datamimic/issues) |
@@ -719,7 +719,7 @@ datamimic version
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). CE is MIT licensed and community contributions are welcome.
+See [CONTRIBUTING.md](https://github.com/rapiddweller/datamimic/blob/development/CONTRIBUTING.md). CE is MIT licensed and community contributions are welcome.
 
 The CE engine is the foundation. If you are building integrations, domain extensions, or MCP tooling on top of DATAMIMIC, we want to hear from you.
 
@@ -727,7 +727,7 @@ The CE engine is the foundation. If you are building integrations, domain extens
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](https://github.com/rapiddweller/datamimic/blob/development/LICENSE).
 
 The DATAMIMIC Enterprise Platform (EE) is a commercial product. [Contact us](https://datamimic.io/contact) for licensing.
 

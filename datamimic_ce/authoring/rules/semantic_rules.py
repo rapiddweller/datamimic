@@ -16,10 +16,12 @@ from lxml import etree
 from datamimic_ce.authoring.diagnostics import Diagnostic, Severity
 from datamimic_ce.authoring.rules.base import LintContext, Rule
 from datamimic_ce.constants.element_constants import (
+    EL_DATABASE,
     EL_GENERATE,
     EL_ID,
     EL_ITERATE,
     EL_KEY,
+    EL_MONGODB,
     EL_NESTED_KEY,
     EL_VARIABLE,
 )
@@ -238,6 +240,38 @@ class NestedKeyNeedsType(Rule):
                 )
 
 
+class SelectorWithoutCountNeedsDbSource(Rule):
+    """selector= without count=/minCount=/maxCount= only resolves against a DatabaseClient
+    (MongoDB, relational DB) — mirrors generate_task.py:87-90, variable_task.py:105.
+    Deliberately excludes <nestedKey>: it resolves its length from count/minCount/maxCount and
+    falls back to the loaded value's length otherwise (nested_key_task.py:
+    _determine_nestedkey_length), never routing through the DatabaseClient-only check."""
+
+    id = "DM211"
+    severity = Severity.ERROR
+
+    _DB_CLIENT_TAGS = (EL_DATABASE, EL_MONGODB)
+
+    def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
+        db_ids = {el.get("id") for el in ctx.iter(*self._DB_CLIENT_TAGS) if el.get("id")}
+        for element in ctx.iter(*_GENERATES, EL_VARIABLE):
+            if element.get("selector") is None:
+                continue
+            if any(element.get(a) is not None for a in ("count", "minCount", "maxCount")):
+                continue
+            source = element.get("source")
+            if source is not None and source in db_ids:
+                continue  # resolves to a declared <database>/<mongodb> client — valid
+            yield ctx.diag(
+                type(self),
+                element,
+                "selector= without count=/minCount=/maxCount= only works when source= "
+                "resolves to a <database> or <mongodb> client.",
+                'Add count= (or minCount/maxCount), or point source= at a declared '
+                '<database id="..."> / <mongodb id="...">.',
+            )
+
+
 RULES: tuple[type[Rule], ...] = (
     CountBoundsConflict,
     CountRequired,
@@ -248,4 +282,5 @@ RULES: tuple[type[Rule], ...] = (
     NestedKeyCyclicNeedsCount,
     SourceCompanionsWithoutSource,
     NestedKeyNeedsType,
+    SelectorWithoutCountNeedsDbSource,
 )

@@ -1,0 +1,51 @@
+<!-- <variable selector=...> distribution x unique matrix against MongoDB - the selector= entry
+     point (client.get_by_page_with_query / DataSourceRegistry.get_unique_data/get_distributed_data
+     via VariableTask._distributed_iter) had zero coverage for these cells; only the type=
+     entry point (test_mongodb_variable_matrix.xml) was matrix-tested before this. Same shared
+     distribution/unique machinery, exercised through selector= instead of type=. -->
+<setup rngSeed="7">
+    <mongodb id="mongodb"/>
+
+    <generate name="del_selector_matrix" source="mongodb" selector="find: 'mm_selector_matrix', filter: {}" target="mongodb.delete"/>
+    <generate name="mm_selector_matrix" type="mm_selector_matrix" target="mongodb" count="15">
+        <key name="row_id" generator="IncrementGenerator"/>
+        <key name="category" script="'Cat' + str((this.row_id - 1) % 3 + 1)"/>
+    </generate>
+
+    <!-- default distribution (random) is a shuffle (permutation, no replacement): count == pool -->
+    <generate name="selector_random" count="15">
+        <variable name="row" source="mongodb" selector="find: 'mm_selector_matrix', filter: {}"/>
+        <key name="row_id" script="row.row_id"/>
+    </generate>
+
+    <!-- random + cyclic: count (30) > pool (15) wraps the shuffled order, forcing repeats -->
+    <generate name="selector_cyclic_random" count="30">
+        <variable name="row" source="mongodb" cyclic="true" selector="find: 'mm_selector_matrix', filter: {}"/>
+        <key name="row_id" script="row.row_id"/>
+    </generate>
+
+    <!-- cumulated: bell-weighted with replacement over the full 15-row pool -->
+    <generate name="selector_cumulated" count="15">
+        <variable name="row" source="mongodb" distribution="cumulated" selector="find: 'mm_selector_matrix', filter: {}"/>
+        <key name="row_id" script="row.row_id"/>
+    </generate>
+
+    <!-- unique: distinct rows, count == pool size, pool fully exhausted. row_id comes from
+         IncrementGenerator (already distinct by construction), so this alone proves unique= is
+         a harmless no-op here, NOT that dedup collapses anything real - see
+         selector_unique_dupes below for that proof. -->
+    <generate name="selector_unique" count="15">
+        <variable name="row" source="mongodb" unique="true" selector="find: 'mm_selector_matrix', filter: {}"/>
+        <key name="row_id" script="row.row_id"/>
+    </generate>
+
+    <!-- unique against a field with REAL duplicates (category: 3 distinct values across 15
+         docs) - a passing test proves dedup genuinely collapses repeats. Projection excludes
+         _id/row_id (both unique per document on their own; dedup compares the whole exposed
+         row). -->
+    <generate name="selector_unique_dupes" count="3">
+        <variable name="row" source="mongodb" unique="true"
+                  selector="find: 'mm_selector_matrix', filter: {}, projection: {'category': 1, '_id': 0}"/>
+        <key name="category" script="row.category"/>
+    </generate>
+</setup>

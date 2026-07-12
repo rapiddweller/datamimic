@@ -23,4 +23,15 @@
         <key name="user_text" script="user_cyclic[id].get('text')"/>
     </generate>
 
+    <!--  unique likewise does not apply to iterationSelector: VariableTask.execute's
+          ITERATION_SELECTOR_MODE branch re-runs get_by_page_with_query fresh on every record and
+          returns the full result list every time, bypassing _distributed_iter/get_unique_data
+          entirely (the same code path that honors unique= for the static selector= and type=
+          modes never runs here). Assert the full 3-row list every time, not a distinct subset. -->
+    <generate name="iteration_selector_unique" count="5" target="ConsoleExporter">
+        <variable name="user_cyclic" source="dbPostgres" unique="True"
+                  iterationSelector="SELECT id, text FROM __table_name__"/>
+        <key name="row_count" script="len(user_cyclic)"/>
+    </generate>
+
 </setup>

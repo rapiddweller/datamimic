@@ -1,0 +1,59 @@
+<!-- <reference> against an Oracle table: pull real foreign keys from rows.
+     Same semantics as reference_postgresql.xml / reference_mongodb.xml (same ReferenceTask,
+     same seeded selection) - only the dialect and setup script differ. -->
+<setup rngSeed="7">
+    <database id="sourceDB" system="oracle" />
+    <memstore id="mem" />
+
+    <execute uri="script/setup_oracle.scr.sql" target="sourceDB" />
+
+    <generate name="ref_customers" target="sourceDB" count="12">
+        <key name="customer_id" generator="IncrementGenerator" />
+        <key name="tier" values="'retail','business'" />
+    </generate>
+
+    <generate name="orders_random" count="30" target="mem">
+        <key name="order_id" generator="IncrementGenerator" />
+        <reference name="customer_id" source="sourceDB" sourceType="ref_customers"
+                   sourceKey="customer_id" />
+    </generate>
+    <generate name="check_random" distribution="ordered" type="orders_random" source="mem" target="" />
+
+    <generate name="orders_cyclic" count="15" target="mem">
+        <key name="order_id" generator="IncrementGenerator" />
+        <reference name="customer_id" source="sourceDB" sourceType="ref_customers"
+                   sourceKey="customer_id" cyclic="true" />
+    </generate>
+    <generate name="check_cyclic" distribution="ordered" type="orders_cyclic" source="mem" target="" />
+
+    <generate name="orders_unique" count="12" target="mem">
+        <key name="order_id" generator="IncrementGenerator" />
+        <reference name="customer_id" source="sourceDB" sourceType="ref_customers"
+                   sourceKey="customer_id" unique="true" />
+    </generate>
+    <generate name="check_unique" distribution="ordered" type="orders_unique" source="mem" target="" />
+
+    <!-- unique against a column with REAL duplicates (tier: 2 distinct values across 12 rows) -
+         proves dedup genuinely collapses repeats, not just that it leaves an already-distinct
+         PRIMARY KEY pool (customer_id, above) alone. -->
+    <generate name="orders_unique_dupes" count="2" target="mem">
+        <key name="order_id" generator="IncrementGenerator" />
+        <reference name="tier" source="sourceDB" sourceType="ref_customers"
+                   sourceKey="tier" unique="true" />
+    </generate>
+    <generate name="check_unique_dupes" distribution="ordered" type="orders_unique_dupes" source="mem" target="" />
+
+    <generate name="ref_customers_composite" target="sourceDB" count="12">
+        <key name="cust_id" generator="IncrementGenerator" />
+        <key name="region" script="'north' if this.cust_id % 2 == 1 else 'south'" />
+    </generate>
+
+    <generate name="orders_composite" count="12" target="mem">
+        <key name="order_id" generator="IncrementGenerator" />
+        <reference name="cust_ref" source="sourceDB" sourceType="ref_customers_composite" unique="true">
+            <field target="cust_id" sourceKey="cust_id" />
+            <field target="region" sourceKey="region" />
+        </reference>
+    </generate>
+    <generate name="check_composite" distribution="ordered" type="orders_composite" source="mem" target="" />
+</setup>
