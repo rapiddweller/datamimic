@@ -166,13 +166,13 @@ class DataSourceRegistry:
                         try:
                             ds_len = client.count_query_length(query=stmt.iteration_selector)
                         except ProgrammingError:
-                            logger.error(
+                            logger.debug(
                                 f"Cannot get length of database source '{source_str}' "
                                 f"with iterationSelector '{stmt.iteration_selector}'"
                             )
                             return
                         except OperationalError:
-                            logger.error(
+                            logger.debug(
                                 f"Cannot get length of database source '{source_str}' "
                                 f"with iterationSelector '{stmt.iteration_selector}'"
                             )
@@ -195,7 +195,7 @@ class DataSourceRegistry:
                         try:
                             ds_len = client.count_query_length(query=stmt.iteration_selector)
                         except ValueError:
-                            logger.error(
+                            logger.debug(
                                 f"Cannot get length of database source '{source_str}' "
                                 f"with iterationSelector '{stmt.iteration_selector}'"
                             )

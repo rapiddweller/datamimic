@@ -144,18 +144,137 @@ def validate(
     _lint(descriptor_path, output_format="text", fail_on="error", max_diagnostics=200)
 
 
-@app.command("capabilities", help="Print the DSL surface as JSON: elements, generators, entities, converters, targets.")
+@app.command(
+    "capabilities",
+    help="Print DSL structural surface as JSON: names and enum values (use `datamimic reference` for prose).",
+)
 def capabilities():
-    """Machine-readable capability manifest, derived live from the engine registries.
+    """Machine-readable, names-only capability manifest, derived live from the engine registries.
 
-    For agents without an MCP runtime: the same knowledge `datamimic_reference` serves
-    interactively, in one queryable JSON document that cannot drift from the code.
+    This is a structural index, not the full DSL knowledge base: no prose, no generator
+    parameter lists or entity field schemas, no recipes. For that, use
+    `datamimic reference <topic> [name]` (e.g. `datamimic reference element variable`,
+    `datamimic reference recipes`) — the CLI-first equivalent of the MCP `datamimic_reference`
+    tool.
     """
     import json
 
     from datamimic_ce.authoring.reference import capabilities_manifest
 
     typer.echo(json.dumps(capabilities_manifest(), indent=2, default=str))
+
+
+def _dry_run(
+    descriptor_path: Path,
+    max_count: int,
+    sample_rows: int,
+    allow_side_effects: bool,
+    timeout_seconds: int,
+    smoke_export: bool,
+    output_format: str,
+) -> None:
+    """Shared implementation for `dry-run` command (exit codes: 0 = ok, 1 = dry-run failed, 2 = file/internal error)."""
+    from datamimic_ce.authoring.dryrun import dry_run
+
+    if not descriptor_path.is_file():
+        typer.echo(f"Error: File not found: {descriptor_path}")
+        raise typer.Exit(2)
+
+    try:
+        result = dry_run(
+            descriptor_path,
+            max_count=max_count,
+            sample_rows=sample_rows,
+            allow_side_effects=allow_side_effects,
+            timeout_seconds=timeout_seconds,
+            smoke_export=smoke_export,
+        )
+    except Exception as e:  # unexpected dry-run crash — distinct from findings
+        typer.echo(f"Dry-run error: {e}")
+        raise typer.Exit(2) from e
+
+    if output_format == "json":
+        typer.echo(result.model_dump_json(indent=2))
+    else:
+        # Text format: print summary, products, then diagnostics
+        typer.echo(f"ok: {result.ok}")
+        typer.echo(f"stage: {result.stage}")
+        if result.timing_ms is not None:
+            typer.echo(f"timing: {result.timing_ms}ms")
+
+        if result.products:
+            typer.echo("")
+            for product in result.products:
+                truncated_note = " (truncated)" if product.truncated_rows else ""
+                typer.echo(f"{product.name}: {product.count} rows{truncated_note}")
+                for row in product.sample:
+                    typer.echo(f"  {row}")
+
+        if result.products_truncated > 0:
+            typer.echo(f"(+{result.products_truncated} products truncated)")
+
+        # Print diagnostics in the same format as _lint
+        if result.diagnostics:
+            typer.echo("")
+            for diag in result.diagnostics:
+                typer.echo(f"{diag.severity.value.upper():<7} {diag.rule}  {diag.message}")
+                typer.echo(f"    -> {diag.fix_hint}")
+
+    raise typer.Exit(0 if result.ok else 1)
+
+
+@app.command("dry-run", help="Safely dry-run a descriptor: lint gate, capped counts, neutralized targets, sample rows.")
+def dry_run_cmd(
+    descriptor_path: Path = DESCRIPTOR_PATH,
+    max_count: int = typer.Option(10, "--max-count", help="Maximum count per generate statement"),
+    sample_rows: int = typer.Option(5, "--sample-rows", help="Maximum sample rows per product"),
+    allow_side_effects: bool = typer.Option(
+        False,
+        "--allow-side-effects",
+        help="Keep file/DB targets and allow <execute> statements (default: neutralized - no writes)",
+    ),
+    timeout: int = typer.Option(30, "--timeout", help="Timeout in seconds"),
+    smoke_export: bool = typer.Option(False, "--smoke-export", help="Test file exporters with captured rows"),
+    output_format: str = typer.Option("text", "--format", "-f", help="text | json"),
+):
+    """Safely dry-run a descriptor with capped counts and neutralized targets."""
+    _dry_run(
+        descriptor_path,
+        max_count=max_count,
+        sample_rows=sample_rows,
+        allow_side_effects=allow_side_effects,
+        timeout_seconds=timeout,
+        smoke_export=smoke_export,
+        output_format=output_format,
+    )
+
+
+@app.command(
+    "reference",
+    help="Look up DATAMIMIC DSL knowledge: overview, element, generators, entities, context, "
+    "timeseries, targets, distributions, converters, recipes, recipe.",
+)
+def reference_cmd(
+    topic: str = typer.Argument(
+        ...,
+        help="overview | element | generators | entities | context | timeseries | targets | "
+        "distributions | converters | recipes | recipe",
+    ),
+    name: str | None = typer.Argument(None, help="Optional name within topic (element tag, generator, recipe id)"),
+):
+    """Query the DATAMIMIC DSL reference by topic and optional name.
+
+    Topics: overview, element, generators, entities, context, timeseries, targets,
+    distributions, converters, recipes, recipe.
+    """
+    from datamimic_ce.authoring.reference import reference
+
+    try:
+        result = reference(topic, name)
+        typer.echo(result)
+    except ValueError as e:
+        typer.echo(f"Error: {e}")
+        raise typer.Exit(1) from e
 
 
 @demo_app.command("info")

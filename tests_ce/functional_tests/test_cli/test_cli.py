@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 from pathlib import Path
@@ -221,3 +222,70 @@ class TestCLI:
         assert "Demo Information" in result.output
         assert "Description" in result.output
         assert "Required Dependencies" in result.output
+
+    # Tests for dry-run command
+    def test_dry_run_nonexistent_file(self):
+        """A missing descriptor file for dry-run is an operational error: exit 2."""
+        result = runner.invoke(app, ["dry-run", "nonexistent.xml"])
+        assert result.exit_code == 2
+        assert "file not found" in result.output.lower()
+
+    def test_dry_run_valid_descriptor_json(self, tmp_path, monkeypatch):
+        """A valid descriptor dry-run succeeds and outputs JSON with ok=true and products,
+        with count (25) above the default --max-count (10)/--sample-rows (5) to actually
+        exercise the capping behavior the command's help text advertises."""
+        monkeypatch.chdir(tmp_path)
+        descriptor_content = """<setup rngSeed="1">
+    <generate name="test" count="25" target="">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+</setup>"""
+        (tmp_path / "test.xml").write_text(descriptor_content)
+        result = runner.invoke(app, ["dry-run", "test.xml", "--format", "json"])
+        assert result.exit_code == 0
+        output_json = json.loads(result.output)
+        assert output_json["ok"] is True
+        assert len(output_json["products"]) > 0
+        product = output_json["products"][0]
+        assert product["name"] == "test"
+        assert product["count"] == 10  # capped at default --max-count
+        assert len(product["sample"]) == 5  # capped at default --sample-rows
+        assert product["truncated_rows"] is True
+
+    def test_dry_run_lint_failure(self, tmp_path, monkeypatch):
+        """A broken descriptor (invalid XML) fails dry-run at the lint gate with exit 1."""
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "invalid.xml").write_text("<invalid>")
+        result = runner.invoke(app, ["dry-run", "invalid.xml"])
+        assert result.exit_code == 1
+        assert "DM001" in result.output
+        assert "stage: lint" in result.output
+
+    # Tests for reference command
+    def test_reference_overview(self):
+        """Reference overview command returns the DSL cheatsheet."""
+        result = runner.invoke(app, ["reference", "overview"])
+        assert result.exit_code == 0
+        assert "# DATAMIMIC DSL" in result.output
+        assert "## Minimal descriptor" in result.output
+        assert '<setup rngSeed=' in result.output
+
+    def test_reference_element_variable(self):
+        """Reference element command with variable tag returns its real attribute schema."""
+        result = runner.invoke(app, ["reference", "element", "variable"])
+        assert result.exit_code == 0
+        assert "# <variable>" in result.output
+        assert "name: str (required)" in result.output
+        assert "Allowed inside:" in result.output
+
+    def test_reference_element_missing_name(self):
+        """Reference element command without name fails with the specific fix-hint message."""
+        result = runner.invoke(app, ["reference", "element"])
+        assert result.exit_code == 1
+        assert "topic=element needs name" in result.output
+
+    def test_reference_unknown_topic(self):
+        """Reference command with unknown topic fails with the specific unknown-topic message."""
+        result = runner.invoke(app, ["reference", "bogus-topic-xyz"])
+        assert result.exit_code == 1
+        assert "Unknown topic 'bogus-topic-xyz'" in result.output
