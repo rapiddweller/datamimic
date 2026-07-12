@@ -39,7 +39,16 @@ def test_mongodb_reference_semantics():
     assert [row["customer_id"] for row in cyclic_rows] == [*range(1, 13), 1, 2, 3]
 
     unique_rows = result["check_unique"]
+    # customer_id comes from IncrementGenerator (already distinct by construction): proves
+    # unique= is a harmless no-op here, NOT that dedup collapses anything real - see
+    # check_unique_dupes below.
     assert {row["customer_id"] for row in unique_rows} == _POOL  # all distinct, pool exhausted
+
+    # unique against tier (only 2 distinct values across the 12 seeded docs): a passing test
+    # here proves dedup genuinely collapses real repeats.
+    dupes_rows = result["check_unique_dupes"]
+    assert len(dupes_rows) == 2
+    assert {row["tier"] for row in dupes_rows} == {"retail", "business"}, dupes_rows
 
 
 def test_mongodb_reference_is_deterministic():

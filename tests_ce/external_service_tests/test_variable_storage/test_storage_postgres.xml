@@ -43,4 +43,22 @@
         <variable name="row" source="dbPostgres" type="storage_pool" storage="iterator" cyclic="false" distribution="ordered" />
         <key name="row_id" script="row.row_id" />
     </generate>
+
+    <!-- storage= + unique="true" on an already-distinct pool (row_id is PRIMARY KEY - proves
+         unique= is a harmless no-op here, NOT that dedup actually collapses anything). -->
+    <generate name="iterator_unique" count="15" pageSize="5" target="">
+        <variable name="row" source="dbPostgres" type="storage_pool" storage="iterator" unique="true" />
+        <key name="row_id" script="row.row_id" />
+    </generate>
+
+    <!-- storage= + unique="true" against a source with REAL duplicates (5 distinct categories,
+         each repeated 3x - see setup_postgresql.scr.sql's storage_pool_dupes; selector= reads
+         only the "category" column, so id's own uniqueness can't mask the duplication) - a
+         passing test here proves _storage_pool's get_unique_data branch genuinely collapses
+         repeats, count (5) < raw row count (15). -->
+    <generate name="iterator_unique_dupes" count="5" target="">
+        <variable name="row" source="dbPostgres" storage="iterator" unique="true"
+                  selector="SELECT category FROM simple.storage_pool_dupes" />
+        <key name="category" script="row.category" />
+    </generate>
 </setup>

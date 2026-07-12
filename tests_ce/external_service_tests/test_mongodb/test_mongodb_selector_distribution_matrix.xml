@@ -9,6 +9,7 @@
     <generate name="del_selector_matrix" source="mongodb" selector="find: 'mm_selector_matrix', filter: {}" target="mongodb.delete"/>
     <generate name="mm_selector_matrix" type="mm_selector_matrix" target="mongodb" count="15">
         <key name="row_id" generator="IncrementGenerator"/>
+        <key name="category" script="'Cat' + str((this.row_id - 1) % 3 + 1)"/>
     </generate>
 
     <!-- default distribution (random) is a shuffle (permutation, no replacement): count == pool -->
@@ -29,9 +30,22 @@
         <key name="row_id" script="row.row_id"/>
     </generate>
 
-    <!-- unique: distinct rows, count == pool size, pool fully exhausted -->
+    <!-- unique: distinct rows, count == pool size, pool fully exhausted. row_id comes from
+         IncrementGenerator (already distinct by construction), so this alone proves unique= is
+         a harmless no-op here, NOT that dedup collapses anything real - see
+         selector_unique_dupes below for that proof. -->
     <generate name="selector_unique" count="15">
         <variable name="row" source="mongodb" unique="true" selector="find: 'mm_selector_matrix', filter: {}"/>
         <key name="row_id" script="row.row_id"/>
+    </generate>
+
+    <!-- unique against a field with REAL duplicates (category: 3 distinct values across 15
+         docs) - a passing test proves dedup genuinely collapses repeats. Projection excludes
+         _id/row_id (both unique per document on their own; dedup compares the whole exposed
+         row). -->
+    <generate name="selector_unique_dupes" count="3">
+        <variable name="row" source="mongodb" unique="true"
+                  selector="find: 'mm_selector_matrix', filter: {}, projection: {'category': 1, '_id': 0}"/>
+        <key name="category" script="row.category"/>
     </generate>
 </setup>

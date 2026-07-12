@@ -24,9 +24,21 @@
         <key name="ean_code" script="int(row.ean_code)"/>
     </generate>
 
-    <!-- unique: distinct rows, count == pool size, pool fully exhausted -->
+    <!-- unique: distinct rows, count == pool size, pool fully exhausted. ean_code is distinct
+         per row by construction in products.ent.csv, so this alone proves unique= is a
+         harmless no-op here, NOT that dedup collapses anything real - see
+         var_file_unique_dupes below for that proof. -->
     <generate name="var_file_unique" count="11" target="">
         <variable name="row" source="data/products.ent.csv" unique="true"/>
         <key name="ean_code" script="int(row.ean_code)"/>
+    </generate>
+
+    <!-- unique against a source with REAL duplicate rows (categories_with_dupes.csv: 3 distinct
+         values, each repeated 3x) - a passing test here proves dedup genuinely collapses
+         repeats (3 distinct results), not just that it leaves an already-distinct pool alone.
+         A single-column CSV means the whole row IS the value, no projection needed. -->
+    <generate name="var_file_unique_dupes" count="3" target="">
+        <variable name="row" source="data/categories_with_dupes.csv" unique="true"/>
+        <key name="category" script="row.category"/>
     </generate>
 </setup>

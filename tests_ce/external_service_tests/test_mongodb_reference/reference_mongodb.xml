@@ -35,13 +35,25 @@
     </generate>
     <generate name="check_cyclic" distribution="ordered" type="orders_cyclic" source="mem" target=""/>
 
-    <!-- unique: distinct keys, pool covers the count -->
+    <!-- unique: distinct keys, pool covers the count. customer_id comes from IncrementGenerator
+         (already distinct by construction), so this alone proves unique= is a harmless no-op
+         here, NOT that dedup collapses anything real - see orders_unique_dupes below. -->
     <generate name="orders_unique" count="12" target="mem">
         <key name="order_id" generator="IncrementGenerator"/>
         <reference name="customer_id" source="mongodb" sourceType="ref_mongo_customers"
                    sourceKey="customer_id" unique="true"/>
     </generate>
     <generate name="check_unique" distribution="ordered" type="orders_unique" source="mem" target=""/>
+
+    <!-- unique against a field with REAL duplicates (tier: 2 distinct values across 12 docs) -
+         proves dedup genuinely collapses repeats, not just that it leaves an already-distinct
+         pool (customer_id, above) alone. -->
+    <generate name="orders_unique_dupes" count="2" target="mem">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <reference name="tier" source="mongodb" sourceType="ref_mongo_customers"
+                   sourceKey="tier" unique="true"/>
+    </generate>
+    <generate name="check_unique_dupes" distribution="ordered" type="orders_unique_dupes" source="mem" target=""/>
 
     <!-- nested reference: sourceKey descends into an embedded sub-document (a converted <part>).
          address_id = customer_id * 10 + seq makes every nested id globally unique and deterministic

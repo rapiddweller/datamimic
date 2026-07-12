@@ -37,7 +37,15 @@ def _assert_reference_semantics(result: dict) -> None:
     assert [row["customer_id"] for row in cyclic_rows] == [*range(1, 13), 1, 2, 3]
 
     unique_rows = result["check_unique"]
+    # customer_id is PRIMARY KEY (already distinct by construction): proves unique= is a
+    # harmless no-op here, NOT that dedup collapses anything real - see check_unique_dupes below.
     assert {row["customer_id"] for row in unique_rows} == _POOL  # all distinct, pool exhausted
+
+    # unique against tier (only 2 distinct values across the 12 seeded rows): a passing test
+    # here proves dedup genuinely collapses real repeats.
+    dupes_rows = result["check_unique_dupes"]
+    assert len(dupes_rows) == 2
+    assert {row["tier"] for row in dupes_rows} == {"retail", "business"}, dupes_rows
 
 
 def _assert_composite_semantics(result: dict) -> None:

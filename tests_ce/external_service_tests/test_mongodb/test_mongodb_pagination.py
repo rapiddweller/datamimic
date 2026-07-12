@@ -16,6 +16,20 @@ import pytest
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+
+
+def _local_client() -> MongoDBClient:
+    return MongoDBClient(
+        credential=MongoDBConnectionConfig(
+            host="localhost",
+            port=47017,
+            database="datamimic",
+            user="datamimic",
+            password="datamimic",
+            authSource="admin",
+        )
+    )
 
 
 class TestMongoDbPagination:
@@ -60,3 +74,58 @@ class TestMongoDbPagination:
         )
         with pytest.raises(ValueError, match="Syntax error"):
             client.get_documents_by_collection("   ")
+
+    def test_limit_zero_returns_empty_not_pymongo_no_limit(self):
+        """pymongo's own cursor.limit(0) means "no limit" (return everything), not "return
+        nothing" - both get() (the "find" query-type branch) and get_documents_by_collection
+        must guard pagination.limit == 0 explicitly rather than pass it straight to pymongo, or
+        a caller asking for zero rows would silently get the whole collection back instead.
+        Seeds/cleans up via raw pymongo (MongoDBClient.insert/delete take the DSL task-layer
+        query-dict shape, not a plain collection name - overkill for a self-contained fixture)."""
+        client = _local_client()
+        collection = "mongo_pagination_limit_zero"
+        with client._create_connection() as conn:
+            coll = conn[client._credential.database][collection]
+            coll.delete_many({})
+            coll.insert_many([{"row_id": i} for i in range(1, 6)])
+        try:
+            zero = DataSourcePagination(skip=0, limit=0)
+            assert client.get(f"find: '{collection}', filter: {{}}", zero) == []
+            assert client.get_documents_by_collection(collection, zero) == []
+
+            # sanity: a real limit on the same collection still returns rows (proves the guard
+            # isn't just swallowing every pagination argument)
+            some = DataSourcePagination(skip=0, limit=2)
+            assert len(client.get(f"find: '{collection}', filter: {{}}", some)) == 2
+        finally:
+            with client._create_connection() as conn:
+                conn[client._credential.database][collection].delete_many({})
+
+    def test_get_by_page_with_query_find_vs_aggregate(self):
+        """get_by_page_with_query dispatches differently by query type: "find" queries are
+        already skip/limit-ed server-side by get() (must not be re-sliced); "aggregate" queries
+        get a Python-side skip/limit fallback since get() fully materializes them. Also covers
+        the pagination=None short-circuit (return self.get(query) with no slicing at all)."""
+        client = _local_client()
+        collection = "mongo_pagination_query_dispatch"
+        with client._create_connection() as conn:
+            coll = conn[client._credential.database][collection]
+            coll.delete_many({})
+            coll.insert_many([{"row_id": i} for i in range(1, 6)])
+        try:
+            # pagination=None: full unpaginated read
+            all_docs = client.get_by_page_with_query(f"find: '{collection}', filter: {{}}")
+            assert len(all_docs) == 5
+
+            # "find": server-side skip/limit, not re-sliced
+            page = DataSourcePagination(skip=1, limit=2)
+            find_page = client.get_by_page_with_query(f"find: '{collection}', filter: {{}}", page)
+            assert [d["row_id"] for d in find_page] == [2, 3]
+
+            # "aggregate": Python-side skip/limit fallback
+            agg_query = f"aggregate: '{collection}', pipeline: [{{'$sort': {{'row_id': 1}}}}]"
+            agg_page = client.get_by_page_with_query(agg_query, page)
+            assert [d["row_id"] for d in agg_page] == [2, 3]
+        finally:
+            with client._create_connection() as conn:
+                conn[client._credential.database][collection].delete_many({})

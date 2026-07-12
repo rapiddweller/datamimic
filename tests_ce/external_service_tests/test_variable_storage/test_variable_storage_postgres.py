@@ -70,6 +70,27 @@ class TestVariableStoragePostgres:
         assert ids[:15] == list(range(1, 16))
         assert ids[15:] == [None] * 5
 
+    def test_storage_iterator_unique_pool_is_deduped(self):
+        """storage= + unique="true" on an already-distinct pool (row_id is PRIMARY KEY): count ==
+        pool size (15), every value distinct. Proves unique= is a harmless no-op here - see
+        test_storage_iterator_unique_actually_collapses_duplicates for proof the dedup itself
+        works, since a PK-backed pool can never contain a real duplicate row to collapse."""
+        result = _run("test_storage_postgres.xml")
+        ids = [r["row_id"] for r in result["iterator_unique"]]
+        assert len(ids) == 15
+        assert set(ids) == _POOL, f"expected all 15 pool values exactly once, got {sorted(ids)}"
+
+    def test_storage_iterator_unique_actually_collapses_duplicates(self):
+        """storage= + unique="true" against a source with REAL duplicate rows (5 distinct
+        categories, each repeated 3x, selector= excludes the id column so nothing else keeps
+        rows apart) - a passing test proves _storage_pool's get_unique_data branch genuinely
+        collapses repeats (5 distinct results) rather than passing the raw 15-row pool through
+        untouched."""
+        result = _run("test_storage_postgres.xml")
+        categories = [r["category"] for r in result["iterator_unique_dupes"]]
+        assert len(categories) == 5
+        assert set(categories) == {"A", "B", "C", "D", "E"}, categories
+
     def test_storage_sp_mp_determinism(self):
         """SP==MP determinism: the same seeded fixture at numProcess=1 and numProcess=2 must
         produce byte-identical per-row sequences for storage="iterator" - proof that

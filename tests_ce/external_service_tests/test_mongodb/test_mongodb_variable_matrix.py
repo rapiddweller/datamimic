@@ -117,16 +117,43 @@ def test_selector_cumulated_reads_full_pool():
 
 
 def test_selector_unique_draws_distinct_pool_exactly():
+    """row_id comes from IncrementGenerator (already distinct by construction), so this alone
+    proves unique= is a harmless no-op here, NOT that dedup collapses anything real - see
+    test_selector_unique_actually_collapses_duplicates for that proof."""
     result = _run_selector()
     ids = [r["row_id"] for r in result["selector_unique"]]
     assert len(ids) == 15
     assert set(ids) == set(range(1, 16)), f"expected all 15 pool values exactly once, got {sorted(ids)}"
 
 
+def test_selector_unique_actually_collapses_duplicates():
+    """unique="true" against a source with REAL duplicate rows (category: 3 distinct values
+    across 15 docs, projection excludes _id/row_id) - a passing test proves the dedup genuinely
+    collapses repeats (3 distinct results)."""
+    result = _run_selector()
+    categories = [r["category"] for r in result["selector_unique_dupes"]]
+    assert len(categories) == 3
+    assert set(categories) == {"Cat1", "Cat2", "Cat3"}, categories
+
+
 def test_unique_random_draws_distinct_pool_exactly():
     """unique="true" + distribution="random" (the only distribution unique is allowed to combine
-    with per ModelUtil.check_unique_constraints): count == pool size, every value distinct."""
+    with per ModelUtil.check_unique_constraints): count == pool size, every value distinct.
+    row_id comes from IncrementGenerator (already distinct by construction), so this alone
+    proves unique= is a harmless no-op here, NOT that dedup collapses anything real - see
+    test_unique_random_actually_collapses_duplicates for that proof."""
     result = _run()
     ids = [r["row_id"] for r in result["unique_random"]]
     assert len(ids) == 15
     assert set(ids) == set(range(1, 16)), f"expected all 15 pool values exactly once, got {sorted(ids)}"
+
+
+def test_unique_random_actually_collapses_duplicates():
+    """unique="true" against a source with REAL duplicate rows (category: 3 distinct values
+    across 15 docs, selector= projection excludes _id/seq so nothing else keeps "duplicate"
+    rows apart) - a passing test proves the dedup genuinely collapses repeats (3 distinct
+    results), not just that it leaves an already-distinct pool untouched."""
+    result = _run()
+    categories = [r["category"] for r in result["unique_random_dupes"]]
+    assert len(categories) == 3
+    assert set(categories) == {"Cat1", "Cat2", "Cat3"}, categories

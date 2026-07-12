@@ -31,11 +31,22 @@
         <key name="row_id" script="row.id"/>
     </generate>
 
-    <!-- unique: distinct rows, count == pool size, pool fully exhausted -->
+    <!-- unique: distinct rows, count == pool size, pool fully exhausted. id is PRIMARY KEY
+         (already distinct by construction), so this alone proves unique= is a harmless no-op
+         here, NOT that dedup collapses anything real - see selector_unique_dupes below. -->
     <generate name="selector_unique" count="15" target="ConsoleExporter">
         <variable name="row" source="dbPostgres" unique="true"
                   selector="SELECT id, text FROM public.selector_distribution_matrix"/>
         <key name="row_id" script="row.id"/>
+    </generate>
+
+    <!-- unique against a column with REAL duplicates (category: 3 distinct values across 15
+         rows) - a passing test here proves dedup genuinely collapses repeats (3 distinct
+         results), not just that it leaves an already-distinct pool alone. -->
+    <generate name="selector_unique_dupes" count="3" target="ConsoleExporter">
+        <variable name="row" source="dbPostgres" unique="true"
+                  selector="SELECT category FROM public.selector_distribution_matrix_dupes"/>
+        <key name="category" script="row.category"/>
     </generate>
 
     <!-- ===== spot-check: <variable type=...> against RDBMS (not mongo) hits the SAME

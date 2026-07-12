@@ -141,6 +141,13 @@ class TestVariableFunctional:
         assert len(unique_ids) == 15
         assert set(unique_ids) == set(range(1, 16)), f"expected all 15 pool values exactly once, got {sorted(unique_ids)}"
 
+        # unique against a column with real duplicates (category: 3 distinct values across 15
+        # rows) - proves dedup genuinely collapses repeats, not just that it leaves an
+        # already-distinct (PRIMARY KEY) pool alone like selector_unique above.
+        unique_dupes = [r["category"] for r in result["selector_unique_dupes"]]
+        assert len(unique_dupes) == 3
+        assert set(unique_dupes) == {"Cat1", "Cat2", "Cat3"}, unique_dupes
+
         # spot-check: <variable type=...> against RDBMS hits the same variable_task.py branch
         # already matrix-tested for MongoDB - pageSize (5) < count (15) is the exact shape of the
         # original truncation bug (loads_all must ignore pageSize and read the whole table).

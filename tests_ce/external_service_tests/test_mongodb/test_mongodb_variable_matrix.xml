@@ -72,7 +72,10 @@
         <key name="row_id" script="row.row_id"/>
     </generate>
 
-    <!-- ===== unique + random (the only distribution unique combines with): pool covers count ===== -->
+    <!-- ===== unique + random (the only distribution unique combines with): pool covers count.
+         row_id comes from IncrementGenerator (already distinct by construction), so this alone
+         proves unique= is a harmless no-op here, NOT that dedup collapses anything real - see
+         unique_random_dupes below for that proof. ===== -->
     <generate name="del_unique" source="mongodb" selector="find: 'mm_unique', filter: {}" target="mongodb.delete"/>
     <generate name="mm_unique" type="mm_unique" target="mongodb" count="15">
         <key name="row_id" generator="IncrementGenerator"/>
@@ -80,5 +83,21 @@
     <generate name="unique_random" count="15">
         <variable name="row" source="mongodb" type="mm_unique" distribution="random" unique="true"/>
         <key name="row_id" script="row.row_id"/>
+    </generate>
+
+    <!-- unique against a field with REAL duplicates (category: 3 distinct values across 15
+         docs) - a passing test here proves dedup genuinely collapses repeats. Dedup compares
+         the WHOLE exposed row, so the selector= projection must exclude _id/seq (both unique
+         per document on their own) - a bare type= read would keep every "duplicate" row
+         apart via its own _id, masking the very thing this test needs to prove. -->
+    <generate name="del_unique_dupes" source="mongodb" selector="find: 'mm_unique_dupes', filter: {}" target="mongodb.delete"/>
+    <generate name="mm_unique_dupes" type="mm_unique_dupes" target="mongodb" count="15">
+        <key name="seq" generator="IncrementGenerator"/>
+        <key name="category" script="'Cat' + str((this.seq - 1) % 3 + 1)"/>
+    </generate>
+    <generate name="unique_random_dupes" count="3">
+        <variable name="row" source="mongodb" unique="true"
+                  selector="find: 'mm_unique_dupes', filter: {}, projection: {'category': 1, '_id': 0}"/>
+        <key name="category" script="row.category"/>
     </generate>
 </setup>
