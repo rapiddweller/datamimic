@@ -14,7 +14,8 @@ authoring loop and the semantic rules that cause most failures.
 - [Agent guide](AGENTS.md): when to use DATAMIMIC, the lint plus dry-run loop, the top semantic rules
 - [DSL cheatsheet](datamimic_ce/authoring/reference_data/cheatsheet.md): elements, value sources, scope, gotchas, one page
 - [MCP quickstart](docs/mcp_quickstart.md): install and register the MCP server (datamimic_check, datamimic_run, datamimic_reference tools)
-- Capability manifest: run `datamimic capabilities` for the live JSON list of elements, attributes, generators, entities, converters, targets, distributions
+- Without MCP (CLI): `datamimic reference <topic> [name]` for lookups (e.g. `datamimic reference element variable`); `datamimic dry-run <path>` for the safe dry-run
+- Capability manifest: run `datamimic capabilities` for the live JSON list of elements, attributes, generators, entities, converters, targets, distributions (names only, no prose — use `datamimic reference` for schemas and recipes)
 
 ## Runnable examples
 

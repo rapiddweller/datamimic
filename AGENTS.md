@@ -22,16 +22,20 @@ before data is written.
 
 1. Look up the DSL before guessing. MCP tool `datamimic_reference`
    (topic=overview first; then element, generators, entities, context, timeseries,
-   targets, distributions, converters, recipes, recipe). Without MCP: `datamimic capabilities`
-   prints the full surface as JSON, generated from the engine registries.
+   targets, distributions, converters, recipes, recipe). Without MCP:
+   `datamimic reference <topic> [name]` is the same lookup, e.g.
+   `datamimic reference element variable`; `datamimic capabilities` prints
+   just the structural surface (names only, no prose) as JSON.
 2. Draft the descriptor. Start from a recipe or a showcase example
    (`examples/showcase/`, four verified end-to-end examples with READMEs).
 3. `datamimic_check` (MCP) or `datamimic lint <path>` (CLI). Every finding has a
    rule id (DMxxx) and a fix hint. Fix all of them.
-4. `datamimic_run` (MCP, safe dry-run: capped counts, neutralized targets,
-   sample rows; smoke_export=true also test-writes the rows through the file
-   exporters in a temp dir to catch export-time crashes) and inspect the sample rows. Confirm the data serves the intent:
-   are countries from the requested list, does the nested list actually nest?
+4. `datamimic_run` (MCP) or `datamimic dry-run <path>` (CLI): a safe dry-run
+   with capped counts, neutralized targets and sample rows. smoke_export=true
+   (`--smoke-export` on the CLI) additionally test-writes the rows through
+   the file exporters in a temp dir to catch export-time crashes. Inspect
+   the sample rows and confirm the data serves the intent: are countries
+   from the requested list, does the nested list actually nest?
    Valid is not the same as correct.
 5. Run for real: `datamimic run path/to/datamimic.xml`.
 

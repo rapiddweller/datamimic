@@ -78,7 +78,7 @@ claude mcp add datamimic -- datamimic-mcp serve --transport stdio
 
 **VS Code** (`.vscode/mcp.json`) uses the same `command`/`args` under a `servers` key. For a networked/shared server instead of stdio, run `datamimic-mcp serve --transport sse` (honours `DATAMIMIC_MCP_HOST` / `PORT` / `API_KEY`).
 
-The server ships the **DSL authoring toolset (AI linter)**: `datamimic_reference` (cheatsheet, element schemas, recipes), `datamimic_check` (aggregated diagnostics — every finding has a rule id and a fix hint) and `datamimic_run` (safe dry-run with capped counts, neutralized targets and sample rows). Agents draft a descriptor, lint it, dry-run it and iterate until green — the resulting XML is a reviewable, deterministic artifact instead of a black-box generation. Without MCP, the `datamimic capabilities` CLI prints the same DSL surface as JSON, generated from the engine registries.
+The server ships the **DSL authoring toolset (AI linter)**: `datamimic_reference` (cheatsheet, element schemas, recipes), `datamimic_check` (aggregated diagnostics — every finding has a rule id and a fix hint) and `datamimic_run` (safe dry-run with capped counts, neutralized targets and sample rows). Agents draft a descriptor, lint it, dry-run it and iterate until green — the resulting XML is a reviewable, deterministic artifact instead of a black-box generation. Without MCP, the CLI covers the same loop: `datamimic reference <topic> [name]` for lookups, `datamimic lint` for checks, `datamimic dry-run` for the safe dry-run (`datamimic capabilities` additionally prints the raw structural surface as JSON).
 
 📘 Full guide: [`docs/mcp_quickstart.md`](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md)
 
@@ -131,7 +131,7 @@ Steps:
 2. Author a DATAMIMIC XML descriptor for this dataset.
 3. Validate it with the datamimic_check MCP tool (or `datamimic lint <path>`
    if MCP is not available). Fix every finding before moving on.
-4. Dry-run it with the datamimic_run MCP tool and inspect the sample rows
+4. Dry-run it with the datamimic_run MCP tool (or `datamimic dry-run <path>` if MCP is not available) and inspect the sample rows
    it returns. Confirm ages are in range and the segment split looks
    weighted, not uniform.
 5. Run it for real: `datamimic run <path-to-descriptor>`.
@@ -163,7 +163,7 @@ Steps:
 2. Author your own descriptor for the customers/accounts/transactions
    shape above.
 3. Validate with datamimic_check (or `datamimic lint`), then dry-run with
-   datamimic_run and inspect the sample rows.
+   datamimic_run (or `datamimic dry-run`) and inspect the sample rows.
 4. Run for real with `datamimic run`.
 5. Before declaring this done, load the generated JSON files and confirm
    every foreign key resolves: every account's customer_id exists in
