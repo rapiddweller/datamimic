@@ -31,7 +31,7 @@ from datamimic_ce.constants.element_constants import (
     EL_SETUP,
     EL_VARIABLE,
 )
-from datamimic_ce.enums.distribution_enums import SourceDistribution
+from datamimic_ce.enums.distribution_enums import NumberDistribution, SourceDistribution
 
 _DATA_TYPES = {
     DATA_TYPE_STRING,
@@ -44,6 +44,12 @@ _DATA_TYPES = {
     DATA_TYPE_DICT,
 }
 _DISTRIBUTIONS = {member.value for member in SourceDistribution}
+_NUMBER_DISTRIBUTIONS = {member.value for member in NumberDistribution}
+# <key>/<id> alias to KeyModel (schema.py), whose distribution= is ALWAYS a NumberDistribution
+# (numeric-range sequence, key_model.py's validate_distribution_requires_numeric_range) -- never
+# the SourceDistribution used by <variable>/<generate>/<nestedKey> to pick rows from a source.
+_NUMBER_RANGE_TAGS = (EL_KEY, EL_ID)
+_DATE_TYPE_GUESSES = {"datetime", "date", "timestamp", "time"}
 
 
 class RootIsSetup(Rule):
@@ -174,21 +180,46 @@ class InvalidAttributeValue(Rule):
         for element in ctx.iter():
             tag = str(element.tag)
             distribution = element.get("distribution")
-            if distribution is not None and distribution not in _DISTRIBUTIONS:
-                yield ctx.diag(
-                    type(self),
-                    element,
-                    f"Invalid distribution '{distribution}'.",
-                    f"Use one of: {', '.join(sorted(_DISTRIBUTIONS))}.",
-                )
-            if tag in (EL_KEY, EL_ID, EL_NESTED_KEY, EL_VARIABLE):
+            if distribution is not None:
+                if tag in _NUMBER_RANGE_TAGS:
+                    if distribution not in _NUMBER_DISTRIBUTIONS:
+                        yield ctx.diag(
+                            type(self),
+                            element,
+                            f"Invalid distribution '{distribution}' on <{tag}>.",
+                            f"<{tag}>'s distribution shapes a numeric range (needs "
+                            f'type="int"/"float"/"decimal" with min=/max=). Use one of: '
+                            f"{', '.join(sorted(_NUMBER_DISTRIBUTIONS))}.",
+                        )
+                elif distribution not in _DISTRIBUTIONS:
+                    yield ctx.diag(
+                        type(self),
+                        element,
+                        f"Invalid distribution '{distribution}'.",
+                        f"Use one of: {', '.join(sorted(_DISTRIBUTIONS))}.",
+                    )
+            # On <variable>/<nestedKey> WITH a source=, type= is not a scalar cast — it's the
+            # sourceEntity->type->name physical-entity fallback (StatementUtil.resolve_source_entity,
+            # e.g. selecting which producer's rows to read back from a <memstore>) and can be any
+            # string. <key>/<id> never read a source (key_task.py ignores KeyModel.source), so their
+            # type= is always the scalar cast and always checked.
+            reads_source = tag in (EL_VARIABLE, EL_NESTED_KEY) and element.get("source")
+            if tag in (EL_KEY, EL_ID, EL_NESTED_KEY, EL_VARIABLE) and not reads_source:
                 type_value = element.get("type")
                 if type_value is not None and type_value not in _DATA_TYPES:
+                    if type_value.lower() in _DATE_TYPE_GUESSES:
+                        hint = (
+                            "DATAMIMIC has no scalar date/time type. For a timestamp field use "
+                            'generator="DateTimeGenerator" (or, inside a time-series <generate '
+                            'start= end= interval=>, script="ts.now").'
+                        )
+                    else:
+                        hint = f"Use one of: {', '.join(sorted(_DATA_TYPES))}."
                     yield ctx.diag(
                         type(self),
                         element,
                         f"Invalid type '{type_value}' on <{tag}>.",
-                        f"Use one of: {', '.join(sorted(_DATA_TYPES))}.",
+                        hint,
                     )
             schema = ctx.schemas.get(tag)
             if schema is None:

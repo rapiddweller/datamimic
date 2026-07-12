@@ -102,7 +102,10 @@ class UnknownTarget(Rule):
                         type(self),
                         element,
                         f"Unknown target '{name}'.",
-                        f"Use one of: {', '.join(valid)}, or declare a client/memstore with that id.",
+                        f'Add <memstore id="{name}"/> as a direct child of <setup>, above this '
+                        f"<{element.tag}> (in-memory, no DB needed), or "
+                        f'<database id="{name}" .../> / <mongodb id="{name}" .../> for a real DB '
+                        f"client. Or use one of the built-in targets: {', '.join(valid)}.",
                     )
 
 
@@ -149,7 +152,9 @@ class UnknownSource(Rule):
                     element,
                     f"source=\"{source}\" is neither a data file (.csv/.json/.xlsx/.xml/.dbunit.xml/.fcw) "
                     "nor a declared <memstore>/<database>/<mongodb> id.",
-                    f"{declared}Point source= at a real file, or declare the client/memstore with that id.",
+                    f'{declared}Point source= at a real file, or add <memstore id="{source}"/> as a '
+                    f"direct child of <setup> (above whatever writes to it and above this element), "
+                    f'or <database id="{source}" .../> / <mongodb id="{source}" .../> for a real DB.',
                 )
 
 

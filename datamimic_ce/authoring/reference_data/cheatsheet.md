@@ -72,6 +72,28 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
   </generate>
   ```
 
+- **Memstore pipelines**: `<memstore id="mem"/>` is an in-memory handoff
+  between two `<generate>` blocks in the SAME run — no DB needed. Declare it
+  once at the top level, WRITE to it by putting its id in `target=` (a
+  producing `<generate>` can write to more than one target, comma-separated,
+  e.g. `target="mem,JSON"`), then READ it back with a `<variable source="mem"
+  type="..."/>` where `type=` names the PRODUCING `<generate>`'s `name=` — on
+  a memstore/DB read, `type=` is not a data type, it selects which producer's
+  rows to read back (falls back to the reader's own `name=` if omitted):
+
+  ```xml
+  <memstore id="mem"/>
+  <generate name="orders" count="20" target="mem,JSON">
+      <key name="order_id" generator="IncrementGenerator"/>
+      <key name="total" type="decimal" min="10" max="500"/>
+  </generate>
+  <generate name="order_summary" count="20">
+      <variable name="row" source="mem" type="orders" distribution="ordered"/>
+      <key name="order_id" script="row.order_id"/>
+      <key name="total_cents" script="int(row.total * 100)"/>
+  </generate>
+  ```
+
 ## Top gotchas (each maps to a lint rule)
 
 1. **Absent `distribution` = RANDOM, not source order** — add
