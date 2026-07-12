@@ -1,0 +1,152 @@
+{
+  "generated_at": "2026-07-12T16:54:24.646243+00:00",
+  "condition": "loop",
+  "initial_variant": "P2_cheatsheet",
+  "max_iterations": 3,
+  "models": [
+    "gemma4:26b",
+    "qwen3.5:35b-a3b-q8_0"
+  ],
+  "tasks": [
+    "weighted_country",
+    "nested_reviews",
+    "reproducible_orders",
+    "memstore_pipeline",
+    "timeseries",
+    "branch_fk"
+  ],
+  "cells": [
+    {
+      "model": "gemma4:26b",
+      "variant": "loop",
+      "task": "weighted_country",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 5
+    },
+    {
+      "model": "gemma4:26b",
+      "variant": "loop",
+      "task": "nested_reviews",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "gemma4:26b",
+      "variant": "loop",
+      "task": "reproducible_orders",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "gemma4:26b",
+      "variant": "loop",
+      "task": "memstore_pipeline",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "gemma4:26b",
+      "variant": "loop",
+      "task": "timeseries",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "gemma4:26b",
+      "variant": "loop",
+      "task": "branch_fk",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 0
+    },
+    {
+      "model": "qwen3.5:35b-a3b-q8_0",
+      "variant": "loop",
+      "task": "weighted_country",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "qwen3.5:35b-a3b-q8_0",
+      "variant": "loop",
+      "task": "nested_reviews",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 0
+    },
+    {
+      "model": "qwen3.5:35b-a3b-q8_0",
+      "variant": "loop",
+      "task": "reproducible_orders",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 0
+    },
+    {
+      "model": "qwen3.5:35b-a3b-q8_0",
+      "variant": "loop",
+      "task": "memstore_pipeline",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 0
+    },
+    {
+      "model": "qwen3.5:35b-a3b-q8_0",
+      "variant": "loop",
+      "task": "timeseries",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 0
+    },
+    {
+      "model": "qwen3.5:35b-a3b-q8_0",
+      "variant": "loop",
+      "task": "branch_fk",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 0
+    }
+  ]
+}

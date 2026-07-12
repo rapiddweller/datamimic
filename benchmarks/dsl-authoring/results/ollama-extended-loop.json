@@ -1,0 +1,426 @@
+{
+  "generated_at": "2026-07-12T16:56:15.452356+00:00",
+  "condition": "loop",
+  "initial_variant": "P2_cheatsheet",
+  "max_iterations": 3,
+  "models": [
+    "qwen3.5:9b",
+    "mistral:latest",
+    "qwen2.5-coder:1.5b",
+    "deepseek-r1:7b-qwen-distill-q4_K_M"
+  ],
+  "tasks": [
+    "weighted_country",
+    "nested_reviews",
+    "reproducible_orders",
+    "memstore_pipeline",
+    "timeseries",
+    "branch_fk"
+  ],
+  "cells": [
+    {
+      "model": "qwen3.5:9b",
+      "variant": "loop",
+      "task": "weighted_country",
+      "score": 0,
+      "rule_ids": [
+        "DM101"
+      ],
+      "detail": "lint: 1 error",
+      "iterations": 3,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM104"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 9263
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 4403
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM101"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 10505
+        }
+      ],
+      "latency_ms": 24171
+    },
+    {
+      "model": "qwen3.5:9b",
+      "variant": "loop",
+      "task": "nested_reviews",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 1,
+      "iteration_details": [
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 5660
+        }
+      ],
+      "latency_ms": 5660
+    },
+    {
+      "model": "qwen3.5:9b",
+      "variant": "loop",
+      "task": "reproducible_orders",
+      "score": 1,
+      "rule_ids": [],
+      "detail": "runs but intent check failed",
+      "iterations": 3,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM104"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 5242
+        },
+        {
+          "score": 1,
+          "rule_ids": [],
+          "detail": "runs but intent check failed",
+          "latency_ms": 4033
+        },
+        {
+          "score": 1,
+          "rule_ids": [],
+          "detail": "runs but intent check failed",
+          "latency_ms": 4897
+        }
+      ],
+      "latency_ms": 14172
+    },
+    {
+      "model": "qwen3.5:9b",
+      "variant": "loop",
+      "task": "memstore_pipeline",
+      "score": 0,
+      "rule_ids": [
+        "DM401"
+      ],
+      "detail": "lint: 1 error, 1 warning, 1 hint",
+      "iterations": 3,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM401",
+            "DM402"
+          ],
+          "detail": "lint: 2 errors, 1 warning, 1 hint",
+          "latency_ms": 5984
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM401",
+            "DM402"
+          ],
+          "detail": "lint: 2 errors, 1 warning, 1 hint",
+          "latency_ms": 4769
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM401"
+          ],
+          "detail": "lint: 1 error, 1 warning, 1 hint",
+          "latency_ms": 5355
+        }
+      ],
+      "latency_ms": 16108
+    },
+    {
+      "model": "qwen3.5:9b",
+      "variant": "loop",
+      "task": "timeseries",
+      "score": 0,
+      "rule_ids": [
+        "DM105"
+      ],
+      "detail": "lint: 1 error",
+      "iterations": 3,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM105"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 6787
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM000"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 5592
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM105"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 6067
+        }
+      ],
+      "latency_ms": 18446
+    },
+    {
+      "model": "qwen3.5:9b",
+      "variant": "loop",
+      "task": "branch_fk",
+      "score": 0,
+      "rule_ids": [
+        "DM102"
+      ],
+      "detail": "lint: 1 error, 2 warnings",
+      "iterations": 3,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 17282
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM102",
+            "DM104",
+            "DM202"
+          ],
+          "detail": "lint: 3 errors, 1 warning",
+          "latency_ms": 10423
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM102"
+          ],
+          "detail": "lint: 1 error, 2 warnings",
+          "latency_ms": 25952
+        }
+      ],
+      "latency_ms": 53657
+    },
+    {
+      "model": "mistral:latest",
+      "variant": "loop",
+      "task": "weighted_country",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 2
+    },
+    {
+      "model": "mistral:latest",
+      "variant": "loop",
+      "task": "nested_reviews",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "mistral:latest",
+      "variant": "loop",
+      "task": "reproducible_orders",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "mistral:latest",
+      "variant": "loop",
+      "task": "memstore_pipeline",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "mistral:latest",
+      "variant": "loop",
+      "task": "timeseries",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "mistral:latest",
+      "variant": "loop",
+      "task": "branch_fk",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "qwen2.5-coder:1.5b",
+      "variant": "loop",
+      "task": "weighted_country",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "qwen2.5-coder:1.5b",
+      "variant": "loop",
+      "task": "nested_reviews",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "qwen2.5-coder:1.5b",
+      "variant": "loop",
+      "task": "reproducible_orders",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "qwen2.5-coder:1.5b",
+      "variant": "loop",
+      "task": "memstore_pipeline",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "qwen2.5-coder:1.5b",
+      "variant": "loop",
+      "task": "timeseries",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "qwen2.5-coder:1.5b",
+      "variant": "loop",
+      "task": "branch_fk",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "deepseek-r1:7b-qwen-distill-q4_K_M",
+      "variant": "loop",
+      "task": "weighted_country",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "deepseek-r1:7b-qwen-distill-q4_K_M",
+      "variant": "loop",
+      "task": "nested_reviews",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "deepseek-r1:7b-qwen-distill-q4_K_M",
+      "variant": "loop",
+      "task": "reproducible_orders",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "deepseek-r1:7b-qwen-distill-q4_K_M",
+      "variant": "loop",
+      "task": "memstore_pipeline",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    },
+    {
+      "model": "deepseek-r1:7b-qwen-distill-q4_K_M",
+      "variant": "loop",
+      "task": "timeseries",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 0
+    },
+    {
+      "model": "deepseek-r1:7b-qwen-distill-q4_K_M",
+      "variant": "loop",
+      "task": "branch_fk",
+      "score": "error",
+      "rule_ids": [],
+      "detail": "HTTP Error 400: Bad Request",
+      "iterations": 0,
+      "iteration_details": [],
+      "latency_ms": 1
+    }
+  ]
+}
