@@ -17,17 +17,24 @@ python benchmarks/dsl-authoring/bench.py              # full matrix: DEFAULT_MOD
 Filter a run:
 
 ```
-python benchmarks/dsl-authoring/bench.py --models qwen2.5:7b --variants P0_bare P2_cheatsheet --tasks weighted_country timeseries
+python benchmarks/dsl-authoring/bench.py --models gemma4:12b --variants P0_bare P2_cheatsheet --tasks weighted_country timeseries
 ```
+
+Add `--think` to a `--loop` run to enable Ollama's thinking mode (off by
+default — see "Known harness limitations").
 
 Ollama must be running locally (`http://localhost:11434`) with the target
 models pulled (`ollama pull <model>`). Each cell is one `/api/chat` call:
-`stream: false`, `think: false` (required for `gemma4:31b` to respond at
-all; verified harmless there — NOT verified harmless on other
-thinking-capable models, see "Known harness limitations"), `temperature 0.2`,
-`num_predict 1400`, `num_ctx 8192` (P2/P3 prompts run past Ollama's default
-2048/4096 context; without raising it the cheatsheet/recipe gets silently
-truncated and the comparison is confounded), 300s timeout per call.
+`stream: false`, `think: false` unless `--think` is passed (required
+`false` for `gemma4:31b` to respond at all when thinking is off; verified
+harmless there — NOT verified harmless on other thinking-capable models, see
+"Known harness limitations"), `temperature 1.0, top_p 0.95, top_k 64` (Gemma
+4's own documented recommendation — the roster is Gemma-only, see "Local
+model selection"), `seed 42` (fixed so repeated runs of the same model+task
+are reproducible instead of a fresh sample each time), `num_predict 1400`,
+`num_ctx 8192` (P2/P3 prompts run past Ollama's default 2048/4096 context;
+without raising it the cheatsheet/recipe gets silently truncated and the
+comparison is confounded), 300s timeout per call.
 
 Output:
 - `results/<timestamp>.json` (or `--out <path>`): every cell, written after
@@ -149,16 +156,25 @@ Pull it first (`ollama pull <name>`). No code change needed.
 ## Local model selection
 
 Prefer models that report both `tools` and `thinking` in `ollama show <model>`'s
-Capabilities block. Neither is exercised by the harness today (see "Known
-harness limitations" below) — this is a forward-looking criterion, not a
-claim that the current `--loop` condition uses either. The reasoning: `tools`
-support is what would let a future harness condition drive real MCP tool
-calls instead of the manual lint/dry-run text loop (a more realistic test of
-"can this model run as an agent against our MCP server," not just "can it
-write XML from feedback"); `thinking` support matters because forcing
-`think: false` on a reasoning-tuned model (e.g. a DeepSeek-R1 distill) may be
-suppressing the exact mechanism it needs for multi-error self-correction —
-worth testing with thinking enabled before ruling a model out.
+Capabilities block. `tools` is not exercised by the harness today (see "Known
+harness limitations") — this is a forward-looking criterion, not a claim the
+current `--loop` condition uses it: `tools` support is what would let a
+future harness condition drive real MCP tool calls instead of the manual
+lint/dry-run text loop (a more realistic test of "can this model run as an
+agent against our MCP server," not just "can it write XML from feedback").
+
+`thinking` support is now testable: `--think` enables it (off by default,
+`--loop` only). Verified 2026-07-13 against a live Ollama call that `content`
+and `thinking` are separate JSON fields in the response regardless of the
+flag — the harness only ever reads `content`, so message history built from
+it already complies with Gemma 4's own documented multi-turn rule ("no
+thinking content in history") whether `--think` is on or off; this was a
+real risk worth checking, not a given. Gemma 4's own docs note one asymmetry
+worth re-testing once `gemma4:e4b` is available locally: disabling thinking
+on the dense/MoE sizes still emits an empty thought-channel wrapper around
+the answer, but the E2B/E4B variants are documented to behave differently —
+unverified whether `think: false` is fully clean on `gemma4:e4b` the way it
+is on `gemma4:31b`.
 
 As of 2026-07-13 the roster is Gemma-only (`gemma4:12b`, `gemma4:26b`,
 `gemma4:31b`, `gemma4:e4b`) after `gemma4:31b` clearly outperformed every
@@ -197,16 +213,17 @@ picks its own naming.
   rating in 1-5 exists somewhere in a nested list"), not a bounds check
   over every rating in every row: matching the stated task intent, not a
   stricter one.
-- Scoring assumes each Ollama call's `message.content` is the entire reply;
-  a model that streams reasoning into `content` instead of respecting
-  `think: false` would inflate token count without changing the
-  extraction/lint/dry-run logic (unaffected in testing, since gemma4:31b was
-  verified to omit its thinking trace when `think: false` is set).
-- `call_ollama` forces `think: false` for every model, including
-  thinking-capable ones — untested whether this helps or hurts models
-  specifically tuned to reason before answering (a poor `deepseek-r1`
-  distill result in this session may be partly attributable to this, not
-  purely capability). Not yet A/B tested with thinking enabled.
+- Scoring assumes each Ollama call's `message.content` is the entire reply
+  and never includes reasoning tokens. Confirmed 2026-07-13 by direct
+  `/api/chat` calls to `gemma4:31b`: `thinking` is always a separate JSON
+  field, never merged into `content`, with or without `--think`.
+- `--think` (default off) threads through `call_ollama`/`run_loop_cell`/
+  `run_loop_matrix` to enable thinking mode, but no A/B run has been done
+  yet — thinking's effect on this specific task (structured XML generation
+  with lint/dry-run feedback, not open-ended reasoning) is unverified in
+  either direction. Cost is real: ~4x latency observed on a trivial prompt
+  against `gemma4:31b` (local test, contended with concurrent downloads —
+  treat as directional, not a clean measurement).
 - The `--loop` condition never uses native tool-calling (Ollama's `tools=`
   chat parameter) even for models that support it — it always drives the
   manual "generate XML, lint/dry-run, feed diagnostics back as a chat

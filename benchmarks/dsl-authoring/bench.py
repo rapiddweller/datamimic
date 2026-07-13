@@ -29,7 +29,15 @@ from datamimic_ce.authoring.dryrun import DryRunResult, dry_run_source
 from datamimic_ce.authoring.reference import load_recipe, reference
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
-TEMPERATURE = 0.2
+# Gemma 4's documented recommendation (README "Best Practices"): temperature=1.0, top_p=0.95,
+# top_k=64 -- the roster is Gemma-only now (see benchmarks README "Local model selection"), so
+# this benchmark follows Gemma's own tuning instead of a generic low-temperature guess.
+TEMPERATURE = 1.0
+TOP_P = 0.95
+TOP_K = 64
+# Fixed so repeated runs of the same model+task are reproducible instead of a fresh dice roll
+# each time -- matters more now that TEMPERATURE=1.0 (vs the old 0.2) samples more freely.
+SEED = 42
 NUM_PREDICT = 1400
 NUM_CTX = 8192  # P2/P3 prompts run well past Ollama's default 2048/4096 context
 NUM_CTX_LOOP = 16384  # loop keeps the cheatsheet + up to LOOP_MAX_ITERATIONS replies + feedback in
@@ -417,16 +425,28 @@ def call_ollama(
     *,
     timeout: int = CALL_TIMEOUT_S,
     num_ctx: int = NUM_CTX,
+    think: bool = False,
 ) -> tuple[str | None, int, str | None]:
     """Returns (content, latency_ms, error). error is None on success.
-    `prompt` is a single user message or a full chat message list (loop mode)."""
+    `prompt` is a single user message or a full chat message list (loop mode).
+    `think=True` costs real latency (~4x on a trivial prompt, verified 2026-07-13) but Ollama
+    keeps the reasoning trace in a separate `message.thinking` field -- `content` below is
+    already reasoning-free either way, so message history built from it never violates Gemma
+    4's "no thinking content in history" multi-turn rule regardless of this flag."""
     messages = [{"role": "user", "content": prompt}] if isinstance(prompt, str) else prompt
     body = {
         "model": model,
         "messages": messages,
         "stream": False,
-        "think": False,  # verified harmless on non-thinking models; required for gemma4:31b
-        "options": {"temperature": TEMPERATURE, "num_predict": NUM_PREDICT, "num_ctx": num_ctx},
+        "think": think,
+        "options": {
+            "temperature": TEMPERATURE,
+            "top_p": TOP_P,
+            "top_k": TOP_K,
+            "seed": SEED,
+            "num_predict": NUM_PREDICT,
+            "num_ctx": num_ctx,
+        },
     }
     req = urllib.request.Request(
         OLLAMA_URL,
@@ -780,7 +800,7 @@ def _best_iteration_index(iterations: list[dict[str, Any]]) -> int:
     )
 
 
-def run_loop_cell(model: str, task: dict[str, Any]) -> dict[str, Any]:
+def run_loop_cell(model: str, task: dict[str, Any], *, think: bool = False) -> dict[str, Any]:
     """One model x task loop cell. Returns the BEST-scoring generation across all
     iterations (not the last -- a later attempt can regress after a real fix; see
     haiku-cli-track-20260712.md), iterations used, per-iteration record, summed latency."""
@@ -791,7 +811,7 @@ def run_loop_cell(model: str, task: dict[str, Any]) -> dict[str, Any]:
     err_note: str | None = None
 
     for attempt in range(1, LOOP_MAX_ITERATIONS + 1):
-        content, latency_ms, err = call_ollama(model, messages, num_ctx=NUM_CTX_LOOP)
+        content, latency_ms, err = call_ollama(model, messages, num_ctx=NUM_CTX_LOOP, think=think)
         total_latency += latency_ms
         if err is not None:
             timed_out = err == "timeout"
@@ -832,7 +852,9 @@ def run_loop_cell(model: str, task: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def run_loop_matrix(models: list[str], tasks: list[dict[str, Any]], *, out_path: Path) -> list[dict[str, Any]]:
+def run_loop_matrix(
+    models: list[str], tasks: list[dict[str, Any]], *, out_path: Path, think: bool = False
+) -> list[dict[str, Any]]:
     cells: list[dict[str, Any]] = []
 
     def persist() -> None:
@@ -841,6 +863,11 @@ def run_loop_matrix(models: list[str], tasks: list[dict[str, Any]], *, out_path:
             "condition": LOOP_VARIANT,
             "initial_variant": "P2_cheatsheet",
             "max_iterations": LOOP_MAX_ITERATIONS,
+            "think": think,
+            "temperature": TEMPERATURE,
+            "top_p": TOP_P,
+            "top_k": TOP_K,
+            "seed": SEED,
             "models": models,
             "tasks": [t["id"] for t in tasks],
             "cells": cells,
@@ -865,7 +892,7 @@ def run_loop_matrix(models: list[str], tasks: list[dict[str, Any]], *, out_path:
                 continue
 
             print(f"-> {model} / {LOOP_VARIANT} / {task['id']}", file=sys.stderr, flush=True)
-            result = run_loop_cell(model, task)
+            result = run_loop_cell(model, task, think=think)
             consecutive_timeouts = consecutive_timeouts + 1 if result.pop("timed_out") else 0
             cell.update(result)
             cells.append(cell)
@@ -965,6 +992,15 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--think",
+        action="store_true",
+        help=(
+            "enable Ollama 'think' mode (only meaningful with --loop, only for thinking-capable "
+            "models). Off by default: ~4x latency on a trivial prompt in local testing, and its "
+            "value on this task is unverified -- see README 'Known harness limitations'."
+        ),
+    )
+    parser.add_argument(
         "--report",
         nargs="+",
         default=None,
@@ -1007,7 +1043,7 @@ def main() -> None:
         tasks = [TASKS_BY_ID[t] for t in args.tasks]
 
     if args.loop:
-        cells = run_loop_matrix(models, tasks, out_path=out_path)
+        cells = run_loop_matrix(models, tasks, out_path=out_path, think=args.think)
         variants = [LOOP_VARIANT]
     else:
         cells = run_matrix(models, variants, tasks, out_path=out_path)
