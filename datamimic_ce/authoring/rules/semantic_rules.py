@@ -9,7 +9,7 @@ Linting aggregates them and adds fix hints. Where possible each rule CALLS the
 same ModelUtil check the engine runs (SPOT); the engine parse remains phase-2
 authority for anything not covered here."""
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable  # noqa: I001
 
 from lxml import etree
 
@@ -25,11 +25,22 @@ from datamimic_ce.constants.element_constants import (
     EL_NESTED_KEY,
     EL_VARIABLE,
 )
+from datamimic_ce.model.constraints import SOURCE_COMPANIONS_WITH_CYCLIC
+from datamimic_ce.model.generate_model import TIMESERIES_ALL_OR_NONE
+from datamimic_ce.model.key_model import _GENERATION_EXCLUSIVE as KEY_GENERATION_EXCLUSIVE
 from datamimic_ce.model.model_util import ModelUtil
+from datamimic_ce.model.variable_model import (
+    _GENERATION_EXCLUSIVE as VARIABLE_GENERATION_EXCLUSIVE,
+    _ITERATION_SELECTOR_REQUIRES_SOURCE,
+)
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
-_TIMESERIES = ("start", "end", "interval")
-_KEY_MODES = ("source", "values", "script", "generator", "constant", "pattern")
+# Timeseries window attributes (all-or-none: start + end + interval)
+_TIMESERIES = tuple(sorted(TIMESERIES_ALL_OR_NONE.attrs))
+# Key generation modes (6 mutually-exclusive, from KeyModel)
+_KEY_MODES = tuple(sorted(KEY_GENERATION_EXCLUSIVE.attrs))
+# Variable generation modes (8 mutually-exclusive, from VariableModel)
+_VARIABLE_MODES = tuple(sorted(VARIABLE_GENERATION_EXCLUSIVE.attrs))
 
 
 def _model_util_diag(
@@ -93,15 +104,18 @@ class KeyGenerationMode(Rule):
     severity = Severity.ERROR
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
-        for element in ctx.iter(EL_KEY, EL_ID):
+        for element in ctx.iter(EL_KEY, EL_ID, EL_VARIABLE):
             tag = str(element.tag)
-            modes = [mode for mode in _KEY_MODES if element.get(mode) is not None]
+            # Choose the mode set based on element tag
+            mode_set = _VARIABLE_MODES if tag == EL_VARIABLE else _KEY_MODES
+
+            modes = [mode for mode in mode_set if element.get(mode) is not None]
             if len(modes) > 1:
                 yield ctx.diag(
                     type(self),
                     element,
                     f"<{tag}> mixes generation modes: {', '.join(modes)}.",
-                    "Keep exactly one value source per key (e.g. only generator=, or only values=).",
+                    "Keep exactly one value source per key/variable (e.g. only generator=, or only values=).",
                 )
             elif not modes and not any(element.get(a) is not None for a in ("type", "string")):
                 yield ctx.diag(
@@ -203,7 +217,12 @@ class SourceCompanionsWithoutSource(Rule):
     id = "DM214"
     severity = Severity.WARNING
 
-    _COMPANIONS = ("cyclic", "selector", "separator", "sourceScripted", "iterationSelector", "weightColumn")
+    # Companion attributes that require source, derived from declared constraint facts.
+    # SOURCE_COMPANIONS_WITH_CYCLIC provides 5 Requires facts; plus the lint_only
+    # iterationSelector ⇒ source fact from VariableModel.
+    _COMPANIONS = tuple(sorted({
+        fact.attr for fact in SOURCE_COMPANIONS_WITH_CYCLIC
+    } | {_ITERATION_SELECTOR_REQUIRES_SOURCE.attr}))
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter(*_GENERATES, EL_VARIABLE, EL_NESTED_KEY):

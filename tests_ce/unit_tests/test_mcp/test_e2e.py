@@ -62,6 +62,7 @@ async def test_schema_resource_available(anyio_backend) -> None:
             "datamimic_check",
             "datamimic_run",
             "datamimic_reference",
+            "datamimic_scaffold",
         }
         resources = await client.read_resource("resource://datamimic/schemas/person/v1/request.json")
         assert resources and "\"$schema\"" in resources[0].text

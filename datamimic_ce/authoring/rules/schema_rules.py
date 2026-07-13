@@ -14,14 +14,8 @@ from collections.abc import Iterable
 from datamimic_ce.authoring.diagnostics import Diagnostic, Severity
 from datamimic_ce.authoring.rules.base import LintContext, Rule
 from datamimic_ce.constants.data_type_constants import (
-    DATA_TYPE_BINARY,
-    DATA_TYPE_BOOL,
-    DATA_TYPE_DECIMAL,
     DATA_TYPE_DICT,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
     DATA_TYPE_LIST,
-    DATA_TYPE_STRING,
 )
 from datamimic_ce.constants.element_constants import (
     EL_COMMENT,
@@ -32,17 +26,14 @@ from datamimic_ce.constants.element_constants import (
     EL_VARIABLE,
 )
 from datamimic_ce.enums.distribution_enums import NumberDistribution, SourceDistribution
+from datamimic_ce.model.key_model import _TYPE_VALUES as KEY_TYPE_VALUES
 
-_DATA_TYPES = {
-    DATA_TYPE_STRING,
-    DATA_TYPE_INT,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_DECIMAL,
-    DATA_TYPE_BOOL,
-    DATA_TYPE_BINARY,
-    DATA_TYPE_LIST,
-    DATA_TYPE_DICT,
-}
+# Key/ID valid scalar types (declared in KeyModel's _TYPE_VALUES constraint, 6 types)
+_KEY_ID_DATA_TYPES = set(KEY_TYPE_VALUES.values)
+# NestedKey/Variable: declare no type enforcement at parse today (per plan R5).
+# Extend lint set to include structural markers (list/dict) in addition to scalar core.
+# This is a lint-only extension; future engine-side enforcement is out of scope.
+_NESTEDKEY_VARIABLE_DATA_TYPES = _KEY_ID_DATA_TYPES | {DATA_TYPE_LIST, DATA_TYPE_DICT}
 _DISTRIBUTIONS = {member.value for member in SourceDistribution}
 _NUMBER_DISTRIBUTIONS = {member.value for member in NumberDistribution}
 # <key>/<id> alias to KeyModel (schema.py), whose distribution= is ALWAYS a NumberDistribution
@@ -205,8 +196,10 @@ class InvalidAttributeValue(Rule):
             # type= is always the scalar cast and always checked.
             reads_source = tag in (EL_VARIABLE, EL_NESTED_KEY) and element.get("source")
             if tag in (EL_KEY, EL_ID, EL_NESTED_KEY, EL_VARIABLE) and not reads_source:
+                # Use the appropriate type set per tag (C-2 fix: key/id accept only 6 scalar types)
+                valid_types = _KEY_ID_DATA_TYPES if tag in (EL_KEY, EL_ID) else _NESTEDKEY_VARIABLE_DATA_TYPES
                 type_value = element.get("type")
-                if type_value is not None and type_value not in _DATA_TYPES:
+                if type_value is not None and type_value not in valid_types:
                     if type_value.lower() in _DATE_TYPE_GUESSES:
                         hint = (
                             "DATAMIMIC has no scalar date/time type. For a timestamp field use "
@@ -214,7 +207,7 @@ class InvalidAttributeValue(Rule):
                             'start= end= interval=>, script="ts.now").'
                         )
                     else:
-                        hint = f"Use one of: {', '.join(sorted(_DATA_TYPES))}."
+                        hint = f"Use one of: {', '.join(sorted(valid_types))}."
                     yield ctx.diag(
                         type(self),
                         element,

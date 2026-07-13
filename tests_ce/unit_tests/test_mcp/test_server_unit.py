@@ -6,14 +6,15 @@ from starlette.responses import Response
 
 from datamimic_ce.domains import facade
 from datamimic_ce.mcp import resources
-from datamimic_ce.mcp.models import GenerateArgs
+from datamimic_ce.mcp.models import GenerateArgs, ScaffoldArgs
 from datamimic_ce.mcp.server import (
     HTTP_MIDDLEWARE_ATTR,
+    _APIKeyMiddleware,
     build_sse_app,
     create_server,
     generate_impl,
     list_domains_impl,
-    _APIKeyMiddleware,
+    scaffold_impl,
 )
 
 
@@ -105,3 +106,61 @@ def test_schema_resources_loadable() -> None:
         assert isinstance(loaded, dict)
         assert loaded, "Schema should not be empty"
     assert discovered, "Expected packaged schema resources"
+
+
+def test_scaffold_impl_valid_spec_dry_runs() -> None:
+    """A valid spec from the scaffold test suite should render, lint clean, and dry-run."""
+    spec = {
+        "seed": 1,
+        "generates": [{
+            "name": "customers", "count": 30, "target": "JSON",
+            "fields": [
+                {"name": "id", "kind": "increment"},
+                {"name": "full_name", "kind": "person_name"},
+                {"name": "age", "kind": "int_range", "min": 18, "max": 90},
+                {"name": "country", "kind": "weighted",
+                 "values": ["US", "DE", "VN"], "weights": [0.5, 0.3, 0.2]},
+            ],
+        }],
+    }
+    args = ScaffoldArgs(spec=spec)
+    result = scaffold_impl(args)
+
+    assert result["ok"] is True
+    assert result["stage"] == "dry_run"
+    assert "xml" in result
+    assert "products" in result
+    assert isinstance(result["products"], list)
+    assert len(result["products"]) > 0
+    assert all("name" in p and "count" in p for p in result["products"])
+
+
+def test_scaffold_impl_malformed_spec_render_error() -> None:
+    """A malformed spec (missing generates) should fail at the render stage."""
+    bad_spec = {}
+    args = ScaffoldArgs(spec=bad_spec)
+    result = scaffold_impl(args)
+
+    assert result["ok"] is False
+    assert result["stage"] == "render"
+    assert "error" in result
+    assert isinstance(result["error"], str)
+
+
+def test_scaffold_impl_dry_run_false_stops_at_lint() -> None:
+    """With dry_run=False, a valid spec should stop after lint and not execute."""
+    spec = {
+        "seed": 1,
+        "generates": [{
+            "name": "items", "count": 5, "target": "JSON",
+            "fields": [{"name": "id", "kind": "increment"}],
+        }],
+    }
+    args = ScaffoldArgs(spec=spec, dry_run=False)
+    result = scaffold_impl(args)
+
+    assert result["ok"] is True
+    assert result["stage"] == "lint"
+    assert "xml" in result
+    assert "products" not in result  # No dry-run, so no products captured
+    assert "summary" in result

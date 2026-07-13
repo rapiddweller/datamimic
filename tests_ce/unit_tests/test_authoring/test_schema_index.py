@@ -108,6 +108,28 @@ def test_gate2_nesting_children_are_known_tags() -> None:
             assert child in known, f"nesting table of <{tag}> references unknown <{child}>"
 
 
+def test_gate4_reflection_dependent_fields_keep_their_descriptions() -> None:
+    """scaffold.py pulls start/end/interval's schema text straight from GenerateModel via
+    model_json_schema() reflection (SPOT — see authoring/schema.py's element_json_schema()).
+    A future edit that drops a Field(description=...) would silently blank that text out
+    without failing any other test; this guard catches it directly. Deliberately scoped to
+    the fields this reflection path actually depends on, not every CE model field — full
+    retrofit is separate, incremental follow-up work, not this gate's job."""
+    from datamimic_ce.model.generate_model import GenerateModel
+    from datamimic_ce.model.variable_model import VariableModel
+
+    generate_schema = GenerateModel.model_json_schema()["properties"]
+    for field_name in ("start", "end", "interval"):
+        prop = generate_schema[field_name]
+        assert prop.get("description"), f"GenerateModel.{field_name} lost its Field(description=...)"
+        assert prop.get("examples"), f"GenerateModel.{field_name} lost its Field(examples=...)"
+
+    variable_schema = VariableModel.model_json_schema()["properties"]
+    for field_name in ("source", "type"):
+        prop = variable_schema[field_name]
+        assert prop.get("description"), f"VariableModel.{field_name} lost its Field(description=...)"
+
+
 def test_gate3_rule_registry_is_consistent() -> None:
     ids = [rule.id for rule in ALL_RULES]
     assert len(ids) == len(set(ids)), "duplicate rule ids"

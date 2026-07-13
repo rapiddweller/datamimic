@@ -94,6 +94,8 @@ def test_capabilities_manifest_matches_registries() -> None:
     from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
 
     manifest = capabilities_manifest()
+    # A version pin for a future EE-side CE-compat CI check to diff against.
+    assert manifest["schema_version"], "capabilities_manifest() must carry a schema_version"
     # SPOT: every section mirrors its live registry, nothing invented
     assert set(manifest["elements"]) == build_schema_index().tags
     assert manifest["aliases"] == ALIASES
@@ -106,6 +108,9 @@ def test_capabilities_manifest_matches_registries() -> None:
     gen = manifest["elements"]["generate"]
     assert gen["attributes"]["name"]["required"] is True
     assert "key" in gen["children"]
+    # Constraints are present in manifest when element has them
+    assert "constraints" in gen, "generate element must have constraints in manifest"
+    assert len(gen["constraints"]) > 0, "generate element constraints must be non-empty"
 
 
 def test_gate3_cheatsheet_elements_exist_in_schema() -> None:
@@ -120,6 +125,19 @@ def test_gate3_cheatsheet_elements_exist_in_schema() -> None:
 def test_reference_element_topic_lists_attributes() -> None:
     text = reference("element", "generate")
     assert "pageSize" in text and "(required)" in text and "Aliases: <iterate>" in text
+
+
+def test_reference_element_surfaces_attribute_descriptions_untruncated() -> None:
+    # Field(description=...) added to every CE model this session must actually reach the
+    # agent-facing element_reference() text (it previously only reflected name/type/default),
+    # and every element's reference must fit the clip budget without dropping attributes —
+    # 'variable' (35 attrs) was the closest to overflow when this was added.
+    index = build_schema_index()
+    for tag in index.tags:
+        text = reference("element", tag)
+        assert "[truncated" not in text, f"<{tag}> reference overflowed the clip budget"
+    text = reference("element", "generate")
+    assert "Number of records to generate" in text  # GenerateModel.count's description
 
 
 def test_reference_element_unknown_lists_valid() -> None:
@@ -186,3 +204,52 @@ def test_element_model_map_covers_all_element_constants() -> None:
         if name.startswith("EL_") and isinstance(value, str)
     }
     assert declared - {"comment"} == set(ELEMENT_MODEL_MAP), "element constant not covered by the map"
+
+
+def test_constraint_three_surface_consistency_all_or_none() -> None:
+    """Gate: GenerateModel's AllOrNone(start, end, interval) constraint appears
+    identically in all three surfaces: (a) element_json_schema, (b) capabilities_manifest,
+    (c) element_reference prose. The three attribute sets must be identical."""
+    from datamimic_ce.authoring.reference import capabilities_manifest, element_reference
+    from datamimic_ce.authoring.schema import element_json_schema
+
+    # Surface (a): JSON schema via Pydantic's json_schema_extra
+    json_schema = element_json_schema("generate")
+    constraints_a = json_schema.get("constraints", [])
+    all_or_none_a = next(
+        (c for c in constraints_a if c.get("kind") == "all_or_none"), None
+    )
+    assert all_or_none_a is not None, "generate must have all_or_none constraint in json_schema"
+    attrs_a = set(all_or_none_a["attrs"])
+
+    # Surface (b): capabilities_manifest
+    manifest = capabilities_manifest()
+    gen_manifest = manifest["elements"]["generate"]
+    constraints_b = gen_manifest.get("constraints", [])
+    all_or_none_b = next(
+        (c for c in constraints_b if c.get("kind") == "all_or_none"), None
+    )
+    assert all_or_none_b is not None, "generate must have all_or_none constraint in manifest"
+    attrs_b = set(all_or_none_b["attrs"])
+
+    # Surface (c): element_reference prose
+    prose = element_reference("generate")
+    # Find the line matching the all_or_none pattern: "<attrs>: all together or none"
+    all_or_none_line = None
+    for line in prose.splitlines():
+        if "all together or none" in line:
+            all_or_none_line = line
+            break
+    assert all_or_none_line is not None, (
+        "generate reference must have 'all together or none' prose for AllOrNone constraint"
+    )
+    # Extract attrs from prose: "- <attr1>, <attr2>, <attr3>: all together or none"
+    # Split on ": all together or none" to get the attr part, then split on ", "
+    attrs_part = all_or_none_line.split(": all together or none")[0].strip("- ").strip()
+    attrs_c = set(attrs_part.split(", "))
+
+    # Assert all three surfaces have the same attribute set
+    assert attrs_a == attrs_b == attrs_c, (
+        f"AllOrNone attrs mismatch across surfaces: "
+        f"json_schema={attrs_a}, manifest={attrs_b}, prose={attrs_c}"
+    )

@@ -17,6 +17,7 @@ the real parser dispatch so it cannot drift.
 
 from dataclasses import dataclass
 from functools import lru_cache
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -125,6 +126,7 @@ class AttributeSpec:
     required: bool
     annotation: str  # rendered type, e.g. "int | None"
     default: object
+    description: str | None = None  # from Field(description=...), when the model provides one
 
 
 @dataclass(frozen=True)
@@ -135,6 +137,7 @@ class ElementSchema:
     allowed_children: set[str] | None  # None = any children allowed; empty = leaf
     allowed_parents: set[str]  # derived by inverting the nesting table
     open_attrs: bool  # extra="allow" models (database/mongodb credentials)
+    constraints: tuple = ()  # tuple of Constraint objects from the model's __constraints__
 
 
 class SchemaIndex:
@@ -159,6 +162,7 @@ def _attribute_specs(model: type[BaseModel]) -> dict[str, AttributeSpec]:
             required=field.is_required(),
             annotation=annotation.replace("typing.", ""),
             default=None if field.is_required() else field.default,
+            description=field.description,
         )
     return specs
 
@@ -187,5 +191,18 @@ def build_schema_index() -> SchemaIndex:
             allowed_children=children_map.get(tag),
             allowed_parents=parents.get(tag, set()),
             open_attrs=open_attrs,
+            constraints=getattr(model, "__constraints__", ()) if model is not None else (),
         )
     return SchemaIndex(elements)
+
+
+def element_json_schema(tag: str) -> dict[str, Any]:
+    """The real Pydantic-derived JSON schema for an element's attribute model
+    (BaseModel.model_json_schema()), carrying whatever description/examples the model's
+    Field(...) definitions provide. This is the SPOT other schema consumers (scaffold.py's
+    constrained-decoding spec, capabilities_manifest()) reflect from instead of hand-typing
+    a parallel schema fragment."""
+    schema = build_schema_index().get(ALIASES.get(tag, tag))
+    if schema is None or schema.model is None:
+        raise ValueError(f"'{tag}' has no attribute model to reflect a JSON schema from")
+    return schema.model.model_json_schema()

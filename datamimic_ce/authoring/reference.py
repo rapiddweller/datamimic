@@ -23,6 +23,15 @@ from datamimic_ce.constants.exporter_constants import (
     EXPORTER_TEST_RESULT_EXPORTER,
 )
 from datamimic_ce.enums.distribution_enums import SourceDistribution
+from datamimic_ce.model.constraints import (
+    AllOrNone,
+    Forbids,
+    MutuallyExclusive,
+    RequiredOneOf,
+    Requires,
+    ValidValues,
+    serialize_constraints,
+)
 
 _GENERATOR_PACKAGE = "datamimic_ce.domains.common.literal_generators"
 
@@ -31,6 +40,42 @@ def clip(text: str, max_chars: int, hint: str) -> str:
     if len(text) <= max_chars:
         return text
     return text[: max_chars - len(hint) - 2].rstrip() + "\n…" + hint
+
+
+def _render_constraint_terse(fact) -> str:
+    """Render a single constraint object as a terse one-liner for element_reference().
+
+    Renders structural facts only (attr/attrs/needs/excludes/when_true); message is omitted.
+    Attributes are sorted for stable output. lint_only facts are marked with [advisory].
+    """
+    advisory = " [advisory]" if fact.lint_only else ""
+
+    if isinstance(fact, RequiredOneOf):
+        attrs_str = ", ".join(sorted(fact.attrs))
+        return f"at least one of: {attrs_str}{advisory}"
+    elif isinstance(fact, MutuallyExclusive):
+        attrs_str = ", ".join(sorted(fact.attrs))
+        return f"at most one of: {attrs_str}{advisory}"
+    elif isinstance(fact, Requires):
+        needs_str = ", ".join(sorted(fact.needs))
+        if len(fact.needs) == 1:
+            needs_str = list(fact.needs)[0]
+        suffix = f" (when {fact.attr} is true)" if fact.when_true else ""
+        return f"{fact.attr} requires {needs_str}{suffix}{advisory}"
+    elif isinstance(fact, AllOrNone):
+        attrs_str = ", ".join(sorted(fact.attrs))
+        return f"{attrs_str}: all together or none{advisory}"
+    elif isinstance(fact, Forbids):
+        excludes_str = ", ".join(sorted(fact.excludes))
+        suffix = f" (when {fact.attr} is true)" if fact.when_true else ""
+        return f"{fact.attr} cannot combine with: {excludes_str}{suffix}{advisory}"
+    elif isinstance(fact, ValidValues):
+        # Evaluate callable values; static sets/tuples are already iterable
+        values = sorted(fact.values()) if callable(fact.values) else sorted(fact.values)
+        values_str = ", ".join(values)
+        return f"{fact.attr} must be one of: {values_str}{advisory}"
+    else:
+        return f"<unknown constraint type: {type(fact).__name__}>{advisory}"
 
 
 @lru_cache(maxsize=1)
@@ -61,8 +106,18 @@ def element_reference(tag: str) -> str:
             required = " (required)" if spec.required else ""
             default = "" if spec.default in (None, "") else f" [default: {spec.default}]"
             lines.append(f"- {spec.name}: {spec.annotation}{required}{default}")
+            if spec.description:
+                # First sentence only: keeps every attribute visible within the clip budget
+                # (the full text is still available via capabilities_manifest()/model_json_schema()).
+                lines.append(f"    {spec.description.split('. ', 1)[0].rstrip('.')}.")
     else:
         lines.append("Attributes: none")
+    # Constraints: cross-field rules (render if present)
+    if schema.constraints:
+        lines.append("Constraints:")
+        for fact in schema.constraints:
+            rendered = _render_constraint_terse(fact)
+            lines.append(f"- {rendered}")
     if schema.allowed_children is None:
         lines.append("Children: any element")
     elif schema.allowed_children:
@@ -72,7 +127,7 @@ def element_reference(tag: str) -> str:
     if schema.allowed_parents:
         lines.append(f"Allowed inside: {', '.join(sorted(schema.allowed_parents))}")
     return clip(
-        "\n".join(lines), 4000, " [truncated — ask for a specific attribute or see the cheatsheet]"
+        "\n".join(lines), 5000, " [truncated — ask for a specific attribute or see the cheatsheet]"
     )
 
 
@@ -242,21 +297,35 @@ def converters_reference() -> str:
 
 def capabilities_manifest() -> dict[str, Any]:
     """Machine-readable DSL surface, derived live from the engine registries — cannot drift."""
+    from importlib.metadata import PackageNotFoundError, version
+
     from datamimic_ce.enums.converter_enums import ConverterEnum
     from datamimic_ce.enums.distribution_enums import NumberDistribution
     from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
+
+    try:
+        schema_version = version("datamimic_ce")
+    except PackageNotFoundError:
+        # Editable/dev checkout without an installed distribution metadata record.
+        schema_version = None
 
     index = build_schema_index()
     elements: dict[str, Any] = {}
     for tag, schema in sorted(index.elements.items()):
         elements[tag] = {
             "attributes": {
-                spec.name: {"required": spec.required, "type": spec.annotation}
+                spec.name: {
+                    "required": spec.required,
+                    "type": spec.annotation,
+                    **({"description": spec.description} if spec.description else {}),
+                }
                 for spec in sorted(schema.attributes.values(), key=lambda s: s.name)
             },
             "children": sorted(schema.allowed_children) if schema.allowed_children is not None else "any",
+            **({"constraints": serialize_constraints(schema.constraints)} if schema.constraints else {}),
         }
     return {
+        "schema_version": schema_version,
         "elements": elements,
         "aliases": dict(ALIASES),
         "generators": sorted(known_generator_names()),

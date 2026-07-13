@@ -21,16 +21,53 @@ from datamimic_ce.model.model_util import ModelUtil
 
 
 class ReferenceModel(BaseModel):
-    name: str
-    source: str
+    name: str = Field(
+        ...,
+        description="Field name in the generated record that receives the reference value. Also "
+        "used as the legacy target when no <field> children are present.",
+        examples=["customer_id"],
+    )
+    source: str = Field(
+        ...,
+        description="Id of the <database>/<mongodb> client to pull the reference from.",
+        examples=["db", "mongo"],
+    )
     # Optional legacy single-field shortcut; composite references use <field> children instead.
-    source_key: str | None = Field(default=None, alias=ATTR_SOURCE_KEY)
-    source_type: str = Field(alias=ATTR_SOURCE_TYPE)
-    unique: bool | None = None
+    source_key: str | None = Field(
+        default=None,
+        alias=ATTR_SOURCE_KEY,
+        description="Legacy single-field shortcut: source column to read, mapped onto 'name'. "
+        "Mutually exclusive with <field> children — use those for composite (multi-column) "
+        "references.",
+        examples=["id"],
+    )
+    source_type: str = Field(
+        alias=ATTR_SOURCE_TYPE,
+        description="Source table/collection to select reference rows from.",
+        examples=["customer"],
+    )
+    unique: bool | None = Field(
+        None,
+        description="Draw distinct rows without replacement instead of the default "
+        "with-replacement sampling (a foreign key may otherwise repeat the same row). Only "
+        "combines with distribution='random' (the default) and is incompatible with cyclic.",
+        examples=[True],
+    )
     # Row-selection shape, same vocabulary as <variable>/<generate>: random (default, with
     # replacement), ordered (source order, strict unless cyclic), cumulated (bell). cyclic wraps.
-    distribution: str | None = None
-    cyclic: bool | None = None
+    distribution: str | None = Field(
+        None,
+        description="Row-selection shape, same vocabulary as <variable>/<generate>: random "
+        "(default, with replacement), ordered (source order, strict unless cyclic), cumulated "
+        "(bell).",
+        examples=["random", "ordered", "cumulated"],
+    )
+    cyclic: bool | None = Field(
+        None,
+        description="Wrap ordered selection back to the start once the source is exhausted, "
+        "instead of stopping.",
+        examples=[True],
+    )
 
     @model_validator(mode="before")
     @classmethod

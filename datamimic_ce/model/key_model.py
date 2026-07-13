@@ -5,7 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from typing import ClassVar
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import (
     ATTR_CONDITION,
@@ -46,41 +48,251 @@ from datamimic_ce.constants.data_type_constants import (
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
 )
+from datamimic_ce.model.constraints import (
+    SOURCE_COMPANIONS_WITH_CYCLIC,
+    UNIQUE_FORBIDS_WEIGHTS,
+    UNIQUE_REQUIRES_POOL,
+    WEIGHTS_REQUIRE_VALUES,
+    Constraint,
+    MutuallyExclusive,
+    RequiredOneOf,
+    ValidValues,
+    constraints_schema_extra,
+)
 from datamimic_ce.model.model_util import ModelUtil
+
+# Declared facts (SPOT): each set lives ONCE here, consumed by BOTH __constraints__
+# and the enforcing validator body. Dynamic messages (interpolating the clashing
+# attrs/value) stay in the validator, so these facts carry message=None.
+_GENERATION_REQUIRED = RequiredOneOf(
+    frozenset((
+        ATTR_TYPE,
+        ATTR_SOURCE,
+        ATTR_VALUES,
+        ATTR_SCRIPT,
+        ATTR_GENERATOR,
+        ATTR_CONSTANT,
+        ATTR_PATTERN,
+        ATTR_STRING,
+    )),
+)
+_GENERATION_EXCLUSIVE = MutuallyExclusive(
+    frozenset((
+        ATTR_SOURCE,
+        ATTR_VALUES,
+        ATTR_SCRIPT,
+        ATTR_GENERATOR,
+        ATTR_CONSTANT,
+        ATTR_PATTERN,
+    )),
+)
+_TYPE_VALUES = ValidValues(
+    ATTR_TYPE,
+    frozenset((
+        DATA_TYPE_STRING,
+        DATA_TYPE_INT,
+        DATA_TYPE_FLOAT,
+        DATA_TYPE_DECIMAL,
+        DATA_TYPE_BOOL,
+        DATA_TYPE_BINARY,
+    )),
+)
 
 
 class KeyModel(BaseModel):
-    name: str
-    type: str | None = None
-    min: str | None = None
-    max: str | None = None
-    granularity: str | None = None
+    # Declared cross-field constraints (read by validators and exposed to schema via json_schema_extra)
+    __constraints__: ClassVar[tuple[Constraint, ...]] = (
+        # Shared constraints (used by KeyModel, VariableModel, GenerateModel)
+        WEIGHTS_REQUIRE_VALUES,
+        UNIQUE_REQUIRES_POOL,
+        UNIQUE_FORBIDS_WEIGHTS,
+        # Source companions (cyclic/selector/separator/sourceScripted/weightColumn require source)
+        *SOURCE_COMPANIONS_WITH_CYCLIC,
+        # Two-tier generation-mode facts + type valid-values (enforced by in-model validators,
+        # which read these same constants; their messages are dynamic, so message=None here)
+        _GENERATION_REQUIRED,
+        _GENERATION_EXCLUSIVE,
+        _TYPE_VALUES,
+    )
+    model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
+
+    name: str = Field(
+        ...,
+        description="Field name in the generated record/export (the JSON/CSV/XML column or key name).",
+        examples=["id", "email", "status"],
+    )
+    type: str | None = Field(
+        None,
+        description="Data type of the key's generated value. Combine with min/max (numeric range), "
+        "minLength/maxLength (string or binary length), or mimeType (binary).",
+        examples=["string", "int", "float", "decimal", "bool", "binary"],
+    )
+    min: str | None = Field(
+        None,
+        description="Minimum value for a numeric range key (type=\"int\"/\"float\"/\"decimal\"); combine "
+        "with max and optionally granularity/distribution to shape an IntegerGenerator/FloatGenerator.",
+        examples=["0", "18"],
+    )
+    max: str | None = Field(
+        None,
+        description="Maximum value for a numeric range key (type=\"int\"/\"float\"/\"decimal\"); combine "
+        "with min and optionally granularity/distribution to shape an IntegerGenerator/FloatGenerator.",
+        examples=["99", "1000"],
+    )
+    granularity: str | None = Field(
+        None,
+        description="Step width of the numeric grid for a type=\"float\"/\"decimal\" range key (e.g. "
+        "0.5); ignored for type=\"int\".",
+        examples=["0.1", "0.5"],
+    )
     # NumberDistribution for numeric range keys (type=int/float/decimal with min/max),
     # e.g. distribution="cumulated" - the native form of IntegerGenerator(..., distribution=...)
-    distribution: str | None = None
-    min_length: str | None = Field(None, alias=ATTR_MIN_LENGTH)
-    mime_type: str | None = Field(None, alias=ATTR_MIME_TYPE)
-    max_length: str | None = Field(None, alias=ATTR_MAX_LENGTH)
-    source: str | None = None
-    selector: str | None = None
-    separator: str | None = None
-    values: str | None = None
-    weights: str | None = None
-    unique: bool | None = None
-    script: str | None = None
-    generator: str | None = None
-    constant: str | None = None
-    condition: str | None = None
-    converter: str | None = None
-    pattern: str | None = None
-    in_date_format: str | None = Field(None, alias=ATTR_IN_DATE_FORMAT)
-    out_date_format: str | None = Field(None, alias=ATTR_OUT_DATE_FORMAT)
-    default_value: str | None = Field(None, alias=ATTR_DEFAULT_VALUE)
-    null_quota: float | None = Field(None, alias=ATTR_NULL_QUOTA)
-    database: str | None = None
-    string: str | None = Field(None, alias=ATTR_STRING)
-    variable_prefix: str | None = Field(None, alias=ATTR_VARIABLE_PREFIX)
-    variable_suffix: str | None = Field(None, alias=ATTR_VARIABLE_SUFFIX)
+    distribution: str | None = Field(
+        None,
+        description="NumberDistribution for numeric range keys (type=\"int\"/\"float\"/\"decimal\" with "
+        "min/max) - the native form of IntegerGenerator(..., distribution=...). Requires type to be a "
+        "numeric type and min and/or max to be set.",
+        examples=["uniform", "cumulated", "step", "shuffle"],
+    )
+    min_length: str | None = Field(
+        None,
+        alias=ATTR_MIN_LENGTH,
+        description="Minimum length for a type=\"string\" (StringGenerator) or type=\"binary\" "
+        "(BinaryGenerator) payload.",
+        examples=["5", "1"],
+    )
+    mime_type: str | None = Field(
+        None,
+        alias=ATTR_MIME_TYPE,
+        description="MIME signature to prefix a type=\"binary\" payload with a real magic-number "
+        "header (MIME-sniffable); must be a supported signature.",
+        examples=["image/png", "application/pdf"],
+    )
+    max_length: str | None = Field(
+        None,
+        alias=ATTR_MAX_LENGTH,
+        description="Maximum length for a type=\"string\" (StringGenerator) or type=\"binary\" "
+        "(BinaryGenerator) payload.",
+        examples=["12", "16"],
+    )
+    source: str | None = Field(
+        None,
+        description="Weighted CSV data source for this key (must end in 'wgt.csv'); rows are drawn "
+        "with replacement, weighted by the file's weight column. Not supported together with unique.",
+        examples=["segments.wgt.csv"],
+    )
+    selector: str | None = Field(
+        None,
+        description="Selector used when reading 'source'. Requires 'source'.",
+        examples=["SELECT * FROM table"],
+    )
+    separator: str | None = Field(
+        None,
+        description="Field separator for the weighted CSV 'source' (defaults to the project's default "
+        "separator).",
+        examples=[",", ";", "|"],
+    )
+    values: str | None = Field(
+        None,
+        description="Comma-separated list of literal values to pick from for the key.",
+        examples=["1,2,3", "'A','B','C'"],
+    )
+    weights: str | None = Field(
+        None,
+        description="Comma-separated relative weights, one per 'values' entry, for weighted random "
+        "selection. Requires 'values'.",
+        examples=["0.7,0.2,0.1", "5,3,2"],
+    )
+    unique: bool | None = Field(
+        None,
+        description="Emit each picked value at most once (distinct selection without replacement). "
+        "Requires 'values' or 'source', cannot combine with 'weights', and only combines with the "
+        "default random distribution.",
+        examples=[True, False],
+    )
+    script: str | None = Field(
+        None,
+        description="Python expression evaluated to compute the key's value.",
+        examples=["random.randint(1, 100)", "fake.name()"],
+    )
+    generator: str | None = Field(
+        None,
+        description="Predefined generator constructor used to produce the key's value; validated "
+        "against the generator registry.",
+        examples=["IncrementGenerator", "DateTimeGenerator(random=True)"],
+    )
+    constant: str | None = Field(
+        None,
+        description="Constant, literal value for the key (same value every record).",
+        examples=["Constant Value"],
+    )
+    condition: str | None = Field(
+        None,
+        description="Python condition expression gating whether this key is generated for the current "
+        "record (default: always generated). Evaluated per record; the key is omitted when false.",
+        examples=["is_active is True", "value == 5 or value == 10"],
+    )
+    converter: str | None = Field(
+        None,
+        description="Converter(s) applied to transform the generated key value before export; "
+        "validated against the converter registry.",
+        examples=["UpperCase", "LowerCase", "DateFormat", "Mask", "MiddleMask", "CutLength", "Append", "Hash"],
+    )
+    pattern: str | None = Field(
+        None,
+        description="Regular-expression pattern used to generate the key's string value.",
+        examples=["[A-Z][a-z]{5,12}", "[0-9]{5}"],
+    )
+    in_date_format: str | None = Field(
+        None,
+        alias=ATTR_IN_DATE_FORMAT,
+        description="Input date format used to parse a source/script date value before converting it "
+        "to outDateFormat.",
+        examples=["%Y-%m-%d", "%d-%b-%Y", "%d.%m.%Y %H:%M:%S.%f", "epoch"],
+    )
+    out_date_format: str | None = Field(
+        None,
+        alias=ATTR_OUT_DATE_FORMAT,
+        description="Output date format the key's date value is rendered in.",
+        examples=["%Y-%m-%d", "%d-%b-%Y", "%d.%m.%Y %H:%M:%S.%f", "epoch"],
+    )
+    default_value: str | None = Field(
+        None,
+        alias=ATTR_DEFAULT_VALUE,
+        description="Fallback value used when 'script' evaluates to None/fails. Requires 'script'.",
+        examples=["None", "unknown"],
+    )
+    null_quota: float | None = Field(
+        None,
+        alias=ATTR_NULL_QUOTA,
+        description="Probability in [0, 1] that this key is assigned a null value instead of a "
+        "generated one. Default is 0 (never null).",
+        examples=[0, 0.5, 1],
+    )
+    database: str | None = Field(
+        None,
+        description="Database client id, e.g. for a SequenceTableGenerator that reads a real DB "
+        "sequence.",
+        examples=["db"],
+    )
+    string: str | None = Field(
+        None,
+        alias=ATTR_STRING,
+        description="String for the variable data generation.",
+        examples=["find: __key_name__, __key_name_2__ "],
+    )
+    variable_prefix: str | None = Field(
+        None,
+        alias=ATTR_VARIABLE_PREFIX,
+        description="Prefix before field's name for string in key generation.",
+        examples=["${", "++", "--", "@", "{"],
+    )
+    variable_suffix: str | None = Field(
+        None,
+        alias=ATTR_VARIABLE_SUFFIX,
+        description="Suffix after field's name for string in key generation.",
+        examples=["++", "--", "@", "}"],
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -166,33 +378,18 @@ class KeyModel(BaseModel):
     @classmethod
     def validate_generator_mode(cls, values: dict):
         """
-        Check if <key> define only one valid generation option
-        :param values:
-        :return:
+        Check if <key> define only one valid generation option.
+
+        Reads the declared facts _GENERATION_REQUIRED / _GENERATION_EXCLUSIVE;
+        message construction stays here (it interpolates the clashing modes).
         """
         key_set = set(values.keys())
-        generator_option = {
-            ATTR_TYPE,
-            ATTR_SOURCE,
-            ATTR_VALUES,
-            ATTR_SCRIPT,
-            ATTR_GENERATOR,
-            ATTR_CONSTANT,
-            ATTR_PATTERN,
-            ATTR_STRING,
-        }
+        generator_option = set(_GENERATION_REQUIRED.attrs)
         # Check if at least one of following attribute is existed to generate <key> value
         if all(key not in key_set for key in generator_option):
             raise ValueError(f"Must defined one of following attributes {generator_option}")
         # Check if at most one generation mode is defined
-        generation_mode = {
-            ATTR_SOURCE,
-            ATTR_VALUES,
-            ATTR_SCRIPT,
-            ATTR_GENERATOR,
-            ATTR_CONSTANT,
-            ATTR_PATTERN,
-        }
+        generation_mode = set(_GENERATION_EXCLUSIVE.attrs)
         first_mode = None
         for mode in generation_mode:
             if mode in key_set:
@@ -231,20 +428,13 @@ class KeyModel(BaseModel):
     @classmethod
     def validate_data_type(cls, value):
         """
-        Validate attribute "type"
+        Validate attribute "type" — reads the declared _TYPE_VALUES fact.
         :param value:
         :return:
         """
         return ModelUtil.check_valid_data_value(
             value=value,
-            valid_values={
-                DATA_TYPE_STRING,
-                DATA_TYPE_INT,
-                DATA_TYPE_FLOAT,
-                DATA_TYPE_DECIMAL,
-                DATA_TYPE_BOOL,
-                DATA_TYPE_BINARY,
-            },
+            valid_values=set(_TYPE_VALUES.values),
         )
 
     @field_validator("name")

@@ -42,6 +42,9 @@ EXPECTED: dict[str, set[str]] = {
     "fx_unknown_source.xml": {"DM402"},
     "fx_missing_include.xml": {"DM405"},
     "fx_selector_without_count.xml": {"DM211"},
+    "fx_key_type_list.xml": {"DM105"},  # C-2 regression: key type=list is invalid
+    "fx_variable_two_modes.xml": {"DM203"},  # C-3: variable with two modes is invalid
+    "fx_iteration_selector_no_source.xml": {"DM214"},  # C-1: iterationSelector requires source
 }
 
 

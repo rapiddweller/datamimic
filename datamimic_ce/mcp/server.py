@@ -16,7 +16,7 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 
 from datamimic_ce.domains import facade
 from datamimic_ce.mcp import resources
-from datamimic_ce.mcp.models import CheckArgs, GenerateArgs, ReferenceArgs, RunArgs
+from datamimic_ce.mcp.models import CheckArgs, GenerateArgs, ReferenceArgs, RunArgs, ScaffoldArgs
 
 if TYPE_CHECKING:  # pragma: no cover - import hint for typing only
     from typing import Protocol
@@ -158,6 +158,44 @@ def reference_impl(args: ReferenceArgs) -> dict[str, Any]:
     return {"ok": True, "topic": args.topic, "name": args.name, "content": text}
 
 
+def scaffold_impl(args: ScaffoldArgs) -> dict[str, Any]:
+    """Render a compact JSON spec to guaranteed-structurally-valid DATAMIMIC DSL, lint it,
+    and optionally dry-run to verify data generation works."""
+    # WHY lazy: the authoring package pulls the engine's parsers/models — keep server
+    # startup light and load on first tool use.
+    from datamimic_ce.authoring.scaffold import check
+
+    result = check(
+        args.spec, dry_run=args.dry_run, max_count=args.max_count, sample_rows=args.sample_rows
+    )
+
+    if result.stage == "render":
+        return {"ok": False, "stage": "render", "error": result.render_error}
+
+    if result.stage == "lint":
+        lint = result.lint_result
+        if not result.ok:
+            return {
+                "ok": False,
+                "stage": "lint",
+                "xml": result.xml,
+                "summary": lint.summary(),
+                "diagnostics": _diagnostic_dicts(lint.diagnostics, args.response_format == "detailed"),
+                "truncated": lint.truncated,
+            }
+        return {"ok": True, "stage": "lint", "xml": result.xml, "summary": lint.summary()}
+
+    # stage == "dry_run"
+    run = result.dryrun_result
+    return {
+        "ok": run.ok,
+        "stage": "dry_run",
+        "xml": result.xml,
+        "diagnostics": _diagnostic_dicts(run.diagnostics, args.response_format == "detailed"),
+        "products": [{"name": p.name, "count": p.count} for p in run.products],
+    }
+
+
 def create_server(*, api_key: str | None = None) -> FastMCP:
     """Create a FastMCP server exposing DataMimic generators."""
 
@@ -198,6 +236,26 @@ def create_server(*, api_key: str | None = None) -> FastMCP:
         numeric range key distributions/sequences), converters (masking/formatting),
         recipes, recipe (full descriptor by id)."""
         return reference_impl(args)
+
+    @server.tool("datamimic_scaffold")
+    async def datamimic_scaffold(args: ScaffoldArgs) -> dict[str, Any]:
+        """Render a compact JSON spec into guaranteed-structurally-valid DATAMIMIC DSL,
+        then lint and optionally dry-run it in one call. The recommended path for models
+        that cannot reliably author raw XML: spec-in (structured output) -> render ->
+        lint -> dry-run -> result out.
+
+        Three patterns the per-field schema descriptions alone won't teach you:
+        - Read an earlier generate's rows: set 'source' to its memstore target id and
+          'source_type' to its 'name'; reference a column by its BARE name in a script
+          (e.g. script='amount * 2'), never 'producer.column'.
+        - Time series: set 'start'/'end'/'interval' together on the generate (never
+          partial) — 'count' then means number of series, not rows.
+        - Unique numeric values (e.g. seat numbers, no repeats): set unique=true on a
+          top-level int_range field (not inside a nested_list — it can't express
+          per-parent uniqueness there) and size min/max to comfortably cover the count.
+
+        See scaffold.SPEC_PROMPT_GUIDE for full worked examples of the first two."""
+        return scaffold_impl(args)
 
     http_middleware = _build_http_middleware(api_key)
     setattr(server, HTTP_MIDDLEWARE_ATTR, http_middleware)
@@ -300,5 +358,6 @@ __all__ = [
     "check_impl",
     "run_impl",
     "reference_impl",
+    "scaffold_impl",
     "build_sse_app",
 ]

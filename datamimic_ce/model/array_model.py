@@ -4,9 +4,9 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from typing import Any
+from typing import Any, ClassVar
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import ATTR_COUNT, ATTR_NAME, ATTR_SCRIPT, ATTR_TYPE
 from datamimic_ce.constants.data_type_constants import (
@@ -16,22 +16,56 @@ from datamimic_ce.constants.data_type_constants import (
     DATA_TYPE_LITERAL,
     DATA_TYPE_STRING,
 )
+from datamimic_ce.model.constraints import (
+    Constraint,
+    ValidValues,
+    constraints_schema_extra,
+)
 from datamimic_ce.model.model_util import ModelUtil
 
-ALLOWED_ARRAY_TYPES = {
-    DATA_TYPE_STRING,
-    DATA_TYPE_INT,
-    DATA_TYPE_BOOL,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_LITERAL,
-}
+# Declared fact (SPOT): the type literal lives ONCE here; ALLOWED_ARRAY_TYPES is an
+# alias derived from it, and the enforcing field_validator reads the alias. Message
+# is dynamic (interpolates the rejected value), so the fact carries message=None.
+_ARRAY_TYPE_VALUES = ValidValues(
+    ATTR_TYPE,
+    frozenset((
+        DATA_TYPE_STRING,
+        DATA_TYPE_INT,
+        DATA_TYPE_BOOL,
+        DATA_TYPE_FLOAT,
+        DATA_TYPE_LITERAL,
+    )),
+)
+ALLOWED_ARRAY_TYPES: set[str] = set(_ARRAY_TYPE_VALUES.values)
 
 
 class ArrayModel(BaseModel):
-    name: str
-    type: str | None = None
-    count: int | None = None
-    script: str | None = None
+    # Declared cross-field constraints
+    __constraints__: ClassVar[tuple[Constraint, ...]] = (
+        # Same object the type field_validator reads (via the ALLOWED_ARRAY_TYPES alias)
+        _ARRAY_TYPE_VALUES,
+    )
+    model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
+
+    name: str = Field(..., description="Name of the array; becomes the field name in the generated record.")
+    type: str | None = Field(
+        None,
+        description="Element data type of the array. 'literal' preserves child <value constant=...> "
+        "entries verbatim instead of randomly generating them (and must not be combined with count/script).",
+        examples=["string", "int", "float", "bool", "literal"],
+    )
+    count: int | None = Field(
+        None,
+        description="Number of randomly generated elements in the array. Required together with type "
+        "unless script is used instead; not allowed with type 'literal'.",
+        examples=[1, 5, 10],
+    )
+    script: str | None = Field(
+        None,
+        description="Python expression producing the array's elements directly as a list, instead of "
+        "randomly generating count elements of type. All elements must share the same data type.",
+        examples=["[10, 20, 30]", "[random.randint(1, 10) for _ in range(5)]"],
+    )
 
     @model_validator(mode="before")
     @classmethod

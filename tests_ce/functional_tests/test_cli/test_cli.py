@@ -1,7 +1,6 @@
 import json
 import os
 import shutil
-from pathlib import Path
 from unittest.mock import patch
 
 from typer.testing import CliRunner
@@ -289,3 +288,129 @@ class TestCLI:
         result = runner.invoke(app, ["reference", "bogus-topic-xyz"])
         assert result.exit_code == 1
         assert "Unknown topic 'bogus-topic-xyz'" in result.output
+
+    # Tests for scaffold command
+    def _run_scaffold(self, tmp_path, monkeypatch, spec_or_text, *extra_args, filename="spec.json"):
+        monkeypatch.chdir(tmp_path)
+        text = spec_or_text if isinstance(spec_or_text, str) else json.dumps(spec_or_text)
+        (tmp_path / filename).write_text(text)
+        return runner.invoke(app, ["scaffold", filename, *extra_args])
+
+    def test_scaffold_valid_spec_text_format(self, tmp_path, monkeypatch):
+        """A valid spec renders to XML, lints clean, and dry-runs successfully with text output."""
+        spec = {
+            "generates": [{
+                "name": "customers", "count": 10, "target": "JSON",
+                "fields": [
+                    {"name": "id", "kind": "increment"},
+                    {"name": "name", "kind": "person_name"},
+                ],
+            }],
+        }
+        result = self._run_scaffold(tmp_path, monkeypatch, spec)
+        assert result.exit_code == 0
+        assert "<setup>" in result.output
+        assert "<generate" in result.output
+        assert "Dry-run successful:" in result.output
+        assert "customers:" in result.output
+
+    def test_scaffold_valid_spec_json_format(self, tmp_path, monkeypatch):
+        """A valid spec with --format json outputs pure JSON with ok/xml/products."""
+        spec = {
+            "generates": [{
+                "name": "products", "count": 5, "target": "JSON",
+                "fields": [{"name": "sku", "kind": "pattern", "pattern": "[A-Z]{3}"}],
+            }],
+        }
+        result = self._run_scaffold(tmp_path, monkeypatch, spec, "--format", "json")
+        assert result.exit_code == 0
+        output_json = json.loads(result.output)
+        assert output_json["ok"] is True
+        assert "xml" in output_json
+        assert "<setup>" in output_json["xml"]
+        assert "products" in output_json
+        assert len(output_json["products"]) > 0
+
+    def test_scaffold_no_dry_run_text(self, tmp_path, monkeypatch):
+        """With --no-dry-run, scaffold outputs XML without running dry-run."""
+        spec = {
+            "generates": [{
+                "name": "data", "count": 3, "target": "JSON",
+                "fields": [{"name": "x", "kind": "constant", "value": "test"}],
+            }],
+        }
+        result = self._run_scaffold(tmp_path, monkeypatch, spec, "--no-dry-run")
+        assert result.exit_code == 0
+        assert "<setup>" in result.output
+        assert "Dry-run successful:" not in result.output
+
+    def test_scaffold_no_dry_run_json(self, tmp_path, monkeypatch):
+        """With --no-dry-run and --format json, outputs JSON with xml field only."""
+        spec = {
+            "generates": [{
+                "name": "data", "count": 2, "target": "JSON",
+                "fields": [{"name": "v", "kind": "increment"}],
+            }],
+        }
+        result = self._run_scaffold(tmp_path, monkeypatch, spec, "--no-dry-run", "--format", "json")
+        assert result.exit_code == 0
+        output_json = json.loads(result.output)
+        assert output_json["ok"] is True
+        assert "xml" in output_json
+        assert "products" not in output_json
+
+    def test_scaffold_missing_file(self):
+        """A missing spec file exits with code 2."""
+        result = runner.invoke(app, ["scaffold", "nonexistent.json"])
+        assert result.exit_code == 2
+        assert "File not found" in result.output
+
+    def test_scaffold_invalid_json(self, tmp_path, monkeypatch):
+        """Invalid JSON in spec file exits with code 2."""
+        result = self._run_scaffold(tmp_path, monkeypatch, "{broken json", filename="bad.json")
+        assert result.exit_code == 2
+        assert "Invalid JSON" in result.output
+
+    def test_scaffold_malformed_spec_empty_dict(self, tmp_path, monkeypatch):
+        """A spec with no generates list exits with code 2 (malformed input)."""
+        result = self._run_scaffold(tmp_path, monkeypatch, {})
+        assert result.exit_code == 2
+        assert "Error:" in result.output
+
+    def test_scaffold_malformed_spec_no_fields(self, tmp_path, monkeypatch):
+        """A spec with generates but no fields exits with code 2."""
+        spec = {"generates": [{"name": "x", "count": 5}]}
+        result = self._run_scaffold(tmp_path, monkeypatch, spec)
+        assert result.exit_code == 2
+        assert "Error:" in result.output
+
+    def test_scaffold_with_custom_max_count(self, tmp_path, monkeypatch):
+        """With --max-count, the dry-run caps at the specified count."""
+        spec = {
+            "generates": [{
+                "name": "data", "count": 100, "target": "JSON",
+                "fields": [{"name": "id", "kind": "increment"}],
+            }],
+        }
+        result = self._run_scaffold(tmp_path, monkeypatch, spec, "--max-count", "7", "--format", "json")
+        assert result.exit_code == 0
+        output_json = json.loads(result.output)
+        assert output_json["products"][0]["count"] == 7
+
+    def test_scaffold_nested_spec(self, tmp_path, monkeypatch):
+        """A spec with nested generates renders correctly."""
+        spec = {
+            "generates": [{
+                "name": "customers", "count": 3, "target": "JSON",
+                "fields": [{"name": "id", "kind": "increment"}],
+                "children": [{
+                    "name": "orders", "count": 2, "target": "JSON",
+                    "fields": [{"name": "customer_id", "kind": "script", "script": "parent.id"}],
+                }],
+            }],
+        }
+        result = self._run_scaffold(tmp_path, monkeypatch, spec, "--format", "json")
+        assert result.exit_code == 0
+        output_json = json.loads(result.output)
+        assert output_json["ok"] is True
+        assert "<generate" in output_json["xml"]

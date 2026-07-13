@@ -6,14 +6,19 @@
 
 """Pydantic model for literal <value> entries inside <array type="literal">."""
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import ATTR_CONSTANT
 from datamimic_ce.model.model_util import ModelUtil
 
 
 class ValueModel(BaseModel):
-    constant: str
+    constant: str = Field(
+        ...,
+        description="Literal value preserved exactly, unchanged, as one element of a "
+        "<array type=\"literal\"> — no random generation, no script evaluation.",
+        examples=["gold", "1.5"],
+    )
 
     @model_validator(mode="before")
     @classmethod

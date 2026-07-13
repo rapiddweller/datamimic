@@ -91,7 +91,7 @@ Cursor and other mcp.json clients: `"command": "datamimic-mcp"`,
   local Postgres/Mongo (credentials: `local.env.properties` at the repo root).
 - Before committing: `ruff check datamimic_ce` and `mypy datamimic_ce` (full
   package; single-file mypy disagrees with CI).
-- The authoring toolset (linter, reference, dry-run, recipes, GBNF grammar)
+- The authoring toolset (linter, reference, dry-run, recipes, scaffold)
   lives in `datamimic_ce/authoring/`; the MCP server in `datamimic_ce/mcp/`.
 - Commit messages carry no AI or tool attribution lines.
 

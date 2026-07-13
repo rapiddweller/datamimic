@@ -215,3 +215,37 @@ class ReferenceArgs(BaseModel):
         description="Element tag (topic=element), entity name (topic=entities), recipe id "
         "(topic=recipe) or generator filter",
     )
+
+
+class ScaffoldArgs(BaseModel):
+    """Arguments for the ``datamimic_scaffold`` MCP tool (spec rendering + optional dry-run)."""
+
+    spec: dict[str, Any] = Field(
+        ...,
+        description=(
+            "Compact JSON spec conforming to SPEC_JSON_SCHEMA. Shape: "
+            "{'seed': int?, 'generates': [{'name': str, 'count': int?, 'target': str, "
+            "'source': str?, 'source_type': str?, 'fields': [...]}]}"
+        ),
+    )
+    dry_run: bool = Field(
+        True,
+        description="Whether to also dry-run the rendered descriptor after a clean lint (default True)",
+    )
+    max_count: int = Field(
+        10,
+        ge=1,
+        le=1000,
+        description="Per-<generate> record cap when dry_run=True (applies to nested generates too)",
+    )
+    sample_rows: int = Field(
+        5,
+        ge=1,
+        le=50,
+        description="Sample rows to capture per product during dry-run",
+    )
+    response_format: str = Field(
+        "concise",
+        pattern="^(concise|detailed)$",
+        description="Response format: concise (key diagnostics) or detailed (full diagnostic info)",
+    )

@@ -3,11 +3,13 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
+import contextlib
 import json
 import os
 import platform
 from importlib.resources import files
 from pathlib import Path
+from typing import Any
 
 import toml
 import typer
@@ -54,6 +56,7 @@ DESCRIPTOR_PATH = typer.Argument(..., help="Path to the descriptor file to valid
 DEFAULT_DESCRIPTOR_PATH = typer.Argument(DEFAULT_DESCRIPTOR, help="Path to the descriptor file")
 DEMO_NAME = typer.Argument(..., help="Name of the demo to get information about", autocompletion=demo_autocomplete)
 OPTIONAL_DEMO_NAME = typer.Argument(None, help="Name of the demo directory to use", autocompletion=demo_autocomplete)
+SPEC_PATH_ARG = typer.Argument(..., help="Path to the JSON spec file")
 
 # Global singleton objects for option defaults
 TARGET_DIRECTORY_OPTION = typer.Option(None, "--target", "-t", help="Target directory for the demo project")
@@ -62,6 +65,12 @@ ALL_DEMOS_OPTION = typer.Option(False, "--all", help="Create all available demo 
 PLATFORM_CONFIGS_OPTION = typer.Option(None, "--platform-configs", help="Platform configurations in JSON format")
 TASK_ID_OPTION = typer.Option(None, "--task-id", help="Task identifier")
 TEST_MODE_OPTION = typer.Option(False, "--test-mode", help="Run in test mode")
+DRY_RUN_OPTION = typer.Option(True, "--dry-run/--no-dry-run", help="Dry-run the rendered descriptor (default: true)")
+SCAFFOLD_FORMAT_OPTION = typer.Option("text", "--format", "-f", help="text | json")
+SCAFFOLD_MAX_COUNT_OPTION = typer.Option(
+    10, "--max-count", help="Maximum count per <generate> (nested generates too, for dry-run)"
+)
+SCAFFOLD_SAMPLE_ROWS_OPTION = typer.Option(5, "--sample-rows", help="Maximum sample rows per product (for dry-run)")
 
 # Environment variables
 DATAMIMIC_CONFIG = os.getenv("DATAMIMIC_CONFIG")
@@ -247,6 +256,134 @@ def dry_run_cmd(
         smoke_export=smoke_export,
         output_format=output_format,
     )
+
+
+def _scaffold(
+    spec_path: Path,
+    dry_run: bool,
+    output_format: str,
+    max_count: int,
+    sample_rows: int,
+) -> None:
+    """Shared implementation for `scaffold` command (exit codes: 0 = ok, 1 = findings, 2 = file/input error).
+
+    Delegates the render -> lint -> optional dry-run sequencing to
+    datamimic_ce.authoring.scaffold.check() (the same pipeline the MCP `datamimic_scaffold`
+    tool uses) so the two surfaces can't drift on stage naming/ordering — only output
+    formatting (JSON vs text, typer.Exit codes) is CLI-specific.
+    """
+    from datamimic_ce.authoring import scaffold
+
+    def _fail(exit_code: int, message: str, *, stage: str | None = None) -> None:
+        if output_format == "json":
+            payload: dict[str, Any] = {"ok": False, "error": message}
+            if stage is not None:
+                payload["stage"] = stage
+            typer.echo(json.dumps(payload, indent=2, default=str))
+        else:
+            typer.echo(f"Error: {message}")
+        raise typer.Exit(exit_code)
+
+    def _emit_diagnostics(stage: str, diagnostics: list, *, summary: str | None = None) -> None:
+        if output_format == "json":
+            typer.echo(
+                json.dumps(
+                    {"ok": False, "stage": stage, "diagnostics": [d.model_dump() for d in diagnostics]},
+                    indent=2,
+                    default=str,
+                )
+            )
+        else:
+            for diag in diagnostics:
+                typer.echo(f"{diag.severity.value.upper():<7} {diag.rule}  {diag.message}")
+                typer.echo(f"    -> {diag.fix_hint}")
+            if summary is not None:
+                typer.echo(f"Summary: {summary}")
+        raise typer.Exit(1)
+
+    # Load the JSON spec from file
+    if not spec_path.is_file():
+        _fail(2, f"File not found: {spec_path}")
+
+    try:
+        spec_dict = json.loads(spec_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        _fail(2, f"Invalid JSON in {spec_path}: {e}")
+    except Exception as e:
+        _fail(2, f"Failed to read {spec_path}: {e}")
+
+    # Suppress engine INFO logs on stderr when emitting JSON, so stdout stays pure JSON.
+    with contextlib.ExitStack() as stack:
+        if output_format == "json":
+            devnull = stack.enter_context(open(os.devnull, "w"))
+            stack.enter_context(contextlib.redirect_stderr(devnull))
+        result = scaffold.check(
+            spec_dict, dry_run=dry_run, max_count=max_count, sample_rows=sample_rows
+        )
+
+    if result.stage == "render":
+        _fail(2, result.render_error or "invalid spec", stage="render")
+
+    if result.stage == "lint" and not result.ok:
+        _emit_diagnostics("lint", result.lint_result.diagnostics, summary=result.lint_result.summary())
+
+    if result.stage == "lint":
+        # ok, --no-dry-run: just output the XML
+        if output_format == "json":
+            typer.echo(json.dumps({"ok": True, "stage": "lint", "xml": result.xml}, indent=2, default=str))
+        else:
+            typer.echo(result.xml)
+        raise typer.Exit(0)
+
+    # stage == "dry_run"
+    dr = result.dryrun_result
+    if not dr.ok:
+        _emit_diagnostics("dry_run", dr.diagnostics)
+
+    # Success: output the rendered XML and products
+    if output_format == "json":
+        typer.echo(
+            json.dumps(
+                {
+                    "ok": True,
+                    "stage": "dry_run",
+                    "xml": result.xml,
+                    "products": [p.model_dump() for p in dr.products],
+                },
+                indent=2,
+                default=str,
+            )
+        )
+    else:
+        typer.echo(result.xml)
+        typer.echo("")
+        typer.echo("Dry-run successful:")
+        for product in dr.products:
+            typer.echo(f"  {product.name}: {product.count} rows")
+    raise typer.Exit(0)
+
+
+@app.command("scaffold", help="Render a JSON spec into DATAMIMIC DSL: validate, lint, optionally dry-run.")
+def scaffold(
+    spec_path: Path = SPEC_PATH_ARG,
+    dry_run: bool = DRY_RUN_OPTION,
+    output_format: str = SCAFFOLD_FORMAT_OPTION,
+    max_count: int = SCAFFOLD_MAX_COUNT_OPTION,
+    sample_rows: int = SCAFFOLD_SAMPLE_ROWS_OPTION,
+):
+    """Render a JSON spec into a guaranteed-structurally-valid DATAMIMIC descriptor, then lint and
+    optionally dry-run it.
+
+    Useful for models/scripts that can't reliably author raw XML directly — the renderer always
+    produces valid element names and structure; the model only chooses values.
+
+    Three patterns the per-field schema alone won't teach a model authoring the spec: reading an
+    earlier generate's rows back (source=/source_type=, bare-name script access, never
+    "producer.column"); a time series (start=/end=/interval= set together, count becomes series
+    count not row count); unique numeric values (unique=true on a top-level int_range field only
+    -- see datamimic_ce.authoring.scaffold.SPEC_PROMPT_GUIDE for full worked examples).
+    """
+    _scaffold(spec_path, dry_run, output_format, max_count, sample_rows)
 
 
 @app.command(

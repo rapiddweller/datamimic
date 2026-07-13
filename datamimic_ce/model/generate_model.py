@@ -5,7 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from typing import ClassVar
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import (
     ATTR_CONVERTER,
@@ -38,45 +40,244 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VARIABLE_SUFFIX,
 )
 from datamimic_ce.constants.element_constants import EL_GENERATE
+from datamimic_ce.model.constraints import (
+    COUNT_XOR_MAX,
+    COUNT_XOR_MIN,
+    EXIST_COUNT,
+    SOURCE_COMPANIONS_WITH_CYCLIC,
+    UNIQUE_FORBIDS_WEIGHTS,
+    UNIQUE_REQUIRES_POOL,
+    AllOrNone,
+    Constraint,
+    Requires,
+    constraints_schema_extra,
+)
 from datamimic_ce.model.model_util import ModelUtil
 
-_TIMESERIES_ATTRS: frozenset[str] = frozenset({ATTR_START, ATTR_END, ATTR_INTERVAL})
+# Declared facts (SPOT): each attribute set lives ONCE here, consumed by BOTH
+# __constraints__ and the enforcing validator bodies below.
+# Time-series all-or-none: the validator's message dynamically lists the missing
+# attrs, so the fact carries message=None and the validator owns the message.
+TIMESERIES_ALL_OR_NONE = AllOrNone(frozenset((ATTR_START, ATTR_END, ATTR_INTERVAL)))
+# Alias kept because several validators in this file consume the raw attr set.
+_TIMESERIES_ATTRS: frozenset[str] = TIMESERIES_ALL_OR_NONE.attrs
+# Offset requires source: static message, enforced via check_constraints.
+_OFFSET_REQUIRES_SOURCE = Requires(
+    ATTR_OFFSET,
+    frozenset((ATTR_SOURCE,)),
+    message="'offset' requires a 'source' - it skips the first N source rows",
+)
 
 
 class GenerateModel(BaseModel):
-    name: str
-    count: str | None = None
-    min_count: int | None = Field(None, alias=ATTR_MIN_COUNT)
-    max_count: int | None = Field(None, alias=ATTR_MAX_COUNT)
-    source: str | None = None
-    cyclic: bool | None = None
+    # Declared cross-field constraints
+    __constraints__: ClassVar[tuple[Constraint, ...]] = (
+        # Shared constraints
+        EXIST_COUNT,
+        COUNT_XOR_MIN,
+        COUNT_XOR_MAX,
+        UNIQUE_REQUIRES_POOL,
+        UNIQUE_FORBIDS_WEIGHTS,
+        # Source companions
+        *SOURCE_COMPANIONS_WITH_CYCLIC,
+        # Generate-specific constraints (same objects the validators read)
+        TIMESERIES_ALL_OR_NONE,
+        _OFFSET_REQUIRES_SOURCE,
+    )
+    model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
+
+    name: str = Field(
+        ...,
+        description="Statement name — the product/table name generated records are grouped and "
+        "exported under, and the name other statements reference it by (e.g. generator=\"<name>\").",
+        examples=["customers", "orders"],
+    )
+    count: str | None = Field(
+        None,
+        description="Number of records to generate: a literal digit string or a '{script}' expression "
+        "evaluated at runtime. Required unless source/script supplies the rows, or minCount/maxCount is "
+        "used instead (count is mutually exclusive with minCount/maxCount).",
+        examples=["100", "{customer_count}"],
+    )
+    min_count: int | None = Field(
+        None,
+        alias=ATTR_MIN_COUNT,
+        description="Minimum number of records to generate. Mutually exclusive with count; combine with "
+        "maxCount for a randomized row count range (minCount must not exceed maxCount).",
+        examples=[1, 10],
+    )
+    max_count: int | None = Field(
+        None,
+        alias=ATTR_MAX_COUNT,
+        description="Maximum number of records to generate. Mutually exclusive with count; combine with "
+        "minCount for a randomized row count range (minCount must not exceed maxCount).",
+        examples=[10, 100],
+    )
+    source: str | None = Field(
+        None,
+        description="Source of data to read for generation: a file path (.csv/.json/.xlsx/.xml/"
+        ".dbunit.xml), a <memstore> id, or a <database>/<mongodb> client id.",
+        examples=["customers.csv", "mem", "db"],
+    )
+    cyclic: bool | None = Field(
+        None,
+        description="Wrap around and re-read the source from the start once exhausted, instead of "
+        "silently capping at the source length when count exceeds it.",
+        examples=[True, False],
+    )
     # Skip the first N source rows before any windowing (migration parity). File sources only;
     # count default, cyclic wrap and page windows all operate on the post-offset region.
-    offset: int | None = Field(None, ge=0)
-    unique: bool | None = None
-    type: str | None = None
-    selector: str | None = None
-    separator: str | None = None
-    source_scripted: bool | None = Field(None, alias=ATTR_SOURCE_SCRIPTED)
-    target: str | None = None
+    offset: int | None = Field(
+        None,
+        ge=0,
+        description="Skip the first N source rows before any windowing (migration parity). File sources "
+        "only; count default, cyclic wrap and page windows all operate on the post-offset region. "
+        "Requires 'source'.",
+        examples=[0, 100],
+    )
+    unique: bool | None = Field(
+        None,
+        description="Emit each source row at most once (distinct selection without replacement). "
+        "Requires a finite pool ('source'), only combines with distribution='random' (the default), and "
+        "is incompatible with 'cyclic' and weighted distributions.",
+        examples=[True, False],
+    )
+    type: str | None = Field(
+        None,
+        description="Explicit physical entity/producer to read or write, used as a fallback in the "
+        "sourceEntity/targetEntity -> type -> name precedence chain (e.g. selects which producing "
+        "<generate>'s rows to read back from a <memstore> source). At most one of type or selector may "
+        "be combined with source.",
+        examples=["orders"],
+    )
+    selector: str | None = Field(
+        None,
+        description="Query/selector used to read from source (e.g. SQL for a database client, or a "
+        "MongoDB find/aggregate expression). At most one of type or selector may be combined with source.",
+        examples=["SELECT * FROM customers", "find: orders, filter: {status: 'open'}"],
+    )
+    separator: str | None = Field(
+        None,
+        description="Field separator for delimited file sources (default '|'); set separator=\",\" to "
+        "read a comma-separated CSV.",
+        examples=[",", ";", "|"],
+    )
+    source_scripted: bool | None = Field(
+        None,
+        alias=ATTR_SOURCE_SCRIPTED,
+        description="Evaluate 'source' as a Python script expression rather than a literal path/id "
+        "(advanced; requires source).",
+        examples=[True, False],
+    )
+    target: str | None = Field(
+        None,
+        description="Target output(s) for generated data: a file exporter (CSV, JSON, XML, XLSX, TXT, "
+        "DbUnit), ConsoleExporter, a <memstore> id, a database/mongodb client id, or "
+        "clientId.upsert/update/delete. Comma-separate multiple targets.",
+        examples=["CSV", "JSON", "mem", "db.upsert", "mem,JSON"],
+    )
     # Explicit physical entity to read/write (table/collection). Precedence: sourceEntity/targetEntity
     # -> type -> name; absent -> existing behaviour. See StatementUtil.resolve_source/target_entity.
-    source_entity: str | None = Field(None, alias=ATTR_SOURCE_ENTITY)
-    target_entity: str | None = Field(None, alias=ATTR_TARGET_ENTITY)
-    page_size: int | None = Field(None, alias=ATTR_PAGE_SIZE)
-    multiprocessing: bool | None = None
-    export_uri: str | None = Field(None, alias=ATTR_EXPORT_URI)
-    distribution: str | None = None
-    variable_prefix: str | None = Field(None, alias=ATTR_VARIABLE_PREFIX)
-    variable_suffix: str | None = Field(None, alias=ATTR_VARIABLE_SUFFIX)
-    converter: str | None = None
-    num_process: int | None = Field(None, alias=ATTR_NUM_PROCESS)
-    script: str | None = Field(None, alias=ATTR_SCRIPT)
-    mp_platform: str | None = Field(None, alias=ATTR_MP_PLATFORM)
+    source_entity: str | None = Field(
+        None,
+        alias=ATTR_SOURCE_ENTITY,
+        description="Explicit physical entity to read/write (table/collection). Precedence: "
+        "sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. See "
+        "StatementUtil.resolve_source/target_entity.",
+        examples=["customers", "public.customers"],
+    )
+    target_entity: str | None = Field(
+        None,
+        alias=ATTR_TARGET_ENTITY,
+        description="Explicit physical entity to read/write (table/collection). Precedence: "
+        "sourceEntity/targetEntity -> type -> name; absent -> existing behaviour. See "
+        "StatementUtil.resolve_source/target_entity.",
+        examples=["customers_out", "public.customers_out"],
+    )
+    page_size: int | None = Field(
+        None,
+        alias=ATTR_PAGE_SIZE,
+        description="Number of rows processed per page when streaming a source/target; keeps memory "
+        "usage roughly O(pageSize) for large datasets.",
+        examples=[1000, 5000],
+    )
+    multiprocessing: bool | None = Field(
+        None,
+        description="Enable multi-process generation for this statement to use multiple CPU cores. "
+        "Incompatible with a seeded run (rngSeed forces single-process for reproducibility) and with "
+        "finite positional numeric sequences (worker-local iterator state would duplicate values).",
+        examples=[True, False],
+    )
+    export_uri: str | None = Field(
+        None,
+        alias=ATTR_EXPORT_URI,
+        description="Explicit output-directory prefix for exporters that support file paths (a safe "
+        "local path, not a URL; '..' is rejected). See ModelUtil.normalize_export_uri.",
+        examples=["output/customers", "/tmp/export"],
+    )
+    distribution: str | None = Field(
+        None,
+        description="Distribution/order for reading the source pool: 'random' (default, whole pool "
+        "loaded into memory), 'ordered' (source order, streams page by page), or 'cumulated' "
+        "(bell-shaped weighted draw; loads the whole pool).",
+        examples=["random", "ordered", "cumulated"],
+    )
+    variable_prefix: str | None = Field(
+        None,
+        alias=ATTR_VARIABLE_PREFIX,
+        description="Prefix before field's name for query select data in selector element",
+        examples=["${", "++", "--", "@", "{"],
+    )
+    variable_suffix: str | None = Field(
+        None,
+        alias=ATTR_VARIABLE_SUFFIX,
+        description="Suffix after field's name for query select data in selector element",
+        examples=["++", "--", "@", "}"],
+    )
+    converter: str | None = Field(
+        None,
+        description="Converter(s) applied to transform generated element data before export; validated "
+        "against the converter registry.",
+        examples=["RemoveNoneOrEmptyElement"],
+    )
+    num_process: int | None = Field(
+        None,
+        alias=ATTR_NUM_PROCESS,
+        description="Number of worker processes to use when multiprocessing is enabled.",
+        examples=[2, 4, 8],
+    )
+    script: str | None = Field(
+        None,
+        alias=ATTR_SCRIPT,
+        description="Python expression evaluated to produce an in-memory iterable of rows for this "
+        "generate statement (an alternative to source); its length can satisfy count when count is "
+        "omitted.",
+        examples=["[{'id': i} for i in range(10)]"],
+    )
+    mp_platform: str | None = Field(
+        None,
+        alias=ATTR_MP_PLATFORM,
+        description="Multiprocessing start method override (advanced).",
+        examples=["fork", "spawn"],
+    )
     # Time-series iterator (ISO 8601 start/end/interval). See _TIMESERIES_ATTRS.
-    start: str | None = None
-    end: str | None = None
-    interval: str | None = None
+    start: str | None = Field(
+        None,
+        description="Time-series window start (ISO 8601 datetime). Set together with end/interval to "
+        "turn this <generate> into a time-series iterator.",
+        examples=["2025-01-01T00:00:00"],
+    )
+    end: str | None = Field(
+        None,
+        description="Time-series window end (ISO 8601 datetime). Must be strictly after start.",
+        examples=["2025-01-02T00:00:00"],
+    )
+    interval: str | None = Field(
+        None,
+        description="Time-series tick interval (ISO 8601 duration). Spacing between consecutive ts.now "
+        "ticks.",
+        examples=["PT1H", "PT15M", "P1D"],
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -123,9 +324,8 @@ class GenerateModel(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_offset_requires_source(cls, values: dict):
-        if ATTR_OFFSET in values and ATTR_SOURCE not in values:
-            raise ValueError("'offset' requires a 'source' - it skips the first N source rows")
-        return values
+        # Enforce the declared fact (static message lives on the fact).
+        return ModelUtil.check_constraints(values, (_OFFSET_REQUIRES_SOURCE,))
 
     @field_validator("source_entity", "target_entity")
     @classmethod
