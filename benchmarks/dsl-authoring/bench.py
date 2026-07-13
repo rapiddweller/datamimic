@@ -46,7 +46,7 @@ MAX_COUNT = 60
 
 RESULTS_DIR = Path(__file__).parent / "results"
 
-DEFAULT_MODELS = ["qwen2.5:7b", "gemma4:31b"]  # fast model first
+DEFAULT_MODELS = ["gemma4:12b", "gemma4:31b"]  # fast model first; see README "Local model selection"
 
 
 # --------------------------------------------------------------------------- #

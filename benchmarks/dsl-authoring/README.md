@@ -22,8 +22,9 @@ python benchmarks/dsl-authoring/bench.py --models qwen2.5:7b --variants P0_bare 
 
 Ollama must be running locally (`http://localhost:11434`) with the target
 models pulled (`ollama pull <model>`). Each cell is one `/api/chat` call:
-`stream: false`, `think: false` (required for thinking models like
-`gemma4:31b`; harmless no-op on the rest), `temperature 0.2`,
+`stream: false`, `think: false` (required for `gemma4:31b` to respond at
+all; verified harmless there — NOT verified harmless on other
+thinking-capable models, see "Known harness limitations"), `temperature 0.2`,
 `num_predict 1400`, `num_ctx 8192` (P2/P3 prompts run past Ollama's default
 2048/4096 context; without raising it the cheatsheet/recipe gets silently
 truncated and the comparison is confounded), 300s timeout per call.
@@ -145,6 +146,27 @@ figures (`results/haiku-track-20260704.md`).
 Add the Ollama model name to `--models` (or `DEFAULT_MODELS` in `bench.py`).
 Pull it first (`ollama pull <name>`). No code change needed.
 
+## Local model selection
+
+Prefer models that report both `tools` and `thinking` in `ollama show <model>`'s
+Capabilities block. Neither is exercised by the harness today (see "Known
+harness limitations" below) — this is a forward-looking criterion, not a
+claim that the current `--loop` condition uses either. The reasoning: `tools`
+support is what would let a future harness condition drive real MCP tool
+calls instead of the manual lint/dry-run text loop (a more realistic test of
+"can this model run as an agent against our MCP server," not just "can it
+write XML from feedback"); `thinking` support matters because forcing
+`think: false` on a reasoning-tuned model (e.g. a DeepSeek-R1 distill) may be
+suppressing the exact mechanism it needs for multi-error self-correction —
+worth testing with thinking enabled before ruling a model out.
+
+As of 2026-07-13 the roster is Gemma-only (`gemma4:12b`, `gemma4:26b`,
+`gemma4:31b`, `gemma4:e4b`) after `gemma4:31b` clearly outperformed every
+other locally-available model on this task set (6/6 intent-correct under the
+loop condition, matching Haiku 4.5). Non-Gemma models were removed from local
+Ollama storage rather than just dropped from `DEFAULT_MODELS`, to keep the
+local model zoo aligned with what's actually still worth benchmarking here.
+
 ## Adding a prompt variant
 
 Add a function `task_prompt -> str` to `PROMPT_VARIANTS` in `bench.py`. It
@@ -180,3 +202,13 @@ picks its own naming.
   `think: false` would inflate token count without changing the
   extraction/lint/dry-run logic (unaffected in testing, since gemma4:31b was
   verified to omit its thinking trace when `think: false` is set).
+- `call_ollama` forces `think: false` for every model, including
+  thinking-capable ones — untested whether this helps or hurts models
+  specifically tuned to reason before answering (a poor `deepseek-r1`
+  distill result in this session may be partly attributable to this, not
+  purely capability). Not yet A/B tested with thinking enabled.
+- The `--loop` condition never uses native tool-calling (Ollama's `tools=`
+  chat parameter) even for models that support it — it always drives the
+  manual "generate XML, lint/dry-run, feed diagnostics back as a chat
+  message" loop. A model's `tools` capability flag is not exercised by
+  anything in this file today.
