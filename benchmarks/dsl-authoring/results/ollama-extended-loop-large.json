@@ -148,5 +148,6 @@
       "iteration_details": [],
       "latency_ms": 0
     }
-  ]
+  ],
+  "rescored_best_of_n": "2026-07-13: score/rule_ids/detail recomputed as best-of-N (was last-of-N) from the already-recorded iteration_details; last_score/best_iteration added."
 }

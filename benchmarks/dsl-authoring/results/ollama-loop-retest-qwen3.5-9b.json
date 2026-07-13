@@ -31,7 +31,9 @@
           "latency_ms": 8224
         }
       ],
-      "latency_ms": 8224
+      "latency_ms": 8224,
+      "last_score": 2,
+      "best_iteration": 1
     },
     {
       "model": "qwen3.5:9b",
@@ -49,7 +51,9 @@
           "latency_ms": 5640
         }
       ],
-      "latency_ms": 5640
+      "latency_ms": 5640,
+      "last_score": 2,
+      "best_iteration": 1
     },
     {
       "model": "qwen3.5:9b",
@@ -57,7 +61,7 @@
       "task": "reproducible_orders",
       "score": 0,
       "rule_ids": [
-        "DM105"
+        "DM402"
       ],
       "detail": "lint: 1 error, 1 warning",
       "iterations": 6,
@@ -114,7 +118,9 @@
           "latency_ms": 8474
         }
       ],
-      "latency_ms": 46651
+      "latency_ms": 46651,
+      "last_score": 0,
+      "best_iteration": 3
     },
     {
       "model": "qwen3.5:9b",
@@ -180,7 +186,9 @@
           "latency_ms": 4485
         }
       ],
-      "latency_ms": 29184
+      "latency_ms": 29184,
+      "last_score": 0,
+      "best_iteration": 4
     },
     {
       "model": "qwen3.5:9b",
@@ -242,7 +250,9 @@
           "latency_ms": 7708
         }
       ],
-      "latency_ms": 40804
+      "latency_ms": 40804,
+      "last_score": 0,
+      "best_iteration": 1
     },
     {
       "model": "qwen3.5:9b",
@@ -281,7 +291,10 @@
           "latency_ms": 6514
         }
       ],
-      "latency_ms": 19673
+      "latency_ms": 19673,
+      "last_score": 2,
+      "best_iteration": 3
     }
-  ]
+  ],
+  "rescored_best_of_n": "2026-07-13: score/rule_ids/detail recomputed as best-of-N (was last-of-N) from the already-recorded iteration_details; last_score/best_iteration added."
 }

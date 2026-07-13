@@ -21,9 +21,9 @@
       "task": "weighted_country",
       "score": 0,
       "rule_ids": [
-        "DM000"
+        "DM103"
       ],
-      "detail": "lint: 1 error, 1 warning",
+      "detail": "lint: 3 errors, 1 warning",
       "iterations": 6,
       "iteration_details": [
         {
@@ -76,7 +76,9 @@
           "latency_ms": 5988
         }
       ],
-      "latency_ms": 35545
+      "latency_ms": 35545,
+      "last_score": 0,
+      "best_iteration": 2
     },
     {
       "model": "qwen3.5:9b",
@@ -94,7 +96,9 @@
           "latency_ms": 5976
         }
       ],
-      "latency_ms": 5976
+      "latency_ms": 5976,
+      "last_score": 2,
+      "best_iteration": 1
     },
     {
       "model": "qwen3.5:9b",
@@ -102,9 +106,9 @@
       "task": "reproducible_orders",
       "score": 0,
       "rule_ids": [
-        "DM002"
+        "DM402"
       ],
-      "detail": "dry-run failed or produced 0 rows",
+      "detail": "lint: 1 error",
       "iterations": 6,
       "iteration_details": [
         {
@@ -156,7 +160,9 @@
           "latency_ms": 6660
         }
       ],
-      "latency_ms": 38346
+      "latency_ms": 38346,
+      "last_score": 0,
+      "best_iteration": 1
     },
     {
       "model": "qwen3.5:9b",
@@ -182,18 +188,17 @@
           "latency_ms": 6205
         }
       ],
-      "latency_ms": 13679
+      "latency_ms": 13679,
+      "last_score": 2,
+      "best_iteration": 2
     },
     {
       "model": "qwen3.5:9b",
       "variant": "loop",
       "task": "timeseries",
-      "score": 0,
-      "rule_ids": [
-        "DM401",
-        "DM402"
-      ],
-      "detail": "lint: 3 errors, 2 warnings",
+      "score": 1,
+      "rule_ids": [],
+      "detail": "runs but intent check failed",
       "iterations": 6,
       "iteration_details": [
         {
@@ -242,7 +247,9 @@
           "latency_ms": 9895
         }
       ],
-      "latency_ms": 49545
+      "latency_ms": 49545,
+      "last_score": 0,
+      "best_iteration": 1
     },
     {
       "model": "qwen3.5:9b",
@@ -250,12 +257,10 @@
       "task": "branch_fk",
       "score": 0,
       "rule_ids": [
-        "DM103",
-        "DM104",
         "DM107",
         "DM401"
       ],
-      "detail": "lint: 11 errors, 1 warning",
+      "detail": "lint: 3 errors, 1 warning",
       "iterations": 6,
       "iteration_details": [
         {
@@ -323,7 +328,10 @@
           "latency_ms": 13038
         }
       ],
-      "latency_ms": 65430
+      "latency_ms": 65430,
+      "last_score": 0,
+      "best_iteration": 5
     }
-  ]
+  ],
+  "rescored_best_of_n": "2026-07-13: score/rule_ids/detail recomputed as best-of-N (was last-of-N) from the already-recorded iteration_details; last_score/best_iteration added."
 }

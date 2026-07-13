@@ -1,0 +1,442 @@
+{
+  "generated_at": "2026-07-13T04:21:23.958143+00:00",
+  "condition": "loop",
+  "initial_variant": "P2_cheatsheet",
+  "max_iterations": 6,
+  "models": [
+    "qwen2.5-coder:1.5b",
+    "gemma4:31b"
+  ],
+  "tasks": [
+    "weighted_country",
+    "nested_reviews",
+    "reproducible_orders",
+    "memstore_pipeline",
+    "timeseries",
+    "branch_fk"
+  ],
+  "cells": [
+    {
+      "model": "qwen2.5-coder:1.5b",
+      "variant": "loop",
+      "task": "weighted_country",
+      "score": 1,
+      "rule_ids": [],
+      "detail": "runs but intent check failed",
+      "iterations": 6,
+      "iteration_details": [
+        {
+          "score": 1,
+          "rule_ids": [],
+          "detail": "runs but intent check failed",
+          "latency_ms": 2234
+        },
+        {
+          "score": 1,
+          "rule_ids": [],
+          "detail": "runs but intent check failed",
+          "latency_ms": 876
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM203"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 943
+        },
+        {
+          "score": 1,
+          "rule_ids": [],
+          "detail": "runs but intent check failed",
+          "latency_ms": 888
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM203"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 956
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM203"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 964
+        }
+      ],
+      "latency_ms": 6861,
+      "last_score": 0,
+      "best_iteration": 1
+    },
+    {
+      "model": "qwen2.5-coder:1.5b",
+      "variant": "loop",
+      "task": "nested_reviews",
+      "score": 0,
+      "rule_ids": [
+        "DM001"
+      ],
+      "detail": "lint: 1 error",
+      "iterations": 6,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 1423
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 851
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 881
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 885
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 878
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 895
+        }
+      ],
+      "latency_ms": 5813,
+      "last_score": 0,
+      "best_iteration": 1
+    },
+    {
+      "model": "qwen2.5-coder:1.5b",
+      "variant": "loop",
+      "task": "reproducible_orders",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 1,
+      "iteration_details": [
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 1296
+        }
+      ],
+      "latency_ms": 1296,
+      "last_score": 2,
+      "best_iteration": 1
+    },
+    {
+      "model": "qwen2.5-coder:1.5b",
+      "variant": "loop",
+      "task": "memstore_pipeline",
+      "score": 1,
+      "rule_ids": [],
+      "detail": "runs but intent check failed",
+      "iterations": 6,
+      "iteration_details": [
+        {
+          "score": 1,
+          "rule_ids": [],
+          "detail": "runs but intent check failed",
+          "latency_ms": 1268
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 1268
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 1349
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 1384
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 1412
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 1428
+        }
+      ],
+      "latency_ms": 8109,
+      "last_score": 0,
+      "best_iteration": 1
+    },
+    {
+      "model": "qwen2.5-coder:1.5b",
+      "variant": "loop",
+      "task": "timeseries",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 2,
+      "iteration_details": [
+        {
+          "score": 1,
+          "rule_ids": [],
+          "detail": "runs but intent check failed",
+          "latency_ms": 1356
+        },
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 803
+        }
+      ],
+      "latency_ms": 2159,
+      "last_score": 2,
+      "best_iteration": 2
+    },
+    {
+      "model": "qwen2.5-coder:1.5b",
+      "variant": "loop",
+      "task": "branch_fk",
+      "score": 0,
+      "rule_ids": [
+        "DM402"
+      ],
+      "detail": "lint: 2 errors, 2 warnings",
+      "iterations": 6,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM103",
+            "DM212",
+            "DM402"
+          ],
+          "detail": "lint: 5 errors, 2 warnings",
+          "latency_ms": 1934
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM103",
+            "DM402"
+          ],
+          "detail": "lint: 4 errors, 2 warnings",
+          "latency_ms": 1484
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM402"
+          ],
+          "detail": "lint: 2 errors, 2 warnings",
+          "latency_ms": 1354
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM402"
+          ],
+          "detail": "lint: 2 errors, 2 warnings",
+          "latency_ms": 1355
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM402"
+          ],
+          "detail": "lint: 2 errors, 2 warnings",
+          "latency_ms": 1397
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM402"
+          ],
+          "detail": "lint: 2 errors, 2 warnings",
+          "latency_ms": 1396
+        }
+      ],
+      "latency_ms": 8920,
+      "last_score": 0,
+      "best_iteration": 3
+    },
+    {
+      "model": "gemma4:31b",
+      "variant": "loop",
+      "task": "weighted_country",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 1,
+      "iteration_details": [
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 30754
+        }
+      ],
+      "latency_ms": 30754,
+      "last_score": 2,
+      "best_iteration": 1
+    },
+    {
+      "model": "gemma4:31b",
+      "variant": "loop",
+      "task": "nested_reviews",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 1,
+      "iteration_details": [
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 23305
+        }
+      ],
+      "latency_ms": 23305,
+      "last_score": 2,
+      "best_iteration": 1
+    },
+    {
+      "model": "gemma4:31b",
+      "variant": "loop",
+      "task": "reproducible_orders",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 1,
+      "iteration_details": [
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 20567
+        }
+      ],
+      "latency_ms": 20567,
+      "last_score": 2,
+      "best_iteration": 1
+    },
+    {
+      "model": "gemma4:31b",
+      "variant": "loop",
+      "task": "memstore_pipeline",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 2,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM202"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 26431
+        },
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 15778
+        }
+      ],
+      "latency_ms": 42209,
+      "last_score": 2,
+      "best_iteration": 2
+    },
+    {
+      "model": "gemma4:31b",
+      "variant": "loop",
+      "task": "timeseries",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 1,
+      "iteration_details": [
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 26843
+        }
+      ],
+      "latency_ms": 26843,
+      "last_score": 2,
+      "best_iteration": 1
+    },
+    {
+      "model": "gemma4:31b",
+      "variant": "loop",
+      "task": "branch_fk",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 1,
+      "iteration_details": [
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 25394
+        }
+      ],
+      "latency_ms": 25394,
+      "last_score": 2,
+      "best_iteration": 1
+    }
+  ],
+  "rescored_best_of_n": "2026-07-13: score/rule_ids/detail recomputed as best-of-N (was last-of-N) from the already-recorded iteration_details; last_score/best_iteration added."
+}

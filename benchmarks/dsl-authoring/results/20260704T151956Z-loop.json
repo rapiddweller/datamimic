@@ -22,9 +22,9 @@
       "task": "weighted_country",
       "score": 0,
       "rule_ids": [
-        "DM002"
+        "DM103"
       ],
-      "detail": "dry-run failed or produced 0 rows",
+      "detail": "lint: 1 error",
       "iterations": 3,
       "iteration_details": [
         {
@@ -52,7 +52,9 @@
           "latency_ms": 2291
         }
       ],
-      "latency_ms": 6996
+      "latency_ms": 6996,
+      "last_score": 0,
+      "best_iteration": 1
     },
     {
       "model": "qwen2.5:7b",
@@ -78,7 +80,9 @@
           "latency_ms": 2624
         }
       ],
-      "latency_ms": 6774
+      "latency_ms": 6774,
+      "last_score": 2,
+      "best_iteration": 2
     },
     {
       "model": "qwen2.5:7b",
@@ -96,7 +100,9 @@
           "latency_ms": 3647
         }
       ],
-      "latency_ms": 3647
+      "latency_ms": 3647,
+      "last_score": 2,
+      "best_iteration": 1
     },
     {
       "model": "qwen2.5:7b",
@@ -138,7 +144,9 @@
           "latency_ms": 4963
         }
       ],
-      "latency_ms": 11150
+      "latency_ms": 11150,
+      "last_score": 0,
+      "best_iteration": 1
     },
     {
       "model": "qwen2.5:7b",
@@ -176,7 +184,9 @@
           "latency_ms": 2730
         }
       ],
-      "latency_ms": 9767
+      "latency_ms": 9767,
+      "last_score": 0,
+      "best_iteration": 1
     },
     {
       "model": "qwen2.5:7b",
@@ -215,7 +225,9 @@
           "latency_ms": 3250
         }
       ],
-      "latency_ms": 11156
+      "latency_ms": 11156,
+      "last_score": 0,
+      "best_iteration": 2
     },
     {
       "model": "gemma4:31b",
@@ -233,7 +245,9 @@
           "latency_ms": 21113
         }
       ],
-      "latency_ms": 21113
+      "latency_ms": 21113,
+      "last_score": 2,
+      "best_iteration": 1
     },
     {
       "model": "gemma4:31b",
@@ -251,7 +265,9 @@
           "latency_ms": 19333
         }
       ],
-      "latency_ms": 19333
+      "latency_ms": 19333,
+      "last_score": 2,
+      "best_iteration": 1
     },
     {
       "model": "gemma4:31b",
@@ -269,7 +285,9 @@
           "latency_ms": 16412
         }
       ],
-      "latency_ms": 16412
+      "latency_ms": 16412,
+      "last_score": 2,
+      "best_iteration": 1
     },
     {
       "model": "gemma4:31b",
@@ -307,7 +325,9 @@
           "latency_ms": 14040
         }
       ],
-      "latency_ms": 49489
+      "latency_ms": 49489,
+      "last_score": 0,
+      "best_iteration": 1
     },
     {
       "model": "gemma4:31b",
@@ -325,7 +345,9 @@
           "latency_ms": 22706
         }
       ],
-      "latency_ms": 22706
+      "latency_ms": 22706,
+      "last_score": 2,
+      "best_iteration": 1
     },
     {
       "model": "gemma4:31b",
@@ -343,7 +365,10 @@
           "latency_ms": 21871
         }
       ],
-      "latency_ms": 21871
+      "latency_ms": 21871,
+      "last_score": 2,
+      "best_iteration": 1
     }
-  ]
+  ],
+  "rescored_best_of_n": "2026-07-13: score/rule_ids/detail recomputed as best-of-N (was last-of-N) from the already-recorded iteration_details; last_score/best_iteration added."
 }

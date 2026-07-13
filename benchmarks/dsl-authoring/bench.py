@@ -32,7 +32,11 @@ OLLAMA_URL = "http://localhost:11434/api/chat"
 TEMPERATURE = 0.2
 NUM_PREDICT = 1400
 NUM_CTX = 8192  # P2/P3 prompts run well past Ollama's default 2048/4096 context
-NUM_CTX_LOOP = 16384  # loop keeps the cheatsheet + 3 replies + feedback in context
+NUM_CTX_LOOP = 16384  # loop keeps the cheatsheet + up to LOOP_MAX_ITERATIONS replies + feedback in
+# context -- each reply is embedded twice (assistant turn + re-quoted in the next feedback
+# message), so watch for silent truncation of the cheatsheet on later iterations if this or
+# LOOP_MAX_ITERATIONS grows further (call_ollama discards Ollama's prompt_eval_count, which
+# would otherwise flag it).
 CALL_TIMEOUT_S = 300
 LOOP_MAX_ITERATIONS = 6
 LOOP_VARIANT = "loop"
@@ -666,6 +670,29 @@ def run_selftest() -> bool:
         if result["score"] != 2:
             all_ok = False
         print(f"[{status}] {key}: score={result['score']} detail={result['detail']}")
+
+    # best-of-N must survive a later regression (the bug this replaced: reporting the LAST
+    # iteration even when an earlier one scored higher) and break ties toward fewer errors,
+    # then the earliest iteration (fastest convergence).
+    cases = [
+        ([0, 1, 0], 1),  # regression after a real improvement -> keep the improvement
+        ([2, 0], 0),  # regression after intent-correct -> keep intent-correct
+        ([0, 0, 0], 0),  # equal score, equal rule_ids -> earliest wins (fastest convergence)
+        ([1, 1], 0),  # equal score, earlier wins (cheapest to reproduce)
+    ]
+    for scores, expected_idx in cases:
+        iters = [{"score": s, "rule_ids": []} for s in scores]
+        got = _best_iteration_index(iters)
+        status = "OK" if got == expected_idx else "FAIL"
+        if got != expected_idx:
+            all_ok = False
+        print(f"[{status}] best_iteration_index{scores}: got={got} expected={expected_idx}")
+    tie_break = _best_iteration_index([{"score": 0, "rule_ids": ["A", "B"]}, {"score": 0, "rule_ids": ["A"]}])
+    status = "OK" if tie_break == 1 else "FAIL"
+    if tie_break != 1:
+        all_ok = False
+    print(f"[{status}] best_iteration_index tie-break on fewer rule_ids: got={tie_break} expected=1")
+
     return all_ok
 
 
@@ -744,14 +771,24 @@ def run_matrix(
 # --------------------------------------------------------------------------- #
 
 
+def _best_iteration_index(iterations: list[dict[str, Any]]) -> int:
+    """Highest score wins; ties break on fewest error rule_ids (closer to passing), then
+    earliest index (rewards fast convergence, cheapest to reproduce)."""
+    return max(
+        range(len(iterations)),
+        key=lambda i: (iterations[i]["score"], -len(iterations[i]["rule_ids"]), -i),
+    )
+
+
 def run_loop_cell(model: str, task: dict[str, Any]) -> dict[str, Any]:
-    """One model x task loop cell. Returns the final cell dict (score of the
-    LAST generation, iterations used, per-iteration record, summed latency)."""
+    """One model x task loop cell. Returns the BEST-scoring generation across all
+    iterations (not the last -- a later attempt can regress after a real fix; see
+    haiku-cli-track-20260712.md), iterations used, per-iteration record, summed latency."""
     messages: list[dict[str, str]] = [{"role": "user", "content": _p2(task["prompt"])}]
     iterations: list[dict[str, Any]] = []
-    final: dict[str, Any] = {"score": 0, "rule_ids": [], "detail": "no generation completed"}
     total_latency = 0
     timed_out = False
+    err_note: str | None = None
 
     for attempt in range(1, LOOP_MAX_ITERATIONS + 1):
         content, latency_ms, err = call_ollama(model, messages, num_ctx=NUM_CTX_LOOP)
@@ -768,22 +805,26 @@ def run_loop_cell(model: str, task: dict[str, Any]) -> dict[str, Any]:
                     "latency_ms": total_latency,
                     "timed_out": timed_out,
                 }
-            final = dict(final)
-            final["detail"] = f"{final['detail']} (+ {err} at iteration {attempt})"
+            err_note = f" (+ {err} at iteration {attempt})"
             break
 
         info = evaluate_generation(task, content or "")
         iterations.append(
             {"score": info["score"], "rule_ids": info["rule_ids"], "detail": info["detail"], "latency_ms": latency_ms}
         )
-        final = {k: info[k] for k in ("score", "rule_ids", "detail")}
         if info["feedback"] is None:  # intent-correct (or intent check itself broke) -- stop
             break
         messages.append({"role": "assistant", "content": content or ""})
         messages.append({"role": "user", "content": info["feedback"]})
 
+    best_idx = _best_iteration_index(iterations)
+    best = iterations[best_idx]
     return {
-        **final,
+        "score": best["score"],
+        "rule_ids": best["rule_ids"],
+        "detail": best["detail"] + (err_note or ""),
+        "best_iteration": best_idx + 1,
+        "last_score": iterations[-1]["score"],
         "iterations": len(iterations),
         "iteration_details": iterations,
         "latency_ms": total_latency,
@@ -918,7 +959,10 @@ def main() -> None:
     parser.add_argument(
         "--loop",
         action="store_true",
-        help="run the loop condition (P2 initial prompt, lint/dry-run feedback, max 3 generations per task)",
+        help=(
+            "run the loop condition (P2 initial prompt, lint/dry-run feedback, "
+            "max LOOP_MAX_ITERATIONS generations per task, best-scoring generation reported)"
+        ),
     )
     parser.add_argument(
         "--report",

@@ -24,7 +24,7 @@
       "task": "weighted_country",
       "score": 0,
       "rule_ids": [
-        "DM101"
+        "DM104"
       ],
       "detail": "lint: 1 error",
       "iterations": 3,
@@ -54,7 +54,9 @@
           "latency_ms": 10505
         }
       ],
-      "latency_ms": 24171
+      "latency_ms": 24171,
+      "last_score": 0,
+      "best_iteration": 1
     },
     {
       "model": "qwen3.5:9b",
@@ -72,7 +74,9 @@
           "latency_ms": 5660
         }
       ],
-      "latency_ms": 5660
+      "latency_ms": 5660,
+      "last_score": 2,
+      "best_iteration": 1
     },
     {
       "model": "qwen3.5:9b",
@@ -104,7 +108,9 @@
           "latency_ms": 4897
         }
       ],
-      "latency_ms": 14172
+      "latency_ms": 14172,
+      "last_score": 1,
+      "best_iteration": 2
     },
     {
       "model": "qwen3.5:9b",
@@ -144,7 +150,9 @@
           "latency_ms": 5355
         }
       ],
-      "latency_ms": 16108
+      "latency_ms": 16108,
+      "last_score": 0,
+      "best_iteration": 3
     },
     {
       "model": "qwen3.5:9b",
@@ -182,7 +190,9 @@
           "latency_ms": 6067
         }
       ],
-      "latency_ms": 18446
+      "latency_ms": 18446,
+      "last_score": 0,
+      "best_iteration": 1
     },
     {
       "model": "qwen3.5:9b",
@@ -190,9 +200,9 @@
       "task": "branch_fk",
       "score": 0,
       "rule_ids": [
-        "DM102"
+        "DM001"
       ],
-      "detail": "lint: 1 error, 2 warnings",
+      "detail": "lint: 1 error",
       "iterations": 3,
       "iteration_details": [
         {
@@ -222,7 +232,9 @@
           "latency_ms": 25952
         }
       ],
-      "latency_ms": 53657
+      "latency_ms": 53657,
+      "last_score": 0,
+      "best_iteration": 1
     },
     {
       "model": "mistral:latest",
@@ -422,5 +434,6 @@
       "iteration_details": [],
       "latency_ms": 1
     }
-  ]
+  ],
+  "rescored_best_of_n": "2026-07-13: score/rule_ids/detail recomputed as best-of-N (was last-of-N) from the already-recorded iteration_details; last_score/best_iteration added."
 }

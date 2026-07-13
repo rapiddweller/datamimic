@@ -1,0 +1,415 @@
+{
+  "generated_at": "2026-07-13T04:54:40.252918+00:00",
+  "condition": "loop",
+  "initial_variant": "P2_cheatsheet",
+  "max_iterations": 6,
+  "models": [
+    "deepseek-r1:7b-qwen-distill-q4_K_M"
+  ],
+  "tasks": [
+    "weighted_country",
+    "nested_reviews",
+    "reproducible_orders",
+    "memstore_pipeline",
+    "timeseries",
+    "branch_fk"
+  ],
+  "cells": [
+    {
+      "model": "deepseek-r1:7b-qwen-distill-q4_K_M",
+      "variant": "loop",
+      "task": "weighted_country",
+      "score": 0,
+      "rule_ids": [
+        "DM001"
+      ],
+      "detail": "lint: 1 error",
+      "iterations": 6,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 23368
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM103",
+            "DM104",
+            "DM203"
+          ],
+          "detail": "lint: 10 errors",
+          "latency_ms": 21747
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM103",
+            "DM104",
+            "DM203"
+          ],
+          "detail": "lint: 10 errors",
+          "latency_ms": 20103
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 28401
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM103",
+            "DM104",
+            "DM203"
+          ],
+          "detail": "lint: 7 errors",
+          "latency_ms": 13648
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM103",
+            "DM104",
+            "DM203"
+          ],
+          "detail": "lint: 6 errors",
+          "latency_ms": 21927
+        }
+      ],
+      "latency_ms": 129194,
+      "last_score": 0,
+      "best_iteration": 1
+    },
+    {
+      "model": "deepseek-r1:7b-qwen-distill-q4_K_M",
+      "variant": "loop",
+      "task": "nested_reviews",
+      "score": 1,
+      "rule_ids": [],
+      "detail": "runs but intent check failed",
+      "iterations": 6,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "NO_XML"
+          ],
+          "detail": "no <setup> block found in reply",
+          "latency_ms": 28717
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 16850
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM104"
+          ],
+          "detail": "lint: 1 error, 1 hint",
+          "latency_ms": 18751
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM000"
+          ],
+          "detail": "lint: 1 error, 1 hint",
+          "latency_ms": 20484
+        },
+        {
+          "score": 1,
+          "rule_ids": [],
+          "detail": "runs but intent check failed",
+          "latency_ms": 21491
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "NO_XML"
+          ],
+          "detail": "no <setup> block found in reply",
+          "latency_ms": 27599
+        }
+      ],
+      "latency_ms": 133892,
+      "last_score": 0,
+      "best_iteration": 5
+    },
+    {
+      "model": "deepseek-r1:7b-qwen-distill-q4_K_M",
+      "variant": "loop",
+      "task": "reproducible_orders",
+      "score": 0,
+      "rule_ids": [
+        "NO_XML"
+      ],
+      "detail": "no <setup> block found in reply",
+      "iterations": 6,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "NO_XML"
+          ],
+          "detail": "no <setup> block found in reply",
+          "latency_ms": 28666
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM102",
+            "DM103",
+            "DM104",
+            "DM105",
+            "DM203"
+          ],
+          "detail": "lint: 7 errors, 1 warning",
+          "latency_ms": 10863
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM105"
+          ],
+          "detail": "lint: 1 error, 1 warning",
+          "latency_ms": 18359
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM104"
+          ],
+          "detail": "lint: 1 error, 1 warning",
+          "latency_ms": 24445
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 26731
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 28005
+        }
+      ],
+      "latency_ms": 137069,
+      "last_score": 0,
+      "best_iteration": 1
+    },
+    {
+      "model": "deepseek-r1:7b-qwen-distill-q4_K_M",
+      "variant": "loop",
+      "task": "memstore_pipeline",
+      "score": 0,
+      "rule_ids": [
+        "DM103"
+      ],
+      "detail": "lint: 10 errors, 1 warning",
+      "iterations": 6,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM103",
+            "DM104",
+            "DM401"
+          ],
+          "detail": "lint: 22 errors, 1 warning",
+          "latency_ms": 25080
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM103",
+            "DM104"
+          ],
+          "detail": "lint: 11 errors, 1 warning",
+          "latency_ms": 14460
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM103"
+          ],
+          "detail": "lint: 10 errors, 1 warning",
+          "latency_ms": 13341
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM103"
+          ],
+          "detail": "lint: 10 errors, 1 warning",
+          "latency_ms": 15829
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM103"
+          ],
+          "detail": "lint: 10 errors, 1 warning",
+          "latency_ms": 16014
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 16406
+        }
+      ],
+      "latency_ms": 101130,
+      "last_score": 0,
+      "best_iteration": 3
+    },
+    {
+      "model": "deepseek-r1:7b-qwen-distill-q4_K_M",
+      "variant": "loop",
+      "task": "timeseries",
+      "score": 0,
+      "rule_ids": [
+        "DM203"
+      ],
+      "detail": "lint: 1 error",
+      "iterations": 6,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM203"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 16049
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 14691
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 27788
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 20779
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 24106
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM103"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 14092
+        }
+      ],
+      "latency_ms": 117505,
+      "last_score": 0,
+      "best_iteration": 1
+    },
+    {
+      "model": "deepseek-r1:7b-qwen-distill-q4_K_M",
+      "variant": "loop",
+      "task": "branch_fk",
+      "score": 0,
+      "rule_ids": [
+        "DM001"
+      ],
+      "detail": "lint: 1 error",
+      "iterations": 6,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 20733
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 12999
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "NO_XML"
+          ],
+          "detail": "no <setup> block found in reply",
+          "latency_ms": 27616
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 21467
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM001"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 11939
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM104"
+          ],
+          "detail": "lint: 2 errors, 1 warning",
+          "latency_ms": 21778
+        }
+      ],
+      "latency_ms": 116532,
+      "last_score": 0,
+      "best_iteration": 1
+    }
+  ],
+  "rescored_best_of_n": "2026-07-13: score/rule_ids/detail recomputed as best-of-N (was last-of-N) from the already-recorded iteration_details; last_score/best_iteration added."
+}
