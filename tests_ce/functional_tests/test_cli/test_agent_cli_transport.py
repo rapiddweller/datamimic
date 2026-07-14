@@ -107,6 +107,33 @@ def test_seeded_json_dry_run_is_repeatable_and_stderr_clean(tmp_path: Path) -> N
     assert first_payload["products"] == second_payload["products"]
 
 
+def test_seeded_json_scaffold_is_repeatable_and_stderr_clean(tmp_path: Path) -> None:
+    spec = json.dumps(
+        {
+            "version": "1",
+            "seed": 17,
+            "products": [
+                {
+                    "kind": "generated",
+                    "name": "records",
+                    "count": 8,
+                    "fields": [{"kind": "increment", "name": "id"}],
+                }
+            ],
+        }
+    )
+
+    first = _run_cli(tmp_path, "scaffold", "-", "--format", "json", stdin=spec)
+    second = _run_cli(tmp_path, "scaffold", "-", "--format", "json", stdin=spec)
+
+    assert first.returncode == second.returncode == 0
+    assert first.stderr == second.stderr == ""
+    assert first.stdout == second.stdout
+    payload = json.loads(first.stdout)
+    assert payload["ok"] is True
+    assert payload["verified"] is True
+
+
 @pytest.mark.parametrize("stdin", ["", "{broken", "[]"])
 def test_malformed_scaffold_stdin_is_single_json_error(tmp_path: Path, stdin: str) -> None:
     result = _run_cli(tmp_path, "scaffold", "-", "--format", "json", stdin=stdin)

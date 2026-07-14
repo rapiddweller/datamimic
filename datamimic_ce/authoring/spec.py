@@ -56,6 +56,33 @@ class FieldIntentKind(StrEnum):
     NESTED_LIST = "nested_list"
 
 
+class ProductIntentKind(StrEnum):
+    """Canonical discriminator vocabulary for authoring products."""
+
+    GENERATED = "generated"
+    SOURCE = "source"
+    TIME_SERIES = "time_series"
+
+
+class TargetIntentKind(StrEnum):
+    """Canonical discriminator vocabulary for authoring targets."""
+
+    FILE_EXPORT = "file_export"
+    MEMSTORE = "memstore"
+
+
+class ExpectationIntentKind(StrEnum):
+    """Canonical discriminator vocabulary for explicit acceptance intent."""
+
+    EXACT_COUNT = "exact_count"
+    PER_PARENT_COUNT = "per_parent_count"
+    UNIQUE = "unique"
+    FOREIGN_KEY = "foreign_key"
+    ALLOWED_VALUES = "allowed_values"
+    RANGE = "range"
+    ROW_CONDITION = "row_condition"
+
+
 LeafFieldKind = Literal[
     FieldIntentKind.INCREMENT,
     FieldIntentKind.PERSON_NAME,
@@ -70,7 +97,11 @@ LeafFieldKind = Literal[
     FieldIntentKind.SCRIPT,
 ]
 FieldKind = Literal[LeafFieldKind, FieldIntentKind.NESTED_LIST]
-ProductKind = Literal["generated", "source", "time_series"]
+ProductKind = Literal[
+    ProductIntentKind.GENERATED,
+    ProductIntentKind.SOURCE,
+    ProductIntentKind.TIME_SERIES,
+]
 
 
 class IntentModel(BaseModel):
@@ -305,13 +336,13 @@ class FileExportTarget(IntentModel):
         json_schema_extra=_file_export_schema,
     )
 
-    kind: Literal["file_export"] = "file_export"
+    kind: Literal[TargetIntentKind.FILE_EXPORT] = TargetIntentKind.FILE_EXPORT
     format: RegisteredFileExporterName
     export_uri: str | None = Field(default=None, min_length=1)
 
 
 class MemstoreTarget(IntentModel):
-    kind: Literal["memstore"] = "memstore"
+    kind: Literal[TargetIntentKind.MEMSTORE] = TargetIntentKind.MEMSTORE
     id: str = Field(min_length=1)
 
 
@@ -356,7 +387,7 @@ class ProductIntent(IntentModel):
 
 
 class NestedGeneratedProduct(ProductIntent):
-    kind: Literal["generated"] = "generated"
+    kind: Literal[ProductIntentKind.GENERATED] = ProductIntentKind.GENERATED
     count: PositiveStrictInt
     relationship: NestedRelationship = Field(default_factory=NestedRelationship)
 
@@ -368,7 +399,7 @@ class NestedGeneratedProduct(ProductIntent):
 
 
 class GeneratedProduct(ProductIntent):
-    kind: Literal["generated"] = "generated"
+    kind: Literal[ProductIntentKind.GENERATED] = ProductIntentKind.GENERATED
     count: PositiveStrictInt
     children: tuple[NestedGeneratedProduct, ...] = ()
 
@@ -380,7 +411,7 @@ class GeneratedProduct(ProductIntent):
 
 
 class SourceProduct(ProductIntent):
-    kind: Literal["source"] = "source"
+    kind: Literal[ProductIntentKind.SOURCE] = ProductIntentKind.SOURCE
     source: SourceIntent
 
     @model_validator(mode="after")
@@ -397,7 +428,7 @@ class TimeSeriesWindow(IntentModel):
 
 
 class TimeSeriesProduct(ProductIntent):
-    kind: Literal["time_series"] = "time_series"
+    kind: Literal[ProductIntentKind.TIME_SERIES] = ProductIntentKind.TIME_SERIES
     series_count: PositiveStrictInt = 1
     window: TimeSeriesWindow
 
@@ -415,27 +446,27 @@ ProductIntentUnion = Annotated[
 
 
 class ExactCountExpectation(IntentModel):
-    kind: Literal["exact_count"] = "exact_count"
+    kind: Literal[ExpectationIntentKind.EXACT_COUNT] = ExpectationIntentKind.EXACT_COUNT
     product: str = Field(min_length=1)
     count: NonNegativeStrictInt
 
 
 class PerParentCountExpectation(IntentModel):
-    kind: Literal["per_parent_count"] = "per_parent_count"
+    kind: Literal[ExpectationIntentKind.PER_PARENT_COUNT] = ExpectationIntentKind.PER_PARENT_COUNT
     parent_product: str = Field(min_length=1)
     child_product: str = Field(min_length=1)
     count: NonNegativeStrictInt
 
 
 class UniqueExpectation(IntentModel):
-    kind: Literal["unique"] = "unique"
+    kind: Literal[ExpectationIntentKind.UNIQUE] = ExpectationIntentKind.UNIQUE
     product: str = Field(min_length=1)
     field: str = Field(min_length=1)
     scope: Literal["global", "per_parent"] = "global"
 
 
 class ForeignKeyExpectation(IntentModel):
-    kind: Literal["foreign_key"] = "foreign_key"
+    kind: Literal[ExpectationIntentKind.FOREIGN_KEY] = ExpectationIntentKind.FOREIGN_KEY
     child_product: str = Field(min_length=1)
     child_field: str = Field(min_length=1)
     parent_product: str = Field(min_length=1)
@@ -443,14 +474,14 @@ class ForeignKeyExpectation(IntentModel):
 
 
 class AllowedValuesExpectation(IntentModel):
-    kind: Literal["allowed_values"] = "allowed_values"
+    kind: Literal[ExpectationIntentKind.ALLOWED_VALUES] = ExpectationIntentKind.ALLOWED_VALUES
     product: str = Field(min_length=1)
     field: str = Field(min_length=1)
     values: tuple[str, ...] = Field(min_length=1)
 
 
 class RangeExpectation(IntentModel):
-    kind: Literal["range"] = "range"
+    kind: Literal[ExpectationIntentKind.RANGE] = ExpectationIntentKind.RANGE
     product: str = Field(min_length=1)
     field: str = Field(min_length=1)
     minimum: Decimal
@@ -464,7 +495,7 @@ class RangeExpectation(IntentModel):
 
 
 class RowConditionExpectation(IntentModel):
-    kind: Literal["row_condition"] = "row_condition"
+    kind: Literal[ExpectationIntentKind.ROW_CONDITION] = ExpectationIntentKind.ROW_CONDITION
     product: str = Field(min_length=1)
     condition: str = Field(min_length=1)
     result_type: Literal["bool"] = "bool"
@@ -600,6 +631,7 @@ SPEC_JSON_SCHEMA = authoring_spec_json_schema()
 __all__ = [
     "AuthoringSpecV1",
     "ExpectationIntent",
+    "ExpectationIntentKind",
     "FieldKind",
     "FieldIntentKind",
     "FieldIntentUnion",
@@ -608,11 +640,13 @@ __all__ = [
     "NonNegativeStrictInt",
     "PositiveStrictInt",
     "ProductKind",
+    "ProductIntentKind",
     "ProductIntentUnion",
     "RegisteredFileExporterName",
     "RuntimeFileSourcePath",
     "RuntimeMemstoreSourceId",
     "SPEC_JSON_SCHEMA",
     "SPEC_PROMPT_GUIDE",
+    "TargetIntentKind",
     "authoring_spec_json_schema",
 ]

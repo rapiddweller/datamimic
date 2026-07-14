@@ -134,22 +134,37 @@ Running the snippet twice with the same seed yields identical addresses. Switchi
 
 Happy generating!
 
-## DSL authoring tools (AI linter)
+## Authoring tools
 
-Three tools turn any MCP-capable agent (Claude Code, Cursor, Copilot) into a
-DATAMIMIC DSL author with a verify loop:
+Four tools expose one canonical new-model transaction plus the raw-XML
+compatibility flow:
 
 | Tool | Purpose |
 |---|---|
-| `datamimic_reference` | DSL knowledge: `topic=overview` (cheatsheet, start here), `element` (+`name=generate`), `generators`, `entities` (+`name=Person` for its fields), `context` (this/parent/root script scope), `timeseries` (start/end/interval + ts.now/step/series), `targets`, `distributions`, `converters` (masking/formatting), `recipes`, `recipe` (+`name=<id>`) |
-| `datamimic_check` | Lint a descriptor (`xml=` inline or `path=`): aggregated diagnostics, each with a rule id (`DMxxx`), severity and a `fix_hint`. Iterate until `ok=true`. |
-| `datamimic_run` | Safe dry-run: lint gate first, counts capped (`max_count`), file/DB targets neutralized (memstores kept), returns per-product `sample` rows. `allow_side_effects=true` opts out. `smoke_export=true` additionally test-writes the captured rows through each stripped file exporter in a temp dir (no artifacts left behind) to catch export-time serialization crashes before a real run. |
+| `datamimic_reference` | Intent and DSL knowledge. For a new model, use `topic=authoring` first to list typed queries, then request one compact fragment with nested `query`, for example `{"category":"field","kind":"weighted"}`. Raw XML topics include `overview`, `element`, `generators`, `entities`, `context`, `timeseries`, `targets`, `distributions`, `converters`, `recipes`, and `recipe`. |
+| `datamimic_scaffold` | The single new-model use case: accept canonical `model.dm.json`, compile deterministic XML, lint, bounded-run, evaluate acceptance, and return structured verification evidence. `verified=true` is terminal. |
+| `datamimic_check` | Raw XML only: lint a descriptor (`xml=` inline or `path=`) and return aggregated diagnostics with rule id, severity, and `fix_hint`. |
+| `datamimic_run` | Raw XML only: bounded safe run with neutralized targets and product samples. Optional `smoke_export=true` exercises stripped file exporters in a temp dir. |
 
 Resources: `resource://datamimic/dsl/cheatsheet` and
 `resource://datamimic/dsl/recipes/{id}`.
 
-The agent loop: `reference` → draft → `check` → fix (hints tell you what to
-change) → `run` → inspect samples → ship. The same linter runs in CI via
+For a new model: query a narrow authoring reference → write `model.dm.json` →
+invoke the single `datamimic_scaffold` use case → inspect issues and evidence →
+change the input before another attempt or stop on `verified=true`. Each attempt
+is one transaction. XML is compiler output, not the editable Intent Model SPOT.
+Without MCP, use
+`datamimic reference authoring --category <category> --kind <kind>` and
+`datamimic scaffold model.dm.json --format json`.
+
+When a scaffold call fails validation, repair the reported issue `path` using
+its `allowed_fields` and `expected_fragment`; for later stages, follow the rule
+diagnostic and `fix_hint`. Narrow the reference query if needed. Never repeat an
+identical failed call without changing the input. The CE service is stateless:
+the calling agent owns this stop/retry policy.
+
+For an existing raw XML descriptor: `reference` → `check` → bounded `run` →
+inspect samples. The same linter runs in CI via
 `datamimic lint <file> --format json` (exit codes: 0 clean, 1 findings, 2 error).
 
 ### Register with agents (stdio)

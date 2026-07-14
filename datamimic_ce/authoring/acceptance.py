@@ -1372,7 +1372,7 @@ def evaluate_acceptance(
     spec: AuthoringSpecV1,
     captured: CapturedProducts,
 ) -> AcceptanceReport:
-    """Evaluate every mandatory expectation against one complete bounded capture."""
+    """Evaluate every mandatory expectation against all rows in one bounded capture."""
 
     results = [
         _evaluate_entry(entry, plan, captured)

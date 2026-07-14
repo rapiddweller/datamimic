@@ -168,8 +168,8 @@ def test_scaffold_impl_malformed_spec_render_error() -> None:
     assert isinstance(result["error"], str)
 
 
-def test_scaffold_impl_dry_run_false_stops_at_lint() -> None:
-    """With dry_run=False, a valid spec should stop after lint and not execute."""
+def test_scaffold_args_reject_removed_lint_only_switch() -> None:
+    """Scaffold always performs the canonical verification transaction."""
     spec = {
         "seed": 1,
         "generates": [{
@@ -177,11 +177,5 @@ def test_scaffold_impl_dry_run_false_stops_at_lint() -> None:
             "fields": [{"name": "id", "kind": "increment"}],
         }],
     }
-    args = ScaffoldArgs(spec=spec, dry_run=False)
-    result = scaffold_impl(args)
-
-    assert result["ok"] is True
-    assert result["stage"] == "lint"
-    assert "xml" in result
-    assert result["products"] == []  # No dry-run, so no products captured
-    assert "summary" in result
+    with pytest.raises(ValueError, match="dry_run"):
+        ScaffoldArgs(spec=spec, dry_run=False)

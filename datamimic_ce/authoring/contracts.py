@@ -15,7 +15,7 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import Annotated, Any, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, StrictStr, model_validator
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, StrictStr, model_validator
 
 from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.spec import (
@@ -47,6 +47,7 @@ class AuthoringStage(StrEnum):
     RENDER = "render"
     DRY_RUN = "dry_run"
     ACCEPTANCE = "acceptance"
+    VERIFICATION = "verification"
 
 
 class AuthoringResponseFormat(StrEnum):
@@ -54,6 +55,168 @@ class AuthoringResponseFormat(StrEnum):
 
     CONCISE = "concise"
     DETAILED = "detailed"
+
+
+class VerificationGateStatus(StrEnum):
+    """Stable outcome vocabulary for optional scaffold verification gates."""
+
+    NOT_REQUESTED = "not_requested"
+    BLOCKED = "blocked"
+    PASSED = "passed"
+    FAILED = "failed"
+    NOT_APPLICABLE = "not_applicable"
+
+
+class ReplayScope(StrEnum):
+    """Typed scope compared by deterministic replay verification."""
+
+    FULL_BOUNDED_CAPTURE = "full_bounded_capture"
+
+
+class ReplayMismatchKind(StrEnum):
+    """Machine-readable reasons why two bounded captures differ."""
+
+    MISSING_PRODUCT = "missing_product"
+    UNEXPECTED_PRODUCT = "unexpected_product"
+    ROW_COUNT = "row_count"
+    ROW_CONTENT = "row_content"
+
+
+class ScaffoldVerification(BaseModel):
+    """Optional gates executed as part of the canonical scaffold transaction."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    smoke_export: Annotated[
+        bool,
+        Field(
+            description=(
+            "Test applicable file exporters against rows from the canonical bounded run "
+            "without performing another engine run"
+            )
+        ),
+    ] = False
+    deterministic_replay: Annotated[
+        bool,
+        Field(
+            description=(
+            "Run the same seeded bounded model once more and compare all bounded captured rows"
+            )
+        ),
+    ] = False
+
+
+class SmokeExportEvidence(BaseModel):
+    """Typed evidence from exporter testing over the first bounded capture."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    status: VerificationGateStatus = VerificationGateStatus.NOT_REQUESTED
+    applicable_exporters: NonNegativeStrictInt = 0
+    attempted_exporters: NonNegativeStrictInt = 0
+    failed_exporters: NonNegativeStrictInt = 0
+    reason: str = "Smoke export was not requested"
+
+    @model_validator(mode="after")
+    def _consistent_counts(self) -> Self:
+        if self.attempted_exporters > self.applicable_exporters:
+            raise ValueError("attempted_exporters must not exceed applicable_exporters")
+        if self.failed_exporters > self.attempted_exporters:
+            raise ValueError("failed_exporters must not exceed attempted_exporters")
+        return self
+
+
+class ReplayProductMismatch(BaseModel):
+    """Compact product-level difference between two full bounded captures."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    product: NonEmptyStrictStr
+    kind: ReplayMismatchKind
+    first_count: NonNegativeStrictInt
+    replay_count: NonNegativeStrictInt
+    first_difference: NonNegativeStrictInt | None = None
+
+
+class DeterministicReplayEvidence(BaseModel):
+    """Typed result of an optional full bounded-capture replay comparison."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    status: VerificationGateStatus = VerificationGateStatus.NOT_REQUESTED
+    scope: ReplayScope = ReplayScope.FULL_BOUNDED_CAPTURE
+    compared_products: NonNegativeStrictInt = 0
+    compared_rows: NonNegativeStrictInt = 0
+    mismatches: tuple[ReplayProductMismatch, ...] = ()
+    reason: str = "Deterministic replay was not requested"
+
+
+def _default_smoke_export_evidence() -> SmokeExportEvidence:
+    return SmokeExportEvidence()
+
+
+def _default_replay_evidence() -> DeterministicReplayEvidence:
+    return DeterministicReplayEvidence()
+
+
+class ScaffoldVerificationEvidence(BaseModel):
+    """Canonical optional-gate evidence returned by every scaffold request."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    smoke_export: SmokeExportEvidence = Field(
+        default_factory=_default_smoke_export_evidence
+    )
+    deterministic_replay: DeterministicReplayEvidence = Field(
+        default_factory=_default_replay_evidence
+    )
+
+    @property
+    def gates_passed(self) -> bool:
+        """Whether all requested gates passed or had no applicable target."""
+
+        passing = (
+            VerificationGateStatus.NOT_REQUESTED,
+            VerificationGateStatus.NOT_APPLICABLE,
+            VerificationGateStatus.PASSED,
+        )
+        return (
+            self.smoke_export.status in passing
+            and self.deterministic_replay.status in passing
+        )
+
+
+def _default_scaffold_verification() -> ScaffoldVerification:
+    return ScaffoldVerification()
+
+
+class IntentValidationIssueCode(StrEnum):
+    """Stable public classifications for invalid authoring intent."""
+
+    UNKNOWN_FIELD = "unknown_field"
+    MISSING_FIELD = "missing_field"
+    INVALID_DISCRIMINATOR = "invalid_discriminator"
+    INVALID_VALUE = "invalid_value"
+    CONSTRAINT_VIOLATION = "constraint_violation"
+    UNSUPPORTED_INTENT = "unsupported_intent"
+
+
+class IntentValidationIssue(BaseModel):
+    """One repair-oriented root cause from intent validation."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    path: tuple[str | int, ...]
+    code: IntentValidationIssueCode
+    message: str = Field(min_length=1)
+    allowed_fields: tuple[str, ...] = ()
+    expected_fragment: dict[str, JsonValue] | None = None
+
+    def summary(self) -> str:
+        """Render the compatibility summary from this canonical issue."""
+
+        location = ".".join(str(part) for part in self.path) or "spec"
+        return f"{location}: {self.message}"
 
 
 class CaptureStatus(StrEnum):
@@ -164,7 +327,9 @@ class RunRequest(BaseModel):
 
 
 class ScaffoldRequest(BaseModel):
-    """Canonical request contract for scaffold operations."""
+    """Canonical request for complete compile, lint, run and acceptance verification."""
+
+    model_config = ConfigDict(extra="forbid")
 
     spec: dict[str, Any] = Field(
         ...,
@@ -174,15 +339,11 @@ class ScaffoldRequest(BaseModel):
             "normalization with visible notes."
         ),
     )
-    dry_run: bool = Field(
-        True,
-        description="Whether to also dry-run the rendered descriptor after a clean lint (default True)",
-    )
     max_count: int = Field(
         10,
         ge=MIN_DRY_RUN_COUNT,
         le=MAX_DRY_RUN_COUNT,
-        description="Per-<generate> record cap when dry_run=True (applies to nested generates too)",
+        description="Per-<generate> record cap for the bounded run (including nested generates)",
     )
     sample_rows: int = Field(
         5,
@@ -193,6 +354,9 @@ class ScaffoldRequest(BaseModel):
     response_format: AuthoringResponseFormat = Field(
         AuthoringResponseFormat.CONCISE,
         description="Response format: concise (key diagnostics) or detailed (full diagnostic info)",
+    )
+    verification: ScaffoldVerification = Field(
+        default_factory=_default_scaffold_verification
     )
 
 
@@ -925,7 +1089,11 @@ class ScaffoldResult(BaseModel):
     )
     error: str | None = Field(
         None,
-        description="Error message if stage=render and ok=False",
+        description="Compatibility summary projected from issues when stage=render",
+    )
+    issues: list[IntentValidationIssue] = Field(
+        default_factory=list,
+        description="Canonical repair-oriented intent validation issues",
     )
     summary: str | None = Field(
         None,
@@ -949,4 +1117,19 @@ class ScaffoldResult(BaseModel):
     )
     compile_plan: CompilePlan | None = None
     acceptance: AcceptanceReport | None = None
+    verification: ScaffoldVerificationEvidence = Field(
+        default_factory=ScaffoldVerificationEvidence
+    )
     verified: bool = False
+
+    @model_validator(mode="after")
+    def _verified_requires_all_evidence(self) -> Self:
+        if self.verified and (
+            self.acceptance is None
+            or not self.acceptance.verified
+            or not self.verification.gates_passed
+        ):
+            raise ValueError(
+                "verified requires passing acceptance and every requested verification gate"
+            )
+        return self

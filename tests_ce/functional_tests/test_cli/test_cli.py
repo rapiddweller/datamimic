@@ -345,8 +345,8 @@ class TestCLI:
         assert "products" in output_json
         assert len(output_json["products"]) > 0
 
-    def test_scaffold_no_dry_run_text(self, tmp_path, monkeypatch):
-        """With --no-dry-run, scaffold outputs XML without running dry-run."""
+    def test_scaffold_removed_no_dry_run_option_is_rejected(self, tmp_path, monkeypatch):
+        """Scaffold no longer exposes a second lint-only execution path."""
         spec = {
             "generates": [{
                 "name": "data", "count": 3, "target": "JSON",
@@ -354,24 +354,24 @@ class TestCLI:
             }],
         }
         result = self._run_scaffold(tmp_path, monkeypatch, spec, "--no-dry-run")
-        assert result.exit_code == 0
-        assert "<setup>" in result.output
-        assert "Dry-run successful:" not in result.output
+        assert result.exit_code == 2
 
-    def test_scaffold_no_dry_run_json(self, tmp_path, monkeypatch):
-        """With --no-dry-run and --format json, outputs JSON with xml field only."""
+    def test_scaffold_json_includes_canonical_verification_evidence(self, tmp_path, monkeypatch):
+        """Default scaffold completes run and acceptance instead of stopping at lint."""
         spec = {
             "generates": [{
                 "name": "data", "count": 2, "target": "JSON",
                 "fields": [{"name": "v", "kind": "increment"}],
             }],
         }
-        result = self._run_scaffold(tmp_path, monkeypatch, spec, "--no-dry-run", "--format", "json")
+        result = self._run_scaffold(tmp_path, monkeypatch, spec, "--format", "json")
         assert result.exit_code == 0
         output_json = json.loads(result.output)
         assert output_json["ok"] is True
         assert "xml" in output_json
-        assert output_json["products"] == []  # No dry-run, so products is empty
+        assert output_json["stage"] == "acceptance"
+        assert output_json["products"]
+        assert output_json["verification"]["smoke_export"]["status"] == "not_requested"
 
     def test_scaffold_missing_file(self):
         """A missing spec file exits with code 2."""

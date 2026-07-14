@@ -133,15 +133,21 @@ def reference_impl(args: ReferenceArgs) -> dict[str, Any]:
     from datamimic_ce.authoring.reference import reference
 
     try:
-        text = reference(args.topic, args.name)
+        text = reference(args.topic, args.name, query=args.query)
     except ValueError as err:
         # actionable error: the message lists the valid values
         return {"ok": False, "error": str(err)}
-    return {"ok": True, "topic": args.topic, "name": args.name, "content": text}
+    return {
+        "ok": True,
+        "topic": args.topic,
+        "name": args.name,
+        "query": args.query,
+        "content": text,
+    }
 
 
 def scaffold_impl(args: ScaffoldArgs) -> dict[str, Any]:
-    """Compile AuthoringSpecV1 intent, lint it, and optionally dry-run it.
+    """Run the complete canonical AuthoringSpecV1 verification transaction.
 
     Uses the service layer to ensure parity with the CLI and maintain a single
     implementation across all transports.
@@ -192,13 +198,16 @@ def create_server(*, api_key: str | None = None) -> DataMimicMCP:
         its fields), context (this/parent/root script scope), timeseries (start/end/
         interval + ts.now/step/series), targets, distributions (source reads and
         numeric range key distributions/sequences), converters (masking/formatting),
-        rules (name=DMxxx for one canonical definition), recipes, recipe (full descriptor by id)."""
+        rules (name=DMxxx for one canonical definition), authoring (a category/kind query
+        selects a compact typed model.dm.json fragment), recipes, recipe (full descriptor by id)."""
         return reference_impl(args)
 
     @server.tool("datamimic_scaffold")
     async def datamimic_scaffold(args: ScaffoldArgs) -> dict[str, Any]:
         """Compile one model.dm.json AuthoringSpecV1 document into DATAMIMIC DSL,
-        then lint and optionally dry-run it through the canonical service. Query
+        then lint, bounded-run and evaluate acceptance through the canonical service.
+        verified=true means acceptance and every requested smoke/replay gate passed;
+        no follow-up datamimic_check or datamimic_run call is needed. Query
         reference topic=scaffold for the schema derived from the Intent Model SPOT.
         Historical compact specs remain accepted only through lossless normalization;
         unsupported or ambiguous intent fails closed with explicit errors."""

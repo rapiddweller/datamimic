@@ -104,7 +104,7 @@ async def test_cli_stdio_dsl_check_and_run() -> None:
 
 @pytest.mark.anyio
 async def test_cli_stdio_scaffold() -> None:
-    """Test the scaffold tool: spec-in -> render -> lint -> dry-run -> result out."""
+    """Prove the canonical spec-in -> compile -> lint -> run -> acceptance transaction."""
     transport = PythonStdioTransport(
         script_path="datamimic_ce/mcp/cli.py",
         args=["serve", "--transport", "stdio"],
@@ -129,7 +129,7 @@ async def test_cli_stdio_scaffold() -> None:
         tool_names = {t.name for t in tools}
         assert "datamimic_scaffold" in tool_names, f"Expected datamimic_scaffold in {tool_names}"
 
-        # Call scaffold with the spec, verify successful render + lint + dry-run
+        # Call scaffold and require terminal acceptance through the real MCP transport.
         result = json.loads(
             (
                 await client.call_tool(

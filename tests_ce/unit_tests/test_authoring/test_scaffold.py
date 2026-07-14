@@ -156,7 +156,6 @@ def test_rng_seed_alias_is_explicitly_normalized() -> None:
         ScaffoldRequest(
             spec={"rngSeed": 42, "generates": [{"name": "g", "count": 1,
                   "fields": [{"name": "id", "kind": "increment"}]}]},
-            dry_run=False,
         )
     )
 
@@ -472,9 +471,9 @@ def test_kind_alias_normalization_surfaces_as_note() -> None:
                            "fields": [{"name": "name", "kind": "weighted_values",
                                        "values": ["pasta", "pizza", "salad"],
                                        "weights": [2, 1, 1]}]}]}
-    result = scaffold_spec(ScaffoldRequest(spec=spec, dry_run=False))
+    result = scaffold_spec(ScaffoldRequest(spec=spec))
     assert result.ok
-    assert result.stage is AuthoringStage.LINT
+    assert result.stage is AuthoringStage.ACCEPTANCE
     assert len(result.normalization_notes) > 0
     # The note should mention the alias normalization
     assert any("weighted_values" in note and "weighted" in note for note in result.normalization_notes), (
@@ -556,7 +555,7 @@ def test_children_as_object_normalized_to_array() -> None:
             }
         ]
     }
-    result = scaffold_spec(ScaffoldRequest(spec=spec, dry_run=False))
+    result = scaffold_spec(ScaffoldRequest(spec=spec))
     assert result.ok
     assert result.xml is not None
     # Verify the note about normalization is present
@@ -628,7 +627,7 @@ def test_object_shaped_nested_fields_are_normalized() -> None:
         ]
     }
 
-    result = scaffold_spec(ScaffoldRequest(spec=spec, dry_run=False))
+    result = scaffold_spec(ScaffoldRequest(spec=spec))
 
     assert result.ok
     assert result.xml is not None

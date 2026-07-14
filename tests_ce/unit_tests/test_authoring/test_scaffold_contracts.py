@@ -128,7 +128,6 @@ class TestScaffoldParity:
         """Service correctly processes a valid spec with dry-run."""
         request = ScaffoldRequest(
             spec=SPEC_VALID_DRY_RUN,
-            dry_run=True,
             max_count=10,
             sample_rows=5,
             response_format="concise",
@@ -142,27 +141,15 @@ class TestScaffoldParity:
         assert len(result.products) > 0
         assert all(p.name and p.count >= 0 for p in result.products)
 
-    def test_service_scaffold_no_dry_run(self):
-        """Service correctly stops at lint when dry_run=False."""
-        request = ScaffoldRequest(
-            spec=SPEC_VALID_NO_DRY_RUN,
-            dry_run=False,
-            max_count=10,
-            sample_rows=5,
-            response_format="concise",
-        )
-        result = scaffold(request)
-
-        assert result.ok is True
-        assert result.stage is AuthoringStage.LINT
-        assert result.xml is not None
-        assert result.products == []
+    def test_service_scaffold_rejects_removed_lint_only_switch(self):
+        """Scaffold always runs the complete canonical transaction."""
+        with pytest.raises(ValueError, match="dry_run"):
+            ScaffoldRequest(spec=SPEC_VALID_NO_DRY_RUN, dry_run=False)
 
     def test_service_scaffold_render_error(self):
         """Service correctly handles render errors."""
         request = ScaffoldRequest(
             spec=SPEC_MALFORMED,
-            dry_run=True,
             max_count=10,
             sample_rows=5,
             response_format="concise",
@@ -178,7 +165,6 @@ class TestScaffoldParity:
         """MCP scaffold_impl returns same data as service layer."""
         args = ScaffoldArgs(
             spec=SPEC_VALID_DRY_RUN,
-            dry_run=True,
             max_count=10,
             sample_rows=5,
             response_format="concise",
@@ -205,26 +191,6 @@ class TestScaffoldParity:
             assert "sample" in mcp_prod
             assert "truncated_rows" in mcp_prod
 
-    def test_mcp_service_parity_no_dry_run(self):
-        """MCP and service return empty products list when dry_run=False."""
-        args = ScaffoldArgs(
-            spec=SPEC_VALID_NO_DRY_RUN,
-            dry_run=False,
-            max_count=10,
-            sample_rows=5,
-            response_format="concise",
-        )
-        request = ScaffoldRequest(**args.model_dump())
-
-        mcp_result = scaffold_impl(args)
-        service_result = scaffold(request)
-        service_dict = service_result.model_dump(mode="json", exclude_none=True)
-
-        assert mcp_result["products"] == []
-        assert service_dict["products"] == []
-        assert mcp_result["ok"] == service_dict["ok"]
-        assert mcp_result["stage"] == "lint"
-
     def test_cli_json_parity_dry_run(self):
         """CLI JSON output matches service layer structure."""
         runner = CliRunner()
@@ -242,7 +208,6 @@ class TestScaffoldParity:
             # Verify service generates same structure
             request = ScaffoldRequest(
                 spec=SPEC_VALID_DRY_RUN,
-                dry_run=True,
                 max_count=10,
                 sample_rows=5,
                 response_format="concise",
@@ -258,8 +223,8 @@ class TestScaffoldParity:
             assert cli_output["compile_plan"] == service_dict["compile_plan"]
             assert len(cli_output.get("products", [])) == len(service_dict.get("products", []))
 
-    def test_cli_json_parity_no_dry_run(self):
-        """CLI JSON with --no-dry-run returns empty products."""
+    def test_cli_rejects_removed_no_dry_run_switch(self):
+        """The removed lint-only path cannot be selected through CLI."""
         runner = CliRunner()
         spec_json = json.dumps(SPEC_VALID_NO_DRY_RUN)
 
@@ -268,11 +233,7 @@ class TestScaffoldParity:
             spec_file.write_text(spec_json)
 
             result = runner.invoke(app, ["scaffold", str(spec_file), "--no-dry-run", "--format", "json"])
-            assert result.exit_code == 0
-
-            cli_output = json.loads(result.stdout)
-            assert cli_output["products"] == []
-            assert cli_output["stage"] == "lint"
+            assert result.exit_code == 2
 
     def test_cli_stdin_support(self):
         """CLI supports '-' for reading spec from stdin."""
@@ -281,7 +242,7 @@ class TestScaffoldParity:
 
         result = runner.invoke(
             app,
-            ["scaffold", "-", "--no-dry-run", "--format", "json"],
+            ["scaffold", "-", "--format", "json"],
             input=spec_json,
         )
         assert result.exit_code == 0
@@ -292,12 +253,12 @@ class TestScaffoldParity:
 
     def test_v1_cli_mcp_service_parity(self):
         """All transports accept the same canonical model.dm.json contract."""
-        request = ScaffoldRequest(spec=SPEC_V1, dry_run=False)
+        request = ScaffoldRequest(spec=SPEC_V1)
         service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
         mcp_result = scaffold_impl(ScaffoldArgs(**request.model_dump()))
         cli_result = CliRunner().invoke(
             app,
-            ["scaffold", "-", "--no-dry-run", "--format", "json"],
+            ["scaffold", "-", "--format", "json"],
             input=json.dumps(SPEC_V1),
         )
 
@@ -312,7 +273,6 @@ class TestScaffoldParity:
         """CLI and MCP preserve a complete memstore result byte-for-byte."""
         request = ScaffoldRequest(
             spec=SPEC_V1_COMPLETE_MEMSTORE,
-            dry_run=True,
             max_count=5,
             sample_rows=1,
         )
@@ -408,7 +368,6 @@ class TestScaffoldParity:
 
         request = ScaffoldRequest(
             spec=spec_with_alias,
-            dry_run=False,
             response_format="concise",
         )
         result = scaffold(request)
@@ -433,7 +392,7 @@ class TestScaffoldParity:
                 },
             ]
         }
-        request = ScaffoldRequest(spec=spec, dry_run=False)
+        request = ScaffoldRequest(spec=spec)
         result = scaffold(request)
 
         assert result.ok is False
@@ -446,7 +405,6 @@ class TestScaffoldParity:
         """Source-backed unique range sufficient for producer count succeeds."""
         request = ScaffoldRequest(
             spec=SPEC_V1_COMPLETE_MEMSTORE,
-            dry_run=True,
             max_count=5,
             sample_rows=3,
         )
@@ -480,7 +438,7 @@ class TestScaffoldParity:
                 },
             ]
         }
-        args = ScaffoldArgs(spec=spec, dry_run=False)
+        args = ScaffoldArgs(spec=spec)
         result = scaffold_impl(args)
 
         assert result["ok"] is False

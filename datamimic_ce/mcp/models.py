@@ -14,6 +14,7 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldRequest,
 )
 from datamimic_ce.authoring.reference import ReferenceTopic
+from datamimic_ce.authoring.reference_projection import AuthoringReferenceQuery
 from datamimic_ce.domains.common.locale_registry import dataset_code_for_locale
 from datamimic_ce.domains.locales import SUPPORTED_DATASET_CODES
 from datamimic_ce.domains.utils.dataset_path import dataset_path
@@ -169,7 +170,8 @@ class ReferenceArgs(BaseModel):
         ReferenceTopic.OVERVIEW,
         description=(
             "What to look up; start with 'overview'. Use 'distributions' for source reads "
-            "and numeric range key sequences; use 'rules' with name=DMxxx for canonical diagnostics."
+            "and numeric range key sequences; use 'rules' with name=DMxxx for canonical diagnostics; "
+            "use 'authoring' with a category/kind query for a compact model.dm.json fragment."
         ),
     )
     name: str | None = Field(
@@ -177,6 +179,18 @@ class ReferenceArgs(BaseModel):
         description="Element tag (topic=element), entity name (topic=entities), rule id "
         "(topic=rules), recipe id (topic=recipe) or generator filter",
     )
+    query: AuthoringReferenceQuery | None = Field(
+        None,
+        description="Discriminated compact projection query for topic=authoring",
+    )
+
+    @model_validator(mode="after")
+    def _authoring_query_scope(self) -> ReferenceArgs:
+        if self.query is not None and self.topic is not ReferenceTopic.AUTHORING:
+            raise ValueError("query is only valid for topic=authoring")
+        if self.topic is ReferenceTopic.AUTHORING and self.name is not None:
+            raise ValueError("topic=authoring uses query, not name")
+        return self
 
 
 # ScaffoldArgs is an alias to ScaffoldRequest from the canonical contracts module

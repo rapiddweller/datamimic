@@ -10,6 +10,7 @@ Token-capped: every answer ends with a pointer instead of overflowing."""
 
 import importlib
 import inspect
+import json
 import pkgutil
 import tomllib
 from enum import StrEnum
@@ -20,6 +21,11 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from datamimic_ce.domains.domain_core.entity_registry import EntitySpec
 
+from datamimic_ce.authoring.reference_projection import (
+    AuthoringReferenceQuery,
+    authoring_reference_projection,
+    list_authoring_reference_queries,
+)
 from datamimic_ce.authoring.schema import ALIASES, build_schema_index
 from datamimic_ce.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
@@ -63,6 +69,7 @@ class ReferenceTopic(StrEnum):
     CONVERTERS = "converters"
     RULES = "rules"
     SCAFFOLD = "scaffold"
+    AUTHORING = "authoring"
     RECIPES = "recipes"
     RECIPE = "recipe"
 
@@ -389,8 +396,6 @@ def rules_reference(name: str | None = None) -> str:
 
 def scaffold_reference() -> str:
     """Versioned intent schema projected directly from the Intent SPOT."""
-    import json
-
     from datamimic_ce.authoring.spec import SPEC_PROMPT_GUIDE, authoring_spec_json_schema
 
     return (
@@ -402,6 +407,24 @@ def scaffold_reference() -> str:
         "## JSON Schema\n```json\n"
         f"{json.dumps(authoring_spec_json_schema(), indent=2)}\n```"
     )
+
+
+def compact_authoring_reference(query: AuthoringReferenceQuery | None = None) -> str:
+    """Render one compact, enum-addressed projection from the Intent Model SPOT."""
+
+    if query is None:
+        return json.dumps(
+            {
+                "topic": ReferenceTopic.AUTHORING,
+                "queries": [
+                    candidate.model_dump(mode="json")
+                    for candidate in list_authoring_reference_queries()
+                ],
+                "usage": "reference authoring --category <category> --kind <kind>",
+            },
+            indent=2,
+        )
+    return authoring_reference_projection(query).model_dump_json(indent=2)
 
 
 def capabilities_manifest() -> dict[str, Any]:
@@ -477,7 +500,12 @@ def load_recipe(recipe_id: str) -> str:
     return f"# {entry['title']}\n{entry['summary']}\n\n```xml\n{xml}```"
 
 
-def reference(topic: ReferenceTopic, name: str | None = None) -> str:
+def reference(
+    topic: ReferenceTopic,
+    name: str | None = None,
+    *,
+    query: AuthoringReferenceQuery | None = None,
+) -> str:
     if topic is ReferenceTopic.OVERVIEW:
         return clip(cheatsheet(), 16000, " [truncated — ask a specific topic]")
     if topic is ReferenceTopic.ELEMENT:
@@ -506,6 +534,8 @@ def reference(topic: ReferenceTopic, name: str | None = None) -> str:
         return rules_reference(name)
     if topic is ReferenceTopic.SCAFFOLD:
         return scaffold_reference()
+    if topic is ReferenceTopic.AUTHORING:
+        return compact_authoring_reference(query)
     if topic is ReferenceTopic.RECIPES:
         return list_recipes()
     if topic is ReferenceTopic.RECIPE:

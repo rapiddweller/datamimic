@@ -123,27 +123,9 @@ def test_scaffold_dry_run_uses_only_the_canonical_dry_run_pipeline(monkeypatch) 
     assert calls == {"lint": 0, "dry_run": 1}
 
 
-def test_scaffold_without_dry_run_lints_once_and_does_not_run(monkeypatch) -> None:
-    calls = {"lint": 0, "dry_run": 0}
-
-    def fake_lint(*_args, **_kwargs) -> LintResult:
-        calls["lint"] += 1
-        return LintResult(ok=True)
-
-    def unexpected_dry_run(*_args, **_kwargs):
-        calls["dry_run"] += 1
-        pytest.fail("no-dry-run scaffold branch must not execute")
-
-    monkeypatch.setattr(authoring_service, "lint_source", fake_lint)
-    monkeypatch.setattr(authoring_service, "dry_run_source", unexpected_dry_run)
-
-    result = authoring_service.scaffold(
+def test_scaffold_rejects_removed_lint_only_switch() -> None:
+    with pytest.raises(ValidationError, match="dry_run"):
         ScaffoldRequest(spec=_SCAFFOLD_SPEC, dry_run=False)
-    )
-
-    assert result.ok
-    assert result.stage is AuthoringStage.LINT
-    assert calls == {"lint": 1, "dry_run": 0}
 
 
 def test_check_service_mcp_cli_parity(tmp_path: Path) -> None:

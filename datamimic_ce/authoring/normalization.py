@@ -18,6 +18,11 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
+from datamimic_ce.authoring.contracts import IntentValidationIssue
+from datamimic_ce.authoring.intent_validation import (
+    project_validation_issues,
+    unsupported_intent_issues,
+)
 from datamimic_ce.authoring.spec import AuthoringSpecV1, FieldIntentKind
 from datamimic_ce.constants.element_constants import EL_GENERATE
 from datamimic_ce.exporters.exporter_util import buffered_exporter_names
@@ -31,7 +36,13 @@ class NormalizationResult(BaseModel):
 
     spec: AuthoringSpecV1 | None = None
     notes: tuple[str, ...] = ()
-    errors: tuple[str, ...] = ()
+    issues: tuple[IntentValidationIssue, ...] = ()
+
+    @property
+    def errors(self) -> tuple[str, ...]:
+        """Compatibility summaries projected from canonical typed issues."""
+
+        return tuple(issue.summary() for issue in self.issues)
 
 
 _KIND_ALIASES: dict[str, FieldIntentKind] = {
@@ -88,14 +99,6 @@ _LEGACY_KEYS_BY_FIELD_KIND: dict[FieldIntentKind, frozenset[str]] = {
     FieldIntentKind.SCRIPT: frozenset(("script",)),
     FieldIntentKind.NESTED_LIST: frozenset(("min", "max", "fields", "children")),
 }
-
-
-def _validation_errors(error: ValidationError) -> tuple[str, ...]:
-    rendered: list[str] = []
-    for issue in error.errors(include_url=False):
-        path = ".".join(str(part) for part in issue["loc"]) or "spec"
-        rendered.append(f"{path}: {issue['msg']}")
-    return tuple(rendered)
 
 
 def _one_alias(mapping: dict[str, Any], aliases: tuple[str, ...], label: str, errors: list[str]) -> Any:
@@ -512,18 +515,20 @@ def _normalize_legacy(raw: dict[str, Any]) -> NormalizationResult:
     if duplicate_products:
         errors.append(f"product names must be unique: {', '.join(duplicate_products)}")
     if errors:
-        return NormalizationResult(notes=tuple(notes), errors=tuple(errors))
+        return NormalizationResult(notes=tuple(notes), issues=unsupported_intent_issues(errors))
+    candidate = {
+        "version": "1",
+        "seed": seed,
+        "products": normalized_products,
+        "expectations": [],
+    }
     try:
-        spec = AuthoringSpecV1.model_validate(
-            {
-                "version": "1",
-                "seed": seed,
-                "products": normalized_products,
-                "expectations": [],
-            }
-        )
+        spec = AuthoringSpecV1.model_validate(candidate)
     except ValidationError as error:
-        return NormalizationResult(notes=tuple(notes), errors=_validation_errors(error))
+        return NormalizationResult(
+            notes=tuple(notes),
+            issues=project_validation_issues(error, candidate),
+        )
     return NormalizationResult(spec=spec, notes=tuple(notes))
 
 
@@ -535,7 +540,7 @@ def normalize_authoring_spec(raw: dict[str, Any]) -> NormalizationResult:
     try:
         return NormalizationResult(spec=AuthoringSpecV1.model_validate(raw))
     except ValidationError as error:
-        return NormalizationResult(errors=_validation_errors(error))
+        return NormalizationResult(issues=project_validation_issues(error, raw))
 
 
 __all__ = ["NormalizationResult", "normalize_authoring_spec"]

@@ -33,10 +33,13 @@ exception.
 """
 
 import multiprocessing as mp
+import os
 import pickle
 import tempfile
 import time
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from enum import StrEnum
 from multiprocessing.connection import Connection
@@ -85,11 +88,36 @@ class CapturedProducts:
 
 
 @dataclass(frozen=True)
+class SmokeExportCapture:
+    """Typed internal facts from smoke-export execution, without public policy."""
+
+    requested: bool
+    applicable_exporters: int
+    attempted_exporters: int
+    failed_exporters: int
+
+    @classmethod
+    def not_requested(cls) -> "SmokeExportCapture":
+        return cls(
+            requested=False,
+            applicable_exporters=0,
+            attempted_exporters=0,
+            failed_exporters=0,
+        )
+
+@dataclass(frozen=True)
 class CapturedRun:
-    """One engine result paired with the complete bounded capture from that run."""
+    """One engine result paired with the full bounded capture from that run."""
 
     result: DryRunResult
     captured: CapturedProducts
+    base_run_ok: bool = True
+    smoke_export: SmokeExportCapture = SmokeExportCapture(
+        requested=False,
+        applicable_exporters=0,
+        attempted_exporters=0,
+        failed_exporters=0,
+    )
 
 
 @dataclass(frozen=True)
@@ -152,6 +180,7 @@ class _WorkerSuccess:
     captured: dict[str, tuple[object, ...]]
     budgets: tuple[_ProductBudget, ...]
     smoke_diagnostics: tuple[dict[str, object], ...]
+    smoke_export: SmokeExportCapture
 
 
 @dataclass(frozen=True)
@@ -593,7 +622,10 @@ def _smoke_setup_context(tmp_dir: Path):
     )
 
 
-def _smoke_export(captured: dict[str, list[object]], stripped: _StrippedTargets) -> list[Diagnostic]:
+def _smoke_export(
+    captured: dict[str, list[object]],
+    stripped: _StrippedTargets,
+) -> tuple[list[Diagnostic], SmokeExportCapture]:
     """Replay the captured rows through each stripped file exporter inside a temp dir
     (write + finalize — the two phases where serialization crashes live). The tempdir
     context manager guarantees zero artifacts. Failures become DM002 diagnostics."""
@@ -603,6 +635,11 @@ def _smoke_export(captured: dict[str, list[object]], stripped: _StrippedTargets)
     from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
 
     diagnostics: list[Diagnostic] = []
+    applicable_exporters = sum(
+        len(file_targets) for _basename, file_targets in stripped.values()
+    )
+    attempted_exporters = 0
+    failed_exporters = 0
     with tempfile.TemporaryDirectory(prefix="datamimic_smoke_") as tmp:
         smoke_ctx = _smoke_setup_context(Path(tmp))
         for full_name, (basename, file_targets) in sorted(stripped.items()):
@@ -613,6 +650,7 @@ def _smoke_export(captured: dict[str, list[object]], stripped: _StrippedTargets)
             if not rows:
                 continue
             for exporter_name, params in file_targets:
+                attempted_exporters += 1
                 try:
                     config = ExporterConfig(
                         setup_context=smoke_ctx,
@@ -625,6 +663,7 @@ def _smoke_export(captured: dict[str, list[object]], stripped: _StrippedTargets)
                     exporter.consume((basename, rows), full_name, ExporterStateManager(worker_id=1))
                     exporter.finalize_chunks(1)
                 except Exception as err:
+                    failed_exporters += 1
                     diagnostics.append(
                         Diagnostic(
                             rule=RULE_RUNTIME_ERROR,
@@ -641,7 +680,12 @@ def _smoke_export(captured: dict[str, list[object]], stripped: _StrippedTargets)
                             name=full_name,
                         )
                     )
-    return diagnostics
+    return diagnostics, SmokeExportCapture(
+        requested=True,
+        applicable_exporters=applicable_exporters,
+        attempted_exporters=attempted_exporters,
+        failed_exporters=failed_exporters,
+    )
 
 
 def dry_run(
@@ -685,7 +729,11 @@ def dry_run_captured(
             lint=lint,
             diagnostics=lint.diagnostics,
         )
-        return CapturedRun(result=result, captured=CapturedProducts((), max_count))
+        return CapturedRun(
+            result=result,
+            captured=CapturedProducts((), max_count),
+            base_run_ok=False,
+        )
     return _execute_captured(
         path,
         max_count=max_count,
@@ -736,7 +784,11 @@ def dry_run_source_captured(
             lint=lint,
             diagnostics=lint.diagnostics,
         )
-        return CapturedRun(result=result, captured=CapturedProducts((), max_count))
+        return CapturedRun(
+            result=result,
+            captured=CapturedProducts((), max_count),
+            base_run_ok=False,
+        )
     with tempfile.TemporaryDirectory(prefix="datamimic_dryrun_") as tmp:
         descriptor = Path(tmp) / "datamimic.xml"
         descriptor.write_text(xml, encoding="utf-8")
@@ -767,7 +819,11 @@ def _clip_value(value: object, max_chars: int = 200) -> object:
 
 
 def _failed_capture(result: DryRunResult, max_count: int) -> CapturedRun:
-    return CapturedRun(result=result, captured=CapturedProducts((), max_count))
+    return CapturedRun(
+        result=result,
+        captured=CapturedProducts((), max_count),
+        base_run_ok=False,
+    )
 
 
 def _ipc_safe_value(value: object) -> object:
@@ -788,6 +844,34 @@ def _ipc_safe_value(value: object) -> object:
     return value
 
 
+@contextmanager
+def _suppress_worker_stderr() -> Iterator[None]:
+    """Silence engine logs at FD 2 inside the isolated dry-run child only."""
+
+    saved_stderr: int | None = None
+    null_stderr: int | None = None
+    redirected = False
+    try:
+        null_stderr = os.open(os.devnull, os.O_WRONLY)
+        saved_stderr = os.dup(2)
+        os.dup2(null_stderr, 2)
+        redirected = True
+    except OSError:
+        # A closed or unavailable stderr must not turn an otherwise valid dry-run
+        # into a runtime failure. The worker still returns structured evidence by IPC.
+        pass
+    try:
+        yield
+    finally:
+        if redirected and saved_stderr is not None:
+            with suppress(OSError):
+                os.dup2(saved_stderr, 2)
+        if saved_stderr is not None:
+            os.close(saved_stderr)
+        if null_stderr is not None:
+            os.close(null_stderr)
+
+
 def _engine_process_worker(
     path: Path,
     max_count: int,
@@ -797,48 +881,54 @@ def _engine_process_worker(
 ) -> None:
     """Execute and capture exactly one engine run inside the cancellable process."""
 
-    from functools import partial
+    with _suppress_worker_stderr():
+        from functools import partial
 
-    from datamimic_ce.datamimic import DataMimic
+        from datamimic_ce.datamimic import DataMimic
 
-    budgets: _ProductBudgets = {}
-    stripped: _StrippedTargets | None = {} if smoke_export else None
-    try:
-        engine = DataMimic(
-            descriptor_path=path,
-            task_id=f"dryrun_{uuid.uuid4().hex}",
-            test_mode=True,
-            statement_transformer=partial(
-                neutralize_for_dry_run,
-                max_count=max_count,
-                allow_side_effects=allow_side_effects,
-                stripped_file_targets=stripped,
-                product_budgets=budgets,
-                descriptor_dir=path.parent,
-            ),
-        )
-        engine.parse_and_execute()
-        raw_capture = engine.capture_test_result() or {}
-        smoke_diagnostics = _smoke_export(raw_capture, stripped) if stripped else []
-        captured = {
-            str(name): tuple(_ipc_safe_value(row) for row in rows)
-            for name, rows in raw_capture.items()
-        }
-        message: _WorkerMessage = _WorkerSuccess(
-            captured=captured,
-            budgets=tuple(sorted(budgets.values(), key=lambda budget: budget.name)),
-            smoke_diagnostics=tuple(
-                diagnostic.model_dump(mode="json") for diagnostic in smoke_diagnostics
-            ),
-        )
-    except Exception as err:
-        # The process is the untyped runtime boundary: every engine exception must
-        # become a stable DM002 response rather than killing the authoring transport.
-        message = _WorkerFailure(message=str(err), fix_hint=_runtime_hint(err))
-    try:
-        send_connection.send(message)
-    finally:
-        send_connection.close()
+        budgets: _ProductBudgets = {}
+        stripped: _StrippedTargets | None = {} if smoke_export else None
+        try:
+            engine = DataMimic(
+                descriptor_path=path,
+                task_id=f"dryrun_{uuid.uuid4().hex}",
+                test_mode=True,
+                statement_transformer=partial(
+                    neutralize_for_dry_run,
+                    max_count=max_count,
+                    allow_side_effects=allow_side_effects,
+                    stripped_file_targets=stripped,
+                    product_budgets=budgets,
+                    descriptor_dir=path.parent,
+                ),
+            )
+            engine.parse_and_execute()
+            raw_capture = engine.capture_test_result() or {}
+            if stripped is None:
+                smoke_diagnostics: list[Diagnostic] = []
+                smoke_export_capture = SmokeExportCapture.not_requested()
+            else:
+                smoke_diagnostics, smoke_export_capture = _smoke_export(raw_capture, stripped)
+            captured = {
+                str(name): tuple(_ipc_safe_value(row) for row in rows)
+                for name, rows in raw_capture.items()
+            }
+            message: _WorkerMessage = _WorkerSuccess(
+                captured=captured,
+                budgets=tuple(sorted(budgets.values(), key=lambda budget: budget.name)),
+                smoke_diagnostics=tuple(
+                    diagnostic.model_dump(mode="json") for diagnostic in smoke_diagnostics
+                ),
+                smoke_export=smoke_export_capture,
+            )
+        except Exception as err:
+            # The process is the untyped runtime boundary: every engine exception must
+            # become a stable DM002 response rather than killing the authoring transport.
+            message = _WorkerFailure(message=str(err), fix_hint=_runtime_hint(err))
+        try:
+            send_connection.send(message)
+        finally:
+            send_connection.close()
 
 
 def _process_context() -> mp.context.SpawnContext:
@@ -1298,7 +1388,12 @@ def _execute_captured(
         lint=lint,
         diagnostics=[*smoke_diags, *zero_rows],
     )
-    return CapturedRun(result=result, captured=captured_products)
+    return CapturedRun(
+        result=result,
+        captured=captured_products,
+        base_run_ok=not zero_rows,
+        smoke_export=message.smoke_export,
+    )
 
 
 def _execute(

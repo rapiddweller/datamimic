@@ -5,6 +5,15 @@ different amounts of prompt guidance. The axis under test is the prompt, not
 the model: same task text, four levels of DSL context, scored with the repo's
 own linter and dry-run engine instead of a human or an LLM judge.
 
+This tracked harness is a **legacy raw-XML prompt baseline** retained for
+historical comparability. Its XML score does not establish success for the
+canonical agent-authoring flow. A canonical evaluation must keep the model's
+successful artifact as `model.dm.json`, call the single scaffold use case through
+CLI or MCP, and pass only when the result reports `verified=true`; returned XML
+is deterministic compiler output and verification evidence, not the authored
+Intent Model SPOT. This harness does not currently exercise that transaction or
+native tool calling.
+
 ## Run it
 
 ```
@@ -42,7 +51,7 @@ Output:
 - `results/latest.md`: the markdown report from the most recent run.
 - stdout: the same markdown report.
 
-## Scoring
+## Legacy raw-XML scoring
 
 Each generation goes through three gates, in order:
 

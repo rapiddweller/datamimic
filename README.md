@@ -6,7 +6,7 @@
 >
 > 👉 **Enterprise Platform:** [datamimic.io](https://datamimic.io) &nbsp;|&nbsp; 📘 **Docs:** [docs.datamimic.io](https://docs.datamimic.io) &nbsp;|&nbsp; 📅 **Book a strategy call:** [datamimic.io/contact](https://datamimic.io/contact)
 >
-> 🤖 **AI agent?** Start at [`AGENTS.md`](https://github.com/rapiddweller/datamimic/blob/development/AGENTS.md): register the MCP server, then author descriptors with the `datamimic_reference` → `datamimic_check` (lint) → `datamimic_run` (dry-run) loop. Verified end-to-end examples live in [`examples/showcase/`](https://github.com/rapiddweller/datamimic/tree/development/examples/showcase/).
+> 🤖 **AI agent?** Start at [`AGENTS.md`](https://github.com/rapiddweller/datamimic/blob/development/AGENTS.md) and use the project CLI: query only the reference fragments you need, preserve new intent as `model.dm.json`, run `datamimic scaffold ... --format json`, and stop on `verified=true`. Existing raw XML uses lint plus bounded dry-run. Verified end-to-end examples live in [`examples/showcase/`](https://github.com/rapiddweller/datamimic/tree/development/examples/showcase/).
 
 ---
 
@@ -32,7 +32,7 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 - **Execute** single-system pipelines against PostgreSQL · MySQL · Oracle · MS SQL · SQLite · MongoDB · CSV · JSON · XML · XLSX · DbUnit · fixed-width (`.fcw`)
 - **Model behavior** — weighted state machines, composite multi-field references, control flow (`<while>`, `<assert>`), and a scriptable memstore for staged aggregation
 - **Emit provenance** — append-only execution logs and per-output content hash for audit re-execution
-- **Serve agents** — bundled MCP server with the full authoring loop (`datamimic_reference` DSL lookup, `datamimic_check` lint with fix hints, `datamimic_run` safe dry-run) plus the deterministic `generate` tool
+- **Guide agents** — machine-readable capabilities, progressive reference queries, and one canonical CLI scaffold transaction; an optional MCP adapter exposes the same authoring service
 
 **The Enterprise Platform adds:**
 
@@ -47,98 +47,58 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 
 ---
 
-## AI agents: author, validate, and run data models (MCP)
+## AI agents: author, verify, and run data models
 
-DATAMIMIC CE ships a Model Context Protocol (MCP) server that Claude Code, Cursor, and any MCP-compatible agent can call. The working loop: look up the DSL with `datamimic_reference`, author a descriptor, lint it with `datamimic_check` (every finding has a rule id and a fix hint), dry-run it with `datamimic_run` (capped counts, sample rows, optional `smoke_export`), then run for real with `datamimic run`. [`AGENTS.md`](https://github.com/rapiddweller/datamimic/blob/development/AGENTS.md) routes agents working in a checkout of this repo; [`examples/showcase/`](https://github.com/rapiddweller/datamimic/tree/development/examples/showcase/) holds four verified end-to-end examples to start from.
+The CLI is the baseline agent contract. Install CE with `pip install datamimic-ce`;
+inside this checkout, use `.venv/bin/datamimic` so a stale global installation cannot
+change the available schema or commands.
 
-```bash
-pip install "datamimic_ce[mcp]"
-```
+| Need | CLI tool | Contract |
+|---|---|---|
+| Discover the live structural surface | `datamimic capabilities` | Machine-readable JSON names and enum values; use it for discovery, not prose. |
+| Learn the Intent Model progressively | `datamimic reference authoring`, then `datamimic reference authoring --category <category> --kind <kind>` | Start with the query catalogue, then load only the typed fragment needed. |
+| Author a new model | Preserve `model.dm.json`; run `datamimic scaffold model.dm.json --format json` | One compile/lint/bounded-run/acceptance transaction per changed attempt. Stop on `verified=true`; generated XML is runtime output. |
+| Work with existing raw XML | `datamimic lint model.xml --format json`, then `datamimic dry-run model.xml --format json` | Fix diagnostics, inspect bounded samples for intent, then use `datamimic run model.xml` only when real execution is requested. |
+| Find a recipe or DSL detail | `datamimic reference recipes`, then a narrow `reference` topic/name | Query the live reference instead of guessing elements, generators, scope, distributions, or rules. |
 
-### Register with your coding agent (stdio)
+`capabilities`, authoring-reference projections, and the commands shown with
+`--format json` return machine-readable JSON. On a failed scaffold attempt, change
+`model.dm.json` using its structured validation issues or rule diagnostics before
+retrying; never repeat an identical failed call. A successful scaffold result is
+terminal for authoring, so do not lint or dry-run its generated XML again.
 
-**Claude Code** — one command:
+### Optional MCP adapter
 
-```bash
-claude mcp add datamimic -- datamimic-mcp serve --transport stdio
-```
-
-**Cursor / Claude Desktop / any `mcp.json` client** — add to the config (`.cursor/mcp.json`, or the project-level `.mcp.json`):
-
-```json
-{
-  "mcpServers": {
-    "datamimic": {
-      "command": "datamimic-mcp",
-      "args": ["serve", "--transport", "stdio"]
-    }
-  }
-}
-```
-
-**VS Code** (`.vscode/mcp.json`) uses the same `command`/`args` under a `servers` key. For a networked/shared server instead of stdio, run `datamimic-mcp serve --transport sse` (honours `DATAMIMIC_MCP_HOST` / `PORT` / `API_KEY`).
-
-The server ships the **DSL authoring toolset (AI linter)**: `datamimic_reference` (cheatsheet, element schemas, recipes), `datamimic_check` (aggregated diagnostics — every finding has a rule id and a fix hint) and `datamimic_run` (safe dry-run with capped counts, neutralized targets and sample rows). Agents draft a descriptor, lint it, dry-run it and iterate until green — the resulting XML is a reviewable, deterministic artifact instead of a black-box generation. Without MCP, the CLI covers the same loop: `datamimic reference <topic> [name]` for lookups, `datamimic lint` for checks, `datamimic dry-run` for the safe dry-run (`datamimic capabilities` additionally prints the raw structural surface as JSON).
-
-📘 Full guide: [`docs/mcp_quickstart.md`](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md)
+When the calling environment already exposes DATAMIMIC MCP tools, they map to the same
+canonical contracts and implementations: `reference` → `datamimic_reference`,
+`scaffold` → `datamimic_scaffold`, `lint` → `datamimic_check`, and `dry-run` →
+`datamimic_run`. Install the adapter with `pip install "datamimic-ce[mcp]"`;
+registration details belong in the [`MCP quickstart`](docs/mcp_quickstart.md),
+not in the authoring workflow. Its optional `generate` tool returns deterministic
+domain JSON as a secondary convenience facade; it does not create or replace a
+reviewable `model.dm.json` artifact.
 
 ### Prompts to paste into your agent
 
-The configuration above wires the MCP server into your tool. The three prompts below are different: paste them as-is into the chat of an agent that already has file and shell access (Claude Code, Cursor, Copilot, Gemini CLI). The agent then does the install, authoring, and verification itself.
-
-**1. Set up DATAMIMIC**
+**Author and verify a new model**
 
 ```text
-Install DATAMIMIC CE and register its MCP server with this tool.
+Create the dataset I describe with DATAMIMIC.
 
-1. Run: pip install "datamimic_ce[mcp]"
-2. Register the MCP server. If this tool supports `claude mcp add`, run:
-   claude mcp add datamimic -- datamimic-mcp serve --transport stdio
-   Otherwise add the stdio equivalent to this tool's MCP config file (for
-   example .cursor/mcp.json or .vscode/mcp.json):
-   {
-     "mcpServers": {
-       "datamimic": {
-         "command": "datamimic-mcp",
-         "args": ["serve", "--transport", "stdio"]
-       }
-     }
-   }
-3. Verify the MCP server: call the datamimic_reference tool with
-   topic=overview and show me the first few lines of the result.
-4. Verify the CLI: run `datamimic version` and show me the output.
-
-Report both verification results before doing anything else.
+Read AGENTS.md first. In a repository checkout use `.venv/bin/datamimic`;
+otherwise use the current `datamimic` CLI. Discover the live surface only when
+needed, start with `datamimic reference authoring`, and query only the narrow
+category/kind fragments required for this task. Preserve my intent as
+`model.dm.json`; do not hand-write XML. Run
+`datamimic scaffold model.dm.json --format json` once per changed attempt. On
+failure, change the input from the structured issues or diagnostics before
+retrying. Inspect acceptance evidence and samples, then stop on `verified=true`;
+do not lint or dry-run the generated XML. If I request real execution, save the
+returned XML as a generated artifact and run that descriptor. Return the
+`model.dm.json` path and concise verification evidence.
 ```
 
-**2. Generate test data**
-
-```text
-Generate a test dataset of 100 customers using DATAMIMIC.
-
-Requirements:
-- 100 records, one Person each, with an incrementing integer id.
-- Realistic name and email, generated from the Person entity, not
-  hand-rolled faker calls.
-- Age between 18 and 90.
-- A "segment" field with at least two values, unevenly weighted (mostly
-  "retail", some "business").
-- Write the output as JSON.
-
-Steps:
-1. If you are working inside a checkout of the datamimic repository, read
-   AGENTS.md first. It explains the DSL authoring loop.
-2. Author a DATAMIMIC XML descriptor for this dataset.
-3. Validate it with the datamimic_check MCP tool (or `datamimic lint <path>`
-   if MCP is not available). Fix every finding before moving on.
-4. Dry-run it with the datamimic_run MCP tool (or `datamimic dry-run <path>` if MCP is not available) and inspect the sample rows
-   it returns. Confirm ages are in range and the segment split looks
-   weighted, not uniform.
-5. Run it for real: `datamimic run <path-to-descriptor>`.
-6. Tell me where the JSON output landed and show me one sample record.
-```
-
-**3. Seed a relational dataset**
+**Use raw XML for a shape outside AuthoringSpecV1**
 
 ```text
 Seed a relational dataset with referential integrity: customers, accounts,
@@ -157,43 +117,22 @@ Requirements:
 - Every customer_id referenced by an account, and by a transaction, must
   exist in the customers output.
 
+This two-hop nested shape is outside AuthoringSpecV1's current one-child-level
+scope, so use the existing raw XML workflow instead of forcing or weakening the
+intent.
+
 Steps:
-1. Read examples/showcase/01-banking-core/datamimic.xml and its README as
-   the reference pattern.
-2. Author your own descriptor for the customers/accounts/transactions
-   shape above.
-3. Validate with datamimic_check (or `datamimic lint`), then dry-run with
-   datamimic_run (or `datamimic dry-run`) and inspect the sample rows.
-4. Run for real with `datamimic run`.
+1. Read AGENTS.md and the banking showcase XML/README. Query only the narrow
+   DSL reference topics needed.
+2. Author the descriptor, then run `datamimic lint <path> --format json` and
+   fix every diagnostic.
+3. Run `datamimic dry-run <path> --format json`; inspect bounded samples and
+   verify the relationships serve the requested intent.
+4. Run `datamimic run <path>` only after verification.
 5. Before declaring this done, load the generated JSON files and confirm
    every foreign key resolves: every account's customer_id exists in
    customers, every transaction's account_id exists in accounts. Show me
    the check you ran and its result.
-```
-
-### Deterministic domain generation (JSON facade)
-
-Descriptor authoring is the primary workflow; the `generate` tool is a secondary interface that returns structured JSON payloads for a domain without a descriptor.
-
-Agents can call `generate` with a domain, seed, count, and locale and receive deterministic, provenance-hashed output — making DATAMIMIC the natural test data runtime for agent-driven workflows.
-
-```python
-import anyio, json
-from fastmcp.client import Client
-from datamimic_ce.mcp.models import GenerateArgs
-from datamimic_ce.mcp.server import create_server
-
-async def main():
-    args = GenerateArgs(domain="person", locale="en_US", seed=42, count=2)
-    payload = args.model_dump(mode="python")
-    async with Client(create_server()) as c:
-        a = await c.call_tool("generate", {"args": payload})
-        b = await c.call_tool("generate", {"args": payload})
-        # Determinism proof: identical hashes across calls
-        assert (json.loads(a[0].text)["determinism_proof"]["content_hash"]
-             == json.loads(b[0].text)["determinism_proof"]["content_hash"])
-
-anyio.run(main)
 ```
 
 ---
@@ -680,16 +619,30 @@ All services are versioned and seeded; each generation emits a provenance hash s
 ## CLI reference
 
 ```bash
-# Initialize a new project
-datamimic init my-scenario
+# Discover the live structural surface as JSON
+datamimic capabilities
+
+# Enumerate typed authoring queries, then request only the needed fragment
+datamimic reference authoring
+datamimic reference authoring --category field --kind weighted
+datamimic reference recipes
+
+# Compile and fully verify the canonical intent artifact; stop on verified=true
+datamimic scaffold model.dm.json --format json
 
 # Lint a descriptor: schema, semantics, best practices — every finding carries
 # a rule id (DMxxx) and a fix hint. `validate` is an alias. Exit codes 0/1/2.
 datamimic lint my-scenario/datamimic.xml
 datamimic lint my-scenario/datamimic.xml --format json   # diagnostics v1, CI-friendly
 
-# Run a scenario
+# Safely execute bounded counts with neutralized targets and sample rows
+datamimic dry-run my-scenario/datamimic.xml --format json
+
+# Run a verified scenario for real
 datamimic run my-scenario/datamimic.xml
+
+# Initialize a new project
+datamimic init my-scenario
 
 # Demos
 datamimic demo list

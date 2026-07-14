@@ -3,7 +3,6 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-import contextlib
 import json
 import os
 import platform
@@ -33,8 +32,13 @@ from datamimic_ce.authoring.contracts import (
     RunRequest,
     ScaffoldRequest,
     ScaffoldResult,
+    ScaffoldVerification,
 )
 from datamimic_ce.authoring.reference import ReferenceTopic
+from datamimic_ce.authoring.reference_projection import (
+    AUTHORING_REFERENCE_QUERY_ADAPTER,
+    AuthoringReferenceCategory,
+)
 from datamimic_ce.datamimic import DataMimic
 from datamimic_ce.logger import logger
 from datamimic_ce.utils.demo_util import demo_autocomplete, handle_demo
@@ -51,6 +55,16 @@ app.add_typer(demo_app, name="demo")
 # Constants
 DEFAULT_DESCRIPTOR = "datamimic.xml"
 REFERENCE_TOPIC_ARG = typer.Argument(..., help="Canonical reference topic")
+REFERENCE_CATEGORY_OPTION = typer.Option(
+    None,
+    "--category",
+    help="Compact authoring projection category",
+)
+REFERENCE_KIND_OPTION = typer.Option(
+    None,
+    "--kind",
+    help="Canonical kind within the selected authoring category",
+)
 
 
 # Pre-defined argument objects to avoid B008 errors
@@ -84,7 +98,6 @@ ALL_DEMOS_OPTION = typer.Option(False, "--all", help="Create all available demo 
 PLATFORM_CONFIGS_OPTION = typer.Option(None, "--platform-configs", help="Platform configurations in JSON format")
 TASK_ID_OPTION = typer.Option(None, "--task-id", help="Task identifier")
 TEST_MODE_OPTION = typer.Option(False, "--test-mode", help="Run in test mode")
-DRY_RUN_OPTION = typer.Option(True, "--dry-run/--no-dry-run", help="Dry-run the rendered descriptor (default: true)")
 SCAFFOLD_FORMAT_OPTION = typer.Option("text", "--format", "-f", help="text | json")
 SCAFFOLD_MAX_COUNT_OPTION = typer.Option(
     10,
@@ -95,6 +108,16 @@ SCAFFOLD_SAMPLE_ROWS_OPTION = typer.Option(
     5,
     "--sample-rows",
     help=f"Maximum sample rows per product ({MIN_SAMPLE_ROWS}-{MAX_SAMPLE_ROWS})",
+)
+SCAFFOLD_SMOKE_EXPORT_OPTION = typer.Option(
+    False,
+    "--smoke-export",
+    help="Test applicable file exporters against rows from the canonical bounded run",
+)
+SCAFFOLD_REPLAY_OPTION = typer.Option(
+    False,
+    "--deterministic-replay",
+    help="Repeat the seeded bounded run and compare every captured row",
 )
 
 # Environment variables
@@ -278,11 +301,7 @@ def _dry_run(
         _emit_error(output_format, f"File not found: {descriptor_path}", exit_code=2)
 
     try:
-        with contextlib.ExitStack() as stack:
-            if output_format == "json":
-                devnull = stack.enter_context(open(os.devnull, "w"))
-                stack.enter_context(contextlib.redirect_stderr(devnull))
-            result = run(request)
+        result = run(request)
     except Exception as e:  # unexpected dry-run crash — distinct from findings
         _emit_error(output_format, f"Dry-run error: {e}", exit_code=2)
 
@@ -356,15 +375,16 @@ def dry_run_cmd(
 
 def _scaffold(
     spec_path: Path,
-    dry_run: bool,
     output_format: str,
     max_count: int,
     sample_rows: int,
+    smoke_export: bool,
+    deterministic_replay: bool,
 ) -> None:
     """Shared implementation for `scaffold` command (exit codes: 0 = ok, 1 = findings, 2 = file/input error).
 
     Uses the service layer (datamimic_ce.authoring.service.scaffold) for the render ->
-    lint -> optional dry-run pipeline so the CLI and MCP surfaces can't drift. Only
+    lint -> bounded run -> acceptance pipeline so the CLI and MCP surfaces can't drift. Only
     output formatting (JSON vs text) and exit code mapping are CLI-specific.
 
     Supports stdin via '-' as spec_path.
@@ -440,7 +460,10 @@ def _scaffold(
                     typer.echo("Dry-run successful:")
                     for product in result_obj.products:
                         typer.echo(f"  {product.name}: {product.count} rows")
-            elif result_obj.stage is AuthoringStage.ACCEPTANCE:
+            elif result_obj.stage in (
+                AuthoringStage.ACCEPTANCE,
+                AuthoringStage.VERIFICATION,
+            ):
                 if result_obj.xml:
                     typer.echo(result_obj.xml)
                 if result_obj.products:
@@ -460,6 +483,17 @@ def _scaffold(
                     )
                     for evidence in report.results:
                         typer.echo(f"  {evidence.status.upper():<11} {evidence.kind}: {evidence.message}")
+                typer.echo("")
+                typer.echo(
+                    "Smoke export: "
+                    f"{result_obj.verification.smoke_export.status.value} — "
+                    f"{result_obj.verification.smoke_export.reason}"
+                )
+                typer.echo(
+                    "Deterministic replay: "
+                    f"{result_obj.verification.deterministic_replay.status.value} — "
+                    f"{result_obj.verification.deterministic_replay.reason}"
+                )
 
             # Normalization notes surface in text mode on EVERY outcome, success included —
             # a repaired near-miss the caller never sees is a hidden semantic rewrite.
@@ -493,41 +527,47 @@ def _scaffold(
     try:
         request = ScaffoldRequest(
             spec=spec_dict,
-            dry_run=dry_run,
             max_count=max_count,
             sample_rows=sample_rows,
             response_format=AuthoringResponseFormat.CONCISE,
+            verification=ScaffoldVerification(
+                smoke_export=smoke_export,
+                deterministic_replay=deterministic_replay,
+            ),
         )
     except ValueError as e:
         _fail(2, str(e))
 
-    # Suppress engine INFO logs on stderr when emitting JSON, so stdout stays pure JSON.
-    with contextlib.ExitStack() as stack:
-        if output_format == "json":
-            devnull = stack.enter_context(open(os.devnull, "w"))
-            stack.enter_context(contextlib.redirect_stderr(devnull))
-        result = scaffold(request)
+    result = scaffold(request)
 
     _emit_result(result)
 
 
 @app.command(
     "scaffold",
-    help="Compile model.dm.json intent into DATAMIMIC DSL, then lint and optionally dry-run.",
+    help="Compile and fully verify model.dm.json through one canonical authoring transaction.",
 )
 def scaffold(
     spec_path: Path = SPEC_PATH_ARG,
-    dry_run: bool = DRY_RUN_OPTION,
     output_format: str = SCAFFOLD_FORMAT_OPTION,
     max_count: int = SCAFFOLD_MAX_COUNT_OPTION,
     sample_rows: int = SCAFFOLD_SAMPLE_ROWS_OPTION,
+    smoke_export: bool = SCAFFOLD_SMOKE_EXPORT_OPTION,
+    deterministic_replay: bool = SCAFFOLD_REPLAY_OPTION,
 ):
-    """Compile AuthoringSpecV1 intent to DATAMIMIC DSL, then lint/dry-run it.
+    """Compile, lint, bounded-run, accept and optionally verify AuthoringSpecV1.
 
     Historical compact specs remain accepted through lossless normalization with
     visible notes. Use `datamimic reference scaffold` for the model.dm.json schema.
     """
-    _scaffold(spec_path, dry_run, output_format, max_count, sample_rows)
+    _scaffold(
+        spec_path,
+        output_format,
+        max_count,
+        sample_rows,
+        smoke_export,
+        deterministic_replay,
+    )
 
 
 @app.command(
@@ -537,6 +577,8 @@ def scaffold(
 def reference_cmd(
     topic: ReferenceTopic = REFERENCE_TOPIC_ARG,
     name: str | None = typer.Argument(None, help="Optional name within topic (element tag, generator, recipe id)"),
+    category: AuthoringReferenceCategory | None = REFERENCE_CATEGORY_OPTION,
+    kind: str | None = REFERENCE_KIND_OPTION,
 ):
     """Query the DATAMIMIC DSL reference by topic and optional name.
 
@@ -545,7 +587,18 @@ def reference_cmd(
     from datamimic_ce.authoring.reference import reference
 
     try:
-        result = reference(topic, name)
+        if category is not None and topic is not ReferenceTopic.AUTHORING:
+            raise ValueError("--category/--kind are only valid for topic=authoring")
+        if topic is ReferenceTopic.AUTHORING and name is not None:
+            raise ValueError("topic=authoring uses --category/--kind, not name")
+        if (category is None) != (kind is None):
+            raise ValueError("--category and --kind must be provided together")
+        query = None
+        if category is not None and kind is not None:
+            query = AUTHORING_REFERENCE_QUERY_ADAPTER.validate_python(
+                {"category": category, "kind": kind}
+            )
+        result = reference(topic, name, query=query)
         typer.echo(result)
     except ValueError as e:
         typer.echo(f"Error: {e}")
