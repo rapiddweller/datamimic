@@ -58,6 +58,7 @@ from datamimic_ce.model.constraints import (
     RequiredOneOf,
     ValidValues,
     constraints_schema_extra,
+    resolved_values,
 )
 from datamimic_ce.model.model_util import ModelUtil
 
@@ -434,7 +435,7 @@ class KeyModel(BaseModel):
         """
         return ModelUtil.check_valid_data_value(
             value=value,
-            valid_values=set(_TYPE_VALUES.values),
+            valid_values=resolved_values(_TYPE_VALUES),
         )
 
     @field_validator("name")

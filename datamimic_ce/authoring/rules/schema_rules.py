@@ -26,10 +26,11 @@ from datamimic_ce.constants.element_constants import (
     EL_VARIABLE,
 )
 from datamimic_ce.enums.distribution_enums import NumberDistribution, SourceDistribution
+from datamimic_ce.model.constraints import resolved_values
 from datamimic_ce.model.key_model import _TYPE_VALUES as KEY_TYPE_VALUES
 
 # Key/ID valid scalar types (declared in KeyModel's _TYPE_VALUES constraint, 6 types)
-_KEY_ID_DATA_TYPES = set(KEY_TYPE_VALUES.values)
+_KEY_ID_DATA_TYPES = resolved_values(KEY_TYPE_VALUES)
 # NestedKey/Variable: declare no type enforcement at parse today (per plan R5).
 # Extend lint set to include structural markers (list/dict) in addition to scalar core.
 # This is a lint-only extension; future engine-side enforcement is out of scope.

@@ -136,6 +136,14 @@ class ValidValues:
 Constraint = RequiredOneOf | MutuallyExclusive | Requires | AllOrNone | Forbids | ValidValues
 
 
+def resolved_values(fact: ValidValues) -> frozenset[str]:
+    """The fact's valid-value set with a lazy callable resolved — the ONE typed API for
+    consumers that need the concrete set (validators, lint rules), so the
+    static-or-callable union is narrowed here once instead of ad-hoc at every call site."""
+    values = fact.values
+    return frozenset(values() if callable(values) else values)
+
+
 # ============================================================================
 # Module-level constraint constants used by multiple models and delegating
 # ModelUtil methods (shared vocabulary, drift-proof by single source)

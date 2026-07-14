@@ -13,6 +13,7 @@ from datamimic_ce.model.constraints import (
     Constraint,
     ValidValues,
     constraints_schema_extra,
+    resolved_values,
 )
 from datamimic_ce.model.model_util import ModelUtil
 
@@ -21,7 +22,7 @@ from datamimic_ce.model.model_util import ModelUtil
 # derived from it, and the enforcing field_validator reads the alias. Message is
 # dynamic (interpolates the rejected value), so the fact carries message=None.
 _EXECUTE_TYPE_VALUES = ValidValues(ATTR_TYPE, frozenset(("python", "bash", "sql")))
-VALID_EXECUTE_TYPES: set[str] = set(_EXECUTE_TYPE_VALUES.values)
+VALID_EXECUTE_TYPES: frozenset[str] = resolved_values(_EXECUTE_TYPE_VALUES)
 
 
 class ExecuteModel(BaseModel):

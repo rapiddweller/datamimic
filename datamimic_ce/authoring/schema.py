@@ -55,6 +55,7 @@ from datamimic_ce.constants.element_constants import (
 )
 from datamimic_ce.model.array_model import ArrayModel
 from datamimic_ce.model.assert_model import AssertModel
+from datamimic_ce.model.constraints import Constraint
 from datamimic_ce.model.database_model import DatabaseModel
 from datamimic_ce.model.demographics_model import DemographicsModel
 from datamimic_ce.model.element_model import ElementModel
@@ -137,7 +138,7 @@ class ElementSchema:
     allowed_children: set[str] | None  # None = any children allowed; empty = leaf
     allowed_parents: set[str]  # derived by inverting the nesting table
     open_attrs: bool  # extra="allow" models (database/mongodb credentials)
-    constraints: tuple = ()  # tuple of Constraint objects from the model's __constraints__
+    constraints: "tuple[Constraint, ...]" = ()  # from the model's __constraints__
 
 
 class SchemaIndex:

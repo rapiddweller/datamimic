@@ -20,6 +20,7 @@ from datamimic_ce.model.constraints import (
     Constraint,
     ValidValues,
     constraints_schema_extra,
+    resolved_values,
 )
 from datamimic_ce.model.model_util import ModelUtil
 
@@ -36,7 +37,7 @@ _ARRAY_TYPE_VALUES = ValidValues(
         DATA_TYPE_LITERAL,
     )),
 )
-ALLOWED_ARRAY_TYPES: set[str] = set(_ARRAY_TYPE_VALUES.values)
+ALLOWED_ARRAY_TYPES: frozenset[str] = resolved_values(_ARRAY_TYPE_VALUES)
 
 
 class ArrayModel(BaseModel):

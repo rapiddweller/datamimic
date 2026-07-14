@@ -213,7 +213,7 @@ class GenerateModel(BaseModel):
         alias=ATTR_EXPORT_URI,
         description="Explicit output-directory prefix for exporters that support file paths (a safe "
         "local path, not a URL; '..' is rejected). See ModelUtil.normalize_export_uri.",
-        examples=["output/customers", "/tmp/export"],
+        examples=["output/customers", "output/export"],
     )
     distribution: str | None = Field(
         None,

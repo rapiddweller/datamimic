@@ -103,7 +103,7 @@ class UnknownTarget(Rule):
                         element,
                         f"Unknown target '{name}'.",
                         f'Add <memstore id="{name}"/> as a direct child of <setup>, above this '
-                        f"<{element.tag}> (in-memory, no DB needed), or "
+                        f"<{element.tag!s}> (in-memory, no DB needed), or "
                         f'<database id="{name}" .../> / <mongodb id="{name}" .../> for a real DB '
                         f"client. Or use one of the built-in targets: {', '.join(valid)}.",
                     )
