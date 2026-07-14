@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import re
+from collections.abc import Set as AbstractSet
 from typing import TYPE_CHECKING
 
 from pydantic import TypeAdapter, ValidationError
@@ -228,7 +229,7 @@ class ModelUtil:
         return value
 
     @staticmethod
-    def check_valid_data_value(value: str, valid_values: set[str]) -> str:
+    def check_valid_data_value(value: str, valid_values: AbstractSet[str]) -> str:
         """
         Check if data type is in valid set
         :param value:

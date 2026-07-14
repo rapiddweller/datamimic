@@ -376,5 +376,5 @@ class GenerateModel(BaseModel):
     @classmethod
     def validate_distribution(cls, value: str | None) -> str | None:
         if value is not None:
-            ModelUtil.check_valid_data_value(value, set(resolved_values(SOURCE_DISTRIBUTION_VALUES)))
+            ModelUtil.check_valid_data_value(value, resolved_values(SOURCE_DISTRIBUTION_VALUES))
         return value
