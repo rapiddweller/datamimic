@@ -23,6 +23,7 @@ from datamimic_ce.constants.data_type_constants import (
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
 )
+from datamimic_ce.constants.element_constants import EL_GENERATE
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
@@ -50,6 +51,7 @@ from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
+from datamimic_ce.model.constraints import SourceFileFormat, source_file_format, source_file_format_for
 from datamimic_ce.statements.array_statement import ArrayStatement
 from datamimic_ce.statements.assert_statement import AssertStatement
 from datamimic_ce.statements.condition_statement import ConditionStatement
@@ -174,7 +176,7 @@ class TaskUtil:
         elif isinstance(stmt, AssertStatement):
             return AssertTask(stmt)
         elif isinstance(stmt, ElementStatement):
-            return ElementTask(ctx, stmt)  # type: ignore[return-value]
+            return ElementTask(ctx, stmt)
         elif isinstance(stmt, GeneratorStatement):
             return GeneratorTask(stmt)
         elif isinstance(stmt, StateMachineStatement):
@@ -351,7 +353,7 @@ class TaskUtil:
             else:
                 # Evaluate script in source
                 source_data = context.evaluate_python_expression(stmt.script)
-        elif source_str.endswith(".wgt.csv") and not TaskUtil._wgt_csv_has_header(
+        elif source_file_format(source_str) is SourceFileFormat.WEIGHTED_CSV and not TaskUtil._wgt_csv_has_header(
             root_context.descriptor_dir / source_str, separator
         ):
             # A HEADERLESS ".wgt.csv" file (value|weight, no column names) has no coherent plain-CSV
@@ -370,7 +372,7 @@ class TaskUtil:
                 f"unweighted CSV instead)"
             )
         # Load data from CSV
-        elif source_str.endswith(".csv"):
+        elif (source_format := source_file_format_for(EL_GENERATE, source_str)) is SourceFileFormat.CSV:
             source_data = DataSourceRegistry.load_csv_file(
                 ctx=root_context,
                 file_path=root_context.descriptor_dir / source_str,
@@ -384,7 +386,7 @@ class TaskUtil:
                 offset=stmt.offset,
             )
         # Load data from JSON
-        elif source_str.endswith(".json"):
+        elif source_format is SourceFileFormat.JSON:
             source_data = DataSourceRegistry.load_json_file(
                 root_context.descriptor_dir / source_str,
                 stmt.cyclic,
@@ -401,25 +403,25 @@ class TaskUtil:
                 except Exception as e:
                     logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
         # Load data from XLSX
-        elif source_str.endswith(".xlsx"):
+        elif source_format is SourceFileFormat.XLSX:
             source_data = DataSourceRegistry.load_xlsx_file(
                 root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx, offset=stmt.offset
             )
         # Load data from a fixed-width column file
-        elif source_str.endswith(".fcw"):
+        elif source_format is SourceFileFormat.FIXED_WIDTH:
             source_data = DataSourceRegistry.load_fixed_width_file(
                 root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx, offset=stmt.offset
             )
         # Load one table from a dbunit dataset (checked BEFORE .xml - a .dbunit.xml also ends with .xml).
         # sourceEntity/type selects the table (resolve_source_entity).
-        elif source_str.endswith(".dbunit.xml"):
+        elif source_format is SourceFileFormat.DBUNIT_XML:
             source_data = FileUtil.read_dbunit_to_dict_list(
                 root_context.descriptor_dir / source_str, StatementUtil.resolve_source_entity(stmt)
             )
             if stmt.offset:
                 source_data = source_data[stmt.offset :]
         # Load data from XML
-        elif source_str.endswith(".xml"):
+        elif source_format is SourceFileFormat.XML:
             source_data = DataSourceRegistry.load_xml_file(
                 root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx, offset=stmt.offset
             )
@@ -534,9 +536,7 @@ class TaskUtil:
         # deepest-first automatically. The operation itself comes from the same parsed
         # (exporter, operation) pairs the engine already built via ExporterUtil.parse_function_string
         # (see create_exporter_list) - not a re-parse of the raw target string.
-        own_targets_delete = any(
-            operation is ExportOperation.DELETE for _, operation in exporters["with_operation"]
-        )
+        own_targets_delete = any(operation is ExportOperation.DELETE for _, operation in exporters["with_operation"])
 
         if own_targets_delete:
             for sub_stmt in stmt.sub_statements:

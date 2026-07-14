@@ -296,10 +296,12 @@ class TestCLI:
         assert "topic=element needs name" in result.output
 
     def test_reference_unknown_topic(self):
-        """Reference command with unknown topic fails with the specific unknown-topic message."""
+        """The typed topic argument rejects unknown values as CLI usage errors."""
         result = runner.invoke(app, ["reference", "bogus-topic-xyz"])
-        assert result.exit_code == 1
-        assert "Unknown topic 'bogus-topic-xyz'" in result.output
+        assert result.exit_code == 2
+        assert "Invalid value for" in result.output
+        assert "not one of" in result.output
+        assert "bogus-topic-xyz" in result.output
 
     # Tests for scaffold command
     def _run_scaffold(self, tmp_path, monkeypatch, spec_or_text, *extra_args, filename="spec.json"):
@@ -405,9 +407,12 @@ class TestCLI:
             }],
         }
         result = self._run_scaffold(tmp_path, monkeypatch, spec, "--max-count", "7", "--format", "json")
-        assert result.exit_code == 0
+        assert result.exit_code == 1
         output_json = json.loads(result.output)
         assert output_json["products"][0]["count"] == 7
+        assert output_json["ok"] is True
+        assert output_json["verified"] is False
+        assert output_json["acceptance"]["unevaluable"] > 0
 
     def test_scaffold_nested_spec(self, tmp_path, monkeypatch):
         """A spec with nested generates renders correctly."""
@@ -422,9 +427,11 @@ class TestCLI:
             }],
         }
         result = self._run_scaffold(tmp_path, monkeypatch, spec, "--format", "json")
-        assert result.exit_code == 0
+        assert result.exit_code == 1
         output_json = json.loads(result.output)
         assert output_json["ok"] is True
+        assert output_json["verified"] is False
+        assert output_json["acceptance"]["unevaluable"] > 0
         assert "<generate" in output_json["xml"]
 
     # Tests for Defect 4: scaffold missing-file with --format json emits single JSON document

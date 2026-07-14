@@ -12,8 +12,10 @@ import re
 import pytest
 
 from datamimic_ce.authoring import lint_source
+from datamimic_ce.authoring.contracts import AuthoringStage, ScaffoldRequest
 from datamimic_ce.authoring.dryrun import dry_run_source
 from datamimic_ce.authoring.scaffold import render
+from datamimic_ce.authoring.service import scaffold as scaffold_spec
 
 _SPECS = {
     "weighted_person": {
@@ -150,10 +152,13 @@ def test_unknown_kind_is_rejected_instead_of_silently_changing_intent() -> None:
 
 
 def test_rng_seed_alias_is_explicitly_normalized() -> None:
-    from datamimic_ce.authoring.scaffold import check
-
-    result = check({"rngSeed": 42, "generates": [{"name": "g", "count": 1,
-                    "fields": [{"name": "id", "kind": "increment"}]}]}, dry_run=False)
+    result = scaffold_spec(
+        ScaffoldRequest(
+            spec={"rngSeed": 42, "generates": [{"name": "g", "count": 1,
+                  "fields": [{"name": "id", "kind": "increment"}]}]},
+            dry_run=False,
+        )
+    )
 
     assert result.ok
     assert result.xml is not None and '<setup rngSeed="42">' in result.xml
@@ -167,7 +172,8 @@ def test_rng_seed_alias_is_explicitly_normalized() -> None:
         ({"generates": [{"name": "g", "count": 1, "typo": 1,
           "fields": [{"name": "id", "kind": "increment"}]}]}, "unknown key.*generate 'g'"),
         ({"generates": [{"name": "g", "count": 1,
-          "fields": [{"name": "id", "kind": "increment", "typo": 1}]}]}, "unknown key.*field"),
+          "fields": [{"name": "id", "kind": "increment", "typo": 1}]}]},
+         "unknown or incompatible key.*field"),
     ],
 )
 def test_unknown_scaffold_keys_are_rejected(spec: dict, expected: str) -> None:
@@ -178,17 +184,17 @@ def test_unknown_scaffold_keys_are_rejected(spec: dict, expected: str) -> None:
 @pytest.mark.parametrize(
     "spec, expected",
     [
-        ({"seed": 42.9, "generates": []}, "seed must be an integer"),
+        ({"seed": 42.9, "generates": []}, "seed.*valid integer"),
         ({"generates": [{"name": "g", "count": 2.9,
-          "fields": [{"name": "id", "kind": "increment"}]}]}, "count.*must be an integer"),
+          "fields": [{"name": "id", "kind": "increment"}]}]}, "count.*valid integer"),
         ({"generates": [{"name": "g", "count": 1,
-          "fields": [{"name": "n", "kind": "int_range"}]}]}, "requires explicit min, max"),
+          "fields": [{"name": "n", "kind": "int_range"}]}]}, "requires explicit min and max"),
         ({"generates": [{"name": "g", "count": 1,
           "fields": [{"name": "n", "kind": "int_range", "min": 1.9, "max": 3}]}]},
-         "int_range min must be an integer"),
+         "minimum.*valid integer"),
         ({"generates": [{"name": "g", "count": 1,
           "fields": [{"name": "items", "kind": "nested_list", "min": 1, "max": 2}]}]},
-         "requires at least one nested field"),
+         "fields.*at least 1"),
     ],
 )
 def test_lossy_or_incomplete_scaffold_values_are_rejected(spec: dict, expected: str) -> None:
@@ -201,7 +207,7 @@ def test_render_normalizes_model_key_drift() -> None:
     # "generate" singular, "weighted_values" kind, a filename target, "type"/"field" aliases.
     drifted = {
         "generate": [{
-            "name": "customers", "count": 50, "target": "customer_data.json",
+            "name": "customers", "count": 50, "target": "JSON",
             "fields": [
                 {"field": "id", "type": "id"},
                 {"name": "country", "kind": "weighted_values",
@@ -341,75 +347,54 @@ def test_three_level_person_scoping_uses_three_distinct_variable_names() -> None
     assert len(set(var_names)) == 3, f"variable names collide, would shadow each other: {var_names}"
 
 
-def test_constant_with_values_array_normalizes_to_values_kind() -> None:
-    # Near-miss: kind="constant" with a values array (no scalar value) — the model meant
-    # "values". Without this, the field silently renders an empty constant="".
+def test_constant_with_values_array_is_rejected_as_ambiguous() -> None:
+    # Changing constant intent into values intent is a semantic repair, not normalization.
     spec = {"generates": [{"name": "x", "count": 3, "target": "JSON",
                            "fields": [{"name": "genre", "kind": "constant",
                                        "values": ["fiction", "nonfiction", "reference"]}]}]}
-    xml = render(spec)
-    assert "values=" in xml and "constant=" not in xml
-    assert lint_source(xml).ok
+    with pytest.raises(ValueError, match="constant with values is ambiguous"):
+        render(spec)
 
 
-def test_weighted_with_scalar_value_splits_into_values_array() -> None:
-    # Near-miss: kind="weighted" with a slash-joined scalar value instead of a values
-    # array — a real stress-test failure (DM002: 'values' element ... is invalid).
+def test_weighted_with_scalar_value_is_rejected_as_ambiguous() -> None:
+    # Splitting arbitrary text changes business values and therefore fails closed.
     spec = {"generates": [{"name": "x", "count": 3, "target": "JSON",
                            "fields": [{"name": "dish", "kind": "weighted",
                                        "value": "pizza/pasta/salad/soup",
                                        "weights": [2, 1, 1, 1]}]}]}
-    xml = render(spec)
-    assert "'pizza'" in xml and "'soup'" in xml
-    result = lint_source(xml)
-    assert result.ok, [(d.rule, d.message) for d in result.diagnostics]
+    with pytest.raises(ValueError, match="requires an explicit values array"):
+        render(spec)
 
 
-def test_weighted_with_script_list_literal_parses_into_values_array() -> None:
-    # Near-miss: kind="weighted" with a Python-list-literal STRING in script= instead of
-    # a values array — a real stress-test failure (script="['pasta', 'pizza', 'salad']").
+def test_weighted_with_script_list_literal_is_rejected_as_ambiguous() -> None:
+    # A script is not reinterpreted as literal values by lossless normalization.
     spec = {"generates": [{"name": "x", "count": 3, "target": "JSON",
                            "fields": [{"name": "dish", "kind": "weighted",
                                        "script": "['pasta', 'pizza', 'salad']",
                                        "weights": [0.25, 0.5, 0.25]}]}]}
-    xml = render(spec)
-    assert "'pasta'" in xml and "'salad'" in xml and "script=" not in xml
-    assert lint_source(xml).ok
+    with pytest.raises(ValueError, match="requires an explicit values array"):
+        render(spec)
 
 
-def test_script_kind_with_fake_unique_function_converts_to_int_range_unique() -> None:
-    # Near-miss: the model picked kind="script" and invented a fake fallback function
-    # instead of discovering the real unique= property on int_range — a real stress-test
-    # failure (script="random.unique(1, 180)"). Must still end up genuinely unique, not
-    # just structurally valid.
+def test_script_kind_with_fake_unique_function_is_rejected() -> None:
+    # Raw Python is never rewritten into a different field strategy.
     spec = {"generates": [{"name": "p", "count": 5, "target": "JSON",
                            "fields": [{"name": "seat", "kind": "script",
                                        "script": "random.unique(1, 20)"}]}]}
-    xml = render(spec)
-    assert 'type="int" min="1" max="20" distribution="shuffle"' in xml
-    dr = dry_run_source(xml, max_count=5, sample_rows=5)
-    assert dr.ok, [d.message for d in dr.diagnostics]
-    seats = [row["seat"] for row in dr.products[0].sample]
-    assert len(seats) == len(set(seats)), f"duplicate seats: {seats}"
+    with pytest.raises(ValueError, match="invented unique helper"):
+        render(spec)
 
 
-def test_duplicate_generate_names_last_draft_wins() -> None:
-    # Observed in a stress-test re-run: a model emitting multiple draft attempts under
-    # the SAME generate name in one response (an incomplete early draft followed by a
-    # corrected one) — DM403 would otherwise reject the whole descriptor. Keep the LAST
-    # (most complete) entry for each name.
+def test_duplicate_generate_names_are_rejected_without_dropping_intent() -> None:
     spec = {"generates": [
         {"name": "x", "count": 5, "target": "JSON", "fields": []},
         {"name": "x", "count": 5, "target": "JSON", "fields": [{"name": "id", "kind": "increment"}]},
     ]}
-    xml = render(spec)
-    assert xml.count("<generate") == 1
-    assert '<key name="id"' in xml
-    assert lint_source(xml).ok
+    with pytest.raises(ValueError, match="product names must be unique"):
+        render(spec)
 
 
-def test_duplicate_child_generate_names_last_draft_wins() -> None:
-    # Same de-duplication, applied to the children (nested <generate>) list too.
+def test_duplicate_child_generate_names_are_rejected_without_dropping_intent() -> None:
     spec = {"generates": [{"name": "parent", "count": 2, "target": "JSON",
                            "fields": [{"name": "id", "kind": "increment"}],
                            "children": [
@@ -417,16 +402,12 @@ def test_duplicate_child_generate_names_last_draft_wins() -> None:
                                {"name": "child", "count": 1, "target": "JSON",
                                 "fields": [{"name": "note", "kind": "constant", "value": "x"}]},
                            ]}]}
-    xml = render(spec)
-    assert xml.count("<generate") == 2
-    assert '<key name="note"' in xml
-    assert lint_source(xml).ok
+    with pytest.raises(ValueError, match="product names must be unique"):
+        render(spec)
 
 
 def test_nested_unique_in_nested_list_rejected_with_clear_message() -> None:
-    # Verify that check() also properly rejects nested-unique and surfaces the error
-    # through ScaffoldCheckResult with the unsupported-feature message.
-    from datamimic_ce.authoring.scaffold import check
+    # Verify that the scaffold use case rejects nested-unique and surfaces the error.
 
     spec = {"generates": [{"name": "flights", "count": 3, "target": "JSON",
                            "fields": [
@@ -435,13 +416,13 @@ def test_nested_unique_in_nested_list_rejected_with_clear_message() -> None:
                                 "fields": [{"name": "seat", "kind": "int_range", "min": 1, "max": 5,
                                             "unique": True}]},
                            ]}]}
-    result = check(spec)
+    result = scaffold_spec(ScaffoldRequest(spec=spec))
     assert not result.ok
-    assert result.stage == "render"
-    assert result.render_error is not None
-    assert "unsupported feature" in result.render_error
-    assert "unique" in result.render_error
-    assert "seat" in result.render_error
+    assert result.stage is AuthoringStage.RENDER
+    assert result.error is not None
+    assert "unsupported feature" in result.error
+    assert "unique" in result.error
+    assert "seat" in result.error
 
 
 def test_three_level_nesting_is_rejected_explicitly() -> None:
@@ -462,8 +443,7 @@ def test_three_level_nesting_is_rejected_explicitly() -> None:
 
 
 def test_three_level_nesting_rejected_via_check() -> None:
-    # Verify check() also properly rejects three-level nesting.
-    from datamimic_ce.authoring.scaffold import check
+    # Verify the service use case also properly rejects three-level nesting.
 
     spec = {"generates": [{"name": "customers", "count": 2, "target": "JSON",
                            "fields": [{"name": "id", "kind": "increment"}],
@@ -475,28 +455,26 @@ def test_three_level_nesting_rejected_via_check() -> None:
                                      "fields": [{"name": "tx_id", "kind": "increment"}]},
                                 ]}
                            ]}]}
-    result = check(spec)
+    result = scaffold_spec(ScaffoldRequest(spec=spec))
     assert not result.ok
-    assert result.stage == "render"
-    assert result.render_error is not None
-    assert "unsupported feature" in result.render_error
-    assert "transactions" in result.render_error
-    assert "nested more than one level" in result.render_error
+    assert result.stage is AuthoringStage.RENDER
+    assert result.error is not None
+    assert "unsupported feature" in result.error
+    assert "transactions" in result.error
+    assert "nested more than one level" in result.error
 
 
 def test_kind_alias_normalization_surfaces_as_note() -> None:
     # Near-miss recovery: a spec using kind="weighted_values" (alias for "weighted")
     # should normalize successfully and surface a normalization_notes entry on check()
     # result to document the repair — the spec is still valid and renders.
-    from datamimic_ce.authoring.scaffold import check
-
     spec = {"generates": [{"name": "dishes", "count": 10, "target": "JSON",
                            "fields": [{"name": "name", "kind": "weighted_values",
                                        "values": ["pasta", "pizza", "salad"],
                                        "weights": [2, 1, 1]}]}]}
-    result = check(spec, dry_run=False)
+    result = scaffold_spec(ScaffoldRequest(spec=spec, dry_run=False))
     assert result.ok
-    assert result.stage == "lint"
+    assert result.stage is AuthoringStage.LINT
     assert len(result.normalization_notes) > 0
     # The note should mention the alias normalization
     assert any("weighted_values" in note and "weighted" in note for note in result.normalization_notes), (
@@ -513,7 +491,7 @@ def test_source_backed_unique_cardinality_propagation_insufficient() -> None:
         "generates": [
             {"name": "producer", "count": 5, "target": "mem,JSON",
              "fields": [{"name": "id", "kind": "increment"}]},
-            {"name": "reader", "count": 1, "source": "mem", "source_type": "producer",
+            {"name": "reader", "source": "mem", "source_type": "producer",
              "fields": [
                  {"name": "id", "kind": "script", "script": "id"},
                  {"name": "seat", "kind": "int_range", "min": 1, "max": 2, "unique": True},
@@ -531,7 +509,7 @@ def test_source_backed_unique_cardinality_propagation_sufficient() -> None:
         "generates": [
             {"name": "producer", "count": 5, "target": "mem,JSON",
              "fields": [{"name": "id", "kind": "increment"}]},
-            {"name": "reader", "count": 1, "source": "mem", "source_type": "producer",
+            {"name": "reader", "source": "mem", "source_type": "producer",
              "fields": [
                  {"name": "id", "kind": "script", "script": "id"},
                  {"name": "seat", "kind": "int_range", "min": 1, "max": 10, "unique": True},
@@ -547,12 +525,11 @@ def test_source_backed_unique_cardinality_propagation_sufficient() -> None:
     assert "count=" not in reader_open
 
 
-def test_source_backed_unique_rejects_unresolvable_count_even_when_count_is_set() -> None:
+def test_source_backed_unique_rejects_unresolvable_file_cardinality() -> None:
     spec = {
         "generates": [
             {
                 "name": "reader",
-                "count": 1,
                 "source": "external.csv",
                 "fields": [
                     {"name": "seat", "kind": "int_range", "min": 1, "max": 10, "unique": True},
@@ -561,15 +538,13 @@ def test_source_backed_unique_rejects_unresolvable_count_even_when_count_is_set(
         ]
     }
 
-    with pytest.raises(ValueError, match="cannot be verified"):
+    with pytest.raises(ValueError, match="cardinality is not statically known"):
         render(spec)
 
 
 def test_children_as_object_normalized_to_array() -> None:
     # Defect 2: if a model emits children as an object instead of an array,
     # it should be normalized to a one-item list with a note, not silently dropped.
-    from datamimic_ce.authoring.scaffold import check
-
     spec = {
         "generates": [
             {"name": "parent", "count": 2, "target": "JSON",
@@ -581,11 +556,11 @@ def test_children_as_object_normalized_to_array() -> None:
             }
         ]
     }
-    result = check(spec, dry_run=False)
+    result = scaffold_spec(ScaffoldRequest(spec=spec, dry_run=False))
     assert result.ok
     assert result.xml is not None
     # Verify the note about normalization is present
-    assert any("object-shaped 'children' normalized" in note for note in result.normalization_notes), (
+    assert any("object-shaped 'children of generate" in note for note in result.normalization_notes), (
         f"expected normalization note about children, got: {result.normalization_notes}"
     )
     # Verify child was rendered
@@ -635,8 +610,6 @@ def test_object_shaped_grandchild_is_rejected() -> None:
 
 
 def test_object_shaped_nested_fields_are_normalized() -> None:
-    from datamimic_ce.authoring.scaffold import check
-
     spec = {
         "generates": [
             {
@@ -646,6 +619,8 @@ def test_object_shaped_nested_fields_are_normalized() -> None:
                     {
                         "name": "employees",
                         "kind": "nested_list",
+                        "min": 1,
+                        "max": 1,
                         "fields": {"name": "employee_id", "kind": "increment"},
                     }
                 ],
@@ -653,7 +628,7 @@ def test_object_shaped_nested_fields_are_normalized() -> None:
         ]
     }
 
-    result = check(spec, dry_run=False)
+    result = scaffold_spec(ScaffoldRequest(spec=spec, dry_run=False))
 
     assert result.ok
     assert result.xml is not None
@@ -703,7 +678,7 @@ def test_deeper_object_shaped_nested_fields_are_rejected() -> None:
         ]
     }
 
-    with pytest.raises(ValueError, match="nested field 'member_id' more than one level deep"):
+    with pytest.raises(ValueError, match="nested field 'members' more than one level deep"):
         render(spec)
 
 

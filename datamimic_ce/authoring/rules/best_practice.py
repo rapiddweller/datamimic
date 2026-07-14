@@ -9,18 +9,31 @@ surprising. These are the linter's flagship rules: nothing else catches them."""
 
 import re
 from collections.abc import Iterable
+from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
+from math import isfinite
 
-from datamimic_ce.authoring.diagnostics import Diagnostic, Severity
+from lxml import etree
+
+from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rules.base import LintContext, Rule
+from datamimic_ce.constants.data_type_constants import DATA_TYPE_DECIMAL, DATA_TYPE_FLOAT, DATA_TYPE_INT
 from datamimic_ce.constants.element_constants import (
+    EL_CONDITION,
+    EL_ELSE,
+    EL_ELSE_IF,
     EL_GENERATE,
     EL_ID,
+    EL_IF,
     EL_ITERATE,
     EL_KEY,
     EL_NESTED_KEY,
     EL_REFERENCE,
     EL_VARIABLE,
 )
+from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
+from datamimic_ce.model.constraints import authoring_rule_definition
+from datamimic_ce.utils.number_sequences import finite_number_sequence_capacity
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
 _SOURCE_READERS = (*_GENERATES, EL_VARIABLE, EL_NESTED_KEY, EL_REFERENCE)
@@ -30,16 +43,116 @@ _SOURCE_READERS = (*_GENERATES, EL_VARIABLE, EL_NESTED_KEY, EL_REFERENCE)
 _INTERP_TOKEN = re.compile(r"(?<![\w.])__[A-Za-z]\w*__")
 # Attributes evaluated as Python expressions, where __var__ interpolation does NOT apply.
 _SCRIPT_ATTRS = ("script", "condition")
+_CONDITIONAL_TAGS = (EL_CONDITION, EL_IF, EL_ELSE_IF, EL_ELSE)
 
 
 def _is_true(value: str | None) -> bool:
     return value is not None and value.lower() in ("true", "1")
 
 
+@dataclass(frozen=True)
+class _NestedSequenceAnalysis:
+    element: etree._Element
+    distribution: NumberDistribution
+    capacity: int
+    demand: int | None
+    unknown_reason: str | None
+
+
+def _sequence_capacity(element: etree._Element) -> tuple[NumberDistribution, int] | None:
+    """Resolve capacity from the same enum and iterator helper as runtime generation."""
+    raw_distribution = element.get("distribution")
+    if raw_distribution is None:
+        return None
+    try:
+        distribution = NumberDistribution(raw_distribution)
+    except ValueError:
+        return None  # DM105 owns unknown distribution values
+    if distribution not in POSITIONAL_NUMBER_SEQUENCES:
+        return None
+
+    data_type = element.get("type")
+    if data_type == DATA_TYPE_INT:
+        defaults = (Decimal(0), Decimal(1_000_000), Decimal(1))
+    elif data_type in (DATA_TYPE_FLOAT, DATA_TYPE_DECIMAL):
+        defaults = (Decimal(0), Decimal(10), Decimal("0.1"))
+    else:
+        return None  # central type/range constraints own invalid shapes
+    min_raw = element.get("min")
+    max_raw = element.get("max")
+    granularity_raw = element.get("granularity")
+    try:
+        min_v = Decimal(min_raw) if min_raw is not None else defaults[0]
+        max_v = Decimal(max_raw) if max_raw is not None else defaults[1]
+        granularity = (
+            Decimal(granularity_raw)
+            if data_type in (DATA_TYPE_FLOAT, DATA_TYPE_DECIMAL) and granularity_raw is not None
+            else defaults[2]
+        )
+    except InvalidOperation:
+        return None
+    if not all(value.is_finite() for value in (min_v, max_v, granularity)):
+        return None
+    numeric_bounds = (float(min_v), float(max_v), float(granularity))
+    if not all(isfinite(value) for value in numeric_bounds):
+        return None
+    capacity = finite_number_sequence_capacity(
+        distribution,
+        *numeric_bounds,
+    )
+    return (distribution, capacity) if capacity is not None else None
+
+
+def _literal_nested_demand(
+    element: etree._Element,
+    cardinality_scopes: list[etree._Element],
+) -> tuple[int | None, str | None]:
+    """Prove total uses of one root-cached sequence, or explain why it is dynamic."""
+    if element.get("condition") is not None or any(
+        isinstance(ancestor.tag, str) and ancestor.tag in _CONDITIONAL_TAGS for ancestor in element.iterancestors()
+    ):
+        return None, "a condition can change how many rows evaluate the field"
+
+    demand = 1
+    for scope in cardinality_scopes:
+        scope_tag = scope.tag.decode() if isinstance(scope.tag, bytes) else str(scope.tag)
+        scope_name = scope.get("name") or ""
+        if scope.get("condition") is not None:
+            return None, f"<{scope_tag}> '{scope_name}' has condition= and may be skipped"
+        if scope.get("source") is not None or scope.get("script") is not None:
+            return None, f"<{scope_tag}> '{scope_name}' derives cardinality from source/script"
+        if any(scope.get(attr) is not None for attr in ("start", "end", "interval", "minCount", "maxCount")):
+            return None, f"<{scope_tag}> '{scope_name}' has non-literal cardinality semantics"
+        count = scope.get("count")
+        if scope_tag == EL_NESTED_KEY and count is None and scope.get("type") == "dict":
+            continue  # one nested object per enclosing row
+        if count is None or not count.isdigit():
+            return None, f"<{scope_tag}> '{scope_name}' does not have a literal count"
+        demand *= int(count)
+    return demand, None
+
+
+def _nested_sequence_analyses(ctx: LintContext) -> Iterable[_NestedSequenceAnalysis]:
+    for element in ctx.iter(EL_KEY, EL_ID):
+        resolved = _sequence_capacity(element)
+        if resolved is None:
+            continue
+        cardinality_scopes = [
+            ancestor
+            for ancestor in element.iterancestors()
+            if isinstance(ancestor.tag, str) and ancestor.tag in (*_GENERATES, EL_NESTED_KEY)
+        ]
+        generate_scope_count = sum(scope.tag in _GENERATES for scope in cardinality_scopes)
+        has_nested_key_scope = any(scope.tag == EL_NESTED_KEY for scope in cardinality_scopes)
+        if generate_scope_count < 2 and not has_nested_key_scope:
+            continue  # a field directly in one top-level generate is intentionally out of scope
+        distribution, capacity = resolved
+        demand, unknown_reason = _literal_nested_demand(element, cardinality_scopes)
+        yield _NestedSequenceAnalysis(element, distribution, capacity, demand, unknown_reason)
+
+
 class DistributionDefaultsToRandom(Rule):
-    id = "DM301"
-    severity = Severity.WARNING
-    docs = "reference://distributions"
+    definition = authoring_rule_definition("DM301")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter(*_SOURCE_READERS):
@@ -47,17 +160,12 @@ class DistributionDefaultsToRandom(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    "Source rows are read in RANDOM order — absent distribution defaults to random, "
-                    "not file/table order.",
-                    'Add distribution="ordered" for source order, or distribution="random" to make '
-                    "the shuffle explicit.",
+                    evidence=f'source="{element.get("source")}" has no distribution',
                 )
 
 
 class NonOrderedLoadsWholeSource(Rule):
-    id = "DM302"
-    severity = Severity.HINT
-    docs = "reference://distributions"
+    definition = authoring_rule_definition("DM302")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter(*_SOURCE_READERS):
@@ -68,32 +176,20 @@ class NonOrderedLoadsWholeSource(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    f"distribution='{distribution or 'random'}'"
-                    f"{' with unique' if _is_true(element.get('unique')) else ''} loads the ENTIRE "
-                    "source into memory before selecting; only 'ordered' reads page by page.",
-                    'For large sources use distribution="ordered", or accept the memory cost knowingly.',
+                    evidence=f"distribution='{distribution or 'random'}', unique={_is_true(element.get('unique'))}",
                 )
 
 
 class UnseededRunNotReproducible(Rule):
-    id = "DM303"
-    severity = Severity.HINT
+    definition = authoring_rule_definition("DM303")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         if ctx.root.get("rngSeed") is None:
-            yield ctx.diag(
-                type(self),
-                ctx.root,
-                "No <setup rngSeed>: every run produces different data by design "
-                "(the privacy-maximized default).",
-                'Add rngSeed="1" (any int) to <setup> when you need identical replay '
-                "(tests, fixtures, reviews).",
-            )
+            yield ctx.diag(type(self), ctx.root)
 
 
 class SeedForcesSingleProcess(Rule):
-    id = "DM304"
-    severity = Severity.HINT
+    definition = authoring_rule_definition("DM304")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         if ctx.root.get("rngSeed") is None:
@@ -106,16 +202,12 @@ class SeedForcesSingleProcess(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    "rngSeed forces single-process execution in CE — numProcess/multiprocessing "
-                    "is silently ignored (seeded runs are serialized for reproducibility).",
-                    "Drop numProcess/multiprocessing, or drop rngSeed if parallel throughput matters "
-                    "more than replay.",
+                    evidence=f"numProcess={num_process}, multiprocessing={element.get('multiprocessing')}",
                 )
 
 
 class SmallPageSize(Rule):
-    id = "DM305"
-    severity = Severity.HINT
+    definition = authoring_rule_definition("DM305")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter(*_GENERATES):
@@ -124,14 +216,12 @@ class SmallPageSize(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    f"pageSize={page_size} (<100) causes per-page overhead on every exporter and source.",
-                    "Use pageSize >= 100, or omit it to let the engine size pages automatically.",
+                    evidence=f"pageSize={page_size}",
                 )
 
 
 class UpsertCoercesZeroCount(Rule):
-    id = "DM307"
-    severity = Severity.HINT
+    definition = authoring_rule_definition("DM307")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter(*_GENERATES):
@@ -140,15 +230,12 @@ class UpsertCoercesZeroCount(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    "count=\"0\" with a mongodb .upsert target is coerced to 1 — the engine still "
-                    "upserts one (empty) document when the query matches nothing.",
-                    "Expect exactly one upsert for zero matches, or drop the upsert target.",
+                    evidence=f'count="0", target="{target}"',
                 )
 
 
 class PreferNativeNumericRange(Rule):
-    id = "DM310"
-    severity = Severity.HINT
+    definition = authoring_rule_definition("DM310")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter(EL_KEY, EL_ID, EL_VARIABLE, EL_NESTED_KEY):
@@ -157,15 +244,12 @@ class PreferNativeNumericRange(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    "IntegerGenerator(...) eval-string used for a plain numeric range.",
-                    'Prefer the native form: type="int" min="..." max="..." (validated attributes '
-                    "instead of an eval-string).",
+                    evidence=f'generator="{generator}"',
                 )
 
 
 class PreferNativeStringLength(Rule):
-    id = "DM311"
-    severity = Severity.HINT
+    definition = authoring_rule_definition("DM311")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter(EL_KEY, EL_ID, EL_VARIABLE, EL_NESTED_KEY):
@@ -174,14 +258,12 @@ class PreferNativeStringLength(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    "StringGenerator(...) eval-string used for string length bounds.",
-                    'Prefer the native form: type="string" minLength="..." maxLength="...".',
+                    evidence=f'generator="{generator}"',
                 )
 
 
 class InterpolationInScript(Rule):
-    id = "DM314"
-    severity = Severity.ERROR  # a bare __name__ in a Python expression is a NameError at runtime
+    definition = authoring_rule_definition("DM314")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter():
@@ -192,16 +274,13 @@ class InterpolationInScript(Rule):
                     yield ctx.diag(
                         type(self),
                         element,
-                        f"{attr}=\"...\" is a Python expression, but it contains {token} — that is the "
-                        "string-interpolation syntax (for string=/pattern=), not variable access.",
-                        f"In {attr}= use the bare variable name: "
-                        f"{token.strip('_')}.field, not {token}.field.",
+                        evidence=f"{attr} contains interpolation token {token}",
+                        fix_context=f"Use {token.strip('_')}.field in {attr}=.",
                     )
 
 
 class IncrementCountsPerParentInNestedGenerate(Rule):
-    id = "DM315"
-    severity = Severity.WARNING
+    definition = authoring_rule_definition("DM315")
 
     # bare literal forms only — IncrementGenerator(start=...) etc. is a deliberate choice
     _INCREMENT_FORMS = ("IncrementGenerator", "IncrementGenerator()")
@@ -224,16 +303,43 @@ class IncrementCountsPerParentInNestedGenerate(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    "IncrementGenerator counts per parent inside a nested <generate>; "
-                    "ids will collide across parents.",
-                    "Compose the global id from the parent key plus the local sequence, "
-                    'e.g. script="parent.customer_id * 100 + this.line_no".',
+                    evidence=f"field '{element.get('name')}' is inside nested <generate>",
+                    fix_context='Example: script="parent.customer_id * 100 + this.line_no".',
                 )
 
 
+class NestedFiniteSequenceExhaustion(Rule):
+    definition = authoring_rule_definition("DM317")
+
+    def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
+        for analysis in _nested_sequence_analyses(ctx):
+            if analysis.demand is None or analysis.capacity >= analysis.demand:
+                continue
+            yield ctx.diag(
+                type(self),
+                analysis.element,
+                evidence=f"distribution='{analysis.distribution.value}', capacity={analysis.capacity}, "
+                f"demand={analysis.demand}",
+            )
+
+
+class NestedFiniteSequenceCardinalityUnknown(Rule):
+    definition = authoring_rule_definition("DM318")
+
+    def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
+        for analysis in _nested_sequence_analyses(ctx):
+            if analysis.demand is not None:
+                continue
+            yield ctx.diag(
+                type(self),
+                analysis.element,
+                evidence=f"distribution='{analysis.distribution.value}', capacity={analysis.capacity}; "
+                f"unknown because {analysis.unknown_reason}",
+            )
+
+
 class CountWithSourceCapsSilently(Rule):
-    id = "DM316"
-    severity = Severity.HINT
+    definition = authoring_rule_definition("DM316")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         from datamimic_ce.enums.distribution_enums import SourceDistribution
@@ -251,9 +357,7 @@ class CountWithSourceCapsSilently(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    "count= above the source length caps silently at the source size "
-                    "(a non-cyclic read stops when the source is exhausted).",
-                    'Set cyclic="True" to wrap the source, or drop count= to consume it exactly once.',
+                    evidence=f'count="{count}", source="{element.get("source")}"',
                 )
 
 
@@ -268,5 +372,7 @@ RULES: tuple[type[Rule], ...] = (
     PreferNativeStringLength,
     InterpolationInScript,
     IncrementCountsPerParentInNestedGenerate,
+    NestedFiniteSequenceExhaustion,
+    NestedFiniteSequenceCardinalityUnknown,
     CountWithSourceCapsSilently,
 )

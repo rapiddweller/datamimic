@@ -61,7 +61,7 @@ from datamimic_ce.model.model_util import ModelUtil
 class KeyModel(BaseModel):
     # Declared cross-field constraints (read by validators and exposed to schema via json_schema_extra)
     __constraints__: ClassVar[tuple[Constraint, ...]] = element_constraints(EL_KEY)
-    model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
+    model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
     name: str = Field(
         ...,

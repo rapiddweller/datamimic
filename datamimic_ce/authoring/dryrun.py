@@ -4,8 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""Safe dry-run of a descriptor: execute with capped counts and neutralized
-targets, capture sample rows in memory, never write artifacts or hit stores.
+"""Safe, bounded dry-run execution with neutralized targets and typed evidence.
 
 Safety model (allow_side_effects=False, the default):
 - memstore targets are KEPT (in-memory, required for pipeline semantics —
@@ -17,11 +16,11 @@ Safety model (allow_side_effects=False, the default):
 - DB/Mongo SOURCES stay allowed — they are reads; connectivity errors surface
   as DM002 with a hint at the conf/{env}.env.properties convention
 
-test_mode capture is target-independent, so rows still arrive with all
-targets stripped. Counts: top-level digit counts are capped; source-driven
-generates get an explicit capped count (which also bypasses the DB
-count_query_length path); {script} counts cannot be capped pre-context and
-rely on the timeout.
+Every ``<generate>`` invocation is bounded by ``max_count``, including nested,
+dynamic-count, ranged-count, and source-driven statements.  A child process is
+the cancellation boundary: timeout terminates and reaps it, so user scripts or
+runtime I/O cannot continue after the authoring request returns.  Captured rows
+and their completeness evidence come from that single engine execution.
 
 smoke_export (opt-in) closes the export-layer gap: stripping file targets also
 hides crashes that only happen at write time (e.g. a value the JSON encoder
@@ -33,15 +32,23 @@ never smoked. A failing exporter surfaces as a DM002 diagnostic, not an
 exception.
 """
 
+import multiprocessing as mp
+import pickle
 import tempfile
 import time
 import uuid
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import TimeoutError as FutureTimeoutError
+from dataclasses import dataclass
+from enum import StrEnum
+from multiprocessing.connection import Connection
 from pathlib import Path
 
-from pydantic import BaseModel, Field
-
+from datamimic_ce.authoring.contracts import (
+    AuthoringStage,
+    CaptureStatus,
+    ProductCaptureEvidence,
+    ProductResult,
+    RunResult,
+)
 from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult, Severity
 from datamimic_ce.authoring.linter import lint_descriptor, lint_source
 
@@ -50,21 +57,111 @@ RULE_SIDE_EFFECT_REFUSAL = "DM003"
 RULE_EMPTY_OUTPUT = "DM004"
 
 
-class DryRunProduct(BaseModel):
+DryRunProduct = ProductResult
+"""Backward-compatible alias for the canonical dry-run product contract."""
+
+DryRunResult = RunResult
+"""Backward-compatible alias for the canonical dry-run result contract."""
+
+
+@dataclass(frozen=True)
+class CapturedProduct:
+    """All bounded rows captured for one runtime product before projection."""
+
     name: str
-    count: int
-    sample: list[dict[str, object]] = Field(default_factory=list)
-    truncated_rows: bool = False
+    rows: tuple[object, ...]
+    capture: ProductCaptureEvidence | None = None
 
 
-class DryRunResult(BaseModel):
-    ok: bool
-    stage: str  # "lint" | "run"
-    timing_ms: int | None = None
-    products: list[DryRunProduct] = Field(default_factory=list)
-    products_truncated: int = 0
-    lint: LintResult | None = None
-    diagnostics: list[Diagnostic] = Field(default_factory=list)
+@dataclass(frozen=True)
+class CapturedProducts:
+    """Internal acceptance input; unlike ``ProductResult`` this is never sampled."""
+
+    products: tuple[CapturedProduct, ...]
+    max_count: int
+
+    def get(self, name: str) -> CapturedProduct | None:
+        return next((product for product in self.products if product.name == name), None)
+
+
+@dataclass(frozen=True)
+class CapturedRun:
+    """One engine result paired with the complete bounded capture from that run."""
+
+    result: DryRunResult
+    captured: CapturedProducts
+
+
+@dataclass(frozen=True)
+class _ProductBudget:
+    """Static boundary facts recorded while the runtime statement tree is transformed."""
+
+    name: str
+    parent_name: str | None
+    requested_per_parent: int | None
+    explicit_count: bool
+    count_kind: "_CountBoundaryKind"
+    source_rows_per_parent: int | None
+    source_exhaustible: bool
+    memstore_source: "_MemstoreSourceBinding | None"
+    source_offset: int
+    cyclic: bool
+    output_multiplier: int
+    bounded_without_cap: bool
+    cap_applied: bool
+    reason: str
+
+
+_ProductBudgets = dict[str, _ProductBudget]
+
+
+class _CountBoundaryKind(StrEnum):
+    STATIC = "static"
+    DYNAMIC = "dynamic"
+    RANGE = "range"
+    SOURCE = "source"
+
+
+@dataclass(frozen=True)
+class _MemstoreProducer:
+    """One runtime statement that writes a typed entity into a declared memstore."""
+
+    source_id: str
+    entity: str
+    product: str
+
+
+class _MemstoreBindingStatus(StrEnum):
+    RESOLVED = "resolved"
+    MISSING = "missing"
+    AMBIGUOUS = "ambiguous"
+
+
+@dataclass(frozen=True)
+class _MemstoreSourceBinding:
+    """Typed runtime routing fact for one generate reading a memstore entity."""
+
+    source_id: str
+    entity: str
+    status: _MemstoreBindingStatus
+    producers: tuple[_MemstoreProducer, ...]
+
+
+@dataclass(frozen=True)
+class _WorkerSuccess:
+    captured: dict[str, tuple[object, ...]]
+    budgets: tuple[_ProductBudget, ...]
+    smoke_diagnostics: tuple[dict[str, object], ...]
+
+
+@dataclass(frozen=True)
+class _WorkerFailure:
+    message: str
+    fix_hint: str
+
+
+_WorkerMessage = _WorkerSuccess | _WorkerFailure
+_ChildProcess = mp.context.SpawnProcess
 
 
 _MAX_PRODUCTS = 20  # generate statements per descriptor are few; a generous cap
@@ -129,7 +226,12 @@ def _run_error(
     diag = Diagnostic(
         rule=rule, severity=Severity.ERROR, message=message, fix_hint=fix_hint, element=element, path="/setup"
     )
-    return DryRunResult(ok=False, stage="run", lint=lint, diagnostics=[diag])
+    return DryRunResult(
+        ok=False,
+        stage=AuthoringStage.RUN,
+        lint=lint,
+        diagnostics=[diag],
+    )
 
 
 def _memstore_ids(root_stmt: object) -> set[str]:
@@ -138,6 +240,90 @@ def _memstore_ids(root_stmt: object) -> set[str]:
 
     assert isinstance(root_stmt, SetupStatement)
     return {stmt.id for stmt in root_stmt.sub_statements if isinstance(stmt, MemstoreStatement)}
+
+
+def _generate_statements(root_stmt: object) -> tuple[object, ...]:
+    """Collect generate statements without assuming their lexical or execution order."""
+
+    from datamimic_ce.statements.composite_statement import CompositeStatement
+    from datamimic_ce.statements.generate_statement import GenerateStatement
+    from datamimic_ce.statements.setup_statement import SetupStatement
+
+    assert isinstance(root_stmt, SetupStatement)
+    statements: list[object] = []
+
+    def _walk(stmt: object) -> None:
+        if isinstance(stmt, GenerateStatement):
+            statements.append(stmt)
+        if isinstance(stmt, CompositeStatement):
+            for child in stmt.sub_statements:
+                _walk(child)
+
+    for statement in root_stmt.sub_statements:
+        _walk(statement)
+    return tuple(statements)
+
+
+def _memstore_producers(
+    root_stmt: object,
+    memstore_ids: set[str],
+) -> tuple[_MemstoreProducer, ...]:
+    from datamimic_ce.statements.generate_statement import GenerateStatement
+    from datamimic_ce.statements.statement_util import StatementUtil
+
+    producers: list[_MemstoreProducer] = []
+    for statement in _generate_statements(root_stmt):
+        if not isinstance(statement, GenerateStatement):
+            continue
+        entity = StatementUtil.resolve_target_entity(
+            statement.target_entity,
+            statement.type,
+            statement.name,
+        )
+        for source_id in sorted(statement.targets & memstore_ids):
+            producers.append(
+                _MemstoreProducer(
+                    source_id=source_id,
+                    entity=entity,
+                    product=_capture_name(statement.full_name),
+                )
+            )
+    return tuple(producers)
+
+
+def _memstore_source_binding(
+    stmt: object,
+    *,
+    memstore_ids: set[str],
+    producers: tuple[_MemstoreProducer, ...],
+) -> _MemstoreSourceBinding | None:
+    from datamimic_ce.constants.element_constants import EL_GENERATE
+    from datamimic_ce.model.constraints import source_file_format_for
+    from datamimic_ce.statements.generate_statement import GenerateStatement
+    from datamimic_ce.statements.statement_util import StatementUtil
+
+    if not isinstance(stmt, GenerateStatement) or stmt.source not in memstore_ids:
+        return None
+    if source_file_format_for(EL_GENERATE, stmt.source, stmt.type) is not None:
+        return None
+    entity = StatementUtil.resolve_source_entity(stmt)
+    candidates = tuple(
+        producer
+        for producer in producers
+        if producer.source_id == stmt.source and producer.entity == entity
+    )
+    if len(candidates) == 1:
+        status = _MemstoreBindingStatus.RESOLVED
+    elif candidates:
+        status = _MemstoreBindingStatus.AMBIGUOUS
+    else:
+        status = _MemstoreBindingStatus.MISSING
+    return _MemstoreSourceBinding(
+        source_id=stmt.source,
+        entity=entity,
+        status=status,
+        producers=candidates,
+    )
 
 
 def _contains_execute(root_stmt: object) -> bool:
@@ -158,6 +344,79 @@ def _contains_execute(root_stmt: object) -> bool:
 _FileTarget = tuple[str, dict[str, object]]
 # product full_name -> (file basename, its stripped file targets)
 _StrippedTargets = dict[str, tuple[str, list[_FileTarget]]]
+
+
+def _capture_name(full_name: str) -> str:
+    """Use the exact nested-product key used by ``TestResultExporter``."""
+
+    from datamimic_ce.constants.convention_constants import NAME_SEPARATOR
+
+    if NAME_SEPARATOR in full_name:
+        return full_name.split(NAME_SEPARATOR, 1)[-1]
+    return full_name
+
+
+def _parent_capture_name(stmt: object) -> str | None:
+    from datamimic_ce.statements.generate_statement import GenerateStatement
+    from datamimic_ce.statements.statement import Statement
+
+    if not isinstance(stmt, Statement):
+        return None
+    parent = stmt.parent_stmt
+    while parent is not None and not isinstance(parent, GenerateStatement):
+        parent = parent.parent_stmt
+    return _capture_name(parent.full_name) if isinstance(parent, GenerateStatement) else None
+
+
+def _source_row_count(
+    stmt: object,
+    *,
+    descriptor_dir: Path | None,
+    default_separator: str,
+) -> int | None:
+    """Return a file source's statically observable remaining rows, if supported."""
+
+    from datamimic_ce.constants.element_constants import EL_GENERATE
+    from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+    from datamimic_ce.model.constraints import SourceFileFormat, source_file_format_for
+    from datamimic_ce.statements.generate_statement import GenerateStatement
+
+    if not isinstance(stmt, GenerateStatement) or descriptor_dir is None or stmt.source is None:
+        return None
+    source_format = source_file_format_for(EL_GENERATE, stmt.source, stmt.type)
+    if source_format is None or source_format is SourceFileFormat.DBUNIT_XML:
+        return None
+    try:
+        rows = DataSourceRegistry._get_source(
+            str(descriptor_dir / stmt.source),
+            stmt.separator or default_separator,
+            source_format,
+        )
+    except Exception:
+        # This is evidence discovery, not execution. The canonical runtime reports
+        # the real file error; failure to prove a length must remain UNKNOWN.
+        return None
+    return max(0, len(rows) - stmt.offset)
+
+
+def _range_upper_bound(stmt: object) -> int | None:
+    from datamimic_ce.statements.generate_statement import GenerateStatement
+
+    if not isinstance(stmt, GenerateStatement):
+        return None
+    if stmt.max_count is not None:
+        return stmt.max_count
+    if stmt.min_count is not None:
+        return stmt.min_count + 5
+    return None
+
+
+def _static_count(value: object) -> int | None:
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    if isinstance(value, str) and value.isdigit():
+        return int(value)
+    return None
 
 
 def _parse_buffered_targets(targets: set[str]) -> list[_FileTarget]:
@@ -184,6 +443,8 @@ def neutralize_for_dry_run(
     max_count: int,
     allow_side_effects: bool,
     stripped_file_targets: _StrippedTargets | None = None,
+    product_budgets: _ProductBudgets | None = None,
+    descriptor_dir: Path | None = None,
 ) -> None:
     """Statement transformer: cap counts, keep only memstore targets, force 1 process.
     When a collector dict is given, the FILE targets removed from each product are
@@ -195,9 +456,12 @@ def neutralize_for_dry_run(
 
     assert isinstance(root_stmt, SetupStatement)
     memstores = _memstore_ids(root_stmt)
+    memstore_producers = _memstore_producers(root_stmt, memstores)
     root_stmt.num_process = 1
 
-    def _neutralize(stmt: object, top_level: bool) -> None:
+    default_separator = root_stmt.default_separator or "|"
+
+    def _neutralize(stmt: object) -> None:
         if isinstance(stmt, GenerateStatement):
             if not allow_side_effects:
                 if stripped_file_targets is not None:
@@ -208,18 +472,100 @@ def neutralize_for_dry_run(
                         stripped_file_targets[stmt.full_name] = (basename, file_targets)
                 stmt.targets = {t for t in stmt.targets if t in memstores}
             stmt.num_process = 1
-            if top_level:
-                count = stmt.count
-                if count is None or (isinstance(count, str) and count.isdigit() and int(count) > max_count):
-                    # explicit count also short-circuits source-length resolution
-                    # (incl. the DB count_query_length path)
+            requested = _static_count(stmt.count)
+            source_rows = _source_row_count(
+                stmt,
+                descriptor_dir=descriptor_dir,
+                default_separator=default_separator,
+            )
+            memstore_source = _memstore_source_binding(
+                stmt,
+                memstore_ids=memstores,
+                producers=memstore_producers,
+            )
+            from datamimic_ce.enums.distribution_enums import SourceDistribution
+
+            source_exhaustible = (
+                source_rows is not None
+                and not stmt.cyclic
+                and stmt.distribution is not SourceDistribution.CUMULATED
+            )
+            range_bound = _range_upper_bound(stmt) if stmt.count is None else None
+            time_series = stmt.get_time_series_config()
+            output_multiplier = time_series.ticks_per_series if time_series is not None else 1
+            cap_applied = False
+            bounded_without_cap = False
+            reason = "runtime cardinality is not statically known"
+
+            if requested is not None:
+                count_kind = _CountBoundaryKind.STATIC
+                bounded_without_cap = requested <= max_count
+                if not bounded_without_cap:
                     stmt.count = str(max_count)
+                    cap_applied = True
+                    reason = f"static count {requested} exceeds per-invocation limit {max_count}"
+                else:
+                    reason = f"static count {requested} is within the per-invocation limit"
+            elif stmt.count is not None:
+                count_kind = _CountBoundaryKind.DYNAMIC
+                # Dynamic expressions are evaluated only with a runtime context. Replacing
+                # them is the only pre-execution bound that cannot be bypassed by the script.
+                stmt.count = str(max_count)
+                cap_applied = True
+                reason = "dynamic count was replaced by the per-invocation limit"
+            elif range_bound is not None:
+                count_kind = _CountBoundaryKind.RANGE
+                bounded_without_cap = range_bound <= max_count
+                if not bounded_without_cap:
+                    stmt.count = str(max_count)
+                    cap_applied = True
+                    reason = f"count range can exceed per-invocation limit {max_count}"
+                else:
+                    reason = f"count range has static upper bound {range_bound}"
+            elif source_rows is not None:
+                count_kind = _CountBoundaryKind.SOURCE
+                bounded_without_cap = source_rows <= max_count
+                if not bounded_without_cap:
+                    stmt.count = str(max_count)
+                    cap_applied = True
+                    reason = f"file source has {source_rows} rows, above limit {max_count}"
+                else:
+                    reason = f"file source has {source_rows} statically observable rows"
+            else:
+                count_kind = _CountBoundaryKind.SOURCE
+                # Includes DB, Mongo, memstore, scripted, and unresolved sources. The
+                # explicit count bypasses their potentially unbounded cardinality scans.
+                stmt.count = str(max_count)
+                cap_applied = True
+
+            if product_budgets is not None:
+                name = _capture_name(stmt.full_name)
+                product_budgets[name] = _ProductBudget(
+                    name=name,
+                    parent_name=_parent_capture_name(stmt),
+                    requested_per_parent=(
+                        requested
+                        if requested is not None
+                        else source_rows if range_bound is None else None
+                    ),
+                    explicit_count=requested is not None,
+                    count_kind=count_kind,
+                    source_rows_per_parent=source_rows,
+                    source_exhaustible=source_exhaustible,
+                    memstore_source=memstore_source,
+                    source_offset=stmt.offset,
+                    cyclic=bool(stmt.cyclic),
+                    output_multiplier=output_multiplier,
+                    bounded_without_cap=bounded_without_cap,
+                    cap_applied=cap_applied,
+                    reason=reason,
+                )
         if isinstance(stmt, CompositeStatement):
             for sub in stmt.sub_statements:
-                _neutralize(sub, top_level=False)
+                _neutralize(sub)
 
     for stmt in root_stmt.sub_statements:
-        _neutralize(stmt, top_level=True)
+        _neutralize(stmt)
 
 
 def _smoke_setup_context(tmp_dir: Path):
@@ -310,10 +656,37 @@ def dry_run(
     """Lint first (errors stop before execution), then execute neutralized and capture.
     smoke_export additionally replays captured rows through the stripped file exporters
     in a temp dir, catching export-layer crashes the plain dry-run cannot see."""
+    return dry_run_captured(
+        path,
+        max_count=max_count,
+        sample_rows=sample_rows,
+        allow_side_effects=allow_side_effects,
+        timeout_seconds=timeout_seconds,
+        smoke_export=smoke_export,
+    ).result
+
+
+def dry_run_captured(
+    path: Path,
+    *,
+    max_count: int = 10,
+    sample_rows: int = 5,
+    allow_side_effects: bool = False,
+    timeout_seconds: int = 30,
+    smoke_export: bool = False,
+) -> CapturedRun:
+    """Canonical file-backed dry-run retaining all bounded rows internally."""
+
     lint = lint_descriptor(path)
     if not lint.ok:
-        return DryRunResult(ok=False, stage="lint", lint=lint, diagnostics=lint.diagnostics)
-    return _execute(
+        result = DryRunResult(
+            ok=False,
+            stage=AuthoringStage.LINT,
+            lint=lint,
+            diagnostics=lint.diagnostics,
+        )
+        return CapturedRun(result=result, captured=CapturedProducts((), max_count))
+    return _execute_captured(
         path,
         max_count=max_count,
         sample_rows=sample_rows,
@@ -334,13 +707,40 @@ def dry_run_source(
     smoke_export: bool = False,
 ) -> DryRunResult:
     """Dry-run inline descriptor XML in a temp dir (relative resources not resolvable)."""
+    return dry_run_source_captured(
+        xml,
+        max_count=max_count,
+        sample_rows=sample_rows,
+        allow_side_effects=allow_side_effects,
+        timeout_seconds=timeout_seconds,
+        smoke_export=smoke_export,
+    ).result
+
+
+def dry_run_source_captured(
+    xml: str,
+    *,
+    max_count: int = 10,
+    sample_rows: int = 5,
+    allow_side_effects: bool = False,
+    timeout_seconds: int = 30,
+    smoke_export: bool = False,
+) -> CapturedRun:
+    """Canonical inline dry-run retaining acceptance rows before sample projection."""
+
     lint = lint_source(xml)
     if not lint.ok:
-        return DryRunResult(ok=False, stage="lint", lint=lint, diagnostics=lint.diagnostics)
+        result = DryRunResult(
+            ok=False,
+            stage=AuthoringStage.LINT,
+            lint=lint,
+            diagnostics=lint.diagnostics,
+        )
+        return CapturedRun(result=result, captured=CapturedProducts((), max_count))
     with tempfile.TemporaryDirectory(prefix="datamimic_dryrun_") as tmp:
         descriptor = Path(tmp) / "datamimic.xml"
         descriptor.write_text(xml, encoding="utf-8")
-        return _execute(
+        return _execute_captured(
             descriptor,
             max_count=max_count,
             sample_rows=sample_rows,
@@ -366,7 +766,386 @@ def _clip_value(value: object, max_chars: int = 200) -> object:
     return str(value)  # datetime, Decimal, custom objects -> readable leaf
 
 
-def _execute(
+def _failed_capture(result: DryRunResult, max_count: int) -> CapturedRun:
+    return CapturedRun(result=result, captured=CapturedProducts((), max_count))
+
+
+def _ipc_safe_value(value: object) -> object:
+    """Preserve structured values across IPC, stringifying only unpicklable leaves."""
+
+    if isinstance(value, str | bytes | int | float | bool | type(None)):
+        return value
+    if isinstance(value, dict):
+        return {str(key): _ipc_safe_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_ipc_safe_value(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_ipc_safe_value(item) for item in value)
+    try:
+        pickle.dumps(value)
+    except (pickle.PickleError, TypeError, AttributeError):
+        return str(value)
+    return value
+
+
+def _engine_process_worker(
+    path: Path,
+    max_count: int,
+    allow_side_effects: bool,
+    smoke_export: bool,
+    send_connection: Connection,
+) -> None:
+    """Execute and capture exactly one engine run inside the cancellable process."""
+
+    from functools import partial
+
+    from datamimic_ce.datamimic import DataMimic
+
+    budgets: _ProductBudgets = {}
+    stripped: _StrippedTargets | None = {} if smoke_export else None
+    try:
+        engine = DataMimic(
+            descriptor_path=path,
+            task_id=f"dryrun_{uuid.uuid4().hex}",
+            test_mode=True,
+            statement_transformer=partial(
+                neutralize_for_dry_run,
+                max_count=max_count,
+                allow_side_effects=allow_side_effects,
+                stripped_file_targets=stripped,
+                product_budgets=budgets,
+                descriptor_dir=path.parent,
+            ),
+        )
+        engine.parse_and_execute()
+        raw_capture = engine.capture_test_result() or {}
+        smoke_diagnostics = _smoke_export(raw_capture, stripped) if stripped else []
+        captured = {
+            str(name): tuple(_ipc_safe_value(row) for row in rows)
+            for name, rows in raw_capture.items()
+        }
+        message: _WorkerMessage = _WorkerSuccess(
+            captured=captured,
+            budgets=tuple(sorted(budgets.values(), key=lambda budget: budget.name)),
+            smoke_diagnostics=tuple(
+                diagnostic.model_dump(mode="json") for diagnostic in smoke_diagnostics
+            ),
+        )
+    except Exception as err:
+        # The process is the untyped runtime boundary: every engine exception must
+        # become a stable DM002 response rather than killing the authoring transport.
+        message = _WorkerFailure(message=str(err), fix_hint=_runtime_hint(err))
+    try:
+        send_connection.send(message)
+    finally:
+        send_connection.close()
+
+
+def _process_context() -> mp.context.SpawnContext:
+    """Use one deterministic cross-platform start strategy for threaded transports."""
+
+    return mp.context.SpawnContext()
+
+
+def _terminate_and_reap(process: _ChildProcess) -> None:
+    """Stop a timed-out child and synchronously reap it; never leave a zombie."""
+
+    if not process.is_alive():
+        process.join(timeout=0.1)
+        return
+    process.terminate()
+    process.join(timeout=0.2)
+    if process.is_alive():
+        process.kill()
+        process.join(timeout=0.2)
+
+
+def _receive_worker_message(
+    receive_connection: Connection,
+    process: _ChildProcess,
+    timeout_seconds: int,
+) -> _WorkerMessage | None:
+    deadline = time.monotonic() + timeout_seconds
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return None
+        if receive_connection.poll(min(0.05, remaining)):
+            try:
+                message = receive_connection.recv()
+            except (EOFError, OSError):
+                return _WorkerFailure(
+                    message="dry-run worker exited without a result",
+                    fix_hint="Inspect the descriptor for a native runtime crash.",
+                )
+            if isinstance(message, _WorkerSuccess | _WorkerFailure):
+                return message
+            return _WorkerFailure(
+                message="dry-run worker returned an invalid result",
+                fix_hint="Report this authoring runtime protocol error.",
+            )
+        if not process.is_alive():
+            return _WorkerFailure(
+                message=f"dry-run worker exited with code {process.exitcode}",
+                fix_hint="Inspect the descriptor for a native runtime crash.",
+            )
+
+
+def _capture_evidence(
+    budget: _ProductBudget | None,
+    *,
+    observed: int,
+    max_count: int,
+    observed_by_name: dict[str, int],
+) -> ProductCaptureEvidence:
+    parent_observed = 1
+    if budget is not None and budget.parent_name is not None:
+        parent_observed = observed_by_name.get(budget.parent_name, 0)
+    output_multiplier = budget.output_multiplier if budget is not None else 1
+    limit = max(1, max_count * parent_observed * output_multiplier)
+    if budget is None:
+        return ProductCaptureEvidence(
+            status=CaptureStatus.UNKNOWN,
+            requested=None,
+            observed=observed,
+            limit=limit,
+            reason="runtime product has no transformed statement-boundary evidence",
+        )
+
+    requested = (
+        budget.requested_per_parent * parent_observed * output_multiplier
+        if budget.requested_per_parent is not None
+        else None
+    )
+    available = (
+        budget.source_rows_per_parent * parent_observed * output_multiplier
+        if budget.source_rows_per_parent is not None
+        else None
+    )
+    if (
+        budget.source_exhaustible
+        and available is not None
+        and observed == available
+        and (not budget.explicit_count or requested is None or requested >= available)
+    ):
+        return ProductCaptureEvidence(
+            status=CaptureStatus.EXHAUSTED,
+            requested=requested,
+            observed=observed,
+            limit=limit,
+            reason=f"finite file source exhausted after {available} available rows",
+        )
+    if budget.cap_applied and observed == limit:
+        return ProductCaptureEvidence(
+            status=CaptureStatus.CAPPED,
+            requested=requested,
+            observed=observed,
+            limit=limit,
+            reason=budget.reason,
+        )
+    if budget.bounded_without_cap and (requested is None or observed == requested):
+        return ProductCaptureEvidence(
+            status=CaptureStatus.COMPLETE,
+            requested=requested,
+            observed=observed,
+            limit=limit,
+            reason=budget.reason,
+        )
+    return ProductCaptureEvidence(
+        status=CaptureStatus.UNKNOWN,
+        requested=requested,
+        observed=observed,
+        limit=limit,
+        reason=(
+            f"{budget.reason}; observed rows do not prove whether the runtime source "
+            "or dynamic cardinality was exhausted"
+        ),
+    )
+
+
+def _unknown_from(
+    evidence: ProductCaptureEvidence,
+    reason: str,
+) -> ProductCaptureEvidence:
+    return ProductCaptureEvidence(
+        status=CaptureStatus.UNKNOWN,
+        requested=evidence.requested,
+        observed=evidence.observed,
+        limit=evidence.limit,
+        reason=reason,
+    )
+
+
+def _memstore_capture_evidence(
+    budget: _ProductBudget,
+    base: ProductCaptureEvidence,
+    *,
+    producer_evidence: ProductCaptureEvidence,
+    producer_observed: int,
+    parent_observed: int,
+) -> ProductCaptureEvidence:
+    binding = budget.memstore_source
+    if binding is None:
+        return base
+    if not producer_evidence.complete:
+        return _unknown_from(
+            base,
+            (
+                f"memstore '{binding.source_id}' entity '{binding.entity}' depends on "
+                "a producer capture that is not proven complete"
+            ),
+        )
+    available_per_parent = max(0, producer_observed - budget.source_offset)
+    available = available_per_parent * parent_observed * budget.output_multiplier
+    if budget.count_kind is _CountBoundaryKind.DYNAMIC:
+        return base if base.status is CaptureStatus.CAPPED else _unknown_from(
+            base,
+            "dynamic count replacement prevents a complete memstore-read proof",
+        )
+    if budget.cyclic:
+        return _unknown_from(
+            base,
+            "cyclic memstore reads do not provide finite exhaustion evidence",
+        )
+    if budget.count_kind is _CountBoundaryKind.SOURCE:
+        if available > base.limit:
+            if base.observed == base.limit:
+                return ProductCaptureEvidence(
+                    status=CaptureStatus.CAPPED,
+                    requested=available,
+                    observed=base.observed,
+                    limit=base.limit,
+                    reason=(
+                        f"finite memstore source has {available} available rows, "
+                        f"above capture limit {base.limit}"
+                    ),
+                )
+            return _unknown_from(base, "memstore source did not reach its proven finite window")
+        if base.observed == available:
+            return ProductCaptureEvidence(
+                status=CaptureStatus.EXHAUSTED,
+                requested=available,
+                observed=base.observed,
+                limit=base.limit,
+                reason=(
+                    f"uniquely resolved memstore producer was fully read: "
+                    f"{available} finite rows"
+                ),
+            )
+        return _unknown_from(base, "memstore source did not exhaust its proven finite window")
+    if budget.count_kind is _CountBoundaryKind.STATIC and base.requested is not None:
+        effective_requested = min(base.requested, available)
+        if base.observed == effective_requested:
+            if base.requested >= available:
+                return ProductCaptureEvidence(
+                    status=CaptureStatus.EXHAUSTED,
+                    requested=base.requested,
+                    observed=base.observed,
+                    limit=base.limit,
+                    reason=(
+                        f"static request reached all {available} rows of the uniquely "
+                        "resolved memstore producer"
+                    ),
+                )
+            if base.requested <= base.limit:
+                return ProductCaptureEvidence(
+                    status=CaptureStatus.COMPLETE,
+                    requested=base.requested,
+                    observed=base.observed,
+                    limit=base.limit,
+                    reason="static memstore read completed within the finite source window",
+                )
+    return base
+
+
+def _capture_evidence_by_product(
+    budgets: _ProductBudgets,
+    captured: dict[str, tuple[object, ...]],
+    *,
+    max_count: int,
+) -> dict[str, ProductCaptureEvidence]:
+    """Resolve ancestry and memstore provenance recursively, independent of name order."""
+
+    observed_by_name = {name: len(rows) for name, rows in captured.items()}
+    resolved: dict[str, ProductCaptureEvidence] = {}
+    visiting: set[str] = set()
+
+    def _resolve(name: str) -> ProductCaptureEvidence:
+        existing = resolved.get(name)
+        if existing is not None:
+            return existing
+        budget = budgets.get(name)
+        observed = observed_by_name.get(name, 0)
+        base = _capture_evidence(
+            budget,
+            observed=observed,
+            max_count=max_count,
+            observed_by_name=observed_by_name,
+        )
+        if name in visiting:
+            return _unknown_from(base, "capture dependency cycle prevents a completeness proof")
+        visiting.add(name)
+        evidence = base
+        dependency_blocked = False
+        if budget is not None and budget.parent_name is not None:
+            if budget.parent_name not in observed_by_name:
+                evidence = _unknown_from(base, "parent product is missing from runtime capture")
+                dependency_blocked = True
+            else:
+                parent_evidence = _resolve(budget.parent_name)
+                if not parent_evidence.complete:
+                    evidence = _unknown_from(
+                        base,
+                        "parent product capture is not proven complete",
+                    )
+                    dependency_blocked = True
+        binding = budget.memstore_source if budget is not None else None
+        if budget is not None and binding is not None and not dependency_blocked:
+            if binding.status is _MemstoreBindingStatus.MISSING:
+                evidence = _unknown_from(
+                    base,
+                    (
+                        f"memstore '{binding.source_id}' entity '{binding.entity}' "
+                        "has no captured producer"
+                    ),
+                )
+            elif binding.status is _MemstoreBindingStatus.AMBIGUOUS:
+                evidence = _unknown_from(
+                    base,
+                    (
+                        f"memstore '{binding.source_id}' entity '{binding.entity}' "
+                        "has multiple possible producers"
+                    ),
+                )
+            else:
+                producer = next(iter(binding.producers), None)
+                if producer is None or producer.product not in observed_by_name:
+                    evidence = _unknown_from(
+                        base,
+                        "resolved memstore producer is missing from runtime capture",
+                    )
+                else:
+                    evidence = _memstore_capture_evidence(
+                        budget,
+                        base,
+                        producer_evidence=_resolve(producer.product),
+                        producer_observed=observed_by_name[producer.product],
+                        parent_observed=(
+                            observed_by_name.get(budget.parent_name, 0)
+                            if budget.parent_name is not None
+                            else 1
+                        ),
+                    )
+        visiting.remove(name)
+        resolved[name] = evidence
+        return evidence
+
+    for product_name in captured:
+        _resolve(product_name)
+    return resolved
+
+
+def _execute_captured(
     path: Path,
     *,
     max_count: int,
@@ -375,10 +1154,7 @@ def _execute(
     timeout_seconds: int,
     lint: LintResult,
     smoke_export: bool = False,
-) -> DryRunResult:
-    from functools import partial
-
-    from datamimic_ce.datamimic import DataMimic
+) -> CapturedRun:
     from datamimic_ce.parsers.descriptor_parser import DescriptorParser
 
     # Refusal gate: <execute> runs arbitrary SQL/scripts — never silently in a dry-run.
@@ -387,59 +1163,115 @@ def _execute(
     try:
         has_execute = _contains_execute(DescriptorParser.parse(path, None))
     except Exception as err:
-        return _run_error(RULE_RUNTIME_ERROR, f"Dry-run failed: {err}", _runtime_hint(err), lint)
+        return _failed_capture(
+            _run_error(RULE_RUNTIME_ERROR, f"Dry-run failed: {err}", _runtime_hint(err), lint),
+            max_count,
+        )
     if not allow_side_effects and has_execute:
-        return _run_error(
-            RULE_SIDE_EFFECT_REFUSAL,
-            "Descriptor contains <execute> (arbitrary SQL/script) — refusing the dry-run.",
-            "Re-run with allow_side_effects=true if the statement is safe to execute.",
-            lint,
-            element="execute",
+        return _failed_capture(
+            _run_error(
+                RULE_SIDE_EFFECT_REFUSAL,
+                "Descriptor contains <execute> (arbitrary SQL/script) — refusing the dry-run.",
+                "Re-run with allow_side_effects=true if the statement is safe to execute.",
+                lint,
+                element="execute",
+            ),
+            max_count,
         )
 
-    # smoke_export needs to know WHICH file targets were stripped from each product.
-    stripped: _StrippedTargets | None = {} if smoke_export else None
-    engine = DataMimic(
-        descriptor_path=path,
-        task_id=f"dryrun_{uuid.uuid4().hex}",
-        test_mode=True,
-        statement_transformer=partial(
-            neutralize_for_dry_run,
-            max_count=max_count,
-            allow_side_effects=allow_side_effects,
-            stripped_file_targets=stripped,
-        ),
-    )
-
     started = time.perf_counter()
-    with ThreadPoolExecutor(max_workers=1) as pool:
-        future = pool.submit(engine.parse_and_execute)
-        try:
-            future.result(timeout=timeout_seconds)
-        except FutureTimeoutError:
-            return _run_error(
+    context = _process_context()
+    receive_connection, send_connection = context.Pipe(duplex=False)
+    process = context.Process(
+        target=_engine_process_worker,
+        args=(path, max_count, allow_side_effects, smoke_export, send_connection),
+        name="datamimic-authoring-dryrun",
+    )
+    try:
+        process.start()
+    except (OSError, RuntimeError) as err:
+        receive_connection.close()
+        send_connection.close()
+        return _failed_capture(
+            _run_error(
                 RULE_RUNTIME_ERROR,
-                f"Dry-run exceeded {timeout_seconds}s and was abandoned.",
-                "Reduce counts/pageSize or raise timeout_seconds; check for unbounded {script} counts.",
+                f"Dry-run worker could not start: {err}",
+                "Check the local multiprocessing runtime and retry.",
                 lint,
-            )
-        except Exception as err:  # engine raises plain ValueError/Exception — map to DM002
-            return _run_error(RULE_RUNTIME_ERROR, f"Dry-run failed: {err}", _runtime_hint(err), lint)
+            ),
+            max_count,
+        )
+    send_connection.close()
+    try:
+        message = _receive_worker_message(receive_connection, process, timeout_seconds)
+    finally:
+        receive_connection.close()
+    if message is None:
+        _terminate_and_reap(process)
+        return _failed_capture(
+            _run_error(
+                RULE_RUNTIME_ERROR,
+                f"Dry-run exceeded {timeout_seconds}s and was terminated.",
+                "Reduce counts/pageSize or raise timeout_seconds; inspect slow scripts and sources.",
+                lint,
+            ),
+            max_count,
+        )
+    process.join(timeout=0.2)
+    if process.is_alive():
+        _terminate_and_reap(process)
+    if isinstance(message, _WorkerFailure):
+        return _failed_capture(
+            _run_error(
+                RULE_RUNTIME_ERROR,
+                f"Dry-run failed: {message.message}",
+                message.fix_hint,
+                lint,
+            ),
+            max_count,
+        )
     timing_ms = int((time.perf_counter() - started) * 1000)
 
-    captured = engine.capture_test_result() or {}
-    # Opt-in export smoke: replay captured rows through the stripped file exporters.
-    smoke_diags: list[Diagnostic] = []
-    if stripped:
-        smoke_diags = _smoke_export(captured, stripped)
+    captured = message.captured
+    budgets = {budget.name: budget for budget in message.budgets}
+    smoke_diags = [
+        Diagnostic.model_validate(diagnostic) for diagnostic in message.smoke_diagnostics
+    ]
+    evidence_by_name = _capture_evidence_by_product(
+        budgets,
+        captured,
+        max_count=max_count,
+    )
+    captured_products = CapturedProducts(
+        products=tuple(
+            CapturedProduct(
+                name=str(name),
+                rows=tuple(rows),
+                capture=evidence_by_name[str(name)],
+            )
+            for name, rows in sorted(captured.items())
+        ),
+        max_count=max_count,
+    )
     products: list[DryRunProduct] = []
-    for name, rows in captured.items():
+    for product in captured_products.products:
+        name = product.name
+        rows = product.rows
+        capture = product.capture
+        if capture is None:
+            capture = evidence_by_name[name]
         sample = [
             {str(k): _clip_value(v) for k, v in row.items()} if isinstance(row, dict) else {"value": _clip_value(row)}
             for row in rows[:sample_rows]
         ]
         products.append(
-            DryRunProduct(name=name, count=len(rows), sample=sample, truncated_rows=len(rows) > sample_rows)
+            DryRunProduct(
+                name=name,
+                count=len(rows),
+                sample=sample,
+                truncated_rows=len(rows) > sample_rows,
+                capture=capture,
+            )
         )
     products.sort(key=lambda p: p.name)
     # A descriptor that generates nothing at all almost always means the author's
@@ -457,12 +1289,36 @@ def _execute(
                 path="/setup",
             )
         )
-    return DryRunResult(
+    result = DryRunResult(
         ok=not smoke_diags and not zero_rows,
-        stage="run",
+        stage=AuthoringStage.RUN,
         timing_ms=timing_ms,
         products=products[:_MAX_PRODUCTS],
         products_truncated=max(0, len(products) - _MAX_PRODUCTS),
         lint=lint,
         diagnostics=[*smoke_diags, *zero_rows],
     )
+    return CapturedRun(result=result, captured=captured_products)
+
+
+def _execute(
+    path: Path,
+    *,
+    max_count: int,
+    sample_rows: int,
+    allow_side_effects: bool,
+    timeout_seconds: int,
+    lint: LintResult,
+    smoke_export: bool = False,
+) -> DryRunResult:
+    """Compatibility projection over the one canonical captured execution path."""
+
+    return _execute_captured(
+        path,
+        max_count=max_count,
+        sample_rows=sample_rows,
+        allow_side_effects=allow_side_effects,
+        timeout_seconds=timeout_seconds,
+        lint=lint,
+        smoke_export=smoke_export,
+    ).result

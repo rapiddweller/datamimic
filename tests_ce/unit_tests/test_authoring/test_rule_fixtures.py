@@ -233,16 +233,14 @@ def test_dm401_dm402_hints_show_the_memstore_declaration() -> None:
     from datamimic_ce.authoring import lint_source
 
     dm401 = lint_source(
-        '<setup rngSeed="1"><generate name="g" count="5" target="mem">'
-        '<key name="n" type="int"/></generate></setup>'
+        '<setup rngSeed="1"><generate name="g" count="5" target="mem"><key name="n" type="int"/></generate></setup>'
     )
     diag = next(d for d in dm401.diagnostics if d.rule == "DM401")
     assert '<memstore id="mem"/>' in diag.fix_hint
 
     dm402 = lint_source(
-        '<setup rngSeed="1"><generate name="g" count="5" target="ConsoleExporter">'
-        '<variable name="row" source="mem" type="x"/>'
-        '<key name="n" script="row.n"/></generate></setup>'
+        '<setup rngSeed="1"><generate name="g" source="mem" count="5" '
+        'target="ConsoleExporter"><key name="n" constant="1"/></generate></setup>'
     )
     diag = next(d for d in dm402.diagnostics if d.rule == "DM402")
     assert '<memstore id="mem"/>' in diag.fix_hint

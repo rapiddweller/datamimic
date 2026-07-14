@@ -16,7 +16,6 @@ import typer
 import uvicorn
 
 from datamimic_ce.mcp.server import (
-    HTTP_MIDDLEWARE_ATTR,
     build_sse_app,
     create_server,
 )
@@ -92,14 +91,13 @@ def serve(
 
     api_key = os.getenv("DATAMIMIC_MCP_API_KEY")
     server = create_server(api_key=api_key)
-    middleware = getattr(server, HTTP_MIDDLEWARE_ATTR, None)
 
     if transport == Transport.stdio:
         # WHY: stdio transport is typically embedded; it does not honour host/port.
         server.run(Transport.stdio.value)
         return
 
-    sse_app = build_sse_app(server, middleware)
+    sse_app = build_sse_app(server, server.http_middleware)
     uvicorn.run(
         sse_app,
         host=host,

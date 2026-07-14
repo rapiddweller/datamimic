@@ -17,7 +17,7 @@ position it had."""
 import random
 from decimal import Decimal
 
-from datamimic_ce.enums.distribution_enums import NumberDistribution
+from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
 
 
 def _grid_size(min_v: float, max_v: float, granularity: float) -> int:
@@ -173,6 +173,31 @@ class _RecurrenceSequence:
                 raise StopIteration
             if value >= self._min:
                 return value
+
+
+def finite_number_sequence_capacity(
+    distribution: NumberDistribution,
+    min_v: float,
+    max_v: float,
+    granularity: float,
+) -> int | None:
+    """Return the exact output capacity of a finite positional sequence.
+
+    This lives beside the iterator implementations so authoring analysis does
+    not reproduce their exhaustion semantics. Non-finite distributions return
+    ``None``. Invalid ranges are left to the runtime model/generator validators.
+    """
+    if distribution not in POSITIONAL_NUMBER_SEQUENCES:
+        return None
+    if min_v > max_v or granularity <= 0:
+        return None
+    if distribution in (NumberDistribution.FIBONACCI, NumberDistribution.PADOVAN):
+        sequence = _RecurrenceSequence(distribution, min_v, max_v)
+        count = 0
+        for _ in sequence:
+            count += 1
+        return count
+    return _grid_size(min_v, max_v, granularity)
 
 
 def build_number_sequence(

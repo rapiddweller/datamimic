@@ -58,7 +58,7 @@ _TIMESERIES_ATTRS: frozenset[str] = TIMESERIES_ALL_OR_NONE.attrs
 class GenerateModel(BaseModel):
     # Declared cross-field constraints
     __constraints__: ClassVar[tuple[Constraint, ...]] = element_constraints(EL_GENERATE)
-    model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
+    model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
     name: str = Field(
         ...,

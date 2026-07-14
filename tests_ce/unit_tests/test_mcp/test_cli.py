@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-# WHY: These tests prove CLI option parsing works without relying on Typer's
-# Literal support. We validate behavior using Enums and avoid I/O by mocking.
-
 from importlib import import_module
 from types import ModuleType
+
 from typer.testing import CliRunner
+
+# WHY: These tests prove CLI option parsing works without relying on Typer's
+# Literal support. We validate behavior using Enums and avoid I/O by mocking.
 
 
 runner = CliRunner()
@@ -14,6 +15,7 @@ runner = CliRunner()
 class _FakeServer:
     def __init__(self) -> None:
         self.runs: list[str] = []
+        self.http_middleware = None
 
     def run(self, mode: str) -> None:
         self.runs.append(mode)
@@ -24,7 +26,6 @@ def test_cli_transport_stdio_invokes_server_run(monkeypatch) -> None:
 
     # Install a fake server module before importing the CLI to avoid optional deps
     fake_server = ModuleType("datamimic_ce.mcp.server")
-    fake_server.HTTP_MIDDLEWARE_ATTR = "_datamimic_http_middleware"  # type: ignore[attr-defined]
 
     def _fake_create_server(api_key=None):  # noqa: ANN001
         return fake
@@ -64,7 +65,6 @@ def test_cli_transport_sse_invokes_uvicorn_with_params(monkeypatch) -> None:
 
     # Install a fake server module before importing the CLI to avoid optional deps
     fake_server = ModuleType("datamimic_ce.mcp.server")
-    fake_server.HTTP_MIDDLEWARE_ATTR = "_datamimic_http_middleware"  # type: ignore[attr-defined]
 
     def _fake_create_server(api_key=None):  # noqa: ANN001
         return fake

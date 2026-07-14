@@ -104,7 +104,12 @@ def _attribute_specs(model: type[BaseModel]) -> dict[str, AttributeSpec]:
     specs: dict[str, AttributeSpec] = {}
     for field_name, field in model.model_fields.items():
         xml_name = field.alias or field_name
-        annotation = getattr(field.annotation, "__name__", None) or str(field.annotation)
+        annotation_value = field.annotation
+        annotation = (
+            annotation_value.__name__
+            if isinstance(annotation_value, type)
+            else str(annotation_value)
+        )
         specs[xml_name] = AttributeSpec(
             name=xml_name,
             required=field.is_required(),

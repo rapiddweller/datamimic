@@ -6,15 +6,14 @@
 
 """Diagnostic contract ("diagnostics v1") shared by the CLI and the MCP tools."""
 
-from enum import StrEnum
+from typing import TypeAlias
 
 from pydantic import BaseModel, Field
 
+from datamimic_ce.model.constraints import RuleSeverity
 
-class Severity(StrEnum):
-    ERROR = "error"  # the engine will (or would) refuse the descriptor
-    WARNING = "warning"  # runs, but almost certainly not what the author meant
-    HINT = "hint"  # best practice / surprising default worth knowing
+# Backwards-compatible public name; the enum itself is owned by the rule SPOT.
+Severity: TypeAlias = RuleSeverity
 
 
 class Diagnostic(BaseModel):

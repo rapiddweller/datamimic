@@ -59,7 +59,7 @@ from datamimic_ce.model.model_util import ModelUtil
 class VariableModel(BaseModel):
     # Declared cross-field constraints
     __constraints__: ClassVar[tuple[Constraint, ...]] = element_constraints(EL_VARIABLE)
-    model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
+    model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
     name: str = Field(
         ...,

@@ -15,11 +15,13 @@ import xmltodict
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
+from datamimic_ce.constants.element_constants import EL_GENERATE, EL_NESTED_KEY, EL_VARIABLE
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.logger import logger
+from datamimic_ce.model.constraints import SourceFileFormat, source_file_format_for
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
@@ -34,19 +36,19 @@ from datamimic_ce.utils.unique_sampling import unique_values
 
 class DataSourceRegistry:
     @staticmethod
-    def _get_source(key: str, csv_separator: str = ",") -> list[dict]:
+    def _get_source(key: str, csv_separator: str, source_format: SourceFileFormat) -> list[dict]:
         """
         Load source data from file and put into cache
         """
         logger.debug(f"Load source {key} from file")
         # Load source data from file
-        if key.endswith(".csv"):
+        if source_format in (SourceFileFormat.CSV, SourceFileFormat.WEIGHTED_ENTITY_CSV):
             return FileUtil.read_csv_to_dict_list(Path(key), csv_separator)
-        elif key.endswith(".xlsx"):
+        elif source_format is SourceFileFormat.XLSX:
             return FileUtil.read_xlsx_to_dict_list(Path(key))
-        elif key.endswith(".fcw"):
+        elif source_format is SourceFileFormat.FIXED_WIDTH:
             return FileUtil.read_fixed_width_to_dict_list(Path(key))
-        elif key.endswith(".json"):
+        elif source_format is SourceFileFormat.JSON:
             json_data = FileUtil.read_json(Path(key))
             if isinstance(json_data, list):
                 return json_data
@@ -54,7 +56,7 @@ class DataSourceRegistry:
                 return [json_data]
             else:
                 raise ValueError(f"JSON file '{key}' must contain a list of objects or a dictionary")
-        elif key.endswith(".xml"):
+        elif source_format is SourceFileFormat.XML:
             return FileContentStorage.load_file_with_custom_func(
                 key, lambda: xmltodict.parse(open(key).read(), attr_prefix="@", cdata_key="#text")
             )
@@ -83,6 +85,8 @@ class DataSourceRegistry:
         # TODO: consider to paginate source of element "reference"
         if isinstance(stmt, ReferenceStatement):
             return
+        if not isinstance(stmt, GenerateStatement | VariableStatement | NestedKeyStatement):
+            return
 
         root_ctx = ctx.root
         source_id: tuple[str | None, str | None] = DataSourceRegistry.data_source_cache_key(stmt)
@@ -101,12 +105,8 @@ class DataSourceRegistry:
                 return
         # Check length of data source
         else:
-            # Check if prop source is available
-            if hasattr(stmt, "source"):
-                source_str = stmt.source
-                if source_str is None:
-                    return
-            else:
+            source_str = stmt.source
+            if source_str is None:
                 return
             # Try to evaluate script as source string
             # Ignore to check scripted source if eval failed in pre-execute task
@@ -118,24 +118,38 @@ class DataSourceRegistry:
 
             # 2: Get source info from ctx client (e.g. checking if it is SQL, MongoDB or CSV source)
 
-            # Check if source is data source file or database collection/table
+            # Check if source is data source file or database collection/table.
+            if isinstance(stmt, GenerateStatement):
+                source_element = EL_GENERATE
+            elif isinstance(stmt, VariableStatement):
+                source_element = EL_VARIABLE
+            elif isinstance(stmt, NestedKeyStatement):
+                source_element = EL_NESTED_KEY
+            else:
+                return
+            source_format = source_file_format_for(
+                source_element,
+                source_str,
+                stmt.type,
+            )
             # dbunit dataset: one table's row count (checked before the generic .xml branch below).
-            if source_str.endswith(".dbunit.xml"):
+            if source_format is SourceFileFormat.DBUNIT_XML:
                 ds_len = len(
                     FileUtil.read_dbunit_to_dict_list(
                         root_ctx.descriptor_dir / source_str, StatementUtil.resolve_source_entity(stmt)
                     )
                 )
             # 2.1: Check if datasource is csv file
-            elif source_str.endswith((".csv", ".json", ".xml", ".xlsx", ".fcw")):
+            elif source_format is not None:
                 ds_len = len(
                     DataSourceRegistry._get_source(
                         str(root_ctx.descriptor_dir / source_str),
-                        (getattr(stmt, "separator", None) or ctx.root.default_separator),
+                        stmt.separator or ctx.root.default_separator,
+                        source_format,
                     )
                 )
             # 2.4: Check if datasource is memstore
-            elif root_ctx.memstore_manager.contain(source_str) and hasattr(stmt, "type"):
+            elif root_ctx.memstore_manager.contain(source_str):
                 ds_len = root_ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(
                     StatementUtil.resolve_source_entity(stmt)
                 )
@@ -148,42 +162,45 @@ class DataSourceRegistry:
                 # handle database collection/table as data source
                 from datamimic_ce.clients.rdbms_client import RdbmsClient
 
-                if isinstance(client, RdbmsClient) and hasattr(stmt, "selector"):
-                    if stmt.selector is not None:
+                selector = stmt.selector if isinstance(stmt, GenerateStatement | VariableStatement) else None
+                iteration_selector = stmt.iteration_selector if isinstance(stmt, VariableStatement) else None
+
+                if isinstance(client, RdbmsClient):
+                    if selector is not None:
                         try:
-                            ds_len = client.count_query_length(query=stmt.selector)
+                            ds_len = client.count_query_length(query=selector)
                         except ProgrammingError:
                             logger.error(
-                                f"Cannot get length of database source '{source_str}' with selector '{stmt.selector}'"
+                                f"Cannot get length of database source '{source_str}' with selector '{selector}'"
                             )
                             return
                         except OperationalError:
                             logger.error(
-                                f"Cannot get length of database source '{source_str}' with selector '{stmt.selector}'"
+                                f"Cannot get length of database source '{source_str}' with selector '{selector}'"
                             )
                             return
-                    elif hasattr(stmt, "iteration_selector") and stmt.iteration_selector is not None:
+                    elif iteration_selector is not None:
                         try:
-                            ds_len = client.count_query_length(query=stmt.iteration_selector)
+                            ds_len = client.count_query_length(query=iteration_selector)
                         except ProgrammingError:
                             logger.error(
                                 f"Cannot get length of database source '{source_str}' "
-                                f"with iterationSelector '{stmt.iteration_selector}'"
+                                f"with iterationSelector '{iteration_selector}'"
                             )
                             return
                         except OperationalError:
                             logger.error(
                                 f"Cannot get length of database source '{source_str}' "
-                                f"with iterationSelector '{stmt.iteration_selector}'"
+                                f"with iterationSelector '{iteration_selector}'"
                             )
                             return
-                    elif hasattr(stmt, "type") and (stmt.source_entity is not None or stmt.type is not None):
+                    elif stmt.source_entity is not None or stmt.type is not None:
                         ds_len = client.count_table_length(table_name=StatementUtil.resolve_source_entity(stmt))
 
-                elif isinstance(client, MongoDBClient) and hasattr(stmt, "selector") and hasattr(stmt, "type"):
-                    if stmt.selector is not None:
+                elif isinstance(client, MongoDBClient):
+                    if selector is not None:
                         try:
-                            ds_len = client.count_query_length(stmt.selector)
+                            ds_len = client.count_query_length(selector)
                         except ValueError:
                             return
                     elif (collection := StatementUtil.resolve_source_collection(stmt)) is not None:
@@ -191,13 +208,13 @@ class DataSourceRegistry:
                             ds_len = client.count(collection_name=collection)
                         except ValueError:
                             return
-                    elif hasattr(stmt, "iteration_selector") and stmt.iteration_selector is not None:
+                    elif iteration_selector is not None:
                         try:
-                            ds_len = client.count_query_length(query=stmt.iteration_selector)
+                            ds_len = client.count_query_length(query=iteration_selector)
                         except ValueError:
                             logger.error(
                                 f"Cannot get length of database source '{source_str}' "
-                                f"with iterationSelector '{stmt.iteration_selector}'"
+                                f"with iterationSelector '{iteration_selector}'"
                             )
                             return
                     else:
@@ -397,7 +414,7 @@ class DataSourceRegistry:
         """
         cyclic = cyclic if cyclic is not None else False
 
-        file_data = DataSourceRegistry._get_source(str(file_path), separator)
+        file_data = DataSourceRegistry._get_source(str(file_path), separator, SourceFileFormat.CSV)
         pagination = (
             DataSourcePagination(start_idx, end_idx - start_idx)
             if (start_idx is not None and end_idx is not None)
@@ -434,7 +451,7 @@ class DataSourceRegistry:
         """
         cyclic = cyclic if cyclic is not None else False
 
-        file_data = DataSourceRegistry._get_source(str(file_path))
+        file_data = DataSourceRegistry._get_source(str(file_path), ",", SourceFileFormat.JSON)
 
         # Validate the JSON data
         if not isinstance(file_data, list):
@@ -453,7 +470,7 @@ class DataSourceRegistry:
         file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None, offset: int = 0
     ) -> list[dict]:
         """Load an .xlsx sheet (first row = header) as a paginated, optionally cyclic list of dicts."""
-        file_data = DataSourceRegistry._get_source(str(file_path))
+        file_data = DataSourceRegistry._get_source(str(file_path), ",", SourceFileFormat.XLSX)
         pagination = (
             DataSourcePagination(start_idx, end_idx - start_idx)
             if (start_idx is not None and end_idx is not None)
@@ -468,7 +485,7 @@ class DataSourceRegistry:
         file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None, offset: int = 0
     ) -> list[dict]:
         """Load a self-describing .fcw file as a paginated, optionally cyclic list of dicts."""
-        file_data = DataSourceRegistry._get_source(str(file_path))
+        file_data = DataSourceRegistry._get_source(str(file_path), ",", SourceFileFormat.FIXED_WIDTH)
         pagination = (
             DataSourcePagination(start_idx, end_idx - start_idx)
             if (start_idx is not None and end_idx is not None)
@@ -494,7 +511,7 @@ class DataSourceRegistry:
         """
         cyclic = cyclic if cyclic is not None else False
         # Read the XML data from a file
-        file_data = DataSourceRegistry._get_source(str(file_path))
+        file_data = DataSourceRegistry._get_source(str(file_path), ",", SourceFileFormat.XML)
         # Handle the case where data might be None
         if file_data is None:
             return []

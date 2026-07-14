@@ -24,7 +24,7 @@ ALLOWED_ARRAY_TYPES: frozenset[str] = resolved_values(ARRAY_TYPE_VALUES)
 
 class ArrayModel(BaseModel):
     __constraints__: ClassVar[tuple[Constraint, ...]] = element_constraints(EL_ARRAY)
-    model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
+    model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
     name: str = Field(..., description="Name of the array; becomes the field name in the generated record.")
     type: str | None = Field(

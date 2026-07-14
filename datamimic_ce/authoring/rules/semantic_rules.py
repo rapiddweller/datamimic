@@ -23,7 +23,7 @@ from dataclasses import replace
 from lxml import etree
 from pydantic import TypeAdapter, ValidationError
 
-from datamimic_ce.authoring.diagnostics import Diagnostic, Severity
+from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rules.base import LintContext, Rule
 from datamimic_ce.constants.attribute_constants import (
     ATTR_DISTRIBUTION,
@@ -54,7 +54,9 @@ from datamimic_ce.model.constraints import (
     RequiredOneOf,
     Requires,
     RequiresWhenValue,
+    RuleSeverity,
     ValidValues,
+    authoring_rule_definition,
     resolved_allowed,
     resolved_values,
 )
@@ -113,23 +115,28 @@ def _model_util_diag(
     ctx: LintContext,
     element: etree._Element,
     check: "Callable[[dict[str, str]], object]",
-    fix_hint: str,
-    severity: Severity | None = None,
+    fix_context: str | None = None,
+    severity: RuleSeverity | None = None,
 ) -> Diagnostic | None:
     """Run one engine-side ModelUtil check against the element's attributes."""
     try:
         check(dict(element.attrib))
     except ValueError as err:
-        return ctx.diag(rule, element, str(err), fix_hint, severity=severity)
+        return ctx.diag(
+            rule,
+            element,
+            evidence=f"runtime model check returned: {err}",
+            fix_context=fix_context,
+            severity=severity,
+        )
     return None
 
 
 def _constraint_check(constraints: tuple[Constraint, ...]) -> Callable[[dict[str, str]], object]:
     """Bind a fact tuple into the one-argument check contract used by lint rules."""
+
     def check(values: dict[str, str]) -> object:
-        lint_constraints = tuple(
-            replace(fact, lint_only=False) if fact.lint_only else fact for fact in constraints
-        )
+        lint_constraints = tuple(replace(fact, lint_only=False) if fact.lint_only else fact for fact in constraints)
         return ModelUtil.check_constraints(values, lint_constraints)
 
     return check
@@ -148,8 +155,7 @@ _REQUIRES_OWNED_ELSEWHERE = (WEIGHTS_REQUIRE_VALUES,)
 
 
 class CountBoundsConflict(Rule):
-    id = "DM201"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM201")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element, constraints in _constrained(ctx):
@@ -165,15 +171,13 @@ class CountBoundsConflict(Rule):
                 ctx,
                 element,
                 check_bounds,
-                "Use either count, or a minCount/maxCount range (with minCount <= maxCount) — never both.",
             )
             if diag:
                 yield diag
 
 
 class CountRequired(Rule):
-    id = "DM202"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM202")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element, constraints in _constrained(ctx):
@@ -192,7 +196,6 @@ class CountRequired(Rule):
                 ctx,
                 element,
                 ModelUtil.check_exist_count,
-                "Add count=\"N\" (or minCount/maxCount), or provide a source/script that supplies the rows.",
             )
             if diag:
                 yield diag
@@ -204,8 +207,7 @@ class GenerationModeConflict(Rule):
     Historically scoped to <key>/<id>/<variable>; now driven purely by each model's
     declared facts, so any model declaring them is covered."""
 
-    id = "DM203"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM203")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element, constraints in _constrained(ctx):
@@ -219,8 +221,8 @@ class GenerationModeConflict(Rule):
                         yield ctx.diag(
                             type(self),
                             element,
-                            f"<{tag}> mixes generation modes: {', '.join(modes)}.",
-                            "Keep exactly one value source (e.g. only generator=, or only values=).",
+                            evidence=f"<{tag}> sets modes {', '.join(modes)}",
+                            severity=type(self).definition.severity_for(advisory=fact.lint_only),
                         )
                 elif isinstance(fact, RequiredOneOf):
                     if fact == EXIST_COUNT:
@@ -230,8 +232,9 @@ class GenerationModeConflict(Rule):
                         yield ctx.diag(
                             type(self),
                             element,
-                            f"<{tag}> defines no value source.",
-                            f"Add one of: {options}.",
+                            evidence=f"<{tag}> has no value source",
+                            fix_context=f"Available modes: {options}.",
+                            severity=type(self).definition.severity_for(advisory=fact.lint_only),
                         )
             if WEIGHTS_REQUIRE_VALUES in constraints:
                 diag = _model_util_diag(
@@ -239,15 +242,14 @@ class GenerationModeConflict(Rule):
                     ctx,
                     element,
                     ModelUtil.check_weights_require_values,
-                    "weights= is only allowed together with values=.",
+                    fix_context="For weighted literals, add values=.",
                 )
                 if diag:
                     yield diag
 
 
 class UniqueConstraints(Rule):
-    id = "DM204"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM204")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element, constraints in _constrained(ctx):
@@ -262,16 +264,13 @@ class UniqueConstraints(Rule):
                 ctx,
                 element,
                 _constraint_check(declared),
-                "unique needs a finite pool (values= or source=) and only combines with "
-                "the element's declared distribution policy — remove the conflicting attributes.",
             )
             if diag:
                 yield diag
 
 
 class SourceModeConflict(Rule):
-    id = "DM205"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM205")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element, constraints in _constrained(ctx):
@@ -283,16 +282,14 @@ class SourceModeConflict(Rule):
                     ctx,
                     element,
                     _constraint_check((fact,)),
-                    "When the gated mode is active, keep only one of the conflicting attributes.",
-                    severity=Severity.WARNING if fact.lint_only else None,
+                    severity=type(self).definition.severity_for(advisory=fact.lint_only),
                 )
                 if diag:
                     yield diag
 
 
 class CountDigitsOrScript(Rule):
-    id = "DM212"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM212")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter(*_GENERATES, EL_NESTED_KEY):
@@ -305,14 +302,13 @@ class CountDigitsOrScript(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    str(err),
-                    'count is digits ("100") or a {script} expression (count="{customers * 3}").',
+                    evidence=f"count='{count}', runtime parser returned: {err}",
+                    fix_context='Examples: count="100" or count="{customers * 3}".',
                 )
 
 
 class NestedKeyCyclicNeedsCount(Rule):
-    id = "DM213"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM213")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter(EL_NESTED_KEY):
@@ -322,9 +318,8 @@ class NestedKeyCyclicNeedsCount(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    "<nestedKey cyclic=\"True\"> without a count would loop forever.",
-                    "Add count= (or minCount/maxCount) to the <nestedKey>. "
-                    "(<generate cyclic> is fine without count — it falls back to the source length.)",
+                    evidence='cyclic="True" without count/minCount/maxCount',
+                    fix_context="A cyclic generate is different: it can fall back to source length.",
                 )
 
 
@@ -335,19 +330,14 @@ class SourceCompanionsWithoutSource(Rule):
     other needs-sets (e.g. dataset=>generator|entity, defaultValue=>script) report per
     needs-group. Engine-enforced facts are errors; lint-only guidance remains a warning."""
 
-    id = "DM214"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM214")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         source_needs = frozenset((ATTR_SOURCE,))
         for element, constraints in _constrained(ctx):
             violated: dict[tuple[frozenset[str], bool, str | None], list[str]] = {}
             for fact in constraints:
-                if (
-                    not isinstance(fact, Requires)
-                    or fact in _REQUIRES_OWNED_ELSEWHERE
-                    or _is_unique_constraint(fact)
-                ):
+                if not isinstance(fact, Requires) or fact in _REQUIRES_OWNED_ELSEWHERE or _is_unique_constraint(fact):
                     continue
                 if not _gate_open(element, fact):
                     continue
@@ -362,33 +352,31 @@ class SourceCompanionsWithoutSource(Rule):
                     yield ctx.diag(
                         type(self),
                         element,
-                        declared_message,
-                        f"Add {' or '.join(f'{need}=' for need in sorted(needs))}, or remove {present}.",
-                        severity=Severity.WARNING if lint_only else None,
+                        evidence=f"{declared_message}; present: {present}",
+                        fix_context=f"Required: {' or '.join(f'{need}=' for need in sorted(needs))}.",
+                        severity=type(self).definition.severity_for(advisory=lint_only),
                     )
                     continue
                 if needs == source_needs:
                     yield ctx.diag(
                         type(self),
                         element,
-                        f"{present} only take effect together with source= (none is set).",
-                        "Add source=..., or remove the attribute(s).",
-                        severity=Severity.WARNING if lint_only else None,
+                        evidence=f"{present} is present without source=",
+                        severity=type(self).definition.severity_for(advisory=lint_only),
                     )
                 else:
                     needed = " or ".join(f"{need}=" for need in sorted(needs))
                     yield ctx.diag(
                         type(self),
                         element,
-                        f"{present} only take effect together with {needed} (none is set).",
-                        f"Add {needed}, or remove the attribute(s).",
-                        severity=Severity.WARNING if lint_only else None,
+                        evidence=f"{present} is present without {needed}",
+                        fix_context=f"Required: {needed}.",
+                        severity=type(self).definition.severity_for(advisory=lint_only),
                     )
 
 
 class NestedKeyNeedsType(Rule):
-    id = "DM216"
-    severity = Severity.WARNING  # no-type is valid template-enrichment, but only if the field pre-exists
+    definition = authoring_rule_definition("DM216")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter(EL_NESTED_KEY):
@@ -400,10 +388,7 @@ class NestedKeyNeedsType(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    "<nestedKey> with child fields but no type/source/script builds nothing — the "
-                    "engine expects the field to already exist and raises KeyError otherwise.",
-                    'Add type="list" (with count/minCount/maxCount) for a list of records, or '
-                    'type="dict" for one nested object.',
+                    evidence="nestedKey has children but no type/source/script",
                 )
 
 
@@ -414,8 +399,7 @@ class SelectorWithoutCountNeedsDbSource(Rule):
     falls back to the loaded value's length otherwise (nested_key_task.py:
     _determine_nestedkey_length), never routing through the DatabaseClient-only check."""
 
-    id = "DM211"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM211")
 
     _DB_CLIENT_TAGS = (EL_DATABASE, EL_MONGODB)
 
@@ -432,10 +416,7 @@ class SelectorWithoutCountNeedsDbSource(Rule):
             yield ctx.diag(
                 type(self),
                 element,
-                "selector= without count=/minCount=/maxCount= only works when source= "
-                "resolves to a <database> or <mongodb> client.",
-                'Add count= (or minCount/maxCount), or point source= at a declared '
-                '<database id="..."> / <mongodb id="...">.',
+                evidence=f"selector is unbounded and source='{source}' is not a declared DB client",
             )
 
 
@@ -443,8 +424,7 @@ class AllOrNoneGroup(Rule):
     """Declared AllOrNone facts (e.g. the <generate> time-series window start/end/interval):
     setting only part of the group is an engine error — report every missing attr at once."""
 
-    id = "DM217"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM217")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element, constraints in _constrained(ctx):
@@ -463,10 +443,9 @@ class AllOrNoneGroup(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    message,
-                    f"Add {', '.join(f'{attr}=' for attr in missing)} or remove "
-                    f"{', '.join(f'{attr}=' for attr in present)}.",
-                    severity=Severity.WARNING if fact.lint_only else None,
+                    evidence=f"{message} Present={present}; missing={missing}",
+                    fix_context=f"Missing: {', '.join(f'{attr}=' for attr in missing)}.",
+                    severity=type(self).definition.severity_for(advisory=fact.lint_only),
                 )
 
 
@@ -474,8 +453,7 @@ class ForbiddenCompanions(Rule):
     """Declared Forbids facts (e.g. <nestedKey script=> forbids type/source/sourceScripted/
     separator). unique=>no-weights/cyclic is owned by DM204."""
 
-    id = "DM218"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM218")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element, constraints in _constrained(ctx):
@@ -492,15 +470,13 @@ class ForbiddenCompanions(Rule):
                     present = sorted(attr for attr in fact.excludes if element.get(attr) is not None)
                 if not present:
                     continue
-                message = fact.message or (
-                    f"<{tag}> {fact.attr}= cannot be combined with: {', '.join(present)}."
-                )
+                message = fact.message or (f"<{tag}> {fact.attr}= cannot be combined with: {', '.join(present)}.")
                 yield ctx.diag(
                     type(self),
                     element,
-                    message,
-                    f"Remove {', '.join(f'{attr}=' for attr in present)}, or drop {fact.attr}=.",
-                    severity=Severity.WARNING if fact.lint_only else None,
+                    evidence=f"{message} Present forbidden attributes: {', '.join(present)}",
+                    fix_context=f"Remove {', '.join(f'{attr}=' for attr in present)} or {fact.attr}=.",
+                    severity=type(self).definition.severity_for(advisory=fact.lint_only),
                 )
 
 
@@ -515,8 +491,7 @@ class DeclaredValidValues(Rule):
     type-check (<array>, <execute>) stay enforced by their field validators, surfaced via
     the phase-2 engine parse."""
 
-    id = "DM219"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM219")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element, constraints in _constrained(ctx):
@@ -534,9 +509,9 @@ class DeclaredValidValues(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    message,
-                    f"Use one of: {options}.",
-                    severity=Severity.WARNING if fact.lint_only else None,
+                    evidence=f"{message} Actual {fact.attr}='{value}'",
+                    fix_context=f"Allowed values: {options}.",
+                    severity=type(self).definition.severity_for(advisory=fact.lint_only),
                 )
 
 
@@ -545,8 +520,7 @@ class AllowedValuesWhenConstraint(Rule):
     if PRESENT must be in the set of allowed values. Unique-gated facts are owned by
     DM204; all other declarations are handled here without model-specific wiring."""
 
-    id = "DM220"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM220")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element, constraints in _constrained(ctx):
@@ -555,9 +529,8 @@ class AllowedValuesWhenConstraint(Rule):
                     continue
                 # Gate on when_attr's presence or truthiness
                 gate_value = element.get(fact.when_attr)
-                should_check = (
-                    (not fact.when_true and fact.when_attr in element.attrib) or
-                    (fact.when_true and _attr_true(gate_value))
+                should_check = (not fact.when_true and fact.when_attr in element.attrib) or (
+                    fact.when_true and _attr_true(gate_value)
                 )
                 if not should_check:
                     continue
@@ -578,17 +551,16 @@ class AllowedValuesWhenConstraint(Rule):
                 yield ctx.diag(
                     type(self),
                     element,
-                    message,
-                    f"Use one of: {options}.",
-                    severity=Severity.WARNING if fact.lint_only else None,
+                    evidence=f"{message} Actual {fact.attr}='{value}'",
+                    fix_context=f"Allowed values: {options}.",
+                    severity=type(self).definition.severity_for(advisory=fact.lint_only),
                 )
 
 
 class ConditionalDeclaredConstraints(Rule):
     """Value-gated and mode-gated central facts not owned by a legacy DM rule."""
 
-    id = "DM221"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM221")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element, constraints in _constrained(ctx):
@@ -602,8 +574,7 @@ class ConditionalDeclaredConstraints(Rule):
                     ctx,
                     element,
                     _constraint_check((fact,)),
-                    "Use only the attributes allowed by the selected mode.",
-                    severity=Severity.WARNING if fact.lint_only else None,
+                    severity=type(self).definition.severity_for(advisory=fact.lint_only),
                 )
                 if diag:
                     yield diag

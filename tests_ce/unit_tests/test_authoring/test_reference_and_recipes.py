@@ -15,6 +15,7 @@ import pytest
 from datamimic_ce.authoring import lint_source
 from datamimic_ce.authoring.dryrun import dry_run_source
 from datamimic_ce.authoring.reference import (
+    ReferenceTopic,
     _recipes_index,
     cheatsheet,
     known_generator_names,
@@ -32,9 +33,7 @@ _EE_TERMS = re.compile(
 
 
 def _recipe_xml(recipe_id: str) -> str:
-    return (resources.files("datamimic_ce.authoring") / "recipes" / f"{recipe_id}.xml").read_text(
-        encoding="utf-8"
-    )
+    return (resources.files("datamimic_ce.authoring") / "recipes" / f"{recipe_id}.xml").read_text(encoding="utf-8")
 
 
 def _recipe_ids() -> list[str]:
@@ -48,7 +47,15 @@ def test_cheatsheet_packaged_and_capped() -> None:
 
 def test_gate3_no_ee_terms_in_agent_content() -> None:
     corpus = "".join(
-        reference(t) for t in ("overview", "targets", "distributions", "context", "timeseries", "recipes")
+        reference(topic)
+        for topic in (
+            ReferenceTopic.OVERVIEW,
+            ReferenceTopic.TARGETS,
+            ReferenceTopic.DISTRIBUTIONS,
+            ReferenceTopic.CONTEXT,
+            ReferenceTopic.TIMESERIES,
+            ReferenceTopic.RECIPES,
+        )
     )
     for recipe_id in _recipe_ids():
         corpus += _recipe_xml(recipe_id)
@@ -56,7 +63,7 @@ def test_gate3_no_ee_terms_in_agent_content() -> None:
 
 
 def test_reference_timeseries_documents_ts_namespace() -> None:
-    text = reference("timeseries")
+    text = reference(ReferenceTopic.TIMESERIES)
     for token in ("ts.now", "ts.step", "ts.series", "interval", "series"):
         assert token in text
 
@@ -64,7 +71,7 @@ def test_reference_timeseries_documents_ts_namespace() -> None:
 def test_reference_distributions_documents_numeric_sequences() -> None:
     from datamimic_ce.enums.distribution_enums import NumberDistribution
 
-    text = reference("distributions")
+    text = reference(ReferenceTopic.DISTRIBUTIONS)
     for member in NumberDistribution:
         assert member.value in text
     assert "multiprocessing" in text
@@ -81,7 +88,7 @@ def test_cheatsheet_documents_numeric_sequence_distributions() -> None:
 def test_reference_converters_derived_from_enum() -> None:
     from datamimic_ce.enums.converter_enums import ConverterEnum
 
-    text = reference("converters")
+    text = reference(ReferenceTopic.CONVERTERS)
     for member in ConverterEnum:
         assert member.value in text  # SPOT: every engine converter is documented
     assert "Converter" in text and "execute" in text  # the custom-extension seam
@@ -123,7 +130,7 @@ def test_gate3_cheatsheet_elements_exist_in_schema() -> None:
 
 
 def test_reference_element_topic_lists_attributes() -> None:
-    text = reference("element", "generate")
+    text = reference(ReferenceTopic.ELEMENT, "generate")
     assert "pageSize" in text and "(required)" in text and "Aliases: <iterate>" in text
 
 
@@ -134,25 +141,25 @@ def test_reference_element_surfaces_attribute_descriptions_untruncated() -> None
     # 'variable' (35 attrs) was the closest to overflow when this was added.
     index = build_schema_index()
     for tag in index.tags:
-        text = reference("element", tag)
+        text = reference(ReferenceTopic.ELEMENT, tag)
         assert "[truncated" not in text, f"<{tag}> reference overflowed the clip budget"
-    text = reference("element", "generate")
+    text = reference(ReferenceTopic.ELEMENT, "generate")
     assert "Number of records to generate" in text  # GenerateModel.count's description
 
 
 def test_reference_element_unknown_lists_valid() -> None:
     with pytest.raises(ValueError, match="Unknown element"):
-        reference("element", "generat")
+        reference(ReferenceTopic.ELEMENT, "generat")
 
 
 def test_reference_generators_derived_and_reserved_names_covered() -> None:
     names = known_generator_names()
     assert {"IncrementGenerator", "DateTimeGenerator", "BooleanGenerator"} <= names
-    assert "IncrementGenerator" in reference("generators", "increment")
+    assert "IncrementGenerator" in reference(ReferenceTopic.GENERATORS, "increment")
 
 
 def test_reference_targets_from_registry() -> None:
-    text = reference("targets")
+    text = reference(ReferenceTopic.TARGETS)
     for target in ("CSV", "JSON", "DbUnit", "ConsoleExporter"):
         assert target in text
 
@@ -160,17 +167,17 @@ def test_reference_targets_from_registry() -> None:
 def test_reference_entities_enumerated_from_registry() -> None:
     from datamimic_ce.domains.domain_core.entity_registry import list_entity_specs
 
-    listing = reference("entities")
+    listing = reference(ReferenceTopic.ENTITIES)
     for entity in (s.entity for s in list_entity_specs()):
         assert entity in listing
-    person = reference("entities", "Person")
+    person = reference(ReferenceTopic.ENTITIES, "Person")
     assert "given_name" in person and "email" in person
     with pytest.raises(ValueError, match="Unknown entity"):
-        reference("entities", "NotAnEntity")
+        reference(ReferenceTopic.ENTITIES, "NotAnEntity")
 
 
 def test_reference_context_documents_scope_aliases() -> None:
-    text = reference("context").lower()
+    text = reference(ReferenceTopic.CONTEXT).lower()
     for token in ("this.", "parent.", "root.", "bare name"):
         assert token in text
 
@@ -199,9 +206,7 @@ def test_element_model_map_covers_all_element_constants() -> None:
     from datamimic_ce.constants import element_constants
 
     declared = {
-        value
-        for name, value in vars(element_constants).items()
-        if name.startswith("EL_") and isinstance(value, str)
+        value for name, value in vars(element_constants).items() if name.startswith("EL_") and isinstance(value, str)
     }
     assert declared - {"comment"} == set(ELEMENT_MODEL_MAP), "element constant not covered by the map"
 
@@ -216,9 +221,7 @@ def test_constraint_three_surface_consistency_all_or_none() -> None:
     # Surface (a): JSON schema via Pydantic's json_schema_extra
     json_schema = element_json_schema("generate")
     constraints_a = json_schema.get("constraints", [])
-    all_or_none_a = next(
-        (c for c in constraints_a if c.get("kind") == "all_or_none"), None
-    )
+    all_or_none_a = next((c for c in constraints_a if c.get("kind") == "all_or_none"), None)
     assert all_or_none_a is not None, "generate must have all_or_none constraint in json_schema"
     attrs_a = set(all_or_none_a["attrs"])
 
@@ -226,9 +229,7 @@ def test_constraint_three_surface_consistency_all_or_none() -> None:
     manifest = capabilities_manifest()
     gen_manifest = manifest["elements"]["generate"]
     constraints_b = gen_manifest.get("constraints", [])
-    all_or_none_b = next(
-        (c for c in constraints_b if c.get("kind") == "all_or_none"), None
-    )
+    all_or_none_b = next((c for c in constraints_b if c.get("kind") == "all_or_none"), None)
     assert all_or_none_b is not None, "generate must have all_or_none constraint in manifest"
     attrs_b = set(all_or_none_b["attrs"])
 
@@ -250,8 +251,7 @@ def test_constraint_three_surface_consistency_all_or_none() -> None:
 
     # Assert all three surfaces have the same attribute set
     assert attrs_a == attrs_b == attrs_c, (
-        f"AllOrNone attrs mismatch across surfaces: "
-        f"json_schema={attrs_a}, manifest={attrs_b}, prose={attrs_c}"
+        f"AllOrNone attrs mismatch across surfaces: json_schema={attrs_a}, manifest={attrs_b}, prose={attrs_c}"
     )
 
 
@@ -260,15 +260,11 @@ def test_reference_unique_constraints_reach_capabilities_and_reference() -> None
 
     constraints = capabilities_manifest()["elements"]["reference"]["constraints"]
     assert any(
-        fact["kind"] == "forbids"
-        and fact["attr"] == "unique"
-        and fact["excludes"] == ["cyclic"]
+        fact["kind"] == "forbids" and fact["attr"] == "unique" and fact["excludes"] == ["cyclic"]
         for fact in constraints
     )
     assert any(
-        fact["kind"] == "allowed_values_when"
-        and fact["when_attr"] == "unique"
-        and fact["allowed"] == ["random"]
+        fact["kind"] == "allowed_values_when" and fact["when_attr"] == "unique" and fact["allowed"] == ["random"]
         for fact in constraints
     )
 

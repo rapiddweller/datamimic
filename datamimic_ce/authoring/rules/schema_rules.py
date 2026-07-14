@@ -11,7 +11,7 @@ attributes, enum values. No hand-copied schema knowledge."""
 import difflib
 from collections.abc import Iterable
 
-from datamimic_ce.authoring.diagnostics import Diagnostic, Severity
+from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rules.base import LintContext, Rule
 from datamimic_ce.constants.data_type_constants import (
     DATA_TYPE_DICT,
@@ -28,6 +28,7 @@ from datamimic_ce.constants.element_constants import (
 from datamimic_ce.model.constraints import (
     KEY_DISTRIBUTION_VALUES,
     ValidValues,
+    authoring_rule_definition,
     resolved_values,
 )
 
@@ -51,18 +52,13 @@ def _distribution_fact(ctx: LintContext, tag: str) -> ValidValues | None:
     if schema is None:
         return None
     return next(
-        (
-            fact
-            for fact in schema.constraints
-            if isinstance(fact, ValidValues) and fact.attr == "distribution"
-        ),
+        (fact for fact in schema.constraints if isinstance(fact, ValidValues) and fact.attr == "distribution"),
         None,
     )
 
 
 class RootIsSetup(Rule):
-    id = "DM106"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM106")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         root_tag = str(ctx.root.tag)
@@ -70,14 +66,12 @@ class RootIsSetup(Rule):
             yield ctx.diag(
                 type(self),
                 ctx.root,
-                f"Root element must be <setup>, got <{root_tag}>.",
-                "Wrap the descriptor in <setup> ... </setup>.",
+                evidence=f"root is <{root_tag}>",
             )
 
 
 class UnknownElement(Rule):
-    id = "DM101"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM101")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         known = ctx.schemas.tags
@@ -86,16 +80,18 @@ class UnknownElement(Rule):
             if tag not in known:
                 suggestion = difflib.get_close_matches(tag, sorted(known), n=1)
                 hint = (
-                    f"Did you mean <{suggestion[0]}>?"
-                    if suggestion
-                    else f"Known elements: {', '.join(sorted(known))}."
+                    f"Did you mean <{suggestion[0]}>?" if suggestion else f"Known elements: {', '.join(sorted(known))}."
                 )
-                yield ctx.diag(type(self), element, f"Unknown element <{tag}>.", hint)
+                yield ctx.diag(
+                    type(self),
+                    element,
+                    evidence=f"element is <{tag}>",
+                    fix_context=hint,
+                )
 
 
 class InvalidChild(Rule):
-    id = "DM102"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM102")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter():
@@ -110,14 +106,13 @@ class InvalidChild(Rule):
                     yield ctx.diag(
                         type(self),
                         child,
-                        f"<{child.tag}> is not allowed inside <{tag}>.",
-                        f"<{tag}> accepts: {', '.join(sorted(schema.allowed_children))}.",
+                        evidence=f"<{child.tag}> appears inside <{tag}>",
+                        fix_context=f"<{tag}> accepts: {', '.join(sorted(schema.allowed_children))}.",
                     )
 
 
 class LeafHasChildren(Rule):
-    id = "DM107"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM107")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter():
@@ -130,14 +125,13 @@ class LeafHasChildren(Rule):
                     yield ctx.diag(
                         type(self),
                         child,
-                        f"<{tag}> does not accept any child elements (found <{child.tag}>).",
-                        f"Remove <{child.tag}> or move it to a container element.",
+                        evidence=f"<{tag}> contains <{child.tag}>",
+                        fix_context=f"Remove <{child.tag}> or move it to a container element.",
                     )
 
 
 class UnknownAttribute(Rule):
-    id = "DM103"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM103")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter():
@@ -155,12 +149,16 @@ class UnknownAttribute(Rule):
                         if suggestion
                         else f"Valid attributes: {', '.join(sorted(valid))}."
                     )
-                    yield ctx.diag(type(self), element, f"Unknown attribute '{attr_name}' on <{tag}>.", hint)
+                    yield ctx.diag(
+                        type(self),
+                        element,
+                        evidence=f"attribute '{attr_name}' appears on <{tag}>",
+                        fix_context=hint,
+                    )
 
 
 class MissingRequiredAttribute(Rule):
-    id = "DM104"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM104")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter():
@@ -175,14 +173,13 @@ class MissingRequiredAttribute(Rule):
                     yield ctx.diag(
                         type(self),
                         element,
-                        f"<{tag}> is missing the required attribute '{spec.name}'.",
-                        f'Add {spec.name}="..." to the <{tag}> element.',
+                        evidence=f"<{tag}> is missing '{spec.name}'",
+                        fix_context=f'Add {spec.name}="..." to <{tag}>.',
                     )
 
 
 class InvalidAttributeValue(Rule):
-    id = "DM105"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM105")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         key_id_data_types = _key_id_data_types(ctx)
@@ -210,8 +207,8 @@ class InvalidAttributeValue(Rule):
                     yield ctx.diag(
                         type(self),
                         element,
-                        f"Invalid distribution '{distribution}' on <{tag}>.",
-                        hint,
+                        evidence=f"distribution='{distribution}' on <{tag}>",
+                        fix_context=hint,
                     )
             # On <variable>/<nestedKey> WITH a source=, type= is not a scalar cast — it's the
             # sourceEntity->type->name physical-entity fallback (StatementUtil.resolve_source_entity,
@@ -235,8 +232,8 @@ class InvalidAttributeValue(Rule):
                     yield ctx.diag(
                         type(self),
                         element,
-                        f"Invalid type '{type_value}' on <{tag}>.",
-                        hint,
+                        evidence=f"type='{type_value}' on <{tag}>",
+                        fix_context=hint,
                     )
             schema = ctx.schemas.get(tag)
             if schema is None:
@@ -248,8 +245,8 @@ class InvalidAttributeValue(Rule):
                     yield ctx.diag(
                         type(self),
                         element,
-                        f"Attribute '{attr!s}' expects an integer, got '{value_str}'.",
-                        f"Set {attr!s} to a whole number.",
+                        evidence=f"attribute '{attr!s}' has non-integer value '{value_str}'",
+                        fix_context=f"Set {attr!s} to a whole number.",
                     )
 
 

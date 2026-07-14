@@ -12,9 +12,13 @@ import importlib
 import inspect
 import pkgutil
 import tomllib
+from enum import StrEnum
 from functools import lru_cache
 from importlib import resources
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from datamimic_ce.domains.domain_core.entity_registry import EntitySpec
 
 from datamimic_ce.authoring.schema import ALIASES, build_schema_index
 from datamimic_ce.constants.exporter_constants import (
@@ -35,11 +39,32 @@ from datamimic_ce.model.constraints import (
     Requires,
     RequiresWhenValue,
     ValidValues,
+    authoring_rule_definition,
+    authoring_rule_definitions,
     resolved_values,
     serialize_constraints,
+    serialize_rule_definition,
+    serialize_source_capability,
+    source_capabilities,
 )
 
 _GENERATOR_PACKAGE = "datamimic_ce.domains.common.literal_generators"
+
+
+class ReferenceTopic(StrEnum):
+    OVERVIEW = "overview"
+    ELEMENT = "element"
+    GENERATORS = "generators"
+    ENTITIES = "entities"
+    CONTEXT = "context"
+    TIMESERIES = "timeseries"
+    TARGETS = "targets"
+    DISTRIBUTIONS = "distributions"
+    CONVERTERS = "converters"
+    RULES = "rules"
+    SCAFFOLD = "scaffold"
+    RECIPES = "recipes"
+    RECIPE = "recipe"
 
 
 def clip(text: str, max_chars: int, hint: str) -> str:
@@ -108,9 +133,7 @@ def _render_constraint_terse(fact) -> str:
 
 @lru_cache(maxsize=1)
 def cheatsheet() -> str:
-    return (resources.files("datamimic_ce.authoring") / "reference_data" / "cheatsheet.md").read_text(
-        encoding="utf-8"
-    )
+    return (resources.files("datamimic_ce.authoring") / "reference_data" / "cheatsheet.md").read_text(encoding="utf-8")
 
 
 def element_reference(tag: str) -> str:
@@ -154,14 +177,23 @@ def element_reference(tag: str) -> str:
         lines.append("Children: none (leaf)")
     if schema.allowed_parents:
         lines.append(f"Allowed inside: {', '.join(sorted(schema.allowed_parents))}")
-    return clip(
-        "\n".join(lines), 16000, " [truncated — inspect `datamimic capabilities` for the full schema]"
-    )
+    source_facts = [capability for capability in source_capabilities() if capability.element == tag]
+    if source_facts:
+        lines.append("Source capabilities:")
+        for capability in source_facts:
+            context = f" type={capability.source_type}" if capability.source_type is not None else ""
+            formats = ", ".join(file_format.value for file_format in capability.file_formats) or "none"
+            lines.append(
+                f"- source{context}: files [{formats}]; memstore={capability.allows_memstore}; "
+                f"client={capability.allows_client}; "
+                f"dynamic={capability.dynamic_source.value if capability.dynamic_source else 'none'}"
+            )
+    return clip("\n".join(lines), 16000, " [truncated — inspect `datamimic capabilities` for the full schema]")
 
 
 @lru_cache(maxsize=1)
 def generator_reference() -> str:
-    lines = ["# Generators (generator=\"Name\" or generator=\"Name(arg=...)\" )"]
+    lines = ['# Generators (generator="Name" or generator="Name(arg=...)" )']
     package = importlib.import_module(_GENERATOR_PACKAGE)
     for module_info in sorted(pkgutil.iter_modules(package.__path__), key=lambda m: m.name):
         module = importlib.import_module(f"{_GENERATOR_PACKAGE}.{module_info.name}")
@@ -185,22 +217,20 @@ def known_generator_names() -> set[str]:
 
 
 def targets_reference() -> str:
-    from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
+    from datamimic_ce.exporters.exporter_util import buffered_exporter_names
 
     lines = [
-        "# Targets (target=\"A, B\")",
-        f"File exporters: {', '.join(sorted(_BUFFERED_EXPORTERS))} "
-        "(exportUri= sets the output subdirectory)",
+        '# Targets (target="A, B")',
+        f"File exporters: {', '.join(sorted(buffered_exporter_names()))} (exportUri= sets the output subdirectory)",
         f"Built-ins: {EXPORTER_CONSOLE_EXPORTER}, {EXPORTER_LOG_EXPORTER}, {EXPORTER_TEST_RESULT_EXPORTER}",
         "Declared ids: any <memstore id>, <database id>, <mongodb id> becomes a target name",
-        "Client write ops: <clientId>.update / .upsert / .delete (e.g. mongodb.upsert); "
-        "plain <clientId> inserts",
+        "Client write ops: <clientId>.update / .upsert / .delete (e.g. mongodb.upsert); plain <clientId> inserts",
     ]
     return "\n".join(lines)
 
 
 @lru_cache(maxsize=1)
-def _entity_specs() -> dict[str, Any]:
+def _entity_specs() -> dict[str, "EntitySpec"]:
     from datamimic_ce.domains.domain_core.entity_registry import list_entity_specs
 
     return {spec.entity: spec for spec in list_entity_specs()}
@@ -211,8 +241,8 @@ def entities_reference(name: str | None = None) -> str:
     specs = _entity_specs()
     if not name:
         return (
-            "# Entities (use as <variable name=\"p\" entity=\"Person\" dataset=\"DE\" locale=\"de\"/> then "
-            "script=\"p.field\")\n"
+            '# Entities (use as <variable name="p" entity="Person" dataset="DE" locale="de"/> then '
+            'script="p.field")\n'
             + ", ".join(sorted(specs))
             + "\n\nCall topic=entities name=<Entity> for its fields. Fields resolve case/underscore-"
             "insensitively (givenName == given_name)."
@@ -220,10 +250,10 @@ def entities_reference(name: str | None = None) -> str:
     spec = specs.get(name) or specs.get(name.capitalize())
     if spec is None:
         raise ValueError(f"Unknown entity '{name}'. Known: {', '.join(sorted(specs))}")
-    lines = [f"# entity=\"{spec.entity}\" fields (access via script=\"<var>.<field>\")"]
+    lines = [f'# entity="{spec.entity}" fields (access via script="<var>.<field>")']
     for field in spec.attributes:
-        opt = "?" if getattr(field, "optional", False) else ""
-        nested = " {…}" if getattr(field, "children", None) else ""
+        opt = "?" if field.optional else ""
+        nested = " {…}" if field.children else ""
         lines.append(f"- {field.name}{opt}: {field.py_type}{nested}")
     return clip("\n".join(lines), 4000, " [truncated — see topic=entities for the full list]")
 
@@ -231,9 +261,9 @@ def entities_reference(name: str | None = None) -> str:
 def context_reference() -> str:
     """Script/expression scope: fields by bare name plus the this/parent/root aliases."""
     return (
-        "# Script scope (script=, condition=, count=\"{expr}\") — plain Python\n"
+        '# Script scope (script=, condition=, count="{expr}") — plain Python\n'
         "- Fields and <variable>s of the CURRENT record are referenced by BARE name: "
-        "script=\"given_name\", script=\"age * 2\".\n"
+        'script="given_name", script="age * 2".\n'
         "- `this.<field>`  — the current scope explicitly; `this.x` == bare `x`. Use it in a nested "
         "<nestedKey>/<list> scope where a bare sibling name is wrapped under the scope name and would "
         "not resolve.\n"
@@ -261,9 +291,9 @@ def timeseries_reference() -> str:
         "    ts.series - 0..count-1 (which series)\n"
         "- ts.* is reproducible without rngSeed (time is deterministic). Avoid naming a "
         "<variable> 'ts' in this mode.\n"
-        "- Example: <generate name=\"readings\" start=\"2025-01-01T00:00:00\" "
-        "end=\"2025-01-02T00:00:00\" interval=\"PT1H\" count=\"3\" target=\"JSON\">"
-        "<key name=\"at\" script=\"ts.now\"/><key name=\"sensor\" script=\"ts.series\"/></generate>"
+        '- Example: <generate name="readings" start="2025-01-01T00:00:00" '
+        'end="2025-01-02T00:00:00" interval="PT1H" count="3" target="JSON">'
+        '<key name="at" script="ts.now"/><key name="sensor" script="ts.series"/></generate>'
     )
 
 
@@ -275,14 +305,21 @@ def distributions_reference() -> str:
     members = ", ".join(sorted(resolved_values(SOURCE_DISTRIBUTION_VALUES)))
     numeric = ", ".join(sorted(resolved_values(KEY_DISTRIBUTION_VALUES)))
     finite_sequences = ", ".join(member.value for member in POSITIONAL_NUMBER_SEQUENCES)
+    source_matrix = "\n".join(
+        f"- <{fact.element}>{f' type={fact.source_type}' if fact.source_type else ''}: "
+        f"files [{', '.join(file_format.value for file_format in fact.file_formats) or 'none'}], "
+        f"memstore={fact.allows_memstore}, client={fact.allows_client}, "
+        f"dynamic={fact.dynamic_source.value if fact.dynamic_source else 'none'}"
+        for fact in source_capabilities()
+    )
     return (
         f"# distribution= on source reads ({members})\n"
         "- ABSENT defaults to RANDOM (shuffled permutation), NOT source order (DM301)\n"
         "- ordered: sequential, reads page by page — the only memory-bounded mode (DM302)\n"
         "- random: one seeded global shuffle; pages/workers take disjoint windows\n"
         "- cumulated: bell-weighted picks WITH replacement (middle of load order favored)\n"
-        "- unique=\"True\": distinct rows without replacement; pool must cover the count\n"
-        "- reproducibility: <setup rngSeed=\"N\"> replays identically and forces single process "
+        '- unique="True": distinct rows without replacement; pool must cover the count\n'
+        '- reproducibility: <setup rngSeed="N"> replays identically and forces single process '
         "(DM303/DM304); unseeded runs differ by design\n"
         f"\n# distribution= on numeric range keys ({numeric})\n"
         "- uniform: default per-row random draw across the numeric range\n"
@@ -295,11 +332,13 @@ def distributions_reference() -> str:
         "- randomWalk: seeded bounded walk that starts at min and saturates at max\n"
         f"- multiprocessing: finite positional sequences ({finite_sequences}) are rejected because "
         "worker-local iterator state would duplicate values; use single-process or a per-row draw\n"
-        "- numeric range fields only (type int/float/decimal with min/max); type=\"string\" or a "
+        '- numeric range fields only (type int/float/decimal with min/max); type="string" or a '
         "missing range fails at parse time\n"
-        "- Examples: <key name=\"id\" type=\"int\" min=\"1\" max=\"100\" distribution=\"step\"/>; "
-        "<key name=\"amount\" type=\"decimal\" min=\"0.01\" max=\"9.99\" granularity=\"0.01\" "
-        "distribution=\"wedge\"/>"
+        '- Examples: <key name="id" type="int" min="1" max="100" distribution="step"/>; '
+        '<key name="amount" type="decimal" min="0.01" max="9.99" granularity="0.01" '
+        'distribution="wedge"/>\n'
+        "\n# source= capabilities by runtime context\n"
+        f"{source_matrix}"
     )
 
 
@@ -311,30 +350,57 @@ def converters_reference() -> str:
         "# Converters (converter= on <key>/<variable>; chain with ';')\n"
         f"Built-in: {names}\n"
         "- Applied to the field value after generation, e.g. "
-        "<key name=\"email\" script=\"p.email\" converter=\"Mask\"/>\n"
-        "- Arguments use constructor syntax: converter=\"CutLength(10)\" or \"Append('_test')\"\n"
+        '<key name="email" script="p.email" converter="Mask"/>\n'
+        '- Arguments use constructor syntax: converter="CutLength(10)" or "Append(\'_test\')"\n'
         "- Substring(start[, end]) uses Python slice semantics; negative indexes count from "
-        "the end: converter=\"Substring(-4)\" keeps the last 4 chars (the classic anonymization "
-        "tail-extract), \"Substring(5, 8)\" a window, \"Substring(2)\" from index 2 to the end.\n"
+        'the end: converter="Substring(-4)" keeps the last 4 chars (the classic anonymization '
+        'tail-extract), "Substring(5, 8)" a window, "Substring(2)" from index 2 to the end.\n'
         "- Custom: subclass datamimic_ce.converter.converter.Converter in a .py file, load it "
-        "with <execute uri=\"script/my_converters.scr.py\"/>, then converter=\"MyConverter()\" "
+        'with <execute uri="script/my_converters.scr.py"/>, then converter="MyConverter()" '
         "(same mechanism for custom generators)."
     )
 
 
+def rules_reference(name: str | None = None) -> str:
+    """Project the public rule catalog without maintaining a prose copy."""
+    if name is None:
+        lines = ["# Authoring rules (topic=rules name=DMxxx for details)"]
+        lines.extend(
+            f"- {definition.id} [{definition.severity.value}]: {definition.title}"
+            for definition in authoring_rule_definitions()
+        )
+        return clip("\n".join(lines), 12000, " [truncated — query one rule by id]")
+    rule_id = name.upper()
+    try:
+        definition = authoring_rule_definition(rule_id)
+    except KeyError as err:
+        known = ", ".join(definition.id for definition in authoring_rule_definitions())
+        raise ValueError(f"Unknown rule '{name}'. Known: {known}") from err
+    return (
+        f"# {definition.id}: {definition.title}\n"
+        f"Severity: {definition.severity.value}\n"
+        f"Explanation: {definition.explanation}\n"
+        f"Fix: {definition.fix_hint}\n"
+        f"Provenance: {definition.provenance}\n"
+        f"Valid: {definition.valid_example}\n"
+        f"Invalid: {definition.invalid_example}"
+    )
+
+
 def scaffold_reference() -> str:
-    """Compact-spec schema and patterns exposed through the same reference CLI."""
+    """Versioned intent schema projected directly from the Intent SPOT."""
     import json
 
-    from datamimic_ce.authoring.scaffold import SPEC_JSON_SCHEMA, SPEC_PROMPT_GUIDE
+    from datamimic_ce.authoring.spec import SPEC_PROMPT_GUIDE, authoring_spec_json_schema
 
     return (
-        "# Scaffold JSON spec\n"
-        "Pass JSON to `datamimic scaffold <path|-> --format json`. Unknown keys and "
-        "unsupported field kinds are rejected.\n\n"
+        "# AuthoringSpecV1 (model.dm.json)\n"
+        "Pass a versioned intent document to `datamimic scaffold <path|-> --format json`. "
+        "Legacy compact specs are losslessly normalized with visible notes; unknown, "
+        "ambiguous, and unsupported intent is rejected.\n\n"
         f"{SPEC_PROMPT_GUIDE}\n\n"
         "## JSON Schema\n```json\n"
-        f"{json.dumps(SPEC_JSON_SCHEMA, indent=2)}\n```"
+        f"{json.dumps(authoring_spec_json_schema(), indent=2)}\n```"
     )
 
 
@@ -342,8 +408,10 @@ def capabilities_manifest() -> dict[str, Any]:
     """Machine-readable DSL surface, derived live from the engine registries — cannot drift."""
     from importlib.metadata import PackageNotFoundError, version
 
+    from datamimic_ce.authoring.spec import authoring_spec_json_schema
     from datamimic_ce.enums.converter_enums import ConverterEnum
-    from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
+    from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES
+    from datamimic_ce.exporters.exporter_util import buffered_exporter_names
 
     try:
         schema_version = version("datamimic_ce")
@@ -374,12 +442,16 @@ def capabilities_manifest() -> dict[str, Any]:
         "entities": sorted(_entity_specs()),
         "converters": sorted(member.value for member in ConverterEnum),
         "targets": {
-            "file_exporters": sorted(_BUFFERED_EXPORTERS),
+            "file_exporters": sorted(buffered_exporter_names()),
             "built_ins": [EXPORTER_CONSOLE_EXPORTER, EXPORTER_LOG_EXPORTER],
             "declared_ids": "any <memstore>/<database>/<mongodb> id; client write ops: <id>.update/.upsert/.delete",
         },
         "distributions": sorted(resolved_values(SOURCE_DISTRIBUTION_VALUES)),
         "numeric_distributions": sorted(resolved_values(KEY_DISTRIBUTION_VALUES)),
+        "finite_numeric_sequences": sorted(member.value for member in POSITIONAL_NUMBER_SEQUENCES),
+        "source_capabilities": [serialize_source_capability(capability) for capability in source_capabilities()],
+        "rules": [serialize_rule_definition(definition) for definition in authoring_rule_definitions()],
+        "authoring_spec": authoring_spec_json_schema(),
     }
 
 
@@ -400,47 +472,44 @@ def load_recipe(recipe_id: str) -> str:
     entries = {recipe["id"]: recipe for recipe in _recipes_index()["recipe"]}
     if recipe_id not in entries:
         raise ValueError(f"Unknown recipe '{recipe_id}'. Known: {', '.join(sorted(entries))}")
-    xml = (resources.files("datamimic_ce.authoring") / "recipes" / f"{recipe_id}.xml").read_text(
-        encoding="utf-8"
-    )
+    xml = (resources.files("datamimic_ce.authoring") / "recipes" / f"{recipe_id}.xml").read_text(encoding="utf-8")
     entry = entries[recipe_id]
     return f"# {entry['title']}\n{entry['summary']}\n\n```xml\n{xml}```"
 
 
-def reference(topic: str, name: str | None = None) -> str:
-    if topic == "overview":
+def reference(topic: ReferenceTopic, name: str | None = None) -> str:
+    if topic is ReferenceTopic.OVERVIEW:
         return clip(cheatsheet(), 16000, " [truncated — ask a specific topic]")
-    if topic == "element":
+    if topic is ReferenceTopic.ELEMENT:
         if not name:
             raise ValueError("topic=element needs name=<tag>")
         return element_reference(name)
-    if topic == "generators":
+    if topic is ReferenceTopic.GENERATORS:
         text = generator_reference()
         if name:
             matches = [line for line in text.splitlines() if name.lower() in line.lower()]
             return "\n".join(matches) if matches else f"No generator matching '{name}'."
         return text
-    if topic == "entities":
+    if topic is ReferenceTopic.ENTITIES:
         return entities_reference(name)
-    if topic == "context":
+    if topic is ReferenceTopic.CONTEXT:
         return context_reference()
-    if topic == "timeseries":
+    if topic is ReferenceTopic.TIMESERIES:
         return timeseries_reference()
-    if topic == "targets":
+    if topic is ReferenceTopic.TARGETS:
         return targets_reference()
-    if topic == "distributions":
+    if topic is ReferenceTopic.DISTRIBUTIONS:
         return distributions_reference()
-    if topic == "converters":
+    if topic is ReferenceTopic.CONVERTERS:
         return converters_reference()
-    if topic == "scaffold":
+    if topic is ReferenceTopic.RULES:
+        return rules_reference(name)
+    if topic is ReferenceTopic.SCAFFOLD:
         return scaffold_reference()
-    if topic == "recipes":
+    if topic is ReferenceTopic.RECIPES:
         return list_recipes()
-    if topic == "recipe":
+    if topic is ReferenceTopic.RECIPE:
         if not name:
             raise ValueError("topic=recipe needs name=<recipe id>. " + list_recipes())
         return load_recipe(name)
-    raise ValueError(
-        f"Unknown topic '{topic}'. Topics: overview, element, generators, entities, context, "
-        "timeseries, targets, distributions, converters, scaffold, recipes, recipe"
-    )
+    raise ValueError(f"Unknown topic '{topic}'. Topics: {', '.join(ReferenceTopic)}")

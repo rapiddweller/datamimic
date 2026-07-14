@@ -9,8 +9,9 @@ from __future__ import annotations
 import json
 import sys
 
-import anyio
 import pytest
+
+from datamimic_ce.mcp.models import GenerateArgs
 
 fastmcp_client = pytest.importorskip(
     "fastmcp.client", reason="fastmcp extra required; install datamimic_ce[mcp]"
@@ -21,9 +22,6 @@ transports = pytest.importorskip(
 
 Client = fastmcp_client.Client
 PythonStdioTransport = transports.PythonStdioTransport
-
-from datamimic_ce.mcp.models import GenerateArgs
-from datamimic_ce.domains.determinism import canonical_json, hash_bytes
 
 
 @pytest.fixture
@@ -133,10 +131,16 @@ async def test_cli_stdio_scaffold() -> None:
 
         # Call scaffold with the spec, verify successful render + lint + dry-run
         result = json.loads(
-            (await client.call_tool("datamimic_scaffold", {"args": {"spec": spec}}))[0].text
+            (
+                await client.call_tool(
+                    "datamimic_scaffold",
+                    {"args": {"spec": spec, "max_count": 30}},
+                )
+            )[0].text
         )
         assert result["ok"] is True
-        assert result["stage"] == "dry_run"
+        assert result["stage"] == "acceptance"
+        assert result["verified"] is True
         assert "xml" in result
         assert "products" in result
         assert isinstance(result["products"], list)

@@ -7,7 +7,7 @@
 """Rule contract for the DSL linter. Rules walk the lxml tree via LintContext and
 emit Diagnostics; they never raise. The engine parse (phase 2) stays the authority."""
 
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import ClassVar
@@ -18,6 +18,25 @@ from datamimic_ce.authoring.diagnostics import Diagnostic, Severity
 from datamimic_ce.authoring.schema import SchemaIndex
 from datamimic_ce.authoring.xml_loader import element_path
 from datamimic_ce.constants.element_constants import EL_COMMENT
+from datamimic_ce.model.constraints import RuleDefinition
+
+
+class RuleMeta(ABCMeta):
+    """Compatibility projection of evaluator metadata from its central definition."""
+
+    definition: RuleDefinition
+
+    @property
+    def id(cls) -> str:
+        return cls.definition.id
+
+    @property
+    def severity(cls) -> Severity:
+        return cls.definition.severity
+
+    @property
+    def docs(cls) -> str:
+        return cls.definition.docs
 
 
 class LintContext:
@@ -38,11 +57,18 @@ class LintContext:
         self,
         rule: "type[Rule]",
         element: etree._Element,
-        message: str,
-        fix_hint: str,
         *,
+        evidence: str | None = None,
+        fix_context: str | None = None,
         severity: Severity | None = None,
     ) -> Diagnostic:
+        definition = rule.definition
+        message = definition.explanation
+        if evidence:
+            message = f"{message} Evidence: {evidence}"
+        fix_hint = definition.fix_hint
+        if fix_context:
+            fix_hint = f"{fix_hint} {fix_context}"
         return Diagnostic(
             rule=rule.id,
             severity=severity or rule.severity,
@@ -56,10 +82,8 @@ class LintContext:
         )
 
 
-class Rule(ABC):
-    id: ClassVar[str]
-    severity: ClassVar[Severity]
-    docs: ClassVar[str | None] = None
+class Rule(ABC, metaclass=RuleMeta):
+    definition: ClassVar[RuleDefinition]
 
     @abstractmethod
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]: ...

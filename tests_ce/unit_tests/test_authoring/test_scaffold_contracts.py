@@ -13,7 +13,11 @@ from tempfile import TemporaryDirectory
 import pytest
 from typer.testing import CliRunner
 
-from datamimic_ce.authoring.contracts import ScaffoldRequest
+from datamimic_ce.authoring.contracts import (
+    AcceptanceStatus,
+    AuthoringStage,
+    ScaffoldRequest,
+)
 from datamimic_ce.authoring.service import scaffold
 from datamimic_ce.cli import app
 from datamimic_ce.mcp.models import ScaffoldArgs
@@ -55,6 +59,67 @@ SPEC_LINT_FAILURE = {
     }],
 }
 
+SPEC_V1 = {
+    "version": "1",
+    "seed": 1,
+    "products": [
+        {
+            "kind": "generated",
+            "name": "items",
+            "count": 2,
+            "fields": [{"kind": "increment", "name": "id"}],
+            "targets": [{"kind": "file_export", "format": "JSON"}],
+        }
+    ],
+    "expectations": [{"kind": "exact_count", "product": "items", "count": 2}],
+}
+
+SPEC_V1_COMPLETE_MEMSTORE = {
+    "version": "1",
+    "seed": 1,
+    "products": [
+        {
+            "kind": "generated",
+            "name": "producer",
+            "count": 5,
+            "targets": [{"kind": "memstore", "id": "mem"}],
+            "fields": [
+                {
+                    "kind": "increment",
+                    "name": "id",
+                    "roles": [{"kind": "identifier"}],
+                }
+            ],
+        },
+        {
+            "kind": "source",
+            "name": "reader",
+            "source": {"kind": "memstore", "id": "mem", "product": "producer"},
+            "fields": [
+                {
+                    "kind": "script",
+                    "name": "id",
+                    "script": "id",
+                    "roles": [
+                        {
+                            "kind": "foreign_key",
+                            "parent_product": "producer",
+                            "parent_field": "id",
+                        }
+                    ],
+                },
+                {
+                    "kind": "int_range",
+                    "name": "seat",
+                    "minimum": 1,
+                    "maximum": 10,
+                    "unique": True,
+                },
+            ],
+        },
+    ],
+}
+
 
 class TestScaffoldParity:
     """Verify parity between service, MCP, and CLI implementations."""
@@ -71,7 +136,8 @@ class TestScaffoldParity:
         result = scaffold(request)
 
         assert result.ok is True
-        assert result.stage == "dry_run"
+        assert result.stage is AuthoringStage.ACCEPTANCE
+        assert result.verified is True
         assert result.xml is not None
         assert len(result.products) > 0
         assert all(p.name and p.count >= 0 for p in result.products)
@@ -88,7 +154,7 @@ class TestScaffoldParity:
         result = scaffold(request)
 
         assert result.ok is True
-        assert result.stage == "lint"
+        assert result.stage is AuthoringStage.LINT
         assert result.xml is not None
         assert result.products == []
 
@@ -104,7 +170,7 @@ class TestScaffoldParity:
         result = scaffold(request)
 
         assert result.ok is False
-        assert result.stage == "render"
+        assert result.stage is AuthoringStage.RENDER
         assert result.error is not None
         assert result.xml is None
 
@@ -121,12 +187,13 @@ class TestScaffoldParity:
 
         mcp_result = scaffold_impl(args)
         service_result = scaffold(request)
-        service_dict = service_result.model_dump(exclude_none=True)
+        service_dict = service_result.model_dump(mode="json", exclude_none=True)
 
         # Compare key fields
         assert mcp_result["ok"] == service_dict["ok"]
         assert mcp_result["stage"] == service_dict["stage"]
         assert mcp_result["xml"] == service_dict["xml"]
+        assert mcp_result["compile_plan"] == service_dict["compile_plan"]
 
         # Compare products structure (should have name, count, sample, truncated_rows)
         mcp_products = mcp_result.get("products", [])
@@ -151,7 +218,7 @@ class TestScaffoldParity:
 
         mcp_result = scaffold_impl(args)
         service_result = scaffold(request)
-        service_dict = service_result.model_dump(exclude_none=True)
+        service_dict = service_result.model_dump(mode="json", exclude_none=True)
 
         assert mcp_result["products"] == []
         assert service_dict["products"] == []
@@ -181,13 +248,14 @@ class TestScaffoldParity:
                 response_format="concise",
             )
             service_result = scaffold(request)
-            service_dict = service_result.model_dump(exclude_none=True)
+            service_dict = service_result.model_dump(mode="json", exclude_none=True)
 
             # Compare structure (not values, as they may differ due to RNG)
             assert cli_output["ok"] == service_dict["ok"]
             assert cli_output["stage"] == service_dict["stage"]
             assert "xml" in cli_output
             assert "xml" in service_dict
+            assert cli_output["compile_plan"] == service_dict["compile_plan"]
             assert len(cli_output.get("products", [])) == len(service_dict.get("products", []))
 
     def test_cli_json_parity_no_dry_run(self):
@@ -221,6 +289,64 @@ class TestScaffoldParity:
         cli_output = json.loads(result.stdout)
         assert cli_output["ok"] is True
         assert "xml" in cli_output
+
+    def test_v1_cli_mcp_service_parity(self):
+        """All transports accept the same canonical model.dm.json contract."""
+        request = ScaffoldRequest(spec=SPEC_V1, dry_run=False)
+        service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
+        mcp_result = scaffold_impl(ScaffoldArgs(**request.model_dump()))
+        cli_result = CliRunner().invoke(
+            app,
+            ["scaffold", "-", "--no-dry-run", "--format", "json"],
+            input=json.dumps(SPEC_V1),
+        )
+
+        assert cli_result.exit_code == 0
+        cli_output = json.loads(cli_result.stdout)
+        assert mcp_result["xml"] == service_result["xml"] == cli_output["xml"]
+        assert mcp_result["compile_plan"] == service_result["compile_plan"]
+        assert cli_output["compile_plan"] == service_result["compile_plan"]
+        assert service_result["normalization_notes"] == []
+
+    def test_v1_acceptance_response_is_identical_across_transports(self):
+        """CLI and MCP preserve a complete memstore result byte-for-byte."""
+        request = ScaffoldRequest(
+            spec=SPEC_V1_COMPLETE_MEMSTORE,
+            dry_run=True,
+            max_count=5,
+            sample_rows=1,
+        )
+        service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
+        mcp_result = scaffold_impl(ScaffoldArgs(**request.model_dump()))
+        cli_result = CliRunner().invoke(
+            app,
+            [
+                "scaffold",
+                "-",
+                "--format",
+                "json",
+                "--max-count",
+                "5",
+                "--sample-rows",
+                "1",
+            ],
+            input=json.dumps(SPEC_V1_COMPLETE_MEMSTORE),
+        )
+
+        assert cli_result.exit_code == 0
+        assert json.loads(cli_result.stdout) == service_result == mcp_result
+        assert service_result["stage"] == "acceptance"
+        assert service_result["verified"] is True
+        assert {product["name"]: product["count"] for product in service_result["products"]} == {
+            "producer": 5,
+            "reader": 5,
+        }
+        memstore = next(
+            item
+            for item in service_result["acceptance"]["results"]
+            if item["kind"] == "memstore_completeness"
+        )
+        assert memstore["status"] == AcceptanceStatus.PASS
 
     def test_cli_format_validation(self):
         """CLI validates --format option."""
@@ -299,7 +425,7 @@ class TestScaffoldParity:
                     "fields": [{"name": "id", "kind": "increment"}],
                 },
                 {
-                    "name": "reader", "count": 1, "source": "mem", "source_type": "producer",
+                    "name": "reader", "source": "mem", "source_type": "producer",
                     "fields": [
                         {"name": "id", "kind": "script", "script": "id"},
                         {"name": "seat", "kind": "int_range", "min": 1, "max": 2, "unique": True},
@@ -311,33 +437,30 @@ class TestScaffoldParity:
         result = scaffold(request)
 
         assert result.ok is False
-        assert result.stage == "render"
+        assert result.stage is AuthoringStage.RENDER
         assert result.error is not None
         assert "unique" in result.error
         assert "insufficient" in result.error.lower() or "possible values" in result.error
 
     def test_source_backed_unique_sufficient_range_service(self):
         """Source-backed unique range sufficient for producer count succeeds."""
-        spec = {
-            "generates": [
-                {
-                    "name": "producer", "count": 5, "target": "mem,JSON",
-                    "fields": [{"name": "id", "kind": "increment"}],
-                },
-                {
-                    "name": "reader", "count": 1, "source": "mem", "source_type": "producer",
-                    "fields": [
-                        {"name": "id", "kind": "script", "script": "id"},
-                        {"name": "seat", "kind": "int_range", "min": 1, "max": 10, "unique": True},
-                    ],
-                },
-            ]
-        }
-        request = ScaffoldRequest(spec=spec, dry_run=True, max_count=5, sample_rows=3)
+        request = ScaffoldRequest(
+            spec=SPEC_V1_COMPLETE_MEMSTORE,
+            dry_run=True,
+            max_count=5,
+            sample_rows=3,
+        )
         result = scaffold(request)
 
         assert result.ok is True
-        assert result.stage == "dry_run"
+        assert result.stage is AuthoringStage.ACCEPTANCE
+        assert result.verified is True, result.acceptance
+        assert result.acceptance is not None
+        assert any(
+            item.kind == "memstore_completeness"
+            and item.status is AcceptanceStatus.PASS
+            for item in result.acceptance.results
+        )
         assert result.xml is not None
 
     def test_mcp_source_backed_unique_insufficient_range(self):
@@ -349,7 +472,7 @@ class TestScaffoldParity:
                     "fields": [{"name": "id", "kind": "increment"}],
                 },
                 {
-                    "name": "reader", "count": 1, "source": "mem", "source_type": "producer",
+                    "name": "reader", "source": "mem", "source_type": "producer",
                     "fields": [
                         {"name": "id", "kind": "script", "script": "id"},
                         {"name": "seat", "kind": "int_range", "min": 1, "max": 2, "unique": True},

@@ -17,9 +17,10 @@ from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.statements.variable_statement import VariableStatement
 
 
-def _ctx_and_stmt_for_db_source(count_error: Exception) -> tuple[Mock, Mock]:
+def _ctx_and_stmt_for_db_source(count_error: Exception) -> tuple[Mock, VariableStatement]:
     client = Mock(spec=RdbmsClient)
     client.count_query_length.side_effect = count_error
 
@@ -31,9 +32,14 @@ def _ctx_and_stmt_for_db_source(count_error: Exception) -> tuple[Mock, Mock]:
     ctx = Mock()
     ctx.root = root_ctx
 
-    stmt = Mock()  # plain Mock: not a Reference/GenerateStatement, so the DB branch runs
-    stmt.source = "db"
-    stmt.selector = "SELECT count(*) FROM broken"
+    stmt = object.__new__(VariableStatement)
+    stmt._name = "row"
+    stmt._full_name = "row"
+    stmt._source = "db"
+    stmt._source_entity = None
+    stmt._type = None
+    stmt._selector = "SELECT count(*) FROM broken"
+    stmt._iteration_selector = None
     return ctx, stmt
 
 

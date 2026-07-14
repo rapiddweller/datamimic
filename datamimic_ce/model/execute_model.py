@@ -24,7 +24,7 @@ VALID_EXECUTE_TYPES: frozenset[str] = resolved_values(EXECUTE_TYPE_VALUES)
 
 class ExecuteModel(BaseModel):
     __constraints__: ClassVar[tuple[Constraint, ...]] = element_constraints(EL_EXECUTE)
-    model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
+    model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
     # uri (a script file) XOR inline element text; enforced by the parser, which also resolves `type`.
     uri: str | None = Field(

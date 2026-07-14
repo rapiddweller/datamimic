@@ -46,7 +46,7 @@ from datamimic_ce.model.model_util import ModelUtil
 
 class NestedKeyModel(BaseModel):
     __constraints__: ClassVar[tuple[Constraint, ...]] = element_constraints(EL_NESTED_KEY)
-    model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
+    model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
     name: str = Field(..., description="Name of the nested key; becomes the field name in the generated record.")
     type: str | None = Field(
