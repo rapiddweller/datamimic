@@ -125,9 +125,12 @@ the tools and feeds the results back.
 
   Every feedback ends with: return a corrected COMPLETE descriptor, output
   only the XML.
-- Max 3 generations per task. The cell score is the score of the LAST
-  generation (0/1/2 as in the static conditions); `iterations` and
-  per-iteration score/rule ids/latency are recorded in the results JSON.
+- Max 6 generations per task. The cell score is the score of the best-scoring
+  generation (0/1/2 as in the static conditions, not the LAST). Tie-breaking:
+  highest score wins; at equal score, fewest rule_ids (closer to passing);
+  at equal score and equal rule_ids, earliest iteration (fastest convergence).
+  `iterations`, `best_iteration`, `last_score`, and per-iteration score/rule ids/latency
+  are recorded in the results JSON.
 - The conversation is multi-turn: the cheatsheet stays in context, each
   attempt appends the assistant reply and the feedback. `num_ctx` is raised
   to 16384 for loop calls.
@@ -145,8 +148,7 @@ python benchmarks/dsl-authoring/bench.py --report results/<static>.json results/
 ```
 
 The combined report adds, per model, a static-best vs loop comparison line
-and a loop-iterations histogram, plus a reference line to the Haiku track
-figures (`results/haiku-track-20260704.md`).
+and a loop-iterations histogram.
 
 ## Adding a model
 

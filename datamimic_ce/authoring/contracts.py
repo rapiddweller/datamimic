@@ -4,16 +4,25 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""Canonical contracts for the scaffold command.
+"""Canonical contracts and input limits for agent-facing authoring operations.
 
-Single source of truth for spec validation and response shape across
-MCP (datamimic_scaffold), CLI (datamimic scaffold), and internal
-service layers.
+Single source of truth across MCP, CLI, and internal service layers.  Keeping
+the shared numeric limits here prevents one transport from accepting requests
+that another transport rejects.
 """
 
 from typing import Any
 
 from pydantic import BaseModel, Field
+
+MIN_DIAGNOSTICS = 1
+MAX_DIAGNOSTICS = 200
+MIN_DRY_RUN_COUNT = 1
+MAX_DRY_RUN_COUNT = 1000
+MIN_SAMPLE_ROWS = 1
+MAX_SAMPLE_ROWS = 50
+MIN_TIMEOUT_SECONDS = 1
+MAX_TIMEOUT_SECONDS = 120
 
 
 class ScaffoldRequest(BaseModel):
@@ -33,14 +42,14 @@ class ScaffoldRequest(BaseModel):
     )
     max_count: int = Field(
         10,
-        ge=1,
-        le=1000,
+        ge=MIN_DRY_RUN_COUNT,
+        le=MAX_DRY_RUN_COUNT,
         description="Per-<generate> record cap when dry_run=True (applies to nested generates too)",
     )
     sample_rows: int = Field(
         5,
-        ge=1,
-        le=50,
+        ge=MIN_SAMPLE_ROWS,
+        le=MAX_SAMPLE_ROWS,
         description="Sample rows to capture per product during dry-run",
     )
     response_format: str = Field(

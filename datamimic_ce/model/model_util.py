@@ -5,27 +5,26 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import re
+from typing import TYPE_CHECKING
 
 from pydantic import TypeAdapter, ValidationError
 
 from datamimic_ce.constants.attribute_constants import (
     ATTR_COUNT,
-    ATTR_CYCLIC,
-    ATTR_DISTRIBUTION,
     ATTR_IN_DATE_FORMAT,
     ATTR_ITERATION_SELECTOR,
     ATTR_MAX_COUNT,
     ATTR_MIN_COUNT,
     ATTR_OUT_DATE_FORMAT,
-    ATTR_SELECTOR,
     ATTR_SOURCE,
     ATTR_STORAGE,
     ATTR_TYPE,
-    ATTR_UNIQUE,
 )
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_STRING
-from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.utils.string_util import StringUtil
+
+if TYPE_CHECKING:
+    from datamimic_ce.model.constraints import Constraint
 
 # Parse XML bool attributes exactly like the pydantic bool fields do, so a "before"
 # cross-field check can never disagree with the coerced value (e.g. unique="yes").
@@ -98,39 +97,37 @@ class ModelUtil:
         return ModelUtil.check_constraints(values, (WEIGHTS_REQUIRE_VALUES,))
 
     @staticmethod
-    def check_unique_constraints(values: dict) -> dict:
+    def check_unique_constraints(
+        values: dict,
+        constraints: tuple["Constraint", ...] | None = None,
+    ) -> dict:
         """'unique' draws distinct values without replacement from a finite pool — an inline
         'values' set or a 'source'. It implies distinct random order, so it only combines with
         distribution='random' (the default) and is incompatible with 'weights' (no weighted
         sampling without replacement), 'cyclic' and ordered/cumulated (no-repeat vs repeat/bell).
 
-        Delegate to declared constraints: UNIQUE_REQUIRES_POOL and UNIQUE_FORBIDS_WEIGHTS.
-        Residual imperative checks (cyclic gated on cyclic's truthiness, distribution value-gate):
-        kept here per review R1.
+        Delegate entirely to the model's declared unique constraints. Source-backed
+        models default to the shared source-selection facts; <key> passes its numeric-
+        distribution-specific fact tuple explicitly.
         """
         from datamimic_ce.model.constraints import (
+            UNIQUE_DISTRIBUTION_RANDOM,
+            UNIQUE_FORBIDS_CYCLIC,
             UNIQUE_FORBIDS_WEIGHTS,
             UNIQUE_REQUIRES_POOL,
         )
 
-        # Declared constraints: require pool, forbid weights (both gated on unique's truthiness)
-        declared = (UNIQUE_REQUIRES_POOL, UNIQUE_FORBIDS_WEIGHTS)
-        ModelUtil.check_constraints(values, declared)
-
-        # Residual: cyclic gate is on cyclic's truthiness (excluded attr), not unique's presence
-        if not _attr_true(values.get(ATTR_UNIQUE)):
-            return values
-        if _attr_true(values.get(ATTR_CYCLIC)):
-            raise ValueError(f"'{ATTR_UNIQUE}' cannot be combined with '{ATTR_CYCLIC}' (no-repeat vs repeat)")
-
-        # Residual: distribution value-gate
-        distribution = SourceDistribution.coerce(values.get(ATTR_DISTRIBUTION))
-        if distribution is not SourceDistribution.RANDOM:
-            raise ValueError(
-                f"'{ATTR_UNIQUE}' only combines with distribution='{SourceDistribution.RANDOM.value}' "
-                f"(it implies distinct random order), not '{distribution.value}'"
+        declared = (
+            (
+                UNIQUE_REQUIRES_POOL,
+                UNIQUE_FORBIDS_WEIGHTS,
+                UNIQUE_FORBIDS_CYCLIC,
+                UNIQUE_DISTRIBUTION_RANDOM,
             )
-        return values
+            if constraints is None
+            else constraints
+        )
+        return ModelUtil.check_constraints(values, declared)
 
     @staticmethod
     def check_storage_constraints(values: dict) -> dict:
@@ -312,17 +309,10 @@ class ModelUtil:
 
     @staticmethod
     def check_generation_mode_of_source(values: dict) -> dict:
-        """Check if at most "selector" or "type" is used when using "source".
+        """Delegate the source-gated type/selector XOR to its central fact."""
+        from datamimic_ce.model.constraints import SOURCE_MODE_EXCLUSIVE
 
-        This check fires only when source AND type AND selector are ALL present.
-        It cannot be expressed as a simple MutuallyExclusive({type,selector}) because
-        that would wrongly reject {type,selector} with no source, which is accepted today.
-        Therefore, this check is kept fully imperative (per plan R1, not declarable).
-        """
-        key_set = set(values.keys())
-        if ATTR_SOURCE in key_set and ATTR_TYPE in key_set and ATTR_SELECTOR in key_set:
-            raise ValueError(f'Only one "{ATTR_TYPE}" or "{ATTR_SELECTOR}" can be defined in "{ATTR_SOURCE}"')
-        return values
+        return ModelUtil.check_constraints(values, (SOURCE_MODE_EXCLUSIVE,))
 
     @staticmethod
     def check_valid_default_value(values: dict) -> dict:
@@ -345,7 +335,7 @@ class ModelUtil:
         return value
 
     @staticmethod
-    def check_constraints(values: dict, constraints: tuple) -> dict:
+    def check_constraints(values: dict, constraints: tuple["Constraint", ...]) -> dict:
         """Generic executor for declarative constraint facts.
 
         Walks the constraints tuple; for each fact:
@@ -368,10 +358,14 @@ class ModelUtil:
         """
         from datamimic_ce.model.constraints import (
             AllOrNone,
+            AllowedValuesWhen,
             Forbids,
+            ForbidsWhenValue,
             MutuallyExclusive,
+            MutuallyExclusiveWhen,
             RequiredOneOf,
             Requires,
+            RequiresWhenValue,
             ValidValues,
         )
 
@@ -393,6 +387,21 @@ class ModelUtil:
                     msg = fact.message or f"at most one of [{attrs_str}] may be present, but got: {present}"
                     raise ValueError(msg)
 
+            elif isinstance(fact, MutuallyExclusiveWhen):
+                gate_value = values.get(fact.when_attr)
+                should_check = (
+                    (not fact.when_true and fact.when_attr in values)
+                    or (fact.when_true and _attr_true(gate_value))
+                )
+                present = [attr for attr in fact.attrs if attr in values]
+                if should_check and len(present) > 1:
+                    attrs_str = ", ".join(sorted(fact.attrs))
+                    msg = fact.message or (
+                        f"when '{fact.when_attr}' is present, at most one of "
+                        f"[{attrs_str}] may be present, but got: {present}"
+                    )
+                    raise ValueError(msg)
+
             elif isinstance(fact, Requires):
                 # Gate on presence; if when_true=True, gate on truthiness
                 attr_value = values.get(fact.attr)
@@ -408,6 +417,18 @@ class ModelUtil:
                         f"[{needs_str}] must be present"
                     )
                     raise ValueError(msg)
+
+            elif isinstance(fact, RequiresWhenValue):
+                if values.get(fact.when_attr) in fact.when_values:
+                    escaped = any(attr in values for attr in fact.unless)
+                    if not escaped and all(need not in values for need in fact.needs):
+                        needs_str = ", ".join(sorted(fact.needs))
+                        values_str = ", ".join(sorted(fact.when_values))
+                        msg = fact.message or (
+                            f"when '{fact.when_attr}' is one of [{values_str}], at least one of "
+                            f"[{needs_str}] must be present"
+                        )
+                        raise ValueError(msg)
 
             elif isinstance(fact, AllOrNone):
                 present = [attr for attr in fact.attrs if attr in values]
@@ -425,13 +446,29 @@ class ModelUtil:
                 )
 
                 if should_check:
-                    present_excludes = [attr for attr in fact.excludes if attr in values]
+                    # If excludes_when_true=True, excluded attr must also be truthy for violation
+                    if fact.excludes_when_true:
+                        present_excludes = [attr for attr in fact.excludes if _attr_true(values.get(attr))]
+                    else:
+                        present_excludes = [attr for attr in fact.excludes if attr in values]
                     if present_excludes:
                         excludes_str = ", ".join(sorted(fact.excludes))
                         msg = fact.message or (
                             f"when '{fact.attr}' is present, none of "
                             f"[{excludes_str}] may be present, but got: "
                             f"{present_excludes}"
+                        )
+                        raise ValueError(msg)
+
+            elif isinstance(fact, ForbidsWhenValue):
+                if values.get(fact.when_attr) in fact.when_values:
+                    present_excludes = [attr for attr in fact.excludes if attr in values]
+                    if present_excludes:
+                        excludes_str = ", ".join(sorted(fact.excludes))
+                        values_str = ", ".join(sorted(fact.when_values))
+                        msg = fact.message or (
+                            f"when '{fact.when_attr}' is one of [{values_str}], none of "
+                            f"[{excludes_str}] may be present, but got: {present_excludes}"
                         )
                         raise ValueError(msg)
 
@@ -447,5 +484,28 @@ class ModelUtil:
                         f"but got: '{attr_value}'"
                     )
                     raise ValueError(msg)
+
+            elif isinstance(fact, AllowedValuesWhen):
+                # Gate on when_attr's presence or truthiness
+                when_value = values.get(fact.when_attr)
+                should_check = (
+                    (not fact.when_true and fact.when_attr in values) or
+                    (fact.when_true and _attr_true(when_value))
+                )
+
+                # Only validate if attr is also present
+                if should_check and fact.attr in values:
+                    attr_value = values[fact.attr]
+                    # Resolve allowed set (may be callable)
+                    allowed_set = fact.allowed() if callable(fact.allowed) else fact.allowed
+                    if attr_value not in allowed_set:
+                        allowed_str = ", ".join(sorted(str(v) for v in allowed_set))
+                        msg = (
+                            fact.message.replace("{actual_value}", str(attr_value))
+                            if fact.message is not None
+                            else f"when '{fact.when_attr}' is present, '{fact.attr}' value must be one of "
+                            f"[{allowed_str}], but got: '{attr_value}'"
+                        )
+                        raise ValueError(msg)
 
         return values

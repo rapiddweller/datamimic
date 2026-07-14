@@ -6,7 +6,7 @@ from starlette.responses import Response
 
 from datamimic_ce.domains import facade
 from datamimic_ce.mcp import resources
-from datamimic_ce.mcp.models import GenerateArgs, ScaffoldArgs
+from datamimic_ce.mcp.models import GenerateArgs, ReferenceArgs, ScaffoldArgs
 from datamimic_ce.mcp.server import (
     HTTP_MIDDLEWARE_ATTR,
     _APIKeyMiddleware,
@@ -14,6 +14,7 @@ from datamimic_ce.mcp.server import (
     create_server,
     generate_impl,
     list_domains_impl,
+    reference_impl,
     scaffold_impl,
 )
 
@@ -56,6 +57,13 @@ def test_generate_impl_forwards_payload(monkeypatch) -> None:
     assert forwarded["seed"] == 123
     assert forwarded["count"] == 2
     assert forwarded["locale"] == "en_US"
+
+
+def test_reference_impl_projects_central_alias_rules() -> None:
+    payload = reference_impl(ReferenceArgs(topic="element", name="iterate"))
+
+    assert payload["ok"] is True
+    assert "at least one of: source" in payload["content"]
 
 
 @pytest.mark.anyio

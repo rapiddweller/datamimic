@@ -3,7 +3,8 @@
 DATAMIMIC descriptors are XML files (`datamimic.xml`) that declare data pipelines:
 generate synthetic records, read/transform existing sources, and export to files,
 databases, or in-memory stores. Deterministic by choice (`rngSeed`), reviewable,
-re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`.
+re-runnable — lint with `datamimic lint` (MCP: `datamimic_check`), execute safely
+with `datamimic dry-run` (MCP: `datamimic_run`).
 
 ## Minimal descriptor
 
@@ -107,8 +108,9 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 5. Every `<key>` needs exactly ONE value source: `type=` (+`min`/`max` or
    `minLength`/`maxLength`), `generator=`, `values=`, `constant=`, `script=`,
    `pattern=`, `source=`, or `string=`. `weights=` needs `values=`. (DM203)
-6. `unique="True"` needs a finite pool (`values`/`source`) covering the count and
-   only combines with random distribution. (DM204)
+6. `unique="True"` needs a finite pool covering the count and only combines with
+   random source selection. `<key>` supports an inline `values` pool only;
+   source-backed elements use `source`. (DM204)
 7. With `source=`: use `type=`/`sourceEntity=` OR `selector=`, not both. A
    MongoDB source needs one of them explicitly. `selector` without `count` only
    works on DB clients. (DM205, DM211)
@@ -177,11 +179,12 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 
 ## Verify loop for agents
 
-1. `datamimic_reference topic=overview` (this sheet), `topic=element name=generate`
-   for details, `topic=recipes` for starting points.
-2. Draft the descriptor → `datamimic_check` → fix every diagnostic (each carries
+1. `datamimic reference overview` (this sheet), `datamimic reference element generate`
+   for details, `datamimic reference recipes` for starting points. MCP clients use
+   the equivalent `datamimic_reference` tool.
+2. Draft the descriptor → `datamimic lint` (MCP: `datamimic_check`) → fix every diagnostic (each carries
    a fix_hint and rule id).
-3. `datamimic_run` (safe: counts capped, targets neutralized, memstores kept;
+3. `datamimic dry-run` (MCP: `datamimic_run`; safe: counts capped, targets neutralized, memstores kept;
    `smoke_export=true` also test-writes rows through the file exporters in a
    temp dir to catch export-time crashes) → inspect sample rows → iterate.
 4. Ship the descriptor; run for real with `datamimic run path/to/datamimic.xml`.

@@ -7,118 +7,65 @@
 """Machine-readable DSL schema, derived from the engine's own sources of truth.
 
 - Attributes: Pydantic ``model_fields`` (name/alias/type/default/required)
-- Nesting:    ``ParserUtil.get_valid_sub_elements_set_by_tag``
-- Tags:       ``element_constants``
-
-The one table the engine lacks is the element→model map below; a gate test
-(tests_ce/unit_tests/test_authoring/test_schema_index.py) reconciles it against
-the real parser dispatch so it cannot drift.
+- Elements:   ``model.element_registry`` (tag/model/parser/aliases/nesting)
 """
 
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any
 
 from pydantic import BaseModel
 
-from datamimic_ce.constants.element_constants import (
-    EL_ARRAY,
-    EL_ASSERT,
-    EL_CONDITION,
-    EL_DATABASE,
-    EL_DEMOGRAPHICS,
-    EL_ECHO,
-    EL_ELEMENT,
-    EL_ELSE,
-    EL_ELSE_IF,
-    EL_EXECUTE,
-    EL_FIELD,
-    EL_GENERATE,
-    EL_GENERATOR,
-    EL_ID,
-    EL_IF,
-    EL_INCLUDE,
-    EL_ITEM,
-    EL_ITERATE,
-    EL_KEY,
-    EL_LIST,
-    EL_MEMSTORE,
-    EL_MONGODB,
-    EL_NESTED_KEY,
-    EL_REFERENCE,
-    EL_SETUP,
-    EL_STATE_MACHINE,
-    EL_TRANSITION,
-    EL_VALUE,
-    EL_VARIABLE,
-    EL_WHILE,
+from datamimic_ce.model.constraints import (
+    Constraint,
+    element_constraints,
+    rule_registry_revision,
+    serialize_constraints,
 )
-from datamimic_ce.model.array_model import ArrayModel
-from datamimic_ce.model.assert_model import AssertModel
-from datamimic_ce.model.constraints import Constraint
-from datamimic_ce.model.database_model import DatabaseModel
-from datamimic_ce.model.demographics_model import DemographicsModel
-from datamimic_ce.model.element_model import ElementModel
-from datamimic_ce.model.else_if_model import ElseIfModel
-from datamimic_ce.model.execute_model import ExecuteModel
-from datamimic_ce.model.generate_model import GenerateModel
-from datamimic_ce.model.generator_model import GeneratorModel
-from datamimic_ce.model.if_model import IfModel
-from datamimic_ce.model.include_model import IncludeModel
-from datamimic_ce.model.item_model import ItemModel
-from datamimic_ce.model.key_model import KeyModel
-from datamimic_ce.model.list_model import ListModel
-from datamimic_ce.model.memstore_model import MemstoreModel
-from datamimic_ce.model.mongodb_model import MongoDBModel
-from datamimic_ce.model.nested_key_model import NestedKeyModel
-from datamimic_ce.model.reference_field_model import ReferenceFieldModel
-from datamimic_ce.model.reference_model import ReferenceModel
-from datamimic_ce.model.setup_model import SetupModel
-from datamimic_ce.model.state_machine_model import StateMachineModel
-from datamimic_ce.model.value_model import ValueModel
-from datamimic_ce.model.variable_model import VariableModel
-from datamimic_ce.model.while_model import WhileModel
-from datamimic_ce.parsers.parser_util import ParserUtil
+from datamimic_ce.model.element_registry import (
+    canonical_tag,
+    element_aliases,
+    get_element_definition,
+    get_model_class,
+    get_valid_children,
+    list_element_tags,
+    registry_revision,
+)
 
-# Element tag -> attribute model. None = structural/text element without attribute schema
-# (<condition>/<else> carry no validated attributes; <echo> is text; <transition> is
-# validated inside <state-machine>; <comment> is a no-op and not dispatchable content here).
-ELEMENT_MODEL_MAP: dict[str, type[BaseModel] | None] = {
-    EL_SETUP: SetupModel,
-    EL_GENERATE: GenerateModel,
-    EL_ITERATE: GenerateModel,  # alias
-    EL_KEY: KeyModel,
-    EL_ID: KeyModel,  # alias
-    EL_VARIABLE: VariableModel,
-    EL_NESTED_KEY: NestedKeyModel,
-    EL_ARRAY: ArrayModel,
-    EL_VALUE: ValueModel,  # <array type="literal"> child only
-    EL_LIST: ListModel,
-    EL_ITEM: ItemModel,
-    EL_REFERENCE: ReferenceModel,
-    EL_FIELD: ReferenceFieldModel,
-    EL_INCLUDE: IncludeModel,
-    EL_MEMSTORE: MemstoreModel,
-    EL_EXECUTE: ExecuteModel,
-    EL_DATABASE: DatabaseModel,
-    EL_MONGODB: MongoDBModel,
-    EL_IF: IfModel,
-    EL_ELSE_IF: ElseIfModel,
-    EL_ELSE: None,
-    EL_CONDITION: None,
-    EL_ECHO: None,
-    EL_ELEMENT: ElementModel,
-    EL_GENERATOR: GeneratorModel,
-    EL_DEMOGRAPHICS: DemographicsModel,
-    EL_STATE_MACHINE: StateMachineModel,
-    EL_TRANSITION: None,
-    EL_WHILE: WhileModel,
-    EL_ASSERT: AssertModel,
-}
 
-# Tags accepted as <generate>/<key> aliases map onto the same schema (attributes AND
-# nesting rules); expose canonical names.
-ALIASES: dict[str, str] = {EL_ITERATE: EL_GENERATE, EL_ID: EL_KEY}
+class _ElementModelView(Mapping[str, type[BaseModel] | None]):
+    """Compatibility view derived live from the central element registry."""
+
+    def __getitem__(self, tag: str) -> type[BaseModel] | None:
+        if get_element_definition(tag) is None:
+            raise KeyError(tag)
+        return get_model_class(tag)
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(list_element_tags())
+
+    def __len__(self) -> int:
+        return len(list_element_tags())
+
+
+class _AliasView(Mapping[str, str]):
+    """Compatibility view derived live from registry-owned aliases."""
+
+    def __getitem__(self, alias: str) -> str:
+        return element_aliases()[alias]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(element_aliases())
+
+    def __len__(self) -> int:
+        return len(element_aliases())
+
+
+# Kept as read-only compatibility surfaces for existing authoring consumers.
+# Registration is owned exclusively by model.element_registry.
+ELEMENT_MODEL_MAP: Mapping[str, type[BaseModel] | None] = _ElementModelView()
+ALIASES: Mapping[str, str] = _AliasView()
 
 
 @dataclass(frozen=True)
@@ -168,22 +115,22 @@ def _attribute_specs(model: type[BaseModel]) -> dict[str, AttributeSpec]:
     return specs
 
 
-@lru_cache(maxsize=1)
-def build_schema_index() -> SchemaIndex:
+@lru_cache(maxsize=8)
+def _build_schema_index(_element_revision: int, _rule_revision: int) -> SchemaIndex:
     # Invert the nesting table once: parent -> children becomes child -> parents.
-    parents: dict[str, set[str]] = {tag: set() for tag in ELEMENT_MODEL_MAP}
+    tags = list_element_tags()
+    parents: dict[str, set[str]] = {tag: set() for tag in tags}
     children_map: dict[str, set[str] | None] = {}
-    for tag in ELEMENT_MODEL_MAP:
-        # aliases (<iterate>/<id>) share the canonical element's nesting rules —
-        # the engine normalizes via the statement TYPE, so the raw-tag lookup would miss
-        allowed = ParserUtil.get_valid_sub_elements_set_by_tag(ALIASES.get(tag, tag))
+    for tag in tags:
+        allowed = get_valid_children(tag)
         children_map[tag] = set(allowed) if allowed is not None else None
         if allowed:
             for child in allowed:
                 parents.setdefault(child, set()).add(tag)
 
     elements: dict[str, ElementSchema] = {}
-    for tag, model in ELEMENT_MODEL_MAP.items():
+    for tag in tags:
+        model = get_model_class(tag)
         open_attrs = bool(model is not None and model.model_config.get("extra") == "allow")
         elements[tag] = ElementSchema(
             tag=tag,
@@ -192,9 +139,23 @@ def build_schema_index() -> SchemaIndex:
             allowed_children=children_map.get(tag),
             allowed_parents=parents.get(tag, set()),
             open_attrs=open_attrs,
-            constraints=getattr(model, "__constraints__", ()) if model is not None else (),
+            constraints=element_constraints(tag),
         )
     return SchemaIndex(elements)
+
+
+class _SchemaIndexBuilder:
+    """Callable revision-aware cache with the legacy ``cache_clear`` hook."""
+
+    def __call__(self) -> SchemaIndex:
+        return _build_schema_index(registry_revision(), rule_registry_revision())
+
+    @staticmethod
+    def cache_clear() -> None:
+        _build_schema_index.cache_clear()
+
+
+build_schema_index = _SchemaIndexBuilder()
 
 
 def element_json_schema(tag: str) -> dict[str, Any]:
@@ -203,7 +164,13 @@ def element_json_schema(tag: str) -> dict[str, Any]:
     Field(...) definitions provide. This is the SPOT other schema consumers (scaffold.py's
     constrained-decoding spec, capabilities_manifest()) reflect from instead of hand-typing
     a parallel schema fragment."""
-    schema = build_schema_index().get(ALIASES.get(tag, tag))
+    schema = build_schema_index().get(canonical_tag(tag))
     if schema is None or schema.model is None:
         raise ValueError(f"'{tag}' has no attribute model to reflect a JSON schema from")
-    return schema.model.model_json_schema()
+    result = schema.model.model_json_schema()
+    constraints = element_constraints(tag)
+    if constraints:
+        result["constraints"] = serialize_constraints(constraints)
+    else:
+        result.pop("constraints", None)
+    return result

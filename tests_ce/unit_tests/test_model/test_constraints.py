@@ -19,10 +19,14 @@ from pydantic import BaseModel, ConfigDict
 
 from datamimic_ce.model.constraints import (
     AllOrNone,
+    AllowedValuesWhen,
     Forbids,
+    ForbidsWhenValue,
     MutuallyExclusive,
+    MutuallyExclusiveWhen,
     RequiredOneOf,
     Requires,
+    RequiresWhenValue,
     ValidValues,
     constraints_schema_extra,
 )
@@ -103,6 +107,31 @@ class TestMutuallyExclusive:
         # Would fail if not skipped
         result = ModelUtil.check_constraints({"a": "val", "b": "val2"}, (fact,))
         assert result == {"a": "val", "b": "val2"}
+
+
+class TestModeGatedConstraints:
+    def test_mutually_exclusive_when_only_applies_with_gate(self):
+        fact = MutuallyExclusiveWhen("source", frozenset(("type", "selector")))
+        assert ModelUtil.check_constraints({"type": "x", "selector": "y"}, (fact,))
+        with pytest.raises(ValueError, match="at most one"):
+            ModelUtil.check_constraints({"source": "s", "type": "x", "selector": "y"}, (fact,))
+
+    def test_requires_when_value_honors_unless(self):
+        fact = RequiresWhenValue(
+            "type",
+            frozenset(("list",)),
+            frozenset(("count",)),
+            unless=frozenset(("source",)),
+        )
+        with pytest.raises(ValueError, match="at least one"):
+            ModelUtil.check_constraints({"type": "list"}, (fact,))
+        assert ModelUtil.check_constraints({"type": "list", "source": "rows.csv"}, (fact,))
+
+    def test_forbids_when_value_only_applies_to_selected_mode(self):
+        fact = ForbidsWhenValue("type", frozenset(("literal",)), frozenset(("count", "script")))
+        assert ModelUtil.check_constraints({"type": "string", "count": "2"}, (fact,))
+        with pytest.raises(ValueError, match="none of"):
+            ModelUtil.check_constraints({"type": "literal", "count": "2"}, (fact,))
 
 
 class TestRequires:
@@ -248,6 +277,27 @@ class TestForbids:
         result = ModelUtil.check_constraints({"a": "val", "b": "val2"}, (fact,))
         assert result == {"a": "val", "b": "val2"}
 
+    def test_excludes_when_true_both_present_fails(self):
+        """When excludes_when_true=True, excluded attr must be truthy for violation."""
+        fact = Forbids(attr="a", excludes=frozenset({"b"}), when_true=True, excludes_when_true=True)
+        # Both a and b are truthy, so violation
+        with pytest.raises(ValueError, match="none of"):
+            ModelUtil.check_constraints({"a": "true", "b": "true"}, (fact,))
+
+    def test_excludes_when_true_excluded_falsy_succeeds(self):
+        """When excludes_when_true=True and excluded attr is falsy, check succeeds."""
+        fact = Forbids(attr="a", excludes=frozenset({"b"}), when_true=True, excludes_when_true=True)
+        # a is truthy but b is falsy, so no violation
+        result = ModelUtil.check_constraints({"a": "true", "b": "false"}, (fact,))
+        assert result == {"a": "true", "b": "false"}
+
+    def test_excludes_when_true_excluded_absent_succeeds(self):
+        """When excludes_when_true=True and excluded attr is absent, check succeeds."""
+        fact = Forbids(attr="a", excludes=frozenset({"b"}), when_true=True, excludes_when_true=True)
+        # a is truthy but b is absent, so no violation
+        result = ModelUtil.check_constraints({"a": "true"}, (fact,))
+        assert result == {"a": "true"}
+
 
 class TestValidValues:
     """ValidValues constraint: attr value must be in the valid set."""
@@ -305,6 +355,100 @@ class TestValidValues:
         fact = ValidValues(attr="a", values=frozenset({"z", "x", "y"}))
         with pytest.raises(ValueError, match="x, y, z"):
             ModelUtil.check_constraints({"a": "w"}, (fact,))
+
+
+class TestAllowedValuesWhen:
+    """AllowedValuesWhen constraint: when a gate attr is present/truthy, attr if PRESENT must be in allowed set."""
+
+    def test_gate_attr_absent_succeeds(self):
+        """When gate attr is absent, check succeeds regardless of attr value."""
+        fact = AllowedValuesWhen(attr="a", allowed=frozenset({"x", "y"}), when_attr="gate")
+        result = ModelUtil.check_constraints({"a": "z"}, (fact,))
+        assert result == {"a": "z"}
+
+    def test_attr_absent_succeeds(self):
+        """When attr is absent, check succeeds even if gate is present."""
+        fact = AllowedValuesWhen(attr="a", allowed=frozenset({"x", "y"}), when_attr="gate")
+        result = ModelUtil.check_constraints({"gate": "value"}, (fact,))
+        assert result == {"gate": "value"}
+
+    def test_both_present_valid_succeeds(self):
+        """When both gate and attr are present, and attr is in allowed, check succeeds."""
+        fact = AllowedValuesWhen(attr="a", allowed=frozenset({"x", "y"}), when_attr="gate")
+        result = ModelUtil.check_constraints({"gate": "value", "a": "x"}, (fact,))
+        assert result == {"gate": "value", "a": "x"}
+
+    def test_both_present_invalid_fails(self):
+        """When both gate and attr are present, and attr is not in allowed, check fails."""
+        fact = AllowedValuesWhen(attr="a", allowed=frozenset({"x", "y"}), when_attr="gate")
+        with pytest.raises(ValueError, match="must be one of"):
+            ModelUtil.check_constraints({"gate": "value", "a": "z"}, (fact,))
+
+    def test_when_true_false_presence_gate(self):
+        """when_true=False gates on presence only (default)."""
+        fact = AllowedValuesWhen(attr="a", allowed=frozenset({"x"}), when_attr="gate", when_true=False)
+        # gate="false" is present, so gate is true -> check a
+        with pytest.raises(ValueError, match="must be one of"):
+            ModelUtil.check_constraints({"gate": "false", "a": "z"}, (fact,))
+
+    def test_when_true_truthy_gate(self):
+        """when_true=True gates on truthiness of the gate attr value."""
+        fact = AllowedValuesWhen(attr="a", allowed=frozenset({"x"}), when_attr="gate", when_true=True)
+        # gate="false" is present but not truthy, so gate is false -> no check
+        result = ModelUtil.check_constraints({"gate": "false", "a": "z"}, (fact,))
+        assert result == {"gate": "false", "a": "z"}
+
+    def test_when_true_truthy_gate_with_yes(self):
+        """when_true=True with truthy gate value triggers the check."""
+        fact = AllowedValuesWhen(attr="a", allowed=frozenset({"x"}), when_attr="gate", when_true=True)
+        # gate="yes" is truthy, so gate is true -> check a
+        with pytest.raises(ValueError, match="must be one of"):
+            ModelUtil.check_constraints({"gate": "yes", "a": "z"}, (fact,))
+
+    def test_callable_allowed_evaluated(self):
+        """When allowed is a callable, it is evaluated at check time."""
+        def dynamic_allowed():
+            return {"dynamic1", "dynamic2"}
+
+        fact = AllowedValuesWhen(attr="a", allowed=dynamic_allowed, when_attr="gate")
+        result = ModelUtil.check_constraints({"gate": "value", "a": "dynamic1"}, (fact,))
+        assert result == {"gate": "value", "a": "dynamic1"}
+
+    def test_callable_allowed_invalid_fails(self):
+        """When callable-evaluated allowed doesn't match, check fails."""
+        def dynamic_allowed():
+            return {"dynamic1", "dynamic2"}
+
+        fact = AllowedValuesWhen(attr="a", allowed=dynamic_allowed, when_attr="gate")
+        with pytest.raises(ValueError, match="must be one of"):
+            ModelUtil.check_constraints({"gate": "value", "a": "invalid"}, (fact,))
+
+    def test_custom_message_used(self):
+        """When message is set, it overrides the default."""
+        fact = AllowedValuesWhen(
+            attr="a", allowed=frozenset({"x"}), when_attr="gate", message="a must be x when gate is set"
+        )
+        with pytest.raises(ValueError, match="a must be x when gate is set"):
+            ModelUtil.check_constraints({"gate": "value", "a": "z"}, (fact,))
+
+    def test_custom_message_renders_actual_value(self):
+        fact = AllowedValuesWhen(
+            attr="distribution",
+            allowed=frozenset({"random"}),
+            when_attr="unique",
+            message="not '{actual_value}'",
+        )
+        with pytest.raises(ValueError, match="not 'ordered'"):
+            ModelUtil.check_constraints(
+                {"unique": "true", "distribution": "ordered"},
+                (fact,),
+            )
+
+    def test_lint_only_skipped(self):
+        """When lint_only=True, constraint is skipped."""
+        fact = AllowedValuesWhen(attr="a", allowed=frozenset({"x"}), when_attr="gate", lint_only=True)
+        result = ModelUtil.check_constraints({"gate": "value", "a": "z"}, (fact,))
+        assert result == {"gate": "value", "a": "z"}
 
 
 class TestConstraintOrder:
@@ -505,3 +649,123 @@ class TestConstraintsSchemaExtra:
         assert schema["constraints"][0]["kind"] == "required_one_of"
         assert schema["constraints"][1]["kind"] == "mutually_exclusive"
         assert schema["constraints"][2]["kind"] == "valid_values"
+
+    def test_forbids_with_excludes_when_true_serialization(self):
+        """Forbids with excludes_when_true is serialized correctly."""
+        class Model(BaseModel):
+            model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
+            __constraints__ = (
+                Forbids(attr="a", excludes=frozenset({"b", "c"}), when_true=True, excludes_when_true=True),
+            )
+
+        schema = Model.model_json_schema()
+        fact = schema["constraints"][0]
+        assert fact["kind"] == "forbids"
+        assert fact["attr"] == "a"
+        assert fact["excludes"] == ["b", "c"]  # sorted
+        assert fact["when_true"] is True
+        assert fact["excludes_when_true"] is True
+
+    def test_forbids_excludes_when_true_false_not_serialized(self):
+        """Forbids with excludes_when_true=False omits the field (default)."""
+        class Model(BaseModel):
+            model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
+            __constraints__ = (
+                Forbids(attr="a", excludes=frozenset({"b"}), excludes_when_true=False),
+            )
+
+        schema = Model.model_json_schema()
+        fact = schema["constraints"][0]
+        assert fact["excludes_when_true"] is False  # Always serialized for Forbids
+
+    def test_allowed_values_when_serialization(self):
+        """AllowedValuesWhen is serialized correctly."""
+        class Model(BaseModel):
+            model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
+            __constraints__ = (
+                AllowedValuesWhen(attr="dist", allowed=frozenset({"random"}), when_attr="unique", when_true=True),
+            )
+
+        schema = Model.model_json_schema()
+        fact = schema["constraints"][0]
+        assert fact["kind"] == "allowed_values_when"
+        assert fact["attr"] == "dist"
+        assert fact["allowed"] == ["random"]  # sorted
+        assert fact["when_attr"] == "unique"
+        assert fact["when_true"] is True
+
+    def test_allowed_values_when_callable_serialization(self):
+        """AllowedValuesWhen with callable allowed is evaluated and sorted in schema."""
+        def get_allowed():
+            return {"z", "a", "m"}
+
+        class Model(BaseModel):
+            model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
+            __constraints__ = (
+                AllowedValuesWhen(attr="dist", allowed=get_allowed, when_attr="unique"),
+            )
+
+        schema = Model.model_json_schema()
+        fact = schema["constraints"][0]
+        assert fact["allowed"] == ["a", "m", "z"]  # sorted, callable evaluated
+
+
+class TestModelUniqueConstraintContracts:
+    def test_key_forbids_any_explicit_numeric_distribution_with_unique(self) -> None:
+        from datamimic_ce.model.key_model import KeyModel
+
+        with pytest.raises(ValueError, match="unique.*cannot be combined.*distribution"):
+            KeyModel(name="id", values="1,2", unique=True, distribution="shuffle")
+
+        constraints = KeyModel.model_json_schema()["constraints"]
+        assert any(
+            fact["kind"] == "forbids"
+            and fact["attr"] == "unique"
+            and fact["excludes"] == ["distribution"]
+            for fact in constraints
+        )
+        assert not any(
+            fact["kind"] == "allowed_values_when"
+            and fact["when_attr"] == "unique"
+            for fact in constraints
+        )
+
+    def test_key_unique_rejects_weighted_source_during_model_validation(self) -> None:
+        from datamimic_ce.model.key_model import KeyModel
+
+        with pytest.raises(ValueError, match="unique.*key.*requires.*values"):
+            KeyModel(name="segment", source="segments.wgt.csv", unique=True)
+
+        constraints = KeyModel.model_json_schema()["constraints"]
+        assert any(
+            fact["kind"] == "requires"
+            and fact["attr"] == "unique"
+            and fact["needs"] == ["values"]
+            for fact in constraints
+        )
+
+    def test_reference_declares_and_enforces_source_unique_constraints(self) -> None:
+        from datamimic_ce.model.reference_model import ReferenceModel
+
+        constraints = ReferenceModel.model_json_schema()["constraints"]
+        assert any(
+            fact["kind"] == "forbids"
+            and fact["attr"] == "unique"
+            and fact["excludes"] == ["cyclic"]
+            for fact in constraints
+        )
+        assert any(
+            fact["kind"] == "allowed_values_when"
+            and fact["when_attr"] == "unique"
+            and fact["allowed"] == ["random"]
+            for fact in constraints
+        )
+
+        with pytest.raises(ValueError, match="not 'ordered'"):
+            ReferenceModel(
+                name="customer_id",
+                source="db",
+                sourceType="customer",
+                unique=True,
+                distribution="ordered",
+            )

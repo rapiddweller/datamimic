@@ -9,28 +9,21 @@ from typing import Any, ClassVar
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import ATTR_SCRIPT, ATTR_TARGET, ATTR_TYPE, ATTR_URI
+from datamimic_ce.constants.element_constants import EL_EXECUTE
 from datamimic_ce.model.constraints import (
+    EXECUTE_TYPE_VALUES,
     Constraint,
-    ValidValues,
     constraints_schema_extra,
+    element_constraints,
     resolved_values,
 )
 from datamimic_ce.model.model_util import ModelUtil
 
-# Inline/uri execution languages DATAMIMIC supports.
-# Declared fact (SPOT): the literal lives ONCE here; VALID_EXECUTE_TYPES is an alias
-# derived from it, and the enforcing field_validator reads the alias. Message is
-# dynamic (interpolates the rejected value), so the fact carries message=None.
-_EXECUTE_TYPE_VALUES = ValidValues(ATTR_TYPE, frozenset(("python", "bash", "sql")))
-VALID_EXECUTE_TYPES: frozenset[str] = resolved_values(_EXECUTE_TYPE_VALUES)
+VALID_EXECUTE_TYPES: frozenset[str] = resolved_values(EXECUTE_TYPE_VALUES)
 
 
 class ExecuteModel(BaseModel):
-    # Declared cross-field constraints
-    __constraints__: ClassVar[tuple[Constraint, ...]] = (
-        # Same object the type field_validator reads (via the VALID_EXECUTE_TYPES alias)
-        _EXECUTE_TYPE_VALUES,
-    )
+    __constraints__: ClassVar[tuple[Constraint, ...]] = element_constraints(EL_EXECUTE)
     model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
 
     # uri (a script file) XOR inline element text; enforced by the parser, which also resolves `type`.
@@ -68,6 +61,12 @@ class ExecuteModel(BaseModel):
             values=values,
             valid_attributes={ATTR_URI, ATTR_TARGET, ATTR_TYPE, ATTR_SCRIPT},
         )
+
+    @model_validator(mode="before")
+    @classmethod
+    def check_execute_modes(cls, values: dict[str, Any]) -> dict[str, Any]:
+        """Enforce attribute-only execute modes; inline text remains parser-owned."""
+        return ModelUtil.check_constraints(values, cls.__constraints__)
 
     @field_validator("type")  # noqa: B023
     @classmethod

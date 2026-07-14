@@ -143,11 +143,57 @@ def test_scaffold_renders_lint_clean_and_runnable(name: str) -> None:
     assert dr.products and all(p.count > 0 for p in dr.products)
 
 
-def test_unknown_kind_degrades_to_valid_constant() -> None:
-    # A model emitting an out-of-enum kind must still yield valid XML, not a crash.
-    xml = render({"generates": [{"name": "g", "count": 2, "target": "JSON",
-                                 "fields": [{"name": "f", "kind": "totally_made_up", "value": "x"}]}]})
-    assert lint_source(xml).ok
+def test_unknown_kind_is_rejected_instead_of_silently_changing_intent() -> None:
+    with pytest.raises(ValueError, match="unsupported field kind 'totally_made_up'"):
+        render({"generates": [{"name": "g", "count": 2, "target": "JSON",
+                               "fields": [{"name": "f", "kind": "totally_made_up", "value": "x"}]}]})
+
+
+def test_rng_seed_alias_is_explicitly_normalized() -> None:
+    from datamimic_ce.authoring.scaffold import check
+
+    result = check({"rngSeed": 42, "generates": [{"name": "g", "count": 1,
+                    "fields": [{"name": "id", "kind": "increment"}]}]}, dry_run=False)
+
+    assert result.ok
+    assert result.xml is not None and '<setup rngSeed="42">' in result.xml
+    assert "root key 'rngSeed' normalized to 'seed'" in result.normalization_notes
+
+
+@pytest.mark.parametrize(
+    "spec, expected",
+    [
+        ({"typo": 1, "generates": []}, "unknown scaffold root key"),
+        ({"generates": [{"name": "g", "count": 1, "typo": 1,
+          "fields": [{"name": "id", "kind": "increment"}]}]}, "unknown key.*generate 'g'"),
+        ({"generates": [{"name": "g", "count": 1,
+          "fields": [{"name": "id", "kind": "increment", "typo": 1}]}]}, "unknown key.*field"),
+    ],
+)
+def test_unknown_scaffold_keys_are_rejected(spec: dict, expected: str) -> None:
+    with pytest.raises(ValueError, match=expected):
+        render(spec)
+
+
+@pytest.mark.parametrize(
+    "spec, expected",
+    [
+        ({"seed": 42.9, "generates": []}, "seed must be an integer"),
+        ({"generates": [{"name": "g", "count": 2.9,
+          "fields": [{"name": "id", "kind": "increment"}]}]}, "count.*must be an integer"),
+        ({"generates": [{"name": "g", "count": 1,
+          "fields": [{"name": "n", "kind": "int_range"}]}]}, "requires explicit min, max"),
+        ({"generates": [{"name": "g", "count": 1,
+          "fields": [{"name": "n", "kind": "int_range", "min": 1.9, "max": 3}]}]},
+         "int_range min must be an integer"),
+        ({"generates": [{"name": "g", "count": 1,
+          "fields": [{"name": "items", "kind": "nested_list", "min": 1, "max": 2}]}]},
+         "requires at least one nested field"),
+    ],
+)
+def test_lossy_or_incomplete_scaffold_values_are_rejected(spec: dict, expected: str) -> None:
+    with pytest.raises(ValueError, match=expected):
+        render(spec)
 
 
 def test_render_normalizes_model_key_drift() -> None:
@@ -456,3 +502,230 @@ def test_kind_alias_normalization_surfaces_as_note() -> None:
     assert any("weighted_values" in note and "weighted" in note for note in result.normalization_notes), (
         f"expected a normalization_notes entry about weighted_values→weighted, got: {result.normalization_notes}"
     )
+
+
+def test_source_backed_unique_cardinality_propagation_insufficient() -> None:
+    # Defect 1: source-backed unique ranges must have their cardinality verified against
+    # the producer's count, not silently under-produce. This spec has a 5-row producer
+    # and a reader with unique range 1..2 (grid too small) — must fail at render with
+    # a message mentioning the producer.
+    spec = {
+        "generates": [
+            {"name": "producer", "count": 5, "target": "mem,JSON",
+             "fields": [{"name": "id", "kind": "increment"}]},
+            {"name": "reader", "count": 1, "source": "mem", "source_type": "producer",
+             "fields": [
+                 {"name": "id", "kind": "script", "script": "id"},
+                 {"name": "seat", "kind": "int_range", "min": 1, "max": 2, "unique": True},
+             ]},
+        ]
+    }
+    with pytest.raises(ValueError, match="unique"):
+        render(spec)
+
+
+def test_source_backed_unique_cardinality_propagation_sufficient() -> None:
+    # Positive case: same producer (count=5) but unique range 1..10 (grid large enough)
+    # — must render successfully, verifying cardinality propagation worked.
+    spec = {
+        "generates": [
+            {"name": "producer", "count": 5, "target": "mem,JSON",
+             "fields": [{"name": "id", "kind": "increment"}]},
+            {"name": "reader", "count": 1, "source": "mem", "source_type": "producer",
+             "fields": [
+                 {"name": "id", "kind": "script", "script": "id"},
+                 {"name": "seat", "kind": "int_range", "min": 1, "max": 10, "unique": True},
+             ]},
+        ]
+    }
+    xml = render(spec)
+    assert lint_source(xml).ok, xml
+    # Verify both generates rendered
+    assert '<generate name="producer"' in xml
+    assert '<generate name="reader"' in xml
+    reader_open = next(line for line in xml.splitlines() if '<generate name="reader"' in line)
+    assert "count=" not in reader_open
+
+
+def test_source_backed_unique_rejects_unresolvable_count_even_when_count_is_set() -> None:
+    spec = {
+        "generates": [
+            {
+                "name": "reader",
+                "count": 1,
+                "source": "external.csv",
+                "fields": [
+                    {"name": "seat", "kind": "int_range", "min": 1, "max": 10, "unique": True},
+                ],
+            }
+        ]
+    }
+
+    with pytest.raises(ValueError, match="cannot be verified"):
+        render(spec)
+
+
+def test_children_as_object_normalized_to_array() -> None:
+    # Defect 2: if a model emits children as an object instead of an array,
+    # it should be normalized to a one-item list with a note, not silently dropped.
+    from datamimic_ce.authoring.scaffold import check
+
+    spec = {
+        "generates": [
+            {"name": "parent", "count": 2, "target": "JSON",
+             "fields": [{"name": "id", "kind": "increment"}],
+             "children": {
+                 "name": "child", "count": 1,
+                 "fields": [{"name": "parent_id", "kind": "script", "script": "parent.id"}],
+             },
+            }
+        ]
+    }
+    result = check(spec, dry_run=False)
+    assert result.ok
+    assert result.xml is not None
+    # Verify the note about normalization is present
+    assert any("object-shaped 'children' normalized" in note for note in result.normalization_notes), (
+        f"expected normalization note about children, got: {result.normalization_notes}"
+    )
+    # Verify child was rendered
+    assert '<generate name="child"' in result.xml
+
+
+def test_children_as_string_rejected() -> None:
+    # If children is a string instead of an array of objects, reject explicitly.
+    spec = {
+        "generates": [
+            {"name": "parent", "count": 2, "target": "JSON",
+             "fields": [{"name": "id", "kind": "increment"}],
+             "children": "invalid_string",
+            }
+        ]
+    }
+    with pytest.raises(ValueError, match="must be an array"):
+        render(spec)
+
+
+def test_object_shaped_grandchild_is_rejected() -> None:
+    spec = {
+        "generates": [
+            {
+                "name": "parent",
+                "count": 2,
+                "fields": [{"name": "id", "kind": "increment"}],
+                "children": {
+                    "name": "child",
+                    "count": 1,
+                    "fields": [{"name": "id", "kind": "increment"}],
+                    "children": {
+                        "name": "grandchild",
+                        "count": 1,
+                        "fields": [{"name": "id", "kind": "increment"}],
+                    },
+                },
+            }
+        ]
+    }
+
+    with pytest.raises(
+        ValueError,
+        match="unsupported feature.*grandchild.*nested more than one level",
+    ):
+        render(spec)
+
+
+def test_object_shaped_nested_fields_are_normalized() -> None:
+    from datamimic_ce.authoring.scaffold import check
+
+    spec = {
+        "generates": [
+            {
+                "name": "departments",
+                "count": 2,
+                "fields": [
+                    {
+                        "name": "employees",
+                        "kind": "nested_list",
+                        "fields": {"name": "employee_id", "kind": "increment"},
+                    }
+                ],
+            }
+        ]
+    }
+
+    result = check(spec, dry_run=False)
+
+    assert result.ok
+    assert result.xml is not None
+    assert '<key name="employee_id" generator="IncrementGenerator"/>' in result.xml
+    assert any("object-shaped 'nested fields" in note for note in result.normalization_notes)
+
+
+def test_non_list_nested_fields_are_rejected() -> None:
+    spec = {
+        "generates": [
+            {
+                "name": "departments",
+                "count": 2,
+                "fields": [
+                    {
+                        "name": "employees",
+                        "kind": "nested_list",
+                        "fields": "not-an-array",
+                    }
+                ],
+            }
+        ]
+    }
+
+    with pytest.raises(ValueError, match="nested fields.*must be an array"):
+        render(spec)
+
+
+def test_deeper_object_shaped_nested_fields_are_rejected() -> None:
+    spec = {
+        "generates": [
+            {
+                "name": "departments",
+                "count": 2,
+                "fields": [
+                    {
+                        "name": "teams",
+                        "kind": "nested_list",
+                        "fields": {
+                            "name": "members",
+                            "kind": "nested_list",
+                            "fields": {"name": "member_id", "kind": "increment"},
+                        },
+                    }
+                ],
+            }
+        ]
+    }
+
+    with pytest.raises(ValueError, match="nested field 'member_id' more than one level deep"):
+        render(spec)
+
+
+def test_parent_with_no_fields_but_child_with_fields_valid() -> None:
+    # Defect 3: a parent with no fields but a child with fields is valid DSL.
+    # Previously only checked top-level generates for emptiness; must now check
+    # recursively across all generates via _iter_generates.
+    spec = {
+        "generates": [
+            {"name": "parent", "count": 2, "target": "JSON",
+             "fields": [],
+             "children": [
+                 {"name": "child", "count": 1,
+                  "fields": [{"name": "child_id", "kind": "increment"}]},
+             ],
+            }
+        ]
+    }
+    xml = render(spec)
+    assert lint_source(xml).ok, xml
+    # Verify both parent and child were rendered
+    assert '<generate name="parent"' in xml
+    assert '<generate name="child"' in xml
+    # Verify child has the field
+    assert '<key name="child_id"' in xml

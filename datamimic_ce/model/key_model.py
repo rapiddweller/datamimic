@@ -40,81 +40,27 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VARIABLE_SUFFIX,
     ATTR_WEIGHTS,
 )
-from datamimic_ce.constants.data_type_constants import (
-    DATA_TYPE_BINARY,
-    DATA_TYPE_BOOL,
-    DATA_TYPE_DECIMAL,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
-    DATA_TYPE_STRING,
-)
+from datamimic_ce.constants.element_constants import EL_KEY
 from datamimic_ce.model.constraints import (
-    SOURCE_COMPANIONS_WITH_CYCLIC,
-    UNIQUE_FORBIDS_WEIGHTS,
-    UNIQUE_REQUIRES_POOL,
-    WEIGHTS_REQUIRE_VALUES,
+    KEY_DISTRIBUTION_NUMERIC_TYPE,
+    KEY_DISTRIBUTION_REQUIRES_RANGE,
+    KEY_DISTRIBUTION_REQUIRES_TYPE,
+    KEY_DISTRIBUTION_VALUES,
+    KEY_GENERATION_EXCLUSIVE,
+    KEY_GENERATION_REQUIRED,
+    KEY_TYPE_VALUES,
+    KEY_UNIQUE_CONSTRAINTS,
     Constraint,
-    MutuallyExclusive,
-    RequiredOneOf,
-    ValidValues,
     constraints_schema_extra,
+    element_constraints,
     resolved_values,
 )
 from datamimic_ce.model.model_util import ModelUtil
 
-# Declared facts (SPOT): each set lives ONCE here, consumed by BOTH __constraints__
-# and the enforcing validator body. Dynamic messages (interpolating the clashing
-# attrs/value) stay in the validator, so these facts carry message=None.
-_GENERATION_REQUIRED = RequiredOneOf(
-    frozenset((
-        ATTR_TYPE,
-        ATTR_SOURCE,
-        ATTR_VALUES,
-        ATTR_SCRIPT,
-        ATTR_GENERATOR,
-        ATTR_CONSTANT,
-        ATTR_PATTERN,
-        ATTR_STRING,
-    )),
-)
-_GENERATION_EXCLUSIVE = MutuallyExclusive(
-    frozenset((
-        ATTR_SOURCE,
-        ATTR_VALUES,
-        ATTR_SCRIPT,
-        ATTR_GENERATOR,
-        ATTR_CONSTANT,
-        ATTR_PATTERN,
-    )),
-)
-_TYPE_VALUES = ValidValues(
-    ATTR_TYPE,
-    frozenset((
-        DATA_TYPE_STRING,
-        DATA_TYPE_INT,
-        DATA_TYPE_FLOAT,
-        DATA_TYPE_DECIMAL,
-        DATA_TYPE_BOOL,
-        DATA_TYPE_BINARY,
-    )),
-)
-
 
 class KeyModel(BaseModel):
     # Declared cross-field constraints (read by validators and exposed to schema via json_schema_extra)
-    __constraints__: ClassVar[tuple[Constraint, ...]] = (
-        # Shared constraints (used by KeyModel, VariableModel, GenerateModel)
-        WEIGHTS_REQUIRE_VALUES,
-        UNIQUE_REQUIRES_POOL,
-        UNIQUE_FORBIDS_WEIGHTS,
-        # Source companions (cyclic/selector/separator/sourceScripted/weightColumn require source)
-        *SOURCE_COMPANIONS_WITH_CYCLIC,
-        # Two-tier generation-mode facts + type valid-values (enforced by in-model validators,
-        # which read these same constants; their messages are dynamic, so message=None here)
-        _GENERATION_REQUIRED,
-        _GENERATION_EXCLUSIVE,
-        _TYPE_VALUES,
-    )
+    __constraints__: ClassVar[tuple[Constraint, ...]] = element_constraints(EL_KEY)
     model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
 
     name: str = Field(
@@ -207,8 +153,8 @@ class KeyModel(BaseModel):
     unique: bool | None = Field(
         None,
         description="Emit each picked value at most once (distinct selection without replacement). "
-        "Requires 'values' or 'source', cannot combine with 'weights', and only combines with the "
-        "default random distribution.",
+        "Requires inline 'values' and cannot combine with key 'source', 'weights', or the key's "
+        "numeric-range 'distribution'.",
         examples=[True, False],
     )
     script: str | None = Field(
@@ -340,11 +286,6 @@ class KeyModel(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def validate_unique_constraints(cls, values: dict):
-        return ModelUtil.check_unique_constraints(values)
-
-    @model_validator(mode="before")
-    @classmethod
     def validate_additional_source_attributes(cls, values: dict):
         return ModelUtil.check_valid_additional_source_attributes(values=values)
 
@@ -356,24 +297,29 @@ class KeyModel(BaseModel):
         error to fail loudly on, never to silently ignore."""
         if ATTR_DISTRIBUTION not in values:
             return values
-        from datamimic_ce.enums.distribution_enums import NumberDistribution
-
+        ModelUtil.check_constraints(
+            values,
+            (
+                KEY_DISTRIBUTION_REQUIRES_TYPE,
+                KEY_DISTRIBUTION_REQUIRES_RANGE,
+                KEY_DISTRIBUTION_NUMERIC_TYPE,
+            ),
+        )
         value = values[ATTR_DISTRIBUTION]
-        valid = sorted(member.value for member in NumberDistribution)
+        valid = sorted(resolved_values(KEY_DISTRIBUTION_VALUES))
         if value not in valid:
             raise ValueError(
                 f"unknown distribution '{value}' on <key> - numeric range keys support: {', '.join(valid)}"
             )
-        if values.get(ATTR_TYPE) not in (DATA_TYPE_INT, DATA_TYPE_FLOAT, DATA_TYPE_DECIMAL):
-            raise ValueError(
-                f"'distribution' on a <key> shapes a numeric range and needs type=\"int\"/\"float\"/\"decimal\" "
-                f"with min/max, but got type=\"{values.get(ATTR_TYPE)}\""
-            )
-        if ATTR_MIN not in values and ATTR_MAX not in values:
-            raise ValueError(
-                "'distribution' on a <key> needs a range to shape - add min= and/or max="
-            )
         return values
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_unique_constraints(cls, values: dict):
+        # Pydantic runs before-validators in reverse declaration order. Keep this
+        # below numeric distribution validation so the declared unique policy wins
+        # for unique+distribution instead of leaking an unrelated range error.
+        return ModelUtil.check_unique_constraints(values, KEY_UNIQUE_CONSTRAINTS)
 
     @model_validator(mode="before")
     @classmethod
@@ -385,12 +331,12 @@ class KeyModel(BaseModel):
         message construction stays here (it interpolates the clashing modes).
         """
         key_set = set(values.keys())
-        generator_option = set(_GENERATION_REQUIRED.attrs)
+        generator_option = set(KEY_GENERATION_REQUIRED.attrs)
         # Check if at least one of following attribute is existed to generate <key> value
         if all(key not in key_set for key in generator_option):
             raise ValueError(f"Must defined one of following attributes {generator_option}")
         # Check if at most one generation mode is defined
-        generation_mode = set(_GENERATION_EXCLUSIVE.attrs)
+        generation_mode = set(KEY_GENERATION_EXCLUSIVE.attrs)
         first_mode = None
         for mode in generation_mode:
             if mode in key_set:
@@ -429,13 +375,13 @@ class KeyModel(BaseModel):
     @classmethod
     def validate_data_type(cls, value):
         """
-        Validate attribute "type" — reads the declared _TYPE_VALUES fact.
+        Validate attribute "type" — reads the central KEY_TYPE_VALUES fact.
         :param value:
         :return:
         """
         return ModelUtil.check_valid_data_value(
             value=value,
-            valid_values=resolved_values(_TYPE_VALUES),
+            valid_values=resolved_values(KEY_TYPE_VALUES),
         )
 
     @field_validator("name")

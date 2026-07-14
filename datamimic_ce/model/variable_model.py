@@ -42,84 +42,23 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_WEIGHT_COLUMN,
     ATTR_WEIGHTS,
 )
+from datamimic_ce.constants.element_constants import EL_VARIABLE
 from datamimic_ce.model.constraints import (
-    DEFAULT_VALUE_REQUIRES_SCRIPT,
-    GENERATOR_ENTITY_ADDONS,
-    SOURCE_COMPANIONS_WITH_CYCLIC,
-    UNIQUE_FORBIDS_WEIGHTS,
-    UNIQUE_REQUIRES_POOL,
-    WEIGHTS_REQUIRE_VALUES,
+    SOURCE_DISTRIBUTION_VALUES,
+    VARIABLE_GENERATION_EXCLUSIVE,
+    VARIABLE_GENERATION_REQUIRED,
+    VARIABLE_STORAGE_VALUES,
     Constraint,
-    MutuallyExclusive,
-    RequiredOneOf,
-    Requires,
-    ValidValues,
     constraints_schema_extra,
+    element_constraints,
+    resolved_values,
 )
 from datamimic_ce.model.model_util import ModelUtil
-
-# Declared facts (SPOT): each set lives ONCE here, consumed by BOTH __constraints__
-# and the enforcing validator bodies. Dynamic messages (interpolating the clashing
-# attrs/value) stay in the validators, so those facts carry message=None.
-_GENERATION_REQUIRED = RequiredOneOf(
-    frozenset((
-        ATTR_SOURCE,
-        ATTR_ENTITY,
-        ATTR_SCRIPT,
-        ATTR_GENERATOR,
-        ATTR_VALUES,
-        ATTR_CONSTANT,
-        ATTR_TYPE,
-        ATTR_PATTERN,
-        ATTR_STRING,
-    )),
-)
-# 8 members; type is NOT mutually exclusive with the others.
-_GENERATION_EXCLUSIVE = MutuallyExclusive(
-    frozenset((
-        ATTR_SOURCE,
-        ATTR_ENTITY,
-        ATTR_SCRIPT,
-        ATTR_GENERATOR,
-        ATTR_VALUES,
-        ATTR_CONSTANT,
-        ATTR_PATTERN,
-        ATTR_STRING,
-    )),
-)
-# Tuple (not frozenset) so the validator's message renders the options in the
-# original, stable 'value'/'data'/'iterator' order.
-_STORAGE_VALUES = ValidValues(ATTR_STORAGE, ("value", "data", "iterator"))
-# C-1 fix: iterationSelector requires source (lint_only, per plan A3-prep;
-# the engine executor skips lint_only facts, so no engine behavior change).
-_ITERATION_SELECTOR_REQUIRES_SOURCE = Requires(
-    ATTR_ITERATION_SELECTOR,
-    frozenset((ATTR_SOURCE,)),
-    lint_only=True,
-    message="'iterationSelector' requires 'source'",
-)
 
 
 class VariableModel(BaseModel):
     # Declared cross-field constraints
-    __constraints__: ClassVar[tuple[Constraint, ...]] = (
-        # Shared constraints
-        WEIGHTS_REQUIRE_VALUES,
-        UNIQUE_REQUIRES_POOL,
-        UNIQUE_FORBIDS_WEIGHTS,
-        # Source companions
-        *SOURCE_COMPANIONS_WITH_CYCLIC,
-        # Generator/entity addon requirements
-        *GENERATOR_ENTITY_ADDONS,
-        # Default value requires script
-        DEFAULT_VALUE_REQUIRES_SCRIPT,
-        # Two-tier generation-mode facts + storage valid-values (enforced by in-model
-        # validators, which read these same constants; dynamic messages stay there)
-        _GENERATION_REQUIRED,
-        _GENERATION_EXCLUSIVE,
-        _STORAGE_VALUES,
-        _ITERATION_SELECTOR_REQUIRES_SOURCE,
-    )
+    __constraints__: ClassVar[tuple[Constraint, ...]] = element_constraints(EL_VARIABLE)
     model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
 
     name: str = Field(
@@ -183,7 +122,9 @@ class VariableModel(BaseModel):
     weight_column: str | None = Field(
         None,
         alias=ATTR_WEIGHT_COLUMN,
-        description="Weight column for distribution='weighted' source generation.",
+        description="Weight column in a '.wgt.ent.csv' source. Rows are sampled with replacement "
+        "according to that column; this is a legacy weighted-entity source format, not a "
+        "distribution='weighted' mode.",
         examples=["weight", "population"],
     )
     source_script: bool | None = Field(
@@ -426,12 +367,12 @@ class VariableModel(BaseModel):
         message construction stays here (it interpolates the clashing modes).
         """
         key_set = set(values.keys())
-        generator_option = set(_GENERATION_REQUIRED.attrs)
+        generator_option = set(VARIABLE_GENERATION_REQUIRED.attrs)
         # Check if at least one of following attribute is existed to generate <variable> value
         if all(key not in key_set for key in generator_option):
             raise ValueError(f"Must defined one of following attributes {generator_option}")
         # Check if at most one generation mode is defined
-        generation_mode = set(_GENERATION_EXCLUSIVE.attrs)
+        generation_mode = set(VARIABLE_GENERATION_EXCLUSIVE.attrs)
         # Check if only one generation mode is defined
         first_mode = None
         for mode in generation_mode:
@@ -488,8 +429,8 @@ class VariableModel(BaseModel):
         # Reads the declared _STORAGE_VALUES fact; the message interpolates the
         # rejected value, so it is constructed here (options rendered in the
         # fact's declared tuple order).
-        if value is not None and value not in _STORAGE_VALUES.values:
-            options = "/".join(f"'{v}'" for v in _STORAGE_VALUES.values)
+        if value is not None and value not in VARIABLE_STORAGE_VALUES.values:
+            options = "/".join(f"'{v}'" for v in VARIABLE_STORAGE_VALUES.values)
             raise ValueError(f"'{ATTR_STORAGE}' must be one of {options}, got '{value}'")
         return value
 
@@ -503,5 +444,9 @@ class VariableModel(BaseModel):
         """
         return ModelUtil.check_valid_pattern(value)
 
-    # NOTE: no distribution validator here — <variable> accepts random/ordered/cumulated,
-    # which VariableStatement enforces via SourceDistribution.coerce at construction.
+    @field_validator("distribution")
+    @classmethod
+    def validate_distribution(cls, value: str | None) -> str | None:
+        if value is not None:
+            ModelUtil.check_valid_data_value(value, set(resolved_values(SOURCE_DISTRIBUTION_VALUES)))
+        return value

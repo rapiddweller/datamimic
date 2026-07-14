@@ -8,7 +8,17 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
-from datamimic_ce.authoring.contracts import ScaffoldRequest
+from datamimic_ce.authoring.contracts import (
+    MAX_DIAGNOSTICS,
+    MAX_DRY_RUN_COUNT,
+    MAX_SAMPLE_ROWS,
+    MAX_TIMEOUT_SECONDS,
+    MIN_DIAGNOSTICS,
+    MIN_DRY_RUN_COUNT,
+    MIN_SAMPLE_ROWS,
+    MIN_TIMEOUT_SECONDS,
+    ScaffoldRequest,
+)
 from datamimic_ce.domains.common.locale_registry import dataset_code_for_locale
 from datamimic_ce.domains.locales import SUPPORTED_DATASET_CODES
 from datamimic_ce.domains.utils.dataset_path import dataset_path
@@ -166,7 +176,7 @@ class CheckArgs(BaseModel):
     xml: str | None = Field(None, description="Inline descriptor XML (preferred for agents)")
     path: str | None = Field(None, description="Path to a descriptor file on the server's filesystem")
     response_format: str = Field("concise", pattern="^(concise|detailed)$")
-    max_diagnostics: int = Field(50, ge=1, le=200)
+    max_diagnostics: int = Field(50, ge=MIN_DIAGNOSTICS, le=MAX_DIAGNOSTICS)
 
     @model_validator(mode="after")
     def _exactly_one_input(self) -> CheckArgs:
@@ -180,8 +190,13 @@ class RunArgs(BaseModel):
 
     xml: str | None = Field(None, description="Inline descriptor XML (preferred for agents)")
     path: str | None = Field(None, description="Path to a descriptor file on the server's filesystem")
-    sample_rows: int = Field(5, ge=1, le=50)
-    max_count: int = Field(10, ge=1, le=1000, description="Per top-level <generate> record cap")
+    sample_rows: int = Field(5, ge=MIN_SAMPLE_ROWS, le=MAX_SAMPLE_ROWS)
+    max_count: int = Field(
+        10,
+        ge=MIN_DRY_RUN_COUNT,
+        le=MAX_DRY_RUN_COUNT,
+        description="Per top-level <generate> record cap",
+    )
     allow_side_effects: bool = Field(
         False, description="Keep file/DB targets and allow <execute> (default: neutralized)"
     )
@@ -190,7 +205,7 @@ class RunArgs(BaseModel):
         description="Also push captured rows through the stripped FILE exporters in a temp dir "
         "(no artifacts) to catch export-time serialization crashes",
     )
-    timeout_seconds: int = Field(30, ge=1, le=120)
+    timeout_seconds: int = Field(30, ge=MIN_TIMEOUT_SECONDS, le=MAX_TIMEOUT_SECONDS)
     response_format: str = Field("concise", pattern="^(concise|detailed)$")
 
     @model_validator(mode="after")

@@ -5,7 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from typing import ClassVar
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import (
     ATTR_CYCLIC,
@@ -16,11 +18,21 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_SOURCE_TYPE,
     ATTR_UNIQUE,
 )
-from datamimic_ce.enums.distribution_enums import SourceDistribution
+from datamimic_ce.constants.element_constants import EL_REFERENCE
+from datamimic_ce.model.constraints import (
+    SOURCE_DISTRIBUTION_VALUES,
+    Constraint,
+    constraints_schema_extra,
+    element_constraints,
+    resolved_values,
+)
 from datamimic_ce.model.model_util import ModelUtil
 
 
 class ReferenceModel(BaseModel):
+    __constraints__: ClassVar[tuple[Constraint, ...]] = element_constraints(EL_REFERENCE)
+    model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
+
     name: str = Field(
         ...,
         description="Field name in the generated record that receives the reference value. Also "
@@ -88,14 +100,13 @@ class ReferenceModel(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def check_unique_constraints(cls, values: dict):
-        # unique implies distinct random order: incompatible with cyclic/ordered/cumulated.
-        return ModelUtil.check_unique_constraints(values=values)
+        return ModelUtil.check_unique_constraints(values, cls.__constraints__)
 
     @field_validator("distribution")
     @classmethod
     def validate_distribution(cls, value):
         if value is not None:
-            SourceDistribution.coerce(value)  # unknown value -> ValueError at parse time
+            ModelUtil.check_valid_data_value(value, set(resolved_values(SOURCE_DISTRIBUTION_VALUES)))
         return value
 
     @field_validator("name", "source", "source_type")

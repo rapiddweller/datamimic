@@ -17,6 +17,16 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from datamimic_ce.authoring.contracts import (
+    MAX_DIAGNOSTICS,
+    MAX_DRY_RUN_COUNT,
+    MAX_SAMPLE_ROWS,
+    MAX_TIMEOUT_SECONDS,
+    MIN_DIAGNOSTICS,
+    MIN_DRY_RUN_COUNT,
+    MIN_SAMPLE_ROWS,
+    MIN_TIMEOUT_SECONDS,
+)
 from datamimic_ce.datamimic import DataMimic
 from datamimic_ce.logger import logger
 from datamimic_ce.utils.demo_util import demo_autocomplete, handle_demo
@@ -68,9 +78,15 @@ TEST_MODE_OPTION = typer.Option(False, "--test-mode", help="Run in test mode")
 DRY_RUN_OPTION = typer.Option(True, "--dry-run/--no-dry-run", help="Dry-run the rendered descriptor (default: true)")
 SCAFFOLD_FORMAT_OPTION = typer.Option("text", "--format", "-f", help="text | json")
 SCAFFOLD_MAX_COUNT_OPTION = typer.Option(
-    10, "--max-count", help="Maximum count per <generate> (nested generates too, for dry-run)"
+    10,
+    "--max-count",
+    help=f"Maximum count per <generate> ({MIN_DRY_RUN_COUNT}-{MAX_DRY_RUN_COUNT}; nested too)",
 )
-SCAFFOLD_SAMPLE_ROWS_OPTION = typer.Option(5, "--sample-rows", help="Maximum sample rows per product (for dry-run)")
+SCAFFOLD_SAMPLE_ROWS_OPTION = typer.Option(
+    5,
+    "--sample-rows",
+    help=f"Maximum sample rows per product ({MIN_SAMPLE_ROWS}-{MAX_SAMPLE_ROWS})",
+)
 
 # Environment variables
 DATAMIMIC_CONFIG = os.getenv("DATAMIMIC_CONFIG")
@@ -106,19 +122,43 @@ def info():
     console.print(info_table)
 
 
+def _emit_error(output_format: str, message: str, exit_code: int = 2) -> None:
+    """Shared error output contract: text for invalid format, JSON when format is valid but error occurred."""
+    if output_format not in ("text", "json"):
+        # Invalid format itself — emit plain text + exit code
+        typer.echo(f"Error: Invalid format '{output_format}'. Expected: text | json")
+        raise typer.Exit(exit_code)
+
+    if output_format == "json":
+        typer.echo(json.dumps({"ok": False, "error": message}, indent=2, default=str))
+    else:
+        typer.echo(f"Error: {message}")
+    raise typer.Exit(exit_code)
+
+
 def _lint(descriptor_path: Path, output_format: str, fail_on: str, max_diagnostics: int) -> None:
     """Shared implementation for `lint` and its alias `validate` (ESLint-style exit codes:
     0 = clean at/above the threshold, 1 = findings, 2 = file/internal error)."""
     from datamimic_ce.authoring import Severity, lint_descriptor
+    # Validate format first (before file check, so unknown format is reported immediately)
+    if output_format not in ("text", "json"):
+        _emit_error(output_format, f"Invalid format '{output_format}'. Expected: text | json", exit_code=2)
+    if fail_on not in ("error", "warning"):
+        _emit_error(output_format, f"Invalid fail-on '{fail_on}'. Expected: error | warning", exit_code=2)
+    if not MIN_DIAGNOSTICS <= max_diagnostics <= MAX_DIAGNOSTICS:
+        _emit_error(
+            output_format,
+            f"Invalid max-diagnostics. Expected an integer from {MIN_DIAGNOSTICS} to {MAX_DIAGNOSTICS}",
+            exit_code=2,
+        )
 
     if not descriptor_path.is_file():
-        typer.echo(f"Error: File not found: {descriptor_path}")
-        raise typer.Exit(2)
+        _emit_error(output_format, f"File not found: {descriptor_path}", exit_code=2)
+
     try:
         result = lint_descriptor(descriptor_path, max_diagnostics=max_diagnostics)
     except Exception as e:  # unexpected linter crash — distinct from findings
-        typer.echo(f"Lint error: {e}")
-        raise typer.Exit(2) from e
+        _emit_error(output_format, f"Lint error: {e}", exit_code=2)
 
     if output_format == "json":
         typer.echo(result.model_dump_json(indent=2))
@@ -185,22 +225,46 @@ def _dry_run(
     """Shared implementation for `dry-run` command (exit codes: 0 = ok, 1 = dry-run failed, 2 = file/internal error)."""
     from datamimic_ce.authoring.dryrun import dry_run
 
+    # Validate format first (before file check, so unknown format is reported immediately)
+    if output_format not in ("text", "json"):
+        _emit_error(output_format, f"Invalid format '{output_format}'. Expected: text | json", exit_code=2)
+    if not MIN_DRY_RUN_COUNT <= max_count <= MAX_DRY_RUN_COUNT:
+        _emit_error(
+            output_format,
+            f"Invalid max-count. Expected an integer from {MIN_DRY_RUN_COUNT} to {MAX_DRY_RUN_COUNT}",
+            exit_code=2,
+        )
+    if not MIN_SAMPLE_ROWS <= sample_rows <= MAX_SAMPLE_ROWS:
+        _emit_error(
+            output_format,
+            f"Invalid sample-rows. Expected an integer from {MIN_SAMPLE_ROWS} to {MAX_SAMPLE_ROWS}",
+            exit_code=2,
+        )
+    if not MIN_TIMEOUT_SECONDS <= timeout_seconds <= MAX_TIMEOUT_SECONDS:
+        _emit_error(
+            output_format,
+            f"Invalid timeout. Expected an integer from {MIN_TIMEOUT_SECONDS} to {MAX_TIMEOUT_SECONDS}",
+            exit_code=2,
+        )
+
     if not descriptor_path.is_file():
-        typer.echo(f"Error: File not found: {descriptor_path}")
-        raise typer.Exit(2)
+        _emit_error(output_format, f"File not found: {descriptor_path}", exit_code=2)
 
     try:
-        result = dry_run(
-            descriptor_path,
-            max_count=max_count,
-            sample_rows=sample_rows,
-            allow_side_effects=allow_side_effects,
-            timeout_seconds=timeout_seconds,
-            smoke_export=smoke_export,
-        )
+        with contextlib.ExitStack() as stack:
+            if output_format == "json":
+                devnull = stack.enter_context(open(os.devnull, "w"))
+                stack.enter_context(contextlib.redirect_stderr(devnull))
+            result = dry_run(
+                descriptor_path,
+                max_count=max_count,
+                sample_rows=sample_rows,
+                allow_side_effects=allow_side_effects,
+                timeout_seconds=timeout_seconds,
+                smoke_export=smoke_export,
+            )
     except Exception as e:  # unexpected dry-run crash — distinct from findings
-        typer.echo(f"Dry-run error: {e}")
-        raise typer.Exit(2) from e
+        _emit_error(output_format, f"Dry-run error: {e}", exit_code=2)
 
     if output_format == "json":
         typer.echo(result.model_dump_json(indent=2))
@@ -235,14 +299,26 @@ def _dry_run(
 @app.command("dry-run", help="Safely dry-run a descriptor: lint gate, capped counts, neutralized targets, sample rows.")
 def dry_run_cmd(
     descriptor_path: Path = DESCRIPTOR_PATH,
-    max_count: int = typer.Option(10, "--max-count", help="Maximum count per generate statement"),
-    sample_rows: int = typer.Option(5, "--sample-rows", help="Maximum sample rows per product"),
+    max_count: int = typer.Option(
+        10,
+        "--max-count",
+        help=f"Maximum count per generate statement ({MIN_DRY_RUN_COUNT}-{MAX_DRY_RUN_COUNT})",
+    ),
+    sample_rows: int = typer.Option(
+        5,
+        "--sample-rows",
+        help=f"Maximum sample rows per product ({MIN_SAMPLE_ROWS}-{MAX_SAMPLE_ROWS})",
+    ),
     allow_side_effects: bool = typer.Option(
         False,
         "--allow-side-effects",
         help="Keep file/DB targets and allow <execute> statements (default: neutralized - no writes)",
     ),
-    timeout: int = typer.Option(30, "--timeout", help="Timeout in seconds"),
+    timeout: int = typer.Option(
+        30,
+        "--timeout",
+        help=f"Timeout in seconds ({MIN_TIMEOUT_SECONDS}-{MAX_TIMEOUT_SECONDS})",
+    ),
     smoke_export: bool = typer.Option(False, "--smoke-export", help="Test file exporters with captured rows"),
     output_format: str = typer.Option("text", "--format", "-f", help="text | json"),
 ):
@@ -359,6 +435,8 @@ def _scaffold(
             spec_text = spec_path_obj.read_text(encoding="utf-8")
 
         spec_dict = json.loads(spec_text)
+    except typer.Exit:
+        raise
     except json.JSONDecodeError as e:
         _fail(2, f"Invalid JSON: {e}")
     except Exception as e:
@@ -412,20 +490,20 @@ def scaffold(
 @app.command(
     "reference",
     help="Look up DATAMIMIC DSL knowledge: overview, element, generators, entities, context, "
-    "timeseries, targets, distributions, converters, recipes, recipe.",
+    "timeseries, targets, distributions, converters, scaffold, recipes, recipe.",
 )
 def reference_cmd(
     topic: str = typer.Argument(
         ...,
         help="overview | element | generators | entities | context | timeseries | targets | "
-        "distributions | converters | recipes | recipe",
+        "distributions | converters | scaffold | recipes | recipe",
     ),
     name: str | None = typer.Argument(None, help="Optional name within topic (element tag, generator, recipe id)"),
 ):
     """Query the DATAMIMIC DSL reference by topic and optional name.
 
     Topics: overview, element, generators, entities, context, timeseries, targets,
-    distributions, converters, recipes, recipe.
+    distributions, converters, scaffold, recipes, recipe.
     """
     from datamimic_ce.authoring.reference import reference
 

@@ -253,3 +253,25 @@ def test_constraint_three_surface_consistency_all_or_none() -> None:
         f"AllOrNone attrs mismatch across surfaces: "
         f"json_schema={attrs_a}, manifest={attrs_b}, prose={attrs_c}"
     )
+
+
+def test_reference_unique_constraints_reach_capabilities_and_reference() -> None:
+    from datamimic_ce.authoring.reference import capabilities_manifest, element_reference
+
+    constraints = capabilities_manifest()["elements"]["reference"]["constraints"]
+    assert any(
+        fact["kind"] == "forbids"
+        and fact["attr"] == "unique"
+        and fact["excludes"] == ["cyclic"]
+        for fact in constraints
+    )
+    assert any(
+        fact["kind"] == "allowed_values_when"
+        and fact["when_attr"] == "unique"
+        and fact["allowed"] == ["random"]
+        for fact in constraints
+    )
+
+    prose = element_reference("reference")
+    assert "unique cannot combine with: cyclic" in prose
+    assert "distribution must be one of: random (when unique is true)" in prose

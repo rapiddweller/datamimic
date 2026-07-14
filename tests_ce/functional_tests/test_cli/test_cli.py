@@ -27,6 +27,18 @@ class TestCLI:
         assert "Config File" in result.output
         assert "Log Level" in result.output
 
+    def test_capabilities_projects_central_alias_rules(self):
+        from datamimic_ce.constants.element_constants import EL_ITERATE
+        from datamimic_ce.model.constraints import element_constraints, serialize_constraints
+
+        result = runner.invoke(app, ["capabilities"])
+
+        assert result.exit_code == 0
+        payload = json.loads(result.output)
+        assert payload["elements"][EL_ITERATE]["constraints"] == serialize_constraints(
+            element_constraints(EL_ITERATE)
+        )
+
     def test_validate_descriptor_failure(self, tmp_path, monkeypatch):
         """A broken descriptor lints with findings (validate is an alias of lint): exit 1."""
         monkeypatch.chdir(tmp_path)
@@ -414,3 +426,48 @@ class TestCLI:
         output_json = json.loads(result.output)
         assert output_json["ok"] is True
         assert "<generate" in output_json["xml"]
+
+    # Tests for Defect 4: scaffold missing-file with --format json emits single JSON document
+    def test_scaffold_missing_file_json_single_document(self):
+        """Missing spec file with --format json exits with code 2 and emits exactly one parseable JSON document."""
+        result = runner.invoke(app, ["scaffold", "nonexistent.json", "--format", "json"])
+        assert result.exit_code == 2
+        # Verify output is exactly one parseable JSON document
+        output_json = json.loads(result.output)
+        assert output_json["ok"] is False
+        assert "error" in output_json
+        assert "File not found" in output_json["error"]
+
+    # Tests for Defect 5: dry-run format validation and JSON error paths
+    def test_dry_run_invalid_format(self):
+        """dry-run with unknown format exits with code 2 and plain text error."""
+        result = runner.invoke(app, ["dry-run", "test.xml", "--format", "banana"])
+        assert result.exit_code == 2
+        assert "Invalid format 'banana'" in result.output
+        assert "Expected: text | json" in result.output
+        # Output should be text, not JSON (format validation happens before any engine activity)
+
+    def test_dry_run_missing_file_json(self, tmp_path, monkeypatch):
+        """dry-run missing file with --format json exits with code 2 and emits single parseable JSON."""
+        result = runner.invoke(app, ["dry-run", "nonexistent.xml", "--format", "json"])
+        assert result.exit_code == 2
+        output_json = json.loads(result.output)
+        assert output_json["ok"] is False
+        assert "error" in output_json
+        assert "File not found" in output_json["error"]
+
+    def test_lint_invalid_format(self):
+        """lint with unknown format exits with code 2 and plain text error."""
+        result = runner.invoke(app, ["lint", "test.xml", "--format", "banana"])
+        assert result.exit_code == 2
+        assert "Invalid format 'banana'" in result.output
+        assert "Expected: text | json" in result.output
+
+    def test_lint_missing_file_json(self):
+        """lint missing file with --format json exits with code 2 and emits single parseable JSON."""
+        result = runner.invoke(app, ["lint", "nonexistent.xml", "--format", "json"])
+        assert result.exit_code == 2
+        output_json = json.loads(result.output)
+        assert output_json["ok"] is False
+        assert "error" in output_json
+        assert "File not found" in output_json["error"]

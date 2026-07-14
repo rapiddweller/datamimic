@@ -9,43 +9,21 @@ from typing import Any, ClassVar
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import ATTR_COUNT, ATTR_NAME, ATTR_SCRIPT, ATTR_TYPE
-from datamimic_ce.constants.data_type_constants import (
-    DATA_TYPE_BOOL,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
-    DATA_TYPE_LITERAL,
-    DATA_TYPE_STRING,
-)
+from datamimic_ce.constants.element_constants import EL_ARRAY
 from datamimic_ce.model.constraints import (
+    ARRAY_TYPE_VALUES,
     Constraint,
-    ValidValues,
     constraints_schema_extra,
+    element_constraints,
     resolved_values,
 )
 from datamimic_ce.model.model_util import ModelUtil
 
-# Declared fact (SPOT): the type literal lives ONCE here; ALLOWED_ARRAY_TYPES is an
-# alias derived from it, and the enforcing field_validator reads the alias. Message
-# is dynamic (interpolates the rejected value), so the fact carries message=None.
-_ARRAY_TYPE_VALUES = ValidValues(
-    ATTR_TYPE,
-    frozenset((
-        DATA_TYPE_STRING,
-        DATA_TYPE_INT,
-        DATA_TYPE_BOOL,
-        DATA_TYPE_FLOAT,
-        DATA_TYPE_LITERAL,
-    )),
-)
-ALLOWED_ARRAY_TYPES: frozenset[str] = resolved_values(_ARRAY_TYPE_VALUES)
+ALLOWED_ARRAY_TYPES: frozenset[str] = resolved_values(ARRAY_TYPE_VALUES)
 
 
 class ArrayModel(BaseModel):
-    # Declared cross-field constraints
-    __constraints__: ClassVar[tuple[Constraint, ...]] = (
-        # Same object the type field_validator reads (via the ALLOWED_ARRAY_TYPES alias)
-        _ARRAY_TYPE_VALUES,
-    )
+    __constraints__: ClassVar[tuple[Constraint, ...]] = element_constraints(EL_ARRAY)
     model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
 
     name: str = Field(..., description="Name of the array; becomes the field name in the generated record.")
@@ -84,34 +62,8 @@ class ArrayModel(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def check_script_mode(cls, values: dict) -> dict:
-        """
-        Check attribute definition
-        When 'script' field is not defined then 'type' and 'count' should be defined and vice versa
-        :param values:
-        :return:
-        """
-        key_set = set(values.keys())
-        if values.get(ATTR_TYPE) == DATA_TYPE_LITERAL:
-            if ATTR_SCRIPT in key_set:
-                raise ValueError(f"'{ATTR_SCRIPT}' must not be defined with {ATTR_TYPE} '{DATA_TYPE_LITERAL}'")
-            if ATTR_COUNT in key_set:
-                raise ValueError(f"'{ATTR_COUNT}' must not be defined with {ATTR_TYPE} '{DATA_TYPE_LITERAL}'")
-            return values
-        if ATTR_SCRIPT in key_set:
-            if ATTR_COUNT in key_set or ATTR_TYPE in key_set:
-                raise ValueError(f"'{ATTR_COUNT}' and '{ATTR_TYPE}' must not be defined with {ATTR_SCRIPT}")
-            return values
-        else:
-            if ATTR_COUNT not in key_set:
-                raise ValueError(
-                    f"{ATTR_COUNT} and {ATTR_TYPE} are required when {ATTR_SCRIPT} not defined, "
-                    f"but missing {ATTR_COUNT}"
-                )
-            elif ATTR_TYPE not in key_set:
-                raise ValueError(
-                    f"{ATTR_COUNT} and {ATTR_TYPE} are required when {ATTR_SCRIPT} not defined, but missing {ATTR_TYPE}"
-                )
-            return values
+        """Enforce the centrally declared array generation modes."""
+        return ModelUtil.check_constraints(values, cls.__constraints__)
 
     @field_validator("type")
     @classmethod

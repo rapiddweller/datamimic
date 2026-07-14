@@ -83,7 +83,7 @@ def test_dry_run_maps_runtime_error_to_dm002() -> None:
 def test_dm004_flags_zero_row_output() -> None:
     # An empty/mis-wired descriptor runs clean but generates nothing — surface it.
     empty = dry_run_source("<setup></setup>")
-    assert empty.ok  # did not crash
+    assert not empty.ok  # no crash, but no useful output either
     assert [d.rule for d in empty.diagnostics] == ["DM004"]
     assert empty.diagnostics[0].severity.value == "warning"
 

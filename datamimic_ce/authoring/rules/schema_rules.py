@@ -25,23 +25,39 @@ from datamimic_ce.constants.element_constants import (
     EL_SETUP,
     EL_VARIABLE,
 )
-from datamimic_ce.enums.distribution_enums import NumberDistribution, SourceDistribution
-from datamimic_ce.model.constraints import resolved_values
-from datamimic_ce.model.key_model import _TYPE_VALUES as KEY_TYPE_VALUES
+from datamimic_ce.model.constraints import (
+    KEY_DISTRIBUTION_VALUES,
+    ValidValues,
+    resolved_values,
+)
 
-# Key/ID valid scalar types (declared in KeyModel's _TYPE_VALUES constraint, 6 types)
-_KEY_ID_DATA_TYPES = resolved_values(KEY_TYPE_VALUES)
-# NestedKey/Variable: declare no type enforcement at parse today (per plan R5).
-# Extend lint set to include structural markers (list/dict) in addition to scalar core.
-# This is a lint-only extension; future engine-side enforcement is out of scope.
-_NESTEDKEY_VARIABLE_DATA_TYPES = _KEY_ID_DATA_TYPES | {DATA_TYPE_LIST, DATA_TYPE_DICT}
-_DISTRIBUTIONS = {member.value for member in SourceDistribution}
-_NUMBER_DISTRIBUTIONS = {member.value for member in NumberDistribution}
-# <key>/<id> alias to KeyModel (schema.py), whose distribution= is ALWAYS a NumberDistribution
-# (numeric-range sequence, key_model.py's validate_distribution_requires_numeric_range) -- never
-# the SourceDistribution used by <variable>/<generate>/<nestedKey> to pick rows from a source.
-_NUMBER_RANGE_TAGS = (EL_KEY, EL_ID)
 _DATE_TYPE_GUESSES = {"datetime", "date", "timestamp", "time"}
+
+
+def _key_id_data_types(ctx: LintContext) -> frozenset[str]:
+    """<key>/<id> valid scalar types, read from KeyModel's declared ValidValues(type=) fact
+    via the schema index (the registered source — no private model-constant import)."""
+    schema = ctx.schemas.get(EL_KEY)
+    if schema is not None:
+        for fact in schema.constraints:
+            if isinstance(fact, ValidValues) and fact.attr == "type":
+                return resolved_values(fact)
+    return frozenset()
+
+
+def _distribution_fact(ctx: LintContext, tag: str) -> ValidValues | None:
+    """Read a tag's distribution vocabulary from its central model contract."""
+    schema = ctx.schemas.get(tag)
+    if schema is None:
+        return None
+    return next(
+        (
+            fact
+            for fact in schema.constraints
+            if isinstance(fact, ValidValues) and fact.attr == "distribution"
+        ),
+        None,
+    )
 
 
 class RootIsSetup(Rule):
@@ -169,26 +185,33 @@ class InvalidAttributeValue(Rule):
     severity = Severity.ERROR
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
+        key_id_data_types = _key_id_data_types(ctx)
+        # NestedKey/Variable: declare no type enforcement at parse today (per plan R5).
+        # Extend lint set to include structural markers (list/dict) in addition to scalar
+        # core. This is a lint-only extension; engine-side enforcement is out of scope.
+        nestedkey_variable_data_types = key_id_data_types | {DATA_TYPE_LIST, DATA_TYPE_DICT}
         for element in ctx.iter():
             tag = str(element.tag)
             distribution = element.get("distribution")
             if distribution is not None:
-                if tag in _NUMBER_RANGE_TAGS:
-                    if distribution not in _NUMBER_DISTRIBUTIONS:
-                        yield ctx.diag(
-                            type(self),
-                            element,
-                            f"Invalid distribution '{distribution}' on <{tag}>.",
+                distribution_fact = _distribution_fact(ctx, tag)
+                valid_distributions = (
+                    resolved_values(distribution_fact) if distribution_fact is not None else frozenset()
+                )
+                if distribution_fact is not None and distribution not in valid_distributions:
+                    if distribution_fact is KEY_DISTRIBUTION_VALUES:
+                        hint = (
                             f"<{tag}>'s distribution shapes a numeric range (needs "
                             f'type="int"/"float"/"decimal" with min=/max=). Use one of: '
-                            f"{', '.join(sorted(_NUMBER_DISTRIBUTIONS))}.",
+                            f"{', '.join(sorted(valid_distributions))}."
                         )
-                elif distribution not in _DISTRIBUTIONS:
+                    else:
+                        hint = f"Use one of: {', '.join(sorted(valid_distributions))}."
                     yield ctx.diag(
                         type(self),
                         element,
-                        f"Invalid distribution '{distribution}'.",
-                        f"Use one of: {', '.join(sorted(_DISTRIBUTIONS))}.",
+                        f"Invalid distribution '{distribution}' on <{tag}>.",
+                        hint,
                     )
             # On <variable>/<nestedKey> WITH a source=, type= is not a scalar cast — it's the
             # sourceEntity->type->name physical-entity fallback (StatementUtil.resolve_source_entity,
@@ -198,7 +221,7 @@ class InvalidAttributeValue(Rule):
             reads_source = tag in (EL_VARIABLE, EL_NESTED_KEY) and element.get("source")
             if tag in (EL_KEY, EL_ID, EL_NESTED_KEY, EL_VARIABLE) and not reads_source:
                 # Use the appropriate type set per tag (C-2 fix: key/id accept only 6 scalar types)
-                valid_types = _KEY_ID_DATA_TYPES if tag in (EL_KEY, EL_ID) else _NESTEDKEY_VARIABLE_DATA_TYPES
+                valid_types = key_id_data_types if tag in (EL_KEY, EL_ID) else nestedkey_variable_data_types
                 type_value = element.get("type")
                 if type_value is not None and type_value not in valid_types:
                     if type_value.lower() in _DATE_TYPE_GUESSES:

@@ -289,3 +289,77 @@ class TestScaffoldParity:
 
         # Should have normalization notes for kind aliases
         assert len(result.normalization_notes) > 0
+
+    def test_source_backed_unique_insufficient_range_service(self):
+        """Source-backed unique range smaller than producer count fails with specific error."""
+        spec = {
+            "generates": [
+                {
+                    "name": "producer", "count": 5, "target": "mem,JSON",
+                    "fields": [{"name": "id", "kind": "increment"}],
+                },
+                {
+                    "name": "reader", "count": 1, "source": "mem", "source_type": "producer",
+                    "fields": [
+                        {"name": "id", "kind": "script", "script": "id"},
+                        {"name": "seat", "kind": "int_range", "min": 1, "max": 2, "unique": True},
+                    ],
+                },
+            ]
+        }
+        request = ScaffoldRequest(spec=spec, dry_run=False)
+        result = scaffold(request)
+
+        assert result.ok is False
+        assert result.stage == "render"
+        assert result.error is not None
+        assert "unique" in result.error
+        assert "insufficient" in result.error.lower() or "possible values" in result.error
+
+    def test_source_backed_unique_sufficient_range_service(self):
+        """Source-backed unique range sufficient for producer count succeeds."""
+        spec = {
+            "generates": [
+                {
+                    "name": "producer", "count": 5, "target": "mem,JSON",
+                    "fields": [{"name": "id", "kind": "increment"}],
+                },
+                {
+                    "name": "reader", "count": 1, "source": "mem", "source_type": "producer",
+                    "fields": [
+                        {"name": "id", "kind": "script", "script": "id"},
+                        {"name": "seat", "kind": "int_range", "min": 1, "max": 10, "unique": True},
+                    ],
+                },
+            ]
+        }
+        request = ScaffoldRequest(spec=spec, dry_run=True, max_count=5, sample_rows=3)
+        result = scaffold(request)
+
+        assert result.ok is True
+        assert result.stage == "dry_run"
+        assert result.xml is not None
+
+    def test_mcp_source_backed_unique_insufficient_range(self):
+        """MCP source-backed unique range validation matches service layer."""
+        spec = {
+            "generates": [
+                {
+                    "name": "producer", "count": 5, "target": "mem,JSON",
+                    "fields": [{"name": "id", "kind": "increment"}],
+                },
+                {
+                    "name": "reader", "count": 1, "source": "mem", "source_type": "producer",
+                    "fields": [
+                        {"name": "id", "kind": "script", "script": "id"},
+                        {"name": "seat", "kind": "int_range", "min": 1, "max": 2, "unique": True},
+                    ],
+                },
+            ]
+        }
+        args = ScaffoldArgs(spec=spec, dry_run=False)
+        result = scaffold_impl(args)
+
+        assert result["ok"] is False
+        assert result["stage"] == "render"
+        assert "unique" in result["error"]

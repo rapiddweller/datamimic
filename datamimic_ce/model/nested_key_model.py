@@ -28,48 +28,24 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VARIABLE_PREFIX,
     ATTR_VARIABLE_SUFFIX,
 )
-from datamimic_ce.constants.data_type_constants import DATA_TYPE_LIST
 from datamimic_ce.constants.element_constants import EL_NESTED_KEY
 from datamimic_ce.model.constraints import (
-    COUNT_XOR_MAX,
-    COUNT_XOR_MIN,
-    SOURCE_COMPANIONS_WITHOUT_CYCLIC,
+    NESTED_CYCLIC_REQUIRES_COUNT,
+    NESTED_CYCLIC_REQUIRES_SOURCE_OR_SCRIPT,
+    NESTED_LIST_REQUIRES_COUNT,
+    NESTED_SCRIPT_FORBIDDEN_ATTRS,
+    NESTED_SCRIPT_FORBIDS,
+    SOURCE_DISTRIBUTION_VALUES,
     Constraint,
-    Forbids,
-    Requires,
     constraints_schema_extra,
+    element_constraints,
+    resolved_values,
 )
 from datamimic_ce.model.model_util import ModelUtil
 
-# Declared facts (SPOT): each set lives ONCE here, consumed by BOTH __constraints__
-# and the enforcing validator bodies.
-# Cyclic requires source or script. PRESENCE-based (no when_true): the original
-# validator checks `ATTR_CYCLIC in key_set`, so cyclic="false" without source/script
-# is rejected today and must stay rejected. Static message lives on the fact.
-_CYCLIC_REQUIRES_SOURCE_OR_SCRIPT = Requires(
-    ATTR_CYCLIC,
-    frozenset((ATTR_SOURCE, ATTR_SCRIPT)),
-    message="'cyclic' is only allowed when one of ('source', 'script') is defined",
-)
-# Script forbids these attributes. The ordered tuple is the single declared literal:
-# the Forbids fact derives its set from it, and the validator iterates it (order
-# determines which offending attribute the dynamic message reports first).
-_SCRIPT_FORBIDDEN_ATTRS: tuple[str, ...] = (ATTR_TYPE, ATTR_SOURCE, ATTR_SOURCE_SCRIPTED, ATTR_SEPARATOR)
-_SCRIPT_FORBIDS = Forbids(ATTR_SCRIPT, frozenset(_SCRIPT_FORBIDDEN_ATTRS))
-
 
 class NestedKeyModel(BaseModel):
-    # Declared cross-field constraints
-    __constraints__: ClassVar[tuple[Constraint, ...]] = (
-        # Count vs minCount/maxCount mutual exclusivity
-        COUNT_XOR_MIN,
-        COUNT_XOR_MAX,
-        # Source companions (without cyclic, since cyclic may combine with script here)
-        *SOURCE_COMPANIONS_WITHOUT_CYCLIC,
-        # Same objects the validators read
-        _CYCLIC_REQUIRES_SOURCE_OR_SCRIPT,
-        _SCRIPT_FORBIDS,
-    )
+    __constraints__: ClassVar[tuple[Constraint, ...]] = element_constraints(EL_NESTED_KEY)
     model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
 
     name: str = Field(..., description="Name of the nested key; becomes the field name in the generated record.")
@@ -211,7 +187,7 @@ class NestedKeyModel(BaseModel):
     def validate_cyclic_exit(cls, values: dict):
         # cyclic can combine with source and script; enforce the declared fact
         # (presence-based Requires with a static message).
-        return ModelUtil.check_constraints(values, (_CYCLIC_REQUIRES_SOURCE_OR_SCRIPT,))
+        return ModelUtil.check_constraints(values, (NESTED_CYCLIC_REQUIRES_SOURCE_OR_SCRIPT,))
 
     @model_validator(mode="before")
     @classmethod
@@ -221,36 +197,24 @@ class NestedKeyModel(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_count_with_data_type(cls, values: dict):
-        key_set = set(values.keys())
-        part_type = values.get(ATTR_TYPE)
-        count_defined = any(ele in key_set for ele in (ATTR_COUNT, ATTR_MAX_COUNT, ATTR_MIN_COUNT))
-        # Make sure 'cyclic' can only be defined with 'count' to avoid infinity loop
-        if not count_defined and ATTR_CYCLIC in key_set:
-            raise ValueError(
-                f"'{ATTR_CYCLIC}' is only allowed when '{ATTR_COUNT}', '{ATTR_MIN_COUNT}' "
-                f"or '{ATTR_MAX_COUNT}' is defined"
-            )
-        # Make sure 'count' is defined in part list generation mode
-        if not count_defined and part_type == DATA_TYPE_LIST and ATTR_SOURCE not in key_set:
-            raise ValueError(
-                f"'{ATTR_COUNT}', '{ATTR_MIN_COUNT}' or '{ATTR_MAX_COUNT}' "
-                f"must be defined in part having {ATTR_TYPE} '{part_type}' without '{ATTR_SOURCE}'"
-            )
-        return values
+        return ModelUtil.check_constraints(
+            values,
+            (NESTED_CYCLIC_REQUIRES_COUNT, NESTED_LIST_REQUIRES_COUNT),
+        )
 
     @model_validator(mode="before")
     @classmethod
     def validate_script_exist(cls, values: dict):
-        # Enforces the declared _SCRIPT_FORBIDS fact; iterates the ordered
-        # _SCRIPT_FORBIDDEN_ATTRS tuple (the fact's source literal) because the
+        # Enforces the central NESTED_SCRIPT_FORBIDS fact; iterates its ordered
+        # source tuple because the
         # dynamic message reports the FIRST offending attribute in that order.
         key_set = set(values.keys())
-        if _SCRIPT_FORBIDS.attr in key_set:
-            for key in _SCRIPT_FORBIDDEN_ATTRS:
+        if NESTED_SCRIPT_FORBIDS.attr in key_set:
+            for key in NESTED_SCRIPT_FORBIDDEN_ATTRS:
                 if key in key_set:
                     raise ValueError(
                         f"When 'script' is defined in <nestedKey>, "
-                        f"not allow to define {_SCRIPT_FORBIDDEN_ATTRS}, but get invalid attribute '{key}'"
+                        f"not allow to define {NESTED_SCRIPT_FORBIDDEN_ATTRS}, but get invalid attribute '{key}'"
                     )
         return values
 
@@ -284,5 +248,9 @@ class NestedKeyModel(BaseModel):
             raise ValueError(f"sourceEntity must be a plain entity name, not a path: '{stripped}'")
         return stripped
 
-    # NOTE: no distribution validator — NestedKeyStatement validates via
-    # SourceDistribution.coerce (random/ordered/cumulated) at construction.
+    @field_validator("distribution")
+    @classmethod
+    def validate_distribution(cls, value: str | None) -> str | None:
+        if value is not None:
+            ModelUtil.check_valid_data_value(value, set(resolved_values(SOURCE_DISTRIBUTION_VALUES)))
+        return value

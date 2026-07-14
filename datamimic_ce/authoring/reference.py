@@ -22,14 +22,20 @@ from datamimic_ce.constants.exporter_constants import (
     EXPORTER_LOG_EXPORTER,
     EXPORTER_TEST_RESULT_EXPORTER,
 )
-from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.model.constraints import (
+    KEY_DISTRIBUTION_VALUES,
+    SOURCE_DISTRIBUTION_VALUES,
     AllOrNone,
+    AllowedValuesWhen,
     Forbids,
+    ForbidsWhenValue,
     MutuallyExclusive,
+    MutuallyExclusiveWhen,
     RequiredOneOf,
     Requires,
+    RequiresWhenValue,
     ValidValues,
+    resolved_values,
     serialize_constraints,
 )
 
@@ -56,24 +62,46 @@ def _render_constraint_terse(fact) -> str:
     elif isinstance(fact, MutuallyExclusive):
         attrs_str = ", ".join(sorted(fact.attrs))
         return f"at most one of: {attrs_str}{advisory}"
+    elif isinstance(fact, MutuallyExclusiveWhen):
+        attrs_str = ", ".join(sorted(fact.attrs))
+        gate = "is true" if fact.when_true else "is set"
+        return f"at most one of: {attrs_str} (when {fact.when_attr} {gate}){advisory}"
     elif isinstance(fact, Requires):
         needs_str = ", ".join(sorted(fact.needs))
         if len(fact.needs) == 1:
             needs_str = list(fact.needs)[0]
         suffix = f" (when {fact.attr} is true)" if fact.when_true else ""
         return f"{fact.attr} requires {needs_str}{suffix}{advisory}"
+    elif isinstance(fact, RequiresWhenValue):
+        values_str = ", ".join(sorted(fact.when_values))
+        needs_str = ", ".join(sorted(fact.needs))
+        unless = f" unless {', '.join(sorted(fact.unless))} is set" if fact.unless else ""
+        return f"{fact.when_attr} in [{values_str}] requires {needs_str}{unless}{advisory}"
     elif isinstance(fact, AllOrNone):
         attrs_str = ", ".join(sorted(fact.attrs))
         return f"{attrs_str}: all together or none{advisory}"
     elif isinstance(fact, Forbids):
         excludes_str = ", ".join(sorted(fact.excludes))
-        suffix = f" (when {fact.attr} is true)" if fact.when_true else ""
+        if fact.excludes_when_true:
+            suffix = f" (when {fact.attr} is true, both true)" if fact.when_true else " (both true)"
+        else:
+            suffix = f" (when {fact.attr} is true)" if fact.when_true else ""
         return f"{fact.attr} cannot combine with: {excludes_str}{suffix}{advisory}"
+    elif isinstance(fact, ForbidsWhenValue):
+        values_str = ", ".join(sorted(fact.when_values))
+        excludes_str = ", ".join(sorted(fact.excludes))
+        return f"{fact.when_attr} in [{values_str}] cannot combine with: {excludes_str}{advisory}"
     elif isinstance(fact, ValidValues):
         # Evaluate callable values; static sets/tuples are already iterable
         values = sorted(fact.values()) if callable(fact.values) else sorted(fact.values)
         values_str = ", ".join(values)
         return f"{fact.attr} must be one of: {values_str}{advisory}"
+    elif isinstance(fact, AllowedValuesWhen):
+        # Evaluate callable allowed; static sets/tuples are already iterable
+        allowed = sorted(fact.allowed()) if callable(fact.allowed) else sorted(fact.allowed)
+        allowed_str = ", ".join(allowed)
+        suffix = f" (when {fact.when_attr} is true)" if fact.when_true else f" (when {fact.when_attr} is set)"
+        return f"{fact.attr} must be one of: {allowed_str}{suffix}{advisory}"
     else:
         return f"<unknown constraint type: {type(fact).__name__}>{advisory}"
 
@@ -88,7 +116,9 @@ def cheatsheet() -> str:
 def element_reference(tag: str) -> str:
     index = build_schema_index()
     canonical = ALIASES.get(tag, tag)
-    schema = index.get(canonical)
+    # Alias schemas share canonical attributes/nesting but may add alias-specific
+    # business rules (for example, <iterate> requires source=).
+    schema = index.get(tag)
     if schema is None:
         raise ValueError(f"Unknown element '{tag}'. Known: {', '.join(sorted(index.tags))}")
     lines = [f"# <{canonical}>"]
@@ -107,9 +137,7 @@ def element_reference(tag: str) -> str:
             default = "" if spec.default in (None, "") else f" [default: {spec.default}]"
             lines.append(f"- {spec.name}: {spec.annotation}{required}{default}")
             if spec.description:
-                # First sentence only: keeps every attribute visible within the clip budget
-                # (the full text is still available via capabilities_manifest()/model_json_schema()).
-                lines.append(f"    {spec.description.split('. ', 1)[0].rstrip('.')}.")
+                lines.append(f"    {spec.description}")
     else:
         lines.append("Attributes: none")
     # Constraints: cross-field rules (render if present)
@@ -127,7 +155,7 @@ def element_reference(tag: str) -> str:
     if schema.allowed_parents:
         lines.append(f"Allowed inside: {', '.join(sorted(schema.allowed_parents))}")
     return clip(
-        "\n".join(lines), 5000, " [truncated — ask for a specific attribute or see the cheatsheet]"
+        "\n".join(lines), 16000, " [truncated — inspect `datamimic capabilities` for the full schema]"
     )
 
 
@@ -242,11 +270,10 @@ def timeseries_reference() -> str:
 def distributions_reference() -> str:
     from datamimic_ce.enums.distribution_enums import (
         POSITIONAL_NUMBER_SEQUENCES,
-        NumberDistribution,
     )
 
-    members = ", ".join(member.value for member in SourceDistribution)
-    numeric = ", ".join(member.value for member in NumberDistribution)
+    members = ", ".join(sorted(resolved_values(SOURCE_DISTRIBUTION_VALUES)))
+    numeric = ", ".join(sorted(resolved_values(KEY_DISTRIBUTION_VALUES)))
     finite_sequences = ", ".join(member.value for member in POSITIONAL_NUMBER_SEQUENCES)
     return (
         f"# distribution= on source reads ({members})\n"
@@ -295,12 +322,27 @@ def converters_reference() -> str:
     )
 
 
+def scaffold_reference() -> str:
+    """Compact-spec schema and patterns exposed through the same reference CLI."""
+    import json
+
+    from datamimic_ce.authoring.scaffold import SPEC_JSON_SCHEMA, SPEC_PROMPT_GUIDE
+
+    return (
+        "# Scaffold JSON spec\n"
+        "Pass JSON to `datamimic scaffold <path|-> --format json`. Unknown keys and "
+        "unsupported field kinds are rejected.\n\n"
+        f"{SPEC_PROMPT_GUIDE}\n\n"
+        "## JSON Schema\n```json\n"
+        f"{json.dumps(SPEC_JSON_SCHEMA, indent=2)}\n```"
+    )
+
+
 def capabilities_manifest() -> dict[str, Any]:
     """Machine-readable DSL surface, derived live from the engine registries — cannot drift."""
     from importlib.metadata import PackageNotFoundError, version
 
     from datamimic_ce.enums.converter_enums import ConverterEnum
-    from datamimic_ce.enums.distribution_enums import NumberDistribution
     from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
 
     try:
@@ -336,8 +378,8 @@ def capabilities_manifest() -> dict[str, Any]:
             "built_ins": [EXPORTER_CONSOLE_EXPORTER, EXPORTER_LOG_EXPORTER],
             "declared_ids": "any <memstore>/<database>/<mongodb> id; client write ops: <id>.update/.upsert/.delete",
         },
-        "distributions": [member.value for member in SourceDistribution],
-        "numeric_distributions": [member.value for member in NumberDistribution],
+        "distributions": sorted(resolved_values(SOURCE_DISTRIBUTION_VALUES)),
+        "numeric_distributions": sorted(resolved_values(KEY_DISTRIBUTION_VALUES)),
     }
 
 
@@ -390,6 +432,8 @@ def reference(topic: str, name: str | None = None) -> str:
         return distributions_reference()
     if topic == "converters":
         return converters_reference()
+    if topic == "scaffold":
+        return scaffold_reference()
     if topic == "recipes":
         return list_recipes()
     if topic == "recipe":
@@ -398,5 +442,5 @@ def reference(topic: str, name: str | None = None) -> str:
         return load_recipe(name)
     raise ValueError(
         f"Unknown topic '{topic}'. Topics: overview, element, generators, entities, context, "
-        "timeseries, targets, distributions, converters, recipes, recipe"
+        "timeseries, targets, distributions, converters, scaffold, recipes, recipe"
     )

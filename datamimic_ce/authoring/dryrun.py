@@ -458,7 +458,7 @@ def _execute(
             )
         )
     return DryRunResult(
-        ok=not smoke_diags,  # a smoke-export failure means the real run WOULD crash at export
+        ok=not smoke_diags and not zero_rows,
         stage="run",
         timing_ms=timing_ms,
         products=products[:_MAX_PRODUCTS],

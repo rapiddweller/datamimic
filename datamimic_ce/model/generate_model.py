@@ -41,49 +41,23 @@ from datamimic_ce.constants.attribute_constants import (
 )
 from datamimic_ce.constants.element_constants import EL_GENERATE
 from datamimic_ce.model.constraints import (
-    COUNT_XOR_MAX,
-    COUNT_XOR_MIN,
-    EXIST_COUNT,
-    SOURCE_COMPANIONS_WITH_CYCLIC,
-    UNIQUE_FORBIDS_WEIGHTS,
-    UNIQUE_REQUIRES_POOL,
-    AllOrNone,
+    GENERATE_OFFSET_REQUIRES_SOURCE,
+    GENERATE_UNIQUE_CONSTRAINTS,
+    SOURCE_DISTRIBUTION_VALUES,
+    TIMESERIES_ALL_OR_NONE,
     Constraint,
-    Requires,
     constraints_schema_extra,
+    element_constraints,
+    resolved_values,
 )
 from datamimic_ce.model.model_util import ModelUtil
 
-# Declared facts (SPOT): each attribute set lives ONCE here, consumed by BOTH
-# __constraints__ and the enforcing validator bodies below.
-# Time-series all-or-none: the validator's message dynamically lists the missing
-# attrs, so the fact carries message=None and the validator owns the message.
-TIMESERIES_ALL_OR_NONE = AllOrNone(frozenset((ATTR_START, ATTR_END, ATTR_INTERVAL)))
-# Alias kept because several validators in this file consume the raw attr set.
 _TIMESERIES_ATTRS: frozenset[str] = TIMESERIES_ALL_OR_NONE.attrs
-# Offset requires source: static message, enforced via check_constraints.
-_OFFSET_REQUIRES_SOURCE = Requires(
-    ATTR_OFFSET,
-    frozenset((ATTR_SOURCE,)),
-    message="'offset' requires a 'source' - it skips the first N source rows",
-)
 
 
 class GenerateModel(BaseModel):
     # Declared cross-field constraints
-    __constraints__: ClassVar[tuple[Constraint, ...]] = (
-        # Shared constraints
-        EXIST_COUNT,
-        COUNT_XOR_MIN,
-        COUNT_XOR_MAX,
-        UNIQUE_REQUIRES_POOL,
-        UNIQUE_FORBIDS_WEIGHTS,
-        # Source companions
-        *SOURCE_COMPANIONS_WITH_CYCLIC,
-        # Generate-specific constraints (same objects the validators read)
-        TIMESERIES_ALL_OR_NONE,
-        _OFFSET_REQUIRES_SOURCE,
-    )
+    __constraints__: ClassVar[tuple[Constraint, ...]] = element_constraints(EL_GENERATE)
     model_config = ConfigDict(json_schema_extra=constraints_schema_extra)
 
     name: str = Field(
@@ -319,13 +293,13 @@ class GenerateModel(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def validate_unique_constraints(cls, values: dict):
-        return ModelUtil.check_unique_constraints(values)
+        return ModelUtil.check_unique_constraints(values, GENERATE_UNIQUE_CONSTRAINTS)
 
     @model_validator(mode="before")
     @classmethod
     def validate_offset_requires_source(cls, values: dict):
         # Enforce the declared fact (static message lives on the fact).
-        return ModelUtil.check_constraints(values, (_OFFSET_REQUIRES_SOURCE,))
+        return ModelUtil.check_constraints(values, (GENERATE_OFFSET_REQUIRES_SOURCE,))
 
     @field_validator("source_entity", "target_entity")
     @classmethod
@@ -398,5 +372,9 @@ class GenerateModel(BaseModel):
     def validate_count(cls, value):
         return ModelUtil.check_is_digit_or_script(value=value)
 
-    # NOTE: no distribution validator — GenerateStatement validates via
-    # SourceDistribution.coerce (random/ordered/cumulated) at construction.
+    @field_validator("distribution")
+    @classmethod
+    def validate_distribution(cls, value: str | None) -> str | None:
+        if value is not None:
+            ModelUtil.check_valid_data_value(value, set(resolved_values(SOURCE_DISTRIBUTION_VALUES)))
+        return value

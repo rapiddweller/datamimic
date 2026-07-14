@@ -78,7 +78,12 @@ def _field_schema(kinds: list[str], allow_children: bool, allow_unique: bool = F
     if allow_children:
         # nested_list children are leaves only — one level of nesting, no recursion.
         props["fields"] = {"type": "array", "items": _field_schema(_LEAF_KINDS, allow_children=False)}
-    return {"type": "object", "properties": props, "required": ["name", "kind"]}
+    return {
+        "type": "object",
+        "properties": props,
+        "required": ["name", "kind"],
+        "additionalProperties": False,
+    }
 
 
 def _passthrough_attrs(*names: str) -> dict[str, dict[str, Any]]:
@@ -132,7 +137,12 @@ def _generate_item_schema(allow_children: bool) -> dict[str, Any]:
             "description": "Nested <generate> inside this one, e.g. a child list keyed to the "
             "parent (one level only).",
         }
-    return {"type": "object", "properties": props, "required": ["name", "fields"]}
+    return {
+        "type": "object",
+        "properties": props,
+        "required": ["name", "fields"],
+        "additionalProperties": False,
+    }
 
 
 # JSON schema the model fills (pass as Ollama `format=` / structured output). No $ref.
@@ -146,6 +156,7 @@ SPEC_JSON_SCHEMA: dict[str, Any] = {
         "generates": {"type": "array", "items": _generate_item_schema(allow_children=True)},
     },
     "required": ["generates"],
+    "additionalProperties": False,
 }
 
 # A worked-example nudge for callers to embed in the PROMPT TEXT alongside
@@ -212,9 +223,11 @@ _KIND_ALIASES = {
 _FILE_TARGET = {".json": "JSON", ".csv": "CSV", ".xml": "XML", ".xlsx": "XLSX", ".txt": "TXT"}
 
 
-def _norm_kind(kind: object) -> str:
-    k = str(kind or "constant").strip().lower()
-    return k if k in _FIELD_KINDS else _KIND_ALIASES.get(k, "constant")
+def _norm_kind(kind: object) -> str | None:
+    k = str(kind or "").strip().lower()
+    if not k:
+        return None
+    return k if k in _FIELD_KINDS else _KIND_ALIASES.get(k)
 
 
 def _norm_target(target: object) -> str:
@@ -223,6 +236,50 @@ def _norm_target(target: object) -> str:
         if t.lower().endswith(ext):
             return fmt
     return t  # a format keyword, memstore id, or client id — leave as-is
+
+
+def _coerce_to_list(
+    value: Any, label: str, gen_name: str, notes: list[str], errors: list[str]
+) -> list[dict[str, Any]]:
+    """Normalize an object collection without silently dropping malformed values."""
+    if value is None:
+        return []
+    if isinstance(value, list):
+        items = value
+    elif isinstance(value, dict):
+        notes.append(
+            f"generate '{gen_name}': object-shaped '{label}' normalized to a one-item list"
+        )
+        items = [value]
+    else:
+        errors.append(
+            f"{label} of generate '{gen_name}' must be an array of objects, "
+            f"got {type(value).__name__}"
+        )
+        return []
+
+    objects: list[dict[str, Any]] = []
+    for index, item in enumerate(items):
+        if isinstance(item, dict):
+            objects.append(item)
+        else:
+            errors.append(
+                f"{label} of generate '{gen_name}' must contain objects; "
+                f"item {index} is {type(item).__name__}"
+            )
+    return objects
+
+
+def _aliased_collection(mapping: dict[str, Any], *names: str) -> Any:
+    """Return the first non-empty alias, or the first explicitly supplied empty value."""
+    for name in names:
+        value = mapping.get(name)
+        if value:
+            return value
+    for name in names:
+        if name in mapping:
+            return mapping[name]
+    return None
 
 
 def _dedupe_by_name(gens: list[dict[str, Any]], notes: list[str]) -> list[dict[str, Any]]:
@@ -255,19 +312,66 @@ def _normalize(spec: dict[str, Any]) -> NormalizeResult:
     weighted_values->weighted, 'x.json' target->JSON, kind/type & name/field aliases).
     Returns NormalizeResult with the normalized spec and any diagnostics (notes for
     non-lossy repairs, errors for unsupported features)."""
+    notes: list[str] = []
+    errors: list[str] = []
+
+    root_keys = {"seed", "rngSeed", "generates", "generate", "entities"}
+    unknown_root_keys = sorted(set(spec) - root_keys)
+    if unknown_root_keys:
+        errors.append(f"unknown scaffold root key(s): {', '.join(unknown_root_keys)}")
+
+    if "seed" in spec and "rngSeed" in spec and spec["seed"] != spec["rngSeed"]:
+        errors.append("conflicting scaffold root keys 'seed' and 'rngSeed'")
+    seed = spec.get("seed", spec.get("rngSeed"))
+    if "rngSeed" in spec and "seed" not in spec:
+        notes.append("root key 'rngSeed' normalized to 'seed'")
+    if seed is not None and (isinstance(seed, bool) or not isinstance(seed, int)):
+        errors.append("scaffold seed must be an integer")
+
     gens = spec.get("generates") or spec.get("generate") or spec.get("entities") or []
     if isinstance(gens, dict):
         gens = [gens]
 
-    notes: list[str] = []
-    errors: list[str] = []
-
-    def _field(f: dict[str, Any], top_level: bool = True, field_name_hint: str = "") -> dict[str, Any]:
+    def _field(
+        f: dict[str, Any],
+        top_level: bool = True,
+        field_name_hint: str = "",
+        gen_name: str = "data",
+    ) -> dict[str, Any]:
         out = dict(f)
+        allowed_field_keys = {
+            "children", "column", "field", "fields", "kind", "max", "min", "name",
+            "pattern", "script", "type", "unique", "value", "values", "weights",
+        }
+        unknown_field_keys = sorted(set(f) - allowed_field_keys)
+        if unknown_field_keys:
+            errors.append(
+                f"unknown key(s) on field '{field_name_hint or f.get('name') or 'field'}': "
+                f"{', '.join(unknown_field_keys)}"
+            )
         out["name"] = f.get("name") or f.get("field") or f.get("column") or "field"
         field_display = out["name"] or field_name_hint
-        raw_kind = str(f.get("kind") or f.get("type") or "constant").strip().lower()
+        raw_kind = str(f.get("kind") or f.get("type") or "").strip().lower()
         out["kind"] = _norm_kind(f.get("kind") or f.get("type"))
+        if out["kind"] is None:
+            label = raw_kind or "<missing>"
+            errors.append(
+                f"unsupported field kind '{label}' on field '{field_display}'; "
+                f"supported kinds: {', '.join(_FIELD_KINDS)}"
+            )
+            out["kind"] = "constant"  # errors prevent rendering; keep normalization total
+        if out["kind"] in {"int_range", "decimal_range", "string_length"}:
+            missing_bounds = [name for name in ("min", "max") if f.get(name) is None]
+            if missing_bounds:
+                errors.append(
+                    f"field '{field_display}' of kind '{out['kind']}' requires explicit "
+                    f"{', '.join(missing_bounds)}"
+                )
+        if out["kind"] == "int_range":
+            for bound in ("min", "max"):
+                value = f.get(bound)
+                if value is not None and (isinstance(value, bool) or not isinstance(value, int)):
+                    errors.append(f"field '{field_display}' int_range {bound} must be an integer")
         # Note: kind alias applied (e.g. weighted_values→weighted, id→increment)
         if raw_kind in _KIND_ALIASES and raw_kind != out["kind"]:
             notes.append(f"kind '{raw_kind}' normalized to '{out['kind']}'")
@@ -345,49 +449,96 @@ def _normalize(spec: dict[str, Any]) -> NormalizeResult:
                 )
             out.pop("unique", None)
 
-        children = f.get("fields") or f.get("children")
-        if children:
+        raw_children = _aliased_collection(f, "fields", "children")
+        children = _coerce_to_list(
+            raw_children,
+            f"nested fields of field '{field_display}'",
+            gen_name,
+            notes,
+            errors,
+        )
+        if children and not top_level:
+            for child in children:
+                child_name = child.get("name") or child.get("field") or "field"
+                errors.append(
+                    f"unsupported feature: nested field '{child_name}' more than one level deep "
+                    f"(inside field '{field_display}' of generate '{gen_name}') — the scaffold "
+                    "spec supports one nested-list level; flatten the structure or author raw XML"
+                )
+        elif children:
             out["kind"] = "nested_list"
             out["fields"] = [
-                _field(c, top_level=False, field_name_hint=field_display)
-                for c in children if isinstance(c, dict)
+                _field(
+                    child,
+                    top_level=False,
+                    field_name_hint=field_display,
+                    gen_name=gen_name,
+                )
+                for child in children
             ]
+        if out["kind"] == "nested_list":
+            if not children:
+                errors.append(f"nested_list field '{field_display}' requires at least one nested field")
+            for bound in ("min", "max"):
+                value = f.get(bound)
+                if value is not None and (isinstance(value, bool) or not isinstance(value, int)):
+                    errors.append(f"nested_list field '{field_display}' {bound} must be an integer")
         return out
 
-    def _generate(gen: dict[str, Any], allow_children: bool) -> dict[str, Any]:
-        fields = gen.get("fields") or gen.get("keys") or gen.get("columns") or []
+    def _generate(
+        gen: dict[str, Any], allow_children: bool, ancestors: tuple[str, ...] = ()
+    ) -> dict[str, Any]:
         gen_name: str = str(gen.get("name") or "data")
+        allowed_generate_keys = {
+            "children", "columns", "count", "end", "fields", "interval", "keys", "name",
+            "nested", "source", "source_type", "start", "target", "type",
+        }
+        unknown_generate_keys = sorted(set(gen) - allowed_generate_keys)
+        if unknown_generate_keys:
+            errors.append(
+                f"unknown key(s) on generate '{gen_name}': {', '.join(unknown_generate_keys)}"
+            )
+        count = gen.get("count")
+        if count is not None and (isinstance(count, bool) or not isinstance(count, int)):
+            errors.append(f"count of generate '{gen_name}' must be an integer")
+        raw_fields = _aliased_collection(gen, "fields", "keys", "columns")
+        fields = _coerce_to_list(raw_fields, "fields", gen_name, notes, errors)
         out = {
             "name": gen_name,
             "count": gen.get("count"),
             "target": _norm_target(gen.get("target")),
-            "fields": [_field(f, field_name_hint=gen.get("name") or "data") for f in fields if isinstance(f, dict)],
+            "fields": [
+                _field(
+                    field,
+                    field_name_hint=gen.get("name") or "data",
+                    gen_name=gen_name,
+                )
+                for field in fields
+            ],
             "source": gen.get("source"),
             "source_type": gen.get("source_type") or gen.get("type"),
             "start": gen.get("start"),
             "end": gen.get("end"),
             "interval": gen.get("interval"),
         }
-        if allow_children:
+        raw_children = _aliased_collection(gen, "children", "nested")
+        children = _coerce_to_list(raw_children, "children", gen_name, notes, errors)
+        if children and not allow_children:
+            parent_name = ancestors[-1] if ancestors else "parent"
+            for child in children:
+                child_name = child.get("name") or "child"
+                errors.append(
+                    f"unsupported feature: generate '{child_name}' nested more than one level deep "
+                    f"(inside '{gen_name}' which is inside '{parent_name}') — the scaffold spec "
+                    "supports one level of nesting; flatten deeper levels into their own "
+                    "top-level generates joined via source=/memstore, or author raw XML"
+                )
+        elif allow_children:
             # One level only — matches _field_schema's existing anti-recursion discipline.
-            children = gen.get("children") or gen.get("nested") or []
-            child_gens = []
-            for c in children:
-                if isinstance(c, dict):
-                    child_name = c.get("name") or "child"
-                    # Check for grandchildren (third hierarchy level) — not allowed.
-                    grandchildren = c.get("children") or c.get("nested") or []
-                    if grandchildren:
-                        for gc in grandchildren:
-                            if isinstance(gc, dict):
-                                gc_name = gc.get("name") or "grandchild"
-                                errors.append(
-                                    f"unsupported feature: generate '{gc_name}' nested more than one level deep "
-                                    f"(inside '{child_name}' which is inside '{gen_name}') — the scaffold spec "
-                                    f"supports one level of nesting; flatten deeper levels into their own "
-                                    f"top-level generates joined via source=/memstore, or author raw XML"
-                                )
-                    child_gens.append(_generate(c, allow_children=False))
+            child_gens = [
+                _generate(child, allow_children=False, ancestors=(*ancestors, gen_name))
+                for child in children
+            ]
             out["children"] = _dedupe_by_name(child_gens, notes)
         return out
 
@@ -395,7 +546,7 @@ def _normalize(spec: dict[str, Any]) -> NormalizeResult:
         [_generate(gen, allow_children=True) for gen in gens if isinstance(gen, dict)], notes
     )
     return NormalizeResult(
-        spec={"seed": spec.get("seed"), "generates": norm_gens},
+        spec={"seed": seed, "generates": norm_gens},
         notes=tuple(notes),
         errors=tuple(errors),
     )
@@ -487,23 +638,101 @@ def _entity_var_name(depth: int) -> str:
     return _ENTITY_VAR if depth == 0 else f"{_ENTITY_VAR}_{depth}"
 
 
-def _check_unique_fits(fields: list[dict[str, Any]], count: Any) -> None:
+def _resolve_producer_count(
+    gen: dict[str, Any], all_generates: list[dict[str, Any]]
+) -> tuple[int | None, str | None]:
+    """Resolve the row count from a source-backed generate by finding its producer.
+
+    Returns (count, producer_name) if exactly one matching producer is found with a known
+    count, else (None, None) for rejection. A producer is excluded if:
+    - It has no integer count (is itself source-backed or time-series)
+    - It has start/end/interval (time-series: count ≠ row count)
+    """
+    source = gen.get("source")
+    if not source:
+        return None, None
+
+    source_type = gen.get("source_type")
+
+    # Comma-split the source id (same logic as render() for memstore auto-declaration)
+    source_ids = {s.strip() for s in str(source).split(",")}
+
+    # Find candidates: generates whose target contains any source_id
+    candidates = []
+    for gen_candidate in _iter_generates(all_generates):
+        if gen_candidate is gen:  # Skip the reader itself
+            continue
+        target_ids = {t.strip() for t in str(gen_candidate.get("target", "")).split(",")}
+        if not target_ids & source_ids:  # No intersection
+            continue
+        candidates.append(gen_candidate)
+
+    # Filter by source_type if specified
+    if source_type:
+        candidates = [c for c in candidates if c.get("name") == source_type]
+
+    # Exclude time-series and source-backed producers
+    usable = [
+        c for c in candidates
+        if (c.get("count") is not None
+            and not c.get("source")
+            and not any(c.get(attr) for attr in ("start", "end", "interval")))
+    ]
+
+    if len(usable) == 1:
+        return int(usable[0]["count"]), usable[0].get("name")
+    return None, None
+
+
+def _check_unique_fits(
+    fields: list[dict[str, Any]],
+    count: int | None,
+    gen: dict[str, Any] | None = None,
+    all_generates: list[dict[str, Any]] | None = None,
+) -> None:
     """Guard against unique=True on an int_range field whose grid is smaller than the
     generate's count: distribution="shuffle" (see _render_field) stops early rather than
     erroring, silently producing fewer rows — exactly the kind of trap this renderer
-    exists to remove, so it's raised here instead of discovered downstream."""
-    if count is None:
+    exists to remove, so it's raised here instead of discovered downstream.
+
+    For source-backed generates, always resolves the row count from the producer because
+    the renderer deliberately drops any explicit reader count."""
+    unique_fields = [
+        field
+        for field in fields
+        if field.get("unique") and field.get("kind") == "int_range"
+    ]
+    if not unique_fields:
         return
-    for f in fields:
-        if not f.get("unique") or f.get("kind") != "int_range":
-            continue
+
+    resolved_count = count
+    producer_name: str | None = None
+
+    if gen and gen.get("source"):
+        if all_generates:
+            resolved_count, producer_name = _resolve_producer_count(gen, all_generates)
+        else:
+            resolved_count = None
+        if resolved_count is None:
+            field = unique_fields[0]
+            raise ValueError(
+                f"unsupported feature: unique=true on field '{field.get('name')}' "
+                f"in source-backed generate '{gen.get('name')}' — the row count comes from "
+                f"source '{gen.get('source')}' and cannot be verified against the range; "
+                "use a resolvable in-spec producer, widen the range, or drop unique"
+            )
+    elif resolved_count is None:
+        return
+
+    for f in unique_fields:
         lo, hi = int(f.get("min", 0)), int(f.get("max", 100))
         grid = hi - lo + 1
-        if grid < int(count):
+        if grid < int(resolved_count):
+            producer_msg = f" — the count came from producer '{producer_name}'" if producer_name else ""
             raise ValueError(
                 f"field '{f.get('name')}': unique=true over [{lo}, {hi}] has only {grid} "
-                f"possible values, but the generate needs {count} rows — widen the range "
-                "or drop unique"
+                f"possible values, but the generate needs {resolved_count} rows — widen the range "
+                f"or drop unique{producer_msg}"
             )
 
 
@@ -517,7 +746,6 @@ def _iter_generates(gens: list[dict[str, Any]]):
 
 def _render_generate(gen: dict[str, Any], indent: str, depth: int = 0) -> list[str]:
     fields = gen.get("fields", [])
-    _check_unique_fits(fields, gen.get("count"))
     inner = indent + "    "
     entity_var = _entity_var_name(depth)
     attrs = f'name={quoteattr(gen["name"])}'
@@ -564,11 +792,16 @@ def _render_normalized(canonical_spec: dict[str, Any]) -> str:
     only for structural/logical errors like unsupported configurations, never silently
     emitting a wrong descriptor."""
     generates = canonical_spec["generates"]
-    if not generates or not any(g["fields"] for g in generates):
+    if not generates or not any(g.get("fields") for g in _iter_generates(generates)):
         raise ValueError(
             "spec needs a non-empty 'generates' list with fields, e.g. "
             "{'generates': [{'name': 'x', 'count': 10, 'fields': [{'name': 'id', 'kind': 'increment'}]}]}"
         )
+
+    # Check unique fits for all generates (including nested), with cardinality propagation
+    # for source-backed ones
+    for gen in _iter_generates(generates):
+        _check_unique_fits(gen.get("fields", []), gen.get("count"), gen, generates)
 
     seed = canonical_spec.get("seed")
     setup_open = f'<setup rngSeed="{int(seed)}">' if seed is not None else "<setup>"

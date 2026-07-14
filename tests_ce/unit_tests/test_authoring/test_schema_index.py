@@ -10,7 +10,7 @@ Gate 1 (drift killer): every model's hand-maintained check_valid_attributes
 allowlist must equal EXACTLY the XML names derived from model_fields — both
 directions. This is what caught the (now purged) GenerateModel.bucket drift.
 
-Gate 2: the linter's ELEMENT_MODEL_MAP must match the engine's parser dispatch.
+Gate 2: parser dispatch and authoring schema must derive from one element registry.
 
 Gate 3 (registry): rule ids unique, banded by module, and every rule ships a fix hint.
 """
@@ -24,8 +24,11 @@ from pydantic import BaseModel
 from datamimic_ce.authoring.rules import ALL_RULES, best_practice, cross_statement, schema_rules, semantic_rules
 from datamimic_ce.authoring.schema import ELEMENT_MODEL_MAP, build_schema_index
 from datamimic_ce.constants.element_constants import EL_COMMENT, EL_FIELD, EL_SETUP, EL_TRANSITION, EL_VALUE
+from datamimic_ce.model.element_registry import ElementDefinition, register_element, unregister_element
 from datamimic_ce.model.model_util import ModelUtil
 from datamimic_ce.parsers.parser_util import ParserUtil
+from datamimic_ce.parsers.statement_parser import StatementParser
+from datamimic_ce.statements.statement import Statement
 
 # Models that intentionally have no check_valid_attributes guard:
 # database/mongodb take open credential attributes (extra="allow").
@@ -106,6 +109,35 @@ def test_gate2_nesting_children_are_known_tags() -> None:
     for tag, schema in index.elements.items():
         for child in schema.allowed_children or set():
             assert child in known, f"nesting table of <{tag}> references unknown <{child}>"
+
+
+def test_gate2_single_registration_reaches_parser_and_authoring() -> None:
+    """A new definition is registered once, then appears in both runtime and authoring."""
+    tag = "synthetic-registry-element"
+
+    class SyntheticModel(BaseModel):
+        name: str
+
+    class SyntheticParser(StatementParser):
+        def __init__(self, element: ET.Element, properties: dict | None):
+            super().__init__(element, properties, valid_element_tag=tag)
+
+        def parse(self, *args, **kwargs) -> Statement:  # pragma: no cover - dispatch is the contract here
+            raise NotImplementedError
+
+    register_element(ElementDefinition(tag, SyntheticModel, SyntheticParser))
+    try:
+        parser = ParserUtil._get_parser_by_element(ET.Element(tag), properties=None)
+        schema = build_schema_index().get(tag)
+
+        assert isinstance(parser, SyntheticParser)
+        assert schema is not None
+        assert schema.model is SyntheticModel
+        assert set(schema.attributes) == {"name"}
+    finally:
+        unregister_element(tag)
+
+    assert build_schema_index().get(tag) is None
 
 
 def test_gate4_reflection_dependent_fields_keep_their_descriptions() -> None:
