@@ -206,12 +206,12 @@ def test_unique_too_small_for_count_raises_at_render() -> None:
         render(spec)
 
 
-def test_unique_inside_nested_list_is_dropped_not_silently_shuffled() -> None:
+def test_unique_inside_nested_list_is_rejected_explicitly() -> None:
     # unique= only makes sense on a top-level field: a shuffle sequence is one stateful
     # iterator shared across the whole statement, not reset per parent-record iteration,
     # so applying it inside a nested_list would draw from one shared pool across ALL
-    # parents (silent under-production again, just relocated) — must be dropped, not
-    # rendered as distribution="shuffle" in that scope.
+    # parents (silent under-production). Must FAIL explicitly with a clear error
+    # message, not silently drop the constraint and render as if it didn't exist.
     spec = {"generates": [{"name": "flights", "count": 3, "target": "JSON",
                            "fields": [
                                {"name": "flight_no", "kind": "pattern", "pattern": "[A-Z]{2}[0-9]{4}"},
@@ -219,9 +219,8 @@ def test_unique_inside_nested_list_is_dropped_not_silently_shuffled() -> None:
                                 "fields": [{"name": "seat", "kind": "int_range", "min": 1, "max": 5,
                                             "unique": True}]},
                            ]}]}
-    xml = render(spec)
-    assert 'distribution="shuffle"' not in xml
-    assert lint_source(xml).ok
+    with pytest.raises(ValueError, match="unsupported feature.*unique.*nested"):
+        render(spec)
 
 
 def test_nested_person_in_list_gets_distinct_names_within_one_parent() -> None:
@@ -376,3 +375,84 @@ def test_duplicate_child_generate_names_last_draft_wins() -> None:
     assert xml.count("<generate") == 2
     assert '<key name="note"' in xml
     assert lint_source(xml).ok
+
+
+def test_nested_unique_in_nested_list_rejected_with_clear_message() -> None:
+    # Verify that check() also properly rejects nested-unique and surfaces the error
+    # through ScaffoldCheckResult with the unsupported-feature message.
+    from datamimic_ce.authoring.scaffold import check
+
+    spec = {"generates": [{"name": "flights", "count": 3, "target": "JSON",
+                           "fields": [
+                               {"name": "flight_no", "kind": "pattern", "pattern": "[A-Z]{2}[0-9]{4}"},
+                               {"name": "passengers", "kind": "nested_list", "min": 2, "max": 2,
+                                "fields": [{"name": "seat", "kind": "int_range", "min": 1, "max": 5,
+                                            "unique": True}]},
+                           ]}]}
+    result = check(spec)
+    assert not result.ok
+    assert result.stage == "render"
+    assert result.render_error is not None
+    assert "unsupported feature" in result.render_error
+    assert "unique" in result.render_error
+    assert "seat" in result.render_error
+
+
+def test_three_level_nesting_is_rejected_explicitly() -> None:
+    # Three-level hierarchy (customers -> accounts -> transactions) is not supported
+    # and must fail explicitly with a clear error naming the generates involved.
+    spec = {"generates": [{"name": "customers", "count": 2, "target": "JSON",
+                           "fields": [{"name": "id", "kind": "increment"}],
+                           "children": [
+                               {"name": "accounts", "count": 2, "target": "JSON",
+                                "fields": [{"name": "account_id", "kind": "increment"}],
+                                "children": [
+                                    {"name": "transactions", "count": 2, "target": "JSON",
+                                     "fields": [{"name": "tx_id", "kind": "increment"}]},
+                                ]}
+                           ]}]}
+    with pytest.raises(ValueError, match="unsupported feature.*transactions.*nested more than one level"):
+        render(spec)
+
+
+def test_three_level_nesting_rejected_via_check() -> None:
+    # Verify check() also properly rejects three-level nesting.
+    from datamimic_ce.authoring.scaffold import check
+
+    spec = {"generates": [{"name": "customers", "count": 2, "target": "JSON",
+                           "fields": [{"name": "id", "kind": "increment"}],
+                           "children": [
+                               {"name": "accounts", "count": 2, "target": "JSON",
+                                "fields": [{"name": "account_id", "kind": "increment"}],
+                                "children": [
+                                    {"name": "transactions", "count": 2, "target": "JSON",
+                                     "fields": [{"name": "tx_id", "kind": "increment"}]},
+                                ]}
+                           ]}]}
+    result = check(spec)
+    assert not result.ok
+    assert result.stage == "render"
+    assert result.render_error is not None
+    assert "unsupported feature" in result.render_error
+    assert "transactions" in result.render_error
+    assert "nested more than one level" in result.render_error
+
+
+def test_kind_alias_normalization_surfaces_as_note() -> None:
+    # Near-miss recovery: a spec using kind="weighted_values" (alias for "weighted")
+    # should normalize successfully and surface a normalization_notes entry on check()
+    # result to document the repair — the spec is still valid and renders.
+    from datamimic_ce.authoring.scaffold import check
+
+    spec = {"generates": [{"name": "dishes", "count": 10, "target": "JSON",
+                           "fields": [{"name": "name", "kind": "weighted_values",
+                                       "values": ["pasta", "pizza", "salad"],
+                                       "weights": [2, 1, 1]}]}]}
+    result = check(spec, dry_run=False)
+    assert result.ok
+    assert result.stage == "lint"
+    assert len(result.normalization_notes) > 0
+    # The note should mention the alias normalization
+    assert any("weighted_values" in note and "weighted" in note for note in result.normalization_notes), (
+        f"expected a normalization_notes entry about weighted_values→weighted, got: {result.normalization_notes}"
+    )

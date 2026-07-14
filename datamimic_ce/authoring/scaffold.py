@@ -36,6 +36,14 @@ _LEAF_KINDS = [
 _FIELD_KINDS = [*_LEAF_KINDS, "nested_list"]
 
 
+@dataclass(frozen=True)
+class NormalizeResult:
+    """Result of _normalize(). Separates non-lossy repairs from unsupported features."""
+    spec: dict[str, Any]
+    notes: tuple[str, ...] = ()
+    errors: tuple[str, ...] = ()
+
+
 def _field_schema(kinds: list[str], allow_children: bool, allow_unique: bool = False) -> dict[str, Any]:
     """One field object. FLAT (no $ref): a local constrained-decoding runtime — Ollama's
     format=, llama.cpp's json-schema-to-GBNF — silently drops recursive $ref, so nesting is
@@ -47,7 +55,7 @@ def _field_schema(kinds: list[str], allow_children: bool, allow_unique: bool = F
     "unique within each nested item" — offering it inside nested_list's own leaf schema
     would let a model pick an option that silently produces wrong results. Not exposing
     it in the schema is the strongest form of that guard; _normalize()'s _field() also
-    defensively drops a nested unique= if a model sets one anyway."""
+    records an unsupported-feature error if a nested unique= is encountered anyway."""
     props: dict[str, Any] = {
         "name": {"type": "string"},
         "kind": {"type": "string", "enum": kinds},
@@ -217,38 +225,58 @@ def _norm_target(target: object) -> str:
     return t  # a format keyword, memstore id, or client id — leave as-is
 
 
-def _dedupe_by_name(gens: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _dedupe_by_name(gens: list[dict[str, Any]], notes: list[str]) -> list[dict[str, Any]]:
     """Last-entry-wins de-duplication by name. Observed: a model emitting several draft
     attempts under the SAME generate name in one response (an incomplete early draft
     followed by a corrected one) — DM403 would otherwise reject the whole descriptor even
     when the last draft is the correct one. Keeps each name's LAST entry, at its
-    first-seen position."""
+    first-seen position. Every dropped earlier draft emits a note — nothing is dropped
+    silently, per the normalization-diagnostics contract."""
     order: list[str] = []
     by_name: dict[str, dict[str, Any]] = {}
+    dropped: dict[str, int] = {}
     for gen in gens:
         name = gen["name"]
         if name not in by_name:
             order.append(name)
+        else:
+            dropped[name] = dropped.get(name, 0) + 1
         by_name[name] = gen
+    for name, count in dropped.items():
+        notes.append(
+            f"generate '{name}': {count} earlier draft(s) with the same name dropped, "
+            "keeping the last"
+        )
     return [by_name[name] for name in order]
 
 
-def _normalize(spec: dict[str, Any]) -> dict[str, Any]:
+def _normalize(spec: dict[str, Any]) -> NormalizeResult:
     """Map a model's near-miss JSON onto the canonical spec shape (generate->generates,
-    weighted_values->weighted, 'x.json' target->JSON, kind/type & name/field aliases)."""
+    weighted_values->weighted, 'x.json' target->JSON, kind/type & name/field aliases).
+    Returns NormalizeResult with the normalized spec and any diagnostics (notes for
+    non-lossy repairs, errors for unsupported features)."""
     gens = spec.get("generates") or spec.get("generate") or spec.get("entities") or []
     if isinstance(gens, dict):
         gens = [gens]
 
-    def _field(f: dict[str, Any], top_level: bool = True) -> dict[str, Any]:
+    notes: list[str] = []
+    errors: list[str] = []
+
+    def _field(f: dict[str, Any], top_level: bool = True, field_name_hint: str = "") -> dict[str, Any]:
         out = dict(f)
         out["name"] = f.get("name") or f.get("field") or f.get("column") or "field"
+        field_display = out["name"] or field_name_hint
+        raw_kind = str(f.get("kind") or f.get("type") or "constant").strip().lower()
         out["kind"] = _norm_kind(f.get("kind") or f.get("type"))
+        # Note: kind alias applied (e.g. weighted_values→weighted, id→increment)
+        if raw_kind in _KIND_ALIASES and raw_kind != out["kind"]:
+            notes.append(f"kind '{raw_kind}' normalized to '{out['kind']}'")
 
         # Near-miss: "constant" chosen but a values list was given instead of a scalar
         # value -> the model meant "values" (observed: kind="constant", values=[...]).
         if out["kind"] == "constant" and f.get("values") and not f.get("value"):
             out["kind"] = "values"
+            notes.append("constant with values list corrected to kind='values'")
 
         # Near-miss: "values"/"weighted" chosen but only a scalar value was given (e.g. a
         # slash- or comma-joined string) -> split it into a values list (observed:
@@ -258,6 +286,7 @@ def _normalize(spec: dict[str, Any]) -> dict[str, Any]:
             sep = "/" if "/" in raw else ("," if "," in raw else None)
             if sep:
                 out["values"] = [v.strip() for v in raw.split(sep) if v.strip()]
+                notes.append(f"{out['kind']} field '{field_display}' split scalar value into values list")
 
         # Near-miss: same as above, but the model put a Python-list-literal STRING in
         # script= instead of value= (observed: kind="weighted", script="['pasta',
@@ -272,6 +301,7 @@ def _normalize(spec: dict[str, Any]) -> dict[str, Any]:
                     parsed = None
                 if isinstance(parsed, list):
                     out["values"] = [str(v) for v in parsed]
+                    notes.append(f"{out['kind']} field '{field_display}' converted script list literal to values array")
 
         # Near-miss: the model signaled uniqueness in its own words instead of
         # discovering the unique= property — either as a hint alongside a correctly-
@@ -284,6 +314,10 @@ def _normalize(spec: dict[str, Any]) -> dict[str, Any]:
         if "unique" not in f:
             if out["kind"] == "int_range" and script_text.strip().lower().startswith("unique"):
                 out["unique"] = True
+                if top_level:
+                    notes.append(
+                        f"int_range field '{field_display}' with 'unique' script hint converted to unique=true"
+                    )
             else:
                 range_match = _UNIQUE_RANGE_SCRIPT_RE.search(script_text)
                 if range_match:
@@ -291,27 +325,43 @@ def _normalize(spec: dict[str, Any]) -> dict[str, Any]:
                     out["min"] = int(range_match.group(1))
                     out["max"] = int(range_match.group(2))
                     out["unique"] = True
+                    if top_level:
+                        notes.append(
+                            f"script field '{field_display}' with 'random.unique(...)' function "
+                            f"converted to int_range unique=true"
+                        )
 
         if not top_level:
             # unique= is top-level-only: a shuffle sequence is one stateful iterator
             # shared across the whole statement, not reset per parent-record iteration,
-            # so applying it inside a nested_list silently under-produces instead of
-            # being per-parent-unique. See _check_unique_fits.
+            # so applying it inside a nested_list would silently under-produce instead of
+            # being per-parent-unique. Record an unsupported-feature error and remove it.
+            if out.get("unique"):
+                errors.append(
+                    f"unsupported feature: unique=true inside a nested list (field '{field_display}') "
+                    f"— per-parent uniqueness is not supported by the scaffold renderer; restructure with "
+                    f"a top-level generate (e.g. passengers as their own generate joined to flights via "
+                    f"source=) or author raw XML"
+                )
             out.pop("unique", None)
 
         children = f.get("fields") or f.get("children")
         if children:
             out["kind"] = "nested_list"
-            out["fields"] = [_field(c, top_level=False) for c in children if isinstance(c, dict)]
+            out["fields"] = [
+                _field(c, top_level=False, field_name_hint=field_display)
+                for c in children if isinstance(c, dict)
+            ]
         return out
 
     def _generate(gen: dict[str, Any], allow_children: bool) -> dict[str, Any]:
         fields = gen.get("fields") or gen.get("keys") or gen.get("columns") or []
+        gen_name: str = str(gen.get("name") or "data")
         out = {
-            "name": gen.get("name") or "data",
+            "name": gen_name,
             "count": gen.get("count"),
             "target": _norm_target(gen.get("target")),
-            "fields": [_field(f) for f in fields if isinstance(f, dict)],
+            "fields": [_field(f, field_name_hint=gen.get("name") or "data") for f in fields if isinstance(f, dict)],
             "source": gen.get("source"),
             "source_type": gen.get("source_type") or gen.get("type"),
             "start": gen.get("start"),
@@ -321,15 +371,34 @@ def _normalize(spec: dict[str, Any]) -> dict[str, Any]:
         if allow_children:
             # One level only — matches _field_schema's existing anti-recursion discipline.
             children = gen.get("children") or gen.get("nested") or []
-            out["children"] = _dedupe_by_name([
-                _generate(c, allow_children=False) for c in children if isinstance(c, dict)
-            ])
+            child_gens = []
+            for c in children:
+                if isinstance(c, dict):
+                    child_name = c.get("name") or "child"
+                    # Check for grandchildren (third hierarchy level) — not allowed.
+                    grandchildren = c.get("children") or c.get("nested") or []
+                    if grandchildren:
+                        for gc in grandchildren:
+                            if isinstance(gc, dict):
+                                gc_name = gc.get("name") or "grandchild"
+                                errors.append(
+                                    f"unsupported feature: generate '{gc_name}' nested more than one level deep "
+                                    f"(inside '{child_name}' which is inside '{gen_name}') — the scaffold spec "
+                                    f"supports one level of nesting; flatten deeper levels into their own "
+                                    f"top-level generates joined via source=/memstore, or author raw XML"
+                                )
+                    child_gens.append(_generate(c, allow_children=False))
+            out["children"] = _dedupe_by_name(child_gens, notes)
         return out
 
     norm_gens = _dedupe_by_name(
-        [_generate(gen, allow_children=True) for gen in gens if isinstance(gen, dict)]
+        [_generate(gen, allow_children=True) for gen in gens if isinstance(gen, dict)], notes
     )
-    return {"seed": spec.get("seed"), "generates": norm_gens}
+    return NormalizeResult(
+        spec={"seed": spec.get("seed"), "generates": norm_gens},
+        notes=tuple(notes),
+        errors=tuple(errors),
+    )
 
 
 def _quote_values(values: list[str]) -> str:
@@ -489,39 +558,50 @@ def _target_exempt_names() -> set[str]:
     return set(_BUFFERED_EXPORTERS) | {EXPORTER_CONSOLE_EXPORTER, EXPORTER_LOG_EXPORTER}
 
 
-def render(spec: dict[str, Any]) -> str:
-    """Render a spec dict into a structurally-valid DATAMIMIC descriptor string.
-
-    Tolerant of a model's near-miss key drift (see _normalize). Raises ValueError only
-    when there is genuinely no generate to render — never a silently-empty descriptor.
-    """
-    spec = _normalize(spec)
-    generates = spec["generates"]
+def _render_normalized(canonical_spec: dict[str, Any]) -> str:
+    """Render an already-normalized spec dict into a structurally-valid DATAMIMIC descriptor
+    string. Called after _normalize() has validated the spec structure. Raises ValueError
+    only for structural/logical errors like unsupported configurations, never silently
+    emitting a wrong descriptor."""
+    generates = canonical_spec["generates"]
     if not generates or not any(g["fields"] for g in generates):
         raise ValueError(
             "spec needs a non-empty 'generates' list with fields, e.g. "
             "{'generates': [{'name': 'x', 'count': 10, 'fields': [{'name': 'id', 'kind': 'increment'}]}]}"
         )
 
-    seed = spec.get("seed")
+    seed = canonical_spec.get("seed")
     setup_open = f'<setup rngSeed="{int(seed)}">' if seed is not None else "<setup>"
     lines = [setup_open]
 
     # Declare any memstore referenced as a target (top-level or nested) so DM402 stays clean.
     memstore_ids = {
         t.strip()
-        for g in _iter_generates(spec.get("generates", []))
+        for g in _iter_generates(canonical_spec.get("generates", []))
         for t in str(g.get("target", "")).split(",")
         if t.strip() and t.strip() not in _target_exempt_names()
     }
     for mid in sorted(memstore_ids):
         lines.append(f'    <memstore id={quoteattr(mid)}/>')
 
-    for gen in spec.get("generates", []):
+    for gen in canonical_spec.get("generates", []):
         lines += _render_generate(gen, "    ")
 
     lines.append("</setup>")
     return "\n".join(lines)
+
+
+def render(spec: dict[str, Any]) -> str:
+    """Render a spec dict into a structurally-valid DATAMIMIC descriptor string.
+
+    Tolerant of a model's near-miss key drift (see _normalize). Raises ValueError with
+    a clear message if there are unsupported features or structural errors — never
+    silently emits a wrong descriptor.
+    """
+    result = _normalize(spec)
+    if result.errors:
+        raise ValueError("; ".join(result.errors))
+    return _render_normalized(result.spec)
 
 
 @dataclass
@@ -535,6 +615,7 @@ class ScaffoldCheckResult:
     stage: str  # "render" | "lint" | "dry_run"
     xml: str | None
     render_error: str | None = None
+    normalization_notes: tuple[str, ...] = ()
     lint_result: Any = None  # LintResult, set once past the render stage
     dryrun_result: Any = None  # DryRunResult, set only when stage == "dry_run"
 
@@ -546,25 +627,44 @@ def check(
     max_count: int = 10,
     sample_rows: int = 5,
 ) -> ScaffoldCheckResult:
-    """render() -> lint_source() -> optionally dry_run_source(), stopping at the first
-    failing stage. The one pipeline the MCP `datamimic_scaffold` tool and the CLI
-    `datamimic scaffold` command both call and then format for their own transport —
-    extracted after two independently-written copies of this sequencing drifted (different
-    stage values for the same phase, inconsistent error shapes)."""
+    """_normalize() -> _render_normalized() -> lint_source() -> optionally dry_run_source(),
+    stopping at the first failing stage. The one pipeline the MCP `datamimic_scaffold` tool
+    and the CLI `datamimic scaffold` command both call and then format for their own
+    transport — extracted after two independently-written copies of this sequencing drifted
+    (different stage values for the same phase, inconsistent error shapes). Normalizes once,
+    surfaces any diagnostics."""
     from datamimic_ce.authoring.dryrun import dry_run_source
     from datamimic_ce.authoring.linter import lint_source
 
+    norm_result = _normalize(spec)
+    norm_notes = norm_result.notes
+
+    if norm_result.errors:
+        return ScaffoldCheckResult(
+            ok=False, stage="render", xml=None, render_error="; ".join(norm_result.errors),
+            normalization_notes=norm_notes,
+        )
+
     try:
-        xml = render(spec)
+        xml = _render_normalized(norm_result.spec)
     except ValueError as err:
-        return ScaffoldCheckResult(ok=False, stage="render", xml=None, render_error=str(err))
+        return ScaffoldCheckResult(
+            ok=False, stage="render", xml=None, render_error=str(err),
+            normalization_notes=norm_notes,
+        )
 
     lint_result = lint_source(xml)
     if not lint_result.ok:
-        return ScaffoldCheckResult(ok=False, stage="lint", xml=xml, lint_result=lint_result)
+        return ScaffoldCheckResult(
+            ok=False, stage="lint", xml=xml, lint_result=lint_result,
+            normalization_notes=norm_notes,
+        )
 
     if not dry_run:
-        return ScaffoldCheckResult(ok=True, stage="lint", xml=xml, lint_result=lint_result)
+        return ScaffoldCheckResult(
+            ok=True, stage="lint", xml=xml, lint_result=lint_result,
+            normalization_notes=norm_notes,
+        )
 
     dryrun_result = dry_run_source(xml, max_count=max_count, sample_rows=sample_rows)
     return ScaffoldCheckResult(
@@ -573,4 +673,5 @@ def check(
         xml=xml,
         lint_result=lint_result,
         dryrun_result=dryrun_result,
+        normalization_notes=norm_notes,
     )

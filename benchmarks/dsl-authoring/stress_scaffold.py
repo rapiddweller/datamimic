@@ -117,30 +117,63 @@ def call_ollama(model: str, prompt: str, *, response_format: dict | None = None)
 # scope"), just enough to turn "eyeball six JSON blobs" into a printed pass/fail. Checked
 # against the rendered XML (post-normalization), not the model's raw JSON, so a near-miss
 # key _normalize() already fixed doesn't read as a false failure here.
+def _check_flight_seats_shape(xml: str, result_obj: dict | None = None) -> str | bool:
+    """flight_seats: either the render rejected nested-unique (now correct behavior),
+    or the render succeeded and produced unique seats per flight."""
+    # Check for explicit rejection of nested-unique (correct new behavior)
+    if (
+        result_obj
+        and result_obj.get("stage") == "render"
+        and result_obj.get("error")
+        and "unsupported feature" in result_obj.get("error", "")
+    ):
+        return True  # Explicit rejection is the correct outcome
+    # Check for successful render with per-flight uniqueness
+    if 'distribution="shuffle"' in xml:
+        # If we have products, verify actual per-flight seat uniqueness
+        if result_obj and result_obj.get("products"):
+            for product in result_obj["products"]:
+                if product["name"] == "flights":
+                    flights = product.get("sample", [])
+                    for flight in flights:
+                        if "passengers" in flight:
+                            seats = [
+                                p.get("seat") for p in flight["passengers"] if "seat" in p
+                            ]
+                            if len(seats) != len(set(seats)):
+                                return "per-flight seat uniqueness violated in sample"
+        return True
+    expected = "expected either explicit rejection of nested-unique or a unique (distribution=shuffle) seat field"
+    return expected
+
 _SPEC_SHAPE_CHECKS = {
-    "library_loans": lambda xml: "source=" in xml or "expected a source= read-back somewhere, found none",
-    "cart_abandonment": lambda xml: "source=" in xml or "expected a source= read-back somewhere, found none",
-    "server_metrics_week": lambda xml: (
+    "library_loans": lambda xml, result_obj=None: (
+        "source=" in xml
+        or "expected a source= read-back somewhere, found none"
+    ),
+    "cart_abandonment": lambda xml, result_obj=None: (
+        "source=" in xml
+        or "expected a source= read-back somewhere, found none"
+    ),
+    "server_metrics_week": lambda xml, result_obj=None: (
         all(f"{a}=" in xml for a in ("start", "end", "interval"))
         or "expected start=/end=/interval= all set, found incomplete/missing"
     ),
-    "flight_seats": lambda xml: (
-        'distribution="shuffle"' in xml
-        or "expected a unique (distribution=shuffle) seat number field, found none"
-    ),
-    "org_chart": lambda xml: (
+    "flight_seats": _check_flight_seats_shape,
+    "org_chart": lambda xml, result_obj=None: (
         xml.count('entity="Person"') >= 2
         or "expected >=2 Person variable declarations (outer + nested-scoped), found fewer"
     ),
 }
 
 
-def _check_spec_shape(scenario_id: str, xml: str | None) -> str | None:
-    """None = check passed or doesn't apply to this scenario; else a short failure reason."""
+def _check_spec_shape(scenario_id: str, xml: str | None, result_obj: dict | None = None) -> str | None:
+    """None = check passed or doesn't apply to this scenario; else a short failure reason.
+    For flight_seats, also checks the rendered output (if ok) or accepts explicit rejection (if render failed)."""
     check_fn = _SPEC_SHAPE_CHECKS.get(scenario_id)
     if check_fn is None or xml is None:
         return None
-    result = check_fn(xml)
+    result = check_fn(xml, result_obj=result_obj)
     return None if result is True else result
 
 
@@ -170,7 +203,7 @@ def run_scaffold_condition(model: str, scenario: dict) -> dict:
         out["products"] = [
             {"name": p.name, "count": p.count, "sample": p.sample[:1]} for p in result.dryrun_result.products
         ]
-    out["shape_check"] = _check_spec_shape(scenario["id"], out.get("xml"))
+    out["shape_check"] = _check_spec_shape(scenario["id"], out.get("xml"), result_obj=out)
     return out
 
 
