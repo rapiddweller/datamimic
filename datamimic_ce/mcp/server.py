@@ -14,6 +14,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_401_UNAUTHORIZED
 
+from datamimic_ce.authoring.diagnostics import _diagnostic_dicts
 from datamimic_ce.domains import facade
 from datamimic_ce.mcp import resources
 from datamimic_ce.mcp.models import CheckArgs, GenerateArgs, ReferenceArgs, RunArgs, ScaffoldArgs
@@ -86,18 +87,6 @@ def generate_impl(args: GenerateArgs) -> dict[str, Any]:
     return facade.generate_domain(payload)
 
 
-def _diagnostic_dicts(diagnostics: list[Any], detailed: bool) -> list[dict[str, Any]]:
-    concise_fields = ("rule", "severity", "line", "message", "fix_hint")
-    out: list[dict[str, Any]] = []
-    for diag in diagnostics:
-        data = diag.model_dump()
-        data["message"] = data["message"][:300]
-        if not detailed:
-            data = {key: data[key] for key in concise_fields}
-        out.append(data)
-    return out
-
-
 def check_impl(args: CheckArgs) -> dict[str, Any]:
     """Lint a DSL descriptor: aggregated diagnostics with fix hints (diagnostics v1)."""
     # WHY lazy: the authoring package pulls the engine's parsers/models — keep server
@@ -160,40 +149,17 @@ def reference_impl(args: ReferenceArgs) -> dict[str, Any]:
 
 def scaffold_impl(args: ScaffoldArgs) -> dict[str, Any]:
     """Render a compact JSON spec to guaranteed-structurally-valid DATAMIMIC DSL, lint it,
-    and optionally dry-run to verify data generation works."""
+    and optionally dry-run to verify data generation works.
+
+    Uses the service layer to ensure parity with the CLI and maintain a single
+    implementation across all transports.
+    """
     # WHY lazy: the authoring package pulls the engine's parsers/models — keep server
     # startup light and load on first tool use.
-    from datamimic_ce.authoring.scaffold import check
+    from datamimic_ce.authoring.service import scaffold
 
-    result = check(
-        args.spec, dry_run=args.dry_run, max_count=args.max_count, sample_rows=args.sample_rows
-    )
-
-    if result.stage == "render":
-        return {"ok": False, "stage": "render", "error": result.render_error}
-
-    if result.stage == "lint":
-        lint = result.lint_result
-        if not result.ok:
-            return {
-                "ok": False,
-                "stage": "lint",
-                "xml": result.xml,
-                "summary": lint.summary(),
-                "diagnostics": _diagnostic_dicts(lint.diagnostics, args.response_format == "detailed"),
-                "truncated": lint.truncated,
-            }
-        return {"ok": True, "stage": "lint", "xml": result.xml, "summary": lint.summary()}
-
-    # stage == "dry_run"
-    run = result.dryrun_result
-    return {
-        "ok": run.ok,
-        "stage": "dry_run",
-        "xml": result.xml,
-        "diagnostics": _diagnostic_dicts(run.diagnostics, args.response_format == "detailed"),
-        "products": [{"name": p.name, "count": p.count} for p in run.products],
-    }
+    result = scaffold(args)
+    return result.model_dump(exclude_none=True)
 
 
 def create_server(*, api_key: str | None = None) -> FastMCP:

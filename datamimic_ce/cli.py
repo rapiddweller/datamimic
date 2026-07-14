@@ -56,7 +56,7 @@ DESCRIPTOR_PATH = typer.Argument(..., help="Path to the descriptor file to valid
 DEFAULT_DESCRIPTOR_PATH = typer.Argument(DEFAULT_DESCRIPTOR, help="Path to the descriptor file")
 DEMO_NAME = typer.Argument(..., help="Name of the demo to get information about", autocompletion=demo_autocomplete)
 OPTIONAL_DEMO_NAME = typer.Argument(None, help="Name of the demo directory to use", autocompletion=demo_autocomplete)
-SPEC_PATH_ARG = typer.Argument(..., help="Path to the JSON spec file")
+SPEC_PATH_ARG = typer.Argument(..., help="Path to the JSON spec file (use '-' to read from stdin)")
 
 # Global singleton objects for option defaults
 TARGET_DIRECTORY_OPTION = typer.Option(None, "--target", "-t", help="Target directory for the demo project")
@@ -267,12 +267,21 @@ def _scaffold(
 ) -> None:
     """Shared implementation for `scaffold` command (exit codes: 0 = ok, 1 = findings, 2 = file/input error).
 
-    Delegates the render -> lint -> optional dry-run sequencing to
-    datamimic_ce.authoring.scaffold.check() (the same pipeline the MCP `datamimic_scaffold`
-    tool uses) so the two surfaces can't drift on stage naming/ordering — only output
-    formatting (JSON vs text, typer.Exit codes) is CLI-specific.
+    Uses the service layer (datamimic_ce.authoring.service.scaffold) for the render ->
+    lint -> optional dry-run pipeline so the CLI and MCP surfaces can't drift. Only
+    output formatting (JSON vs text) and exit code mapping are CLI-specific.
+
+    Supports stdin via '-' as spec_path.
     """
-    from datamimic_ce.authoring import scaffold
+    import sys
+
+    from datamimic_ce.authoring.contracts import ScaffoldRequest
+    from datamimic_ce.authoring.service import scaffold
+
+    # Validate output format early
+    if output_format not in ("text", "json"):
+        typer.echo(f"Error: Invalid format '{output_format}'. Expected: text | json")
+        raise typer.Exit(2)
 
     def _fail(exit_code: int, message: str, *, stage: str | None = None) -> None:
         if output_format == "json":
@@ -284,83 +293,97 @@ def _scaffold(
             typer.echo(f"Error: {message}")
         raise typer.Exit(exit_code)
 
-    def _emit_diagnostics(stage: str, diagnostics: list, *, summary: str | None = None) -> None:
+    def _emit_result(result_obj) -> None:
+        """Emit the result in the requested format and exit appropriately."""
+        # Determine exit code based on ok flag and stage
+        exit_code = (2 if result_obj.stage == "render" else 1) if not result_obj.ok else 0
+
         if output_format == "json":
-            typer.echo(
-                json.dumps(
-                    {"ok": False, "stage": stage, "diagnostics": [d.model_dump() for d in diagnostics]},
-                    indent=2,
-                    default=str,
-                )
-            )
+            typer.echo(json.dumps(result_obj.model_dump(exclude_none=True), indent=2, default=str))
         else:
-            for diag in diagnostics:
-                typer.echo(f"{diag.severity.value.upper():<7} {diag.rule}  {diag.message}")
-                typer.echo(f"    -> {diag.fix_hint}")
-            if summary is not None:
-                typer.echo(f"Summary: {summary}")
-        raise typer.Exit(1)
+            # Text format output
+            if result_obj.stage == "render":
+                typer.echo(f"Error: {result_obj.error}")
+            elif result_obj.stage == "lint":
+                if result_obj.diagnostics:
+                    for diag in result_obj.diagnostics:
+                        rule = diag.get("rule", "UNKNOWN")
+                        severity = diag.get("severity", "unknown").upper()
+                        message = diag.get("message", "")
+                        fix_hint = diag.get("fix_hint", "")
+                        typer.echo(f"{severity:<7} {rule}  {message}")
+                        typer.echo(f"    -> {fix_hint}")
+                if result_obj.summary:
+                    typer.echo(f"Summary: {result_obj.summary}")
+                if not result_obj.ok and result_obj.xml:
+                    pass  # lint failure, no XML output
+                elif result_obj.ok and result_obj.xml:
+                    typer.echo("")
+                    typer.echo(result_obj.xml)
+            elif result_obj.stage == "dry_run":
+                if result_obj.diagnostics:
+                    for diag in result_obj.diagnostics:
+                        rule = diag.get("rule", "UNKNOWN")
+                        severity = diag.get("severity", "unknown").upper()
+                        message = diag.get("message", "")
+                        fix_hint = diag.get("fix_hint", "")
+                        typer.echo(f"{severity:<7} {rule}  {message}")
+                        typer.echo(f"    -> {fix_hint}")
+                if result_obj.xml:
+                    typer.echo("")
+                    typer.echo(result_obj.xml)
+                if result_obj.ok and result_obj.products:
+                    typer.echo("")
+                    typer.echo("Dry-run successful:")
+                    for product in result_obj.products:
+                        typer.echo(f"  {product.name}: {product.count} rows")
 
-    # Load the JSON spec from file
-    if not spec_path.is_file():
-        _fail(2, f"File not found: {spec_path}")
+            # Normalization notes surface in text mode on EVERY outcome, success included —
+            # a repaired near-miss the caller never sees is a hidden semantic rewrite.
+            for note in result_obj.normalization_notes:
+                typer.echo(f"note: {note}")
 
+        raise typer.Exit(exit_code)
+
+    # Load the JSON spec from file or stdin
     try:
-        spec_dict = json.loads(spec_path.read_text(encoding="utf-8"))
+        spec_str = str(spec_path)
+        if spec_str == "-":
+            # Read from stdin
+            spec_text = sys.stdin.read()
+        else:
+            # Read from file
+            spec_path_obj = Path(spec_path)
+            if not spec_path_obj.is_file():
+                _fail(2, f"File not found: {spec_path_obj}")
+            spec_text = spec_path_obj.read_text(encoding="utf-8")
+
+        spec_dict = json.loads(spec_text)
     except json.JSONDecodeError as e:
-        _fail(2, f"Invalid JSON in {spec_path}: {e}")
+        _fail(2, f"Invalid JSON: {e}")
     except Exception as e:
-        _fail(2, f"Failed to read {spec_path}: {e}")
+        _fail(2, f"Failed to read spec: {e}")
+
+    # Validate inputs through ScaffoldRequest (gives us bounds checking)
+    try:
+        request = ScaffoldRequest(
+            spec=spec_dict,
+            dry_run=dry_run,
+            max_count=max_count,
+            sample_rows=sample_rows,
+            response_format="concise",  # CLI doesn't expose response_format to users
+        )
+    except ValueError as e:
+        _fail(2, str(e))
 
     # Suppress engine INFO logs on stderr when emitting JSON, so stdout stays pure JSON.
     with contextlib.ExitStack() as stack:
         if output_format == "json":
             devnull = stack.enter_context(open(os.devnull, "w"))
             stack.enter_context(contextlib.redirect_stderr(devnull))
-        result = scaffold.check(
-            spec_dict, dry_run=dry_run, max_count=max_count, sample_rows=sample_rows
-        )
+        result = scaffold(request)
 
-    if result.stage == "render":
-        _fail(2, result.render_error or "invalid spec", stage="render")
-
-    if result.stage == "lint" and not result.ok:
-        _emit_diagnostics("lint", result.lint_result.diagnostics, summary=result.lint_result.summary())
-
-    if result.stage == "lint":
-        # ok, --no-dry-run: just output the XML
-        if output_format == "json":
-            typer.echo(json.dumps({"ok": True, "stage": "lint", "xml": result.xml}, indent=2, default=str))
-        else:
-            typer.echo(result.xml)
-        raise typer.Exit(0)
-
-    # stage == "dry_run"
-    dr = result.dryrun_result
-    if not dr.ok:
-        _emit_diagnostics("dry_run", dr.diagnostics)
-
-    # Success: output the rendered XML and products
-    if output_format == "json":
-        typer.echo(
-            json.dumps(
-                {
-                    "ok": True,
-                    "stage": "dry_run",
-                    "xml": result.xml,
-                    "products": [p.model_dump() for p in dr.products],
-                },
-                indent=2,
-                default=str,
-            )
-        )
-    else:
-        typer.echo(result.xml)
-        typer.echo("")
-        typer.echo("Dry-run successful:")
-        for product in dr.products:
-            typer.echo(f"  {product.name}: {product.count} rows")
-    raise typer.Exit(0)
+    _emit_result(result)
 
 
 @app.command("scaffold", help="Render a JSON spec into DATAMIMIC DSL: validate, lint, optionally dry-run.")

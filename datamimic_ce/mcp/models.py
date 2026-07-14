@@ -8,6 +8,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
+from datamimic_ce.authoring.contracts import ScaffoldRequest
 from datamimic_ce.domains.common.locale_registry import dataset_code_for_locale
 from datamimic_ce.domains.locales import SUPPORTED_DATASET_CODES
 from datamimic_ce.domains.utils.dataset_path import dataset_path
@@ -156,7 +157,7 @@ class GenerateArgs(BaseModel):
         return payload
 
 
-__all__ = ["GenerateArgs", "MAX_COUNT"]
+__all__ = ["GenerateArgs", "MAX_COUNT", "ScaffoldArgs"]
 
 
 class CheckArgs(BaseModel):
@@ -217,35 +218,5 @@ class ReferenceArgs(BaseModel):
     )
 
 
-class ScaffoldArgs(BaseModel):
-    """Arguments for the ``datamimic_scaffold`` MCP tool (spec rendering + optional dry-run)."""
-
-    spec: dict[str, Any] = Field(
-        ...,
-        description=(
-            "Compact JSON spec conforming to SPEC_JSON_SCHEMA. Shape: "
-            "{'seed': int?, 'generates': [{'name': str, 'count': int?, 'target': str, "
-            "'source': str?, 'source_type': str?, 'fields': [...]}]}"
-        ),
-    )
-    dry_run: bool = Field(
-        True,
-        description="Whether to also dry-run the rendered descriptor after a clean lint (default True)",
-    )
-    max_count: int = Field(
-        10,
-        ge=1,
-        le=1000,
-        description="Per-<generate> record cap when dry_run=True (applies to nested generates too)",
-    )
-    sample_rows: int = Field(
-        5,
-        ge=1,
-        le=50,
-        description="Sample rows to capture per product during dry-run",
-    )
-    response_format: str = Field(
-        "concise",
-        pattern="^(concise|detailed)$",
-        description="Response format: concise (key diagnostics) or detailed (full diagnostic info)",
-    )
+# ScaffoldArgs is an alias to ScaffoldRequest from the canonical contracts module
+ScaffoldArgs = ScaffoldRequest

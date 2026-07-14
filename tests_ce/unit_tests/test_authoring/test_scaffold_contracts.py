@@ -1,0 +1,291 @@
+# DATAMIMIC
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
+
+"""Parity tests for scaffold across MCP, CLI, and service transports."""
+
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+import pytest
+from typer.testing import CliRunner
+
+from datamimic_ce.authoring.contracts import ScaffoldRequest
+from datamimic_ce.authoring.service import scaffold
+from datamimic_ce.cli import app
+from datamimic_ce.mcp.models import ScaffoldArgs
+from datamimic_ce.mcp.server import scaffold_impl
+
+# Test specs covering various scenarios
+SPEC_VALID_DRY_RUN = {
+    "seed": 1,
+    "generates": [{
+        "name": "customers", "count": 10, "target": "JSON",
+        "fields": [
+            {"name": "id", "kind": "increment"},
+            {"name": "name", "kind": "person_name"},
+            {"name": "age", "kind": "int_range", "min": 18, "max": 90},
+        ],
+    }],
+}
+
+SPEC_VALID_NO_DRY_RUN = {
+    "seed": 1,
+    "generates": [{
+        "name": "items", "count": 5, "target": "JSON",
+        "fields": [{"name": "id", "kind": "increment"}],
+    }],
+}
+
+SPEC_MALFORMED = {
+    "generates": [{
+        "name": "data", "count": 5, "target": "JSON",
+        # Missing fields array — should fail at render
+    }],
+}
+
+SPEC_LINT_FAILURE = {
+    "generates": [{
+        "name": "data", "count": 5, "target": "JSON",
+        "fields": [{"name": "id", "kind": "increment"}],
+        # DM303: No rngSeed — will pass render but lint will warn
+    }],
+}
+
+
+class TestScaffoldParity:
+    """Verify parity between service, MCP, and CLI implementations."""
+
+    def test_service_scaffold_valid_dry_run(self):
+        """Service correctly processes a valid spec with dry-run."""
+        request = ScaffoldRequest(
+            spec=SPEC_VALID_DRY_RUN,
+            dry_run=True,
+            max_count=10,
+            sample_rows=5,
+            response_format="concise",
+        )
+        result = scaffold(request)
+
+        assert result.ok is True
+        assert result.stage == "dry_run"
+        assert result.xml is not None
+        assert len(result.products) > 0
+        assert all(p.name and p.count >= 0 for p in result.products)
+
+    def test_service_scaffold_no_dry_run(self):
+        """Service correctly stops at lint when dry_run=False."""
+        request = ScaffoldRequest(
+            spec=SPEC_VALID_NO_DRY_RUN,
+            dry_run=False,
+            max_count=10,
+            sample_rows=5,
+            response_format="concise",
+        )
+        result = scaffold(request)
+
+        assert result.ok is True
+        assert result.stage == "lint"
+        assert result.xml is not None
+        assert result.products == []
+
+    def test_service_scaffold_render_error(self):
+        """Service correctly handles render errors."""
+        request = ScaffoldRequest(
+            spec=SPEC_MALFORMED,
+            dry_run=True,
+            max_count=10,
+            sample_rows=5,
+            response_format="concise",
+        )
+        result = scaffold(request)
+
+        assert result.ok is False
+        assert result.stage == "render"
+        assert result.error is not None
+        assert result.xml is None
+
+    def test_mcp_service_parity_dry_run(self):
+        """MCP scaffold_impl returns same data as service layer."""
+        args = ScaffoldArgs(
+            spec=SPEC_VALID_DRY_RUN,
+            dry_run=True,
+            max_count=10,
+            sample_rows=5,
+            response_format="concise",
+        )
+        request = ScaffoldRequest(**args.model_dump())
+
+        mcp_result = scaffold_impl(args)
+        service_result = scaffold(request)
+        service_dict = service_result.model_dump(exclude_none=True)
+
+        # Compare key fields
+        assert mcp_result["ok"] == service_dict["ok"]
+        assert mcp_result["stage"] == service_dict["stage"]
+        assert mcp_result["xml"] == service_dict["xml"]
+
+        # Compare products structure (should have name, count, sample, truncated_rows)
+        mcp_products = mcp_result.get("products", [])
+        service_products = service_dict.get("products", [])
+        assert len(mcp_products) == len(service_products)
+        for mcp_prod, service_prod in zip(mcp_products, service_products, strict=False):
+            assert mcp_prod["name"] == service_prod["name"]
+            assert mcp_prod["count"] == service_prod["count"]
+            assert "sample" in mcp_prod
+            assert "truncated_rows" in mcp_prod
+
+    def test_mcp_service_parity_no_dry_run(self):
+        """MCP and service return empty products list when dry_run=False."""
+        args = ScaffoldArgs(
+            spec=SPEC_VALID_NO_DRY_RUN,
+            dry_run=False,
+            max_count=10,
+            sample_rows=5,
+            response_format="concise",
+        )
+        request = ScaffoldRequest(**args.model_dump())
+
+        mcp_result = scaffold_impl(args)
+        service_result = scaffold(request)
+        service_dict = service_result.model_dump(exclude_none=True)
+
+        assert mcp_result["products"] == []
+        assert service_dict["products"] == []
+        assert mcp_result["ok"] == service_dict["ok"]
+        assert mcp_result["stage"] == "lint"
+
+    def test_cli_json_parity_dry_run(self):
+        """CLI JSON output matches service layer structure."""
+        runner = CliRunner()
+        spec_json = json.dumps(SPEC_VALID_DRY_RUN)
+
+        with TemporaryDirectory() as tmpdir:
+            spec_file = Path(tmpdir) / "spec.json"
+            spec_file.write_text(spec_json)
+
+            result = runner.invoke(app, ["scaffold", str(spec_file), "--format", "json"])
+            assert result.exit_code == 0
+
+            cli_output = json.loads(result.stdout)
+
+            # Verify service generates same structure
+            request = ScaffoldRequest(
+                spec=SPEC_VALID_DRY_RUN,
+                dry_run=True,
+                max_count=10,
+                sample_rows=5,
+                response_format="concise",
+            )
+            service_result = scaffold(request)
+            service_dict = service_result.model_dump(exclude_none=True)
+
+            # Compare structure (not values, as they may differ due to RNG)
+            assert cli_output["ok"] == service_dict["ok"]
+            assert cli_output["stage"] == service_dict["stage"]
+            assert "xml" in cli_output
+            assert "xml" in service_dict
+            assert len(cli_output.get("products", [])) == len(service_dict.get("products", []))
+
+    def test_cli_json_parity_no_dry_run(self):
+        """CLI JSON with --no-dry-run returns empty products."""
+        runner = CliRunner()
+        spec_json = json.dumps(SPEC_VALID_NO_DRY_RUN)
+
+        with TemporaryDirectory() as tmpdir:
+            spec_file = Path(tmpdir) / "spec.json"
+            spec_file.write_text(spec_json)
+
+            result = runner.invoke(app, ["scaffold", str(spec_file), "--no-dry-run", "--format", "json"])
+            assert result.exit_code == 0
+
+            cli_output = json.loads(result.stdout)
+            assert cli_output["products"] == []
+            assert cli_output["stage"] == "lint"
+
+    def test_cli_stdin_support(self):
+        """CLI supports '-' for reading spec from stdin."""
+        runner = CliRunner()
+        spec_json = json.dumps(SPEC_VALID_NO_DRY_RUN)
+
+        result = runner.invoke(
+            app,
+            ["scaffold", "-", "--no-dry-run", "--format", "json"],
+            input=spec_json,
+        )
+        assert result.exit_code == 0
+
+        cli_output = json.loads(result.stdout)
+        assert cli_output["ok"] is True
+        assert "xml" in cli_output
+
+    def test_cli_format_validation(self):
+        """CLI validates --format option."""
+        runner = CliRunner()
+        spec_json = json.dumps(SPEC_VALID_NO_DRY_RUN)
+
+        with TemporaryDirectory() as tmpdir:
+            spec_file = Path(tmpdir) / "spec.json"
+            spec_file.write_text(spec_json)
+
+            result = runner.invoke(app, ["scaffold", str(spec_file), "--format", "banana"])
+            assert result.exit_code == 2
+            assert "Invalid format" in result.stdout
+
+    def test_request_bounds_validation_max_count(self):
+        """ScaffoldRequest validates max_count bounds."""
+        # max_count must be >= 1
+        with pytest.raises(ValueError):
+            ScaffoldRequest(
+                spec=SPEC_VALID_DRY_RUN,
+                max_count=0,
+            )
+
+        # max_count must be <= 1000
+        with pytest.raises(ValueError):
+            ScaffoldRequest(
+                spec=SPEC_VALID_DRY_RUN,
+                max_count=1001,
+            )
+
+    def test_request_bounds_validation_sample_rows(self):
+        """ScaffoldRequest validates sample_rows bounds."""
+        # sample_rows must be >= 1
+        with pytest.raises(ValueError):
+            ScaffoldRequest(
+                spec=SPEC_VALID_DRY_RUN,
+                sample_rows=0,
+            )
+
+        # sample_rows must be <= 50
+        with pytest.raises(ValueError):
+            ScaffoldRequest(
+                spec=SPEC_VALID_DRY_RUN,
+                sample_rows=51,
+            )
+
+    def test_normalization_notes_preserved(self):
+        """Normalization notes are carried through in ScaffoldResult."""
+        # Create a spec that triggers normalization
+        spec_with_alias = {
+            "generates": [{
+                "name": "data", "count": 5, "target": "JSON",
+                "fields": [
+                    {"name": "id", "kind": "id"},  # alias: id → increment
+                    {"name": "email", "kind": "email"},  # alias: email → person_email
+                ],
+            }],
+        }
+
+        request = ScaffoldRequest(
+            spec=spec_with_alias,
+            dry_run=False,
+            response_format="concise",
+        )
+        result = scaffold(request)
+
+        # Should have normalization notes for kind aliases
+        assert len(result.normalization_notes) > 0

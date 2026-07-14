@@ -61,3 +61,26 @@ class LintResult(BaseModel):
             if self.counts.get(sev.value, 0)
         ]
         return ", ".join(parts) if parts else "no findings"
+
+
+def _diagnostic_dicts(diagnostics: list[Diagnostic], detailed: bool) -> list[dict[str, object]]:
+    """Serialize diagnostics to dicts, optionally filtering to concise fields.
+
+    Args:
+        diagnostics: List of Diagnostic objects
+        detailed: If True, return full diagnostic dicts; if False, only concise fields
+
+    Returns:
+        List of diagnostic dicts (rule, severity, line, message, fix_hint when detailed=False)
+    """
+    concise_fields = ("rule", "severity", "line", "message", "fix_hint")
+    out: list[dict[str, object]] = []
+    for diag in diagnostics:
+        data: dict[str, object] = diag.model_dump()
+        msg = data.get("message", "")
+        if isinstance(msg, str):
+            data["message"] = msg[:300]  # truncate long messages
+        if not detailed:
+            data = {key: data[key] for key in concise_fields if key in data}
+        out.append(data)
+    return out

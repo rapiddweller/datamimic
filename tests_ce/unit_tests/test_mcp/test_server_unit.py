@@ -162,5 +162,5 @@ def test_scaffold_impl_dry_run_false_stops_at_lint() -> None:
     assert result["ok"] is True
     assert result["stage"] == "lint"
     assert "xml" in result
-    assert "products" not in result  # No dry-run, so no products captured
+    assert result["products"] == []  # No dry-run, so no products captured
     assert "summary" in result

@@ -357,7 +357,7 @@ class TestCLI:
         output_json = json.loads(result.output)
         assert output_json["ok"] is True
         assert "xml" in output_json
-        assert "products" not in output_json
+        assert output_json["products"] == []  # No dry-run, so products is empty
 
     def test_scaffold_missing_file(self):
         """A missing spec file exits with code 2."""
