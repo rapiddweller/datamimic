@@ -590,9 +590,7 @@ class _IntentGraphIndex:
     def require_field(self, product: str, field: str, context: str) -> None:
         self.require_product(product, context)
         if field not in self.fields[product]:
-            raise ValueError(
-                f"{context} references unknown field '{field}' on product '{product}'"
-            )
+            raise ValueError(f"{context} references unknown field '{field}' on product '{product}'")
 
 
 def _intent_products(
@@ -615,10 +613,7 @@ def _intent_products(
 def _intent_fields(
     products: dict[str, ProductIntent | NestedGeneratedProduct],
 ) -> dict[str, set[str]]:
-    return {
-        name: {field.name for field in product.fields}
-        for name, product in products.items()
-    }
+    return {name: {field.name for field in product.fields} for name, product in products.items()}
 
 
 def _intent_nested_edges(
@@ -663,9 +658,7 @@ def _validate_nested_identifier_role(
 
 def _validate_unique_expectations(expectations: tuple[ExpectationIntent, ...]) -> None:
     duplicate_kinds = [
-        expectation.kind
-        for index, expectation in enumerate(expectations)
-        if expectation in expectations[:index]
+        expectation.kind for index, expectation in enumerate(expectations) if expectation in expectations[:index]
     ]
     if duplicate_kinds:
         kinds = ", ".join(duplicate_kinds)

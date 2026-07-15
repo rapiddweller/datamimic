@@ -265,11 +265,7 @@ def _definitions() -> dict[str, ElementDefinition]:
 
 
 def _alias_map() -> dict[str, str]:
-    return {
-        alias: definition.tag
-        for definition in _definitions().values()
-        for alias in definition.aliases
-    }
+    return {alias: definition.tag for definition in _definitions().values() for alias in definition.aliases}
 
 
 def registry_revision() -> int:

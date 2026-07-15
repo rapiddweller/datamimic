@@ -86,8 +86,7 @@ def _mutually_exclusive_when_error(
         return None
     attrs_str = ", ".join(sorted(fact.attrs))
     return fact.message or (
-        f"when '{fact.when_attr}' is present, at most one of "
-        f"[{attrs_str}] may be present, but got: {present}"
+        f"when '{fact.when_attr}' is present, at most one of [{attrs_str}] may be present, but got: {present}"
     )
 
 
@@ -97,9 +96,7 @@ def _requires_error(values: dict, fact: Requires) -> str | None:
     if any(need in values for need in fact.needs):
         return None
     needs_str = ", ".join(sorted(fact.needs))
-    return fact.message or (
-        f"when '{fact.attr}' is present, at least one of [{needs_str}] must be present"
-    )
+    return fact.message or (f"when '{fact.attr}' is present, at least one of [{needs_str}] must be present")
 
 
 def _requires_when_value_error(values: dict, fact: RequiresWhenValue) -> str | None:
@@ -112,8 +109,7 @@ def _requires_when_value_error(values: dict, fact: RequiresWhenValue) -> str | N
     needs_str = ", ".join(sorted(fact.needs))
     values_str = ", ".join(sorted(fact.when_values))
     return fact.message or (
-        f"when '{fact.when_attr}' is one of [{values_str}], at least one of "
-        f"[{needs_str}] must be present"
+        f"when '{fact.when_attr}' is one of [{values_str}], at least one of [{needs_str}] must be present"
     )
 
 
@@ -139,8 +135,7 @@ def _forbids_error(values: dict, fact: Forbids) -> str | None:
         return None
     excludes_str = ", ".join(sorted(fact.excludes))
     return fact.message or (
-        f"when '{fact.attr}' is present, none of [{excludes_str}] may be present, "
-        f"but got: {present}"
+        f"when '{fact.attr}' is present, none of [{excludes_str}] may be present, but got: {present}"
     )
 
 
@@ -153,8 +148,7 @@ def _forbids_when_value_error(values: dict, fact: ForbidsWhenValue) -> str | Non
     excludes_str = ", ".join(sorted(fact.excludes))
     values_str = ", ".join(sorted(fact.when_values))
     return fact.message or (
-        f"when '{fact.when_attr}' is one of [{values_str}], none of "
-        f"[{excludes_str}] may be present, but got: {present}"
+        f"when '{fact.when_attr}' is one of [{values_str}], none of [{excludes_str}] may be present, but got: {present}"
     )
 
 
@@ -166,9 +160,7 @@ def _valid_values_error(values: dict, fact: ValidValues) -> str | None:
     if attr_value in valid_set:
         return None
     valid_str = ", ".join(sorted(str(value) for value in valid_set))
-    return fact.message or (
-        f"'{fact.attr}' value must be one of [{valid_str}], but got: '{attr_value}'"
-    )
+    return fact.message or (f"'{fact.attr}' value must be one of [{valid_str}], but got: '{attr_value}'")
 
 
 def _allowed_values_error(values: dict, fact: AllowedValuesWhen) -> str | None:
@@ -256,6 +248,7 @@ class ModelUtil:
         Delegate to declared constraint: EXIST_COUNT.
         """
         from datamimic_ce.model.constraints import EXIST_COUNT
+
         return ModelUtil.check_constraints(values, (EXIST_COUNT,))
 
     @staticmethod
@@ -265,6 +258,7 @@ class ModelUtil:
         Delegate to declared constraint: WEIGHTS_REQUIRE_VALUES.
         """
         from datamimic_ce.model.constraints import WEIGHTS_REQUIRE_VALUES
+
         return ModelUtil.check_constraints(values, (WEIGHTS_REQUIRE_VALUES,))
 
     @staticmethod
@@ -355,6 +349,7 @@ class ModelUtil:
         Delegate to declared constraints: SOURCE_COMPANIONS_WITH_CYCLIC.
         """
         from datamimic_ce.model.constraints import SOURCE_COMPANIONS_WITH_CYCLIC
+
         return ModelUtil.check_constraints(values, SOURCE_COMPANIONS_WITH_CYCLIC)
 
     @staticmethod
@@ -365,6 +360,7 @@ class ModelUtil:
         Delegate to declared constraints: SOURCE_COMPANIONS_WITHOUT_CYCLIC.
         """
         from datamimic_ce.model.constraints import SOURCE_COMPANIONS_WITHOUT_CYCLIC
+
         return ModelUtil.check_constraints(values, SOURCE_COMPANIONS_WITHOUT_CYCLIC)
 
     @staticmethod
@@ -374,6 +370,7 @@ class ModelUtil:
         Delegate to declared constraints: GENERATOR_ENTITY_ADDONS.
         """
         from datamimic_ce.model.constraints import GENERATOR_ENTITY_ADDONS
+
         return ModelUtil.check_constraints(values, GENERATOR_ENTITY_ADDONS)
 
     @staticmethod
@@ -492,6 +489,7 @@ class ModelUtil:
         Delegate to declared constraint: DEFAULT_VALUE_REQUIRES_SCRIPT.
         """
         from datamimic_ce.model.constraints import DEFAULT_VALUE_REQUIRES_SCRIPT
+
         return ModelUtil.check_constraints(values, (DEFAULT_VALUE_REQUIRES_SCRIPT,))
 
     @staticmethod

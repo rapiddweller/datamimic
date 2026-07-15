@@ -24,6 +24,11 @@ from datamimic_ce.authoring.reference_projection import (
     authoring_reference_projection,
     list_authoring_reference_queries,
 )
+from datamimic_ce.authoring.rule_catalog import (
+    authoring_rule_definition,
+    authoring_rule_definitions,
+    serialize_rule_definition,
+)
 from datamimic_ce.authoring.schema import build_schema_index
 from datamimic_ce.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
@@ -48,8 +53,6 @@ from datamimic_ce.model.constraints import (
     serialize_source_capability,
     source_capabilities,
 )
-
-from datamimic_ce.authoring.rule_catalog import authoring_rule_definition, authoring_rule_definitions, serialize_rule_definition
 from datamimic_ce.model.element_registry import canonical_tag, element_aliases
 
 _GENERATOR_PACKAGE = "datamimic_ce.domains.common.literal_generators"
@@ -123,9 +126,7 @@ def overview_reference() -> str:
     """Describe the live discovery surface without loading a parallel guide."""
 
     topics = ", ".join(topic.value for topic in ReferenceTopic)
-    categories = ", ".join(
-        sorted({query.category.value for query in list_authoring_reference_queries()})
-    )
+    categories = ", ".join(sorted({query.category.value for query in list_authoring_reference_queries()}))
     return (
         "# DATAMIMIC reference\n"
         f"Topics: {topics}.\n"
@@ -408,10 +409,7 @@ def compact_authoring_reference(query: AuthoringReferenceQuery | None = None) ->
         return json.dumps(
             {
                 "topic": ReferenceTopic.AUTHORING,
-                "queries": [
-                    candidate.model_dump(mode="json")
-                    for candidate in list_authoring_reference_queries()
-                ],
+                "queries": [candidate.model_dump(mode="json") for candidate in list_authoring_reference_queries()],
                 "usage": "reference authoring --category <category> --kind <kind>",
             },
             indent=2,
@@ -427,6 +425,7 @@ def capabilities_manifest() -> dict[str, Any]:
     from datamimic_ce.enums.converter_enums import ConverterEnum
     from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES
     from datamimic_ce.exporters.exporter_util import buffered_exporter_names
+
     try:
         schema_version = version("datamimic_ce")
     except PackageNotFoundError:

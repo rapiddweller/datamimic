@@ -20,9 +20,7 @@ class EANGenerator(BaseLiteralGenerator):
 
     _UNIQUE_MAX_RETRIES = 100
 
-    def __init__(
-        self, locale: str | None = "en_US", unique: bool = False, rng: random.Random | None = None
-    ) -> None:
+    def __init__(self, locale: str | None = "en_US", unique: bool = False, rng: random.Random | None = None) -> None:
         super().__init__(rng=rng)
         self._gen = DataFakerGenerator(method="ean", locale=locale, rng=rng)
         self._unique = unique
@@ -39,6 +37,4 @@ class EANGenerator(BaseLiteralGenerator):
                 self._seen.add(value)
                 return value
             value = self._gen.generate()
-        raise ValueError(
-            f"EANGenerator(unique=True) found no fresh EAN after {self._UNIQUE_MAX_RETRIES} retries"
-        )
+        raise ValueError(f"EANGenerator(unique=True) found no fresh EAN after {self._UNIQUE_MAX_RETRIES} retries")

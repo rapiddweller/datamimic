@@ -20,10 +20,9 @@ The JSON schema exposure is derived by a shared callable factory
 This ensures one declaration, all consumers derive consistently.
 """
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from types import MappingProxyType
 from typing import Any
 
 # Attribute constants (imported at module level to avoid circular imports)

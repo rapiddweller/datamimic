@@ -63,7 +63,7 @@ class GenerateModel(BaseModel):
     name: str = Field(
         ...,
         description="Statement name — the product/table name generated records are grouped and "
-        "exported under, and the name other statements reference it by (e.g. generator=\"<name>\").",
+        'exported under, and the name other statements reference it by (e.g. generator="<name>").',
         examples=["customers", "orders"],
     )
     count: str | None = Field(
@@ -248,8 +248,7 @@ class GenerateModel(BaseModel):
     )
     interval: str | None = Field(
         None,
-        description="Time-series tick interval (ISO 8601 duration). Spacing between consecutive ts.now "
-        "ticks.",
+        description="Time-series tick interval (ISO 8601 duration). Spacing between consecutive ts.now ticks.",
         examples=["PT1H", "PT15M", "P1D"],
     )
 

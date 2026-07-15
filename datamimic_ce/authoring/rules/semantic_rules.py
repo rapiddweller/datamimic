@@ -225,9 +225,7 @@ def _requires_violations(
     for candidate in constraints:
         fact = _requires_violation(element, candidate)
         if fact is not None:
-            violated.setdefault((fact.needs, fact.lint_only, fact.message), []).append(
-                fact.attr
-            )
+            violated.setdefault((fact.needs, fact.lint_only, fact.message), []).append(fact.attr)
     return violated
 
 
@@ -283,9 +281,7 @@ def _forbidden_companion_diag(
     if not present:
         return None
     tag = str(element.tag)
-    message = fact.message or (
-        f"<{tag}> {fact.attr}= cannot be combined with: {', '.join(present)}."
-    )
+    message = fact.message or (f"<{tag}> {fact.attr}= cannot be combined with: {', '.join(present)}.")
     return ctx.diag(
         rule,
         element,
@@ -317,8 +313,7 @@ def _allowed_values_diag(
     message = (
         fact.message.replace("{actual_value}", value)
         if fact.message is not None
-        else f"when '{fact.when_attr}' is set, '{fact.attr}' value must be one of "
-        f"[{options}], but got: '{value}'"
+        else f"when '{fact.when_attr}' is set, '{fact.attr}' value must be one of [{options}], but got: '{value}'"
     )
     return ctx.diag(
         rule,

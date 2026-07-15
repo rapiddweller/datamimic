@@ -33,7 +33,9 @@ class DummyRdbmsClient:
     def __init__(self):
         self._seq = {}
 
-    def get_current_sequence_number(self, sequence_name: str, table_name: str | None = None, column_name: str | None = None) -> int:
+    def get_current_sequence_number(
+        self, sequence_name: str, table_name: str | None = None, column_name: str | None = None
+    ) -> int:
         return self._seq.get(sequence_name, 1000)
 
     def increase_sequence_number(

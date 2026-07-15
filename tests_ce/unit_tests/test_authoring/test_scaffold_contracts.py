@@ -25,33 +25,45 @@ from datamimic_ce.cli import app
 SPEC_VALID_DRY_RUN = {
     "version": "1",
     "seed": 1,
-    "products": [{
-        "kind": "generated", "name": "customers", "count": 10,
-        "targets": [{"kind": "file_export", "format": "JSON"}],
-        "fields": [
-            {"kind": "increment", "name": "id"},
-            {"kind": "person_name", "name": "name"},
-            {"kind": "int_range", "name": "age", "minimum": 18, "maximum": 90},
-        ],
-    }],
+    "products": [
+        {
+            "kind": "generated",
+            "name": "customers",
+            "count": 10,
+            "targets": [{"kind": "file_export", "format": "JSON"}],
+            "fields": [
+                {"kind": "increment", "name": "id"},
+                {"kind": "person_name", "name": "name"},
+                {"kind": "int_range", "name": "age", "minimum": 18, "maximum": 90},
+            ],
+        }
+    ],
 }
 
 SPEC_VALID_NO_DRY_RUN = {
     "version": "1",
     "seed": 1,
-    "products": [{
-        "kind": "generated", "name": "items", "count": 5,
-        "targets": [{"kind": "file_export", "format": "JSON"}],
-        "fields": [{"kind": "increment", "name": "id"}],
-    }],
+    "products": [
+        {
+            "kind": "generated",
+            "name": "items",
+            "count": 5,
+            "targets": [{"kind": "file_export", "format": "JSON"}],
+            "fields": [{"kind": "increment", "name": "id"}],
+        }
+    ],
 }
 
 SPEC_MALFORMED = {
     "version": "1",
-    "products": [{
-        "kind": "generated", "name": "data", "count": 5,
-        # Missing fields array — should fail at render
-    }],
+    "products": [
+        {
+            "kind": "generated",
+            "name": "data",
+            "count": 5,
+            # Missing fields array — should fail at render
+        }
+    ],
 }
 
 SPEC_V1 = {
@@ -263,9 +275,7 @@ class TestScaffoldParity:
             "reader": 5,
         }
         memstore = next(
-            item
-            for item in service_result["acceptance"]["results"]
-            if item["kind"] == "memstore_completeness"
+            item for item in service_result["acceptance"]["results"] if item["kind"] == "memstore_completeness"
         )
         assert memstore["status"] == AcceptanceStatus.PASS
         assert memstore["required_consumer_foreign_key"] == {
@@ -355,9 +365,7 @@ class TestScaffoldParity:
         assert cli_result.exit_code == 1
         assert json.loads(cli_result.stdout) == service_result
         memstore = next(
-            item
-            for item in service_result["acceptance"]["results"]
-            if item["kind"] == "memstore_completeness"
+            item for item in service_result["acceptance"]["results"] if item["kind"] == "memstore_completeness"
         )
         assert memstore["required_consumer_foreign_key"]["observed_count"] == 0
 
@@ -420,8 +428,7 @@ class TestScaffoldParity:
         assert result.verified is True, result.acceptance
         assert result.acceptance is not None
         assert any(
-            item.kind == "memstore_completeness"
-            and item.status is AcceptanceStatus.PASS
+            item.kind == "memstore_completeness" and item.status is AcceptanceStatus.PASS
             for item in result.acceptance.results
         )
         assert result.xml is not None

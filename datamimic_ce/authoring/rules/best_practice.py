@@ -16,6 +16,7 @@ from math import isfinite
 from lxml import etree
 
 from datamimic_ce.authoring.diagnostics import Diagnostic
+from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules.base import LintContext, Rule
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_DECIMAL, DATA_TYPE_FLOAT, DATA_TYPE_INT
 from datamimic_ce.constants.element_constants import (
@@ -32,7 +33,6 @@ from datamimic_ce.constants.element_constants import (
     EL_VARIABLE,
 )
 from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
-from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.utils.number_sequences import finite_number_sequence_capacity
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
@@ -124,10 +124,7 @@ def _literal_nested_demand(
 def _conditional_demand_reason(element: etree._Element) -> str | None:
     if element.get("condition") is not None:
         return "a condition can change how many rows evaluate the field"
-    if any(
-        isinstance(ancestor.tag, str) and ancestor.tag in _CONDITIONAL_TAGS
-        for ancestor in element.iterancestors()
-    ):
+    if any(isinstance(ancestor.tag, str) and ancestor.tag in _CONDITIONAL_TAGS for ancestor in element.iterancestors()):
         return "a condition can change how many rows evaluate the field"
     return None
 

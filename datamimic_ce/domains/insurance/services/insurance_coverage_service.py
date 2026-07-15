@@ -34,9 +34,7 @@ class InsuranceCoverageService(BaseDomainService[InsuranceCoverage]):
     """Service for generating and managing insurance company coverages."""
 
     def __init__(self, dataset: str | None = None, rng: Random | None = None):
-        super().__init__(
-            InsuranceCoverageGenerator(dataset=dataset, rng=rng), InsuranceCoverage
-        )
+        super().__init__(InsuranceCoverageGenerator(dataset=dataset, rng=rng), InsuranceCoverage)
 
     DATASET_PATTERNS = ("insurance/coverages_{CC}.csv",)
 

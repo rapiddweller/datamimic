@@ -35,9 +35,7 @@ class TestCLI:
 
         assert result.exit_code == 0
         payload = json.loads(result.output)
-        assert payload["elements"][EL_ITERATE]["constraints"] == serialize_constraints(
-            element_constraints(EL_ITERATE)
-        )
+        assert payload["elements"][EL_ITERATE]["constraints"] == serialize_constraints(element_constraints(EL_ITERATE))
 
     def test_lint_descriptor_failure(self, tmp_path, monkeypatch):
         """A broken descriptor lints with findings: exit 1."""
@@ -314,14 +312,18 @@ class TestCLI:
         """A valid spec renders to XML, lints clean, and dry-runs successfully with text output."""
         spec = {
             "version": "1",
-            "products": [{
-                "kind": "generated", "name": "customers", "count": 10,
-                "targets": [{"kind": "file_export", "format": "JSON"}],
-                "fields": [
-                    {"kind": "increment", "name": "id"},
-                    {"kind": "person_name", "name": "name"},
-                ],
-            }],
+            "products": [
+                {
+                    "kind": "generated",
+                    "name": "customers",
+                    "count": 10,
+                    "targets": [{"kind": "file_export", "format": "JSON"}],
+                    "fields": [
+                        {"kind": "increment", "name": "id"},
+                        {"kind": "person_name", "name": "name"},
+                    ],
+                }
+            ],
         }
         result = self._run_scaffold(tmp_path, monkeypatch, spec)
         assert result.exit_code == 0
@@ -334,11 +336,15 @@ class TestCLI:
         """A valid spec with --format json outputs pure JSON with ok/xml/products."""
         spec = {
             "version": "1",
-            "products": [{
-                "kind": "generated", "name": "products", "count": 5,
-                "targets": [{"kind": "file_export", "format": "JSON"}],
-                "fields": [{"kind": "pattern", "name": "sku", "pattern": "[A-Z]{3}"}],
-            }],
+            "products": [
+                {
+                    "kind": "generated",
+                    "name": "products",
+                    "count": 5,
+                    "targets": [{"kind": "file_export", "format": "JSON"}],
+                    "fields": [{"kind": "pattern", "name": "sku", "pattern": "[A-Z]{3}"}],
+                }
+            ],
         }
         result = self._run_scaffold(tmp_path, monkeypatch, spec, "--format", "json")
         assert result.exit_code == 0
@@ -352,10 +358,14 @@ class TestCLI:
     def test_scaffold_removed_no_dry_run_option_is_rejected(self, tmp_path, monkeypatch):
         """Scaffold no longer exposes a second lint-only execution path."""
         spec = {
-            "generates": [{
-                "name": "data", "count": 3, "target": "JSON",
-                "fields": [{"name": "x", "kind": "constant", "value": "test"}],
-            }],
+            "generates": [
+                {
+                    "name": "data",
+                    "count": 3,
+                    "target": "JSON",
+                    "fields": [{"name": "x", "kind": "constant", "value": "test"}],
+                }
+            ],
         }
         result = self._run_scaffold(tmp_path, monkeypatch, spec, "--no-dry-run")
         assert result.exit_code == 2
@@ -364,11 +374,15 @@ class TestCLI:
         """Default scaffold completes run and acceptance instead of stopping at lint."""
         spec = {
             "version": "1",
-            "products": [{
-                "kind": "generated", "name": "data", "count": 2,
-                "targets": [{"kind": "file_export", "format": "JSON"}],
-                "fields": [{"kind": "increment", "name": "v"}],
-            }],
+            "products": [
+                {
+                    "kind": "generated",
+                    "name": "data",
+                    "count": 2,
+                    "targets": [{"kind": "file_export", "format": "JSON"}],
+                    "fields": [{"kind": "increment", "name": "v"}],
+                }
+            ],
         }
         result = self._run_scaffold(tmp_path, monkeypatch, spec, "--format", "json")
         assert result.exit_code == 0
@@ -408,11 +422,15 @@ class TestCLI:
         """With --max-count, the dry-run caps at the specified count."""
         spec = {
             "version": "1",
-            "products": [{
-                "kind": "generated", "name": "data", "count": 100,
-                "targets": [{"kind": "file_export", "format": "JSON"}],
-                "fields": [{"kind": "increment", "name": "id"}],
-            }],
+            "products": [
+                {
+                    "kind": "generated",
+                    "name": "data",
+                    "count": 100,
+                    "targets": [{"kind": "file_export", "format": "JSON"}],
+                    "fields": [{"kind": "increment", "name": "id"}],
+                }
+            ],
         }
         result = self._run_scaffold(tmp_path, monkeypatch, spec, "--max-count", "7", "--format", "json")
         assert result.exit_code == 1
@@ -426,16 +444,24 @@ class TestCLI:
         """A spec with nested generates renders correctly."""
         spec = {
             "version": "1",
-            "products": [{
-                "kind": "generated", "name": "customers", "count": 3,
-                "targets": [{"kind": "file_export", "format": "JSON"}],
-                "fields": [{"kind": "increment", "name": "id"}],
-                "children": [{
-                    "kind": "generated", "name": "orders", "count": 2,
+            "products": [
+                {
+                    "kind": "generated",
+                    "name": "customers",
+                    "count": 3,
                     "targets": [{"kind": "file_export", "format": "JSON"}],
-                    "fields": [{"kind": "script", "name": "customer_id", "script": "parent.id"}],
-                }],
-            }],
+                    "fields": [{"kind": "increment", "name": "id"}],
+                    "children": [
+                        {
+                            "kind": "generated",
+                            "name": "orders",
+                            "count": 2,
+                            "targets": [{"kind": "file_export", "format": "JSON"}],
+                            "fields": [{"kind": "script", "name": "customer_id", "script": "parent.id"}],
+                        }
+                    ],
+                }
+            ],
         }
         result = self._run_scaffold(tmp_path, monkeypatch, spec, "--format", "json")
         assert result.exit_code == 1

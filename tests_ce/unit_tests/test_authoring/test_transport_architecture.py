@@ -57,8 +57,6 @@ def test_transports_do_not_import_authoring_implementation_modules() -> None:
     for relative in ("datamimic_ce/cli.py", "datamimic_ce/cli_authoring.py", "datamimic_ce/mcp/server.py"):
         tree = ast.parse((ROOT / relative).read_text(encoding="utf-8"))
         imports = {
-            node.module
-            for node in ast.walk(tree)
-            if isinstance(node, ast.ImportFrom) and node.module is not None
+            node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module is not None
         }
         assert not imports & forbidden

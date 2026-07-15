@@ -139,7 +139,9 @@ class TestVariableFunctional:
 
         unique_ids = [r["row_id"] for r in result["selector_unique"]]
         assert len(unique_ids) == 15
-        assert set(unique_ids) == set(range(1, 16)), f"expected all 15 pool values exactly once, got {sorted(unique_ids)}"
+        assert set(unique_ids) == set(range(1, 16)), (
+            f"expected all 15 pool values exactly once, got {sorted(unique_ids)}"
+        )
 
         # unique against a column with real duplicates (category: 3 distinct values across 15
         # rows) - proves dedup genuinely collapses repeats, not just that it leaves an

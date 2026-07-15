@@ -14,8 +14,9 @@ def test_ragged_dbunit_table_inserts_into_a_real_rdbms():
     shutil.rmtree(_DIR / "db", ignore_errors=True)
     try:
         DataMimicTest(test_dir=_DIR, filename="read_to_db.xml", capture_test_result=True).test_with_timer()
-        cfg = RdbmsConnectionConfig(dbms="sqlite", database="dbunit_read_db", host=None, port=None,
-                                    user=None, password=None, db_schema=None)
+        cfg = RdbmsConnectionConfig(
+            dbms="sqlite", database="dbunit_read_db", host=None, port=None, user=None, password=None, db_schema=None
+        )
         client = RdbmsClient(cfg, task_id="t")
         assert client.get("SELECT COUNT(*) FROM db_category")[0][0] == 28
         # a top-level category landed with NULL parent_id

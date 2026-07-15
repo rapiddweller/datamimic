@@ -113,4 +113,3 @@ def test_nested_key_all_distributions():
     res2 = _run("nestedkey_source.xml")
     for product in ("ordered", "random", "cumulated"):
         assert _nested_vals(res, product) == _nested_vals(res2, product)
-

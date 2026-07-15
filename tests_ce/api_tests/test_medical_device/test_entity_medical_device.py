@@ -6,18 +6,19 @@ from datamimic_ce.domains.healthcare.services.medical_device_service import Medi
 
 class TestEntityMedicalDevice:
     _supported_datasets = ["US", "DE"]
+
     def _test_single_medical_device(self, medical_device: MedicalDevice):
         assert isinstance(medical_device, MedicalDevice)
         assert isinstance(medical_device.device_id, str)
         assert isinstance(medical_device.device_type, str)
-        assert isinstance(medical_device.manufacturer, str) 
+        assert isinstance(medical_device.manufacturer, str)
         assert isinstance(medical_device.model_number, str)
         assert isinstance(medical_device.serial_number, str)
         assert isinstance(medical_device.manufacture_date, str)
         assert isinstance(medical_device.expiration_date, str)
         assert isinstance(medical_device.last_maintenance_date, str)
         assert isinstance(medical_device.next_maintenance_date, str)
-        assert isinstance(medical_device.status, str)           
+        assert isinstance(medical_device.status, str)
         assert isinstance(medical_device.location, str)
         assert isinstance(medical_device.assigned_to, str)
         assert isinstance(medical_device.specifications, dict)
@@ -27,6 +28,7 @@ class TestEntityMedicalDevice:
         assert medical_device.device_id is not None and medical_device.device_id != ""
         #  validate standardized device ID format
         import re
+
         assert re.fullmatch(r"DEV-\d{8}", medical_device.device_id)
         assert medical_device.manufacturer is not None and medical_device.manufacturer != ""
         assert medical_device.model_number is not None and medical_device.model_number != ""
@@ -40,9 +42,10 @@ class TestEntityMedicalDevice:
         assert medical_device.assigned_to is not None and medical_device.assigned_to != ""
         assert medical_device.specifications is not None and medical_device.specifications != {}
         assert medical_device.usage_logs is not None and medical_device.usage_logs != []
-        assert medical_device.maintenance_history is not None and medical_device.maintenance_history != []      
+        assert medical_device.maintenance_history is not None and medical_device.maintenance_history != []
         #  validate temporal consistency of generated dates
         from datetime import datetime
+
         assert medical_device.manufacture_date <= medical_device.expiration_date
         assert datetime.strptime(medical_device.last_maintenance_date, "%Y-%m-%d") <= datetime.now()
         assert datetime.now() <= datetime.strptime(medical_device.next_maintenance_date, "%Y-%m-%d")
@@ -59,7 +62,7 @@ class TestEntityMedicalDevice:
         for medical_device in medical_devices:
             self._test_single_medical_device(medical_device)
 
-    def test_hospital_property_cache(self): 
+    def test_hospital_property_cache(self):
         medical_device_service = MedicalDeviceService()
         medical_device = medical_device_service.generate()
         assert medical_device.device_id == medical_device.device_id
@@ -79,7 +82,7 @@ class TestEntityMedicalDevice:
 
     @pytest.mark.flaky(reruns=10)
     def test_two_different_entities(self):
-        medical_device_service = MedicalDeviceService()    
+        medical_device_service = MedicalDeviceService()
         medical_device1 = medical_device_service.generate()
         medical_device2 = medical_device_service.generate()
         assert medical_device1.device_id != medical_device2.device_id

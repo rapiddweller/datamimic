@@ -94,9 +94,7 @@ def test_compiler_is_byte_deterministic_and_plan_matches_relationships() -> None
     second = compile_authoring_spec(spec)
     assert first == second
     assert [product.name for product in first.plan.products] == ["customers", "orders"]
-    assert [(edge.parent, edge.child) for edge in first.plan.relationships] == [
-        ("customers", "orders")
-    ]
+    assert [(edge.parent, edge.child) for edge in first.plan.relationships] == [("customers", "orders")]
     assert dry_run_source(first.xml, max_count=8, sample_rows=2).ok
 
 
@@ -164,9 +162,7 @@ def test_source_and_exporter_facts_have_one_projection() -> None:
     assert formats[0] is SourceFileFormat.DBUNIT_XML
     assert source_file_format("dataset.dbunit.xml") is SourceFileFormat.DBUNIT_XML
     assert source_file_format("rows.fcw") is SourceFileFormat.FIXED_WIDTH
-    schema_formats = set(
-        authoring_spec_json_schema()["$defs"]["FileExportTarget"]["properties"]["format"]["enum"]
-    )
+    schema_formats = set(authoring_spec_json_schema()["$defs"]["FileExportTarget"]["properties"]["format"]["enum"])
     assert schema_formats == buffered_exporter_names()
 
 

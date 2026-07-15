@@ -165,9 +165,7 @@ def test_run_service_cli_parity(tmp_path: Path) -> None:
     assert service_result.ok == cli_payload["ok"]
     assert service_result.stage is AuthoringStage.RUN
     assert cli_payload["stage"] == AuthoringStage.RUN.value
-    assert cli_payload["products"] == [
-        product.model_dump(mode="json") for product in service_result.products
-    ]
+    assert cli_payload["products"] == [product.model_dump(mode="json") for product in service_result.products]
     assert cli_payload["diagnostics"] == [
         diagnostic.model_dump(mode="json") for diagnostic in service_result.diagnostics
     ]

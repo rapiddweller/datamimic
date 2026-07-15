@@ -9,8 +9,8 @@
 from pathlib import Path
 
 from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.model.generator_model import GeneratorModel
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
@@ -60,10 +60,12 @@ def _create_context() -> SetupContext:
 
 def test_root_caching_behaviour():
     ctx = _create_context()
-    ctx.namespace.update({
-        "CachedGenerator": CachedGenerator,
-        "NonCachedGenerator": NonCachedGenerator,
-    })
+    ctx.namespace.update(
+        {
+            "CachedGenerator": CachedGenerator,
+            "NonCachedGenerator": NonCachedGenerator,
+        }
+    )
 
     util = GeneratorUtil(ctx)
     stmt = DummyStatement()

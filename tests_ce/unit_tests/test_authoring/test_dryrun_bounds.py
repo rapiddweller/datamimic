@@ -143,9 +143,7 @@ def test_capped_memstore_producer_propagates_unknown_to_full_bounded_reader() ->
         <generate name="reader" source="mem" type="producer" distribution="ordered"/>
     </setup>"""
 
-    products = {
-        product.name: product for product in dry_run_source(xml, max_count=10).products
-    }
+    products = {product.name: product for product in dry_run_source(xml, max_count=10).products}
 
     assert products["producer"].capture.status is CaptureStatus.CAPPED
     assert products["reader"].count == 10
@@ -201,8 +199,7 @@ def test_ambiguous_memstore_producers_fail_closed_unknown() -> None:
 
 def test_memstore_producer_cycle_fails_closed_unknown(tmp_path: Path) -> None:
     (tmp_path / "seed.scr.py").write_text(
-        "store_a.consume(('entity_a', [{'id': 1}]))\n"
-        "store_b.consume(('entity_b', [{'id': 2}]))\n",
+        "store_a.consume(('entity_a', [{'id': 1}]))\nstore_b.consume(('entity_b', [{'id': 2}]))\n",
         encoding="utf-8",
     )
     descriptor = tmp_path / "datamimic.xml"

@@ -147,9 +147,7 @@ def _range_field_element(
     attributes: dict[str, str],
 ) -> Element:
     if isinstance(field, IntegerRangeField):
-        attributes.update(
-            {"type": "int", "min": str(field.minimum), "max": str(field.maximum)}
-        )
+        attributes.update({"type": "int", "min": str(field.minimum), "max": str(field.maximum)})
         if field.unique:
             attributes["distribution"] = "shuffle"
     elif isinstance(field, DecimalRangeField):
@@ -286,9 +284,7 @@ def _append_product_fields(
     depth: int,
 ) -> None:
     if _uses_person(product.fields):
-        element.append(
-            Element("variable", {"name": _entity_variable(depth), "entity": "Person"})
-        )
+        element.append(Element("variable", {"name": _entity_variable(depth), "entity": "Person"}))
     for field in product.fields:
         element.append(_field_element(field, depth=depth))
 
@@ -331,36 +327,28 @@ def _validate_registry_tree(element: Element, parent: Element | None = None) -> 
     if parent is not None:
         parent_schema = index.get(parent.tag)
         if parent_schema is None or (
-            parent_schema.allowed_children is not None
-            and element.tag not in parent_schema.allowed_children
+            parent_schema.allowed_children is not None and element.tag not in parent_schema.allowed_children
         ):
-            raise CompileError(
-                f"runtime registry does not allow <{element.tag}> inside <{parent.tag}>"
-            )
+            raise CompileError(f"runtime registry does not allow <{element.tag}> inside <{parent.tag}>")
     if not schema.open_attrs:
         unknown = sorted(set(element.attrib) - set(schema.attributes))
         if unknown:
             raise CompileError(
-                f"runtime registry does not define attribute(s) on <{element.tag}>: "
-                f"{', '.join(unknown)}"
+                f"runtime registry does not define attribute(s) on <{element.tag}>: {', '.join(unknown)}"
             )
     if schema.model is not None:
         try:
             schema.model.model_validate(element.attrib)
         except ValidationError as error:
             first = error.errors(include_url=False)[0]
-            raise CompileError(
-                f"runtime model rejected <{element.tag}>: {first['msg']}"
-            ) from error
+            raise CompileError(f"runtime model rejected <{element.tag}>: {first['msg']}") from error
     for child in element:
         _validate_registry_tree(child, element)
 
 
 def _serialize_element(element: Element, depth: int = 0) -> list[str]:
     indent = "    " * depth
-    attributes = "".join(
-        f" {name}={quoteattr(value)}" for name, value in element.attrib.items()
-    )
+    attributes = "".join(f" {name}={quoteattr(value)}" for name, value in element.attrib.items())
     if len(element) == 0:
         return [f"{indent}<{element.tag}{attributes}/>"]
     lines = [f"{indent}<{element.tag}{attributes}>"]
@@ -377,18 +365,14 @@ def _producer_for_source(
     candidates = [
         product
         for product, _parent in products
-        if any(
-            isinstance(target, MemstoreTarget) and target.id == source.id
-            for target in product.targets
-        )
+        if any(isinstance(target, MemstoreTarget) and target.id == source.id for target in product.targets)
     ]
     if source.product is not None:
         candidates = [product for product in candidates if product.name == source.product]
     if len(candidates) != 1:
         detail = "none" if not candidates else ", ".join(product.name for product in candidates)
         raise CompileError(
-            f"memstore source '{source.id}' must resolve to exactly one in-spec producer; "
-            f"resolved: {detail}"
+            f"memstore source '{source.id}' must resolve to exactly one in-spec producer; resolved: {detail}"
         )
     return candidates[0]
 
@@ -480,9 +464,7 @@ def _resolve_memstore_cardinalities(
     while pending:
         progressed = False
         for product in list(pending):
-            if _resolve_memstore_cardinality(
-                product, products, counts, relationships, unresolved
-            ):
+            if _resolve_memstore_cardinality(product, products, counts, relationships, unresolved):
                 pending.remove(product)
                 progressed = True
         if not progressed:
@@ -702,11 +684,7 @@ def _product_compile_plan(
     if isinstance(product, GeneratedProduct | NestedGeneratedProduct):
         if static_count is None:
             raise CompileError(f"generated product '{product.name}' has unknown cardinality")
-        children = (
-            [child.name for child in product.children]
-            if isinstance(product, GeneratedProduct)
-            else []
-        )
+        children = [child.name for child in product.children] if isinstance(product, GeneratedProduct) else []
         return GeneratedProductCompilePlan(
             name=product.name,
             fields=fields,
@@ -745,9 +723,7 @@ def _derived_count_acceptance(
 ) -> list[DerivedAcceptancePlan]:
     result: list[DerivedAcceptancePlan] = []
     if static_count is not None:
-        result.append(
-            ExactCountAcceptancePlan(product=product_name, exact_count=static_count)
-        )
+        result.append(ExactCountAcceptancePlan(product=product_name, exact_count=static_count))
     if parent is not None and per_parent is not None:
         result.append(
             PerParentCountAcceptancePlan(

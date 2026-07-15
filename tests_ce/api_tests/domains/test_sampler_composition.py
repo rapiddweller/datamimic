@@ -1,4 +1,5 @@
 """Validate that group masks remain normalized for demographic profiles."""
+
 from __future__ import annotations
 
 import csv

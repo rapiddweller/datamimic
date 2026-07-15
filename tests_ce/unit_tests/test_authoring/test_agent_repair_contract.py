@@ -28,13 +28,21 @@ from datamimic_ce.cli import app
 
 
 def test_unknown_field_reports_exact_owner_without_synthetic_example() -> None:
-    result = scaffold(ScaffoldRequest(spec={
-        "version": "1",
-        "products": [{
-            "kind": "generated", "name": "customers", "count": 5,
-            "columns": [{"name": "id", "kind": "increment"}],
-        }],
-    }))
+    result = scaffold(
+        ScaffoldRequest(
+            spec={
+                "version": "1",
+                "products": [
+                    {
+                        "kind": "generated",
+                        "name": "customers",
+                        "count": 5,
+                        "columns": [{"name": "id", "kind": "increment"}],
+                    }
+                ],
+            }
+        )
+    )
 
     assert len(result.issues) == 1
     issue = result.issues[0]
@@ -45,17 +53,30 @@ def test_unknown_field_reports_exact_owner_without_synthetic_example() -> None:
 
 
 def test_expectation_paths_hide_union_implementation_labels() -> None:
-    result = scaffold(ScaffoldRequest(spec={
-        "version": "1",
-        "products": [{
-            "kind": "generated", "name": "records", "count": 1,
-            "fields": [{"kind": "increment", "name": "id"}],
-        }],
-        "expectations": [{
-            "kind": "range", "product": "records", "field": "id",
-            "minimum": 0, "upper": 10,
-        }],
-    }))
+    result = scaffold(
+        ScaffoldRequest(
+            spec={
+                "version": "1",
+                "products": [
+                    {
+                        "kind": "generated",
+                        "name": "records",
+                        "count": 1,
+                        "fields": [{"kind": "increment", "name": "id"}],
+                    }
+                ],
+                "expectations": [
+                    {
+                        "kind": "range",
+                        "product": "records",
+                        "field": "id",
+                        "minimum": 0,
+                        "upper": 10,
+                    }
+                ],
+            }
+        )
+    )
 
     assert {issue.path for issue in result.issues} == {
         ("expectations", 0, "maximum"),
@@ -64,18 +85,30 @@ def test_expectation_paths_hide_union_implementation_labels() -> None:
 
 
 def test_nested_product_children_are_unsupported_intent() -> None:
-    result = scaffold(ScaffoldRequest(spec={
-        "version": "1",
-        "products": [{
-            "kind": "generated", "name": "parents", "count": 1,
-            "fields": [{"kind": "increment", "name": "id"}],
-            "children": [{
-                "kind": "generated", "name": "children", "count": 1,
-                "fields": [{"kind": "increment", "name": "id"}],
-                "children": [],
-            }],
-        }],
-    }))
+    result = scaffold(
+        ScaffoldRequest(
+            spec={
+                "version": "1",
+                "products": [
+                    {
+                        "kind": "generated",
+                        "name": "parents",
+                        "count": 1,
+                        "fields": [{"kind": "increment", "name": "id"}],
+                        "children": [
+                            {
+                                "kind": "generated",
+                                "name": "children",
+                                "count": 1,
+                                "fields": [{"kind": "increment", "name": "id"}],
+                                "children": [],
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
+    )
 
     issue = result.issues[0]
     assert issue.path == ("products", 0, "children", 0, "children")
@@ -88,23 +121,36 @@ def _memstore_source_with_rejected_field(field: str) -> dict[str, object]:
         "version": "1",
         "products": [
             {
-                "kind": "generated", "name": "customers", "count": 2,
-                "fields": [{
-                    "kind": "increment", "name": "customer_id",
-                    "roles": [{"kind": "identifier"}],
-                }],
+                "kind": "generated",
+                "name": "customers",
+                "count": 2,
+                "fields": [
+                    {
+                        "kind": "increment",
+                        "name": "customer_id",
+                        "roles": [{"kind": "identifier"}],
+                    }
+                ],
                 "targets": [{"kind": "memstore", "id": "customer_mem"}],
             },
             {
-                "kind": "source", "name": "readback",
+                "kind": "source",
+                "name": "readback",
                 "source": {"kind": "memstore", "id": "customer_mem", field: "customers"},
-                "fields": [{
-                    "kind": "script", "name": "customer_id", "script": "customer_id",
-                    "roles": [{
-                        "kind": "foreign_key", "parent_product": "customers",
-                        "parent_field": "customer_id",
-                    }],
-                }],
+                "fields": [
+                    {
+                        "kind": "script",
+                        "name": "customer_id",
+                        "script": "customer_id",
+                        "roles": [
+                            {
+                                "kind": "foreign_key",
+                                "parent_product": "customers",
+                                "parent_field": "customer_id",
+                            }
+                        ],
+                    }
+                ],
             },
         ],
     }
@@ -146,10 +192,7 @@ def test_reference_catalog_is_schema_only_and_exhaustive() -> None:
 
 
 def test_source_reference_queries_cover_canonical_union() -> None:
-    queries = [
-        query for query in list_authoring_reference_queries()
-        if isinstance(query, SourceReferenceQuery)
-    ]
+    queries = [query for query in list_authoring_reference_queries() if isinstance(query, SourceReferenceQuery)]
     assert {query.kind for query in queries} == set(SourceIntentKind)
 
 
@@ -169,12 +212,20 @@ def test_cli_and_service_return_identical_schema_projection() -> None:
 
 @pytest.mark.parametrize("extra_field", ["range", "generated", "script", "source", "unique"])
 def test_discriminator_named_extra_field_remains_in_public_path(extra_field: str) -> None:
-    result = scaffold(ScaffoldRequest(spec={
-        "version": "1",
-        "products": [{
-            "kind": "generated", "name": "records", "count": 1,
-            "fields": [{"kind": "increment", "name": "id"}],
-            extra_field: True,
-        }],
-    }))
+    result = scaffold(
+        ScaffoldRequest(
+            spec={
+                "version": "1",
+                "products": [
+                    {
+                        "kind": "generated",
+                        "name": "records",
+                        "count": 1,
+                        "fields": [{"kind": "increment", "name": "id"}],
+                        extra_field: True,
+                    }
+                ],
+            }
+        )
+    )
     assert result.issues[0].path == ("products", 0, extra_field)

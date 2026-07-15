@@ -166,14 +166,8 @@ class TestEntity:
         assert patients_a == patients_b, "Seeded patients should be reproducible"
         assert patients_a, "Expected seeded patients"
         assert all(60 <= row["age"] <= 70 for row in patients_a)
-        assert all(
-            any("diabetes" in cond.lower() for cond in row.get("conditions", []))
-            for row in patients_a
-        )
-        assert all(
-            all("hypertension" not in cond.lower() for cond in row.get("conditions", []))
-            for row in patients_a
-        )
+        assert all(any("diabetes" in cond.lower() for cond in row.get("conditions", [])) for row in patients_a)
+        assert all(all("hypertension" not in cond.lower() for cond in row.get("conditions", [])) for row in patients_a)
 
     def test_doctor_seeded_reproducible(self):
         res_a, res_b = self._capture_descriptor_twice("doctor.xml")
@@ -190,13 +184,8 @@ class TestEntity:
 
         assert seniors, "Expected seeded senior cohort to be populated"
         assert all(70 <= row["age"] <= 80 for row in seniors)
-        assert all(
-            all("hypertension" not in cond.lower() for cond in row.get("conditions", []))
-            for row in seniors
-        )
-        assert any(
-            any("diabetes" in cond.lower() for cond in row.get("conditions", [])) for row in seniors
-        )
+        assert all(all("hypertension" not in cond.lower() for cond in row.get("conditions", [])) for row in seniors)
+        assert any(any("diabetes" in cond.lower() for cond in row.get("conditions", [])) for row in seniors)
 
     def test_encounter_seed_replay(self):
         res_a, res_b = self._capture_descriptor_twice("encounter.xml")

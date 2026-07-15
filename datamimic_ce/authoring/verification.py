@@ -74,9 +74,7 @@ def max_count_remediations(
     return [
         RetryWithParameterRemediation(
             minimum_value=required_minimum,
-            affected_products=tuple(
-                product.name for product in plan.products if product.name in affected
-            ),
+            affected_products=tuple(product.name for product in plan.products if product.name in affected),
         )
     ]
 
@@ -190,9 +188,7 @@ def compare_captures(
         first_difference = next(
             (
                 index
-                for index, (first_row, replay_row) in enumerate(
-                    zip(first_rows, replay_rows, strict=False)
-                )
+                for index, (first_row, replay_row) in enumerate(zip(first_rows, replay_rows, strict=False))
                 if first_row != replay_row
             ),
             None,

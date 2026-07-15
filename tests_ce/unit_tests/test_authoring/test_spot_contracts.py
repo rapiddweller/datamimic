@@ -69,8 +69,7 @@ def test_business_rules_only_reference_attributes_owned_by_their_model() -> None
                     referenced.add(attribute)
 
         assert referenced <= model_attributes, (
-            f"<{tag}> rules reference attributes outside its model: "
-            f"{sorted(referenced - model_attributes)}"
+            f"<{tag}> rules reference attributes outside its model: {sorted(referenced - model_attributes)}"
         )
 
 

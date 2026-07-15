@@ -167,7 +167,7 @@ class TestGenerateTask:
     @pytest.fixture
     def generate_task(self, mock_statement):
         """Create GenerateTask instance with mocked dependencies."""
-        return GenerateTask(mock_statement)         
+        return GenerateTask(mock_statement)
 
     def test_determine_count_default(self, generate_task, mock_context):
         """Test _determine_count when no count is specified."""
@@ -228,7 +228,7 @@ class TestGenerateTask:
         ],
     )
     def test_calculate_default_page_size_various_counts(
-            self, generate_task, mock_statement, entity_count, expected_size
+        self, generate_task, mock_statement, entity_count, expected_size
     ):
         """Test _calculate_default_page_size with various entity counts."""
         mock_statement.page_size = None
@@ -283,7 +283,9 @@ class TestGenerateTask:
 
     def test_scan_data_source(self, generate_task, mock_context):
         """Test _scan_data_source method."""
-        with patch("datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.set_data_source_length") as mock_set_data_source_length:
+        with patch(
+            "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.set_data_source_length"
+        ) as mock_set_data_source_length:
             GenerateTask._scan_data_source(mock_context, generate_task.statement)
 
             mock_set_data_source_length.assert_called_once_with(mock_context, generate_task.statement)

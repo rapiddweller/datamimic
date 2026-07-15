@@ -191,18 +191,14 @@ class ScaffoldVerification(BaseModel):
         bool,
         Field(
             description=(
-            "Test applicable file exporters against rows from the canonical bounded run "
-            "without performing another engine run"
+                "Test applicable file exporters against rows from the canonical bounded run "
+                "without performing another engine run"
             )
         ),
     ] = False
     deterministic_replay: Annotated[
         bool,
-        Field(
-            description=(
-            "Run the same seeded bounded model once more and compare all bounded captured rows"
-            )
-        ),
+        Field(description=("Run the same seeded bounded model once more and compare all bounded captured rows")),
     ] = False
 
 
@@ -264,12 +260,8 @@ class ScaffoldVerificationEvidence(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
-    smoke_export: SmokeExportEvidence = Field(
-        default_factory=_default_smoke_export_evidence
-    )
-    deterministic_replay: DeterministicReplayEvidence = Field(
-        default_factory=_default_replay_evidence
-    )
+    smoke_export: SmokeExportEvidence = Field(default_factory=_default_smoke_export_evidence)
+    deterministic_replay: DeterministicReplayEvidence = Field(default_factory=_default_replay_evidence)
 
     @property
     def gates_passed(self) -> bool:
@@ -280,10 +272,7 @@ class ScaffoldVerificationEvidence(BaseModel):
             VerificationGateStatus.NOT_APPLICABLE,
             VerificationGateStatus.PASSED,
         )
-        return (
-            self.smoke_export.status in passing
-            and self.deterministic_replay.status in passing
-        )
+        return self.smoke_export.status in passing and self.deterministic_replay.status in passing
 
 
 def _default_scaffold_verification() -> ScaffoldVerification:
@@ -366,11 +355,7 @@ class ProductCaptureEvidence(BaseModel):
     def _consistent_counts(self) -> "ProductCaptureEvidence":
         if self.observed > self.limit:
             raise ValueError("observed must not exceed limit")
-        if (
-            self.requested is not None
-            and self.status is CaptureStatus.COMPLETE
-            and self.observed != self.requested
-        ):
+        if self.requested is not None and self.status is CaptureStatus.COMPLETE and self.observed != self.requested:
             raise ValueError("complete capture must observe the requested count")
         if self.status is CaptureStatus.CAPPED and self.observed != self.limit:
             raise ValueError("capped capture must observe its limit")
@@ -464,9 +449,7 @@ class ScaffoldRequest(BaseModel):
         AuthoringResponseFormat.CONCISE,
         description="Response format: concise (key diagnostics) or detailed (full diagnostic info)",
     )
-    verification: ScaffoldVerification = Field(
-        default_factory=_default_scaffold_verification
-    )
+    verification: ScaffoldVerification = Field(default_factory=_default_scaffold_verification)
 
 
 class ProductResult(BaseModel):
@@ -749,9 +732,7 @@ class CompilePlan(CompilePlanModel):
             fields: dict[str, FieldPlan] = {}
             for field in product.fields:
                 if field.name in fields:
-                    raise ValueError(
-                        f"duplicate field name '{field.name}' in product '{product.name}'"
-                    )
+                    raise ValueError(f"duplicate field name '{field.name}' in product '{product.name}'")
                 fields[field.name] = field
             fields_by_product[product.name] = fields
 
@@ -765,10 +746,7 @@ class CompilePlan(CompilePlanModel):
             require_product(product_name, context)
             field = fields_by_product[product_name].get(field_name)
             if field is None:
-                raise ValueError(
-                    f"{context} references unknown field '{field_name}' "
-                    f"on product '{product_name}'"
-                )
+                raise ValueError(f"{context} references unknown field '{field_name}' on product '{product_name}'")
             return field
 
         product_nested_edges: set[tuple[str, str]] = set()
@@ -780,23 +758,15 @@ class CompilePlan(CompilePlanModel):
             if product.parent is not None:
                 parent = require_product(product.parent, f"generated product '{product.name}'")
                 if not isinstance(parent, GeneratedProductCompilePlan):
-                    raise ValueError(
-                        f"generated parent '{product.parent}' must be a generated product"
-                    )
+                    raise ValueError(f"generated parent '{product.parent}' must be a generated product")
                 if product.name not in parent.children:
-                    raise ValueError(
-                        f"generated child '{product.name}' is not declared by parent "
-                        f"'{parent.name}'"
-                    )
+                    raise ValueError(f"generated child '{product.name}' is not declared by parent '{parent.name}'")
             for child_name in product.children:
                 child = require_product(child_name, f"generated product '{product.name}'")
                 if not isinstance(child, GeneratedProductCompilePlan):
                     raise ValueError(f"generated child '{child_name}' must be a generated product")
                 if child.parent != product.name:
-                    raise ValueError(
-                        f"generated child '{child_name}' does not reference parent "
-                        f"'{product.name}'"
-                    )
+                    raise ValueError(f"generated child '{child_name}' does not reference parent '{product.name}'")
                 product_nested_edges.add((product.name, child_name))
 
         visiting: set[str] = set()
@@ -837,10 +807,7 @@ class CompilePlan(CompilePlanModel):
             endpoints = (relationship.parent, relationship.child)
             if isinstance(relationship, NestedRelationshipPlan):
                 if endpoints in nested_relationships:
-                    raise ValueError(
-                        f"duplicate nested relationship '{relationship.parent}' -> "
-                        f"'{relationship.child}'"
-                    )
+                    raise ValueError(f"duplicate nested relationship '{relationship.parent}' -> '{relationship.child}'")
                 nested_relationships.add(endpoints)
                 if endpoints not in product_nested_edges:
                     raise ValueError(
@@ -854,15 +821,10 @@ class CompilePlan(CompilePlanModel):
                 continue
 
             if endpoints in memstore_relationships:
-                raise ValueError(
-                    f"duplicate memstore relationship '{relationship.parent}' -> "
-                    f"'{relationship.child}'"
-                )
+                raise ValueError(f"duplicate memstore relationship '{relationship.parent}' -> '{relationship.child}'")
             memstore_relationships.add(endpoints)
             if relationship.child in memstore_children:
-                raise ValueError(
-                    f"source product '{relationship.child}' has multiple memstore relationships"
-                )
+                raise ValueError(f"source product '{relationship.child}' has multiple memstore relationships")
             memstore_children.add(relationship.child)
             if not isinstance(child, SourceProductCompilePlan) or not isinstance(
                 child.source, MemstoreSourceBindingPlan
@@ -873,8 +835,7 @@ class CompilePlan(CompilePlanModel):
             if child.source.product is not None and child.source.product != relationship.parent:
                 raise ValueError("memstore relationship parent does not match child source product")
             if not any(
-                isinstance(target, MemstoreTargetBindingPlan)
-                and target.id == relationship.source_id
+                isinstance(target, MemstoreTargetBindingPlan) and target.id == relationship.source_id
                 for target in parent.targets
             ):
                 raise ValueError("memstore relationship source_id does not match parent target")
@@ -887,9 +848,7 @@ class CompilePlan(CompilePlanModel):
                 and isinstance(product.source, MemstoreSourceBindingPlan)
                 and product.name not in memstore_children
             ):
-                raise ValueError(
-                    f"memstore source product '{product.name}' has no relationship declaration"
-                )
+                raise ValueError(f"memstore source product '{product.name}' has no relationship declaration")
 
         exact_facts: set[str] = set()
         per_parent_facts: set[tuple[str, str]] = set()
@@ -901,9 +860,7 @@ class CompilePlan(CompilePlanModel):
             product = require_product(acceptance.product, "derived acceptance")
             if isinstance(acceptance, ExactCountAcceptancePlan):
                 if acceptance.product in exact_facts:
-                    raise ValueError(
-                        f"duplicate exact-count acceptance for '{acceptance.product}'"
-                    )
+                    raise ValueError(f"duplicate exact-count acceptance for '{acceptance.product}'")
                 exact_facts.add(acceptance.product)
                 if acceptance.exact_count != product.static_count:
                     raise ValueError("exact-count acceptance does not match product static_count")
@@ -920,10 +877,7 @@ class CompilePlan(CompilePlanModel):
                     product, GeneratedProductCompilePlan
                 ):
                     raise ValueError("per-parent acceptance requires generated products")
-                if (
-                    per_parent_fact not in product_nested_edges
-                    or product.parent != parent.name
-                ):
+                if per_parent_fact not in product_nested_edges or product.parent != parent.name:
                     raise ValueError("per-parent acceptance does not match nested relationship")
                 if acceptance.count_per_parent != product.count_per_parent:
                     raise ValueError("per-parent acceptance does not match child count_per_parent")
@@ -937,13 +891,9 @@ class CompilePlan(CompilePlanModel):
                     acceptance.field,
                     "unique acceptance",
                 )
-                has_identifier_role = any(
-                    isinstance(role, IdentifierRolePlan) for role in field.roles
-                )
+                has_identifier_role = any(isinstance(role, IdentifierRolePlan) for role in field.roles)
                 if field.kind is not FieldIntentKind.INTEGER_RANGE and not has_identifier_role:
-                    raise ValueError(
-                        "unique acceptance requires an integer range or identifier role"
-                    )
+                    raise ValueError("unique acceptance requires an integer range or identifier role")
             elif isinstance(acceptance, ForeignKeyAcceptancePlan):
                 foreign_key_fact = (
                     acceptance.product,
@@ -982,9 +932,7 @@ class CompilePlan(CompilePlanModel):
                     "allowed-values acceptance",
                 )
                 if field.kind not in (FieldIntentKind.VALUES, FieldIntentKind.WEIGHTED):
-                    raise ValueError(
-                        "allowed-values acceptance requires values or weighted field intent"
-                    )
+                    raise ValueError("allowed-values acceptance requires values or weighted field intent")
             elif isinstance(acceptance, RangeAcceptancePlan):
                 range_fact = (acceptance.product, acceptance.field)
                 if range_fact in range_facts:
@@ -1006,10 +954,7 @@ class CompilePlan(CompilePlanModel):
             require_product(unresolved.product, "unresolved fact")
             unresolved_fact = (unresolved.product, unresolved.aspect)
             if unresolved_fact in unresolved_facts:
-                raise ValueError(
-                    f"duplicate unresolved fact '{unresolved.aspect}' for "
-                    f"'{unresolved.product}'"
-                )
+                raise ValueError(f"duplicate unresolved fact '{unresolved.aspect}' for '{unresolved.product}'")
             unresolved_facts.add(unresolved_fact)
         return self
 
@@ -1217,9 +1162,7 @@ class RetryWithParameterRemediation(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    kind: Literal[ScaffoldRemediationKind.RETRY_WITH_PARAMETER] = (
-        ScaffoldRemediationKind.RETRY_WITH_PARAMETER
-    )
+    kind: Literal[ScaffoldRemediationKind.RETRY_WITH_PARAMETER] = ScaffoldRemediationKind.RETRY_WITH_PARAMETER
     parameter: Literal[ScaffoldParameter.MAX_COUNT] = ScaffoldParameter.MAX_COUNT
     minimum_value: PositiveStrictInt = Field(le=MAX_DRY_RUN_COUNT)
     affected_products: tuple[NonEmptyStrictStr, ...] = Field(min_length=1)
@@ -1254,21 +1197,15 @@ class ScaffoldResult(BaseModel):
     compile_plan: CompilePlan | None = None
     acceptance: AcceptanceReport | None = None
     remediations: list[RetryWithParameterRemediation] = Field(default_factory=list)
-    verification: ScaffoldVerificationEvidence = Field(
-        default_factory=ScaffoldVerificationEvidence
-    )
+    verification: ScaffoldVerificationEvidence = Field(default_factory=ScaffoldVerificationEvidence)
     verified: bool = False
 
     @model_validator(mode="after")
     def _verified_requires_all_evidence(self) -> Self:
         if self.verified and (
-            self.acceptance is None
-            or not self.acceptance.verified
-            or not self.verification.gates_passed
+            self.acceptance is None or not self.acceptance.verified or not self.verification.gates_passed
         ):
-            raise ValueError(
-                "verified requires passing acceptance and every requested verification gate"
-            )
+            raise ValueError("verified requires passing acceptance and every requested verification gate")
         if self.verified and self.remediations:
             raise ValueError("verified scaffold results cannot require remediation")
         return self

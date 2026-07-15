@@ -33,9 +33,7 @@ class _PydanticIssueType(StrEnum):
 
 
 _ROOT_SCHEMA = AuthoringSpecV1.model_json_schema()
-_JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(
-    dict[str, JsonValue]
-)
+_JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 _MIN_REPLACEMENT_SIMILARITY = 0.72
 _MIN_REPLACEMENT_MARGIN = 0.10
 
@@ -114,11 +112,7 @@ def _validation_location(
         if isinstance(part, int):
             items = resolved.get("items")
             schema = items if isinstance(items, Mapping) else {}
-            if (
-                isinstance(current, Sequence)
-                and not isinstance(current, str)
-                and 0 <= part < len(current)
-            ):
+            if isinstance(current, Sequence) and not isinstance(current, str) and 0 <= part < len(current):
                 current = current[part]
             continue
         properties = resolved.get("properties")
@@ -140,10 +134,7 @@ def _issue_code(
     issue_type: _PydanticIssueType | None,
     intent_issue_type: IntentModelValidationIssueType | None,
 ) -> IntentValidationIssueCode:
-    if (
-        intent_issue_type
-        is IntentModelValidationIssueType.UNSUPPORTED_NESTED_PRODUCT_CHILDREN
-    ):
+    if intent_issue_type is IntentModelValidationIssueType.UNSUPPORTED_NESTED_PRODUCT_CHILDREN:
         return IntentValidationIssueCode.UNSUPPORTED_INTENT
     if issue_type is None:
         return IntentValidationIssueCode.CONSTRAINT_VIOLATION
@@ -173,17 +164,11 @@ def _replace_field(
         if not isinstance(current, list) or not 0 <= part < len(current):
             return None
         current = current[part]
-    if (
-        not isinstance(current, dict)
-        or rejected not in current
-        or replacement in current
-    ):
+    if not isinstance(current, dict) or rejected not in current or replacement in current:
         return None
     raw_rejected_value = current.pop(rejected)
     try:
-        rejected_value = _JSON_OBJECT_ADAPTER.validate_python(
-            {"value": raw_rejected_value}
-        )["value"]
+        rejected_value = _JSON_OBJECT_ADAPTER.validate_python({"value": raw_rejected_value})["value"]
     except ValidationError:
         return None
     current[replacement] = rejected_value
@@ -191,14 +176,8 @@ def _replace_field(
         AuthoringSpecV1.model_validate(document)
     except ValidationError as error:
         owner_prefix = path[:-1]
-        corrected_locations = (
-            _validation_location(tuple(issue["loc"]), document).path
-            for issue in error.errors()
-        )
-        if any(
-            location[: len(owner_prefix)] == owner_prefix
-            for location in corrected_locations
-        ):
+        corrected_locations = (_validation_location(tuple(issue["loc"]), document).path for issue in error.errors())
+        if any(location[: len(owner_prefix)] == owner_prefix for location in corrected_locations):
             return None
     try:
         corrected_fragment = _JSON_OBJECT_ADAPTER.validate_python(current)
@@ -233,11 +212,7 @@ def _replacement_repair(
     properties = location.owner_schema.get("properties")
     if not isinstance(properties, Mapping):
         return None
-    candidates = [
-        field
-        for field in allowed_fields
-        if field != rejected and field not in location.raw_owner
-    ]
+    candidates = [field for field in allowed_fields if field != rejected and field not in location.raw_owner]
     ranked = sorted(
         (
             (
@@ -259,20 +234,20 @@ def _replacement_repair(
         if not isinstance(property_schema, Mapping):
             continue
         aliases = property_schema.get(INTENT_REPAIR_ALIASES_SCHEMA_KEY)
-        if (
-            isinstance(aliases, Sequence)
-            and not isinstance(aliases, str)
-            and rejected in aliases
-        ):
+        if isinstance(aliases, Sequence) and not isinstance(aliases, str) and rejected in aliases:
             alias_candidates.append(candidate)
 
     selected: list[str]
     if alias_candidates:
         selected = sorted(alias_candidates)
-    elif not ranked or ranked[0][0] < _MIN_REPLACEMENT_SIMILARITY or (
-        len(ranked) > 1
-        and ranked[1][0] >= _MIN_REPLACEMENT_SIMILARITY
-        and ranked[0][0] - ranked[1][0] < _MIN_REPLACEMENT_MARGIN
+    elif (
+        not ranked
+        or ranked[0][0] < _MIN_REPLACEMENT_SIMILARITY
+        or (
+            len(ranked) > 1
+            and ranked[1][0] >= _MIN_REPLACEMENT_SIMILARITY
+            and ranked[0][0] - ranked[1][0] < _MIN_REPLACEMENT_MARGIN
+        )
     ):
         return None
     else:
@@ -309,9 +284,7 @@ def _repair_context(
     properties = location.owner_schema.get("properties")
     if not isinstance(properties, Mapping):
         return (), None, None
-    allowed_fields = tuple(
-        name for name in properties if isinstance(name, str)
-    )
+    allowed_fields = tuple(name for name in properties if isinstance(name, str))
     title = location.owner_schema.get("title")
     model_name = title if isinstance(title, str) else None
     repair = _replacement_repair(raw, location, allowed_fields)
@@ -323,16 +296,12 @@ def project_validation_issues(
     raw: Mapping[str, Any],
 ) -> tuple[IntentValidationIssue, ...]:
     source = error.errors()
-    public = [
-        (_validation_location(tuple(issue["loc"]), raw), issue)
-        for issue in source
-    ]
+    public = [(_validation_location(tuple(issue["loc"]), raw), issue) for issue in source]
     filtered = [
         (location, issue)
         for location, issue in public
         if not any(
-            other_location.path[: len(location.path)] == location.path
-            and len(other_location.path) > len(location.path)
+            other_location.path[: len(location.path)] == location.path and len(other_location.path) > len(location.path)
             for other_location, _ in public
         )
     ]

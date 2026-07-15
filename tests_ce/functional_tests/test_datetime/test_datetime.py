@@ -209,6 +209,7 @@ class TestDateTime:
 
         # uniform: just ensure within range
         from datetime import datetime as _dt
+
         lo2024 = _dt(2024, 1, 1, 0, 0, 0)
         hi2024 = _dt(2024, 12, 31, 23, 59, 59)
         for r in rows:
@@ -249,6 +250,7 @@ class TestDateTime:
 
         # dom_last: last day of month
         import calendar as _cal
+
         for r in rows:
             d = r["dom_last"]
             last = _cal.monthrange(d.year, d.month)[1]

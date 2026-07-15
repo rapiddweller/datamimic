@@ -403,8 +403,7 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
 
         if not filtered_data:
             raise ValueError(
-                f"Transaction type {transaction_type!r} not found in "
-                f"transaction_type_modifiers_{self._dataset}.csv"
+                f"Transaction type {transaction_type!r} not found in transaction_type_modifiers_{self._dataset}.csv"
             )
         # Use first matching transaction type (should be only one)
         type_data = filtered_data[0]

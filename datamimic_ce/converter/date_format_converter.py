@@ -15,7 +15,5 @@ class DateFormatConverter(Converter):
 
     def convert(self, value: datetime) -> str:
         if not isinstance(value, datetime):
-            raise ValueError(
-                f"DateFormat converter expects datetime, got {type(value).__name__}: {value!r}"
-            )
+            raise ValueError(f"DateFormat converter expects datetime, got {type(value).__name__}: {value!r}")
         return value.strftime(self._format)

@@ -1,11 +1,38 @@
 import pytest
+
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.common.models.company import Company
 from datamimic_ce.domains.common.services.company_service import CompanyService
 
 
 class TestEntityCompany:
-    _supported_datasets = ["AT", "AU", "BE", "BR", "CA", "CH", "CZ", "DE", "ES", "FI", "FR", "GB", "IE", "IT", "NL", "NO", "NZ", "PL", "RU", "SE", "SK", "TR", "UA", "US"]
+    _supported_datasets = [
+        "AT",
+        "AU",
+        "BE",
+        "BR",
+        "CA",
+        "CH",
+        "CZ",
+        "DE",
+        "ES",
+        "FI",
+        "FR",
+        "GB",
+        "IE",
+        "IT",
+        "NL",
+        "NO",
+        "NZ",
+        "PL",
+        "RU",
+        "SE",
+        "SK",
+        "TR",
+        "UA",
+        "US",
+    ]
+
     def _test_single_company(self, company: Company):
         assert isinstance(company, Company)
         assert isinstance(company.id, str)
@@ -19,9 +46,9 @@ class TestEntityCompany:
         assert isinstance(company.country_code, str)
         assert isinstance(company.country, str)
         assert isinstance(company.city, str)
-        assert isinstance(company.state, str)   
+        assert isinstance(company.state, str)
         assert isinstance(company.zip_code, str)
-                
+
         assert company.sector is not None and company.sector != ""
         assert company.legal_form is not None and company.legal_form != ""
         assert company.email is not None and company.email != ""
@@ -54,7 +81,7 @@ class TestEntityCompany:
 
     def test_company_property_cache(self):
         company_service = CompanyService()
-        company = company_service.generate()    
+        company = company_service.generate()
         assert company is not None
         assert company.id == company.id
         assert company.short_name == company.short_name

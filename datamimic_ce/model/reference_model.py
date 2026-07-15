@@ -76,8 +76,7 @@ class ReferenceModel(BaseModel):
     )
     cyclic: bool | None = Field(
         None,
-        description="Wrap ordered selection back to the start once the source is exhausted, "
-        "instead of stopping.",
+        description="Wrap ordered selection back to the start once the source is exhausted, instead of stopping.",
         examples=[True],
     )
 

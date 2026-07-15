@@ -35,9 +35,7 @@ class TestXmlFunctional:
         engine.test_with_timer()
         result = engine.capture_result()
         task_id = engine.task_id
-        file_path = self._test_dir.joinpath(
-            f"output/{task_id}/export_template_1.xml"
-        )
+        file_path = self._test_dir.joinpath(f"output/{task_id}/export_template_1.xml")
         tree = ET.parse(file_path)
         root = tree.getroot()
 

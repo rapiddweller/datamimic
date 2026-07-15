@@ -19,10 +19,10 @@ from lxml import etree
 
 from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.engine_check import run_engine_parse
+from datamimic_ce.authoring.rule_catalog import RuleSeverity
 from datamimic_ce.authoring.rules import ALL_RULES, LintContext
 from datamimic_ce.authoring.schema import build_schema_index
 from datamimic_ce.authoring.xml_loader import load_file, load_source
-from datamimic_ce.authoring.rule_catalog import RuleSeverity
 
 _INLINE_NOTE = (
     " (inline XML runs in a temp dir: relative source/include paths are not resolvable — "
@@ -62,9 +62,7 @@ def lint_source(xml: str, *, max_diagnostics: int | None = None) -> LintResult:
     """Lint inline descriptor XML (the MCP path). Engine phase runs in a temp dir."""
     root, load_error = load_source(xml)
     if root is None:
-        return LintResult.from_diagnostics(
-            [load_error] if load_error else [], max_diagnostics=max_diagnostics
-        )
+        return LintResult.from_diagnostics([load_error] if load_error else [], max_diagnostics=max_diagnostics)
     diagnostics = _run_rules(root, base_dir=None)
     if not _has_errors(diagnostics):
         with tempfile.TemporaryDirectory(prefix="datamimic_lint_") as tmp:

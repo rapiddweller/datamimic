@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from lxml import etree
 
 from datamimic_ce.authoring.diagnostics import Diagnostic
+from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules.base import LintContext, Rule
 from datamimic_ce.constants.element_constants import (
     EL_DATABASE,
@@ -46,7 +47,6 @@ from datamimic_ce.model.constraints import (
     source_file_format_for,
     supported_source_file_formats,
 )
-from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
 _SOURCE_READERS = (*_GENERATES, EL_VARIABLE, EL_NESTED_KEY, EL_KEY, EL_ID, EL_ELEMENT, EL_REFERENCE)
@@ -116,11 +116,7 @@ def _unsupported_file_source_diagnostic(
     known_format: SourceFileFormat,
 ) -> _SourceDiagnostic:
     supported = supported_source_file_formats(element_tag, source_type)
-    allowed = (
-        ", ".join(file_format.value for file_format in supported)
-        if supported
-        else "no file formats"
-    )
+    allowed = ", ".join(file_format.value for file_format in supported) if supported else "no file formats"
     return _SourceDiagnostic(
         evidence=(
             f'<{element_tag}> type="{source_type}" does not support source suffix '
@@ -238,9 +234,7 @@ class UnknownSource(Rule):
             source_type = element.get("type")
             if _source_is_declared(source, element_tag, source_type, clients, memstores):
                 continue
-            diagnostic = _unknown_source_diagnostic(
-                source, element_tag, source_type, clients, memstores
-            )
+            diagnostic = _unknown_source_diagnostic(source, element_tag, source_type, clients, memstores)
             if diagnostic is None:
                 continue
             yield ctx.diag(

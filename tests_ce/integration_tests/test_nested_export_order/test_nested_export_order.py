@@ -32,9 +32,7 @@ def _assert_users_and_orders(result: dict) -> None:
     # Every order's FK actually resolves - not just "no trigger fired", but the right rows exist.
     assert all(o["user_id"] in user_ids for o in orders)
     # Deterministic id scheme (user_id * 10 + seq): also pins down insertion order.
-    assert [o["id"] for o in orders] == [
-        uid * 10 + seq for uid in range(1, 9) for seq in (1, 2)
-    ]
+    assert [o["id"] for o in orders] == [uid * 10 + seq for uid in range(1, 9) for seq in (1, 2)]
 
 
 def test_insert_order_parent_before_child():

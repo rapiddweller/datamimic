@@ -4,8 +4,9 @@ from datamimic_ce.data_mimic_test import DataMimicTest
 
 
 def _run():
-    engine = DataMimicTest(test_dir=Path(__file__).resolve().parent, filename="entity_field_compat.xml",
-                           capture_test_result=True)
+    engine = DataMimicTest(
+        test_dir=Path(__file__).resolve().parent, filename="entity_field_compat.xml", capture_test_result=True
+    )
     engine.test_with_timer()
     return engine.capture_result()["g"]
 

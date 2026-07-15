@@ -165,7 +165,7 @@ def test_mode_gated_facts_lint_generically() -> None:
 def test_nestedkey_default_guidance_is_warning_not_runtime_error() -> None:
     result = lint_source(
         '<setup rngSeed="1"><generate name="g" count="1">'
-        '<nestedKey name="profile" script="{\'status\': \'ok\'}"/>'
+        "<nestedKey name=\"profile\" script=\"{'status': 'ok'}\"/>"
         "</generate></setup>"
     )
     guidance = [diag for diag in result.diagnostics if diag.rule == "DM214"]

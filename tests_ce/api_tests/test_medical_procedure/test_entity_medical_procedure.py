@@ -1,5 +1,6 @@
 import random
 import string
+
 import pytest
 
 from datamimic_ce.domains.healthcare.models.medical_procedure import MedicalProcedure
@@ -8,6 +9,7 @@ from datamimic_ce.domains.healthcare.services.medical_procedure_service import M
 
 class TestEntityMedicalProcedure:
     _supported_datasets = ["US", "DE"]
+
     def _test_single_medical_procedure(self, medical_procedure: MedicalProcedure):
         assert isinstance(medical_procedure, MedicalProcedure)
         assert isinstance(medical_procedure.procedure_id, str)
@@ -18,14 +20,14 @@ class TestEntityMedicalProcedure:
         assert isinstance(medical_procedure.requires_anesthesia, bool)
         assert isinstance(medical_procedure.is_surgical, bool)
         assert isinstance(medical_procedure.is_diagnostic, bool)
-        assert isinstance(medical_procedure.is_preventive, bool)    
-        assert isinstance(medical_procedure.recovery_time_days, int)            
+        assert isinstance(medical_procedure.is_preventive, bool)
+        assert isinstance(medical_procedure.recovery_time_days, int)
         assert isinstance(medical_procedure.cpt_code, str)
         assert isinstance(medical_procedure.name, str)
         assert isinstance(medical_procedure.procedure_code, str)
         assert isinstance(medical_procedure.recovery_time_days, int)
         assert isinstance(medical_procedure.category, str)
-        
+
         assert medical_procedure.procedure_id is not None
         assert medical_procedure.description is not None
         assert medical_procedure.specialty is not None
@@ -50,9 +52,9 @@ class TestEntityMedicalProcedure:
         assert medical_procedure.category != ""
         assert medical_procedure.cpt_code != ""
         assert medical_procedure.name != ""
-        assert medical_procedure.procedure_code != ""   
+        assert medical_procedure.procedure_code != ""
 
-    def test_generate_single_medical_procedure(self):   
+    def test_generate_single_medical_procedure(self):
         medical_procedure_service = MedicalProcedureService()
         medical_procedure = medical_procedure_service.generate()
         self._test_single_medical_procedure(medical_procedure)
@@ -64,7 +66,7 @@ class TestEntityMedicalProcedure:
         for medical_procedure in medical_procedures:
             self._test_single_medical_procedure(medical_procedure)
 
-    def test_hospital_property_cache(self): 
+    def test_hospital_property_cache(self):
         medical_procedure_service = MedicalProcedureService()
         medical_procedure = medical_procedure_service.generate()
         assert medical_procedure.procedure_id == medical_procedure.procedure_id
@@ -84,7 +86,7 @@ class TestEntityMedicalProcedure:
 
     @pytest.mark.flaky(reruns=10)
     def test_two_different_entities(self):
-        medical_procedure_service = MedicalProcedureService()    
+        medical_procedure_service = MedicalProcedureService()
         medical_procedure1 = medical_procedure_service.generate()
         medical_procedure2 = medical_procedure_service.generate()
         assert medical_procedure1.procedure_id != medical_procedure2.procedure_id

@@ -1,4 +1,5 @@
 import pytest
+
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.domains.insurance.models.insurance_company import InsuranceCompany
 from datamimic_ce.domains.insurance.services.insurance_company_service import InsuranceCompanyService
@@ -6,6 +7,7 @@ from datamimic_ce.domains.insurance.services.insurance_company_service import In
 
 class TestInsuranceCompany:
     _supported_datasets = ["US", "DE"]
+
     def _test_single_insurance_company(self, insurance_company: InsuranceCompany):
         assert isinstance(insurance_company, InsuranceCompany)
         assert isinstance(insurance_company.id, str)
@@ -60,7 +62,7 @@ class TestInsuranceCompany:
         insurance_company1 = insurance_company_service.generate()
         insurance_company2 = insurance_company_service.generate()
         assert insurance_company1.id != insurance_company2.id
-        assert insurance_company1.name != insurance_company2.name   
+        assert insurance_company1.name != insurance_company2.name
         assert insurance_company1.code != insurance_company2.code
         assert insurance_company1.founded_year != insurance_company2.founded_year
         assert insurance_company1.headquarters != insurance_company2.headquarters

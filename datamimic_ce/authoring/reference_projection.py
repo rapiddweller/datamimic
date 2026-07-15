@@ -65,9 +65,7 @@ class AuthoringReferenceProjection(BaseModel):
 
 
 IntentModelType = type[BaseModel]
-_JSON_SCHEMA_ADAPTER: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(
-    dict[str, JsonValue]
-)
+_JSON_SCHEMA_ADAPTER: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 
 _PRODUCT_MODELS: Mapping[ProductIntentKind, IntentModelType] = {
     ProductIntentKind.GENERATED: GeneratedProduct,
@@ -129,13 +127,9 @@ def authoring_reference_projection(
     return AuthoringReferenceProjection(
         query=query,
         model=model_type.__name__,
-        required_fields=tuple(
-            name for name, field in fields.items() if field.is_required()
-        ),
+        required_fields=tuple(name for name, field in fields.items() if field.is_required()),
         allowed_fields=tuple(fields),
-        json_schema=_JSON_SCHEMA_ADAPTER.validate_python(
-            model_type.model_json_schema()
-        ),
+        json_schema=_JSON_SCHEMA_ADAPTER.validate_python(model_type.model_json_schema()),
     )
 
 
@@ -168,10 +162,7 @@ def projection_catalog_is_exhaustive() -> bool:
         *_TARGET_MODELS.values(),
         *_EXPECTATION_MODELS.values(),
     )
-    return (
-        all(actual == expected for actual, expected in mappings)
-        and len(set(model_types)) == len(model_types)
-    )
+    return all(actual == expected for actual, expected in mappings) and len(set(model_types)) == len(model_types)
 
 
 __all__ = [

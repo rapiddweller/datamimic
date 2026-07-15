@@ -288,7 +288,6 @@ class SetupContext(Context):
     def data_source_len(self):
         return self._data_source_len
 
-
     @property
     def properties(self):
         return self._properties

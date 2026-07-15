@@ -34,6 +34,7 @@ class TestEntityPoliceOfficer:
         assert police_officer.officer_id is not None and police_officer.officer_id != ""
         #  validate standardized ID and badge formats
         import re
+
         assert re.fullmatch(r"OFF-[0-9A-F]{8}", police_officer.officer_id)
         assert police_officer.badge_number is not None and police_officer.badge_number != ""
         assert re.fullmatch(r"\d{4}", police_officer.badge_number)

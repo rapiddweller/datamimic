@@ -90,10 +90,7 @@ def emit_check(
     else:
         for diagnostic in result.diagnostics:
             location = f"{descriptor_path}:{diagnostic.line}" if diagnostic.line else str(descriptor_path)
-            typer.echo(
-                f"{location}  {diagnostic.severity.value.upper():<7} "
-                f"{diagnostic.rule}  {diagnostic.message}"
-            )
+            typer.echo(f"{location}  {diagnostic.severity.value.upper():<7} {diagnostic.rule}  {diagnostic.message}")
             typer.echo(f"    -> {diagnostic.fix_hint}")
         suffix = f" (+{result.truncated} truncated)" if result.truncated else ""
         typer.echo(f"Summary: {result.summary()}{suffix}")

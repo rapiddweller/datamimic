@@ -5,7 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-import pytest
 
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 

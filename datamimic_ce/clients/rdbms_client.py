@@ -440,9 +440,7 @@ class RdbmsClient(DatabaseClient):
         table = self._get_metadata(engine).tables[self._get_actual_table_name(table_name)]
         pk = [c.name for c in table.primary_key.columns]
         if not pk:
-            raise ValueError(
-                f"Table '{table_name}' has no primary key - update/upsert/delete need one to match rows"
-            )
+            raise ValueError(f"Table '{table_name}' has no primary key - update/upsert/delete need one to match rows")
         return table, pk
 
     @staticmethod
@@ -684,7 +682,6 @@ class RdbmsClient(DatabaseClient):
                 # session-scoped anyway, so it's released automatically once this connection
                 # closes even if RELEASE_LOCK itself fails here.
                 logger.error(f"Failed to release MySQL advisory lock '{lock_name}': {release_err}")
-
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._engine:

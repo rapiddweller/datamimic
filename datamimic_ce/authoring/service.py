@@ -163,7 +163,6 @@ def run(request: RunRequest) -> RunResult:
     return result
 
 
-
 def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
     """Compile, lint, run, accept and optionally verify one authoring intent."""
     try:
@@ -258,11 +257,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
     diagnostics = [*dry_run_result.diagnostics, *replay_diagnostics]
     return ScaffoldResult(
         ok=verification_passed,
-        stage=(
-            AuthoringStage.ACCEPTANCE
-            if verification_passed
-            else AuthoringStage.VERIFICATION
-        ),
+        stage=(AuthoringStage.ACCEPTANCE if verification_passed else AuthoringStage.VERIFICATION),
         xml=xml,
         summary=None,
         diagnostics=diagnostics,

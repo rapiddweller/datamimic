@@ -1,4 +1,3 @@
-
 def generate_mock_data(total_records=3000, title="Mock Title", year=2020):
     """Generate mock data for testing."""
     return [{"id": f"movie_{i + 1}", "title": f"{title} {i + 1}", "year": year} for i in range(total_records)]

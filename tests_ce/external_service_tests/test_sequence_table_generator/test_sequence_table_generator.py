@@ -115,9 +115,7 @@ class TestSequenceTableGenerator:
     def test_sequence_table_generator_mysql_uneven_multiprocess(self):
         """Same process_id regression as the Postgres uneven-multiprocess test, exercised
         against MySQL's AUTO_INCREMENT-integration path instead of a native sequence."""
-        engine = DataMimicTest(
-            test_dir=self._test_dir, filename="mysql_uneven_mp_test.xml", capture_test_result=True
-        )
+        engine = DataMimicTest(test_dir=self._test_dir, filename="mysql_uneven_mp_test.xml", capture_test_result=True)
         engine.test_with_timer()
         result = engine.capture_result()
 

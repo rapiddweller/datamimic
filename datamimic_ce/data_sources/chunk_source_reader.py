@@ -87,9 +87,7 @@ class ChunkSourceReader:
             # Stable per-statement seed -> identical global sequence in every chunk/worker;
             # each chunk keeps only its own window of it.
             seed = self._context.root.stable_distribution_seed(stmt.full_name)
-            chunk_pagination = DataSourcePagination(
-                skip=self._chunk_start, limit=self._chunk_end - self._chunk_start
-            )
+            chunk_pagination = DataSourcePagination(skip=self._chunk_start, limit=self._chunk_end - self._chunk_start)
             if stmt.unique:
                 self._chunk_order = DataSourceRegistry.get_unique_data(
                     pool, chunk_pagination, seed, f"<generate> '{stmt.name}'"

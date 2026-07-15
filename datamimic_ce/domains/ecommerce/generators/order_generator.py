@@ -57,24 +57,16 @@ class OrderGenerator(ClockAnchoredDomainGenerator):
         return val
 
     def get_order_status(self) -> str:
-        return self._pick_from_weighted_csv(
-            f"order_statuses_{self._dataset}.csv", value_col="status"
-        )
+        return self._pick_from_weighted_csv(f"order_statuses_{self._dataset}.csv", value_col="status")
 
     def get_payment_method(self) -> str:
-        return self._pick_from_weighted_csv(
-            f"payment_methods_{self._dataset}.csv", value_col="method"
-        )
+        return self._pick_from_weighted_csv(f"payment_methods_{self._dataset}.csv", value_col="method")
 
     def get_shipping_method(self) -> str:
-        return self._pick_from_weighted_csv(
-            f"shipping_methods_{self._dataset}.csv", value_col="method"
-        )
+        return self._pick_from_weighted_csv(f"shipping_methods_{self._dataset}.csv", value_col="method")
 
     def get_currency_code(self) -> str:
-        return self._pick_from_weighted_csv(
-            f"currencies_{self._dataset}.csv", value_col="code"
-        )
+        return self._pick_from_weighted_csv(f"currencies_{self._dataset}.csv", value_col="code")
 
     def get_shipping_amount(self, shipping_method: str) -> float:
         # Load method rows, then pick bounds for the selected method
@@ -91,9 +83,7 @@ class OrderGenerator(ClockAnchoredDomainGenerator):
                 except ValueError as e:
                     raise ValueError("Invalid shipping cost bounds") from e
                 return round(self._rng.uniform(min(lo, hi), max(lo, hi)), 2)
-        raise ValueError(
-            f"Shipping method {shipping_method!r} not found in shipping_methods_{self._dataset}.csv"
-        )
+        raise ValueError(f"Shipping method {shipping_method!r} not found in shipping_methods_{self._dataset}.csv")
 
     def pick_coupon_prefix(self) -> str:
         values, weights = load_weighted_values_try_dataset(

@@ -322,6 +322,7 @@ class TestValidValues:
 
     def test_callable_values_evaluated(self):
         """When values is a callable, it is evaluated at check time."""
+
         def dynamic_values():
             return {"dynamic1", "dynamic2"}
 
@@ -331,6 +332,7 @@ class TestValidValues:
 
     def test_callable_values_invalid_fails(self):
         """When callable-evaluated values don't match, check fails."""
+
         def dynamic_values():
             return {"dynamic1", "dynamic2"}
 
@@ -407,6 +409,7 @@ class TestAllowedValuesWhen:
 
     def test_callable_allowed_evaluated(self):
         """When allowed is a callable, it is evaluated at check time."""
+
         def dynamic_allowed():
             return {"dynamic1", "dynamic2"}
 
@@ -416,6 +419,7 @@ class TestAllowedValuesWhen:
 
     def test_callable_allowed_invalid_fails(self):
         """When callable-evaluated allowed doesn't match, check fails."""
+
         def dynamic_allowed():
             return {"dynamic1", "dynamic2"}
 
@@ -479,6 +483,7 @@ class TestConstraintsSchemaExtra:
 
     def test_no_constraints_no_injection(self):
         """When model has no __constraints__, nothing is injected."""
+
         class NoConstraintsModel(BaseModel):
             model_config = ConfigDict(json_schema_extra=constraints_schema_extra(()))
             name: str
@@ -488,11 +493,10 @@ class TestConstraintsSchemaExtra:
 
     def test_constraints_injected(self):
         """When model has __constraints__, they are injected into schema."""
+
         class ConstrainedModel(BaseModel):
             name: str
-            __constraints__ = (
-                RequiredOneOf(attrs=frozenset({"a", "b"})),
-            )
+            __constraints__ = (RequiredOneOf(attrs=frozenset({"a", "b"})),)
             model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
         schema = ConstrainedModel.model_json_schema()
@@ -503,10 +507,9 @@ class TestConstraintsSchemaExtra:
 
     def test_required_one_of_serialization(self):
         """RequiredOneOf is serialized correctly."""
+
         class Model(BaseModel):
-            __constraints__ = (
-                RequiredOneOf(attrs=frozenset({"x", "y", "z"})),
-            )
+            __constraints__ = (RequiredOneOf(attrs=frozenset({"x", "y", "z"})),)
             model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
         schema = Model.model_json_schema()
@@ -516,10 +519,9 @@ class TestConstraintsSchemaExtra:
 
     def test_mutually_exclusive_serialization(self):
         """MutuallyExclusive is serialized correctly."""
+
         class Model(BaseModel):
-            __constraints__ = (
-                MutuallyExclusive(attrs=frozenset({"a", "b"})),
-            )
+            __constraints__ = (MutuallyExclusive(attrs=frozenset({"a", "b"})),)
             model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
         schema = Model.model_json_schema()
@@ -529,10 +531,9 @@ class TestConstraintsSchemaExtra:
 
     def test_requires_serialization(self):
         """Requires is serialized correctly with when_true field."""
+
         class Model(BaseModel):
-            __constraints__ = (
-                Requires(attr="a", needs=frozenset({"b", "c"}), when_true=True),
-            )
+            __constraints__ = (Requires(attr="a", needs=frozenset({"b", "c"}), when_true=True),)
             model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
         schema = Model.model_json_schema()
@@ -544,10 +545,9 @@ class TestConstraintsSchemaExtra:
 
     def test_forbids_serialization(self):
         """Forbids is serialized correctly with when_true field."""
+
         class Model(BaseModel):
-            __constraints__ = (
-                Forbids(attr="a", excludes=frozenset({"b", "c"}), when_true=False),
-            )
+            __constraints__ = (Forbids(attr="a", excludes=frozenset({"b", "c"}), when_true=False),)
             model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
         schema = Model.model_json_schema()
@@ -559,10 +559,9 @@ class TestConstraintsSchemaExtra:
 
     def test_valid_values_serialization(self):
         """ValidValues is serialized correctly with callable resolution."""
+
         class Model(BaseModel):
-            __constraints__ = (
-                ValidValues(attr="type", values=frozenset({"int", "string", "float"})),
-            )
+            __constraints__ = (ValidValues(attr="type", values=frozenset({"int", "string", "float"})),)
             model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
         schema = Model.model_json_schema()
@@ -573,13 +572,12 @@ class TestConstraintsSchemaExtra:
 
     def test_valid_values_callable_serialization(self):
         """ValidValues with callable is evaluated and sorted in schema."""
+
         def get_types():
             return {"z", "a", "m"}
 
         class Model(BaseModel):
-            __constraints__ = (
-                ValidValues(attr="type", values=get_types),
-            )
+            __constraints__ = (ValidValues(attr="type", values=get_types),)
             model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
         schema = Model.model_json_schema()
@@ -588,10 +586,9 @@ class TestConstraintsSchemaExtra:
 
     def test_lint_only_omitted_when_false(self):
         """lint_only is omitted from schema when False (default)."""
+
         class Model(BaseModel):
-            __constraints__ = (
-                RequiredOneOf(attrs=frozenset({"a"}), lint_only=False),
-            )
+            __constraints__ = (RequiredOneOf(attrs=frozenset({"a"}), lint_only=False),)
             model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
         schema = Model.model_json_schema()
@@ -600,10 +597,9 @@ class TestConstraintsSchemaExtra:
 
     def test_lint_only_included_when_true(self):
         """lint_only is included in schema when True."""
+
         class Model(BaseModel):
-            __constraints__ = (
-                RequiredOneOf(attrs=frozenset({"a"}), lint_only=True),
-            )
+            __constraints__ = (RequiredOneOf(attrs=frozenset({"a"}), lint_only=True),)
             model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
         schema = Model.model_json_schema()
@@ -612,10 +608,9 @@ class TestConstraintsSchemaExtra:
 
     def test_message_omitted_when_none(self):
         """message is omitted from schema when None (default)."""
+
         class Model(BaseModel):
-            __constraints__ = (
-                RequiredOneOf(attrs=frozenset({"a"})),
-            )
+            __constraints__ = (RequiredOneOf(attrs=frozenset({"a"})),)
             model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
         schema = Model.model_json_schema()
@@ -624,10 +619,9 @@ class TestConstraintsSchemaExtra:
 
     def test_message_included_when_set(self):
         """message is included in schema when set."""
+
         class Model(BaseModel):
-            __constraints__ = (
-                RequiredOneOf(attrs=frozenset({"a"}), message="custom error"),
-            )
+            __constraints__ = (RequiredOneOf(attrs=frozenset({"a"}), message="custom error"),)
             model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
         schema = Model.model_json_schema()
@@ -636,6 +630,7 @@ class TestConstraintsSchemaExtra:
 
     def test_multiple_constraints_in_schema(self):
         """Multiple constraints are all injected in order."""
+
         class Model(BaseModel):
             __constraints__ = (
                 RequiredOneOf(attrs=frozenset({"a", "b"})),
@@ -652,6 +647,7 @@ class TestConstraintsSchemaExtra:
 
     def test_forbids_with_excludes_when_true_serialization(self):
         """Forbids with excludes_when_true is serialized correctly."""
+
         class Model(BaseModel):
             __constraints__ = (
                 Forbids(attr="a", excludes=frozenset({"b", "c"}), when_true=True, excludes_when_true=True),
@@ -668,10 +664,9 @@ class TestConstraintsSchemaExtra:
 
     def test_forbids_excludes_when_true_false_not_serialized(self):
         """Forbids with excludes_when_true=False omits the field (default)."""
+
         class Model(BaseModel):
-            __constraints__ = (
-                Forbids(attr="a", excludes=frozenset({"b"}), excludes_when_true=False),
-            )
+            __constraints__ = (Forbids(attr="a", excludes=frozenset({"b"}), excludes_when_true=False),)
             model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
         schema = Model.model_json_schema()
@@ -680,6 +675,7 @@ class TestConstraintsSchemaExtra:
 
     def test_allowed_values_when_serialization(self):
         """AllowedValuesWhen is serialized correctly."""
+
         class Model(BaseModel):
             __constraints__ = (
                 AllowedValuesWhen(attr="dist", allowed=frozenset({"random"}), when_attr="unique", when_true=True),
@@ -696,13 +692,12 @@ class TestConstraintsSchemaExtra:
 
     def test_allowed_values_when_callable_serialization(self):
         """AllowedValuesWhen with callable allowed is evaluated and sorted in schema."""
+
         def get_allowed():
             return {"z", "a", "m"}
 
         class Model(BaseModel):
-            __constraints__ = (
-                AllowedValuesWhen(attr="dist", allowed=get_allowed, when_attr="unique"),
-            )
+            __constraints__ = (AllowedValuesWhen(attr="dist", allowed=get_allowed, when_attr="unique"),)
             model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
 
         schema = Model.model_json_schema()
@@ -719,16 +714,10 @@ class TestModelUniqueConstraintContracts:
 
         constraints = KeyModel.model_json_schema()["constraints"]
         assert any(
-            fact["kind"] == "forbids"
-            and fact["attr"] == "unique"
-            and fact["excludes"] == ["distribution"]
+            fact["kind"] == "forbids" and fact["attr"] == "unique" and fact["excludes"] == ["distribution"]
             for fact in constraints
         )
-        assert not any(
-            fact["kind"] == "allowed_values_when"
-            and fact["when_attr"] == "unique"
-            for fact in constraints
-        )
+        assert not any(fact["kind"] == "allowed_values_when" and fact["when_attr"] == "unique" for fact in constraints)
 
     def test_key_unique_rejects_weighted_source_during_model_validation(self) -> None:
         from datamimic_ce.model.key_model import KeyModel
@@ -738,9 +727,7 @@ class TestModelUniqueConstraintContracts:
 
         constraints = KeyModel.model_json_schema()["constraints"]
         assert any(
-            fact["kind"] == "requires"
-            and fact["attr"] == "unique"
-            and fact["needs"] == ["values"]
+            fact["kind"] == "requires" and fact["attr"] == "unique" and fact["needs"] == ["values"]
             for fact in constraints
         )
 
@@ -749,15 +736,11 @@ class TestModelUniqueConstraintContracts:
 
         constraints = ReferenceModel.model_json_schema()["constraints"]
         assert any(
-            fact["kind"] == "forbids"
-            and fact["attr"] == "unique"
-            and fact["excludes"] == ["cyclic"]
+            fact["kind"] == "forbids" and fact["attr"] == "unique" and fact["excludes"] == ["cyclic"]
             for fact in constraints
         )
         assert any(
-            fact["kind"] == "allowed_values_when"
-            and fact["when_attr"] == "unique"
-            and fact["allowed"] == ["random"]
+            fact["kind"] == "allowed_values_when" and fact["when_attr"] == "unique" and fact["allowed"] == ["random"]
             for fact in constraints
         )
 

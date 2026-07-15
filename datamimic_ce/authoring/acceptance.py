@@ -125,14 +125,7 @@ class _MemstoreCompleteness:
 
 
 _Expectation: TypeAlias = (
-    _Exact
-    | _PerParent
-    | _Unique
-    | _ForeignKey
-    | _AllowedValues
-    | _Range
-    | _RowCondition
-    | _MemstoreCompleteness
+    _Exact | _PerParent | _Unique | _ForeignKey | _AllowedValues | _Range | _RowCondition | _MemstoreCompleteness
 )
 
 
@@ -209,9 +202,7 @@ def _explicit_expectations(spec: AuthoringSpecV1) -> list[_Expectation]:
                 )
             )
         elif isinstance(expectation, UniqueExpectation):
-            result.append(
-                _Unique(expectation.product, expectation.field, expectation.scope)
-            )
+            result.append(_Unique(expectation.product, expectation.field, expectation.scope))
         elif isinstance(expectation, ForeignKeyExpectation):
             result.append(
                 _ForeignKey(
@@ -222,9 +213,7 @@ def _explicit_expectations(spec: AuthoringSpecV1) -> list[_Expectation]:
                 )
             )
         elif isinstance(expectation, AllowedValuesExpectation):
-            result.append(
-                _AllowedValues(expectation.product, expectation.field, expectation.values)
-            )
+            result.append(_AllowedValues(expectation.product, expectation.field, expectation.values))
         elif isinstance(expectation, RangeExpectation):
             result.append(
                 _Range(
@@ -346,10 +335,7 @@ def _capture_completeness(
     captured: CapturedProducts,
     products: tuple[str, ...],
 ) -> CaptureCompletenessEvidence:
-    proofs = [
-        _product_capture_completeness(captured, product)
-        for product in dict.fromkeys(products)
-    ]
+    proofs = [_product_capture_completeness(captured, product) for product in dict.fromkeys(products)]
     if any(proof.status is CaptureCompletenessStatus.PARTIAL for proof in proofs):
         status = CaptureCompletenessStatus.PARTIAL
     elif any(proof.status is CaptureCompletenessStatus.UNKNOWN for proof in proofs):
@@ -373,8 +359,7 @@ def _join_fields(
         (field.name, role.parent_field)
         for field in child.fields
         for role in field.roles
-        if isinstance(role, ForeignKeyRolePlan)
-        and role.parent_product == parent_product
+        if isinstance(role, ForeignKeyRolePlan) and role.parent_product == parent_product
     ]
     if len(candidates) != 1:
         return None, (
@@ -427,9 +412,7 @@ def _group_by_parent(
     )
     if child_values is None:
         return None, error
-    groups: dict[str, list[Mapping[str, object]]] = {
-        _display(value): [] for value in parent_values
-    }
+    groups: dict[str, list[Mapping[str, object]]] = {_display(value): [] for value in parent_values}
     for row, value in zip(child_rows, child_values, strict=True):
         key = _display(value)
         if key not in groups:
@@ -546,9 +529,7 @@ def _unique_result(
     if expectation.scope == "global":
         duplicates, distinct_count = _global_unique_evidence(values)
     else:
-        duplicates, distinct_count, scope_error = _per_parent_unique_evidence(
-            expectation, plan, captured
-        )
+        duplicates, distinct_count, scope_error = _per_parent_unique_evidence(expectation, plan, captured)
         if scope_error is not None:
             return _unevaluable_unique_result(expectation, source, len(rows), scope_error)
     passed = not duplicates
@@ -599,9 +580,7 @@ def _per_parent_unique_evidence(
         )
         if group_values is None:
             return [], 0, str(error)
-        duplicates.extend(
-            f"parent={parent}:{value}" for value in _duplicates(group_values)
-        )
+        duplicates.extend(f"parent={parent}:{value}" for value in _duplicates(group_values))
         distinct_count += len({_display(value) for value in group_values})
     return duplicates, distinct_count, None
 
@@ -668,9 +647,7 @@ def _foreign_key_result(
         )
         if parent_values is not None:
             parent_keys = {_display(value) for value in parent_values}
-            missing = sorted(
-                {repr(value) for value in child_values if _display(value) not in parent_keys}
-            )
+            missing = sorted({repr(value) for value in child_values if _display(value) not in parent_keys})
             return ForeignKeyAcceptanceResult(
                 status=AcceptanceStatus.PASS if not missing else AcceptanceStatus.FAIL,
                 source=source,
@@ -704,11 +681,15 @@ def _allowed_values_result(
     captured: CapturedProducts,
 ) -> AllowedValuesAcceptanceResult:
     rows, error = _rows(captured, expectation.product)
-    values = None if rows is None else _values(
-        rows,
-        product=expectation.product,
-        field=expectation.field,
-    )[0]
+    values = (
+        None
+        if rows is None
+        else _values(
+            rows,
+            product=expectation.product,
+            field=expectation.field,
+        )[0]
+    )
     if rows is None or values is None:
         if rows is not None:
             _ignored, error = _values(
@@ -726,13 +707,7 @@ def _allowed_values_result(
             observed_count=None if rows is None else len(rows),
         )
     allowed = set(expectation.values)
-    unexpected = sorted(
-        {
-            repr(value)
-            for value in values
-            if not isinstance(value, str) or value not in allowed
-        }
-    )
+    unexpected = sorted({repr(value) for value in values if not isinstance(value, str) or value not in allowed})
     return AllowedValuesAcceptanceResult(
         status=AcceptanceStatus.PASS if not unexpected else AcceptanceStatus.FAIL,
         source=source,
@@ -751,11 +726,15 @@ def _range_result(
     captured: CapturedProducts,
 ) -> RangeAcceptanceResult:
     rows, error = _rows(captured, expectation.product)
-    values = None if rows is None else _values(
-        rows,
-        product=expectation.product,
-        field=expectation.field,
-    )[0]
+    values = (
+        None
+        if rows is None
+        else _values(
+            rows,
+            product=expectation.product,
+            field=expectation.field,
+        )[0]
+    )
     if rows is None or values is None:
         if rows is not None:
             _ignored, error = _values(
@@ -790,9 +769,7 @@ def _range_result(
             expected_maximum=str(expectation.maximum),
         )
     violations = [
-        index
-        for index, value in enumerate(decimals)
-        if value < expectation.minimum or value > expectation.maximum
+        index for index, value in enumerate(decimals) if value < expectation.minimum or value > expectation.maximum
     ]
     return RangeAcceptanceResult(
         status=AcceptanceStatus.PASS if not violations else AcceptanceStatus.FAIL,
@@ -876,9 +853,7 @@ def _safe_condition_value(value: object) -> object:
                 raise _UnsafeCondition("nested containers are not supported in conditions")
             _safe_condition_value(item)
         return value
-    raise _UnsafeCondition(
-        f"unsupported operand type '{type(value).__name__}' in row condition"
-    )
+    raise _UnsafeCondition(f"unsupported operand type '{type(value).__name__}' in row condition")
 
 
 def _validate_condition_tree(tree: ast.AST) -> None:
@@ -908,10 +883,7 @@ class _ConditionTreeValidator:
     def _validate_node(node: ast.AST) -> None:
         if isinstance(node, ast.Constant):
             _safe_condition_value(node.value)
-        if (
-            isinstance(node, ast.List | ast.Tuple | ast.Set)
-            and len(node.elts) > _MAX_CONTAINER_ITEMS
-        ):
+        if isinstance(node, ast.List | ast.Tuple | ast.Set) and len(node.elts) > _MAX_CONTAINER_ITEMS:
             raise _UnsafeCondition("condition literal exceeds the container budget")
         if isinstance(node, ast.BinOp):
             _ConditionTreeValidator._validate_repetition(node)
@@ -925,9 +897,7 @@ class _ConditionTreeValidator:
             ast.List | ast.Tuple | ast.Set,
         ):
             raise _UnsafeCondition("sequence repetition is forbidden in row conditions")
-        if (
-            isinstance(node.left, ast.Constant) and isinstance(node.left.value, str)
-        ) or (
+        if (isinstance(node.left, ast.Constant) and isinstance(node.left.value, str)) or (
             isinstance(node.right, ast.Constant) and isinstance(node.right.value, str)
         ):
             raise _UnsafeCondition("string repetition is forbidden in row conditions")
@@ -1178,11 +1148,7 @@ def _resolve_memstore_context(
     producer = captured.get(expectation.producer_product)
     consumer = captured.get(expectation.consumer_product)
     if producer is None or consumer is None:
-        missing_product = (
-            expectation.producer_product
-            if producer is None
-            else expectation.consumer_product
-        )
+        missing_product = expectation.producer_product if producer is None else expectation.consumer_product
         return MemstoreCompletenessAcceptanceResult(
             status=AcceptanceStatus.UNEVALUABLE,
             source=source,
@@ -1415,9 +1381,7 @@ def _expectation_products(expectation: _Expectation) -> tuple[str, ...]:
 
 
 def _incomplete_message(evidence: CaptureCompletenessEvidence) -> str:
-    details = "; ".join(
-        f"{proof.product}: {proof.reason}" for proof in evidence.products
-    )
+    details = "; ".join(f"{proof.product}: {proof.reason}" for proof in evidence.products)
     return f"whole-product expectation requires a complete capture; {details}"
 
 
@@ -1567,15 +1531,10 @@ def evaluate_acceptance(
 ) -> AcceptanceReport:
     """Evaluate every mandatory expectation against all rows in one bounded capture."""
 
-    results = [
-        _evaluate_entry(entry, plan, captured)
-        for entry in merge_expectations(plan, spec)
-    ]
+    results = [_evaluate_entry(entry, plan, captured) for entry in merge_expectations(plan, spec)]
     passed = sum(result.status is AcceptanceStatus.PASS for result in results)
     failed = sum(result.status is AcceptanceStatus.FAIL for result in results)
-    unevaluable = sum(
-        result.status is AcceptanceStatus.UNEVALUABLE for result in results
-    )
+    unevaluable = sum(result.status is AcceptanceStatus.UNEVALUABLE for result in results)
     return AcceptanceReport(
         verified=bool(results) and failed == 0 and unevaluable == 0,
         passed=passed,

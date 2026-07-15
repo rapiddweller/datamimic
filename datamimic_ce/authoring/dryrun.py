@@ -53,8 +53,8 @@ from datamimic_ce.authoring.contracts import (
     RunResult,
 )
 from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
-from datamimic_ce.authoring.rule_catalog import RuleSeverity
 from datamimic_ce.authoring.linter import lint_descriptor, lint_source
+from datamimic_ce.authoring.rule_catalog import RuleSeverity
 
 RULE_RUNTIME_ERROR = "DM002"
 RULE_SIDE_EFFECT_REFUSAL = "DM003"
@@ -105,6 +105,7 @@ class SmokeExportCapture:
             attempted_exporters=0,
             failed_exporters=0,
         )
+
 
 @dataclass(frozen=True)
 class CapturedRun:
@@ -211,7 +212,7 @@ _RUNTIME_HINTS: tuple[tuple[str, str], ...] = (
     (
         "is empty in memstore",
         "A <generate>/<iterate> reads a memstore product that no earlier statement wrote. "
-        "Add a <generate target=\"<memstoreId>\"> whose name matches this type=/sourceType= "
+        'Add a <generate target="<memstoreId>"> whose name matches this type=/sourceType= '
         "and place it BEFORE the reader.",
     ),
     (
@@ -226,13 +227,11 @@ _RUNTIME_HINTS: tuple[tuple[str, str], ...] = (
     ("have undefined", _SCOPE_HINT),
     (
         "file not found",
-        "An <include>/source path does not exist relative to the descriptor. Fix the path "
-        "or create the file.",
+        "An <include>/source path does not exist relative to the descriptor. Fix the path or create the file.",
     ),
     (
         "connection",
-        "Check DB connectivity and the conf/{environment}.env.properties convention "
-        "(keys {system}.{db|mongo}.{attr}).",
+        "Check DB connectivity and the conf/{environment}.env.properties convention (keys {system}.{db|mongo}.{attr}).",
     ),
     (
         "Evaluation error",
@@ -250,9 +249,7 @@ def _runtime_hint(err: Exception) -> str:
     return "Fix the reported runtime error; lint the descriptor for earlier detection."
 
 
-def _run_error(
-    rule: str, message: str, fix_hint: str, lint: LintResult, *, element: str = "setup"
-) -> DryRunResult:
+def _run_error(rule: str, message: str, fix_hint: str, lint: LintResult, *, element: str = "setup") -> DryRunResult:
     diag = Diagnostic(
         rule=rule, severity=RuleSeverity.ERROR, message=message, fix_hint=fix_hint, element=element, path="/setup"
     )
@@ -338,9 +335,7 @@ def _memstore_source_binding(
         return None
     entity = StatementUtil.resolve_source_entity(stmt)
     candidates = tuple(
-        producer
-        for producer in producers
-        if producer.source_id == stmt.source and producer.entity == entity
+        producer for producer in producers if producer.source_id == stmt.source and producer.entity == entity
     )
     if len(candidates) == 1:
         status = _MemstoreBindingStatus.RESOLVED
@@ -516,9 +511,7 @@ def neutralize_for_dry_run(
             from datamimic_ce.enums.distribution_enums import SourceDistribution
 
             source_exhaustible = (
-                source_rows is not None
-                and not stmt.cyclic
-                and stmt.distribution is not SourceDistribution.CUMULATED
+                source_rows is not None and not stmt.cyclic and stmt.distribution is not SourceDistribution.CUMULATED
             )
             range_bound = _range_upper_bound(stmt) if stmt.count is None else None
             time_series = stmt.get_time_series_config()
@@ -635,9 +628,7 @@ def _smoke_export(
     from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
 
     diagnostics: list[Diagnostic] = []
-    applicable_exporters = sum(
-        len(file_targets) for _basename, file_targets in stripped.values()
-    )
+    applicable_exporters = sum(len(file_targets) for _basename, file_targets in stripped.values())
     attempted_exporters = 0
     failed_exporters = 0
     with tempfile.TemporaryDirectory(prefix="datamimic_smoke_") as tmp:
@@ -909,16 +900,11 @@ def _engine_process_worker(
                 smoke_export_capture = SmokeExportCapture.not_requested()
             else:
                 smoke_diagnostics, smoke_export_capture = _smoke_export(raw_capture, stripped)
-            captured = {
-                str(name): tuple(_ipc_safe_value(row) for row in rows)
-                for name, rows in raw_capture.items()
-            }
+            captured = {str(name): tuple(_ipc_safe_value(row) for row in rows) for name, rows in raw_capture.items()}
             message: _WorkerMessage = _WorkerSuccess(
                 captured=captured,
                 budgets=tuple(sorted(budgets.values(), key=lambda budget: budget.name)),
-                smoke_diagnostics=tuple(
-                    diagnostic.model_dump(mode="json") for diagnostic in smoke_diagnostics
-                ),
+                smoke_diagnostics=tuple(diagnostic.model_dump(mode="json") for diagnostic in smoke_diagnostics),
                 smoke_export=smoke_export_capture,
             )
         except Exception as err:
@@ -1088,9 +1074,13 @@ def _memstore_capture_evidence(
     available_per_parent = max(0, producer_observed - budget.source_offset)
     available = available_per_parent * parent_observed * budget.output_multiplier
     if budget.count_kind is _CountBoundaryKind.DYNAMIC:
-        return base if base.status is CaptureStatus.CAPPED else _unknown_from(
-            base,
-            "dynamic count replacement prevents a complete memstore-read proof",
+        return (
+            base
+            if base.status is CaptureStatus.CAPPED
+            else _unknown_from(
+                base,
+                "dynamic count replacement prevents a complete memstore-read proof",
+            )
         )
     if budget.cyclic:
         return _unknown_from(
@@ -1115,10 +1105,7 @@ def _source_memstore_capture_evidence(
                 requested=available,
                 observed=base.observed,
                 limit=base.limit,
-                reason=(
-                    f"finite memstore source has {available} available rows, "
-                    f"above capture limit {base.limit}"
-                ),
+                reason=(f"finite memstore source has {available} available rows, above capture limit {base.limit}"),
             )
         return _unknown_from(base, "memstore source did not reach its proven finite window")
     if base.observed == available:
@@ -1127,10 +1114,7 @@ def _source_memstore_capture_evidence(
             requested=available,
             observed=base.observed,
             limit=base.limit,
-            reason=(
-                f"uniquely resolved memstore producer was fully read: "
-                f"{available} finite rows"
-            ),
+            reason=(f"uniquely resolved memstore producer was fully read: {available} finite rows"),
         )
     return _unknown_from(base, "memstore source did not exhaust its proven finite window")
 
@@ -1147,10 +1131,7 @@ def _static_memstore_capture_evidence(
             requested=base.requested,
             observed=base.observed,
             limit=base.limit,
-            reason=(
-                f"static request reached all {available} rows of the uniquely "
-                "resolved memstore producer"
-            ),
+            reason=(f"static request reached all {available} rows of the uniquely resolved memstore producer"),
         )
     if base.requested <= base.limit:
         return ProductCaptureEvidence(
@@ -1244,18 +1225,12 @@ class _CaptureEvidenceResolver:
         if binding.status is _MemstoreBindingStatus.MISSING:
             return _unknown_from(
                 base,
-                (
-                    f"memstore '{binding.source_id}' entity '{binding.entity}' "
-                    "has no captured producer"
-                ),
+                (f"memstore '{binding.source_id}' entity '{binding.entity}' has no captured producer"),
             )
         if binding.status is _MemstoreBindingStatus.AMBIGUOUS:
             return _unknown_from(
                 base,
-                (
-                    f"memstore '{binding.source_id}' entity '{binding.entity}' "
-                    "has multiple possible producers"
-                ),
+                (f"memstore '{binding.source_id}' entity '{binding.entity}' has multiple possible producers"),
             )
         return self._resolved_memstore_evidence(budget, binding, base)
 
@@ -1374,9 +1349,7 @@ def _execute_captured(
 
     captured = message.captured
     budgets = {budget.name: budget for budget in message.budgets}
-    smoke_diags = [
-        Diagnostic.model_validate(diagnostic) for diagnostic in message.smoke_diagnostics
-    ]
+    smoke_diags = [Diagnostic.model_validate(diagnostic) for diagnostic in message.smoke_diagnostics]
     evidence_by_name = _capture_evidence_by_product(
         budgets,
         captured,

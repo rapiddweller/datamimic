@@ -37,9 +37,7 @@ def test_agent_facing_readme_relative_links_resolve() -> None:
 
 
 def test_documentation_index_has_no_removed_authoring_archive() -> None:
-    documentation_index = (_REPOSITORY_ROOT / "docs" / "README.md").read_text(
-        encoding="utf-8"
-    )
+    documentation_index = (_REPOSITORY_ROOT / "docs" / "README.md").read_text(encoding="utf-8")
 
     assert "Authoring evaluation archive" not in documentation_index
     assert "benchmarks/dsl-authoring" not in documentation_index
@@ -55,15 +53,11 @@ def test_agent_cli_discovery_and_scaffold_contract() -> None:
     assert isinstance(authoring, dict)
     assert authoring["queries"]
 
-    weighted = _invoke_json(
-        ["reference", "authoring", "--category", "field", "--kind", "weighted"]
-    )
+    weighted = _invoke_json(["reference", "authoring", "--category", "field", "--kind", "weighted"])
     assert isinstance(weighted, dict)
     assert weighted["query"] == {"category": "field", "kind": "weighted"}
 
-    memstore_source = _invoke_json(
-        ["reference", "authoring", "--category", "source", "--kind", "memstore"]
-    )
+    memstore_source = _invoke_json(["reference", "authoring", "--category", "source", "--kind", "memstore"])
     assert isinstance(memstore_source, dict)
     assert memstore_source["query"] == {
         "category": "source",
