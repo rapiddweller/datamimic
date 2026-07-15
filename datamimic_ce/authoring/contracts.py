@@ -13,7 +13,7 @@ that another transport rejects.
 
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
-from typing import Annotated, Any, Literal, Self
+from typing import Annotated, Any, Callable, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, RootModel, StrictStr, TypeAdapter, model_validator
 
@@ -855,7 +855,8 @@ def _validate_memstore_relationship(
     if relationship.child in memstore_children:
         raise ValueError(f"source product '{relationship.child}' has multiple memstore relationships")
     memstore_children.add(relationship.child)
-    assert isinstance(child, SourceProductCompilePlan), "memstore relationship child must be a source product"
+    if not isinstance(child, SourceProductCompilePlan):
+        raise ValueError("memstore relationship child must use a memstore source")
     if not isinstance(child.source, MemstoreSourceBindingPlan):
         raise ValueError("memstore relationship child must use a memstore source")
     if child.source.id != relationship.source_id:
@@ -1036,7 +1037,9 @@ def _validate_range(
         raise ValueError("range acceptance requires a numeric range field intent")
 
 
-_ACCEPTANCE_VALIDATORS: dict[type, object] = {
+# Keyed on exact type (not isinstance). A future subclass of any acceptance plan
+# needs its own entry — the dispatch loop silently skips unknown types.
+_ACCEPTANCE_VALIDATORS: dict[type, Callable[..., None]] = {
     ExactCountAcceptancePlan: _validate_exact_count,
     PerParentCountAcceptancePlan: _validate_per_parent_count,
     UniqueAcceptancePlan: _validate_unique,
@@ -1057,7 +1060,7 @@ def _validate_acceptance_facts(
         product = _require_product(products_by_name, acceptance.product, "derived acceptance")
         validator = _ACCEPTANCE_VALIDATORS.get(type(acceptance))
         if validator is not None:
-            validator(acceptance, product, ctx)  # type: ignore[operator]
+            validator(acceptance, product, ctx)
 
 
 def _validate_unresolved_facts(
