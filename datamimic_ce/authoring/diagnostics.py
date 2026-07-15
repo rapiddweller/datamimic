@@ -8,7 +8,7 @@
 
 from pydantic import BaseModel, Field
 
-from datamimic_ce.model.constraints import RuleSeverity
+from datamimic_ce.authoring.rule_catalog import RuleSeverity
 
 
 class Diagnostic(BaseModel):

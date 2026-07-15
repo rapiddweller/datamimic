@@ -15,7 +15,7 @@ from pathlib import Path
 from lxml import etree
 
 from datamimic_ce.authoring.diagnostics import Diagnostic
-from datamimic_ce.model.constraints import RuleSeverity
+from datamimic_ce.authoring.rule_catalog import RuleSeverity
 
 RULE_XML_LOAD = "DM001"
 

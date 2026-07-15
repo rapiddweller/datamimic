@@ -22,7 +22,7 @@ from datamimic_ce.authoring.engine_check import run_engine_parse
 from datamimic_ce.authoring.rules import ALL_RULES, LintContext
 from datamimic_ce.authoring.schema import build_schema_index
 from datamimic_ce.authoring.xml_loader import load_file, load_source
-from datamimic_ce.model.constraints import RuleSeverity
+from datamimic_ce.authoring.rule_catalog import RuleSeverity
 
 _INLINE_NOTE = (
     " (inline XML runs in a temp dir: relative source/include paths are not resolvable — "

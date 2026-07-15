@@ -54,13 +54,12 @@ from datamimic_ce.model.constraints import (
     RequiredOneOf,
     Requires,
     RequiresWhenValue,
-    RuleSeverity,
     ValidValues,
-    authoring_rule_definition,
     resolved_allowed,
     resolved_values,
 )
 from datamimic_ce.model.model_util import ModelUtil
+from datamimic_ce.authoring.rule_catalog import RuleSeverity, authoring_rule_definition
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
 

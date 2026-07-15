@@ -39,7 +39,6 @@ from datamimic_ce.exporters.exporter_util import ExporterUtil, buffered_exporter
 from datamimic_ce.model.constraints import (
     DynamicSourceKind,
     SourceFileFormat,
-    authoring_rule_definition,
     source_allows_client,
     source_allows_memstore,
     source_dynamic_kind,
@@ -47,6 +46,7 @@ from datamimic_ce.model.constraints import (
     source_file_format_for,
     supported_source_file_formats,
 )
+from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
 _SOURCE_READERS = (*_GENERATES, EL_VARIABLE, EL_NESTED_KEY, EL_KEY, EL_ID, EL_ELEMENT, EL_REFERENCE)

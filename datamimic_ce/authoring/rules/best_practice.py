@@ -32,7 +32,7 @@ from datamimic_ce.constants.element_constants import (
     EL_VARIABLE,
 )
 from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
-from datamimic_ce.model.constraints import authoring_rule_definition
+from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.utils.number_sequences import finite_number_sequence_capacity
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)

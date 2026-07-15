@@ -16,7 +16,7 @@ from rich.table import Table
 
 from datamimic_ce.authoring.contracts import AuthoringStage, RunResult, ScaffoldResult
 from datamimic_ce.authoring.diagnostics import LintResult
-from datamimic_ce.model.constraints import RuleSeverity
+from datamimic_ce.authoring.rule_catalog import RuleSeverity
 
 
 class CliOutputFormat(StrEnum):

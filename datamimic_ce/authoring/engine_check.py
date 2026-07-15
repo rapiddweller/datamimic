@@ -15,7 +15,7 @@ import re
 from pathlib import Path
 
 from datamimic_ce.authoring.diagnostics import Diagnostic
-from datamimic_ce.model.constraints import RuleSeverity
+from datamimic_ce.authoring.rule_catalog import RuleSeverity
 
 RULE_ENGINE_PARSE = "DM000"
 

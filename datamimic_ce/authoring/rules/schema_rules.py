@@ -28,9 +28,9 @@ from datamimic_ce.constants.element_constants import (
 from datamimic_ce.model.constraints import (
     KEY_DISTRIBUTION_VALUES,
     ValidValues,
-    authoring_rule_definition,
     resolved_values,
 )
+from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 
 _DATE_TYPE_GUESSES = {"datetime", "date", "timestamp", "time"}
 

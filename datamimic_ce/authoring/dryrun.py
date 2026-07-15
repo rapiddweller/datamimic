@@ -53,7 +53,7 @@ from datamimic_ce.authoring.contracts import (
     RunResult,
 )
 from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
-from datamimic_ce.model.constraints import RuleSeverity
+from datamimic_ce.authoring.rule_catalog import RuleSeverity
 from datamimic_ce.authoring.linter import lint_descriptor, lint_source
 
 RULE_RUNTIME_ERROR = "DM002"

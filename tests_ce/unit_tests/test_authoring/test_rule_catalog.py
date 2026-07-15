@@ -21,12 +21,8 @@ from datamimic_ce.authoring.rules.base import LintContext
 from datamimic_ce.authoring.schema import build_schema_index
 from datamimic_ce.cli import app
 from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
-from datamimic_ce.model.constraints import (
-    AUTHORING_RULE_DEFINITIONS,
-    RuleSeverity,
-    authoring_rule_definitions,
-    serialize_rule_definition,
-)
+from datamimic_ce.authoring.rule_catalog import AUTHORING_RULE_DEFINITIONS, RuleSeverity, authoring_rule_definitions, serialize_rule_definition
+
 
 
 def test_every_evaluator_points_to_exactly_one_complete_catalog_definition() -> None:
