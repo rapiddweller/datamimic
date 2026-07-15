@@ -16,24 +16,42 @@ still sufficient for a small local model to author a verified `model.dm.json`
 using only the `datamimic` CLI as its tool?** This is the actual use case the
 `capabilities` command exists for.
 
+Two conditions were run against the same task, oracle, seed, and turn budget:
+
+- **Condition A — hand-rolled text protocol:** the model requests CLI
+  invocations via a documented `CLI: <args>` text convention and submits its
+  answer as a fenced ```json``` block. This mirrors what an agent with no
+  native tool-calling support has to do.
+- **Condition B — native Ollama tool-calling:** the same CLI commands exposed
+  as OpenAI-style function-call tools (`datamimic_capabilities`,
+  `datamimic_reference_authoring`, `datamimic_reference_scaffold`,
+  `datamimic_scaffold_submit`), with `think: true` enabled. Added after
+  Condition A's results raised the question of whether the failures were a
+  capabilities-index sufficiency finding or a tool-use-protocol artifact —
+  `ollama show <model>` confirmed all three models declare native `tools` and
+  `thinking` capability, so Condition A was not exercising what these models
+  are actually built for.
+
+Context-window size was checked and ruled out as a factor for both
+conditions: `ollama ps` reports the full native context allocated for each
+model (`qwen3.5:9b-mlx` 262144 tokens, both `gemma4` variants 131072 tokens)
+from the very first turn, and no Modelfile or request in either condition set
+a smaller `num_ctx`. The conversations here (a handful of turns, each a few
+KB) never came close to those limits.
+
 ## Contract and method
 
-Isolation was enforced structurally, not just by prompt: the harness
-(`ollama_cli_eval.py`, throwaway, not committed) never imports `datamimic_ce`.
-Every DATAMIMIC interaction is a `subprocess` call to the installed
-`.venv/bin/datamimic` console script, restricted to an allow-list of
-subcommands (`--help`, `capabilities`, `reference`, `scaffold`, `lint`,
-`dry-run`). The model's only knowledge of DATAMIMIC is what those commands
-return in-conversation; it has no access to repository source, tests, or
-documentation.
+Isolation was enforced structurally in both conditions, not just by prompt:
+the harness (`ollama_cli_eval.py` / `ollama_cli_eval_v2.py`, throwaway, not
+committed) never imports `datamimic_ce`. Every DATAMIMIC interaction is a
+`subprocess` call to the installed `.venv/bin/datamimic` console script,
+restricted to an allow-list of subcommands (`--help`, `capabilities`,
+`reference`, `scaffold`, `lint`, `dry-run`). The model's only knowledge of
+DATAMIMIC is what those commands return in-conversation; it has no access to
+repository source, tests, or documentation.
 
-Each model got a system prompt naming the CLI as its only tool, listing the
-exact allowed invocation forms (including `reference authoring`, `reference
-authoring --category <category> --kind <kind>`, and `reference scaffold`), and
-a submission protocol: reply with one `CLI: <args>` line, or a fenced
-` ```json ` block containing the final `model.dm.json`. Every reply was fed
-back either as a CLI result or as the structured `scaffold --format json`
-issue list. Budget: 6 turns total per model, seed 42, temperature 0.2.
+Budget: 6 turns total per model, seed 42, temperature 0.2, in both
+conditions.
 
 **Task (T1 flat, reused from a prior — since-deleted — diagnostic; a
 proven, already-specified task, no new design needed):** generate exactly 5
@@ -53,17 +71,18 @@ acceptance checks passed, deterministic replay passed).
 
 ## Access gate
 
-| Model | Local | Access |
-|---|---|---|
-| `qwen3.5:9b-mlx` | yes (MLX) | pass |
-| `gemma4:e4b` | yes | pass |
-| `gemma4:e4b-it-qat` | yes | pass |
+| Model | Local | Access (A) | Access (B) |
+|---|---|---|---|
+| `qwen3.5:9b-mlx` | yes (MLX) | pass | pass |
+| `gemma4:e4b` | yes | pass | pass |
+| `gemma4:e4b-it-qat` | yes | pass | pass |
 
-All three models were reachable via the local Ollama server; no access
-failures. `-cloud`-tagged Ollama models were excluded — they proxy to Ollama's
-cloud, not local inference, and were out of scope for this "local model" test.
+All three models were reachable via the local Ollama server in both
+conditions; no access failures. `-cloud`-tagged Ollama models were excluded —
+they proxy to Ollama's cloud, not local inference, and were out of scope for
+this "local model" test.
 
-## Reproduction chain (as actually executed)
+## Condition A — hand-rolled text protocol
 
 ```text
 system prompt: CLI is the only tool, allowed invocations listed
@@ -75,8 +94,6 @@ system prompt: CLI is the only tool, allowed invocations listed
   -> on failure, the structured issue list is fed back as the next turn
   -> stop on oracle pass, or after 6 turns
 ```
-
-## Per-model result
 
 | Model | CLI discovery calls | `scaffold` submissions | Turn reached `verified=true` | Outcome |
 |---|---|---|---|---|
@@ -112,51 +129,145 @@ told them the exact required keys.
   engine's own list of valid tags in the previous turn's diagnostic. At turn
   6, the only remaining issues were a missing `count` field and one stray
   `unknown_field` (`generate`, left over from an earlier guess) — this run
-  was visibly converging turn over turn and plausibly would have reached
-  `verified=true` within 1–2 more turns.
+  was visibly converging turn over turn.
 
 Total wall-clock spent inside `scaffold` calls per model was small (2.9–3.7 s
 across 5–6 calls each) — the bottleneck was authoring correctness, not CLI or
 model latency.
 
+## Condition B — native Ollama tool-calling
+
+Same task/oracle/seed/budget; `datamimic_capabilities`,
+`datamimic_reference_authoring`, `datamimic_reference_scaffold`, and
+`datamimic_scaffold_submit` exposed as real function-call tools, `think:
+true`. A pre-flight two-turn dry run against `gemma4:e4b` confirmed the
+round-trip works before committing to the full run: turn 1 called
+`datamimic_reference_scaffold`, turn 2 called `datamimic_scaffold_submit` —
+already qualitatively different from Condition A's zero-discovery pattern for
+the same model.
+
+| Model | Discovery tool calls | `scaffold_submit` calls | No-tool-call turns | Turn reached `verified=true` | Outcome |
+|---|---|---|---|---|---|
+| `qwen3.5:9b-mlx` | 6 (`capabilities`, 5× `reference_authoring`) | 0 | 0 | — | fail: turn budget exhausted (never submitted) |
+| `gemma4:e4b` | 3 (`reference_scaffold`, 2× `reference_authoring`) | 2 | 1 | — | fail: turn budget exhausted |
+| `gemma4:e4b-it-qat` | 1 (`reference_scaffold`) | 4 | 1 | — | fail: turn budget exhausted |
+
+**Still 0/3 verified within the same 6-turn budget — but the failure mode
+changed substantially, in the direction the tool-calling hypothesis
+predicted:**
+
+- **`qwen3.5:9b-mlx`** now discovers instead of guessing: `capabilities` →
+  `reference authoring` (full listing) → `reference authoring
+  --category product --kind generated` → `--category field --kind int_range`
+  → `--category field --kind values` → `--category entity --kind generated`
+  (this last query names a category, `entity`, that does not exist in the
+  taxonomy — a real query mistake, not a hallucinated tool). It used the
+  entire budget on discovery and never attempted a submission, so the earlier
+  "stuck loop repeating identical wrong output" failure mode is gone, replaced
+  by "never stops discovering." Its visible `thinking` traces show genuine,
+  reasonable step-by-step planning at every turn — a stark contrast to
+  Condition A, where nothing about its reasoning was ever observable.
+- **`gemma4:e4b`** went straight for the full JSON Schema (`reference
+  scaffold`) on turn 1 rather than the compact index, then attempted a
+  submission on turn 2 using an invented flat top-level shape (`fields`
+  instead of nested `products[].fields`). After two `reference authoring`
+  lookups (`field/identifier`, `field/increment`) and one turn that produced
+  no tool call at all (a wasted turn — the model's `thinking` shows it was
+  still reasoning about structure without emitting a call), its final
+  submission at turn 6 used `"kind"` values from the *field* vocabulary
+  (`increment`, `allowed_values`, `decimal_range`) at the *product* level,
+  where only `generated`/`source`/`time_series` are valid — the same
+  product-vs-field discriminator confusion seen in Condition A, just reached
+  by a different path.
+- **`gemma4:e4b-it-qat`** fetched the full schema once (turn 1), skipped a
+  turn (turn 2, no tool call), then submitted four times in a row (turns
+  3–6), each attempt restructuring the document (flat `fields` → nested
+  `products[].fields` with per-field `"kind"` → per-field `roles[].kind` →
+  a mix of the last two) without ever adding the required `"kind":
+  "generated"` discriminator on the *product* object itself. Every one of the
+  four submissions failed for a variant of the same root cause.
+
+The recurring cross-model failure in Condition B is narrower and more
+specific than Condition A's "wrong shape entirely": **all three models
+correctly discovered they need a `products` array with `expectations`, and
+correctly reused field-level "kind" vocabulary from `reference authoring`
+lookups, but repeatedly missed or misapplied the separate product-level
+`"kind"` discriminator** (`generated`/`source`/`time_series`), which
+distinguishes the different product types. `datamimic_reference_authoring`
+under `category=product, kind=generated` — the exact fragment that documents
+this — was fetched by only one model (`qwen3.5:9b-mlx`, turn 3), and even
+then it ran out of budget before submitting.
+
+## Comparison
+
+| | Condition A (text protocol) | Condition B (native tools) |
+|---|---|---|
+| Verified | 0/3 | 0/3 |
+| Discovery calls used | 0–1 per model | 1–6 per model |
+| Reasoning visible to evaluator | no | yes (`thinking`) |
+| Dominant failure mode | guess blindly from invented syntax; one model stuck repeating an identical wrong payload | explore genuinely, converge on most of the structure, miss the product-level `kind` discriminator; one model never stops exploring |
+
+Native tool-calling did not flip the pass/fail outcome inside the same
+6-turn budget, but it changed *what* failed. Every model in Condition B
+engaged with the actual discovery tools and made visible, generally sensible
+progress; none exhibited Condition A's degenerate repeated-identical-output
+loop. The remaining blocker narrowed from "wrong syntax across the board" to
+one specific, nameable confusion (product-kind vs. field-kind) plus a turn
+budget that was too tight for the models that spent it on thorough discovery
+(`qwen3.5:9b-mlx`) or on slow iterative repair (`gemma4:e4b-it-qat`, visibly
+still improving at turn 6).
+
 ## Decision
 
-- **NO-GO:** unguided CLI-only authoring (discovery left optional in the
-  prompt, no mandatory `reference` step) by small local models within a
-  6-turn budget. 0/3 verified on the simplest possible task (T1 flat).
-- **NO DATA:** whether the compact `capabilities` index itself is the
-  bottleneck, versus the models simply not using the `reference` discovery
-  commands that were offered. Two of three models fetched `capabilities`
-  once; none progressed to `reference authoring`, which is what actually
-  carries the exact required-field list. This diagnostic cannot separate "the
-  compact index wasn't enough" from "the models never asked for the next
-  level of detail" — both were true here, but the second explains the
-  failures at least as well as the first.
+- **NO-GO (both conditions):** unattended CLI-only authoring by small local
+  models within a 6-turn budget on this task. 0/3 verified in both
+  conditions.
+- **GO (tooling choice):** native tool-calling over a hand-rolled text
+  protocol for any future local-model harness. It did not change the
+  pass/fail count here, but it eliminated a degenerate failure mode (the
+  identical-payload stuck loop), produced auditable reasoning traces, and
+  measurably increased genuine discovery-tool usage — strictly better
+  evidence quality for the same budget, independent of whether it changes the
+  verified rate on a larger run.
+- **NO DATA:** whether the compact `capabilities` index itself is a
+  bottleneck. In Condition B, two of three models skipped `capabilities`
+  entirely in favor of `reference scaffold` (the full JSON Schema) when both
+  were offered as equally-weighted tools — suggesting the compact index's
+  role is a token-budget optimization for cases where an agent doesn't need
+  full detail, not a hard blocker when an agent does reach for the detailed
+  path. No model in either condition was ever observed failing *because* the
+  compact index specifically omitted something it needed and had no drill-down
+  for.
 - **NO DATA:** model ranking or reliability claims from a single seed and a
-  6-turn budget. `gemma4:e4b-it-qat`'s turn-over-turn convergence versus
-  `qwen3.5:9b-mlx`'s stuck loop is suggestive, not conclusive, on one run.
+  6-turn budget, in either condition.
 
 ## Ranked follow-up
 
-1. Test a discovery-mandatory condition: require at least one `reference
-   authoring` call before a `scaffold` submission is even accepted by the
-   harness, mirroring the prior (deleted) diagnostic's C0-vs-C1 comparison,
-   to isolate whether that closes the gap.
-2. Re-run `gemma4:e4b-it-qat` with a larger turn budget (it was still
-   improving at turn 6) before concluding anything about compact-capabilities
-   sufficiency for that model.
-3. Consider a minimal worked `model.dm.json` example directly in the compact
-   index's `_meta.usage` block or system-prompt-adjacent guidance — every
-   model guessed plausible-looking but wrong top-level keys (`product`,
-   `generate`, `demographics`), suggesting a one-shot example would remove
-   most of the early-turn churn cheaper than more discovery calls would.
-4. Investigate `qwen3.5:9b-mlx`'s identical-payload stuck loop specifically
-   (turns 3–6) before drawing any comparison between it and the two Gemma
-   variants — this looks like a distinct failure mode (ignoring feedback),
-   not the same "wrong schema guess" failure the other two showed.
-5. Re-run with seeds 42–46 across both a guided and unguided condition before
-   making any GO/NO-GO claim about the compact index's real-world
-   sufficiency — this diagnostic is one seed, three models, one condition.
+1. Re-run Condition B with a larger turn budget (10–12): `qwen3.5:9b-mlx` used
+   its entire budget on discovery without ever submitting, and
+   `gemma4:e4b-it-qat` was still iterating at turn 6 — both may simply need
+   more room, not a different protocol.
+2. Make the product-level `"kind"` discriminator harder to miss: either
+   surface a one-line worked example (`{"kind": "generated", ...}` at the
+   product level) directly in `capabilities`' compact index or in
+   `reference scaffold`'s output, or strengthen the `invalid_discriminator`
+   diagnostic to name the *product* vocabulary explicitly instead of relying
+   on the model to infer it's a different `"kind"` than the field-level one
+   it just saw. This is the single most common root cause across both
+   conditions and all three models.
+3. Test a discovery-budget guard: cap discovery calls (e.g. at 3) and require
+   a submission attempt after that, so models like `qwen3.5:9b-mlx` that
+   discover thoroughly but never converge to a submission are forced to test
+   their understanding within the turn budget.
+4. Re-run with seeds 42–46 across both conditions before making any GO/NO-GO
+   claim about the compact index's real-world sufficiency or about
+   native-tool-calling's effect on the verified rate — this diagnostic is one
+   seed, three models, two conditions.
+5. If a future harness is built for real (per this directory's "Contract for
+   a future canonical harness"), it should default to native tool-calling per
+   this diagnostic's Condition B evidence, and should log `thinking` traces
+   in its hashed call ledger — they were the single most useful signal for
+   understanding *why* a run failed, not just that it did.
 
 ## Verification commands
 
@@ -171,4 +282,5 @@ model latency.
 The gold-spec self-check (`scaffold --smoke-export --deterministic-replay` on
 the hand-built T1 answer) is reproducible with the task definition above; it
 is not committed as a fixture per this archive's evidence-outside-the-repo
-convention.
+convention. `ollama show <model>` (no arguments needed beyond the model tag)
+reproduces the capability/context-length checks cited above.
