@@ -4,8 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""DSL reference for agents: element schemas, generators, targets, distributions,
-recipes — everything derived from the engine's registries or gate-tested content.
+"""DSL reference for agents: element schemas, generators, targets, distributions —
+everything derived from the engine's registries or gate-tested content.
 Token-capped: every answer ends with a pointer instead of overflowing."""
 
 import importlib

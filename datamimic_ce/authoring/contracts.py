@@ -446,11 +446,7 @@ class ScaffoldRequest(BaseModel):
 
     spec: dict[str, Any] = Field(
         ...,
-        description=(
-            "Versioned AuthoringSpecV1 model.dm.json intent. The historical compact "
-            "{'seed': ..., 'generates': [...]} shape is accepted through lossless "
-            "normalization with visible notes."
-        ),
+        description="Versioned AuthoringSpecV1 model.dm.json intent.",
     )
     max_count: int = Field(
         10,
