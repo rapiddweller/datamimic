@@ -94,6 +94,7 @@ acceptance checks passed, deterministic replay passed).
 | `gemma4:e4b-it-qat` | yes | pass | pass |
 | `gemma4:31b-cloud` | no (Ollama cloud) | not run | pass |
 | `nemotron-3-nano:30b-cloud` | no (Ollama cloud) | not run | pass |
+| `gpt-oss:120b-cloud` | no (Ollama cloud) | not run | pass |
 | `qwen3.5:cloud` | no (Ollama cloud) | not run | **fail — subscription required** |
 | `mistral-large-3:675b-cloud` | no (Ollama cloud) | not run | **fail — subscription required** |
 | `deepseek-v4-flash:cloud` | no (Ollama cloud) | not run | **fail — subscription required** |
@@ -296,8 +297,8 @@ without a stated reason; this is not best practice.
 **Condition B2** re-runs the same task/oracle/seed/6-turn budget/tool
 schema, with the harness fixed to send only `seed` in `options` — every
 other sampling parameter now falls back to each model's own declared
-default. It also adds the three newly-requested models
-(`nemotron-3-nano:30b-cloud`, plus `qwen3.5:cloud` and
+default. It also adds the newly-requested models
+(`nemotron-3-nano:30b-cloud`, `gpt-oss:120b-cloud`, plus `qwen3.5:cloud` and
 `mistral-large-3:675b-cloud`/`deepseek-v4-flash:cloud`, all three of which
 turned out to be access-gated — see Access gate above).
 
@@ -308,12 +309,13 @@ turned out to be access-gated — see Access gate above).
 | `gemma4:e4b-it-qat` | 4 | 1 | 1 | no — turn budget exhausted |
 | `gemma4:31b-cloud` | 6 | 0 | 0 | no — turn budget exhausted, never submitted |
 | `nemotron-3-nano:30b-cloud` | 6 | 0 | 0 | no — turn budget exhausted, never submitted |
+| `gpt-oss:120b-cloud` | 6 | 0 | 0 | no — turn budget exhausted, never submitted |
 
-**0/5 verified — correcting the sampling defaults did not change the
-pass/fail outcome for any of the four re-run models, and the new model
-(`nemotron-3-nano:30b-cloud`) also failed to verify.** It did change
-qualitative behavior, in ways that cut against a simple "low temperature
-caused the failures" story:
+**0/6 verified — correcting the sampling defaults did not change the
+pass/fail outcome for any of the four re-run models, and neither new model
+(`nemotron-3-nano:30b-cloud`, `gpt-oss:120b-cloud`) verified either.** It did
+change qualitative behavior, in ways that cut against a simple "low
+temperature caused the failures" story:
 
 - **`gemma4:e4b`** is the clearest case: at `temperature: 0.2` (original
   Condition B) it made 2 distinct submission attempts with genuinely
@@ -340,6 +342,17 @@ caused the failures" story:
   category/kind combinations (the correct kind for an enumerated set of
   values is `values`, not `enum`) — three of its six discovery calls queried
   fragments that do not exist.
+- **`gpt-oss:120b-cloud`** (new) shows the most sophisticated visible
+  reasoning of any model in this diagnostic — its `thinking` traces correctly
+  name `ExactCountExpectation` and an `identifier` field role before it has
+  even queried them — but it still used its entire budget on discovery and
+  never submitted. Two of its six calls were pure waste: turn 3 queried an
+  invalid fragment (`category: product, kind: definition`), and turn 5
+  re-queried `category: product, kind: generated` — a fragment it had
+  already fetched (correctly) at turn 4 — before spending its final turn
+  re-fetching `reference scaffold` a second time (also already fetched, at
+  turn 1) instead of attempting a submission. Sophisticated reasoning did not
+  translate into efficient budget use here.
 
 The corrected-sampling data does not support "Condition B's original 0/4 was
 an artifact of bad temperature" — the outcome is unchanged, and the one
@@ -348,16 +361,20 @@ a better one. The sampling fix was still the right thing to do (self-imposed,
 uncorrected parameter deviation is not something to leave standing simply
 because it happened not to flip the result here), and it is documented as an
 erratum rather than silently overwriting the original Condition B numbers.
+Across B2's six accessible models, four (`qwen3.5:9b-mlx`,
+`gemma4:31b-cloud`, `nemotron-3-nano:30b-cloud`, `gpt-oss:120b-cloud`) never
+attempted a single submission — discovery-budget exhaustion, not incorrect
+submissions, is now the single most common outcome in this diagnostic.
 
 ## Comparison
 
 | | Condition A (text protocol) | Condition B (native tools, temp=0.2) | Condition B2 (native tools, model-default sampling) | Condition C (Haiku, cleanroom) |
 |---|---|---|---|---|
-| Verified | 0/3 | 0/4 | 0/5 | 1/1 |
+| Verified | 0/3 | 0/4 | 0/6 | 1/1 |
 | Discovery calls used | 0–1 per model | 0–6 per model | 1–6 per model | 3 (unrationed) |
 | Submission attempts before pass | — | — | — | 1 |
 | Reasoning visible to evaluator | no | yes (`thinking`) | yes (`thinking`) | yes (agent's own report) |
-| Dominant failure mode | guess blindly from invented syntax; one model stuck repeating an identical wrong payload | explore genuinely, converge on most of the structure, miss the product-level `kind` discriminator; two of four never even reach submission | same discriminator confusion; `gemma4:e4b` develops its own stuck loop (4 identical resubmissions); weakest model (`nemotron-3-nano:30b-cloud`) queries several nonexistent category/kind pairs | none observed |
+| Dominant failure mode | guess blindly from invented syntax; one model stuck repeating an identical wrong payload | explore genuinely, converge on most of the structure, miss the product-level `kind` discriminator; two of four never even reach submission | same discriminator confusion; `gemma4:e4b` develops its own stuck loop (4 identical resubmissions); 4 of 6 models never submit at all, including the most articulate reasoner (`gpt-oss:120b-cloud`) | none observed |
 
 Native tool-calling did not flip the pass/fail outcome inside the same
 6-turn budget, but it changed *what* failed relative to Condition A. Every
@@ -384,14 +401,15 @@ conclusive — see follow-up #1.
 
 ## Decision
 
-- **NO-GO (Conditions A/B/B2):** unattended CLI-only authoring by small
-  (8B–31B), open-weight local/Ollama-hosted models within a 6-turn budget on
-  this task. 0/9 verified across all three conditions and (counting
-  `gemma4:e4b`/`gemma4:e4b-it-qat`/`qwen3.5:9b-mlx`/`gemma4:31b-cloud` once
-  each plus `nemotron-3-nano:30b-cloud`) eight distinct model runs.
+- **NO-GO (Conditions A/B/B2):** unattended CLI-only authoring by small-to-
+  large (8B–120B), open-weight/proprietary-weight local/Ollama-hosted models
+  within a 6-turn budget on this task. 0/10 verified across all three
+  conditions and nine distinct model runs (`gemma4:e4b`/
+  `gemma4:e4b-it-qat`/`qwen3.5:9b-mlx`/`gemma4:31b-cloud` once each in both B
+  and B2 plus `nemotron-3-nano:30b-cloud`/`gpt-oss:120b-cloud` in B2 only).
 - **Confirmed: Condition B's original sampling was not best-practice**
   (forced `temperature: 0.2` against every model's own declared default of
-  `1`), **but correcting it (B2) did not change the outcome.** 0/5 verified
+  `1`), **but correcting it (B2) did not change the outcome.** 0/6 verified
   under model-default sampling, same as 0/4 under the forced low temperature.
   One model's *failure mode* changed (a new stuck loop in `gemma4:e4b`), not
   its pass/fail result. Sampling defaults are not the explanation for these
@@ -408,7 +426,7 @@ conclusive — see follow-up #1.
   evidence quality for the same budget, independent of whether it changes the
   verified rate on a larger run. (It did not reliably eliminate the
   identical-payload stuck loop either — see B2's `gemma4:e4b`.)
-- **Access, not capability, is the finding for three of the seven requested
+- **Access, not capability, is the finding for three of the eight requested
   cloud models:** `qwen3.5:cloud`, `mistral-large-3:675b-cloud`, and
   `deepseek-v4-flash:cloud` all require an Ollama subscription this
   environment doesn't have. No semantic conclusion is possible for these
@@ -421,11 +439,15 @@ conclusive — see follow-up #1.
   detail, not a hard blocker when an agent does reach for the detailed path.
   No model in any condition was ever observed failing *because* the compact
   index specifically omitted something it needed and had no drill-down for.
-- **NO DATA:** whether the models that spent their entire B/B2 budget on
-  discovery (`qwen3.5:9b-mlx`, `gemma4:31b-cloud`, `nemotron-3-nano:30b-cloud`
-  — three of five in B2) would pass under a Condition-C-shaped budget (more
-  turns, unrationed discovery). They never got to demonstrate whether their
-  discovery had actually converged on a correct understanding.
+- **NO DATA:** whether the models that spent their entire B2 budget on
+  discovery without ever submitting (`qwen3.5:9b-mlx`, `gemma4:31b-cloud`,
+  `nemotron-3-nano:30b-cloud`, `gpt-oss:120b-cloud` — four of six in B2,
+  including a 120B model with the most articulate visible reasoning of any
+  model tested) would pass under a Condition-C-shaped budget (more turns,
+  unrationed discovery). Discovery-budget exhaustion, not incorrect
+  submission, is now the single most common outcome in this diagnostic, and
+  none of these four ever got to demonstrate whether their discovery had
+  actually converged on a correct understanding.
 - **NO DATA:** model ranking or reliability claims from a single seed, small
   model/condition counts, and (for Condition C) a single run.
 
@@ -438,11 +460,16 @@ conclusive — see follow-up #1.
    with a different budget shape and tool surface, which this diagnostic has
    been explicit about not controlling for. This is the single highest-value
    remaining gap.
-2. Re-run Condition B2 with a larger turn budget (10–12) for the three
+2. Re-run Condition B2 with a larger turn budget (10–12) for the four
    discovery-only models (`qwen3.5:9b-mlx`, `gemma4:31b-cloud`,
-   `nemotron-3-nano:30b-cloud`) — this directly tests whether they "ran out
-   of time" or "would have failed the same way as `gemma4:e4b`/
-   `gemma4:e4b-it-qat`."
+   `nemotron-3-nano:30b-cloud`, `gpt-oss:120b-cloud`) — this directly tests
+   whether they "ran out of time" or "would have failed the same way as
+   `gemma4:e4b`/`gemma4:e4b-it-qat`." Worth prioritizing `gpt-oss:120b-cloud`
+   specifically: its reasoning was the most sophisticated observed, but two
+   of its six calls were pure waste (one invalid query, one exact duplicate
+   of an already-fetched fragment) — a stricter "don't repeat a fragment
+   you've already fetched" instruction alone might be enough to free up the
+   turn it needed to submit.
 3. Make the product-level `"kind"` discriminator harder to miss: either
    surface a one-line worked example (`{"kind": "generated", ...}` at the
    product level) directly in `capabilities`' compact index or in
