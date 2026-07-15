@@ -18,7 +18,6 @@ datamimic info                      # Show system and configuration details
 datamimic init <project-name>       # Initialize a new project
 datamimic run <descriptor.xml>      # Run a data generation descriptor
 datamimic lint <descriptor.xml>     # Lint a descriptor: schema, semantics, best practices
-datamimic validate <descriptor.xml>  # Validate XML descriptor (alias of lint)
 datamimic capabilities               # Print the DSL surface as JSON (elements, generators, entities, converters, targets)
 ```
 
@@ -122,23 +121,6 @@ datamimic lint my-descriptor.xml
 
 # JSON output for CI, capped at 50 diagnostics
 datamimic lint my-descriptor.xml --format json --max-diagnostics 50
-```
-
-#### `validate` - Validate Descriptor (alias of `lint`)
-
-```bash
-datamimic validate <descriptor.xml>
-```
-
-`validate` is a thin alias for `lint` with fixed defaults
-(`--format text --fail-on error --max-diagnostics 200`). It runs the same
-schema/semantic/best-practice checks as `lint`; it does not read or validate
-`info.toml`.
-
-Example:
-
-```bash
-datamimic validate my-descriptor.xml
 ```
 
 #### `capabilities` - Print the DSL Surface

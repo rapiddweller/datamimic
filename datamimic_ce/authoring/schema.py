@@ -10,7 +10,6 @@
 - Elements:   ``model.element_registry`` (tag/model/parser/aliases/nesting)
 """
 
-from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any
@@ -25,47 +24,11 @@ from datamimic_ce.model.constraints import (
 )
 from datamimic_ce.model.element_registry import (
     canonical_tag,
-    element_aliases,
-    get_element_definition,
     get_model_class,
     get_valid_children,
     list_element_tags,
     registry_revision,
 )
-
-
-class _ElementModelView(Mapping[str, type[BaseModel] | None]):
-    """Compatibility view derived live from the central element registry."""
-
-    def __getitem__(self, tag: str) -> type[BaseModel] | None:
-        if get_element_definition(tag) is None:
-            raise KeyError(tag)
-        return get_model_class(tag)
-
-    def __iter__(self) -> Iterator[str]:
-        return iter(list_element_tags())
-
-    def __len__(self) -> int:
-        return len(list_element_tags())
-
-
-class _AliasView(Mapping[str, str]):
-    """Compatibility view derived live from registry-owned aliases."""
-
-    def __getitem__(self, alias: str) -> str:
-        return element_aliases()[alias]
-
-    def __iter__(self) -> Iterator[str]:
-        return iter(element_aliases())
-
-    def __len__(self) -> int:
-        return len(element_aliases())
-
-
-# Kept as read-only compatibility surfaces for existing authoring consumers.
-# Registration is owned exclusively by model.element_registry.
-ELEMENT_MODEL_MAP: Mapping[str, type[BaseModel] | None] = _ElementModelView()
-ALIASES: Mapping[str, str] = _AliasView()
 
 
 @dataclass(frozen=True)
@@ -149,18 +112,8 @@ def _build_schema_index(_element_revision: int, _rule_revision: int) -> SchemaIn
     return SchemaIndex(elements)
 
 
-class _SchemaIndexBuilder:
-    """Callable revision-aware cache with the legacy ``cache_clear`` hook."""
-
-    def __call__(self) -> SchemaIndex:
-        return _build_schema_index(registry_revision(), rule_registry_revision())
-
-    @staticmethod
-    def cache_clear() -> None:
-        _build_schema_index.cache_clear()
-
-
-build_schema_index = _SchemaIndexBuilder()
+def build_schema_index() -> SchemaIndex:
+    return _build_schema_index(registry_revision(), rule_registry_revision())
 
 
 def element_json_schema(tag: str) -> dict[str, Any]:

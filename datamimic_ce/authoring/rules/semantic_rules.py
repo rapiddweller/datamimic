@@ -558,7 +558,7 @@ class AllowedValuesWhenConstraint(Rule):
 
 
 class ConditionalDeclaredConstraints(Rule):
-    """Value-gated and mode-gated central facts not owned by a legacy DM rule."""
+    """Value-gated and mode-gated central facts not owned by a specialized DM rule."""
 
     definition = authoring_rule_definition("DM221")
 

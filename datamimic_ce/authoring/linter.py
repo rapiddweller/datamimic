@@ -17,11 +17,12 @@ from pathlib import Path
 
 from lxml import etree
 
-from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult, Severity
+from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.engine_check import run_engine_parse
 from datamimic_ce.authoring.rules import ALL_RULES, LintContext
 from datamimic_ce.authoring.schema import build_schema_index
 from datamimic_ce.authoring.xml_loader import load_file, load_source
+from datamimic_ce.model.constraints import RuleSeverity
 
 _INLINE_NOTE = (
     " (inline XML runs in a temp dir: relative source/include paths are not resolvable — "
@@ -39,7 +40,7 @@ def _run_rules(root: etree._Element, base_dir: Path | None) -> list[Diagnostic]:
 
 
 def _has_errors(diagnostics: list[Diagnostic]) -> bool:
-    return any(d.severity is Severity.ERROR for d in diagnostics)
+    return any(d.severity is RuleSeverity.ERROR for d in diagnostics)
 
 
 def lint_descriptor(path: Path, *, max_diagnostics: int | None = None) -> LintResult:

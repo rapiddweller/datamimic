@@ -52,19 +52,13 @@ from datamimic_ce.authoring.contracts import (
     ProductResult,
     RunResult,
 )
-from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult, Severity
+from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.linter import lint_descriptor, lint_source
+from datamimic_ce.model.constraints import RuleSeverity
 
 RULE_RUNTIME_ERROR = "DM002"
 RULE_SIDE_EFFECT_REFUSAL = "DM003"
 RULE_EMPTY_OUTPUT = "DM004"
-
-
-DryRunProduct = ProductResult
-"""Backward-compatible alias for the canonical dry-run product contract."""
-
-DryRunResult = RunResult
-"""Backward-compatible alias for the canonical dry-run result contract."""
 
 
 @dataclass(frozen=True)
@@ -109,7 +103,7 @@ class SmokeExportCapture:
 class CapturedRun:
     """One engine result paired with the full bounded capture from that run."""
 
-    result: DryRunResult
+    result: RunResult
     captured: CapturedProducts
     base_run_ok: bool = True
     smoke_export: SmokeExportCapture = SmokeExportCapture(
@@ -251,11 +245,11 @@ def _runtime_hint(err: Exception) -> str:
 
 def _run_error(
     rule: str, message: str, fix_hint: str, lint: LintResult, *, element: str = "setup"
-) -> DryRunResult:
+) -> RunResult:
     diag = Diagnostic(
-        rule=rule, severity=Severity.ERROR, message=message, fix_hint=fix_hint, element=element, path="/setup"
+        rule=rule, severity=RuleSeverity.ERROR, message=message, fix_hint=fix_hint, element=element, path="/setup"
     )
-    return DryRunResult(
+    return RunResult(
         ok=False,
         stage=AuthoringStage.RUN,
         lint=lint,
@@ -667,7 +661,7 @@ def _smoke_export(
                     diagnostics.append(
                         Diagnostic(
                             rule=RULE_RUNTIME_ERROR,
-                            severity=Severity.ERROR,
+                            severity=RuleSeverity.ERROR,
                             message=f"{exporter_name} smoke export failed for '{full_name}': {err}",
                             fix_hint=(
                                 f"A generated value cannot be written by the {exporter_name} exporter "
@@ -696,7 +690,7 @@ def dry_run(
     allow_side_effects: bool = False,
     timeout_seconds: int = 30,
     smoke_export: bool = False,
-) -> DryRunResult:
+) -> RunResult:
     """Lint first (errors stop before execution), then execute neutralized and capture.
     smoke_export additionally replays captured rows through the stripped file exporters
     in a temp dir, catching export-layer crashes the plain dry-run cannot see."""
@@ -723,7 +717,7 @@ def dry_run_captured(
 
     lint = lint_descriptor(path)
     if not lint.ok:
-        result = DryRunResult(
+        result = RunResult(
             ok=False,
             stage=AuthoringStage.LINT,
             lint=lint,
@@ -753,7 +747,7 @@ def dry_run_source(
     allow_side_effects: bool = False,
     timeout_seconds: int = 30,
     smoke_export: bool = False,
-) -> DryRunResult:
+) -> RunResult:
     """Dry-run inline descriptor XML in a temp dir (relative resources not resolvable)."""
     return dry_run_source_captured(
         xml,
@@ -778,7 +772,7 @@ def dry_run_source_captured(
 
     lint = lint_source(xml)
     if not lint.ok:
-        result = DryRunResult(
+        result = RunResult(
             ok=False,
             stage=AuthoringStage.LINT,
             lint=lint,
@@ -818,7 +812,7 @@ def _clip_value(value: object, max_chars: int = 200) -> object:
     return str(value)  # datetime, Decimal, custom objects -> readable leaf
 
 
-def _failed_capture(result: DryRunResult, max_count: int) -> CapturedRun:
+def _failed_capture(result: RunResult, max_count: int) -> CapturedRun:
     return CapturedRun(
         result=result,
         captured=CapturedProducts((), max_count),
@@ -1343,7 +1337,7 @@ def _execute_captured(
         ),
         max_count=max_count,
     )
-    products: list[DryRunProduct] = []
+    products: list[ProductResult] = []
     for product in captured_products.products:
         name = product.name
         rows = product.rows
@@ -1355,7 +1349,7 @@ def _execute_captured(
             for row in rows[:sample_rows]
         ]
         products.append(
-            DryRunProduct(
+            ProductResult(
                 name=name,
                 count=len(rows),
                 sample=sample,
@@ -1372,14 +1366,14 @@ def _execute_captured(
         zero_rows.append(
             Diagnostic(
                 rule=RULE_EMPTY_OUTPUT,
-                severity=Severity.WARNING,
+                severity=RuleSeverity.WARNING,
                 message="The dry-run generated 0 rows across all products — the descriptor produces no data.",
                 fix_hint="Ensure a <generate> exists with a positive count (or a source that returns rows).",
                 element="setup",
                 path="/setup",
             )
         )
-    result = DryRunResult(
+    result = RunResult(
         ok=not smoke_diags and not zero_rows,
         stage=AuthoringStage.RUN,
         timing_ms=timing_ms,
@@ -1394,26 +1388,3 @@ def _execute_captured(
         base_run_ok=not zero_rows,
         smoke_export=message.smoke_export,
     )
-
-
-def _execute(
-    path: Path,
-    *,
-    max_count: int,
-    sample_rows: int,
-    allow_side_effects: bool,
-    timeout_seconds: int,
-    lint: LintResult,
-    smoke_export: bool = False,
-) -> DryRunResult:
-    """Compatibility projection over the one canonical captured execution path."""
-
-    return _execute_captured(
-        path,
-        max_count=max_count,
-        sample_rows=sample_rows,
-        allow_side_effects=allow_side_effects,
-        timeout_seconds=timeout_seconds,
-        lint=lint,
-        smoke_export=smoke_export,
-    ).result

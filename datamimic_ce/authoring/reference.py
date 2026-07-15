@@ -12,19 +12,19 @@ import importlib
 import inspect
 import json
 import pkgutil
-from enum import StrEnum
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from datamimic_ce.domains.domain_core.entity_registry import EntitySpec
 
+from datamimic_ce.authoring.contracts import ReferenceTopic
 from datamimic_ce.authoring.reference_projection import (
     AuthoringReferenceQuery,
     authoring_reference_projection,
     list_authoring_reference_queries,
 )
-from datamimic_ce.authoring.schema import ALIASES, build_schema_index
+from datamimic_ce.authoring.schema import build_schema_index
 from datamimic_ce.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_LOG_EXPORTER,
@@ -51,23 +51,9 @@ from datamimic_ce.model.constraints import (
     serialize_source_capability,
     source_capabilities,
 )
+from datamimic_ce.model.element_registry import canonical_tag, element_aliases
 
 _GENERATOR_PACKAGE = "datamimic_ce.domains.common.literal_generators"
-
-
-class ReferenceTopic(StrEnum):
-    OVERVIEW = "overview"
-    ELEMENT = "element"
-    GENERATORS = "generators"
-    ENTITIES = "entities"
-    CONTEXT = "context"
-    TIMESERIES = "timeseries"
-    TARGETS = "targets"
-    DISTRIBUTIONS = "distributions"
-    CONVERTERS = "converters"
-    RULES = "rules"
-    SCAFFOLD = "scaffold"
-    AUTHORING = "authoring"
 
 
 def clip(text: str, max_chars: int, hint: str) -> str:
@@ -154,14 +140,14 @@ def overview_reference() -> str:
 
 def element_reference(tag: str) -> str:
     index = build_schema_index()
-    canonical = ALIASES.get(tag, tag)
+    canonical = canonical_tag(tag)
     # Alias schemas share canonical attributes/nesting but may add alias-specific
     # business rules (for example, <iterate> requires source=).
     schema = index.get(tag)
     if schema is None:
         raise ValueError(f"Unknown element '{tag}'. Known: {', '.join(sorted(index.tags))}")
     lines = [f"# <{canonical}>"]
-    aliases = sorted(alias for alias, target in ALIASES.items() if target == canonical)
+    aliases = sorted(alias for alias, target in element_aliases().items() if target == canonical)
     if aliases:
         lines.append(f"Aliases: {', '.join(f'<{a}>' for a in aliases)}")
     if schema.open_attrs:
@@ -467,7 +453,7 @@ def capabilities_manifest() -> dict[str, Any]:
     return {
         "schema_version": schema_version,
         "elements": elements,
-        "aliases": dict(ALIASES),
+        "aliases": element_aliases(),
         "generators": sorted(known_generator_names()),
         "entities": sorted(_entity_specs()),
         "converters": sorted(member.value for member in ConverterEnum),

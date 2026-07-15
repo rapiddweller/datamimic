@@ -20,7 +20,7 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldVerification,
     VerificationGateStatus,
 )
-from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult, Severity
+from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.dryrun import (
     CapturedProduct,
     CapturedProducts,
@@ -29,7 +29,7 @@ from datamimic_ce.authoring.dryrun import (
 )
 from datamimic_ce.authoring.service import scaffold
 from datamimic_ce.cli import app
-from datamimic_ce.mcp.server import scaffold_impl
+from datamimic_ce.model.constraints import RuleSeverity
 
 
 def _spec(*, seed: int | None = 7, count: int = 2) -> dict[str, object]:
@@ -69,7 +69,7 @@ def _captured_run(
         diagnostics.append(
             Diagnostic(
                 rule="DM002",
-                severity=Severity.ERROR,
+                severity=RuleSeverity.ERROR,
                 message="Captured execution diagnostic",
                 fix_hint="Use the typed run evidence to classify this failure",
                 element="generate",
@@ -267,7 +267,7 @@ def test_render_failure_blocks_requested_gates() -> None:
 def test_lint_failure_blocks_requested_gates(monkeypatch) -> None:
     diagnostic = Diagnostic(
         rule="DM001",
-        severity=Severity.ERROR,
+        severity=RuleSeverity.ERROR,
         message="Lint failed",
         fix_hint="Fix the descriptor",
         element="setup",
@@ -410,7 +410,7 @@ def test_matching_replay_does_not_override_incomplete_acceptance() -> None:
     assert result.verification.deterministic_replay.status is VerificationGateStatus.PASSED
 
 
-def test_cli_mcp_service_byte_parity_for_smoke_and_replay() -> None:
+def test_cli_service_byte_parity_for_smoke_and_replay() -> None:
     request = ScaffoldRequest(
         spec=_spec(),
         sample_rows=1,
@@ -420,7 +420,6 @@ def test_cli_mcp_service_byte_parity_for_smoke_and_replay() -> None:
         ),
     )
     service_payload = scaffold(request).model_dump(mode="json", exclude_none=True)
-    mcp_payload = scaffold_impl(request)
     cli_result = CliRunner().invoke(
         app,
         [
@@ -437,4 +436,4 @@ def test_cli_mcp_service_byte_parity_for_smoke_and_replay() -> None:
     )
 
     assert cli_result.exit_code == 0
-    assert json.loads(cli_result.stdout) == mcp_payload == service_payload
+    assert json.loads(cli_result.stdout) == service_payload

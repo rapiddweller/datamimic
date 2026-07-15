@@ -6,21 +6,16 @@
 
 """Diagnostic contract ("diagnostics v1") shared by the CLI and the MCP tools."""
 
-from typing import TypeAlias
-
 from pydantic import BaseModel, Field
 
 from datamimic_ce.model.constraints import RuleSeverity
-
-# Backwards-compatible public name; the enum itself is owned by the rule SPOT.
-Severity: TypeAlias = RuleSeverity
 
 
 class Diagnostic(BaseModel):
     """One finding, always actionable: what is wrong AND what to do differently."""
 
     rule: str  # e.g. "DM301"
-    severity: Severity
+    severity: RuleSeverity
     message: str
     fix_hint: str  # never empty — the agent's next edit
     element: str  # tag, e.g. "generate"
@@ -46,7 +41,7 @@ class LintResult(BaseModel):
             counts[diag.severity.value] = counts.get(diag.severity.value, 0) + 1
         kept = diagnostics if max_diagnostics is None else diagnostics[:max_diagnostics]
         return cls(
-            ok=counts.get(Severity.ERROR.value, 0) == 0,
+            ok=counts.get(RuleSeverity.ERROR.value, 0) == 0,
             file=file,
             counts=counts,
             diagnostics=kept,
@@ -56,7 +51,7 @@ class LintResult(BaseModel):
     def summary(self) -> str:
         parts = [
             f"{self.counts.get(sev.value, 0)} {sev.value}{'s' if self.counts.get(sev.value, 0) != 1 else ''}"
-            for sev in Severity
+            for sev in RuleSeverity
             if self.counts.get(sev.value, 0)
         ]
         return ", ".join(parts) if parts else "no findings"

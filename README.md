@@ -637,7 +637,7 @@ datamimic reference overview
 datamimic scaffold model.dm.json --format json
 
 # Lint a descriptor: schema, semantics, best practices — every finding carries
-# a rule id (DMxxx) and a fix hint. `validate` is an alias. Exit codes 0/1/2.
+# a rule id (DMxxx) and a fix hint. Exit codes 0/1/2.
 datamimic lint my-scenario/datamimic.xml
 datamimic lint my-scenario/datamimic.xml --format json   # diagnostics v1, CI-friendly
 

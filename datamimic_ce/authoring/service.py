@@ -21,15 +21,16 @@ from datamimic_ce.authoring.acceptance import evaluate_acceptance
 from datamimic_ce.authoring.compiler import CompileError, compile_authoring_spec
 from datamimic_ce.authoring.contracts import (
     MAX_DRY_RUN_COUNT,
-    AuthoringResponseFormat,
     AuthoringStage,
+    CapabilitiesResult,
     CaptureStatus,
     CheckRequest,
-    CheckResult,
     CompilePlan,
     GeneratedProductCompilePlan,
     IntentValidationIssue,
     IntentValidationIssueCode,
+    ReferenceRequest,
+    ReferenceResult,
     RetryWithParameterRemediation,
     RunRequest,
     RunResult,
@@ -39,7 +40,7 @@ from datamimic_ce.authoring.contracts import (
     SourceProductCompilePlan,
     TimeSeriesProductCompilePlan,
 )
-from datamimic_ce.authoring.diagnostics import _diagnostic_dicts
+from datamimic_ce.authoring.diagnostics import LintResult
 from datamimic_ce.authoring.dryrun import (
     CapturedProducts,
     dry_run,
@@ -105,7 +106,35 @@ def compile_document(spec: dict[str, Any]) -> CompiledDocument:
     )
 
 
-def check(request: CheckRequest) -> CheckResult:
+def capabilities() -> CapabilitiesResult:
+    from datamimic_ce.authoring.reference import capabilities_manifest
+
+    return CapabilitiesResult(capabilities_manifest())
+
+
+def reference(request: ReferenceRequest) -> ReferenceResult:
+    from datamimic_ce.authoring.reference import reference as project_reference
+
+    try:
+        content = project_reference(request.topic, request.name, query=request.query)
+    except ValueError as error:
+        return ReferenceResult(
+            ok=False,
+            topic=request.topic,
+            name=request.name,
+            query=request.query,
+            error=str(error),
+        )
+    return ReferenceResult(
+        ok=True,
+        topic=request.topic,
+        name=request.name,
+        query=request.query,
+        content=content,
+    )
+
+
+def check(request: CheckRequest) -> LintResult:
     """Lint one inline or file-backed descriptor through the canonical linter."""
     if request.xml is not None:
         result = lint_source(request.xml, max_diagnostics=request.max_diagnostics)
@@ -206,7 +235,6 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             ok=False,
             stage=AuthoringStage.RENDER,
             xml=None,
-            error=str(error),
             issues=list(error.issues),
             summary=None,
             truncated=False,
@@ -230,12 +258,8 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             ok=False,
             stage=AuthoringStage.LINT,
             xml=xml,
-            error=None,
             summary=failed_lint.summary() if failed_lint is not None else None,
-            diagnostics=_diagnostic_dicts(
-                dry_run_result.diagnostics,
-                detailed=request.response_format is AuthoringResponseFormat.DETAILED,
-            ),
+            diagnostics=dry_run_result.diagnostics,
             truncated=bool(failed_lint.truncated) if failed_lint is not None else False,
             compile_plan=compiled.plan,
             verification=blocked_verification(
@@ -260,12 +284,8 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             ok=False,
             stage=AuthoringStage.DRY_RUN,
             xml=xml,
-            error=None,
             summary=None,
-            diagnostics=_diagnostic_dicts(
-                dry_run_result.diagnostics,
-                detailed=request.response_format is AuthoringResponseFormat.DETAILED,
-            ),
+            diagnostics=dry_run_result.diagnostics,
             products=dry_run_result.products,
             truncated=False,
             compile_plan=compiled.plan,
@@ -306,12 +326,8 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             else AuthoringStage.VERIFICATION
         ),
         xml=xml,
-        error=None,
         summary=None,
-        diagnostics=_diagnostic_dicts(
-            diagnostics,
-            detailed=request.response_format is AuthoringResponseFormat.DETAILED,
-        ),
+        diagnostics=diagnostics,
         products=dry_run_result.products,
         truncated=False,
         compile_plan=compiled.plan,

@@ -9,20 +9,22 @@ import json
 import pytest
 from typer.testing import CliRunner
 
-from datamimic_ce.authoring.contracts import IntentValidationIssueCode, ScaffoldRequest
-from datamimic_ce.authoring.reference import ReferenceTopic
-from datamimic_ce.authoring.reference_projection import (
+from datamimic_ce.authoring.contracts import (
+    IntentValidationIssueCode,
     ProductReferenceQuery,
+    ReferenceRequest,
+    ReferenceTopic,
+    ScaffoldRequest,
     SourceReferenceQuery,
+)
+from datamimic_ce.authoring.reference_projection import (
     authoring_reference_projection,
     list_authoring_reference_queries,
     projection_catalog_is_exhaustive,
 )
-from datamimic_ce.authoring.service import scaffold
+from datamimic_ce.authoring.service import reference, scaffold
 from datamimic_ce.authoring.spec import AuthoringSpecV1, MemstoreSource, ProductIntentKind, SourceIntentKind
 from datamimic_ce.cli import app
-from datamimic_ce.mcp.models import ReferenceArgs
-from datamimic_ce.mcp.server import reference_impl
 
 
 def test_unknown_field_reports_exact_owner_without_synthetic_example() -> None:
@@ -40,7 +42,6 @@ def test_unknown_field_reports_exact_owner_without_synthetic_example() -> None:
     assert issue.code is IntentValidationIssueCode.UNKNOWN_FIELD
     assert "fields" in issue.allowed_fields
     assert issue.repair is None
-    assert result.error == issue.summary()
 
 
 def test_expectation_paths_hide_union_implementation_labels() -> None:
@@ -152,17 +153,18 @@ def test_source_reference_queries_cover_canonical_union() -> None:
     assert {query.kind for query in queries} == set(SourceIntentKind)
 
 
-def test_cli_and_mcp_return_identical_schema_projection() -> None:
+def test_cli_and_service_return_identical_schema_projection() -> None:
     query = ProductReferenceQuery(kind=ProductIntentKind.GENERATED)
-    mcp_result = reference_impl(ReferenceArgs(topic=ReferenceTopic.AUTHORING, query=query))
+    result = reference(ReferenceRequest(topic=ReferenceTopic.AUTHORING, query=query))
     cli_result = CliRunner().invoke(
         app,
         ["reference", ReferenceTopic.AUTHORING, "--category", query.category, "--kind", query.kind],
     )
 
-    assert mcp_result["ok"] is True
+    assert result.ok is True
+    assert result.content is not None
     assert cli_result.exit_code == 0, cli_result.stdout
-    assert json.loads(cli_result.stdout) == json.loads(mcp_result["content"])
+    assert json.loads(cli_result.stdout) == json.loads(result.content)
 
 
 @pytest.mark.parametrize("extra_field", ["range", "generated", "script", "source", "unique"])

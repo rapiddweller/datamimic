@@ -39,17 +39,17 @@ class TestCLI:
             element_constraints(EL_ITERATE)
         )
 
-    def test_validate_descriptor_failure(self, tmp_path, monkeypatch):
-        """A broken descriptor lints with findings (validate is an alias of lint): exit 1."""
+    def test_lint_descriptor_failure(self, tmp_path, monkeypatch):
+        """A broken descriptor lints with findings: exit 1."""
         monkeypatch.chdir(tmp_path)
         (tmp_path / "invalid.xml").write_text("<invalid>")
-        result = runner.invoke(app, ["validate", "invalid.xml"])
+        result = runner.invoke(app, ["lint", "invalid.xml"])
         assert result.exit_code == 1
         assert "error" in result.output.lower()  # DM001 XML-not-well-formed
 
-    def test_validate_nonexistent_file(self):
+    def test_lint_nonexistent_file(self):
         """A missing file is an operational error, not a finding: exit 2 (ESLint convention)."""
-        result = runner.invoke(app, ["validate", "nonexistent.xml"])
+        result = runner.invoke(app, ["lint", "nonexistent.xml"])
         assert result.exit_code == 2
         assert "file not found" in result.output.lower()
 
@@ -62,7 +62,7 @@ class TestCLI:
     def test_demo_info_valid(self):
         """Test getting information about a valid demo"""
         with (
-            patch("pathlib.Path.exists", return_value=True),
+            patch("pathlib.Path.is_file", return_value=True),
             patch(
                 "toml.load",
                 return_value={
@@ -96,12 +96,12 @@ class TestCLI:
     def test_demo_create_requires_demo_name_or_all(self):
         result = runner.invoke(app, ["demo", "create"])
         assert result.exit_code == 1
-        assert "Please specify a demo name or use '--all' to create all demos." in result.output
+        assert "Specify a demo name or use --all" in result.output
 
     def test_demo_create_all_requires_target_directory(self):
         result = runner.invoke(app, ["demo", "create", "--all"])
         assert result.exit_code == 1
-        assert "Target directory is required when using '--all'." in result.output
+        assert "Target directory is required with --all" in result.output
 
     def test_demo_create_specific_demo(self, tmp_path):
         # Setup
@@ -461,8 +461,8 @@ class TestCLI:
         """dry-run with unknown format exits with code 2 and plain text error."""
         result = runner.invoke(app, ["dry-run", "test.xml", "--format", "banana"])
         assert result.exit_code == 2
-        assert "Invalid format 'banana'" in result.output
-        assert "Expected: text | json" in result.output
+        assert "Invalid value" in result.output
+        assert "text" in result.output and "json" in result.output
         # Output should be text, not JSON (format validation happens before any engine activity)
 
     def test_dry_run_missing_file_json(self, tmp_path, monkeypatch):
@@ -478,8 +478,8 @@ class TestCLI:
         """lint with unknown format exits with code 2 and plain text error."""
         result = runner.invoke(app, ["lint", "test.xml", "--format", "banana"])
         assert result.exit_code == 2
-        assert "Invalid format 'banana'" in result.output
-        assert "Expected: text | json" in result.output
+        assert "Invalid value" in result.output
+        assert "text" in result.output and "json" in result.output
 
     def test_lint_missing_file_json(self):
         """lint missing file with --format json exits with code 2 and emits single parseable JSON."""

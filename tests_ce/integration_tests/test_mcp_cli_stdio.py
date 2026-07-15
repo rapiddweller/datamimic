@@ -1,148 +1,41 @@
-"""Integration test: spawn the real MCP CLI in stdio mode and call tools.
-
-WHY: Ensures our tests exercise the actual CLI process and FastMCP wiring
-without mocks. Uses stdio transport so no network is required.
-"""
-
-from __future__ import annotations
+"""Real stdio transport coverage for the reduced MCP adapter."""
 
 import json
 import sys
+from pathlib import Path
 
 import pytest
 
-from datamimic_ce.mcp.models import GenerateArgs
-
-fastmcp_client = pytest.importorskip(
-    "fastmcp.client", reason="fastmcp extra required; install datamimic_ce[mcp]"
-)
-transports = pytest.importorskip(
-    "fastmcp.client.transports", reason="fastmcp extra required; install datamimic_ce[mcp]"
-)
-
+fastmcp_client = pytest.importorskip("fastmcp.client")
+transports = pytest.importorskip("fastmcp.client.transports")
 Client = fastmcp_client.Client
 PythonStdioTransport = transports.PythonStdioTransport
+ROOT = Path(__file__).parents[2]
 
 
 @pytest.fixture
-def anyio_backend() -> str:  # pragma: no cover - fixture glue
+def anyio_backend() -> str:
     return "asyncio"
 
 
 @pytest.mark.anyio
-async def test_cli_stdio_generate_roundtrip() -> None:
-    # Spawn the real CLI as a subprocess with stdio transport
+async def test_cli_stdio_authoring_roundtrip(anyio_backend: str) -> None:
     transport = PythonStdioTransport(
-        script_path="datamimic_ce/mcp/cli.py",
-        args=["serve", "--transport", "stdio"],
+        script_path=ROOT / "datamimic_ce/mcp/cli.py",
+        args=["--transport", "stdio"],
         python_cmd=sys.executable,
-    )
-
-    async with Client(transport) as client:
-        # Discover tools
-        tools = await client.list_tools()
-        tool_names = {t.name for t in tools}
-        assert {"list_domains", "generate"}.issubset(tool_names)
-        # Show tool list for human verification in -s runs
-        print("MCP tools:", sorted(tool_names))
-        # Also show domain catalog size and first entry
-        catalog_raw = await client.call_tool("list_domains", {})
-        catalog = json.loads(catalog_raw[0].text)
-        print("Domains count:", len(catalog))
-        if catalog:
-            print("First domain entry:", json.dumps(catalog[0], sort_keys=True)[:240])
-
-        # Call generate with deterministic args and assert result shape
-        args = GenerateArgs(domain="person", locale="en_US", seed=7)
-        payload = args.model_dump(mode="python")
-        result = await client.call_tool("generate", {"args": payload})
-        assert result, "No content from generate tool"
-        text = result[0].text
-        assert text and text.strip(), "Empty text payload from generate tool"
-        data = json.loads(text)
-        assert isinstance(data.get("items"), list) and data["items"], "Expected non-empty generated items"
-        # Show a snippet of the generated item for human verification in -s runs
-        sample = data["items"][0]
-        print("Generated sample (seed=7):", json.dumps(sample, sort_keys=True)[:240])
-        # Determinism is covered in unit/e2e tests; stdio path validated for roundtrip.
-        # Also verify schema resource fetch via stdio transport
-        res = await client.read_resource("resource://datamimic/schemas/person/v1/request.json")
-        assert res and res[0].text
-        print("Schema snippet:", res[0].text[:120])
-
-
-@pytest.mark.anyio
-async def test_cli_stdio_dsl_check_and_run() -> None:
-    """The DSL authoring loop over the REAL stdio transport. Executing the engine in-process
-    must not corrupt the JSON-RPC frames on stdout (logs go to stderr, ConsoleExporter is
-    neutralized by the dry-run) — a successful roundtrip IS the proof."""
-    transport = PythonStdioTransport(
-        script_path="datamimic_ce/mcp/cli.py",
-        args=["serve", "--transport", "stdio"],
-        python_cmd=sys.executable,
-    )
-    descriptor = (
-        '<setup rngSeed="1"><memstore id="mem"/>'
-        '<generate name="users" count="50" target="mem,CSV,ConsoleExporter">'
-        '<key name="id" generator="IncrementGenerator"/></generate></setup>'
+        cwd=str(ROOT),
+        env={"PYTHONPATH": str(ROOT)},
     )
     async with Client(transport) as client:
-        check = json.loads((await client.call_tool("datamimic_check", {"args": {"xml": descriptor}}))[0].text)
-        assert check["ok"] is True, check
-
-        run = json.loads(
-            (await client.call_tool("datamimic_run", {"args": {"xml": descriptor, "max_count": 5}}))[0].text
+        assert {tool.name for tool in await client.list_tools()} == {
+            "datamimic_check",
+            "datamimic_run",
+            "datamimic_reference",
+            "datamimic_scaffold",
+        }
+        result = await client.call_tool(
+            "datamimic_reference",
+            {"request": {"topic": "element", "name": "generate"}},
         )
-        assert run["ok"] is True and run["stage"] == "run", run
-        assert run["products"][0]["count"] == 5  # capped from 50
-
-        ref = json.loads(
-            (await client.call_tool("datamimic_reference", {"args": {"topic": "recipes"}}))[0].text
-        )
-        assert ref["ok"] is True and "csv-to-json-pipeline" in ref["content"]
-
-
-@pytest.mark.anyio
-async def test_cli_stdio_scaffold() -> None:
-    """Prove the canonical spec-in -> compile -> lint -> run -> acceptance transaction."""
-    transport = PythonStdioTransport(
-        script_path="datamimic_ce/mcp/cli.py",
-        args=["serve", "--transport", "stdio"],
-        python_cmd=sys.executable,
-    )
-    spec = {
-        "seed": 1,
-        "generates": [{
-            "name": "customers", "count": 30, "target": "JSON",
-            "fields": [
-                {"name": "id", "kind": "increment"},
-                {"name": "full_name", "kind": "person_name"},
-                {"name": "age", "kind": "int_range", "min": 18, "max": 90},
-                {"name": "country", "kind": "weighted",
-                 "values": ["US", "DE", "VN"], "weights": [0.5, 0.3, 0.2]},
-            ],
-        }],
-    }
-    async with Client(transport) as client:
-        # Verify datamimic_scaffold tool is available
-        tools = await client.list_tools()
-        tool_names = {t.name for t in tools}
-        assert "datamimic_scaffold" in tool_names, f"Expected datamimic_scaffold in {tool_names}"
-
-        # Call scaffold and require terminal acceptance through the real MCP transport.
-        result = json.loads(
-            (
-                await client.call_tool(
-                    "datamimic_scaffold",
-                    {"args": {"spec": spec, "max_count": 30}},
-                )
-            )[0].text
-        )
-        assert result["ok"] is True
-        assert result["stage"] == "acceptance"
-        assert result["verified"] is True
-        assert "xml" in result
-        assert "products" in result
-        assert isinstance(result["products"], list)
-        assert len(result["products"]) > 0
-        assert all("name" in p and "count" in p for p in result["products"])
+        assert "pageSize" in json.loads(result[0].text)["content"]

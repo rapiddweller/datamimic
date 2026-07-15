@@ -6,10 +6,17 @@
 
 from collections.abc import Mapping
 from enum import StrEnum
-from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, TypeAdapter
+from pydantic import BaseModel, ConfigDict, JsonValue, TypeAdapter
 
+from datamimic_ce.authoring.contracts import (
+    AuthoringReferenceQuery,
+    ExpectationReferenceQuery,
+    FieldReferenceQuery,
+    ProductReferenceQuery,
+    SourceReferenceQuery,
+    TargetReferenceQuery,
+)
 from datamimic_ce.authoring.spec import (
     AllowedValuesExpectation,
     ConstantField,
@@ -42,58 +49,6 @@ from datamimic_ce.authoring.spec import (
     UniqueExpectation,
     ValuesField,
     WeightedField,
-)
-
-
-class AuthoringReferenceCategory(StrEnum):
-    """Canonical discriminated-union families exposed for discovery."""
-
-    PRODUCT = "product"
-    SOURCE = "source"
-    FIELD = "field"
-    TARGET = "target"
-    EXPECTATION = "expectation"
-
-
-class _Query(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-
-class ProductReferenceQuery(_Query):
-    category: Literal[AuthoringReferenceCategory.PRODUCT] = AuthoringReferenceCategory.PRODUCT
-    kind: ProductIntentKind
-
-
-class FieldReferenceQuery(_Query):
-    category: Literal[AuthoringReferenceCategory.FIELD] = AuthoringReferenceCategory.FIELD
-    kind: FieldIntentKind
-
-
-class SourceReferenceQuery(_Query):
-    category: Literal[AuthoringReferenceCategory.SOURCE] = AuthoringReferenceCategory.SOURCE
-    kind: SourceIntentKind
-
-
-class TargetReferenceQuery(_Query):
-    category: Literal[AuthoringReferenceCategory.TARGET] = AuthoringReferenceCategory.TARGET
-    kind: TargetIntentKind
-
-
-class ExpectationReferenceQuery(_Query):
-    category: Literal[AuthoringReferenceCategory.EXPECTATION] = AuthoringReferenceCategory.EXPECTATION
-    kind: ExpectationIntentKind
-
-
-AuthoringReferenceQuery = Annotated[
-    ProductReferenceQuery
-    | SourceReferenceQuery
-    | FieldReferenceQuery
-    | TargetReferenceQuery
-    | ExpectationReferenceQuery,
-    Field(discriminator="category"),
-]
-AUTHORING_REFERENCE_QUERY_ADAPTER: TypeAdapter[AuthoringReferenceQuery] = TypeAdapter(
-    AuthoringReferenceQuery
 )
 
 
@@ -220,15 +175,7 @@ def projection_catalog_is_exhaustive() -> bool:
 
 
 __all__ = [
-    "AUTHORING_REFERENCE_QUERY_ADAPTER",
-    "AuthoringReferenceCategory",
     "AuthoringReferenceProjection",
-    "AuthoringReferenceQuery",
-    "ExpectationReferenceQuery",
-    "FieldReferenceQuery",
-    "ProductReferenceQuery",
-    "SourceReferenceQuery",
-    "TargetReferenceQuery",
     "authoring_reference_projection",
     "list_authoring_reference_queries",
     "projection_catalog_is_exhaustive",

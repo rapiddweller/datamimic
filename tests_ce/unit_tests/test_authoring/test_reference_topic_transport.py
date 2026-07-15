@@ -8,10 +8,9 @@
 import pytest
 from typer.testing import CliRunner
 
-from datamimic_ce.authoring.reference import ReferenceTopic
+from datamimic_ce.authoring.contracts import ReferenceRequest, ReferenceTopic
+from datamimic_ce.authoring.service import reference
 from datamimic_ce.cli import app
-from datamimic_ce.mcp.models import ReferenceArgs
-from datamimic_ce.mcp.server import reference_impl
 
 _TOPIC_NAMES = {
     ReferenceTopic.ELEMENT: "generate",
@@ -21,14 +20,14 @@ _TOPIC_NAMES = {
 
 
 @pytest.mark.parametrize("topic", list(ReferenceTopic))
-def test_every_reference_topic_has_cli_and_mcp_transport_parity(topic: ReferenceTopic) -> None:
+def test_every_reference_topic_has_cli_and_service_parity(topic: ReferenceTopic) -> None:
     name = _TOPIC_NAMES.get(topic)
-    args = ReferenceArgs(topic=topic, name=name)
+    args = ReferenceRequest(topic=topic, name=name)
     assert args.topic is topic
 
-    mcp_result = reference_impl(args)
-    assert mcp_result["ok"] is True
-    assert mcp_result["content"]
+    result = reference(args)
+    assert result.ok is True
+    assert result.content
 
     command = ["reference", topic.value]
     if name is not None:
@@ -38,5 +37,5 @@ def test_every_reference_topic_has_cli_and_mcp_transport_parity(topic: Reference
     assert cli_result.stdout.strip()
 
 
-def test_reference_args_uses_the_canonical_topic_type_directly() -> None:
-    assert ReferenceArgs.model_fields["topic"].annotation is ReferenceTopic
+def test_reference_request_uses_the_canonical_topic_type_directly() -> None:
+    assert ReferenceRequest.model_fields["topic"].annotation is ReferenceTopic

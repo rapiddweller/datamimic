@@ -15,19 +15,23 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import Annotated, Any, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, StrictStr, model_validator
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, RootModel, StrictStr, TypeAdapter, model_validator
 
 from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.spec import (
+    ExpectationIntentKind,
     FieldIntentKind,
     FieldRoleKind,
     LeafFieldKind,
     NonEmptyStrictStr,
     NonNegativeStrictInt,
     PositiveStrictInt,
+    ProductIntentKind,
     RegisteredFileExporterName,
     RuntimeFileSourcePath,
     RuntimeMemstoreSourceId,
+    SourceIntentKind,
+    TargetIntentKind,
 )
 
 MIN_DIAGNOSTICS = 1
@@ -56,6 +60,101 @@ class AuthoringResponseFormat(StrEnum):
 
     CONCISE = "concise"
     DETAILED = "detailed"
+
+
+class ReferenceTopic(StrEnum):
+    OVERVIEW = "overview"
+    ELEMENT = "element"
+    GENERATORS = "generators"
+    ENTITIES = "entities"
+    CONTEXT = "context"
+    TIMESERIES = "timeseries"
+    TARGETS = "targets"
+    DISTRIBUTIONS = "distributions"
+    CONVERTERS = "converters"
+    RULES = "rules"
+    SCAFFOLD = "scaffold"
+    AUTHORING = "authoring"
+
+
+class AuthoringReferenceCategory(StrEnum):
+    PRODUCT = "product"
+    SOURCE = "source"
+    FIELD = "field"
+    TARGET = "target"
+    EXPECTATION = "expectation"
+
+
+class ProductReferenceQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    category: Literal[AuthoringReferenceCategory.PRODUCT] = AuthoringReferenceCategory.PRODUCT
+    kind: ProductIntentKind
+
+
+class FieldReferenceQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    category: Literal[AuthoringReferenceCategory.FIELD] = AuthoringReferenceCategory.FIELD
+    kind: FieldIntentKind
+
+
+class SourceReferenceQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    category: Literal[AuthoringReferenceCategory.SOURCE] = AuthoringReferenceCategory.SOURCE
+    kind: SourceIntentKind
+
+
+class TargetReferenceQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    category: Literal[AuthoringReferenceCategory.TARGET] = AuthoringReferenceCategory.TARGET
+    kind: TargetIntentKind
+
+
+class ExpectationReferenceQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    category: Literal[AuthoringReferenceCategory.EXPECTATION] = AuthoringReferenceCategory.EXPECTATION
+    kind: ExpectationIntentKind
+
+
+AuthoringReferenceQuery = Annotated[
+    ProductReferenceQuery
+    | SourceReferenceQuery
+    | FieldReferenceQuery
+    | TargetReferenceQuery
+    | ExpectationReferenceQuery,
+    Field(discriminator="category"),
+]
+AUTHORING_REFERENCE_QUERY_ADAPTER: TypeAdapter[AuthoringReferenceQuery] = TypeAdapter(AuthoringReferenceQuery)
+
+
+class ReferenceRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    topic: ReferenceTopic = ReferenceTopic.OVERVIEW
+    name: str | None = None
+    query: AuthoringReferenceQuery | None = None
+
+    @model_validator(mode="after")
+    def validate_scope(self) -> "ReferenceRequest":
+        if self.query is not None and self.topic is not ReferenceTopic.AUTHORING:
+            raise ValueError("query is only valid for topic=authoring")
+        if self.topic is ReferenceTopic.AUTHORING and self.name is not None:
+            raise ValueError("topic=authoring uses query, not name")
+        return self
+
+
+class ReferenceResult(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    ok: bool
+    topic: ReferenceTopic
+    name: str | None = None
+    query: AuthoringReferenceQuery | None = None
+    content: str | None = None
+    error: str | None = None
+
+
+class CapabilitiesResult(RootModel[dict[str, JsonValue]]):
+    pass
 
 
 class VerificationGateStatus(StrEnum):
@@ -231,7 +330,7 @@ class IntentValidationIssue(BaseModel):
     repair: ReplaceFieldRepair | None = None
 
     def summary(self) -> str:
-        """Render the compatibility summary from this canonical issue."""
+        """Render a concise human-readable issue summary."""
 
         location = ".".join(str(part) for part in self.path) or "spec"
         return f"{location}: {self.message}"
@@ -298,10 +397,6 @@ class CheckRequest(BaseModel):
         if (self.xml is None) == (self.path is None):
             raise ValueError("Provide exactly one of 'xml' (inline descriptor) or 'path' (file)")
         return self
-
-
-CheckResult = LintResult
-"""Canonical response contract for descriptor linting."""
 
 
 class RunRequest(BaseModel):
@@ -1134,9 +1229,6 @@ class RetryWithParameterRemediation(BaseModel):
     affected_products: tuple[NonEmptyStrictStr, ...] = Field(min_length=1)
 
 
-ScaffoldRemediation = RetryWithParameterRemediation
-
-
 class ScaffoldResult(BaseModel):
     """Canonical response contract for scaffold operations."""
 
@@ -1146,10 +1238,6 @@ class ScaffoldResult(BaseModel):
         None,
         description="Rendered DATAMIMIC descriptor XML (None only on render error)",
     )
-    error: str | None = Field(
-        None,
-        description="Compatibility summary projected from issues when stage=render",
-    )
     issues: list[IntentValidationIssue] = Field(
         default_factory=list,
         description="Canonical repair-oriented intent validation issues",
@@ -1158,10 +1246,7 @@ class ScaffoldResult(BaseModel):
         None,
         description="Lint summary if stage=lint",
     )
-    diagnostics: list[dict[str, Any]] = Field(
-        default_factory=list,
-        description="Lint or dry-run diagnostics (verbosity controlled by response_format)",
-    )
+    diagnostics: list[Diagnostic] = Field(default_factory=list)
     truncated: bool = Field(
         False,
         description="Diagnostics truncated due to max_diagnostics limit",
@@ -1172,7 +1257,7 @@ class ScaffoldResult(BaseModel):
     )
     compile_plan: CompilePlan | None = None
     acceptance: AcceptanceReport | None = None
-    remediations: list[ScaffoldRemediation] = Field(default_factory=list)
+    remediations: list[RetryWithParameterRemediation] = Field(default_factory=list)
     verification: ScaffoldVerificationEvidence = Field(
         default_factory=ScaffoldVerificationEvidence
     )

@@ -1,120 +1,61 @@
-from __future__ import annotations
+"""Transport option tests for the direct MCP CLI interface."""
 
-from importlib import import_module
-from types import ModuleType
+from dataclasses import dataclass, field
 
 from typer.testing import CliRunner
 
-# WHY: These tests prove CLI option parsing works without relying on Typer's
-# Literal support. We validate behavior using Enums and avoid I/O by mocking.
-
+import datamimic_ce.mcp.cli as cli
 
 runner = CliRunner()
 
 
-class _FakeServer:
-    def __init__(self) -> None:
-        self.runs: list[str] = []
-        self.http_middleware = None
+@dataclass
+class FakeServer:
+    runs: list[str] = field(default_factory=list)
 
     def run(self, mode: str) -> None:
         self.runs.append(mode)
 
 
-def test_cli_transport_stdio_invokes_server_run(monkeypatch) -> None:
-    fake = _FakeServer()
+def test_stdio_is_a_direct_top_level_option(monkeypatch) -> None:
+    server = FakeServer()
+    uvicorn_calls: list[object] = []
+    monkeypatch.setattr(cli, "create_server", lambda: server)
+    monkeypatch.setattr(cli.uvicorn, "run", lambda *args, **kwargs: uvicorn_calls.append((args, kwargs)))
 
-    # Install a fake server module before importing the CLI to avoid optional deps
-    fake_server = ModuleType("datamimic_ce.mcp.server")
-
-    def _fake_create_server(api_key=None):  # noqa: ANN001
-        return fake
-
-    def _fake_build_sse_app(server, middleware):  # noqa: ANN001
-        return object()
-
-    fake_server.create_server = _fake_create_server  # type: ignore[attr-defined]
-    fake_server.build_sse_app = _fake_build_sse_app  # type: ignore[attr-defined]
-    fake_server.mount_mcp = lambda *a, **k: None  # type: ignore[attr-defined]
-
-    monkeypatch.setitem(
-        __import__("sys").modules,
-        "datamimic_ce.mcp.server",
-        fake_server,
-    )
-
-    cli_mod = import_module("datamimic_ce.mcp.cli")
-
-    # Ensure uvicorn.run isn't called in stdio mode
-    uvicorn_called = {"count": 0}
-
-    def _fake_uvicorn_run(*args, **kwargs):  # noqa: ANN001
-        uvicorn_called["count"] += 1
-
-    monkeypatch.setattr(cli_mod.uvicorn, "run", _fake_uvicorn_run)
-
-    result = runner.invoke(cli_mod.app, ["serve", "--transport", "stdio"])
+    result = runner.invoke(cli.app, ["--transport", "stdio"])
 
     assert result.exit_code == 0, result.output
-    assert fake.runs == ["stdio"]
-    assert uvicorn_called["count"] == 0
+    assert server.runs == ["stdio"]
+    assert uvicorn_calls == []
 
 
-def test_cli_transport_sse_invokes_uvicorn_with_params(monkeypatch) -> None:
-    fake = _FakeServer()
+def test_sse_is_a_direct_top_level_option(monkeypatch) -> None:
+    server = FakeServer()
+    application = object()
+    captured: dict[str, object] = {}
+    monkeypatch.setattr(cli, "create_server", lambda: server)
+    monkeypatch.setattr(cli, "build_sse_app", lambda current, api_key: application)
 
-    # Install a fake server module before importing the CLI to avoid optional deps
-    fake_server = ModuleType("datamimic_ce.mcp.server")
+    def record_run(app: object, host: str, port: int, log_level: str) -> None:
+        captured.update(app=app, host=host, port=port, log_level=log_level)
 
-    def _fake_create_server(api_key=None):  # noqa: ANN001
-        return fake
-
-    def _fake_build_sse_app(server, middleware):  # noqa: ANN001
-        return object()
-
-    fake_server.create_server = _fake_create_server  # type: ignore[attr-defined]
-    fake_server.build_sse_app = _fake_build_sse_app  # type: ignore[attr-defined]
-    fake_server.mount_mcp = lambda *a, **k: None  # type: ignore[attr-defined]
-
-    monkeypatch.setitem(
-        __import__("sys").modules,
-        "datamimic_ce.mcp.server",
-        fake_server,
-    )
-
-    cli_mod = import_module("datamimic_ce.mcp.cli")
-
-    captured = {}
-
-    def _fake_uvicorn_run(app, host, port, log_level):  # noqa: ANN001
-        captured.update({
-            "app": app,
-            "host": host,
-            "port": port,
-            "log_level": log_level,
-        })
-
-    monkeypatch.setattr(cli_mod.uvicorn, "run", _fake_uvicorn_run)
-
+    monkeypatch.setattr(cli.uvicorn, "run", record_run)
     result = runner.invoke(
-        cli_mod.app,
-        [
-            "serve",
-            "--transport",
-            "sse",
-            "--host",
-            "0.0.0.0",
-            "--port",
-            "1234",
-            "--log-level",
-            "debug",
-        ],
+        cli.app,
+        ["--transport", "sse", "--host", "0.0.0.0", "--port", "1234", "--log-level", "debug"],
     )
 
     assert result.exit_code == 0, result.output
-    # server.run should not be used for SSE
-    assert fake.runs == []
-    # uvicorn.run should receive our params, including mapped log level
-    assert captured["host"] == "0.0.0.0"
-    assert captured["port"] == 1234
-    assert captured["log_level"] == "debug"
+    assert server.runs == []
+    assert captured == {
+        "app": application,
+        "host": "0.0.0.0",
+        "port": 1234,
+        "log_level": "debug",
+    }
+
+
+def test_serve_subcommand_does_not_exist() -> None:
+    result = runner.invoke(cli.app, ["serve", "--transport", "stdio"])
+    assert result.exit_code == 2

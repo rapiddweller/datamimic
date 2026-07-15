@@ -14,7 +14,8 @@ from pathlib import Path
 
 from lxml import etree
 
-from datamimic_ce.authoring.diagnostics import Diagnostic, Severity
+from datamimic_ce.authoring.diagnostics import Diagnostic
+from datamimic_ce.model.constraints import RuleSeverity
 
 RULE_XML_LOAD = "DM001"
 
@@ -42,7 +43,7 @@ def load_file(path: Path) -> tuple["etree._Element | None", Diagnostic | None]:
     except OSError as err:
         return None, Diagnostic(
             rule=RULE_XML_LOAD,
-            severity=Severity.ERROR,
+            severity=RuleSeverity.ERROR,
             message=f"Cannot read descriptor: {err}",
             fix_hint="Check that the path exists and is readable.",
             element="setup",
@@ -56,7 +57,7 @@ def load_file(path: Path) -> tuple["etree._Element | None", Diagnostic | None]:
 def _syntax_diagnostic(err: etree.XMLSyntaxError) -> Diagnostic:
     return Diagnostic(
         rule=RULE_XML_LOAD,
-        severity=Severity.ERROR,
+        severity=RuleSeverity.ERROR,
         message=f"XML is not well-formed: {err.msg}",
         fix_hint="Fix the XML syntax first — close every tag, quote every attribute value.",
         element="setup",

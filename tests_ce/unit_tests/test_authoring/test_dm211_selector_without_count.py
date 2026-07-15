@@ -11,7 +11,7 @@ covers the cases DM211 must NOT fire on."""
 
 from pathlib import Path
 
-from datamimic_ce.authoring import lint_descriptor
+from datamimic_ce.authoring.linter import lint_descriptor
 
 _FIXTURES = Path(__file__).resolve().parent / "fixtures"
 

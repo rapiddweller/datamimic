@@ -14,7 +14,8 @@ still catches becomes a DM000 diagnostic (a lint rule gap worth closing)."""
 import re
 from pathlib import Path
 
-from datamimic_ce.authoring.diagnostics import Diagnostic, Severity
+from datamimic_ce.authoring.diagnostics import Diagnostic
+from datamimic_ce.model.constraints import RuleSeverity
 
 RULE_ENGINE_PARSE = "DM000"
 
@@ -47,7 +48,7 @@ def run_engine_parse(descriptor_path: Path) -> Diagnostic | None:
             return None  # DB credentials are wired at run time, not a lint error
         return Diagnostic(
             rule=RULE_ENGINE_PARSE,
-            severity=Severity.ERROR,
+            severity=RuleSeverity.ERROR,
             message=f"Engine parser rejected the descriptor: {err}",
             fix_hint="Fix the reported element/attribute; the message quotes the engine's own check.",
             element="setup",

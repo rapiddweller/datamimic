@@ -20,8 +20,6 @@ from datamimic_ce.authoring.contracts import (
 )
 from datamimic_ce.authoring.service import scaffold
 from datamimic_ce.cli import app
-from datamimic_ce.mcp.models import ScaffoldArgs
-from datamimic_ce.mcp.server import scaffold_impl
 
 # Test specs covering various scenarios
 SPEC_VALID_DRY_RUN = {
@@ -155,38 +153,8 @@ class TestScaffoldParity:
 
         assert result.ok is False
         assert result.stage is AuthoringStage.RENDER
-        assert result.error is not None
+        assert result.issues
         assert result.xml is None
-
-    def test_mcp_service_parity_dry_run(self):
-        """MCP scaffold_impl returns same data as service layer."""
-        args = ScaffoldArgs(
-            spec=SPEC_VALID_DRY_RUN,
-            max_count=10,
-            sample_rows=5,
-            response_format="concise",
-        )
-        request = ScaffoldRequest(**args.model_dump())
-
-        mcp_result = scaffold_impl(args)
-        service_result = scaffold(request)
-        service_dict = service_result.model_dump(mode="json", exclude_none=True)
-
-        # Compare key fields
-        assert mcp_result["ok"] == service_dict["ok"]
-        assert mcp_result["stage"] == service_dict["stage"]
-        assert mcp_result["xml"] == service_dict["xml"]
-        assert mcp_result["compile_plan"] == service_dict["compile_plan"]
-
-        # Compare products structure (should have name, count, sample, truncated_rows)
-        mcp_products = mcp_result.get("products", [])
-        service_products = service_dict.get("products", [])
-        assert len(mcp_products) == len(service_products)
-        for mcp_prod, service_prod in zip(mcp_products, service_products, strict=False):
-            assert mcp_prod["name"] == service_prod["name"]
-            assert mcp_prod["count"] == service_prod["count"]
-            assert "sample" in mcp_prod
-            assert "truncated_rows" in mcp_prod
 
     def test_cli_json_parity_dry_run(self):
         """CLI JSON output matches service layer structure."""
@@ -252,7 +220,6 @@ class TestScaffoldParity:
         """All transports accept the same canonical model.dm.json contract."""
         request = ScaffoldRequest(spec=SPEC_V1)
         service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
-        mcp_result = scaffold_impl(ScaffoldArgs(**request.model_dump()))
         cli_result = CliRunner().invoke(
             app,
             ["scaffold", "-", "--format", "json"],
@@ -261,8 +228,7 @@ class TestScaffoldParity:
 
         assert cli_result.exit_code == 0
         cli_output = json.loads(cli_result.stdout)
-        assert mcp_result["xml"] == service_result["xml"] == cli_output["xml"]
-        assert mcp_result["compile_plan"] == service_result["compile_plan"]
+        assert service_result["xml"] == cli_output["xml"]
         assert cli_output["compile_plan"] == service_result["compile_plan"]
 
     def test_v1_acceptance_response_is_identical_across_transports(self):
@@ -273,7 +239,6 @@ class TestScaffoldParity:
             sample_rows=1,
         )
         service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
-        mcp_result = scaffold_impl(ScaffoldArgs(**request.model_dump()))
         cli_result = CliRunner().invoke(
             app,
             [
@@ -290,7 +255,7 @@ class TestScaffoldParity:
         )
 
         assert cli_result.exit_code == 0
-        assert json.loads(cli_result.stdout) == service_result == mcp_result
+        assert json.loads(cli_result.stdout) == service_result
         assert service_result["stage"] == "acceptance"
         assert service_result["verified"] is True
         assert {product["name"]: product["count"] for product in service_result["products"]} == {
@@ -319,7 +284,6 @@ class TestScaffoldParity:
         request = ScaffoldRequest(spec=spec, max_count=10, sample_rows=1)
 
         service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
-        mcp_result = scaffold_impl(ScaffoldArgs(**request.model_dump()))
         cli_result = CliRunner().invoke(
             app,
             [
@@ -336,7 +300,7 @@ class TestScaffoldParity:
         )
 
         assert cli_result.exit_code == 1
-        assert json.loads(cli_result.stdout) == service_result == mcp_result
+        assert json.loads(cli_result.stdout) == service_result
         assert service_result["remediations"] == [
             {
                 "kind": "retry_with_parameter",
@@ -354,7 +318,6 @@ class TestScaffoldParity:
         request = ScaffoldRequest(spec=spec)
 
         service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
-        mcp_result = scaffold_impl(ScaffoldArgs(**request.model_dump()))
         cli_result = CliRunner().invoke(
             app,
             ["scaffold", "-", "--format", "json"],
@@ -362,7 +325,7 @@ class TestScaffoldParity:
         )
 
         assert cli_result.exit_code == 2
-        assert json.loads(cli_result.stdout) == service_result == mcp_result
+        assert json.loads(cli_result.stdout) == service_result
         repair = service_result["issues"][0]["repair"]
         assert repair["replacement_field"] == "product"
         assert repair["rejected_value"] == "producer"
@@ -374,7 +337,6 @@ class TestScaffoldParity:
         request = ScaffoldRequest(spec=spec, max_count=5, sample_rows=1)
 
         service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
-        mcp_result = scaffold_impl(ScaffoldArgs(**request.model_dump()))
         cli_result = CliRunner().invoke(
             app,
             [
@@ -391,7 +353,7 @@ class TestScaffoldParity:
         )
 
         assert cli_result.exit_code == 1
-        assert json.loads(cli_result.stdout) == service_result == mcp_result
+        assert json.loads(cli_result.stdout) == service_result
         memstore = next(
             item
             for item in service_result["acceptance"]["results"]
@@ -410,7 +372,7 @@ class TestScaffoldParity:
 
             result = runner.invoke(app, ["scaffold", str(spec_file), "--format", "banana"])
             assert result.exit_code == 2
-            assert "Invalid format" in result.stdout
+            assert "Invalid value" in result.output
 
     def test_request_bounds_validation_max_count(self):
         """ScaffoldRequest validates max_count bounds."""
