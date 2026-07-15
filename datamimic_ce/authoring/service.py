@@ -20,29 +20,22 @@ from pydantic import ValidationError
 from datamimic_ce.authoring.acceptance import evaluate_acceptance
 from datamimic_ce.authoring.compiler import CompileError, compile_authoring_spec
 from datamimic_ce.authoring.contracts import (
-    MAX_DRY_RUN_COUNT,
     AuthoringStage,
     CapabilitiesResult,
-    CaptureStatus,
     CheckRequest,
     CompilePlan,
-    GeneratedProductCompilePlan,
     IntentValidationIssue,
     IntentValidationIssueCode,
     ReferenceRequest,
     ReferenceResult,
-    RetryWithParameterRemediation,
     RunRequest,
     RunResult,
     ScaffoldRequest,
     ScaffoldResult,
     ScaffoldVerificationEvidence,
-    SourceProductCompilePlan,
-    TimeSeriesProductCompilePlan,
 )
 from datamimic_ce.authoring.diagnostics import LintResult
 from datamimic_ce.authoring.dryrun import (
-    CapturedProducts,
     dry_run,
     dry_run_source,
     dry_run_source_captured,
@@ -53,6 +46,7 @@ from datamimic_ce.authoring.spec import AuthoringSpecV1
 from datamimic_ce.authoring.verification import (
     blocked_replay,
     blocked_verification,
+    max_count_remediations,
     replay_evidence,
     replay_not_requested,
     smoke_export_evidence,
@@ -169,62 +163,6 @@ def run(request: RunRequest) -> RunResult:
     return result
 
 
-def _max_count_remediations(
-    plan: CompilePlan,
-    captured: CapturedProducts,
-) -> list[RetryWithParameterRemediation]:
-    """Derive one retry action from typed, statically bounded cap evidence."""
-
-    products_by_name = {product.name: product for product in plan.products}
-    minimums: dict[str, int] = {}
-    for product in captured.products:
-        evidence = product.capture
-        planned = products_by_name.get(product.name)
-        if (
-            evidence is None
-            or evidence.status is not CaptureStatus.CAPPED
-            or evidence.requested is None
-            or planned is None
-        ):
-            continue
-        if isinstance(planned, GeneratedProductCompilePlan):
-            minimum = planned.count_per_parent or planned.static_count
-        elif isinstance(planned, TimeSeriesProductCompilePlan):
-            minimum = planned.series_count
-        elif isinstance(planned, SourceProductCompilePlan):
-            minimum = evidence.requested
-        else:
-            continue
-        if minimum > captured.max_count:
-            minimums[product.name] = minimum
-    if not minimums:
-        return []
-    required_minimum = max(minimums.values())
-    if required_minimum > MAX_DRY_RUN_COUNT:
-        return []
-
-    captured_names = {product.name for product in captured.products}
-    affected = set(minimums)
-    changed = True
-    while changed:
-        changed = False
-        for relationship in plan.relationships:
-            if (
-                relationship.parent in affected
-                and relationship.child in captured_names
-                and relationship.child not in affected
-            ):
-                affected.add(relationship.child)
-                changed = True
-    return [
-        RetryWithParameterRemediation(
-            minimum_value=required_minimum,
-            affected_products=tuple(
-                product.name for product in plan.products if product.name in affected
-            ),
-        )
-    ]
-
 
 def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
     """Compile, lint, run, accept and optionally verify one authoring intent."""
@@ -294,7 +232,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
         )
 
     acceptance = evaluate_acceptance(compiled.plan, compiled.spec, captured_run.captured)
-    remediations = _max_count_remediations(
+    remediations = max_count_remediations(
         compiled.plan,
         captured_run.captured,
     )

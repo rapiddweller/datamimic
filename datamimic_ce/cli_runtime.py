@@ -117,6 +117,8 @@ def execute_descriptor(
     task_id: str | None,
     test_mode: bool,
 ) -> None:
+    """Full runtime execution — intentionally bypasses authoring.service, which only
+    offers the bounded dry-run path. This is the production engine boundary."""
     descriptor = descriptor_path.resolve()
     if not descriptor.is_file():
         cli_presenter.fail(f"Invalid descriptor file path: {descriptor}", code=1)
