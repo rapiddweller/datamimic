@@ -92,6 +92,9 @@ acceptance checks passed, deterministic replay passed).
 | `qwen3.5:9b-mlx` | yes (MLX) | pass | pass |
 | `gemma4:e4b` | yes | pass | pass |
 | `gemma4:e4b-it-qat` | yes | pass | pass |
+| `ministral-3:8b-instruct-2512-q4_K_M` | yes (pulled locally) | not run | pass |
+| `phi4-mini:3.8b-q4_K_M` | yes (pulled locally) | not run | pass |
+| `qwen3-coder:30b-a3b-q4_K_M` | yes (pulled locally) | not run | pass |
 | `gemma4:31b-cloud` | no (Ollama cloud) | not run | pass |
 | `nemotron-3-nano:30b-cloud` | no (Ollama cloud) | not run | pass |
 | `gpt-oss:120b-cloud` | no (Ollama cloud) | not run | pass |
@@ -303,8 +306,22 @@ schema, with the harness fixed to send only `seed` in `options` — every
 other sampling parameter now falls back to each model's own declared
 default. It also adds the newly-requested models
 (`nemotron-3-nano:30b-cloud`, `gpt-oss:120b-cloud`, plus `qwen3.5:cloud` and
-`mistral-large-3:675b-cloud`/`deepseek-v4-flash:cloud`, all three of which
-turned out to be access-gated — see Access gate above).
+`mistral-large-3:675b-cloud`/`deepseek-v4-flash:cloud`/
+`gemini-3-flash-preview:cloud`, all four of which turned out to be
+access-gated — see Access gate above) and, after a request for genuinely
+local (not cloud-proxied) family diversity on this machine (Apple M5 Pro,
+48GB unified RAM), three models pulled and run entirely on-device:
+`ministral-3:8b-instruct-2512-q4_K_M` (Mistral family), `phi4-mini:3.8b-q4_K_M`
+(Microsoft family, smallest model in this diagnostic), and
+`qwen3-coder:30b-a3b-q4_K_M` (30B-total/~3B-active MoE, agentic-coding
+specialized — fits the 48GB budget at Q4 despite its total parameter count
+because only the active path needs to run at speed; the full weight set
+still needs to be resident, roughly 18GB, well inside a ~30-35GB comfortable
+ceiling on this machine at Q4 quantization). None of these three declare
+`thinking` capability (unlike every model tested so far), so the harness was
+fixed to only request `think: true` when a model's own `api/show`
+capabilities list it — sending the flag unconditionally errored with `"...
+does not support thinking"` on the first attempt.
 
 | Model | Discovery tool calls | `scaffold_submit` calls | No-tool-call turns | Verified? |
 |---|---|---|---|---|
@@ -314,12 +331,17 @@ turned out to be access-gated — see Access gate above).
 | `gemma4:31b-cloud` | 6 | 0 | 0 | no — turn budget exhausted, never submitted |
 | `nemotron-3-nano:30b-cloud` | 6 | 0 | 0 | no — turn budget exhausted, never submitted |
 | `gpt-oss:120b-cloud` | 6 | 0 | 0 | no — turn budget exhausted, never submitted |
+| `ministral-3:8b` (local) | 5 | 1 | 0 | no — turn budget exhausted |
+| `phi4-mini:3.8b` (local) | 0 | 0 | 6 | no — **never emitted a real tool call in any of 6 turns** |
+| `qwen3-coder:30b-a3b` (local) | 6 | 0 | 0 | no — turn budget exhausted, never submitted |
 
-**0/6 verified — correcting the sampling defaults did not change the
-pass/fail outcome for any of the four re-run models, and neither new model
-(`nemotron-3-nano:30b-cloud`, `gpt-oss:120b-cloud`) verified either.** It did
-change qualitative behavior, in ways that cut against a simple "low
-temperature caused the failures" story:
+**0/9 verified across all of B2** — correcting the sampling defaults did not
+change the pass/fail outcome for any of the four re-run models, and none of
+the five newly-added models (`nemotron-3-nano:30b-cloud`,
+`gpt-oss:120b-cloud`, `ministral-3:8b`, `phi4-mini:3.8b`,
+`qwen3-coder:30b-a3b`) verified either. It did change qualitative behavior,
+in ways that cut against a simple "low temperature caused the failures"
+story:
 
 - **`gemma4:e4b`** is the clearest case: at `temperature: 0.2` (original
   Condition B) it made 2 distinct submission attempts with genuinely
@@ -357,6 +379,39 @@ temperature caused the failures" story:
   re-fetching `reference scaffold` a second time (also already fetched, at
   turn 1) instead of attempting a submission. Sophisticated reasoning did not
   translate into efficient budget use here.
+- **`ministral-3:8b`** (new, local) is the only one of the five newly-added
+  models to actually reach a submission: a sensible discovery sequence
+  (`capabilities` → `reference authoring` × 3, including one malformed query
+  with an empty `kind: ""`) then `reference scaffold`, then one submission at
+  turn 6. The submission got the field-level structure essentially right
+  (`int_range`/`values` fields correctly nested under the product) but hit
+  the by-now-familiar product-level `"kind"` discriminator miss on *two*
+  entries — it also invented a second, spurious "product" purely to hold the
+  seed value (`{"name": "seed", "value": 42}`), a new confusion type not
+  seen in any other model: not recognizing `seed` as a top-level scalar
+  field of the document itself.
+- **`phi4-mini:3.8b`** (new, local) is a new failure mode entirely, worse
+  than any seen so far: it **never emitted a single real tool call across
+  all 6 turns**, despite `api/show` declaring `tools` capability. Every
+  turn's response was prose *narrating* an intended tool call ("I would
+  invoke `datamimic_scaffold_submit` as follows...", "Let's first explore
+  Datamimic's DSL capabilities by utilizing `datamimic_capabilities`...")
+  without the structured `tool_calls` field ever being populated — the model
+  describes the right actions in the right order but does not actually take
+  them. Turn 1 also free-hand invented a completely fictional JSON dialect
+  (`"$schema"`, `"@id"`, `"$kind"`) resembling neither DATAMIMIC's schema nor
+  anything it had queried, since it had queried nothing yet. This matches a
+  documented real-world caveat for this model: schema adherence and reliable
+  tool invocation are known to degrade with more elaborate tool definitions.
+- **`qwen3-coder:30b-a3b`** (new, local, agentic-coding-specialized) shows
+  the cleanest, most methodical discovery sequence of any model in this
+  diagnostic — `capabilities` → `reference scaffold` → `reference authoring
+  category=field` (broad) → `int_range` → `values` → `increment`, zero
+  wasted or invalid calls — but still used the entire budget on discovery
+  and never submitted. Domain specialization (coding/agentic RL training)
+  produced the most *efficient* discovery of the diagnostic, not a
+  correspondingly higher pass rate; it simply ran out of turns one step from
+  where every other careful-discovery model also ran out.
 
 The corrected-sampling data does not support "Condition B's original 0/4 was
 an artifact of bad temperature" — the outcome is unchanged, and the one
@@ -365,20 +420,24 @@ a better one. The sampling fix was still the right thing to do (self-imposed,
 uncorrected parameter deviation is not something to leave standing simply
 because it happened not to flip the result here), and it is documented as an
 erratum rather than silently overwriting the original Condition B numbers.
-Across B2's six accessible models, four (`qwen3.5:9b-mlx`,
-`gemma4:31b-cloud`, `nemotron-3-nano:30b-cloud`, `gpt-oss:120b-cloud`) never
-attempted a single submission — discovery-budget exhaustion, not incorrect
-submissions, is now the single most common outcome in this diagnostic.
+Across B2's nine accessible models, five (`qwen3.5:9b-mlx`,
+`gemma4:31b-cloud`, `nemotron-3-nano:30b-cloud`, `gpt-oss:120b-cloud`,
+`qwen3-coder:30b-a3b`) never attempted a single submission, and one
+(`phi4-mini:3.8b`) never made a real tool call at all — discovery-budget
+exhaustion, not incorrect submissions, is now the single most common outcome
+in this diagnostic, and it is independent of model size (3.8B through 120B
+all show it) or specialization (a dedicated coding/agentic model showed it
+too).
 
 ## Comparison
 
 | | Condition A (text protocol) | Condition B (native tools, temp=0.2) | Condition B2 (native tools, model-default sampling) | Condition C (Haiku, cleanroom) |
 |---|---|---|---|---|
-| Verified | 0/3 | 0/4 | 0/6 | 1/1 |
-| Discovery calls used | 0–1 per model | 0–6 per model | 1–6 per model | 3 (unrationed) |
+| Verified | 0/3 | 0/4 | 0/9 | 1/1 |
+| Discovery calls used | 0–1 per model | 0–6 per model | 0–6 per model | 3 (unrationed) |
 | Submission attempts before pass | — | — | — | 1 |
-| Reasoning visible to evaluator | no | yes (`thinking`) | yes (`thinking`) | yes (agent's own report) |
-| Dominant failure mode | guess blindly from invented syntax; one model stuck repeating an identical wrong payload | explore genuinely, converge on most of the structure, miss the product-level `kind` discriminator; two of four never even reach submission | same discriminator confusion; `gemma4:e4b` develops its own stuck loop (4 identical resubmissions); 4 of 6 models never submit at all, including the most articulate reasoner (`gpt-oss:120b-cloud`) | none observed |
+| Reasoning visible to evaluator | no | yes (`thinking`) | yes (`thinking`, where supported) | yes (agent's own report) |
+| Dominant failure mode | guess blindly from invented syntax; one model stuck repeating an identical wrong payload | explore genuinely, converge on most of the structure, miss the product-level `kind` discriminator; two of four never even reach submission | same discriminator confusion; `gemma4:e4b` develops its own stuck loop; 5 of 9 models never submit at all, spanning 3.8B to 120B and a dedicated coding model; 1 model (`phi4-mini`) never makes a real tool call at all | none observed |
 
 Native tool-calling did not flip the pass/fail outcome inside the same
 6-turn budget, but it changed *what* failed relative to Condition A. Every
@@ -406,18 +465,18 @@ conclusive — see follow-up #1.
 ## Decision
 
 - **NO-GO (Conditions A/B/B2):** unattended CLI-only authoring by small-to-
-  large (8B–120B), open-weight/proprietary-weight local/Ollama-hosted models
-  within a 6-turn budget on this task. 0/10 verified across all three
-  conditions and nine distinct model runs (`gemma4:e4b`/
-  `gemma4:e4b-it-qat`/`qwen3.5:9b-mlx`/`gemma4:31b-cloud` once each in both B
-  and B2 plus `nemotron-3-nano:30b-cloud`/`gpt-oss:120b-cloud` in B2 only).
+  large (3.8B–120B), open-weight/proprietary-weight local/Ollama-hosted
+  models within a 6-turn budget on this task. 0/16 verified across all
+  run-instances (9 distinct models across A/B/B2, several re-run across
+  multiple conditions).
 - **Confirmed: Condition B's original sampling was not best-practice**
   (forced `temperature: 0.2` against every model's own declared default of
-  `1`), **but correcting it (B2) did not change the outcome.** 0/6 verified
-  under model-default sampling, same as 0/4 under the forced low temperature.
-  One model's *failure mode* changed (a new stuck loop in `gemma4:e4b`), not
-  its pass/fail result. Sampling defaults are not the explanation for these
-  models' failures.
+  `1`), **but correcting it (B2) did not change the outcome.** 0/9 verified
+  under model-default sampling across B2's full model set, same as 0/4 under
+  the forced low temperature on the original four. One model's *failure
+  mode* changed (a new stuck loop in `gemma4:e4b`), not its pass/fail
+  result. Sampling defaults are not the explanation for these models'
+  failures.
 - **GO (schema/CLI is not the blocker):** Condition C shows a competent model
   resolves the whole task, including the exact discriminator confusion every
   A/B/B2 model hit, zero-shot and cleanroom, with less discovery than several
@@ -426,10 +485,27 @@ conclusive — see follow-up #1.
 - **GO (tooling choice):** native tool-calling over a hand-rolled text
   protocol for any future local-model harness. It did not change the
   pass/fail count in A vs. B/B2, but it produced auditable reasoning traces
-  and measurably increased genuine discovery-tool usage — strictly better
-  evidence quality for the same budget, independent of whether it changes the
-  verified rate on a larger run. (It did not reliably eliminate the
-  identical-payload stuck loop either — see B2's `gemma4:e4b`.)
+  (where the model supports `thinking`) and measurably increased genuine
+  discovery-tool usage — strictly better evidence quality for the same
+  budget, independent of whether it changes the verified rate on a larger
+  run. (It did not reliably eliminate the identical-payload stuck loop
+  either — see B2's `gemma4:e4b` — and does not guarantee the model actually
+  *uses* tool-calling at all — see B2's `phi4-mini`.)
+- **NEW (widest-impact) failure mode found: declared tool support does not
+  guarantee actual tool use.** `phi4-mini:3.8b` declares `tools` capability
+  via `api/show` but never emitted a single structured tool call across 6
+  turns in this harness — every turn was prose narrating an intended action
+  instead of taking it. Any harness (this one included, until now) that
+  assumes "capability declared" implies "capability exercised" will silently
+  misattribute this as "0 discovery, 0 submissions" without realizing the
+  model never engaged the tool-calling machinery at all.
+- **NO-GO holds regardless of model scale or specialization, confirmed with
+  more data:** the discovery-only-never-submits pattern now spans 3.8B
+  (`phi4-mini`, in its own more severe "never even calls a tool" variant) to
+  120B (`gpt-oss:120b-cloud`), and hits a model purpose-trained for
+  agentic/coding tool-use (`qwen3-coder:30b-a3b`) exactly as often as
+  generalist chat models — domain specialization bought the *cleanest*
+  discovery sequence observed in this diagnostic, not a better outcome.
 - **Access, not capability, is the finding for four of the nine requested
   cloud models:** `qwen3.5:cloud`, `mistral-large-3:675b-cloud`, and
   `deepseek-v4-flash:cloud` all require an Ollama subscription this
@@ -444,15 +520,15 @@ conclusive — see follow-up #1.
   detail, not a hard blocker when an agent does reach for the detailed path.
   No model in any condition was ever observed failing *because* the compact
   index specifically omitted something it needed and had no drill-down for.
-- **NO DATA:** whether the models that spent their entire B2 budget on
+- **NO DATA:** whether the six models that spent their entire B2 budget on
   discovery without ever submitting (`qwen3.5:9b-mlx`, `gemma4:31b-cloud`,
-  `nemotron-3-nano:30b-cloud`, `gpt-oss:120b-cloud` — four of six in B2,
-  including a 120B model with the most articulate visible reasoning of any
-  model tested) would pass under a Condition-C-shaped budget (more turns,
-  unrationed discovery). Discovery-budget exhaustion, not incorrect
-  submission, is now the single most common outcome in this diagnostic, and
-  none of these four ever got to demonstrate whether their discovery had
-  actually converged on a correct understanding.
+  `nemotron-3-nano:30b-cloud`, `gpt-oss:120b-cloud`, `qwen3-coder:30b-a3b`,
+  plus `phi4-mini` in its more severe variant) would pass under a
+  Condition-C-shaped budget (more turns, unrationed discovery).
+  Discovery-budget exhaustion, not incorrect submission, is now the single
+  most common outcome in this diagnostic, and none of these six ever got to
+  demonstrate whether their discovery had actually converged on a correct
+  understanding.
 - **NO DATA:** model ranking or reliability claims from a single seed, small
   model/condition counts, and (for Condition C) a single run.
 
@@ -465,25 +541,34 @@ conclusive — see follow-up #1.
    with a different budget shape and tool surface, which this diagnostic has
    been explicit about not controlling for. This is the single highest-value
    remaining gap.
-2. Re-run Condition B2 with a larger turn budget (10–12) for the four
+2. Add an explicit "declared-but-unused tool capability" check to any future
+   harness: if a model goes N consecutive turns with zero `tool_calls` while
+   `tools` capability was declared, flag it distinctly from "chose not to
+   call a tool this turn" — `phi4-mini` would otherwise silently blend into
+   the same bucket as models that discover thoroughly and just run out of
+   budget, which is a materially different failure.
+3. Re-run Condition B2 with a larger turn budget (10–12) for the six
    discovery-only models (`qwen3.5:9b-mlx`, `gemma4:31b-cloud`,
-   `nemotron-3-nano:30b-cloud`, `gpt-oss:120b-cloud`) — this directly tests
-   whether they "ran out of time" or "would have failed the same way as
-   `gemma4:e4b`/`gemma4:e4b-it-qat`." Worth prioritizing `gpt-oss:120b-cloud`
-   specifically: its reasoning was the most sophisticated observed, but two
-   of its six calls were pure waste (one invalid query, one exact duplicate
-   of an already-fetched fragment) — a stricter "don't repeat a fragment
-   you've already fetched" instruction alone might be enough to free up the
-   turn it needed to submit.
-3. Make the product-level `"kind"` discriminator harder to miss: either
+   `nemotron-3-nano:30b-cloud`, `gpt-oss:120b-cloud`, `qwen3-coder:30b-a3b`,
+   `phi4-mini`) — this directly tests whether they "ran out of time" or
+   "would have failed the same way as `gemma4:e4b`/`gemma4:e4b-it-qat`."
+   Worth prioritizing `gpt-oss:120b-cloud` and `qwen3-coder:30b-a3b`
+   specifically: both showed efficient/near-efficient discovery with little
+   to no wasted calls, so a modest budget increase (not a protocol change)
+   is the most direct next test for them.
+4. Make the product-level `"kind"` discriminator harder to miss: either
    surface a one-line worked example (`{"kind": "generated", ...}` at the
    product level) directly in `capabilities`' compact index or in
    `reference scaffold`'s output, or strengthen the `invalid_discriminator`
    diagnostic to name the *product* vocabulary explicitly instead of relying
    on the model to infer it's a different `"kind"` than the field-level one
    it just saw. This is the single most common root cause across every
-   condition and every model that reached a submission.
-4. Investigate `gemma4:e4b`'s stuck loop in B2 specifically (4 byte-identical
+   condition and every model that reached a submission — now confirmed a
+   fourth time by `ministral-3:8b`, which additionally invented a spurious
+   second "product" to hold the top-level `seed` value, worth folding into
+   the same fix (make the top-level document shape, not just the product
+   discriminator, harder to guess wrong).
+5. Investigate `gemma4:e4b`'s stuck loop in B2 specifically (4 byte-identical
    resubmissions of a payload already known to fail) — this is the second
    time this exact degenerate pattern has appeared (Condition A's
    `qwen3.5:9b-mlx`, now B2's `gemma4:e4b`), in different models under
@@ -491,21 +576,23 @@ conclusive — see follow-up #1.
    more general Ollama chat-loop artifact (e.g. the model's context making
    near-identical continuations likely) rather than a property of any one
    model or setting.
-5. Test a discovery-budget guard: cap discovery calls (e.g. at 3) and require
+6. Test a discovery-budget guard: cap discovery calls (e.g. at 3) and require
    a submission attempt after that, so models that discover thoroughly but
    never converge to a submission are forced to test their understanding
    within the turn budget.
-6. Re-run with seeds 42–46 across all conditions before making any GO/NO-GO
+7. Re-run with seeds 42–46 across all conditions before making any GO/NO-GO
    claim about the compact index's real-world sufficiency or about
    native-tool-calling's/sampling's effect on the verified rate — this
    diagnostic is one seed throughout.
-7. If a future harness is built for real (per this directory's "Contract for
+8. If a future harness is built for real (per this directory's "Contract for
    a future canonical harness"), it should default to native tool-calling and
    each model's own declared sampling defaults (never an arbitrary uniform
-   temperature), and should log `thinking` traces (or, for Claude-family
-   agents, the agent's own self-reported call sequence) in its hashed call
-   ledger — they were the single most useful signal in this diagnostic for
-   understanding *why* a run failed, not just that it did.
+   temperature), skip the `think` flag for models that don't declare
+   `thinking` capability (sending it unconditionally errors outright), and
+   should log `thinking` traces (or, for Claude-family agents, the agent's
+   own self-reported call sequence) in its hashed call ledger — they were
+   the single most useful signal in this diagnostic for understanding *why*
+   a run failed, not just that it did.
 
 ## Verification commands
 
