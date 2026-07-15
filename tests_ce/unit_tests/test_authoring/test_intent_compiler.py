@@ -438,6 +438,20 @@ def test_compile_plan_rejects_duplicate_products_in_isolation() -> None:
         )
 
 
+def test_compile_plan_rejects_duplicate_fields_in_isolation() -> None:
+    product = _minimal_compile_plan_product()
+    product["fields"] = [
+        {"kind": "increment", "name": "id"},
+        {"kind": "script", "name": "id"},
+    ]
+
+    with pytest.raises(
+        ValidationError,
+        match="duplicate field name 'id' in product 'rows'",
+    ):
+        CompilePlan.model_validate({"products": [product]})
+
+
 def test_compile_plan_rejects_dangling_relationship_in_isolation() -> None:
     with pytest.raises(ValidationError, match="relationship references unknown product 'missing'"):
         CompilePlan.model_validate(

@@ -41,6 +41,7 @@ PositiveStrictInt = Annotated[StrictInt, Field(gt=0)]
 NonNegativeStrictInt = Annotated[StrictInt, Field(ge=0)]
 NonEmptyStrictStr = Annotated[StrictStr, Field(min_length=1)]
 INTENT_REPAIR_ALIASES_SCHEMA_KEY = "x-datamimic-repair-aliases"
+_ORDERED_BOUNDS_ERROR = "minimum must not exceed maximum"
 
 
 class FieldIntentKind(StrEnum):
@@ -201,7 +202,7 @@ class IntegerRangeField(FieldIntent):
     @model_validator(mode="after")
     def _ordered_bounds(self) -> IntegerRangeField:
         if self.minimum > self.maximum:
-            raise ValueError("minimum must not exceed maximum")
+            raise ValueError(_ORDERED_BOUNDS_ERROR)
         return self
 
 
@@ -213,7 +214,7 @@ class DecimalRangeField(FieldIntent):
     @model_validator(mode="after")
     def _ordered_bounds(self) -> DecimalRangeField:
         if self.minimum > self.maximum:
-            raise ValueError("minimum must not exceed maximum")
+            raise ValueError(_ORDERED_BOUNDS_ERROR)
         return self
 
 
@@ -225,7 +226,7 @@ class StringLengthField(FieldIntent):
     @model_validator(mode="after")
     def _ordered_bounds(self) -> StringLengthField:
         if self.minimum > self.maximum:
-            raise ValueError("minimum must not exceed maximum")
+            raise ValueError(_ORDERED_BOUNDS_ERROR)
         return self
 
 
@@ -365,9 +366,7 @@ def _file_export_schema(schema: JsonDict) -> None:
     if isinstance(properties, dict):
         format_schema = properties.get("format")
         if isinstance(format_schema, dict):
-            enum_values: list[JsonValue] = [
-                name for name in sorted(buffered_exporter_names())
-            ]
+            enum_values = list[JsonValue](sorted(buffered_exporter_names()))
             format_schema["enum"] = enum_values
 
 
@@ -554,7 +553,7 @@ class RangeExpectation(IntentModel):
     @model_validator(mode="after")
     def _ordered_bounds(self) -> RangeExpectation:
         if self.minimum > self.maximum:
-            raise ValueError("minimum must not exceed maximum")
+            raise ValueError(_ORDERED_BOUNDS_ERROR)
         return self
 
 
@@ -577,6 +576,132 @@ ExpectationIntent = Annotated[
 ]
 
 
+class _IntentGraphIndex:
+    def __init__(self, products: tuple[ProductIntentUnion, ...]) -> None:
+        self.products = _intent_products(products)
+        self.fields = _intent_fields(self.products)
+        self.nested_edges = _intent_nested_edges(products)
+
+    def require_product(self, name: str, context: str) -> None:
+        if name not in self.products:
+            raise ValueError(f"{context} references unknown product '{name}'")
+
+    def require_field(self, product: str, field: str, context: str) -> None:
+        self.require_product(product, context)
+        if field not in self.fields[product]:
+            raise ValueError(
+                f"{context} references unknown field '{field}' on product '{product}'"
+            )
+
+
+def _intent_products(
+    products: tuple[ProductIntentUnion, ...],
+) -> dict[str, ProductIntent | NestedGeneratedProduct]:
+    names: list[str] = []
+    products_by_name: dict[str, ProductIntent | NestedGeneratedProduct] = {}
+    for product in products:
+        names.append(product.name)
+        products_by_name[product.name] = product
+        if isinstance(product, GeneratedProduct):
+            names.extend(child.name for child in product.children)
+            products_by_name.update({child.name: child for child in product.children})
+    duplicates = sorted({name for name in names if names.count(name) > 1})
+    if duplicates:
+        raise ValueError(f"product names must be unique: {', '.join(duplicates)}")
+    return products_by_name
+
+
+def _intent_fields(
+    products: dict[str, ProductIntent | NestedGeneratedProduct],
+) -> dict[str, set[str]]:
+    return {
+        name: {field.name for field in product.fields}
+        for name, product in products.items()
+    }
+
+
+def _intent_nested_edges(
+    products: tuple[ProductIntentUnion, ...],
+) -> set[tuple[str, str]]:
+    return {
+        (product.name, child.name)
+        for product in products
+        if isinstance(product, GeneratedProduct)
+        for child in product.children
+    }
+
+
+def _validate_intent_roles(index: _IntentGraphIndex) -> None:
+    for product_name, product in index.products.items():
+        for field in product.fields:
+            _validate_nested_identifier_role(product_name, product, field)
+            for role in field.roles:
+                if isinstance(role, ForeignKeyRole):
+                    index.require_field(
+                        role.parent_product,
+                        role.parent_field,
+                        f"foreign-key role on {product_name}.{field.name}",
+                    )
+
+
+def _validate_nested_identifier_role(
+    product_name: str,
+    product: ProductIntent | NestedGeneratedProduct,
+    field: FieldIntentUnion,
+) -> None:
+    if not isinstance(product, NestedGeneratedProduct):
+        return
+    if not isinstance(field, IncrementField):
+        return
+    if any(isinstance(role, IdentifierRole) for role in field.roles):
+        raise ValueError(
+            f"nested Increment field '{product_name}.{field.name}' is local per "
+            "parent and cannot claim the global identifier role"
+        )
+
+
+def _validate_unique_expectations(expectations: tuple[ExpectationIntent, ...]) -> None:
+    duplicate_kinds = [
+        expectation.kind
+        for index, expectation in enumerate(expectations)
+        if expectation in expectations[:index]
+    ]
+    if duplicate_kinds:
+        kinds = ", ".join(duplicate_kinds)
+        raise ValueError(f"explicit expectations must be unique; duplicates: {kinds}")
+
+
+def _validate_expectation(
+    expectation: ExpectationIntent,
+    index: _IntentGraphIndex,
+) -> None:
+    context = f"{expectation.kind} expectation"
+    if isinstance(expectation, ExactCountExpectation | RowConditionExpectation):
+        index.require_product(expectation.product, context)
+    elif isinstance(expectation, PerParentCountExpectation):
+        index.require_product(expectation.parent_product, context)
+        index.require_product(expectation.child_product, context)
+        if (expectation.parent_product, expectation.child_product) not in index.nested_edges:
+            raise ValueError(
+                f"{context} requires a nested parent-child relationship between "
+                f"'{expectation.parent_product}' and '{expectation.child_product}'"
+            )
+    elif isinstance(expectation, UniqueExpectation | AllowedValuesExpectation | RangeExpectation):
+        index.require_field(expectation.product, expectation.field, context)
+    else:
+        index.require_field(expectation.child_product, expectation.child_field, context)
+        index.require_field(expectation.parent_product, expectation.parent_field, context)
+
+
+def _validate_expectations(
+    expectations: tuple[ExpectationIntent, ...],
+    index: _IntentGraphIndex,
+) -> None:
+    _validate_unique_expectations(expectations)
+    for expectation in expectations:
+        _validate_expectation(expectation, index)
+
+
 class AuthoringSpecV1(IntentModel):
     """Canonical contents of a ``model.dm.json`` authoring artifact."""
 
@@ -587,92 +712,9 @@ class AuthoringSpecV1(IntentModel):
 
     @model_validator(mode="after")
     def _unique_product_names(self) -> AuthoringSpecV1:
-        names: list[str] = []
-        products_by_name: dict[str, ProductIntent | NestedGeneratedProduct] = {}
-        for product in self.products:
-            names.append(product.name)
-            products_by_name[product.name] = product
-            if isinstance(product, GeneratedProduct):
-                names.extend(child.name for child in product.children)
-                products_by_name.update({child.name: child for child in product.children})
-        duplicates = sorted({name for name in names if names.count(name) > 1})
-        if duplicates:
-            raise ValueError(f"product names must be unique: {', '.join(duplicates)}")
-
-        fields_by_product = {
-            name: {field.name for field in product.fields} for name, product in products_by_name.items()
-        }
-
-        def require_product(name: str, context: str) -> None:
-            if name not in products_by_name:
-                raise ValueError(f"{context} references unknown product '{name}'")
-
-        def require_field(product: str, field: str, context: str) -> None:
-            require_product(product, context)
-            if field not in fields_by_product[product]:
-                raise ValueError(f"{context} references unknown field '{field}' on product '{product}'")
-
-        for product_name, resolved_product in products_by_name.items():
-            for field in resolved_product.fields:
-                if (
-                    isinstance(resolved_product, NestedGeneratedProduct)
-                    and isinstance(field, IncrementField)
-                    and any(isinstance(role, IdentifierRole) for role in field.roles)
-                ):
-                    raise ValueError(
-                        f"nested Increment field '{product_name}.{field.name}' is local per "
-                        "parent and cannot claim the global identifier role"
-                    )
-                for role in field.roles:
-                    if isinstance(role, ForeignKeyRole):
-                        require_field(
-                            role.parent_product,
-                            role.parent_field,
-                            f"foreign-key role on {product_name}.{field.name}",
-                        )
-
-        nested_edges = {
-            (product.name, child.name)
-            for product in self.products
-            if isinstance(product, GeneratedProduct)
-            for child in product.children
-        }
-        duplicate_expectation_kinds = [
-            expectation.kind
-            for index, expectation in enumerate(self.expectations)
-            if expectation in self.expectations[:index]
-        ]
-        if duplicate_expectation_kinds:
-            kinds = ", ".join(duplicate_expectation_kinds)
-            raise ValueError(f"explicit expectations must be unique; duplicates: {kinds}")
-        for expectation in self.expectations:
-            context = f"{expectation.kind} expectation"
-            if isinstance(expectation, ExactCountExpectation | RowConditionExpectation):
-                require_product(expectation.product, context)
-            elif isinstance(expectation, PerParentCountExpectation):
-                require_product(expectation.parent_product, context)
-                require_product(expectation.child_product, context)
-                if (expectation.parent_product, expectation.child_product) not in nested_edges:
-                    raise ValueError(
-                        f"{context} requires a nested parent-child relationship between "
-                        f"'{expectation.parent_product}' and '{expectation.child_product}'"
-                    )
-            elif isinstance(
-                expectation,
-                UniqueExpectation | AllowedValuesExpectation | RangeExpectation,
-            ):
-                require_field(expectation.product, expectation.field, context)
-            elif isinstance(expectation, ForeignKeyExpectation):
-                require_field(
-                    expectation.child_product,
-                    expectation.child_field,
-                    context,
-                )
-                require_field(
-                    expectation.parent_product,
-                    expectation.parent_field,
-                    context,
-                )
+        index = _IntentGraphIndex(self.products)
+        _validate_intent_roles(index)
+        _validate_expectations(self.expectations, index)
         return self
 
 

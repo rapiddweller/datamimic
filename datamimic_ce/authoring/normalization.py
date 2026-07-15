@@ -188,20 +188,59 @@ def _normalize_field(
     notes: list[str],
     errors: list[str],
 ) -> dict[str, Any] | None:
+    name = _legacy_field_name(field, product_name, notes, errors)
+    kind = _legacy_field_kind(field, name, notes, errors)
+    if kind is None:
+        return None
+    _validate_legacy_field_shape(field, name, kind, errors)
+    result: dict[str, Any] = {"kind": kind, "name": name}
+    _normalize_field_payload(
+        result,
+        field,
+        name=name,
+        kind=kind,
+        product_name=product_name,
+        nested=nested,
+        notes=notes,
+        errors=errors,
+    )
+    return result
+
+
+def _legacy_field_name(
+    field: dict[str, Any],
+    product_name: str,
+    notes: list[str],
+    errors: list[str],
+) -> str:
     name = _one_alias(field, ("name", "field", "column"), "field name", errors)
     if not isinstance(name, str) or not name.strip():
         errors.append(f"field in product '{product_name}' requires a non-empty name")
-        name = "<invalid>"
-    elif "name" not in field:
+        return "<invalid>"
+    if "name" not in field:
         used = "field" if "field" in field else "column"
         notes.append(f"field '{name}': key '{used}' normalized to 'name'")
+    return name
 
+
+def _legacy_field_kind(
+    field: dict[str, Any],
+    name: str,
+    notes: list[str],
+    errors: list[str],
+) -> FieldIntentKind | None:
     raw_kind = _one_alias(field, ("kind", "type"), f"kind of field '{name}'", errors)
     if "kind" not in field and "type" in field:
         notes.append(f"field '{name}': key 'type' normalized to 'kind'")
-    kind = _normalize_kind(raw_kind, str(name), notes, errors)
-    if kind is None:
-        return None
+    return _normalize_kind(raw_kind, name, notes, errors)
+
+
+def _validate_legacy_field_shape(
+    field: dict[str, Any],
+    name: str,
+    kind: FieldIntentKind,
+    errors: list[str],
+) -> None:
 
     if "script" in field and _calls_unsupported_unique_helper(field["script"]):
         errors.append(
@@ -219,7 +258,18 @@ def _normalize_field(
     if kind in (FieldIntentKind.VALUES, FieldIntentKind.WEIGHTED) and "values" not in field:
         errors.append(f"field '{name}' of kind '{kind}' requires an explicit values array")
 
-    result: dict[str, Any] = {"kind": kind, "name": name}
+
+def _normalize_field_payload(
+    result: dict[str, Any],
+    field: dict[str, Any],
+    *,
+    name: str,
+    kind: FieldIntentKind,
+    product_name: str,
+    nested: bool,
+    notes: list[str],
+    errors: list[str],
+) -> None:
     if kind in (
         FieldIntentKind.INTEGER_RANGE,
         FieldIntentKind.DECIMAL_RANGE,
@@ -245,41 +295,61 @@ def _normalize_field(
     elif kind is FieldIntentKind.SCRIPT:
         result["script"] = field.get("script")
     elif kind is FieldIntentKind.NESTED_LIST:
-        if nested:
-            errors.append(
-                f"unsupported feature: nested field '{name}' more than one level deep in product '{product_name}'"
-            )
-        children_raw = _one_alias(
+        _normalize_nested_field(
+            result,
             field,
-            ("fields", "children"),
-            f"nested fields of '{name}'",
-            errors,
-        )
-        if "fields" not in field and "children" in field:
-            notes.append(f"nested field '{name}': key 'children' normalized to 'fields'")
-        children = _objects(
-            children_raw,
-            label=f"nested fields of field '{name}'",
+            name=name,
+            product_name=product_name,
+            nested=nested,
             notes=notes,
             errors=errors,
         )
-        result["minimum_count"] = field.get("min")
-        result["maximum_count"] = field.get("max")
-        result["fields"] = [
-            normalized
-            for child in children
-            if (
-                normalized := _normalize_field(
-                    child,
-                    product_name=product_name,
-                    nested=True,
-                    notes=notes,
-                    errors=errors,
-                )
+
+
+def _normalize_nested_field(
+    result: dict[str, Any],
+    field: dict[str, Any],
+    *,
+    name: str,
+    product_name: str,
+    nested: bool,
+    notes: list[str],
+    errors: list[str],
+) -> None:
+    if nested:
+        errors.append(
+            f"unsupported feature: nested field '{name}' more than one level deep in product '{product_name}'"
+        )
+    children_raw = _one_alias(
+        field,
+        ("fields", "children"),
+        f"nested fields of '{name}'",
+        errors,
+    )
+    if "fields" not in field and "children" in field:
+        notes.append(f"nested field '{name}': key 'children' normalized to 'fields'")
+    children = _objects(
+        children_raw,
+        label=f"nested fields of field '{name}'",
+        notes=notes,
+        errors=errors,
+    )
+    result["minimum_count"] = field.get("min")
+    result["maximum_count"] = field.get("max")
+    result["fields"] = [
+        normalized
+        for child in children
+        if (
+            normalized := _normalize_field(
+                child,
+                product_name=product_name,
+                nested=True,
+                notes=notes,
+                errors=errors,
             )
-            is not None
-        ]
-    return result
+        )
+        is not None
+    ]
 
 
 def _normalize_targets(raw: Any, product_name: str, errors: list[str]) -> list[dict[str, Any]]:
@@ -344,11 +414,43 @@ def _normalize_product(
     notes: list[str],
     errors: list[str],
 ) -> dict[str, Any] | None:
+    name = _legacy_product_name(product, errors)
+    _validate_legacy_product_keys(product, name, errors)
+    normalized_fields = _normalize_product_fields(product, name, notes, errors)
+    targets = _normalize_targets(product.get("target"), name, errors)
+    children = _normalize_product_children(product, name, depth, notes, errors)
+    has_source, timeseries_attrs = _validate_product_mode(product, name, children, errors)
+    common: dict[str, Any] = {
+        "name": name,
+        "fields": normalized_fields,
+        "targets": targets,
+    }
+    if has_source:
+        return _normalized_source_product(product, name, common, errors)
+    if timeseries_attrs:
+        return _normalized_time_series_product(product, common)
+    normalized_children = _normalize_generated_children(children, depth, notes, errors)
+    return {
+        "kind": "generated",
+        **common,
+        "count": product.get("count"),
+        "children": normalized_children,
+    }
+
+
+def _legacy_product_name(product: dict[str, Any], errors: list[str]) -> str:
     name = product.get("name")
     if not isinstance(name, str) or not name.strip():
         errors.append("every legacy generate requires a non-empty name")
-        name = "<invalid>"
+        return "<invalid>"
+    return name
 
+
+def _validate_legacy_product_keys(
+    product: dict[str, Any],
+    name: str,
+    errors: list[str],
+) -> None:
     allowed = {
         "name",
         "count",
@@ -369,12 +471,19 @@ def _normalize_product(
     if unknown:
         errors.append(f"unknown key(s) on generate '{name}': {', '.join(unknown)}")
 
+
+def _normalize_product_fields(
+    product: dict[str, Any],
+    name: str,
+    notes: list[str],
+    errors: list[str],
+) -> list[dict[str, Any]]:
     fields_raw = _one_alias(product, ("fields", "keys", "columns"), f"fields of '{name}'", errors)
     used_field_alias = next((key for key in ("keys", "columns") if key in product), None)
     if "fields" not in product and used_field_alias:
         notes.append(f"generate '{name}': key '{used_field_alias}' normalized to 'fields'")
     fields = _objects(fields_raw, label=f"fields of generate '{name}'", notes=notes, errors=errors)
-    normalized_fields = [
+    return [
         normalized
         for field in fields
         if (
@@ -389,7 +498,14 @@ def _normalize_product(
         is not None
     ]
 
-    targets = _normalize_targets(product.get("target"), str(name), errors)
+
+def _normalize_product_children(
+    product: dict[str, Any],
+    name: str,
+    depth: int,
+    notes: list[str],
+    errors: list[str],
+) -> list[dict[str, Any]]:
     children_raw = _one_alias(product, ("children", "nested"), f"children of '{name}'", errors)
     if "children" not in product and "nested" in product:
         notes.append(f"generate '{name}': key 'nested' normalized to 'children'")
@@ -405,7 +521,15 @@ def _normalize_product(
                 f"unsupported feature: generate '{child.get('name', '<unnamed>')}' nested more "
                 f"than one level deep inside '{name}'"
             )
+    return children
 
+
+def _validate_product_mode(
+    product: dict[str, Any],
+    name: str,
+    children: list[dict[str, Any]],
+    errors: list[str],
+) -> tuple[bool, list[str]]:
     has_source = product.get("source") is not None
     timeseries_attrs = [attr for attr in ("start", "end", "interval") if product.get(attr) is not None]
     if timeseries_attrs and len(timeseries_attrs) != 3:
@@ -418,33 +542,47 @@ def _normalize_product(
         errors.append(f"product '{name}' defines source_type/type without a source")
     if (has_source or timeseries_attrs) and children:
         errors.append(f"source/time-series product '{name}' cannot contain nested child products in V1")
+    return has_source, timeseries_attrs
 
-    common: dict[str, Any] = {
-        "name": name,
-        "fields": normalized_fields,
-        "targets": targets,
+
+def _normalized_source_product(
+    product: dict[str, Any],
+    name: str,
+    common: dict[str, Any],
+    errors: list[str],
+) -> dict[str, Any]:
+    source_type = _one_alias(
+        product,
+        ("source_type", "type"),
+        f"source type of '{name}'",
+        errors,
+    )
+    source = _normalize_source(product.get("source"), source_type, name, errors)
+    return {"kind": "source", **common, "source": source}
+
+
+def _normalized_time_series_product(
+    product: dict[str, Any],
+    common: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "kind": "time_series",
+        **common,
+        "series_count": product.get("count", 1),
+        "window": {
+            "start": product.get("start"),
+            "end": product.get("end"),
+            "interval": product.get("interval"),
+        },
     }
-    if has_source:
-        source_type = _one_alias(
-            product,
-            ("source_type", "type"),
-            f"source type of '{name}'",
-            errors,
-        )
-        source = _normalize_source(product.get("source"), source_type, str(name), errors)
-        return {"kind": "source", **common, "source": source}
-    if timeseries_attrs:
-        return {
-            "kind": "time_series",
-            **common,
-            "series_count": product.get("count", 1),
-            "window": {
-                "start": product.get("start"),
-                "end": product.get("end"),
-                "interval": product.get("interval"),
-            },
-        }
 
+
+def _normalize_generated_children(
+    children: list[dict[str, Any]],
+    depth: int,
+    notes: list[str],
+    errors: list[str],
+) -> list[dict[str, Any]]:
     normalized_children = [
         normalized
         for child in children
@@ -466,12 +604,7 @@ def _normalize_product(
     for child in normalized_children:
         child["relationship"] = {"kind": "nested"}
         child.pop("children", None)
-    return {
-        "kind": "generated",
-        **common,
-        "count": product.get("count"),
-        "children": normalized_children,
-    }
+    return normalized_children
 
 
 def _normalize_legacy(raw: dict[str, Any]) -> NormalizationResult:

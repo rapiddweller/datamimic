@@ -28,6 +28,8 @@ from datamimic_ce.authoring.contracts import (
     GeneratedProductCompilePlan,
     IntentValidationIssue,
     IntentValidationIssueCode,
+    ProductCaptureEvidence,
+    ProductCompilePlan,
     RetryWithParameterRemediation,
     RunRequest,
     RunResult,
@@ -153,11 +155,28 @@ def run(request: RunRequest) -> RunResult:
     return result
 
 
-def _max_count_remediations(
+def _minimum_required_for_capped_product(
+    planned: ProductCompilePlan,
+    evidence: ProductCaptureEvidence,
+) -> int:
+    """Resolve the complete bounded count from one typed product plan."""
+
+    if isinstance(planned, GeneratedProductCompilePlan):
+        return planned.count_per_parent or planned.static_count
+    if isinstance(planned, TimeSeriesProductCompilePlan):
+        return planned.series_count
+    if isinstance(planned, SourceProductCompilePlan):
+        if evidence.requested is None:
+            raise ValueError("capped source evidence requires a requested count")
+        return evidence.requested
+    raise TypeError(f"Unsupported product plan: {type(planned).__name__}")
+
+
+def _capped_product_minimums(
     plan: CompilePlan,
     captured: CapturedProducts,
-) -> list[RetryWithParameterRemediation]:
-    """Derive one retry action from typed, statically bounded cap evidence."""
+) -> dict[str, int]:
+    """Return products whose statically complete count exceeds the capture bound."""
 
     products_by_name = {product.name: product for product in plan.products}
     minimums: dict[str, int] = {}
@@ -171,21 +190,18 @@ def _max_count_remediations(
             or planned is None
         ):
             continue
-        if isinstance(planned, GeneratedProductCompilePlan):
-            minimum = planned.count_per_parent or planned.static_count
-        elif isinstance(planned, TimeSeriesProductCompilePlan):
-            minimum = planned.series_count
-        elif isinstance(planned, SourceProductCompilePlan):
-            minimum = evidence.requested
-        else:
-            continue
+        minimum = _minimum_required_for_capped_product(planned, evidence)
         if minimum > captured.max_count:
             minimums[product.name] = minimum
-    if not minimums:
-        return []
-    required_minimum = max(minimums.values())
-    if required_minimum > MAX_DRY_RUN_COUNT:
-        return []
+    return minimums
+
+
+def _affected_capped_products(
+    plan: CompilePlan,
+    captured: CapturedProducts,
+    minimums: dict[str, int],
+) -> set[str]:
+    """Include captured descendants whose rows depend on a capped parent."""
 
     captured_names = {product.name for product in captured.products}
     affected = set(minimums)
@@ -200,6 +216,23 @@ def _max_count_remediations(
             ):
                 affected.add(relationship.child)
                 changed = True
+    return affected
+
+
+def _max_count_remediations(
+    plan: CompilePlan,
+    captured: CapturedProducts,
+) -> list[RetryWithParameterRemediation]:
+    """Derive one retry action from typed, statically bounded cap evidence."""
+
+    minimums = _capped_product_minimums(plan, captured)
+    if not minimums:
+        return []
+    required_minimum = max(minimums.values())
+    if required_minimum > MAX_DRY_RUN_COUNT:
+        return []
+
+    affected = _affected_capped_products(plan, captured, minimums)
     return [
         RetryWithParameterRemediation(
             minimum_value=required_minimum,

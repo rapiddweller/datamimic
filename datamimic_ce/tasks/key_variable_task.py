@@ -57,13 +57,12 @@ class KeyVariableTask(Task):
     ):
         from datamimic_ce.tasks.task_util import TaskUtil
 
-        self._element_tag = (
-            EL_KEY
-            if isinstance(statement, KeyStatement)
-            else EL_VARIABLE
-            if isinstance(statement, VariableStatement)
-            else EL_ELEMENT
-        )
+        if isinstance(statement, KeyStatement):
+            self._element_tag = EL_KEY
+        elif isinstance(statement, VariableStatement):
+            self._element_tag = EL_VARIABLE
+        else:
+            self._element_tag = EL_ELEMENT
         self._statement = statement
         self._generator: WeightedDataSource | None = None
         self._pagination = pagination

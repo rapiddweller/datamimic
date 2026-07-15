@@ -8,11 +8,11 @@ import os
 import platform
 from importlib.resources import files
 from pathlib import Path
-from typing import Any
+from typing import Any, Never
 
 import toml
 import typer
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -29,7 +29,9 @@ from datamimic_ce.authoring.contracts import (
     AuthoringResponseFormat,
     AuthoringStage,
     CheckRequest,
+    CheckResult,
     RunRequest,
+    RunResult,
     ScaffoldRequest,
     ScaffoldResult,
     ScaffoldVerification,
@@ -154,7 +156,7 @@ def info():
     console.print(info_table)
 
 
-def _emit_error(output_format: str, message: str, exit_code: int = 2) -> None:
+def _emit_error(output_format: str, message: str, exit_code: int = 2) -> Never:
     """Shared error output contract: text for invalid format, JSON when format is valid but error occurred."""
     if output_format not in ("text", "json"):
         # Invalid format itself — emit plain text + exit code
@@ -166,6 +168,38 @@ def _emit_error(output_format: str, message: str, exit_code: int = 2) -> None:
     else:
         typer.echo(f"Error: {message}")
     raise typer.Exit(exit_code)
+
+
+def _emit_lint_result(
+    descriptor_path: Path,
+    output_format: str,
+    result: CheckResult,
+) -> None:
+    if output_format == "json":
+        typer.echo(result.model_dump_json(indent=2))
+        return
+    for diagnostic in result.diagnostics:
+        location = (
+            f"{descriptor_path}:{diagnostic.line}"
+            if diagnostic.line
+            else str(descriptor_path)
+        )
+        typer.echo(
+            f"{location}  {diagnostic.severity.value.upper():<7} "
+            f"{diagnostic.rule}  {diagnostic.message}"
+        )
+        typer.echo(f"    -> {diagnostic.fix_hint}")
+    truncated = f" (+{result.truncated} truncated)" if result.truncated else ""
+    typer.echo(f"Summary: {result.summary()}{truncated}")
+
+
+def _lint_exit_code(result: CheckResult, fail_on: str) -> int:
+    fail_severities = {"error"} if fail_on == "error" else {"error", "warning"}
+    failed = any(
+        diagnostic.severity.value in fail_severities
+        for diagnostic in result.diagnostics
+    )
+    return 1 if failed else 0
 
 
 def _lint(descriptor_path: Path, output_format: str, fail_on: str, max_diagnostics: int) -> None:
@@ -200,18 +234,8 @@ def _lint(descriptor_path: Path, output_format: str, fail_on: str, max_diagnosti
     except Exception as e:  # unexpected linter crash — distinct from findings
         _emit_error(output_format, f"Lint error: {e}", exit_code=2)
 
-    if output_format == "json":
-        typer.echo(result.model_dump_json(indent=2))
-    else:
-        for diag in result.diagnostics:
-            location = f"{descriptor_path}:{diag.line}" if diag.line else str(descriptor_path)
-            typer.echo(f"{location}  {diag.severity.value.upper():<7} {diag.rule}  {diag.message}")
-            typer.echo(f"    -> {diag.fix_hint}")
-        typer.echo(f"Summary: {result.summary()}" + (f" (+{result.truncated} truncated)" if result.truncated else ""))
-
-    fail_severities = {"error"} if fail_on == "error" else {"error", "warning"}
-    failed = any(diag.severity.value in fail_severities for diag in result.diagnostics)
-    raise typer.Exit(1 if failed else 0)
+    _emit_lint_result(descriptor_path, output_format, result)
+    raise typer.Exit(_lint_exit_code(result, fail_on))
 
 
 @app.command("lint", help="Lint a DATAMIMIC descriptor: schema, semantics, best practices.")
@@ -253,6 +277,90 @@ def capabilities():
     typer.echo(json.dumps(capabilities_manifest(), indent=2, default=str))
 
 
+def _run_request_validation_message(
+    max_count: int,
+    sample_rows: int,
+    timeout_seconds: int,
+) -> str | None:
+    if not MIN_DRY_RUN_COUNT <= max_count <= MAX_DRY_RUN_COUNT:
+        return (
+            "Invalid max-count. Expected an integer from "
+            f"{MIN_DRY_RUN_COUNT} to {MAX_DRY_RUN_COUNT}"
+        )
+    if not MIN_SAMPLE_ROWS <= sample_rows <= MAX_SAMPLE_ROWS:
+        return (
+            "Invalid sample-rows. Expected an integer from "
+            f"{MIN_SAMPLE_ROWS} to {MAX_SAMPLE_ROWS}"
+        )
+    if not MIN_TIMEOUT_SECONDS <= timeout_seconds <= MAX_TIMEOUT_SECONDS:
+        return (
+            "Invalid timeout. Expected an integer from "
+            f"{MIN_TIMEOUT_SECONDS} to {MAX_TIMEOUT_SECONDS}"
+        )
+    return None
+
+
+def _build_run_request(
+    descriptor_path: Path,
+    max_count: int,
+    sample_rows: int,
+    allow_side_effects: bool,
+    timeout_seconds: int,
+    smoke_export: bool,
+    output_format: str,
+) -> RunRequest:
+    try:
+        return RunRequest(
+            xml=None,
+            path=str(descriptor_path),
+            response_format=AuthoringResponseFormat.DETAILED,
+            max_count=max_count,
+            sample_rows=sample_rows,
+            allow_side_effects=allow_side_effects,
+            timeout_seconds=timeout_seconds,
+            smoke_export=smoke_export,
+        )
+    except ValidationError:
+        message = _run_request_validation_message(
+            max_count,
+            sample_rows,
+            timeout_seconds,
+        )
+        if message is None:
+            raise
+        _emit_error(output_format, message, exit_code=2)
+
+
+def _emit_run_result(result: RunResult, output_format: str) -> None:
+    if output_format == "json":
+        typer.echo(result.model_dump_json(indent=2))
+        return
+    typer.echo(f"ok: {result.ok}")
+    typer.echo(f"stage: {result.stage.value}")
+    if result.timing_ms is not None:
+        typer.echo(f"timing: {result.timing_ms}ms")
+
+    if result.products:
+        typer.echo("")
+        for product in result.products:
+            truncated_note = " (truncated)" if product.truncated_rows else ""
+            typer.echo(f"{product.name}: {product.count} rows{truncated_note}")
+            for row in product.sample:
+                typer.echo(f"  {row}")
+
+    if result.products_truncated > 0:
+        typer.echo(f"(+{result.products_truncated} products truncated)")
+
+    if result.diagnostics:
+        typer.echo("")
+        for diagnostic in result.diagnostics:
+            typer.echo(
+                f"{diagnostic.severity.value.upper():<7} "
+                f"{diagnostic.rule}  {diagnostic.message}"
+            )
+            typer.echo(f"    -> {diagnostic.fix_hint}")
+
+
 def _dry_run(
     descriptor_path: Path,
     max_count: int,
@@ -268,34 +376,15 @@ def _dry_run(
     # Validate format first (before file check, so unknown format is reported immediately)
     if output_format not in ("text", "json"):
         _emit_error(output_format, f"Invalid format '{output_format}'. Expected: text | json", exit_code=2)
-    try:
-        request = RunRequest(
-            xml=None,
-            path=str(descriptor_path),
-            response_format=AuthoringResponseFormat.DETAILED,
-            max_count=max_count,
-            sample_rows=sample_rows,
-            allow_side_effects=allow_side_effects,
-            timeout_seconds=timeout_seconds,
-            smoke_export=smoke_export,
-        )
-    except ValidationError as error:
-        invalid_field = str(error.errors()[0]["loc"][0])
-        messages = {
-            "max_count": (
-                "Invalid max-count. Expected an integer from "
-                f"{MIN_DRY_RUN_COUNT} to {MAX_DRY_RUN_COUNT}"
-            ),
-            "sample_rows": (
-                "Invalid sample-rows. Expected an integer from "
-                f"{MIN_SAMPLE_ROWS} to {MAX_SAMPLE_ROWS}"
-            ),
-            "timeout_seconds": (
-                "Invalid timeout. Expected an integer from "
-                f"{MIN_TIMEOUT_SECONDS} to {MAX_TIMEOUT_SECONDS}"
-            ),
-        }
-        _emit_error(output_format, messages[invalid_field], exit_code=2)
+    request = _build_run_request(
+        descriptor_path,
+        max_count,
+        sample_rows,
+        allow_side_effects,
+        timeout_seconds,
+        smoke_export,
+        output_format,
+    )
 
     if not descriptor_path.is_file():
         _emit_error(output_format, f"File not found: {descriptor_path}", exit_code=2)
@@ -305,33 +394,7 @@ def _dry_run(
     except Exception as e:  # unexpected dry-run crash — distinct from findings
         _emit_error(output_format, f"Dry-run error: {e}", exit_code=2)
 
-    if output_format == "json":
-        typer.echo(result.model_dump_json(indent=2))
-    else:
-        # Text format: print summary, products, then diagnostics
-        typer.echo(f"ok: {result.ok}")
-        typer.echo(f"stage: {result.stage.value}")
-        if result.timing_ms is not None:
-            typer.echo(f"timing: {result.timing_ms}ms")
-
-        if result.products:
-            typer.echo("")
-            for product in result.products:
-                truncated_note = " (truncated)" if product.truncated_rows else ""
-                typer.echo(f"{product.name}: {product.count} rows{truncated_note}")
-                for row in product.sample:
-                    typer.echo(f"  {row}")
-
-        if result.products_truncated > 0:
-            typer.echo(f"(+{result.products_truncated} products truncated)")
-
-        # Print diagnostics in the same format as _lint
-        if result.diagnostics:
-            typer.echo("")
-            for diag in result.diagnostics:
-                typer.echo(f"{diag.severity.value.upper():<7} {diag.rule}  {diag.message}")
-                typer.echo(f"    -> {diag.fix_hint}")
-
+    _emit_run_result(result, output_format)
     raise typer.Exit(0 if result.ok else 1)
 
 
@@ -373,160 +436,157 @@ def dry_run_cmd(
     )
 
 
-def _scaffold(
-    spec_path: Path,
+class _ScaffoldDiagnosticView(BaseModel):
+    """Typed CLI projection of the canonical concise diagnostic dictionary."""
+
+    rule: str = "UNKNOWN"
+    severity: str = "unknown"
+    message: str = ""
+    fix_hint: str = ""
+
+
+def _scaffold_failure(output_format: str, exit_code: int, message: str) -> Never:
+    if output_format == "json":
+        payload: dict[str, Any] = {"ok": False, "error": message}
+        typer.echo(json.dumps(payload, indent=2, default=str))
+    else:
+        typer.echo(f"Error: {message}")
+    raise typer.Exit(exit_code)
+
+
+def _scaffold_exit_code(result: ScaffoldResult) -> int:
+    if not result.ok:
+        return 2 if result.stage is AuthoringStage.RENDER else 1
+    if result.stage is AuthoringStage.ACCEPTANCE and not result.verified:
+        return 1
+    return 0
+
+
+def _emit_scaffold_diagnostics(result: ScaffoldResult) -> None:
+    for raw_diagnostic in result.diagnostics:
+        diagnostic = _ScaffoldDiagnosticView.model_validate(raw_diagnostic)
+        typer.echo(
+            f"{diagnostic.severity.upper():<7} "
+            f"{diagnostic.rule}  {diagnostic.message}"
+        )
+        typer.echo(f"    -> {diagnostic.fix_hint}")
+
+
+def _emit_scaffold_lint_result(result: ScaffoldResult) -> None:
+    _emit_scaffold_diagnostics(result)
+    if result.summary:
+        typer.echo(f"Summary: {result.summary}")
+    if result.ok and result.xml:
+        typer.echo("")
+        typer.echo(result.xml)
+
+
+def _emit_scaffold_dry_run_result(result: ScaffoldResult) -> None:
+    _emit_scaffold_diagnostics(result)
+    if result.xml:
+        typer.echo("")
+        typer.echo(result.xml)
+    if result.ok and result.products:
+        typer.echo("")
+        typer.echo("Dry-run successful:")
+        for product in result.products:
+            typer.echo(f"  {product.name}: {product.count} rows")
+
+
+def _emit_scaffold_acceptance_result(result: ScaffoldResult) -> None:
+    if result.xml:
+        typer.echo(result.xml)
+    if result.products:
+        typer.echo("")
+        typer.echo(
+            "Dry-run successful:"
+            if result.verified
+            else "Bounded dry-run completed without full verification:"
+        )
+        for product in result.products:
+            typer.echo(f"  {product.name}: {product.count} rows")
+    if result.acceptance is not None:
+        report = result.acceptance
+        typer.echo("")
+        typer.echo(
+            f"Acceptance: {report.passed} passed, {report.failed} failed, "
+            f"{report.unevaluable} unevaluable"
+        )
+        for evidence in report.results:
+            typer.echo(
+                f"  {evidence.status.upper():<11} "
+                f"{evidence.kind}: {evidence.message}"
+            )
+    typer.echo("")
+    typer.echo(
+        "Smoke export: "
+        f"{result.verification.smoke_export.status.value} — "
+        f"{result.verification.smoke_export.reason}"
+    )
+    typer.echo(
+        "Deterministic replay: "
+        f"{result.verification.deterministic_replay.status.value} — "
+        f"{result.verification.deterministic_replay.reason}"
+    )
+
+
+def _emit_scaffold_text_result(result: ScaffoldResult) -> None:
+    if result.stage is AuthoringStage.RENDER:
+        typer.echo(f"Error: {result.error}")
+    elif result.stage is AuthoringStage.LINT:
+        _emit_scaffold_lint_result(result)
+    elif result.stage is AuthoringStage.DRY_RUN:
+        _emit_scaffold_dry_run_result(result)
+    elif result.stage in (AuthoringStage.ACCEPTANCE, AuthoringStage.VERIFICATION):
+        _emit_scaffold_acceptance_result(result)
+
+    for note in result.normalization_notes:
+        typer.echo(f"note: {note}")
+
+
+def _emit_scaffold_result(result: ScaffoldResult, output_format: str) -> Never:
+    if output_format == "json":
+        typer.echo(
+            json.dumps(
+                result.model_dump(mode="json", exclude_none=True),
+                indent=2,
+            )
+        )
+    else:
+        _emit_scaffold_text_result(result)
+    raise typer.Exit(_scaffold_exit_code(result))
+
+
+def _read_scaffold_spec(spec_path: Path, output_format: str) -> dict[str, Any]:
+    import sys
+
+    try:
+        if str(spec_path) == "-":
+            spec_text = sys.stdin.read()
+        else:
+            if not spec_path.is_file():
+                _scaffold_failure(output_format, 2, f"File not found: {spec_path}")
+            spec_text = spec_path.read_text(encoding="utf-8")
+        return json.loads(spec_text)
+    except typer.Exit:
+        raise
+    except json.JSONDecodeError as error:
+        _scaffold_failure(output_format, 2, f"Invalid JSON: {error}")
+    except Exception as error:
+        _scaffold_failure(output_format, 2, f"Failed to read spec: {error}")
+
+
+def _build_scaffold_request(
+    spec: dict[str, Any],
     output_format: str,
     max_count: int,
     sample_rows: int,
     smoke_export: bool,
     deterministic_replay: bool,
-) -> None:
-    """Shared implementation for `scaffold` command (exit codes: 0 = ok, 1 = findings, 2 = file/input error).
-
-    Uses the service layer (datamimic_ce.authoring.service.scaffold) for the render ->
-    lint -> bounded run -> acceptance pipeline so the CLI and MCP surfaces can't drift. Only
-    output formatting (JSON vs text) and exit code mapping are CLI-specific.
-
-    Supports stdin via '-' as spec_path.
-    """
-    import sys
-
-    from datamimic_ce.authoring.service import scaffold
-
-    # Validate output format early
-    if output_format not in ("text", "json"):
-        typer.echo(f"Error: Invalid format '{output_format}'. Expected: text | json")
-        raise typer.Exit(2)
-
-    def _fail(exit_code: int, message: str) -> None:
-        if output_format == "json":
-            payload: dict[str, Any] = {"ok": False, "error": message}
-            typer.echo(json.dumps(payload, indent=2, default=str))
-        else:
-            typer.echo(f"Error: {message}")
-        raise typer.Exit(exit_code)
-
-    def _emit_result(result_obj: ScaffoldResult) -> None:
-        """Emit the result in the requested format and exit appropriately."""
-        # Determine exit code based on ok flag and stage
-        if not result_obj.ok:
-            exit_code = 2 if result_obj.stage is AuthoringStage.RENDER else 1
-        elif result_obj.stage is AuthoringStage.ACCEPTANCE and not result_obj.verified:
-            exit_code = 1
-        else:
-            exit_code = 0
-
-        if output_format == "json":
-            typer.echo(
-                json.dumps(
-                    result_obj.model_dump(mode="json", exclude_none=True),
-                    indent=2,
-                )
-            )
-        else:
-            # Text format output
-            if result_obj.stage is AuthoringStage.RENDER:
-                typer.echo(f"Error: {result_obj.error}")
-            elif result_obj.stage is AuthoringStage.LINT:
-                if result_obj.diagnostics:
-                    for diag in result_obj.diagnostics:
-                        rule = diag.get("rule", "UNKNOWN")
-                        severity = diag.get("severity", "unknown").upper()
-                        message = diag.get("message", "")
-                        fix_hint = diag.get("fix_hint", "")
-                        typer.echo(f"{severity:<7} {rule}  {message}")
-                        typer.echo(f"    -> {fix_hint}")
-                if result_obj.summary:
-                    typer.echo(f"Summary: {result_obj.summary}")
-                if not result_obj.ok and result_obj.xml:
-                    pass  # lint failure, no XML output
-                elif result_obj.ok and result_obj.xml:
-                    typer.echo("")
-                    typer.echo(result_obj.xml)
-            elif result_obj.stage is AuthoringStage.DRY_RUN:
-                if result_obj.diagnostics:
-                    for diag in result_obj.diagnostics:
-                        rule = diag.get("rule", "UNKNOWN")
-                        severity = diag.get("severity", "unknown").upper()
-                        message = diag.get("message", "")
-                        fix_hint = diag.get("fix_hint", "")
-                        typer.echo(f"{severity:<7} {rule}  {message}")
-                        typer.echo(f"    -> {fix_hint}")
-                if result_obj.xml:
-                    typer.echo("")
-                    typer.echo(result_obj.xml)
-                if result_obj.ok and result_obj.products:
-                    typer.echo("")
-                    typer.echo("Dry-run successful:")
-                    for product in result_obj.products:
-                        typer.echo(f"  {product.name}: {product.count} rows")
-            elif result_obj.stage in (
-                AuthoringStage.ACCEPTANCE,
-                AuthoringStage.VERIFICATION,
-            ):
-                if result_obj.xml:
-                    typer.echo(result_obj.xml)
-                if result_obj.products:
-                    typer.echo("")
-                    typer.echo(
-                        "Dry-run successful:"
-                        if result_obj.verified
-                        else "Bounded dry-run completed without full verification:"
-                    )
-                    for product in result_obj.products:
-                        typer.echo(f"  {product.name}: {product.count} rows")
-                if result_obj.acceptance is not None:
-                    report = result_obj.acceptance
-                    typer.echo("")
-                    typer.echo(
-                        f"Acceptance: {report.passed} passed, {report.failed} failed, {report.unevaluable} unevaluable"
-                    )
-                    for evidence in report.results:
-                        typer.echo(f"  {evidence.status.upper():<11} {evidence.kind}: {evidence.message}")
-                typer.echo("")
-                typer.echo(
-                    "Smoke export: "
-                    f"{result_obj.verification.smoke_export.status.value} — "
-                    f"{result_obj.verification.smoke_export.reason}"
-                )
-                typer.echo(
-                    "Deterministic replay: "
-                    f"{result_obj.verification.deterministic_replay.status.value} — "
-                    f"{result_obj.verification.deterministic_replay.reason}"
-                )
-
-            # Normalization notes surface in text mode on EVERY outcome, success included —
-            # a repaired near-miss the caller never sees is a hidden semantic rewrite.
-            for note in result_obj.normalization_notes:
-                typer.echo(f"note: {note}")
-
-        raise typer.Exit(exit_code)
-
-    # Load the JSON spec from file or stdin
+) -> ScaffoldRequest:
     try:
-        spec_str = str(spec_path)
-        if spec_str == "-":
-            # Read from stdin
-            spec_text = sys.stdin.read()
-        else:
-            # Read from file
-            spec_path_obj = Path(spec_path)
-            if not spec_path_obj.is_file():
-                _fail(2, f"File not found: {spec_path_obj}")
-            spec_text = spec_path_obj.read_text(encoding="utf-8")
-
-        spec_dict = json.loads(spec_text)
-    except typer.Exit:
-        raise
-    except json.JSONDecodeError as e:
-        _fail(2, f"Invalid JSON: {e}")
-    except Exception as e:
-        _fail(2, f"Failed to read spec: {e}")
-
-    # Validate inputs through ScaffoldRequest (gives us bounds checking)
-    try:
-        request = ScaffoldRequest(
-            spec=spec_dict,
+        return ScaffoldRequest(
+            spec=spec,
             max_count=max_count,
             sample_rows=sample_rows,
             response_format=AuthoringResponseFormat.CONCISE,
@@ -535,12 +595,36 @@ def _scaffold(
                 deterministic_replay=deterministic_replay,
             ),
         )
-    except ValueError as e:
-        _fail(2, str(e))
+    except ValueError as error:
+        _scaffold_failure(output_format, 2, str(error))
 
+
+def _scaffold(
+    spec_path: Path,
+    output_format: str,
+    max_count: int,
+    sample_rows: int,
+    smoke_export: bool,
+    deterministic_replay: bool,
+) -> None:
+    """Validate CLI input, call the authoring service, and project its result."""
+
+    from datamimic_ce.authoring.service import scaffold
+
+    if output_format not in ("text", "json"):
+        typer.echo(f"Error: Invalid format '{output_format}'. Expected: text | json")
+        raise typer.Exit(2)
+    spec = _read_scaffold_spec(spec_path, output_format)
+    request = _build_scaffold_request(
+        spec,
+        output_format,
+        max_count,
+        sample_rows,
+        smoke_export,
+        deterministic_replay,
+    )
     result = scaffold(request)
-
-    _emit_result(result)
+    _emit_scaffold_result(result, output_format)
 
 
 @app.command(

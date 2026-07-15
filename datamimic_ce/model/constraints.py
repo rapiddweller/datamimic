@@ -551,6 +551,8 @@ def _rule_definition(
 
 # Public authoring evaluator catalog. Keep IDs stable: benchmark fixtures and
 # downstream agent tooling use them as machine contracts.
+_MINIMAL_GENERATE_EXAMPLE = '<generate name="g" count="1"/>'
+
 _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
     _rule_definition(
         "DM101",
@@ -579,7 +581,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "An element contains an attribute absent from its registered runtime model.",
         "Use an attribute exposed by the element model.",
         "Pydantic runtime model field contract.",
-        '<generate name="g" count="1"/>',
+        _MINIMAL_GENERATE_EXAMPLE,
         '<generate name="g" couunt="1"/>',
     ),
     _rule_definition(
@@ -589,7 +591,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "A required runtime-model attribute is absent.",
         "Add the required attribute.",
         "Pydantic runtime model required-field contract.",
-        '<generate name="g" count="1"/>',
+        _MINIMAL_GENERATE_EXAMPLE,
         '<generate count="1"/>',
     ),
     _rule_definition(
@@ -610,7 +612,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "Wrap the descriptor in a setup element.",
         "Setup parser root contract.",
         "<setup/>",
-        '<generate name="g" count="1"/>',
+        _MINIMAL_GENERATE_EXAMPLE,
     ),
     _rule_definition(
         "DM107",
@@ -640,7 +642,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "another declared mode supplies cardinality.",
         "Add a supported cardinality source.",
         "EXIST_COUNT central constraint and ADR-006 count fallback.",
-        '<generate name="g" count="1"/>',
+        _MINIMAL_GENERATE_EXAMPLE,
         '<generate name="g"/>',
     ),
     _rule_definition(
@@ -1617,52 +1619,10 @@ def serialize_constraints(constraints: tuple[Constraint, ...]) -> list[dict[str,
     if not constraints:
         return []
 
-    serialized = []
+    serialized: list[dict[str, Any]] = []
     for fact in constraints:
         serialized_fact: dict[str, Any] = {"kind": _constraint_kind(fact)}
-
-        if isinstance(fact, RequiredOneOf | MutuallyExclusive):
-            serialized_fact["attrs"] = sorted(fact.attrs)
-        elif isinstance(fact, MutuallyExclusiveWhen):
-            serialized_fact["when_attr"] = fact.when_attr
-            serialized_fact["attrs"] = sorted(fact.attrs)
-            serialized_fact["when_true"] = fact.when_true
-        elif isinstance(fact, Requires):
-            serialized_fact["attr"] = fact.attr
-            serialized_fact["needs"] = sorted(fact.needs)
-            serialized_fact["when_true"] = fact.when_true
-        elif isinstance(fact, RequiresWhenValue):
-            serialized_fact["when_attr"] = fact.when_attr
-            serialized_fact["when_values"] = sorted(fact.when_values)
-            serialized_fact["needs"] = sorted(fact.needs)
-            serialized_fact["unless"] = sorted(fact.unless)
-        elif isinstance(fact, AllOrNone):
-            serialized_fact["attrs"] = sorted(fact.attrs)
-        elif isinstance(fact, Forbids):
-            serialized_fact["attr"] = fact.attr
-            serialized_fact["excludes"] = sorted(fact.excludes)
-            serialized_fact["when_true"] = fact.when_true
-            serialized_fact["excludes_when_true"] = fact.excludes_when_true
-        elif isinstance(fact, ForbidsWhenValue):
-            serialized_fact["when_attr"] = fact.when_attr
-            serialized_fact["when_values"] = sorted(fact.when_values)
-            serialized_fact["excludes"] = sorted(fact.excludes)
-        elif isinstance(fact, ValidValues):
-            serialized_fact["attr"] = fact.attr
-            # Evaluate callable values to sorted list; static sets are already sorted
-            if callable(fact.values):
-                serialized_fact["values"] = sorted(fact.values())
-            else:
-                serialized_fact["values"] = sorted(fact.values)
-        elif isinstance(fact, AllowedValuesWhen):
-            serialized_fact["attr"] = fact.attr
-            # Evaluate callable allowed to sorted list; static sets are already sorted
-            if callable(fact.allowed):
-                serialized_fact["allowed"] = sorted(fact.allowed())
-            else:
-                serialized_fact["allowed"] = sorted(fact.allowed)
-            serialized_fact["when_attr"] = fact.when_attr
-            serialized_fact["when_true"] = fact.when_true
+        serialized_fact.update(_serialized_constraint_fields(fact))
 
         # Only serialize lint_only if True (non-default)
         if fact.lint_only:
@@ -1675,6 +1635,53 @@ def serialize_constraints(constraints: tuple[Constraint, ...]) -> list[dict[str,
         serialized.append(serialized_fact)
 
     return serialized
+
+
+def _serialized_constraint_fields(fact: Constraint) -> dict[str, Any]:
+    if isinstance(fact, RequiredOneOf | MutuallyExclusive | AllOrNone):
+        return {"attrs": sorted(fact.attrs)}
+    if isinstance(fact, MutuallyExclusiveWhen):
+        return {
+            "when_attr": fact.when_attr,
+            "attrs": sorted(fact.attrs),
+            "when_true": fact.when_true,
+        }
+    if isinstance(fact, Requires):
+        return {
+            "attr": fact.attr,
+            "needs": sorted(fact.needs),
+            "when_true": fact.when_true,
+        }
+    if isinstance(fact, RequiresWhenValue):
+        return {
+            "when_attr": fact.when_attr,
+            "when_values": sorted(fact.when_values),
+            "needs": sorted(fact.needs),
+            "unless": sorted(fact.unless),
+        }
+    if isinstance(fact, Forbids):
+        return {
+            "attr": fact.attr,
+            "excludes": sorted(fact.excludes),
+            "when_true": fact.when_true,
+            "excludes_when_true": fact.excludes_when_true,
+        }
+    if isinstance(fact, ForbidsWhenValue):
+        return {
+            "when_attr": fact.when_attr,
+            "when_values": sorted(fact.when_values),
+            "excludes": sorted(fact.excludes),
+        }
+    if isinstance(fact, ValidValues):
+        return {"attr": fact.attr, "values": sorted(resolved_values(fact))}
+    if isinstance(fact, AllowedValuesWhen):
+        return {
+            "attr": fact.attr,
+            "allowed": sorted(resolved_allowed(fact)),
+            "when_attr": fact.when_attr,
+            "when_true": fact.when_true,
+        }
+    raise TypeError(f"Unknown constraint type: {type(fact)}")
 
 
 def constraints_schema_extra(

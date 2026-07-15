@@ -9,6 +9,7 @@ checks at runtime (unknown targets) or not at all (duplicate names)."""
 
 import ast
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from lxml import etree
 
@@ -37,6 +38,7 @@ from datamimic_ce.enums.operation_enums import ExportOperation
 from datamimic_ce.exporters.exporter_util import ExporterUtil, buffered_exporter_names
 from datamimic_ce.model.constraints import (
     DynamicSourceKind,
+    SourceFileFormat,
     authoring_rule_definition,
     source_allows_client,
     source_allows_memstore,
@@ -73,6 +75,86 @@ def _is_python_source_expression(source: str) -> bool:
     except SyntaxError:
         return False
     return True
+
+
+@dataclass(frozen=True)
+class _SourceDiagnostic:
+    evidence: str
+    fix_context: str
+
+
+def _source_is_declared(
+    source: str,
+    element_tag: str,
+    source_type: str | None,
+    clients: set[str],
+    memstores: set[str],
+) -> bool:
+    return (
+        source_file_format_for(element_tag, source, source_type) is not None
+        or (source in clients and source_allows_client(element_tag, source_type))
+        or (source in memstores and source_allows_memstore(element_tag, source_type))
+    )
+
+
+def _dynamic_source_is_valid(
+    source: str,
+    element_tag: str,
+    source_type: str | None,
+) -> bool:
+    dynamic_kind = source_dynamic_kind(element_tag, source_type)
+    if dynamic_kind is DynamicSourceKind.BRACED_EXPRESSION:
+        return source.startswith("{") and source.endswith("}")
+    if dynamic_kind is DynamicSourceKind.PYTHON_EXPRESSION:
+        return _is_python_source_expression(source)
+    return False
+
+
+def _unsupported_file_source_diagnostic(
+    element_tag: str,
+    source_type: str | None,
+    known_format: SourceFileFormat,
+) -> _SourceDiagnostic:
+    supported = supported_source_file_formats(element_tag, source_type)
+    allowed = (
+        ", ".join(file_format.value for file_format in supported)
+        if supported
+        else "no file formats"
+    )
+    return _SourceDiagnostic(
+        evidence=(
+            f'<{element_tag}> type="{source_type}" does not support source suffix '
+            f"'{known_format.value}' (allowed: {allowed})"
+        ),
+        fix_context=f"Use a source format supported by <{element_tag}> or another source element.",
+    )
+
+
+def _unknown_source_diagnostic(
+    source: str,
+    element_tag: str,
+    source_type: str | None,
+    clients: set[str],
+    memstores: set[str],
+) -> _SourceDiagnostic | None:
+    known_format = source_file_format(source)
+    if known_format is not None:
+        return _unsupported_file_source_diagnostic(element_tag, source_type, known_format)
+    if _dynamic_source_is_valid(source, element_tag, source_type):
+        return None
+    valid_ids: set[str] = set()
+    if source_allows_client(element_tag, source_type):
+        valid_ids.update(clients)
+    if source_allows_memstore(element_tag, source_type):
+        valid_ids.update(memstores)
+    declared = f" Valid ids: {', '.join(sorted(valid_ids))}." if valid_ids else ""
+    fix_context = f"Declare an allowed source id or select a supported file format.{declared}"
+    if source_allows_memstore(element_tag, source_type):
+        fix_context += f' For memory input add <memstore id="{source}"/> above its users.'
+    return _SourceDiagnostic(
+        evidence=f'<{element_tag}> source="{source}" is not a supported file or source id',
+        fix_context=fix_context,
+    )
 
 
 class UnknownTarget(Rule):
@@ -154,47 +236,18 @@ class UnknownSource(Rule):
                 continue
             element_tag = str(element.tag)
             source_type = element.get("type")
-            if source_file_format_for(element_tag, source, source_type) is not None:
-                continue  # supported file; existence is a separate concern
-            if source in clients and source_allows_client(element_tag, source_type):
+            if _source_is_declared(source, element_tag, source_type, clients, memstores):
                 continue
-            if source in memstores and source_allows_memstore(element_tag, source_type):
+            diagnostic = _unknown_source_diagnostic(
+                source, element_tag, source_type, clients, memstores
+            )
+            if diagnostic is None:
                 continue
-
-            known_format = source_file_format(source)
-            supported = supported_source_file_formats(element_tag, source_type)
-            if known_format is not None:
-                allowed = ", ".join(file_format.value for file_format in supported) if supported else "no file formats"
-                evidence = (
-                    f'<{element_tag}> type="{source_type}" does not support source suffix '
-                    f"'{known_format.value}' (allowed: {allowed})"
-                )
-                fix_context = f"Use a source format supported by <{element_tag}> or another source element."
-            else:
-                dynamic_kind = source_dynamic_kind(element_tag, source_type)
-                if (
-                    dynamic_kind is DynamicSourceKind.BRACED_EXPRESSION
-                    and source.startswith("{")
-                    and source.endswith("}")
-                ):
-                    continue
-                if dynamic_kind is DynamicSourceKind.PYTHON_EXPRESSION and _is_python_source_expression(source):
-                    continue
-                valid_ids = set()
-                if source_allows_client(element_tag, source_type):
-                    valid_ids.update(clients)
-                if source_allows_memstore(element_tag, source_type):
-                    valid_ids.update(memstores)
-                declared = f" Valid ids: {', '.join(sorted(valid_ids))}." if valid_ids else ""
-                evidence = f'<{element_tag}> source="{source}" is not a supported file or source id'
-                fix_context = f"Declare an allowed source id or select a supported file format.{declared}"
-                if source_allows_memstore(element_tag, source_type):
-                    fix_context += f' For memory input add <memstore id="{source}"/> above its users.'
             yield ctx.diag(
                 UnknownSource,
                 element,
-                evidence=evidence,
-                fix_context=fix_context,
+                evidence=diagnostic.evidence,
+                fix_context=diagnostic.fix_context,
             )
 
 

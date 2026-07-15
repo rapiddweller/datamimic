@@ -108,28 +108,46 @@ def _literal_nested_demand(
     cardinality_scopes: list[etree._Element],
 ) -> tuple[int | None, str | None]:
     """Prove total uses of one root-cached sequence, or explain why it is dynamic."""
-    if element.get("condition") is not None or any(
-        isinstance(ancestor.tag, str) and ancestor.tag in _CONDITIONAL_TAGS for ancestor in element.iterancestors()
-    ):
-        return None, "a condition can change how many rows evaluate the field"
+    conditional_reason = _conditional_demand_reason(element)
+    if conditional_reason is not None:
+        return None, conditional_reason
 
     demand = 1
     for scope in cardinality_scopes:
-        scope_tag = scope.tag.decode() if isinstance(scope.tag, bytes) else str(scope.tag)
-        scope_name = scope.get("name") or ""
-        if scope.get("condition") is not None:
-            return None, f"<{scope_tag}> '{scope_name}' has condition= and may be skipped"
-        if scope.get("source") is not None or scope.get("script") is not None:
-            return None, f"<{scope_tag}> '{scope_name}' derives cardinality from source/script"
-        if any(scope.get(attr) is not None for attr in ("start", "end", "interval", "minCount", "maxCount")):
-            return None, f"<{scope_tag}> '{scope_name}' has non-literal cardinality semantics"
-        count = scope.get("count")
-        if scope_tag == EL_NESTED_KEY and count is None and scope.get("type") == "dict":
-            continue  # one nested object per enclosing row
-        if count is None or not count.isdigit():
-            return None, f"<{scope_tag}> '{scope_name}' does not have a literal count"
-        demand *= int(count)
+        factor, unknown_reason = _literal_scope_factor(scope)
+        if unknown_reason is not None:
+            return None, unknown_reason
+        demand *= factor
     return demand, None
+
+
+def _conditional_demand_reason(element: etree._Element) -> str | None:
+    if element.get("condition") is not None:
+        return "a condition can change how many rows evaluate the field"
+    if any(
+        isinstance(ancestor.tag, str) and ancestor.tag in _CONDITIONAL_TAGS
+        for ancestor in element.iterancestors()
+    ):
+        return "a condition can change how many rows evaluate the field"
+    return None
+
+
+def _literal_scope_factor(scope: etree._Element) -> tuple[int, str | None]:
+    scope_tag = scope.tag.decode() if isinstance(scope.tag, bytes) else str(scope.tag)
+    scope_name = scope.get("name") or ""
+    if scope.get("condition") is not None:
+        return 1, f"<{scope_tag}> '{scope_name}' has condition= and may be skipped"
+    if scope.get("source") is not None or scope.get("script") is not None:
+        return 1, f"<{scope_tag}> '{scope_name}' derives cardinality from source/script"
+    dynamic_attrs = ("start", "end", "interval", "minCount", "maxCount")
+    if any(scope.get(attr) is not None for attr in dynamic_attrs):
+        return 1, f"<{scope_tag}> '{scope_name}' has non-literal cardinality semantics"
+    count = scope.get("count")
+    if scope_tag == EL_NESTED_KEY and count is None and scope.get("type") == "dict":
+        return 1, None
+    if count is None or not count.isdigit():
+        return 1, f"<{scope_tag}> '{scope_name}' does not have a literal count"
+    return int(count), None
 
 
 def _nested_sequence_analyses(ctx: LintContext) -> Iterable[_NestedSequenceAnalysis]:

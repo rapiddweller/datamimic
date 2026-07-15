@@ -5,6 +5,8 @@
 
 """The authoring capacity API must stay identical to runtime iterator exhaustion."""
 
+import copy
+import pickle
 import random
 
 import pytest
@@ -24,6 +26,29 @@ def test_finite_capacity_matches_runtime_iterator(distribution: NumberDistributi
         integral=True,
     )
     assert finite_number_sequence_capacity(distribution, 1, 20, 1) == len(list(sequence))
+
+
+@pytest.mark.parametrize("distribution", sorted(POSITIONAL_NUMBER_SEQUENCES, key=lambda item: item.value))
+def test_number_sequence_iterator_preserves_cursor_when_copied(
+    distribution: NumberDistribution,
+) -> None:
+    sequence = build_number_sequence(
+        distribution,
+        min_v=1,
+        max_v=20,
+        granularity=1,
+        rng=random.Random(1),
+        integral=True,
+    )
+    assert iter(sequence) is sequence
+    next(sequence)
+
+    deep_copy = copy.deepcopy(sequence)
+    pickled_copy = pickle.loads(pickle.dumps(sequence))
+
+    expected_remaining = list(sequence)
+    assert list(deep_copy) == expected_remaining
+    assert list(pickled_copy) == expected_remaining
 
 
 @pytest.mark.parametrize(

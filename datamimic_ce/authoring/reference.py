@@ -37,6 +37,7 @@ from datamimic_ce.model.constraints import (
     SOURCE_DISTRIBUTION_VALUES,
     AllOrNone,
     AllowedValuesWhen,
+    Constraint,
     Forbids,
     ForbidsWhenValue,
     MutuallyExclusive,
@@ -55,6 +56,7 @@ from datamimic_ce.model.constraints import (
 )
 
 _GENERATOR_PACKAGE = "datamimic_ce.domains.common.literal_generators"
+_AUTHORING_PACKAGE = "datamimic_ce.authoring"
 
 
 class ReferenceTopic(StrEnum):
@@ -80,7 +82,38 @@ def clip(text: str, max_chars: int, hint: str) -> str:
     return text[: max_chars - len(hint) - 2].rstrip() + "\n…" + hint
 
 
-def _render_constraint_terse(fact) -> str:
+def _render_requires_constraint(fact: Requires, advisory: str) -> str:
+    needs = ", ".join(sorted(fact.needs))
+    if len(fact.needs) == 1:
+        needs = list(fact.needs)[0]
+    suffix = f" (when {fact.attr} is true)" if fact.when_true else ""
+    return f"{fact.attr} requires {needs}{suffix}{advisory}"
+
+
+def _render_conditional_requires_constraint(
+    fact: RequiresWhenValue,
+    advisory: str,
+) -> str:
+    values = ", ".join(sorted(fact.when_values))
+    needs = ", ".join(sorted(fact.needs))
+    unless = f" unless {', '.join(sorted(fact.unless))} is set" if fact.unless else ""
+    return f"{fact.when_attr} in [{values}] requires {needs}{unless}{advisory}"
+
+
+def _render_forbids_constraint(fact: Forbids, advisory: str) -> str:
+    excludes = ", ".join(sorted(fact.excludes))
+    if fact.excludes_when_true:
+        suffix = (
+            f" (when {fact.attr} is true, both true)"
+            if fact.when_true
+            else " (both true)"
+        )
+    else:
+        suffix = f" (when {fact.attr} is true)" if fact.when_true else ""
+    return f"{fact.attr} cannot combine with: {excludes}{suffix}{advisory}"
+
+
+def _render_constraint_terse(fact: Constraint) -> str:
     """Render a single constraint object as a terse one-liner for element_reference().
 
     Renders structural facts only (attr/attrs/needs/excludes/when_true); message is omitted.
@@ -91,56 +124,43 @@ def _render_constraint_terse(fact) -> str:
     if isinstance(fact, RequiredOneOf):
         attrs_str = ", ".join(sorted(fact.attrs))
         return f"at least one of: {attrs_str}{advisory}"
-    elif isinstance(fact, MutuallyExclusive):
+    if isinstance(fact, MutuallyExclusive):
         attrs_str = ", ".join(sorted(fact.attrs))
         return f"at most one of: {attrs_str}{advisory}"
-    elif isinstance(fact, MutuallyExclusiveWhen):
+    if isinstance(fact, MutuallyExclusiveWhen):
         attrs_str = ", ".join(sorted(fact.attrs))
         gate = "is true" if fact.when_true else "is set"
         return f"at most one of: {attrs_str} (when {fact.when_attr} {gate}){advisory}"
-    elif isinstance(fact, Requires):
-        needs_str = ", ".join(sorted(fact.needs))
-        if len(fact.needs) == 1:
-            needs_str = list(fact.needs)[0]
-        suffix = f" (when {fact.attr} is true)" if fact.when_true else ""
-        return f"{fact.attr} requires {needs_str}{suffix}{advisory}"
-    elif isinstance(fact, RequiresWhenValue):
-        values_str = ", ".join(sorted(fact.when_values))
-        needs_str = ", ".join(sorted(fact.needs))
-        unless = f" unless {', '.join(sorted(fact.unless))} is set" if fact.unless else ""
-        return f"{fact.when_attr} in [{values_str}] requires {needs_str}{unless}{advisory}"
-    elif isinstance(fact, AllOrNone):
+    if isinstance(fact, Requires):
+        return _render_requires_constraint(fact, advisory)
+    if isinstance(fact, RequiresWhenValue):
+        return _render_conditional_requires_constraint(fact, advisory)
+    if isinstance(fact, AllOrNone):
         attrs_str = ", ".join(sorted(fact.attrs))
         return f"{attrs_str}: all together or none{advisory}"
-    elif isinstance(fact, Forbids):
-        excludes_str = ", ".join(sorted(fact.excludes))
-        if fact.excludes_when_true:
-            suffix = f" (when {fact.attr} is true, both true)" if fact.when_true else " (both true)"
-        else:
-            suffix = f" (when {fact.attr} is true)" if fact.when_true else ""
-        return f"{fact.attr} cannot combine with: {excludes_str}{suffix}{advisory}"
-    elif isinstance(fact, ForbidsWhenValue):
+    if isinstance(fact, Forbids):
+        return _render_forbids_constraint(fact, advisory)
+    if isinstance(fact, ForbidsWhenValue):
         values_str = ", ".join(sorted(fact.when_values))
         excludes_str = ", ".join(sorted(fact.excludes))
         return f"{fact.when_attr} in [{values_str}] cannot combine with: {excludes_str}{advisory}"
-    elif isinstance(fact, ValidValues):
+    if isinstance(fact, ValidValues):
         # Evaluate callable values; static sets/tuples are already iterable
         values = sorted(fact.values()) if callable(fact.values) else sorted(fact.values)
         values_str = ", ".join(values)
         return f"{fact.attr} must be one of: {values_str}{advisory}"
-    elif isinstance(fact, AllowedValuesWhen):
+    if isinstance(fact, AllowedValuesWhen):
         # Evaluate callable allowed; static sets/tuples are already iterable
         allowed = sorted(fact.allowed()) if callable(fact.allowed) else sorted(fact.allowed)
         allowed_str = ", ".join(allowed)
         suffix = f" (when {fact.when_attr} is true)" if fact.when_true else f" (when {fact.when_attr} is set)"
         return f"{fact.attr} must be one of: {allowed_str}{suffix}{advisory}"
-    else:
-        return f"<unknown constraint type: {type(fact).__name__}>{advisory}"
+    return f"<unknown constraint type: {type(fact).__name__}>{advisory}"
 
 
 @lru_cache(maxsize=1)
 def cheatsheet() -> str:
-    return (resources.files("datamimic_ce.authoring") / "reference_data" / "cheatsheet.md").read_text(encoding="utf-8")
+    return (resources.files(_AUTHORING_PACKAGE) / "reference_data" / "cheatsheet.md").read_text(encoding="utf-8")
 
 
 def element_reference(tag: str) -> str:
@@ -480,7 +500,7 @@ def capabilities_manifest() -> dict[str, Any]:
 
 @lru_cache(maxsize=1)
 def _recipes_index() -> dict[str, list[dict[str, Any]]]:
-    raw = (resources.files("datamimic_ce.authoring") / "recipes" / "recipes.toml").read_text(encoding="utf-8")
+    raw = (resources.files(_AUTHORING_PACKAGE) / "recipes" / "recipes.toml").read_text(encoding="utf-8")
     return tomllib.loads(raw)
 
 
@@ -495,19 +515,15 @@ def load_recipe(recipe_id: str) -> str:
     entries = {recipe["id"]: recipe for recipe in _recipes_index()["recipe"]}
     if recipe_id not in entries:
         raise ValueError(f"Unknown recipe '{recipe_id}'. Known: {', '.join(sorted(entries))}")
-    xml = (resources.files("datamimic_ce.authoring") / "recipes" / f"{recipe_id}.xml").read_text(encoding="utf-8")
+    xml = (resources.files(_AUTHORING_PACKAGE) / "recipes" / f"{recipe_id}.xml").read_text(encoding="utf-8")
     entry = entries[recipe_id]
     return f"# {entry['title']}\n{entry['summary']}\n\n```xml\n{xml}```"
 
 
-def reference(
+def _named_reference(
     topic: ReferenceTopic,
     name: str | None = None,
-    *,
-    query: AuthoringReferenceQuery | None = None,
-) -> str:
-    if topic is ReferenceTopic.OVERVIEW:
-        return clip(cheatsheet(), 16000, " [truncated — ask a specific topic]")
+) -> str | None:
     if topic is ReferenceTopic.ELEMENT:
         if not name:
             raise ValueError("topic=element needs name=<tag>")
@@ -520,6 +536,21 @@ def reference(
         return text
     if topic is ReferenceTopic.ENTITIES:
         return entities_reference(name)
+    if topic is ReferenceTopic.RULES:
+        return rules_reference(name)
+    if topic is ReferenceTopic.RECIPE:
+        if not name:
+            raise ValueError("topic=recipe needs name=<recipe id>. " + list_recipes())
+        return load_recipe(name)
+    return None
+
+
+def _projected_reference(
+    topic: ReferenceTopic,
+    query: AuthoringReferenceQuery | None,
+) -> str:
+    if topic is ReferenceTopic.OVERVIEW:
+        return clip(cheatsheet(), 16000, " [truncated — ask a specific topic]")
     if topic is ReferenceTopic.CONTEXT:
         return context_reference()
     if topic is ReferenceTopic.TIMESERIES:
@@ -530,16 +561,22 @@ def reference(
         return distributions_reference()
     if topic is ReferenceTopic.CONVERTERS:
         return converters_reference()
-    if topic is ReferenceTopic.RULES:
-        return rules_reference(name)
     if topic is ReferenceTopic.SCAFFOLD:
         return scaffold_reference()
     if topic is ReferenceTopic.AUTHORING:
         return compact_authoring_reference(query)
     if topic is ReferenceTopic.RECIPES:
         return list_recipes()
-    if topic is ReferenceTopic.RECIPE:
-        if not name:
-            raise ValueError("topic=recipe needs name=<recipe id>. " + list_recipes())
-        return load_recipe(name)
     raise ValueError(f"Unknown topic '{topic}'. Topics: {', '.join(ReferenceTopic)}")
+
+
+def reference(
+    topic: ReferenceTopic,
+    name: str | None = None,
+    *,
+    query: AuthoringReferenceQuery | None = None,
+) -> str:
+    named = _named_reference(topic, name)
+    if named is not None:
+        return named
+    return _projected_reference(topic, query)
