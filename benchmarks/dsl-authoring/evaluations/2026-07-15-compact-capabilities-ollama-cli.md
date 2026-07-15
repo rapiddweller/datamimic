@@ -16,7 +16,8 @@ still sufficient for a small local model to author a verified `model.dm.json`
 using only the `datamimic` CLI as its tool?** This is the actual use case the
 `capabilities` command exists for.
 
-Two conditions were run against the same task, oracle, seed, and turn budget:
+Three conditions were run, added incrementally as each answer raised the next
+question:
 
 - **Condition A — hand-rolled text protocol:** the model requests CLI
   invocations via a documented `CLI: <args>` text convention and submits its
@@ -31,9 +32,20 @@ Two conditions were run against the same task, oracle, seed, and turn budget:
   `ollama show <model>` confirmed all three models declare native `tools` and
   `thinking` capability, so Condition A was not exercising what these models
   are actually built for.
+- **Condition C — Claude Haiku, cleanroom, no harness:** after Condition B
+  still found 0/3 verified, the open question became whether the DATAMIMIC
+  schema/CLI itself was the obstacle, independent of model scale. A single
+  context-free Claude Haiku subagent (no memory of this conversation,
+  forbidden from reading any repository file) was given the same business
+  intent and only the raw `datamimic` binary via an unrestricted Bash tool —
+  not the fixed 4-function harness used in B. This is **not** a controlled
+  replication of A/B (different tooling, different budget shape — see the
+  condition's own section for the exact caveat); it answers a narrower
+  question: can *any* competent model solve this at all, zero-shot,
+  cleanroom.
 
-Context-window size was checked and ruled out as a factor for both
-conditions: `ollama ps` reports the full native context allocated for each
+Context-window size was checked and ruled out as a factor for Conditions A/B:
+`ollama ps` reports the full native context allocated for each
 model (`qwen3.5:9b-mlx` 262144 tokens, both `gemma4` variants 131072 tokens)
 from the very first turn, and no Modelfile or request in either condition set
 a smaller `num_ctx`. The conversations here (a handful of turns, each a few
@@ -41,17 +53,19 @@ KB) never came close to those limits.
 
 ## Contract and method
 
-Isolation was enforced structurally in both conditions, not just by prompt:
-the harness (`ollama_cli_eval.py` / `ollama_cli_eval_v2.py`, throwaway, not
-committed) never imports `datamimic_ce`. Every DATAMIMIC interaction is a
-`subprocess` call to the installed `.venv/bin/datamimic` console script,
-restricted to an allow-list of subcommands (`--help`, `capabilities`,
-`reference`, `scaffold`, `lint`, `dry-run`). The model's only knowledge of
-DATAMIMIC is what those commands return in-conversation; it has no access to
-repository source, tests, or documentation.
+Isolation was enforced structurally in Conditions A and B, not just by
+prompt: the harness (`ollama_cli_eval.py` / `ollama_cli_eval_v2.py`,
+throwaway, not committed) never imports `datamimic_ce`. Every DATAMIMIC
+interaction is a `subprocess` call to the installed `.venv/bin/datamimic`
+console script, restricted to an allow-list of subcommands (`--help`,
+`capabilities`, `reference`, `scaffold`, `lint`, `dry-run`). The model's only
+knowledge of DATAMIMIC is what those commands return in-conversation; it has
+no access to repository source, tests, or documentation. Condition C's
+isolation is prompt-level only (a documented instruction to the agent, not a
+subprocess allow-list) — see that condition's own section.
 
-Budget: 6 turns total per model, seed 42, temperature 0.2, in both
-conditions.
+Budget: 6 turns total per model, seed 42, temperature 0.2, in Conditions A
+and B. Condition C's budget is shaped differently — see its section.
 
 **Task (T1 flat, reused from a prior — since-deleted — diagnostic; a
 proven, already-specified task, no new design needed):** generate exactly 5
@@ -76,11 +90,13 @@ acceptance checks passed, deterministic replay passed).
 | `qwen3.5:9b-mlx` | yes (MLX) | pass | pass |
 | `gemma4:e4b` | yes | pass | pass |
 | `gemma4:e4b-it-qat` | yes | pass | pass |
+| `gemma4:31b-cloud` | no (Ollama cloud) | not run | pass |
 
-All three models were reachable via the local Ollama server in both
-conditions; no access failures. `-cloud`-tagged Ollama models were excluded —
-they proxy to Ollama's cloud, not local inference, and were out of scope for
-this "local model" test.
+The first three models were reachable via the local Ollama server in both
+conditions; no access failures. `-cloud`-tagged Ollama models were excluded
+from the original scope — they proxy to Ollama's cloud, not local inference —
+but `gemma4:31b-cloud` was added to Condition B on request, as a larger
+(31B vs. 8-9B) reference point run through the identical harness/budget.
 
 ## Condition A — hand-rolled text protocol
 
@@ -151,8 +167,9 @@ the same model.
 | `qwen3.5:9b-mlx` | 6 (`capabilities`, 5× `reference_authoring`) | 0 | 0 | — | fail: turn budget exhausted (never submitted) |
 | `gemma4:e4b` | 3 (`reference_scaffold`, 2× `reference_authoring`) | 2 | 1 | — | fail: turn budget exhausted |
 | `gemma4:e4b-it-qat` | 1 (`reference_scaffold`) | 4 | 1 | — | fail: turn budget exhausted |
+| `gemma4:31b-cloud` | 6 (`capabilities`, `reference_scaffold`, 4× `reference_authoring`) | 0 | 0 | — | fail: turn budget exhausted (never submitted) |
 
-**Still 0/3 verified within the same 6-turn budget — but the failure mode
+**Still 0/4 verified within the same 6-turn budget — but the failure mode
 changed substantially, in the direction the tool-calling hypothesis
 predicted:**
 
@@ -179,6 +196,19 @@ predicted:**
   where only `generated`/`source`/`time_series` are valid — the same
   product-vs-field discriminator confusion seen in Condition A, just reached
   by a different path.
+- **`gemma4:31b-cloud`** (31B, ~3.5–7x larger than the local models) was, if
+  anything, *more* thorough than the smaller models, not less: `capabilities`
+  → `reference scaffold` (full schema) → `reference authoring
+  --category field` (a broad, kind-less listing call) → `--category product
+  --kind generated` → `--category field --kind increment` → `--category
+  field --kind int_range`. It never attempted a single submission — the
+  entire 6-turn budget went to careful, well-targeted discovery, including
+  the one query (`product`/`generated`) that documents the exact
+  discriminator every other model in this diagnostic got wrong. Whether it
+  would have gotten the discriminator right had it had one more turn to
+  submit is unanswered; this run cannot distinguish "would have failed the
+  same way" from "would have passed" because it never reached the submission
+  step.
 - **`gemma4:e4b-it-qat`** fetched the full schema once (turn 1), skipped a
   turn (turn 2, no tool call), then submitted four times in a row (turns
   3–6), each attempt restructuring the document (flat `fields` → nested
@@ -195,79 +225,147 @@ lookups, but repeatedly missed or misapplied the separate product-level
 `"kind"` discriminator** (`generated`/`source`/`time_series`), which
 distinguishes the different product types. `datamimic_reference_authoring`
 under `category=product, kind=generated` — the exact fragment that documents
-this — was fetched by only one model (`qwen3.5:9b-mlx`, turn 3), and even
-then it ran out of budget before submitting.
+this — was fetched by only two models in Condition B (`qwen3.5:9b-mlx` turn
+3, `gemma4:31b-cloud` turn 4), and neither of those two ever submitted, so
+neither had the chance to demonstrate they'd actually internalized it.
+
+## Condition C — Claude Haiku, cleanroom, no harness
+
+A single context-free Claude Haiku subagent (spawned fresh, no memory of this
+conversation or this report's findings) was given the T1 business intent and
+told its only source of DATAMIMIC knowledge was the raw `datamimic --help`/
+`capabilities`/`reference`/`scaffold` CLI, invoked via an unrestricted Bash
+tool. It was explicitly forbidden from reading any file in the repository.
+Budget was framed differently than A/B: "at most 10 scaffold attempts"
+rather than a fixed count of total turns, and discovery calls were
+effectively unlimited (ordinary Bash invocations, not a rationed tool-call
+budget) — **this is a looser, more favorable budget shape than Condition B's
+6-turn total**, so a direct pass-rate comparison to A/B would overstate the
+capability gap. Treat this as answering "can a competent model solve this
+zero-shot at all," not "would it also pass under B's exact constraints."
+
+Commands run, in order:
+
+```text
+datamimic --help
+datamimic capabilities
+datamimic reference scaffold
+datamimic scaffold <tmp-file> --format json --smoke-export --deterministic-replay
+```
+
+**Result: `verified: true` on the first and only scaffold attempt.** All 4
+acceptance checks passed (`exact_count`, `unique`, `allowed_values`, `range`),
+deterministic replay passed. The submitted document correctly used
+`"kind": "generated"` at the product level and the right field-level kinds
+(`increment`, `values`, `int_range`) on the first try — the exact
+product-vs-field discriminator distinction that tripped up every model in
+Conditions A and B. It also added explicit `expectations` for `unique`,
+`allowed_values`, and `range` unprompted — closer to the hand-built gold
+spec than any Condition A/B submission got. Self-reported confusion points:
+none; the agent's own report states the schema was "clear and consistent
+after exploring the reference documentation."
 
 ## Comparison
 
-| | Condition A (text protocol) | Condition B (native tools) |
-|---|---|---|
-| Verified | 0/3 | 0/3 |
-| Discovery calls used | 0–1 per model | 1–6 per model |
-| Reasoning visible to evaluator | no | yes (`thinking`) |
-| Dominant failure mode | guess blindly from invented syntax; one model stuck repeating an identical wrong payload | explore genuinely, converge on most of the structure, miss the product-level `kind` discriminator; one model never stops exploring |
+| | Condition A (text protocol) | Condition B (native tools) | Condition C (Haiku, cleanroom) |
+|---|---|---|---|
+| Verified | 0/3 | 0/4 | 1/1 |
+| Discovery calls used | 0–1 per model | 0–6 per model | 3 (unrationed) |
+| Submission attempts before pass | — | — | 1 |
+| Reasoning visible to evaluator | no | yes (`thinking`) | yes (agent's own report) |
+| Dominant failure mode | guess blindly from invented syntax; one model stuck repeating an identical wrong payload | explore genuinely, converge on most of the structure, miss the product-level `kind` discriminator; two of four never even reach submission | none observed |
 
 Native tool-calling did not flip the pass/fail outcome inside the same
 6-turn budget, but it changed *what* failed. Every model in Condition B
 engaged with the actual discovery tools and made visible, generally sensible
 progress; none exhibited Condition A's degenerate repeated-identical-output
 loop. The remaining blocker narrowed from "wrong syntax across the board" to
-one specific, nameable confusion (product-kind vs. field-kind) plus a turn
-budget that was too tight for the models that spent it on thorough discovery
-(`qwen3.5:9b-mlx`) or on slow iterative repair (`gemma4:e4b-it-qat`, visibly
-still improving at turn 6).
+one specific, nameable confusion (product-kind vs. field-kind) plus, for two
+of the four Condition B models (`qwen3.5:9b-mlx`, `gemma4:31b-cloud`), a turn
+budget spent entirely on discovery with nothing left for a submission
+attempt.
+
+Condition C's clean first-attempt pass is the most important single data
+point in this diagnostic: it demonstrates the DATAMIMIC schema and CLI
+surface, including the compact `capabilities` index, is not inherently
+confusing or under-specified — a capable model resolved the exact
+discriminator confusion that stumped every Condition A/B model, using less
+discovery than several of them. That reframes Condition B's 0/4 as evidence
+about small-model (8B–31B, open-weight, as currently prompted) capability and
+budget, not evidence against the compact-index design PR #215 introduces.
+The budget-shape difference from Condition B means this is directional, not
+conclusive — see follow-up #1.
 
 ## Decision
 
-- **NO-GO (both conditions):** unattended CLI-only authoring by small local
-  models within a 6-turn budget on this task. 0/3 verified in both
-  conditions.
+- **NO-GO (Conditions A/B):** unattended CLI-only authoring by small
+  (8B–31B), open-weight local/Ollama-hosted models within a 6-turn budget on
+  this task. 0/4 verified across both conditions and four models.
+- **GO (schema/CLI is not the blocker):** Condition C shows a competent model
+  resolves the whole task, including the exact discriminator confusion every
+  A/B model hit, zero-shot and cleanroom, with less discovery than several
+  A/B models used. The compact `capabilities` index and the rest of the CLI
+  surface are not implicated as the cause of the A/B failures.
 - **GO (tooling choice):** native tool-calling over a hand-rolled text
   protocol for any future local-model harness. It did not change the
-  pass/fail count here, but it eliminated a degenerate failure mode (the
-  identical-payload stuck loop), produced auditable reasoning traces, and
-  measurably increased genuine discovery-tool usage — strictly better
+  pass/fail count in A vs. B, but it eliminated a degenerate failure mode
+  (the identical-payload stuck loop), produced auditable reasoning traces,
+  and measurably increased genuine discovery-tool usage — strictly better
   evidence quality for the same budget, independent of whether it changes the
   verified rate on a larger run.
 - **NO DATA:** whether the compact `capabilities` index itself is a
-  bottleneck. In Condition B, two of three models skipped `capabilities`
+  bottleneck. Across Condition B, three of four models skipped `capabilities`
   entirely in favor of `reference scaffold` (the full JSON Schema) when both
   were offered as equally-weighted tools — suggesting the compact index's
   role is a token-budget optimization for cases where an agent doesn't need
   full detail, not a hard blocker when an agent does reach for the detailed
-  path. No model in either condition was ever observed failing *because* the
-  compact index specifically omitted something it needed and had no drill-down
-  for.
-- **NO DATA:** model ranking or reliability claims from a single seed and a
-  6-turn budget, in either condition.
+  path. No model in any condition was ever observed failing *because* the
+  compact index specifically omitted something it needed and had no
+  drill-down for.
+- **NO DATA:** whether Condition B's small/mid open-weight models would pass
+  under a Condition-C-shaped budget (more turns, unrationed discovery). The
+  two models that spent their entire Condition B budget on discovery
+  (`qwen3.5:9b-mlx`, `gemma4:31b-cloud`) never got to demonstrate whether
+  their discovery had actually converged on a correct understanding — the
+  budget ran out before that question could be answered either way.
+- **NO DATA:** model ranking or reliability claims from a single seed, small
+  model/condition counts, and (for Condition C) a single run.
 
 ## Ranked follow-up
 
-1. Re-run Condition B with a larger turn budget (10–12): `qwen3.5:9b-mlx` used
-   its entire budget on discovery without ever submitting, and
-   `gemma4:e4b-it-qat` was still iterating at turn 6 — both may simply need
-   more room, not a different protocol.
+1. Re-run Condition B with a larger turn budget (10–12) for at least
+   `qwen3.5:9b-mlx` and `gemma4:31b-cloud`, which spent their entire budget on
+   discovery without ever submitting — this is the single highest-value
+   re-run, since it directly tests whether those two "ran out of time" or
+   "would have failed the same way as `gemma4:e4b`/`gemma4:e4b-it-qat`."
 2. Make the product-level `"kind"` discriminator harder to miss: either
    surface a one-line worked example (`{"kind": "generated", ...}` at the
    product level) directly in `capabilities`' compact index or in
    `reference scaffold`'s output, or strengthen the `invalid_discriminator`
    diagnostic to name the *product* vocabulary explicitly instead of relying
    on the model to infer it's a different `"kind"` than the field-level one
-   it just saw. This is the single most common root cause across both
-   conditions and all three models.
+   it just saw. This is the single most common root cause across every
+   condition and every model that reached a submission.
 3. Test a discovery-budget guard: cap discovery calls (e.g. at 3) and require
-   a submission attempt after that, so models like `qwen3.5:9b-mlx` that
-   discover thoroughly but never converge to a submission are forced to test
-   their understanding within the turn budget.
-4. Re-run with seeds 42–46 across both conditions before making any GO/NO-GO
+   a submission attempt after that, so models like `qwen3.5:9b-mlx` and
+   `gemma4:31b-cloud` that discover thoroughly but never converge to a
+   submission are forced to test their understanding within the turn budget.
+4. Run Condition C's exact task/prompt through Condition B's exact harness
+   (fixed 4-tool schema, 6-turn budget, subprocess isolation) with a
+   capable model, to get one genuinely controlled A/B/C comparison — the
+   current Condition C result is suggestive but was run with a different
+   budget shape and tool surface, which this diagnostic has been explicit
+   about not controlling for.
+5. Re-run with seeds 42–46 across all conditions before making any GO/NO-GO
    claim about the compact index's real-world sufficiency or about
    native-tool-calling's effect on the verified rate — this diagnostic is one
-   seed, three models, two conditions.
-5. If a future harness is built for real (per this directory's "Contract for
+   seed throughout.
+6. If a future harness is built for real (per this directory's "Contract for
    a future canonical harness"), it should default to native tool-calling per
-   this diagnostic's Condition B evidence, and should log `thinking` traces
-   in its hashed call ledger — they were the single most useful signal for
-   understanding *why* a run failed, not just that it did.
+   Condition B's evidence, and should log `thinking` traces (or, for
+   Claude-family agents, the agent's own self-reported call sequence) in its
+   hashed call ledger — they were the single most useful signal in this
+   diagnostic for understanding *why* a run failed, not just that it did.
 
 ## Verification commands
 
