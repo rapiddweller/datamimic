@@ -30,7 +30,7 @@ to all entities generated within the descriptor:
 ```xml
 <setup>
   <demographics dataset="DE" version="2023Q4"
-                dir="examples/demographics/DE/2023Q4" rngSeed="42"/>
+                dir="data/demographics/DE/2023Q4" rngSeed="42"/>
   <generate name="cohort" count="1000" target="CSV">
     <variable name="patient" entity="Patient" dataset="DE" rngSeed="1234"/>
     <key name="age" script="patient.age"/>

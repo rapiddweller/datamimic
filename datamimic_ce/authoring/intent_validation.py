@@ -22,9 +22,7 @@ from datamimic_ce.authoring.spec import (
     INTENT_REPAIR_ALIASES_SCHEMA_KEY,
     AuthoringSpecV1,
     IntentModelValidationIssueType,
-    ProductIntentKind,
 )
-from datamimic_ce.authoring.spec_examples import minimal_product_example
 
 
 class _PydanticIssueType(StrEnum):
@@ -136,15 +134,6 @@ def _validation_location(
         owner_schema=owner_schema,
         raw_owner=raw_owner,
     )
-
-
-def normalize_validation_path(
-    location: tuple[str | int, ...],
-    raw: Mapping[str, Any],
-) -> tuple[str | int, ...]:
-    """Remove union labels only at schema-proven discriminated-union positions."""
-
-    return _validation_location(location, raw).path
 
 
 def _issue_code(
@@ -312,35 +301,21 @@ def _repair_context(
     location: _ValidationLocation,
 ) -> tuple[
     tuple[str, ...],
-    dict[str, JsonValue] | None,
     str | None,
     ReplaceFieldRepair | None,
 ]:
     if location.owner_schema is None or location.raw_owner is None:
-        return (), None, None, None
+        return (), None, None
     properties = location.owner_schema.get("properties")
     if not isinstance(properties, Mapping):
-        return (), None, None, None
+        return (), None, None
     allowed_fields = tuple(
         name for name in properties if isinstance(name, str)
     )
     title = location.owner_schema.get("title")
     model_name = title if isinstance(title, str) else None
     repair = _replacement_repair(raw, location, allowed_fields)
-
-    raw_kind = location.raw_owner.get("kind")
-    expected_fragment: dict[str, JsonValue] | None = None
-    if not isinstance(raw_kind, str):
-        return allowed_fields, None if repair is None else repair.corrected_fragment, model_name, repair
-    try:
-        product_kind = ProductIntentKind(raw_kind)
-    except ValueError:
-        if repair is not None:
-            expected_fragment = repair.corrected_fragment
-    else:
-        product = minimal_product_example(product_kind)
-        expected_fragment = product.model_dump(mode="json", exclude_none=True)
-    return allowed_fields, expected_fragment, model_name, repair
+    return allowed_fields, model_name, repair
 
 
 def project_validation_issues(
@@ -379,11 +354,10 @@ def project_validation_issues(
                 issue_type = None
         code = _issue_code(issue_type, intent_issue_type)
         allowed_fields: tuple[str, ...] = ()
-        expected_fragment: dict[str, Any] | None = None
         model_name: str | None = None
         repair: ReplaceFieldRepair | None = None
         if code is IntentValidationIssueCode.UNKNOWN_FIELD:
-            allowed_fields, expected_fragment, model_name, repair = _repair_context(
+            allowed_fields, model_name, repair = _repair_context(
                 raw,
                 location,
             )
@@ -397,26 +371,12 @@ def project_validation_issues(
                 code=code,
                 message=message,
                 allowed_fields=allowed_fields,
-                expected_fragment=expected_fragment,
                 repair=repair,
             )
         )
     return tuple(result)
 
 
-def unsupported_intent_issues(errors: list[str]) -> tuple[IntentValidationIssue, ...]:
-    return tuple(
-        IntentValidationIssue(
-            path=("spec",),
-            code=IntentValidationIssueCode.UNSUPPORTED_INTENT,
-            message=message,
-        )
-        for message in errors
-    )
-
-
 __all__ = [
-    "normalize_validation_path",
     "project_validation_issues",
-    "unsupported_intent_issues",
 ]

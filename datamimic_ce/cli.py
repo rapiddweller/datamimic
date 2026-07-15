@@ -243,7 +243,7 @@ def capabilities():
     This is a structural index, not the full DSL knowledge base: no prose, no generator
     parameter lists or entity field schemas, no recipes. For that, use
     `datamimic reference <topic> [name]` (e.g. `datamimic reference element variable`,
-    `datamimic reference recipes`) — the CLI-first equivalent of the MCP `datamimic_reference`
+    `datamimic reference overview`) — the CLI-first equivalent of the MCP `datamimic_reference`
     tool.
     """
     import json
@@ -494,11 +494,6 @@ def _scaffold(
                     f"{result_obj.verification.deterministic_replay.status.value} — "
                     f"{result_obj.verification.deterministic_replay.reason}"
                 )
-
-            # Normalization notes surface in text mode on EVERY outcome, success included —
-            # a repaired near-miss the caller never sees is a hidden semantic rewrite.
-            for note in result_obj.normalization_notes:
-                typer.echo(f"note: {note}")
 
         raise typer.Exit(exit_code)
 

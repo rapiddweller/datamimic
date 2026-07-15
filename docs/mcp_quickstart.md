@@ -128,8 +128,6 @@ Running the snippet twice with the same seed yields identical addresses. Switchi
 
 ## Additional resources
 
-- `examples/call_list_domains.py` – prints the registered tools and domain catalogue.
-- `examples/call_generate.py` – emits sample person records using `seed=42`.
 - `make typecheck`, `make lint`, and `make coverage` – convenience targets for the strict quality gates (mypy `--strict`, pylint ≥ 9.0, coverage ≥ 90%).
 
 Happy generating!
@@ -141,13 +139,10 @@ compatibility flow:
 
 | Tool | Purpose |
 |---|---|
-| `datamimic_reference` | Intent and DSL knowledge. For a new model, use `topic=authoring` first to list typed queries, then request one compact fragment with nested `query`, for example `{"category":"field","kind":"weighted"}`. Raw XML topics include `overview`, `element`, `generators`, `entities`, `context`, `timeseries`, `targets`, `distributions`, `converters`, `recipes`, and `recipe`. |
+| `datamimic_reference` | Intent and DSL knowledge. For a new model, use `topic=authoring` first to list typed queries, then request one typed schema with a nested `query`. Raw XML topics include `overview`, `element`, `generators`, `entities`, `context`, `timeseries`, `targets`, `distributions`, `converters`, and `rules`. |
 | `datamimic_scaffold` | The single new-model use case: accept canonical `model.dm.json`, compile deterministic XML, lint, bounded-run, evaluate acceptance, and return structured verification evidence. `verified=true` is terminal. |
 | `datamimic_check` | Raw XML only: lint a descriptor (`xml=` inline or `path=`) and return aggregated diagnostics with rule id, severity, and `fix_hint`. |
 | `datamimic_run` | Raw XML only: bounded safe run with neutralized targets and product samples. Optional `smoke_export=true` exercises stripped file exporters in a temp dir. |
-
-Resources: `resource://datamimic/dsl/cheatsheet` and
-`resource://datamimic/dsl/recipes/{id}`.
 
 For a new model: query a narrow authoring reference → write `model.dm.json` →
 invoke the single `datamimic_scaffold` use case → inspect issues and evidence →
@@ -158,7 +153,7 @@ Without MCP, use
 `datamimic scaffold model.dm.json --format json`.
 
 When a scaffold call fails validation, repair the reported issue `path` using
-its `allowed_fields` and `expected_fragment`; for later stages, follow the rule
+its `allowed_fields` and optional typed `repair`; for later stages, follow the rule
 diagnostic and `fix_hint`. Narrow the reference query if needed. Never repeat an
 identical failed call without changing the input. The CE service is stateless:
 the calling agent owns this stop/retry policy.

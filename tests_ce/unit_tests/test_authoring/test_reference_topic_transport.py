@@ -17,7 +17,6 @@ _TOPIC_NAMES = {
     ReferenceTopic.ELEMENT: "generate",
     ReferenceTopic.ENTITIES: "Person",
     ReferenceTopic.RULES: "DM315",
-    ReferenceTopic.RECIPE: "csv-to-json-pipeline",
 }
 
 

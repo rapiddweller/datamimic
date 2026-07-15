@@ -131,14 +131,16 @@ def test_schema_resources_loadable() -> None:
 def test_scaffold_impl_valid_spec_dry_runs() -> None:
     """A valid spec from the scaffold test suite should render, lint clean, and dry-run."""
     spec = {
+        "version": "1",
         "seed": 1,
-        "generates": [{
-            "name": "customers", "count": 30, "target": "JSON",
+        "products": [{
+            "kind": "generated", "name": "customers", "count": 30,
+            "targets": [{"kind": "file_export", "format": "JSON"}],
             "fields": [
-                {"name": "id", "kind": "increment"},
-                {"name": "full_name", "kind": "person_name"},
-                {"name": "age", "kind": "int_range", "min": 18, "max": 90},
-                {"name": "country", "kind": "weighted",
+                {"kind": "increment", "name": "id"},
+                {"kind": "person_name", "name": "full_name"},
+                {"kind": "int_range", "name": "age", "minimum": 18, "maximum": 90},
+                {"kind": "weighted", "name": "country",
                  "values": ["US", "DE", "VN"], "weights": [0.5, 0.3, 0.2]},
             ],
         }],

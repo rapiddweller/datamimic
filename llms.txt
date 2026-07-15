@@ -18,18 +18,10 @@ and semantic rules that cause most failures.
 - Progressive Intent Model reference: `datamimic reference authoring`, then `datamimic reference authoring --category <category> --kind <kind>`
 - New model: preserve `model.dm.json`, run `datamimic scaffold model.dm.json --format json`, change input before retrying, and stop on `verified=true`
 - Existing raw XML: `datamimic lint <path> --format json`, then bounded `datamimic dry-run <path> --format json`; inspect intent before `datamimic run <path>`
-- [DSL cheatsheet](datamimic_ce/authoring/reference_data/cheatsheet.md): elements, value sources, scope, gotchas, one page
 - Recipes and DSL specifics: query a narrow `datamimic reference` topic/name instead of guessing
 
 ## Runnable examples
 
-- [Showcase gallery](examples/showcase/README.md): four verified end-to-end examples
-- [Banking with referential integrity](examples/showcase/01-banking-core/README.md): customers, accounts, transactions, two-hop foreign keys
-- [Multi-source assembly](examples/showcase/02-multi-source-assembly/README.md): CSV source plus generated fields plus lookup join
-- [Conditions and time-series](examples/showcase/03-orchestration-timeseries/README.md): if/else-if/else branching, start/end/interval with the ts namespace
-- [Custom python components](examples/showcase/04-python-seam/README.md): custom generator, custom converter, plain-script postprocessing
-- Recipes: `datamimic_ce/authoring/recipes/` holds small single-pattern descriptors
-- [DSL authoring benchmark](benchmarks/dsl-authoring/README.md): legacy raw-XML prompt baseline plus the canonical model.dm.json/scaffold success contract for agent evaluations
 
 ## Project
 

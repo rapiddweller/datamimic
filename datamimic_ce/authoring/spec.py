@@ -676,20 +676,10 @@ class AuthoringSpecV1(IntentModel):
         return self
 
 
-SPEC_PROMPT_GUIDE = """Produce one canonical model.dm.json document with version \"1\".
-Choose each product's explicit kind: generated, source, or time_series. Choose every
-field/source/target/expectation by its explicit kind discriminator; do not invent Python
-helpers to express supported intent. A generated product may contain one level of
-generated children. Database and MongoDB products are not supported by authoring V1."""
-
-
 def authoring_spec_json_schema() -> dict[str, object]:
     """Project the structured-output schema directly from the Intent SPOT."""
 
     return AuthoringSpecV1.model_json_schema()
-
-
-SPEC_JSON_SCHEMA = authoring_spec_json_schema()
 
 
 __all__ = [
@@ -714,8 +704,6 @@ __all__ = [
     "RegisteredFileExporterName",
     "RuntimeFileSourcePath",
     "RuntimeMemstoreSourceId",
-    "SPEC_JSON_SCHEMA",
-    "SPEC_PROMPT_GUIDE",
     "SourceIntentKind",
     "TargetIntentKind",
     "authoring_spec_json_schema",

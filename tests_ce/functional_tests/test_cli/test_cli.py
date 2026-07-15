@@ -274,12 +274,12 @@ class TestCLI:
 
     # Tests for reference command
     def test_reference_overview(self):
-        """Reference overview command returns the DSL cheatsheet."""
+        """Reference overview command returns the live discovery guide."""
         result = runner.invoke(app, ["reference", "overview"])
         assert result.exit_code == 0
-        assert "# DATAMIMIC DSL" in result.output
-        assert "## Minimal descriptor" in result.output
-        assert '<setup rngSeed=' in result.output
+        assert "# DATAMIMIC reference" in result.output
+        assert "AuthoringSpecV1" in result.output
+        assert "topic=scaffold" in result.output
 
     def test_reference_element_variable(self):
         """Reference element command with variable tag returns its real attribute schema."""
@@ -300,7 +300,7 @@ class TestCLI:
         result = runner.invoke(app, ["reference", "bogus-topic-xyz"])
         assert result.exit_code == 2
         assert "Invalid value for" in result.output
-        assert "not one of" in result.output
+        assert "bogus-topic-xyz" in result.output
         assert "bogus-topic-xyz" in result.output
 
     # Tests for scaffold command
@@ -313,11 +313,13 @@ class TestCLI:
     def test_scaffold_valid_spec_text_format(self, tmp_path, monkeypatch):
         """A valid spec renders to XML, lints clean, and dry-runs successfully with text output."""
         spec = {
-            "generates": [{
-                "name": "customers", "count": 10, "target": "JSON",
+            "version": "1",
+            "products": [{
+                "kind": "generated", "name": "customers", "count": 10,
+                "targets": [{"kind": "file_export", "format": "JSON"}],
                 "fields": [
-                    {"name": "id", "kind": "increment"},
-                    {"name": "name", "kind": "person_name"},
+                    {"kind": "increment", "name": "id"},
+                    {"kind": "person_name", "name": "name"},
                 ],
             }],
         }
@@ -331,9 +333,11 @@ class TestCLI:
     def test_scaffold_valid_spec_json_format(self, tmp_path, monkeypatch):
         """A valid spec with --format json outputs pure JSON with ok/xml/products."""
         spec = {
-            "generates": [{
-                "name": "products", "count": 5, "target": "JSON",
-                "fields": [{"name": "sku", "kind": "pattern", "pattern": "[A-Z]{3}"}],
+            "version": "1",
+            "products": [{
+                "kind": "generated", "name": "products", "count": 5,
+                "targets": [{"kind": "file_export", "format": "JSON"}],
+                "fields": [{"kind": "pattern", "name": "sku", "pattern": "[A-Z]{3}"}],
             }],
         }
         result = self._run_scaffold(tmp_path, monkeypatch, spec, "--format", "json")
@@ -359,9 +363,11 @@ class TestCLI:
     def test_scaffold_json_includes_canonical_verification_evidence(self, tmp_path, monkeypatch):
         """Default scaffold completes run and acceptance instead of stopping at lint."""
         spec = {
-            "generates": [{
-                "name": "data", "count": 2, "target": "JSON",
-                "fields": [{"name": "v", "kind": "increment"}],
+            "version": "1",
+            "products": [{
+                "kind": "generated", "name": "data", "count": 2,
+                "targets": [{"kind": "file_export", "format": "JSON"}],
+                "fields": [{"kind": "increment", "name": "v"}],
             }],
         }
         result = self._run_scaffold(tmp_path, monkeypatch, spec, "--format", "json")
@@ -401,9 +407,11 @@ class TestCLI:
     def test_scaffold_with_custom_max_count(self, tmp_path, monkeypatch):
         """With --max-count, the dry-run caps at the specified count."""
         spec = {
-            "generates": [{
-                "name": "data", "count": 100, "target": "JSON",
-                "fields": [{"name": "id", "kind": "increment"}],
+            "version": "1",
+            "products": [{
+                "kind": "generated", "name": "data", "count": 100,
+                "targets": [{"kind": "file_export", "format": "JSON"}],
+                "fields": [{"kind": "increment", "name": "id"}],
             }],
         }
         result = self._run_scaffold(tmp_path, monkeypatch, spec, "--max-count", "7", "--format", "json")
@@ -417,12 +425,15 @@ class TestCLI:
     def test_scaffold_nested_spec(self, tmp_path, monkeypatch):
         """A spec with nested generates renders correctly."""
         spec = {
-            "generates": [{
-                "name": "customers", "count": 3, "target": "JSON",
-                "fields": [{"name": "id", "kind": "increment"}],
+            "version": "1",
+            "products": [{
+                "kind": "generated", "name": "customers", "count": 3,
+                "targets": [{"kind": "file_export", "format": "JSON"}],
+                "fields": [{"kind": "increment", "name": "id"}],
                 "children": [{
-                    "name": "orders", "count": 2, "target": "JSON",
-                    "fields": [{"name": "customer_id", "kind": "script", "script": "parent.id"}],
+                    "kind": "generated", "name": "orders", "count": 2,
+                    "targets": [{"kind": "file_export", "format": "JSON"}],
+                    "fields": [{"kind": "script", "name": "customer_id", "script": "parent.id"}],
                 }],
             }],
         }

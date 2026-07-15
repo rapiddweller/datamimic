@@ -177,7 +177,7 @@ class ReferenceArgs(BaseModel):
     name: str | None = Field(
         None,
         description="Element tag (topic=element), entity name (topic=entities), rule id "
-        "(topic=rules), recipe id (topic=recipe) or generator filter",
+        "(topic=rules) or generator filter",
     )
     query: AuthoringReferenceQuery | None = Field(
         None,

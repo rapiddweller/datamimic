@@ -129,7 +129,7 @@ def run_impl(args: RunArgs) -> dict[str, Any]:
 
 
 def reference_impl(args: ReferenceArgs) -> dict[str, Any]:
-    """DSL reference lookup: cheatsheet, schemas, rules, generators, targets and recipes."""
+    """DSL reference lookup projected from schemas, rules, and runtime registries."""
     from datamimic_ce.authoring.reference import reference
 
     try:
@@ -193,7 +193,7 @@ def create_server(*, api_key: str | None = None) -> DataMimicMCP:
 
     @server.tool("datamimic_reference")
     async def datamimic_reference(args: ReferenceArgs) -> dict[str, Any]:
-        """Look up DATAMIMIC DSL knowledge: topic=overview (cheatsheet, start here),
+        """Look up DATAMIMIC DSL knowledge: topic=overview (start here),
         element (attributes/nesting for a tag), generators, entities (name=Person for
         its fields), context (this/parent/root script scope), timeseries (start/end/
         interval + ts.now/step/series), targets, distributions (source reads and
@@ -209,8 +209,7 @@ def create_server(*, api_key: str | None = None) -> DataMimicMCP:
         verified=true means acceptance and every requested smoke/replay gate passed;
         no follow-up datamimic_check or datamimic_run call is needed. Query
         reference topic=scaffold for the schema derived from the Intent Model SPOT.
-        Historical compact specs remain accepted only through lossless normalization;
-        unsupported or ambiguous intent fails closed with explicit errors."""
+        Unsupported intent fails closed with explicit errors."""
         return scaffold_impl(args)
 
     server.http_middleware = _build_http_middleware(api_key)
@@ -218,32 +217,6 @@ def create_server(*, api_key: str | None = None) -> DataMimicMCP:
     for schema in resources.iter_schema_resources():
         loader = _schema_loader(schema.domain, schema.version, schema.kind)
         server.resource(schema.uri, mime_type="application/schema+json")(loader)
-
-    def _cheatsheet_resource() -> str:
-        from datamimic_ce.authoring.reference import cheatsheet
-
-        return cheatsheet()
-
-    server.resource("resource://datamimic/dsl/cheatsheet", mime_type="text/markdown")(_cheatsheet_resource)
-
-    # One resource per curated recipe. Only the tiny toml index is read at startup;
-    # the descriptor XML loads lazily on access.
-    import tomllib
-    from importlib import resources as importlib_resources
-
-    recipes_dir = importlib_resources.files("datamimic_ce.authoring") / "recipes"
-    recipes_index = tomllib.loads((recipes_dir / "recipes.toml").read_text(encoding="utf-8"))
-
-    def _recipe_loader_factory(recipe_id: str) -> Callable[[], str]:
-        def load() -> str:
-            return (recipes_dir / f"{recipe_id}.xml").read_text(encoding="utf-8")
-
-        return load
-
-    for entry in recipes_index["recipe"]:
-        server.resource(f"resource://datamimic/dsl/recipes/{entry['id']}", mime_type="application/xml")(
-            _recipe_loader_factory(entry["id"])
-        )
 
     return server
 

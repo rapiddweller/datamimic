@@ -228,7 +228,6 @@ class IntentValidationIssue(BaseModel):
     code: IntentValidationIssueCode
     message: str = Field(min_length=1)
     allowed_fields: tuple[str, ...] = ()
-    expected_fragment: dict[str, JsonValue] | None = None
     repair: ReplaceFieldRepair | None = None
 
     def summary(self) -> str:
@@ -1106,7 +1105,7 @@ class RunResult(BaseModel):
     timing_ms: int | None = None
     products: list[ProductResult] = Field(default_factory=list)
     products_truncated: int = 0
-    lint: CheckResult | None = None
+    lint: LintResult | None = None
     diagnostics: list[Diagnostic] = Field(default_factory=list)
 
 
@@ -1170,10 +1169,6 @@ class ScaffoldResult(BaseModel):
     products: list[ProductResult] = Field(
         default_factory=list,
         description="Captured sample rows per product (when execution completed)",
-    )
-    normalization_notes: list[str] = Field(
-        default_factory=list,
-        description="Notes from schema normalization (e.g. kind aliases applied)",
     )
     compile_plan: CompilePlan | None = None
     acceptance: AcceptanceReport | None = None

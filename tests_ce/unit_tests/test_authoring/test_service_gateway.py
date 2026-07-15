@@ -44,12 +44,14 @@ _XML = """<setup rngSeed="1">
 </setup>"""
 
 _SCAFFOLD_SPEC = {
+    "version": "1",
     "seed": 1,
-    "generates": [
+    "products": [
         {
+            "kind": "generated",
             "name": "items",
             "count": 2,
-            "fields": [{"name": "id", "kind": "increment"}],
+            "fields": [{"kind": "increment", "name": "id"}],
         }
     ],
 }

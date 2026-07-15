@@ -65,10 +65,6 @@ async def test_schema_resource_available(anyio_backend) -> None:
         }
         resources = await client.read_resource("resource://datamimic/schemas/person/v1/request.json")
         assert resources and "\"$schema\"" in resources[0].text
-        cheatsheet = await client.read_resource("resource://datamimic/dsl/cheatsheet")
-        assert cheatsheet and "<setup" in cheatsheet[0].text
-        recipe = await client.read_resource("resource://datamimic/dsl/recipes/csv-to-json-pipeline")
-        assert recipe and "<iterate" in recipe[0].text
 
 
 @pytest.mark.anyio

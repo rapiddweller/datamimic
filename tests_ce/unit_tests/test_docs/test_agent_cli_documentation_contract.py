@@ -23,10 +23,7 @@ def _invoke_json(arguments: list[str], *, stdin: str | None = None) -> object:
 
 
 def test_agent_facing_readme_relative_links_resolve() -> None:
-    readmes = (
-        _REPOSITORY_ROOT / "README.md",
-        _REPOSITORY_ROOT / "benchmarks" / "dsl-authoring" / "README.md",
-    )
+    readmes = (_REPOSITORY_ROOT / "README.md",)
     missing: list[str] = []
     for readme in readmes:
         for target in _MARKDOWN_LINK.findall(readme.read_text(encoding="utf-8")):
@@ -39,12 +36,13 @@ def test_agent_facing_readme_relative_links_resolve() -> None:
     assert missing == []
 
 
-def test_documentation_index_describes_authoring_records_without_reliability_claim() -> None:
+def test_documentation_index_has_no_removed_authoring_archive() -> None:
     documentation_index = (_REPOSITORY_ROOT / "docs" / "README.md").read_text(
         encoding="utf-8"
     )
 
-    assert "Authoring evaluation archive" in documentation_index
+    assert "Authoring evaluation archive" not in documentation_index
+    assert "benchmarks/dsl-authoring" not in documentation_index
     assert "measures how reliably agents author" not in documentation_index
 
 
@@ -71,7 +69,10 @@ def test_agent_cli_discovery_and_scaffold_contract() -> None:
         "category": "source",
         "kind": "memstore",
     }
-    assert memstore_source["fragment"]["product"] == "records"
+    assert memstore_source["model"] == "MemstoreSource"
+    assert "product" in memstore_source["allowed_fields"]
+    assert "fragment" not in memstore_source
+    assert memstore_source["json_schema"]["title"] == "MemstoreSource"
 
     spec = {
         "version": "1",

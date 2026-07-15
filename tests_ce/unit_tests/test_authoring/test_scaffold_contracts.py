@@ -25,37 +25,34 @@ from datamimic_ce.mcp.server import scaffold_impl
 
 # Test specs covering various scenarios
 SPEC_VALID_DRY_RUN = {
+    "version": "1",
     "seed": 1,
-    "generates": [{
-        "name": "customers", "count": 10, "target": "JSON",
+    "products": [{
+        "kind": "generated", "name": "customers", "count": 10,
+        "targets": [{"kind": "file_export", "format": "JSON"}],
         "fields": [
-            {"name": "id", "kind": "increment"},
-            {"name": "name", "kind": "person_name"},
-            {"name": "age", "kind": "int_range", "min": 18, "max": 90},
+            {"kind": "increment", "name": "id"},
+            {"kind": "person_name", "name": "name"},
+            {"kind": "int_range", "name": "age", "minimum": 18, "maximum": 90},
         ],
     }],
 }
 
 SPEC_VALID_NO_DRY_RUN = {
+    "version": "1",
     "seed": 1,
-    "generates": [{
-        "name": "items", "count": 5, "target": "JSON",
-        "fields": [{"name": "id", "kind": "increment"}],
+    "products": [{
+        "kind": "generated", "name": "items", "count": 5,
+        "targets": [{"kind": "file_export", "format": "JSON"}],
+        "fields": [{"kind": "increment", "name": "id"}],
     }],
 }
 
 SPEC_MALFORMED = {
-    "generates": [{
-        "name": "data", "count": 5, "target": "JSON",
+    "version": "1",
+    "products": [{
+        "kind": "generated", "name": "data", "count": 5,
         # Missing fields array — should fail at render
-    }],
-}
-
-SPEC_LINT_FAILURE = {
-    "generates": [{
-        "name": "data", "count": 5, "target": "JSON",
-        "fields": [{"name": "id", "kind": "increment"}],
-        # DM303: No rngSeed — will pass render but lint will warn
     }],
 }
 
@@ -267,7 +264,6 @@ class TestScaffoldParity:
         assert mcp_result["xml"] == service_result["xml"] == cli_output["xml"]
         assert mcp_result["compile_plan"] == service_result["compile_plan"]
         assert cli_output["compile_plan"] == service_result["compile_plan"]
-        assert service_result["normalization_notes"] == []
 
     def test_v1_acceptance_response_is_identical_across_transports(self):
         """CLI and MCP preserve a complete memstore result byte-for-byte."""
@@ -448,54 +444,6 @@ class TestScaffoldParity:
                 sample_rows=51,
             )
 
-    def test_normalization_notes_preserved(self):
-        """Normalization notes are carried through in ScaffoldResult."""
-        # Create a spec that triggers normalization
-        spec_with_alias = {
-            "generates": [{
-                "name": "data", "count": 5, "target": "JSON",
-                "fields": [
-                    {"name": "id", "kind": "id"},  # alias: id → increment
-                    {"name": "email", "kind": "email"},  # alias: email → person_email
-                ],
-            }],
-        }
-
-        request = ScaffoldRequest(
-            spec=spec_with_alias,
-            response_format="concise",
-        )
-        result = scaffold(request)
-
-        # Should have normalization notes for kind aliases
-        assert len(result.normalization_notes) > 0
-
-    def test_source_backed_unique_insufficient_range_service(self):
-        """Source-backed unique range smaller than producer count fails with specific error."""
-        spec = {
-            "generates": [
-                {
-                    "name": "producer", "count": 5, "target": "mem,JSON",
-                    "fields": [{"name": "id", "kind": "increment"}],
-                },
-                {
-                    "name": "reader", "source": "mem", "source_type": "producer",
-                    "fields": [
-                        {"name": "id", "kind": "script", "script": "id"},
-                        {"name": "seat", "kind": "int_range", "min": 1, "max": 2, "unique": True},
-                    ],
-                },
-            ]
-        }
-        request = ScaffoldRequest(spec=spec)
-        result = scaffold(request)
-
-        assert result.ok is False
-        assert result.stage is AuthoringStage.RENDER
-        assert result.error is not None
-        assert "unique" in result.error
-        assert "insufficient" in result.error.lower() or "possible values" in result.error
-
     def test_source_backed_unique_sufficient_range_service(self):
         """Source-backed unique range sufficient for producer count succeeds."""
         request = ScaffoldRequest(
@@ -515,27 +463,3 @@ class TestScaffoldParity:
             for item in result.acceptance.results
         )
         assert result.xml is not None
-
-    def test_mcp_source_backed_unique_insufficient_range(self):
-        """MCP source-backed unique range validation matches service layer."""
-        spec = {
-            "generates": [
-                {
-                    "name": "producer", "count": 5, "target": "mem,JSON",
-                    "fields": [{"name": "id", "kind": "increment"}],
-                },
-                {
-                    "name": "reader", "source": "mem", "source_type": "producer",
-                    "fields": [
-                        {"name": "id", "kind": "script", "script": "id"},
-                        {"name": "seat", "kind": "int_range", "min": 1, "max": 2, "unique": True},
-                    ],
-                },
-            ]
-        }
-        args = ScaffoldArgs(spec=spec)
-        result = scaffold_impl(args)
-
-        assert result["ok"] is False
-        assert result["stage"] == "render"
-        assert "unique" in result["error"]
