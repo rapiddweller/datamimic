@@ -121,30 +121,35 @@ def emit_run(result: RunResult, output_format: CliOutputFormat) -> None:
     raise typer.Exit(0 if result.ok else 1)
 
 
+def _emit_scaffold_human(result: ScaffoldResult) -> None:
+    """Render scaffold result as human-readable terminal output."""
+    for issue in result.issues:
+        typer.echo(f"Error: {issue.summary()}")
+    for diagnostic in result.diagnostics:
+        severity = diagnostic.severity.value.upper()
+        typer.echo(f"{severity:<7} {diagnostic.rule}  {diagnostic.message}")
+        typer.echo(f"    -> {diagnostic.fix_hint}")
+    if result.summary:
+        typer.echo(f"Summary: {result.summary}")
+    if result.xml and result.stage not in (AuthoringStage.LINT, AuthoringStage.DRY_RUN):
+        typer.echo(result.xml)
+    if result.products:
+        typer.echo("Dry-run successful:")
+    for product in result.products:
+        typer.echo(f"{product.name}: {product.count} rows")
+    if result.acceptance:
+        typer.echo(
+            f"Acceptance: {result.acceptance.passed} passed, "
+            f"{result.acceptance.failed} failed, {result.acceptance.unevaluable} unevaluable"
+        )
+    typer.echo(f"verified: {result.verified}")
+
+
 def emit_scaffold(result: ScaffoldResult, output_format: CliOutputFormat) -> None:
     if output_format is CliOutputFormat.JSON:
         typer.echo(result.model_dump_json(indent=2, exclude_none=True))
     else:
-        for issue in result.issues:
-            typer.echo(f"Error: {issue.summary()}")
-        for diagnostic in result.diagnostics:
-            severity = diagnostic.severity.value.upper()
-            typer.echo(f"{severity:<7} {diagnostic.rule}  {diagnostic.message}")
-            typer.echo(f"    -> {diagnostic.fix_hint}")
-        if result.summary:
-            typer.echo(f"Summary: {result.summary}")
-        if result.xml and result.stage not in (AuthoringStage.LINT, AuthoringStage.DRY_RUN):
-            typer.echo(result.xml)
-        if result.products:
-            typer.echo("Dry-run successful:")
-        for product in result.products:
-            typer.echo(f"{product.name}: {product.count} rows")
-        if result.acceptance:
-            typer.echo(
-                f"Acceptance: {result.acceptance.passed} passed, "
-                f"{result.acceptance.failed} failed, {result.acceptance.unevaluable} unevaluable"
-            )
-        typer.echo(f"verified: {result.verified}")
+        _emit_scaffold_human(result)
     if not result.ok or not result.verified:
         raise typer.Exit(2 if result.stage is AuthoringStage.RENDER else 1)
     raise typer.Exit(0)

@@ -11,6 +11,9 @@ from datamimic_ce.authoring.contracts import (
     CompilePlan,
     DeterministicReplayEvidence,
     GeneratedProductCompilePlan,
+    MemstoreRelationshipPlan,
+    NestedRelationshipPlan,
+    ProductCaptureEvidence,
     ReplayMismatchKind,
     ReplayProductMismatch,
     RetryWithParameterRemediation,
@@ -22,6 +25,32 @@ from datamimic_ce.authoring.contracts import (
     VerificationGateStatus,
 )
 from datamimic_ce.authoring.dryrun import CapturedProducts, CapturedRun, SmokeExportCapture
+
+
+def _product_minimum(planned: GeneratedProductCompilePlan | TimeSeriesProductCompilePlan | SourceProductCompilePlan, evidence: ProductCaptureEvidence) -> int | None:
+    """Extract the minimum expected count from a typed compile plan."""
+    if isinstance(planned, GeneratedProductCompilePlan):
+        return planned.count_per_parent or planned.static_count
+    if isinstance(planned, TimeSeriesProductCompilePlan):
+        return planned.series_count
+    if isinstance(planned, SourceProductCompilePlan):
+        return evidence.requested
+    return None
+
+
+def _expand_affected(affected: set[str], captured_names: set[str], relationships: list[NestedRelationshipPlan | MemstoreRelationshipPlan]) -> None:
+    """Transitively close *affected* over parent→child relationships (mutates in place)."""
+    changed = True
+    while changed:
+        changed = False
+        for relationship in relationships:
+            if (
+                relationship.parent in affected
+                and relationship.child in captured_names
+                and relationship.child not in affected
+            ):
+                affected.add(relationship.child)
+                changed = True
 
 
 def max_count_remediations(
@@ -42,15 +71,8 @@ def max_count_remediations(
             or planned is None
         ):
             continue
-        if isinstance(planned, GeneratedProductCompilePlan):
-            minimum = planned.count_per_parent or planned.static_count
-        elif isinstance(planned, TimeSeriesProductCompilePlan):
-            minimum = planned.series_count
-        elif isinstance(planned, SourceProductCompilePlan):
-            minimum = evidence.requested
-        else:
-            continue
-        if minimum > captured.max_count:
+        minimum = _product_minimum(planned, evidence)
+        if minimum is not None and minimum > captured.max_count:
             minimums[product.name] = minimum
     if not minimums:
         return []
@@ -60,17 +82,7 @@ def max_count_remediations(
 
     captured_names = {product.name for product in captured.products}
     affected = set(minimums)
-    changed = True
-    while changed:
-        changed = False
-        for relationship in plan.relationships:
-            if (
-                relationship.parent in affected
-                and relationship.child in captured_names
-                and relationship.child not in affected
-            ):
-                affected.add(relationship.child)
-                changed = True
+    _expand_affected(affected, captured_names, plan.relationships)
     return [
         RetryWithParameterRemediation(
             minimum_value=required_minimum,
