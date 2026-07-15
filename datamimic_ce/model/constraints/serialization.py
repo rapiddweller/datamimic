@@ -123,27 +123,23 @@ def constraints_schema_extra(
     return inject
 
 
+_CONSTRAINT_KIND_MAP: dict[type, str] = {
+    RequiredOneOf: "required_one_of",
+    MutuallyExclusive: "mutually_exclusive",
+    MutuallyExclusiveWhen: "mutually_exclusive_when",
+    Requires: "requires",
+    RequiresWhenValue: "requires_when_value",
+    AllOrNone: "all_or_none",
+    Forbids: "forbids",
+    ForbidsWhenValue: "forbids_when_value",
+    ValidValues: "valid_values",
+    AllowedValuesWhen: "allowed_values_when",
+}
+
+
 def _constraint_kind(fact: Constraint) -> str:
     """Map a constraint instance to its kind discriminator string."""
-    if isinstance(fact, RequiredOneOf):
-        return "required_one_of"
-    elif isinstance(fact, MutuallyExclusive):
-        return "mutually_exclusive"
-    elif isinstance(fact, MutuallyExclusiveWhen):
-        return "mutually_exclusive_when"
-    elif isinstance(fact, Requires):
-        return "requires"
-    elif isinstance(fact, RequiresWhenValue):
-        return "requires_when_value"
-    elif isinstance(fact, AllOrNone):
-        return "all_or_none"
-    elif isinstance(fact, Forbids):
-        return "forbids"
-    elif isinstance(fact, ForbidsWhenValue):
-        return "forbids_when_value"
-    elif isinstance(fact, ValidValues):
-        return "valid_values"
-    elif isinstance(fact, AllowedValuesWhen):
-        return "allowed_values_when"
-    else:
-        raise TypeError(f"Unknown constraint type: {type(fact)}")
+    kind = _CONSTRAINT_KIND_MAP.get(type(fact))
+    if kind is not None:
+        return kind
+    raise TypeError(f"Unknown constraint type: {type(fact)}")
