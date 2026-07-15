@@ -17,7 +17,9 @@ using only the `datamimic` CLI as its tool?** This is the actual use case the
 `capabilities` command exists for.
 
 Three conditions were run, added incrementally as each answer raised the next
-question:
+question (plus a corrected-sampling rerun of Condition B, "B2" — see its own
+section — after a review question surfaced that Condition B's sampling
+config was not best-practice):
 
 - **Condition A — hand-rolled text protocol:** the model requests CLI
   invocations via a documented `CLI: <args>` text convention and submits its
@@ -91,11 +93,24 @@ acceptance checks passed, deterministic replay passed).
 | `gemma4:e4b` | yes | pass | pass |
 | `gemma4:e4b-it-qat` | yes | pass | pass |
 | `gemma4:31b-cloud` | no (Ollama cloud) | not run | pass |
+| `nemotron-3-nano:30b-cloud` | no (Ollama cloud) | not run | pass |
+| `qwen3.5:cloud` | no (Ollama cloud) | not run | **fail — subscription required** |
+| `mistral-large-3:675b-cloud` | no (Ollama cloud) | not run | **fail — subscription required** |
+| `deepseek-v4-flash:cloud` | no (Ollama cloud) | not run | **fail — subscription required** |
 
-The first three models were reachable via the local Ollama server in both
-conditions; no access failures. `-cloud`-tagged Ollama models were excluded
-from the original scope — they proxy to Ollama's cloud, not local inference —
-but `gemma4:31b-cloud` was added to Condition B on request, as a larger
+Three of the requested cloud models returned `HTTP 403` / "this model
+requires a subscription, upgrade for access" on every chat request — a
+real access gate, not a harness bug (`api/show` on these models succeeds and
+reports normal capabilities; only the actual inference call is gated). This
+matches a prior, now-deleted diagnostic's finding that `qwen3.5:cloud`
+specifically was inaccessible. These three are excluded from all semantic
+denominators below, per this archive's own access/semantic separation
+convention.
+
+The three genuinely local models were reachable via the local Ollama server
+in both conditions; no access failures. `-cloud`-tagged Ollama models were
+excluded from the original scope — they proxy to Ollama's cloud, not local
+inference — but `gemma4:31b-cloud` was added to Condition B on request, as a larger
 (31B vs. 8-9B) reference point run through the identical harness/budget.
 
 ## Condition A — hand-rolled text protocol
@@ -265,25 +280,96 @@ spec than any Condition A/B submission got. Self-reported confusion points:
 none; the agent's own report states the schema was "clear and consistent
 after exploring the reference documentation."
 
+## Errata: Condition B's sampling was not best-practice, and B2 corrects it
+
+**Condition B's four model runs above (`qwen3.5:9b-mlx`, `gemma4:e4b`,
+`gemma4:e4b-it-qat`, `gemma4:31b-cloud`) forced `temperature: 0.2` on every
+request.** That was inherited unreflected from a prior, now-deleted
+harness's determinism-first design and never re-checked against these
+specific models. `ollama show <model> --parameters` shows every locally
+declared model in this diagnostic lists `temperature: 1` (not 0.2) as its own
+default — `top_p 0.95`/`top_k 20-64` and, for `qwen3.5:9b-mlx`,
+`presence_penalty 1.5`, are also part of each model's declared configuration.
+Overriding only `temperature` deviates from the model's own tuned defaults
+without a stated reason; this is not best practice.
+
+**Condition B2** re-runs the same task/oracle/seed/6-turn budget/tool
+schema, with the harness fixed to send only `seed` in `options` — every
+other sampling parameter now falls back to each model's own declared
+default. It also adds the three newly-requested models
+(`nemotron-3-nano:30b-cloud`, plus `qwen3.5:cloud` and
+`mistral-large-3:675b-cloud`/`deepseek-v4-flash:cloud`, all three of which
+turned out to be access-gated — see Access gate above).
+
+| Model | Discovery tool calls | `scaffold_submit` calls | No-tool-call turns | Verified? |
+|---|---|---|---|---|
+| `qwen3.5:9b-mlx` | 6 | 0 | 0 | no — turn budget exhausted, never submitted |
+| `gemma4:e4b` | 1 | 5 | 0 | no — turn budget exhausted |
+| `gemma4:e4b-it-qat` | 4 | 1 | 1 | no — turn budget exhausted |
+| `gemma4:31b-cloud` | 6 | 0 | 0 | no — turn budget exhausted, never submitted |
+| `nemotron-3-nano:30b-cloud` | 6 | 0 | 0 | no — turn budget exhausted, never submitted |
+
+**0/5 verified — correcting the sampling defaults did not change the
+pass/fail outcome for any of the four re-run models, and the new model
+(`nemotron-3-nano:30b-cloud`) also failed to verify.** It did change
+qualitative behavior, in ways that cut against a simple "low temperature
+caused the failures" story:
+
+- **`gemma4:e4b`** is the clearest case: at `temperature: 0.2` (original
+  Condition B) it made 2 distinct submission attempts with genuinely
+  different, evolving mistakes. At `temperature: 1` (its own declared
+  default, Condition B2) it made 5 submission attempts, but turns 3–6
+  resubmitted the **exact same** invalid payload four times in a row
+  (`invalid_discriminator` on the product `"kind"`, unchanged) — the same
+  degenerate stuck-loop pattern seen in Condition A's `qwen3.5:9b-mlx` run,
+  now reproduced in Condition B under correct sampling. Its first attempt
+  (turn 2) also invented a completely different, more elaborate wrong shape
+  (`components`/`data_source`/`field_definition` wrappers, `unique_integer`
+  as a field kind) than anything seen at the lower temperature — consistent
+  with higher temperature increasing the variety of wrong guesses without
+  increasing correctness.
+- **`qwen3.5:9b-mlx`** and **`gemma4:31b-cloud`** show the same
+  "thorough-discovery, never submits" pattern as at `temperature: 0.2`,
+  including `qwen3.5:9b-mlx` making an invalid query (`category: entity,
+  kind: composite`) and redundantly re-fetching `capabilities` a second
+  time at turn 5.
+- **`nemotron-3-nano:30b-cloud`** (new) used its entire budget on discovery
+  and never submitted, but its query targeting was visibly weaker than the
+  other models': `category: entity, kind: record`, `category: product,
+  kind: record`, and `category: field, kind: enum` are all invalid
+  category/kind combinations (the correct kind for an enumerated set of
+  values is `values`, not `enum`) — three of its six discovery calls queried
+  fragments that do not exist.
+
+The corrected-sampling data does not support "Condition B's original 0/4 was
+an artifact of bad temperature" — the outcome is unchanged, and the one
+model whose behavior changed most (`gemma4:e4b`) got a new failure mode, not
+a better one. The sampling fix was still the right thing to do (self-imposed,
+uncorrected parameter deviation is not something to leave standing simply
+because it happened not to flip the result here), and it is documented as an
+erratum rather than silently overwriting the original Condition B numbers.
+
 ## Comparison
 
-| | Condition A (text protocol) | Condition B (native tools) | Condition C (Haiku, cleanroom) |
-|---|---|---|---|
-| Verified | 0/3 | 0/4 | 1/1 |
-| Discovery calls used | 0–1 per model | 0–6 per model | 3 (unrationed) |
-| Submission attempts before pass | — | — | 1 |
-| Reasoning visible to evaluator | no | yes (`thinking`) | yes (agent's own report) |
-| Dominant failure mode | guess blindly from invented syntax; one model stuck repeating an identical wrong payload | explore genuinely, converge on most of the structure, miss the product-level `kind` discriminator; two of four never even reach submission | none observed |
+| | Condition A (text protocol) | Condition B (native tools, temp=0.2) | Condition B2 (native tools, model-default sampling) | Condition C (Haiku, cleanroom) |
+|---|---|---|---|---|
+| Verified | 0/3 | 0/4 | 0/5 | 1/1 |
+| Discovery calls used | 0–1 per model | 0–6 per model | 1–6 per model | 3 (unrationed) |
+| Submission attempts before pass | — | — | — | 1 |
+| Reasoning visible to evaluator | no | yes (`thinking`) | yes (`thinking`) | yes (agent's own report) |
+| Dominant failure mode | guess blindly from invented syntax; one model stuck repeating an identical wrong payload | explore genuinely, converge on most of the structure, miss the product-level `kind` discriminator; two of four never even reach submission | same discriminator confusion; `gemma4:e4b` develops its own stuck loop (4 identical resubmissions); weakest model (`nemotron-3-nano:30b-cloud`) queries several nonexistent category/kind pairs | none observed |
 
 Native tool-calling did not flip the pass/fail outcome inside the same
-6-turn budget, but it changed *what* failed. Every model in Condition B
-engaged with the actual discovery tools and made visible, generally sensible
-progress; none exhibited Condition A's degenerate repeated-identical-output
-loop. The remaining blocker narrowed from "wrong syntax across the board" to
-one specific, nameable confusion (product-kind vs. field-kind) plus, for two
-of the four Condition B models (`qwen3.5:9b-mlx`, `gemma4:31b-cloud`), a turn
-budget spent entirely on discovery with nothing left for a submission
-attempt.
+6-turn budget, but it changed *what* failed relative to Condition A. Every
+model in B/B2 engaged with the actual discovery tools and made visible,
+generally sensible progress; the one exception — `gemma4:e4b`'s stuck loop
+in B2 — shows that the "identical repeated payload" pattern is not
+specific to Condition A's text protocol or to low temperature; it recurred
+under native tool-calling with correct sampling too, just in a different
+model. The remaining blocker narrowed from "wrong syntax across the board"
+to one specific, nameable confusion (product-kind vs. field-kind) plus, for
+most B/B2 models, a turn budget spent substantially or entirely on discovery
+with too little left for a converged submission.
 
 Condition C's clean first-attempt pass is the most important single data
 point in this diagnostic: it demonstrates the DATAMIMIC schema and CLI
@@ -298,47 +384,66 @@ conclusive — see follow-up #1.
 
 ## Decision
 
-- **NO-GO (Conditions A/B):** unattended CLI-only authoring by small
+- **NO-GO (Conditions A/B/B2):** unattended CLI-only authoring by small
   (8B–31B), open-weight local/Ollama-hosted models within a 6-turn budget on
-  this task. 0/4 verified across both conditions and four models.
+  this task. 0/9 verified across all three conditions and (counting
+  `gemma4:e4b`/`gemma4:e4b-it-qat`/`qwen3.5:9b-mlx`/`gemma4:31b-cloud` once
+  each plus `nemotron-3-nano:30b-cloud`) eight distinct model runs.
+- **Confirmed: Condition B's original sampling was not best-practice**
+  (forced `temperature: 0.2` against every model's own declared default of
+  `1`), **but correcting it (B2) did not change the outcome.** 0/5 verified
+  under model-default sampling, same as 0/4 under the forced low temperature.
+  One model's *failure mode* changed (a new stuck loop in `gemma4:e4b`), not
+  its pass/fail result. Sampling defaults are not the explanation for these
+  models' failures.
 - **GO (schema/CLI is not the blocker):** Condition C shows a competent model
   resolves the whole task, including the exact discriminator confusion every
-  A/B model hit, zero-shot and cleanroom, with less discovery than several
-  A/B models used. The compact `capabilities` index and the rest of the CLI
-  surface are not implicated as the cause of the A/B failures.
+  A/B/B2 model hit, zero-shot and cleanroom, with less discovery than several
+  A/B/B2 models used. The compact `capabilities` index and the rest of the
+  CLI surface are not implicated as the cause of the A/B/B2 failures.
 - **GO (tooling choice):** native tool-calling over a hand-rolled text
   protocol for any future local-model harness. It did not change the
-  pass/fail count in A vs. B, but it eliminated a degenerate failure mode
-  (the identical-payload stuck loop), produced auditable reasoning traces,
+  pass/fail count in A vs. B/B2, but it produced auditable reasoning traces
   and measurably increased genuine discovery-tool usage — strictly better
   evidence quality for the same budget, independent of whether it changes the
-  verified rate on a larger run.
+  verified rate on a larger run. (It did not reliably eliminate the
+  identical-payload stuck loop either — see B2's `gemma4:e4b`.)
+- **Access, not capability, is the finding for three of the seven requested
+  cloud models:** `qwen3.5:cloud`, `mistral-large-3:675b-cloud`, and
+  `deepseek-v4-flash:cloud` all require an Ollama subscription this
+  environment doesn't have. No semantic conclusion is possible for these
+  three.
 - **NO DATA:** whether the compact `capabilities` index itself is a
-  bottleneck. Across Condition B, three of four models skipped `capabilities`
-  entirely in favor of `reference scaffold` (the full JSON Schema) when both
-  were offered as equally-weighted tools — suggesting the compact index's
-  role is a token-budget optimization for cases where an agent doesn't need
-  full detail, not a hard blocker when an agent does reach for the detailed
-  path. No model in any condition was ever observed failing *because* the
-  compact index specifically omitted something it needed and had no
-  drill-down for.
-- **NO DATA:** whether Condition B's small/mid open-weight models would pass
-  under a Condition-C-shaped budget (more turns, unrationed discovery). The
-  two models that spent their entire Condition B budget on discovery
-  (`qwen3.5:9b-mlx`, `gemma4:31b-cloud`) never got to demonstrate whether
-  their discovery had actually converged on a correct understanding — the
-  budget ran out before that question could be answered either way.
+  bottleneck. Across B/B2, most models skipped `capabilities` entirely in
+  favor of `reference scaffold` (the full JSON Schema) when both were
+  offered as equally-weighted tools — suggesting the compact index's role is
+  a token-budget optimization for cases where an agent doesn't need full
+  detail, not a hard blocker when an agent does reach for the detailed path.
+  No model in any condition was ever observed failing *because* the compact
+  index specifically omitted something it needed and had no drill-down for.
+- **NO DATA:** whether the models that spent their entire B/B2 budget on
+  discovery (`qwen3.5:9b-mlx`, `gemma4:31b-cloud`, `nemotron-3-nano:30b-cloud`
+  — three of five in B2) would pass under a Condition-C-shaped budget (more
+  turns, unrationed discovery). They never got to demonstrate whether their
+  discovery had actually converged on a correct understanding.
 - **NO DATA:** model ranking or reliability claims from a single seed, small
   model/condition counts, and (for Condition C) a single run.
 
 ## Ranked follow-up
 
-1. Re-run Condition B with a larger turn budget (10–12) for at least
-   `qwen3.5:9b-mlx` and `gemma4:31b-cloud`, which spent their entire budget on
-   discovery without ever submitting — this is the single highest-value
-   re-run, since it directly tests whether those two "ran out of time" or
-   "would have failed the same way as `gemma4:e4b`/`gemma4:e4b-it-qat`."
-2. Make the product-level `"kind"` discriminator harder to miss: either
+1. Run Condition C's exact task/prompt through Condition B2's exact harness
+   (fixed 4-tool schema, 6-turn budget, subprocess isolation, model-default
+   sampling) with a capable model, to get one genuinely controlled A/B/C
+   comparison — the current Condition C result is suggestive but was run
+   with a different budget shape and tool surface, which this diagnostic has
+   been explicit about not controlling for. This is the single highest-value
+   remaining gap.
+2. Re-run Condition B2 with a larger turn budget (10–12) for the three
+   discovery-only models (`qwen3.5:9b-mlx`, `gemma4:31b-cloud`,
+   `nemotron-3-nano:30b-cloud`) — this directly tests whether they "ran out
+   of time" or "would have failed the same way as `gemma4:e4b`/
+   `gemma4:e4b-it-qat`."
+3. Make the product-level `"kind"` discriminator harder to miss: either
    surface a one-line worked example (`{"kind": "generated", ...}` at the
    product level) directly in `capabilities`' compact index or in
    `reference scaffold`'s output, or strengthen the `invalid_discriminator`
@@ -346,26 +451,29 @@ conclusive — see follow-up #1.
    on the model to infer it's a different `"kind"` than the field-level one
    it just saw. This is the single most common root cause across every
    condition and every model that reached a submission.
-3. Test a discovery-budget guard: cap discovery calls (e.g. at 3) and require
-   a submission attempt after that, so models like `qwen3.5:9b-mlx` and
-   `gemma4:31b-cloud` that discover thoroughly but never converge to a
-   submission are forced to test their understanding within the turn budget.
-4. Run Condition C's exact task/prompt through Condition B's exact harness
-   (fixed 4-tool schema, 6-turn budget, subprocess isolation) with a
-   capable model, to get one genuinely controlled A/B/C comparison — the
-   current Condition C result is suggestive but was run with a different
-   budget shape and tool surface, which this diagnostic has been explicit
-   about not controlling for.
-5. Re-run with seeds 42–46 across all conditions before making any GO/NO-GO
+4. Investigate `gemma4:e4b`'s stuck loop in B2 specifically (4 byte-identical
+   resubmissions of a payload already known to fail) — this is the second
+   time this exact degenerate pattern has appeared (Condition A's
+   `qwen3.5:9b-mlx`, now B2's `gemma4:e4b`), in different models under
+   different protocols and sampling settings, which suggests it may be a
+   more general Ollama chat-loop artifact (e.g. the model's context making
+   near-identical continuations likely) rather than a property of any one
+   model or setting.
+5. Test a discovery-budget guard: cap discovery calls (e.g. at 3) and require
+   a submission attempt after that, so models that discover thoroughly but
+   never converge to a submission are forced to test their understanding
+   within the turn budget.
+6. Re-run with seeds 42–46 across all conditions before making any GO/NO-GO
    claim about the compact index's real-world sufficiency or about
-   native-tool-calling's effect on the verified rate — this diagnostic is one
-   seed throughout.
-6. If a future harness is built for real (per this directory's "Contract for
-   a future canonical harness"), it should default to native tool-calling per
-   Condition B's evidence, and should log `thinking` traces (or, for
-   Claude-family agents, the agent's own self-reported call sequence) in its
-   hashed call ledger — they were the single most useful signal in this
-   diagnostic for understanding *why* a run failed, not just that it did.
+   native-tool-calling's/sampling's effect on the verified rate — this
+   diagnostic is one seed throughout.
+7. If a future harness is built for real (per this directory's "Contract for
+   a future canonical harness"), it should default to native tool-calling and
+   each model's own declared sampling defaults (never an arbitrary uniform
+   temperature), and should log `thinking` traces (or, for Claude-family
+   agents, the agent's own self-reported call sequence) in its hashed call
+   ledger — they were the single most useful signal in this diagnostic for
+   understanding *why* a run failed, not just that it did.
 
 ## Verification commands
 
