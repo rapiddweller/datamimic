@@ -10,6 +10,11 @@ agent authoring.
   diagnoses whether the compact-by-default `datamimic capabilities` index is
   sufficient, on its own, for local Ollama models to author a verified
   `model.dm.json` through the CLI alone.
+- [`evaluations/2026-07-15-t1-t5-challenge-ladder.md`](evaluations/2026-07-15-t1-t5-challenge-ladder.md)
+  extends that diagnostic to a five-rung difficulty ladder (flat →
+  relational → mixed fields → memstore pipeline → time series) across five
+  local models with a Claude Haiku baseline, paper-structured with a failure
+  taxonomy and threats-to-validity section.
 
 The records deliberately omit generated models, transcripts, provider request
 identifiers, and runtime outputs. Those artifacts belong in a system temporary
