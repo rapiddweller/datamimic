@@ -48,6 +48,7 @@ from datamimic_ce.model.constraints import (
     ValidValues,
     authoring_rule_definition,
     authoring_rule_definitions,
+    resolved_allowed,
     resolved_values,
     serialize_constraints,
     serialize_rule_definition,
@@ -113,14 +114,7 @@ def _render_forbids_constraint(fact: Forbids, advisory: str) -> str:
     return f"{fact.attr} cannot combine with: {excludes}{suffix}{advisory}"
 
 
-def _render_constraint_terse(fact: Constraint) -> str:
-    """Render a single constraint object as a terse one-liner for element_reference().
-
-    Renders structural facts only (attr/attrs/needs/excludes/when_true); message is omitted.
-    Attributes are sorted for stable output. lint_only facts are marked with [advisory].
-    """
-    advisory = " [advisory]" if fact.lint_only else ""
-
+def _render_structural_constraint(fact: Constraint, advisory: str) -> str | None:
     if isinstance(fact, RequiredOneOf):
         attrs_str = ", ".join(sorted(fact.attrs))
         return f"at least one of: {attrs_str}{advisory}"
@@ -131,30 +125,57 @@ def _render_constraint_terse(fact: Constraint) -> str:
         attrs_str = ", ".join(sorted(fact.attrs))
         gate = "is true" if fact.when_true else "is set"
         return f"at most one of: {attrs_str} (when {fact.when_attr} {gate}){advisory}"
+    if isinstance(fact, AllOrNone):
+        attrs_str = ", ".join(sorted(fact.attrs))
+        return f"{attrs_str}: all together or none{advisory}"
+    return None
+
+
+def _render_dependency_constraint(fact: Constraint, advisory: str) -> str | None:
     if isinstance(fact, Requires):
         return _render_requires_constraint(fact, advisory)
     if isinstance(fact, RequiresWhenValue):
         return _render_conditional_requires_constraint(fact, advisory)
-    if isinstance(fact, AllOrNone):
-        attrs_str = ", ".join(sorted(fact.attrs))
-        return f"{attrs_str}: all together or none{advisory}"
     if isinstance(fact, Forbids):
         return _render_forbids_constraint(fact, advisory)
     if isinstance(fact, ForbidsWhenValue):
         values_str = ", ".join(sorted(fact.when_values))
         excludes_str = ", ".join(sorted(fact.excludes))
         return f"{fact.when_attr} in [{values_str}] cannot combine with: {excludes_str}{advisory}"
+    return None
+
+
+def _render_value_constraint(fact: Constraint, advisory: str) -> str | None:
     if isinstance(fact, ValidValues):
-        # Evaluate callable values; static sets/tuples are already iterable
-        values = sorted(fact.values()) if callable(fact.values) else sorted(fact.values)
-        values_str = ", ".join(values)
+        values_str = ", ".join(sorted(resolved_values(fact)))
         return f"{fact.attr} must be one of: {values_str}{advisory}"
     if isinstance(fact, AllowedValuesWhen):
-        # Evaluate callable allowed; static sets/tuples are already iterable
-        allowed = sorted(fact.allowed()) if callable(fact.allowed) else sorted(fact.allowed)
-        allowed_str = ", ".join(allowed)
-        suffix = f" (when {fact.when_attr} is true)" if fact.when_true else f" (when {fact.when_attr} is set)"
+        allowed_str = ", ".join(sorted(resolved_allowed(fact)))
+        suffix = (
+            f" (when {fact.when_attr} is true)"
+            if fact.when_true
+            else f" (when {fact.when_attr} is set)"
+        )
         return f"{fact.attr} must be one of: {allowed_str}{suffix}{advisory}"
+    return None
+
+
+def _render_constraint_terse(fact: Constraint) -> str:
+    """Render a single constraint object as a terse one-liner for element_reference().
+
+    Renders structural facts only (attr/attrs/needs/excludes/when_true); message is omitted.
+    Attributes are sorted for stable output. lint_only facts are marked with [advisory].
+    """
+    advisory = " [advisory]" if fact.lint_only else ""
+    structural = _render_structural_constraint(fact, advisory)
+    if structural is not None:
+        return structural
+    dependency = _render_dependency_constraint(fact, advisory)
+    if dependency is not None:
+        return dependency
+    value = _render_value_constraint(fact, advisory)
+    if value is not None:
+        return value
     return f"<unknown constraint type: {type(fact).__name__}>{advisory}"
 
 

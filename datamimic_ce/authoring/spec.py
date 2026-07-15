@@ -366,7 +366,8 @@ def _file_export_schema(schema: JsonDict) -> None:
     if isinstance(properties, dict):
         format_schema = properties.get("format")
         if isinstance(format_schema, dict):
-            enum_values = list[JsonValue](sorted(buffered_exporter_names()))
+            enum_values: list[JsonValue] = []
+            enum_values.extend(sorted(buffered_exporter_names()))
             format_schema["enum"] = enum_values
 
 

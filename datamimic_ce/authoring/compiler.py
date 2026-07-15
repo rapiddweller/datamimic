@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
+from typing import assert_never
 from xml.etree.ElementTree import Element
 from xml.sax.saxutils import quoteattr
 
@@ -547,20 +548,20 @@ def _field_plan(field: FieldIntentUnion) -> FieldPlan:
     return LeafFieldPlan(name=field.name, kind=field.kind, roles=roles)
 
 
-def _source_plan(product: ProductIntentUnion | NestedGeneratedProduct) -> SourceBindingPlan | None:
-    if not isinstance(product, SourceProduct):
-        return None
+def _source_plan(product: SourceProduct) -> SourceBindingPlan:
     if isinstance(product.source, FileSource):
         return FileSourceBindingPlan(
             path=product.source.path,
             separator=product.source.separator,
             distribution=product.source.distribution,
         )
-    return MemstoreSourceBindingPlan(
-        id=product.source.id,
-        product=product.source.product,
-        distribution=product.source.distribution,
-    )
+    if isinstance(product.source, MemstoreSource):
+        return MemstoreSourceBindingPlan(
+            id=product.source.id,
+            product=product.source.product,
+            distribution=product.source.distribution,
+        )
+    assert_never(product.source)
 
 
 def _target_plans(
@@ -717,8 +718,6 @@ def _product_compile_plan(
         )
     if isinstance(product, SourceProduct):
         source = _source_plan(product)
-        if source is None:
-            raise CompileError(f"source plan missing for '{product.name}'")
         return SourceProductCompilePlan(
             name=product.name,
             fields=fields,
