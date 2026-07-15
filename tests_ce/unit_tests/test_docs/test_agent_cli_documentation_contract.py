@@ -36,6 +36,12 @@ def test_agent_facing_readme_relative_links_resolve() -> None:
     assert missing == []
 
 
+def test_agents_md_points_to_scaffold_for_the_full_intent_schema() -> None:
+    agents_md = (_REPOSITORY_ROOT / "AGENTS.md").read_text(encoding="utf-8")
+
+    assert "datamimic reference scaffold" in agents_md
+
+
 def test_documentation_index_has_no_removed_authoring_archive() -> None:
     documentation_index = (_REPOSITORY_ROOT / "docs" / "README.md").read_text(encoding="utf-8")
 

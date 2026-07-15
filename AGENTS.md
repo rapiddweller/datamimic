@@ -47,7 +47,9 @@ adapter.
 1. Query the Intent Model before guessing. Run `datamimic reference authoring`
    to list typed category/kind queries, then request only the fragment needed,
    for example `datamimic reference authoring --category field --kind weighted`
-   or `datamimic reference authoring --category source --kind memstore`.
+   or `datamimic reference authoring --category source --kind memstore`. For the
+   complete `model.dm.json` JSON Schema (`AuthoringSpecV1`), run
+   `datamimic reference scaffold`.
 2. Create one canonical `model.dm.json` with `version: "1"`. Do not hand-author
    XML for a new model; XML is deterministic compiler output, not the Intent SPOT.
 3. Invoke `datamimic scaffold model.dm.json --format json`. Each attempt is one

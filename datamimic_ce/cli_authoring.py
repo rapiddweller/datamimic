@@ -187,7 +187,9 @@ def show_capabilities(section: str | None = None, full: bool = False) -> None:
     from datamimic_ce.authoring.contracts import CapabilitiesRequest, UnknownCapabilitySection
 
     if section is not None and full:
-        cli_presenter.fail("--section and --full are mutually exclusive", code=1)
+        conflict_payload: dict[str, object] = {"ok": False, "error": "--section and --full are mutually exclusive"}
+        typer.echo(json.dumps(conflict_payload, indent=2))
+        raise typer.Exit(1)
     try:
         if section is not None:
             sections = tuple(s.strip() for s in section.split(",") if s.strip())

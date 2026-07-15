@@ -552,6 +552,7 @@ def capabilities_index() -> dict[str, Any]:
                 "element_detail": "datamimic reference element <tag>",
                 "entity_detail": "datamimic reference entities <name>",
                 "rule_detail": "datamimic reference rules <id>",
+                "authoring_spec_detail": "datamimic reference scaffold",
                 "full_section": "datamimic capabilities --section <name>",
                 "full_manifest": "datamimic capabilities --full",
             },

@@ -170,6 +170,7 @@ def test_capabilities_cli_compact_is_valid_json() -> None:
     assert data["_meta"]["format_version"] == 1
     assert data["_meta"]["view"] == "compact"
     assert "authoring_spec" not in data
+    assert data["_meta"]["usage"]["authoring_spec_detail"] == "datamimic reference scaffold"
 
 
 def test_capabilities_cli_section_error_is_machine_readable() -> None:
@@ -192,6 +193,9 @@ def test_capabilities_cli_section_and_full_are_mutually_exclusive() -> None:
 
     result = CliRunner().invoke(app, ["capabilities", "--section", "x", "--full"])
     assert result.exit_code == 1
+    data = json.loads(result.stdout)
+    assert data["ok"] is False
+    assert "mutually exclusive" in data["error"]
 
 
 def test_capabilities_cli_section_mode_returns_keyed_dict() -> None:
