@@ -11,9 +11,10 @@ the shared numeric limits here prevents one transport from accepting requests
 that another transport rejects.
 """
 
+from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
-from typing import Annotated, Any, Callable, Literal, Self
+from typing import Annotated, Any, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, RootModel, StrictStr, TypeAdapter, model_validator
 
@@ -744,7 +745,9 @@ DerivedAcceptancePlan = Annotated[
 # ---------------------------------------------------------------------------
 
 
-def _require_product(products_by_name: dict[str, "ProductCompilePlan"], name: str, context: str) -> "ProductCompilePlan":
+def _require_product(
+    products_by_name: dict[str, "ProductCompilePlan"], name: str, context: str
+) -> "ProductCompilePlan":
     product = products_by_name.get(name)
     if product is None:
         raise ValueError(f"{context} references unknown product '{name}'")
@@ -768,13 +771,13 @@ def _require_field(
 def _build_product_index(
     products: list["ProductCompilePlan"],
 ) -> tuple[dict[str, "ProductCompilePlan"], dict[str, dict[str, "FieldPlan"]]]:
-    products_by_name: dict[str, "ProductCompilePlan"] = {}
-    fields_by_product: dict[str, dict[str, "FieldPlan"]] = {}
+    products_by_name: dict[str, ProductCompilePlan] = {}
+    fields_by_product: dict[str, dict[str, FieldPlan]] = {}
     for product in products:
         if product.name in products_by_name:
             raise ValueError(f"duplicate product name '{product.name}'")
         products_by_name[product.name] = product
-        fields: dict[str, "FieldPlan"] = {}
+        fields: dict[str, FieldPlan] = {}
         for field in product.fields:
             if field.name in fields:
                 raise ValueError(f"duplicate field name '{field.name}' in product '{product.name}'")
@@ -788,7 +791,7 @@ def _validate_generated_products(
     products_by_name: dict[str, "ProductCompilePlan"],
 ) -> tuple[dict[str, "GeneratedProductCompilePlan"], set[tuple[str, str]]]:
     product_nested_edges: set[tuple[str, str]] = set()
-    generated_products: dict[str, "GeneratedProductCompilePlan"] = {}
+    generated_products: dict[str, GeneratedProductCompilePlan] = {}
     for product in products:
         if not isinstance(product, GeneratedProductCompilePlan):
             continue
@@ -908,9 +911,13 @@ def _validate_relationships(
         child = _require_product(products_by_name, relationship.child, "relationship")
         endpoints = (relationship.parent, relationship.child)
         if isinstance(relationship, NestedRelationshipPlan):
-            _validate_nested_relationship(relationship, parent, child, endpoints, nested_relationships, product_nested_edges)
+            _validate_nested_relationship(
+                relationship, parent, child, endpoints, nested_relationships, product_nested_edges
+            )
             continue
-        _validate_memstore_relationship(relationship, parent, child, endpoints, memstore_relationships, memstore_children)
+        _validate_memstore_relationship(
+            relationship, parent, child, endpoints, memstore_relationships, memstore_children
+        )
     return nested_relationships, memstore_children
 
 

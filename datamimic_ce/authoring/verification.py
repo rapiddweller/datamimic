@@ -27,7 +27,10 @@ from datamimic_ce.authoring.contracts import (
 from datamimic_ce.authoring.dryrun import CapturedProducts, CapturedRun, SmokeExportCapture
 
 
-def _product_minimum(planned: GeneratedProductCompilePlan | TimeSeriesProductCompilePlan | SourceProductCompilePlan, evidence: ProductCaptureEvidence) -> int | None:
+def _product_minimum(
+    planned: GeneratedProductCompilePlan | TimeSeriesProductCompilePlan | SourceProductCompilePlan,
+    evidence: ProductCaptureEvidence,
+) -> int | None:
     """Extract the minimum expected count from a typed compile plan."""
     if isinstance(planned, GeneratedProductCompilePlan):
         return planned.count_per_parent or planned.static_count
@@ -38,7 +41,11 @@ def _product_minimum(planned: GeneratedProductCompilePlan | TimeSeriesProductCom
     return None
 
 
-def _expand_affected(affected: set[str], captured_names: set[str], relationships: list[NestedRelationshipPlan | MemstoreRelationshipPlan]) -> None:
+def _expand_affected(
+    affected: set[str],
+    captured_names: set[str],
+    relationships: list[NestedRelationshipPlan | MemstoreRelationshipPlan],
+) -> None:
     """Transitively close *affected* over parent→child relationships (mutates in place)."""
     changed = True
     while changed:
