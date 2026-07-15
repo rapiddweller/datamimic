@@ -7,12 +7,6 @@ import typer
 
 from datamimic_ce import cli_authoring, cli_runtime
 from datamimic_ce.authoring.contracts import (
-    MAX_DRY_RUN_COUNT,
-    MAX_SAMPLE_ROWS,
-    MAX_TIMEOUT_SECONDS,
-    MIN_DRY_RUN_COUNT,
-    MIN_SAMPLE_ROWS,
-    MIN_TIMEOUT_SECONDS,
     AuthoringReferenceCategory,
     ReferenceTopic,
 )
@@ -59,8 +53,8 @@ def reference(
 def scaffold(
     spec_path: Path = SPEC_PATH,
     output_format: Annotated[CliOutputFormat, typer.Option("--format", "-f")] = CliOutputFormat.TEXT,
-    max_count: Annotated[int, typer.Option("--max-count", min=MIN_DRY_RUN_COUNT, max=MAX_DRY_RUN_COUNT)] = 10,
-    sample_rows: Annotated[int, typer.Option("--sample-rows", min=MIN_SAMPLE_ROWS, max=MAX_SAMPLE_ROWS)] = 5,
+    max_count: Annotated[int, typer.Option("--max-count")] = 10,
+    sample_rows: Annotated[int, typer.Option("--sample-rows")] = 5,
     smoke_export: Annotated[bool, typer.Option("--smoke-export")] = False,
     deterministic_replay: Annotated[bool, typer.Option("--deterministic-replay")] = False,
 ) -> None:
@@ -79,7 +73,7 @@ def lint(
     descriptor_path: Path = DESCRIPTOR_PATH,
     output_format: Annotated[CliOutputFormat, typer.Option("--format", "-f")] = CliOutputFormat.TEXT,
     fail_on: Annotated[FailureThreshold, typer.Option("--fail-on")] = FailureThreshold.ERROR,
-    max_diagnostics: Annotated[int, typer.Option("--max-diagnostics", min=1, max=200)] = 200,
+    max_diagnostics: Annotated[int, typer.Option("--max-diagnostics")] = 200,
 ) -> None:
     cli_authoring.lint_descriptor(descriptor_path, output_format, fail_on, max_diagnostics)
 
@@ -87,10 +81,10 @@ def lint(
 @app.command("dry-run", help="Safely execute one bounded, target-neutralized descriptor run.")
 def dry_run(
     descriptor_path: Path = DESCRIPTOR_PATH,
-    max_count: Annotated[int, typer.Option("--max-count", min=MIN_DRY_RUN_COUNT, max=MAX_DRY_RUN_COUNT)] = 10,
-    sample_rows: Annotated[int, typer.Option("--sample-rows", min=MIN_SAMPLE_ROWS, max=MAX_SAMPLE_ROWS)] = 5,
+    max_count: Annotated[int, typer.Option("--max-count")] = 10,
+    sample_rows: Annotated[int, typer.Option("--sample-rows")] = 5,
     allow_side_effects: Annotated[bool, typer.Option("--allow-side-effects")] = False,
-    timeout: Annotated[int, typer.Option("--timeout", min=MIN_TIMEOUT_SECONDS, max=MAX_TIMEOUT_SECONDS)] = 30,
+    timeout: Annotated[int, typer.Option("--timeout")] = 30,
     smoke_export: Annotated[bool, typer.Option("--smoke-export")] = False,
     output_format: Annotated[CliOutputFormat, typer.Option("--format", "-f")] = CliOutputFormat.TEXT,
 ) -> None:
