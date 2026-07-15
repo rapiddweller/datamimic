@@ -8,13 +8,37 @@ import os
 import platform
 from importlib.resources import files
 from pathlib import Path
+from typing import Any
 
 import toml
 import typer
+from pydantic import ValidationError
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from datamimic_ce.authoring.contracts import (
+    MAX_DIAGNOSTICS,
+    MAX_DRY_RUN_COUNT,
+    MAX_SAMPLE_ROWS,
+    MAX_TIMEOUT_SECONDS,
+    MIN_DIAGNOSTICS,
+    MIN_DRY_RUN_COUNT,
+    MIN_SAMPLE_ROWS,
+    MIN_TIMEOUT_SECONDS,
+    AuthoringResponseFormat,
+    AuthoringStage,
+    CheckRequest,
+    RunRequest,
+    ScaffoldRequest,
+    ScaffoldResult,
+    ScaffoldVerification,
+)
+from datamimic_ce.authoring.reference import ReferenceTopic
+from datamimic_ce.authoring.reference_projection import (
+    AUTHORING_REFERENCE_QUERY_ADAPTER,
+    AuthoringReferenceCategory,
+)
 from datamimic_ce.datamimic import DataMimic
 from datamimic_ce.logger import logger
 from datamimic_ce.utils.demo_util import demo_autocomplete, handle_demo
@@ -30,6 +54,17 @@ app.add_typer(demo_app, name="demo")
 
 # Constants
 DEFAULT_DESCRIPTOR = "datamimic.xml"
+REFERENCE_TOPIC_ARG = typer.Argument(..., help="Canonical reference topic")
+REFERENCE_CATEGORY_OPTION = typer.Option(
+    None,
+    "--category",
+    help="Compact authoring projection category",
+)
+REFERENCE_KIND_OPTION = typer.Option(
+    None,
+    "--kind",
+    help="Canonical kind within the selected authoring category",
+)
 
 
 # Pre-defined argument objects to avoid B008 errors
@@ -54,6 +89,7 @@ DESCRIPTOR_PATH = typer.Argument(..., help="Path to the descriptor file to valid
 DEFAULT_DESCRIPTOR_PATH = typer.Argument(DEFAULT_DESCRIPTOR, help="Path to the descriptor file")
 DEMO_NAME = typer.Argument(..., help="Name of the demo to get information about", autocompletion=demo_autocomplete)
 OPTIONAL_DEMO_NAME = typer.Argument(None, help="Name of the demo directory to use", autocompletion=demo_autocomplete)
+SPEC_PATH_ARG = typer.Argument(..., help="Path to the JSON spec file (use '-' to read from stdin)")
 
 # Global singleton objects for option defaults
 TARGET_DIRECTORY_OPTION = typer.Option(None, "--target", "-t", help="Target directory for the demo project")
@@ -62,6 +98,27 @@ ALL_DEMOS_OPTION = typer.Option(False, "--all", help="Create all available demo 
 PLATFORM_CONFIGS_OPTION = typer.Option(None, "--platform-configs", help="Platform configurations in JSON format")
 TASK_ID_OPTION = typer.Option(None, "--task-id", help="Task identifier")
 TEST_MODE_OPTION = typer.Option(False, "--test-mode", help="Run in test mode")
+SCAFFOLD_FORMAT_OPTION = typer.Option("text", "--format", "-f", help="text | json")
+SCAFFOLD_MAX_COUNT_OPTION = typer.Option(
+    10,
+    "--max-count",
+    help=f"Maximum count per <generate> ({MIN_DRY_RUN_COUNT}-{MAX_DRY_RUN_COUNT}; nested too)",
+)
+SCAFFOLD_SAMPLE_ROWS_OPTION = typer.Option(
+    5,
+    "--sample-rows",
+    help=f"Maximum sample rows per product ({MIN_SAMPLE_ROWS}-{MAX_SAMPLE_ROWS})",
+)
+SCAFFOLD_SMOKE_EXPORT_OPTION = typer.Option(
+    False,
+    "--smoke-export",
+    help="Test applicable file exporters against rows from the canonical bounded run",
+)
+SCAFFOLD_REPLAY_OPTION = typer.Option(
+    False,
+    "--deterministic-replay",
+    help="Repeat the seeded bounded run and compare every captured row",
+)
 
 # Environment variables
 DATAMIMIC_CONFIG = os.getenv("DATAMIMIC_CONFIG")
@@ -97,19 +154,51 @@ def info():
     console.print(info_table)
 
 
+def _emit_error(output_format: str, message: str, exit_code: int = 2) -> None:
+    """Shared error output contract: text for invalid format, JSON when format is valid but error occurred."""
+    if output_format not in ("text", "json"):
+        # Invalid format itself — emit plain text + exit code
+        typer.echo(f"Error: Invalid format '{output_format}'. Expected: text | json")
+        raise typer.Exit(exit_code)
+
+    if output_format == "json":
+        typer.echo(json.dumps({"ok": False, "error": message}, indent=2, default=str))
+    else:
+        typer.echo(f"Error: {message}")
+    raise typer.Exit(exit_code)
+
+
 def _lint(descriptor_path: Path, output_format: str, fail_on: str, max_diagnostics: int) -> None:
     """Shared implementation for `lint` and its alias `validate` (ESLint-style exit codes:
     0 = clean at/above the threshold, 1 = findings, 2 = file/internal error)."""
-    from datamimic_ce.authoring import Severity, lint_descriptor
+    from datamimic_ce.authoring.service import check
+
+    # Validate format first (before file check, so unknown format is reported immediately)
+    if output_format not in ("text", "json"):
+        _emit_error(output_format, f"Invalid format '{output_format}'. Expected: text | json", exit_code=2)
+    if fail_on not in ("error", "warning"):
+        _emit_error(output_format, f"Invalid fail-on '{fail_on}'. Expected: error | warning", exit_code=2)
+    try:
+        request = CheckRequest(
+            xml=None,
+            path=str(descriptor_path),
+            response_format=AuthoringResponseFormat.DETAILED,
+            max_diagnostics=max_diagnostics,
+        )
+    except ValidationError:
+        _emit_error(
+            output_format,
+            f"Invalid max-diagnostics. Expected an integer from {MIN_DIAGNOSTICS} to {MAX_DIAGNOSTICS}",
+            exit_code=2,
+        )
 
     if not descriptor_path.is_file():
-        typer.echo(f"Error: File not found: {descriptor_path}")
-        raise typer.Exit(2)
+        _emit_error(output_format, f"File not found: {descriptor_path}", exit_code=2)
+
     try:
-        result = lint_descriptor(descriptor_path, max_diagnostics=max_diagnostics)
+        result = check(request)
     except Exception as e:  # unexpected linter crash — distinct from findings
-        typer.echo(f"Lint error: {e}")
-        raise typer.Exit(2) from e
+        _emit_error(output_format, f"Lint error: {e}", exit_code=2)
 
     if output_format == "json":
         typer.echo(result.model_dump_json(indent=2))
@@ -120,8 +209,8 @@ def _lint(descriptor_path: Path, output_format: str, fail_on: str, max_diagnosti
             typer.echo(f"    -> {diag.fix_hint}")
         typer.echo(f"Summary: {result.summary()}" + (f" (+{result.truncated} truncated)" if result.truncated else ""))
 
-    fail_severities = {Severity.ERROR} if fail_on == "error" else {Severity.ERROR, Severity.WARNING}
-    failed = any(diag.severity in fail_severities for diag in result.diagnostics)
+    fail_severities = {"error"} if fail_on == "error" else {"error", "warning"}
+    failed = any(diag.severity.value in fail_severities for diag in result.diagnostics)
     raise typer.Exit(1 if failed else 0)
 
 
@@ -144,18 +233,376 @@ def validate(
     _lint(descriptor_path, output_format="text", fail_on="error", max_diagnostics=200)
 
 
-@app.command("capabilities", help="Print the DSL surface as JSON: elements, generators, entities, converters, targets.")
+@app.command(
+    "capabilities",
+    help="Print DSL structural surface as JSON: names and enum values (use `datamimic reference` for prose).",
+)
 def capabilities():
-    """Machine-readable capability manifest, derived live from the engine registries.
+    """Machine-readable, names-only capability manifest, derived live from the engine registries.
 
-    For agents without an MCP runtime: the same knowledge `datamimic_reference` serves
-    interactively, in one queryable JSON document that cannot drift from the code.
+    This is a structural index, not the full DSL knowledge base: no prose, no generator
+    parameter lists or entity field schemas, no recipes. For that, use
+    `datamimic reference <topic> [name]` (e.g. `datamimic reference element variable`,
+    `datamimic reference recipes`) — the CLI-first equivalent of the MCP `datamimic_reference`
+    tool.
     """
     import json
 
     from datamimic_ce.authoring.reference import capabilities_manifest
 
     typer.echo(json.dumps(capabilities_manifest(), indent=2, default=str))
+
+
+def _dry_run(
+    descriptor_path: Path,
+    max_count: int,
+    sample_rows: int,
+    allow_side_effects: bool,
+    timeout_seconds: int,
+    smoke_export: bool,
+    output_format: str,
+) -> None:
+    """Shared implementation for `dry-run` command (exit codes: 0 = ok, 1 = dry-run failed, 2 = file/internal error)."""
+    from datamimic_ce.authoring.service import run
+
+    # Validate format first (before file check, so unknown format is reported immediately)
+    if output_format not in ("text", "json"):
+        _emit_error(output_format, f"Invalid format '{output_format}'. Expected: text | json", exit_code=2)
+    try:
+        request = RunRequest(
+            xml=None,
+            path=str(descriptor_path),
+            response_format=AuthoringResponseFormat.DETAILED,
+            max_count=max_count,
+            sample_rows=sample_rows,
+            allow_side_effects=allow_side_effects,
+            timeout_seconds=timeout_seconds,
+            smoke_export=smoke_export,
+        )
+    except ValidationError as error:
+        invalid_field = str(error.errors()[0]["loc"][0])
+        messages = {
+            "max_count": (
+                "Invalid max-count. Expected an integer from "
+                f"{MIN_DRY_RUN_COUNT} to {MAX_DRY_RUN_COUNT}"
+            ),
+            "sample_rows": (
+                "Invalid sample-rows. Expected an integer from "
+                f"{MIN_SAMPLE_ROWS} to {MAX_SAMPLE_ROWS}"
+            ),
+            "timeout_seconds": (
+                "Invalid timeout. Expected an integer from "
+                f"{MIN_TIMEOUT_SECONDS} to {MAX_TIMEOUT_SECONDS}"
+            ),
+        }
+        _emit_error(output_format, messages[invalid_field], exit_code=2)
+
+    if not descriptor_path.is_file():
+        _emit_error(output_format, f"File not found: {descriptor_path}", exit_code=2)
+
+    try:
+        result = run(request)
+    except Exception as e:  # unexpected dry-run crash — distinct from findings
+        _emit_error(output_format, f"Dry-run error: {e}", exit_code=2)
+
+    if output_format == "json":
+        typer.echo(result.model_dump_json(indent=2))
+    else:
+        # Text format: print summary, products, then diagnostics
+        typer.echo(f"ok: {result.ok}")
+        typer.echo(f"stage: {result.stage.value}")
+        if result.timing_ms is not None:
+            typer.echo(f"timing: {result.timing_ms}ms")
+
+        if result.products:
+            typer.echo("")
+            for product in result.products:
+                truncated_note = " (truncated)" if product.truncated_rows else ""
+                typer.echo(f"{product.name}: {product.count} rows{truncated_note}")
+                for row in product.sample:
+                    typer.echo(f"  {row}")
+
+        if result.products_truncated > 0:
+            typer.echo(f"(+{result.products_truncated} products truncated)")
+
+        # Print diagnostics in the same format as _lint
+        if result.diagnostics:
+            typer.echo("")
+            for diag in result.diagnostics:
+                typer.echo(f"{diag.severity.value.upper():<7} {diag.rule}  {diag.message}")
+                typer.echo(f"    -> {diag.fix_hint}")
+
+    raise typer.Exit(0 if result.ok else 1)
+
+
+@app.command("dry-run", help="Safely dry-run a descriptor: lint gate, capped counts, neutralized targets, sample rows.")
+def dry_run_cmd(
+    descriptor_path: Path = DESCRIPTOR_PATH,
+    max_count: int = typer.Option(
+        10,
+        "--max-count",
+        help=f"Maximum count per generate statement ({MIN_DRY_RUN_COUNT}-{MAX_DRY_RUN_COUNT})",
+    ),
+    sample_rows: int = typer.Option(
+        5,
+        "--sample-rows",
+        help=f"Maximum sample rows per product ({MIN_SAMPLE_ROWS}-{MAX_SAMPLE_ROWS})",
+    ),
+    allow_side_effects: bool = typer.Option(
+        False,
+        "--allow-side-effects",
+        help="Keep file/DB targets and allow <execute> statements (default: neutralized - no writes)",
+    ),
+    timeout: int = typer.Option(
+        30,
+        "--timeout",
+        help=f"Timeout in seconds ({MIN_TIMEOUT_SECONDS}-{MAX_TIMEOUT_SECONDS})",
+    ),
+    smoke_export: bool = typer.Option(False, "--smoke-export", help="Test file exporters with captured rows"),
+    output_format: str = typer.Option("text", "--format", "-f", help="text | json"),
+):
+    """Safely dry-run a descriptor with capped counts and neutralized targets."""
+    _dry_run(
+        descriptor_path,
+        max_count=max_count,
+        sample_rows=sample_rows,
+        allow_side_effects=allow_side_effects,
+        timeout_seconds=timeout,
+        smoke_export=smoke_export,
+        output_format=output_format,
+    )
+
+
+def _scaffold(
+    spec_path: Path,
+    output_format: str,
+    max_count: int,
+    sample_rows: int,
+    smoke_export: bool,
+    deterministic_replay: bool,
+) -> None:
+    """Shared implementation for `scaffold` command (exit codes: 0 = ok, 1 = findings, 2 = file/input error).
+
+    Uses the service layer (datamimic_ce.authoring.service.scaffold) for the render ->
+    lint -> bounded run -> acceptance pipeline so the CLI and MCP surfaces can't drift. Only
+    output formatting (JSON vs text) and exit code mapping are CLI-specific.
+
+    Supports stdin via '-' as spec_path.
+    """
+    import sys
+
+    from datamimic_ce.authoring.service import scaffold
+
+    # Validate output format early
+    if output_format not in ("text", "json"):
+        typer.echo(f"Error: Invalid format '{output_format}'. Expected: text | json")
+        raise typer.Exit(2)
+
+    def _fail(exit_code: int, message: str) -> None:
+        if output_format == "json":
+            payload: dict[str, Any] = {"ok": False, "error": message}
+            typer.echo(json.dumps(payload, indent=2, default=str))
+        else:
+            typer.echo(f"Error: {message}")
+        raise typer.Exit(exit_code)
+
+    def _emit_result(result_obj: ScaffoldResult) -> None:
+        """Emit the result in the requested format and exit appropriately."""
+        # Determine exit code based on ok flag and stage
+        if not result_obj.ok:
+            exit_code = 2 if result_obj.stage is AuthoringStage.RENDER else 1
+        elif result_obj.stage is AuthoringStage.ACCEPTANCE and not result_obj.verified:
+            exit_code = 1
+        else:
+            exit_code = 0
+
+        if output_format == "json":
+            typer.echo(
+                json.dumps(
+                    result_obj.model_dump(mode="json", exclude_none=True),
+                    indent=2,
+                )
+            )
+        else:
+            # Text format output
+            if result_obj.stage is AuthoringStage.RENDER:
+                typer.echo(f"Error: {result_obj.error}")
+            elif result_obj.stage is AuthoringStage.LINT:
+                if result_obj.diagnostics:
+                    for diag in result_obj.diagnostics:
+                        rule = diag.get("rule", "UNKNOWN")
+                        severity = diag.get("severity", "unknown").upper()
+                        message = diag.get("message", "")
+                        fix_hint = diag.get("fix_hint", "")
+                        typer.echo(f"{severity:<7} {rule}  {message}")
+                        typer.echo(f"    -> {fix_hint}")
+                if result_obj.summary:
+                    typer.echo(f"Summary: {result_obj.summary}")
+                if not result_obj.ok and result_obj.xml:
+                    pass  # lint failure, no XML output
+                elif result_obj.ok and result_obj.xml:
+                    typer.echo("")
+                    typer.echo(result_obj.xml)
+            elif result_obj.stage is AuthoringStage.DRY_RUN:
+                if result_obj.diagnostics:
+                    for diag in result_obj.diagnostics:
+                        rule = diag.get("rule", "UNKNOWN")
+                        severity = diag.get("severity", "unknown").upper()
+                        message = diag.get("message", "")
+                        fix_hint = diag.get("fix_hint", "")
+                        typer.echo(f"{severity:<7} {rule}  {message}")
+                        typer.echo(f"    -> {fix_hint}")
+                if result_obj.xml:
+                    typer.echo("")
+                    typer.echo(result_obj.xml)
+                if result_obj.ok and result_obj.products:
+                    typer.echo("")
+                    typer.echo("Dry-run successful:")
+                    for product in result_obj.products:
+                        typer.echo(f"  {product.name}: {product.count} rows")
+            elif result_obj.stage in (
+                AuthoringStage.ACCEPTANCE,
+                AuthoringStage.VERIFICATION,
+            ):
+                if result_obj.xml:
+                    typer.echo(result_obj.xml)
+                if result_obj.products:
+                    typer.echo("")
+                    typer.echo(
+                        "Dry-run successful:"
+                        if result_obj.verified
+                        else "Bounded dry-run completed without full verification:"
+                    )
+                    for product in result_obj.products:
+                        typer.echo(f"  {product.name}: {product.count} rows")
+                if result_obj.acceptance is not None:
+                    report = result_obj.acceptance
+                    typer.echo("")
+                    typer.echo(
+                        f"Acceptance: {report.passed} passed, {report.failed} failed, {report.unevaluable} unevaluable"
+                    )
+                    for evidence in report.results:
+                        typer.echo(f"  {evidence.status.upper():<11} {evidence.kind}: {evidence.message}")
+                typer.echo("")
+                typer.echo(
+                    "Smoke export: "
+                    f"{result_obj.verification.smoke_export.status.value} — "
+                    f"{result_obj.verification.smoke_export.reason}"
+                )
+                typer.echo(
+                    "Deterministic replay: "
+                    f"{result_obj.verification.deterministic_replay.status.value} — "
+                    f"{result_obj.verification.deterministic_replay.reason}"
+                )
+
+            # Normalization notes surface in text mode on EVERY outcome, success included —
+            # a repaired near-miss the caller never sees is a hidden semantic rewrite.
+            for note in result_obj.normalization_notes:
+                typer.echo(f"note: {note}")
+
+        raise typer.Exit(exit_code)
+
+    # Load the JSON spec from file or stdin
+    try:
+        spec_str = str(spec_path)
+        if spec_str == "-":
+            # Read from stdin
+            spec_text = sys.stdin.read()
+        else:
+            # Read from file
+            spec_path_obj = Path(spec_path)
+            if not spec_path_obj.is_file():
+                _fail(2, f"File not found: {spec_path_obj}")
+            spec_text = spec_path_obj.read_text(encoding="utf-8")
+
+        spec_dict = json.loads(spec_text)
+    except typer.Exit:
+        raise
+    except json.JSONDecodeError as e:
+        _fail(2, f"Invalid JSON: {e}")
+    except Exception as e:
+        _fail(2, f"Failed to read spec: {e}")
+
+    # Validate inputs through ScaffoldRequest (gives us bounds checking)
+    try:
+        request = ScaffoldRequest(
+            spec=spec_dict,
+            max_count=max_count,
+            sample_rows=sample_rows,
+            response_format=AuthoringResponseFormat.CONCISE,
+            verification=ScaffoldVerification(
+                smoke_export=smoke_export,
+                deterministic_replay=deterministic_replay,
+            ),
+        )
+    except ValueError as e:
+        _fail(2, str(e))
+
+    result = scaffold(request)
+
+    _emit_result(result)
+
+
+@app.command(
+    "scaffold",
+    help="Compile and fully verify model.dm.json through one canonical authoring transaction.",
+)
+def scaffold(
+    spec_path: Path = SPEC_PATH_ARG,
+    output_format: str = SCAFFOLD_FORMAT_OPTION,
+    max_count: int = SCAFFOLD_MAX_COUNT_OPTION,
+    sample_rows: int = SCAFFOLD_SAMPLE_ROWS_OPTION,
+    smoke_export: bool = SCAFFOLD_SMOKE_EXPORT_OPTION,
+    deterministic_replay: bool = SCAFFOLD_REPLAY_OPTION,
+):
+    """Compile, lint, bounded-run, accept and optionally verify AuthoringSpecV1.
+
+    Historical compact specs remain accepted through lossless normalization with
+    visible notes. Use `datamimic reference scaffold` for the model.dm.json schema.
+    """
+    _scaffold(
+        spec_path,
+        output_format,
+        max_count,
+        sample_rows,
+        smoke_export,
+        deterministic_replay,
+    )
+
+
+@app.command(
+    "reference",
+    help=f"Look up DATAMIMIC DSL knowledge: {', '.join(ReferenceTopic)}.",
+)
+def reference_cmd(
+    topic: ReferenceTopic = REFERENCE_TOPIC_ARG,
+    name: str | None = typer.Argument(None, help="Optional name within topic (element tag, generator, recipe id)"),
+    category: AuthoringReferenceCategory | None = REFERENCE_CATEGORY_OPTION,
+    kind: str | None = REFERENCE_KIND_OPTION,
+):
+    """Query the DATAMIMIC DSL reference by topic and optional name.
+
+    Topics are projected from the canonical authoring reference vocabulary.
+    """
+    from datamimic_ce.authoring.reference import reference
+
+    try:
+        if category is not None and topic is not ReferenceTopic.AUTHORING:
+            raise ValueError("--category/--kind are only valid for topic=authoring")
+        if topic is ReferenceTopic.AUTHORING and name is not None:
+            raise ValueError("topic=authoring uses --category/--kind, not name")
+        if (category is None) != (kind is None):
+            raise ValueError("--category and --kind must be provided together")
+        query = None
+        if category is not None and kind is not None:
+            query = AUTHORING_REFERENCE_QUERY_ADAPTER.validate_python(
+                {"category": category, "kind": kind}
+            )
+        result = reference(topic, name, query=query)
+        typer.echo(result)
+    except ValueError as e:
+        typer.echo(f"Error: {e}")
+        raise typer.Exit(1) from e
 
 
 @demo_app.command("info")

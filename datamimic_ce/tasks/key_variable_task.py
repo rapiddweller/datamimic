@@ -22,6 +22,7 @@ from datamimic_ce.constants.data_type_constants import (
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
 )
+from datamimic_ce.constants.element_constants import EL_ELEMENT, EL_KEY, EL_VARIABLE
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
@@ -29,13 +30,15 @@ from datamimic_ce.data_sources.weighted_data_source import WeightedDataSource
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
 from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
+from datamimic_ce.model.constraints import SourceFileFormat, source_file_format_for
 from datamimic_ce.statements.element_statement import ElementStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.variable_statement import VariableStatement
+from datamimic_ce.tasks.task import Task
 from datamimic_ce.utils.unique_sampling import unique_value_iter
 
 
-class KeyVariableTask:
+class KeyVariableTask(Task):
     # Specify which mode Attribute and Variable Task will use
     _SCRIPT_MODE = "script"
     _CONSTANT_MODE = "constant"
@@ -54,7 +57,13 @@ class KeyVariableTask:
     ):
         from datamimic_ce.tasks.task_util import TaskUtil
 
-        self._element_tag = "key" if isinstance(statement, KeyStatement) else "variable"
+        self._element_tag = (
+            EL_KEY
+            if isinstance(statement, KeyStatement)
+            else EL_VARIABLE
+            if isinstance(statement, VariableStatement)
+            else EL_ELEMENT
+        )
         self._statement = statement
         self._generator: WeightedDataSource | None = None
         self._pagination = pagination
@@ -132,7 +141,7 @@ class KeyVariableTask:
                     f"'unique' is not supported on a <{self._element_tag}> 'source'; "
                     f"use a <variable source ... unique=\"true\"> or inline 'values'"
                 )
-            if not source.endswith("wgt.csv"):
+            if source_file_format_for(self._element_tag, source) is not SourceFileFormat.WEIGHTED_CSV:
                 raise ValueError(f"Data source of attribute '{self._statement.name}' must be type of: 'wgt.csv'")
             separator = self._statement.separator or ctx.default_separator
             seeded = ctx.derive_seeded_rng()
@@ -149,7 +158,10 @@ class KeyVariableTask:
             # generator and reuse create_generator's seeding + caching (instead of a generator="..." string)
             self._generator = GeneratorUtil(ctx).create_generator(
                 # see above: disambiguate same-named keys across <condition> branches
-                range_gen, self._statement, self._pagination, key=f"{self._statement.full_name}|{range_gen}"
+                range_gen,
+                self._statement,
+                self._pagination,
+                key=f"{self._statement.full_name}|{range_gen}",
             )
             self._mode = self._GENERATOR_MODE
         # IMPORTANT: always put this condition at the end

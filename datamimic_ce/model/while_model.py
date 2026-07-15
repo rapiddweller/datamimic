@@ -11,9 +11,23 @@ from datamimic_ce.model.model_util import ModelUtil
 
 
 class WhileModel(BaseModel):
-    condition: str
+    condition: str = Field(
+        ...,
+        description="Python boolean expression, evaluated against the current row's context (variables/"
+        "keys) before each iteration; the loop body runs while it evaluates truthy. The body must mutate "
+        "something the condition reads (a <variable>/<key>), otherwise the condition never changes and "
+        "the loop runs until 'max_iterations' raises.",
+        examples=["n < 3"],
+    )
     # Mandatory infinite-loop backstop: the loop RAISES when it exceeds this (never silently stops).
-    max_iterations: int = Field(default=10000, alias=ATTR_MAX_ITERATIONS)
+    max_iterations: int = Field(
+        default=10000,
+        alias=ATTR_MAX_ITERATIONS,
+        description="Safety cap on loop iterations per row. Once reached, the loop raises ValueError "
+        "instead of silently stopping, so a non-terminating condition surfaces as an error rather than "
+        "being masked.",
+        examples=[5],
+    )
 
     @model_validator(mode="before")
     @classmethod

@@ -3,7 +3,8 @@
 DATAMIMIC descriptors are XML files (`datamimic.xml`) that declare data pipelines:
 generate synthetic records, read/transform existing sources, and export to files,
 databases, or in-memory stores. Deterministic by choice (`rngSeed`), reviewable,
-re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`.
+re-runnable — lint with `datamimic lint` (MCP: `datamimic_check`), execute safely
+with `datamimic dry-run` (MCP: `datamimic_run`).
 
 ## Minimal descriptor
 
@@ -29,8 +30,9 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
   inside `<nestedKey>`s to any depth.
 - **XML shaping**: inside a `<key>`, child `<element>`s become sub-elements of that
   key in XML output (`<key name="author"><element name="name" script="p.name"/></key>`).
-- `source=` reads existing data (`.csv`, `.json`, `.xlsx`, `.xml`, `.dbunit.xml`,
-  a `<memstore>` id, or a `<database>`/`<mongodb>` id). `offset="N"` skips the
+- `source=` reads existing data; supported files and source kinds vary by element
+  and nested shape. Query `datamimic reference distributions` for the derived
+  runtime matrix. `offset="N"` skips the
   first N source rows (file sources only — DB/memstore sources reject it; the
   count default shrinks to the remainder and `cyclic` wraps within it).
 - **`<generate>` vs `<iterate>`** — same engine element, different *intent*:
@@ -72,6 +74,28 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
   </generate>
   ```
 
+- **Memstore pipelines**: `<memstore id="mem"/>` is an in-memory handoff
+  between two `<generate>` blocks in the SAME run — no DB needed. Declare it
+  once at the top level, WRITE to it by putting its id in `target=` (a
+  producing `<generate>` can write to more than one target, comma-separated,
+  e.g. `target="mem,JSON"`), then READ it back with a `<variable source="mem"
+  type="..."/>` where `type=` names the PRODUCING `<generate>`'s `name=` — on
+  a memstore/DB read, `type=` is not a data type, it selects which producer's
+  rows to read back (falls back to the reader's own `name=` if omitted):
+
+  ```xml
+  <memstore id="mem"/>
+  <generate name="orders" count="20" target="mem,JSON">
+      <key name="order_id" generator="IncrementGenerator"/>
+      <key name="total" type="decimal" min="10" max="500"/>
+  </generate>
+  <generate name="order_summary" count="20">
+      <variable name="row" source="mem" type="orders" distribution="ordered"/>
+      <key name="order_id" script="row.order_id"/>
+      <key name="total_cents" script="int(row.total * 100)"/>
+  </generate>
+  ```
+
 ## Top gotchas (each maps to a lint rule)
 
 1. **Absent `distribution` = RANDOM, not source order** — add
@@ -85,8 +109,9 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 5. Every `<key>` needs exactly ONE value source: `type=` (+`min`/`max` or
    `minLength`/`maxLength`), `generator=`, `values=`, `constant=`, `script=`,
    `pattern=`, `source=`, or `string=`. `weights=` needs `values=`. (DM203)
-6. `unique="True"` needs a finite pool (`values`/`source`) covering the count and
-   only combines with random distribution. (DM204)
+6. `unique="True"` needs a finite pool covering the count and only combines with
+   random source selection. `<key>` supports an inline `values` pool only;
+   source-backed elements use `source`. (DM204)
 7. With `source=`: use `type=`/`sourceEntity=` OR `selector=`, not both. A
    MongoDB source needs one of them explicitly. `selector` without `count` only
    works on DB clients. (DM205, DM211)
@@ -104,9 +129,14 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 10. Targets must exist: registry exporters, declared `<memstore>`/client ids, or
     `clientId.operation`. (DM401)
 11. **`IncrementGenerator` counts per parent** inside a nested `<generate>`;
-    compose unique child ids from the parent key + local sequence. (DM315)
+    that local sequence is valid. Only when global uniqueness is required,
+    compose the parent key + local sequence. (DM315)
 12. **`count=` above the source length caps silently** without
     `cyclic="True"`. (DM316)
+13. A finite numeric sequence inside a nested `<generate>` or `<nestedKey>`
+    shares one finite iterator across the nested demand. Size its range for all
+    parent × child/list rows; literal under-capacity is rejected before execution.
+    (DM317, DM318)
 
 ## Choosing a `<key>` value source (match the field's meaning)
 
@@ -128,8 +158,8 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 
 ## Sources & credentials
 
-- File sources resolve relative to the descriptor; type is inferred from the
-  extension (`.dbunit.xml` before `.xml`). The default field separator is `|`;
+- File sources resolve relative to the descriptor; the runtime-context matrix is
+  projected by `datamimic reference distributions`. The default field separator is `|`;
   reading a comma CSV needs `separator=","` (or `defaultSeparator=` on `<setup>`).
 - `<database id="db" system="postgresql" environment="local"/>` +
   `<mongodb id="mongo"/>` read credentials from `conf/{environment}.env.properties`
@@ -155,11 +185,13 @@ re-runnable — lint with `datamimic_check`, execute safely with `datamimic_run`
 
 ## Verify loop for agents
 
-1. `datamimic_reference topic=overview` (this sheet), `topic=element name=generate`
-   for details, `topic=recipes` for starting points.
-2. Draft the descriptor → `datamimic_check` → fix every diagnostic (each carries
+1. `datamimic reference overview` (this sheet), `datamimic reference element generate`
+   for details, `datamimic reference rules DM315` for canonical rule guidance, and
+   `datamimic reference recipes` for starting points. MCP clients use
+   the equivalent `datamimic_reference` tool.
+2. Draft the descriptor → `datamimic lint` (MCP: `datamimic_check`) → fix every diagnostic (each carries
    a fix_hint and rule id).
-3. `datamimic_run` (safe: counts capped, targets neutralized, memstores kept;
+3. `datamimic dry-run` (MCP: `datamimic_run`; safe: counts capped, targets neutralized, memstores kept;
    `smoke_export=true` also test-writes rows through the file exporters in a
    temp dir to catch export-time crashes) → inspect sample rows → iterate.
 4. Ship the descriptor; run for real with `datamimic run path/to/datamimic.xml`.

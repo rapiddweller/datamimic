@@ -5,15 +5,21 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import ATTR_CONVERTER, ATTR_NAME
 from datamimic_ce.model.model_util import ModelUtil
 
 
 class ListModel(BaseModel):
-    name: str
-    converter: str | None = None
+    name: str = Field(
+        ..., description="Name of the list; becomes the field name holding the generated array of items."
+    )
+    converter: str | None = Field(
+        None,
+        description="Converter(s) applied to the assembled list value before it is assigned to the current record.",
+        examples=["RemoveNoneOrEmptyElement"],
+    )
 
     @model_validator(mode="before")
     @classmethod

@@ -7,12 +7,14 @@
 import copy
 
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE_LIST
+from datamimic_ce.constants.element_constants import EL_NESTED_KEY
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.logger import logger
+from datamimic_ce.model.constraints import SourceFileFormat, source_file_format_for
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.statement_util import StatementUtil
 from datamimic_ce.tasks.element_task import ElementTask
@@ -230,14 +232,15 @@ class NestedKeyTask(GenSubTask):
             if source_str.startswith("{") and source_str.endswith("}")
             else source_str
         )
+        source_format = source_file_format_for(EL_NESTED_KEY, source, nestedkey_type)
         if nestedkey_type == DATA_TYPE_LIST and isinstance(parent_context, GenIterContext):
             # Read data from source
-            if source.endswith("csv"):
+            if source_format is SourceFileFormat.CSV:
                 separator = self._statement.separator or parent_context.root.default_separator
                 list_value = FileUtil.read_csv_to_dict_list(
                     file_path=self._descriptor_dir / source, separator=separator
                 )
-            elif source.endswith("json"):
+            elif source_format is SourceFileFormat.JSON:
                 list_value = FileUtil.read_json_to_list(self._descriptor_dir / source)
             else:
                 raise ValueError(f"Invalid source '{source}' of nestedkey '{self._statement.name}'")
@@ -245,7 +248,7 @@ class NestedKeyTask(GenSubTask):
             result = self._modify_nestedkey_data_list(parent_context, list_value)
 
         elif nestedkey_type == DATA_TYPE_DICT and isinstance(parent_context, GenIterContext):
-            if source.endswith("json"):
+            if source_format is SourceFileFormat.JSON:
                 dict_value = FileUtil.read_json_to_dict(self._descriptor_dir / source)
                 result = self._modify_nestedkey_data_dict(parent_context, dict_value)
             else:

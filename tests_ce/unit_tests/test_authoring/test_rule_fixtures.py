@@ -42,6 +42,9 @@ EXPECTED: dict[str, set[str]] = {
     "fx_unknown_source.xml": {"DM402"},
     "fx_missing_include.xml": {"DM405"},
     "fx_selector_without_count.xml": {"DM211"},
+    "fx_key_type_list.xml": {"DM105"},  # C-2 regression: key type=list is invalid
+    "fx_variable_two_modes.xml": {"DM203"},  # C-3: variable with two modes is invalid
+    "fx_iteration_selector_no_source.xml": {"DM214"},  # C-1: iterationSelector requires source
 }
 
 
@@ -149,6 +152,98 @@ def test_db_descriptor_lints_without_spurious_credential_error() -> None:
         'target="ConsoleExporter"/></setup>'
     )
     assert not lint_source(missing_dbms).ok
+
+
+def test_dm105_distribution_is_context_aware() -> None:
+    """distribution= means NumberDistribution on <key>/<id> (numeric-range sequence) but
+    SourceDistribution everywhere else (row selection) — DM105 must validate against the
+    right enum instead of always assuming SourceDistribution."""
+    from datamimic_ce.authoring import lint_source
+
+    # valid numeric-range sequence value, invalid as a SourceDistribution -- must NOT fire
+    numeric = lint_source(
+        '<setup rngSeed="1"><generate name="g" count="5" target="ConsoleExporter">'
+        '<key name="n" type="int" min="0" max="100" distribution="step"/></generate></setup>'
+    )
+    assert not any(d.rule == "DM105" for d in numeric.diagnostics), numeric.diagnostics
+
+    # valid SourceDistribution value, invalid as a NumberDistribution -- must fire on <key>
+    bad_numeric = lint_source(
+        '<setup rngSeed="1"><generate name="g" count="5" target="ConsoleExporter">'
+        '<key name="n" type="int" min="0" max="100" distribution="random"/></generate></setup>'
+    )
+    assert any(d.rule == "DM105" for d in bad_numeric.diagnostics)
+
+    # unchanged: <variable>/<generate> still validate against SourceDistribution
+    source_ctx = lint_source(
+        '<setup rngSeed="1"><generate name="g" count="5" target="ConsoleExporter">'
+        '<variable name="p" entity="Person" distribution="step"/>'
+        '<key name="n" script="p.name"/></generate></setup>'
+    )
+    assert any(d.rule == "DM105" for d in source_ctx.diagnostics)
+
+
+def test_dm105_type_hint_points_to_datetime_construct() -> None:
+    from datamimic_ce.authoring import lint_source
+
+    result = lint_source(
+        '<setup rngSeed="1"><generate name="g" count="5" target="ConsoleExporter">'
+        '<key name="at" type="datetime"/></generate></setup>'
+    )
+    diag = next(d for d in result.diagnostics if d.rule == "DM105")
+    assert "DateTimeGenerator" in diag.fix_hint
+    assert "ts.now" in diag.fix_hint
+
+
+def test_dm105_skips_scalar_type_check_on_source_backed_read() -> None:
+    """On <variable>/<nestedKey> with source=, type= selects the producing statement's
+    name (StatementUtil.resolve_source_entity: sourceEntity -> type -> name) -- an
+    arbitrary id, not a scalar cast. Must not be checked against the scalar type list."""
+    from datamimic_ce.authoring import lint_source
+
+    memstore_read = lint_source(
+        '<setup rngSeed="1"><memstore id="mem"/>'
+        '<generate name="orders" count="5" target="mem">'
+        '<key name="n" type="int"/></generate>'
+        '<generate name="summary" count="5">'
+        '<variable name="row" source="mem" type="orders" distribution="ordered"/>'
+        '<key name="n" script="row.n"/></generate></setup>'
+    )
+    assert not any(d.rule == "DM105" for d in memstore_read.diagnostics), memstore_read.diagnostics
+
+    # unchanged: same tag, no source= -- type= is still a scalar cast and still checked
+    no_source = lint_source(
+        '<setup rngSeed="1"><generate name="g" count="5" target="ConsoleExporter">'
+        '<variable name="p" type="bogus" constant="x"/>'
+        '<key name="n" script="p"/></generate></setup>'
+    )
+    assert any(d.rule == "DM105" for d in no_source.diagnostics)
+
+    # unchanged: <key>/<id> never read a source (key_task.py ignores it) -- always checked
+    key_bogus = lint_source(
+        '<setup rngSeed="1"><generate name="g" count="5" target="ConsoleExporter">'
+        '<key name="n" type="bogus"/></generate></setup>'
+    )
+    assert any(d.rule == "DM105" for d in key_bogus.diagnostics)
+
+
+def test_dm401_dm402_hints_show_the_memstore_declaration() -> None:
+    """A missing target/source id is fixed by declaring a <memstore> -- show the literal
+    snippet instead of just naming the concept, so a weak model can copy it mechanically."""
+    from datamimic_ce.authoring import lint_source
+
+    dm401 = lint_source(
+        '<setup rngSeed="1"><generate name="g" count="5" target="mem"><key name="n" type="int"/></generate></setup>'
+    )
+    diag = next(d for d in dm401.diagnostics if d.rule == "DM401")
+    assert '<memstore id="mem"/>' in diag.fix_hint
+
+    dm402 = lint_source(
+        '<setup rngSeed="1"><generate name="g" source="mem" count="5" '
+        'target="ConsoleExporter"><key name="n" constant="1"/></generate></setup>'
+    )
+    diag = next(d for d in dm402.diagnostics if d.rule == "DM402")
+    assert '<memstore id="mem"/>' in diag.fix_hint
 
 
 def test_dry_run_never_crashes_on_parse_error() -> None:

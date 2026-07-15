@@ -90,3 +90,10 @@ test_artifacts/
 # Local AI assistant scratchpads (do not check in)
 CLAUDE.md
 .claude/
+.agent-scratch/
+
+.code-review-graph/
+
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/

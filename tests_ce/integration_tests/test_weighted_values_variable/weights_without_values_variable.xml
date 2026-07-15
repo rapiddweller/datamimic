@@ -1,0 +1,6 @@
+<setup rngSeed="13">
+    <!-- 'weights' without 'values' on <variable> is meaningless -> must fail at parse time. -->
+    <generate name="x" count="1" target="">
+        <variable name="grade" weights="0.1, 0.3"/>
+    </generate>
+</setup>

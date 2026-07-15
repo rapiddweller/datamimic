@@ -1,0 +1,12 @@
+<setup rngSeed="1">
+    <!-- C-2 regression: <key type="list"> should yield DM105 (invalid type for key/id) -->
+    <generate name="bad_key" count="1" target="ConsoleExporter">
+        <key name="list_field" type="list" count="3"/>
+    </generate>
+    <!-- <nestedKey type="list"> is valid (lint doesn't enforce scalar-only) -->
+    <generate name="good_nested" count="1" target="ConsoleExporter">
+        <nestedKey name="items" type="list" count="2">
+            <key name="item_id" type="int"/>
+        </nestedKey>
+    </generate>
+</setup>

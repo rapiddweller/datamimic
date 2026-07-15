@@ -5,14 +5,20 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import ATTR_URI
 from datamimic_ce.model.model_util import ModelUtil
 
 
 class IncludeModel(BaseModel):
-    uri: str
+    uri: str = Field(
+        ...,
+        description="Path of another descriptor (or .properties) file to include, relative to "
+        "this descriptor's directory. Splits a setup across multiple files; .properties files "
+        "load key=value pairs at parse time instead of XML elements.",
+        examples=["part.xml", "conf/common.properties"],
+    )
 
     @model_validator(mode="before")
     @classmethod

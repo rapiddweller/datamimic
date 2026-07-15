@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import MISSING, fields
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from fastmcp import FastMCP
 from starlette.applications import Starlette
@@ -14,9 +14,11 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_401_UNAUTHORIZED
 
+from datamimic_ce.authoring.contracts import AuthoringResponseFormat
+from datamimic_ce.authoring.diagnostics import _diagnostic_dicts
 from datamimic_ce.domains import facade
 from datamimic_ce.mcp import resources
-from datamimic_ce.mcp.models import CheckArgs, GenerateArgs, ReferenceArgs, RunArgs
+from datamimic_ce.mcp.models import CheckArgs, GenerateArgs, ReferenceArgs, RunArgs, ScaffoldArgs
 
 if TYPE_CHECKING:  # pragma: no cover - import hint for typing only
     from typing import Protocol
@@ -26,9 +28,6 @@ if TYPE_CHECKING:  # pragma: no cover - import hint for typing only
             """Mount an ASGI app at the provided path."""
 else:  # pragma: no cover - runtime fallback avoids optional FastAPI dependency
     _FastAPILike = Any
-
-
-HTTP_MIDDLEWARE_ATTR = "_datamimic_http_middleware"
 
 
 class _APIKeyMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-methods
@@ -51,6 +50,12 @@ class _APIKeyMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-m
                 content={"error": "invalid_api_key"},
             )
         return await call_next(request)
+
+
+class DataMimicMCP(FastMCP):
+    """FastMCP server with an explicit transport-middleware contract."""
+
+    http_middleware: list[Middleware] | None
 
 
 def list_domains_impl() -> list[dict[str, Any]]:
@@ -86,56 +91,33 @@ def generate_impl(args: GenerateArgs) -> dict[str, Any]:
     return facade.generate_domain(payload)
 
 
-def _diagnostic_dicts(diagnostics: list[Any], detailed: bool) -> list[dict[str, Any]]:
-    concise_fields = ("rule", "severity", "line", "message", "fix_hint")
-    out: list[dict[str, Any]] = []
-    for diag in diagnostics:
-        data = diag.model_dump()
-        data["message"] = data["message"][:300]
-        if not detailed:
-            data = {key: data[key] for key in concise_fields}
-        out.append(data)
-    return out
-
-
 def check_impl(args: CheckArgs) -> dict[str, Any]:
     """Lint a DSL descriptor: aggregated diagnostics with fix hints (diagnostics v1)."""
     # WHY lazy: the authoring package pulls the engine's parsers/models — keep server
     # startup light and load on first tool use.
-    from pathlib import Path
+    from datamimic_ce.authoring.service import check
 
-    from datamimic_ce.authoring import lint_descriptor, lint_source
-
-    if args.xml is not None:
-        result = lint_source(args.xml, max_diagnostics=args.max_diagnostics)
-    else:
-        result = lint_descriptor(Path(str(args.path)), max_diagnostics=args.max_diagnostics)
+    result = check(args)
     return {
         "ok": result.ok,
         "summary": result.summary(),
-        "diagnostics": _diagnostic_dicts(result.diagnostics, args.response_format == "detailed"),
+        "diagnostics": _diagnostic_dicts(
+            result.diagnostics,
+            args.response_format is AuthoringResponseFormat.DETAILED,
+        ),
         "truncated": result.truncated,
     }
 
 
 def run_impl(args: RunArgs) -> dict[str, Any]:
     """Safe dry-run: lint gate, neutralized targets (memstores kept), capped counts."""
-    from pathlib import Path
+    from datamimic_ce.authoring.service import run
 
-    from datamimic_ce.authoring.dryrun import dry_run, dry_run_source
-
-    kwargs: dict[str, Any] = dict(
-        max_count=args.max_count,
-        sample_rows=args.sample_rows,
-        allow_side_effects=args.allow_side_effects,
-        timeout_seconds=args.timeout_seconds,
-        smoke_export=args.smoke_export,
-    )
-    result = dry_run_source(args.xml, **kwargs) if args.xml is not None else dry_run(Path(str(args.path)), **kwargs)
-    detailed = args.response_format == "detailed"
+    result = run(args)
+    detailed = args.response_format is AuthoringResponseFormat.DETAILED
     payload: dict[str, Any] = {
         "ok": result.ok,
-        "stage": result.stage,
+        "stage": result.stage.value,
         "timing_ms": result.timing_ms,
         "products": [product.model_dump() for product in result.products],
         "products_truncated": result.products_truncated,
@@ -147,21 +129,41 @@ def run_impl(args: RunArgs) -> dict[str, Any]:
 
 
 def reference_impl(args: ReferenceArgs) -> dict[str, Any]:
-    """DSL reference lookup: cheatsheet, element schemas, generators, targets, recipes."""
+    """DSL reference lookup: cheatsheet, schemas, rules, generators, targets and recipes."""
     from datamimic_ce.authoring.reference import reference
 
     try:
-        text = reference(args.topic, args.name)
+        text = reference(args.topic, args.name, query=args.query)
     except ValueError as err:
         # actionable error: the message lists the valid values
         return {"ok": False, "error": str(err)}
-    return {"ok": True, "topic": args.topic, "name": args.name, "content": text}
+    return {
+        "ok": True,
+        "topic": args.topic,
+        "name": args.name,
+        "query": args.query,
+        "content": text,
+    }
 
 
-def create_server(*, api_key: str | None = None) -> FastMCP:
+def scaffold_impl(args: ScaffoldArgs) -> dict[str, Any]:
+    """Run the complete canonical AuthoringSpecV1 verification transaction.
+
+    Uses the service layer to ensure parity with the CLI and maintain a single
+    implementation across all transports.
+    """
+    # WHY lazy: the authoring package pulls the engine's parsers/models — keep server
+    # startup light and load on first tool use.
+    from datamimic_ce.authoring.service import scaffold
+
+    result = scaffold(args)
+    return result.model_dump(mode="json", exclude_none=True)
+
+
+def create_server(*, api_key: str | None = None) -> DataMimicMCP:
     """Create a FastMCP server exposing DataMimic generators."""
 
-    server = FastMCP(
+    server = DataMimicMCP(
         name="datamimic-ce",
         version=None,
     )
@@ -196,11 +198,22 @@ def create_server(*, api_key: str | None = None) -> FastMCP:
         its fields), context (this/parent/root script scope), timeseries (start/end/
         interval + ts.now/step/series), targets, distributions (source reads and
         numeric range key distributions/sequences), converters (masking/formatting),
-        recipes, recipe (full descriptor by id)."""
+        rules (name=DMxxx for one canonical definition), authoring (a category/kind query
+        selects a compact typed model.dm.json fragment), recipes, recipe (full descriptor by id)."""
         return reference_impl(args)
 
-    http_middleware = _build_http_middleware(api_key)
-    setattr(server, HTTP_MIDDLEWARE_ATTR, http_middleware)
+    @server.tool("datamimic_scaffold")
+    async def datamimic_scaffold(args: ScaffoldArgs) -> dict[str, Any]:
+        """Compile one model.dm.json AuthoringSpecV1 document into DATAMIMIC DSL,
+        then lint, bounded-run and evaluate acceptance through the canonical service.
+        verified=true means acceptance and every requested smoke/replay gate passed;
+        no follow-up datamimic_check or datamimic_run call is needed. Query
+        reference topic=scaffold for the schema derived from the Intent Model SPOT.
+        Historical compact specs remain accepted only through lossless normalization;
+        unsupported or ambiguous intent fails closed with explicit errors."""
+        return scaffold_impl(args)
+
+    server.http_middleware = _build_http_middleware(api_key)
 
     for schema in resources.iter_schema_resources():
         loader = _schema_loader(schema.domain, schema.version, schema.kind)
@@ -245,7 +258,11 @@ def mount_mcp(
     """Mount the FastMCP server onto an existing FastAPI application."""
 
     mcp_server = server or create_server(api_key=api_key)
-    http_middleware = getattr(mcp_server, HTTP_MIDDLEWARE_ATTR, None)
+    http_middleware = (
+        mcp_server.http_middleware
+        if isinstance(mcp_server, DataMimicMCP)
+        else _build_http_middleware(api_key)
+    )
     sse_app = build_sse_app(mcp_server, http_middleware)
     app.mount(path, sse_app)
     return mcp_server
@@ -263,10 +280,10 @@ def _schema_loader(
     domain: str,
     version: str,
     kind: resources.SchemaKind,
-) -> Callable[[], dict[str, Any]]:
+) -> Callable[[], resources.SchemaDocument]:
     """Build a parameterless schema loader for the FastMCP registry."""
 
-    def load() -> dict[str, Any]:
+    def load() -> resources.SchemaDocument:
         return resources.load_schema(domain, version, kind)
 
     return load
@@ -282,8 +299,7 @@ def build_sse_app(
     None after streaming. This does not affect functionality; tests verify end-to-end.
     """
 
-    sse_factory = cast(Callable[[], Starlette], server.sse_app)
-    sse_app = sse_factory()
+    sse_app = server.sse_app()
     if middleware:
         for entry in middleware:
             # WHY: Starlette stores middleware callables and kwargs separately; rehydrate
@@ -294,11 +310,13 @@ def build_sse_app(
 
 __all__ = [
     "create_server",
+    "DataMimicMCP",
     "mount_mcp",
     "generate_impl",
     "list_domains_impl",
     "check_impl",
     "run_impl",
     "reference_impl",
+    "scaffold_impl",
     "build_sse_app",
 ]

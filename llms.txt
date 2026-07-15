@@ -1,20 +1,25 @@
 # DATAMIMIC Community Edition
 
 > DATAMIMIC is a model-driven, deterministic-first test data platform. The
-> Community Edition is the open-source engine: describe a data pipeline as a
-> small XML descriptor and generate synthetic records, transform sources, or
-> pseudonymize exports. The same seed produces the identical dataset on every
-> run. Python-native, MIT-licensed, with an MCP server for AI agents.
+> Community Edition is the open-source engine: author new business intent in
+> model.dm.json, compile it deterministically to executable XML, and generate
+> synthetic records, transform sources, or pseudonymize exports. Existing raw
+> XML remains supported. Python-native, MIT-licensed, with a CLI and optional MCP
+> adapter for AI agents.
 
-Agents working in a checkout should read AGENTS.md first; it carries the
-authoring loop and the semantic rules that cause most failures.
+Agents working in a checkout must read AGENTS.md first and use
+`.venv/bin/datamimic`; it carries the tool-selection contract, authoring flow,
+and semantic rules that cause most failures.
 
 ## Authoring the DSL
 
-- [Agent guide](AGENTS.md): when to use DATAMIMIC, the lint plus dry-run loop, the top semantic rules
+- [Agent guide](AGENTS.md): read first; CLI tool selection, canonical model.dm.json scaffold flow, raw XML compatibility flow, repair and stop policy
+- Live structural discovery: `datamimic capabilities` returns machine-readable JSON names and enum values
+- Progressive Intent Model reference: `datamimic reference authoring`, then `datamimic reference authoring --category <category> --kind <kind>`
+- New model: preserve `model.dm.json`, run `datamimic scaffold model.dm.json --format json`, change input before retrying, and stop on `verified=true`
+- Existing raw XML: `datamimic lint <path> --format json`, then bounded `datamimic dry-run <path> --format json`; inspect intent before `datamimic run <path>`
 - [DSL cheatsheet](datamimic_ce/authoring/reference_data/cheatsheet.md): elements, value sources, scope, gotchas, one page
-- [MCP quickstart](docs/mcp_quickstart.md): install and register the MCP server (datamimic_check, datamimic_run, datamimic_reference tools)
-- Capability manifest: run `datamimic capabilities` for the live JSON list of elements, attributes, generators, entities, converters, targets, distributions
+- Recipes and DSL specifics: query a narrow `datamimic reference` topic/name instead of guessing
 
 ## Runnable examples
 
@@ -24,7 +29,7 @@ authoring loop and the semantic rules that cause most failures.
 - [Conditions and time-series](examples/showcase/03-orchestration-timeseries/README.md): if/else-if/else branching, start/end/interval with the ts namespace
 - [Custom python components](examples/showcase/04-python-seam/README.md): custom generator, custom converter, plain-script postprocessing
 - Recipes: `datamimic_ce/authoring/recipes/` holds small single-pattern descriptors
-- [DSL authoring benchmark](benchmarks/dsl-authoring/README.md): measures how reliably agents author correct descriptors; the diagnostics loop beats any static prompt
+- [DSL authoring benchmark](benchmarks/dsl-authoring/README.md): legacy raw-XML prompt baseline plus the canonical model.dm.json/scaffold success contract for agent evaluations
 
 ## Project
 
@@ -33,5 +38,6 @@ authoring loop and the semantic rules that cause most failures.
 
 ## Optional
 
+- [MCP quickstart](docs/mcp_quickstart.md): optional adapter over the same authoring service
 - [Developer guide](docs/developer_guide.md)
 - [Data domains](docs/data-domains): built-in domain documentation

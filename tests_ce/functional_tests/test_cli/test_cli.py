@@ -1,6 +1,6 @@
+import json
 import os
 import shutil
-from pathlib import Path
 from unittest.mock import patch
 
 from typer.testing import CliRunner
@@ -26,6 +26,18 @@ class TestCLI:
         assert "Operating System" in result.output
         assert "Config File" in result.output
         assert "Log Level" in result.output
+
+    def test_capabilities_projects_central_alias_rules(self):
+        from datamimic_ce.constants.element_constants import EL_ITERATE
+        from datamimic_ce.model.constraints import element_constraints, serialize_constraints
+
+        result = runner.invoke(app, ["capabilities"])
+
+        assert result.exit_code == 0
+        payload = json.loads(result.output)
+        assert payload["elements"][EL_ITERATE]["constraints"] == serialize_constraints(
+            element_constraints(EL_ITERATE)
+        )
 
     def test_validate_descriptor_failure(self, tmp_path, monkeypatch):
         """A broken descriptor lints with findings (validate is an alias of lint): exit 1."""
@@ -221,3 +233,248 @@ class TestCLI:
         assert "Demo Information" in result.output
         assert "Description" in result.output
         assert "Required Dependencies" in result.output
+
+    # Tests for dry-run command
+    def test_dry_run_nonexistent_file(self):
+        """A missing descriptor file for dry-run is an operational error: exit 2."""
+        result = runner.invoke(app, ["dry-run", "nonexistent.xml"])
+        assert result.exit_code == 2
+        assert "file not found" in result.output.lower()
+
+    def test_dry_run_valid_descriptor_json(self, tmp_path, monkeypatch):
+        """A valid descriptor dry-run succeeds and outputs JSON with ok=true and products,
+        with count (25) above the default --max-count (10)/--sample-rows (5) to actually
+        exercise the capping behavior the command's help text advertises."""
+        monkeypatch.chdir(tmp_path)
+        descriptor_content = """<setup rngSeed="1">
+    <generate name="test" count="25" target="">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+</setup>"""
+        (tmp_path / "test.xml").write_text(descriptor_content)
+        result = runner.invoke(app, ["dry-run", "test.xml", "--format", "json"])
+        assert result.exit_code == 0
+        output_json = json.loads(result.output)
+        assert output_json["ok"] is True
+        assert len(output_json["products"]) > 0
+        product = output_json["products"][0]
+        assert product["name"] == "test"
+        assert product["count"] == 10  # capped at default --max-count
+        assert len(product["sample"]) == 5  # capped at default --sample-rows
+        assert product["truncated_rows"] is True
+
+    def test_dry_run_lint_failure(self, tmp_path, monkeypatch):
+        """A broken descriptor (invalid XML) fails dry-run at the lint gate with exit 1."""
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "invalid.xml").write_text("<invalid>")
+        result = runner.invoke(app, ["dry-run", "invalid.xml"])
+        assert result.exit_code == 1
+        assert "DM001" in result.output
+        assert "stage: lint" in result.output
+
+    # Tests for reference command
+    def test_reference_overview(self):
+        """Reference overview command returns the DSL cheatsheet."""
+        result = runner.invoke(app, ["reference", "overview"])
+        assert result.exit_code == 0
+        assert "# DATAMIMIC DSL" in result.output
+        assert "## Minimal descriptor" in result.output
+        assert '<setup rngSeed=' in result.output
+
+    def test_reference_element_variable(self):
+        """Reference element command with variable tag returns its real attribute schema."""
+        result = runner.invoke(app, ["reference", "element", "variable"])
+        assert result.exit_code == 0
+        assert "# <variable>" in result.output
+        assert "name: str (required)" in result.output
+        assert "Allowed inside:" in result.output
+
+    def test_reference_element_missing_name(self):
+        """Reference element command without name fails with the specific fix-hint message."""
+        result = runner.invoke(app, ["reference", "element"])
+        assert result.exit_code == 1
+        assert "topic=element needs name" in result.output
+
+    def test_reference_unknown_topic(self):
+        """The typed topic argument rejects unknown values as CLI usage errors."""
+        result = runner.invoke(app, ["reference", "bogus-topic-xyz"])
+        assert result.exit_code == 2
+        assert "Invalid value for" in result.output
+        assert "not one of" in result.output
+        assert "bogus-topic-xyz" in result.output
+
+    # Tests for scaffold command
+    def _run_scaffold(self, tmp_path, monkeypatch, spec_or_text, *extra_args, filename="spec.json"):
+        monkeypatch.chdir(tmp_path)
+        text = spec_or_text if isinstance(spec_or_text, str) else json.dumps(spec_or_text)
+        (tmp_path / filename).write_text(text)
+        return runner.invoke(app, ["scaffold", filename, *extra_args])
+
+    def test_scaffold_valid_spec_text_format(self, tmp_path, monkeypatch):
+        """A valid spec renders to XML, lints clean, and dry-runs successfully with text output."""
+        spec = {
+            "generates": [{
+                "name": "customers", "count": 10, "target": "JSON",
+                "fields": [
+                    {"name": "id", "kind": "increment"},
+                    {"name": "name", "kind": "person_name"},
+                ],
+            }],
+        }
+        result = self._run_scaffold(tmp_path, monkeypatch, spec)
+        assert result.exit_code == 0
+        assert "<setup>" in result.output
+        assert "<generate" in result.output
+        assert "Dry-run successful:" in result.output
+        assert "customers:" in result.output
+
+    def test_scaffold_valid_spec_json_format(self, tmp_path, monkeypatch):
+        """A valid spec with --format json outputs pure JSON with ok/xml/products."""
+        spec = {
+            "generates": [{
+                "name": "products", "count": 5, "target": "JSON",
+                "fields": [{"name": "sku", "kind": "pattern", "pattern": "[A-Z]{3}"}],
+            }],
+        }
+        result = self._run_scaffold(tmp_path, monkeypatch, spec, "--format", "json")
+        assert result.exit_code == 0
+        output_json = json.loads(result.output)
+        assert output_json["ok"] is True
+        assert "xml" in output_json
+        assert "<setup>" in output_json["xml"]
+        assert "products" in output_json
+        assert len(output_json["products"]) > 0
+
+    def test_scaffold_removed_no_dry_run_option_is_rejected(self, tmp_path, monkeypatch):
+        """Scaffold no longer exposes a second lint-only execution path."""
+        spec = {
+            "generates": [{
+                "name": "data", "count": 3, "target": "JSON",
+                "fields": [{"name": "x", "kind": "constant", "value": "test"}],
+            }],
+        }
+        result = self._run_scaffold(tmp_path, monkeypatch, spec, "--no-dry-run")
+        assert result.exit_code == 2
+
+    def test_scaffold_json_includes_canonical_verification_evidence(self, tmp_path, monkeypatch):
+        """Default scaffold completes run and acceptance instead of stopping at lint."""
+        spec = {
+            "generates": [{
+                "name": "data", "count": 2, "target": "JSON",
+                "fields": [{"name": "v", "kind": "increment"}],
+            }],
+        }
+        result = self._run_scaffold(tmp_path, monkeypatch, spec, "--format", "json")
+        assert result.exit_code == 0
+        output_json = json.loads(result.output)
+        assert output_json["ok"] is True
+        assert "xml" in output_json
+        assert output_json["stage"] == "acceptance"
+        assert output_json["products"]
+        assert output_json["verification"]["smoke_export"]["status"] == "not_requested"
+
+    def test_scaffold_missing_file(self):
+        """A missing spec file exits with code 2."""
+        result = runner.invoke(app, ["scaffold", "nonexistent.json"])
+        assert result.exit_code == 2
+        assert "File not found" in result.output
+
+    def test_scaffold_invalid_json(self, tmp_path, monkeypatch):
+        """Invalid JSON in spec file exits with code 2."""
+        result = self._run_scaffold(tmp_path, monkeypatch, "{broken json", filename="bad.json")
+        assert result.exit_code == 2
+        assert "Invalid JSON" in result.output
+
+    def test_scaffold_malformed_spec_empty_dict(self, tmp_path, monkeypatch):
+        """A spec with no generates list exits with code 2 (malformed input)."""
+        result = self._run_scaffold(tmp_path, monkeypatch, {})
+        assert result.exit_code == 2
+        assert "Error:" in result.output
+
+    def test_scaffold_malformed_spec_no_fields(self, tmp_path, monkeypatch):
+        """A spec with generates but no fields exits with code 2."""
+        spec = {"generates": [{"name": "x", "count": 5}]}
+        result = self._run_scaffold(tmp_path, monkeypatch, spec)
+        assert result.exit_code == 2
+        assert "Error:" in result.output
+
+    def test_scaffold_with_custom_max_count(self, tmp_path, monkeypatch):
+        """With --max-count, the dry-run caps at the specified count."""
+        spec = {
+            "generates": [{
+                "name": "data", "count": 100, "target": "JSON",
+                "fields": [{"name": "id", "kind": "increment"}],
+            }],
+        }
+        result = self._run_scaffold(tmp_path, monkeypatch, spec, "--max-count", "7", "--format", "json")
+        assert result.exit_code == 1
+        output_json = json.loads(result.output)
+        assert output_json["products"][0]["count"] == 7
+        assert output_json["ok"] is True
+        assert output_json["verified"] is False
+        assert output_json["acceptance"]["unevaluable"] > 0
+
+    def test_scaffold_nested_spec(self, tmp_path, monkeypatch):
+        """A spec with nested generates renders correctly."""
+        spec = {
+            "generates": [{
+                "name": "customers", "count": 3, "target": "JSON",
+                "fields": [{"name": "id", "kind": "increment"}],
+                "children": [{
+                    "name": "orders", "count": 2, "target": "JSON",
+                    "fields": [{"name": "customer_id", "kind": "script", "script": "parent.id"}],
+                }],
+            }],
+        }
+        result = self._run_scaffold(tmp_path, monkeypatch, spec, "--format", "json")
+        assert result.exit_code == 1
+        output_json = json.loads(result.output)
+        assert output_json["ok"] is True
+        assert output_json["verified"] is False
+        assert output_json["acceptance"]["unevaluable"] > 0
+        assert "<generate" in output_json["xml"]
+
+    # Tests for Defect 4: scaffold missing-file with --format json emits single JSON document
+    def test_scaffold_missing_file_json_single_document(self):
+        """Missing spec file with --format json exits with code 2 and emits exactly one parseable JSON document."""
+        result = runner.invoke(app, ["scaffold", "nonexistent.json", "--format", "json"])
+        assert result.exit_code == 2
+        # Verify output is exactly one parseable JSON document
+        output_json = json.loads(result.output)
+        assert output_json["ok"] is False
+        assert "error" in output_json
+        assert "File not found" in output_json["error"]
+
+    # Tests for Defect 5: dry-run format validation and JSON error paths
+    def test_dry_run_invalid_format(self):
+        """dry-run with unknown format exits with code 2 and plain text error."""
+        result = runner.invoke(app, ["dry-run", "test.xml", "--format", "banana"])
+        assert result.exit_code == 2
+        assert "Invalid format 'banana'" in result.output
+        assert "Expected: text | json" in result.output
+        # Output should be text, not JSON (format validation happens before any engine activity)
+
+    def test_dry_run_missing_file_json(self, tmp_path, monkeypatch):
+        """dry-run missing file with --format json exits with code 2 and emits single parseable JSON."""
+        result = runner.invoke(app, ["dry-run", "nonexistent.xml", "--format", "json"])
+        assert result.exit_code == 2
+        output_json = json.loads(result.output)
+        assert output_json["ok"] is False
+        assert "error" in output_json
+        assert "File not found" in output_json["error"]
+
+    def test_lint_invalid_format(self):
+        """lint with unknown format exits with code 2 and plain text error."""
+        result = runner.invoke(app, ["lint", "test.xml", "--format", "banana"])
+        assert result.exit_code == 2
+        assert "Invalid format 'banana'" in result.output
+        assert "Expected: text | json" in result.output
+
+    def test_lint_missing_file_json(self):
+        """lint missing file with --format json exits with code 2 and emits single parseable JSON."""
+        result = runner.invoke(app, ["lint", "nonexistent.xml", "--format", "json"])
+        assert result.exit_code == 2
+        output_json = json.loads(result.output)
+        assert output_json["ok"] is False
+        assert "error" in output_json
+        assert "File not found" in output_json["error"]

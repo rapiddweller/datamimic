@@ -8,6 +8,13 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
+from datamimic_ce.authoring.contracts import (
+    CheckRequest,
+    RunRequest,
+    ScaffoldRequest,
+)
+from datamimic_ce.authoring.reference import ReferenceTopic
+from datamimic_ce.authoring.reference_projection import AuthoringReferenceQuery
 from datamimic_ce.domains.common.locale_registry import dataset_code_for_locale
 from datamimic_ce.domains.locales import SUPPORTED_DATASET_CODES
 from datamimic_ce.domains.utils.dataset_path import dataset_path
@@ -156,62 +163,46 @@ class GenerateArgs(BaseModel):
         return payload
 
 
-__all__ = ["GenerateArgs", "MAX_COUNT"]
-
-
-class CheckArgs(BaseModel):
-    """Arguments for the ``datamimic_check`` MCP tool (DSL linting)."""
-
-    xml: str | None = Field(None, description="Inline descriptor XML (preferred for agents)")
-    path: str | None = Field(None, description="Path to a descriptor file on the server's filesystem")
-    response_format: str = Field("concise", pattern="^(concise|detailed)$")
-    max_diagnostics: int = Field(50, ge=1, le=200)
-
-    @model_validator(mode="after")
-    def _exactly_one_input(self) -> CheckArgs:
-        if (self.xml is None) == (self.path is None):
-            raise ValueError("Provide exactly one of 'xml' (inline descriptor) or 'path' (file)")
-        return self
-
-
-class RunArgs(BaseModel):
-    """Arguments for the ``datamimic_run`` MCP tool (safe dry-run)."""
-
-    xml: str | None = Field(None, description="Inline descriptor XML (preferred for agents)")
-    path: str | None = Field(None, description="Path to a descriptor file on the server's filesystem")
-    sample_rows: int = Field(5, ge=1, le=50)
-    max_count: int = Field(10, ge=1, le=1000, description="Per top-level <generate> record cap")
-    allow_side_effects: bool = Field(
-        False, description="Keep file/DB targets and allow <execute> (default: neutralized)"
-    )
-    smoke_export: bool = Field(
-        False,
-        description="Also push captured rows through the stripped FILE exporters in a temp dir "
-        "(no artifacts) to catch export-time serialization crashes",
-    )
-    timeout_seconds: int = Field(30, ge=1, le=120)
-    response_format: str = Field("concise", pattern="^(concise|detailed)$")
-
-    @model_validator(mode="after")
-    def _exactly_one_input(self) -> RunArgs:
-        if (self.xml is None) == (self.path is None):
-            raise ValueError("Provide exactly one of 'xml' (inline descriptor) or 'path' (file)")
-        return self
-
-
 class ReferenceArgs(BaseModel):
     """Arguments for the ``datamimic_reference`` MCP tool (DSL knowledge lookup)."""
 
-    topic: str = Field(
-        "overview",
-        pattern="^(overview|element|generators|entities|context|timeseries|targets|distributions|converters|recipes|recipe)$",
+    topic: ReferenceTopic = Field(
+        ReferenceTopic.OVERVIEW,
         description=(
             "What to look up; start with 'overview'. Use 'distributions' for source reads "
-            "and numeric range key sequences."
+            "and numeric range key sequences; use 'rules' with name=DMxxx for canonical diagnostics; "
+            "use 'authoring' with a category/kind query for a compact model.dm.json fragment."
         ),
     )
     name: str | None = Field(
         None,
-        description="Element tag (topic=element), entity name (topic=entities), recipe id "
-        "(topic=recipe) or generator filter",
+        description="Element tag (topic=element), entity name (topic=entities), rule id "
+        "(topic=rules), recipe id (topic=recipe) or generator filter",
     )
+    query: AuthoringReferenceQuery | None = Field(
+        None,
+        description="Discriminated compact projection query for topic=authoring",
+    )
+
+    @model_validator(mode="after")
+    def _authoring_query_scope(self) -> ReferenceArgs:
+        if self.query is not None and self.topic is not ReferenceTopic.AUTHORING:
+            raise ValueError("query is only valid for topic=authoring")
+        if self.topic is ReferenceTopic.AUTHORING and self.name is not None:
+            raise ValueError("topic=authoring uses query, not name")
+        return self
+
+
+# ScaffoldArgs is an alias to ScaffoldRequest from the canonical contracts module
+CheckArgs = CheckRequest
+RunArgs = RunRequest
+ScaffoldArgs = ScaffoldRequest
+
+__all__ = [
+    "CheckArgs",
+    "GenerateArgs",
+    "MAX_COUNT",
+    "ReferenceArgs",
+    "RunArgs",
+    "ScaffoldArgs",
+]

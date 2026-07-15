@@ -14,8 +14,16 @@ from datamimic_ce.model.model_util import ModelUtil
 class ReferenceFieldModel(BaseModel):
     """A <field> child of a composite <reference>: maps a source column to a target field."""
 
-    target: str = Field(alias=ATTR_TARGET)
-    source_key: str = Field(alias=ATTR_SOURCE_KEY)
+    target: str = Field(
+        alias=ATTR_TARGET,
+        description="Field name in the generated record that receives the sampled value.",
+        examples=["customer_id", "line_no"],
+    )
+    source_key: str = Field(
+        alias=ATTR_SOURCE_KEY,
+        description="Source column name to read from the parent <reference>'s sourceType.",
+        examples=["id", "line_no"],
+    )
 
     @model_validator(mode="before")
     @classmethod

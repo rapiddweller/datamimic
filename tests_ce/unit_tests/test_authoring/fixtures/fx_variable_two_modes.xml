@@ -1,0 +1,7 @@
+<setup rngSeed="1">
+    <!-- C-3: <variable> with two generation modes should yield DM203 -->
+    <generate name="test" count="1" target="ConsoleExporter">
+        <variable name="bad_var" values="1,2,3" script="random.randint(1, 100)"/>
+        <key name="id" type="int" min="1" max="100"/>
+    </generate>
+</setup>

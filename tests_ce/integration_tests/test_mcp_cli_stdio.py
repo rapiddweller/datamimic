@@ -9,8 +9,9 @@ from __future__ import annotations
 import json
 import sys
 
-import anyio
 import pytest
+
+from datamimic_ce.mcp.models import GenerateArgs
 
 fastmcp_client = pytest.importorskip(
     "fastmcp.client", reason="fastmcp extra required; install datamimic_ce[mcp]"
@@ -21,9 +22,6 @@ transports = pytest.importorskip(
 
 Client = fastmcp_client.Client
 PythonStdioTransport = transports.PythonStdioTransport
-
-from datamimic_ce.mcp.models import GenerateArgs
-from datamimic_ce.domains.determinism import canonical_json, hash_bytes
 
 
 @pytest.fixture
@@ -102,3 +100,49 @@ async def test_cli_stdio_dsl_check_and_run() -> None:
             (await client.call_tool("datamimic_reference", {"args": {"topic": "recipes"}}))[0].text
         )
         assert ref["ok"] is True and "csv-to-json-pipeline" in ref["content"]
+
+
+@pytest.mark.anyio
+async def test_cli_stdio_scaffold() -> None:
+    """Prove the canonical spec-in -> compile -> lint -> run -> acceptance transaction."""
+    transport = PythonStdioTransport(
+        script_path="datamimic_ce/mcp/cli.py",
+        args=["serve", "--transport", "stdio"],
+        python_cmd=sys.executable,
+    )
+    spec = {
+        "seed": 1,
+        "generates": [{
+            "name": "customers", "count": 30, "target": "JSON",
+            "fields": [
+                {"name": "id", "kind": "increment"},
+                {"name": "full_name", "kind": "person_name"},
+                {"name": "age", "kind": "int_range", "min": 18, "max": 90},
+                {"name": "country", "kind": "weighted",
+                 "values": ["US", "DE", "VN"], "weights": [0.5, 0.3, 0.2]},
+            ],
+        }],
+    }
+    async with Client(transport) as client:
+        # Verify datamimic_scaffold tool is available
+        tools = await client.list_tools()
+        tool_names = {t.name for t in tools}
+        assert "datamimic_scaffold" in tool_names, f"Expected datamimic_scaffold in {tool_names}"
+
+        # Call scaffold and require terminal acceptance through the real MCP transport.
+        result = json.loads(
+            (
+                await client.call_tool(
+                    "datamimic_scaffold",
+                    {"args": {"spec": spec, "max_count": 30}},
+                )
+            )[0].text
+        )
+        assert result["ok"] is True
+        assert result["stage"] == "acceptance"
+        assert result["verified"] is True
+        assert "xml" in result
+        assert "products" in result
+        assert isinstance(result["products"], list)
+        assert len(result["products"]) > 0
+        assert all("name" in p and "count" in p for p in result["products"])

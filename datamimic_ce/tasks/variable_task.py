@@ -27,6 +27,7 @@ from datamimic_ce.data_sources.data_source_pagination import DataSourcePaginatio
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntityDataSource
 from datamimic_ce.logger import logger
+from datamimic_ce.model.constraints import SourceFileFormat, source_file_format_for
 from datamimic_ce.statements.statement_util import StatementUtil
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
@@ -114,9 +115,10 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         # Try to init generation mode of VariableTask
         if statement.source is not None:
             source_str = statement.source
+            source_format = source_file_format_for(EL_VARIABLE, source_str)
             separator = statement.separator or ctx.default_separator
             # Load data from weighted entity file
-            if source_str.endswith(".wgt.ent.csv"):
+            if source_format is SourceFileFormat.WEIGHTED_ENTITY_CSV:
                 seeded = ctx.derive_seeded_rng()
                 self._weighted_data_source = WeightedEntityDataSource(
                     file_path=descriptor_dir / source_str,
@@ -178,22 +180,22 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                         self._mode = self._ITERATOR_MODE
             else:
                 # Load data from csv or json file
-                if source_str.endswith(("csv", "json", "xlsx", "fcw")):
-                    if source_str.endswith("csv"):
-                        file_data = FileUtil.read_csv_to_dict_list(
+                if source_format is not None:
+                    if source_format is SourceFileFormat.CSV:
+                        loaded_file_data = FileUtil.read_csv_to_dict_list(
                             file_path=descriptor_dir / source_str, separator=separator
                         )
-                    elif source_str.endswith("xlsx"):
-                        file_data = FileUtil.read_xlsx_to_dict_list(descriptor_dir / source_str)
-                    elif source_str.endswith("fcw"):
-                        file_data = FileUtil.read_fixed_width_to_dict_list(descriptor_dir / source_str)
+                    elif source_format is SourceFileFormat.XLSX:
+                        loaded_file_data = FileUtil.read_xlsx_to_dict_list(descriptor_dir / source_str)
+                    elif source_format is SourceFileFormat.FIXED_WIDTH:
+                        loaded_file_data = FileUtil.read_fixed_width_to_dict_list(descriptor_dir / source_str)
                     else:
-                        file_data = FileUtil.read_json_to_list(descriptor_dir / source_str)
+                        loaded_file_data = FileUtil.read_json_to_list(descriptor_dir / source_str)
                     if loads_all or force_full_pool:
-                        self._finalize_pool(file_data, loads_all, seed)
+                        self._finalize_pool(loaded_file_data, loads_all, seed)
                     else:
                         self._iterator = DataSourceRegistry.get_cyclic_data_iterator(
-                            data=file_data,
+                            data=loaded_file_data,
                             cyclic=statement.cyclic,
                             pagination=pagination,
                         )
@@ -308,7 +310,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         entity_class_name, kwargs = StringUtil.parse_constructor_string(entity_name)
         # Inject dataset if not explicitly provided in constructor
         kwargs.setdefault("dataset", dataset)
-        demographic_context = getattr(ctx.root, "demographic_context", None)
+        demographic_context = ctx.root.demographic_context
         # Build demographic config + rng from statement attributes when present
         demo_cfg = None
         if any(

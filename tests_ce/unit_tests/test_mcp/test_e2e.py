@@ -17,10 +17,9 @@ uvicorn = pytest.importorskip("uvicorn", reason="uvicorn required for SSE transp
 
 Client = fastmcp_client.Client
 
-from datamimic_ce.domains.determinism import canonical_json, hash_bytes
-from datamimic_ce.mcp.models import GenerateArgs
-from datamimic_ce.mcp.server import (
-    HTTP_MIDDLEWARE_ATTR,
+from datamimic_ce.domains.determinism import canonical_json, hash_bytes  # noqa: E402
+from datamimic_ce.mcp.models import GenerateArgs  # noqa: E402
+from datamimic_ce.mcp.server import (  # noqa: E402
     build_sse_app,
     create_server,
 )
@@ -62,6 +61,7 @@ async def test_schema_resource_available(anyio_backend) -> None:
             "datamimic_check",
             "datamimic_run",
             "datamimic_reference",
+            "datamimic_scaffold",
         }
         resources = await client.read_resource("resource://datamimic/schemas/person/v1/request.json")
         assert resources and "\"$schema\"" in resources[0].text
@@ -103,7 +103,7 @@ async def test_dsl_check_run_reference_loop(anyio_backend) -> None:
 @pytest.mark.anyio
 async def test_sse_transport_roundtrip(anyio_backend, free_tcp_port_factory) -> None:
     server = create_server()
-    middleware = getattr(server, HTTP_MIDDLEWARE_ATTR, None)
+    middleware = server.http_middleware
     sse_app = build_sse_app(server, middleware)
 
     port = free_tcp_port_factory()

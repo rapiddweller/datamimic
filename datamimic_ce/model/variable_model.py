@@ -5,7 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from typing import ClassVar
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import (
     ATTR_CONSTANT,
@@ -40,50 +42,250 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_WEIGHT_COLUMN,
     ATTR_WEIGHTS,
 )
+from datamimic_ce.constants.element_constants import EL_VARIABLE
+from datamimic_ce.model.constraints import (
+    SOURCE_DISTRIBUTION_VALUES,
+    VARIABLE_GENERATION_EXCLUSIVE,
+    VARIABLE_GENERATION_REQUIRED,
+    VARIABLE_STORAGE_VALUES,
+    Constraint,
+    constraints_schema_extra,
+    element_constraints,
+    resolved_values,
+)
 from datamimic_ce.model.model_util import ModelUtil
 
 
 class VariableModel(BaseModel):
-    name: str
-    type: str | None = None
-    source: str | None = None
+    # Declared cross-field constraints
+    __constraints__: ClassVar[tuple[Constraint, ...]] = element_constraints(EL_VARIABLE)
+    model_config = ConfigDict(json_schema_extra=constraints_schema_extra(__constraints__))
+
+    name: str = Field(
+        ...,
+        description="Variable name — how this <variable>'s value is referenced by later script=/"
+        "condition= expressions in the same record scope (e.g. script=\"<name>.field\" for an "
+        "entity variable, bare script=\"<name>\" for a scalar).",
+        examples=["p", "row", "customer_id"],
+    )
+    type: str | None = Field(
+        None,
+        description="Normally a scalar cast for a generated value (e.g. 'int', 'string'). When "
+        "'source' is also set, this instead selects which source-backed statement's rows to read "
+        "(a producer name, not a type) — see StatementUtil.resolve_source_entity's "
+        "sourceEntity -> type -> name fallback.",
+    )
+    source: str | None = Field(
+        None,
+        description="Read rows from a declared source: a <memstore>/<database>/<mongodb> id, or a "
+        "file path. Combine with 'type' to pick which produced entity/table to read when the "
+        "source holds more than one.",
+    )
     # Explicit physical entity to read (sourceEntity -> type -> name). See resolve_source_entity.
-    source_entity: str | None = Field(None, alias=ATTR_SOURCE_ENTITY)
-    selector: str | None = None
-    separator: str | None = None
-    cyclic: bool | None = None
-    entity: str | None = None
-    script: str | None = None
-    weight_column: str | None = Field(None, alias=ATTR_WEIGHT_COLUMN)
-    source_script: bool | None = Field(None, alias=ATTR_SOURCE_SCRIPTED)
-    generator: str | None = None
-    dataset: str | None = None
-    locale: str | None = None
-    in_date_format: str | None = Field(None, alias=ATTR_IN_DATE_FORMAT)
-    out_date_format: str | None = Field(None, alias=ATTR_OUT_DATE_FORMAT)
-    converter: str | None = None
-    values: str | None = None
-    weights: str | None = None
-    unique: bool | None = None
-    constant: str | None = None
-    iteration_selector: str | None = Field(None, alias=ATTR_ITERATION_SELECTOR)
-    default_value: str | None = Field(None, alias=ATTR_DEFAULT_VALUE)
-    pattern: str | None = None
-    distribution: str | None = None
-    database: str | None = None
-    variable_prefix: str | None = Field(None, alias=ATTR_VARIABLE_PREFIX)
-    variable_suffix: str | None = Field(None, alias=ATTR_VARIABLE_SUFFIX)
-    string: str | None = Field(None, alias=ATTR_STRING)
+    source_entity: str | None = Field(
+        None,
+        alias=ATTR_SOURCE_ENTITY,
+        description="Explicit physical entity to read (table/collection/product), taking precedence "
+        "over name/type. See resolve_source_entity's sourceEntity -> type -> name fallback.",
+        examples=["customers", "public.customers"],
+    )
+    selector: str | None = Field(
+        None,
+        description="Query/selector used to read from 'source' (e.g. SQL for a database client, or a "
+        "MongoDB find/aggregate expression). At most one of type or selector may be combined with "
+        "source.",
+        examples=["SELECT id FROM public.users", "find: orders, filter: {status: completed}"],
+    )
+    separator: str | None = Field(
+        None,
+        description="Field separator for delimited file sources (default '|'); set separator=\",\" to "
+        "read a comma-separated CSV.",
+        examples=[",", ";", "|"],
+    )
+    cyclic: bool | None = Field(
+        None,
+        description="Wrap around and re-read the source from the start once exhausted, instead of "
+        "stopping when the source is exhausted.",
+        examples=[True, False],
+    )
+    entity: str | None = Field(
+        None,
+        description="Built-in domain entity to generate (e.g. Person, Company, Address, Order); "
+        "validated against the entity registry. Combine with dataset/locale.",
+        examples=["Person", "Company", "Address", "Order"],
+    )
+    script: str | None = Field(
+        None,
+        description="Python expression evaluated to compute the variable's value.",
+        examples=["random.randint(0, 100)", "fake.name()"],
+    )
+    weight_column: str | None = Field(
+        None,
+        alias=ATTR_WEIGHT_COLUMN,
+        description="Weight column in a '.wgt.ent.csv' source. Rows are sampled with replacement "
+        "according to that column; this is a legacy weighted-entity source format, not a "
+        "distribution='weighted' mode.",
+        examples=["weight", "population"],
+    )
+    source_script: bool | None = Field(
+        None,
+        alias=ATTR_SOURCE_SCRIPTED,
+        description="Evaluate 'source' as a Python script expression rather than a literal path/id "
+        "(advanced; requires source).",
+        examples=[True, False],
+    )
+    generator: str | None = Field(
+        None,
+        description="Predefined generator constructor used to produce the variable's value; validated "
+        "against the generator registry.",
+        examples=["IncrementGenerator", "DateTimeGenerator(random=True)"],
+    )
+    dataset: str | None = Field(
+        None,
+        description="Dataset (country code) for an entity/generator variable.",
+        examples=["DE", "US", "BR", "BE", "FR"],
+    )
+    locale: str | None = Field(
+        None,
+        description="Locale for an entity/generator variable.",
+        examples=["de_DE", "en_US", "fr_FR"],
+    )
+    in_date_format: str | None = Field(
+        None,
+        alias=ATTR_IN_DATE_FORMAT,
+        description="Input date format used to parse a source/script date value before converting it "
+        "to outDateFormat.",
+        examples=["%Y-%m-%d", "%d-%b-%Y", "%d.%m.%Y %H:%M:%S.%f", "epoch"],
+    )
+    out_date_format: str | None = Field(
+        None,
+        alias=ATTR_OUT_DATE_FORMAT,
+        description="Output date format the variable's date value is rendered in.",
+        examples=["%Y-%m-%d", "%d-%b-%Y", "%d.%m.%Y %H:%M:%S.%f", "epoch"],
+    )
+    converter: str | None = Field(
+        None,
+        description="Converter(s) applied to transform the generated variable value; validated against "
+        "the converter registry.",
+        examples=["UpperCase", "LowerCase", "DateFormat", "Mask", "MiddleMask", "CutLength", "Append", "Hash"],
+    )
+    values: str | None = Field(
+        None,
+        description="Comma-separated list of literal values to pick from for the variable.",
+        examples=["'A','B','C'", "1,2,3"],
+    )
+    weights: str | None = Field(
+        None,
+        description="Comma-separated relative weights, one per 'values' entry, for weighted random "
+        "selection. Requires 'values'.",
+        examples=["0.7,0.2,0.1", "5,3,2"],
+    )
+    unique: bool | None = Field(
+        None,
+        description="Emit each value at most once (distinct picks from 'values' or 'source', without "
+        "replacement). Requires 'values' or 'source', cannot combine with 'weights', and only combines "
+        "with the default random distribution.",
+        examples=[True, False],
+    )
+    constant: str | None = Field(
+        None,
+        description="Constant, literal value for the variable (same value every record).",
+        examples=["Constant Value"],
+    )
+    iteration_selector: str | None = Field(
+        None,
+        alias=ATTR_ITERATION_SELECTOR,
+        description="Selector re-evaluated per iteration (instead of cached once at setup); overrides "
+        "sourceEntity/type in this mode and is incompatible with 'storage' (no stable pool to index "
+        "into).",
+        examples=["SELECT id FROM public.users", "SELECT product_id FROM products"],
+    )
+    default_value: str | None = Field(
+        None,
+        alias=ATTR_DEFAULT_VALUE,
+        description="Fallback value used when 'script' evaluates to None/fails. Requires 'script'.",
+        examples=["None", "unknown"],
+    )
+    pattern: str | None = Field(
+        None,
+        description="Regular-expression pattern used to generate the variable's string value.",
+        examples=["[A-Z][a-z]{5,12}", "[0-9]{5}"],
+    )
+    distribution: str | None = Field(
+        None,
+        description="Distribution/order for reading the source pool: 'random' (default, whole pool "
+        "loaded into memory), 'ordered' (source order, streams page by page), or 'cumulated' "
+        "(bell-shaped weighted draw; loads the whole pool).",
+        examples=["random", "ordered", "cumulated"],
+    )
+    database: str | None = Field(
+        None,
+        description="Database client id when source equals 'database'.",
+        examples=["db"],
+    )
+    variable_prefix: str | None = Field(
+        None,
+        alias=ATTR_VARIABLE_PREFIX,
+        description="Prefix before field's name for query select data in selector element",
+        examples=["${", "++", "--", "@", "{"],
+    )
+    variable_suffix: str | None = Field(
+        None,
+        alias=ATTR_VARIABLE_SUFFIX,
+        description="Suffix after field's name for query select data in selector element",
+        examples=["++", "--", "@", "}"],
+    )
+    string: str | None = Field(
+        None,
+        alias=ATTR_STRING,
+        description="String for the variable data generation.",
+        examples=["find: __var_name__, filter: status : active"],
+    )
     # Storage strategy for a source-backed pool: "value" (always the pool's first row, fixed -
     # distinct from the unset default, which advances one row per generated record), "data" (the
     # whole materialized pool, same list every row), "iterator" (a position-indexed proxy).
-    storage: str | None = Field(None, alias=ATTR_STORAGE)
+    storage: str | None = Field(
+        None,
+        alias=ATTR_STORAGE,
+        description="Storage strategy for a source-backed pool: 'value' (always the pool's first row, "
+        "fixed - distinct from the unset default, which advances one row per generated record), 'data' "
+        "(the whole materialized pool, same list every row), 'iterator' (a position-indexed proxy). "
+        "Requires 'source' and is incompatible with 'iterationSelector' and a weighted-entity source.",
+        examples=["value", "data", "iterator"],
+    )
     # Demographic and RNG extensions for entity variables
-    age_min: int | None = Field(None, alias="ageMin")
-    age_max: int | None = Field(None, alias="ageMax")
-    conditions_include: str | None = Field(None, alias="conditionsInclude")
-    conditions_exclude: str | None = Field(None, alias="conditionsExclude")
-    rng_seed: int | None = Field(None, alias=ATTR_RNG_SEED)
+    age_min: int | None = Field(
+        None,
+        alias="ageMin",
+        description="Minimum age when generating entity data. Requires 'entity' or 'generator'.",
+        examples=[18],
+    )
+    age_max: int | None = Field(
+        None,
+        alias="ageMax",
+        description="Maximum age when generating entity data. Requires 'entity' or 'generator'.",
+        examples=[90],
+    )
+    conditions_include: str | None = Field(
+        None,
+        alias="conditionsInclude",
+        description="Comma-separated condition tags that must be included when generating entity data. "
+        "Requires 'entity' or 'generator'.",
+        examples=["diabetes,asthma"],
+    )
+    conditions_exclude: str | None = Field(
+        None,
+        alias="conditionsExclude",
+        description="Comma-separated condition tags that must be excluded when generating entity data. "
+        "Requires 'entity' or 'generator'.",
+        examples=["pregnant"],
+    )
+    rng_seed: int | None = Field(
+        None,
+        alias=ATTR_RNG_SEED,
+        description="Deterministic RNG seed for this variable.",
+        examples=[12345],
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -159,36 +361,18 @@ class VariableModel(BaseModel):
     @classmethod
     def validate_generator_mode(cls, values: dict):
         """
-        Check if <variable> define only one valid generation option
-        :param values:
-        :return:
+        Check if <variable> define only one valid generation option.
+
+        Reads the declared facts _GENERATION_REQUIRED / _GENERATION_EXCLUSIVE;
+        message construction stays here (it interpolates the clashing modes).
         """
         key_set = set(values.keys())
-        generator_option = {
-            ATTR_SOURCE,
-            ATTR_ENTITY,
-            ATTR_SCRIPT,
-            ATTR_GENERATOR,
-            ATTR_VALUES,
-            ATTR_CONSTANT,
-            ATTR_TYPE,
-            ATTR_PATTERN,
-            ATTR_STRING,
-        }
+        generator_option = set(VARIABLE_GENERATION_REQUIRED.attrs)
         # Check if at least one of following attribute is existed to generate <variable> value
         if all(key not in key_set for key in generator_option):
             raise ValueError(f"Must defined one of following attributes {generator_option}")
         # Check if at most one generation mode is defined
-        generation_mode = {
-            ATTR_SOURCE,
-            ATTR_ENTITY,
-            ATTR_SCRIPT,
-            ATTR_GENERATOR,
-            ATTR_VALUES,
-            ATTR_CONSTANT,
-            ATTR_PATTERN,
-            ATTR_STRING,
-        }
+        generation_mode = set(VARIABLE_GENERATION_EXCLUSIVE.attrs)
         # Check if only one generation mode is defined
         first_mode = None
         for mode in generation_mode:
@@ -242,8 +426,12 @@ class VariableModel(BaseModel):
     @field_validator("storage")
     @classmethod
     def validate_storage(cls, value):
-        if value is not None and value not in ("value", "data", "iterator"):
-            raise ValueError(f"'{ATTR_STORAGE}' must be one of 'value'/'data'/'iterator', got '{value}'")
+        # Reads the declared _STORAGE_VALUES fact; the message interpolates the
+        # rejected value, so it is constructed here (options rendered in the
+        # fact's declared tuple order).
+        if value is not None and value not in VARIABLE_STORAGE_VALUES.values:
+            options = "/".join(f"'{v}'" for v in VARIABLE_STORAGE_VALUES.values)
+            raise ValueError(f"'{ATTR_STORAGE}' must be one of {options}, got '{value}'")
         return value
 
     @field_validator("pattern")
@@ -256,5 +444,9 @@ class VariableModel(BaseModel):
         """
         return ModelUtil.check_valid_pattern(value)
 
-    # NOTE: no distribution validator here — <variable> accepts random/ordered/cumulated,
-    # which VariableStatement enforces via SourceDistribution.coerce at construction.
+    @field_validator("distribution")
+    @classmethod
+    def validate_distribution(cls, value: str | None) -> str | None:
+        if value is not None:
+            ModelUtil.check_valid_data_value(value, resolved_values(SOURCE_DISTRIBUTION_VALUES))
+        return value

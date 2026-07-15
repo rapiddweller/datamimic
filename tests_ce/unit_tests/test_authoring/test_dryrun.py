@@ -8,6 +8,7 @@
 
 from pathlib import Path
 
+from datamimic_ce.authoring.contracts import AuthoringStage
 from datamimic_ce.authoring.dryrun import dry_run_source
 
 _PIPELINE = """<setup rngSeed="1">
@@ -23,7 +24,7 @@ _PIPELINE = """<setup rngSeed="1">
 def test_dry_run_caps_counts_strips_targets_keeps_memstore(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.chdir(tmp_path)  # any accidental artifact would land here
     result = dry_run_source(_PIPELINE, max_count=7, sample_rows=3)
-    assert result.ok and result.stage == "run", [d.message for d in result.diagnostics]
+    assert result.ok and result.stage is AuthoringStage.RUN, [d.message for d in result.diagnostics]
 
     by_name = {p.name: p for p in result.products}
     assert by_name["users"].count == 7  # capped from 500
@@ -55,7 +56,7 @@ def test_dry_run_sample_preserves_nested_structure() -> None:
 
 def test_dry_run_lint_gate_blocks_broken_descriptor() -> None:
     result = dry_run_source("<setup><generate name='a' pagesize='5' target='ConsoleExporter'/></setup>")
-    assert not result.ok and result.stage == "lint"
+    assert not result.ok and result.stage is AuthoringStage.LINT
     assert any(d.rule == "DM103" for d in result.diagnostics)
 
 
@@ -65,7 +66,7 @@ def test_dry_run_refuses_execute_without_allow() -> None:
         <generate name="a" count="1" target="ConsoleExporter"><key name="x" constant="1"/></generate>
     </setup>"""
     result = dry_run_source(xml)
-    assert not result.ok and result.stage == "run"
+    assert not result.ok and result.stage is AuthoringStage.RUN
     assert [d.rule for d in result.diagnostics] == ["DM003"]
 
 
@@ -75,7 +76,7 @@ def test_dry_run_maps_runtime_error_to_dm002() -> None:
         <generate name="a" count="3" source="missing.csv" distribution="ordered" target="ConsoleExporter"/>
     </setup>"""
     result = dry_run_source(xml)
-    assert not result.ok and result.stage == "run"
+    assert not result.ok and result.stage is AuthoringStage.RUN
     assert [d.rule for d in result.diagnostics] == ["DM002"]
     assert result.diagnostics[0].fix_hint
 
@@ -83,7 +84,7 @@ def test_dry_run_maps_runtime_error_to_dm002() -> None:
 def test_dm004_flags_zero_row_output() -> None:
     # An empty/mis-wired descriptor runs clean but generates nothing — surface it.
     empty = dry_run_source("<setup></setup>")
-    assert empty.ok  # did not crash
+    assert not empty.ok  # no crash, but no useful output either
     assert [d.rule for d in empty.diagnostics] == ["DM004"]
     assert empty.diagnostics[0].severity.value == "warning"
 
@@ -133,7 +134,7 @@ def test_smoke_export_catches_unserializable_value_plain_dry_run_does_not(tmp_pa
     assert plain.ok  # the gap: JSON target stripped, crash invisible
 
     smoked = dry_run_source(xml, smoke_export=True)
-    assert not smoked.ok and smoked.stage == "run"
+    assert not smoked.ok and smoked.stage is AuthoringStage.RUN
     diag = next(d for d in smoked.diagnostics if d.rule == "DM002")
     assert "JSON" in diag.message and "serializable" in diag.message
     assert diag.name == "batches|blobs"  # names the offending (nested) product
@@ -201,7 +202,7 @@ def test_engine_scope_error_names_the_missing_identifier() -> None:
         </generate>
     </setup>"""
     result = dry_run_source(xml)
-    assert not result.ok and result.stage == "run"
+    assert not result.ok and result.stage is AuthoringStage.RUN
     diag = next(d for d in result.diagnostics if d.rule == "DM002")
     assert "ghost_field" in diag.message  # the identifier, verbatim
     assert "this." in diag.message  # and the scope guidance travels with it
