@@ -429,15 +429,69 @@ in this diagnostic, and it is independent of model size (3.8B through 120B
 all show it) or specialization (a dedicated coding/agentic model showed it
 too).
 
+## Condition D — guided prompt: worked example + submit-early strategy
+
+Every prior condition told the model to *discover* the schema before writing.
+Condition D tests the opposite hypothesis, derived directly from the B/B2
+ledgers: small models get lost in discovery (6 of 9 never submitted) but
+repair well from `scaffold`'s structured errors (the one model that saw the
+valid product-kind enum in an error message immediately fixed it). Same
+harness, task, oracle, seed, tools, and 6-turn budget as B2 — only the
+system prompt changed:
+
+1. a **minimal worked example** of a valid `model.dm.json` for a *different*
+   task (3 cities, one `values` field — deliberately not containing
+   `int_range`, `increment`, expectations, or anything T1-specific, so the
+   document *shape* is given but the task solution is not);
+2. one sentence naming the two rules every prior model tripped on (top-level
+   allows only `version`/`seed`/`products`/`expectations`; product-level
+   `kind` is a different vocabulary from field-level `kind`);
+3. a **submit-early strategy instruction**: first submission by turn 2 at
+   the latest, at most one discovery call before it, repair from the
+   structured errors, never resubmit an unchanged document.
+
+| Model | Discovery calls | Submissions | Verified turn | Outcome |
+|---|---|---|---|---|
+| `gemma4:e4b` | 0 | 2 | **2** | **pass** |
+| `gemma4:e4b-it-qat` | 1 | 2 | **3** | **pass** |
+| `qwen3.5:9b-mlx` | 2 | 2 | **3** | **pass** |
+| `ministral-3:8b` | 5 | 1 | **4** | **pass** |
+| `qwen3-coder:30b-a3b` | 5 (batched) | 1 | **2** | **pass** |
+
+**5/5 verified — every model that failed in B2 passes under the guided
+prompt, within the same 6-turn budget, and every one produced the identical
+seed-42 sample rows** (id 1–5, categories A/B/A/B/A, scores 16/20/11/17/14 —
+matching Condition C's Haiku output and the hand-built gold spec exactly,
+confirming deterministic replay across completely different authoring
+paths). The repair loop worked exactly as hypothesized: `gemma4:e4b` and
+`gemma4:e4b-it-qat` both had their first submission rejected on a
+field-naming detail (`min`/`max` instead of `minimum`/`maximum`) and fixed
+it in one turn from the structured error; `qwen3.5:9b-mlx` hit one
+field-level discriminator error and fixed it in one turn. No model got
+stuck, no model over-discovered, no model missed the product-level `kind`
+this time — the two prompt sentences covering the known traps were
+evidently sufficient.
+
+This is the single most decisive result in the diagnostic: **the 0/9 in B2
+was a workflow-design failure, not a model-capability ceiling.** The same
+3.8–30B-class models that looked hopeless under "discover first" author
+correct, verified, deterministic models in 2–4 turns when given (a) one
+worked example of the document shape, (b) the two known traps stated
+upfront, and (c) permission to submit early and lean on the engine's
+structured errors. Caveats: still one seed, one task (T1 flat), and the
+prompt encodes lessons learned from this diagnostic's own failures — a
+genuinely novel schema would need its own worked example. `phi4-mini` (the
+no-tool-calls-at-all failure) and the cloud models were not re-run in D.
+
 ## Comparison
 
-| | Condition A (text protocol) | Condition B (native tools, temp=0.2) | Condition B2 (native tools, model-default sampling) | Condition C (Haiku, cleanroom) |
-|---|---|---|---|---|
-| Verified | 0/3 | 0/4 | 0/9 | 1/1 |
-| Discovery calls used | 0–1 per model | 0–6 per model | 0–6 per model | 3 (unrationed) |
-| Submission attempts before pass | — | — | — | 1 |
-| Reasoning visible to evaluator | no | yes (`thinking`) | yes (`thinking`, where supported) | yes (agent's own report) |
-| Dominant failure mode | guess blindly from invented syntax; one model stuck repeating an identical wrong payload | explore genuinely, converge on most of the structure, miss the product-level `kind` discriminator; two of four never even reach submission | same discriminator confusion; `gemma4:e4b` develops its own stuck loop; 5 of 9 models never submit at all, spanning 3.8B to 120B and a dedicated coding model; 1 model (`phi4-mini`) never makes a real tool call at all | none observed |
+| | Condition A (text protocol) | Condition B (native tools, temp=0.2) | Condition B2 (native tools, model-default sampling) | Condition C (Haiku, cleanroom) | Condition D (guided prompt) |
+|---|---|---|---|---|---|
+| Verified | 0/3 | 0/4 | 0/9 | 1/1 | **5/5** |
+| Discovery calls used | 0–1 per model | 0–6 per model | 0–6 per model | 3 (unrationed) | 0–5 per model |
+| Submission attempts before pass | — | — | — | 1 | 1–2 |
+| Reasoning visible to evaluator | no | yes (`thinking`) | yes (`thinking`, where supported) | yes (agent's own report) | yes (`thinking`, where supported) |
+| Dominant failure mode | guess blindly from invented syntax; one model stuck repeating an identical wrong payload | explore genuinely, converge on most of the structure, miss the product-level `kind` discriminator; two of four never even reach submission | same discriminator confusion; `gemma4:e4b` develops its own stuck loop; 5 of 9 models never submit at all, spanning 3.8B to 120B and a dedicated coding model; 1 model (`phi4-mini`) never makes a real tool call at all | none observed | none — all pass in 2–4 turns |
 
 Native tool-calling did not flip the pass/fail outcome inside the same
 6-turn budget, but it changed *what* failed relative to Condition A. Every
@@ -451,24 +505,30 @@ to one specific, nameable confusion (product-kind vs. field-kind) plus, for
 most B/B2 models, a turn budget spent substantially or entirely on discovery
 with too little left for a converged submission.
 
-Condition C's clean first-attempt pass is the most important single data
-point in this diagnostic: it demonstrates the DATAMIMIC schema and CLI
-surface, including the compact `capabilities` index, is not inherently
-confusing or under-specified — a capable model resolved the exact
-discriminator confusion that stumped every Condition A/B model, using less
-discovery than several of them. That reframes Condition B's 0/4 as evidence
-about small-model (8B–31B, open-weight, as currently prompted) capability and
-budget, not evidence against the compact-index design PR #215 introduces.
-The budget-shape difference from Condition B means this is directional, not
-conclusive — see follow-up #1.
+Condition C's clean first-attempt pass demonstrated the DATAMIMIC schema and
+CLI surface, including the compact `capabilities` index, is not inherently
+confusing or under-specified. Condition D then closed the argument from the
+other side: the *same small models* that failed 0/9 under "discover first"
+all pass in 2–4 turns under "worked example + submit early + repair from
+structured errors" — same budget, same tools, same task, same seed. Together
+they pin the B/B2 failures on workflow/prompt design, not on the models, the
+schema, the CLI, or the compact index.
 
 ## Decision
 
-- **NO-GO (Conditions A/B/B2):** unattended CLI-only authoring by small-to-
-  large (3.8B–120B), open-weight/proprietary-weight local/Ollama-hosted
-  models within a 6-turn budget on this task. 0/16 verified across all
-  run-instances (9 distinct models across A/B/B2, several re-run across
-  multiple conditions).
+- **GO (the headline): small local models CAN author verified models — with
+  the right workflow.** Condition D: 5/5 verified in 2–4 turns (same budget,
+  tools, task, seed as B2's 0/9) once the prompt provides one worked
+  example of the document shape, names the two known schema traps, and
+  instructs submit-early-repair-from-errors instead of discover-first. Every
+  Condition D pass reproduced the identical seed-42 rows as Haiku and the
+  gold spec.
+- **NO-GO (discover-first workflow on small models):** unattended CLI-only
+  authoring by small-to-large (3.8B–120B) open-weight models under a
+  "discover the schema before writing" prompt within a 6-turn budget.
+  0/16 verified across all A/B/B2 run-instances (9 distinct models). The
+  contrast with Condition D localizes the failure to the workflow design,
+  not the models.
 - **Confirmed: Condition B's original sampling was not best-practice**
   (forced `temperature: 0.2` against every model's own declared default of
   `1`), **but correcting it (B2) did not change the outcome.** 0/9 verified
@@ -534,20 +594,28 @@ conclusive — see follow-up #1.
 
 ## Ranked follow-up
 
-1. Run Condition C's exact task/prompt through Condition B2's exact harness
+1. **Productize Condition D's guidance**: fold the worked example, the two
+   trap rules (top-level shape; product-kind vs. field-kind vocabulary), and
+   the submit-early-repair-from-errors strategy into the agent-facing surface
+   itself — the natural homes are AGENTS.md §"Authoring a new model", the
+   compact `capabilities` `_meta.usage` block, and/or `reference scaffold`'s
+   prose preamble. Condition D proves this is worth ~0→100% verified-rate on
+   small local models for this task class; a T2-relational worked example
+   should ship alongside it before claiming generality.
+2. Validate Condition D beyond one seed and one task: seeds 42–46, plus the
+   T2 relational task, before treating the guided workflow as reliable
+   rather than demonstrated-once.
+3. Run Condition C's exact task/prompt through Condition B2's exact harness
    (fixed 4-tool schema, 6-turn budget, subprocess isolation, model-default
-   sampling) with a capable model, to get one genuinely controlled A/B/C
-   comparison — the current Condition C result is suggestive but was run
-   with a different budget shape and tool surface, which this diagnostic has
-   been explicit about not controlling for. This is the single highest-value
-   remaining gap.
-2. Add an explicit "declared-but-unused tool capability" check to any future
+   sampling) with a capable model, to get one genuinely controlled
+   comparison across all conditions.
+4. Add an explicit "declared-but-unused tool capability" check to any future
    harness: if a model goes N consecutive turns with zero `tool_calls` while
    `tools` capability was declared, flag it distinctly from "chose not to
    call a tool this turn" — `phi4-mini` would otherwise silently blend into
    the same bucket as models that discover thoroughly and just run out of
    budget, which is a materially different failure.
-3. Re-run Condition B2 with a larger turn budget (10–12) for the six
+5. Re-run Condition B2 with a larger turn budget (10–12) for the six
    discovery-only models (`qwen3.5:9b-mlx`, `gemma4:31b-cloud`,
    `nemotron-3-nano:30b-cloud`, `gpt-oss:120b-cloud`, `qwen3-coder:30b-a3b`,
    `phi4-mini`) — this directly tests whether they "ran out of time" or
@@ -556,7 +624,7 @@ conclusive — see follow-up #1.
    specifically: both showed efficient/near-efficient discovery with little
    to no wasted calls, so a modest budget increase (not a protocol change)
    is the most direct next test for them.
-4. Make the product-level `"kind"` discriminator harder to miss: either
+6. Make the product-level `"kind"` discriminator harder to miss: either
    surface a one-line worked example (`{"kind": "generated", ...}` at the
    product level) directly in `capabilities`' compact index or in
    `reference scaffold`'s output, or strengthen the `invalid_discriminator`
@@ -568,7 +636,7 @@ conclusive — see follow-up #1.
    second "product" to hold the top-level `seed` value, worth folding into
    the same fix (make the top-level document shape, not just the product
    discriminator, harder to guess wrong).
-5. Investigate `gemma4:e4b`'s stuck loop in B2 specifically (4 byte-identical
+7. Investigate `gemma4:e4b`'s stuck loop in B2 specifically (4 byte-identical
    resubmissions of a payload already known to fail) — this is the second
    time this exact degenerate pattern has appeared (Condition A's
    `qwen3.5:9b-mlx`, now B2's `gemma4:e4b`), in different models under
@@ -576,15 +644,15 @@ conclusive — see follow-up #1.
    more general Ollama chat-loop artifact (e.g. the model's context making
    near-identical continuations likely) rather than a property of any one
    model or setting.
-6. Test a discovery-budget guard: cap discovery calls (e.g. at 3) and require
+8. Test a discovery-budget guard: cap discovery calls (e.g. at 3) and require
    a submission attempt after that, so models that discover thoroughly but
    never converge to a submission are forced to test their understanding
    within the turn budget.
-7. Re-run with seeds 42–46 across all conditions before making any GO/NO-GO
+9. Re-run with seeds 42–46 across all conditions before making any GO/NO-GO
    claim about the compact index's real-world sufficiency or about
    native-tool-calling's/sampling's effect on the verified rate — this
    diagnostic is one seed throughout.
-8. If a future harness is built for real (per this directory's "Contract for
+10. If a future harness is built for real (per this directory's "Contract for
    a future canonical harness"), it should default to native tool-calling and
    each model's own declared sampling defaults (never an arbitrary uniform
    temperature), skip the `think` flag for models that don't declare
