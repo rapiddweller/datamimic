@@ -10,7 +10,7 @@ from datamimic_ce.authoring.contracts import (
     AuthoringReferenceCategory,
     ReferenceTopic,
 )
-from datamimic_ce.cli_presenter import CliOutputFormat, FailureThreshold
+from datamimic_ce.cli_presenter import CliOutputFormat
 from datamimic_ce.utils.demo_util import demo_autocomplete
 
 app = typer.Typer(help="DATAMIMIC Command Line Interface.", rich_markup_mode="markdown")
@@ -72,7 +72,7 @@ def scaffold(
 def lint(
     descriptor_path: Path = DESCRIPTOR_PATH,
     output_format: Annotated[CliOutputFormat, typer.Option("--format", "-f")] = CliOutputFormat.TEXT,
-    fail_on: Annotated[FailureThreshold, typer.Option("--fail-on")] = FailureThreshold.ERROR,
+    fail_on: Annotated[str, typer.Option("--fail-on")] = "error",
     max_diagnostics: Annotated[int, typer.Option("--max-diagnostics")] = 200,
 ) -> None:
     cli_authoring.lint_descriptor(descriptor_path, output_format, fail_on, max_diagnostics)
