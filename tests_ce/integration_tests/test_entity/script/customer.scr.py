@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import datetime as _dt
 import hashlib
+from collections.abc import Iterable
 from random import Random
-from typing import Iterable
 
 from datamimic_ce.domains.common.models.person import Person
 
@@ -13,7 +13,7 @@ from datamimic_ce.domains.common.models.person import Person
 def _derive_seed(person: Person, cohort: str) -> int:
     """Create a stable seed based on person attributes and cohort label."""
 
-    material = f"{cohort}|{person.email}|{person.birthdate}|{person.gender}".encode("utf-8")
+    material = f"{cohort}|{person.email}|{person.birthdate}|{person.gender}".encode()
     digest = hashlib.blake2b(material, digest_size=8).digest()
     return int.from_bytes(digest, "big", signed=False)
 
@@ -33,7 +33,7 @@ def select_payment_method(person: Person, options: Iterable[str], cohort: str) -
 def stable_customer_id(person: Person, cohort: str) -> str:
     """Compute a deterministic customer identifier."""
 
-    material = f"{cohort}|{person.email}|{person.name}|{person.birthdate}".encode("utf-8")
+    material = f"{cohort}|{person.email}|{person.name}|{person.birthdate}".encode()
     digest = hashlib.blake2b(material, digest_size=10).hexdigest()
     return f"cust-{digest[:20]}"
 

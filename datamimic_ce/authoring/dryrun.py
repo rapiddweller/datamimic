@@ -52,8 +52,9 @@ from datamimic_ce.authoring.contracts import (
     ProductResult,
     RunResult,
 )
-from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult, Severity
+from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.linter import lint_descriptor, lint_source
+from datamimic_ce.authoring.rule_catalog import RuleSeverity
 
 RULE_RUNTIME_ERROR = "DM002"
 RULE_SIDE_EFFECT_REFUSAL = "DM003"
@@ -104,6 +105,7 @@ class SmokeExportCapture:
             attempted_exporters=0,
             failed_exporters=0,
         )
+
 
 @dataclass(frozen=True)
 class CapturedRun:
@@ -210,7 +212,7 @@ _RUNTIME_HINTS: tuple[tuple[str, str], ...] = (
     (
         "is empty in memstore",
         "A <generate>/<iterate> reads a memstore product that no earlier statement wrote. "
-        "Add a <generate target=\"<memstoreId>\"> whose name matches this type=/sourceType= "
+        'Add a <generate target="<memstoreId>"> whose name matches this type=/sourceType= '
         "and place it BEFORE the reader.",
     ),
     (
@@ -225,13 +227,11 @@ _RUNTIME_HINTS: tuple[tuple[str, str], ...] = (
     ("have undefined", _SCOPE_HINT),
     (
         "file not found",
-        "An <include>/source path does not exist relative to the descriptor. Fix the path "
-        "or create the file.",
+        "An <include>/source path does not exist relative to the descriptor. Fix the path or create the file.",
     ),
     (
         "connection",
-        "Check DB connectivity and the conf/{environment}.env.properties convention "
-        "(keys {system}.{db|mongo}.{attr}).",
+        "Check DB connectivity and the conf/{environment}.env.properties convention (keys {system}.{db|mongo}.{attr}).",
     ),
     (
         "Evaluation error",
@@ -249,11 +249,9 @@ def _runtime_hint(err: Exception) -> str:
     return "Fix the reported runtime error; lint the descriptor for earlier detection."
 
 
-def _run_error(
-    rule: str, message: str, fix_hint: str, lint: LintResult, *, element: str = "setup"
-) -> DryRunResult:
+def _run_error(rule: str, message: str, fix_hint: str, lint: LintResult, *, element: str = "setup") -> DryRunResult:
     diag = Diagnostic(
-        rule=rule, severity=Severity.ERROR, message=message, fix_hint=fix_hint, element=element, path="/setup"
+        rule=rule, severity=RuleSeverity.ERROR, message=message, fix_hint=fix_hint, element=element, path="/setup"
     )
     return DryRunResult(
         ok=False,
@@ -337,9 +335,7 @@ def _memstore_source_binding(
         return None
     entity = StatementUtil.resolve_source_entity(stmt)
     candidates = tuple(
-        producer
-        for producer in producers
-        if producer.source_id == stmt.source and producer.entity == entity
+        producer for producer in producers if producer.source_id == stmt.source and producer.entity == entity
     )
     if len(candidates) == 1:
         status = _MemstoreBindingStatus.RESOLVED
@@ -515,9 +511,7 @@ def neutralize_for_dry_run(
             from datamimic_ce.enums.distribution_enums import SourceDistribution
 
             source_exhaustible = (
-                source_rows is not None
-                and not stmt.cyclic
-                and stmt.distribution is not SourceDistribution.CUMULATED
+                source_rows is not None and not stmt.cyclic and stmt.distribution is not SourceDistribution.CUMULATED
             )
             range_bound = _range_upper_bound(stmt) if stmt.count is None else None
             time_series = stmt.get_time_series_config()
@@ -569,14 +563,13 @@ def neutralize_for_dry_run(
 
             if product_budgets is not None:
                 name = _capture_name(stmt.full_name)
+                requested_per_parent: int | None = requested
+                if requested_per_parent is None and range_bound is None:
+                    requested_per_parent = source_rows
                 product_budgets[name] = _ProductBudget(
                     name=name,
                     parent_name=_parent_capture_name(stmt),
-                    requested_per_parent=(
-                        requested
-                        if requested is not None
-                        else source_rows if range_bound is None else None
-                    ),
+                    requested_per_parent=requested_per_parent,
                     explicit_count=requested is not None,
                     count_kind=count_kind,
                     source_rows_per_parent=source_rows,
@@ -635,9 +628,7 @@ def _smoke_export(
     from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
 
     diagnostics: list[Diagnostic] = []
-    applicable_exporters = sum(
-        len(file_targets) for _basename, file_targets in stripped.values()
-    )
+    applicable_exporters = sum(len(file_targets) for _basename, file_targets in stripped.values())
     attempted_exporters = 0
     failed_exporters = 0
     with tempfile.TemporaryDirectory(prefix="datamimic_smoke_") as tmp:
@@ -667,7 +658,7 @@ def _smoke_export(
                     diagnostics.append(
                         Diagnostic(
                             rule=RULE_RUNTIME_ERROR,
-                            severity=Severity.ERROR,
+                            severity=RuleSeverity.ERROR,
                             message=f"{exporter_name} smoke export failed for '{full_name}': {err}",
                             fix_hint=(
                                 f"A generated value cannot be written by the {exporter_name} exporter "
@@ -909,16 +900,11 @@ def _engine_process_worker(
                 smoke_export_capture = SmokeExportCapture.not_requested()
             else:
                 smoke_diagnostics, smoke_export_capture = _smoke_export(raw_capture, stripped)
-            captured = {
-                str(name): tuple(_ipc_safe_value(row) for row in rows)
-                for name, rows in raw_capture.items()
-            }
+            captured = {str(name): tuple(_ipc_safe_value(row) for row in rows) for name, rows in raw_capture.items()}
             message: _WorkerMessage = _WorkerSuccess(
                 captured=captured,
                 budgets=tuple(sorted(budgets.values(), key=lambda budget: budget.name)),
-                smoke_diagnostics=tuple(
-                    diagnostic.model_dump(mode="json") for diagnostic in smoke_diagnostics
-                ),
+                smoke_diagnostics=tuple(diagnostic.model_dump(mode="json") for diagnostic in smoke_diagnostics),
                 smoke_export=smoke_export_capture,
             )
         except Exception as err:
@@ -1088,9 +1074,13 @@ def _memstore_capture_evidence(
     available_per_parent = max(0, producer_observed - budget.source_offset)
     available = available_per_parent * parent_observed * budget.output_multiplier
     if budget.count_kind is _CountBoundaryKind.DYNAMIC:
-        return base if base.status is CaptureStatus.CAPPED else _unknown_from(
-            base,
-            "dynamic count replacement prevents a complete memstore-read proof",
+        return (
+            base
+            if base.status is CaptureStatus.CAPPED
+            else _unknown_from(
+                base,
+                "dynamic count replacement prevents a complete memstore-read proof",
+            )
         )
     if budget.cyclic:
         return _unknown_from(
@@ -1098,53 +1088,59 @@ def _memstore_capture_evidence(
             "cyclic memstore reads do not provide finite exhaustion evidence",
         )
     if budget.count_kind is _CountBoundaryKind.SOURCE:
-        if available > base.limit:
-            if base.observed == base.limit:
-                return ProductCaptureEvidence(
-                    status=CaptureStatus.CAPPED,
-                    requested=available,
-                    observed=base.observed,
-                    limit=base.limit,
-                    reason=(
-                        f"finite memstore source has {available} available rows, "
-                        f"above capture limit {base.limit}"
-                    ),
-                )
-            return _unknown_from(base, "memstore source did not reach its proven finite window")
-        if base.observed == available:
+        return _source_memstore_capture_evidence(base, available)
+    if budget.count_kind is _CountBoundaryKind.STATIC and base.requested is not None:
+        return _static_memstore_capture_evidence(base, available)
+    return base
+
+
+def _source_memstore_capture_evidence(
+    base: ProductCaptureEvidence,
+    available: int,
+) -> ProductCaptureEvidence:
+    if available > base.limit:
+        if base.observed == base.limit:
             return ProductCaptureEvidence(
-                status=CaptureStatus.EXHAUSTED,
+                status=CaptureStatus.CAPPED,
                 requested=available,
                 observed=base.observed,
                 limit=base.limit,
-                reason=(
-                    f"uniquely resolved memstore producer was fully read: "
-                    f"{available} finite rows"
-                ),
+                reason=(f"finite memstore source has {available} available rows, above capture limit {base.limit}"),
             )
-        return _unknown_from(base, "memstore source did not exhaust its proven finite window")
-    if budget.count_kind is _CountBoundaryKind.STATIC and base.requested is not None:
-        effective_requested = min(base.requested, available)
-        if base.observed == effective_requested:
-            if base.requested >= available:
-                return ProductCaptureEvidence(
-                    status=CaptureStatus.EXHAUSTED,
-                    requested=base.requested,
-                    observed=base.observed,
-                    limit=base.limit,
-                    reason=(
-                        f"static request reached all {available} rows of the uniquely "
-                        "resolved memstore producer"
-                    ),
-                )
-            if base.requested <= base.limit:
-                return ProductCaptureEvidence(
-                    status=CaptureStatus.COMPLETE,
-                    requested=base.requested,
-                    observed=base.observed,
-                    limit=base.limit,
-                    reason="static memstore read completed within the finite source window",
-                )
+        return _unknown_from(base, "memstore source did not reach its proven finite window")
+    if base.observed == available:
+        return ProductCaptureEvidence(
+            status=CaptureStatus.EXHAUSTED,
+            requested=available,
+            observed=base.observed,
+            limit=base.limit,
+            reason=(f"uniquely resolved memstore producer was fully read: {available} finite rows"),
+        )
+    return _unknown_from(base, "memstore source did not exhaust its proven finite window")
+
+
+def _static_memstore_capture_evidence(
+    base: ProductCaptureEvidence,
+    available: int,
+) -> ProductCaptureEvidence:
+    if base.requested is None or base.observed != min(base.requested, available):
+        return base
+    if base.requested >= available:
+        return ProductCaptureEvidence(
+            status=CaptureStatus.EXHAUSTED,
+            requested=base.requested,
+            observed=base.observed,
+            limit=base.limit,
+            reason=(f"static request reached all {available} rows of the uniquely resolved memstore producer"),
+        )
+    if base.requested <= base.limit:
+        return ProductCaptureEvidence(
+            status=CaptureStatus.COMPLETE,
+            requested=base.requested,
+            observed=base.observed,
+            limit=base.limit,
+            reason="static memstore read completed within the finite source window",
+        )
     return base
 
 
@@ -1156,83 +1152,112 @@ def _capture_evidence_by_product(
 ) -> dict[str, ProductCaptureEvidence]:
     """Resolve ancestry and memstore provenance recursively, independent of name order."""
 
-    observed_by_name = {name: len(rows) for name, rows in captured.items()}
-    resolved: dict[str, ProductCaptureEvidence] = {}
-    visiting: set[str] = set()
+    return _CaptureEvidenceResolver(budgets, captured, max_count).resolve_all()
 
-    def _resolve(name: str) -> ProductCaptureEvidence:
-        existing = resolved.get(name)
+
+class _CaptureEvidenceResolver:
+    """Resolve capture completeness from typed ancestry and memstore facts."""
+
+    def __init__(
+        self,
+        budgets: _ProductBudgets,
+        captured: dict[str, tuple[object, ...]],
+        max_count: int,
+    ) -> None:
+        self._budgets = budgets
+        self._observed = {name: len(rows) for name, rows in captured.items()}
+        self._product_names = tuple(captured)
+        self._max_count = max_count
+        self._resolved: dict[str, ProductCaptureEvidence] = {}
+        self._visiting: set[str] = set()
+
+    def resolve_all(self) -> dict[str, ProductCaptureEvidence]:
+        for product_name in self._product_names:
+            self._resolve(product_name)
+        return self._resolved
+
+    def _resolve(self, name: str) -> ProductCaptureEvidence:
+        existing = self._resolved.get(name)
         if existing is not None:
             return existing
-        budget = budgets.get(name)
-        observed = observed_by_name.get(name, 0)
+        budget = self._budgets.get(name)
         base = _capture_evidence(
             budget,
-            observed=observed,
-            max_count=max_count,
-            observed_by_name=observed_by_name,
+            observed=self._observed.get(name, 0),
+            max_count=self._max_count,
+            observed_by_name=self._observed,
         )
-        if name in visiting:
-            return _unknown_from(base, "capture dependency cycle prevents a completeness proof")
-        visiting.add(name)
-        evidence = base
-        dependency_blocked = False
-        if budget is not None and budget.parent_name is not None:
-            if budget.parent_name not in observed_by_name:
-                evidence = _unknown_from(base, "parent product is missing from runtime capture")
-                dependency_blocked = True
-            else:
-                parent_evidence = _resolve(budget.parent_name)
-                if not parent_evidence.complete:
-                    evidence = _unknown_from(
-                        base,
-                        "parent product capture is not proven complete",
-                    )
-                    dependency_blocked = True
-        binding = budget.memstore_source if budget is not None else None
-        if budget is not None and binding is not None and not dependency_blocked:
-            if binding.status is _MemstoreBindingStatus.MISSING:
-                evidence = _unknown_from(
-                    base,
-                    (
-                        f"memstore '{binding.source_id}' entity '{binding.entity}' "
-                        "has no captured producer"
-                    ),
-                )
-            elif binding.status is _MemstoreBindingStatus.AMBIGUOUS:
-                evidence = _unknown_from(
-                    base,
-                    (
-                        f"memstore '{binding.source_id}' entity '{binding.entity}' "
-                        "has multiple possible producers"
-                    ),
-                )
-            else:
-                producer = next(iter(binding.producers), None)
-                if producer is None or producer.product not in observed_by_name:
-                    evidence = _unknown_from(
-                        base,
-                        "resolved memstore producer is missing from runtime capture",
-                    )
-                else:
-                    evidence = _memstore_capture_evidence(
-                        budget,
-                        base,
-                        producer_evidence=_resolve(producer.product),
-                        producer_observed=observed_by_name[producer.product],
-                        parent_observed=(
-                            observed_by_name.get(budget.parent_name, 0)
-                            if budget.parent_name is not None
-                            else 1
-                        ),
-                    )
-        visiting.remove(name)
-        resolved[name] = evidence
+        if name in self._visiting:
+            return _unknown_from(
+                base,
+                "capture dependency cycle prevents a completeness proof",
+            )
+        self._visiting.add(name)
+        evidence, dependency_blocked = self._parent_evidence(budget, base)
+        if budget is not None and budget.memstore_source is not None and not dependency_blocked:
+            evidence = self._memstore_evidence(budget, base)
+        self._visiting.remove(name)
+        self._resolved[name] = evidence
         return evidence
 
-    for product_name in captured:
-        _resolve(product_name)
-    return resolved
+    def _parent_evidence(
+        self,
+        budget: _ProductBudget | None,
+        base: ProductCaptureEvidence,
+    ) -> tuple[ProductCaptureEvidence, bool]:
+        if budget is None or budget.parent_name is None:
+            return base, False
+        if budget.parent_name not in self._observed:
+            return _unknown_from(base, "parent product is missing from runtime capture"), True
+        parent_evidence = self._resolve(budget.parent_name)
+        if not parent_evidence.complete:
+            return _unknown_from(base, "parent product capture is not proven complete"), True
+        return base, False
+
+    def _memstore_evidence(
+        self,
+        budget: _ProductBudget,
+        base: ProductCaptureEvidence,
+    ) -> ProductCaptureEvidence:
+        binding = budget.memstore_source
+        if binding is None:
+            return base
+        if binding.status is _MemstoreBindingStatus.MISSING:
+            return _unknown_from(
+                base,
+                (f"memstore '{binding.source_id}' entity '{binding.entity}' has no captured producer"),
+            )
+        if binding.status is _MemstoreBindingStatus.AMBIGUOUS:
+            return _unknown_from(
+                base,
+                (f"memstore '{binding.source_id}' entity '{binding.entity}' has multiple possible producers"),
+            )
+        return self._resolved_memstore_evidence(budget, binding, base)
+
+    def _resolved_memstore_evidence(
+        self,
+        budget: _ProductBudget,
+        binding: _MemstoreSourceBinding,
+        base: ProductCaptureEvidence,
+    ) -> ProductCaptureEvidence:
+        producer = next(iter(binding.producers), None)
+        if producer is None or producer.product not in self._observed:
+            return _unknown_from(
+                base,
+                "resolved memstore producer is missing from runtime capture",
+            )
+        return _memstore_capture_evidence(
+            budget,
+            base,
+            producer_evidence=self._resolve(producer.product),
+            producer_observed=self._observed[producer.product],
+            parent_observed=self._parent_observed(budget),
+        )
+
+    def _parent_observed(self, budget: _ProductBudget) -> int:
+        if budget.parent_name is None:
+            return 1
+        return self._observed.get(budget.parent_name, 0)
 
 
 def _execute_captured(
@@ -1324,9 +1349,7 @@ def _execute_captured(
 
     captured = message.captured
     budgets = {budget.name: budget for budget in message.budgets}
-    smoke_diags = [
-        Diagnostic.model_validate(diagnostic) for diagnostic in message.smoke_diagnostics
-    ]
+    smoke_diags = [Diagnostic.model_validate(diagnostic) for diagnostic in message.smoke_diagnostics]
     evidence_by_name = _capture_evidence_by_product(
         budgets,
         captured,
@@ -1372,7 +1395,7 @@ def _execute_captured(
         zero_rows.append(
             Diagnostic(
                 rule=RULE_EMPTY_OUTPUT,
-                severity=Severity.WARNING,
+                severity=RuleSeverity.WARNING,
                 message="The dry-run generated 0 rows across all products — the descriptor produces no data.",
                 fix_hint="Ensure a <generate> exists with a positive count (or a source that returns rows).",
                 element="setup",

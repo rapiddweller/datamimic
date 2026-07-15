@@ -13,21 +13,20 @@ import pytest
 from lxml import etree
 from typer.testing import CliRunner
 
-from datamimic_ce.authoring.diagnostics import Severity
-from datamimic_ce.authoring.reference import ReferenceTopic, capabilities_manifest, reference
-from datamimic_ce.authoring.rules import ALL_RULES
-from datamimic_ce.authoring.rules.base import LintContext
-from datamimic_ce.authoring.schema import build_schema_index
-from datamimic_ce.cli import app
-from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
-from datamimic_ce.mcp.models import ReferenceArgs
-from datamimic_ce.mcp.server import reference_impl
-from datamimic_ce.model.constraints import (
+from datamimic_ce.authoring.contracts import ReferenceTopic
+from datamimic_ce.authoring.diagnostics import Diagnostic
+from datamimic_ce.authoring.reference import capabilities_manifest, reference
+from datamimic_ce.authoring.rule_catalog import (
     AUTHORING_RULE_DEFINITIONS,
     RuleSeverity,
     authoring_rule_definitions,
     serialize_rule_definition,
 )
+from datamimic_ce.authoring.rules import ALL_RULES
+from datamimic_ce.authoring.rules.base import LintContext
+from datamimic_ce.authoring.schema import build_schema_index
+from datamimic_ce.cli import app
+from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
 
 
 def test_every_evaluator_points_to_exactly_one_complete_catalog_definition() -> None:
@@ -39,9 +38,6 @@ def test_every_evaluator_points_to_exactly_one_complete_catalog_definition() -> 
     for rule in ALL_RULES:
         definition = rule.definition
         assert AUTHORING_RULE_DEFINITIONS[definition.id] is definition
-        assert rule.id == definition.id
-        assert rule.severity is definition.severity
-        assert rule.docs == definition.docs
         assert all(
             (
                 definition.title,
@@ -55,9 +51,15 @@ def test_every_evaluator_points_to_exactly_one_complete_catalog_definition() -> 
 
 
 def test_rule_severity_has_one_owner_and_catalog_is_immutable() -> None:
-    assert Severity is RuleSeverity
+    assert Diagnostic.model_fields["severity"].annotation is RuleSeverity
     with pytest.raises(TypeError):
         AUTHORING_RULE_DEFINITIONS["DM999"] = authoring_rule_definitions()[0]  # type: ignore[index]
+
+
+def test_evaluator_metadata_is_read_directly_from_definition() -> None:
+    rule = ALL_RULES[0]
+    assert set(rule.__dict__) & {"id", "severity", "docs"} == set()
+    assert rule.definition in authoring_rule_definitions()
 
 
 def test_public_evaluators_do_not_declare_identity_or_severity() -> None:
@@ -138,10 +140,6 @@ def test_catalog_projects_identically_to_capabilities_and_reference() -> None:
         assert definition.explanation in detail
         assert definition.fix_hint in detail
         assert definition.provenance in detail
-
-    mcp_result = reference_impl(ReferenceArgs(topic="rules", name="DM315"))
-    assert mcp_result["ok"] is True
-    assert "Severity: hint" in mcp_result["content"]
 
     cli_result = CliRunner().invoke(app, ["reference", "rules", "DM315"])
     assert cli_result.exit_code == 0

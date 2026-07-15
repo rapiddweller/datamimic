@@ -1,9 +1,7 @@
 """Command line interface for serving the FastMCP endpoint.
 
-WHY: Typer in some environments doesn't support ``typing.Literal`` for
-option types, raising "Type not yet supported". To keep broad
-compatibility without upgrading tooling, we use ``Enum`` for choices.
-This keeps the CLI thin, explicit, and compatible across Typer versions.
+Typer does not support ``typing.Literal`` for these option types, so explicit
+enums define the transport choices at the boundary.
 """
 
 from __future__ import annotations
@@ -20,18 +18,7 @@ from datamimic_ce.mcp.server import (
     create_server,
 )
 
-app = typer.Typer(help="Run the DataMimic MCP server")
-
-
-@app.callback()
-def _root() -> None:
-    """Keep `serve` as an explicit subcommand.
-
-    WHY: with a single @app.command() Typer collapses the app onto that command,
-    which silently breaks the documented `datamimic-mcp serve ...` form (and every
-    MCP client config carrying ["serve", ...] in its args). The no-op callback
-    forces subcommand routing so the public interface stays stable.
-    """
+app = typer.Typer(help="Run the DATAMIMIC MCP adapter")
 
 _DEFAULT_HOST = "127.0.0.1"
 _DEFAULT_PORT = 8765
@@ -66,7 +53,7 @@ class LogLevel(StrEnum):
     debug = "debug"
 
 
-@app.command()
+@app.callback(invoke_without_command=True)
 def serve(
     host: Annotated[
         str,
@@ -87,17 +74,16 @@ def serve(
         typer.Option(help="Log level when running the SSE server"),
     ] = LogLevel.info,
 ) -> None:
-    """Start the FastMCP server with optional API key gating."""
+    """Start the MCP adapter using stdio or SSE transport."""
 
     api_key = os.getenv("DATAMIMIC_MCP_API_KEY")
-    server = create_server(api_key=api_key)
+    server = create_server()
 
     if transport == Transport.stdio:
-        # WHY: stdio transport is typically embedded; it does not honour host/port.
         server.run(Transport.stdio.value)
         return
 
-    sse_app = build_sse_app(server, server.http_middleware)
+    sse_app = build_sse_app(server, api_key)
     uvicorn.run(
         sse_app,
         host=host,

@@ -73,7 +73,7 @@ class MongoDBClient(DatabaseClient):
         remaining unquoted bareword key. A value like ``"$total_price"`` is preceded by ``:`` (not
         ``{``/``,``) and already quoted, so it is left untouched."""
         s = "{" + query.replace("'", '"') + "}"
-        return re.sub(r'([{,]\s*)([$A-Za-z_][\w$]*)\s*:', r'\1"\2":', s)
+        return re.sub(r"([{,]\s*)([$A-Za-z_][\w$]*)\s*:", r'\1"\2":', s)
 
     def _create_connection(self) -> MongoClient:
         ars = {
@@ -152,9 +152,7 @@ class MongoDBClient(DatabaseClient):
         """
         return self.get_documents_by_collection(collection_name, pagination)
 
-    def get_documents_by_collection(
-        self, collection_name: str, pagination: DataSourcePagination | None = None
-    ) -> list:
+    def get_documents_by_collection(self, collection_name: str, pagination: DataSourcePagination | None = None) -> list:
         """
         Get documents in collection, optionally paginated server-side (skip/limit pushed to the
         MongoDB cursor instead of loading the full collection into memory).
@@ -374,9 +372,7 @@ class MongoDBClient(DatabaseClient):
                     update = {"$set": doc}
                     collection.update_one(filter, update, upsert=True)
                 # Return updated data
-                return self._from_bson(
-                    list(collection.find({"_id": {"$in": [doc["_id"] for doc in updated_data]}}))
-                )
+                return self._from_bson(list(collection.find({"_id": {"$in": [doc["_id"] for doc in updated_data]}})))
 
     def _decompose_find_query(self, query: str) -> dict:
         """

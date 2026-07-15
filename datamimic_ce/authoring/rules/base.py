@@ -7,36 +7,18 @@
 """Rule contract for the DSL linter. Rules walk the lxml tree via LintContext and
 emit Diagnostics; they never raise. The engine parse (phase 2) stays the authority."""
 
-from abc import ABC, ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import ClassVar
 
 from lxml import etree
 
-from datamimic_ce.authoring.diagnostics import Diagnostic, Severity
+from datamimic_ce.authoring.diagnostics import Diagnostic
+from datamimic_ce.authoring.rule_catalog import RuleDefinition, RuleSeverity
 from datamimic_ce.authoring.schema import SchemaIndex
 from datamimic_ce.authoring.xml_loader import element_path
 from datamimic_ce.constants.element_constants import EL_COMMENT
-from datamimic_ce.model.constraints import RuleDefinition
-
-
-class RuleMeta(ABCMeta):
-    """Compatibility projection of evaluator metadata from its central definition."""
-
-    definition: RuleDefinition
-
-    @property
-    def id(cls) -> str:
-        return cls.definition.id
-
-    @property
-    def severity(cls) -> Severity:
-        return cls.definition.severity
-
-    @property
-    def docs(cls) -> str:
-        return cls.definition.docs
 
 
 class LintContext:
@@ -60,7 +42,7 @@ class LintContext:
         *,
         evidence: str | None = None,
         fix_context: str | None = None,
-        severity: Severity | None = None,
+        severity: RuleSeverity | None = None,
     ) -> Diagnostic:
         definition = rule.definition
         message = definition.explanation
@@ -70,19 +52,19 @@ class LintContext:
         if fix_context:
             fix_hint = f"{fix_hint} {fix_context}"
         return Diagnostic(
-            rule=rule.id,
-            severity=severity or rule.severity,
+            rule=definition.id,
+            severity=severity or definition.severity,
             message=message,
             fix_hint=fix_hint,
             element=str(element.tag),
             path=element_path(element),
             name=element.get("name") or element.get("id"),
             line=element.sourceline,
-            docs=rule.docs,
+            docs=definition.docs,
         )
 
 
-class Rule(ABC, metaclass=RuleMeta):
+class Rule(ABC):
     definition: ClassVar[RuleDefinition]
 
     @abstractmethod

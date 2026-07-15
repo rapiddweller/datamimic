@@ -259,7 +259,9 @@ class TestDataSourceCyclic:
 
         unique_codes = [r["ean_code"] for r in result["var_file_unique"]]
         assert len(unique_codes) == 11
-        assert set(unique_codes) == set(range(1, 12)), f"expected all 11 pool values exactly once, got {sorted(unique_codes)}"
+        assert set(unique_codes) == set(range(1, 12)), (
+            f"expected all 11 pool values exactly once, got {sorted(unique_codes)}"
+        )
 
         # unique against a source with real duplicate rows (3 distinct categories, each
         # repeated 3x) - proves dedup genuinely collapses repeats, not just that it leaves an

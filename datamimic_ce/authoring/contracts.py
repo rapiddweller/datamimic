@@ -15,19 +15,23 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import Annotated, Any, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, StrictStr, model_validator
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, RootModel, StrictStr, TypeAdapter, model_validator
 
 from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.spec import (
+    ExpectationIntentKind,
     FieldIntentKind,
     FieldRoleKind,
     LeafFieldKind,
     NonEmptyStrictStr,
     NonNegativeStrictInt,
     PositiveStrictInt,
+    ProductIntentKind,
     RegisteredFileExporterName,
     RuntimeFileSourcePath,
     RuntimeMemstoreSourceId,
+    SourceIntentKind,
+    TargetIntentKind,
 )
 
 MIN_DIAGNOSTICS = 1
@@ -56,6 +60,101 @@ class AuthoringResponseFormat(StrEnum):
 
     CONCISE = "concise"
     DETAILED = "detailed"
+
+
+class ReferenceTopic(StrEnum):
+    OVERVIEW = "overview"
+    ELEMENT = "element"
+    GENERATORS = "generators"
+    ENTITIES = "entities"
+    CONTEXT = "context"
+    TIMESERIES = "timeseries"
+    TARGETS = "targets"
+    DISTRIBUTIONS = "distributions"
+    CONVERTERS = "converters"
+    RULES = "rules"
+    SCAFFOLD = "scaffold"
+    AUTHORING = "authoring"
+
+
+class AuthoringReferenceCategory(StrEnum):
+    PRODUCT = "product"
+    SOURCE = "source"
+    FIELD = "field"
+    TARGET = "target"
+    EXPECTATION = "expectation"
+
+
+class ProductReferenceQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    category: Literal[AuthoringReferenceCategory.PRODUCT] = AuthoringReferenceCategory.PRODUCT
+    kind: ProductIntentKind
+
+
+class FieldReferenceQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    category: Literal[AuthoringReferenceCategory.FIELD] = AuthoringReferenceCategory.FIELD
+    kind: FieldIntentKind
+
+
+class SourceReferenceQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    category: Literal[AuthoringReferenceCategory.SOURCE] = AuthoringReferenceCategory.SOURCE
+    kind: SourceIntentKind
+
+
+class TargetReferenceQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    category: Literal[AuthoringReferenceCategory.TARGET] = AuthoringReferenceCategory.TARGET
+    kind: TargetIntentKind
+
+
+class ExpectationReferenceQuery(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    category: Literal[AuthoringReferenceCategory.EXPECTATION] = AuthoringReferenceCategory.EXPECTATION
+    kind: ExpectationIntentKind
+
+
+AuthoringReferenceQuery = Annotated[
+    ProductReferenceQuery
+    | SourceReferenceQuery
+    | FieldReferenceQuery
+    | TargetReferenceQuery
+    | ExpectationReferenceQuery,
+    Field(discriminator="category"),
+]
+AUTHORING_REFERENCE_QUERY_ADAPTER: TypeAdapter[AuthoringReferenceQuery] = TypeAdapter(AuthoringReferenceQuery)
+
+
+class ReferenceRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    topic: ReferenceTopic = ReferenceTopic.OVERVIEW
+    name: str | None = None
+    query: AuthoringReferenceQuery | None = None
+
+    @model_validator(mode="after")
+    def validate_scope(self) -> "ReferenceRequest":
+        if self.query is not None and self.topic is not ReferenceTopic.AUTHORING:
+            raise ValueError("query is only valid for topic=authoring")
+        if self.topic is ReferenceTopic.AUTHORING and self.name is not None:
+            raise ValueError("topic=authoring uses query, not name")
+        return self
+
+
+class ReferenceResult(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    ok: bool
+    topic: ReferenceTopic
+    name: str | None = None
+    query: AuthoringReferenceQuery | None = None
+    content: str | None = None
+    error: str | None = None
+
+
+class CapabilitiesResult(RootModel[dict[str, JsonValue]]):
+    pass
 
 
 class VerificationGateStatus(StrEnum):
@@ -92,18 +191,14 @@ class ScaffoldVerification(BaseModel):
         bool,
         Field(
             description=(
-            "Test applicable file exporters against rows from the canonical bounded run "
-            "without performing another engine run"
+                "Test applicable file exporters against rows from the canonical bounded run "
+                "without performing another engine run"
             )
         ),
     ] = False
     deterministic_replay: Annotated[
         bool,
-        Field(
-            description=(
-            "Run the same seeded bounded model once more and compare all bounded captured rows"
-            )
-        ),
+        Field(description=("Run the same seeded bounded model once more and compare all bounded captured rows")),
     ] = False
 
 
@@ -165,12 +260,8 @@ class ScaffoldVerificationEvidence(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
-    smoke_export: SmokeExportEvidence = Field(
-        default_factory=_default_smoke_export_evidence
-    )
-    deterministic_replay: DeterministicReplayEvidence = Field(
-        default_factory=_default_replay_evidence
-    )
+    smoke_export: SmokeExportEvidence = Field(default_factory=_default_smoke_export_evidence)
+    deterministic_replay: DeterministicReplayEvidence = Field(default_factory=_default_replay_evidence)
 
     @property
     def gates_passed(self) -> bool:
@@ -181,10 +272,7 @@ class ScaffoldVerificationEvidence(BaseModel):
             VerificationGateStatus.NOT_APPLICABLE,
             VerificationGateStatus.PASSED,
         )
-        return (
-            self.smoke_export.status in passing
-            and self.deterministic_replay.status in passing
-        )
+        return self.smoke_export.status in passing and self.deterministic_replay.status in passing
 
 
 def _default_scaffold_verification() -> ScaffoldVerification:
@@ -228,11 +316,10 @@ class IntentValidationIssue(BaseModel):
     code: IntentValidationIssueCode
     message: str = Field(min_length=1)
     allowed_fields: tuple[str, ...] = ()
-    expected_fragment: dict[str, JsonValue] | None = None
     repair: ReplaceFieldRepair | None = None
 
     def summary(self) -> str:
-        """Render the compatibility summary from this canonical issue."""
+        """Render a concise human-readable issue summary."""
 
         location = ".".join(str(part) for part in self.path) or "spec"
         return f"{location}: {self.message}"
@@ -268,11 +355,7 @@ class ProductCaptureEvidence(BaseModel):
     def _consistent_counts(self) -> "ProductCaptureEvidence":
         if self.observed > self.limit:
             raise ValueError("observed must not exceed limit")
-        if (
-            self.requested is not None
-            and self.status is CaptureStatus.COMPLETE
-            and self.observed != self.requested
-        ):
+        if self.requested is not None and self.status is CaptureStatus.COMPLETE and self.observed != self.requested:
             raise ValueError("complete capture must observe the requested count")
         if self.status is CaptureStatus.CAPPED and self.observed != self.limit:
             raise ValueError("capped capture must observe its limit")
@@ -299,10 +382,6 @@ class CheckRequest(BaseModel):
         if (self.xml is None) == (self.path is None):
             raise ValueError("Provide exactly one of 'xml' (inline descriptor) or 'path' (file)")
         return self
-
-
-CheckResult = LintResult
-"""Canonical response contract for descriptor linting."""
 
 
 class RunRequest(BaseModel):
@@ -352,11 +431,7 @@ class ScaffoldRequest(BaseModel):
 
     spec: dict[str, Any] = Field(
         ...,
-        description=(
-            "Versioned AuthoringSpecV1 model.dm.json intent. The historical compact "
-            "{'seed': ..., 'generates': [...]} shape is accepted through lossless "
-            "normalization with visible notes."
-        ),
+        description="Versioned AuthoringSpecV1 model.dm.json intent.",
     )
     max_count: int = Field(
         10,
@@ -374,9 +449,7 @@ class ScaffoldRequest(BaseModel):
         AuthoringResponseFormat.CONCISE,
         description="Response format: concise (key diagnostics) or detailed (full diagnostic info)",
     )
-    verification: ScaffoldVerification = Field(
-        default_factory=_default_scaffold_verification
-    )
+    verification: ScaffoldVerification = Field(default_factory=_default_scaffold_verification)
 
 
 class ProductResult(BaseModel):
@@ -659,9 +732,7 @@ class CompilePlan(CompilePlanModel):
             fields: dict[str, FieldPlan] = {}
             for field in product.fields:
                 if field.name in fields:
-                    raise ValueError(
-                        f"duplicate field name '{field.name}' in product '{product.name}'"
-                    )
+                    raise ValueError(f"duplicate field name '{field.name}' in product '{product.name}'")
                 fields[field.name] = field
             fields_by_product[product.name] = fields
 
@@ -675,10 +746,7 @@ class CompilePlan(CompilePlanModel):
             require_product(product_name, context)
             field = fields_by_product[product_name].get(field_name)
             if field is None:
-                raise ValueError(
-                    f"{context} references unknown field '{field_name}' "
-                    f"on product '{product_name}'"
-                )
+                raise ValueError(f"{context} references unknown field '{field_name}' on product '{product_name}'")
             return field
 
         product_nested_edges: set[tuple[str, str]] = set()
@@ -690,23 +758,15 @@ class CompilePlan(CompilePlanModel):
             if product.parent is not None:
                 parent = require_product(product.parent, f"generated product '{product.name}'")
                 if not isinstance(parent, GeneratedProductCompilePlan):
-                    raise ValueError(
-                        f"generated parent '{product.parent}' must be a generated product"
-                    )
+                    raise ValueError(f"generated parent '{product.parent}' must be a generated product")
                 if product.name not in parent.children:
-                    raise ValueError(
-                        f"generated child '{product.name}' is not declared by parent "
-                        f"'{parent.name}'"
-                    )
+                    raise ValueError(f"generated child '{product.name}' is not declared by parent '{parent.name}'")
             for child_name in product.children:
                 child = require_product(child_name, f"generated product '{product.name}'")
                 if not isinstance(child, GeneratedProductCompilePlan):
                     raise ValueError(f"generated child '{child_name}' must be a generated product")
                 if child.parent != product.name:
-                    raise ValueError(
-                        f"generated child '{child_name}' does not reference parent "
-                        f"'{product.name}'"
-                    )
+                    raise ValueError(f"generated child '{child_name}' does not reference parent '{product.name}'")
                 product_nested_edges.add((product.name, child_name))
 
         visiting: set[str] = set()
@@ -747,10 +807,7 @@ class CompilePlan(CompilePlanModel):
             endpoints = (relationship.parent, relationship.child)
             if isinstance(relationship, NestedRelationshipPlan):
                 if endpoints in nested_relationships:
-                    raise ValueError(
-                        f"duplicate nested relationship '{relationship.parent}' -> "
-                        f"'{relationship.child}'"
-                    )
+                    raise ValueError(f"duplicate nested relationship '{relationship.parent}' -> '{relationship.child}'")
                 nested_relationships.add(endpoints)
                 if endpoints not in product_nested_edges:
                     raise ValueError(
@@ -764,15 +821,10 @@ class CompilePlan(CompilePlanModel):
                 continue
 
             if endpoints in memstore_relationships:
-                raise ValueError(
-                    f"duplicate memstore relationship '{relationship.parent}' -> "
-                    f"'{relationship.child}'"
-                )
+                raise ValueError(f"duplicate memstore relationship '{relationship.parent}' -> '{relationship.child}'")
             memstore_relationships.add(endpoints)
             if relationship.child in memstore_children:
-                raise ValueError(
-                    f"source product '{relationship.child}' has multiple memstore relationships"
-                )
+                raise ValueError(f"source product '{relationship.child}' has multiple memstore relationships")
             memstore_children.add(relationship.child)
             if not isinstance(child, SourceProductCompilePlan) or not isinstance(
                 child.source, MemstoreSourceBindingPlan
@@ -783,8 +835,7 @@ class CompilePlan(CompilePlanModel):
             if child.source.product is not None and child.source.product != relationship.parent:
                 raise ValueError("memstore relationship parent does not match child source product")
             if not any(
-                isinstance(target, MemstoreTargetBindingPlan)
-                and target.id == relationship.source_id
+                isinstance(target, MemstoreTargetBindingPlan) and target.id == relationship.source_id
                 for target in parent.targets
             ):
                 raise ValueError("memstore relationship source_id does not match parent target")
@@ -797,9 +848,7 @@ class CompilePlan(CompilePlanModel):
                 and isinstance(product.source, MemstoreSourceBindingPlan)
                 and product.name not in memstore_children
             ):
-                raise ValueError(
-                    f"memstore source product '{product.name}' has no relationship declaration"
-                )
+                raise ValueError(f"memstore source product '{product.name}' has no relationship declaration")
 
         exact_facts: set[str] = set()
         per_parent_facts: set[tuple[str, str]] = set()
@@ -811,9 +860,7 @@ class CompilePlan(CompilePlanModel):
             product = require_product(acceptance.product, "derived acceptance")
             if isinstance(acceptance, ExactCountAcceptancePlan):
                 if acceptance.product in exact_facts:
-                    raise ValueError(
-                        f"duplicate exact-count acceptance for '{acceptance.product}'"
-                    )
+                    raise ValueError(f"duplicate exact-count acceptance for '{acceptance.product}'")
                 exact_facts.add(acceptance.product)
                 if acceptance.exact_count != product.static_count:
                     raise ValueError("exact-count acceptance does not match product static_count")
@@ -830,10 +877,7 @@ class CompilePlan(CompilePlanModel):
                     product, GeneratedProductCompilePlan
                 ):
                     raise ValueError("per-parent acceptance requires generated products")
-                if (
-                    per_parent_fact not in product_nested_edges
-                    or product.parent != parent.name
-                ):
+                if per_parent_fact not in product_nested_edges or product.parent != parent.name:
                     raise ValueError("per-parent acceptance does not match nested relationship")
                 if acceptance.count_per_parent != product.count_per_parent:
                     raise ValueError("per-parent acceptance does not match child count_per_parent")
@@ -847,13 +891,9 @@ class CompilePlan(CompilePlanModel):
                     acceptance.field,
                     "unique acceptance",
                 )
-                has_identifier_role = any(
-                    isinstance(role, IdentifierRolePlan) for role in field.roles
-                )
+                has_identifier_role = any(isinstance(role, IdentifierRolePlan) for role in field.roles)
                 if field.kind is not FieldIntentKind.INTEGER_RANGE and not has_identifier_role:
-                    raise ValueError(
-                        "unique acceptance requires an integer range or identifier role"
-                    )
+                    raise ValueError("unique acceptance requires an integer range or identifier role")
             elif isinstance(acceptance, ForeignKeyAcceptancePlan):
                 foreign_key_fact = (
                     acceptance.product,
@@ -892,9 +932,7 @@ class CompilePlan(CompilePlanModel):
                     "allowed-values acceptance",
                 )
                 if field.kind not in (FieldIntentKind.VALUES, FieldIntentKind.WEIGHTED):
-                    raise ValueError(
-                        "allowed-values acceptance requires values or weighted field intent"
-                    )
+                    raise ValueError("allowed-values acceptance requires values or weighted field intent")
             elif isinstance(acceptance, RangeAcceptancePlan):
                 range_fact = (acceptance.product, acceptance.field)
                 if range_fact in range_facts:
@@ -916,10 +954,7 @@ class CompilePlan(CompilePlanModel):
             require_product(unresolved.product, "unresolved fact")
             unresolved_fact = (unresolved.product, unresolved.aspect)
             if unresolved_fact in unresolved_facts:
-                raise ValueError(
-                    f"duplicate unresolved fact '{unresolved.aspect}' for "
-                    f"'{unresolved.product}'"
-                )
+                raise ValueError(f"duplicate unresolved fact '{unresolved.aspect}' for '{unresolved.product}'")
             unresolved_facts.add(unresolved_fact)
         return self
 
@@ -1106,7 +1141,7 @@ class RunResult(BaseModel):
     timing_ms: int | None = None
     products: list[ProductResult] = Field(default_factory=list)
     products_truncated: int = 0
-    lint: CheckResult | None = None
+    lint: LintResult | None = None
     diagnostics: list[Diagnostic] = Field(default_factory=list)
 
 
@@ -1127,15 +1162,10 @@ class RetryWithParameterRemediation(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    kind: Literal[ScaffoldRemediationKind.RETRY_WITH_PARAMETER] = (
-        ScaffoldRemediationKind.RETRY_WITH_PARAMETER
-    )
+    kind: Literal[ScaffoldRemediationKind.RETRY_WITH_PARAMETER] = ScaffoldRemediationKind.RETRY_WITH_PARAMETER
     parameter: Literal[ScaffoldParameter.MAX_COUNT] = ScaffoldParameter.MAX_COUNT
     minimum_value: PositiveStrictInt = Field(le=MAX_DRY_RUN_COUNT)
     affected_products: tuple[NonEmptyStrictStr, ...] = Field(min_length=1)
-
-
-ScaffoldRemediation = RetryWithParameterRemediation
 
 
 class ScaffoldResult(BaseModel):
@@ -1147,10 +1177,6 @@ class ScaffoldResult(BaseModel):
         None,
         description="Rendered DATAMIMIC descriptor XML (None only on render error)",
     )
-    error: str | None = Field(
-        None,
-        description="Compatibility summary projected from issues when stage=render",
-    )
     issues: list[IntentValidationIssue] = Field(
         default_factory=list,
         description="Canonical repair-oriented intent validation issues",
@@ -1159,10 +1185,7 @@ class ScaffoldResult(BaseModel):
         None,
         description="Lint summary if stage=lint",
     )
-    diagnostics: list[dict[str, Any]] = Field(
-        default_factory=list,
-        description="Lint or dry-run diagnostics (verbosity controlled by response_format)",
-    )
+    diagnostics: list[Diagnostic] = Field(default_factory=list)
     truncated: bool = Field(
         False,
         description="Diagnostics truncated due to max_diagnostics limit",
@@ -1171,28 +1194,18 @@ class ScaffoldResult(BaseModel):
         default_factory=list,
         description="Captured sample rows per product (when execution completed)",
     )
-    normalization_notes: list[str] = Field(
-        default_factory=list,
-        description="Notes from schema normalization (e.g. kind aliases applied)",
-    )
     compile_plan: CompilePlan | None = None
     acceptance: AcceptanceReport | None = None
-    remediations: list[ScaffoldRemediation] = Field(default_factory=list)
-    verification: ScaffoldVerificationEvidence = Field(
-        default_factory=ScaffoldVerificationEvidence
-    )
+    remediations: list[RetryWithParameterRemediation] = Field(default_factory=list)
+    verification: ScaffoldVerificationEvidence = Field(default_factory=ScaffoldVerificationEvidence)
     verified: bool = False
 
     @model_validator(mode="after")
     def _verified_requires_all_evidence(self) -> Self:
         if self.verified and (
-            self.acceptance is None
-            or not self.acceptance.verified
-            or not self.verification.gates_passed
+            self.acceptance is None or not self.acceptance.verified or not self.verification.gates_passed
         ):
-            raise ValueError(
-                "verified requires passing acceptance and every requested verification gate"
-            )
+            raise ValueError("verified requires passing acceptance and every requested verification gate")
         if self.verified and self.remediations:
             raise ValueError("verified scaffold results cannot require remediation")
         return self

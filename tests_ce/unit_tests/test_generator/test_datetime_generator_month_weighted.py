@@ -41,4 +41,3 @@ def test_seed_makes_sequence_deterministic():
     seq1 = [g1.generate() for _ in range(20)]
     seq2 = [g2.generate() for _ in range(20)]
     assert seq1 == seq2
-

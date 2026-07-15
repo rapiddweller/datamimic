@@ -27,12 +27,8 @@ def shared_profile() -> DemographicProfile:
         )
     }
     condition_rates = {
-        "Hypertension": (
-            DemographicConditionRate("Hypertension", None, 0, 120, 0.22),
-        ),
-        "Type 2 Diabetes": (
-            DemographicConditionRate("Type 2 Diabetes", None, 0, 120, 0.19),
-        ),
+        "Hypertension": (DemographicConditionRate("Hypertension", None, 0, 120, 0.22),),
+        "Type 2 Diabetes": (DemographicConditionRate("Type 2 Diabetes", None, 0, 120, 0.19),),
     }
     return DemographicProfile(
         profile_id=profile_id,

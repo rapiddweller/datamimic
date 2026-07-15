@@ -1,4 +1,5 @@
 import pytest
+
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.public_sector.models.administration_office import AdministrationOffice
 from datamimic_ce.domains.public_sector.services.administration_office_service import AdministrationOfficeService
@@ -32,7 +33,7 @@ class TestEntityAdministrationOffice:
         assert administration_office.website is not None and administration_office.website != ""
         assert administration_office.email is not None and administration_office.email != ""
         assert administration_office.phone is not None and administration_office.phone != ""
-        
+
     def test_generate_single_address(self):
         administration_office_service = AdministrationOfficeService()
         administration_office = administration_office_service.generate()

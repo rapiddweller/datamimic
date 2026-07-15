@@ -16,7 +16,7 @@ class ValueModel(BaseModel):
     constant: str = Field(
         ...,
         description="Literal value preserved exactly, unchanged, as one element of a "
-        "<array type=\"literal\"> — no random generation, no script evaluation.",
+        '<array type="literal"> — no random generation, no script evaluation.',
         examples=["gold", "1.5"],
     )
 

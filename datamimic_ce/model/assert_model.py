@@ -13,8 +13,7 @@ from datamimic_ce.model.model_util import ModelUtil
 class AssertModel(BaseModel):
     condition: str = Field(
         ...,
-        description="Boolean expression the record (or setup context) must satisfy; the run fails "
-        "when it is not true.",
+        description="Boolean expression the record (or setup context) must satisfy; the run fails when it is not true.",
         examples=["18 <= age <= 65", "total > 0", "status in ('open', 'closed')"],
     )
     message: str | None = Field(

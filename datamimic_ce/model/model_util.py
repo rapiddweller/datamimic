@@ -6,7 +6,6 @@
 
 import re
 from collections.abc import Set as AbstractSet
-from typing import TYPE_CHECKING
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -22,10 +21,22 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_TYPE,
 )
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_STRING
+from datamimic_ce.model.constraints import (
+    AllOrNone,
+    AllowedValuesWhen,
+    Constraint,
+    Forbids,
+    ForbidsWhenValue,
+    MutuallyExclusive,
+    MutuallyExclusiveWhen,
+    RequiredOneOf,
+    Requires,
+    RequiresWhenValue,
+    ValidValues,
+    resolved_allowed,
+    resolved_values,
+)
 from datamimic_ce.utils.string_util import StringUtil
-
-if TYPE_CHECKING:
-    from datamimic_ce.model.constraints import Constraint
 
 # Parse XML bool attributes exactly like the pydantic bool fields do, so a "before"
 # cross-field check can never disagree with the coerced value (e.g. unique="yes").
@@ -39,6 +50,157 @@ def _attr_true(value: object) -> bool:
         return _BOOL_ADAPTER.validate_python(value)
     except ValidationError:
         return False
+
+
+def _constraint_gate_open(
+    values: dict,
+    attr: str,
+    when_true: bool,
+) -> bool:
+    return _attr_true(values.get(attr)) if when_true else attr in values
+
+
+def _required_one_of_error(values: dict, fact: RequiredOneOf) -> str | None:
+    if any(attr in values for attr in fact.attrs):
+        return None
+    attrs_str = ", ".join(sorted(fact.attrs))
+    return fact.message or f"must define one of: {attrs_str}"
+
+
+def _mutually_exclusive_error(values: dict, fact: MutuallyExclusive) -> str | None:
+    present = [attr for attr in fact.attrs if attr in values]
+    if len(present) <= 1:
+        return None
+    attrs_str = ", ".join(sorted(fact.attrs))
+    return fact.message or f"at most one of [{attrs_str}] may be present, but got: {present}"
+
+
+def _mutually_exclusive_when_error(
+    values: dict,
+    fact: MutuallyExclusiveWhen,
+) -> str | None:
+    if not _constraint_gate_open(values, fact.when_attr, fact.when_true):
+        return None
+    present = [attr for attr in fact.attrs if attr in values]
+    if len(present) <= 1:
+        return None
+    attrs_str = ", ".join(sorted(fact.attrs))
+    return fact.message or (
+        f"when '{fact.when_attr}' is present, at most one of [{attrs_str}] may be present, but got: {present}"
+    )
+
+
+def _requires_error(values: dict, fact: Requires) -> str | None:
+    if not _constraint_gate_open(values, fact.attr, fact.when_true):
+        return None
+    if any(need in values for need in fact.needs):
+        return None
+    needs_str = ", ".join(sorted(fact.needs))
+    return fact.message or (f"when '{fact.attr}' is present, at least one of [{needs_str}] must be present")
+
+
+def _requires_when_value_error(values: dict, fact: RequiresWhenValue) -> str | None:
+    if values.get(fact.when_attr) not in fact.when_values:
+        return None
+    if any(attr in values for attr in fact.unless):
+        return None
+    if any(need in values for need in fact.needs):
+        return None
+    needs_str = ", ".join(sorted(fact.needs))
+    values_str = ", ".join(sorted(fact.when_values))
+    return fact.message or (
+        f"when '{fact.when_attr}' is one of [{values_str}], at least one of [{needs_str}] must be present"
+    )
+
+
+def _all_or_none_error(values: dict, fact: AllOrNone) -> str | None:
+    present = [attr for attr in fact.attrs if attr in values]
+    if not present or len(present) == len(fact.attrs):
+        return None
+    attrs_str = ", ".join(sorted(fact.attrs))
+    return fact.message or f"either all of [{attrs_str}] must be present, or none"
+
+
+def _forbidden_attributes(values: dict, fact: Forbids) -> list[str]:
+    if fact.excludes_when_true:
+        return [attr for attr in fact.excludes if _attr_true(values.get(attr))]
+    return [attr for attr in fact.excludes if attr in values]
+
+
+def _forbids_error(values: dict, fact: Forbids) -> str | None:
+    if not _constraint_gate_open(values, fact.attr, fact.when_true):
+        return None
+    present = _forbidden_attributes(values, fact)
+    if not present:
+        return None
+    excludes_str = ", ".join(sorted(fact.excludes))
+    return fact.message or (
+        f"when '{fact.attr}' is present, none of [{excludes_str}] may be present, but got: {present}"
+    )
+
+
+def _forbids_when_value_error(values: dict, fact: ForbidsWhenValue) -> str | None:
+    if values.get(fact.when_attr) not in fact.when_values:
+        return None
+    present = [attr for attr in fact.excludes if attr in values]
+    if not present:
+        return None
+    excludes_str = ", ".join(sorted(fact.excludes))
+    values_str = ", ".join(sorted(fact.when_values))
+    return fact.message or (
+        f"when '{fact.when_attr}' is one of [{values_str}], none of [{excludes_str}] may be present, but got: {present}"
+    )
+
+
+def _valid_values_error(values: dict, fact: ValidValues) -> str | None:
+    if fact.attr not in values:
+        return None
+    attr_value = values[fact.attr]
+    valid_set = resolved_values(fact)
+    if attr_value in valid_set:
+        return None
+    valid_str = ", ".join(sorted(str(value) for value in valid_set))
+    return fact.message or (f"'{fact.attr}' value must be one of [{valid_str}], but got: '{attr_value}'")
+
+
+def _allowed_values_error(values: dict, fact: AllowedValuesWhen) -> str | None:
+    if not _constraint_gate_open(values, fact.when_attr, fact.when_true):
+        return None
+    if fact.attr not in values:
+        return None
+    attr_value = values[fact.attr]
+    allowed_set = resolved_allowed(fact)
+    if attr_value in allowed_set:
+        return None
+    allowed_str = ", ".join(sorted(str(value) for value in allowed_set))
+    return (
+        fact.message.replace("{actual_value}", str(attr_value))
+        if fact.message is not None
+        else f"when '{fact.when_attr}' is present, '{fact.attr}' value must be one of "
+        f"[{allowed_str}], but got: '{attr_value}'"
+    )
+
+
+def _constraint_error(values: dict, fact: Constraint) -> str | None:
+    if isinstance(fact, RequiredOneOf):
+        return _required_one_of_error(values, fact)
+    if isinstance(fact, MutuallyExclusive):
+        return _mutually_exclusive_error(values, fact)
+    if isinstance(fact, MutuallyExclusiveWhen):
+        return _mutually_exclusive_when_error(values, fact)
+    if isinstance(fact, Requires):
+        return _requires_error(values, fact)
+    if isinstance(fact, RequiresWhenValue):
+        return _requires_when_value_error(values, fact)
+    if isinstance(fact, AllOrNone):
+        return _all_or_none_error(values, fact)
+    if isinstance(fact, Forbids):
+        return _forbids_error(values, fact)
+    if isinstance(fact, ForbidsWhenValue):
+        return _forbids_when_value_error(values, fact)
+    if isinstance(fact, ValidValues):
+        return _valid_values_error(values, fact)
+    return _allowed_values_error(values, fact)
 
 
 class ModelUtil:
@@ -86,6 +248,7 @@ class ModelUtil:
         Delegate to declared constraint: EXIST_COUNT.
         """
         from datamimic_ce.model.constraints import EXIST_COUNT
+
         return ModelUtil.check_constraints(values, (EXIST_COUNT,))
 
     @staticmethod
@@ -95,6 +258,7 @@ class ModelUtil:
         Delegate to declared constraint: WEIGHTS_REQUIRE_VALUES.
         """
         from datamimic_ce.model.constraints import WEIGHTS_REQUIRE_VALUES
+
         return ModelUtil.check_constraints(values, (WEIGHTS_REQUIRE_VALUES,))
 
     @staticmethod
@@ -185,6 +349,7 @@ class ModelUtil:
         Delegate to declared constraints: SOURCE_COMPANIONS_WITH_CYCLIC.
         """
         from datamimic_ce.model.constraints import SOURCE_COMPANIONS_WITH_CYCLIC
+
         return ModelUtil.check_constraints(values, SOURCE_COMPANIONS_WITH_CYCLIC)
 
     @staticmethod
@@ -195,6 +360,7 @@ class ModelUtil:
         Delegate to declared constraints: SOURCE_COMPANIONS_WITHOUT_CYCLIC.
         """
         from datamimic_ce.model.constraints import SOURCE_COMPANIONS_WITHOUT_CYCLIC
+
         return ModelUtil.check_constraints(values, SOURCE_COMPANIONS_WITHOUT_CYCLIC)
 
     @staticmethod
@@ -204,6 +370,7 @@ class ModelUtil:
         Delegate to declared constraints: GENERATOR_ENTITY_ADDONS.
         """
         from datamimic_ce.model.constraints import GENERATOR_ENTITY_ADDONS
+
         return ModelUtil.check_constraints(values, GENERATOR_ENTITY_ADDONS)
 
     @staticmethod
@@ -322,6 +489,7 @@ class ModelUtil:
         Delegate to declared constraint: DEFAULT_VALUE_REQUIRES_SCRIPT.
         """
         from datamimic_ce.model.constraints import DEFAULT_VALUE_REQUIRES_SCRIPT
+
         return ModelUtil.check_constraints(values, (DEFAULT_VALUE_REQUIRES_SCRIPT,))
 
     @staticmethod
@@ -357,156 +525,10 @@ class ModelUtil:
         Raises:
             ValueError: On constraint violation, with the fact's message or a generated default
         """
-        from datamimic_ce.model.constraints import (
-            AllOrNone,
-            AllowedValuesWhen,
-            Forbids,
-            ForbidsWhenValue,
-            MutuallyExclusive,
-            MutuallyExclusiveWhen,
-            RequiredOneOf,
-            Requires,
-            RequiresWhenValue,
-            ValidValues,
-        )
-
         for fact in constraints:
-            # Skip lint-only facts; they are not engine-enforced
             if fact.lint_only:
                 continue
-
-            if isinstance(fact, RequiredOneOf):
-                if all(attr not in values for attr in fact.attrs):
-                    attrs_str = ", ".join(sorted(fact.attrs))
-                    msg = fact.message or f"must define one of: {attrs_str}"
-                    raise ValueError(msg)
-
-            elif isinstance(fact, MutuallyExclusive):
-                present = [attr for attr in fact.attrs if attr in values]
-                if len(present) > 1:
-                    attrs_str = ", ".join(sorted(fact.attrs))
-                    msg = fact.message or f"at most one of [{attrs_str}] may be present, but got: {present}"
-                    raise ValueError(msg)
-
-            elif isinstance(fact, MutuallyExclusiveWhen):
-                gate_value = values.get(fact.when_attr)
-                should_check = (
-                    (not fact.when_true and fact.when_attr in values)
-                    or (fact.when_true and _attr_true(gate_value))
-                )
-                present = [attr for attr in fact.attrs if attr in values]
-                if should_check and len(present) > 1:
-                    attrs_str = ", ".join(sorted(fact.attrs))
-                    msg = fact.message or (
-                        f"when '{fact.when_attr}' is present, at most one of "
-                        f"[{attrs_str}] may be present, but got: {present}"
-                    )
-                    raise ValueError(msg)
-
-            elif isinstance(fact, Requires):
-                # Gate on presence; if when_true=True, gate on truthiness
-                attr_value = values.get(fact.attr)
-                should_check = (
-                    (not fact.when_true and fact.attr in values) or
-                    (fact.when_true and _attr_true(attr_value))
-                )
-
-                if should_check and all(need not in values for need in fact.needs):
-                    needs_str = ", ".join(sorted(fact.needs))
-                    msg = fact.message or (
-                        f"when '{fact.attr}' is present, at least one of "
-                        f"[{needs_str}] must be present"
-                    )
-                    raise ValueError(msg)
-
-            elif isinstance(fact, RequiresWhenValue):
-                if values.get(fact.when_attr) in fact.when_values:
-                    escaped = any(attr in values for attr in fact.unless)
-                    if not escaped and all(need not in values for need in fact.needs):
-                        needs_str = ", ".join(sorted(fact.needs))
-                        values_str = ", ".join(sorted(fact.when_values))
-                        msg = fact.message or (
-                            f"when '{fact.when_attr}' is one of [{values_str}], at least one of "
-                            f"[{needs_str}] must be present"
-                        )
-                        raise ValueError(msg)
-
-            elif isinstance(fact, AllOrNone):
-                present = [attr for attr in fact.attrs if attr in values]
-                if present and len(present) != len(fact.attrs):
-                    attrs_str = ", ".join(sorted(fact.attrs))
-                    msg = fact.message or f"either all of [{attrs_str}] must be present, or none"
-                    raise ValueError(msg)
-
-            elif isinstance(fact, Forbids):
-                # Gate on presence; if when_true=True, gate on truthiness
-                attr_value = values.get(fact.attr)
-                should_check = (
-                    (not fact.when_true and fact.attr in values) or
-                    (fact.when_true and _attr_true(attr_value))
-                )
-
-                if should_check:
-                    # If excludes_when_true=True, excluded attr must also be truthy for violation
-                    if fact.excludes_when_true:
-                        present_excludes = [attr for attr in fact.excludes if _attr_true(values.get(attr))]
-                    else:
-                        present_excludes = [attr for attr in fact.excludes if attr in values]
-                    if present_excludes:
-                        excludes_str = ", ".join(sorted(fact.excludes))
-                        msg = fact.message or (
-                            f"when '{fact.attr}' is present, none of "
-                            f"[{excludes_str}] may be present, but got: "
-                            f"{present_excludes}"
-                        )
-                        raise ValueError(msg)
-
-            elif isinstance(fact, ForbidsWhenValue):
-                if values.get(fact.when_attr) in fact.when_values:
-                    present_excludes = [attr for attr in fact.excludes if attr in values]
-                    if present_excludes:
-                        excludes_str = ", ".join(sorted(fact.excludes))
-                        values_str = ", ".join(sorted(fact.when_values))
-                        msg = fact.message or (
-                            f"when '{fact.when_attr}' is one of [{values_str}], none of "
-                            f"[{excludes_str}] may be present, but got: {present_excludes}"
-                        )
-                        raise ValueError(msg)
-
-            elif isinstance(fact, ValidValues) and fact.attr in values:
-                # Only validate if the attribute is present
-                attr_value = values[fact.attr]
-                # Resolve values set (may be callable)
-                valid_set = fact.values() if callable(fact.values) else fact.values
-                if attr_value not in valid_set:
-                    valid_str = ", ".join(sorted(str(v) for v in valid_set))
-                    msg = fact.message or (
-                        f"'{fact.attr}' value must be one of [{valid_str}], "
-                        f"but got: '{attr_value}'"
-                    )
-                    raise ValueError(msg)
-
-            elif isinstance(fact, AllowedValuesWhen):
-                # Gate on when_attr's presence or truthiness
-                when_value = values.get(fact.when_attr)
-                should_check = (
-                    (not fact.when_true and fact.when_attr in values) or
-                    (fact.when_true and _attr_true(when_value))
-                )
-
-                # Only validate if attr is also present
-                if should_check and fact.attr in values:
-                    attr_value = values[fact.attr]
-                    # Resolve allowed set (may be callable)
-                    allowed_set = fact.allowed() if callable(fact.allowed) else fact.allowed
-                    if attr_value not in allowed_set:
-                        allowed_str = ", ".join(sorted(str(v) for v in allowed_set))
-                        msg = (
-                            fact.message.replace("{actual_value}", str(attr_value))
-                            if fact.message is not None
-                            else f"when '{fact.when_attr}' is present, '{fact.attr}' value must be one of "
-                            f"[{allowed_str}], but got: '{attr_value}'"
-                        )
-                        raise ValueError(msg)
-
+            error = _constraint_error(values, fact)
+            if error is not None:
+                raise ValueError(error)
         return values

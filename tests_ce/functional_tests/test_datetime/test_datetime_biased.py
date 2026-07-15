@@ -33,4 +33,3 @@ class TestDateTimeBiased:
         hour_counts = Counter(dt.hour for dt in values)
         assert hour_counts[0] > hour_counts[23]
         assert hour_counts[0] > hour_counts[12]
-

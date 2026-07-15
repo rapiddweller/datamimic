@@ -15,7 +15,7 @@ class DemographicsModel(BaseModel):
         description="Demographic dataset code selecting which profile to load (e.g. a country code). "
         "Must match the 'dataset' column value inside the CSV files found in 'directory'. Once loaded, "
         "this profile is installed setup-wide and feeds age/condition sampling for entities that support "
-        "it (e.g. <variable entity=\"Person\"/>), independent of that entity's own dataset= attribute.",
+        'it (e.g. <variable entity="Person"/>), independent of that entity\'s own dataset= attribute.',
         examples=["DE"],
     )
     version: str = Field(

@@ -3,7 +3,6 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-import os
 import subprocess
 import sys
 import time
@@ -12,13 +11,12 @@ from pathlib import Path
 import pytest
 
 # WHY: Remove Ray-specific env var since Ray is optional and not used in tests.
-
 # WHY: Ray is optional now. Remove hard dependency from tests.
-
 from datamimic_ce.config import settings
 from datamimic_ce.logger import logger
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 
 @pytest.fixture
 def mysql_services():

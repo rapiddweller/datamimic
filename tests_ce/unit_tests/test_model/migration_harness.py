@@ -119,18 +119,22 @@ def capture_current_messages() -> dict[str, list[dict]]:
     for test_case in FAILING_INPUTS["check_weights_require_values"]:
         try:
             ModelUtil.check_weights_require_values(test_case["input"])
-            messages.append({
-                "input": test_case["input"],
-                "description": test_case["description"],
-                "message": None,
-                "error": "No error raised (expected failure)",
-            })
+            messages.append(
+                {
+                    "input": test_case["input"],
+                    "description": test_case["description"],
+                    "message": None,
+                    "error": "No error raised (expected failure)",
+                }
+            )
         except ValueError as e:
-            messages.append({
-                "input": test_case["input"],
-                "description": test_case["description"],
-                "message": str(e),
-            })
+            messages.append(
+                {
+                    "input": test_case["input"],
+                    "description": test_case["description"],
+                    "message": str(e),
+                }
+            )
     results["check_weights_require_values"] = messages
 
     # check_min_max_count
@@ -138,18 +142,22 @@ def capture_current_messages() -> dict[str, list[dict]]:
     for test_case in FAILING_INPUTS["check_min_max_count"]:
         try:
             ModelUtil.check_min_max_count(test_case["input"], test_case["element_tag"])
-            messages.append({
-                "input": test_case["input"],
-                "description": test_case["description"],
-                "message": None,
-                "error": "No error raised (expected failure)",
-            })
+            messages.append(
+                {
+                    "input": test_case["input"],
+                    "description": test_case["description"],
+                    "message": None,
+                    "error": "No error raised (expected failure)",
+                }
+            )
         except ValueError as e:
-            messages.append({
-                "input": test_case["input"],
-                "description": test_case["description"],
-                "message": str(e),
-            })
+            messages.append(
+                {
+                    "input": test_case["input"],
+                    "description": test_case["description"],
+                    "message": str(e),
+                }
+            )
     results["check_min_max_count"] = messages
 
     # check_unique_constraints
@@ -157,18 +165,22 @@ def capture_current_messages() -> dict[str, list[dict]]:
     for test_case in FAILING_INPUTS["check_unique_constraints"]:
         try:
             ModelUtil.check_unique_constraints(test_case["input"])
-            messages.append({
-                "input": test_case["input"],
-                "description": test_case["description"],
-                "message": None,
-                "error": "No error raised (expected failure)",
-            })
+            messages.append(
+                {
+                    "input": test_case["input"],
+                    "description": test_case["description"],
+                    "message": None,
+                    "error": "No error raised (expected failure)",
+                }
+            )
         except ValueError as e:
-            messages.append({
-                "input": test_case["input"],
-                "description": test_case["description"],
-                "message": str(e),
-            })
+            messages.append(
+                {
+                    "input": test_case["input"],
+                    "description": test_case["description"],
+                    "message": str(e),
+                }
+            )
     results["check_unique_constraints"] = messages
 
     # check_exist_count
@@ -176,18 +188,22 @@ def capture_current_messages() -> dict[str, list[dict]]:
     for test_case in FAILING_INPUTS["check_exist_count"]:
         try:
             ModelUtil.check_exist_count(test_case["input"])
-            messages.append({
-                "input": test_case["input"],
-                "description": test_case["description"],
-                "message": None,
-                "error": "No error raised (expected failure)",
-            })
+            messages.append(
+                {
+                    "input": test_case["input"],
+                    "description": test_case["description"],
+                    "message": None,
+                    "error": "No error raised (expected failure)",
+                }
+            )
         except ValueError as e:
-            messages.append({
-                "input": test_case["input"],
-                "description": test_case["description"],
-                "message": str(e),
-            })
+            messages.append(
+                {
+                    "input": test_case["input"],
+                    "description": test_case["description"],
+                    "message": str(e),
+                }
+            )
     results["check_exist_count"] = messages
 
     # check_valid_default_value
@@ -195,18 +211,22 @@ def capture_current_messages() -> dict[str, list[dict]]:
     for test_case in FAILING_INPUTS["check_valid_default_value"]:
         try:
             ModelUtil.check_valid_default_value(test_case["input"])
-            messages.append({
-                "input": test_case["input"],
-                "description": test_case["description"],
-                "message": None,
-                "error": "No error raised (expected failure)",
-            })
+            messages.append(
+                {
+                    "input": test_case["input"],
+                    "description": test_case["description"],
+                    "message": None,
+                    "error": "No error raised (expected failure)",
+                }
+            )
         except ValueError as e:
-            messages.append({
-                "input": test_case["input"],
-                "description": test_case["description"],
-                "message": str(e),
-            })
+            messages.append(
+                {
+                    "input": test_case["input"],
+                    "description": test_case["description"],
+                    "message": str(e),
+                }
+            )
     results["check_valid_default_value"] = messages
 
     # check_generation_mode_of_source
@@ -214,18 +234,22 @@ def capture_current_messages() -> dict[str, list[dict]]:
     for test_case in FAILING_INPUTS["check_generation_mode_of_source"]:
         try:
             ModelUtil.check_generation_mode_of_source(test_case["input"])
-            messages.append({
-                "input": test_case["input"],
-                "description": test_case["description"],
-                "message": None,
-                "error": "No error raised (expected failure)",
-            })
+            messages.append(
+                {
+                    "input": test_case["input"],
+                    "description": test_case["description"],
+                    "message": None,
+                    "error": "No error raised (expected failure)",
+                }
+            )
         except ValueError as e:
-            messages.append({
-                "input": test_case["input"],
-                "description": test_case["description"],
-                "message": str(e),
-            })
+            messages.append(
+                {
+                    "input": test_case["input"],
+                    "description": test_case["description"],
+                    "message": str(e),
+                }
+            )
     results["check_generation_mode_of_source"] = messages
 
     return results

@@ -1,13 +1,63 @@
-import random
-import string
 from typing import Optional
+
 import pytest
+
 from datamimic_ce.domains.common.models.city import City
 from datamimic_ce.domains.common.services.city_service import CityService
 
 
 class TestEntityCity:
-    _supported_datasets = ["AD", "AL", "AT", "AU", "BA", "BE", "BG", "BR", "CA", "CH", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GB", "GR", "HR", "HU", "IE", "IS", "IT", "LI", "LT", "LU", "LV", "MC", "NL", "NO", "NZ", "PL", "PT", "RO", "RU", "SE", "SI", "SK", "SM", "TH", "TR", "UA", "US", "VA", "VE", "VN"]
+    _supported_datasets = [
+        "AD",
+        "AL",
+        "AT",
+        "AU",
+        "BA",
+        "BE",
+        "BG",
+        "BR",
+        "CA",
+        "CH",
+        "CY",
+        "CZ",
+        "DE",
+        "DK",
+        "EE",
+        "ES",
+        "FI",
+        "FR",
+        "GB",
+        "GR",
+        "HR",
+        "HU",
+        "IE",
+        "IS",
+        "IT",
+        "LI",
+        "LT",
+        "LU",
+        "LV",
+        "MC",
+        "NL",
+        "NO",
+        "NZ",
+        "PL",
+        "PT",
+        "RO",
+        "RU",
+        "SE",
+        "SI",
+        "SK",
+        "SM",
+        "TH",
+        "TR",
+        "UA",
+        "US",
+        "VA",
+        "VE",
+        "VN",
+    ]
+
     def _test_single_city(self, city: City):
         assert isinstance(city, City)
         assert isinstance(city.name, str)
@@ -16,11 +66,12 @@ class TestEntityCity:
         assert isinstance(city.state, str)
         assert isinstance(city.area_code, str)
         assert isinstance(city.postal_code, str)
-        assert isinstance(city.name_extension, str) 
+        assert isinstance(city.name_extension, str)
         assert isinstance(city.language, Optional[str])
         assert isinstance(city.population, Optional[int])
 
         assert city.name is not None
+
     def test_generate_single_city(self):
         city_service = CityService()
         city = city_service.generate()
@@ -28,8 +79,8 @@ class TestEntityCity:
 
     def test_generate_multiple_cities(self):
         city_service = CityService()
-        cities = city_service.generate_batch(10)    
-        assert len(cities) == 10    
+        cities = city_service.generate_batch(10)
+        assert len(cities) == 10
         for city in cities:
             self._test_single_city(city)
 
@@ -65,7 +116,7 @@ class TestEntityCity:
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):
         city_service = CityService(dataset=dataset)
-        city = city_service.generate()   
+        city = city_service.generate()
         self._test_single_city(city)
 
     def test_not_supported_dataset(self):

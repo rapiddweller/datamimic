@@ -90,9 +90,7 @@ def test_mongodb_reference_dotted_composite_rejected():
     from datamimic_ce.clients.mongodb_client import MongoDBClient
     from datamimic_ce.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 
-    client = MongoDBClient(
-        credential=MongoDBConnectionConfig(host="unreachable.invalid", port=27017, database="x")
-    )
+    client = MongoDBClient(credential=MongoDBConnectionConfig(host="unreachable.invalid", port=27017, database="x"))
     with pytest.raises(ValueError, match="dotted"):
         client.get_random_rows_by_columns("some_collection", ["addresses.address_id", "region"])
 

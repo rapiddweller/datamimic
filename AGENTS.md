@@ -33,7 +33,7 @@ already exposes them.
 | Compile and verify a new `model.dm.json` | `datamimic scaffold model.dm.json --format json` |
 | Validate existing raw XML | `datamimic lint <path> --format json` |
 | Safely inspect existing raw XML | `datamimic dry-run <path> --format json` |
-| Find recipes or DSL semantics | `datamimic reference recipes` or another narrow `reference` topic/name |
+| Find DSL semantics | `datamimic reference overview` or another narrow `reference` topic/name |
 | Execute a verified runtime descriptor | `datamimic run <path>` |
 
 Optional adapter mapping: CLI `reference`, `scaffold`, `lint`, and `dry-run`
@@ -55,7 +55,7 @@ adapter.
    acceptance against that same capture. Request `--smoke-export` and
    `--deterministic-replay` only when those verification gates are required.
 4. On failure, repair from structured validation issue `path`, `allowed_fields`,
-   `expected_fragment`, and optional typed `repair`, or from the rule diagnostic
+   `allowed_fields` and optional typed `repair`, or from the rule diagnostic
    and `fix_hint` at later stages. If `remediations` requests
    `max_count`, retry with at least its `minimum_value`; this changes the bounded
    verification limit, not `model.dm.json`. Use a narrower authoring reference
@@ -83,8 +83,7 @@ adapter.
    `this.`/`parent.`/`root.` — it does not resolve bare from a descendant,
    and if a descendant redeclares the same name, the ancestor's own bare
    reference still wins (no silent shadowing). `parent.field` reads the
-   enclosing record, `root.field` the outermost. See
-   `examples/showcase/01-banking-core/`.
+   enclosing record, `root.field` the outermost.
 2. `IncrementGenerator` counts per parent inside a nested `<generate>`, not
    globally. Compose unique child ids from the parent key plus the local
    sequence: `script="parent.customer_id * 10 + this.account_no"`.
@@ -103,8 +102,8 @@ adapter.
    `row['field']`). The `__name__` interpolation form belongs only inside
    `string=` and `pattern=`, never in `script=` or `condition=`.
 
-Full table of value-source choices and more rules: `datamimic reference overview`,
-mirrored at `datamimic_ce/authoring/reference_data/cheatsheet.md`.
+Discover value-source choices and rules from the live model and rule registries
+with `datamimic reference overview`, then query a narrow topic.
 
 ## Install the CLI
 
@@ -126,17 +125,12 @@ registration details.
   local Postgres/Mongo (credentials: `local.env.properties` at the repo root).
 - Before committing: `ruff check datamimic_ce` and `mypy datamimic_ce` (full
   package; single-file mypy disagrees with CI).
-- The authoring toolset (linter, reference, dry-run, recipes, scaffold)
+- The authoring toolset (linter, reference, dry-run, scaffold)
   lives in `datamimic_ce/authoring/`; the MCP server in `datamimic_ce/mcp/`.
 - Commit messages carry no AI or tool attribution lines.
 
 ## Pointers
 
-- Runnable example gallery: `examples/showcase/` (banking with referential
-  integrity, multi-source assembly, condition + time-series, custom python
-  components). Each is CI-verified.
-- Recipes (small single-pattern descriptors): `datamimic reference recipes`
-  or `datamimic_ce/authoring/recipes/`.
 - Optional MCP adapter: `docs/mcp_quickstart.md`.
 - Curated doc map for LLM consumption: `llms.txt`.
 - Enterprise Platform (governed workflows, PII scanning, multi-system

@@ -6,10 +6,8 @@ from __future__ import annotations
 import random
 from collections import Counter
 
-from datamimic_ce.domains.healthcare.generators import patient_generator
-from datamimic_ce.domains.healthcare.generators.patient_generator import (
-    PatientGenerator
-)
+from datamimic_ce.domains.healthcare.generators.patient_generator import PatientGenerator
+
 
 class TestPatientGeneratorEmergencyContact:
     def setup_method(self) -> None:
@@ -19,10 +17,12 @@ class TestPatientGeneratorEmergencyContact:
         dataset = "US"
         # Intercept emergency relationships file load and provide controlled weights
         from datamimic_ce.utils import file_util as _fu
+
         orig_read = _fu.FileUtil.read_wgt_file
 
         def _fake_read_wgt_file(file_path, delimiter=",", encoding="utf-8"):
             from pathlib import Path as _P
+
             name = _P(file_path).name
             if name == f"emergency_relationships_{dataset}.csv":
                 # Parent:Friend = 3:1 → 0.75/0.25
@@ -36,10 +36,7 @@ class TestPatientGeneratorEmergencyContact:
         monkeypatch.setattr(generator._family_name_generator, "generate", lambda: "Family")
         monkeypatch.setattr(generator._phone_number_generator, "generate", lambda: "555-0100")
 
-        relationships = [
-            generator.get_emergency_contact("Doe")["relationship"]
-            for _ in range(200)
-        ]
+        relationships = [generator.get_emergency_contact("Doe")["relationship"] for _ in range(200)]
 
         counts = Counter(relationships)
         total = counts["Parent"] + counts["Friend"]

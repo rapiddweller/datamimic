@@ -17,8 +17,14 @@ from datamimic_ce.connection_config.rdbms_connection_config import RdbmsConnecti
 
 def _credential(**extra) -> RdbmsConnectionConfig:
     return RdbmsConnectionConfig(
-        dbms="mssql", host="localhost", port=1433, user="sa", password="pw", database="master",
-        db_schema="dbo", **extra,
+        dbms="mssql",
+        host="localhost",
+        port=1433,
+        user="sa",
+        password="pw",
+        database="master",
+        db_schema="dbo",
+        **extra,
     )
 
 

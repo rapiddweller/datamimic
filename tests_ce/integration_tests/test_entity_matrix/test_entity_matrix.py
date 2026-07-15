@@ -25,8 +25,9 @@ def _clean():
 
 
 def _table_rows(database: str, table: str) -> int:
-    cfg = RdbmsConnectionConfig(dbms="sqlite", database=database, host=None, port=None,
-                                user=None, password=None, db_schema=None)
+    cfg = RdbmsConnectionConfig(
+        dbms="sqlite", database=database, host=None, port=None, user=None, password=None, db_schema=None
+    )
     return RdbmsClient(cfg, task_id="t").get(f"SELECT COUNT(*) FROM {table}")[0][0]
 
 
@@ -37,6 +38,7 @@ def _run(filename: str) -> DataMimicTest:
 
 
 # ---- targetEntity: WRITE routes to the physical entity, not the statement name 'gen' ----
+
 
 def test_target_entity_rdbms():
     _clean()
@@ -64,8 +66,10 @@ def test_target_entity_file_exporter(fmt, ext):
         _run(f"te_{fmt}.xml")
         routed = list((_DIR / "output").rglob(f"routed*.{ext}"))
         gen = list((_DIR / "output").rglob(f"gen*.{ext}"))
-        assert routed, f"targetEntity did not name the {ext} output 'routed' (files: "\
+        assert routed, (
+            f"targetEntity did not name the {ext} output 'routed' (files: "
             f"{[p.name for p in (_DIR / 'output').rglob('*.' + ext)]})"
+        )
         assert not gen, f"the {ext} output still used the statement name 'gen'"
     finally:
         _clean()
@@ -73,12 +77,14 @@ def test_target_entity_file_exporter(fmt, ext):
 
 # ---- targetEntity for RDBMS write OPERATIONS (update/delete), statement name 'gen' != table ----
 
+
 def test_target_entity_rdbms_update():
     _clean()
     try:
         _run("te_rdbms_update.xml")
-        cfg = RdbmsConnectionConfig(dbms="sqlite", database="matrix_upd", host=None, port=None,
-                                    user=None, password=None, db_schema=None)
+        cfg = RdbmsConnectionConfig(
+            dbms="sqlite", database="matrix_upd", host=None, port=None, user=None, password=None, db_schema=None
+        )
         rows = RdbmsClient(cfg, task_id="t").get("SELECT tier FROM customers")
         assert [r[0] for r in rows] == ["gold", "gold"]  # targetEntity routed the UPDATE
     finally:
@@ -95,6 +101,7 @@ def test_target_entity_rdbms_delete():
 
 
 # ---- sourceEntity: READ routes from the physical entity, not the statement name ----
+
 
 def test_source_entity_rdbms():
     _clean()

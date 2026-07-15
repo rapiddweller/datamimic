@@ -1,322 +1,86 @@
-"""FastMCP server wiring for DataMimic domains."""
+"""Optional MCP transport for the canonical authoring service."""
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import MISSING, fields
-from typing import TYPE_CHECKING, Any
+from typing import Protocol
 
 from fastmcp import FastMCP
 from starlette.applications import Starlette
-from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.status import HTTP_401_UNAUTHORIZED
 
-from datamimic_ce.authoring.contracts import AuthoringResponseFormat
-from datamimic_ce.authoring.diagnostics import _diagnostic_dicts
-from datamimic_ce.domains import facade
-from datamimic_ce.mcp import resources
-from datamimic_ce.mcp.models import CheckArgs, GenerateArgs, ReferenceArgs, RunArgs, ScaffoldArgs
-
-if TYPE_CHECKING:  # pragma: no cover - import hint for typing only
-    from typing import Protocol
-
-    class _FastAPILike(Protocol):  # pylint: disable=too-few-public-methods
-        def mount(self, path: str, app: Any) -> None:
-            """Mount an ASGI app at the provided path."""
-else:  # pragma: no cover - runtime fallback avoids optional FastAPI dependency
-    _FastAPILike = Any
+from datamimic_ce.authoring import service
+from datamimic_ce.authoring.contracts import (
+    CheckRequest,
+    ReferenceRequest,
+    ReferenceResult,
+    RunRequest,
+    RunResult,
+    ScaffoldRequest,
+    ScaffoldResult,
+)
+from datamimic_ce.authoring.diagnostics import LintResult
 
 
-class _APIKeyMiddleware(BaseHTTPMiddleware):  # pylint: disable=too-few-public-methods
-    """Reject requests that lack the configured API key."""
+class MountableApplication(Protocol):
+    def mount(self, path: str, app: Starlette) -> None: ...
 
-    def __init__(self, app: Any, api_key: str) -> None:
+
+class APIKeyMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app: Starlette, api_key: str) -> None:
         super().__init__(app)
-        self._api_key = api_key
+        self.api_key = api_key
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        provided = request.headers.get("authorization")
-        token = None
-        if provided and provided.lower().startswith("bearer "):
-            token = provided.split(" ", 1)[1]
-        if token is None:
-            token = request.headers.get("x-api-key")
-        if token != self._api_key:
-            return JSONResponse(
-                status_code=HTTP_401_UNAUTHORIZED,
-                content={"error": "invalid_api_key"},
-            )
+        authorization = request.headers.get("authorization")
+        bearer = authorization.removeprefix("Bearer ") if authorization else None
+        token = bearer or request.headers.get("x-api-key")
+        if token != self.api_key:
+            return JSONResponse(status_code=HTTP_401_UNAUTHORIZED, content={"error": "invalid_api_key"})
         return await call_next(request)
 
 
-class DataMimicMCP(FastMCP):
-    """FastMCP server with an explicit transport-middleware contract."""
-
-    http_middleware: list[Middleware] | None
-
-
-def list_domains_impl() -> list[dict[str, Any]]:
-    """Return metadata describing the registered domain generators."""
-
-    catalog: list[dict[str, Any]] = []
-    for (domain, version), (request_cls, _) in sorted(facade.REGISTRY.items()):
-        defaults: dict[str, Any] = {}
-        field_names: list[str] = []
-        for field in fields(request_cls):
-            if field.name == "request_hash":
-                continue
-            field_names.append(field.name)
-            if field.default is not MISSING:
-                defaults[field.name] = field.default
-        catalog.append(
-            {
-                "domain": domain,
-                "version": version,
-                "request_fields": field_names,
-                "defaults": defaults,
-            }
-        )
-    return catalog
-
-
-def generate_impl(args: GenerateArgs) -> dict[str, Any]:
-    """Delegate to the domain facade with deterministic payloads."""
-
-    payload = args.to_payload()
-    # WHY: The facade owns canonical hashing and RNG seeding; forwarding the payload
-    # untouched prevents duplicate hash derivations and keeps determinism obvious.
-    return facade.generate_domain(payload)
-
-
-def check_impl(args: CheckArgs) -> dict[str, Any]:
-    """Lint a DSL descriptor: aggregated diagnostics with fix hints (diagnostics v1)."""
-    # WHY lazy: the authoring package pulls the engine's parsers/models — keep server
-    # startup light and load on first tool use.
-    from datamimic_ce.authoring.service import check
-
-    result = check(args)
-    return {
-        "ok": result.ok,
-        "summary": result.summary(),
-        "diagnostics": _diagnostic_dicts(
-            result.diagnostics,
-            args.response_format is AuthoringResponseFormat.DETAILED,
-        ),
-        "truncated": result.truncated,
-    }
-
-
-def run_impl(args: RunArgs) -> dict[str, Any]:
-    """Safe dry-run: lint gate, neutralized targets (memstores kept), capped counts."""
-    from datamimic_ce.authoring.service import run
-
-    result = run(args)
-    detailed = args.response_format is AuthoringResponseFormat.DETAILED
-    payload: dict[str, Any] = {
-        "ok": result.ok,
-        "stage": result.stage.value,
-        "timing_ms": result.timing_ms,
-        "products": [product.model_dump() for product in result.products],
-        "products_truncated": result.products_truncated,
-        "diagnostics": _diagnostic_dicts(result.diagnostics, detailed),
-    }
-    if detailed and result.lint is not None:
-        payload["lint_summary"] = result.lint.summary()
-    return payload
-
-
-def reference_impl(args: ReferenceArgs) -> dict[str, Any]:
-    """DSL reference lookup: cheatsheet, schemas, rules, generators, targets and recipes."""
-    from datamimic_ce.authoring.reference import reference
-
-    try:
-        text = reference(args.topic, args.name, query=args.query)
-    except ValueError as err:
-        # actionable error: the message lists the valid values
-        return {"ok": False, "error": str(err)}
-    return {
-        "ok": True,
-        "topic": args.topic,
-        "name": args.name,
-        "query": args.query,
-        "content": text,
-    }
-
-
-def scaffold_impl(args: ScaffoldArgs) -> dict[str, Any]:
-    """Run the complete canonical AuthoringSpecV1 verification transaction.
-
-    Uses the service layer to ensure parity with the CLI and maintain a single
-    implementation across all transports.
-    """
-    # WHY lazy: the authoring package pulls the engine's parsers/models — keep server
-    # startup light and load on first tool use.
-    from datamimic_ce.authoring.service import scaffold
-
-    result = scaffold(args)
-    return result.model_dump(mode="json", exclude_none=True)
-
-
-def create_server(*, api_key: str | None = None) -> DataMimicMCP:
-    """Create a FastMCP server exposing DataMimic generators."""
-
-    server = DataMimicMCP(
-        name="datamimic-ce",
-        version=None,
-    )
-
-    @server.tool("list_domains")
-    async def list_domains() -> list[dict[str, Any]]:
-        return list_domains_impl()
-
-    @server.tool("generate")
-    async def generate(args: GenerateArgs) -> dict[str, Any]:
-        return generate_impl(args)
+def create_server() -> FastMCP:
+    server = FastMCP(name="datamimic-ce", version=None)
 
     @server.tool("datamimic_check")
-    async def datamimic_check(args: CheckArgs) -> dict[str, Any]:
-        """Lint a DATAMIMIC DSL descriptor. Returns aggregated diagnostics, each with a
-        rule id, severity and a fix_hint saying what to change. Iterate until ok=true."""
-        return check_impl(args)
+    async def datamimic_check(request: CheckRequest) -> LintResult:
+        return service.check(request)
 
     @server.tool("datamimic_run")
-    async def datamimic_run(args: RunArgs) -> dict[str, Any]:
-        """Safely dry-run a descriptor: counts capped, file/DB targets neutralized
-        (memstores kept), lint gate first. Returns per-product sample rows to verify
-        the generated data looks right. smoke_export=true additionally test-writes
-        the captured rows through each stripped file exporter in a temp dir (no
-        artifacts) to catch export-time serialization crashes before a real run."""
-        return run_impl(args)
+    async def datamimic_run(request: RunRequest) -> RunResult:
+        return service.run(request)
 
     @server.tool("datamimic_reference")
-    async def datamimic_reference(args: ReferenceArgs) -> dict[str, Any]:
-        """Look up DATAMIMIC DSL knowledge: topic=overview (cheatsheet, start here),
-        element (attributes/nesting for a tag), generators, entities (name=Person for
-        its fields), context (this/parent/root script scope), timeseries (start/end/
-        interval + ts.now/step/series), targets, distributions (source reads and
-        numeric range key distributions/sequences), converters (masking/formatting),
-        rules (name=DMxxx for one canonical definition), authoring (a category/kind query
-        selects a compact typed model.dm.json fragment), recipes, recipe (full descriptor by id)."""
-        return reference_impl(args)
+    async def datamimic_reference(request: ReferenceRequest) -> ReferenceResult:
+        return service.reference(request)
 
     @server.tool("datamimic_scaffold")
-    async def datamimic_scaffold(args: ScaffoldArgs) -> dict[str, Any]:
-        """Compile one model.dm.json AuthoringSpecV1 document into DATAMIMIC DSL,
-        then lint, bounded-run and evaluate acceptance through the canonical service.
-        verified=true means acceptance and every requested smoke/replay gate passed;
-        no follow-up datamimic_check or datamimic_run call is needed. Query
-        reference topic=scaffold for the schema derived from the Intent Model SPOT.
-        Historical compact specs remain accepted only through lossless normalization;
-        unsupported or ambiguous intent fails closed with explicit errors."""
-        return scaffold_impl(args)
-
-    server.http_middleware = _build_http_middleware(api_key)
-
-    for schema in resources.iter_schema_resources():
-        loader = _schema_loader(schema.domain, schema.version, schema.kind)
-        server.resource(schema.uri, mime_type="application/schema+json")(loader)
-
-    def _cheatsheet_resource() -> str:
-        from datamimic_ce.authoring.reference import cheatsheet
-
-        return cheatsheet()
-
-    server.resource("resource://datamimic/dsl/cheatsheet", mime_type="text/markdown")(_cheatsheet_resource)
-
-    # One resource per curated recipe. Only the tiny toml index is read at startup;
-    # the descriptor XML loads lazily on access.
-    import tomllib
-    from importlib import resources as importlib_resources
-
-    recipes_dir = importlib_resources.files("datamimic_ce.authoring") / "recipes"
-    recipes_index = tomllib.loads((recipes_dir / "recipes.toml").read_text(encoding="utf-8"))
-
-    def _recipe_loader_factory(recipe_id: str) -> Callable[[], str]:
-        def load() -> str:
-            return (recipes_dir / f"{recipe_id}.xml").read_text(encoding="utf-8")
-
-        return load
-
-    for entry in recipes_index["recipe"]:
-        server.resource(f"resource://datamimic/dsl/recipes/{entry['id']}", mime_type="application/xml")(
-            _recipe_loader_factory(entry["id"])
-        )
+    async def datamimic_scaffold(request: ScaffoldRequest) -> ScaffoldResult:
+        return service.scaffold(request)
 
     return server
 
 
+def build_sse_app(server: FastMCP, api_key: str | None = None) -> Starlette:
+    application = server.sse_app()
+    if api_key:
+        application.add_middleware(APIKeyMiddleware, api_key=api_key)
+    return application
+
+
 def mount_mcp(
-    app: _FastAPILike,
+    application: MountableApplication,
     *,
     path: str = "/mcp",
     api_key: str | None = None,
     server: FastMCP | None = None,
 ) -> FastMCP:
-    """Mount the FastMCP server onto an existing FastAPI application."""
-
-    mcp_server = server or create_server(api_key=api_key)
-    http_middleware = (
-        mcp_server.http_middleware
-        if isinstance(mcp_server, DataMimicMCP)
-        else _build_http_middleware(api_key)
-    )
-    sse_app = build_sse_app(mcp_server, http_middleware)
-    app.mount(path, sse_app)
+    mcp_server = server or create_server()
+    application.mount(path, build_sse_app(mcp_server, api_key))
     return mcp_server
 
 
-def _build_http_middleware(api_key: str | None) -> list[Middleware] | None:
-    if not api_key:
-        return None
-    # WHY: Starlette middleware keeps HTTP transports gated.
-    # Avoid reimplementing FastMCP internals just for header inspection.
-    return [Middleware(_APIKeyMiddleware, api_key=api_key)]
-
-
-def _schema_loader(
-    domain: str,
-    version: str,
-    kind: resources.SchemaKind,
-) -> Callable[[], resources.SchemaDocument]:
-    """Build a parameterless schema loader for the FastMCP registry."""
-
-    def load() -> resources.SchemaDocument:
-        return resources.load_schema(domain, version, kind)
-
-    return load
-
-
-def build_sse_app(
-    server: FastMCP,
-    middleware: list[Middleware] | None,
-) -> Starlette:
-    """Create an SSE ASGI app with optional middleware layering.
-
-    Note: FastMCP's Starlette route may log a benign TypeError due to returning
-    None after streaming. This does not affect functionality; tests verify end-to-end.
-    """
-
-    sse_app = server.sse_app()
-    if middleware:
-        for entry in middleware:
-            # WHY: Starlette stores middleware callables and kwargs separately; rehydrate
-            # them instead of reimplementing the wrapping logic here.
-            sse_app.add_middleware(entry.cls, *entry.args, **entry.kwargs)
-    return sse_app
-
-
-__all__ = [
-    "create_server",
-    "DataMimicMCP",
-    "mount_mcp",
-    "generate_impl",
-    "list_domains_impl",
-    "check_impl",
-    "run_impl",
-    "reference_impl",
-    "scaffold_impl",
-    "build_sse_app",
-]
+__all__ = ["build_sse_app", "create_server", "mount_mcp"]

@@ -6,15 +6,77 @@
 """Pure scaffold verification policy over typed bounded-run evidence."""
 
 from datamimic_ce.authoring.contracts import (
+    MAX_DRY_RUN_COUNT,
+    CaptureStatus,
+    CompilePlan,
     DeterministicReplayEvidence,
+    GeneratedProductCompilePlan,
     ReplayMismatchKind,
     ReplayProductMismatch,
+    RetryWithParameterRemediation,
     ScaffoldVerification,
     ScaffoldVerificationEvidence,
     SmokeExportEvidence,
+    SourceProductCompilePlan,
+    TimeSeriesProductCompilePlan,
     VerificationGateStatus,
 )
 from datamimic_ce.authoring.dryrun import CapturedProducts, CapturedRun, SmokeExportCapture
+
+
+def max_count_remediations(
+    plan: CompilePlan,
+    captured: CapturedProducts,
+) -> list[RetryWithParameterRemediation]:
+    """Derive one retry action from typed, statically bounded cap evidence."""
+
+    products_by_name = {product.name: product for product in plan.products}
+    minimums: dict[str, int] = {}
+    for product in captured.products:
+        evidence = product.capture
+        planned = products_by_name.get(product.name)
+        if (
+            evidence is None
+            or evidence.status is not CaptureStatus.CAPPED
+            or evidence.requested is None
+            or planned is None
+        ):
+            continue
+        if isinstance(planned, GeneratedProductCompilePlan):
+            minimum = planned.count_per_parent or planned.static_count
+        elif isinstance(planned, TimeSeriesProductCompilePlan):
+            minimum = planned.series_count
+        elif isinstance(planned, SourceProductCompilePlan):
+            minimum = evidence.requested
+        else:
+            continue
+        if minimum > captured.max_count:
+            minimums[product.name] = minimum
+    if not minimums:
+        return []
+    required_minimum = max(minimums.values())
+    if required_minimum > MAX_DRY_RUN_COUNT:
+        return []
+
+    captured_names = {product.name for product in captured.products}
+    affected = set(minimums)
+    changed = True
+    while changed:
+        changed = False
+        for relationship in plan.relationships:
+            if (
+                relationship.parent in affected
+                and relationship.child in captured_names
+                and relationship.child not in affected
+            ):
+                affected.add(relationship.child)
+                changed = True
+    return [
+        RetryWithParameterRemediation(
+            minimum_value=required_minimum,
+            affected_products=tuple(product.name for product in plan.products if product.name in affected),
+        )
+    ]
 
 
 def blocked_verification(
@@ -126,9 +188,7 @@ def compare_captures(
         first_difference = next(
             (
                 index
-                for index, (first_row, replay_row) in enumerate(
-                    zip(first_rows, replay_rows, strict=False)
-                )
+                for index, (first_row, replay_row) in enumerate(zip(first_rows, replay_rows, strict=False))
                 if first_row != replay_row
             ),
             None,

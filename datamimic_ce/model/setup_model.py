@@ -26,8 +26,7 @@ from datamimic_ce.model.model_util import ModelUtil
 class SetupModel(BaseModel):
     multiprocessing: bool | None = Field(
         None,
-        description="Run top-level <generate> statements across worker processes instead of a "
-        "single process.",
+        description="Run top-level <generate> statements across worker processes instead of a single process.",
         examples=[True],
     )
     default_separator: str | None = Field(

@@ -54,13 +54,12 @@ from datamimic_ce.model.constraints import (
     RequiredOneOf,
     Requires,
     RequiresWhenValue,
-    RuleSeverity,
     ValidValues,
-    authoring_rule_definition,
     resolved_allowed,
     resolved_values,
 )
 from datamimic_ce.model.model_util import ModelUtil
+from datamimic_ce.authoring.rule_catalog import RuleSeverity, authoring_rule_definition
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
 
@@ -152,6 +151,177 @@ def _constraint_check(constraints: tuple[Constraint, ...]) -> Callable[[dict[str
 # changes here, because the owning rules derive their applicable elements from the index too.
 _COUNT_RANGE_FACTS = (COUNT_XOR_MIN, COUNT_XOR_MAX)
 _REQUIRES_OWNED_ELSEWHERE = (WEIGHTS_REQUIRE_VALUES,)
+_RequiresGroupKey = tuple[frozenset[str], bool, str | None]
+
+
+def _generation_mode_diag(
+    rule: type[Rule],
+    ctx: LintContext,
+    element: etree._Element,
+    fact: Constraint,
+) -> Diagnostic | None:
+    tag = str(element.tag)
+    if isinstance(fact, MutuallyExclusive):
+        if fact in _COUNT_RANGE_FACTS:
+            return None
+        modes = sorted(attr for attr in fact.attrs if element.get(attr) is not None)
+        if len(modes) > 1:
+            return ctx.diag(
+                rule,
+                element,
+                evidence=f"<{tag}> sets modes {', '.join(modes)}",
+                severity=rule.definition.severity_for(advisory=fact.lint_only),
+            )
+    if (
+        isinstance(fact, RequiredOneOf)
+        and fact != EXIST_COUNT
+        and all(element.get(attr) is None for attr in fact.attrs)
+    ):
+        options = ", ".join(f"{attr}=" for attr in sorted(fact.attrs))
+        return ctx.diag(
+            rule,
+            element,
+            evidence=f"<{tag}> has no value source",
+            fix_context=f"Available modes: {options}.",
+            severity=rule.definition.severity_for(advisory=fact.lint_only),
+        )
+    return None
+
+
+def _weights_require_values_diag(
+    rule: type[Rule],
+    ctx: LintContext,
+    element: etree._Element,
+    constraints: tuple[Constraint, ...],
+) -> Diagnostic | None:
+    if WEIGHTS_REQUIRE_VALUES not in constraints:
+        return None
+    return _model_util_diag(
+        rule,
+        ctx,
+        element,
+        ModelUtil.check_weights_require_values,
+        fix_context="For weighted literals, add values=.",
+    )
+
+
+def _requires_violation(element: etree._Element, fact: Constraint) -> Requires | None:
+    if not isinstance(fact, Requires):
+        return None
+    if fact in _REQUIRES_OWNED_ELSEWHERE or _is_unique_constraint(fact):
+        return None
+    if not _gate_open(element, fact):
+        return None
+    if any(element.get(need) is not None for need in fact.needs):
+        return None
+    return fact
+
+
+def _requires_violations(
+    element: etree._Element,
+    constraints: tuple[Constraint, ...],
+) -> dict[_RequiresGroupKey, list[str]]:
+    violated: dict[_RequiresGroupKey, list[str]] = {}
+    for candidate in constraints:
+        fact = _requires_violation(element, candidate)
+        if fact is not None:
+            violated.setdefault((fact.needs, fact.lint_only, fact.message), []).append(fact.attr)
+    return violated
+
+
+def _source_companion_diag(
+    rule: type[Rule],
+    ctx: LintContext,
+    element: etree._Element,
+    key: _RequiresGroupKey,
+    attrs: list[str],
+) -> Diagnostic:
+    needs, lint_only, declared_message = key
+    present = ", ".join(sorted(attrs))
+    severity = rule.definition.severity_for(advisory=lint_only)
+    if declared_message is not None:
+        return ctx.diag(
+            rule,
+            element,
+            evidence=f"{declared_message}; present: {present}",
+            fix_context=f"Required: {' or '.join(f'{need}=' for need in sorted(needs))}.",
+            severity=severity,
+        )
+    if needs == frozenset((ATTR_SOURCE,)):
+        return ctx.diag(
+            rule,
+            element,
+            evidence=f"{present} is present without source=",
+            severity=severity,
+        )
+    needed = " or ".join(f"{need}=" for need in sorted(needs))
+    return ctx.diag(
+        rule,
+        element,
+        evidence=f"{present} is present without {needed}",
+        fix_context=f"Required: {needed}.",
+        severity=severity,
+    )
+
+
+def _forbidden_companion_diag(
+    rule: type[Rule],
+    ctx: LintContext,
+    element: etree._Element,
+    fact: Constraint,
+) -> Diagnostic | None:
+    if not isinstance(fact, Forbids) or _is_unique_constraint(fact):
+        return None
+    if not _gate_open(element, fact):
+        return None
+    if fact.excludes_when_true:
+        present = sorted(attr for attr in fact.excludes if _attr_true(element.get(attr)))
+    else:
+        present = sorted(attr for attr in fact.excludes if element.get(attr) is not None)
+    if not present:
+        return None
+    tag = str(element.tag)
+    message = fact.message or (f"<{tag}> {fact.attr}= cannot be combined with: {', '.join(present)}.")
+    return ctx.diag(
+        rule,
+        element,
+        evidence=f"{message} Present forbidden attributes: {', '.join(present)}",
+        fix_context=f"Remove {', '.join(f'{attr}=' for attr in present)} or {fact.attr}=.",
+        severity=rule.definition.severity_for(advisory=fact.lint_only),
+    )
+
+
+def _allowed_values_diag(
+    rule: type[Rule],
+    ctx: LintContext,
+    element: etree._Element,
+    fact: Constraint,
+) -> Diagnostic | None:
+    if not isinstance(fact, AllowedValuesWhen) or _is_unique_constraint(fact):
+        return None
+    gate_value = element.get(fact.when_attr)
+    should_check = (not fact.when_true and fact.when_attr in element.attrib) or (
+        fact.when_true and _attr_true(gate_value)
+    )
+    value = element.get(fact.attr)
+    if not should_check or value is None:
+        return None
+    allowed = resolved_allowed(fact)
+    if value in allowed:
+        return None
+    options = ", ".join(sorted(allowed))
+    message = (
+        fact.message.replace("{actual_value}", value)
+        if fact.message is not None
+        else f"when '{fact.when_attr}' is set, '{fact.attr}' value must be one of [{options}], but got: '{value}'"
+    )
+    return ctx.diag(
+        rule,
+        element,
+        evidence=f"{message} Actual {fact.attr}='{value}'",
+        fix_context=f"Allowed values: {options}.",
+        severity=rule.definition.severity_for(advisory=fact.lint_only),
+    )
 
 
 class CountBoundsConflict(Rule):
@@ -211,41 +381,13 @@ class GenerationModeConflict(Rule):
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element, constraints in _constrained(ctx):
-            tag = str(element.tag)
             for fact in constraints:
-                if isinstance(fact, MutuallyExclusive):
-                    if fact in _COUNT_RANGE_FACTS:
-                        continue  # DM201 reports count-vs-range with its friendlier message
-                    modes = sorted(attr for attr in fact.attrs if element.get(attr) is not None)
-                    if len(modes) > 1:
-                        yield ctx.diag(
-                            type(self),
-                            element,
-                            evidence=f"<{tag}> sets modes {', '.join(modes)}",
-                            severity=type(self).definition.severity_for(advisory=fact.lint_only),
-                        )
-                elif isinstance(fact, RequiredOneOf):
-                    if fact == EXIST_COUNT:
-                        continue  # DM202 reports missing count with the time-series interplay
-                    if all(element.get(attr) is None for attr in fact.attrs):
-                        options = ", ".join(f"{attr}=" for attr in sorted(fact.attrs))
-                        yield ctx.diag(
-                            type(self),
-                            element,
-                            evidence=f"<{tag}> has no value source",
-                            fix_context=f"Available modes: {options}.",
-                            severity=type(self).definition.severity_for(advisory=fact.lint_only),
-                        )
-            if WEIGHTS_REQUIRE_VALUES in constraints:
-                diag = _model_util_diag(
-                    type(self),
-                    ctx,
-                    element,
-                    ModelUtil.check_weights_require_values,
-                    fix_context="For weighted literals, add values=.",
-                )
+                diag = _generation_mode_diag(type(self), ctx, element, fact)
                 if diag:
                     yield diag
+            weights_diag = _weights_require_values_diag(type(self), ctx, element, constraints)
+            if weights_diag:
+                yield weights_diag
 
 
 class UniqueConstraints(Rule):
@@ -333,46 +475,14 @@ class SourceCompanionsWithoutSource(Rule):
     definition = authoring_rule_definition("DM214")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
-        source_needs = frozenset((ATTR_SOURCE,))
         for element, constraints in _constrained(ctx):
-            violated: dict[tuple[frozenset[str], bool, str | None], list[str]] = {}
-            for fact in constraints:
-                if not isinstance(fact, Requires) or fact in _REQUIRES_OWNED_ELSEWHERE or _is_unique_constraint(fact):
-                    continue
-                if not _gate_open(element, fact):
-                    continue
-                if any(element.get(need) is not None for need in fact.needs):
-                    continue
-                violated.setdefault((fact.needs, fact.lint_only, fact.message), []).append(fact.attr)
-            for (needs, lint_only, declared_message), attrs in sorted(
-                violated.items(), key=lambda item: (sorted(item[0][0]), item[0][1], item[0][2] or "")
-            ):
-                present = ", ".join(sorted(attrs))
-                if declared_message is not None:
-                    yield ctx.diag(
-                        type(self),
-                        element,
-                        evidence=f"{declared_message}; present: {present}",
-                        fix_context=f"Required: {' or '.join(f'{need}=' for need in sorted(needs))}.",
-                        severity=type(self).definition.severity_for(advisory=lint_only),
-                    )
-                    continue
-                if needs == source_needs:
-                    yield ctx.diag(
-                        type(self),
-                        element,
-                        evidence=f"{present} is present without source=",
-                        severity=type(self).definition.severity_for(advisory=lint_only),
-                    )
-                else:
-                    needed = " or ".join(f"{need}=" for need in sorted(needs))
-                    yield ctx.diag(
-                        type(self),
-                        element,
-                        evidence=f"{present} is present without {needed}",
-                        fix_context=f"Required: {needed}.",
-                        severity=type(self).definition.severity_for(advisory=lint_only),
-                    )
+            violations = _requires_violations(element, constraints)
+            ordered = sorted(
+                violations.items(),
+                key=lambda item: (sorted(item[0][0]), item[0][1], item[0][2] or ""),
+            )
+            for key, attrs in ordered:
+                yield _source_companion_diag(type(self), ctx, element, key, attrs)
 
 
 class NestedKeyNeedsType(Rule):
@@ -457,27 +567,10 @@ class ForbiddenCompanions(Rule):
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element, constraints in _constrained(ctx):
-            tag = str(element.tag)
             for fact in constraints:
-                if not isinstance(fact, Forbids) or _is_unique_constraint(fact):
-                    continue
-                if not _gate_open(element, fact):
-                    continue
-                # When excludes_when_true=True, excluded attr must also be truthy for violation
-                if fact.excludes_when_true:
-                    present = sorted(attr for attr in fact.excludes if _attr_true(element.get(attr)))
-                else:
-                    present = sorted(attr for attr in fact.excludes if element.get(attr) is not None)
-                if not present:
-                    continue
-                message = fact.message or (f"<{tag}> {fact.attr}= cannot be combined with: {', '.join(present)}.")
-                yield ctx.diag(
-                    type(self),
-                    element,
-                    evidence=f"{message} Present forbidden attributes: {', '.join(present)}",
-                    fix_context=f"Remove {', '.join(f'{attr}=' for attr in present)} or {fact.attr}=.",
-                    severity=type(self).definition.severity_for(advisory=fact.lint_only),
-                )
+                diag = _forbidden_companion_diag(type(self), ctx, element, fact)
+                if diag:
+                    yield diag
 
 
 class DeclaredValidValues(Rule):
@@ -525,36 +618,9 @@ class AllowedValuesWhenConstraint(Rule):
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element, constraints in _constrained(ctx):
             for fact in constraints:
-                if not isinstance(fact, AllowedValuesWhen) or _is_unique_constraint(fact):
-                    continue
-                # Gate on when_attr's presence or truthiness
-                gate_value = element.get(fact.when_attr)
-                should_check = (not fact.when_true and fact.when_attr in element.attrib) or (
-                    fact.when_true and _attr_true(gate_value)
-                )
-                if not should_check:
-                    continue
-                # Only validate if attr is also present
-                value = element.get(fact.attr)
-                if value is None:
-                    continue
-                allowed = resolved_allowed(fact)
-                if value in allowed:
-                    continue
-                options = ", ".join(sorted(allowed))
-                message = (
-                    fact.message.replace("{actual_value}", value)
-                    if fact.message is not None
-                    else f"when '{fact.when_attr}' is set, '{fact.attr}' value must be one of "
-                    f"[{options}], but got: '{value}'"
-                )
-                yield ctx.diag(
-                    type(self),
-                    element,
-                    evidence=f"{message} Actual {fact.attr}='{value}'",
-                    fix_context=f"Allowed values: {options}.",
-                    severity=type(self).definition.severity_for(advisory=fact.lint_only),
-                )
+                diag = _allowed_values_diag(type(self), ctx, element, fact)
+                if diag:
+                    yield diag
 
 
 class ConditionalDeclaredConstraints(Rule):

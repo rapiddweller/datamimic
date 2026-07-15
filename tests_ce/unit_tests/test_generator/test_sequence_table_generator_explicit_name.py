@@ -45,7 +45,9 @@ class RecordingRdbmsClient:
         self._seq = {}
         self.requested_names: list[str] = []
 
-    def get_current_sequence_number(self, sequence_name: str, table_name: str | None = None, column_name: str | None = None) -> int:
+    def get_current_sequence_number(
+        self, sequence_name: str, table_name: str | None = None, column_name: str | None = None
+    ) -> int:
         self.requested_names.append(sequence_name)
         return self._seq.get(sequence_name, 1000)
 
@@ -104,9 +106,7 @@ def test_empty_parens_behave_like_no_parens(setup_context: SetupContext):
 
 
 def test_explicit_sequence_name_reaches_client_verbatim(setup_context: SetupContext):
-    gen, client = _make(
-        setup_context, "SequenceTableGenerator(sequence='zsv.t_angebote_id_seq')", key="k3"
-    )
+    gen, client = _make(setup_context, "SequenceTableGenerator(sequence='zsv.t_angebote_id_seq')", key="k3")
     assert client.requested_names == ["zsv.t_angebote_id_seq"]
     # pre_execute (the increment side) must resolve to the same explicit name
     gen.pre_execute(setup_context)

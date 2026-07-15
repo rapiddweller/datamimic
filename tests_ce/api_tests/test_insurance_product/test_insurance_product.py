@@ -1,12 +1,14 @@
 import pytest
-from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 
+from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
 from datamimic_ce.domains.insurance.models.insurance_product import InsuranceProduct
 from datamimic_ce.domains.insurance.services.insurance_product_service import InsuranceProductService
 
+
 class TestInsuranceProduct:
     _supported_datasets = ["US", "DE"]
+
     def _test_single_insurance_product(self, insurance_product: InsuranceProduct):
         assert isinstance(insurance_product, InsuranceProduct)
         assert isinstance(insurance_product.id, str)
@@ -42,8 +44,8 @@ class TestInsuranceProduct:
         for insurance_product in insurance_products:
             self._test_single_insurance_product(insurance_product)
 
-    def test_insurance_product_property_cache(self):    
-        insurance_product_service = InsuranceProductService() 
+    def test_insurance_product_property_cache(self):
+        insurance_product_service = InsuranceProductService()
         insurance_product = insurance_product_service.generate()
         assert insurance_product is not None
         assert insurance_product.id == insurance_product.id
@@ -57,12 +59,11 @@ class TestInsuranceProduct:
         insurance_product_service = InsuranceProductService()
         insurance_product1 = insurance_product_service.generate()
         insurance_product2 = insurance_product_service.generate()
-        assert insurance_product1.id != insurance_product2.id   
+        assert insurance_product1.id != insurance_product2.id
         assert insurance_product1.type != insurance_product2.type
         assert insurance_product1.code != insurance_product2.code
         assert insurance_product1.description != insurance_product2.description
-        assert insurance_product1.coverages != insurance_product2.coverages     
-        
+        assert insurance_product1.coverages != insurance_product2.coverages
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

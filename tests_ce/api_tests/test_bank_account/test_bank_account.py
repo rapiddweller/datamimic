@@ -1,10 +1,14 @@
 from datetime import datetime
+
 import pytest
-from datamimic_ce.domains.finance.services.bank_account_service import BankAccountService
+
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
+from datamimic_ce.domains.finance.services.bank_account_service import BankAccountService
+
 
 class TestBankAccount:
     _supported_datasets = ["US", "DE"]
+
     def _test_single_bank_account(self, bank_account: BankAccount):
         assert isinstance(bank_account, BankAccount)
         assert isinstance(bank_account.account_number, str)
@@ -34,7 +38,7 @@ class TestBankAccount:
         #  ensure temporal consistency; last_transaction_date should not precede created_date
         assert bank_account.created_date <= bank_account.last_transaction_date
         assert bank_account.bank_code != ""
-        assert bank_account.bic is not None 
+        assert bank_account.bic is not None
         assert bank_account.bin is not None
         assert bank_account.bin != ""
 
@@ -43,7 +47,7 @@ class TestBankAccount:
         bank_account = bank_account_service.generate()
         self._test_single_bank_account(bank_account)
 
-    def test_generate_multiple_bank_accounts(self): 
+    def test_generate_multiple_bank_accounts(self):
         bank_account_service = BankAccountService()
         bank_accounts = bank_account_service.generate_batch(10)
         assert len(bank_accounts) == 10
@@ -87,7 +91,7 @@ class TestBankAccount:
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):
-        bank_account_service = BankAccountService(dataset=dataset)      
+        bank_account_service = BankAccountService(dataset=dataset)
         bank_account = bank_account_service.generate()
         self._test_single_bank_account(bank_account)
 

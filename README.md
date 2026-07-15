@@ -6,7 +6,7 @@
 >
 > 👉 **Enterprise Platform:** [datamimic.io](https://datamimic.io) &nbsp;|&nbsp; 📘 **Docs:** [docs.datamimic.io](https://docs.datamimic.io) &nbsp;|&nbsp; 📅 **Book a strategy call:** [datamimic.io/contact](https://datamimic.io/contact)
 >
-> 🤖 **AI agent?** Start at [`AGENTS.md`](https://github.com/rapiddweller/datamimic/blob/development/AGENTS.md) and use the project CLI: query only the reference fragments you need, preserve new intent as `model.dm.json`, run `datamimic scaffold ... --format json`, and stop on `verified=true`. Existing raw XML uses lint plus bounded dry-run. Verified end-to-end examples live in [`examples/showcase/`](https://github.com/rapiddweller/datamimic/tree/development/examples/showcase/).
+> 🤖 **AI agent?** Start at [`AGENTS.md`](https://github.com/rapiddweller/datamimic/blob/development/AGENTS.md) and use the project CLI: query only the typed reference schema you need, preserve new intent as `model.dm.json`, run `datamimic scaffold ... --format json`, and stop on `verified=true`. Existing raw XML uses lint plus bounded dry-run.
 
 ---
 
@@ -59,7 +59,7 @@ change the available schema or commands.
 | Learn the Intent Model progressively | `datamimic reference authoring`, then `datamimic reference authoring --category <category> --kind <kind>` | Start with the query catalogue, then load only the typed fragment needed. |
 | Author a new model | Preserve `model.dm.json`; run `datamimic scaffold model.dm.json --format json` | One compile/lint/bounded-run/acceptance transaction per changed attempt. Stop on `verified=true`; generated XML is runtime output. |
 | Work with existing raw XML | `datamimic lint model.xml --format json`, then `datamimic dry-run model.xml --format json` | Fix diagnostics, inspect bounded samples for intent, then use `datamimic run model.xml` only when real execution is requested. |
-| Find a recipe or DSL detail | `datamimic reference recipes`, then a narrow `reference` topic/name | Query the live reference instead of guessing elements, generators, scope, distributions, or rules. |
+| Find a DSL detail | `datamimic reference overview`, then a narrow `reference` topic/name | Query the live model and rule registries instead of guessing elements, generators, scope, distributions, or rules. |
 
 `capabilities`, authoring-reference projections, and the commands shown with
 `--format json` return machine-readable JSON. On a failed scaffold attempt, change
@@ -109,8 +109,7 @@ returned XML as a generated artifact and run that descriptor. Return the
 Seed a relational dataset with referential integrity: customers, accounts,
 transactions.
 
-Follow the pattern in examples/showcase/01-banking-core in the datamimic
-repository: customers get an incrementing id; each customer gets 1-3
+Customers get an incrementing id; each customer gets 1-3
 accounts that carry the real customer id as a foreign key; each account
 gets several transactions that carry both the account id and, two hops up,
 the owning customer id.
@@ -127,7 +126,7 @@ Steps:
    the complete requested hierarchy to `datamimic scaffold ... --format json`.
 2. If scaffold verifies the intent, stop. If its structured issue classifies a
    required relationship as `unsupported_intent`, preserve that evidence and
-   use the banking showcase XML/README as the raw-XML fallback. Repair every
+   use raw XML as the fallback. Repair every
    other validation error in `model.dm.json`; do not infer capability limits
    from this prompt.
 3. For the fallback, author the descriptor, then run
@@ -632,13 +631,13 @@ datamimic capabilities
 # Enumerate typed authoring queries, then request only the needed fragment
 datamimic reference authoring
 datamimic reference authoring --category field --kind weighted
-datamimic reference recipes
+datamimic reference overview
 
 # Compile and fully verify the canonical intent artifact; stop on verified=true
 datamimic scaffold model.dm.json --format json
 
 # Lint a descriptor: schema, semantics, best practices — every finding carries
-# a rule id (DMxxx) and a fix hint. `validate` is an alias. Exit codes 0/1/2.
+# a rule id (DMxxx) and a fix hint. Exit codes 0/1/2.
 datamimic lint my-scenario/datamimic.xml
 datamimic lint my-scenario/datamimic.xml --format json   # diagnostics v1, CI-friendly
 

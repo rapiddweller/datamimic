@@ -57,11 +57,7 @@ def _spec(
     unsafe_condition: bool = False,
     condition: str | None = None,
 ) -> AuthoringSpecV1:
-    condition = condition or (
-        "__import__('os').getcwd()"
-        if unsafe_condition
-        else "age >= 18 and tier in ['A', 'B']"
-    )
+    condition = condition or ("__import__('os').getcwd()" if unsafe_condition else "age >= 18 and tier in ['A', 'B']")
     return AuthoringSpecV1.model_validate(
         {
             "version": "1",
@@ -263,25 +259,13 @@ def test_acceptance_verifies_counts_local_sequence_global_id_fk_and_memstore() -
 
     assert report.verified
     assert report.failed == report.unevaluable == 0
-    per_parent = next(
-        item
-        for item in report.results
-        if isinstance(item, PerParentCountAcceptanceResult)
-    )
-    unique = {
-        item.scope: item
-        for item in report.results
-        if isinstance(item, UniqueAcceptanceResult)
-    }
+    per_parent = next(item for item in report.results if isinstance(item, PerParentCountAcceptanceResult))
+    unique = {item.scope: item for item in report.results if isinstance(item, UniqueAcceptanceResult)}
     assert per_parent.observed_counts is not None
     assert set(per_parent.observed_counts.values()) == {2}
     assert unique["per_parent"].distinct_count == 16
     assert unique["global"].distinct_count in {8, 16}
-    memstore = next(
-        item
-        for item in report.results
-        if isinstance(item, MemstoreCompletenessAcceptanceResult)
-    )
+    memstore = next(item for item in report.results if isinstance(item, MemstoreCompletenessAcceptanceResult))
     assert (memstore.producer_count, memstore.consumer_count) == (8, 8)
 
 
@@ -349,9 +333,7 @@ def test_each_supported_expectation_has_structured_failure_evidence() -> None:
         ),
     )
     assert any(
-        item.kind == "foreign_key"
-        and item.status is AcceptanceStatus.FAIL
-        and item.missing_values == ["999"]
+        item.kind == "foreign_key" and item.status is AcceptanceStatus.FAIL and item.missing_values == ["999"]
         for item in fk_report.results
     )
 
@@ -367,10 +349,7 @@ def test_missing_capture_and_unsafe_row_condition_are_unevaluable() -> None:
     report = evaluate_acceptance(plan, spec, capture)
 
     assert report.unevaluable > 0
-    assert any(
-        item.kind == "row_condition" and item.status is AcceptanceStatus.UNEVALUABLE
-        for item in report.results
-    )
+    assert any(item.kind == "row_condition" and item.status is AcceptanceStatus.UNEVALUABLE for item in report.results)
     assert not report.verified
 
 
@@ -433,9 +412,7 @@ def test_orphan_join_value_cannot_make_per_parent_count_pass() -> None:
     )
     captured = CapturedProducts(
         tuple(
-            _complete_product(product.name, product.rows + orphan_rows)
-            if product.name == "orders"
-            else product
+            _complete_product(product.name, product.rows + orphan_rows) if product.name == "orders" else product
             for product in products.values()
         ),
         max_count=10,
@@ -456,9 +433,7 @@ def test_row_condition_uses_python_short_circuit_without_division_error() -> Non
     customers[0]["age"] = 0
     captured = CapturedProducts(
         tuple(
-            _complete_product(product.name, tuple(customers))
-            if product.name == "customers"
-            else product
+            _complete_product(product.name, tuple(customers)) if product.name == "customers" else product
             for product in products.values()
         ),
         max_count=10,
@@ -563,26 +538,18 @@ def test_nested_runtime_cap_blocks_every_affected_whole_product_expectation() ->
         ],
     }
 
-    result = service_module.scaffold(
-        ScaffoldRequest(spec=spec, max_count=1, sample_rows=1)
-    )
+    result = service_module.scaffold(ScaffoldRequest(spec=spec, max_count=1, sample_rows=1))
 
     affected = [
         expectation
         for expectation in result.acceptance.results
         if (
             expectation.kind in {"per_parent_count", "foreign_key"}
-            or (
-                expectation.kind in {"exact_count", "unique"}
-                and expectation.product == "children"
-            )
+            or (expectation.kind in {"exact_count", "unique"} and expectation.product == "children")
         )
     ]
     assert affected
-    assert all(
-        expectation.status is AcceptanceStatus.UNEVALUABLE
-        for expectation in affected
-    )
+    assert all(expectation.status is AcceptanceStatus.UNEVALUABLE for expectation in affected)
     child_proofs = [
         proof
         for expectation in affected
@@ -645,9 +612,7 @@ def test_file_source_acceptance_uses_runtime_exhaustion_evidence(
                     "path": str(source),
                     "separator": ",",
                 },
-                "fields": [
-                    {"kind": "script", "name": "status", "script": "status"}
-                ],
+                "fields": [{"kind": "script", "name": "status", "script": "status"}],
             }
         ],
         "expectations": [
@@ -660,13 +625,9 @@ def test_file_source_acceptance_uses_runtime_exhaustion_evidence(
         ],
     }
 
-    result = service_module.scaffold(
-        ScaffoldRequest(spec=spec, max_count=max_count, sample_rows=1)
-    )
+    result = service_module.scaffold(ScaffoldRequest(spec=spec, max_count=max_count, sample_rows=1))
 
-    allowed = next(
-        item for item in result.acceptance.results if item.kind == "allowed_values"
-    )
+    allowed = next(item for item in result.acceptance.results if item.kind == "allowed_values")
     assert result.ok
     assert allowed.capture_completeness is not None
     proof = allowed.capture_completeness.products[0]
@@ -684,9 +645,7 @@ def test_missing_runtime_capture_evidence_fails_closed_without_plan_fallback() -
     spec = _spec()
     capture = _capture()
     products = tuple(
-        CapturedProduct(product.name, product.rows)
-        if product.name == "customers"
-        else product
+        CapturedProduct(product.name, product.rows) if product.name == "customers" else product
         for product in capture.products
     )
 
@@ -703,11 +662,7 @@ def test_missing_runtime_capture_evidence_fails_closed_without_plan_fallback() -
     proof = allowed.capture_completeness.products[0]
     assert proof.runtime_status is None
     assert proof.requested is proof.observed is proof.limit is None
-    aggregates = [
-        result
-        for result in report.results
-        if result.kind in {"foreign_key", "memstore_completeness"}
-    ]
+    aggregates = [result for result in report.results if result.kind in {"foreign_key", "memstore_completeness"}]
     assert aggregates
     assert all(
         result.status is AcceptanceStatus.UNEVALUABLE
@@ -732,9 +687,7 @@ def test_non_finite_range_value_is_unevaluable_not_an_exception() -> None:
     customers[0]["age"] = float("nan")
     captured = CapturedProducts(
         tuple(
-            _complete_product(product.name, tuple(customers))
-            if product.name == "customers"
-            else product
+            _complete_product(product.name, tuple(customers)) if product.name == "customers" else product
             for product in products.values()
         ),
         max_count=10,
@@ -743,9 +696,7 @@ def test_non_finite_range_value_is_unevaluable_not_an_exception() -> None:
     report = evaluate_acceptance(compile_authoring_spec(spec).plan, spec, captured)
 
     age_range = next(
-        item
-        for item in report.results
-        if item.kind == "range" and item.product == "customers" and item.field == "age"
+        item for item in report.results if item.kind == "range" and item.product == "customers" and item.field == "age"
     )
     assert age_range.status is AcceptanceStatus.UNEVALUABLE
     assert not report.verified
@@ -758,9 +709,7 @@ def test_memstore_same_count_different_identities_fails_with_key_evidence() -> N
     different_copy = tuple({"customer_id": value} for value in range(101, 109))
     captured = CapturedProducts(
         tuple(
-            _complete_product(product.name, different_copy)
-            if product.name == "customer_copy"
-            else product
+            _complete_product(product.name, different_copy) if product.name == "customer_copy" else product
             for product in products.values()
         ),
         max_count=10,
@@ -768,9 +717,7 @@ def test_memstore_same_count_different_identities_fails_with_key_evidence() -> N
 
     report = evaluate_acceptance(compile_authoring_spec(spec).plan, spec, captured)
 
-    completeness = next(
-        item for item in report.results if item.kind == "memstore_completeness"
-    )
+    completeness = next(item for item in report.results if item.kind == "memstore_completeness")
     assert completeness.status is AcceptanceStatus.FAIL
     assert completeness.producer_key_field == "customer_id"
     assert completeness.consumer_key_field == "customer_id"
@@ -787,9 +734,7 @@ def test_memstore_without_typed_identity_join_is_unevaluable() -> None:
 
     report = evaluate_acceptance(compile_authoring_spec(spec).plan, spec, _capture())
 
-    completeness = next(
-        item for item in report.results if item.kind == "memstore_completeness"
-    )
+    completeness = next(item for item in report.results if item.kind == "memstore_completeness")
     assert completeness.status is AcceptanceStatus.UNEVALUABLE
     assert "typed producer identifier" in completeness.message
     assert completeness.required_consumer_foreign_key is not None
@@ -827,11 +772,7 @@ def test_complete_memstore_capture_reports_missing_typed_consumer_role() -> None
     )
 
     assert result.acceptance is not None
-    completeness = next(
-        item
-        for item in result.acceptance.results
-        if item.kind == "memstore_completeness"
-    )
+    completeness = next(item for item in result.acceptance.results if item.kind == "memstore_completeness")
     assert completeness.status is AcceptanceStatus.UNEVALUABLE
     assert completeness.required_consumer_foreign_key is not None
     assert completeness.required_consumer_foreign_key.parent_product == "customers"
@@ -851,11 +792,7 @@ def test_complete_memstore_capture_with_one_typed_consumer_role_verifies() -> No
     )
 
     assert result.acceptance is not None
-    completeness = next(
-        item
-        for item in result.acceptance.results
-        if item.kind == "memstore_completeness"
-    )
+    completeness = next(item for item in result.acceptance.results if item.kind == "memstore_completeness")
     assert completeness.status is AcceptanceStatus.PASS
     assert completeness.required_consumer_foreign_key is not None
     assert completeness.required_consumer_foreign_key.observed_count == 1
@@ -886,10 +823,7 @@ def test_memstore_ambiguous_identity_join_is_unevaluable() -> None:
         tuple(
             _complete_product(
                 product.name,
-                tuple(
-                    {**row, "customer_id_again": row["customer_id"]}
-                    for row in product.rows
-                ),
+                tuple({**row, "customer_id_again": row["customer_id"]} for row in product.rows),
             )
             if product.name == "customer_copy"
             else product
@@ -900,9 +834,7 @@ def test_memstore_ambiguous_identity_join_is_unevaluable() -> None:
 
     report = evaluate_acceptance(compile_authoring_spec(spec).plan, spec, captured)
 
-    completeness = next(
-        item for item in report.results if item.kind == "memstore_completeness"
-    )
+    completeness = next(item for item in report.results if item.kind == "memstore_completeness")
     assert completeness.status is AcceptanceStatus.UNEVALUABLE
     assert "found 2" in completeness.message
     assert completeness.required_consumer_foreign_key is not None
@@ -921,9 +853,7 @@ def test_sample_projection_does_not_change_acceptance_and_uses_gateway_once(monk
         return original_gateway(*args, **kwargs)
 
     monkeypatch.setattr(service_module, "dry_run_source_captured", counted)
-    result = service_module.scaffold(
-        ScaffoldRequest(spec=spec.model_dump(mode="json"), sample_rows=1, max_count=10)
-    )
+    result = service_module.scaffold(ScaffoldRequest(spec=spec.model_dump(mode="json"), sample_rows=1, max_count=10))
 
     assert gateway_calls == 1
     assert result.stage is AuthoringStage.ACCEPTANCE
@@ -936,16 +866,10 @@ def test_sample_projection_does_not_change_acceptance_and_uses_gateway_once(monk
         "orders": 16,
     }
     exact_orders = next(
-        item
-        for item in result.acceptance.results
-        if item.kind == "exact_count" and item.product == "orders"
+        item for item in result.acceptance.results if item.kind == "exact_count" and item.product == "orders"
     )
     assert exact_orders.observed_count == 16
-    memstore = next(
-        item
-        for item in result.acceptance.results
-        if item.kind == "memstore_completeness"
-    )
+    memstore = next(item for item in result.acceptance.results if item.kind == "memstore_completeness")
     assert memstore.status is AcceptanceStatus.PASS
     assert memstore.required_consumer_foreign_key is not None
     assert memstore.required_consumer_foreign_key.observed_count == 1
@@ -973,9 +897,7 @@ def test_count_above_bound_is_unevaluable_not_a_false_verification() -> None:
         }
     )
 
-    result = service_module.scaffold(
-        ScaffoldRequest(spec=spec.model_dump(mode="json"), max_count=10, sample_rows=1)
-    )
+    result = service_module.scaffold(ScaffoldRequest(spec=spec.model_dump(mode="json"), max_count=10, sample_rows=1))
 
     exact = next(item for item in result.acceptance.results if item.kind == "exact_count")
     assert exact.status is AcceptanceStatus.UNEVALUABLE
@@ -1015,9 +937,7 @@ def test_count_retry_is_emitted_only_when_canonical_limit_can_execute_it(
         }
     )
 
-    result = service_module.scaffold(
-        ScaffoldRequest(spec=spec.model_dump(mode="json"), max_count=10, sample_rows=1)
-    )
+    result = service_module.scaffold(ScaffoldRequest(spec=spec.model_dump(mode="json"), max_count=10, sample_rows=1))
 
     exact = next(item for item in result.acceptance.results if item.kind == "exact_count")
     assert exact.status is AcceptanceStatus.UNEVALUABLE
@@ -1057,9 +977,7 @@ def test_time_series_count_above_bound_is_unevaluable() -> None:
         }
     )
 
-    result = service_module.scaffold(
-        ScaffoldRequest(spec=spec.model_dump(mode="json"), max_count=10, sample_rows=1)
-    )
+    result = service_module.scaffold(ScaffoldRequest(spec=spec.model_dump(mode="json"), max_count=10, sample_rows=1))
 
     exact = next(item for item in result.acceptance.results if item.kind == "exact_count")
     assert exact.status is AcceptanceStatus.UNEVALUABLE
@@ -1071,9 +989,7 @@ def test_acceptance_has_no_xml_or_transport_dependency() -> None:
     source = Path(acceptance_module.__file__).read_text(encoding="utf-8")
     tree = ast.parse(source)
     imported_modules = {
-        node.module
-        for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom) and node.module is not None
+        node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module is not None
     }
 
     assert not any(module.endswith("xml") or ".xml" in module for module in imported_modules)
@@ -1090,8 +1006,7 @@ def test_acceptance_merge_deduplicates_identical_but_retains_conflicts() -> None
     order_exact = [
         entry
         for entry in entries
-        if type(entry.expectation).__name__ == "_Exact"
-        and entry.expectation.product == "orders"
+        if type(entry.expectation).__name__ == "_Exact" and entry.expectation.product == "orders"
     ]
 
     assert len(order_exact) == 1
@@ -1123,8 +1038,7 @@ def test_merge_cannot_relabel_explicit_only_duplicate_as_derived() -> None:
     conditions = [
         entry
         for entry in entries
-        if type(entry.expectation).__name__ == "_RowCondition"
-        and entry.expectation.condition == "age >= 18"
+        if type(entry.expectation).__name__ == "_RowCondition" and entry.expectation.condition == "age >= 18"
     ]
 
     assert len(conditions) == 1
@@ -1152,9 +1066,7 @@ def test_contradictory_explicit_expectations_remain_explicit_and_both_evaluate()
     evaluated = [
         result
         for result in report.results
-        if result.kind == "exact_count"
-        and result.product == "customers"
-        and result.source is AcceptanceSource.EXPLICIT
+        if result.kind == "exact_count" and result.product == "customers" and result.source is AcceptanceSource.EXPLICIT
     ]
 
     assert len(explicit_counts) == 2

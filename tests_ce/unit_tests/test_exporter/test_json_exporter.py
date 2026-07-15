@@ -11,18 +11,16 @@ from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContex
 
 
 class TestJsonExporter(unittest.TestCase):
-    def setUp(self, encoding='utf-8', chunk_size=1000, use_ndjson=False):
+    def setUp(self, encoding="utf-8", chunk_size=1000, use_ndjson=False):
         self.task_id = f"test_task_{uuid.uuid4().hex}"
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.tmp_dir_path = Path(self.tmp_dir.name)
 
-        self.setup_context = MockSetupContext(
-            task_id=self.task_id,
-            descriptor_dir=self.tmp_dir_path
-        )
+        self.setup_context = MockSetupContext(task_id=self.task_id, descriptor_dir=self.tmp_dir_path)
         self.encoding = encoding
 
-        self.exporter = make_exporter(JsonExporter, 
+        self.exporter = make_exporter(
+            JsonExporter,
             setup_context=self.setup_context,
             product_name="test_product",
             use_ndjson=use_ndjson,
@@ -205,7 +203,7 @@ class TestJsonExporter(unittest.TestCase):
                 product_name="test_product",
                 use_ndjson=False,
                 encoding="utf-8",
-                chunk_size=0
+                chunk_size=0,
             )
         self.assertIn("Chunk size must be a positive integer", str(context_zero.exception))
 
@@ -216,7 +214,7 @@ class TestJsonExporter(unittest.TestCase):
                 product_name="test_product",
                 use_ndjson=False,
                 encoding="utf-8",
-                chunk_size=-5
+                chunk_size=-5,
             )
         self.assertIn("Chunk size must be a positive integer", str(context_negative.exception))
 
@@ -265,6 +263,7 @@ class TestJsonExporter(unittest.TestCase):
     def test_non_serializable_data(self):
         """Test exporter raises exception when data contains non-serializable objects."""
         from datetime import datetime
+
         # Generate data with a datetime object, which is not JSON serializable by default
         data = [{"id": 1, "timestamp": datetime.now()}]
         product = ("test_product", data)
@@ -324,7 +323,7 @@ class TestJsonExporter(unittest.TestCase):
         special_characters_data = [
             {"id": 1, "text": "Hello, world!"},
             {"id": 2, "text": "Special chars: !@#$%^&*()_+-=[]{}|;':,./<>?"},
-            {"id": 3, "text": "Unicode: Привет мир, こんにちは世界, 안녕하세요 세계"}
+            {"id": 3, "text": "Unicode: Привет мир, こんにちは世界, 안녕하세요 세계"},
         ]
         product = ("test_product", special_characters_data)
         stmt_full_name = "test_product"
@@ -390,6 +389,7 @@ class TestJsonExporter(unittest.TestCase):
                 print(f"Skipping {json_file}: Invalid JSON")
 
         self.assertEqual(len(empty_dicts_data), total_items)
+
 
 if __name__ == "__main__":
     unittest.main()

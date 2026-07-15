@@ -60,9 +60,7 @@ class Bank(BaseEntity):
         Returns:
             A formatted phone number string.
         """
-        return PhoneNumberGenerator(
-            dataset=self._bank_generator.dataset, rng=self._bank_generator.rng
-        ).generate()
+        return PhoneNumberGenerator(dataset=self._bank_generator.dataset, rng=self._bank_generator.rng).generate()
 
     def to_dict(self) -> dict[str, Any]:
         return {

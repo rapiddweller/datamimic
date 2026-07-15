@@ -33,15 +33,9 @@ class CompanyGenerator(DatasetAwareDomainGenerator):
     ):
         super().__init__(dataset=dataset, rng=rng)
         self._company_name_generator = CompanyNameGenerator(rng=self._derive_rng())
-        self._email_address_generator = EmailAddressGenerator(
-            dataset=self._dataset, rng=self._derive_rng()
-        )
-        self._phone_number_generator = PhoneNumberGenerator(
-            dataset=self._dataset, rng=self._derive_rng()
-        )
-        self._address_generator = AddressGenerator(
-            dataset=self._dataset, rng=self._derive_rng()
-        )
+        self._email_address_generator = EmailAddressGenerator(dataset=self._dataset, rng=self._derive_rng())
+        self._phone_number_generator = PhoneNumberGenerator(dataset=self._dataset, rng=self._derive_rng())
+        self._address_generator = AddressGenerator(dataset=self._dataset, rng=self._derive_rng())
         self._sector_generator = SectorGenerator(dataset=self._dataset, rng=self._derive_rng())
         self._legal_dataset = self._dataset
         self._last_legal_form: str | None = None

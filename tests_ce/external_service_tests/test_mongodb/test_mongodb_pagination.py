@@ -77,9 +77,7 @@ class TestMongoDbPagination:
         descriptor that exercises it - only a direct client call can, hence a client-level test
         rather than an engine-level one. No network call happens before the guard, so a dummy,
         unreachable connection config is enough - this never dials out."""
-        client = MongoDBClient(
-            credential=MongoDBConnectionConfig(host="unreachable.invalid", port=27017, database="x")
-        )
+        client = MongoDBClient(credential=MongoDBConnectionConfig(host="unreachable.invalid", port=27017, database="x"))
         with pytest.raises(ValueError, match="Syntax error"):
             client.get_documents_by_collection("   ")
 

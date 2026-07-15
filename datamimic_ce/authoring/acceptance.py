@@ -45,6 +45,7 @@ from datamimic_ce.authoring.contracts import (
     PerParentCountAcceptancePlan,
     PerParentCountAcceptanceResult,
     ProductCaptureCompleteness,
+    ProductCompilePlan,
     RangeAcceptancePlan,
     RangeAcceptanceResult,
     RequiredConsumerForeignKey,
@@ -52,7 +53,7 @@ from datamimic_ce.authoring.contracts import (
     UniqueAcceptancePlan,
     UniqueAcceptanceResult,
 )
-from datamimic_ce.authoring.dryrun import CapturedProducts
+from datamimic_ce.authoring.dryrun import CapturedProduct, CapturedProducts
 from datamimic_ce.authoring.spec import (
     AllowedValuesExpectation,
     AuthoringSpecV1,
@@ -63,6 +64,8 @@ from datamimic_ce.authoring.spec import (
     RowConditionExpectation,
     UniqueExpectation,
 )
+
+_BOOLEAN_OPERANDS_ERROR = "boolean operators require boolean operands"
 
 
 @dataclass(frozen=True)
@@ -122,14 +125,7 @@ class _MemstoreCompleteness:
 
 
 _Expectation: TypeAlias = (
-    _Exact
-    | _PerParent
-    | _Unique
-    | _ForeignKey
-    | _AllowedValues
-    | _Range
-    | _RowCondition
-    | _MemstoreCompleteness
+    _Exact | _PerParent | _Unique | _ForeignKey | _AllowedValues | _Range | _RowCondition | _MemstoreCompleteness
 )
 
 
@@ -206,9 +202,7 @@ def _explicit_expectations(spec: AuthoringSpecV1) -> list[_Expectation]:
                 )
             )
         elif isinstance(expectation, UniqueExpectation):
-            result.append(
-                _Unique(expectation.product, expectation.field, expectation.scope)
-            )
+            result.append(_Unique(expectation.product, expectation.field, expectation.scope))
         elif isinstance(expectation, ForeignKeyExpectation):
             result.append(
                 _ForeignKey(
@@ -219,9 +213,7 @@ def _explicit_expectations(spec: AuthoringSpecV1) -> list[_Expectation]:
                 )
             )
         elif isinstance(expectation, AllowedValuesExpectation):
-            result.append(
-                _AllowedValues(expectation.product, expectation.field, expectation.values)
-            )
+            result.append(_AllowedValues(expectation.product, expectation.field, expectation.values))
         elif isinstance(expectation, RangeExpectation):
             result.append(
                 _Range(
@@ -343,10 +335,7 @@ def _capture_completeness(
     captured: CapturedProducts,
     products: tuple[str, ...],
 ) -> CaptureCompletenessEvidence:
-    proofs = [
-        _product_capture_completeness(captured, product)
-        for product in dict.fromkeys(products)
-    ]
+    proofs = [_product_capture_completeness(captured, product) for product in dict.fromkeys(products)]
     if any(proof.status is CaptureCompletenessStatus.PARTIAL for proof in proofs):
         status = CaptureCompletenessStatus.PARTIAL
     elif any(proof.status is CaptureCompletenessStatus.UNKNOWN for proof in proofs):
@@ -370,8 +359,7 @@ def _join_fields(
         (field.name, role.parent_field)
         for field in child.fields
         for role in field.roles
-        if isinstance(role, ForeignKeyRolePlan)
-        and role.parent_product == parent_product
+        if isinstance(role, ForeignKeyRolePlan) and role.parent_product == parent_product
     ]
     if len(candidates) != 1:
         return None, (
@@ -424,9 +412,7 @@ def _group_by_parent(
     )
     if child_values is None:
         return None, error
-    groups: dict[str, list[Mapping[str, object]]] = {
-        _display(value): [] for value in parent_values
-    }
+    groups: dict[str, list[Mapping[str, object]]] = {_display(value): [] for value in parent_values}
     for row, value in zip(child_rows, child_values, strict=True):
         key = _display(value)
         if key not in groups:
@@ -541,65 +527,11 @@ def _unique_result(
             distinct_count=None,
         )
     if expectation.scope == "global":
-        duplicates = _duplicates(values)
-        distinct_count = len({_display(value) for value in values})
+        duplicates, distinct_count = _global_unique_evidence(values)
     else:
-        product_plan = next(
-            (item for item in plan.products if item.name == expectation.product),
-            None,
-        )
-        if not isinstance(product_plan, GeneratedProductCompilePlan) or product_plan.parent is None:
-            return UniqueAcceptanceResult(
-                status=AcceptanceStatus.UNEVALUABLE,
-                source=source,
-                message="per-parent uniqueness requires a nested product in CompilePlan",
-                product=expectation.product,
-                field=expectation.field,
-                scope=expectation.scope,
-                observed_count=len(rows),
-                distinct_count=None,
-            )
-        grouped, error = _group_by_parent(
-            plan,
-            captured,
-            child_product=expectation.product,
-            parent_product=product_plan.parent,
-        )
-        if grouped is None:
-            return UniqueAcceptanceResult(
-                status=AcceptanceStatus.UNEVALUABLE,
-                source=source,
-                message=str(error),
-                product=expectation.product,
-                field=expectation.field,
-                scope=expectation.scope,
-                observed_count=len(rows),
-                distinct_count=None,
-            )
-        groups, _child_field, _parent_field = grouped
-        duplicates = []
-        distinct_count = 0
-        for parent, group_rows in sorted(groups.items()):
-            group_values, error = _values(
-                tuple(group_rows),
-                product=expectation.product,
-                field=expectation.field,
-            )
-            if group_values is None:
-                return UniqueAcceptanceResult(
-                    status=AcceptanceStatus.UNEVALUABLE,
-                    source=source,
-                    message=str(error),
-                    product=expectation.product,
-                    field=expectation.field,
-                    scope=expectation.scope,
-                    observed_count=len(rows),
-                    distinct_count=None,
-                )
-            duplicates.extend(
-                f"parent={parent}:{value}" for value in _duplicates(group_values)
-            )
-            distinct_count += len({_display(value) for value in group_values})
+        duplicates, distinct_count, scope_error = _per_parent_unique_evidence(expectation, plan, captured)
+        if scope_error is not None:
+            return _unevaluable_unique_result(expectation, source, len(rows), scope_error)
     passed = not duplicates
     return UniqueAcceptanceResult(
         status=AcceptanceStatus.PASS if passed else AcceptanceStatus.FAIL,
@@ -611,6 +543,63 @@ def _unique_result(
         observed_count=len(rows),
         distinct_count=distinct_count,
         duplicate_values=duplicates[:20],
+    )
+
+
+def _global_unique_evidence(values: list[object]) -> tuple[list[str], int]:
+    return _duplicates(values), len({_display(value) for value in values})
+
+
+def _per_parent_unique_evidence(
+    expectation: _Unique,
+    plan: CompilePlan,
+    captured: CapturedProducts,
+) -> tuple[list[str], int, str | None]:
+    product_plan = next(
+        (item for item in plan.products if item.name == expectation.product),
+        None,
+    )
+    if not isinstance(product_plan, GeneratedProductCompilePlan) or product_plan.parent is None:
+        return [], 0, "per-parent uniqueness requires a nested product in CompilePlan"
+    grouped, error = _group_by_parent(
+        plan,
+        captured,
+        child_product=expectation.product,
+        parent_product=product_plan.parent,
+    )
+    if grouped is None:
+        return [], 0, str(error)
+    groups, _child_field, _parent_field = grouped
+    duplicates: list[str] = []
+    distinct_count = 0
+    for parent, group_rows in sorted(groups.items()):
+        group_values, error = _values(
+            tuple(group_rows),
+            product=expectation.product,
+            field=expectation.field,
+        )
+        if group_values is None:
+            return [], 0, str(error)
+        duplicates.extend(f"parent={parent}:{value}" for value in _duplicates(group_values))
+        distinct_count += len({_display(value) for value in group_values})
+    return duplicates, distinct_count, None
+
+
+def _unevaluable_unique_result(
+    expectation: _Unique,
+    source: AcceptanceSource,
+    observed_count: int,
+    message: str,
+) -> UniqueAcceptanceResult:
+    return UniqueAcceptanceResult(
+        status=AcceptanceStatus.UNEVALUABLE,
+        source=source,
+        message=message,
+        product=expectation.product,
+        field=expectation.field,
+        scope=expectation.scope,
+        observed_count=observed_count,
+        distinct_count=None,
     )
 
 
@@ -658,9 +647,7 @@ def _foreign_key_result(
         )
         if parent_values is not None:
             parent_keys = {_display(value) for value in parent_values}
-            missing = sorted(
-                {repr(value) for value in child_values if _display(value) not in parent_keys}
-            )
+            missing = sorted({repr(value) for value in child_values if _display(value) not in parent_keys})
             return ForeignKeyAcceptanceResult(
                 status=AcceptanceStatus.PASS if not missing else AcceptanceStatus.FAIL,
                 source=source,
@@ -694,11 +681,15 @@ def _allowed_values_result(
     captured: CapturedProducts,
 ) -> AllowedValuesAcceptanceResult:
     rows, error = _rows(captured, expectation.product)
-    values = None if rows is None else _values(
-        rows,
-        product=expectation.product,
-        field=expectation.field,
-    )[0]
+    values = (
+        None
+        if rows is None
+        else _values(
+            rows,
+            product=expectation.product,
+            field=expectation.field,
+        )[0]
+    )
     if rows is None or values is None:
         if rows is not None:
             _ignored, error = _values(
@@ -716,13 +707,7 @@ def _allowed_values_result(
             observed_count=None if rows is None else len(rows),
         )
     allowed = set(expectation.values)
-    unexpected = sorted(
-        {
-            repr(value)
-            for value in values
-            if not isinstance(value, str) or value not in allowed
-        }
-    )
+    unexpected = sorted({repr(value) for value in values if not isinstance(value, str) or value not in allowed})
     return AllowedValuesAcceptanceResult(
         status=AcceptanceStatus.PASS if not unexpected else AcceptanceStatus.FAIL,
         source=source,
@@ -741,11 +726,15 @@ def _range_result(
     captured: CapturedProducts,
 ) -> RangeAcceptanceResult:
     rows, error = _rows(captured, expectation.product)
-    values = None if rows is None else _values(
-        rows,
-        product=expectation.product,
-        field=expectation.field,
-    )[0]
+    values = (
+        None
+        if rows is None
+        else _values(
+            rows,
+            product=expectation.product,
+            field=expectation.field,
+        )[0]
+    )
     if rows is None or values is None:
         if rows is not None:
             _ignored, error = _values(
@@ -780,9 +769,7 @@ def _range_result(
             expected_maximum=str(expectation.maximum),
         )
     violations = [
-        index
-        for index, value in enumerate(decimals)
-        if value < expectation.minimum or value > expectation.maximum
+        index for index, value in enumerate(decimals) if value < expectation.minimum or value > expectation.maximum
     ]
     return RangeAcceptanceResult(
         status=AcceptanceStatus.PASS if not violations else AcceptanceStatus.FAIL,
@@ -866,65 +853,98 @@ def _safe_condition_value(value: object) -> object:
                 raise _UnsafeCondition("nested containers are not supported in conditions")
             _safe_condition_value(item)
         return value
-    raise _UnsafeCondition(
-        f"unsupported operand type '{type(value).__name__}' in row condition"
-    )
+    raise _UnsafeCondition(f"unsupported operand type '{type(value).__name__}' in row condition")
 
 
 def _validate_condition_tree(tree: ast.AST) -> None:
-    node_count = 0
+    _ConditionTreeValidator().validate(tree)
 
-    def visit(node: ast.AST, depth: int) -> None:
-        nonlocal node_count
-        node_count += 1
-        if node_count > _MAX_CONDITION_NODES:
+
+class _ConditionTreeValidator:
+    """Validate one typed condition AST against the bounded expression contract."""
+
+    def __init__(self) -> None:
+        self._node_count = 0
+
+    def validate(self, tree: ast.AST) -> None:
+        self._visit(tree, 0)
+
+    def _visit(self, node: ast.AST, depth: int) -> None:
+        self._node_count += 1
+        if self._node_count > _MAX_CONDITION_NODES:
             raise _UnsafeCondition("condition exceeds the AST node budget")
         if depth > _MAX_CONDITION_DEPTH:
             raise _UnsafeCondition("condition exceeds the AST depth budget")
+        self._validate_node(node)
+        for child in ast.iter_child_nodes(node):
+            self._visit(child, depth + 1)
+
+    @staticmethod
+    def _validate_node(node: ast.AST) -> None:
         if isinstance(node, ast.Constant):
             _safe_condition_value(node.value)
-        if (
-            isinstance(node, ast.List | ast.Tuple | ast.Set)
-            and len(node.elts) > _MAX_CONTAINER_ITEMS
-        ):
+        if isinstance(node, ast.List | ast.Tuple | ast.Set) and len(node.elts) > _MAX_CONTAINER_ITEMS:
             raise _UnsafeCondition("condition literal exceeds the container budget")
-        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mult):
-            if isinstance(node.left, ast.List | ast.Tuple | ast.Set) or isinstance(
-                node.right,
-                ast.List | ast.Tuple | ast.Set,
-            ):
-                raise _UnsafeCondition("sequence repetition is forbidden in row conditions")
-            if (
-                isinstance(node.left, ast.Constant)
-                and isinstance(node.left.value, str)
-            ) or (
-                isinstance(node.right, ast.Constant)
-                and isinstance(node.right.value, str)
-            ):
-                raise _UnsafeCondition("string repetition is forbidden in row conditions")
-        for child in ast.iter_child_nodes(node):
-            visit(child, depth + 1)
+        if isinstance(node, ast.BinOp):
+            _ConditionTreeValidator._validate_repetition(node)
 
-    visit(tree, 0)
+    @staticmethod
+    def _validate_repetition(node: ast.BinOp) -> None:
+        if not isinstance(node.op, ast.Mult):
+            return
+        if isinstance(node.left, ast.List | ast.Tuple | ast.Set) or isinstance(
+            node.right,
+            ast.List | ast.Tuple | ast.Set,
+        ):
+            raise _UnsafeCondition("sequence repetition is forbidden in row conditions")
+        if (isinstance(node.left, ast.Constant) and isinstance(node.left.value, str)) or (
+            isinstance(node.right, ast.Constant) and isinstance(node.right.value, str)
+        ):
+            raise _UnsafeCondition("string repetition is forbidden in row conditions")
 
 
 def _eval_condition_node(node: ast.AST, row: Mapping[str, object]) -> object:
-    if isinstance(node, ast.Expression):
-        return _eval_condition_node(node.body, row)
-    if isinstance(node, ast.Constant):
-        return _safe_condition_value(node.value)
-    if isinstance(node, ast.Name):
-        if node.id not in row:
+    return _ConditionEvaluator(row).evaluate(node)
+
+
+class _ConditionEvaluator:
+    """Evaluate the explicitly supported condition AST without dynamic dispatch."""
+
+    def __init__(self, row: Mapping[str, object]) -> None:
+        self._row = row
+
+    def evaluate(self, node: ast.AST) -> object:
+        if isinstance(node, ast.Expression):
+            return self.evaluate(node.body)
+        if isinstance(node, ast.Constant):
+            return _safe_condition_value(node.value)
+        if isinstance(node, ast.Name):
+            return self._name(node)
+        if isinstance(node, ast.List):
+            return [self.evaluate(item) for item in node.elts]
+        if isinstance(node, ast.Tuple):
+            return tuple(self.evaluate(item) for item in node.elts)
+        if isinstance(node, ast.Set):
+            return {self.evaluate(item) for item in node.elts}
+        if isinstance(node, ast.UnaryOp):
+            return self._unary(node)
+        if isinstance(node, ast.BinOp):
+            return self._binary(node)
+        if isinstance(node, ast.BoolOp):
+            return self._boolean(node)
+        if isinstance(node, ast.Compare):
+            return self._compare(node)
+        raise _UnsafeCondition(
+            f"unsupported condition syntax '{type(node).__name__}'; calls, attributes, and subscripts are forbidden"
+        )
+
+    def _name(self, node: ast.Name) -> object:
+        if node.id not in self._row:
             raise _UnsafeCondition(f"name '{node.id}' is missing from the captured row")
-        return _safe_condition_value(row[node.id])
-    if isinstance(node, ast.List):
-        return [_eval_condition_node(item, row) for item in node.elts]
-    if isinstance(node, ast.Tuple):
-        return tuple(_eval_condition_node(item, row) for item in node.elts)
-    if isinstance(node, ast.Set):
-        return {_eval_condition_node(item, row) for item in node.elts}
-    if isinstance(node, ast.UnaryOp):
-        operand = _eval_condition_node(node.operand, row)
+        return _safe_condition_value(self._row[node.id])
+
+    def _unary(self, node: ast.UnaryOp) -> object:
+        operand = self.evaluate(node.operand)
         if isinstance(node.op, ast.Not):
             if not isinstance(operand, bool):
                 raise _UnsafeCondition("not requires a boolean operand")
@@ -934,43 +954,52 @@ def _eval_condition_node(node: ast.AST, row: Mapping[str, object]) -> object:
         if isinstance(node.op, ast.UAdd):
             return _safe_number(+_safe_number(operand))
         raise _UnsafeCondition("unsupported unary operator")
-    if isinstance(node, ast.BinOp):
+
+    def _binary(self, node: ast.BinOp) -> object:
         operation = _BINARY_OPERATORS.get(type(node.op))
         if operation is None:
             raise _UnsafeCondition("unsupported binary operator")
-        left = _safe_number(_eval_condition_node(node.left, row))
-        right = _safe_number(_eval_condition_node(node.right, row))
-        return _safe_number(
-            operation(left, right),
-        )
-    if isinstance(node, ast.BoolOp):
-        bool_result = _eval_condition_node(node.values[0], row)
+        left = _safe_number(self.evaluate(node.left))
+        right = _safe_number(self.evaluate(node.right))
+        return _safe_number(operation(left, right))
+
+    def _boolean(self, node: ast.BoolOp) -> bool:
+        bool_result = self.evaluate(node.values[0])
         if not isinstance(bool_result, bool):
-            raise _UnsafeCondition("boolean operators require boolean operands")
+            raise _UnsafeCondition(_BOOLEAN_OPERANDS_ERROR)
         if isinstance(node.op, ast.And):
-            for value in node.values[1:]:
-                if not bool_result:
-                    return bool_result
-                bool_result = _eval_condition_node(value, row)
-                if not isinstance(bool_result, bool):
-                    raise _UnsafeCondition("boolean operators require boolean operands")
-            return bool_result
+            return self._and(node.values[1:], bool_result)
         if isinstance(node.op, ast.Or):
-            for value in node.values[1:]:
-                if bool_result:
-                    return bool_result
-                bool_result = _eval_condition_node(value, row)
-                if not isinstance(bool_result, bool):
-                    raise _UnsafeCondition("boolean operators require boolean operands")
-            return bool_result
+            return self._or(node.values[1:], bool_result)
         raise _UnsafeCondition("unsupported boolean operator")
-    if isinstance(node, ast.Compare):
-        compare_left = _eval_condition_node(node.left, row)
+
+    def _and(self, values: list[ast.expr], result: bool) -> bool:
+        for value in values:
+            if not result:
+                return result
+            next_result = self.evaluate(value)
+            if not isinstance(next_result, bool):
+                raise _UnsafeCondition(_BOOLEAN_OPERANDS_ERROR)
+            result = next_result
+        return result
+
+    def _or(self, values: list[ast.expr], result: bool) -> bool:
+        for value in values:
+            if result:
+                return result
+            next_result = self.evaluate(value)
+            if not isinstance(next_result, bool):
+                raise _UnsafeCondition(_BOOLEAN_OPERANDS_ERROR)
+            result = next_result
+        return result
+
+    def _compare(self, node: ast.Compare) -> bool:
+        compare_left = self.evaluate(node.left)
         for operation_node, comparator in zip(node.ops, node.comparators, strict=True):
             operation = _COMPARE_OPERATORS.get(type(operation_node))
             if operation is None:
                 raise _UnsafeCondition("unsupported comparison operator")
-            compare_right = _eval_condition_node(comparator, row)
+            compare_right = self.evaluate(comparator)
             _safe_condition_value(compare_left)
             _safe_condition_value(compare_right)
             if isinstance(operation_node, ast.In | ast.NotIn) and not isinstance(
@@ -982,9 +1011,6 @@ def _eval_condition_node(node: ast.AST, row: Mapping[str, object]) -> object:
                 return False
             compare_left = compare_right
         return True
-    raise _UnsafeCondition(
-        f"unsupported condition syntax '{type(node).__name__}'; calls, attributes, and subscripts are forbidden"
-    )
 
 
 def _row_condition_result(
@@ -1075,14 +1101,54 @@ def _memstore_result(
     plan: CompilePlan,
     captured: CapturedProducts,
 ) -> MemstoreCompletenessAcceptanceResult:
+    resolved_context = _resolve_memstore_context(expectation, source, plan, captured)
+    if isinstance(resolved_context, MemstoreCompletenessAcceptanceResult):
+        return resolved_context
+    count_result = _memstore_count_result(resolved_context)
+    if count_result is not None:
+        return count_result
+    resolved_binding = _resolve_memstore_binding(resolved_context)
+    if isinstance(resolved_binding, MemstoreCompletenessAcceptanceResult):
+        return resolved_binding
+    resolved_values = _resolve_memstore_values(resolved_context, resolved_binding, captured)
+    if isinstance(resolved_values, MemstoreCompletenessAcceptanceResult):
+        return resolved_values
+    return _memstore_identity_result(resolved_context, resolved_binding, resolved_values)
+
+
+@dataclass(frozen=True)
+class _MemstoreContext:
+    expectation: _MemstoreCompleteness
+    source: AcceptanceSource
+    producer: CapturedProduct
+    consumer: CapturedProduct
+    consumer_plan: ProductCompilePlan
+    producer_identifiers: frozenset[str]
+    required_foreign_key: RequiredConsumerForeignKey | None
+
+
+@dataclass(frozen=True)
+class _MemstoreBinding:
+    consumer_key_field: str
+    producer_key_field: str
+
+
+@dataclass(frozen=True)
+class _MemstoreValues:
+    producer: list[object]
+    consumer: list[object]
+
+
+def _resolve_memstore_context(
+    expectation: _MemstoreCompleteness,
+    source: AcceptanceSource,
+    plan: CompilePlan,
+    captured: CapturedProducts,
+) -> _MemstoreContext | MemstoreCompletenessAcceptanceResult:
     producer = captured.get(expectation.producer_product)
     consumer = captured.get(expectation.consumer_product)
     if producer is None or consumer is None:
-        missing_product = (
-            expectation.producer_product
-            if producer is None
-            else expectation.consumer_product
-        )
+        missing_product = expectation.producer_product if producer is None else expectation.consumer_product
         return MemstoreCompletenessAcceptanceResult(
             status=AcceptanceStatus.UNEVALUABLE,
             source=source,
@@ -1113,129 +1179,190 @@ def _memstore_result(
             producer_count=len(producer.rows),
             consumer_count=len(consumer.rows),
         )
-    producer_identifiers = {
+    producer_identifiers = frozenset(
         field.name
         for field in producer_plan.fields
         if any(isinstance(role, IdentifierRolePlan) for role in field.roles)
-    }
-    required_foreign_key: RequiredConsumerForeignKey | None = None
-    if len(producer_identifiers) == 1:
-        producer_identifier = next(iter(producer_identifiers))
-        observed_roles = sum(
-            1
-            for field in consumer_plan.fields
-            for role in field.roles
-            if isinstance(role, ForeignKeyRolePlan)
-            and role.parent_product == expectation.producer_product
-            and role.parent_field == producer_identifier
-        )
-        required_foreign_key = RequiredConsumerForeignKey(
-            parent_product=expectation.producer_product,
-            parent_field=producer_identifier,
-            observed_count=observed_roles,
-        )
-    if len(producer.rows) != len(consumer.rows):
-        return MemstoreCompletenessAcceptanceResult(
-            status=AcceptanceStatus.FAIL,
-            source=source,
-            message="producer and memstore consumer bounded row counts differ",
-            producer_product=expectation.producer_product,
-            consumer_product=expectation.consumer_product,
-            source_id=expectation.source_id,
-            producer_count=len(producer.rows),
-            consumer_count=len(consumer.rows),
-            required_consumer_foreign_key=required_foreign_key,
-        )
-    candidates = [
-        (field.name, role.parent_field)
+    )
+    required_foreign_key = _required_memstore_foreign_key(
+        expectation,
+        consumer_plan,
+        producer_identifiers,
+    )
+    return _MemstoreContext(
+        expectation=expectation,
+        source=source,
+        producer=producer,
+        consumer=consumer,
+        consumer_plan=consumer_plan,
+        producer_identifiers=producer_identifiers,
+        required_foreign_key=required_foreign_key,
+    )
+
+
+def _required_memstore_foreign_key(
+    expectation: _MemstoreCompleteness,
+    consumer_plan: ProductCompilePlan,
+    producer_identifiers: frozenset[str],
+) -> RequiredConsumerForeignKey | None:
+    if len(producer_identifiers) != 1:
+        return None
+    producer_identifier = next(iter(producer_identifiers))
+    observed_roles = sum(
+        1
         for field in consumer_plan.fields
         for role in field.roles
         if isinstance(role, ForeignKeyRolePlan)
         and role.parent_product == expectation.producer_product
-        and role.parent_field in producer_identifiers
+        and role.parent_field == producer_identifier
+    )
+    return RequiredConsumerForeignKey(
+        parent_product=expectation.producer_product,
+        parent_field=producer_identifier,
+        observed_count=observed_roles,
+    )
+
+
+def _memstore_count_result(
+    context: _MemstoreContext,
+) -> MemstoreCompletenessAcceptanceResult | None:
+    if len(context.producer.rows) != len(context.consumer.rows):
+        return MemstoreCompletenessAcceptanceResult(
+            status=AcceptanceStatus.FAIL,
+            source=context.source,
+            message="producer and memstore consumer bounded row counts differ",
+            producer_product=context.expectation.producer_product,
+            consumer_product=context.expectation.consumer_product,
+            source_id=context.expectation.source_id,
+            producer_count=len(context.producer.rows),
+            consumer_count=len(context.consumer.rows),
+            required_consumer_foreign_key=context.required_foreign_key,
+        )
+    return None
+
+
+def _resolve_memstore_binding(
+    context: _MemstoreContext,
+) -> _MemstoreBinding | MemstoreCompletenessAcceptanceResult:
+    candidates = [
+        (field.name, role.parent_field)
+        for field in context.consumer_plan.fields
+        for role in field.roles
+        if isinstance(role, ForeignKeyRolePlan)
+        and role.parent_product == context.expectation.producer_product
+        and role.parent_field in context.producer_identifiers
     ]
     if len(candidates) != 1:
         return MemstoreCompletenessAcceptanceResult(
             status=AcceptanceStatus.UNEVALUABLE,
-            source=source,
+            source=context.source,
             message=(
                 "memstore completeness requires exactly one explicit consumer FK role "
                 "targeting a typed producer identifier; "
                 f"found {len(candidates)}"
             ),
-            producer_product=expectation.producer_product,
-            consumer_product=expectation.consumer_product,
-            source_id=expectation.source_id,
-            producer_count=len(producer.rows),
-            consumer_count=len(consumer.rows),
-            required_consumer_foreign_key=required_foreign_key,
+            producer_product=context.expectation.producer_product,
+            consumer_product=context.expectation.consumer_product,
+            source_id=context.expectation.source_id,
+            producer_count=len(context.producer.rows),
+            consumer_count=len(context.consumer.rows),
+            required_consumer_foreign_key=context.required_foreign_key,
         )
     consumer_key_field, producer_key_field = candidates[0]
-    producer_rows, producer_error = _rows(captured, expectation.producer_product)
-    consumer_rows, consumer_error = _rows(captured, expectation.consumer_product)
+    return _MemstoreBinding(
+        consumer_key_field=consumer_key_field,
+        producer_key_field=producer_key_field,
+    )
+
+
+def _resolve_memstore_values(
+    context: _MemstoreContext,
+    binding: _MemstoreBinding,
+    captured: CapturedProducts,
+) -> _MemstoreValues | MemstoreCompletenessAcceptanceResult:
+    producer_rows, producer_error = _rows(
+        captured,
+        context.expectation.producer_product,
+    )
+    consumer_rows, consumer_error = _rows(
+        captured,
+        context.expectation.consumer_product,
+    )
     if producer_rows is None or consumer_rows is None:
-        return MemstoreCompletenessAcceptanceResult(
-            status=AcceptanceStatus.UNEVALUABLE,
-            source=source,
-            message=str(producer_error or consumer_error),
-            producer_product=expectation.producer_product,
-            consumer_product=expectation.consumer_product,
-            source_id=expectation.source_id,
-            producer_count=len(producer.rows),
-            consumer_count=len(consumer.rows),
-            producer_key_field=producer_key_field,
-            consumer_key_field=consumer_key_field,
-            required_consumer_foreign_key=required_foreign_key,
+        return _unevaluable_memstore_values(
+            context,
+            binding,
+            str(producer_error or consumer_error),
         )
     producer_values, producer_error = _values(
         producer_rows,
-        product=expectation.producer_product,
-        field=producer_key_field,
+        product=context.expectation.producer_product,
+        field=binding.producer_key_field,
     )
     consumer_values, consumer_error = _values(
         consumer_rows,
-        product=expectation.consumer_product,
-        field=consumer_key_field,
+        product=context.expectation.consumer_product,
+        field=binding.consumer_key_field,
     )
     if producer_values is None or consumer_values is None:
-        return MemstoreCompletenessAcceptanceResult(
-            status=AcceptanceStatus.UNEVALUABLE,
-            source=source,
-            message=str(producer_error or consumer_error),
-            producer_product=expectation.producer_product,
-            consumer_product=expectation.consumer_product,
-            source_id=expectation.source_id,
-            producer_count=len(producer.rows),
-            consumer_count=len(consumer.rows),
-            producer_key_field=producer_key_field,
-            consumer_key_field=consumer_key_field,
-            required_consumer_foreign_key=required_foreign_key,
+        return _unevaluable_memstore_values(
+            context,
+            binding,
+            str(producer_error or consumer_error),
         )
-    producer_keys = {_display(value) for value in producer_values}
-    consumer_keys = {_display(value) for value in consumer_values}
-    producer_labels = {_display(value): repr(value) for value in producer_values}
-    consumer_labels = {_display(value): repr(value) for value in consumer_values}
+    return _MemstoreValues(producer=producer_values, consumer=consumer_values)
+
+
+def _unevaluable_memstore_values(
+    context: _MemstoreContext,
+    binding: _MemstoreBinding,
+    message: str,
+) -> MemstoreCompletenessAcceptanceResult:
+    return MemstoreCompletenessAcceptanceResult(
+        status=AcceptanceStatus.UNEVALUABLE,
+        source=context.source,
+        message=message,
+        producer_product=context.expectation.producer_product,
+        consumer_product=context.expectation.consumer_product,
+        source_id=context.expectation.source_id,
+        producer_count=len(context.producer.rows),
+        consumer_count=len(context.consumer.rows),
+        producer_key_field=binding.producer_key_field,
+        consumer_key_field=binding.consumer_key_field,
+        required_consumer_foreign_key=context.required_foreign_key,
+    )
+
+
+def _memstore_identity_result(
+    context: _MemstoreContext,
+    binding: _MemstoreBinding,
+    values: _MemstoreValues,
+) -> MemstoreCompletenessAcceptanceResult:
+    producer_keys = {_display(value) for value in values.producer}
+    consumer_keys = {_display(value) for value in values.consumer}
+    producer_labels = {_display(value): repr(value) for value in values.producer}
+    consumer_labels = {_display(value): repr(value) for value in values.consumer}
     missing = sorted(producer_labels[key] for key in producer_keys - consumer_keys)
     unexpected = sorted(consumer_labels[key] for key in consumer_keys - producer_keys)
-    duplicate_producer = _duplicates(producer_values)
-    duplicate_consumer = _duplicates(consumer_values)
+    duplicate_producer = _duplicates(values.producer)
+    duplicate_consumer = _duplicates(values.consumer)
     passed = not (missing or unexpected or duplicate_producer or duplicate_consumer)
     return MemstoreCompletenessAcceptanceResult(
         status=AcceptanceStatus.PASS if passed else AcceptanceStatus.FAIL,
-        source=source,
+        source=context.source,
         message=(
             "every bounded producer identity was read back exactly once"
             if passed
             else "memstore consumer identities do not exactly match producer identities"
         ),
-        producer_product=expectation.producer_product,
-        consumer_product=expectation.consumer_product,
-        source_id=expectation.source_id,
-        producer_count=len(producer.rows),
-        consumer_count=len(consumer.rows),
-        producer_key_field=producer_key_field,
-        consumer_key_field=consumer_key_field,
-        required_consumer_foreign_key=required_foreign_key,
+        producer_product=context.expectation.producer_product,
+        consumer_product=context.expectation.consumer_product,
+        source_id=context.expectation.source_id,
+        producer_count=len(context.producer.rows),
+        consumer_count=len(context.consumer.rows),
+        producer_key_field=binding.producer_key_field,
+        consumer_key_field=binding.consumer_key_field,
+        required_consumer_foreign_key=context.required_foreign_key,
         missing_keys=missing[:20],
         unexpected_keys=unexpected[:20],
         duplicate_producer_keys=duplicate_producer[:20],
@@ -1254,9 +1381,7 @@ def _expectation_products(expectation: _Expectation) -> tuple[str, ...]:
 
 
 def _incomplete_message(evidence: CaptureCompletenessEvidence) -> str:
-    details = "; ".join(
-        f"{proof.product}: {proof.reason}" for proof in evidence.products
-    )
+    details = "; ".join(f"{proof.product}: {proof.reason}" for proof in evidence.products)
     return f"whole-product expectation requires a complete capture; {details}"
 
 
@@ -1265,20 +1390,38 @@ def _incomplete_result(
     captured: CapturedProducts,
     evidence: CaptureCompletenessEvidence,
 ) -> AcceptanceResult:
+    result = _incomplete_result_without_evidence(
+        entry,
+        captured,
+        _incomplete_message(evidence),
+    )
+    return result.with_capture_completeness(evidence)
+
+
+def _captured_count(captured: CapturedProducts, product: str) -> int | None:
+    capture = captured.get(product)
+    if capture is None:
+        return None
+    return len(capture.rows)
+
+
+def _incomplete_result_without_evidence(
+    entry: _ExpectationEntry,
+    captured: CapturedProducts,
+    message: str,
+) -> AcceptanceResult:
     expectation = entry.expectation
-    message = _incomplete_message(evidence)
     if isinstance(expectation, _Exact):
-        product = captured.get(expectation.product)
-        result: AcceptanceResult = ExactCountAcceptanceResult(
+        return ExactCountAcceptanceResult(
             status=AcceptanceStatus.UNEVALUABLE,
             source=entry.source,
             message=message,
             product=expectation.product,
             expected_count=expectation.count,
-            observed_count=None if product is None else len(product.rows),
+            observed_count=_captured_count(captured, expectation.product),
         )
-    elif isinstance(expectation, _PerParent):
-        result = PerParentCountAcceptanceResult(
+    if isinstance(expectation, _PerParent):
+        return PerParentCountAcceptanceResult(
             status=AcceptanceStatus.UNEVALUABLE,
             source=entry.source,
             message=message,
@@ -1286,21 +1429,19 @@ def _incomplete_result(
             parent_product=expectation.parent_product,
             expected_count_per_parent=expectation.count,
         )
-    elif isinstance(expectation, _Unique):
-        product = captured.get(expectation.product)
-        result = UniqueAcceptanceResult(
+    if isinstance(expectation, _Unique):
+        return UniqueAcceptanceResult(
             status=AcceptanceStatus.UNEVALUABLE,
             source=entry.source,
             message=message,
             product=expectation.product,
             field=expectation.field,
             scope=expectation.scope,
-            observed_count=None if product is None else len(product.rows),
+            observed_count=_captured_count(captured, expectation.product),
             distinct_count=None,
         )
-    elif isinstance(expectation, _ForeignKey):
-        product = captured.get(expectation.product)
-        result = ForeignKeyAcceptanceResult(
+    if isinstance(expectation, _ForeignKey):
+        return ForeignKeyAcceptanceResult(
             status=AcceptanceStatus.UNEVALUABLE,
             source=entry.source,
             message=message,
@@ -1308,21 +1449,20 @@ def _incomplete_result(
             child_field=expectation.child_field,
             parent_product=expectation.parent_product,
             parent_field=expectation.parent_field,
-            observed_count=None if product is None else len(product.rows),
+            observed_count=_captured_count(captured, expectation.product),
         )
-    elif isinstance(expectation, _AllowedValues):
-        product = captured.get(expectation.product)
-        result = AllowedValuesAcceptanceResult(
+    if isinstance(expectation, _AllowedValues):
+        return AllowedValuesAcceptanceResult(
             status=AcceptanceStatus.UNEVALUABLE,
             source=entry.source,
             message=message,
             product=expectation.product,
             field=expectation.field,
             allowed_values=list(expectation.values),
-            observed_count=None if product is None else len(product.rows),
+            observed_count=_captured_count(captured, expectation.product),
         )
-    elif isinstance(expectation, _Range):
-        result = RangeAcceptanceResult(
+    if isinstance(expectation, _Range):
+        return RangeAcceptanceResult(
             status=AcceptanceStatus.UNEVALUABLE,
             source=entry.source,
             message=message,
@@ -1331,30 +1471,25 @@ def _incomplete_result(
             expected_minimum=str(expectation.minimum),
             expected_maximum=str(expectation.maximum),
         )
-    elif isinstance(expectation, _RowCondition):
-        product = captured.get(expectation.product)
-        result = RowConditionAcceptanceResult(
+    if isinstance(expectation, _RowCondition):
+        return RowConditionAcceptanceResult(
             status=AcceptanceStatus.UNEVALUABLE,
             source=entry.source,
             message=message,
             product=expectation.product,
             condition=expectation.condition,
-            observed_count=None if product is None else len(product.rows),
+            observed_count=_captured_count(captured, expectation.product),
         )
-    else:
-        producer = captured.get(expectation.producer_product)
-        consumer = captured.get(expectation.consumer_product)
-        result = MemstoreCompletenessAcceptanceResult(
-            status=AcceptanceStatus.UNEVALUABLE,
-            source=entry.source,
-            message=message,
-            producer_product=expectation.producer_product,
-            consumer_product=expectation.consumer_product,
-            source_id=expectation.source_id,
-            producer_count=None if producer is None else len(producer.rows),
-            consumer_count=None if consumer is None else len(consumer.rows),
-        )
-    return result.with_capture_completeness(evidence)
+    return MemstoreCompletenessAcceptanceResult(
+        status=AcceptanceStatus.UNEVALUABLE,
+        source=entry.source,
+        message=message,
+        producer_product=expectation.producer_product,
+        consumer_product=expectation.consumer_product,
+        source_id=expectation.source_id,
+        producer_count=_captured_count(captured, expectation.producer_product),
+        consumer_count=_captured_count(captured, expectation.consumer_product),
+    )
 
 
 def _evaluate_entry(
@@ -1396,15 +1531,10 @@ def evaluate_acceptance(
 ) -> AcceptanceReport:
     """Evaluate every mandatory expectation against all rows in one bounded capture."""
 
-    results = [
-        _evaluate_entry(entry, plan, captured)
-        for entry in merge_expectations(plan, spec)
-    ]
+    results = [_evaluate_entry(entry, plan, captured) for entry in merge_expectations(plan, spec)]
     passed = sum(result.status is AcceptanceStatus.PASS for result in results)
     failed = sum(result.status is AcceptanceStatus.FAIL for result in results)
-    unevaluable = sum(
-        result.status is AcceptanceStatus.UNEVALUABLE for result in results
-    )
+    unevaluable = sum(result.status is AcceptanceStatus.UNEVALUABLE for result in results)
     return AcceptanceReport(
         verified=bool(results) and failed == 0 and unevaluable == 0,
         passed=passed,

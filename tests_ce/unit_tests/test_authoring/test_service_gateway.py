@@ -17,8 +17,6 @@ import datamimic_ce.authoring.service as authoring_service
 from datamimic_ce.authoring.contracts import (
     AuthoringStage,
     CheckRequest,
-    CheckResult,
-    ProductResult,
     RunRequest,
     RunResult,
     ScaffoldRequest,
@@ -29,13 +27,9 @@ from datamimic_ce.authoring.dryrun import (
     CapturedProduct,
     CapturedProducts,
     CapturedRun,
-    DryRunProduct,
-    DryRunResult,
 )
 from datamimic_ce.authoring.service import check, run
 from datamimic_ce.cli import app
-from datamimic_ce.mcp.models import CheckArgs, RunArgs, ScaffoldArgs
-from datamimic_ce.mcp.server import check_impl, run_impl
 
 _XML = """<setup rngSeed="1">
     <generate name="items" count="3" target="">
@@ -44,27 +38,17 @@ _XML = """<setup rngSeed="1">
 </setup>"""
 
 _SCAFFOLD_SPEC = {
+    "version": "1",
     "seed": 1,
-    "generates": [
+    "products": [
         {
+            "kind": "generated",
             "name": "items",
             "count": 2,
-            "fields": [{"name": "id", "kind": "increment"}],
+            "fields": [{"kind": "increment", "name": "id"}],
         }
     ],
 }
-
-
-def test_mcp_authoring_models_are_canonical_contract_aliases() -> None:
-    assert CheckArgs is CheckRequest
-    assert RunArgs is RunRequest
-    assert ScaffoldArgs is ScaffoldRequest
-
-
-def test_authoring_result_models_have_one_canonical_owner() -> None:
-    assert CheckResult is LintResult
-    assert DryRunProduct is ProductResult
-    assert DryRunResult is RunResult
 
 
 def test_authoring_stage_is_typed_and_serialized_only_at_the_boundary() -> None:
@@ -128,7 +112,7 @@ def test_scaffold_rejects_removed_lint_only_switch() -> None:
         ScaffoldRequest(spec=_SCAFFOLD_SPEC, dry_run=False)
 
 
-def test_check_service_mcp_cli_parity(tmp_path: Path) -> None:
+def test_check_service_cli_parity(tmp_path: Path) -> None:
     descriptor = tmp_path / "datamimic.xml"
     descriptor.write_text(_XML, encoding="utf-8")
     request = CheckRequest(
@@ -138,7 +122,6 @@ def test_check_service_mcp_cli_parity(tmp_path: Path) -> None:
     )
 
     service_result = check(request)
-    mcp_result = check_impl(request)
     cli_result = CliRunner().invoke(
         app,
         ["lint", str(descriptor), "--format", "json", "--max-diagnostics", "17"],
@@ -146,16 +129,10 @@ def test_check_service_mcp_cli_parity(tmp_path: Path) -> None:
 
     assert cli_result.exit_code == 0
     cli_payload = json.loads(cli_result.stdout)
-    assert mcp_result == {
-        "ok": service_result.ok,
-        "summary": service_result.summary(),
-        "diagnostics": [diagnostic.model_dump(mode="json") for diagnostic in service_result.diagnostics],
-        "truncated": service_result.truncated,
-    }
     assert cli_payload == service_result.model_dump(mode="json")
 
 
-def test_run_service_mcp_cli_parity(tmp_path: Path) -> None:
+def test_run_service_cli_parity(tmp_path: Path) -> None:
     descriptor = tmp_path / "datamimic.xml"
     descriptor.write_text(_XML, encoding="utf-8")
     request = RunRequest(
@@ -167,7 +144,6 @@ def test_run_service_mcp_cli_parity(tmp_path: Path) -> None:
     )
 
     service_result = run(request)
-    mcp_result = run_impl(request)
     cli_result = CliRunner().invoke(
         app,
         [
@@ -186,14 +162,13 @@ def test_run_service_mcp_cli_parity(tmp_path: Path) -> None:
 
     assert cli_result.exit_code == 0
     cli_payload = json.loads(cli_result.stdout)
-    assert mcp_result["ok"] == service_result.ok == cli_payload["ok"]
+    assert service_result.ok == cli_payload["ok"]
     assert service_result.stage is AuthoringStage.RUN
-    assert mcp_result["stage"] == cli_payload["stage"] == AuthoringStage.RUN.value
-    assert mcp_result["products"] == [
-        product.model_dump(mode="json") for product in service_result.products
+    assert cli_payload["stage"] == AuthoringStage.RUN.value
+    assert cli_payload["products"] == [product.model_dump(mode="json") for product in service_result.products]
+    assert cli_payload["diagnostics"] == [
+        diagnostic.model_dump(mode="json") for diagnostic in service_result.diagnostics
     ]
-    assert cli_payload["products"] == mcp_result["products"]
-    assert mcp_result["diagnostics"] == cli_payload["diagnostics"]
 
 
 @pytest.mark.parametrize(

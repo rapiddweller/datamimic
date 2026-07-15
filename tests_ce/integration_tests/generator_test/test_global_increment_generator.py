@@ -47,4 +47,3 @@ class TestGlobalIncrementGenerator:
         assert len(set(c_ids)) == len(c_ids)
         assert len(set(o_ids)) == len(o_ids)
         assert len(set(l_ids)) == len(l_ids)
-

@@ -12,6 +12,7 @@ import difflib
 from collections.abc import Iterable
 
 from datamimic_ce.authoring.diagnostics import Diagnostic
+from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules.base import LintContext, Rule
 from datamimic_ce.constants.data_type_constants import (
     DATA_TYPE_DICT,
@@ -28,7 +29,6 @@ from datamimic_ce.constants.element_constants import (
 from datamimic_ce.model.constraints import (
     KEY_DISTRIBUTION_VALUES,
     ValidValues,
-    authoring_rule_definition,
     resolved_values,
 )
 

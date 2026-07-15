@@ -6,6 +6,7 @@ They prove:
   (b) Deterministic for a fixed random.Random seed.
   (c) Returns the sole value when only one distinct value in pool.
 """
+
 from __future__ import annotations
 
 import random

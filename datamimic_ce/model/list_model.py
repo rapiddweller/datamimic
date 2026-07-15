@@ -12,9 +12,7 @@ from datamimic_ce.model.model_util import ModelUtil
 
 
 class ListModel(BaseModel):
-    name: str = Field(
-        ..., description="Name of the list; becomes the field name holding the generated array of items."
-    )
+    name: str = Field(..., description="Name of the list; becomes the field name holding the generated array of items.")
     converter: str | None = Field(
         None,
         description="Converter(s) applied to the assembled list value before it is assigned to the current record.",

@@ -12,33 +12,31 @@ NO_OFFSET = [
 ]
 
 SPARSE_ID_OFFSET_RULES = [
-    {"threshold": 0.80, "min": 0, "max": 0},        # 80% (add increment only; no offset)
-    {"threshold": 0.90, "min": 1, "max": 5},        # 10%
-    {"threshold": 0.95, "min": 301, "max": 500},    #  5%
+    {"threshold": 0.80, "min": 0, "max": 0},  # 80% (add increment only; no offset)
+    {"threshold": 0.90, "min": 1, "max": 5},  # 10%
+    {"threshold": 0.95, "min": 301, "max": 500},  #  5%
     {"threshold": 0.99, "min": 2501, "max": 2700},  #  4%
-    {"threshold": 1, "min": 30001, "max": 30300}    #  1%
+    {"threshold": 1, "min": 30001, "max": 30300},  #  1%
 ]
 
-#---[ Global counters for persistent IDs ]--
+# ---[ Global counters for persistent IDs ]--
 
 customer_counter = 0
 
-#---[ Id generation functions ]---
+# ---[ Id generation functions ]---
+
 
 def customer_id():
     global customer_counter
     customer_counter += 1
     return f"C{customer_counter}"
 
-#---[ Custom Generators ]---
+
+# ---[ Custom Generators ]---
+
 
 class PrefixedWeightedInt(BaseLiteralGenerator):
-    def __init__(self,
-                 prefix = "",
-                 increment = 1 ,
-                 keep_counter = True,
-                 offset_rules = None):
-
+    def __init__(self, prefix="", increment=1, keep_counter=True, offset_rules=None):
         self.counter = 0
         self.prefix = prefix
         self.keep_counter = bool(keep_counter)

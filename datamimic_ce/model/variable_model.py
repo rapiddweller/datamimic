@@ -64,8 +64,8 @@ class VariableModel(BaseModel):
     name: str = Field(
         ...,
         description="Variable name — how this <variable>'s value is referenced by later script=/"
-        "condition= expressions in the same record scope (e.g. script=\"<name>.field\" for an "
-        "entity variable, bare script=\"<name>\" for a scalar).",
+        'condition= expressions in the same record scope (e.g. script="<name>.field" for an '
+        'entity variable, bare script="<name>" for a scalar).',
         examples=["p", "row", "customer_id"],
     )
     type: str | None = Field(
@@ -153,8 +153,7 @@ class VariableModel(BaseModel):
     in_date_format: str | None = Field(
         None,
         alias=ATTR_IN_DATE_FORMAT,
-        description="Input date format used to parse a source/script date value before converting it "
-        "to outDateFormat.",
+        description="Input date format used to parse a source/script date value before converting it to outDateFormat.",
         examples=["%Y-%m-%d", "%d-%b-%Y", "%d.%m.%Y %H:%M:%S.%f", "epoch"],
     )
     out_date_format: str | None = Field(

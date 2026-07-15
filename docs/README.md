@@ -16,9 +16,6 @@ This project documentation focuses specifically on:
 
 - [Agent guide](../AGENTS.md): repository instructions that teach a coding agent the DSL authoring loop.
 - [MCP Quickstart](mcp_quickstart.md): install and register the MCP server; the check/run/reference authoring tools.
-- [DSL cheatsheet](../datamimic_ce/authoring/reference_data/cheatsheet.md): one-page DSL syntax reference, the same content the MCP server serves.
-- [Showcase gallery](../examples/showcase/README.md): four runnable, seeded descriptor examples, verified by CI.
-- [Authoring evaluation archive](../benchmarks/dsl-authoring/README.md): curated diagnostic records for canonical agent authoring.
 
 ### Getting started
 
@@ -35,7 +32,7 @@ This project documentation focuses specifically on:
 - [Testing with DATAMIMIC](data-domains/testing_with_datamimic.md): synthetic data in unit and integration tests.
 - [Dataset loading standard](data-domains/datasets.md): file naming, loaders, strict mode.
 - [Demographic profiles](demographics.md): population priors via `.dmgrp.csv` bundles and the `<demographics>` element.
-- [Examples index](examples/README.md): Python API examples plus the showcase pointer.
+- [Examples index](examples/README.md): Python API documentation.
   - [Person generation](examples/person_generation.md)
   - [Healthcare generation](examples/healthcare_generation.md)
 

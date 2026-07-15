@@ -1,4 +1,5 @@
 """Static checks that domain services avoid direct file I/O."""
+
 from __future__ import annotations
 
 import ast

@@ -15,7 +15,7 @@ class StateMachineModel(BaseModel):
     id: str = Field(
         ...,
         description="Unique name under which this weighted state-machine definition (this element plus "
-        "its <transition> children) is registered. Referenced later via generator=\"<id>\" on a <key>/"
+        'its <transition> children) is registered. Referenced later via generator="<id>" on a <key>/'
         "<variable> to walk the machine; each reference builds its own independent, stateful walk.",
         examples=["orderLifecycle"],
     )

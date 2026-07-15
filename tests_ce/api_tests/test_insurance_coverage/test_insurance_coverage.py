@@ -1,9 +1,12 @@
 import pytest
+
 from datamimic_ce.domains.insurance.models.insurance_coverage import InsuranceCoverage
 from datamimic_ce.domains.insurance.services.insurance_coverage_service import InsuranceCoverageService
 
+
 class TestInsuranceCoverage:
     _supported_datasets = ["US", "DE"]
+
     def _test_single_insurance_coverage(self, insurance_coverage: InsuranceCoverage):
         assert isinstance(insurance_coverage, InsuranceCoverage)
         assert isinstance(insurance_coverage.name, str)
@@ -39,7 +42,7 @@ class TestInsuranceCoverage:
         for insurance_coverage in insurance_coverages:
             self._test_single_insurance_coverage(insurance_coverage)
 
-    def test_insurance_coverage_property_cache(self):    
+    def test_insurance_coverage_property_cache(self):
         insurance_coverage_service = InsuranceCoverageService()
         insurance_coverage = insurance_coverage_service.generate()
         assert insurance_coverage is not None
@@ -55,13 +58,12 @@ class TestInsuranceCoverage:
         insurance_coverage_service = InsuranceCoverageService()
         insurance_coverage1 = insurance_coverage_service.generate()
         insurance_coverage2 = insurance_coverage_service.generate()
-        assert insurance_coverage1.name != insurance_coverage2.name 
+        assert insurance_coverage1.name != insurance_coverage2.name
         assert insurance_coverage1.code != insurance_coverage2.code
         assert insurance_coverage1.product_code != insurance_coverage2.product_code
         assert insurance_coverage1.description != insurance_coverage2.description
         assert insurance_coverage1.min_coverage != insurance_coverage2.min_coverage
-        assert insurance_coverage1.max_coverage != insurance_coverage2.max_coverage     
-        
+        assert insurance_coverage1.max_coverage != insurance_coverage2.max_coverage
 
     @pytest.mark.parametrize("dataset", _supported_datasets)
     def test_supported_datasets(self, dataset):

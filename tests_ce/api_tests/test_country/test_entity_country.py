@@ -1,11 +1,33 @@
-
 import pytest
+
 from datamimic_ce.domains.common.models.country import Country
 from datamimic_ce.domains.common.services.country_service import CountryService
 
 
 class TestEntityCountry:
-    _supported_datasets = ["US", "CA", "GB", "FR", "DE", "IT", "ES", "PT", "NL", "BE", "CH", "AT", "AU", "NZ", "PL", "CZ", "SK", "TR", "UA", "RU"]
+    _supported_datasets = [
+        "US",
+        "CA",
+        "GB",
+        "FR",
+        "DE",
+        "IT",
+        "ES",
+        "PT",
+        "NL",
+        "BE",
+        "CH",
+        "AT",
+        "AU",
+        "NZ",
+        "PL",
+        "CZ",
+        "SK",
+        "TR",
+        "UA",
+        "RU",
+    ]
+
     def _test_single_country(self, country: Country):
         assert isinstance(country, Country)
         assert isinstance(country.iso_code, str)

@@ -18,7 +18,8 @@ class TestCSVExporter(unittest.TestCase):
         self.tmp_dir_path = Path(self.tmp_dir.name)
         self.setup_context.descriptor_dir = self.tmp_dir_path
         self.setup_context.properties = {}
-        self.exporter = make_exporter(CSVExporter, 
+        self.exporter = make_exporter(
+            CSVExporter,
             setup_context=self.setup_context,
             product_name="test_product",
             chunk_size=1000,
@@ -82,7 +83,8 @@ class TestCSVExporter(unittest.TestCase):
     def test_large_dataset(self):
         """Test exporting a very large dataset to check performance and memory usage."""
         total_records = 500_000  # Half a million records
-        self.exporter = make_exporter(CSVExporter, 
+        self.exporter = make_exporter(
+            CSVExporter,
             setup_context=self.setup_context,
             product_name="test_product",
             chunk_size=100_000,
@@ -187,7 +189,8 @@ class TestCSVExporter(unittest.TestCase):
     def test_chunk_rotation_without_remainder(self):
         """Test exporting data where total records are a multiple of chunk size."""
         total_records = 5000
-        self.exporter = make_exporter(CSVExporter, 
+        self.exporter = make_exporter(
+            CSVExporter,
             setup_context=self.setup_context,
             product_name="test_product",
             chunk_size=1000,
@@ -211,7 +214,8 @@ class TestCSVExporter(unittest.TestCase):
     def test_chunk_rotation_with_remainder(self):
         """Test exporting data where total records are not a multiple of chunk size."""
         total_records = 5500
-        self.exporter = make_exporter(CSVExporter, 
+        self.exporter = make_exporter(
+            CSVExporter,
             setup_context=self.setup_context,
             product_name="test_product",
             chunk_size=1000,
@@ -251,7 +255,8 @@ class TestCSVExporter(unittest.TestCase):
     def test_export_with_custom_quotechar(self):
         """Test exporting data with a custom quote character."""
         self.setup_context.properties = {"quotechar": "'", "quoting": csv.QUOTE_ALL}
-        self.exporter = make_exporter(CSVExporter, 
+        self.exporter = make_exporter(
+            CSVExporter,
             setup_context=self.setup_context,
             product_name="test_product",
             chunk_size=1000,

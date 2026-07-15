@@ -27,6 +27,7 @@ class DummyAsPy:
     """
     Dummy class that simulates a pyarrow-like object by providing an as_py method.
     """
+
     def as_py(self):
         return {"key": "value"}
 
@@ -35,6 +36,7 @@ class BrokenStr:
     """
     Dummy class that simulates a broken __str__ method.
     """
+
     def __str__(self):
         raise Exception("Cannot convert object to string")
 
@@ -98,7 +100,7 @@ class TestCustomSerializer(unittest.TestCase):
     def test_bytes_non_utf8(self):
         """Test that bytes not decodable as UTF-8 are encoded in base64."""
         # b'\xff' is typically invalid in UTF-8.
-        non_utf8 = b'\xff'
+        non_utf8 = b"\xff"
         expected = base64.b64encode(non_utf8).decode("ascii")
         self.assertEqual(custom_serializer(non_utf8), expected)
 

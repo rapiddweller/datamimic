@@ -76,27 +76,27 @@ class KeyModel(BaseModel):
     )
     min: str | None = Field(
         None,
-        description="Minimum value for a numeric range key (type=\"int\"/\"float\"/\"decimal\"); combine "
+        description='Minimum value for a numeric range key (type="int"/"float"/"decimal"); combine '
         "with max and optionally granularity/distribution to shape an IntegerGenerator/FloatGenerator.",
         examples=["0", "18"],
     )
     max: str | None = Field(
         None,
-        description="Maximum value for a numeric range key (type=\"int\"/\"float\"/\"decimal\"); combine "
+        description='Maximum value for a numeric range key (type="int"/"float"/"decimal"); combine '
         "with min and optionally granularity/distribution to shape an IntegerGenerator/FloatGenerator.",
         examples=["99", "1000"],
     )
     granularity: str | None = Field(
         None,
-        description="Step width of the numeric grid for a type=\"float\"/\"decimal\" range key (e.g. "
-        "0.5); ignored for type=\"int\".",
+        description='Step width of the numeric grid for a type="float"/"decimal" range key (e.g. '
+        '0.5); ignored for type="int".',
         examples=["0.1", "0.5"],
     )
     # NumberDistribution for numeric range keys (type=int/float/decimal with min/max),
     # e.g. distribution="cumulated" - the native form of IntegerGenerator(..., distribution=...)
     distribution: str | None = Field(
         None,
-        description="NumberDistribution for numeric range keys (type=\"int\"/\"float\"/\"decimal\" with "
+        description='NumberDistribution for numeric range keys (type="int"/"float"/"decimal" with '
         "min/max) - the native form of IntegerGenerator(..., distribution=...). Requires type to be a "
         "numeric type and min and/or max to be set.",
         examples=["uniform", "cumulated", "step", "shuffle"],
@@ -104,22 +104,20 @@ class KeyModel(BaseModel):
     min_length: str | None = Field(
         None,
         alias=ATTR_MIN_LENGTH,
-        description="Minimum length for a type=\"string\" (StringGenerator) or type=\"binary\" "
-        "(BinaryGenerator) payload.",
+        description='Minimum length for a type="string" (StringGenerator) or type="binary" (BinaryGenerator) payload.',
         examples=["5", "1"],
     )
     mime_type: str | None = Field(
         None,
         alias=ATTR_MIME_TYPE,
-        description="MIME signature to prefix a type=\"binary\" payload with a real magic-number "
+        description='MIME signature to prefix a type="binary" payload with a real magic-number '
         "header (MIME-sniffable); must be a supported signature.",
         examples=["image/png", "application/pdf"],
     )
     max_length: str | None = Field(
         None,
         alias=ATTR_MAX_LENGTH,
-        description="Maximum length for a type=\"string\" (StringGenerator) or type=\"binary\" "
-        "(BinaryGenerator) payload.",
+        description='Maximum length for a type="string" (StringGenerator) or type="binary" (BinaryGenerator) payload.',
         examples=["12", "16"],
     )
     source: str | None = Field(
@@ -135,8 +133,7 @@ class KeyModel(BaseModel):
     )
     separator: str | None = Field(
         None,
-        description="Field separator for the weighted CSV 'source' (defaults to the project's default "
-        "separator).",
+        description="Field separator for the weighted CSV 'source' (defaults to the project's default separator).",
         examples=[",", ";", "|"],
     )
     values: str | None = Field(
@@ -193,8 +190,7 @@ class KeyModel(BaseModel):
     in_date_format: str | None = Field(
         None,
         alias=ATTR_IN_DATE_FORMAT,
-        description="Input date format used to parse a source/script date value before converting it "
-        "to outDateFormat.",
+        description="Input date format used to parse a source/script date value before converting it to outDateFormat.",
         examples=["%Y-%m-%d", "%d-%b-%Y", "%d.%m.%Y %H:%M:%S.%f", "epoch"],
     )
     out_date_format: str | None = Field(
@@ -218,8 +214,7 @@ class KeyModel(BaseModel):
     )
     database: str | None = Field(
         None,
-        description="Database client id, e.g. for a SequenceTableGenerator that reads a real DB "
-        "sequence.",
+        description="Database client id, e.g. for a SequenceTableGenerator that reads a real DB sequence.",
         examples=["db"],
     )
     string: str | None = Field(

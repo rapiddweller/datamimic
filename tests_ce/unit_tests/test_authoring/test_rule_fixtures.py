@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.authoring import lint_descriptor
+from datamimic_ce.authoring.linter import lint_descriptor
 
 _FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
@@ -63,7 +63,7 @@ def test_every_fixture_produces_diagnostics() -> None:
 
 
 def test_dm401_validates_client_operation() -> None:
-    from datamimic_ce.authoring import lint_source
+    from datamimic_ce.authoring.linter import lint_source
 
     def _op_flagged(op: str) -> bool:
         xml = (
@@ -78,7 +78,7 @@ def test_dm401_validates_client_operation() -> None:
 
 
 def test_dm315_increment_generator_fires_nested_only() -> None:
-    from datamimic_ce.authoring import lint_source
+    from datamimic_ce.authoring.linter import lint_source
 
     nested = (
         '<setup rngSeed="1"><generate name="parents" count="5" target="ConsoleExporter">'
@@ -104,7 +104,7 @@ def test_dm315_increment_generator_fires_nested_only() -> None:
 
 
 def test_dm316_count_with_source_hints_the_silent_cap() -> None:
-    from datamimic_ce.authoring import lint_source
+    from datamimic_ce.authoring.linter import lint_source
 
     base = (
         '<setup rngSeed="1"><memstore id="mem"/>'
@@ -123,7 +123,7 @@ def test_dm316_count_with_source_hints_the_silent_cap() -> None:
 
 
 def test_db_descriptor_lints_without_spurious_credential_error() -> None:
-    from datamimic_ce.authoring import lint_source
+    from datamimic_ce.authoring.linter import lint_source
 
     # A <variable source= selector=> reading a declared client is valid DSL; the linter
     # must NOT reject it just because DB credentials aren't wired in the lint environment.
@@ -158,7 +158,7 @@ def test_dm105_distribution_is_context_aware() -> None:
     """distribution= means NumberDistribution on <key>/<id> (numeric-range sequence) but
     SourceDistribution everywhere else (row selection) — DM105 must validate against the
     right enum instead of always assuming SourceDistribution."""
-    from datamimic_ce.authoring import lint_source
+    from datamimic_ce.authoring.linter import lint_source
 
     # valid numeric-range sequence value, invalid as a SourceDistribution -- must NOT fire
     numeric = lint_source(
@@ -184,7 +184,7 @@ def test_dm105_distribution_is_context_aware() -> None:
 
 
 def test_dm105_type_hint_points_to_datetime_construct() -> None:
-    from datamimic_ce.authoring import lint_source
+    from datamimic_ce.authoring.linter import lint_source
 
     result = lint_source(
         '<setup rngSeed="1"><generate name="g" count="5" target="ConsoleExporter">'
@@ -199,7 +199,7 @@ def test_dm105_skips_scalar_type_check_on_source_backed_read() -> None:
     """On <variable>/<nestedKey> with source=, type= selects the producing statement's
     name (StatementUtil.resolve_source_entity: sourceEntity -> type -> name) -- an
     arbitrary id, not a scalar cast. Must not be checked against the scalar type list."""
-    from datamimic_ce.authoring import lint_source
+    from datamimic_ce.authoring.linter import lint_source
 
     memstore_read = lint_source(
         '<setup rngSeed="1"><memstore id="mem"/>'
@@ -230,7 +230,7 @@ def test_dm105_skips_scalar_type_check_on_source_backed_read() -> None:
 def test_dm401_dm402_hints_show_the_memstore_declaration() -> None:
     """A missing target/source id is fixed by declaring a <memstore> -- show the literal
     snippet instead of just naming the concept, so a weak model can copy it mechanically."""
-    from datamimic_ce.authoring import lint_source
+    from datamimic_ce.authoring.linter import lint_source
 
     dm401 = lint_source(
         '<setup rngSeed="1"><generate name="g" count="5" target="mem"><key name="n" type="int"/></generate></setup>'

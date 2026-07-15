@@ -4,29 +4,32 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""DSL reference for agents: element schemas, generators, targets, distributions,
-recipes — everything derived from the engine's registries or gate-tested content.
+"""DSL reference for agents: element schemas, generators, targets, distributions —
+everything derived from the engine's registries or gate-tested content.
 Token-capped: every answer ends with a pointer instead of overflowing."""
 
 import importlib
 import inspect
 import json
 import pkgutil
-import tomllib
-from enum import StrEnum
 from functools import lru_cache
-from importlib import resources
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from datamimic_ce.domains.domain_core.entity_registry import EntitySpec
 
+from datamimic_ce.authoring.contracts import ReferenceTopic
 from datamimic_ce.authoring.reference_projection import (
     AuthoringReferenceQuery,
     authoring_reference_projection,
     list_authoring_reference_queries,
 )
-from datamimic_ce.authoring.schema import ALIASES, build_schema_index
+from datamimic_ce.authoring.rule_catalog import (
+    authoring_rule_definition,
+    authoring_rule_definitions,
+    serialize_rule_definition,
+)
+from datamimic_ce.authoring.schema import build_schema_index
 from datamimic_ce.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_LOG_EXPORTER,
@@ -45,33 +48,14 @@ from datamimic_ce.model.constraints import (
     Requires,
     RequiresWhenValue,
     ValidValues,
-    authoring_rule_definition,
-    authoring_rule_definitions,
     resolved_values,
     serialize_constraints,
-    serialize_rule_definition,
     serialize_source_capability,
     source_capabilities,
 )
+from datamimic_ce.model.element_registry import canonical_tag, element_aliases
 
 _GENERATOR_PACKAGE = "datamimic_ce.domains.common.literal_generators"
-
-
-class ReferenceTopic(StrEnum):
-    OVERVIEW = "overview"
-    ELEMENT = "element"
-    GENERATORS = "generators"
-    ENTITIES = "entities"
-    CONTEXT = "context"
-    TIMESERIES = "timeseries"
-    TARGETS = "targets"
-    DISTRIBUTIONS = "distributions"
-    CONVERTERS = "converters"
-    RULES = "rules"
-    SCAFFOLD = "scaffold"
-    AUTHORING = "authoring"
-    RECIPES = "recipes"
-    RECIPE = "recipe"
 
 
 def clip(text: str, max_chars: int, hint: str) -> str:
@@ -138,21 +122,32 @@ def _render_constraint_terse(fact) -> str:
         return f"<unknown constraint type: {type(fact).__name__}>{advisory}"
 
 
-@lru_cache(maxsize=1)
-def cheatsheet() -> str:
-    return (resources.files("datamimic_ce.authoring") / "reference_data" / "cheatsheet.md").read_text(encoding="utf-8")
+def overview_reference() -> str:
+    """Describe the live discovery surface without loading a parallel guide."""
+
+    topics = ", ".join(topic.value for topic in ReferenceTopic)
+    categories = ", ".join(sorted({query.category.value for query in list_authoring_reference_queries()}))
+    return (
+        "# DATAMIMIC reference\n"
+        f"Topics: {topics}.\n"
+        "New models use the canonical AuthoringSpecV1 intent grammar. Query "
+        "topic=authoring for its typed variants or topic=scaffold for the complete "
+        "schema. Existing XML descriptors use the element, rules, context, targets, "
+        "and distributions topics.\n"
+        f"Authoring categories: {categories}."
+    )
 
 
 def element_reference(tag: str) -> str:
     index = build_schema_index()
-    canonical = ALIASES.get(tag, tag)
+    canonical = canonical_tag(tag)
     # Alias schemas share canonical attributes/nesting but may add alias-specific
     # business rules (for example, <iterate> requires source=).
     schema = index.get(tag)
     if schema is None:
         raise ValueError(f"Unknown element '{tag}'. Known: {', '.join(sorted(index.tags))}")
     lines = [f"# <{canonical}>"]
-    aliases = sorted(alias for alias, target in ALIASES.items() if target == canonical)
+    aliases = sorted(alias for alias, target in element_aliases().items() if target == canonical)
     if aliases:
         lines.append(f"Aliases: {', '.join(f'<{a}>' for a in aliases)}")
     if schema.open_attrs:
@@ -396,14 +391,12 @@ def rules_reference(name: str | None = None) -> str:
 
 def scaffold_reference() -> str:
     """Versioned intent schema projected directly from the Intent SPOT."""
-    from datamimic_ce.authoring.spec import SPEC_PROMPT_GUIDE, authoring_spec_json_schema
+    from datamimic_ce.authoring.spec import authoring_spec_json_schema
 
     return (
         "# AuthoringSpecV1 (model.dm.json)\n"
         "Pass a versioned intent document to `datamimic scaffold <path|-> --format json`. "
-        "Legacy compact specs are losslessly normalized with visible notes; unknown, "
-        "ambiguous, and unsupported intent is rejected.\n\n"
-        f"{SPEC_PROMPT_GUIDE}\n\n"
+        "Unknown and unsupported intent is rejected by the canonical Pydantic grammar.\n\n"
         "## JSON Schema\n```json\n"
         f"{json.dumps(authoring_spec_json_schema(), indent=2)}\n```"
     )
@@ -416,10 +409,7 @@ def compact_authoring_reference(query: AuthoringReferenceQuery | None = None) ->
         return json.dumps(
             {
                 "topic": ReferenceTopic.AUTHORING,
-                "queries": [
-                    candidate.model_dump(mode="json")
-                    for candidate in list_authoring_reference_queries()
-                ],
+                "queries": [candidate.model_dump(mode="json") for candidate in list_authoring_reference_queries()],
                 "usage": "reference authoring --category <category> --kind <kind>",
             },
             indent=2,
@@ -460,7 +450,7 @@ def capabilities_manifest() -> dict[str, Any]:
     return {
         "schema_version": schema_version,
         "elements": elements,
-        "aliases": dict(ALIASES),
+        "aliases": element_aliases(),
         "generators": sorted(known_generator_names()),
         "entities": sorted(_entity_specs()),
         "converters": sorted(member.value for member in ConverterEnum),
@@ -478,28 +468,6 @@ def capabilities_manifest() -> dict[str, Any]:
     }
 
 
-@lru_cache(maxsize=1)
-def _recipes_index() -> dict[str, list[dict[str, Any]]]:
-    raw = (resources.files("datamimic_ce.authoring") / "recipes" / "recipes.toml").read_text(encoding="utf-8")
-    return tomllib.loads(raw)
-
-
-def list_recipes() -> str:
-    lines = ["# Recipes (topic=recipe name=<id> for the full descriptor)"]
-    for recipe in _recipes_index()["recipe"]:
-        lines.append(f"- {recipe['id']}: {recipe['summary']} [elements: {', '.join(recipe['elements'])}]")
-    return "\n".join(lines)
-
-
-def load_recipe(recipe_id: str) -> str:
-    entries = {recipe["id"]: recipe for recipe in _recipes_index()["recipe"]}
-    if recipe_id not in entries:
-        raise ValueError(f"Unknown recipe '{recipe_id}'. Known: {', '.join(sorted(entries))}")
-    xml = (resources.files("datamimic_ce.authoring") / "recipes" / f"{recipe_id}.xml").read_text(encoding="utf-8")
-    entry = entries[recipe_id]
-    return f"# {entry['title']}\n{entry['summary']}\n\n```xml\n{xml}```"
-
-
 def reference(
     topic: ReferenceTopic,
     name: str | None = None,
@@ -507,7 +475,7 @@ def reference(
     query: AuthoringReferenceQuery | None = None,
 ) -> str:
     if topic is ReferenceTopic.OVERVIEW:
-        return clip(cheatsheet(), 16000, " [truncated — ask a specific topic]")
+        return overview_reference()
     if topic is ReferenceTopic.ELEMENT:
         if not name:
             raise ValueError("topic=element needs name=<tag>")
@@ -536,10 +504,4 @@ def reference(
         return scaffold_reference()
     if topic is ReferenceTopic.AUTHORING:
         return compact_authoring_reference(query)
-    if topic is ReferenceTopic.RECIPES:
-        return list_recipes()
-    if topic is ReferenceTopic.RECIPE:
-        if not name:
-            raise ValueError("topic=recipe needs name=<recipe id>. " + list_recipes())
-        return load_recipe(name)
     raise ValueError(f"Unknown topic '{topic}'. Topics: {', '.join(ReferenceTopic)}")

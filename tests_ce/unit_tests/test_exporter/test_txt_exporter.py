@@ -9,7 +9,7 @@ from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContex
 
 
 class TestTXTExporter(unittest.TestCase):
-    def setUp(self, encoding='utf-8', separator=None, line_terminator=None, chunk_size=1000):
+    def setUp(self, encoding="utf-8", separator=None, line_terminator=None, chunk_size=1000):
         """Set up test fixtures."""
         self.setup_context = MockSetupContext(task_id=f"test_task_{uuid.uuid4().hex}", descriptor_dir="test_dir")
         self.tmp_dir = tempfile.TemporaryDirectory()
@@ -23,7 +23,8 @@ class TestTXTExporter(unittest.TestCase):
         self.line_terminator = line_terminator
         self.encoding = encoding
 
-        self.exporter = make_exporter(TXTExporter, 
+        self.exporter = make_exporter(
+            TXTExporter,
             setup_context=self.setup_context,
             product_name=self.product_name,
             chunk_size=self.chunk_size,
@@ -125,7 +126,7 @@ class TestTXTExporter(unittest.TestCase):
 
     def test_custom_separator_and_encoding(self):
         """Test exporting with custom separator and encoding."""
-        self.setUp(encoding='utf-16', separator='|')
+        self.setUp(encoding="utf-16", separator="|")
 
         original_data = generate_mock_data(10)
         product = ("test_product", original_data)
@@ -161,14 +162,14 @@ class TestTXTExporter(unittest.TestCase):
     def test_special_characters_in_data(self):
         """Test exporting data containing separators, quotes, and newlines."""
         # Change exporter setup
-        self.setUp(encoding='utf-16', separator='|')
+        self.setUp(encoding="utf-16", separator="|")
 
         # Simulate data export
         data = [
-            {"id": "1", "title": 'Title with | pipe', "year": 2020},
+            {"id": "1", "title": "Title with | pipe", "year": 2020},
             {"id": "2", "title": 'Title with "quote"', "year": 2021},
-            {"id": "3", "title": 'Title with \n newline', "year": 2022},
-            {"id": "4", "title": 'Title with separator|semicolon', "year": 2023},
+            {"id": "3", "title": "Title with \n newline", "year": 2022},
+            {"id": "4", "title": "Title with separator|semicolon", "year": 2023},
         ]
 
         product = ("test_product", data)
@@ -190,10 +191,12 @@ class TestTXTExporter(unittest.TestCase):
                 written_content = written_content.join(file_data)
 
         # Expected content with the separator applied
-        expected_content = ("test_product: {'id': '1', 'title': 'Title with | pipe', 'year': 2020}\n"
-                            'test_product: {\'id\': \'2\', \'title\': \'Title with "quote"\', \'year\': 2021}\n'
-                            "test_product: {'id': '3', 'title': 'Title with \\n newline', 'year': 2022}\n"
-                            "test_product: {'id': '4', 'title': 'Title with separator|semicolon', 'year': 2023}\n")
+        expected_content = (
+            "test_product: {'id': '1', 'title': 'Title with | pipe', 'year': 2020}\n"
+            "test_product: {'id': '2', 'title': 'Title with \"quote\"', 'year': 2021}\n"
+            "test_product: {'id': '3', 'title': 'Title with \\n newline', 'year': 2022}\n"
+            "test_product: {'id': '4', 'title': 'Title with separator|semicolon', 'year': 2023}\n"
+        )
 
         # Assert that the content written to the file matches the expected content
         self.assertEqual(expected_content, written_content)
@@ -350,7 +353,7 @@ class TestTXTExporter(unittest.TestCase):
             with txt_file.open("r", encoding=self.encoding) as file:
                 file_data = file.read()
                 # Split using custom line terminator
-                lines = file_data.split('|')
+                lines = file_data.split("|")
                 # Remove the last empty element if split by terminator
                 if lines and not lines[-1]:
                     lines.pop()
