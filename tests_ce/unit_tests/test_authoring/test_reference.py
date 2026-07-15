@@ -13,7 +13,6 @@ from datamimic_ce.authoring.reference import (
     capabilities_index,
     capabilities_manifest,
     capabilities_sections,
-    generator_names,
     known_generator_names,
     reference,
 )
@@ -150,8 +149,6 @@ def test_generator_names_is_unbounded_and_deterministic() -> None:
     assert len(names) > 0
     # Repeatable
     assert names == known_generator_names()
-    # generator_names() returns the same set
-    assert names == generator_names()
 
 
 def test_element_reference_pages_not_truncated() -> None:

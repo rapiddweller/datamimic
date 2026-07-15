@@ -40,6 +40,7 @@ from datamimic_ce.model.constraints import (
     SOURCE_DISTRIBUTION_VALUES,
     AllOrNone,
     AllowedValuesWhen,
+    Constraint,
     Forbids,
     ForbidsWhenValue,
     MutuallyExclusive,
@@ -142,13 +143,13 @@ _CONSTRAINT_RENDERERS: dict[type, object] = {
 }
 
 
-def _render_constraint_terse(fact: object) -> str:
+def _render_constraint_terse(fact: Constraint) -> str:
     """Render a single constraint object as a terse one-liner for element_reference().
 
     Renders structural facts only (attr/attrs/needs/excludes/when_true); message is omitted.
     Attributes are sorted for stable output. lint_only facts are marked with [advisory].
     """
-    advisory = " [advisory]" if getattr(fact, "lint_only", False) else ""
+    advisory = " [advisory]" if fact.lint_only else ""
     renderer = _CONSTRAINT_RENDERERS.get(type(fact))
     if renderer is not None:
         return renderer(fact, advisory)  # type: ignore[operator]
@@ -265,7 +266,7 @@ def _generator_info() -> list[tuple[str, list[str]]]:
     return result
 
 
-def generator_names() -> set[str]:
+def known_generator_names() -> set[str]:
     """Unbounded set of generator class names — not clipped."""
     return {name for name, _ in _generator_info()}
 
@@ -275,10 +276,6 @@ def generator_reference() -> str:
     for name, params in _generator_info():
         lines.append(f"- {name}({', '.join(params)})")
     return clip("\n".join(lines), 8000, " [truncated]")
-
-
-def known_generator_names() -> set[str]:
-    return generator_names()
 
 
 def targets_reference() -> str:
