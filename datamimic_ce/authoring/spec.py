@@ -13,6 +13,7 @@ the compiler's responsibility.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Literal
@@ -26,9 +27,11 @@ from pydantic import (
     StrictFloat,
     StrictInt,
     StrictStr,
+    ValidationError,
     model_validator,
 )
 from pydantic.json_schema import JsonDict, JsonValue
+from pydantic_core import InitErrorDetails, PydanticCustomError
 
 from datamimic_ce.constants.element_constants import EL_GENERATE
 from datamimic_ce.exporters.exporter_util import buffered_exporter_names
@@ -37,6 +40,7 @@ from datamimic_ce.model.constraints import is_source_file
 PositiveStrictInt = Annotated[StrictInt, Field(gt=0)]
 NonNegativeStrictInt = Annotated[StrictInt, Field(ge=0)]
 NonEmptyStrictStr = Annotated[StrictStr, Field(min_length=1)]
+INTENT_REPAIR_ALIASES_SCHEMA_KEY = "x-datamimic-repair-aliases"
 
 
 class FieldIntentKind(StrEnum):
@@ -64,6 +68,13 @@ class ProductIntentKind(StrEnum):
     TIME_SERIES = "time_series"
 
 
+class SourceIntentKind(StrEnum):
+    """Canonical discriminator vocabulary for authoring sources."""
+
+    FILE = "file"
+    MEMSTORE = "memstore"
+
+
 class TargetIntentKind(StrEnum):
     """Canonical discriminator vocabulary for authoring targets."""
 
@@ -81,6 +92,34 @@ class ExpectationIntentKind(StrEnum):
     ALLOWED_VALUES = "allowed_values"
     RANGE = "range"
     ROW_CONDITION = "row_condition"
+
+
+class FieldRoleKind(StrEnum):
+    """Canonical discriminator vocabulary for semantic field roles."""
+
+    IDENTIFIER = "identifier"
+    FOREIGN_KEY = "foreign_key"
+    TIMESTAMP = "timestamp"
+    VALUE = "value"
+
+
+class IntentModelValidationIssueType(StrEnum):
+    """Stable custom validation signals owned by the Intent Model."""
+
+    UNSUPPORTED_NESTED_PRODUCT_CHILDREN = "unsupported_nested_product_children"
+
+
+class IntentModelPathSegment(StrEnum):
+    """Canonical field names used in model-owned validation locations."""
+
+    CHILDREN = "children"
+
+
+INTENT_MODEL_VALIDATION_MESSAGES: dict[IntentModelValidationIssueType, str] = {
+    IntentModelValidationIssueType.UNSUPPORTED_NESTED_PRODUCT_CHILDREN: (
+        "Nested product relationships cannot define child products in AuthoringSpecV1"
+    ),
+}
 
 
 LeafFieldKind = Literal[
@@ -111,21 +150,21 @@ class IntentModel(BaseModel):
 
 
 class IdentifierRole(IntentModel):
-    kind: Literal["identifier"] = "identifier"
+    kind: Literal[FieldRoleKind.IDENTIFIER] = FieldRoleKind.IDENTIFIER
 
 
 class ForeignKeyRole(IntentModel):
-    kind: Literal["foreign_key"] = "foreign_key"
+    kind: Literal[FieldRoleKind.FOREIGN_KEY] = FieldRoleKind.FOREIGN_KEY
     parent_product: str = Field(min_length=1)
     parent_field: str = Field(min_length=1)
 
 
 class TimestampRole(IntentModel):
-    kind: Literal["timestamp"] = "timestamp"
+    kind: Literal[FieldRoleKind.TIMESTAMP] = FieldRoleKind.TIMESTAMP
 
 
 class ValueRole(IntentModel):
-    kind: Literal["value"] = "value"
+    kind: Literal[FieldRoleKind.VALUE] = FieldRoleKind.VALUE
 
 
 FieldRole = Annotated[
@@ -301,16 +340,20 @@ RegisteredFileExporterName = Annotated[
 
 
 class FileSource(IntentModel):
-    kind: Literal["file"] = "file"
+    kind: Literal[SourceIntentKind.FILE] = SourceIntentKind.FILE
     path: RuntimeFileSourcePath
     separator: str | None = None
     distribution: Literal["ordered"] = "ordered"
 
 
 class MemstoreSource(IntentModel):
-    kind: Literal["memstore"] = "memstore"
+    kind: Literal[SourceIntentKind.MEMSTORE] = SourceIntentKind.MEMSTORE
     id: RuntimeMemstoreSourceId
-    product: str | None = Field(default=None, min_length=1)
+    product: str | None = Field(
+        default=None,
+        min_length=1,
+        json_schema_extra={INTENT_REPAIR_ALIASES_SCHEMA_KEY: ["type"]},
+    )
     distribution: Literal["ordered"] = "ordered"
 
 
@@ -390,6 +433,27 @@ class NestedGeneratedProduct(ProductIntent):
     kind: Literal[ProductIntentKind.GENERATED] = ProductIntentKind.GENERATED
     count: PositiveStrictInt
     relationship: NestedRelationship = Field(default_factory=NestedRelationship)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _reject_child_products(cls, value: object) -> object:
+        children = IntentModelPathSegment.CHILDREN
+        if not isinstance(value, Mapping) or children not in value:
+            return value
+        issue_type = IntentModelValidationIssueType.UNSUPPORTED_NESTED_PRODUCT_CHILDREN
+        raise ValidationError.from_exception_data(
+            cls.__name__,
+            [
+                InitErrorDetails(
+                    type=PydanticCustomError(
+                        issue_type,
+                        INTENT_MODEL_VALIDATION_MESSAGES[issue_type],
+                    ),
+                    loc=(children,),
+                    input=value[children],
+                )
+            ],
+        )
 
     @model_validator(mode="after")
     def _has_fields(self) -> NestedGeneratedProduct:
@@ -635,6 +699,11 @@ __all__ = [
     "FieldKind",
     "FieldIntentKind",
     "FieldIntentUnion",
+    "FieldRoleKind",
+    "INTENT_MODEL_VALIDATION_MESSAGES",
+    "INTENT_REPAIR_ALIASES_SCHEMA_KEY",
+    "IntentModelPathSegment",
+    "IntentModelValidationIssueType",
     "LeafFieldKind",
     "NonEmptyStrictStr",
     "NonNegativeStrictInt",
@@ -647,6 +716,7 @@ __all__ = [
     "RuntimeMemstoreSourceId",
     "SPEC_JSON_SCHEMA",
     "SPEC_PROMPT_GUIDE",
+    "SourceIntentKind",
     "TargetIntentKind",
     "authoring_spec_json_schema",
 ]

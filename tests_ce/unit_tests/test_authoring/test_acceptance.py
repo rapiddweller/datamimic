@@ -19,6 +19,7 @@ import datamimic_ce.authoring.service as service_module
 from datamimic_ce.authoring.acceptance import evaluate_acceptance
 from datamimic_ce.authoring.compiler import compile_authoring_spec
 from datamimic_ce.authoring.contracts import (
+    MAX_DRY_RUN_COUNT,
     AcceptanceSource,
     AcceptanceStatus,
     AuthoringStage,
@@ -27,6 +28,8 @@ from datamimic_ce.authoring.contracts import (
     MemstoreCompletenessAcceptanceResult,
     PerParentCountAcceptanceResult,
     ProductCaptureEvidence,
+    RetryWithParameterRemediation,
+    ScaffoldParameter,
     ScaffoldRequest,
     UniqueAcceptanceResult,
 )
@@ -174,6 +177,56 @@ def _spec(
             ],
         }
     )
+
+
+def _memstore_service_spec(*, count: int, consumer_fk: bool) -> dict[str, object]:
+    roles = (
+        [
+            {
+                "kind": "foreign_key",
+                "parent_product": "customers",
+                "parent_field": "customer_id",
+            }
+        ]
+        if consumer_fk
+        else []
+    )
+    return {
+        "version": "1",
+        "seed": 7,
+        "products": [
+            {
+                "kind": "generated",
+                "name": "customers",
+                "count": count,
+                "fields": [
+                    {
+                        "kind": "increment",
+                        "name": "customer_id",
+                        "roles": [{"kind": "identifier"}],
+                    }
+                ],
+                "targets": [{"kind": "memstore", "id": "customer_mem"}],
+            },
+            {
+                "kind": "source",
+                "name": "customer_readback",
+                "source": {
+                    "kind": "memstore",
+                    "id": "customer_mem",
+                    "product": "customers",
+                },
+                "fields": [
+                    {
+                        "kind": "script",
+                        "name": "customer_id",
+                        "script": "customer_id",
+                        "roles": roles,
+                    }
+                ],
+            },
+        ],
+    }
 
 
 def _capture(*, malformed_distribution: bool = False) -> CapturedProducts:
@@ -739,7 +792,75 @@ def test_memstore_without_typed_identity_join_is_unevaluable() -> None:
     )
     assert completeness.status is AcceptanceStatus.UNEVALUABLE
     assert "typed producer identifier" in completeness.message
+    assert completeness.required_consumer_foreign_key is not None
+    assert completeness.required_consumer_foreign_key.parent_product == "customers"
+    assert completeness.required_consumer_foreign_key.parent_field == "customer_id"
+    assert completeness.required_consumer_foreign_key.required_count == 1
+    assert completeness.required_consumer_foreign_key.observed_count == 0
     assert not report.verified
+
+
+def test_count_cap_emits_one_typed_memstore_retry_remediation() -> None:
+    result = service_module.scaffold(
+        ScaffoldRequest(
+            spec=_memstore_service_spec(count=15, consumer_fk=True),
+            max_count=10,
+            sample_rows=1,
+        )
+    )
+
+    assert not result.verified
+    assert len(result.remediations) == 1
+    remediation = result.remediations[0]
+    assert remediation.parameter is ScaffoldParameter.MAX_COUNT
+    assert remediation.minimum_value == 15
+    assert remediation.affected_products == ("customers", "customer_readback")
+
+
+def test_complete_memstore_capture_reports_missing_typed_consumer_role() -> None:
+    result = service_module.scaffold(
+        ScaffoldRequest(
+            spec=_memstore_service_spec(count=15, consumer_fk=False),
+            max_count=15,
+            sample_rows=1,
+        )
+    )
+
+    assert result.acceptance is not None
+    completeness = next(
+        item
+        for item in result.acceptance.results
+        if item.kind == "memstore_completeness"
+    )
+    assert completeness.status is AcceptanceStatus.UNEVALUABLE
+    assert completeness.required_consumer_foreign_key is not None
+    assert completeness.required_consumer_foreign_key.parent_product == "customers"
+    assert completeness.required_consumer_foreign_key.parent_field == "customer_id"
+    assert completeness.required_consumer_foreign_key.observed_count == 0
+    assert result.remediations == []
+    assert not result.verified
+
+
+def test_complete_memstore_capture_with_one_typed_consumer_role_verifies() -> None:
+    result = service_module.scaffold(
+        ScaffoldRequest(
+            spec=_memstore_service_spec(count=15, consumer_fk=True),
+            max_count=15,
+            sample_rows=1,
+        )
+    )
+
+    assert result.acceptance is not None
+    completeness = next(
+        item
+        for item in result.acceptance.results
+        if item.kind == "memstore_completeness"
+    )
+    assert completeness.status is AcceptanceStatus.PASS
+    assert completeness.required_consumer_foreign_key is not None
+    assert completeness.required_consumer_foreign_key.observed_count == 1
+    assert result.remediations == []
+    assert result.verified
 
 
 def test_memstore_ambiguous_identity_join_is_unevaluable() -> None:
@@ -784,6 +905,8 @@ def test_memstore_ambiguous_identity_join_is_unevaluable() -> None:
     )
     assert completeness.status is AcceptanceStatus.UNEVALUABLE
     assert "found 2" in completeness.message
+    assert completeness.required_consumer_foreign_key is not None
+    assert completeness.required_consumer_foreign_key.observed_count == 2
     assert not report.verified
 
 
@@ -824,11 +947,14 @@ def test_sample_projection_does_not_change_acceptance_and_uses_gateway_once(monk
         if item.kind == "memstore_completeness"
     )
     assert memstore.status is AcceptanceStatus.PASS
+    assert memstore.required_consumer_foreign_key is not None
+    assert memstore.required_consumer_foreign_key.observed_count == 1
     assert memstore.producer_key_field == "customer_id"
     assert memstore.consumer_key_field == "customer_id"
     assert (memstore.producer_count, memstore.consumer_count) == (8, 8)
     assert memstore.missing_keys == memstore.unexpected_keys == []
     assert memstore.duplicate_producer_keys == memstore.duplicate_consumer_keys == []
+    assert result.remediations == []
 
 
 def test_count_above_bound_is_unevaluable_not_a_false_verification() -> None:
@@ -840,7 +966,7 @@ def test_count_above_bound_is_unevaluable_not_a_false_verification() -> None:
                 {
                     "kind": "generated",
                     "name": "rows",
-                    "count": 20,
+                    "count": 15,
                     "fields": [{"kind": "increment", "name": "id"}],
                 }
             ],
@@ -856,6 +982,58 @@ def test_count_above_bound_is_unevaluable_not_a_false_verification() -> None:
     assert exact.observed_count == 10
     assert result.stage is AuthoringStage.ACCEPTANCE
     assert not result.verified
+    assert len(result.remediations) == 1
+    remediation = result.remediations[0]
+    assert remediation.parameter is ScaffoldParameter.MAX_COUNT
+    assert remediation.minimum_value == 15
+    assert remediation.affected_products == ("rows",)
+
+
+@pytest.mark.parametrize(
+    ("requested_count", "expected_minimum"),
+    [
+        (MAX_DRY_RUN_COUNT, MAX_DRY_RUN_COUNT),
+        (MAX_DRY_RUN_COUNT + 1, None),
+    ],
+)
+def test_count_retry_is_emitted_only_when_canonical_limit_can_execute_it(
+    requested_count: int,
+    expected_minimum: int | None,
+) -> None:
+    spec = AuthoringSpecV1.model_validate(
+        {
+            "version": "1",
+            "seed": 1,
+            "products": [
+                {
+                    "kind": "generated",
+                    "name": "rows",
+                    "count": requested_count,
+                    "fields": [{"kind": "increment", "name": "id"}],
+                }
+            ],
+        }
+    )
+
+    result = service_module.scaffold(
+        ScaffoldRequest(spec=spec.model_dump(mode="json"), max_count=10, sample_rows=1)
+    )
+
+    exact = next(item for item in result.acceptance.results if item.kind == "exact_count")
+    assert exact.status is AcceptanceStatus.UNEVALUABLE
+    if expected_minimum is None:
+        assert result.remediations == []
+    else:
+        assert len(result.remediations) == 1
+        assert result.remediations[0].minimum_value == expected_minimum
+
+
+def test_retry_contract_rejects_minimum_above_canonical_limit() -> None:
+    with pytest.raises(ValidationError):
+        RetryWithParameterRemediation(
+            minimum_value=MAX_DRY_RUN_COUNT + 1,
+            affected_products=("rows",),
+        )
 
 
 def test_time_series_count_above_bound_is_unevaluable() -> None:

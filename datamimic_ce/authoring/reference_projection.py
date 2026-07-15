@@ -21,14 +21,12 @@ from datamimic_ce.authoring.spec import (
     FieldIntent,
     FieldIntentKind,
     FileExportTarget,
+    FileSource,
     ForeignKeyExpectation,
-    ForeignKeyRole,
-    GeneratedProduct,
-    IdentifierRole,
     IncrementField,
     IntegerRangeField,
+    MemstoreSource,
     MemstoreTarget,
-    NestedGeneratedProduct,
     NestedListField,
     PatternField,
     PerParentCountExpectation,
@@ -39,6 +37,7 @@ from datamimic_ce.authoring.spec import (
     RangeExpectation,
     RowConditionExpectation,
     ScriptField,
+    SourceIntentKind,
     StringLengthField,
     TargetIntentKind,
     UniqueExpectation,
@@ -46,15 +45,21 @@ from datamimic_ce.authoring.spec import (
     WeightedField,
 )
 from datamimic_ce.authoring.spec_examples import (
+    flat_authoring_example,
+    memstore_pipeline_authoring_example,
     minimal_product_example,
-    minimal_source_product_example,
-    minimal_time_series_product_example,
+    minimal_source_example,
+    nested_authoring_example,
     product_example_kinds,
+    source_authoring_example,
+    source_example_kinds,
+    time_series_authoring_example,
 )
 
 
 class AuthoringReferenceCategory(StrEnum):
     PRODUCT = "product"
+    SOURCE = "source"
     FIELD = "field"
     TARGET = "target"
     EXPECTATION = "expectation"
@@ -66,6 +71,7 @@ class AuthoringExampleKind(StrEnum):
     NESTED = "nested"
     SOURCE = "source"
     TIME_SERIES = "time_series"
+    MEMSTORE_PIPELINE = "memstore_pipeline"
 
 
 class _Query(BaseModel):
@@ -80,6 +86,11 @@ class ProductReferenceQuery(_Query):
 class FieldReferenceQuery(_Query):
     category: Literal[AuthoringReferenceCategory.FIELD] = AuthoringReferenceCategory.FIELD
     kind: FieldIntentKind
+
+
+class SourceReferenceQuery(_Query):
+    category: Literal[AuthoringReferenceCategory.SOURCE] = AuthoringReferenceCategory.SOURCE
+    kind: SourceIntentKind
 
 
 class TargetReferenceQuery(_Query):
@@ -99,6 +110,7 @@ class ExampleReferenceQuery(_Query):
 
 AuthoringReferenceQuery = Annotated[
     ProductReferenceQuery
+    | SourceReferenceQuery
     | FieldReferenceQuery
     | TargetReferenceQuery
     | ExpectationReferenceQuery
@@ -123,6 +135,8 @@ class AuthoringReferenceProjection(BaseModel):
 ReferenceModel = (
     AuthoringSpecV1
     | ProductIntent
+    | FileSource
+    | MemstoreSource
     | FieldIntent
     | FileExportTarget
     | MemstoreTarget
@@ -135,71 +149,6 @@ ReferenceModel = (
     | RowConditionExpectation
 )
 ReferenceFactory = Callable[[], ReferenceModel]
-
-
-def _flat_example() -> AuthoringSpecV1:
-    return AuthoringSpecV1(
-        seed=42,
-        products=(
-            GeneratedProduct(
-                name="customers",
-                count=5,
-                fields=(
-                    IncrementField(name="customer_id", roles=(IdentifierRole(),)),
-                    PersonNameField(name="name"),
-                ),
-                targets=(FileExportTarget(format="JSON"),),
-            ),
-        ),
-        expectations=(ExactCountExpectation(product="customers", count=5),),
-    )
-
-
-def _nested_example() -> AuthoringSpecV1:
-    return AuthoringSpecV1(
-        seed=42,
-        products=(
-            GeneratedProduct(
-                name="customers",
-                count=4,
-                fields=(IncrementField(name="customer_id", roles=(IdentifierRole(),)),),
-                children=(
-                    NestedGeneratedProduct(
-                        name="orders",
-                        count=2,
-                        fields=(
-                            IncrementField(name="order_no"),
-                            ScriptField(
-                                name="customer_id",
-                                script="parent.customer_id",
-                                roles=(
-                                    ForeignKeyRole(
-                                        parent_product="customers",
-                                        parent_field="customer_id",
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-        ),
-        expectations=(
-            PerParentCountExpectation(
-                parent_product="customers",
-                child_product="orders",
-                count=2,
-            ),
-        ),
-    )
-
-
-def _source_example() -> AuthoringSpecV1:
-    return AuthoringSpecV1(seed=42, products=(minimal_source_product_example(),))
-
-
-def _time_series_example() -> AuthoringSpecV1:
-    return AuthoringSpecV1(seed=42, products=(minimal_time_series_product_example(),))
 
 
 _FIELD_FACTORIES: Mapping[FieldIntentKind, ReferenceFactory] = {
@@ -255,16 +204,19 @@ _EXPECTATION_FACTORIES: Mapping[ExpectationIntentKind, ReferenceFactory] = {
     ),
 }
 _EXAMPLE_FACTORIES: Mapping[AuthoringExampleKind, ReferenceFactory] = {
-    AuthoringExampleKind.FLAT: _flat_example,
-    AuthoringExampleKind.NESTED: _nested_example,
-    AuthoringExampleKind.SOURCE: _source_example,
-    AuthoringExampleKind.TIME_SERIES: _time_series_example,
+    AuthoringExampleKind.FLAT: flat_authoring_example,
+    AuthoringExampleKind.NESTED: nested_authoring_example,
+    AuthoringExampleKind.SOURCE: source_authoring_example,
+    AuthoringExampleKind.TIME_SERIES: time_series_authoring_example,
+    AuthoringExampleKind.MEMSTORE_PIPELINE: memstore_pipeline_authoring_example,
 }
 
 
 def _model_for_query(query: AuthoringReferenceQuery) -> ReferenceModel:
     if isinstance(query, ProductReferenceQuery):
         return minimal_product_example(query.kind)
+    if isinstance(query, SourceReferenceQuery):
+        return minimal_source_example(query.kind)
     if isinstance(query, FieldReferenceQuery):
         return _FIELD_FACTORIES[query.kind]()
     if isinstance(query, TargetReferenceQuery):
@@ -296,6 +248,7 @@ def reference_fragment_is_valid(query: AuthoringReferenceQuery) -> bool:
 def list_authoring_reference_queries() -> tuple[AuthoringReferenceQuery, ...]:
     return (
         *(ProductReferenceQuery(kind=kind) for kind in ProductIntentKind),
+        *(SourceReferenceQuery(kind=kind) for kind in SourceIntentKind),
         *(FieldReferenceQuery(kind=kind) for kind in FieldIntentKind),
         *(TargetReferenceQuery(kind=kind) for kind in TargetIntentKind),
         *(ExpectationReferenceQuery(kind=kind) for kind in ExpectationIntentKind),
@@ -307,6 +260,7 @@ def projection_catalog_is_exhaustive() -> bool:
     """Fail closed if any canonical kind lacks exactly one compact projection."""
 
     product_models = [minimal_product_example(kind) for kind in ProductIntentKind]
+    source_models = [minimal_source_example(kind) for kind in SourceIntentKind]
     field_models = [_FIELD_FACTORIES[kind]() for kind in FieldIntentKind]
     target_models = [_TARGET_FACTORIES[kind]() for kind in TargetIntentKind]
     expectation_models = [_EXPECTATION_FACTORIES[kind]() for kind in ExpectationIntentKind]
@@ -315,10 +269,16 @@ def projection_catalog_is_exhaustive() -> bool:
         and set(_TARGET_FACTORIES) == set(TargetIntentKind)
         and set(_EXPECTATION_FACTORIES) == set(ExpectationIntentKind)
         and product_example_kinds() == frozenset(ProductIntentKind)
+        and source_example_kinds() == frozenset(SourceIntentKind)
         and len({type(model) for model in product_models}) == len(tuple(ProductIntentKind))
         and len({type(model) for model in field_models}) == len(tuple(FieldIntentKind))
+        and len({type(model) for model in source_models}) == len(tuple(SourceIntentKind))
         and len({type(model) for model in target_models}) == len(tuple(TargetIntentKind))
         and len({type(model) for model in expectation_models}) == len(tuple(ExpectationIntentKind))
+        and all(
+            model.model_dump(mode="json")["kind"] == kind
+            for model, kind in zip(source_models, SourceIntentKind, strict=True)
+        )
         and all(
             model.model_dump(mode="json")["kind"] == kind
             for model, kind in zip(product_models, ProductIntentKind, strict=True)
@@ -348,6 +308,7 @@ __all__ = [
     "ExpectationReferenceQuery",
     "FieldReferenceQuery",
     "ProductReferenceQuery",
+    "SourceReferenceQuery",
     "TargetReferenceQuery",
     "authoring_reference_projection",
     "list_authoring_reference_queries",

@@ -46,7 +46,8 @@ adapter.
 
 1. Query the Intent Model before guessing. Run `datamimic reference authoring`
    to list typed category/kind queries, then request only the fragment needed,
-   for example `datamimic reference authoring --category field --kind weighted`.
+   for example `datamimic reference authoring --category field --kind weighted`
+   or `datamimic reference authoring --category source --kind memstore`.
 2. Create one canonical `model.dm.json` with `version: "1"`. Do not hand-author
    XML for a new model; XML is deterministic compiler output, not the Intent SPOT.
 3. Invoke `datamimic scaffold model.dm.json --format json`. Each attempt is one
@@ -54,9 +55,12 @@ adapter.
    acceptance against that same capture. Request `--smoke-export` and
    `--deterministic-replay` only when those verification gates are required.
 4. On failure, repair from structured validation issue `path`, `allowed_fields`,
-   and `expected_fragment`, or from the rule diagnostic and `fix_hint` at later
-   stages. Use a narrower authoring reference query if needed. Never repeat an
-   identical failed call without changing its input.
+   `expected_fragment`, and optional typed `repair`, or from the rule diagnostic
+   and `fix_hint` at later stages. If `remediations` requests
+   `max_count`, retry with at least its `minimum_value`; this changes the bounded
+   verification limit, not `model.dm.json`. Use a narrower authoring reference
+   query if needed. Never repeat an identical failed call without changing its
+   input or requested verification parameter.
 5. Stop immediately when `verified=true`; do not call check/lint or dry-run again.
    If real execution is requested, save the returned `xml` as a generated runtime
    artifact and run `datamimic run path/to/datamimic.xml`.

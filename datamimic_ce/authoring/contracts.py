@@ -20,6 +20,7 @@ from pydantic import BaseModel, ConfigDict, Field, JsonValue, StrictStr, model_v
 from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.spec import (
     FieldIntentKind,
+    FieldRoleKind,
     LeafFieldKind,
     NonEmptyStrictStr,
     NonNegativeStrictInt,
@@ -201,6 +202,23 @@ class IntentValidationIssueCode(StrEnum):
     UNSUPPORTED_INTENT = "unsupported_intent"
 
 
+class IntentRepairKind(StrEnum):
+    """Stable discriminator vocabulary for intent repair actions."""
+
+    REPLACE_FIELD = "replace_field"
+
+
+class ReplaceFieldRepair(BaseModel):
+    """Validated replacement of one rejected field on its exact model owner."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    kind: Literal[IntentRepairKind.REPLACE_FIELD] = IntentRepairKind.REPLACE_FIELD
+    replacement_field: NonEmptyStrictStr
+    rejected_value: JsonValue
+    corrected_fragment: dict[str, JsonValue]
+
+
 class IntentValidationIssue(BaseModel):
     """One repair-oriented root cause from intent validation."""
 
@@ -211,6 +229,7 @@ class IntentValidationIssue(BaseModel):
     message: str = Field(min_length=1)
     allowed_fields: tuple[str, ...] = ()
     expected_fragment: dict[str, JsonValue] | None = None
+    repair: ReplaceFieldRepair | None = None
 
     def summary(self) -> str:
         """Render the compatibility summary from this canonical issue."""
@@ -1026,6 +1045,18 @@ class RowConditionAcceptanceResult(AcceptanceResultBase):
     evaluation_errors: list[str] = Field(default_factory=list)
 
 
+class RequiredConsumerForeignKey(BaseModel):
+    """Typed role evidence required for a memstore identity read-back."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    role_kind: Literal[FieldRoleKind.FOREIGN_KEY] = FieldRoleKind.FOREIGN_KEY
+    parent_product: NonEmptyStrictStr
+    parent_field: NonEmptyStrictStr
+    required_count: Literal[1] = 1
+    observed_count: NonNegativeStrictInt
+
+
 class MemstoreCompletenessAcceptanceResult(AcceptanceResultBase):
     kind: Literal["memstore_completeness"] = "memstore_completeness"
     producer_product: str
@@ -1035,6 +1066,7 @@ class MemstoreCompletenessAcceptanceResult(AcceptanceResultBase):
     consumer_count: int | None
     producer_key_field: str | None = None
     consumer_key_field: str | None = None
+    required_consumer_foreign_key: RequiredConsumerForeignKey | None = None
     missing_keys: list[str] = Field(default_factory=list)
     unexpected_keys: list[str] = Field(default_factory=list)
     duplicate_producer_keys: list[str] = Field(default_factory=list)
@@ -1078,6 +1110,34 @@ class RunResult(BaseModel):
     diagnostics: list[Diagnostic] = Field(default_factory=list)
 
 
+class ScaffoldParameter(StrEnum):
+    """Canonical request parameters that a scaffold response may remediate."""
+
+    MAX_COUNT = "max_count"
+
+
+class ScaffoldRemediationKind(StrEnum):
+    """Stable discriminator vocabulary for scaffold-level remediation."""
+
+    RETRY_WITH_PARAMETER = "retry_with_parameter"
+
+
+class RetryWithParameterRemediation(BaseModel):
+    """Transport-neutral instruction to retry with a larger bounded parameter."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    kind: Literal[ScaffoldRemediationKind.RETRY_WITH_PARAMETER] = (
+        ScaffoldRemediationKind.RETRY_WITH_PARAMETER
+    )
+    parameter: Literal[ScaffoldParameter.MAX_COUNT] = ScaffoldParameter.MAX_COUNT
+    minimum_value: PositiveStrictInt = Field(le=MAX_DRY_RUN_COUNT)
+    affected_products: tuple[NonEmptyStrictStr, ...] = Field(min_length=1)
+
+
+ScaffoldRemediation = RetryWithParameterRemediation
+
+
 class ScaffoldResult(BaseModel):
     """Canonical response contract for scaffold operations."""
 
@@ -1117,6 +1177,7 @@ class ScaffoldResult(BaseModel):
     )
     compile_plan: CompilePlan | None = None
     acceptance: AcceptanceReport | None = None
+    remediations: list[ScaffoldRemediation] = Field(default_factory=list)
     verification: ScaffoldVerificationEvidence = Field(
         default_factory=ScaffoldVerificationEvidence
     )
@@ -1132,4 +1193,6 @@ class ScaffoldResult(BaseModel):
             raise ValueError(
                 "verified requires passing acceptance and every requested verification gate"
             )
+        if self.verified and self.remediations:
+            raise ValueError("verified scaffold results cannot require remediation")
         return self

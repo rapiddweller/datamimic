@@ -11,6 +11,7 @@ from typer.testing import CliRunner
 
 from datamimic_ce.authoring.compiler import compile_authoring_spec
 from datamimic_ce.authoring.contracts import (
+    AcceptanceStatus,
     IntentValidationIssueCode,
     RunRequest,
     ScaffoldRequest,
@@ -20,13 +21,19 @@ from datamimic_ce.authoring.reference_projection import (
     AuthoringExampleKind,
     ExampleReferenceQuery,
     ProductReferenceQuery,
+    SourceReferenceQuery,
     authoring_reference_projection,
     list_authoring_reference_queries,
     projection_catalog_is_exhaustive,
     reference_fragment_is_valid,
 )
 from datamimic_ce.authoring.service import run, scaffold
-from datamimic_ce.authoring.spec import AuthoringSpecV1, ProductIntentKind
+from datamimic_ce.authoring.spec import (
+    AuthoringSpecV1,
+    MemstoreSource,
+    ProductIntentKind,
+    SourceIntentKind,
+)
 from datamimic_ce.cli import app
 from datamimic_ce.mcp.models import ReferenceArgs
 from datamimic_ce.mcp.server import reference_impl
@@ -97,6 +104,210 @@ def test_expectation_validation_paths_hide_union_implementation_labels() -> None
     }
 
 
+def test_nested_product_children_are_classified_as_unsupported_intent() -> None:
+    result = scaffold(
+        ScaffoldRequest(
+            spec={
+                "version": "1",
+                "seed": 42,
+                "products": [
+                    {
+                        "kind": "generated",
+                        "name": "customers",
+                        "count": 2,
+                        "fields": [{"kind": "increment", "name": "customer_id"}],
+                        "children": [
+                            {
+                                "kind": "generated",
+                                "name": "accounts",
+                                "count": 2,
+                                "fields": [{"kind": "increment", "name": "account_id"}],
+                                "children": [
+                                    {
+                                        "kind": "generated",
+                                        "name": "transactions",
+                                        "count": 2,
+                                        "fields": [
+                                            {"kind": "increment", "name": "transaction_id"}
+                                        ],
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
+    )
+
+    assert result.ok is False
+    assert len(result.issues) == 1
+    issue = result.issues[0]
+    assert issue.path == ("products", 0, "children", 0, "children")
+    assert issue.code is IntentValidationIssueCode.UNSUPPORTED_INTENT
+    assert issue.allowed_fields == ()
+    assert issue.expected_fragment is None
+    assert "cannot define child products" in issue.message
+
+
+def test_children_on_nested_increment_field_remain_unknown_field() -> None:
+    result = scaffold(
+        ScaffoldRequest(
+            spec={
+                "version": "1",
+                "products": [
+                    {
+                        "kind": "generated",
+                        "name": "customers",
+                        "count": 1,
+                        "fields": [{"kind": "increment", "name": "customer_id"}],
+                        "children": [
+                            {
+                                "kind": "generated",
+                                "name": "accounts",
+                                "count": 1,
+                                "fields": [
+                                    {
+                                        "kind": "increment",
+                                        "name": "account_id",
+                                        "children": [],
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
+    )
+
+    assert result.ok is False
+    assert len(result.issues) == 1
+    issue = result.issues[0]
+    assert issue.path == (
+        "products",
+        0,
+        "children",
+        0,
+        "fields",
+        0,
+        "children",
+    )
+    assert issue.code is IntentValidationIssueCode.UNKNOWN_FIELD
+
+
+def _memstore_source_with_rejected_field(field: str) -> dict[str, object]:
+    return {
+        "version": "1",
+        "seed": 42,
+        "products": [
+            {
+                "kind": "generated",
+                "name": "customers",
+                "count": 2,
+                "fields": [
+                    {
+                        "kind": "increment",
+                        "name": "customer_id",
+                        "roles": [{"kind": "identifier"}],
+                    }
+                ],
+                "targets": [{"kind": "memstore", "id": "customer_mem"}],
+            },
+            {
+                "kind": "source",
+                "name": "customer_readback",
+                "source": {
+                    "kind": "memstore",
+                    "id": "customer_mem",
+                    field: "customers",
+                },
+                "fields": [
+                    {
+                        "kind": "script",
+                        "name": "customer_id",
+                        "script": "customer_id",
+                        "roles": [
+                            {
+                                "kind": "foreign_key",
+                                "parent_product": "customers",
+                                "parent_field": "customer_id",
+                            }
+                        ],
+                    }
+                ],
+            },
+        ],
+    }
+
+
+def test_unknown_memstore_source_field_repairs_exact_owner_and_validates() -> None:
+    raw = _memstore_source_with_rejected_field("type")
+
+    result = scaffold(ScaffoldRequest(spec=raw))
+
+    assert result.ok is False
+    assert len(result.issues) == 1
+    issue = result.issues[0]
+    assert issue.path == ("products", 1, "source", "type")
+    assert issue.code is IntentValidationIssueCode.UNKNOWN_FIELD
+    assert issue.allowed_fields == tuple(MemstoreSource.model_fields)
+    assert issue.repair is not None
+    assert issue.repair.replacement_field == "product"
+    assert issue.repair.rejected_value == "customers"
+    assert issue.expected_fragment == issue.repair.corrected_fragment
+    MemstoreSource.model_validate(issue.repair.corrected_fragment)
+
+    corrected = json.loads(json.dumps(raw))
+    source = corrected["products"][1]["source"]
+    source[issue.repair.replacement_field] = source.pop("type")
+    AuthoringSpecV1.model_validate(corrected)
+
+
+def test_source_repair_survives_unrelated_root_validation_error() -> None:
+    raw = _memstore_source_with_rejected_field("type")
+    raw["unknown_root"] = True
+
+    result = scaffold(ScaffoldRequest(spec=raw))
+
+    assert len(result.issues) == 2
+    issues = {issue.path: issue for issue in result.issues}
+    source_issue = issues[("products", 1, "source", "type")]
+    assert source_issue.repair is not None
+    assert source_issue.repair.replacement_field == "product"
+    assert source_issue.repair.rejected_value == "customers"
+    root_issue = issues[("unknown_root",)]
+    assert root_issue.code is IntentValidationIssueCode.UNKNOWN_FIELD
+    assert root_issue.repair is None
+
+
+def test_source_repair_rejects_candidate_with_owner_local_validation_error() -> None:
+    raw = _memstore_source_with_rejected_field("type")
+    source = raw["products"][1]["source"]
+    source["type"] = 123
+
+    result = scaffold(ScaffoldRequest(spec=raw))
+
+    assert len(result.issues) == 1
+    issue = result.issues[0]
+    assert issue.path == ("products", 1, "source", "type")
+    assert issue.repair is None
+    assert issue.expected_fragment is None
+
+
+def test_unknown_memstore_source_field_without_validated_match_has_no_repair() -> None:
+    result = scaffold(
+        ScaffoldRequest(spec=_memstore_source_with_rejected_field("oops"))
+    )
+
+    assert len(result.issues) == 1
+    issue = result.issues[0]
+    assert issue.code is IntentValidationIssueCode.UNKNOWN_FIELD
+    assert issue.allowed_fields == tuple(MemstoreSource.model_fields)
+    assert issue.repair is None
+    assert issue.expected_fragment is None
+
+
 def test_every_compact_reference_is_exact_model_valid_and_small() -> None:
     assert projection_catalog_is_exhaustive()
     for query in list_authoring_reference_queries():
@@ -105,6 +316,21 @@ def test_every_compact_reference_is_exact_model_valid_and_small() -> None:
         assert projection.allowed_fields
         assert set(projection.required_fields) <= set(projection.allowed_fields)
         assert len(projection.model_dump_json()) < 4_000
+
+
+def test_source_reference_queries_are_exhaustive_and_exact() -> None:
+    source_queries = [
+        query
+        for query in list_authoring_reference_queries()
+        if isinstance(query, SourceReferenceQuery)
+    ]
+
+    assert {query.kind for query in source_queries} == set(SourceIntentKind)
+    assert len(source_queries) == len(SourceIntentKind)
+    for query in source_queries:
+        projection = authoring_reference_projection(query)
+        assert projection.fragment["kind"] == query.kind
+        assert reference_fragment_is_valid(query)
 
 
 def test_cli_and_mcp_return_identical_compact_authoring_reference() -> None:
@@ -218,6 +444,25 @@ def test_all_full_examples_compile() -> None:
         query = ExampleReferenceQuery(kind=kind)
         spec = AuthoringSpecV1.model_validate(authoring_reference_projection(query).fragment)
         assert compile_authoring_spec(spec).xml
+
+
+def test_memstore_pipeline_example_is_acceptance_ready() -> None:
+    fragment = authoring_reference_projection(
+        ExampleReferenceQuery(kind=AuthoringExampleKind.MEMSTORE_PIPELINE)
+    ).fragment
+
+    result = scaffold(ScaffoldRequest(spec=fragment, sample_rows=1))
+
+    assert result.verified
+    assert result.acceptance is not None
+    memstore = next(
+        item
+        for item in result.acceptance.results
+        if item.kind == "memstore_completeness"
+    )
+    assert memstore.status is AcceptanceStatus.PASS
+    assert memstore.required_consumer_foreign_key is not None
+    assert memstore.required_consumer_foreign_key.observed_count == 1
 
 
 @pytest.mark.parametrize(

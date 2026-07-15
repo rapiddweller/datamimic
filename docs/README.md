@@ -18,7 +18,7 @@ This project documentation focuses specifically on:
 - [MCP Quickstart](mcp_quickstart.md): install and register the MCP server; the check/run/reference authoring tools.
 - [DSL cheatsheet](../datamimic_ce/authoring/reference_data/cheatsheet.md): one-page DSL syntax reference, the same content the MCP server serves.
 - [Showcase gallery](../examples/showcase/README.md): four runnable, seeded descriptor examples, verified by CI.
-- [DSL authoring benchmark](../benchmarks/dsl-authoring/README.md): harness that measures how reliably agents author correct descriptors.
+- [Authoring evaluation archive](../benchmarks/dsl-authoring/README.md): curated diagnostic records for canonical agent authoring.
 
 ### Getting started
 

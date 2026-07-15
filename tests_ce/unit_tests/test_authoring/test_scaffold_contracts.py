@@ -307,6 +307,101 @@ class TestScaffoldParity:
             if item["kind"] == "memstore_completeness"
         )
         assert memstore["status"] == AcceptanceStatus.PASS
+        assert memstore["required_consumer_foreign_key"] == {
+            "role_kind": "foreign_key",
+            "parent_product": "producer",
+            "parent_field": "id",
+            "required_count": 1,
+            "observed_count": 1,
+        }
+
+    def test_v1_count_remediation_is_identical_across_transports(self):
+        """CLI and MCP serialize the service-owned retry action unchanged."""
+        spec = json.loads(json.dumps(SPEC_V1_COMPLETE_MEMSTORE))
+        spec["products"][0]["count"] = 15
+        spec["products"][1]["fields"] = spec["products"][1]["fields"][:1]
+        request = ScaffoldRequest(spec=spec, max_count=10, sample_rows=1)
+
+        service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
+        mcp_result = scaffold_impl(ScaffoldArgs(**request.model_dump()))
+        cli_result = CliRunner().invoke(
+            app,
+            [
+                "scaffold",
+                "-",
+                "--format",
+                "json",
+                "--max-count",
+                "10",
+                "--sample-rows",
+                "1",
+            ],
+            input=json.dumps(spec),
+        )
+
+        assert cli_result.exit_code == 1
+        assert json.loads(cli_result.stdout) == service_result == mcp_result
+        assert service_result["remediations"] == [
+            {
+                "kind": "retry_with_parameter",
+                "parameter": "max_count",
+                "minimum_value": 15,
+                "affected_products": ["producer", "reader"],
+            }
+        ]
+
+    def test_v1_source_repair_is_identical_across_transports(self):
+        """Nested source repair is a canonical result, not adapter policy."""
+        spec = json.loads(json.dumps(SPEC_V1_COMPLETE_MEMSTORE))
+        source = spec["products"][1]["source"]
+        source["type"] = source.pop("product")
+        request = ScaffoldRequest(spec=spec)
+
+        service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
+        mcp_result = scaffold_impl(ScaffoldArgs(**request.model_dump()))
+        cli_result = CliRunner().invoke(
+            app,
+            ["scaffold", "-", "--format", "json"],
+            input=json.dumps(spec),
+        )
+
+        assert cli_result.exit_code == 2
+        assert json.loads(cli_result.stdout) == service_result == mcp_result
+        repair = service_result["issues"][0]["repair"]
+        assert repair["replacement_field"] == "product"
+        assert repair["rejected_value"] == "producer"
+
+    def test_v1_missing_role_evidence_is_identical_across_transports(self):
+        """The missing consumer role remains structured through both adapters."""
+        spec = json.loads(json.dumps(SPEC_V1_COMPLETE_MEMSTORE))
+        spec["products"][1]["fields"][0]["roles"] = []
+        request = ScaffoldRequest(spec=spec, max_count=5, sample_rows=1)
+
+        service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
+        mcp_result = scaffold_impl(ScaffoldArgs(**request.model_dump()))
+        cli_result = CliRunner().invoke(
+            app,
+            [
+                "scaffold",
+                "-",
+                "--format",
+                "json",
+                "--max-count",
+                "5",
+                "--sample-rows",
+                "1",
+            ],
+            input=json.dumps(spec),
+        )
+
+        assert cli_result.exit_code == 1
+        assert json.loads(cli_result.stdout) == service_result == mcp_result
+        memstore = next(
+            item
+            for item in service_result["acceptance"]["results"]
+            if item["kind"] == "memstore_completeness"
+        )
+        assert memstore["required_consumer_foreign_key"]["observed_count"] == 0
 
     def test_cli_format_validation(self):
         """CLI validates --format option."""

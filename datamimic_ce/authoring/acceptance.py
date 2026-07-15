@@ -47,6 +47,7 @@ from datamimic_ce.authoring.contracts import (
     ProductCaptureCompleteness,
     RangeAcceptancePlan,
     RangeAcceptanceResult,
+    RequiredConsumerForeignKey,
     RowConditionAcceptanceResult,
     UniqueAcceptancePlan,
     UniqueAcceptanceResult,
@@ -1092,17 +1093,6 @@ def _memstore_result(
             producer_count=None if producer is None else len(producer.rows),
             consumer_count=None if consumer is None else len(consumer.rows),
         )
-    if len(producer.rows) != len(consumer.rows):
-        return MemstoreCompletenessAcceptanceResult(
-            status=AcceptanceStatus.FAIL,
-            source=source,
-            message="producer and memstore consumer bounded row counts differ",
-            producer_product=expectation.producer_product,
-            consumer_product=expectation.consumer_product,
-            source_id=expectation.source_id,
-            producer_count=len(producer.rows),
-            consumer_count=len(consumer.rows),
-        )
 
     producer_plan = next(
         (item for item in plan.products if item.name == expectation.producer_product),
@@ -1128,6 +1118,34 @@ def _memstore_result(
         for field in producer_plan.fields
         if any(isinstance(role, IdentifierRolePlan) for role in field.roles)
     }
+    required_foreign_key: RequiredConsumerForeignKey | None = None
+    if len(producer_identifiers) == 1:
+        producer_identifier = next(iter(producer_identifiers))
+        observed_roles = sum(
+            1
+            for field in consumer_plan.fields
+            for role in field.roles
+            if isinstance(role, ForeignKeyRolePlan)
+            and role.parent_product == expectation.producer_product
+            and role.parent_field == producer_identifier
+        )
+        required_foreign_key = RequiredConsumerForeignKey(
+            parent_product=expectation.producer_product,
+            parent_field=producer_identifier,
+            observed_count=observed_roles,
+        )
+    if len(producer.rows) != len(consumer.rows):
+        return MemstoreCompletenessAcceptanceResult(
+            status=AcceptanceStatus.FAIL,
+            source=source,
+            message="producer and memstore consumer bounded row counts differ",
+            producer_product=expectation.producer_product,
+            consumer_product=expectation.consumer_product,
+            source_id=expectation.source_id,
+            producer_count=len(producer.rows),
+            consumer_count=len(consumer.rows),
+            required_consumer_foreign_key=required_foreign_key,
+        )
     candidates = [
         (field.name, role.parent_field)
         for field in consumer_plan.fields
@@ -1150,6 +1168,7 @@ def _memstore_result(
             source_id=expectation.source_id,
             producer_count=len(producer.rows),
             consumer_count=len(consumer.rows),
+            required_consumer_foreign_key=required_foreign_key,
         )
     consumer_key_field, producer_key_field = candidates[0]
     producer_rows, producer_error = _rows(captured, expectation.producer_product)
@@ -1166,6 +1185,7 @@ def _memstore_result(
             consumer_count=len(consumer.rows),
             producer_key_field=producer_key_field,
             consumer_key_field=consumer_key_field,
+            required_consumer_foreign_key=required_foreign_key,
         )
     producer_values, producer_error = _values(
         producer_rows,
@@ -1189,6 +1209,7 @@ def _memstore_result(
             consumer_count=len(consumer.rows),
             producer_key_field=producer_key_field,
             consumer_key_field=consumer_key_field,
+            required_consumer_foreign_key=required_foreign_key,
         )
     producer_keys = {_display(value) for value in producer_values}
     consumer_keys = {_display(value) for value in consumer_values}
@@ -1214,6 +1235,7 @@ def _memstore_result(
         consumer_count=len(consumer.rows),
         producer_key_field=producer_key_field,
         consumer_key_field=consumer_key_field,
+        required_consumer_foreign_key=required_foreign_key,
         missing_keys=missing[:20],
         unexpected_keys=unexpected[:20],
         duplicate_producer_keys=duplicate_producer[:20],

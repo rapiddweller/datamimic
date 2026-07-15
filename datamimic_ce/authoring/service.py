@@ -18,21 +18,32 @@ from typing import Any
 from datamimic_ce.authoring.acceptance import evaluate_acceptance
 from datamimic_ce.authoring.compiler import CompileError, compile_authoring_spec
 from datamimic_ce.authoring.contracts import (
+    MAX_DRY_RUN_COUNT,
     AuthoringResponseFormat,
     AuthoringStage,
+    CaptureStatus,
     CheckRequest,
     CheckResult,
     CompilePlan,
+    GeneratedProductCompilePlan,
     IntentValidationIssue,
     IntentValidationIssueCode,
+    RetryWithParameterRemediation,
     RunRequest,
     RunResult,
     ScaffoldRequest,
     ScaffoldResult,
     ScaffoldVerificationEvidence,
+    SourceProductCompilePlan,
+    TimeSeriesProductCompilePlan,
 )
 from datamimic_ce.authoring.diagnostics import _diagnostic_dicts
-from datamimic_ce.authoring.dryrun import dry_run, dry_run_source, dry_run_source_captured
+from datamimic_ce.authoring.dryrun import (
+    CapturedProducts,
+    dry_run,
+    dry_run_source,
+    dry_run_source_captured,
+)
 from datamimic_ce.authoring.linter import lint_descriptor, lint_source
 from datamimic_ce.authoring.normalization import normalize_authoring_spec
 from datamimic_ce.authoring.spec import AuthoringSpecV1
@@ -142,6 +153,63 @@ def run(request: RunRequest) -> RunResult:
     return result
 
 
+def _max_count_remediations(
+    plan: CompilePlan,
+    captured: CapturedProducts,
+) -> list[RetryWithParameterRemediation]:
+    """Derive one retry action from typed, statically bounded cap evidence."""
+
+    products_by_name = {product.name: product for product in plan.products}
+    minimums: dict[str, int] = {}
+    for product in captured.products:
+        evidence = product.capture
+        planned = products_by_name.get(product.name)
+        if (
+            evidence is None
+            or evidence.status is not CaptureStatus.CAPPED
+            or evidence.requested is None
+            or planned is None
+        ):
+            continue
+        if isinstance(planned, GeneratedProductCompilePlan):
+            minimum = planned.count_per_parent or planned.static_count
+        elif isinstance(planned, TimeSeriesProductCompilePlan):
+            minimum = planned.series_count
+        elif isinstance(planned, SourceProductCompilePlan):
+            minimum = evidence.requested
+        else:
+            continue
+        if minimum > captured.max_count:
+            minimums[product.name] = minimum
+    if not minimums:
+        return []
+    required_minimum = max(minimums.values())
+    if required_minimum > MAX_DRY_RUN_COUNT:
+        return []
+
+    captured_names = {product.name for product in captured.products}
+    affected = set(minimums)
+    changed = True
+    while changed:
+        changed = False
+        for relationship in plan.relationships:
+            if (
+                relationship.parent in affected
+                and relationship.child in captured_names
+                and relationship.child not in affected
+            ):
+                affected.add(relationship.child)
+                changed = True
+    return [
+        RetryWithParameterRemediation(
+            minimum_value=required_minimum,
+            affected_products=tuple(
+                product.name for product in plan.products if product.name in affected
+            ),
+        )
+    ]
+
+
 def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
     """Compile, lint, run, accept and optionally verify one authoring intent."""
     try:
@@ -223,6 +291,10 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
         )
 
     acceptance = evaluate_acceptance(compiled.plan, compiled.spec, captured_run.captured)
+    remediations = _max_count_remediations(
+        compiled.plan,
+        captured_run.captured,
+    )
     replay_run = None
     if not request.verification.deterministic_replay:
         replay_result = replay_not_requested()
@@ -262,6 +334,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
         normalization_notes=normalization_notes,
         compile_plan=compiled.plan,
         acceptance=acceptance,
+        remediations=remediations,
         verification=verification,
         verified=acceptance.verified and verification_passed,
     )

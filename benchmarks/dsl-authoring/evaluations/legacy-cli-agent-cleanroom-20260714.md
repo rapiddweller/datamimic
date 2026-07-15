@@ -1,11 +1,13 @@
-# CLI-only agent stress report — 2026-07-14
+# Legacy CLI-only raw-XML agent stress report — 2026-07-14
+
+> Historical pre-canonical evaluation retained for context. It authored raw XML
+> and is not evidence for the current `model.dm.json`/`scaffold` contract.
 
 ## Isolation contract
 
-- Agent `cli_only_banking` was started with `fork_turns="none"`.
-- Agent `cli_only_replay` was independently started with `fork_turns="none"`.
-- Both were forbidden to read skills, repository source, tests, docs, existing descriptors,
-  or other agents' `/tmp` artifacts.
+- Two independent context-free runs were performed.
+- Both were forbidden to read skills, repository source, tests, documentation,
+  existing descriptors, or artifacts from the other run.
 - Their only DATAMIMIC knowledge source was `.venv/bin/datamimic`: `--help`,
   `capabilities`, `reference`, `scaffold`, `lint`, and `dry-run`.
 - A separate black-box process stress used only the executable CLI, never authoring service imports.
@@ -15,7 +17,7 @@
 ```text
 business intent
   -> datamimic --help / capabilities / reference
-  -> agent-authored descriptor in /tmp
+  -> generated descriptor in a system temporary directory
   -> datamimic lint --fail-on warning --format json
   -> datamimic dry-run --sample-rows 50 --format json
   -> external intent oracle over every returned row
@@ -24,8 +26,6 @@ business intent
 ```
 
 ## Clean-room result A: nested banking
-
-Artifact: `/tmp/datamimic-cli-banking.xml`
 
 - Products: 5 branches, 13 customers, 32 accounts.
 - All samples were complete (`truncated_rows=false`).
@@ -40,8 +40,6 @@ Artifact: `/tmp/datamimic-cli-banking.xml`
 - Strict lint and smoke-export both exited 0.
 
 ## Clean-room result B: related customer/order/read-back pipeline
-
-Artifact: `/tmp/datamimic-cli-cleanroom/business.xml`
 
 - Products: 5 customers, 10 orders, 5 ordered read-back rows.
 - All 20 returned rows were complete.

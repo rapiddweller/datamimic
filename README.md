@@ -63,9 +63,12 @@ change the available schema or commands.
 
 `capabilities`, authoring-reference projections, and the commands shown with
 `--format json` return machine-readable JSON. On a failed scaffold attempt, change
-`model.dm.json` using its structured validation issues or rule diagnostics before
-retrying; never repeat an identical failed call. A successful scaffold result is
-terminal for authoring, so do not lint or dry-run its generated XML again.
+`model.dm.json` using its structured validation issues, typed repair, or rule
+diagnostics before retrying. A typed `max_count` remediation instead changes only
+the bounded scaffold parameter to at least its reported minimum. Never repeat an
+identical failed call. A successful scaffold result is terminal for authoring, so
+do not lint or dry-run its generated XML again. Exact source fragments are
+discoverable through queries such as `--category source --kind memstore`.
 
 ### Optional MCP adapter
 
@@ -91,14 +94,16 @@ needed, start with `datamimic reference authoring`, and query only the narrow
 category/kind fragments required for this task. Preserve my intent as
 `model.dm.json`; do not hand-write XML. Run
 `datamimic scaffold model.dm.json --format json` once per changed attempt. On
-failure, change the input from the structured issues or diagnostics before
-retrying. Inspect acceptance evidence and samples, then stop on `verified=true`;
+failure, apply its typed repair or change the input from structured issues and
+diagnostics. If a remediation requests a larger `max_count`, retry scaffold with
+at least that value without changing the intent. Inspect acceptance evidence and
+samples, then stop on `verified=true`;
 do not lint or dry-run the generated XML. If I request real execution, save the
 returned XML as a generated artifact and run that descriptor. Return the
 `model.dm.json` path and concise verification evidence.
 ```
 
-**Use raw XML for a shape outside AuthoringSpecV1**
+**Fall back to raw XML only when scaffold reports unsupported intent**
 
 ```text
 Seed a relational dataset with referential integrity: customers, accounts,
@@ -117,19 +122,21 @@ Requirements:
 - Every customer_id referenced by an account, and by a transaction, must
   exist in the customers output.
 
-This two-hop nested shape is outside AuthoringSpecV1's current one-child-level
-scope, so use the existing raw XML workflow instead of forcing or weakening the
-intent.
-
 Steps:
-1. Read AGENTS.md and the banking showcase XML/README. Query only the narrow
-   DSL reference topics needed.
-2. Author the descriptor, then run `datamimic lint <path> --format json` and
+1. Read AGENTS.md and start with the canonical `model.dm.json` workflow. Submit
+   the complete requested hierarchy to `datamimic scaffold ... --format json`.
+2. If scaffold verifies the intent, stop. If its structured issue classifies a
+   required relationship as `unsupported_intent`, preserve that evidence and
+   use the banking showcase XML/README as the raw-XML fallback. Repair every
+   other validation error in `model.dm.json`; do not infer capability limits
+   from this prompt.
+3. For the fallback, author the descriptor, then run
+   `datamimic lint <path> --format json` and
    fix every diagnostic.
-3. Run `datamimic dry-run <path> --format json`; inspect bounded samples and
+4. Run `datamimic dry-run <path> --format json`; inspect bounded samples and
    verify the relationships serve the requested intent.
-4. Run `datamimic run <path>` only after verification.
-5. Before declaring this done, load the generated JSON files and confirm
+5. Run `datamimic run <path>` only after verification.
+6. Before declaring this done, load the generated JSON files and confirm
    every foreign key resolves: every account's customer_id exists in
    customers, every transaction's account_id exists in accounts. Show me
    the check you ran and its result.
@@ -511,7 +518,7 @@ response = generate_domain({
 # Same engine version + same model + same seed → same output, every machine, every run.
 ```
 
-**2. Deterministic data backend for AI agents and LLM tooling.** The bundled MCP server (`pip install datamimic-ce[mcp]`) exposes `generate` as an MCP tool. Agents call it with seed, locale, count; outputs ship with a `determinism_proof.content_hash` so the same call can be re-executed and verified later — useful for agent regression tests and for any workflow where the data the agent saw needs to be reconstructable.
+**2. Deterministic data backend for AI agents and LLM tooling.** The CLI and Python API are the baseline surfaces for seeded, verifiable generation. The optional MCP adapter (`pip install "datamimic-ce[mcp]"`) exposes the same domain facade to MCP clients. Generated outputs include a `determinism_proof.content_hash`, so callers can re-execute and verify the data later — useful for agent regression tests and any workflow where the data an agent saw must be reconstructable.
 
 **3. Pseudonymization of staging and QA exports.** Manual model in CE (XML pipeline), no scanner license required. Seeded mode for stable regression test data; non-seeded mode for one-time deliveries with maximized privacy posture. See the [Pseudonymization section above](#pseudonymization--ce-manual-model).
 

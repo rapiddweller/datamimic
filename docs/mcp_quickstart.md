@@ -5,7 +5,7 @@ This guide walks through installing and exercising the Model Context Protocol (M
 ## Installation
 
 ```bash
-pip install datamimic-ce[mcp]
+pip install "datamimic-ce[mcp]"
 ```
 
 The optional `mcp` extra pulls in `fastmcp`, `uvicorn`, and the additional runtime pieces needed for the server and tests.
@@ -13,7 +13,7 @@ The optional `mcp` extra pulls in `fastmcp`, `uvicorn`, and the additional runti
 For local development against a checkout, install the package in editable mode so the test suite can import the optional transport client:
 
 ```bash
-pip install -e .[mcp]
+pip install -e ".[mcp]"
 ```
 
 ## Running the server
