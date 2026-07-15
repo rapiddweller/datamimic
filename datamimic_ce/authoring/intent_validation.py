@@ -291,6 +291,43 @@ def _repair_context(
     return allowed_fields, model_name, repair
 
 
+def _build_intent_validation_issue(
+    location: _ValidationLocation, issue: Mapping[str, Any], raw: Mapping[str, Any]
+) -> IntentValidationIssue:
+    """Build one IntentValidationIssue from a filtered Pydantic error item."""
+    path = location.path
+    raw_issue_type = issue["type"]
+    if not isinstance(raw_issue_type, str):
+        issue_type = None
+        intent_issue_type = None
+    else:
+        try:
+            intent_issue_type = IntentModelValidationIssueType(raw_issue_type)
+        except ValueError:
+            intent_issue_type = None
+        try:
+            issue_type = _PydanticIssueType(raw_issue_type)
+        except ValueError:
+            issue_type = None
+    code = _issue_code(issue_type, intent_issue_type)
+    allowed_fields: tuple[str, ...] = ()
+    model_name: str | None = None
+    repair: ReplaceFieldRepair | None = None
+    if code is IntentValidationIssueCode.UNKNOWN_FIELD:
+        allowed_fields, model_name, repair = _repair_context(raw, location)
+    message = str(issue["msg"])
+    if code is IntentValidationIssueCode.UNKNOWN_FIELD and path:
+        owner = f" for {model_name}" if model_name is not None else ""
+        message = f"Unknown field '{path[-1]}'{owner}"
+    return IntentValidationIssue(
+        path=path,
+        code=code,
+        message=message,
+        allowed_fields=allowed_fields,
+        repair=repair,
+    )
+
+
 def project_validation_issues(
     error: ValidationError,
     raw: Mapping[str, Any],
@@ -305,45 +342,7 @@ def project_validation_issues(
             for other_location, _ in public
         )
     ]
-    result: list[IntentValidationIssue] = []
-    for location, issue in filtered:
-        path = location.path
-        raw_issue_type = issue["type"]
-        if not isinstance(raw_issue_type, str):
-            issue_type = None
-            intent_issue_type = None
-        else:
-            try:
-                intent_issue_type = IntentModelValidationIssueType(raw_issue_type)
-            except ValueError:
-                intent_issue_type = None
-            try:
-                issue_type = _PydanticIssueType(raw_issue_type)
-            except ValueError:
-                issue_type = None
-        code = _issue_code(issue_type, intent_issue_type)
-        allowed_fields: tuple[str, ...] = ()
-        model_name: str | None = None
-        repair: ReplaceFieldRepair | None = None
-        if code is IntentValidationIssueCode.UNKNOWN_FIELD:
-            allowed_fields, model_name, repair = _repair_context(
-                raw,
-                location,
-            )
-        message = str(issue["msg"])
-        if code is IntentValidationIssueCode.UNKNOWN_FIELD and path:
-            owner = f" for {model_name}" if model_name is not None else ""
-            message = f"Unknown field '{path[-1]}'{owner}"
-        result.append(
-            IntentValidationIssue(
-                path=path,
-                code=code,
-                message=message,
-                allowed_fields=allowed_fields,
-                repair=repair,
-            )
-        )
-    return tuple(result)
+    return tuple(_build_intent_validation_issue(location, issue, raw) for location, issue in filtered)
 
 
 __all__ = [
