@@ -13,7 +13,7 @@ that another transport rejects.
 
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
-from typing import Annotated, Any, Literal, Self
+from typing import Annotated, Any, Callable, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, RootModel, StrictStr, TypeAdapter, model_validator
 
@@ -713,6 +713,369 @@ DerivedAcceptancePlan = Annotated[
 ]
 
 
+# ---------------------------------------------------------------------------
+# Graph-integrity phase helpers — extracted from CompilePlan._validate_graph_integrity
+# to keep each phase a coherent, testable unit.
+# ---------------------------------------------------------------------------
+
+
+def _require_product(products_by_name: dict[str, "ProductCompilePlan"], name: str, context: str) -> "ProductCompilePlan":
+    product = products_by_name.get(name)
+    if product is None:
+        raise ValueError(f"{context} references unknown product '{name}'")
+    return product
+
+
+def _require_field(
+    products_by_name: dict[str, "ProductCompilePlan"],
+    fields_by_product: dict[str, dict[str, "FieldPlan"]],
+    product_name: str,
+    field_name: str,
+    context: str,
+) -> "FieldPlan":
+    _require_product(products_by_name, product_name, context)
+    field = fields_by_product[product_name].get(field_name)
+    if field is None:
+        raise ValueError(f"{context} references unknown field '{field_name}' on product '{product_name}'")
+    return field
+
+
+def _build_product_index(
+    products: list["ProductCompilePlan"],
+) -> tuple[dict[str, "ProductCompilePlan"], dict[str, dict[str, "FieldPlan"]]]:
+    products_by_name: dict[str, "ProductCompilePlan"] = {}
+    fields_by_product: dict[str, dict[str, "FieldPlan"]] = {}
+    for product in products:
+        if product.name in products_by_name:
+            raise ValueError(f"duplicate product name '{product.name}'")
+        products_by_name[product.name] = product
+        fields: dict[str, "FieldPlan"] = {}
+        for field in product.fields:
+            if field.name in fields:
+                raise ValueError(f"duplicate field name '{field.name}' in product '{product.name}'")
+            fields[field.name] = field
+        fields_by_product[product.name] = fields
+    return products_by_name, fields_by_product
+
+
+def _validate_generated_products(
+    products: list["ProductCompilePlan"],
+    products_by_name: dict[str, "ProductCompilePlan"],
+) -> tuple[dict[str, "GeneratedProductCompilePlan"], set[tuple[str, str]]]:
+    product_nested_edges: set[tuple[str, str]] = set()
+    generated_products: dict[str, "GeneratedProductCompilePlan"] = {}
+    for product in products:
+        if not isinstance(product, GeneratedProductCompilePlan):
+            continue
+        generated_products[product.name] = product
+        if product.parent is not None:
+            parent = _require_product(products_by_name, product.parent, f"generated product '{product.name}'")
+            if not isinstance(parent, GeneratedProductCompilePlan):
+                raise ValueError(f"generated parent '{product.parent}' must be a generated product")
+            if product.name not in parent.children:
+                raise ValueError(f"generated child '{product.name}' is not declared by parent '{parent.name}'")
+        for child_name in product.children:
+            child = _require_product(products_by_name, child_name, f"generated product '{product.name}'")
+            if not isinstance(child, GeneratedProductCompilePlan):
+                raise ValueError(f"generated child '{child_name}' must be a generated product")
+            if child.parent != product.name:
+                raise ValueError(f"generated child '{child_name}' does not reference parent '{product.name}'")
+            product_nested_edges.add((product.name, child_name))
+
+    # Cycle detection
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit_generated(product_name: str) -> None:
+        if product_name in visiting:
+            raise ValueError(f"generated product graph contains a cycle at '{product_name}'")
+        if product_name in visited:
+            return
+        visiting.add(product_name)
+        product = generated_products[product_name]
+        for child_name in product.children:
+            visit_generated(child_name)
+        visiting.remove(product_name)
+        visited.add(product_name)
+
+    for product_name in generated_products:
+        visit_generated(product_name)
+
+    return generated_products, product_nested_edges
+
+
+def _validate_memstore_sources(
+    products: list["ProductCompilePlan"],
+    products_by_name: dict[str, "ProductCompilePlan"],
+) -> None:
+    for product in products:
+        if (
+            isinstance(product, SourceProductCompilePlan)
+            and isinstance(product.source, MemstoreSourceBindingPlan)
+            and product.source.product is not None
+        ):
+            _require_product(
+                products_by_name,
+                product.source.product,
+                f"memstore source product '{product.name}'",
+            )
+
+
+def _validate_nested_relationship(
+    relationship: "NestedRelationshipPlan",
+    parent: "ProductCompilePlan",
+    child: "ProductCompilePlan",
+    endpoints: tuple[str, str],
+    nested_relationships: set[tuple[str, str]],
+    product_nested_edges: set[tuple[str, str]],
+) -> None:
+    if endpoints in nested_relationships:
+        raise ValueError(f"duplicate nested relationship '{relationship.parent}' -> '{relationship.child}'")
+    nested_relationships.add(endpoints)
+    if endpoints not in product_nested_edges:
+        raise ValueError(
+            f"nested relationship '{relationship.parent}' -> "
+            f"'{relationship.child}' is inconsistent with product graph"
+        )
+    if not isinstance(parent, GeneratedProductCompilePlan) or not isinstance(child, GeneratedProductCompilePlan):
+        raise ValueError("nested relationship endpoints must be generated products")
+
+
+def _validate_memstore_relationship(
+    relationship: "MemstoreRelationshipPlan",
+    parent: "ProductCompilePlan",
+    child: "ProductCompilePlan",
+    endpoints: tuple[str, str],
+    memstore_relationships: set[tuple[str, str]],
+    memstore_children: set[str],
+) -> None:
+    if endpoints in memstore_relationships:
+        raise ValueError(f"duplicate memstore relationship '{relationship.parent}' -> '{relationship.child}'")
+    memstore_relationships.add(endpoints)
+    if relationship.child in memstore_children:
+        raise ValueError(f"source product '{relationship.child}' has multiple memstore relationships")
+    memstore_children.add(relationship.child)
+    if not isinstance(child, SourceProductCompilePlan):
+        raise ValueError("memstore relationship child must use a memstore source")
+    if not isinstance(child.source, MemstoreSourceBindingPlan):
+        raise ValueError("memstore relationship child must use a memstore source")
+    if child.source.id != relationship.source_id:
+        raise ValueError("memstore relationship source_id does not match child source")
+    if child.source.product is not None and child.source.product != relationship.parent:
+        raise ValueError("memstore relationship parent does not match child source product")
+    if not any(
+        isinstance(target, MemstoreTargetBindingPlan) and target.id == relationship.source_id
+        for target in parent.targets
+    ):
+        raise ValueError("memstore relationship source_id does not match parent target")
+
+
+def _validate_relationships(
+    relationships: list["NestedRelationshipPlan | MemstoreRelationshipPlan"],
+    products_by_name: dict[str, "ProductCompilePlan"],
+    product_nested_edges: set[tuple[str, str]],
+) -> tuple[set[tuple[str, str]], set[str]]:
+    nested_relationships: set[tuple[str, str]] = set()
+    memstore_relationships: set[tuple[str, str]] = set()
+    memstore_children: set[str] = set()
+    for relationship in relationships:
+        parent = _require_product(products_by_name, relationship.parent, "relationship")
+        child = _require_product(products_by_name, relationship.child, "relationship")
+        endpoints = (relationship.parent, relationship.child)
+        if isinstance(relationship, NestedRelationshipPlan):
+            _validate_nested_relationship(relationship, parent, child, endpoints, nested_relationships, product_nested_edges)
+            continue
+        _validate_memstore_relationship(relationship, parent, child, endpoints, memstore_relationships, memstore_children)
+    return nested_relationships, memstore_children
+
+
+def _validate_relationship_consistency(
+    nested_relationships: set[tuple[str, str]],
+    product_nested_edges: set[tuple[str, str]],
+    products: list["ProductCompilePlan"],
+    memstore_children: set[str],
+) -> None:
+    if nested_relationships != product_nested_edges:
+        raise ValueError("nested product graph and relationship declarations differ")
+    for product in products:
+        if (
+            isinstance(product, SourceProductCompilePlan)
+            and isinstance(product.source, MemstoreSourceBindingPlan)
+            and product.name not in memstore_children
+        ):
+            raise ValueError(f"memstore source product '{product.name}' has no relationship declaration")
+
+
+class _AcceptanceCtx:
+    """Shared mutable state for acceptance-fact validation — one pass, per-type dedup sets."""
+
+    __slots__ = (
+        "products_by_name",
+        "fields_by_product",
+        "product_nested_edges",
+        "exact_facts",
+        "per_parent_facts",
+        "unique_facts",
+        "foreign_key_facts",
+        "allowed_values_facts",
+        "range_facts",
+    )
+
+    def __init__(
+        self,
+        products_by_name: dict[str, "ProductCompilePlan"],
+        fields_by_product: dict[str, dict[str, "FieldPlan"]],
+        product_nested_edges: set[tuple[str, str]],
+    ) -> None:
+        self.products_by_name = products_by_name
+        self.fields_by_product = fields_by_product
+        self.product_nested_edges = product_nested_edges
+        self.exact_facts: set[str] = set()
+        self.per_parent_facts: set[tuple[str, str]] = set()
+        self.unique_facts: set[tuple[str, str]] = set()
+        self.foreign_key_facts: set[tuple[str, str, str, str]] = set()
+        self.allowed_values_facts: set[tuple[str, str]] = set()
+        self.range_facts: set[tuple[str, str]] = set()
+
+
+def _validate_exact_count(
+    acceptance: "ExactCountAcceptancePlan", product: "ProductCompilePlan", ctx: _AcceptanceCtx
+) -> None:
+    if acceptance.product in ctx.exact_facts:
+        raise ValueError(f"duplicate exact-count acceptance for '{acceptance.product}'")
+    ctx.exact_facts.add(acceptance.product)
+    if acceptance.exact_count != product.static_count:
+        raise ValueError("exact-count acceptance does not match product static_count")
+
+
+def _validate_per_parent_count(
+    acceptance: "PerParentCountAcceptancePlan", product: "ProductCompilePlan", ctx: _AcceptanceCtx
+) -> None:
+    per_parent_fact = (acceptance.parent_product, acceptance.product)
+    if per_parent_fact in ctx.per_parent_facts:
+        raise ValueError("duplicate per-parent acceptance")
+    ctx.per_parent_facts.add(per_parent_fact)
+    parent = _require_product(ctx.products_by_name, acceptance.parent_product, "per-parent acceptance")
+    if not isinstance(parent, GeneratedProductCompilePlan) or not isinstance(product, GeneratedProductCompilePlan):
+        raise ValueError("per-parent acceptance requires generated products")
+    if per_parent_fact not in ctx.product_nested_edges or product.parent != parent.name:
+        raise ValueError("per-parent acceptance does not match nested relationship")
+    if acceptance.count_per_parent != product.count_per_parent:
+        raise ValueError("per-parent acceptance does not match child count_per_parent")
+
+
+def _validate_unique(
+    acceptance: "UniqueAcceptancePlan", _product: "ProductCompilePlan", ctx: _AcceptanceCtx
+) -> None:
+    unique_fact = (acceptance.product, acceptance.field)
+    if unique_fact in ctx.unique_facts:
+        raise ValueError("duplicate unique acceptance")
+    ctx.unique_facts.add(unique_fact)
+    field = _require_field(
+        ctx.products_by_name, ctx.fields_by_product,
+        acceptance.product, acceptance.field, "unique acceptance",
+    )
+    has_identifier_role = any(isinstance(role, IdentifierRolePlan) for role in field.roles)
+    if field.kind is not FieldIntentKind.INTEGER_RANGE and not has_identifier_role:
+        raise ValueError("unique acceptance requires an integer range or identifier role")
+
+
+def _validate_foreign_key(
+    acceptance: "ForeignKeyAcceptancePlan", _product: "ProductCompilePlan", ctx: _AcceptanceCtx
+) -> None:
+    foreign_key_fact = (
+        acceptance.product, acceptance.child_field,
+        acceptance.parent_product, acceptance.parent_field,
+    )
+    if foreign_key_fact in ctx.foreign_key_facts:
+        raise ValueError("duplicate foreign-key acceptance")
+    ctx.foreign_key_facts.add(foreign_key_fact)
+    child_field = _require_field(
+        ctx.products_by_name, ctx.fields_by_product,
+        acceptance.product, acceptance.child_field, "foreign-key acceptance",
+    )
+    _require_field(
+        ctx.products_by_name, ctx.fields_by_product,
+        acceptance.parent_product, acceptance.parent_field, "foreign-key acceptance",
+    )
+    if not any(
+        isinstance(role, ForeignKeyRolePlan)
+        and role.parent_product == acceptance.parent_product
+        and role.parent_field == acceptance.parent_field
+        for role in child_field.roles
+    ):
+        raise ValueError("foreign-key acceptance does not match child field role")
+
+
+def _validate_allowed_values(
+    acceptance: "AllowedValuesAcceptancePlan", _product: "ProductCompilePlan", ctx: _AcceptanceCtx
+) -> None:
+    allowed_values_fact = (acceptance.product, acceptance.field)
+    if allowed_values_fact in ctx.allowed_values_facts:
+        raise ValueError("duplicate allowed-values acceptance")
+    ctx.allowed_values_facts.add(allowed_values_fact)
+    field = _require_field(
+        ctx.products_by_name, ctx.fields_by_product,
+        acceptance.product, acceptance.field, "allowed-values acceptance",
+    )
+    if field.kind not in (FieldIntentKind.VALUES, FieldIntentKind.WEIGHTED):
+        raise ValueError("allowed-values acceptance requires values or weighted field intent")
+
+
+def _validate_range(
+    acceptance: "RangeAcceptancePlan", _product: "ProductCompilePlan", ctx: _AcceptanceCtx
+) -> None:
+    range_fact = (acceptance.product, acceptance.field)
+    if range_fact in ctx.range_facts:
+        raise ValueError("duplicate range acceptance")
+    ctx.range_facts.add(range_fact)
+    field = _require_field(
+        ctx.products_by_name, ctx.fields_by_product,
+        acceptance.product, acceptance.field, "range acceptance",
+    )
+    if field.kind not in (FieldIntentKind.INTEGER_RANGE, FieldIntentKind.DECIMAL_RANGE):
+        raise ValueError("range acceptance requires a numeric range field intent")
+
+
+# Keyed on exact type (not isinstance). A future subclass of any acceptance plan
+# needs its own entry — the dispatch loop silently skips unknown types.
+_ACCEPTANCE_VALIDATORS: dict[type, Callable[..., None]] = {
+    ExactCountAcceptancePlan: _validate_exact_count,
+    PerParentCountAcceptancePlan: _validate_per_parent_count,
+    UniqueAcceptancePlan: _validate_unique,
+    ForeignKeyAcceptancePlan: _validate_foreign_key,
+    AllowedValuesAcceptancePlan: _validate_allowed_values,
+    RangeAcceptancePlan: _validate_range,
+}
+
+
+def _validate_acceptance_facts(
+    derived_acceptance: list["DerivedAcceptancePlan"],
+    products_by_name: dict[str, "ProductCompilePlan"],
+    fields_by_product: dict[str, dict[str, "FieldPlan"]],
+    product_nested_edges: set[tuple[str, str]],
+) -> None:
+    ctx = _AcceptanceCtx(products_by_name, fields_by_product, product_nested_edges)
+    for acceptance in derived_acceptance:
+        product = _require_product(products_by_name, acceptance.product, "derived acceptance")
+        validator = _ACCEPTANCE_VALIDATORS.get(type(acceptance))
+        if validator is not None:
+            validator(acceptance, product, ctx)
+
+
+def _validate_unresolved_facts(
+    unresolved: list["UnresolvedCompileFact"],
+    products_by_name: dict[str, "ProductCompilePlan"],
+) -> None:
+    unresolved_facts: set[tuple[str, str]] = set()
+    for item in unresolved:
+        _require_product(products_by_name, item.product, "unresolved fact")
+        unresolved_fact = (item.product, item.aspect)
+        if unresolved_fact in unresolved_facts:
+            raise ValueError(f"duplicate unresolved fact '{item.aspect}' for '{item.product}'")
+        unresolved_facts.add(unresolved_fact)
+
+
 class CompilePlan(CompilePlanModel):
     """Complete compiler-owned handoff for execution and acceptance stages."""
 
@@ -723,239 +1086,21 @@ class CompilePlan(CompilePlanModel):
 
     @model_validator(mode="after")
     def _validate_graph_integrity(self) -> "CompilePlan":
-        products_by_name: dict[str, ProductCompilePlan] = {}
-        fields_by_product: dict[str, dict[str, FieldPlan]] = {}
-        for product in self.products:
-            if product.name in products_by_name:
-                raise ValueError(f"duplicate product name '{product.name}'")
-            products_by_name[product.name] = product
-            fields: dict[str, FieldPlan] = {}
-            for field in product.fields:
-                if field.name in fields:
-                    raise ValueError(f"duplicate field name '{field.name}' in product '{product.name}'")
-                fields[field.name] = field
-            fields_by_product[product.name] = fields
-
-        def require_product(name: str, context: str) -> ProductCompilePlan:
-            product = products_by_name.get(name)
-            if product is None:
-                raise ValueError(f"{context} references unknown product '{name}'")
-            return product
-
-        def require_field(product_name: str, field_name: str, context: str) -> FieldPlan:
-            require_product(product_name, context)
-            field = fields_by_product[product_name].get(field_name)
-            if field is None:
-                raise ValueError(f"{context} references unknown field '{field_name}' on product '{product_name}'")
-            return field
-
-        product_nested_edges: set[tuple[str, str]] = set()
-        generated_products: dict[str, GeneratedProductCompilePlan] = {}
-        for product in self.products:
-            if not isinstance(product, GeneratedProductCompilePlan):
-                continue
-            generated_products[product.name] = product
-            if product.parent is not None:
-                parent = require_product(product.parent, f"generated product '{product.name}'")
-                if not isinstance(parent, GeneratedProductCompilePlan):
-                    raise ValueError(f"generated parent '{product.parent}' must be a generated product")
-                if product.name not in parent.children:
-                    raise ValueError(f"generated child '{product.name}' is not declared by parent '{parent.name}'")
-            for child_name in product.children:
-                child = require_product(child_name, f"generated product '{product.name}'")
-                if not isinstance(child, GeneratedProductCompilePlan):
-                    raise ValueError(f"generated child '{child_name}' must be a generated product")
-                if child.parent != product.name:
-                    raise ValueError(f"generated child '{child_name}' does not reference parent '{product.name}'")
-                product_nested_edges.add((product.name, child_name))
-
-        visiting: set[str] = set()
-        visited: set[str] = set()
-
-        def visit_generated(product_name: str) -> None:
-            if product_name in visiting:
-                raise ValueError(f"generated product graph contains a cycle at '{product_name}'")
-            if product_name in visited:
-                return
-            visiting.add(product_name)
-            product = generated_products[product_name]
-            for child_name in product.children:
-                visit_generated(child_name)
-            visiting.remove(product_name)
-            visited.add(product_name)
-
-        for product_name in generated_products:
-            visit_generated(product_name)
-
-        for product in self.products:
-            if (
-                isinstance(product, SourceProductCompilePlan)
-                and isinstance(product.source, MemstoreSourceBindingPlan)
-                and product.source.product is not None
-            ):
-                require_product(
-                    product.source.product,
-                    f"memstore source product '{product.name}'",
-                )
-
-        nested_relationships: set[tuple[str, str]] = set()
-        memstore_relationships: set[tuple[str, str]] = set()
-        memstore_children: set[str] = set()
-        for relationship in self.relationships:
-            parent = require_product(relationship.parent, "relationship")
-            child = require_product(relationship.child, "relationship")
-            endpoints = (relationship.parent, relationship.child)
-            if isinstance(relationship, NestedRelationshipPlan):
-                if endpoints in nested_relationships:
-                    raise ValueError(f"duplicate nested relationship '{relationship.parent}' -> '{relationship.child}'")
-                nested_relationships.add(endpoints)
-                if endpoints not in product_nested_edges:
-                    raise ValueError(
-                        f"nested relationship '{relationship.parent}' -> "
-                        f"'{relationship.child}' is inconsistent with product graph"
-                    )
-                if not isinstance(parent, GeneratedProductCompilePlan) or not isinstance(
-                    child, GeneratedProductCompilePlan
-                ):
-                    raise ValueError("nested relationship endpoints must be generated products")
-                continue
-
-            if endpoints in memstore_relationships:
-                raise ValueError(f"duplicate memstore relationship '{relationship.parent}' -> '{relationship.child}'")
-            memstore_relationships.add(endpoints)
-            if relationship.child in memstore_children:
-                raise ValueError(f"source product '{relationship.child}' has multiple memstore relationships")
-            memstore_children.add(relationship.child)
-            if not isinstance(child, SourceProductCompilePlan) or not isinstance(
-                child.source, MemstoreSourceBindingPlan
-            ):
-                raise ValueError("memstore relationship child must use a memstore source")
-            if child.source.id != relationship.source_id:
-                raise ValueError("memstore relationship source_id does not match child source")
-            if child.source.product is not None and child.source.product != relationship.parent:
-                raise ValueError("memstore relationship parent does not match child source product")
-            if not any(
-                isinstance(target, MemstoreTargetBindingPlan) and target.id == relationship.source_id
-                for target in parent.targets
-            ):
-                raise ValueError("memstore relationship source_id does not match parent target")
-
-        if nested_relationships != product_nested_edges:
-            raise ValueError("nested product graph and relationship declarations differ")
-        for product in self.products:
-            if (
-                isinstance(product, SourceProductCompilePlan)
-                and isinstance(product.source, MemstoreSourceBindingPlan)
-                and product.name not in memstore_children
-            ):
-                raise ValueError(f"memstore source product '{product.name}' has no relationship declaration")
-
-        exact_facts: set[str] = set()
-        per_parent_facts: set[tuple[str, str]] = set()
-        unique_facts: set[tuple[str, str]] = set()
-        foreign_key_facts: set[tuple[str, str, str, str]] = set()
-        allowed_values_facts: set[tuple[str, str]] = set()
-        range_facts: set[tuple[str, str]] = set()
-        for acceptance in self.derived_acceptance:
-            product = require_product(acceptance.product, "derived acceptance")
-            if isinstance(acceptance, ExactCountAcceptancePlan):
-                if acceptance.product in exact_facts:
-                    raise ValueError(f"duplicate exact-count acceptance for '{acceptance.product}'")
-                exact_facts.add(acceptance.product)
-                if acceptance.exact_count != product.static_count:
-                    raise ValueError("exact-count acceptance does not match product static_count")
-            elif isinstance(acceptance, PerParentCountAcceptancePlan):
-                per_parent_fact = (acceptance.parent_product, acceptance.product)
-                if per_parent_fact in per_parent_facts:
-                    raise ValueError("duplicate per-parent acceptance")
-                per_parent_facts.add(per_parent_fact)
-                parent = require_product(
-                    acceptance.parent_product,
-                    "per-parent acceptance",
-                )
-                if not isinstance(parent, GeneratedProductCompilePlan) or not isinstance(
-                    product, GeneratedProductCompilePlan
-                ):
-                    raise ValueError("per-parent acceptance requires generated products")
-                if per_parent_fact not in product_nested_edges or product.parent != parent.name:
-                    raise ValueError("per-parent acceptance does not match nested relationship")
-                if acceptance.count_per_parent != product.count_per_parent:
-                    raise ValueError("per-parent acceptance does not match child count_per_parent")
-            elif isinstance(acceptance, UniqueAcceptancePlan):
-                unique_fact = (acceptance.product, acceptance.field)
-                if unique_fact in unique_facts:
-                    raise ValueError("duplicate unique acceptance")
-                unique_facts.add(unique_fact)
-                field = require_field(
-                    acceptance.product,
-                    acceptance.field,
-                    "unique acceptance",
-                )
-                has_identifier_role = any(isinstance(role, IdentifierRolePlan) for role in field.roles)
-                if field.kind is not FieldIntentKind.INTEGER_RANGE and not has_identifier_role:
-                    raise ValueError("unique acceptance requires an integer range or identifier role")
-            elif isinstance(acceptance, ForeignKeyAcceptancePlan):
-                foreign_key_fact = (
-                    acceptance.product,
-                    acceptance.child_field,
-                    acceptance.parent_product,
-                    acceptance.parent_field,
-                )
-                if foreign_key_fact in foreign_key_facts:
-                    raise ValueError("duplicate foreign-key acceptance")
-                foreign_key_facts.add(foreign_key_fact)
-                child_field = require_field(
-                    acceptance.product,
-                    acceptance.child_field,
-                    "foreign-key acceptance",
-                )
-                require_field(
-                    acceptance.parent_product,
-                    acceptance.parent_field,
-                    "foreign-key acceptance",
-                )
-                if not any(
-                    isinstance(role, ForeignKeyRolePlan)
-                    and role.parent_product == acceptance.parent_product
-                    and role.parent_field == acceptance.parent_field
-                    for role in child_field.roles
-                ):
-                    raise ValueError("foreign-key acceptance does not match child field role")
-            elif isinstance(acceptance, AllowedValuesAcceptancePlan):
-                allowed_values_fact = (acceptance.product, acceptance.field)
-                if allowed_values_fact in allowed_values_facts:
-                    raise ValueError("duplicate allowed-values acceptance")
-                allowed_values_facts.add(allowed_values_fact)
-                field = require_field(
-                    acceptance.product,
-                    acceptance.field,
-                    "allowed-values acceptance",
-                )
-                if field.kind not in (FieldIntentKind.VALUES, FieldIntentKind.WEIGHTED):
-                    raise ValueError("allowed-values acceptance requires values or weighted field intent")
-            elif isinstance(acceptance, RangeAcceptancePlan):
-                range_fact = (acceptance.product, acceptance.field)
-                if range_fact in range_facts:
-                    raise ValueError("duplicate range acceptance")
-                range_facts.add(range_fact)
-                field = require_field(
-                    acceptance.product,
-                    acceptance.field,
-                    "range acceptance",
-                )
-                if field.kind not in (
-                    FieldIntentKind.INTEGER_RANGE,
-                    FieldIntentKind.DECIMAL_RANGE,
-                ):
-                    raise ValueError("range acceptance requires a numeric range field intent")
-
-        unresolved_facts: set[tuple[str, str]] = set()
-        for unresolved in self.unresolved:
-            require_product(unresolved.product, "unresolved fact")
-            unresolved_fact = (unresolved.product, unresolved.aspect)
-            if unresolved_fact in unresolved_facts:
-                raise ValueError(f"duplicate unresolved fact '{unresolved.aspect}' for '{unresolved.product}'")
-            unresolved_facts.add(unresolved_fact)
+        products_by_name, fields_by_product = _build_product_index(self.products)
+        _, product_nested_edges = _validate_generated_products(
+            self.products, products_by_name
+        )
+        _validate_memstore_sources(self.products, products_by_name)
+        nested_relationships, memstore_children = _validate_relationships(
+            self.relationships, products_by_name, product_nested_edges
+        )
+        _validate_relationship_consistency(
+            nested_relationships, product_nested_edges, self.products, memstore_children
+        )
+        _validate_acceptance_facts(
+            self.derived_acceptance, products_by_name, fields_by_product, product_nested_edges
+        )
+        _validate_unresolved_facts(self.unresolved, products_by_name)
         return self
 
 

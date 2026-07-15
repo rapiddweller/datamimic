@@ -11,6 +11,8 @@ attributes, enum values. No hand-copied schema knowledge."""
 import difflib
 from collections.abc import Iterable
 
+from lxml import etree
+
 from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules.base import LintContext, Rule
@@ -178,6 +180,84 @@ class MissingRequiredAttribute(Rule):
                     )
 
 
+def _check_distribution_element(
+    ctx: LintContext, element: etree._Element, tag: str, distribution: str
+) -> Iterable[Diagnostic]:
+    """Validate one element's distribution= value against the registered fact."""
+    distribution_fact = _distribution_fact(ctx, tag)
+    valid_distributions = (
+        resolved_values(distribution_fact) if distribution_fact is not None else frozenset()
+    )
+    if distribution_fact is None or distribution in valid_distributions:
+        return
+    if distribution_fact is KEY_DISTRIBUTION_VALUES:
+        hint = (
+            f"<{tag}>'s distribution shapes a numeric range (needs "
+            f'type="int"/"float"/"decimal" with min=/max=). Use one of: '
+            f"{', '.join(sorted(valid_distributions))}."
+        )
+    else:
+        hint = f"Use one of: {', '.join(sorted(valid_distributions))}."
+    yield ctx.diag(
+        InvalidAttributeValue,
+        element,
+        evidence=f"distribution='{distribution}' on <{tag}>",
+        fix_context=hint,
+    )
+
+
+def _check_type_element(
+    ctx: LintContext,
+    element: etree._Element,
+    tag: str,
+    key_id_data_types: frozenset[str],
+    nestedkey_variable_data_types: frozenset[str],
+) -> Iterable[Diagnostic]:
+    """Validate one element's type= value when the element enforces scalar types."""
+    # On <variable>/<nestedKey> WITH a source=, type= is not a scalar cast — it's the
+    # sourceEntity->type->name physical-entity fallback and can be any string.
+    reads_source = tag in (EL_VARIABLE, EL_NESTED_KEY) and element.get("source")
+    if tag not in (EL_KEY, EL_ID, EL_NESTED_KEY, EL_VARIABLE) or reads_source:
+        return
+    valid_types = key_id_data_types if tag in (EL_KEY, EL_ID) else nestedkey_variable_data_types
+    type_value = element.get("type")
+    if type_value is None or type_value in valid_types:
+        return
+    if type_value.lower() in _DATE_TYPE_GUESSES:
+        hint = (
+            "DATAMIMIC has no scalar date/time type. For a timestamp field use "
+            'generator="DateTimeGenerator" (or, inside a time-series <generate '
+            'start= end= interval=>, script="ts.now").'
+        )
+    else:
+        hint = f"Use one of: {', '.join(sorted(valid_types))}."
+    yield ctx.diag(
+        InvalidAttributeValue,
+        element,
+        evidence=f"type='{type_value}' on <{tag}>",
+        fix_context=hint,
+    )
+
+
+def _check_int_attributes(
+    ctx: LintContext, element: etree._Element, tag: str
+) -> Iterable[Diagnostic]:
+    """Validate that attributes annotated as int hold integer values."""
+    schema = ctx.schemas.get(tag)
+    if schema is None:
+        return
+    for attr, value in element.attrib.items():
+        spec = schema.attributes.get(str(attr))
+        value_str = str(value)
+        if spec is not None and "int" in spec.annotation and not value_str.lstrip("-").isdigit():
+            yield ctx.diag(
+                InvalidAttributeValue,
+                element,
+                evidence=f"attribute '{attr!s}' has non-integer value '{value_str}'",
+                fix_context=f"Set {attr!s} to a whole number.",
+            )
+
+
 class InvalidAttributeValue(Rule):
     definition = authoring_rule_definition("DM105")
 
@@ -191,63 +271,9 @@ class InvalidAttributeValue(Rule):
             tag = str(element.tag)
             distribution = element.get("distribution")
             if distribution is not None:
-                distribution_fact = _distribution_fact(ctx, tag)
-                valid_distributions = (
-                    resolved_values(distribution_fact) if distribution_fact is not None else frozenset()
-                )
-                if distribution_fact is not None and distribution not in valid_distributions:
-                    if distribution_fact is KEY_DISTRIBUTION_VALUES:
-                        hint = (
-                            f"<{tag}>'s distribution shapes a numeric range (needs "
-                            f'type="int"/"float"/"decimal" with min=/max=). Use one of: '
-                            f"{', '.join(sorted(valid_distributions))}."
-                        )
-                    else:
-                        hint = f"Use one of: {', '.join(sorted(valid_distributions))}."
-                    yield ctx.diag(
-                        type(self),
-                        element,
-                        evidence=f"distribution='{distribution}' on <{tag}>",
-                        fix_context=hint,
-                    )
-            # On <variable>/<nestedKey> WITH a source=, type= is not a scalar cast — it's the
-            # sourceEntity->type->name physical-entity fallback (StatementUtil.resolve_source_entity,
-            # e.g. selecting which producer's rows to read back from a <memstore>) and can be any
-            # string. <key>/<id> never read a source (key_task.py ignores KeyModel.source), so their
-            # type= is always the scalar cast and always checked.
-            reads_source = tag in (EL_VARIABLE, EL_NESTED_KEY) and element.get("source")
-            if tag in (EL_KEY, EL_ID, EL_NESTED_KEY, EL_VARIABLE) and not reads_source:
-                # Use the appropriate type set per tag (C-2 fix: key/id accept only 6 scalar types)
-                valid_types = key_id_data_types if tag in (EL_KEY, EL_ID) else nestedkey_variable_data_types
-                type_value = element.get("type")
-                if type_value is not None and type_value not in valid_types:
-                    if type_value.lower() in _DATE_TYPE_GUESSES:
-                        hint = (
-                            "DATAMIMIC has no scalar date/time type. For a timestamp field use "
-                            'generator="DateTimeGenerator" (or, inside a time-series <generate '
-                            'start= end= interval=>, script="ts.now").'
-                        )
-                    else:
-                        hint = f"Use one of: {', '.join(sorted(valid_types))}."
-                    yield ctx.diag(
-                        type(self),
-                        element,
-                        evidence=f"type='{type_value}' on <{tag}>",
-                        fix_context=hint,
-                    )
-            schema = ctx.schemas.get(tag)
-            if schema is None:
-                continue
-            for attr, value in element.attrib.items():
-                spec = schema.attributes.get(str(attr))
-                value_str = str(value)
-                if spec is not None and "int" in spec.annotation and not value_str.lstrip("-").isdigit():
-                    yield ctx.diag(
-                        type(self),
-                        element,
-                        evidence=f"attribute '{attr!s}' has non-integer value '{value_str}'",
-                        fix_context=f"Set {attr!s} to a whole number.",
-                    )
+                yield from _check_distribution_element(ctx, element, tag, distribution)
+            yield from _check_type_element(ctx, element, tag, key_id_data_types, nestedkey_variable_data_types)
+            yield from _check_int_attributes(ctx, element, tag)
 
 
 RULES: tuple[type[Rule], ...] = (

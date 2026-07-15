@@ -33,6 +33,24 @@ _FIELD_LABELS: dict[str, str] = {
 }
 
 
+def _format_numeric_error(label: str, msg: str, ctx: dict[str, object]) -> str | None:
+    """Return a formatted numeric-constraint message, or None if not a numeric error."""
+    if "gt" in msg or "greater_than_equal" in msg:
+        ge = ctx.get("ge")
+        le = ctx.get("le")
+        if ge is not None and le is not None:
+            return f"Invalid {label}. Expected an integer from {ge} to {le}"
+        if ge is not None:
+            return f"Invalid {label}. Expected an integer >= {ge}"
+        if le is not None:
+            return f"Invalid {label}. Expected an integer <= {le}"
+    if "less_than_equal" in msg:
+        le = ctx.get("le")
+        if le is not None:
+            return f"Invalid {label}. Expected an integer <= {le}"
+    return None
+
+
 def _format_validation_error(error: ValidationError) -> str:
     """Project the first Pydantic error into a single-line CLI message."""
     for err in error.errors():
@@ -40,19 +58,9 @@ def _format_validation_error(error: ValidationError) -> str:
         label = _FIELD_LABELS.get(field, field)
         msg = err.get("msg", "Invalid value")
         ctx = err.get("ctx", {})
-        if "gt" in msg or "greater_than_equal" in msg:
-            ge = ctx.get("ge")
-            le = ctx.get("le")
-            if ge is not None and le is not None:
-                return f"Invalid {label}. Expected an integer from {ge} to {le}"
-            if ge is not None:
-                return f"Invalid {label}. Expected an integer >= {ge}"
-            if le is not None:
-                return f"Invalid {label}. Expected an integer <= {le}"
-        if "less_than_equal" in msg:
-            le = ctx.get("le")
-            if le is not None:
-                return f"Invalid {label}. Expected an integer <= {le}"
+        formatted = _format_numeric_error(label, msg, ctx)
+        if formatted is not None:
+            return formatted
         return f"Invalid {label}: {msg}"
     return f"Invalid value: {error}"
 
@@ -137,18 +145,28 @@ def scaffold_model(
     cli_presenter.emit_scaffold(service.scaffold(request), output_format)
 
 
-def show_reference(
+def _validate_show_reference_args(
     topic: ReferenceTopic,
     name: str | None,
     category: AuthoringReferenceCategory | None,
     kind: str | None,
 ) -> None:
+    """Guard CLI args for show_reference; fail()s on invalid combinations."""
     if category is not None and topic is not ReferenceTopic.AUTHORING:
         cli_presenter.fail("--category/--kind are only valid for topic=authoring", code=1)
     if topic is ReferenceTopic.AUTHORING and name is not None:
         cli_presenter.fail("topic=authoring uses --category/--kind, not name", code=1)
     if (category is None) != (kind is None):
         cli_presenter.fail("--category and --kind must be provided together", code=1)
+
+
+def show_reference(
+    topic: ReferenceTopic,
+    name: str | None,
+    category: AuthoringReferenceCategory | None,
+    kind: str | None,
+) -> None:
+    _validate_show_reference_args(topic, name, category, kind)
     try:
         query = (
             AUTHORING_REFERENCE_QUERY_ADAPTER.validate_python({"category": category, "kind": kind})

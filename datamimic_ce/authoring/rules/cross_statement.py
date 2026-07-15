@@ -153,6 +153,38 @@ def _unknown_source_diagnostic(
     )
 
 
+def _check_target_entry(
+    name: str,
+    clients: set[str],
+    memstores: set[str],
+) -> tuple[str | None, str | None]:
+    """Validate one parsed target entry name.
+
+    Returns (evidence, fix_context) if the entry is invalid, or (None, None) if valid.
+    """
+    base = name.split(".", 1)[0]
+    if "." in name:
+        if base not in clients:
+            return (
+                f"target '{name}' references undeclared client '{base}'",
+                f'Declare <mongodb id="{base}"/> or <database id="{base}" .../>.',
+            )
+        operation = name.split(".", 1)[1]
+        if operation not in _CLIENT_OPERATIONS:
+            return (
+                f"operation '{operation}' in target '{name}' is unknown",
+                f"Client operations: {', '.join(sorted(_CLIENT_OPERATIONS))}; plain clientId inserts.",
+            )
+        return (None, None)
+    if name not in _STATIC_TARGETS and name not in clients and name not in memstores:
+        valid = sorted(_STATIC_TARGETS | clients | memstores)
+        return (
+            f"target '{name}' is not built-in or declared",
+            f"For memory output add <memstore id=\"{name}\"/> above the writer; known targets: {', '.join(valid)}.",
+        )
+    return (None, None)
+
+
 class UnknownTarget(Rule):
     definition = authoring_rule_definition("DM401")
 
@@ -169,35 +201,9 @@ class UnknownTarget(Rule):
                 yield ctx.diag(UnknownTarget, element, evidence=f"target parser returned: {err}")
                 continue
             for entry in parsed:
-                name = entry["function_name"]
-                base = name.split(".", 1)[0]
-                if "." in name:
-                    if base not in clients:
-                        yield ctx.diag(
-                            UnknownTarget,
-                            element,
-                            evidence=f"target '{name}' references undeclared client '{base}'",
-                            fix_context=f'Declare <mongodb id="{base}"/> or <database id="{base}" .../>.',
-                        )
-                    else:
-                        operation = name.split(".", 1)[1]
-                        if operation not in _CLIENT_OPERATIONS:
-                            yield ctx.diag(
-                                UnknownTarget,
-                                element,
-                                evidence=f"operation '{operation}' in target '{name}' is unknown",
-                                fix_context=f"Client operations: {', '.join(sorted(_CLIENT_OPERATIONS))}; "
-                                "plain clientId inserts.",
-                            )
-                elif name not in _STATIC_TARGETS and name not in clients and name not in memstores:
-                    valid = sorted(_STATIC_TARGETS | clients | memstores)
-                    yield ctx.diag(
-                        UnknownTarget,
-                        element,
-                        evidence=f"target '{name}' is not built-in or declared",
-                        fix_context=f'For memory output add <memstore id="{name}"/> above the writer; '
-                        f"known targets: {', '.join(valid)}.",
-                    )
+                evidence, fix_context = _check_target_entry(entry["function_name"], clients, memstores)
+                if evidence is not None:
+                    yield ctx.diag(UnknownTarget, element, evidence=evidence, fix_context=fix_context)
 
 
 class DuplicateGenerateName(Rule):

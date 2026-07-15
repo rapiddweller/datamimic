@@ -29,7 +29,7 @@ from datamimic_ce.authoring.rule_catalog import (
     authoring_rule_definitions,
     serialize_rule_definition,
 )
-from datamimic_ce.authoring.schema import build_schema_index
+from datamimic_ce.authoring.schema import ElementSchema, build_schema_index
 from datamimic_ce.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_LOG_EXPORTER,
@@ -64,62 +64,95 @@ def clip(text: str, max_chars: int, hint: str) -> str:
     return text[: max_chars - len(hint) - 2].rstrip() + "\n…" + hint
 
 
-def _render_constraint_terse(fact) -> str:
+def _render_required_one_of(fact: RequiredOneOf, advisory: str) -> str:
+    attrs_str = ", ".join(sorted(fact.attrs))
+    return f"at least one of: {attrs_str}{advisory}"
+
+
+def _render_mutually_exclusive(fact: MutuallyExclusive, advisory: str) -> str:
+    attrs_str = ", ".join(sorted(fact.attrs))
+    return f"at most one of: {attrs_str}{advisory}"
+
+
+def _render_mutually_exclusive_when(fact: MutuallyExclusiveWhen, advisory: str) -> str:
+    attrs_str = ", ".join(sorted(fact.attrs))
+    gate = "is true" if fact.when_true else "is set"
+    return f"at most one of: {attrs_str} (when {fact.when_attr} {gate}){advisory}"
+
+
+def _render_requires(fact: Requires, advisory: str) -> str:
+    needs_str = ", ".join(sorted(fact.needs))
+    if len(fact.needs) == 1:
+        needs_str = list(fact.needs)[0]
+    suffix = f" (when {fact.attr} is true)" if fact.when_true else ""
+    return f"{fact.attr} requires {needs_str}{suffix}{advisory}"
+
+
+def _render_requires_when_value(fact: RequiresWhenValue, advisory: str) -> str:
+    values_str = ", ".join(sorted(fact.when_values))
+    needs_str = ", ".join(sorted(fact.needs))
+    unless = f" unless {', '.join(sorted(fact.unless))} is set" if fact.unless else ""
+    return f"{fact.when_attr} in [{values_str}] requires {needs_str}{unless}{advisory}"
+
+
+def _render_all_or_none(fact: AllOrNone, advisory: str) -> str:
+    attrs_str = ", ".join(sorted(fact.attrs))
+    return f"{attrs_str}: all together or none{advisory}"
+
+
+def _render_forbids(fact: Forbids, advisory: str) -> str:
+    excludes_str = ", ".join(sorted(fact.excludes))
+    if fact.excludes_when_true:
+        suffix = f" (when {fact.attr} is true, both true)" if fact.when_true else " (both true)"
+    else:
+        suffix = f" (when {fact.attr} is true)" if fact.when_true else ""
+    return f"{fact.attr} cannot combine with: {excludes_str}{suffix}{advisory}"
+
+
+def _render_forbids_when_value(fact: ForbidsWhenValue, advisory: str) -> str:
+    values_str = ", ".join(sorted(fact.when_values))
+    excludes_str = ", ".join(sorted(fact.excludes))
+    return f"{fact.when_attr} in [{values_str}] cannot combine with: {excludes_str}{advisory}"
+
+
+def _render_valid_values(fact: ValidValues, advisory: str) -> str:
+    values = sorted(fact.values()) if callable(fact.values) else sorted(fact.values)
+    values_str = ", ".join(values)
+    return f"{fact.attr} must be one of: {values_str}{advisory}"
+
+
+def _render_allowed_values_when(fact: AllowedValuesWhen, advisory: str) -> str:
+    allowed = sorted(fact.allowed()) if callable(fact.allowed) else sorted(fact.allowed)
+    allowed_str = ", ".join(allowed)
+    suffix = f" (when {fact.when_attr} is true)" if fact.when_true else f" (when {fact.when_attr} is set)"
+    return f"{fact.attr} must be one of: {allowed_str}{suffix}{advisory}"
+
+
+_CONSTRAINT_RENDERERS: dict[type, object] = {
+    RequiredOneOf: _render_required_one_of,
+    MutuallyExclusive: _render_mutually_exclusive,
+    MutuallyExclusiveWhen: _render_mutually_exclusive_when,
+    Requires: _render_requires,
+    RequiresWhenValue: _render_requires_when_value,
+    AllOrNone: _render_all_or_none,
+    Forbids: _render_forbids,
+    ForbidsWhenValue: _render_forbids_when_value,
+    ValidValues: _render_valid_values,
+    AllowedValuesWhen: _render_allowed_values_when,
+}
+
+
+def _render_constraint_terse(fact: object) -> str:
     """Render a single constraint object as a terse one-liner for element_reference().
 
     Renders structural facts only (attr/attrs/needs/excludes/when_true); message is omitted.
     Attributes are sorted for stable output. lint_only facts are marked with [advisory].
     """
-    advisory = " [advisory]" if fact.lint_only else ""
-
-    if isinstance(fact, RequiredOneOf):
-        attrs_str = ", ".join(sorted(fact.attrs))
-        return f"at least one of: {attrs_str}{advisory}"
-    elif isinstance(fact, MutuallyExclusive):
-        attrs_str = ", ".join(sorted(fact.attrs))
-        return f"at most one of: {attrs_str}{advisory}"
-    elif isinstance(fact, MutuallyExclusiveWhen):
-        attrs_str = ", ".join(sorted(fact.attrs))
-        gate = "is true" if fact.when_true else "is set"
-        return f"at most one of: {attrs_str} (when {fact.when_attr} {gate}){advisory}"
-    elif isinstance(fact, Requires):
-        needs_str = ", ".join(sorted(fact.needs))
-        if len(fact.needs) == 1:
-            needs_str = list(fact.needs)[0]
-        suffix = f" (when {fact.attr} is true)" if fact.when_true else ""
-        return f"{fact.attr} requires {needs_str}{suffix}{advisory}"
-    elif isinstance(fact, RequiresWhenValue):
-        values_str = ", ".join(sorted(fact.when_values))
-        needs_str = ", ".join(sorted(fact.needs))
-        unless = f" unless {', '.join(sorted(fact.unless))} is set" if fact.unless else ""
-        return f"{fact.when_attr} in [{values_str}] requires {needs_str}{unless}{advisory}"
-    elif isinstance(fact, AllOrNone):
-        attrs_str = ", ".join(sorted(fact.attrs))
-        return f"{attrs_str}: all together or none{advisory}"
-    elif isinstance(fact, Forbids):
-        excludes_str = ", ".join(sorted(fact.excludes))
-        if fact.excludes_when_true:
-            suffix = f" (when {fact.attr} is true, both true)" if fact.when_true else " (both true)"
-        else:
-            suffix = f" (when {fact.attr} is true)" if fact.when_true else ""
-        return f"{fact.attr} cannot combine with: {excludes_str}{suffix}{advisory}"
-    elif isinstance(fact, ForbidsWhenValue):
-        values_str = ", ".join(sorted(fact.when_values))
-        excludes_str = ", ".join(sorted(fact.excludes))
-        return f"{fact.when_attr} in [{values_str}] cannot combine with: {excludes_str}{advisory}"
-    elif isinstance(fact, ValidValues):
-        # Evaluate callable values; static sets/tuples are already iterable
-        values = sorted(fact.values()) if callable(fact.values) else sorted(fact.values)
-        values_str = ", ".join(values)
-        return f"{fact.attr} must be one of: {values_str}{advisory}"
-    elif isinstance(fact, AllowedValuesWhen):
-        # Evaluate callable allowed; static sets/tuples are already iterable
-        allowed = sorted(fact.allowed()) if callable(fact.allowed) else sorted(fact.allowed)
-        allowed_str = ", ".join(allowed)
-        suffix = f" (when {fact.when_attr} is true)" if fact.when_true else f" (when {fact.when_attr} is set)"
-        return f"{fact.attr} must be one of: {allowed_str}{suffix}{advisory}"
-    else:
-        return f"<unknown constraint type: {type(fact).__name__}>{advisory}"
+    advisory = " [advisory]" if getattr(fact, "lint_only", False) else ""
+    renderer = _CONSTRAINT_RENDERERS.get(type(fact))
+    if renderer is not None:
+        return renderer(fact, advisory)  # type: ignore[operator]
+    return f"<unknown constraint type: {type(fact).__name__}>{advisory}"
 
 
 def overview_reference() -> str:
@@ -138,18 +171,8 @@ def overview_reference() -> str:
     )
 
 
-def element_reference(tag: str) -> str:
-    index = build_schema_index()
-    canonical = canonical_tag(tag)
-    # Alias schemas share canonical attributes/nesting but may add alias-specific
-    # business rules (for example, <iterate> requires source=).
-    schema = index.get(tag)
-    if schema is None:
-        raise ValueError(f"Unknown element '{tag}'. Known: {', '.join(sorted(index.tags))}")
-    lines = [f"# <{canonical}>"]
-    aliases = sorted(alias for alias, target in element_aliases().items() if target == canonical)
-    if aliases:
-        lines.append(f"Aliases: {', '.join(f'<{a}>' for a in aliases)}")
+def _render_element_attributes(schema: ElementSchema, lines: list[str]) -> None:
+    """Append attribute lines for one element schema to *lines*."""
     if schema.open_attrs:
         lines.append(
             "Attributes: open — credentials resolve from conf/{environment}.env.properties "
@@ -165,31 +188,54 @@ def element_reference(tag: str) -> str:
                 lines.append(f"    {spec.description}")
     else:
         lines.append("Attributes: none")
-    # Constraints: cross-field rules (render if present)
-    if schema.constraints:
-        lines.append("Constraints:")
-        for fact in schema.constraints:
-            rendered = _render_constraint_terse(fact)
-            lines.append(f"- {rendered}")
+
+
+def _render_element_children(schema: ElementSchema, lines: list[str]) -> None:
     if schema.allowed_children is None:
         lines.append("Children: any element")
     elif schema.allowed_children:
         lines.append(f"Children: {', '.join(sorted(schema.allowed_children))}")
     else:
         lines.append("Children: none (leaf)")
+
+
+def _render_element_source_capabilities(tag: str, lines: list[str]) -> None:
+    source_facts = [capability for capability in source_capabilities() if capability.element == tag]
+    if not source_facts:
+        return
+    lines.append("Source capabilities:")
+    for capability in source_facts:
+        context = f" type={capability.source_type}" if capability.source_type is not None else ""
+        formats = ", ".join(file_format.value for file_format in capability.file_formats) or "none"
+        lines.append(
+            f"- source{context}: files [{formats}]; memstore={capability.allows_memstore}; "
+            f"client={capability.allows_client}; "
+            f"dynamic={capability.dynamic_source.value if capability.dynamic_source else 'none'}"
+        )
+
+
+def element_reference(tag: str) -> str:
+    index = build_schema_index()
+    canonical = canonical_tag(tag)
+    # Alias schemas share canonical attributes/nesting but may add alias-specific
+    # business rules (for example, <iterate> requires source=).
+    schema = index.get(tag)
+    if schema is None:
+        raise ValueError(f"Unknown element '{tag}'. Known: {', '.join(sorted(index.tags))}")
+    lines = [f"# <{canonical}>"]
+    aliases = sorted(alias for alias, target in element_aliases().items() if target == canonical)
+    if aliases:
+        lines.append(f"Aliases: {', '.join(f'<{a}>' for a in aliases)}")
+    _render_element_attributes(schema, lines)
+    if schema.constraints:
+        lines.append("Constraints:")
+        for fact in schema.constraints:
+            rendered = _render_constraint_terse(fact)
+            lines.append(f"- {rendered}")
+    _render_element_children(schema, lines)
     if schema.allowed_parents:
         lines.append(f"Allowed inside: {', '.join(sorted(schema.allowed_parents))}")
-    source_facts = [capability for capability in source_capabilities() if capability.element == tag]
-    if source_facts:
-        lines.append("Source capabilities:")
-        for capability in source_facts:
-            context = f" type={capability.source_type}" if capability.source_type is not None else ""
-            formats = ", ".join(file_format.value for file_format in capability.file_formats) or "none"
-            lines.append(
-                f"- source{context}: files [{formats}]; memstore={capability.allows_memstore}; "
-                f"client={capability.allows_client}; "
-                f"dynamic={capability.dynamic_source.value if capability.dynamic_source else 'none'}"
-            )
+    _render_element_source_capabilities(tag, lines)
     return clip("\n".join(lines), 16000, " [truncated — inspect `datamimic capabilities` for the full schema]")
 
 
@@ -468,40 +514,42 @@ def capabilities_manifest() -> dict[str, Any]:
     }
 
 
+_TOPIC_HANDLERS: dict[ReferenceTopic, object] = {
+    ReferenceTopic.OVERVIEW: lambda _n, _q: overview_reference(),
+    ReferenceTopic.ELEMENT: lambda name, _q: _element_ref_require_name(name),
+    ReferenceTopic.GENERATORS: lambda name, _q: _generator_ref_filter(generator_reference(), name),
+    ReferenceTopic.ENTITIES: lambda name, _q: entities_reference(name),
+    ReferenceTopic.CONTEXT: lambda _n, _q: context_reference(),
+    ReferenceTopic.TIMESERIES: lambda _n, _q: timeseries_reference(),
+    ReferenceTopic.TARGETS: lambda _n, _q: targets_reference(),
+    ReferenceTopic.DISTRIBUTIONS: lambda _n, _q: distributions_reference(),
+    ReferenceTopic.CONVERTERS: lambda _n, _q: converters_reference(),
+    ReferenceTopic.RULES: lambda name, _q: rules_reference(name),
+    ReferenceTopic.SCAFFOLD: lambda _n, _q: scaffold_reference(),
+    ReferenceTopic.AUTHORING: lambda _n, query: compact_authoring_reference(query),
+}
+
+
+def _element_ref_require_name(name: str | None) -> str:
+    if not name:
+        raise ValueError("topic=element needs name=<tag>")
+    return element_reference(name)
+
+
+def _generator_ref_filter(text: str, name: str | None) -> str:
+    if not name:
+        return text
+    matches = [line for line in text.splitlines() if name.lower() in line.lower()]
+    return "\n".join(matches) if matches else f"No generator matching '{name}'."
+
+
 def reference(
     topic: ReferenceTopic,
     name: str | None = None,
     *,
     query: AuthoringReferenceQuery | None = None,
 ) -> str:
-    if topic is ReferenceTopic.OVERVIEW:
-        return overview_reference()
-    if topic is ReferenceTopic.ELEMENT:
-        if not name:
-            raise ValueError("topic=element needs name=<tag>")
-        return element_reference(name)
-    if topic is ReferenceTopic.GENERATORS:
-        text = generator_reference()
-        if name:
-            matches = [line for line in text.splitlines() if name.lower() in line.lower()]
-            return "\n".join(matches) if matches else f"No generator matching '{name}'."
-        return text
-    if topic is ReferenceTopic.ENTITIES:
-        return entities_reference(name)
-    if topic is ReferenceTopic.CONTEXT:
-        return context_reference()
-    if topic is ReferenceTopic.TIMESERIES:
-        return timeseries_reference()
-    if topic is ReferenceTopic.TARGETS:
-        return targets_reference()
-    if topic is ReferenceTopic.DISTRIBUTIONS:
-        return distributions_reference()
-    if topic is ReferenceTopic.CONVERTERS:
-        return converters_reference()
-    if topic is ReferenceTopic.RULES:
-        return rules_reference(name)
-    if topic is ReferenceTopic.SCAFFOLD:
-        return scaffold_reference()
-    if topic is ReferenceTopic.AUTHORING:
-        return compact_authoring_reference(query)
+    handler = _TOPIC_HANDLERS.get(topic)
+    if handler is not None:
+        return handler(name, query)  # type: ignore[operator]
     raise ValueError(f"Unknown topic '{topic}'. Topics: {', '.join(ReferenceTopic)}")

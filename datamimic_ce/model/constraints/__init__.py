@@ -1,0 +1,138 @@
+# DATAMIMIC
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
+
+"""Declarative constraint vocabulary and central CE element-rule registry.
+
+This module is the SPOT for business rules that can be expressed from XML
+attributes. Models execute these facts, while authoring schema/reference/lint
+derive from the same tuples. Each constraint is a frozen dataclass capturing:
+
+- The attributes involved
+- Optional truthiness gates (when_true: some rules apply only when an attr is truthy)
+- Optional lint-only flags (facts the engine doesn't hard-enforce)
+- Optional message overrides (exact error strings from the validators being migrated)
+
+The JSON schema exposure is derived by a shared callable factory
+(``constraints_schema_extra``) bound explicitly to each model's central tuple.
+This ensures one declaration, all consumers derive consistently.
+"""
+
+from datamimic_ce.model.constraints.capabilities import (
+    DynamicSourceKind,
+    SourceCapability,
+    SourceFileFormat,
+    is_source_file,
+    recognized_source_file_formats,
+    serialize_source_capability,
+    source_allows_client,
+    source_allows_memstore,
+    source_capabilities,
+    source_dynamic_kind,
+    source_file_format,
+    source_file_format_for,
+    supported_source_file_formats,
+)
+from datamimic_ce.model.constraints.facts import (
+    AGE_MAX_REQUIRES_GENERATOR_OR_ENTITY,
+    AGE_MIN_REQUIRES_GENERATOR_OR_ENTITY,
+    ARRAY_GENERATED_MODE_REQUIRES_COUNT,
+    ARRAY_LITERAL_FORBIDS_GENERATED_MODE,
+    ARRAY_SCRIPT_FORBIDS_GENERATED_MODE,
+    ARRAY_TYPE_VALUES,
+    ARRAY_VALUE_MODE_REQUIRED,
+    CONDITIONS_EXCLUDE_REQUIRES_GENERATOR_OR_ENTITY,
+    CONDITIONS_INCLUDE_REQUIRES_GENERATOR_OR_ENTITY,
+    COUNT_XOR_MAX,
+    COUNT_XOR_MIN,
+    CYCLIC_REQUIRES_SOURCE,
+    DATASET_REQUIRES_GENERATOR_OR_ENTITY,
+    DEFAULT_VALUE_REQUIRES_SCRIPT,
+    EXECUTE_SCRIPT_REQUIRES_TYPE,
+    EXECUTE_TYPE_VALUES,
+    EXECUTE_URI_SCRIPT_EXCLUSIVE,
+    EXIST_COUNT,
+    GENERATE_OFFSET_REQUIRES_SOURCE,
+    GENERATE_SOURCE_COMPANIONS,
+    GENERATE_UNIQUE_CONSTRAINTS,
+    GENERATE_UNIQUE_REQUIRES_SOURCE,
+    GENERATOR_ENTITY_ADDONS,
+    ITERATE_REQUIRES_SOURCE,
+    ITERATION_SELECTOR_REQUIRES_SOURCE,
+    KEY_DISTRIBUTION_NUMERIC_TYPE,
+    KEY_DISTRIBUTION_REQUIRES_RANGE,
+    KEY_DISTRIBUTION_REQUIRES_TYPE,
+    KEY_DISTRIBUTION_VALUES,
+    KEY_GENERATION_EXCLUSIVE,
+    KEY_GENERATION_REQUIRED,
+    KEY_SOURCE_COMPANIONS,
+    KEY_TYPE_VALUES,
+    KEY_UNIQUE_CONSTRAINTS,
+    KEY_UNIQUE_FORBIDS_DISTRIBUTION,
+    KEY_UNIQUE_REQUIRES_VALUES,
+    LOCALE_REQUIRES_GENERATOR_OR_ENTITY,
+    NESTED_CONDITION_RECOMMENDS_DEFAULT,
+    NESTED_CYCLIC_REQUIRES_COUNT,
+    NESTED_CYCLIC_REQUIRES_SOURCE_OR_SCRIPT,
+    NESTED_KEY_SOURCE_COMPANIONS,
+    NESTED_LIST_REQUIRES_COUNT,
+    NESTED_SCRIPT_FORBIDDEN_ATTRS,
+    NESTED_SCRIPT_FORBIDS,
+    NESTED_SCRIPT_RECOMMENDS_DEFAULT,
+    OUT_DATE_FORMAT_STRING_TYPE,
+    RNG_SEED_REQUIRES_GENERATOR_OR_ENTITY,
+    SELECTOR_REQUIRES_SOURCE,
+    SEPARATOR_REQUIRES_SOURCE,
+    SOURCE_COMPANIONS_WITHOUT_CYCLIC,
+    SOURCE_COMPANIONS_WITH_CYCLIC,
+    SOURCE_DISTRIBUTION_VALUES,
+    SOURCE_ENTITY_REQUIRES_SOURCE,
+    SOURCE_MODE_EXCLUSIVE,
+    SOURCE_SCRIPTED_REQUIRES_SOURCE,
+    TIMESERIES_ALL_OR_NONE,
+    UNIQUE_DISTRIBUTION_RANDOM,
+    UNIQUE_FORBIDS_CYCLIC,
+    UNIQUE_FORBIDS_WEIGHTS,
+    UNIQUE_REQUIRES_POOL,
+    VARIABLE_GENERATION_EXCLUSIVE,
+    VARIABLE_GENERATION_REQUIRED,
+    VARIABLE_SOURCE_COMPANIONS,
+    VARIABLE_STORAGE_VALUES,
+    WEIGHTS_REQUIRE_VALUES,
+    WEIGHT_COLUMN_REQUIRES_SOURCE,
+    _ARRAY_RULES,
+    _EXECUTE_RULES,
+    _GENERATE_RULES,
+    _KEY_RULES,
+    _NESTED_KEY_RULES,
+    _REFERENCE_RULES,
+    _VARIABLE_RULES,
+)
+from datamimic_ce.model.constraints.registry import (
+    element_constraints,
+    register_element_constraints,
+    registered_rule_tags,
+    rule_registry_revision,
+    unregister_element_constraints,
+)
+from datamimic_ce.model.constraints.serialization import (
+    constraints_schema_extra,
+    serialize_constraints,
+)
+from datamimic_ce.model.constraints.types import (
+    AllOrNone,
+    AllowedValuesWhen,
+    Constraint,
+    Forbids,
+    ForbidsWhenValue,
+    MutuallyExclusive,
+    MutuallyExclusiveWhen,
+    RequiredOneOf,
+    Requires,
+    RequiresWhenValue,
+    ValidValues,
+    resolved_allowed,
+    resolved_values,
+)
