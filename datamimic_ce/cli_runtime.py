@@ -31,13 +31,13 @@ class DemoMetadata(BaseModel):
 
 
 def show_version() -> None:
-    cli_presenter.emit_version(get_datamimic_lib_version())
+    cli_presenter.emit_version(get_datamimic_lib_version() or "unknown")
 
 
 def show_system_information() -> None:
     cli_presenter.emit_system_information(
         SystemInformation(
-            version=get_datamimic_lib_version(),
+            version=get_datamimic_lib_version() or "unknown",
             python_version=platform.python_version(),
             operating_system=platform.platform(),
             config_file=os.getenv("DATAMIMIC_CONFIG", "Default"),
