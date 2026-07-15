@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
+import typer
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
 from datamimic_ce import cli_presenter
@@ -181,5 +183,25 @@ def show_reference(
     cli_presenter.emit_reference(result.content)
 
 
-def show_capabilities() -> None:
-    cli_presenter.emit_capabilities(service.capabilities().root)
+def show_capabilities(section: str | None = None, full: bool = False) -> None:
+    from datamimic_ce.authoring.contracts import CapabilitiesRequest, UnknownCapabilitySection
+
+    if section is not None and full:
+        cli_presenter.fail("--section and --full are mutually exclusive", code=1)
+    try:
+        if section is not None:
+            sections = tuple(s.strip() for s in section.split(",") if s.strip())
+            request = CapabilitiesRequest(mode="sections", sections=sections)
+        elif full:
+            request = CapabilitiesRequest(mode="full")
+        else:
+            request = CapabilitiesRequest()
+        cli_presenter.emit_capabilities(service.capabilities(request).root)
+    except UnknownCapabilitySection as error:
+        payload: dict[str, object] = {
+            "ok": False,
+            "error": str(error),
+            "valid_sections": error.valid_sections,
+        }
+        typer.echo(json.dumps(payload, indent=2))
+        raise typer.Exit(1) from None

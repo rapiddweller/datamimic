@@ -240,8 +240,13 @@ def element_reference(tag: str) -> str:
 
 
 @lru_cache(maxsize=1)
-def generator_reference() -> str:
-    lines = ['# Generators (generator="Name" or generator="Name(arg=...)" )']
+def _generator_info() -> list[tuple[str, list[str]]]:
+    """Unbounded list of (name, params) from the literal_generators package.
+
+    Serves both the prose renderer (which clips *rendered* text only) and
+    ``known_generator_names`` (which must see every name regardless of prose size).
+    """
+    result: list[tuple[str, list[str]]] = []
     package = importlib.import_module(_GENERATOR_PACKAGE)
     for module_info in sorted(pkgutil.iter_modules(package.__path__), key=lambda m: m.name):
         module = importlib.import_module(f"{_GENERATOR_PACKAGE}.{module_info.name}")
@@ -256,12 +261,24 @@ def generator_reference() -> str:
                 params = [p for p in inspect.signature(cls.__init__).parameters if p not in internal]
             except (TypeError, ValueError):
                 params = []
-            lines.append(f"- {name}({', '.join(params)})")
+            result.append((name, params))
+    return result
+
+
+def generator_names() -> set[str]:
+    """Unbounded set of generator class names — not clipped."""
+    return {name for name, _ in _generator_info()}
+
+
+def generator_reference() -> str:
+    lines = ['# Generators (generator="Name" or generator="Name(arg=...)" )']
+    for name, params in _generator_info():
+        lines.append(f"- {name}({', '.join(params)})")
     return clip("\n".join(lines), 8000, " [truncated]")
 
 
 def known_generator_names() -> set[str]:
-    return {line[2:].split("(", 1)[0] for line in generator_reference().splitlines() if line.startswith("- ")}
+    return generator_names()
 
 
 def targets_reference() -> str:
@@ -512,6 +529,64 @@ def capabilities_manifest() -> dict[str, Any]:
         "rules": [serialize_rule_definition(definition) for definition in authoring_rule_definitions()],
         "authoring_spec": authoring_spec_json_schema(),
     }
+
+
+def capabilities_index() -> dict[str, Any]:
+    """Compact annotated index of ``capabilities_manifest()`` — ~10× smaller.
+
+    Projects a versioned ToC with attribute names, child tags, and rule id/severity/title
+    triples.  Omits ``authoring_spec`` (reachable via ``reference scaffold`` or
+    ``--section authoring_spec``).
+    """
+    manifest = capabilities_manifest()
+    elements: dict[str, Any] = {}
+    for tag, el in manifest["elements"].items():
+        elements[tag] = {
+            "attributes": sorted(el["attributes"]),
+            "children": el["children"],
+        }
+    return {
+        "_meta": {
+            "format_version": 1,
+            "view": "compact",
+            "schema_version": manifest["schema_version"],
+            "sections": list(manifest),
+            "usage": {
+                "element_detail": "datamimic reference element <tag>",
+                "entity_detail": "datamimic reference entities <name>",
+                "rule_detail": "datamimic reference rules <id>",
+                "full_section": "datamimic capabilities --section <name>",
+                "full_manifest": "datamimic capabilities --full",
+            },
+        },
+        "schema_version": manifest["schema_version"],
+        "elements": elements,
+        "aliases": manifest["aliases"],
+        "generators": manifest["generators"],
+        "entities": manifest["entities"],
+        "converters": manifest["converters"],
+        "targets": manifest["targets"],
+        "distributions": manifest["distributions"],
+        "numeric_distributions": manifest["numeric_distributions"],
+        "finite_numeric_sequences": manifest["finite_numeric_sequences"],
+        "source_capabilities": manifest["source_capabilities"],
+        "rules": [{"id": r["id"], "severity": r["severity"], "title": r["title"]} for r in manifest["rules"]],
+    }
+
+
+def capabilities_sections(names: tuple[str, ...]) -> dict[str, Any]:
+    """Return the requested manifest sections keyed by name.
+
+    Raises:
+        UnknownCapabilitySection: any name is unknown (atomic — no partial output).
+    """
+    from datamimic_ce.authoring.contracts import UnknownCapabilitySection
+
+    manifest = capabilities_manifest()
+    unknown = [n for n in names if n not in manifest]
+    if unknown:
+        raise UnknownCapabilitySection(unknown[0], list(manifest))
+    return {name: manifest[name] for name in names}
 
 
 _TOPIC_HANDLERS: dict[ReferenceTopic, object] = {

@@ -18,7 +18,7 @@ datamimic info                      # Show system and configuration details
 datamimic init <project-name>       # Initialize a new project
 datamimic run <descriptor.xml>      # Run a data generation descriptor
 datamimic lint <descriptor.xml>     # Lint a descriptor: schema, semantics, best practices
-datamimic capabilities               # Print the DSL surface as JSON (elements, generators, entities, converters, targets)
+datamimic capabilities               # Print the DSL surface as JSON (compact index by default; --full for the complete manifest)
 ```
 
 ### Demo Management
@@ -126,14 +126,18 @@ datamimic lint my-descriptor.xml --format json --max-diagnostics 50
 #### `capabilities` - Print the DSL Surface
 
 ```bash
-datamimic capabilities
+datamimic capabilities [--section <name>] [--full]
 ```
 
-Prints a machine-readable JSON manifest of the DSL surface (elements,
-aliases, generators, entities, converters, targets, distributions), derived live from the engine
-registries so it cannot drift from the code. Useful for agents without an MCP
-runtime; see the [MCP Quickstart](../mcp_quickstart.md) for the equivalent
-`datamimic_reference` MCP tool.
+Prints a compact annotated JSON index of the DSL surface by default
+(elements, aliases, generators, entities, converters, targets,
+distributions), derived live from the engine registries so it cannot drift.
+Use `--full` for the complete manifest (including `authoring_spec`) or
+`--section <name>` (comma-separated) for specific sections. The compact
+output carries `_meta.format_version: 1` for stable agent contracts.
+
+Useful for agents without an MCP runtime; see the [MCP Quickstart](../mcp_quickstart.md)
+for the equivalent `datamimic_reference` MCP tool.
 
 ### Demo Management
 

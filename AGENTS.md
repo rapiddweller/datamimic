@@ -27,7 +27,7 @@ already exposes them.
 
 | Need | CLI command |
 |---|---|
-| Discover live element, enum, generator, target, and distribution names | `datamimic capabilities` |
+| Discover live element, enum, generator, target, and distribution names | `datamimic capabilities` (compact index by default; `--full` for the complete manifest, `--section <name>` for one section) |
 | Enumerate typed Intent Model queries | `datamimic reference authoring` |
 | Load one authoring fragment | `datamimic reference authoring --category <category> --kind <kind>` |
 | Compile and verify a new `model.dm.json` | `datamimic scaffold model.dm.json --format json` |

@@ -157,6 +157,31 @@ class CapabilitiesResult(RootModel[dict[str, JsonValue]]):
     pass
 
 
+class UnknownCapabilitySection(ValueError):
+    """Raised when ``--section`` names an unknown manifest key."""
+
+    def __init__(self, section: str, valid_sections: list[str]) -> None:
+        super().__init__(f"Unknown capability section '{section}'")
+        self.valid_sections = valid_sections
+
+
+class CapabilitiesRequest(BaseModel):
+    """Transport-neutral request for the capability manifest."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    mode: Literal["compact", "full", "sections"] = "compact"
+    sections: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def _validate(self) -> "CapabilitiesRequest":
+        if self.mode == "sections" and not self.sections:
+            raise ValueError("sections mode requires at least one section")
+        if self.mode != "sections" and self.sections:
+            raise ValueError("sections are only valid in sections mode")
+        return self
+
+
 class VerificationGateStatus(StrEnum):
     """Stable outcome vocabulary for optional scaffold verification gates."""
 

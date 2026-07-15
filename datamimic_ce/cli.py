@@ -34,9 +34,20 @@ def info() -> None:
     cli_runtime.show_system_information()
 
 
-@app.command("capabilities", help="Print the live DSL and authoring capability manifest as JSON.")
-def capabilities() -> None:
-    cli_authoring.show_capabilities()
+@app.command(
+    "capabilities",
+    help="Print the DSL surface as JSON (compact index by default; --full for the complete manifest).",
+)
+def capabilities(
+    section: Annotated[
+        str | None,
+        typer.Option("--section", help="Comma-separated manifest sections (e.g. elements,rules)"),
+    ] = None,
+    full: Annotated[
+        bool, typer.Option("--full", help="Emit the complete manifest (today's output, unchanged)")
+    ] = False,
+) -> None:
+    cli_authoring.show_capabilities(section, full)
 
 
 @app.command("reference", help="Query canonical DATAMIMIC model, rule, and authoring reference data.")

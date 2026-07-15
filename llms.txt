@@ -14,7 +14,7 @@ and semantic rules that cause most failures.
 ## Authoring the DSL
 
 - [Agent guide](AGENTS.md): read first; CLI tool selection, canonical model.dm.json scaffold flow, raw XML compatibility flow, repair and stop policy
-- Live structural discovery: `datamimic capabilities` returns machine-readable JSON names and enum values
+- Live structural discovery: `datamimic capabilities` returns a compact annotated JSON index; `--full` for the complete manifest, `--section <name>` for one section
 - Progressive Intent Model reference: `datamimic reference authoring`, then `datamimic reference authoring --category <category> --kind <kind>`
 - New model: preserve `model.dm.json`, run `datamimic scaffold model.dm.json --format json`, change input before retrying, and stop on `verified=true`
 - Existing raw XML: `datamimic lint <path> --format json`, then bounded `datamimic dry-run <path> --format json`; inspect intent before `datamimic run <path>`

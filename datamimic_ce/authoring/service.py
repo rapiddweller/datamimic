@@ -21,6 +21,7 @@ from datamimic_ce.authoring.acceptance import evaluate_acceptance
 from datamimic_ce.authoring.compiler import CompileError, compile_authoring_spec
 from datamimic_ce.authoring.contracts import (
     AuthoringStage,
+    CapabilitiesRequest,
     CapabilitiesResult,
     CheckRequest,
     CompilePlan,
@@ -100,10 +101,20 @@ def compile_document(spec: dict[str, Any]) -> CompiledDocument:
     )
 
 
-def capabilities() -> CapabilitiesResult:
-    from datamimic_ce.authoring.reference import capabilities_manifest
+def capabilities(request: CapabilitiesRequest | None = None) -> CapabilitiesResult:
+    from datamimic_ce.authoring.reference import (
+        capabilities_index,
+        capabilities_manifest,
+        capabilities_sections,
+    )
 
-    return CapabilitiesResult(capabilities_manifest())
+    if request is None:
+        request = CapabilitiesRequest()
+    if request.mode == "compact":
+        return CapabilitiesResult(capabilities_index())
+    if request.mode == "full":
+        return CapabilitiesResult(capabilities_manifest())
+    return CapabilitiesResult(capabilities_sections(request.sections))
 
 
 def reference(request: ReferenceRequest) -> ReferenceResult:
