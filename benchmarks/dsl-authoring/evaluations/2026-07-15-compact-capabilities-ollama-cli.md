@@ -98,15 +98,19 @@ acceptance checks passed, deterministic replay passed).
 | `qwen3.5:cloud` | no (Ollama cloud) | not run | **fail — subscription required** |
 | `mistral-large-3:675b-cloud` | no (Ollama cloud) | not run | **fail — subscription required** |
 | `deepseek-v4-flash:cloud` | no (Ollama cloud) | not run | **fail — subscription required** |
+| `gemini-3-flash-preview:cloud` | no (Ollama cloud) | not run | **fail — model retired** |
 
 Three of the requested cloud models returned `HTTP 403` / "this model
 requires a subscription, upgrade for access" on every chat request — a
 real access gate, not a harness bug (`api/show` on these models succeeds and
 reports normal capabilities; only the actual inference call is gated). This
 matches a prior, now-deleted diagnostic's finding that `qwen3.5:cloud`
-specifically was inaccessible. These three are excluded from all semantic
-denominators below, per this archive's own access/semantic separation
-convention.
+specifically was inaccessible. `gemini-3-flash-preview:cloud` failed for a
+different, unrelated reason: Ollama's own error message states it "was
+retired at 2026-07-15 00:00:00 -0700 PDT" — the model was withdrawn the same
+day this diagnostic was run, not a subscription gate. All four are excluded
+from all semantic denominators below, per this archive's own
+access/semantic separation convention.
 
 The three genuinely local models were reachable via the local Ollama server
 in both conditions; no access failures. `-cloud`-tagged Ollama models were
@@ -426,11 +430,12 @@ conclusive — see follow-up #1.
   evidence quality for the same budget, independent of whether it changes the
   verified rate on a larger run. (It did not reliably eliminate the
   identical-payload stuck loop either — see B2's `gemma4:e4b`.)
-- **Access, not capability, is the finding for three of the eight requested
+- **Access, not capability, is the finding for four of the nine requested
   cloud models:** `qwen3.5:cloud`, `mistral-large-3:675b-cloud`, and
   `deepseek-v4-flash:cloud` all require an Ollama subscription this
-  environment doesn't have. No semantic conclusion is possible for these
-  three.
+  environment doesn't have; `gemini-3-flash-preview:cloud` was retired by
+  Ollama the same day this diagnostic ran. No semantic conclusion is
+  possible for any of these four.
 - **NO DATA:** whether the compact `capabilities` index itself is a
   bottleneck. Across B/B2, most models skipped `capabilities` entirely in
   favor of `reference scaffold` (the full JSON Schema) when both were
