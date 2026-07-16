@@ -512,7 +512,9 @@ ProductIntentUnion = Annotated[
 class ExactCountExpectation(IntentModel):
     kind: Literal[ExpectationIntentKind.EXACT_COUNT] = ExpectationIntentKind.EXACT_COUNT
     product: str = Field(min_length=1)
-    count: NonNegativeStrictInt
+    count: NonNegativeStrictInt = Field(
+        json_schema_extra={INTENT_REPAIR_ALIASES_SCHEMA_KEY: ["exact_count"]},
+    )
 
 
 class PerParentCountExpectation(IntentModel):

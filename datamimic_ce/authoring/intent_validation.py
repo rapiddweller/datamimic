@@ -341,6 +341,8 @@ def _build_intent_validation_issue(
     if code is IntentValidationIssueCode.UNKNOWN_FIELD and path:
         owner = f" for {model_name}" if model_name is not None else ""
         message = f"Unknown field '{path[-1]}'{owner}"
+        if repair is not None:
+            message = f"{message}; did you mean '{repair.replacement_field}'?"
     return IntentValidationIssue(
         path=path,
         code=code,

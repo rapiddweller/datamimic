@@ -229,6 +229,31 @@ def test_typo_repair_is_derived_from_and_validated_against_user_input() -> None:
     AuthoringSpecV1.model_validate(corrected)
 
 
+def test_exact_count_output_spelling_has_a_validated_count_repair() -> None:
+    result = scaffold(
+        ScaffoldRequest(
+            spec={
+                "version": "1",
+                "products": [
+                    {
+                        "kind": "generated",
+                        "name": "records",
+                        "count": 1,
+                        "fields": [{"kind": "increment", "name": "id"}],
+                    }
+                ],
+                "expectations": [{"kind": "exact_count", "product": "records", "exact_count": 1}],
+            }
+        )
+    )
+
+    issue = next(issue for issue in result.issues if issue.path[-1] == "exact_count")
+    assert issue.code is IntentValidationIssueCode.UNKNOWN_FIELD
+    assert "did you mean 'count'?" in issue.message
+    assert issue.repair is not None
+    assert issue.repair.replacement_field == "count"
+
+
 def test_unvalidated_field_guess_has_no_repair() -> None:
     result = scaffold(ScaffoldRequest(spec=_memstore_source_with_rejected_field("oops")))
     issue = result.issues[0]
