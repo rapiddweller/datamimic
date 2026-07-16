@@ -1,0 +1,5 @@
+<setup rngSeed="42">
+  <generate name="gen" count="5" target="">
+    <key name="code" values="'A','B','C','D','E'" unique="true"/>
+  </generate>
+</setup>

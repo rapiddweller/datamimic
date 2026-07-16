@@ -205,10 +205,12 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "DM204",
         RuleSeverity.ERROR,
         "Invalid unique combination",
-        "unique requires a finite pool and must follow the element's central distribution policy.",
-        "Use a supported finite pool and remove conflicting weights, cyclic or distribution attributes.",
+        "unique requires a finite pool (values, source, or generator) and must follow the element's "
+        "central distribution policy. Generator-backed unique uses task-level dedup — the generator "
+        "itself does not own uniqueness.",
+        "Use values, source or generator as a supported pool; remove conflicting weights, cyclic or distribution.",
         "Central unique/source compatibility facts and ADR-042.",
-        '<variable name="x" values="1,2" unique="true"/>',
+        '<key name="x" generator="EANGenerator()" unique="true"/>',
         '<variable name="x" values="1,2" unique="true" cyclic="true"/>',
     ),
     _rule_definition(

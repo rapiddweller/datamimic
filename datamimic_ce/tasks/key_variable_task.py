@@ -71,6 +71,10 @@ class KeyVariableTask(Task):
         self._mode: str | None = None
         # Lazily-built distinct-value iterator for unique="true" (sampling without replacement).
         self._unique_iter: Iterator[Any] | None = None
+        # Dedup set for generator-backed unique="true": every generated value is
+        # tracked; duplicates trigger a bounded retry loop. Generator-owned uniqueness
+        # is a separate concern — this is cross-row dedup at the task level.
+        self._generator_seen: set[Any] | None = None
 
         self._simple_type_set = {
             DATA_TYPE_BINARY,
@@ -296,7 +300,12 @@ class KeyVariableTask(Task):
                     self._pagination,
                     key=f"{self._statement.full_name}|{self._statement.generator}",
                 )
-            value = self._generator.generate() if self._generator is not None else None
+            if self._generator is None:
+                value = None
+            elif self._statement.unique:
+                value = self._next_unique_generator_value()
+            else:
+                value = self._generator.generate()
             # Convert numpy.bool_ to bool for being compatible with consumer (db,...)
             if isinstance(value, numpy.bool_):
                 value = bool(value)
@@ -355,6 +364,22 @@ class KeyVariableTask(Task):
                 self._values, ctx.rng, f"<{self._element_tag}> '{self._statement.name}'"
             )
         return next(self._unique_iter)
+
+    def _next_unique_generator_value(self) -> Any:
+        """Call the generator repeatedly until a value not yet seen this task is produced.
+        Raises after a bounded number of retries."""
+        if self._generator_seen is None:
+            self._generator_seen = set()
+        max_retries = 100
+        for _ in range(max_retries):
+            value = self._generator.generate()
+            if value not in self._generator_seen:
+                self._generator_seen.add(value)
+                return value
+        raise ValueError(
+            f"<{self._element_tag}> '{self._statement.name}' unique=\"true\": "
+            f"generator produced only duplicates after {max_retries} retries"
+        )
 
     def _parse_weights(self, values):
         """Parse the 'weights' companion of 'values' into floats, validating the count.

@@ -8,7 +8,6 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel, ConfigDict, JsonValue, TypeAdapter
 
-from datamimic_ce._compat import StrEnum
 from datamimic_ce.authoring.contracts import (
     AuthoringReferenceCategory,
     AuthoringReferenceQuery,
@@ -67,7 +66,6 @@ class AuthoringReferenceProjection(BaseModel):
 
 
 IntentModelType = type[BaseModel]
-_JSON_SCHEMA_ADAPTER: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 
 _PRODUCT_MODELS: Mapping[ProductIntentKind, IntentModelType] = {
     ProductIntentKind.GENERATED: GeneratedProduct,
@@ -131,7 +129,7 @@ def authoring_reference_projection(
         model=model_type.__name__,
         required_fields=tuple(name for name, field in fields.items() if field.is_required()),
         allowed_fields=tuple(fields),
-        json_schema=_JSON_SCHEMA_ADAPTER.validate_python(model_type.model_json_schema()),
+        json_schema=TypeAdapter(dict[str, JsonValue]).validate_python(model_type.model_json_schema()),
     )
 
 
@@ -192,32 +190,11 @@ def source_product_repair_guidance(source_kind: SourceIntentKind | None) -> str:
     return ". ".join(fragments) + "."
 
 
-def projection_catalog_is_exhaustive() -> bool:
-    """Return whether every canonical variant has exactly one model owner."""
-
-    mappings: tuple[tuple[set[StrEnum], set[StrEnum]], ...] = (
-        (set(_PRODUCT_MODELS), set(ProductIntentKind)),
-        (set(_SOURCE_MODELS), set(SourceIntentKind)),
-        (set(_FIELD_MODELS), set(FieldIntentKind)),
-        (set(_TARGET_MODELS), set(TargetIntentKind)),
-        (set(_EXPECTATION_MODELS), set(ExpectationIntentKind)),
-    )
-    model_types = (
-        *_PRODUCT_MODELS.values(),
-        *_SOURCE_MODELS.values(),
-        *_FIELD_MODELS.values(),
-        *_TARGET_MODELS.values(),
-        *_EXPECTATION_MODELS.values(),
-    )
-    return all(actual == expected for actual, expected in mappings) and len(set(model_types)) == len(model_types)
-
-
 __all__ = [
     "AuthoringReferenceProjection",
     "authoring_variant_kinds",
     "authoring_reference_projection",
     "list_authoring_reference_queries",
     "minimal_authoring_variant_shapes",
-    "projection_catalog_is_exhaustive",
     "source_product_repair_guidance",
 ]

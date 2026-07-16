@@ -1,0 +1,8 @@
+<setup rngSeed="42">
+  <!-- Element-level unique="true" must forward to EANGenerator so all 5 EANs
+       are distinct. Without the forwarding, EANGenerator() runs without internal
+       uniqueness and may produce duplicates. -->
+  <generate name="products" count="5" target="">
+    <key name="ean" generator="EANGenerator()" unique="true"/>
+  </generate>
+</setup>

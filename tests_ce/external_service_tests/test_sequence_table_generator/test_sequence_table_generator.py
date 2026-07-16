@@ -95,10 +95,16 @@ class TestSequenceTableGenerator:
         assert len(set(ids)) == 13, f"duplicate ids: {ids}"
 
     def test_sequence_table_generator_mysql_uneven_multiprocess(self):
-        """MySQL's emulated sequence cannot enter an unsafe multiprocess execution."""
+        """MySQL SequenceTableGenerator gracefully degrades to single-process
+        (PR #217 added _uses_mysql_sequence policy).  The run must complete with
+        a gapless, duplicate-free sequence despite the numProcess=4 request."""
         engine = DataMimicTest(test_dir=self._test_dir, filename="mysql_uneven_mp_test.xml", capture_test_result=True)
-        with pytest.raises(ValueError, match="MySQL source is single-process only"):
-            engine.test_with_timer()
+        engine.test_with_timer()
+        result = engine.capture_result()
+        ids = [row["id"] for row in result["check"]]
+        assert len(ids) == 13
+        assert len(set(ids)) == 13, f"duplicate ids: {ids}"
+        assert min(ids) == 1 and max(ids) == 13, f"non-contiguous ids: {sorted(ids)}"
 
     @pytest.mark.skip(
         reason="MSSQL native-sequence support was prototyped and pulled: SequenceTableGenerator "

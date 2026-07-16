@@ -1,0 +1,6 @@
+<setup rngSeed="1">
+  <generate name="gen" count="5" target="">
+    <variable name="cat" values="'A','B','C','D','E'" unique="true" distribution="random"/>
+    <key name="code" script="cat"/>
+  </generate>
+</setup>

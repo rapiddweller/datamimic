@@ -1,0 +1,6 @@
+<setup>
+  <generate name="gen" count="5" target="">
+    <variable name="cat" generator="IncrementGenerator()" unique="true"/>
+    <key name="code" script="cat"/>
+  </generate>
+</setup>

@@ -266,10 +266,12 @@ class ModelUtil:
         values: dict,
         constraints: tuple["Constraint", ...] | None = None,
     ) -> dict:
-        """'unique' draws distinct values without replacement from a finite pool — an inline
-        'values' set or a 'source'. It implies distinct random order, so it only combines with
-        distribution='random' (the default) and is incompatible with 'weights' (no weighted
-        sampling without replacement), 'cyclic' and ordered/cumulated (no-repeat vs repeat/bell).
+        """'unique' draws distinct values without replacement from a finite pool — inline
+        'values', a 'source', or a 'generator'. It implies distinct random order, so it only
+        combines with distribution='random' (the default) and is incompatible with 'weights'
+        (no weighted sampling without replacement), 'cyclic' and ordered/cumulated
+        (no-repeat vs repeat/bell). Generator-backed unique uses task-level dedup in
+        KeyVariableTask — the generator itself does not own uniqueness state.
 
         Delegate entirely to the model's declared unique constraints. Source-backed
         models default to the shared source-selection facts; <key> passes its numeric-

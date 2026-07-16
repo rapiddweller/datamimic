@@ -150,8 +150,9 @@ class KeyModel(BaseModel):
     unique: bool | None = Field(
         None,
         description="Emit each picked value at most once (distinct selection without replacement). "
-        "Requires inline 'values' and cannot combine with key 'source', 'weights', or the key's "
-        "numeric-range 'distribution'.",
+        "Requires 'values' or 'generator' and cannot combine with 'weights' or the key's "
+        "numeric-range 'distribution'. Generator-backed dedup is task-level; the generator itself "
+        "does not own uniqueness state.",
         examples=[True, False],
     )
     script: str | None = Field(

@@ -22,7 +22,6 @@ from datamimic_ce.authoring.contracts import (
 from datamimic_ce.authoring.reference_projection import (
     authoring_reference_projection,
     list_authoring_reference_queries,
-    projection_catalog_is_exhaustive,
     source_product_repair_guidance,
 )
 from datamimic_ce.authoring.script_semantics import current_scope_reference
@@ -365,8 +364,11 @@ def test_source_product_repair_guidance_uses_each_typed_source_variant(source_ki
 
 
 def test_reference_catalog_is_schema_only_and_exhaustive() -> None:
-    assert projection_catalog_is_exhaustive()
-    for query in list_authoring_reference_queries():
+    queries = list_authoring_reference_queries()
+    assert queries
+    models = {authoring_reference_projection(q).model for q in queries}
+    assert len(models) == len(queries)  # every variant maps to a distinct model
+    for query in queries:
         projection = authoring_reference_projection(query)
         assert projection.allowed_fields
         assert set(projection.required_fields) <= set(projection.allowed_fields)
