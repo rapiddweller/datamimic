@@ -48,24 +48,35 @@ were captured with `ollama list` and `ollama show` before the run.
 | `ministral-3:8b-instruct-2512-q4_K_M` | `1922accd5827` | Q4_K_M | no | temperature .15 |
 | `qwen3-coder:30b-a3b-q4_K_M` | `06c1097efce0` | Q4_K_M | no | temperature .7, top_k 20, top_p .8, repeat_penalty 1.05 |
 
-## Valid native-Ollama results
+## Results and comparison status
+
+This run is a valid **post-change benchmark**, but it is not yet a controlled
+before/after measurement of D1–D7: the 2026-07-15 record did not fix the
+Ollama inference seed, and this run strengthens T4/T5 with the new D1/D7
+contracts. Therefore a score difference must not be attributed to the code
+changes. A valid improvement claim requires an additional run of the
+pre-change commit under this exact profile and oracle.
 
 ✓tN means that the typed oracle passed on turn N; ✗ means no oracle pass
-within the eight-turn budget. All preflights passed.
+within the eight-turn budget. ✓ for an agent row means its reported verified
+submission passed the post-run semantic check. All local-Ollama preflights
+passed.
 
-| Participant | T1 | T2 | T3 | T4 | T5 | Score |
-|---|---|---|---|---|---|---|
-| `gemma4:e4b` | ✓t2 | ✗ | ✗ | ✗ | ✗ | 1/5 |
-| `gemma4:e4b-it-qat` | ✗ | ✗ | ✗ | ✗ | ✗ | 0/5 |
-| `qwen3.5:9b-mlx` | ✗ | ✗ | ✓t4 | ✗ | ✗ | 1/5 |
-| `ministral-3:8b-instruct-2512-q4_K_M` | ✗ | ✗ | ✓t5 | ✗ | ✓t5 | 2/5 |
-| `qwen3-coder:30b-a3b-q4_K_M` | ✓t2 | ✓t5 | ✗ | ✗ | ✗ | 2/5 |
+| Participant | Execution mode | T1 | T2 | T3 | T4 | T5 | Score |
+|---|---|---|---|---|---|---|---|
+| `gemma4:e4b` | native Ollama | ✓t2 | ✗ | ✗ | ✗ | ✗ | 1/5 |
+| `gemma4:e4b-it-qat` | native Ollama | ✗ | ✗ | ✗ | ✗ | ✗ | 0/5 |
+| `qwen3.5:9b-mlx` | native Ollama | ✗ | ✗ | ✓t4 | ✗ | ✗ | 1/5 |
+| `ministral-3:8b-instruct-2512-q4_K_M` | native Ollama | ✗ | ✗ | ✓t5 | ✗ | ✓t5 | 2/5 |
+| `qwen3-coder:30b-a3b-q4_K_M` | native Ollama | ✓t2 | ✓t5 | ✗ | ✗ | ✗ | 2/5 |
+| Luna | isolated CLI agent | ✓ | ✓ | ✓ | ✓ | ✓ | 5/5 |
+| `gpt-5.4-mini` | isolated CLI agent | ✓ | ✓ | ✓ | ✓ | ✓ | 5/5 |
 
 The D1–D7 contracts are exercised by successful T2 nested-FK validation and
 T5 compiler-derived row-count evidence. No local participant passed T4, so
 the memstore role-pairing/read-back rung remains the dominant gap.
 
-## Requested agent checks (separate transport)
+## Agent-row caveat
 
 Spark was removed from the requested comparison before scoring and has no row
 in this report. The host did not offer a model named GPT-4 mini; the requested
@@ -76,16 +87,17 @@ Luna and `gpt-5.4-mini` each received one isolated, context-free task prompt,
 the same CLI-only constraint and eight-invocation budget, and no repository
 read/write permission. Both reported `verified=true` submissions for T1–T5;
 a post-run check of their final intent documents found every task-specific
-semantic condition satisfied (5/5 each). These are useful authoring-agent
-checks, but are not pooled with the native-Ollama table: their execution
-transport and in-loop oracle feedback differ.
+semantic condition satisfied (5/5 each). They are displayed in the common
+table because they were requested comparison participants, while their
+different transport and in-loop oracle feedback remain explicit in the
+`Execution mode` column.
 
 ## Interpretation and artifacts
 
-This is one fixed inference seed, not a reliability estimate. Do not rank it
-against the 2026-07-15 scores: that predecessor records an Intent Model seed
-but not an Ollama inference seed. A future reliability claim needs multiple
-pre-registered inference seeds under the same frozen profile.
+This is one fixed inference seed, not a reliability estimate. The old and new
+rows are not an improvement comparison until the pre-change commit has been
+run under this exact profile and strengthened oracle. A future reliability
+claim additionally needs multiple pre-registered inference seeds.
 
 Scratch-only machine evidence is retained outside the repository at
 `/private/tmp/datamimic-ladder-rerun-20260716T070951Z/` (append-only ledger
