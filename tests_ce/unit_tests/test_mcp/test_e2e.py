@@ -45,6 +45,15 @@ async def test_reference_and_check_delegate_canonical_contracts(anyio_backend: s
             "allowed_fields": ["kind", "product", "field", "minimum", "maximum"],
         } in authoring_content["variants"]
 
+        field_reference = await client.call_tool(
+            "datamimic_reference",
+            {"request": {"topic": "authoring", "category": "field"}},
+        )
+        field_payload = json.loads(field_reference[0].text)
+        assert field_payload["ok"] is True
+        field_content = json.loads(field_payload["content"])
+        assert {variant["category"] for variant in field_content["variants"]} == {"field"}
+
         reference = await client.call_tool(
             "datamimic_reference",
             {"request": {"topic": "element", "name": "generate"}},

@@ -158,8 +158,8 @@ def _validate_show_reference_args(
         cli_presenter.fail("--category/--kind are only valid for topic=authoring", code=1)
     if topic is ReferenceTopic.AUTHORING and name is not None:
         cli_presenter.fail("topic=authoring uses --category/--kind, not name", code=1)
-    if (category is None) != (kind is None):
-        cli_presenter.fail("--category and --kind must be provided together", code=1)
+    if category is None and kind is not None:
+        cli_presenter.fail("--kind requires --category", code=1)
 
 
 def show_reference(
@@ -175,7 +175,9 @@ def show_reference(
             if category is not None and kind is not None
             else None
         )
-        result = service.reference(ReferenceRequest(topic=topic, name=name, query=query))
+        result = service.reference(
+            ReferenceRequest(topic=topic, name=name, category=category if query is None else None, query=query)
+        )
     except ValidationError as error:
         cli_presenter.fail(str(error), code=1)
     if not result.ok or result.content is None:

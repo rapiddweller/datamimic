@@ -142,14 +142,17 @@ class ReferenceRequest(BaseModel):
 
     topic: ReferenceTopic = ReferenceTopic.OVERVIEW
     name: str | None = None
+    category: AuthoringReferenceCategory | None = None
     query: AuthoringReferenceQuery | None = None
 
     @model_validator(mode="after")
     def validate_scope(self) -> "ReferenceRequest":
-        if self.query is not None and self.topic is not ReferenceTopic.AUTHORING:
-            raise ValueError("query is only valid for topic=authoring")
+        if (self.category is not None or self.query is not None) and self.topic is not ReferenceTopic.AUTHORING:
+            raise ValueError("category and query are only valid for topic=authoring")
         if self.topic is ReferenceTopic.AUTHORING and self.name is not None:
-            raise ValueError("topic=authoring uses query, not name")
+            raise ValueError("topic=authoring uses category/query, not name")
+        if self.category is not None and self.query is not None:
+            raise ValueError("category is a listing request; use query for one authoring variant")
         return self
 
 

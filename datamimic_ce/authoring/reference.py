@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from datamimic_ce.domains.domain_core.entity_registry import EntitySpec
 
-from datamimic_ce.authoring.contracts import ReferenceTopic
+from datamimic_ce.authoring.contracts import AuthoringReferenceCategory, ReferenceTopic
 from datamimic_ce.authoring.reference_projection import (
     AuthoringReferenceQuery,
     authoring_reference_projection,
@@ -462,14 +462,22 @@ def scaffold_reference() -> str:
     )
 
 
-def compact_authoring_reference(query: AuthoringReferenceQuery | None = None) -> str:
+def compact_authoring_reference(
+    query: AuthoringReferenceQuery | None = None,
+    category: AuthoringReferenceCategory | None = None,
+) -> str:
     """Render one compact, enum-addressed projection from the Intent Model SPOT."""
 
     if query is None:
-        queries = list_authoring_reference_queries()
+        queries = tuple(
+            candidate
+            for candidate in list_authoring_reference_queries()
+            if category is None or candidate.category is category
+        )
         return json.dumps(
             {
                 "topic": ReferenceTopic.AUTHORING,
+                "category": category,
                 "queries": [candidate.model_dump(mode="json") for candidate in queries],
                 "variants": [
                     {
@@ -480,7 +488,7 @@ def compact_authoring_reference(query: AuthoringReferenceQuery | None = None) ->
                     for candidate in queries
                 ],
                 "usage": (
-                    "Use variants for one-call discriminator and field discovery; "
+                    "Use this listing for one-call discriminator and field discovery; "
                     "use reference authoring --category <category> --kind <kind> for one full JSON schema."
                 ),
             },
@@ -632,8 +640,13 @@ def reference(
     topic: ReferenceTopic,
     name: str | None = None,
     *,
+    category: AuthoringReferenceCategory | None = None,
     query: AuthoringReferenceQuery | None = None,
 ) -> str:
+    if category is not None:
+        if topic is not ReferenceTopic.AUTHORING or query is not None:
+            raise ValueError("category listing is only valid for topic=authoring without a variant query")
+        return compact_authoring_reference(category=category)
     handler = _TOPIC_HANDLERS.get(topic)
     if handler is not None:
         return handler(name, query)  # type: ignore[operator]

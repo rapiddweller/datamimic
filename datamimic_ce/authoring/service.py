@@ -123,7 +123,7 @@ def reference(request: ReferenceRequest) -> ReferenceResult:
     from datamimic_ce.authoring.reference import reference as project_reference
 
     try:
-        content = project_reference(request.topic, request.name, query=request.query)
+        content = project_reference(request.topic, request.name, category=request.category, query=request.query)
     except ValueError as error:
         return ReferenceResult(
             ok=False,

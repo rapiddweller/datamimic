@@ -321,6 +321,20 @@ def test_compact_authoring_reference_includes_variant_field_summaries() -> None:
     assert exact_count["kind"] == "exact_count"
 
 
+def test_category_reference_lists_only_its_schema_owned_variants() -> None:
+    result = reference(
+        ReferenceRequest(topic=ReferenceTopic.AUTHORING, category=AuthoringReferenceCategory.FIELD)
+    )
+
+    assert result.ok is True
+    assert result.content is not None
+    content = json.loads(result.content)
+    assert content["category"] == "field"
+    assert content["variants"]
+    assert {variant["category"] for variant in content["variants"]} == {"field"}
+    assert {variant["kind"] for variant in content["variants"]} == set(FieldIntentKind)
+
+
 def test_source_reference_queries_cover_canonical_union() -> None:
     queries = [query for query in list_authoring_reference_queries() if isinstance(query, SourceReferenceQuery)]
     assert {query.kind for query in queries} == set(SourceIntentKind)
@@ -333,6 +347,18 @@ def test_cli_and_service_return_identical_schema_projection() -> None:
         app,
         ["reference", ReferenceTopic.AUTHORING, "--category", query.category, "--kind", query.kind],
     )
+
+    assert result.ok is True
+    assert result.content is not None
+    assert cli_result.exit_code == 0, cli_result.stdout
+    assert json.loads(cli_result.stdout) == json.loads(result.content)
+
+
+def test_cli_category_listing_matches_the_service_contract() -> None:
+    result = reference(
+        ReferenceRequest(topic=ReferenceTopic.AUTHORING, category=AuthoringReferenceCategory.FIELD)
+    )
+    cli_result = CliRunner().invoke(app, ["reference", "authoring", "--category", "field"])
 
     assert result.ok is True
     assert result.content is not None
