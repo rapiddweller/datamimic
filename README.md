@@ -17,6 +17,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/rapiddweller/datamimic/blob/development/LICENSE)
 [![MCP Ready](https://img.shields.io/badge/MCP-ready-8A2BE2.svg)](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md)
 
+**4.1.0:** Typed `model.dm.json` authoring, canonical agent and MCP operations, and centralized
+data-source routing. See the [release notes](docs/releases/4.1.0.md).
+
 ---
 
 ## What is DATAMIMIC?
