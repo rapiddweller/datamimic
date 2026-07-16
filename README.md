@@ -17,9 +17,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/rapiddweller/datamimic/blob/development/LICENSE)
 [![MCP Ready](https://img.shields.io/badge/MCP-ready-8A2BE2.svg)](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md)
 
-**4.1.0:** Typed `model.dm.json` authoring, canonical agent and MCP operations, and centralized
-data-source routing. See the [release notes](docs/releases/4.1.0.md).
-
 ---
 
 ## What is DATAMIMIC?
@@ -79,7 +76,7 @@ When the calling environment already exposes DATAMIMIC MCP tools, they map to th
 canonical contracts and implementations: `reference` → `datamimic_reference`,
 `scaffold` → `datamimic_scaffold`, `lint` → `datamimic_check`, and `dry-run` →
 `datamimic_run`. Install the adapter with `pip install "datamimic-ce[mcp]"`;
-registration details belong in the [`MCP quickstart`](docs/mcp_quickstart.md),
+registration details belong in the [`MCP quickstart`](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md),
 not in the authoring workflow. The adapter intentionally exposes only the four
 canonical reference, scaffold, check, and bounded-run operations; domain generation
 remains a Python/CLI capability rather than a parallel MCP authoring path.
