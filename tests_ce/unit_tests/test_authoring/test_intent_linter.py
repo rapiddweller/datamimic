@@ -113,6 +113,9 @@ def test_memstore_readback_regeneration_warns_with_an_exact_copy_repair() -> Non
     assert {item.name for item in diagnostics} == {"region", "credit_limit"}
     assert all(item.severity is RuleSeverity.WARNING for item in diagnostics)
     assert '"script":"this.region"' in diagnostics[0].fix_hint
+    assert result.ok is True
+    assert result.acceptance is not None and result.acceptance.verified is True
+    assert result.verified is False
 
 
 def test_memstore_readback_copy_fields_do_not_warn() -> None:

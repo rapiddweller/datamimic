@@ -42,7 +42,7 @@ from datamimic_ce.authoring.dryrun import (
     dry_run_source,
     dry_run_source_captured,
 )
-from datamimic_ce.authoring.intent_linter import lint_intent
+from datamimic_ce.authoring.intent_linter import intent_diagnostics_pass_verification, lint_intent
 from datamimic_ce.authoring.intent_validation import project_validation_issues
 from datamimic_ce.authoring.linter import lint_descriptor, lint_source
 from datamimic_ce.authoring.spec import AuthoringSpecV1
@@ -198,6 +198,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
     xml = compiled.xml
     derived_facts = derive_facts(compiled.plan)
     intent_diagnostics = lint_intent(compiled.spec, compiled.plan)
+    intent_verification_passed = intent_diagnostics_pass_verification(intent_diagnostics)
 
     captured_run = dry_run_source_captured(
         xml,
@@ -287,5 +288,5 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
         acceptance=acceptance,
         remediations=remediations,
         verification=verification,
-        verified=acceptance.verified and verification_passed,
+        verified=acceptance.verified and verification_passed and intent_verification_passed,
     )

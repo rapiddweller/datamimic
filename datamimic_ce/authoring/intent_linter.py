@@ -2,6 +2,7 @@
 
 from datamimic_ce.authoring.contracts import CompilePlan
 from datamimic_ce.authoring.diagnostics import Diagnostic
+from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules import ALL_INTENT_RULES, IntentLintContext
 from datamimic_ce.authoring.spec import AuthoringSpecV1
 
@@ -14,3 +15,9 @@ def lint_intent(spec: AuthoringSpecV1, plan: CompilePlan) -> list[Diagnostic]:
     for rule in ALL_INTENT_RULES:
         diagnostics.extend(rule().check(context, spec, plan))
     return diagnostics
+
+
+def intent_diagnostics_pass_verification(diagnostics: list[Diagnostic]) -> bool:
+    """Whether all intent findings permit a semantic ``verified`` certificate."""
+
+    return not any(authoring_rule_definition(diagnostic.rule).blocks_verification for diagnostic in diagnostics)

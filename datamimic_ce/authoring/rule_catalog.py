@@ -41,6 +41,7 @@ class RuleDefinition:
     valid_example: str
     invalid_example: str
     advisory_severity: RuleSeverity | None = None
+    blocks_verification: bool = False
 
     def __post_init__(self) -> None:
         if len(self.id) != 5 or not self.id.startswith("DM") or not self.id[2:].isdigit():
@@ -76,6 +77,7 @@ def _rule_definition(
     valid_example: str,
     invalid_example: str,
     advisory_severity: RuleSeverity | None = None,
+    blocks_verification: bool = False,
 ) -> RuleDefinition:
     return RuleDefinition(
         id=rule_id,
@@ -87,6 +89,7 @@ def _rule_definition(
         valid_example=valid_example,
         invalid_example=invalid_example,
         advisory_severity=advisory_severity,
+        blocks_verification=blocks_verification,
     )
 
 
@@ -516,7 +519,8 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         RuleSeverity.WARNING,
         "Memstore readback field does not copy its source",
         "A same-named field in a memstore-backed source product regenerates a stored value instead of reading it.",
-        'Use a script field with script="this.<field>"; retain any foreign-key role on that field.',
+        'Use a script field with script="this.<field>"; retain any foreign-key role on that field. '
+        "This readback-integrity rule must pass before verified=true.",
         "AuthoringSpecV1 memstore source readback contract.",
         '<setup><memstore id="store"/><generate name="users" count="1" target="store">'
         '<key name="id" generator="IncrementGenerator"/></generate>'
@@ -526,6 +530,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         '<key name="id" generator="IncrementGenerator"/></generate>'
         '<generate name="audit" source="store" type="users"><key name="id" type="int" min="1" max="9"/>'
         "</generate></setup>",
+        blocks_verification=True,
     ),
 )
 
@@ -545,9 +550,9 @@ def authoring_rule_definition(rule_id: str) -> RuleDefinition:
     return AUTHORING_RULE_DEFINITIONS[rule_id]
 
 
-def serialize_rule_definition(definition: RuleDefinition) -> dict[str, str]:
+def serialize_rule_definition(definition: RuleDefinition) -> dict[str, str | bool]:
     """Project one catalog entry to CLI/MCP-friendly plain data."""
-    serialized = {
+    serialized: dict[str, str | bool] = {
         "id": definition.id,
         "severity": definition.severity.value,
         "title": definition.title,
@@ -560,4 +565,6 @@ def serialize_rule_definition(definition: RuleDefinition) -> dict[str, str]:
     }
     if definition.advisory_severity is not None:
         serialized["advisory_severity"] = definition.advisory_severity.value
+    if definition.blocks_verification:
+        serialized["blocks_verification"] = True
     return serialized
