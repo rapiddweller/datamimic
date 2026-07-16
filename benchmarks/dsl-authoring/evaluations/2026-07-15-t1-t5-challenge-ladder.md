@@ -1,303 +1,466 @@
-# A Five-Rung Difficulty Ladder for CLI-Only Agent Authoring of DATAMIMIC Intent Models — 2026-07-15
+# A Five-Rung Difficulty Ladder for CLI-Only Agent Authoring of DATAMIMIC Intent Models — 2026-07-15/16
 
-Single-seed study on `feat/capabilities-compact-index` (PR #215). Curated
-record; raw transcripts, provider request identifiers, and runtime outputs
-are intentionally not committed. Every number in this document is backed by
-a machine-written ledger entry in the (uncommitted, scratchpad-local) run
-records; nothing is reported from memory.
+Single-seed study on `feat/capabilities-compact-index` (PR #215). This is the
+sole committed record of this evaluation series; it is self-contained. Every
+number is backed by a machine-written ledger entry in the (scratchpad-local,
+uncommitted) run records. Every prompt shown is verbatim.
 
 ## Abstract
 
-We test whether five locally-hosted open-weight models (3.8B–30B class,
-Apple M5 Pro / 48GB) and one capable baseline (Claude Haiku) can author
-verified DATAMIMIC `model.dm.json` documents across five data-generation
-tasks of increasing structural difficulty, using only the `datamimic` CLI as
-their knowledge source, under an identical guided prompt (worked example +
-submit-early-repair strategy, previously shown to flip 0/9 → 5/5 on the
-easiest task). Result: a clean capability gradient. Small generalist chat
-models (Gemma-4 8B variants, Qwen3.5 9B) pass only the flat-record rung
-(1/5). An agentic-tuned 8B (Ministral-3) adds the mixed-field rung (2/5). A
-coding-specialized 30B MoE (Qwen3-Coder) adds the memstore-pipeline rung
-(3/5) — the one rung the Haiku baseline itself failed. Haiku passes 4/5.
-No participant passed all five rungs unaided. Two distinct failure classes
-dominate: schema-shape errors (recoverable via the engine's structured
-diagnostics) and intent-comprehension errors (invisible to the engine's
-`verified` flag, caught only by an independent typed oracle). The relational
-rung (T2) — nested children, per-parent counts, cross-product foreign keys —
-is the sharpest small-model discriminator: zero local passes, and even the
-baseline needed 7 of its 8 budgeted attempts.
+Five locally-hosted open-weight models (3.8B–30B class, Apple M5 Pro / 48GB)
+and one capable baseline (Claude Haiku) attempt to author verified DATAMIMIC
+`model.dm.json` documents across five data-generation tasks of increasing
+structural difficulty, using only the `datamimic` CLI as their knowledge
+source, under an identical guided prompt. Result: a clean capability
+gradient — generalist 8–9B chat models pass only the flat-record rung (1/5);
+an agentic-tuned 8B adds the mixed-field rung (2/5); a coding-specialized
+30B MoE scores 3/5 by the pre-registered oracle — but its memstore-pipeline
+"pass" is reclassified on inspection as an **oracle loophole** (it generated
+a look-alike duplicate instead of the required read-back pipeline), making
+its intent-true score 2/5. The baseline passes 4/5. **On the true intent, no
+participant passed the memstore-pipeline rung (T4)**, and the relational
+rung (T2) had zero local passes with the baseline needing 7 of 8 attempts.
+Three findings matter beyond the scores: (1) engine-verified ≠
+intent-verified, demonstrated at both capability extremes; (2) a typed
+oracle is itself an artifact that can be gamed unintentionally and needs the
+same scrutiny as the systems it judges; (3) the memstore rung fails
+participants not on capability but on one under-documented pairing of
+field-level role declarations.
 
-## 1. Background
+## 1. Background (self-contained)
 
-A prior diagnostic (`2026-07-15-compact-capabilities-ollama-cli.md`, same
-directory) established on a single flat task (T1) that: (a) the DATAMIMIC
-schema/CLI is learnable zero-shot by a capable model; (b) small local models
-fail under a discover-first workflow but all pass under a guided prompt
-(worked example + two schema-trap rules + submit-early-repair strategy); (c)
-neither sampling configuration nor tool-calling protocol explains the
-capability gap. This study extends that single task to a five-rung
-difficulty ladder to locate *where* the guided workflow stops carrying small
-models, with Haiku as the capability baseline.
+Predecessor experiments on the same branch (superseded by this record)
+established, on the flat task only: small local models fail 0/9 under a
+"discover the schema before writing" prompt, independent of tool-calling
+protocol and sampling configuration; the identical models pass 5/5 under a
+guided prompt (worked example + two schema-trap rules + submit-early
+strategy); a capable model solves the flat task zero-shot cleanroom either
+way. Conclusion carried into this study: the guided workflow is the right
+baseline condition, and the open question is where it stops carrying small
+models as structural difficulty rises.
 
-## 2. Method
+## 2. Scope — who ran, on what
 
-**Harness.** Identical to the prior study's Condition D harness, extended
-for task parameterization: native Ollama tool-calling with four tools
-(`datamimic_capabilities`, `datamimic_reference_authoring`,
-`datamimic_reference_scaffold`, `datamimic_scaffold_submit`), each tool a
-`subprocess` call to the installed `.venv/bin/datamimic` — the harness never
-imports `datamimic_ce`, enforcing CLI-only isolation structurally. `think:
-true` is requested only for models whose `api/show` capabilities declare
-`thinking`. Sampling: only `seed: 42` is forced; all other sampling
-parameters use each model's declared defaults. `num_ctx` is capped at 32768
-after Ministral-3's native 262k default allocated a ~42GB KV cache on the
-48GB machine, spilled to CPU, and produced mid-conversation HTTP 500s; no
-conversation in this study approaches even a third of the 32k cap, and the
-affected runs were cleared and re-run rather than patched around.
+| Participant | Class | Size | Quantization | Host |
+|---|---|---|---|---|
+| `gemma4:e4b` | generalist chat | ~8B | as shipped | local Ollama, M5 Pro 48GB |
+| `gemma4:e4b-it-qat` | generalist chat, QAT | ~8B | QAT | local Ollama |
+| `qwen3.5:9b-mlx` | generalist chat | 9.4B | nvfp4 (MLX) | local Ollama |
+| `ministral-3:8b-instruct-2512-q4_K_M` | agentic-tuned instruct | 8B | Q4_K_M | local Ollama |
+| `qwen3-coder:30b-a3b-q4_K_M` | coding/agentic MoE | 30B total / ~3B active | Q4_K_M | local Ollama |
+| Claude Haiku | capable baseline | — | — | API subagent |
 
-**Budget.** 8 turns per (model, task) cell — two more than the prior
-study's 6, granted uniformly because the upper rungs are genuinely larger
-documents. One turn = one model response; a response may carry multiple
-batched tool calls.
+Excluded with reason: `phi4-mini:3.8b` (declares `tools` capability but
+never emits structured tool calls — every cell would be an automatic
+no-contest); Ollama `-cloud` models (not local; three additionally
+subscription-gated, one retired by Ollama on test day).
 
-**Guided prompt.** Constant across all tasks and models: the same
-3-city worked example (shape only, never task content), the same two
-schema-trap rules (top-level key whitelist; product-kind vs. field-kind
-vocabulary), the same submit-early instruction (first submission by turn 2,
-at most one discovery call before it, never resubmit unchanged).
+## 3. Method
 
-**Gold-spec gate.** Every task's reference solution was authored by the
-evaluator and verified against `datamimic scaffold --format json
---deterministic-replay` (reaching `ok: true, verified: true`) *before* any
-model saw the task. Every task's typed oracle was then self-tested: it must
-pass on the gold spec's scaffold output. All five oracles passed this gate.
+**Harness (local models).** Native Ollama tool-calling; four tools, each
+one a `subprocess` call to the installed `.venv/bin/datamimic` (the harness
+never imports `datamimic_ce` — CLI-only isolation is structural, not
+prompt-level):
 
-**Typed oracle.** Per task, an independent check over `scaffold`'s raw
-sample rows and product counts (uniqueness, domains, ranges, counts,
-FK-sample validity), plus the engine's own `verified` flag. The oracle
-result — including which specific checks failed — is fed back to the model
-inside the tool response, so a model can repair intent-level misses, not
-just schema-level ones. Verification requires **all** oracle checks to
-pass; the engine flag alone is insufficient (see §6.3).
+| Tool | Maps to |
+|---|---|
+| `datamimic_capabilities` | `datamimic capabilities` (compact index) |
+| `datamimic_reference_authoring` | `datamimic reference authoring [--category C --kind K]` |
+| `datamimic_reference_scaffold` | `datamimic reference scaffold` (full AuthoringSpecV1 JSON Schema) |
+| `datamimic_scaffold_submit` | `datamimic scaffold - --format json --deterministic-replay` (stdin) |
 
-**Baseline protocol (Haiku).** One context-free Claude Haiku subagent per
-task, forbidden from reading any repository file, restricted by prompt to
-the same four CLI invocation forms, same guided-prompt text, same task
-prompts, and an instructed budget of 8 total CLI invocations. Two protocol
-differences from the local harness are unavoidable and disclosed: transport
-(Claude agent with a Bash tool vs. Ollama chat API with function-calling),
-and enforcement (the locals' budget is enforced by the harness; the
-baseline's budget is instructed, and was in fact exceeded in one cell — see
-§5). The baseline also initially lacked in-loop oracle feedback; where that
-mattered (T5), the oracle result was delivered as a follow-up message and
-the repair round is reported explicitly.
+Settings: seed 42 forced; all sampling parameters at each model's declared
+defaults; `think: true` only for models declaring `thinking` capability;
+`num_ctx: 32768` (capped after Ministral-3's native 262k default allocated a
+~42GB KV cache on the 48GB host, spilled to CPU, and produced
+mid-conversation HTTP 500s — affected cells were cleared and fully re-run,
+not patched; no conversation in this study used more than a third of 32k).
+Budget: 8 turns per (model, task) cell; one turn = one model response,
+which may batch several tool calls. Submission errors and the typed-oracle
+result (including which named checks failed) are fed back to the model in
+the tool response, so both schema-level and intent-level misses are
+repairable in-loop.
 
-## 3. The task ladder
+**System prompt — verbatim, constant across all tasks and models:**
 
-All tasks use seed 42. Difficulty is structural, not numerical: each rung
-introduces a DSL concept absent from all rungs below it.
+```text
+You are authoring a DATAMIMIC model.dm.json document.
 
-| Rung | Name | New concepts introduced | Gold-spec acceptance checks |
-|---|---|---|---|
-| T1 | Flat records | one product, three field kinds (increment/values/int_range) | 4 |
-| T2 | Relational parent–child | nested `children` products, per-parent counts, FK via `script: parent.id` + `foreign_key` role, cross-product expectations | 7 |
-| T3 | Mixed field kinds | `weighted` (values+weights), regex `pattern`, `constant`, decimals | 5 |
-| T4 | Memstore pipeline | `targets: memstore`, second product `kind: source` reading back, `identifier`/`foreign_key` roles required by the engine's memstore-completeness gate | 9 |
-| T5 | Time series | product `kind: time_series`, ISO-8601 window/interval, `series_count`, implied (not stated) row count 12 | 3 explicit + row-count via oracle |
+Here is a minimal valid model.dm.json, for a DIFFERENT task (3 cities, one
+text field), so you can see the exact document shape:
 
-Task prompts state business intent only — no schema hints beyond the
-constant guided prompt. Full prompts are in the harness script; gold specs
-reached `verified: true` with deterministic replay for every rung.
+{
+  "version": "1",
+  "seed": 7,
+  "products": [
+    {
+      "kind": "generated",
+      "name": "cities",
+      "count": 3,
+      "fields": [
+        {"kind": "values", "name": "region", "values": ["north", "south"]}
+      ]
+    }
+  ]
+}
 
-Notable gold-spec construction findings (the evaluator hit these before any
-model did, confirming they are real schema hurdles, not model
-hallucinations): T2's child FK must be `{"kind": "script", "script":
-"parent.id"}` — a randomly generated FK field passes schema validation but
-fails the per-parent-count acceptance check; the engine's own `fix_hint` on
-the first wrong attempt names the `parent.` prefix. T4's
-memstore-completeness gate requires exactly one consumer FK role targeting a
-typed producer identifier — `ok: true` with 7/7 explicit checks still yields
-`verified: false` until both roles are declared.
+Rules that matter: the top level allows ONLY version, seed, products,
+expectations. Every product needs a "kind" (product-level kinds are
+generated/source/time_series -- different vocabulary from field-level
+kinds). Field-level kinds include increment, values, weighted, int_range,
+decimal_range, pattern, constant, script, and others discoverable via
+datamimic_reference_authoring.
 
-## 4. Participants
+Strategy: call datamimic_scaffold_submit with your best attempt EARLY -- by
+your second turn at the latest. The submission errors are structured
+(path/code/message/allowed_fields) and diagnostics carry a fix_hint; they
+are the fastest way to learn the schema. Repair from them instead of doing
+more discovery. Never resubmit an unchanged document. Use at most ONE
+discovery call before your first submission.
+```
 
-| Participant | Class | Size | Runs on |
-|---|---|---|---|
-| `gemma4:e4b` | generalist chat | ~8B | local (M5 Pro, 48GB) |
-| `gemma4:e4b-it-qat` | generalist chat, QAT | ~8B | local |
-| `qwen3.5:9b-mlx` | generalist chat | 9.4B | local (MLX) |
-| `ministral-3:8b-instruct-2512-q4_K_M` | agentic-tuned instruct | 8B | local |
-| `qwen3-coder:30b-a3b-q4_K_M` | coding/agentic MoE | 30B total / ~3B active | local |
-| Claude Haiku | capable baseline | — | API (subagent) |
+**Baseline protocol (Haiku).** One context-free subagent per task,
+forbidden from reading any repository file, restricted by prompt to the same
+four CLI invocation forms, given the identical guidance text above plus the
+identical task prompt, and an instructed budget of 8 total `datamimic`
+invocations. Disclosed differences from the local harness: transport (Bash
+tool vs. function-calling API); budget enforcement (instructed vs.
+harness-enforced — violated once, see §6); oracle feedback initially absent
+(delivered post-hoc where it mattered, T5, reported explicitly).
 
-`phi4-mini:3.8b` was excluded: the prior study established it never emits
-structured tool calls despite declaring `tools` capability, making every
-cell an automatic no-contest.
+**Gold gate.** Before any model ran: an evaluator-authored gold spec per
+task reached `ok: true, verified: true` with deterministic replay, and each
+task's typed oracle was self-tested to pass on that gold output. 5/5 golds
+and 5/5 oracle self-tests passed.
+
+## 4. The tasks — verbatim prompts and oracles
+
+All tasks use seed 42. Difficulty is structural: each rung introduces a DSL
+concept absent from all rungs below it.
+
+### T1 — flat records
+
+```text
+Business intent: produce a DATAMIMIC model.dm.json that generates
+exactly 5 records for a product named "records". Each record has:
+- id: a globally unique integer identifier
+- category: exactly one of "A", "B", "C"
+- score: an integer between 10 and 20 inclusive
+
+Use seed 42.
+```
+
+Oracle: count==5; ids distinct integers; category ∈ {A,B,C}; score ∈
+[10,20]; engine `verified` true.
+
+### T2 — relational parent–child
+
+```text
+Business intent: produce a DATAMIMIC model.dm.json for a relational
+parent-child dataset:
+- product "customers": exactly 4 rows, each with a globally unique integer id
+  and a region that is exactly one of "north", "south", "east", "west".
+- each customer has EXACTLY 2 child rows in a product named "orders"; each
+  order carries a customer_id that references its own parent customer's id,
+  and an amount between 10.0 and 500.0.
+- declare expectations for: the exact customer count, customer id uniqueness,
+  exactly 2 orders per customer, the orders->customers foreign key, and the
+  amount range.
+
+Use seed 42.
+```
+
+Oracle: customers count==4 / orders count==8; customer ids unique; region
+domain; every sampled order's customer_id ∈ sampled customer ids; sampled
+amounts ∈ [10.0, 500.0]; engine `verified` true.
+
+### T3 — mixed field kinds
+
+```text
+Business intent: produce a DATAMIMIC model.dm.json that generates
+exactly 10 rows for a product named "tickets". Each ticket has:
+- id: a globally unique integer identifier
+- priority: weighted random value -- "low" with weight 0.6, "medium" with
+  weight 0.3, "high" with weight 0.1
+- code: a string matching the regular expression pattern TCK-[0-9]{4}
+- handling_fee: a decimal between 0.5 and 9.99
+- channel: always the constant string "web"
+
+Declare expectations for the exact count, id uniqueness, the allowed
+priority values, and the handling_fee range. Use seed 42.
+```
+
+Oracle: count==10; sampled ids unique; priority domain; code matches
+`TCK-[0-9]{4}`; fee ∈ [0.5, 9.99]; channel=="web"; engine `verified` true.
+
+### T4 — memstore pipeline
+
+```text
+Business intent: produce a DATAMIMIC model.dm.json for a two-stage
+memstore pipeline:
+- product "users": exactly 5 rows -- globally unique integer id, region
+  exactly one of "eu", "us", "apac", credit_limit an integer between 100 and
+  1000. Write this product into a memstore.
+- product "user_audit": read the users back OUT of that memstore as a second
+  product, exposing the same three fields (id, region, credit_limit). The
+  audit ids must reference the user ids (foreign key).
+
+Declare expectations for both products' exact counts, user id uniqueness,
+the audit region domain, and the audit credit_limit range. Use seed 42.
+```
+
+Oracle (as pre-registered): users count==5; audit count==5; user ids
+unique; audit region domain; audit credit ∈ [100,1000]; sampled audit ids ⊆
+user ids; engine `verified` true. **Known gap, discovered post-hoc (§7.2):
+no check asserts the audit product is actually `kind: source` reading from
+the memstore** — a generated look-alike satisfies every listed check.
+
+### T5 — time series
+
+```text
+Business intent: produce a DATAMIMIC model.dm.json for a time-series
+product named "readings":
+- 2 parallel series over the window 2026-01-01T00:00:00 to
+  2026-01-01T06:00:00 with an interval of one hour (ISO-8601 duration PT1H)
+- each row has: sensor, exactly one of "temp" or "humidity", and value, a
+  decimal between 0.0 and 100.0.
+
+Declare expectations for the sensor domain and the value range. Use seed 42.
+```
+
+Oracle: count==12 (2 series × 6 hourly points — implied, not stated, in the
+prompt); sensor ∈ {temp, humidity}; value ∈ [0.0, 100.0]; engine `verified`
+true.
+
+### Gold-spec construction findings
+
+The evaluator hit these hurdles before any model did (confirming they are
+real schema hurdles): T2's child FK must be `{"kind": "script", "script":
+"parent.id"}` — a randomly generated FK passes schema validation but fails
+the per-parent-count acceptance check; the engine's `fix_hint` on the wrong
+attempt names the `parent.` prefix. T4's memstore-completeness gate requires
+BOTH a `{"kind": "identifier"}` role on the producer's id field AND a
+`{"kind": "foreign_key", "parent_product": ..., "parent_field": ...}` role
+on the consumer's id field — `ok: true` with all explicit checks passing
+still yields `verified: false` until both are declared.
 
 ## 5. Results
 
 ✓tN = oracle-verified at turn N (locals) / attempt N (baseline). ✗ = failed
-within budget.
+within budget. † = reclassified, see §7.2.
 
-| Participant | T1 | T2 | T3 | T4 | T5 | Total |
-|---|---|---|---|---|---|---|
-| `gemma4:e4b` | ✓t2 | ✗ | ✗ | ✗ | ✗ | 1/5 |
-| `gemma4:e4b-it-qat` | ✓t3 | ✗ | ✗ | ✗ | ✗ | 1/5 |
-| `qwen3.5:9b-mlx` | ✓t4 | ✗ | ✗ | ✗ | ✗ | 1/5 |
-| `ministral-3:8b` | ✓t5 | ✗ | ✓t4 | ✗ | ✗ | 2/5 |
-| `qwen3-coder:30b-a3b` | ✓t2 | ✗ | ✓t2 | ✓t7 | ✗ | 3/5 |
-| Claude Haiku (baseline) | ✓a1 | ✓a7 | ✓a2 | ✗ | ✓a3* | 4/5 |
+| Participant | T1 | T2 | T3 | T4 | T5 | Oracle score | Intent-true score |
+|---|---|---|---|---|---|---|---|
+| `gemma4:e4b` | ✓t2 | ✗ | ✗ | ✗ | ✗ | 1/5 | 1/5 |
+| `gemma4:e4b-it-qat` | ✓t3 | ✗ | ✗ | ✗ | ✗ | 1/5 | 1/5 |
+| `qwen3.5:9b-mlx` | ✓t4 | ✗ | ✗ | ✗ | ✗ | 1/5 | 1/5 |
+| `ministral-3:8b` | ✓t5 | ✗ | ✓t4 | ✗ | ✗ | 2/5 | 2/5 |
+| `qwen3-coder:30b-a3b` | ✓t2 | ✗ | ✓t2 | ✓t7† | ✗ | 3/5 | 2/5 † |
+| Claude Haiku (baseline) | ✓a1 | ✓a7 | ✓a2 | ✗ | ✓a3* | 4/5 | 4/5 |
 
-\* T5 baseline: first submission was engine-verified but oracle-failed (see
-§6.3); verified on overall attempt 3 after the oracle result was delivered.
+\* T5 baseline: first submission engine-verified but oracle-failed (missing
+`series_count: 2`, 6 rows instead of 12); repaired on overall attempt 3
+after the oracle result was delivered as a follow-up message.
 
-Baseline protocol deviations, disclosed: on T2 the baseline used exactly its
-8-invocation budget (verified on the 7th scaffold attempt). On T4 it
-**exceeded** the instructed budget (~20 datamimic invocations per its own
-report) and still ended at `verified: false` — under strict budget
-enforcement its T4 cell would fail identically, so the 4/5 total is
-unaffected, but per-attempt numbers for T4 are not budget-comparable.
+† T4 `qwen3-coder`: passed every pre-registered oracle check, but did not
+build the required pipeline — reclassified in §7.2.
 
-## 6. Analysis
+**On the true task intent, T4 was passed by nobody.**
 
-### 6.1 A clean capability gradient
+## 6. What each agent actually did — full action sequences
 
-Total scores order exactly by model class, not raw parameter count:
-generalist 8–9B chat models (1/5, all three identical) < agentic-tuned 8B
-(2/5) < coding-specialized 30B MoE (3/5) < capable baseline (4/5). Ministral
-outscoring same-size Gemma/Qwen generalists, and Qwen3-Coder outscoring it
-in turn, is consistent with tool-use/agentic fine-tuning mattering more than
-scale at the small end. The single most striking cell: **`qwen3-coder`
-passed T4 (memstore pipeline, turn 7) — the one rung the baseline failed.**
-One cell on one seed is an anecdote, not a ranking; but it demonstrates the
-ladder's upper rungs are within local-model reach, and that T4's difficulty
-is of a different *kind* (role-declaration knowledge) rather than a pure
-capability ceiling.
+Notation: `caps` = capabilities; `schema` = reference scaffold;
+`ref(c/k)` = reference authoring --category c --kind k; `SUBMIT` = scaffold
+submission; `(stall)` = a turn with no tool call emitted.
 
-### 6.2 T2 (relational) is the sharpest discriminator
+```text
+gemma4:e4b            T1 PASS t2  SUBMIT > SUBMIT
+gemma4:e4b            T2 FAIL     SUBMIT > (stall) > (stall) > (stall) > schema > (stall) > (stall) > SUBMIT
+gemma4:e4b            T3 FAIL     (stall) > (stall) > (stall) > SUBMIT > SUBMIT > SUBMIT > SUBMIT > SUBMIT
+gemma4:e4b            T4 FAIL     (stall) > (stall) > SUBMIT > SUBMIT > SUBMIT > SUBMIT > SUBMIT > (stall)
+gemma4:e4b            T5 FAIL     (stall) > (stall) > (stall) > SUBMIT > SUBMIT > SUBMIT > SUBMIT > SUBMIT
 
-Zero local passes, and the baseline needed 7 of 8 attempts. The failure
-chain is consistent across every participant that engaged: `min`/`max`
-naming → nested-children shape → FK-as-random-value (schema-valid,
-acceptance-invalid) → `parent.id` script syntax → roles-as-objects. Each
-step is individually recoverable from the engine's diagnostics — the
-baseline recovered through all five within budget; `qwen3-coder` got to the
-last step (its final T2 submission failed only the FK-sample and
-engine-verified oracle checks) and ran out of turns. The smaller models
-never got past the first two steps, and the Gemma variants wasted 3–6 turns
-per task emitting no tool call at all (a stall mode that reappears under
-pressure even though the guided prompt eliminated it on T1).
+gemma4:e4b-it-qat     T1 PASS t3  (stall) > SUBMIT > SUBMIT
+gemma4:e4b-it-qat     T2 FAIL     schema > (stall) x5 > SUBMIT > (stall)
+gemma4:e4b-it-qat     T3 FAIL     (stall) > (stall) > SUBMIT > SUBMIT > (stall) > SUBMIT > (stall) > (stall)
+gemma4:e4b-it-qat     T4 FAIL     (stall) > ref(field/increment) > (stall) > (stall) > SUBMIT > (stall) x3
+gemma4:e4b-it-qat     T5 FAIL     (stall) > ref(field/constant) > (stall) > (stall) > SUBMIT > SUBMIT > (stall) x2
 
-### 6.3 Engine-verified is not intent-verified — two clean specimens
+qwen3.5:9b-mlx        T1 PASS t4  ref(field/increment) > ref(field/values) > ref(field/int_range) > SUBMIT
+qwen3.5:9b-mlx        T2 FAIL     SUBMIT > schema > ref(product/generated) > ref(field/foreign_key) > caps > SUBMIT > SUBMIT > ref(product/generated) > SUBMIT
+qwen3.5:9b-mlx        T3 FAIL     caps > 7x ref(...) > SUBMIT > schema > SUBMIT > SUBMIT > SUBMIT
+qwen3.5:9b-mlx        T4 FAIL     6x ref/caps > SUBMIT > schema > SUBMIT > caps > SUBMIT
+qwen3.5:9b-mlx        T5 FAIL     ref(product/time_series) > ref(field/increment) > caps > SUBMIT > schema > SUBMIT > ref(field/weighted) > SUBMIT
 
-The study's most consequential finding for tooling design, observed
-independently at both ends of the capability spectrum:
+ministral-3:8b        T1 PASS t5  ref(field/) > SUBMIT > (stall) > ref(field/int_range) > SUBMIT
+ministral-3:8b        T2 FAIL     8x ref(...) incl. all 5 expectation kinds > SUBMIT > SUBMIT
+ministral-3:8b        T3 PASS t4  ref(field/values) > ref(product/) > SUBMIT > SUBMIT > SUBMIT > SUBMIT
+ministral-3:8b        T4 FAIL     caps > 5x ref(...) incl. product/source > SUBMIT > SUBMIT
+ministral-3:8b        T5 FAIL     7x ref(...) > SUBMIT
 
-- **Baseline, T5:** first submission omitted `series_count: 2` (the "2
-  parallel series" requirement), produced 6 rows instead of 12, and was
-  `verified: true` — because the engine verifies only *declared*
-  expectations. The typed oracle caught it; given the oracle result, the
-  baseline repaired in one more scaffold attempt and — notably — articulated
-  the lesson itself: "`verified: true` only certifies the expectations you
-  declared; it is not a check against the business intent."
-- **`qwen3-coder`, T5:** submitted `values: ["sensor1", "sensor2"]` for the
-  sensor field — apparently misreading "2 parallel series" as two sensor
-  *names* — and its final submission was schema-valid and engine-verified
-  with only the oracle's `sensor_domain` check failing. Unlike the baseline,
-  it never acted on that oracle feedback across five submissions: an
-  intent-comprehension failure that no amount of schema diagnostics can fix.
+qwen3-coder:30b-a3b   T1 PASS t2  caps > schema > 4x ref(...) > SUBMIT          (all discovery batched turn 1)
+qwen3-coder:30b-a3b   T2 FAIL     caps > schema > 6x ref(...) > 7x SUBMIT
+qwen3-coder:30b-a3b   T3 PASS t2  caps > schema > 9x ref(...) > SUBMIT          (all discovery batched turn 1)
+qwen3-coder:30b-a3b   T4 PASS t7† caps > schema > 4x ref(...) > SUBMIT > ref(field/increment) > ref(expectation/unique) > SUBMIT > ref(target/memstore) > SUBMIT
+qwen3-coder:30b-a3b   T5 FAIL     caps > 3x ref(...) > SUBMIT > 2x ref(...) > SUBMIT > SUBMIT > SUBMIT > SUBMIT
+```
 
-Any production acceptance gate for agent-authored models therefore needs
-intent-derived checks (or a reviewer) on top of `verified: true`; the flag
-alone systematically passes documents that miss undeclared requirements.
+Baseline command sequences (from each agent's own mandatory report):
 
-### 6.4 Failure taxonomy across all 19 failed cells
+```text
+Haiku T1 PASS a1  ref(field/increment) > ref(field/int_range) > scaffold  (verified first try)
+Haiku T2 PASS a7  ref(expectation/exact_count) > 7x scaffold (repair chain: min/max naming ->
+                  per_parent_count needs nesting -> children array shape -> parent.id script ->
+                  roles as objects -> verified)
+Haiku T3 PASS a2  ref(field/weighted) > ref(field/pattern) > scaffold(fail: min/max + expectation
+                  kind names) > scaffold (verified)
+Haiku T4 FAIL     ref(sink/memstore) [invalid category] > ref(target) [invalid: kind missing] >
+                  ~18 scaffold attempts; ended ok:true, verified:false (budget exceeded, see §7.1)
+Haiku T5 PASS a3* ref(time_series/product) [invalid] > ref(product/time_series) > ref(expectation)
+                  [invalid] > ref(expectation/allowed_values) > ref(expectation/range) >
+                  scaffold (engine-verified, 6 rows, oracle-FAIL) > [oracle feedback delivered] >
+                  scaffold (fail: expectation field name) > scaffold (verified, 12 rows)
+```
 
-1. **Schema-shape errors** (dominant in 8–9B generalists): `min`/`max` vs
-   `minimum`/`maximum`, product/field/expectation `kind` discriminator
-   confusion, invented attributes (`unique: true` on fields), wrong
-   expectation field spellings. Recoverable in principle — these models
-   recover on T1 but the error *volume* on larger documents exceeds an
-   8-turn budget.
-2. **Stalls** (Gemma variants only): 3–6 no-tool-call turns per failed task,
-   the model reasoning in prose without emitting a call. The single largest
-   budget drain for that family.
-3. **Concept gaps** (mid-tier): Ministral's T4 failures center on the source
-   product's shape (`source/id` missing, spurious `count`); its T2 failures
-   on the relationship encoding. These are one-concept misses, not volume
-   problems.
-4. **Intent misses** (top-tier): §6.3 — schema-perfect, intent-wrong.
-   Uniquely dangerous because every engine signal reads green.
-5. **Infrastructure noise** (excluded from scores, documented): Ministral's
-   native 262k context allocation caused OOM-driven HTTP 500s on the 48GB
-   host; cells affected were cleared and re-run with `num_ctx: 32768`. One
-   T3 pass survived from the affected batch (it completed before the
-   pressure built) and was retained; its replay-determinism makes
-   contamination implausible.
+## 7. The two T4 stories — the study's most important section
 
-### 6.5 The one-worked-example ceiling
+### 7.1 Why the baseline (Haiku) failed T4
 
-The guided prompt's worked example shows a flat single-product document.
-Its transfer tracks structural distance: T1 (same shape) — 6/6 participants
-pass; T3 (same shape, new field kinds) — 3/6; T2/T4/T5 (new *structural*
-concepts: nesting, pipelines, time windows) — 0/5 locals, baseline 2/3.
-The earlier study's "productize the worked example" recommendation
-therefore under-specifies: one example per *structural family* (flat,
-nested-relational, pipeline, time-series) is the indicated shape, not one
-example globally.
+Haiku built the **correct** pipeline architecture: `users` with a memstore
+target, `user_audit` as `kind: source` reading `{"kind": "memstore", "id":
+..., "product": "users"}`, script fields (`this.id` etc.) for the read-back
+columns, and a top-level `foreign_key` expectation. Its final state:
+`ok: true`, 9 acceptance checks passed, 0 failed — and `verified: false`,
+because one derived check stayed *unevaluable*:
 
-## 7. Threats to validity
+> memstore completeness requires exactly one explicit consumer FK role
+> targeting a typed producer identifier; found 0
 
-- **Single seed, single run per cell.** No reliability claim; the gradient's
-  cleanness (three identical 1/5 rows; strict ordering by class) is
-  suggestive but unreplicated. Seeds 42–46 remain future work.
-- **Baseline transport differs** (§2), and its T4 budget overrun means T4
-  attempt-counts are not comparable across participants (pass/fail is).
-- **Oracle-feedback asymmetry on T5**: locals had the oracle in-loop from
-  turn 1; the baseline received it post-hoc. The reported a3* makes the
-  asymmetry explicit rather than hiding it; under an in-loop oracle the
-  baseline would plausibly have repaired one attempt sooner.
-- **Guided prompt was tuned on T1 failures** (prior study). T1 results are
-  therefore partially circular for the locals; T2–T5 results are not (the
-  prompt contains nothing about children, memstore, roles, or windows).
-- **The evaluator authored both gold specs and oracles.** The gold-gate
-  protocol (spec must verify, oracle must pass on gold, before any model
-  runs) bounds but does not eliminate design bias — e.g., T5's implied row
-  count is only as fair as the phrase "2 parallel series" is unambiguous,
-  and one local model demonstrably parsed it differently.
-- **Ollama-hosted quantized weights** (Q4_K_M) may understate the FP16
-  capability of every local model tested.
+The missing piece is a **pair of field-level role declarations**: `{"kind":
+"identifier"}` on the producer's id field, plus `{"kind": "foreign_key",
+"parent_product": "users", "parent_field": "id"}` on the consumer's id
+field. Haiku knew a role was needed and tried repeatedly — its own report
+lists "roles as strings", "objects with `type`", "objects with `kind`" all
+failing — but never landed the exact pair. Root cause, visible in its
+ledger: both of its T4 discovery calls were invalid queries
+(`--category sink --kind memstore`; `--category target` with no kind), so
+**it never fetched a single field fragment in T4** — and the
+`ForeignKeyRole`/`IdentifierRole` schemas live in every field fragment's
+`json_schema.$defs`. It burned ~20 scaffold attempts (violating its
+8-invocation budget) probing role syntax by trial and error against an
+error message that names the requirement but not the syntax. The evaluator
+hit the identical wall building the gold spec and found the answer the same
+way any agent would have to: inside a field fragment's `$defs`.
 
-## 8. Conclusions and future work
+Verdict: not a reasoning failure — an under-documented two-sided role
+requirement whose syntax is only discoverable in a place T4's failing
+participants never looked. This is the study's clearest actionable tooling
+finding: the memstore-completeness diagnostic should state the required
+role syntax, or `reference authoring` should offer a `source`/`role`
+fragment that surfaces it directly.
 
-Under a guided prompt that fully solves the flat-record case, structural
-document complexity — not field-kind variety — is what separates small local
-models from a capable baseline on CLI-only DATAMIMIC authoring. The
-practical rungs for local deployment today: 8–9B generalists are reliable
-only for flat single-product models; an agentic-tuned 8B adds rich flat
-models; a coding-tuned 30B MoE reaches pipelines but not relational
-hierarchies within tight budgets. The engine's `verified` flag must not be
-the sole acceptance gate for any of them — nor for the baseline.
+### 7.2 Why `qwen3-coder`'s T4 "pass" is reclassified
 
-Priority follow-ups: (1) per-structural-family worked examples in the
-agent-facing guidance, re-run the ladder; (2) seeds 42–46 replication; (3)
-budget-extension study for the near-miss cells (`qwen3-coder` T2 was one
-concept from passing); (4) an in-loop intent oracle as a first-class
-`scaffold` feature — both §6.3 specimens would have been caught at authoring
-time by machine-checkable derived expectations (e.g., "N parallel series"
-implies a derivable row count the engine already knows from the compile
-plan).
+Its turn-7 submission passed every pre-registered oracle check and the
+engine's verification. But the document contains **no `kind: "source"`
+product at all**: `user_audit` is a second *generated* product with field
+definitions copied from `users` (same increment id 1–5, same values list,
+same int_range), plus the identifier/FK role pair, plus its own memstore
+target. Nothing is ever read back out of a memstore. The oracle was
+satisfied because: both counts are 5; increment ids 1–5 trivially "reference"
+each other; region/credit checks test domain membership, not row equality;
+and the engine verified because no memstore *consumer* exists to trigger the
+completeness gate. The intent — "read the users back OUT of that memstore" —
+is unfulfilled.
 
-## Reproduction
+There is no indication of deliberate gaming; the model plausibly modeled
+"audit" as "a second table that looks like users". But the verdict stands:
+**pre-registered-oracle pass, intent fail**, and the oracle itself carries
+the defect (no `kind == source` check, no users↔audit row-equality check).
+Both are one-line fixes for any re-run, and the honest score column above
+carries the reclassification.
 
-Harness: `ollama_cli_eval_v4_ladder.py` (scratchpad, uncommitted per this
-archive's convention); gold specs under `gold_specs/` alongside it. Gold
-gate: `datamimic scaffold <gold> --format json --deterministic-replay` must
-report `verified: true` for every task before any model run. Oracle
-self-test: every oracle must pass on its gold output. Local runs:
-`python3 ollama_cli_eval_v4_ladder.py "<model>" "T1,T2,T3,T4,T5"` with
-results accumulating incrementally (crash-safe, resumable). Verification
-commands for the repository state this study ran against:
+Together, 7.1 + 7.2 are one lesson from two directions: the engine's
+`verified` flag under-constrains (T5 baseline, T4 qwen3-coder), and typed
+oracles are artifacts with their own bug surface. Layered, mutually
+checking gates — engine acceptance + intent oracle + (for anything
+production-bound) row-level equality checks — are the indicated design.
+
+## 8. Analysis beyond T4
+
+- **Gradient by class, not size.** The three 8–9B generalists score
+  identically (1/5, T1 only) with the same failure texture: high
+  schema-error volume (`min`/`max` naming, discriminator confusion,
+  invented attributes like `unique: true`) plus — uniquely in the Gemma
+  family — massive stalling: 3–6 no-tool-call turns per failed task (see
+  §6; `gemma4:e4b-it-qat` T2 stalled 6 of 8 turns). Ministral (2/5) and
+  qwen3-coder (3/5 oracle / 2/5 intent) fail on single missing concepts,
+  not volume.
+- **T2 is the sharpest small-model discriminator.** Zero local passes. The
+  recovery chain it demands (naming → nesting → FK-by-`parent.id` → role
+  objects) has more steps than any small model's effective budget.
+  `qwen3-coder` came closest: its final T2 submission failed only the
+  FK-sample and engine-verified checks — one concept (`script: parent.id`)
+  from passing. The baseline traversed the full chain in exactly 7 attempts.
+- **Batched discovery is a budget multiplier.** `qwen3-coder` fetched
+  capabilities + full schema + 4–9 fragments inside turn 1 on every task —
+  that's why it could afford discovery *and* multiple repairs in 8 turns.
+  No other local model batched.
+- **T5 failed all locals** on two distinct causes: window/`series_count`
+  shape errors (most), and one intent misread — `qwen3-coder` submitted
+  `values: ["sensor1", "sensor2"]` for the sensor field (apparently parsing
+  "2 parallel series" as two sensor names), stayed engine-verified, failed
+  only the oracle's `sensor_domain` check, and did not act on that feedback
+  across four further submissions.
+
+## 9. Threats to validity
+
+- **Single seed, single run per cell** — no reliability claim; the clean
+  gradient is unreplicated. Seeds 42–46 are future work.
+- **Baseline transport differs**, and its T4 budget violation means T4
+  effort is not comparable (pass/fail is; it failed with ~2.5× budget).
+- **Oracle-feedback asymmetry on T5**: locals in-loop, baseline post-hoc
+  (reported as a3*, not a1).
+- **The guided prompt was tuned on flat-task failures**, so local T1
+  results are partially circular; T2–T5 are not (the prompt says nothing
+  about children, memstore, roles, or windows).
+- **The evaluator authored both golds and oracles**, and §7.2 proves this
+  matters: one oracle had an exploitable gap despite the gold-gate protocol.
+  Independent oracle review would be required for any stronger claim.
+- **Q4 quantization** may understate every local model's FP16 capability.
+- **Prompt-ambiguity confound in T5**: "2 parallel series" was demonstrably
+  parseable as sensor names; the implied row count of 12 was never stated.
+
+## 10. Conclusions
+
+1. Under a guided prompt that fully solves flat records, **structural**
+   complexity (nesting, pipelines, time windows) — not field-kind variety —
+   is what separates small local models from a capable baseline.
+2. Practical local-deployment rungs today: 8–9B generalists → flat
+   single-product models only; agentic-tuned 8B → rich flat models; coding
+   30B MoE → close to relational/pipeline but not across the line within
+   tight budgets.
+3. `verified: true` must not be the sole acceptance gate — for anyone. Both
+   under-constraint specimens (missing `series_count`; look-alike instead
+   of read-back) sailed through it.
+4. Highest-leverage tooling fixes, in order: (a) make the
+   memstore-completeness diagnostic state the required role syntax (it
+   defeated the baseline and nearly everything else); (b) per-structural-
+   family worked examples (flat/nested/pipeline/time-series) in agent-facing
+   guidance — the single flat example transferred to nothing structural;
+   (c) machine-derivable intent checks (e.g., "N parallel series" ⇒
+   expected row count) surfaced by `scaffold` itself.
+
+## 11. Reproduction
+
+Harness `ollama_cli_eval_v4_ladder.py` and gold specs live in the session
+scratchpad, uncommitted by this archive's evidence-outside-the-repo
+convention; this document contains everything needed to rebuild them: the
+verbatim system prompt (§3), verbatim task prompts and oracle definitions
+(§4), tool-to-CLI mapping (§3), settings (seed 42, 8 turns, model-default
+sampling, `num_ctx` 32768), and the gold-gate protocol (gold must reach
+`verified: true` with deterministic replay; oracle must pass on gold;
+both before any model runs). Repository state verification:
 
 ```bash
 .venv/bin/pytest -q tests_ce/unit_tests/test_authoring tests_ce/unit_tests/test_docs \
