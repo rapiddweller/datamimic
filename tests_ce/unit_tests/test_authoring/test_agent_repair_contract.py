@@ -10,6 +10,7 @@ import pytest
 from typer.testing import CliRunner
 
 from datamimic_ce.authoring.contracts import (
+    AuthoringReferenceCategory,
     IntentValidationIssueCode,
     ProductReferenceQuery,
     ReferenceRequest,
@@ -23,7 +24,13 @@ from datamimic_ce.authoring.reference_projection import (
     projection_catalog_is_exhaustive,
 )
 from datamimic_ce.authoring.service import reference, scaffold
-from datamimic_ce.authoring.spec import AuthoringSpecV1, MemstoreSource, ProductIntentKind, SourceIntentKind
+from datamimic_ce.authoring.spec import (
+    AuthoringSpecV1,
+    FieldIntentKind,
+    MemstoreSource,
+    ProductIntentKind,
+    SourceIntentKind,
+)
 from datamimic_ce.cli import app
 
 
@@ -288,6 +295,24 @@ def test_cli_and_service_return_identical_schema_projection() -> None:
     assert result.content is not None
     assert cli_result.exit_code == 0, cli_result.stdout
     assert json.loads(cli_result.stdout) == json.loads(result.content)
+
+
+def test_invalid_authoring_reference_queries_list_the_live_taxonomy() -> None:
+    runner = CliRunner()
+
+    unknown_category = runner.invoke(
+        app,
+        ["reference", "authoring", "--category", "entity", "--kind", "record"],
+    )
+    assert unknown_category.exit_code == 2
+    assert all(category.value in unknown_category.output for category in AuthoringReferenceCategory)
+
+    unknown_kind = runner.invoke(
+        app,
+        ["reference", "authoring", "--category", "field", "--kind", "enum"],
+    )
+    assert unknown_kind.exit_code == 1
+    assert all(kind.value in unknown_kind.output for kind in FieldIntentKind)
 
 
 @pytest.mark.parametrize("extra_field", ["range", "generated", "script", "source", "unique"])
