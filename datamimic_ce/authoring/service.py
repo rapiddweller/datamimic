@@ -129,6 +129,7 @@ def reference(request: ReferenceRequest) -> ReferenceResult:
             ok=False,
             topic=request.topic,
             name=request.name,
+            category=request.category,
             query=request.query,
             error=str(error),
         )
@@ -136,6 +137,7 @@ def reference(request: ReferenceRequest) -> ReferenceResult:
         ok=True,
         topic=request.topic,
         name=request.name,
+        category=request.category,
         query=request.query,
         content=content,
     )
@@ -195,7 +197,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
         )
     xml = compiled.xml
     derived_facts = derive_facts(compiled.plan)
-    intent_diagnostics = lint_intent(compiled.spec)
+    intent_diagnostics = lint_intent(compiled.spec, compiled.plan)
 
     captured_run = dry_run_source_captured(
         xml,

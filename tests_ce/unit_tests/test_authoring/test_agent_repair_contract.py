@@ -150,6 +150,55 @@ def test_missing_discriminator_lists_the_live_union_vocabulary(path, mutate, exp
         assert "range(kind, product, field, minimum, maximum)" in issue.message
 
 
+def _memstore_discriminator_spec() -> dict[str, object]:
+    return {
+        "version": "1",
+        "products": [
+            {
+                "kind": "generated",
+                "name": "records",
+                "count": 1,
+                "fields": [{"kind": "increment", "name": "id"}],
+                "targets": [{"kind": "memstore", "id": "store"}],
+            },
+            {
+                "kind": "source",
+                "name": "readback",
+                "source": {"kind": "memstore", "id": "store", "product": "records"},
+                "fields": [{"kind": "script", "name": "id", "script": "this.id"}],
+            },
+        ],
+    }
+
+
+def test_missing_source_discriminator_minimal_forms_use_typed_projection_catalog() -> None:
+    spec = _memstore_discriminator_spec()
+    products = spec["products"]
+    assert isinstance(products, list)
+    readback = products[1]
+    assert isinstance(readback, dict)
+    readback["source"] = {"id": "store", "product": "records"}
+
+    result = scaffold(ScaffoldRequest(spec=spec))
+
+    issue = next(issue for issue in result.issues if issue.path == ("products", 1, "source"))
+    assert "memstore(kind, id)" in issue.message
+
+
+def test_missing_target_discriminator_minimal_forms_use_typed_projection_catalog() -> None:
+    spec = _memstore_discriminator_spec()
+    products = spec["products"]
+    assert isinstance(products, list)
+    records = products[0]
+    assert isinstance(records, dict)
+    records["targets"] = [{"id": "store"}]
+
+    result = scaffold(ScaffoldRequest(spec=spec))
+
+    issue = next(issue for issue in result.issues if issue.path == ("products", 0, "targets", 0))
+    assert "memstore(kind, id)" in issue.message
+
+
 def test_nested_product_children_are_unsupported_intent() -> None:
     result = scaffold(
         ScaffoldRequest(
@@ -328,6 +377,7 @@ def test_category_reference_lists_only_its_schema_owned_variants() -> None:
     )
 
     assert result.ok is True
+    assert result.category is AuthoringReferenceCategory.FIELD
     assert result.content is not None
     content = json.loads(result.content)
     assert content["category"] == "field"
@@ -346,6 +396,7 @@ def test_time_series_projection_explains_series_and_field_domain_semantics() -> 
 
     assert "does not create a data field" in product["properties"]["series_count"]["description"]
     assert "business-domain values" in values["properties"]["values"]["description"]
+    assert "series_count" not in values["properties"]["values"]["description"]
 
 
 def test_source_reference_queries_cover_canonical_union() -> None:

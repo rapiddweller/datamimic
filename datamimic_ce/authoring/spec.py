@@ -113,7 +113,12 @@ class IntentModelValidationIssueType(StrEnum):
 class IntentModelPathSegment(StrEnum):
     """Canonical field names used in model-owned validation locations."""
 
+    PRODUCTS = "products"
+    EXPECTATIONS = "expectations"
     CHILDREN = "children"
+    FIELDS = "fields"
+    SOURCE = "source"
+    TARGETS = "targets"
 
 
 INTENT_MODEL_VALIDATION_MESSAGES: dict[IntentModelValidationIssueType, str] = {
@@ -234,7 +239,7 @@ class ValuesField(FieldIntent):
     kind: Literal[FieldIntentKind.VALUES] = FieldIntentKind.VALUES
     values: tuple[str, ...] = Field(
         min_length=1,
-        description="The business-domain values emitted by this field; series_count never supplies field values.",
+        description="The business-domain values emitted by this field.",
     )
 
 

@@ -497,6 +497,11 @@ def compact_authoring_reference(
     return authoring_reference_projection(query).model_dump_json(indent=2)
 
 
+def _authoring_category_listing_usage() -> str:
+    categories = "|".join(category.value for category in AuthoringReferenceCategory)
+    return f"datamimic reference authoring [--category {categories}]"
+
+
 def capabilities_manifest() -> dict[str, Any]:
     """Machine-readable DSL surface, derived live from the engine registries — cannot drift."""
     from importlib.metadata import PackageNotFoundError, version
@@ -573,10 +578,7 @@ def capabilities_index() -> dict[str, Any]:
                 "entity_detail": "datamimic reference entities <name>",
                 "rule_detail": "datamimic reference rules <id>",
                 "authoring_spec_detail": "datamimic reference scaffold",
-                "authoring_variant_listing": (
-                    "datamimic reference authoring "
-                    "[--category product|source|field|target|expectation]"
-                ),
+                "authoring_variant_listing": _authoring_category_listing_usage(),
                 "authoring_variant_detail": "datamimic reference authoring --category <category> --kind <kind>",
                 "full_section": "datamimic capabilities --section <name>",
                 "full_manifest": "datamimic capabilities --full",

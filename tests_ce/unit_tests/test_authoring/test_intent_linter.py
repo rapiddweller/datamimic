@@ -122,6 +122,104 @@ def test_memstore_readback_copy_fields_do_not_warn() -> None:
     assert not [item for item in result.diagnostics if item.rule == "DM406"]
 
 
+def test_memstore_readback_rule_accepts_bare_source_field_reference() -> None:
+    spec = _memstore_readback_spec(copy_source=True)
+    audit = spec["products"][1]
+    assert isinstance(audit, dict)
+    fields = audit["fields"]
+    assert isinstance(fields, list)
+    fields[1]["script"] = "region"
+
+    result = scaffold(ScaffoldRequest(spec=spec))
+
+    assert result.verified is True
+    assert not [item for item in result.diagnostics if item.rule == "DM406"]
+
+
+def test_memstore_readback_rule_accepts_source_derived_transform() -> None:
+    spec = _memstore_readback_spec(copy_source=True)
+    audit = spec["products"][1]
+    assert isinstance(audit, dict)
+    fields = audit["fields"]
+    assert isinstance(fields, list)
+    fields[1]["script"] = "this.region.upper()"
+
+    result = scaffold(ScaffoldRequest(spec=spec))
+
+    assert result.verified is True
+    assert not [item for item in result.diagnostics if item.rule == "DM406"]
+
+
+def test_memstore_readback_rule_uses_compiler_resolution_without_explicit_producer() -> None:
+    spec = _memstore_readback_spec(copy_source=False)
+    audit = spec["products"][1]
+    assert isinstance(audit, dict)
+    source = audit["source"]
+    assert isinstance(source, dict)
+    del source["product"]
+
+    result = scaffold(ScaffoldRequest(spec=spec))
+
+    diagnostics = [item for item in result.diagnostics if item.rule == "DM406"]
+    assert {item.name for item in diagnostics} == {"region", "credit_limit"}
+
+
+def test_memstore_readback_rule_uses_compiler_resolution_for_nested_producer() -> None:
+    result = scaffold(
+        ScaffoldRequest(
+            spec={
+                "version": "1",
+                "products": [
+                    {
+                        "kind": "generated",
+                        "name": "customers",
+                        "count": 1,
+                        "fields": [{"kind": "increment", "name": "id"}],
+                        "children": [
+                            {
+                                "name": "snapshots",
+                                "count": 1,
+                                "fields": [{"kind": "values", "name": "region", "values": ["eu"]}],
+                                "targets": [{"kind": "memstore", "id": "snapshot_store"}],
+                            }
+                        ],
+                    },
+                    {
+                        "kind": "source",
+                        "name": "snapshot_audit",
+                        "source": {"kind": "memstore", "id": "snapshot_store"},
+                        "fields": [{"kind": "values", "name": "region", "values": ["us"]}],
+                    },
+                ],
+            }
+        )
+    )
+
+    diagnostics = [item for item in result.diagnostics if item.rule == "DM406"]
+    assert [item.name for item in diagnostics] == ["region"]
+
+
+def test_memstore_readback_repair_preserves_field_roles() -> None:
+    spec = _memstore_readback_spec(copy_source=False)
+    audit = spec["products"][1]
+    assert isinstance(audit, dict)
+    fields = audit["fields"]
+    assert isinstance(fields, list)
+    fields[0] = {
+        "kind": "int_range",
+        "name": "id",
+        "minimum": 1,
+        "maximum": 2,
+        "roles": fields[0]["roles"],
+    }
+
+    result = scaffold(ScaffoldRequest(spec=spec))
+
+    foreign_key = next(item for item in result.diagnostics if item.rule == "DM406" and item.name == "id")
+
+    assert '"roles":[{"kind":"foreign_key"' in foreign_key.fix_hint
+
+
 def test_memstore_readback_rule_allows_consumer_only_derived_fields() -> None:
     spec = _memstore_readback_spec(copy_source=True)
     audit = spec["products"][1]

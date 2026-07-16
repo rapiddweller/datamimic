@@ -1,10 +1,13 @@
 """Intent-model advisories that must run before the XML-only linter."""
 
+import json
 from collections.abc import Iterable
 
+from datamimic_ce.authoring.contracts import CompilePlan, MemstoreRelationshipPlan
 from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules.base import IntentLintContext, IntentRule
+from datamimic_ce.authoring.script_semantics import current_scope_reference, references_current_scope_field
 from datamimic_ce.authoring.spec import (
     AuthoringSpecV1,
     ForeignKeyRole,
@@ -18,7 +21,7 @@ from datamimic_ce.authoring.spec import (
 class NestedForeignKeyMustCopyParentRule(IntentRule):
     definition = authoring_rule_definition("DM404")
 
-    def check(self, ctx: IntentLintContext, spec: AuthoringSpecV1) -> Iterable[Diagnostic]:
+    def check(self, ctx: IntentLintContext, spec: AuthoringSpecV1, _plan: CompilePlan) -> Iterable[Diagnostic]:
         for product_index, product in enumerate(spec.products):
             if not isinstance(product, GeneratedProduct):
                 continue
@@ -48,33 +51,46 @@ class NestedForeignKeyMustCopyParentRule(IntentRule):
 class MemstoreReadbackFieldMustCopySourceRule(IntentRule):
     definition = authoring_rule_definition("DM406")
 
-    def check(self, ctx: IntentLintContext, spec: AuthoringSpecV1) -> Iterable[Diagnostic]:
-        for product_index, product in enumerate(spec.products):
-            if not isinstance(product, SourceProduct) or not isinstance(product.source, MemstoreSource):
+    def check(self, ctx: IntentLintContext, spec: AuthoringSpecV1, plan: CompilePlan) -> Iterable[Diagnostic]:
+        source_products = {
+            product.name: (product_index, product)
+            for product_index, product in enumerate(spec.products)
+            if isinstance(product, SourceProduct) and isinstance(product.source, MemstoreSource)
+        }
+        product_fields = {product.name: {field.name for field in product.fields} for product in plan.products}
+        for relationship in plan.relationships:
+            if not isinstance(relationship, MemstoreRelationshipPlan):
                 continue
-            producer_name = product.source.product
-            if producer_name is None:
+            source_product = source_products.get(relationship.child)
+            if source_product is None:
                 continue
-            producer = next((candidate for candidate in spec.products if candidate.name == producer_name), None)
-            if producer is None:
-                continue
-            producer_field_names = {field.name for field in producer.fields}
+            product_index, product = source_product
+            producer_field_names = product_fields[relationship.parent]
             for field_index, field in enumerate(product.fields):
                 if field.name not in producer_field_names:
                     continue
-                if isinstance(field, ScriptField) and field.script == f"this.{field.name}":
+                if isinstance(field, ScriptField) and references_current_scope_field(field.script, field.name):
                     continue
+                replacement = ScriptField(
+                    name=field.name,
+                    roles=field.roles,
+                    script=current_scope_reference(field.name),
+                )
+                replacement_json = json.dumps(
+                    replacement.model_dump(mode="json"),
+                    separators=(",", ":"),
+                )
                 yield ctx.diag(
                     MemstoreReadbackFieldMustCopySourceRule,
                     path=f"/products/{product_index}/fields/{field_index}",
                     name=field.name,
                     evidence=(
-                        f"{product.name}.{field.name} reads memstore '{product.source.id}' "
-                        f"from {product.source.product!r} with kind '{field.kind}'"
+                        f"{product.name}.{field.name} reads memstore '{relationship.source_id}' "
+                        f"from '{relationship.parent}' with kind '{field.kind}'"
                     ),
                     fix_context=(
-                        f'Replace it with {{"kind":"script","name":"{field.name}",'
-                        f'"script":"this.{field.name}"}}.'
+                        "Replace it with "
+                        f"{replacement_json}."
                     ),
                 )
 

@@ -162,6 +162,7 @@ class ReferenceResult(BaseModel):
     ok: bool
     topic: ReferenceTopic
     name: str | None = None
+    category: AuthoringReferenceCategory | None = None
     query: AuthoringReferenceQuery | None = None
     content: str | None = None
     error: str | None = None

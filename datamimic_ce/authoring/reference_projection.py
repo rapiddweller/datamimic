@@ -10,6 +10,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, JsonValue, TypeAdapter
 
 from datamimic_ce.authoring.contracts import (
+    AuthoringReferenceCategory,
     AuthoringReferenceQuery,
     ExpectationReferenceQuery,
     FieldReferenceQuery,
@@ -145,6 +146,30 @@ def list_authoring_reference_queries() -> tuple[AuthoringReferenceQuery, ...]:
     )
 
 
+def minimal_authoring_variant_shapes(category: AuthoringReferenceCategory) -> tuple[str, ...]:
+    """Render minimal forms from the typed variant-projection catalog.
+
+    This keeps validation feedback aligned with type-owned models instead of
+    walking Pydantic's serialized ``$defs``.
+    """
+
+    return tuple(
+        f"{query.kind.value}({', '.join(('kind', *authoring_reference_projection(query).required_fields))})"
+        for query in list_authoring_reference_queries()
+        if query.category is category
+    )
+
+
+def authoring_variant_kinds(category: AuthoringReferenceCategory) -> tuple[str, ...]:
+    """Return the type-owned discriminator vocabulary for one reference category."""
+
+    return tuple(
+        query.kind.value
+        for query in list_authoring_reference_queries()
+        if query.category is category
+    )
+
+
 def projection_catalog_is_exhaustive() -> bool:
     """Return whether every canonical variant has exactly one model owner."""
 
@@ -167,7 +192,9 @@ def projection_catalog_is_exhaustive() -> bool:
 
 __all__ = [
     "AuthoringReferenceProjection",
+    "authoring_variant_kinds",
     "authoring_reference_projection",
     "list_authoring_reference_queries",
+    "minimal_authoring_variant_shapes",
     "projection_catalog_is_exhaustive",
 ]

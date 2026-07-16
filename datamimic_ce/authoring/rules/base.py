@@ -21,6 +21,7 @@ from datamimic_ce.authoring.xml_loader import element_path
 from datamimic_ce.constants.element_constants import EL_COMMENT
 
 if TYPE_CHECKING:
+    from datamimic_ce.authoring.contracts import CompilePlan
     from datamimic_ce.authoring.spec import AuthoringSpecV1
 
 
@@ -106,9 +107,14 @@ class IntentLintContext:
 
 
 class IntentRule(ABC):
-    """Rule over AuthoringSpecV1 facts that are intentionally absent from XML."""
+    """Rule over validated intent and compiler-owned facts absent from XML."""
 
     definition: ClassVar[RuleDefinition]
 
     @abstractmethod
-    def check(self, ctx: IntentLintContext, spec: "AuthoringSpecV1") -> Iterable[Diagnostic]: ...
+    def check(
+        self,
+        ctx: IntentLintContext,
+        spec: "AuthoringSpecV1",
+        plan: "CompilePlan",
+    ) -> Iterable[Diagnostic]: ...

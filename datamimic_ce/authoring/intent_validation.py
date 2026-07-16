@@ -14,13 +14,19 @@ from typing import Any
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
 from datamimic_ce.authoring.contracts import (
+    AuthoringReferenceCategory,
     IntentValidationIssue,
     IntentValidationIssueCode,
     ReplaceFieldRepair,
 )
+from datamimic_ce.authoring.reference_projection import (
+    authoring_variant_kinds,
+    minimal_authoring_variant_shapes,
+)
 from datamimic_ce.authoring.spec import (
     INTENT_REPAIR_ALIASES_SCHEMA_KEY,
     AuthoringSpecV1,
+    IntentModelPathSegment,
     IntentModelValidationIssueType,
 )
 
@@ -295,56 +301,26 @@ def _repair_context(
     return allowed_fields, model_name, repair
 
 
-def _discriminator_kinds(location: _ValidationLocation) -> tuple[str, ...]:
-    """Return the live tag vocabulary for a missing discriminated-union tag."""
+def _missing_discriminator_category(
+    path: tuple[str | int, ...],
+) -> AuthoringReferenceCategory | None:
+    """Route a public intent path to its typed discriminated-union category."""
 
-    if location.owner_schema is None:
-        return ()
-    schema = _resolve_schema(location.owner_schema)
-    while True:
-        discriminator = schema.get("discriminator")
-        if isinstance(discriminator, Mapping):
-            mapping = discriminator.get("mapping")
-            if isinstance(mapping, Mapping):
-                return tuple(kind for kind in mapping if isinstance(kind, str))
-        items = schema.get("items")
-        if not isinstance(items, Mapping):
-            return ()
-        schema = _resolve_schema(items)
-
-
-def _discriminator_variant_shapes(location: _ValidationLocation) -> tuple[str, ...]:
-    """Render minimal, schema-derived forms for one missing discriminator.
-
-    The output deliberately includes only the discriminator plus fields required
-    by each variant. It gives an agent an immediately actionable repair without
-    duplicating hand-maintained grammar examples beside the Pydantic SPOT.
-    """
-
-    if location.owner_schema is None:
-        return ()
-    schema = _resolve_schema(location.owner_schema)
-    while True:
-        discriminator = schema.get("discriminator")
-        if isinstance(discriminator, Mapping):
-            mapping = discriminator.get("mapping")
-            if not isinstance(mapping, Mapping):
-                return ()
-            shapes: list[str] = []
-            for kind, reference in mapping.items():
-                if not isinstance(kind, str) or not isinstance(reference, str):
-                    continue
-                branch = _resolve_schema({"$ref": reference})
-                required = branch.get("required")
-                fields = ["kind"]
-                if isinstance(required, Sequence) and not isinstance(required, str):
-                    fields.extend(field for field in required if isinstance(field, str) and field != "kind")
-                shapes.append(f"{kind}({', '.join(fields)})")
-            return tuple(shapes)
-        items = schema.get("items")
-        if not isinstance(items, Mapping):
-            return ()
-        schema = _resolve_schema(items)
+    if not path:
+        return None
+    if path[0] == IntentModelPathSegment.EXPECTATIONS and len(path) == 2:
+        return AuthoringReferenceCategory.EXPECTATION
+    if path[0] != IntentModelPathSegment.PRODUCTS:
+        return None
+    if len(path) == 2:
+        return AuthoringReferenceCategory.PRODUCT
+    if path[-1] == IntentModelPathSegment.SOURCE:
+        return AuthoringReferenceCategory.SOURCE
+    if len(path) >= 2 and path[-2] == IntentModelPathSegment.TARGETS:
+        return AuthoringReferenceCategory.TARGET
+    if len(path) >= 2 and path[-2] == IntentModelPathSegment.FIELDS:
+        return AuthoringReferenceCategory.FIELD
+    return None
 
 
 def _source_product_message(path: tuple[str | int, ...], raw: Mapping[str, Any]) -> str | None:
@@ -393,9 +369,10 @@ def _build_intent_validation_issue(
         allowed_fields, model_name, repair = _repair_context(raw, location)
     message = str(issue["msg"])
     if issue_type is _PydanticIssueType.UNION_TAG_NOT_FOUND:
-        kinds = _discriminator_kinds(location)
-        if kinds:
-            shapes = _discriminator_variant_shapes(location)
+        category = _missing_discriminator_category(path)
+        if category is not None:
+            shapes = minimal_authoring_variant_shapes(category)
+            kinds = authoring_variant_kinds(category)
             shape_hint = f" Minimal forms: {'; '.join(shapes)}." if shapes else ""
             message = (
                 f"Missing discriminator 'kind'. Valid kinds: {', '.join(kinds)}. "
