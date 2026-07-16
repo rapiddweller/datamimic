@@ -6,7 +6,7 @@
 >
 > 👉 **Enterprise Platform:** [datamimic.io](https://datamimic.io) &nbsp;|&nbsp; 📘 **Docs:** [docs.datamimic.io](https://docs.datamimic.io) &nbsp;|&nbsp; 📅 **Book a strategy call:** [datamimic.io/contact](https://datamimic.io/contact)
 >
-> 🤖 **AI agent?** Start at [`AGENTS.md`](https://github.com/rapiddweller/datamimic/blob/development/AGENTS.md) and use the project CLI: query only the typed reference schema you need, preserve new intent as `model.dm.json`, run `datamimic scaffold ... --format json`, and stop on `verified=true`. Existing raw XML uses lint plus bounded dry-run.
+> 🤖 **AI agent?** Start at [`AGENTS.md`](https://github.com/rapiddweller/datamimic/blob/development/AGENTS.md) and use the project CLI: preserve new intent as `model.dm.json`, submit an early best attempt via `datamimic scaffold ... --format json`, repair from the structured issues, declare an expectation per stated requirement, and stop on `verified=true`. Existing raw XML uses lint plus bounded dry-run.
 
 ---
 
@@ -55,7 +55,7 @@ change the available schema or commands.
 
 | Need | CLI tool | Contract |
 |---|---|---|
-| Discover the live structural surface | `datamimic capabilities` | Machine-readable JSON names and enum values; use it for discovery, not prose. |
+| Discover the live structural surface | `datamimic capabilities` | Compact machine-readable JSON index by default; `--full` for the complete manifest, `--section <name>` for one section. |
 | Learn the Intent Model progressively | `datamimic reference authoring`, then `datamimic reference authoring --category <category> --kind <kind>` | Start with the query catalogue, then load only the typed fragment needed. |
 | Author a new model | Preserve `model.dm.json`; run `datamimic scaffold model.dm.json --format json` | One compile/lint/bounded-run/acceptance transaction per changed attempt. Stop on `verified=true`; generated XML is runtime output. |
 | Work with existing raw XML | `datamimic lint model.xml --format json`, then `datamimic dry-run model.xml --format json` | Fix diagnostics, inspect bounded samples for intent, then use `datamimic run model.xml` only when real execution is requested. |
@@ -89,57 +89,56 @@ reviewable `model.dm.json` artifact.
 Create the dataset I describe with DATAMIMIC.
 
 Read AGENTS.md first. In a repository checkout use `.venv/bin/datamimic`;
-otherwise use the current `datamimic` CLI. Discover the live surface only when
-needed, start with `datamimic reference authoring`, and query only the narrow
-category/kind fragments required for this task. Preserve my intent as
-`model.dm.json`; do not hand-write XML. Run
-`datamimic scaffold model.dm.json --format json` once per changed attempt. On
-failure, apply its typed repair or change the input from structured issues and
-diagnostics. If a remediation requests a larger `max_count`, retry scaffold with
-at least that value without changing the intent. Inspect acceptance evidence and
-samples, then stop on `verified=true`;
-do not lint or dry-run the generated XML. If I request real execution, save the
+otherwise use the current `datamimic` CLI. Preserve my intent as
+`model.dm.json`; do not hand-write XML.
+
+Start from the minimal valid document shape in AGENTS.md ("Authoring a new
+model"). Two rules prevent most rejections: the top level allows ONLY
+version, seed, products, expectations; product-level "kind"
+(generated/source/time_series) is a different vocabulary from field-level
+"kind" (increment, values, weighted, int_range, decimal_range, pattern,
+constant, script). Range fields take minimum/maximum, never min/max.
+
+Submit EARLY: run `datamimic scaffold model.dm.json --format json` with your
+best attempt after at most one discovery call. Repair from the structured
+issues (path/code/message/allowed_fields) and diagnostics (fix_hint) — they
+teach the schema faster than more discovery. Never resubmit an unchanged
+document. If a remediation requests a larger max_count, retry scaffold with
+at least that value without changing the intent.
+
+Declare an expectation for every requirement I state (counts as exact_count
+with a "count" field, uniqueness, allowed values, ranges, foreign keys) —
+verified=true certifies only what you declared. Stop on verified=true; do
+not lint or dry-run the generated XML. If I request real execution, save the
 returned XML as a generated artifact and run that descriptor. Return the
-`model.dm.json` path and concise verification evidence.
+model.dm.json path and concise verification evidence.
 ```
 
-**Fall back to raw XML only when scaffold reports unsupported intent**
+**Relational hierarchy with referential integrity (fully supported — no XML
+needed)**
 
 ```text
-Seed a relational dataset with referential integrity: customers, accounts,
-transactions.
+Seed a relational dataset with referential integrity: 4 customers, each with
+exactly 2 orders.
 
-Customers get an incrementing id; each customer gets 1-3
-accounts that carry the real customer id as a foreign key; each account
-gets several transactions that carry both the account id and, two hops up,
-the owning customer id.
+Customers get an incrementing unique id and a region from
+{north, south, east, west}. Each order carries the REAL parent customer id
+as a foreign key and an amount between 10.0 and 500.0.
 
-Requirements:
-- Set rngSeed on <setup> so the dataset is reproducible.
-- Every account_id referenced by a transaction must exist in the accounts
-  output.
-- Every customer_id referenced by an account, and by a transaction, must
-  exist in the customers output.
-
-Steps:
-1. Read AGENTS.md and start with the canonical `model.dm.json` workflow. Submit
-   the complete requested hierarchy to `datamimic scaffold ... --format json`.
-2. If scaffold verifies the intent, stop. If its structured issue classifies a
-   required relationship as `unsupported_intent`, preserve that evidence and
-   use raw XML as the fallback. Repair every
-   other validation error in `model.dm.json`; do not infer capability limits
-   from this prompt.
-3. For the fallback, author the descriptor, then run
-   `datamimic lint <path> --format json` and
-   fix every diagnostic.
-4. Run `datamimic dry-run <path> --format json`; inspect bounded samples and
-   verify the relationships serve the requested intent.
-5. Run `datamimic run <path>` only after verification.
-6. Before declaring this done, load the generated JSON files and confirm
-   every foreign key resolves: every account's customer_id exists in
-   customers, every transaction's account_id exists in accounts. Show me
-   the check you ran and its result.
+Follow AGENTS.md's "Authoring a new model" and its structural recipes:
+orders nest inside the customer product's "children" array; the FK field is
+{"kind": "script", "script": "parent.id"} with a foreign_key role — a
+randomly generated FK passes schema validation but fails per-parent-count
+acceptance. Declare expectations for the customer count, customer id
+uniqueness, exactly 2 orders per customer (per_parent_count), the
+orders->customers foreign key, and the amount range. Stop on verified=true
+and show the acceptance evidence.
 ```
+
+Raw XML remains supported for existing descriptors (lint → dry-run → run;
+see AGENTS.md). For new models it is a last resort: only when a scaffold
+issue explicitly classifies the requirement as `unsupported_intent` should
+an agent hand-author XML, preserving that evidence.
 
 ---
 
