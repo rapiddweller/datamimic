@@ -140,15 +140,7 @@ routinely exhaust their budget without ever submitting.
    passes verification silently. Encode counts as `exact_count` with a
    `count` field (the derived-acceptance output spells it `exact_count`; the
    explicit input schema requires `count`).
-6. Preserve stated business fields one-to-one. Before submitting, map every
-   explicitly named output field to its own Intent field and put a finite
-   stated domain on that same field. Do not rename a field, substitute its
-   values, or introduce a second business field to carry one of its stated
-   constraints unless the request explicitly calls for that additional field.
-   This keeps the model reviewable and prevents a semantically plausible but
-   different dataset from being certified by only its self-declared
-   expectations.
-7. Stop immediately when `verified=true`; do not call check/lint or dry-run
+6. Stop immediately when `verified=true`; do not call check/lint or dry-run
    again. If real execution is requested, save the returned `xml` as a
    generated runtime artifact and run `datamimic run path/to/datamimic.xml`.
 
