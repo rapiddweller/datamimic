@@ -291,6 +291,24 @@ def _repair_context(
     return allowed_fields, model_name, repair
 
 
+def _discriminator_kinds(location: _ValidationLocation) -> tuple[str, ...]:
+    """Return the live tag vocabulary for a missing discriminated-union tag."""
+
+    if location.owner_schema is None:
+        return ()
+    schema = _resolve_schema(location.owner_schema)
+    while True:
+        discriminator = schema.get("discriminator")
+        if isinstance(discriminator, Mapping):
+            mapping = discriminator.get("mapping")
+            if isinstance(mapping, Mapping):
+                return tuple(kind for kind in mapping if isinstance(kind, str))
+        items = schema.get("items")
+        if not isinstance(items, Mapping):
+            return ()
+        schema = _resolve_schema(items)
+
+
 def _build_intent_validation_issue(
     location: _ValidationLocation, issue: Mapping[str, Any], raw: Mapping[str, Any]
 ) -> IntentValidationIssue:
@@ -316,6 +334,10 @@ def _build_intent_validation_issue(
     if code is IntentValidationIssueCode.UNKNOWN_FIELD:
         allowed_fields, model_name, repair = _repair_context(raw, location)
     message = str(issue["msg"])
+    if issue_type is _PydanticIssueType.UNION_TAG_NOT_FOUND:
+        kinds = _discriminator_kinds(location)
+        if kinds:
+            message = f"Missing discriminator 'kind'. Valid kinds: {', '.join(kinds)}"
     if code is IntentValidationIssueCode.UNKNOWN_FIELD and path:
         owner = f" for {model_name}" if model_name is not None else ""
         message = f"Unknown field '{path[-1]}'{owner}"

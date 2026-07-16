@@ -84,6 +84,61 @@ def test_expectation_paths_hide_union_implementation_labels() -> None:
     }
 
 
+@pytest.mark.parametrize(
+    ("path", "mutate", "expected_kinds"),
+    [
+        (
+            ("products", 0),
+            lambda spec: spec["products"][0].pop("kind"),
+            ("generated", "source", "time_series"),
+        ),
+        (
+            ("products", 0, "fields", 0),
+            lambda spec: spec["products"][0]["fields"][0].pop("kind"),
+            (
+                "increment",
+                "person_name",
+                "person_email",
+                "int_range",
+                "decimal_range",
+                "string_length",
+                "values",
+                "weighted",
+                "pattern",
+                "constant",
+                "script",
+                "nested_list",
+            ),
+        ),
+        (
+            ("expectations", 0),
+            lambda spec: spec["expectations"][0].pop("kind"),
+            ("exact_count", "per_parent_count", "unique", "foreign_key", "allowed_values", "range", "row_condition"),
+        ),
+    ],
+)
+def test_missing_discriminator_lists_the_live_union_vocabulary(path, mutate, expected_kinds) -> None:
+    spec = {
+        "version": "1",
+        "products": [
+            {
+                "kind": "generated",
+                "name": "records",
+                "count": 1,
+                "fields": [{"kind": "increment", "name": "id"}],
+            }
+        ],
+        "expectations": [{"kind": "exact_count", "product": "records", "count": 1}],
+    }
+    mutate(spec)
+
+    result = scaffold(ScaffoldRequest(spec=spec))
+
+    issue = next(issue for issue in result.issues if issue.path == path)
+    assert issue.code is IntentValidationIssueCode.INVALID_DISCRIMINATOR
+    assert all(kind in issue.message for kind in expected_kinds)
+
+
 def test_nested_product_children_are_unsupported_intent() -> None:
     result = scaffold(
         ScaffoldRequest(
