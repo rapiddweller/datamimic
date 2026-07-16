@@ -368,6 +368,8 @@ class KeyVariableTask(Task):
     def _next_unique_generator_value(self) -> Any:
         """Call the generator repeatedly until a value not yet seen this task is produced.
         Raises after a bounded number of retries."""
+        if self._generator is None:
+            raise RuntimeError("Generator is not initialised for unique dedup")
         if self._generator_seen is None:
             self._generator_seen = set()
         max_retries = 100
