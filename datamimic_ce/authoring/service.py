@@ -35,6 +35,7 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldResult,
     ScaffoldVerificationEvidence,
 )
+from datamimic_ce.authoring.derived_facts import derive_facts
 from datamimic_ce.authoring.diagnostics import LintResult
 from datamimic_ce.authoring.dryrun import (
     dry_run,
@@ -193,6 +194,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             ),
         )
     xml = compiled.xml
+    derived_facts = derive_facts(compiled.plan)
     intent_diagnostics = lint_intent(compiled.spec)
 
     captured_run = dry_run_source_captured(
@@ -212,6 +214,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             diagnostics=[*intent_diagnostics, *dry_run_result.diagnostics],
             truncated=bool(failed_lint.truncated) if failed_lint is not None else False,
             compile_plan=compiled.plan,
+            derived_facts=derived_facts,
             verification=blocked_verification(
                 request.verification,
                 "Lint failed before verification could run",
@@ -239,6 +242,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             products=dry_run_result.products,
             truncated=False,
             compile_plan=compiled.plan,
+            derived_facts=derived_facts,
             verification=verification,
             verified=False,
         )
@@ -277,6 +281,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
         products=dry_run_result.products,
         truncated=False,
         compile_plan=compiled.plan,
+        derived_facts=derived_facts,
         acceptance=acceptance,
         remediations=remediations,
         verification=verification,

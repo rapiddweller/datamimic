@@ -270,6 +270,22 @@ class TestScaffoldParity:
         assert json.loads(cli_result.stdout) == service_result
         assert service_result["stage"] == "acceptance"
         assert service_result["verified"] is True
+        assert service_result["derived_facts"]["memstores"] == [
+            {
+                "id": "mem",
+                "producer_product": "producer",
+                "consumer_products": ["reader"],
+                "has_consumer": True,
+            }
+        ]
+        assert service_result["derived_facts"]["foreign_keys"] == [
+            {
+                "child_product": "reader",
+                "child_field": "id",
+                "parent_product": "producer",
+                "parent_field": "id",
+            }
+        ]
         assert {product["name"]: product["count"] for product in service_result["products"]} == {
             "producer": 5,
             "reader": 5,

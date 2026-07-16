@@ -16,7 +16,17 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import Annotated, Any, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, RootModel, StrictStr, TypeAdapter, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    JsonValue,
+    RootModel,
+    StrictStr,
+    TypeAdapter,
+    model_serializer,
+    model_validator,
+)
 
 from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.spec import (
@@ -1136,6 +1146,66 @@ class CompilePlan(CompilePlanModel):
         return self
 
 
+class DerivedProductFact(CompilePlanModel):
+    """Static product facts exposed by successful intent compilation."""
+
+    name: NonEmptyStrictStr
+    kind: Literal["generated", "source", "time_series"]
+    row_count: NonNegativeStrictInt | None
+    series_count: PositiveStrictInt | None = None
+
+    @model_validator(mode="after")
+    def _series_count_belongs_to_time_series(self) -> "DerivedProductFact":
+        if (self.kind == "time_series") != (self.series_count is not None):
+            raise ValueError("series_count is required only for time_series products")
+        return self
+
+    @model_serializer
+    def _serialize(self) -> dict[str, str | int | None]:
+        """Keep unknown source cardinality explicit even with exclude_none=True."""
+
+        result: dict[str, str | int | None] = {
+            "name": self.name,
+            "kind": self.kind,
+            "row_count": self.row_count,
+        }
+        if self.series_count is not None:
+            result["series_count"] = self.series_count
+        return result
+
+
+class DerivedMemstoreFact(CompilePlanModel):
+    """One declared memstore target and every validated consumer bound to it."""
+
+    id: NonEmptyStrictStr
+    producer_product: NonEmptyStrictStr
+    consumer_products: list[NonEmptyStrictStr] = Field(default_factory=list)
+    has_consumer: bool
+
+    @model_validator(mode="after")
+    def _consumer_flag_matches_members(self) -> "DerivedMemstoreFact":
+        if self.has_consumer != bool(self.consumer_products):
+            raise ValueError("has_consumer must match consumer_products")
+        return self
+
+
+class DerivedForeignKeyFact(CompilePlanModel):
+    """A foreign-key relationship declared directly on a compiled field role."""
+
+    child_product: NonEmptyStrictStr
+    child_field: NonEmptyStrictStr
+    parent_product: NonEmptyStrictStr
+    parent_field: NonEmptyStrictStr
+
+
+class DerivedFacts(CompilePlanModel):
+    """Transport-neutral facts derived from the validated compiler plan."""
+
+    products: list[DerivedProductFact] = Field(default_factory=list)
+    memstores: list[DerivedMemstoreFact] = Field(default_factory=list)
+    foreign_keys: list[DerivedForeignKeyFact] = Field(default_factory=list)
+
+
 class AcceptanceStatus(StrEnum):
     PASS = "pass"
     FAIL = "fail"
@@ -1372,6 +1442,7 @@ class ScaffoldResult(BaseModel):
         description="Captured sample rows per product (when execution completed)",
     )
     compile_plan: CompilePlan | None = None
+    derived_facts: DerivedFacts | None = None
     acceptance: AcceptanceReport | None = None
     remediations: list[RetryWithParameterRemediation] = Field(default_factory=list)
     verification: ScaffoldVerificationEvidence = Field(default_factory=ScaffoldVerificationEvidence)
