@@ -488,6 +488,16 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         '<setup><generate name="a" count="1"/><generate name="a" count="1"/></setup>',
     ),
     _rule_definition(
+        "DM404",
+        RuleSeverity.WARNING,
+        "Nested foreign key does not copy its parent",
+        "A nested child foreign-key field is generated independently instead of carrying its enclosing parent key.",
+        'Use a script field that copies the parent key, for example script: "parent.<field>".',
+        "AuthoringSpecV1 nested relationship and foreign-key role contract.",
+        '{"kind":"script","name":"customer_id","script":"parent.id","roles":[{"kind":"foreign_key","parent_product":"customers","parent_field":"id"}]}',
+        '{"kind":"int_range","name":"customer_id","minimum":1,"maximum":4,"roles":[{"kind":"foreign_key","parent_product":"customers","parent_field":"id"}]}',
+    ),
+    _rule_definition(
         "DM405",
         RuleSeverity.ERROR,
         "Missing include file",

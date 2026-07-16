@@ -41,6 +41,7 @@ from datamimic_ce.authoring.dryrun import (
     dry_run_source,
     dry_run_source_captured,
 )
+from datamimic_ce.authoring.intent_linter import lint_intent
 from datamimic_ce.authoring.intent_validation import project_validation_issues
 from datamimic_ce.authoring.linter import lint_descriptor, lint_source
 from datamimic_ce.authoring.spec import AuthoringSpecV1
@@ -192,6 +193,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             ),
         )
     xml = compiled.xml
+    intent_diagnostics = lint_intent(compiled.spec)
 
     captured_run = dry_run_source_captured(
         xml,
@@ -207,7 +209,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             stage=AuthoringStage.LINT,
             xml=xml,
             summary=failed_lint.summary() if failed_lint is not None else None,
-            diagnostics=dry_run_result.diagnostics,
+            diagnostics=[*intent_diagnostics, *dry_run_result.diagnostics],
             truncated=bool(failed_lint.truncated) if failed_lint is not None else False,
             compile_plan=compiled.plan,
             verification=blocked_verification(
@@ -233,7 +235,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             stage=AuthoringStage.DRY_RUN,
             xml=xml,
             summary=None,
-            diagnostics=dry_run_result.diagnostics,
+            diagnostics=[*intent_diagnostics, *dry_run_result.diagnostics],
             products=dry_run_result.products,
             truncated=False,
             compile_plan=compiled.plan,
@@ -265,7 +267,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
     )
     verification_passed = verification.gates_passed
     replay_diagnostics = replay_run.result.diagnostics if replay_run is not None else []
-    diagnostics = [*dry_run_result.diagnostics, *replay_diagnostics]
+    diagnostics = [*intent_diagnostics, *dry_run_result.diagnostics, *replay_diagnostics]
     return ScaffoldResult(
         ok=verification_passed,
         stage=(AuthoringStage.ACCEPTANCE if verification_passed else AuthoringStage.VERIFICATION),
