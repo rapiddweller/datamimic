@@ -11,8 +11,9 @@ metadata. The runtime engine should not depend on them.
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from enum import StrEnum
 from types import MappingProxyType
+
+from datamimic_ce._compat import StrEnum
 
 
 class RuleSeverity(StrEnum):

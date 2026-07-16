@@ -8,7 +8,7 @@
 import pytest
 from typer.testing import CliRunner
 
-from datamimic_ce.authoring.contracts import ReferenceRequest, ReferenceTopic
+from datamimic_ce.authoring.contracts import AuthoringReferenceCategory, ReferenceRequest, ReferenceTopic
 from datamimic_ce.authoring.service import reference
 from datamimic_ce.cli import app
 
@@ -39,3 +39,18 @@ def test_every_reference_topic_has_cli_and_service_parity(topic: ReferenceTopic)
 
 def test_reference_request_uses_the_canonical_topic_type_directly() -> None:
     assert ReferenceRequest.model_fields["topic"].annotation is ReferenceTopic
+
+
+@pytest.mark.parametrize("category", list(AuthoringReferenceCategory))
+def test_every_authoring_reference_category_has_cli_and_service_parity(
+    category: AuthoringReferenceCategory,
+) -> None:
+    request = ReferenceRequest(topic=ReferenceTopic.AUTHORING, category=category)
+    result = reference(request)
+    assert result.ok is True
+    assert result.category is category
+    assert result.content
+
+    cli_result = CliRunner().invoke(app, ["reference", "authoring", "--category", category.value])
+    assert cli_result.exit_code == 0, cli_result.stdout
+    assert cli_result.stdout.strip()

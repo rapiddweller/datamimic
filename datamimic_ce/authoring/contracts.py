@@ -13,8 +13,7 @@ that another transport rejects.
 
 from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
-from enum import StrEnum
-from typing import Annotated, Any, Literal, Self
+from typing import Annotated, Any, Literal, TypeVar
 
 from pydantic import (
     BaseModel,
@@ -22,14 +21,18 @@ from pydantic import (
     Field,
     JsonValue,
     RootModel,
+    StrictBool,
+    StrictInt,
     StrictStr,
     TypeAdapter,
     model_serializer,
     model_validator,
 )
 
+from datamimic_ce._compat import StrEnum
 from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.spec import (
+    ExpectationIntent,
     ExpectationIntentKind,
     FieldIntentKind,
     FieldRoleKind,
@@ -64,13 +67,6 @@ class AuthoringStage(StrEnum):
     DRY_RUN = "dry_run"
     ACCEPTANCE = "acceptance"
     VERIFICATION = "verification"
-
-
-class AuthoringResponseFormat(StrEnum):
-    """Canonical diagnostic projection requested by an authoring transport."""
-
-    CONCISE = "concise"
-    DETAILED = "detailed"
 
 
 class ReferenceTopic(StrEnum):
@@ -254,7 +250,7 @@ class SmokeExportEvidence(BaseModel):
     reason: str = "Smoke export was not requested"
 
     @model_validator(mode="after")
-    def _consistent_counts(self) -> Self:
+    def _consistent_counts(self) -> "SmokeExportEvidence":
         if self.attempted_exporters > self.applicable_exporters:
             raise ValueError("attempted_exporters must not exceed applicable_exporters")
         if self.failed_exporters > self.attempted_exporters:
@@ -405,13 +401,14 @@ class ProductCaptureEvidence(BaseModel):
 class CheckRequest(BaseModel):
     """Canonical request contract for descriptor linting."""
 
-    xml: str | None = Field(None, description="Inline descriptor XML (preferred for agents)")
-    path: str | None = Field(
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    xml: StrictStr | None = Field(None, description="Inline descriptor XML (preferred for agents)")
+    path: StrictStr | None = Field(
         None,
         description="Path to a descriptor file on the server's filesystem",
     )
-    response_format: AuthoringResponseFormat = AuthoringResponseFormat.CONCISE
-    max_diagnostics: int = Field(
+    max_diagnostics: StrictInt = Field(
         50,
         ge=MIN_DIAGNOSTICS,
         le=MAX_DIAGNOSTICS,
@@ -427,36 +424,36 @@ class CheckRequest(BaseModel):
 class RunRequest(BaseModel):
     """Canonical request contract for safe descriptor dry-runs."""
 
-    xml: str | None = Field(None, description="Inline descriptor XML (preferred for agents)")
-    path: str | None = Field(
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    xml: StrictStr | None = Field(None, description="Inline descriptor XML (preferred for agents)")
+    path: StrictStr | None = Field(
         None,
         description="Path to a descriptor file on the server's filesystem",
     )
-    sample_rows: int = Field(5, ge=MIN_SAMPLE_ROWS, le=MAX_SAMPLE_ROWS)
-    max_count: int = Field(
+    sample_rows: StrictInt = Field(5, ge=MIN_SAMPLE_ROWS, le=MAX_SAMPLE_ROWS)
+    max_count: StrictInt = Field(
         10,
         ge=MIN_DRY_RUN_COUNT,
         le=MAX_DRY_RUN_COUNT,
         description="Per-invocation record cap for every <generate> level",
     )
-    allow_side_effects: bool = Field(
+    allow_side_effects: StrictBool = Field(
         False,
         description="Keep file/DB targets and allow <execute> (default: neutralized)",
     )
-    smoke_export: bool = Field(
+    smoke_export: StrictBool = Field(
         False,
         description=(
             "Also push captured rows through the stripped FILE exporters in a temp dir "
             "(no artifacts) to catch export-time serialization crashes"
         ),
     )
-    timeout_seconds: int = Field(
+    timeout_seconds: StrictInt = Field(
         30,
         ge=MIN_TIMEOUT_SECONDS,
         le=MAX_TIMEOUT_SECONDS,
     )
-    response_format: AuthoringResponseFormat = AuthoringResponseFormat.CONCISE
-
     @model_validator(mode="after")
     def _exactly_one_input(self) -> "RunRequest":
         if (self.xml is None) == (self.path is None):
@@ -467,27 +464,30 @@ class RunRequest(BaseModel):
 class ScaffoldRequest(BaseModel):
     """Canonical request for complete compile, lint, run and acceptance verification."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
     spec: dict[str, Any] = Field(
         ...,
         description="Versioned AuthoringSpecV1 model.dm.json intent.",
     )
-    max_count: int = Field(
+    acceptance_requirements: tuple[ExpectationIntent, ...] = Field(
+        default=(),
+        description=(
+            "Optional caller-owned acceptance assertions for this transaction. "
+            "They are evaluated with, but are not persisted into, model.dm.json expectations."
+        ),
+    )
+    max_count: StrictInt = Field(
         10,
         ge=MIN_DRY_RUN_COUNT,
         le=MAX_DRY_RUN_COUNT,
         description="Per-<generate> record cap for the bounded run (including nested generates)",
     )
-    sample_rows: int = Field(
+    sample_rows: StrictInt = Field(
         5,
         ge=MIN_SAMPLE_ROWS,
         le=MAX_SAMPLE_ROWS,
         description="Sample rows to capture per product during dry-run",
-    )
-    response_format: AuthoringResponseFormat = Field(
-        AuthoringResponseFormat.CONCISE,
-        description="Response format: concise (key diagnostics) or detailed (full diagnostic info)",
     )
     verification: ScaffoldVerification = Field(default_factory=_default_scaffold_verification)
 
@@ -1083,8 +1083,8 @@ def _validate_range(
         raise ValueError("range acceptance requires a numeric range field intent")
 
 
-# Keyed on exact type (not isinstance). A future subclass of any acceptance plan
-# needs its own entry — the dispatch loop silently skips unknown types.
+# Keyed on exact type (not isinstance). A future acceptance-plan type must add
+# its validator here; the dispatch loop fails closed when that registration is missing.
 _ACCEPTANCE_VALIDATORS: dict[type, Callable[..., None]] = {
     ExactCountAcceptancePlan: _validate_exact_count,
     PerParentCountAcceptancePlan: _validate_per_parent_count,
@@ -1105,8 +1105,9 @@ def _validate_acceptance_facts(
     for acceptance in derived_acceptance:
         product = _require_product(products_by_name, acceptance.product, "derived acceptance")
         validator = _ACCEPTANCE_VALIDATORS.get(type(acceptance))
-        if validator is not None:
-            validator(acceptance, product, ctx)
+        if validator is None:
+            raise TypeError(f"no acceptance validator registered for {type(acceptance).__name__}")
+        validator(acceptance, product, ctx)
 
 
 def _validate_unresolved_facts(
@@ -1219,6 +1220,7 @@ class AcceptanceStatus(StrEnum):
 class AcceptanceSource(StrEnum):
     DERIVED = "derived"
     EXPLICIT = "explicit"
+    CALLER = "caller"
     DERIVED_AND_EXPLICIT = "derived_and_explicit"
 
 
@@ -1247,6 +1249,9 @@ class CaptureCompletenessEvidence(BaseModel):
     products: list[ProductCaptureCompleteness]
 
 
+AcceptanceResultT = TypeVar("AcceptanceResultT", bound="AcceptanceResultBase")
+
+
 class AcceptanceResultBase(BaseModel):
     """Shared, transport-neutral evidence for one mandatory expectation."""
 
@@ -1259,9 +1264,9 @@ class AcceptanceResultBase(BaseModel):
     capture_completeness: CaptureCompletenessEvidence | None = None
 
     def with_capture_completeness(
-        self,
+        self: AcceptanceResultT,
         evidence: CaptureCompletenessEvidence,
-    ) -> Self:
+    ) -> AcceptanceResultT:
         return self.model_copy(update={"capture_completeness": evidence})
 
 
@@ -1453,7 +1458,7 @@ class ScaffoldResult(BaseModel):
     verified: bool = False
 
     @model_validator(mode="after")
-    def _verified_requires_all_evidence(self) -> Self:
+    def _verified_requires_all_evidence(self) -> "ScaffoldResult":
         if self.verified and (
             self.acceptance is None or not self.acceptance.verified or not self.verification.gates_passed
         ):

@@ -15,7 +15,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
-from enum import StrEnum
 from typing import Annotated, Literal
 
 from pydantic import (
@@ -33,6 +32,7 @@ from pydantic import (
 from pydantic.json_schema import JsonDict, JsonValue
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
+from datamimic_ce._compat import StrEnum
 from datamimic_ce.constants.element_constants import EL_GENERATE
 from datamimic_ce.exporters.exporter_util import buffered_exporter_names
 from datamimic_ce.model.constraints import is_source_file

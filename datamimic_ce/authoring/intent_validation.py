@@ -9,11 +9,11 @@ from contextlib import suppress
 from copy import deepcopy
 from dataclasses import dataclass
 from difflib import SequenceMatcher
-from enum import StrEnum
 from typing import Any
 
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
+from datamimic_ce._compat import StrEnum
 from datamimic_ce.authoring.contracts import (
     AuthoringReferenceCategory,
     IntentValidationIssue,

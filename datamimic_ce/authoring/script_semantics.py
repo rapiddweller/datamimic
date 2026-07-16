@@ -5,7 +5,8 @@ unambiguous runtime meaning. It does not evaluate scripts.
 """
 
 import ast
-from enum import StrEnum
+
+from datamimic_ce._compat import StrEnum
 
 
 class ScriptScope(StrEnum):

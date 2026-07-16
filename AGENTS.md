@@ -140,6 +140,13 @@ routinely exhaust their budget without ever submitting.
    passes verification silently. Encode counts as `exact_count` with a
    `count` field (the derived-acceptance output spells it `exact_count`; the
    explicit input schema requires `count`).
+   An MCP caller that owns an independent task-acceptance contract can instead
+   pass typed acceptance_requirements to datamimic_scaffold. They are checked
+   for that transaction, reported with source caller, and block verified when
+   they fail; they do not mutate or become a second source of truth for
+   model.dm.json. CLI callers pass the same JSON array with
+   --acceptance-requirements path/to/requirements.json. Persist requirements
+   owned by the model itself in the document's expectations.
 6. Stop immediately when `verified=true`; do not call check/lint or dry-run
    again. If real execution is requested, save the returned `xml` as a
    generated runtime artifact and run `datamimic run path/to/datamimic.xml`.

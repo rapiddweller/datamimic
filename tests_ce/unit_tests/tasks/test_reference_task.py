@@ -7,7 +7,7 @@
 import random
 import unittest
 from random import Random
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.contexts.geniter_context import GenIterContext
@@ -148,6 +148,21 @@ class TestReferenceTask(unittest.TestCase):
 
         self.assertEqual(result, 42)
         self.context.add_current_product_field.assert_called_once_with("test_name", 42)
+
+    def test_task_delegates_loading_mapping_and_selection_to_registry(self):
+        """ReferenceTask owns iteration/context mutation, not datasource policy."""
+        selected = [{"test_name": 17}, {"test_name": 23}]
+        task = ReferenceTask(self.statement, self.pagination)
+
+        with patch(
+            "datamimic_ce.tasks.reference_task.DataSourceRegistry.load_reference_source",
+            return_value=selected,
+        ) as load_reference_source:
+            assert task.execute(self.context) == 17
+            assert task.execute(self.context) == 23
+
+        load_reference_source.assert_called_once_with(self.context, self.statement, self.pagination)
+        self.rdbms_client.get_random_rows_by_columns.assert_not_called()
 
 
 if __name__ == "__main__":

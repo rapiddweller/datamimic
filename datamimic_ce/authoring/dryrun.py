@@ -41,10 +41,10 @@ import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
-from enum import StrEnum
 from multiprocessing.connection import Connection
 from pathlib import Path
 
+from datamimic_ce._compat import StrEnum
 from datamimic_ce.authoring.contracts import (
     AuthoringStage,
     CaptureStatus,

@@ -51,8 +51,8 @@ class TestSequenceTableGenerator:
         """MySQL has no freestanding sequence object - SequenceTableGenerator integrates
         directly with the target table's own AUTO_INCREMENT counter (rdbms_client.py:
         _advance_mysql_auto_increment), advanced atomically via MySQL's session-scoped
-        GET_LOCK/RELEASE_LOCK around a read-then-ALTER TABLE round trip. numProcess="2" in the
-        descriptor is deliberate: that's where a non-atomic advance would collide.
+        GET_LOCK/RELEASE_LOCK around a read-then-ALTER TABLE round trip. MySQL execution is
+        deliberately single-process because it has no atomic native sequence reservation.
 
         Only asserts no-duplicate-ids, not "exactly 30 rows exist": SequenceTableGenerator is
         re-instantiated per page/scan-phase pass (existing engine behavior, confirmed present
@@ -63,12 +63,8 @@ class TestSequenceTableGenerator:
         fix introduces or is scoped to close - the guarantee this fix owns is that whatever ids
         DO get assigned are unique, which is what's asserted here.
 
-        Caution: this test's stability (5/5 observed) does NOT generalize to MySQL MP safety in
-        general - count=10/numProcess=2 divides evenly (per_process_count=5, no rounding excess).
-        The uneven-ratio sibling test below (count=13/numProcess=4) reproduces real duplicate-key
-        collisions in ~2/3 of runs against the exact same GET_LOCK-guarded mechanism and is
-        skipped for it; see SequenceTableGenerator's class docstring for the full per-dialect
-        picture. Treat this test as a smoke check, not proof of atomicity."""
+        Multiprocessing rejection is covered by the unit contract; this external test proves the
+        supported single-process MySQL path against the real database."""
         engine = DataMimicTest(test_dir=self._test_dir, filename="mysql_test.xml", capture_test_result=True)
         engine.test_with_timer()
         result = engine.capture_result()
@@ -98,30 +94,11 @@ class TestSequenceTableGenerator:
         assert len(ids) == 13
         assert len(set(ids)) == 13, f"duplicate ids: {ids}"
 
-    @pytest.mark.skip(
-        reason="MySQL's AUTO_INCREMENT-integration advance (_advance_mysql_auto_increment) is NOT "
-        "reliably atomic under real concurrent multiprocess workers, unlike Postgres's native "
-        "nextval/setval: get_current_sequence_number's own +1 side effect (mirroring Postgres's "
-        "nextval contract) races against other workers' GET_LOCK-guarded read-then-ALTER TABLE "
-        "critical sections once actual OS-level processes are involved, not just concurrent "
-        "connections on one process - reproduced as real duplicate-key collisions in ~2/3 of "
-        "isolated runs (see PR discussion). This matches DATAMIMIC EE's own judgment for this "
-        "generator (__parallel_safe__ = False) - MySQL sequence generation is single-process only "
-        "in CE too; test_sequence_table_generator_mysql (numProcess=2) above already only asserts "
-        "no-duplicate-ids as a best-effort check, not a guarantee. The process_id wiring fix "
-        "itself is verified MP-safe where it matters: Postgres's atomic native sequence, see "
-        "test_sequence_table_generator_postgres_uneven_multiprocess."
-    )
     def test_sequence_table_generator_mysql_uneven_multiprocess(self):
-        """Same process_id regression as the Postgres uneven-multiprocess test, exercised
-        against MySQL's AUTO_INCREMENT-integration path instead of a native sequence."""
+        """MySQL's emulated sequence cannot enter an unsafe multiprocess execution."""
         engine = DataMimicTest(test_dir=self._test_dir, filename="mysql_uneven_mp_test.xml", capture_test_result=True)
-        engine.test_with_timer()
-        result = engine.capture_result()
-
-        ids = [row["id"] for row in result["check"]]
-        assert len(ids) == 13
-        assert len(set(ids)) == 13, f"duplicate ids: {ids}"
+        with pytest.raises(ValueError, match="MySQL source is single-process only"):
+            engine.test_with_timer()
 
     @pytest.mark.skip(
         reason="MSSQL native-sequence support was prototyped and pulled: SequenceTableGenerator "

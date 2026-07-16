@@ -63,6 +63,13 @@ def reference(
 @app.command("scaffold", help="Compile and fully verify one model.dm.json document.")
 def scaffold(
     spec_path: Path = SPEC_PATH,
+    acceptance_requirements_path: Annotated[
+        Path | None,
+        typer.Option(
+            "--acceptance-requirements",
+            help="JSON array of caller-owned assertions for this transaction",
+        ),
+    ] = None,
     output_format: Annotated[CliOutputFormat, typer.Option("--format", "-f")] = CliOutputFormat.TEXT,
     max_count: Annotated[int, typer.Option("--max-count")] = 10,
     sample_rows: Annotated[int, typer.Option("--sample-rows")] = 5,
@@ -71,6 +78,7 @@ def scaffold(
 ) -> None:
     cli_authoring.scaffold_model(
         spec_path,
+        acceptance_requirements_path,
         output_format,
         max_count,
         sample_rows,

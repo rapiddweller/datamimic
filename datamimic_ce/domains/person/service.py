@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from ..determinism import (
@@ -107,7 +107,7 @@ def generate(req: PersonRequest, *, profile_seed: int | None = None) -> dict[str
         birth_month = rng.randint(1, 12)
         birth_day = rng.randint(1, 28)
         birth_year = clock_dt.year - age
-        birth_date = datetime(birth_year, birth_month, birth_day, tzinfo=UTC)
+        birth_date = datetime(birth_year, birth_month, birth_day, tzinfo=timezone.utc)
 
         person_id = stable_uuid("datamimic:person:v1", derived_seed, index)
 

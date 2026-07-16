@@ -7,7 +7,8 @@
 """Source-file-format and capability facts for ``source=``-aware elements."""
 
 from dataclasses import dataclass
-from enum import StrEnum
+
+from datamimic_ce._compat import StrEnum
 
 # Attribute constants (imported at module level to avoid circular imports)
 from datamimic_ce.constants.data_type_constants import (
@@ -49,8 +50,8 @@ class SourceCapability:
     """One runtime-supported ``source=`` context.
 
     ``source_type`` narrows shape-sensitive consumers such as ``nestedKey``.
-    File-loader implementations stay in their runtime tasks; this fact owns only
-    which source kinds and suffixes each element is allowed to dispatch.
+    ``DataSourceRegistry`` owns runtime loading and routing; this fact owns which
+    source kinds and suffixes that boundary allows each element to dispatch.
     """
 
     element: str

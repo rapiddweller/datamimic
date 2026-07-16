@@ -7,20 +7,17 @@
 import copy
 
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE_LIST
-from datamimic_ce.constants.element_constants import EL_NESTED_KEY
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.logger import logger
-from datamimic_ce.model.constraints import SourceFileFormat, source_file_format_for
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.statement_util import StatementUtil
 from datamimic_ce.tasks.element_task import ElementTask
 from datamimic_ce.tasks.task import GenSubTask
 from datamimic_ce.tasks.task_util import TaskUtil
-from datamimic_ce.utils.file_util import FileUtil
 
 
 class NestedKeyTask(GenSubTask):
@@ -31,7 +28,6 @@ class NestedKeyTask(GenSubTask):
     ):
         self._statement = statement
         self._default_value = statement.default_value
-        self._descriptor_dir = ctx.root.descriptor_dir
         self._sub_tasks: list | None = None
         self._converter_list = TaskUtil.create_converter_list(ctx, statement.converter)
 
@@ -145,12 +141,6 @@ class NestedKeyTask(GenSubTask):
                     raise ValueError(f"Failed when execute script of element '{self._statement.name}'") from e
         elif self._statement.source:
             result = self._load_data_from_source(parent_context)
-            # Reorder rows for random (shuffle) / cumulated (bell); ordered keeps source order
-            if self._statement.distribution.loads_all:
-                seed = parent_context.root.get_distribution_seed()
-                result = DataSourceRegistry.get_distributed_data(
-                    result, None, self._statement.cyclic, seed, self._statement.distribution
-                )
         else:
             raise ValueError(f"Cannot load original data for <nestedKey> '{self._statement.name}'")
 
@@ -216,79 +206,16 @@ class NestedKeyTask(GenSubTask):
         return result
 
     def _load_data_from_source(self, parent_context: Context) -> list | dict:
-        """
-        Load data from source
+        """Load through the registry, then apply nested child tasks to the returned records."""
+        if not isinstance(parent_context, GenIterContext):
+            raise ValueError(f"<nestedKey> '{self._statement.name}' requires a generation context")
 
-        :param parent_context:
-        :return:
-        """
-        source_str = self._statement.source
-        nestedkey_type = self._statement.type
-        result: dict | list
-
-        # Evaluate scripted source string
-        source = (
-            parent_context.evaluate_python_expression(source_str[1:-1])
-            if source_str.startswith("{") and source_str.endswith("}")
-            else source_str
-        )
-        source_format = source_file_format_for(EL_NESTED_KEY, source, nestedkey_type)
-        if nestedkey_type == DATA_TYPE_LIST and isinstance(parent_context, GenIterContext):
-            # Read data from source
-            if source_format is SourceFileFormat.CSV:
-                separator = self._statement.separator or parent_context.root.default_separator
-                list_value = FileUtil.read_csv_to_dict_list(
-                    file_path=self._descriptor_dir / source, separator=separator
-                )
-            elif source_format is SourceFileFormat.JSON:
-                list_value = FileUtil.read_json_to_list(self._descriptor_dir / source)
-            else:
-                raise ValueError(f"Invalid source '{source}' of nestedkey '{self._statement.name}'")
-
-            result = self._modify_nestedkey_data_list(parent_context, list_value)
-
-        elif nestedkey_type == DATA_TYPE_DICT and isinstance(parent_context, GenIterContext):
-            if source_format is SourceFileFormat.JSON:
-                dict_value = FileUtil.read_json_to_dict(self._descriptor_dir / source)
-                result = self._modify_nestedkey_data_dict(parent_context, dict_value)
-            else:
-                raise ValueError(f"Source of nestedkey having type as 'dict' does not support format {source}")
-
-        # handle memstore source
-        elif parent_context.root.memstore_manager.contain(source_str) and isinstance(parent_context, GenIterContext):
-            # memstore read: sourceEntity -> type -> name, same resolver as generate/iterate/variable.
-            list_value = parent_context.root.memstore_manager.get_memstore(source_str).get_data_by_type(
-                StatementUtil.resolve_source_entity(self._statement), None, self._statement.cyclic
-            )
-
-            result = self._modify_nestedkey_data_list(parent_context, list_value)
+        raw = DataSourceRegistry.load_nested_key_source(parent_context, self._statement)
+        if isinstance(raw, list):
+            result: list | dict = self._modify_nestedkey_data_list(parent_context, raw)
         else:
-            raise ValueError(
-                f"Cannot load data from source '{self._statement.source}' of <nestedKey> '{self._statement.name}'"
-            )
-
-        # sourceScripted evaluate python expression
-        source_scripted = (
-            self._statement.source_script
-            if self._statement.source_script is not None
-            else bool(parent_context.root.default_source_scripted)
-        )
-        if source_scripted:
-            # Determine variable prefix and suffix
-            ctx = parent_context.parent if isinstance(parent_context, GenIterContext) else parent_context
-            while isinstance(ctx, GenIterContext):
-                ctx = ctx.parent
-            if isinstance(ctx, SetupContext):
-                variable_prefix = self.statement.variable_prefix or ctx.default_variable_prefix
-                variable_suffix = self.statement.variable_suffix or ctx.default_variable_suffix
-            else:
-                variable_prefix = self.statement.variable_prefix
-                variable_suffix = self.statement.variable_suffix
-
-            # Evaluate source_script
-            result = TaskUtil.evaluate_file_script_template(parent_context, result, variable_prefix, variable_suffix)
-
-        return result
+            result = self._modify_nestedkey_data_dict(parent_context, raw)
+        return DataSourceRegistry.finalize_nested_key_source(parent_context, self._statement, result)
 
     def _modify_nestedkey_data_dict(self, parent_context: GenIterContext, value: dict) -> dict:
         """
@@ -312,18 +239,9 @@ class NestedKeyTask(GenSubTask):
         :return:
         """
         result = []
-        # Determine len of nestedkey
         count = self._determine_nestedkey_length(context=parent_context)
-        value_len = len(value)
-        # https://gitlab.dwellerlab.com/rapiddweller/datamimic_ce/rd-lib-datamimic_ce/-/merge_requests/98#note_10678
-        nestedkey_len = value_len if count is None else count if self._statement.cyclic else min(count, value_len)
-
-        # Init original data of nestedkey
-        iterate_value = DataSourceRegistry.get_cyclic_data_list(
-            data=value,
-            pagination=DataSourcePagination(0, nestedkey_len),
-            cyclic=self._statement.cyclic,
-        )
+        iterate_value = DataSourceRegistry.window_nested_key_rows(value, count, self._statement.cyclic)
+        nestedkey_len = len(iterate_value)
 
         # Modify port data
         self._lazy_init_sub_tasks(parent_context=parent_context, nestedkey_length=nestedkey_len)

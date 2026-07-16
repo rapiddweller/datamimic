@@ -18,7 +18,7 @@ import ast
 import json
 import math
 import operator
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, replace
 from decimal import Decimal, InvalidOperation
 from typing import Literal, TypeAlias
@@ -59,6 +59,7 @@ from datamimic_ce.authoring.spec import (
     AllowedValuesExpectation,
     AuthoringSpecV1,
     ExactCountExpectation,
+    ExpectationIntent,
     ForeignKeyExpectation,
     PerParentCountExpectation,
     RangeExpectation,
@@ -189,9 +190,9 @@ def _derived_expectations(plan: CompilePlan) -> list[_Expectation]:
     return result
 
 
-def _explicit_expectations(spec: AuthoringSpecV1) -> list[_Expectation]:
+def _intent_expectations(expectations: Iterable[ExpectationIntent]) -> list[_Expectation]:
     result: list[_Expectation] = []
-    for expectation in spec.expectations:
+    for expectation in expectations:
         if isinstance(expectation, ExactCountExpectation):
             result.append(_Exact(expectation.product, expectation.count))
         elif isinstance(expectation, PerParentCountExpectation):
@@ -229,13 +230,22 @@ def _explicit_expectations(spec: AuthoringSpecV1) -> list[_Expectation]:
     return result
 
 
-def merge_expectations(plan: CompilePlan, spec: AuthoringSpecV1) -> tuple[_ExpectationEntry, ...]:
-    """Merge exact duplicates while retaining contradictory explicit assertions.
+def _explicit_expectations(spec: AuthoringSpecV1) -> list[_Expectation]:
+    return _intent_expectations(spec.expectations)
 
-    An explicit expectation identical to a derived invariant is represented once
-    with ``derived_and_explicit`` provenance.  Expectations with the same subject
-    but different expected values are both retained, so a contradiction cannot be
-    silently resolved in favour of either owner.
+
+def merge_expectations(
+    plan: CompilePlan,
+    spec: AuthoringSpecV1,
+    acceptance_requirements: Iterable[ExpectationIntent] = (),
+) -> tuple[_ExpectationEntry, ...]:
+    """Merge derived and model-owned assertions; retain caller requirements.
+
+    A model expectation identical to a derived invariant is represented once
+    with derived-and-explicit provenance. Contradictory model expectations
+    remain visible. Caller requirements always retain their own provenance so
+    a caller can distinguish its independent contract from model-declared
+    intent.
     """
 
     entries: list[_ExpectationEntry] = []
@@ -253,6 +263,12 @@ def merge_expectations(plan: CompilePlan, spec: AuthoringSpecV1) -> tuple[_Expec
                 entries[position],
                 source=AcceptanceSource.DERIVED_AND_EXPLICIT,
             )
+    caller_seen: set[_Expectation] = set()
+    for expectation in _intent_expectations(acceptance_requirements):
+        if expectation in caller_seen:
+            continue
+        caller_seen.add(expectation)
+        entries.append(_ExpectationEntry(expectation, AcceptanceSource.CALLER))
     return tuple(entries)
 
 
@@ -1578,10 +1594,14 @@ def evaluate_acceptance(
     plan: CompilePlan,
     spec: AuthoringSpecV1,
     captured: CapturedProducts,
+    acceptance_requirements: Iterable[ExpectationIntent] = (),
 ) -> AcceptanceReport:
     """Evaluate every mandatory expectation against all rows in one bounded capture."""
 
-    results = [_evaluate_entry(entry, plan, spec, captured) for entry in merge_expectations(plan, spec)]
+    results = [
+        _evaluate_entry(entry, plan, spec, captured)
+        for entry in merge_expectations(plan, spec, acceptance_requirements)
+    ]
     passed = sum(result.status is AcceptanceStatus.PASS for result in results)
     failed = sum(result.status is AcceptanceStatus.FAIL for result in results)
     unevaluable = sum(result.status is AcceptanceStatus.UNEVALUABLE for result in results)

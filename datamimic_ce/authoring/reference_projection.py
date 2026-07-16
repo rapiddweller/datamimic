@@ -5,10 +5,10 @@
 """Typed authoring discovery projected from the canonical intent models."""
 
 from collections.abc import Mapping
-from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, JsonValue, TypeAdapter
 
+from datamimic_ce._compat import StrEnum
 from datamimic_ce.authoring.contracts import (
     AuthoringReferenceCategory,
     AuthoringReferenceQuery,

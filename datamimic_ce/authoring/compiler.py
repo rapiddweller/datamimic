@@ -15,12 +15,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import assert_never
 from xml.etree.ElementTree import Element
 from xml.sax.saxutils import quoteattr
 
 from pydantic import ValidationError
 
+from datamimic_ce._compat import assert_never
 from datamimic_ce.authoring.contracts import (
     AllowedValuesAcceptancePlan,
     CompilePlan,

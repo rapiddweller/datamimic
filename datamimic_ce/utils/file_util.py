@@ -12,9 +12,11 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from lxml import etree
 from pandas import DataFrame
 
 from datamimic_ce.utils.file_content_storage import FileContentStorage
+from datamimic_ce.utils.secure_xml import DTDForbiddenError, parse_xml_file
 
 
 class FileUtil:
@@ -29,19 +31,17 @@ class FileUtil:
         carries every column, an absent one filled with None. This gives faithful table semantics (a
         NULL cell, not a missing key) and lets a batch RDBMS insert see a uniform column set.
 
-        Security: a value with XML character entities is decoded. ElementTree does NOT fetch external
-        DTDs, but it DOES expand internal entities - dbunit files are trusted local fixtures, not
-        untrusted input; do not point this at attacker-controlled XML.
+        Security: predefined XML character entities are decoded, while DTD declarations and
+        custom entities are rejected by the shared runtime XML parser. External DTD references are
+        retained for DbUnit compatibility but are never loaded or fetched.
         """
-        import xml.etree.ElementTree as ET  # noqa: N817
-
         try:
-            root = ET.parse(str(path)).getroot()
-        except ET.ParseError as e:
+            root = parse_xml_file(path)
+        except (DTDForbiddenError, etree.XMLSyntaxError) as e:
             raise ValueError(f"dbunit dataset '{path}' is not well-formed XML: {e}") from e
         # dbunit's root is <dataset>; anything else is not a dataset
         if root.tag != "dataset":
-            raise ValueError(f"dbunit dataset '{path}' must have a <dataset> root, got <{root.tag}>")
+            raise ValueError(f"dbunit dataset '{path}' must have a <dataset> root, got {root.tag!r}")
         raw = [child.attrib for child in root if child.tag == table]
         if not raw:
             available = sorted({child.tag for child in root})

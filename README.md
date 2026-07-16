@@ -77,9 +77,9 @@ canonical contracts and implementations: `reference` → `datamimic_reference`,
 `scaffold` → `datamimic_scaffold`, `lint` → `datamimic_check`, and `dry-run` →
 `datamimic_run`. Install the adapter with `pip install "datamimic-ce[mcp]"`;
 registration details belong in the [`MCP quickstart`](docs/mcp_quickstart.md),
-not in the authoring workflow. Its optional `generate` tool returns deterministic
-domain JSON as a secondary convenience facade; it does not create or replace a
-reviewable `model.dm.json` artifact.
+not in the authoring workflow. The adapter intentionally exposes only the four
+canonical reference, scaffold, check, and bounded-run operations; domain generation
+remains a Python/CLI capability rather than a parallel MCP authoring path.
 
 ### Prompts to paste into your agent
 
@@ -516,7 +516,7 @@ response = generate_domain({
 # Same engine version + same model + same seed → same output, every machine, every run.
 ```
 
-**2. Deterministic data backend for AI agents and LLM tooling.** The CLI and Python API are the baseline surfaces for seeded, verifiable generation. The optional MCP adapter (`pip install "datamimic-ce[mcp]"`) exposes the same domain facade to MCP clients. Generated outputs include a `determinism_proof.content_hash`, so callers can re-execute and verify the data later — useful for agent regression tests and any workflow where the data an agent saw must be reconstructable.
+**2. Deterministic data backend for AI agents and LLM tooling.** The CLI and Python API are the baseline surfaces for seeded, verifiable generation. The optional MCP adapter (`pip install "datamimic-ce[mcp]"`) exposes the canonical reference, scaffold, check, and bounded-run authoring operations. Generated domain-facade outputs include a `determinism_proof.content_hash`, so Python/CLI callers can re-execute and verify the data later — useful for agent regression tests and any workflow where the data an agent saw must be reconstructable.
 
 **3. Pseudonymization of staging and QA exports.** Manual model in CE (XML pipeline), no scanner license required. Seeded mode for stable regression test data; non-seeded mode for one-time deliveries with maximized privacy posture. See the [Pseudonymization section above](#pseudonymization--ce-manual-model).
 

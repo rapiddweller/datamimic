@@ -9,6 +9,7 @@
 import ast
 from pathlib import Path
 
+import pytest
 from pydantic import BaseModel
 
 from datamimic_ce.authoring.reference import capabilities_manifest, element_reference
@@ -21,19 +22,18 @@ from datamimic_ce.model.constraints import (
     Constraint,
     RequiredOneOf,
     element_constraints,
-    register_element_constraints,
     registered_rule_tags,
     resolved_values,
     serialize_constraints,
-    unregister_element_constraints,
 )
 from datamimic_ce.model.element_registry import (
     ElementDefinition,
     canonical_tag,
+    get_element_definition,
     get_model_class,
     list_element_tags,
-    register_element,
-    unregister_element,
+    register_element_extension,
+    unregister_element_extension,
 )
 
 
@@ -133,14 +133,33 @@ def test_extension_rules_are_registered_once_and_project_without_model_copies() 
     class SyntheticModel(BaseModel):
         source: str | None = None
 
-    register_element(ElementDefinition(tag, SyntheticModel, None))
+    register_element_extension(ElementDefinition(tag, SyntheticModel, None), rules)
     try:
-        register_element_constraints(tag, rules)
-        try:
-            schema = build_schema_index().get(tag)
-            assert schema is not None and schema.constraints is rules
-            assert element_json_schema(tag)["constraints"] == serialize_constraints(rules)
-        finally:
-            unregister_element_constraints(tag)
+        schema = build_schema_index().get(tag)
+        assert schema is not None and schema.constraints is rules
+        assert element_json_schema(tag)["constraints"] == serialize_constraints(rules)
     finally:
-        unregister_element(tag)
+        unregister_element_extension(tag)
+
+
+def test_extension_registration_rolls_back_structure_and_rules_atomically(monkeypatch: pytest.MonkeyPatch) -> None:
+    from datamimic_ce.model.constraints import registry as rule_registry
+
+    tag = "synthetic-atomic-extension"
+    alias = "synthetic-atomic-alias"
+    original_register = rule_registry._register_element_constraints
+
+    def fail_for_alias(registered_tag: str, constraints: tuple[Constraint, ...]) -> None:
+        if registered_tag == alias:
+            raise RuntimeError("forced second-half failure")
+        original_register(registered_tag, constraints)
+
+    monkeypatch.setattr(rule_registry, "_register_element_constraints", fail_for_alias)
+
+    with pytest.raises(RuntimeError, match="forced second-half failure"):
+        register_element_extension(ElementDefinition(tag, None, None, aliases=frozenset({alias})))
+
+    assert get_element_definition(tag) is None
+    assert get_element_definition(alias) is None
+    assert tag not in registered_rule_tags()
+    assert alias not in registered_rule_tags()

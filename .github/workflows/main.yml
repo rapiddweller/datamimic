@@ -178,6 +178,26 @@ jobs:
         with:
           path: dist/*
 
+  python_310_smoke:
+    name: Python 3.10 wheel smoke test
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - name: Set Up Python 3.10
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+      - name: Download wheel
+        uses: actions/download-artifact@v7
+        with:
+          name: artifact
+          path: dist
+      - name: Install and import built package
+        run: |
+          python -m pip install dist/*.whl
+          python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.cli"
+          datamimic --help
+
   unit_test:
     runs-on: ubuntu-22.04
     needs: install_dependencies
@@ -632,7 +652,7 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04
-    needs: [e2e_test]
+    needs: [e2e_test, mypy, ruff, python_310_smoke]
     environment:
       name: pypi
       url: https://pypi.org/p/datamimic-ce

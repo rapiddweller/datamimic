@@ -193,7 +193,7 @@ The CLI behavior can be customized using environment variables:
 Most commands use `0` for success and `1` for a general error (e.g. `run` on a
 missing descriptor, `init` on an invalid project name).
 
-`lint`/`validate` use a distinct, ESLint-style scheme:
+`lint` uses a distinct, ESLint-style scheme:
 
 - `0`: no diagnostic reached the `--fail-on` threshold
 - `1`: at least one diagnostic reached the `--fail-on` threshold
@@ -247,8 +247,8 @@ Common issues and solutions:
 # Initialize new project
 datamimic init customer-data
 
-# Create and validate descriptor
-datamimic validate customer-data/descriptor.xml
+# Create and lint descriptor
+datamimic lint customer-data/descriptor.xml
 
 # Generate data
 datamimic run customer-data/descriptor.xml

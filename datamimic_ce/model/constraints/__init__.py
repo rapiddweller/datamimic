@@ -105,10 +105,8 @@ from datamimic_ce.model.constraints.facts import (
 )
 from datamimic_ce.model.constraints.registry import (
     element_constraints,
-    register_element_constraints,
     registered_rule_tags,
     rule_registry_revision,
-    unregister_element_constraints,
 )
 from datamimic_ce.model.constraints.serialization import (
     constraints_schema_extra,
@@ -215,7 +213,6 @@ __all__ = [
     "element_constraints",
     "is_source_file",
     "recognized_source_file_formats",
-    "register_element_constraints",
     "registered_rule_tags",
     "resolved_allowed",
     "resolved_values",
@@ -229,5 +226,4 @@ __all__ = [
     "source_file_format",
     "source_file_format_for",
     "supported_source_file_formats",
-    "unregister_element_constraints",
 ]

@@ -14,7 +14,6 @@ from datamimic_ce.authoring import service
 from datamimic_ce.authoring.contracts import (
     AUTHORING_REFERENCE_QUERY_ADAPTER,
     AuthoringReferenceCategory,
-    AuthoringResponseFormat,
     CheckRequest,
     ReferenceRequest,
     ReferenceTopic,
@@ -22,9 +21,11 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldRequest,
     ScaffoldVerification,
 )
+from datamimic_ce.authoring.spec import ExpectationIntent
 from datamimic_ce.cli_presenter import CliOutputFormat, FailureThreshold
 
 JSON_OBJECT_ADAPTER = TypeAdapter(dict[str, JsonValue])
+ACCEPTANCE_REQUIREMENTS_ADAPTER = TypeAdapter(tuple[ExpectationIntent, ...])
 
 # Map Pydantic field names to CLI-facing option names for clean error messages.
 _FIELD_LABELS: dict[str, str] = {
@@ -81,7 +82,6 @@ def lint_descriptor(
         request = CheckRequest(
             xml=None,
             path=str(descriptor_path),
-            response_format=AuthoringResponseFormat.DETAILED,
             max_diagnostics=max_diagnostics,
         )
     except ValidationError as error:
@@ -104,7 +104,6 @@ def dry_run_descriptor(
         request = RunRequest(
             xml=None,
             path=str(descriptor_path),
-            response_format=AuthoringResponseFormat.DETAILED,
             max_count=max_count,
             sample_rows=sample_rows,
             allow_side_effects=allow_side_effects,
@@ -118,6 +117,7 @@ def dry_run_descriptor(
 
 def scaffold_model(
     spec_path: Path,
+    acceptance_requirements_path: Path | None,
     output_format: CliOutputFormat,
     max_count: int,
     sample_rows: int,
@@ -126,17 +126,26 @@ def scaffold_model(
 ) -> None:
     if str(spec_path) != "-" and not spec_path.is_file():
         cli_presenter.fail(f"File not found: {spec_path}", output_format)
+    if acceptance_requirements_path is not None and not acceptance_requirements_path.is_file():
+        cli_presenter.fail(f"File not found: {acceptance_requirements_path}", output_format)
     try:
         text = sys.stdin.read() if str(spec_path) == "-" else spec_path.read_text(encoding="utf-8")
+        acceptance_requirements = (
+            ACCEPTANCE_REQUIREMENTS_ADAPTER.validate_json(
+                acceptance_requirements_path.read_text(encoding="utf-8")
+            )
+            if acceptance_requirements_path is not None
+            else ()
+        )
     except OSError as error:
         cli_presenter.fail(str(error), output_format)
     try:
         spec = JSON_OBJECT_ADAPTER.validate_json(text)
         request = ScaffoldRequest(
             spec=spec,
+            acceptance_requirements=acceptance_requirements,
             max_count=max_count,
             sample_rows=sample_rows,
-            response_format=AuthoringResponseFormat.DETAILED,
             verification=ScaffoldVerification(
                 smoke_export=smoke_export,
                 deterministic_replay=deterministic_replay,
@@ -148,16 +157,10 @@ def scaffold_model(
 
 
 def _validate_show_reference_args(
-    topic: ReferenceTopic,
-    name: str | None,
     category: AuthoringReferenceCategory | None,
     kind: str | None,
 ) -> None:
-    """Guard CLI args for show_reference; fail()s on invalid combinations."""
-    if category is not None and topic is not ReferenceTopic.AUTHORING:
-        cli_presenter.fail("--category/--kind are only valid for topic=authoring", code=1)
-    if topic is ReferenceTopic.AUTHORING and name is not None:
-        cli_presenter.fail("topic=authoring uses --category/--kind, not name", code=1)
+    """Validate only the CLI flattening rule absent from ReferenceRequest."""
     if category is None and kind is not None:
         cli_presenter.fail("--kind requires --category", code=1)
 
@@ -168,7 +171,7 @@ def show_reference(
     category: AuthoringReferenceCategory | None,
     kind: str | None,
 ) -> None:
-    _validate_show_reference_args(topic, name, category, kind)
+    _validate_show_reference_args(category, kind)
     try:
         query = (
             AUTHORING_REFERENCE_QUERY_ADAPTER.validate_python({"category": category, "kind": kind})

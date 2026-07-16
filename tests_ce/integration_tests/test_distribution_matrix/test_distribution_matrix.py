@@ -31,6 +31,7 @@ All under <setup rngSeed=42>, so random/cumulated replay identically.
 from __future__ import annotations
 
 from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -39,22 +40,30 @@ from datamimic_ce.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
 
-# (model file, base offset of the 27 source values)
-SOURCE_CASES = [
-    ("variable_csv.xml", 0),
+@dataclass(frozen=True)
+class SourceMatrixCase:
+    descriptor: str
+    consumer: str
+    source_kind: str
+    paged: bool
+    low: int
+
+
+SOURCE_CASES = (
+    SourceMatrixCase("variable_csv.xml", "variable", "csv", False, 0),
     # Same source/distributions but pageSize < count: the distribution invariants (permutation,
     # bell) must still hold ACROSS pages — a stable per-statement seed makes random/cumulated/unique
     # paginate consistently instead of re-shuffling / re-belling per page.
-    ("variable_csv_paged.xml", 0),
-    ("variable_json.xml", 0),
-    ("variable_sqlite.xml", 0),
-    ("variable_memstore.xml", 1),
-    ("variable_lazy.xml", 0),
-    ("generate_source.xml", 0),
+    SourceMatrixCase("variable_csv_paged.xml", "variable", "csv", True, 0),
+    SourceMatrixCase("variable_json.xml", "variable", "json", False, 0),
+    SourceMatrixCase("variable_sqlite.xml", "variable", "database", False, 0),
+    SourceMatrixCase("variable_memstore.xml", "variable", "memstore", False, 1),
+    SourceMatrixCase("variable_lazy.xml", "variable", "python-expression", False, 0),
+    SourceMatrixCase("generate_source.xml", "generate", "csv", False, 0),
     # <generate source> paged (pageSize < count): the worker-level selection must use a stable
     # per-statement seed too, else random/cumulated/unique repeat/miss values across pages.
-    ("generate_source_paged.xml", 0),
-]
+    SourceMatrixCase("generate_source_paged.xml", "generate", "csv", True, 0),
+)
 
 
 def _run(filename: str) -> dict:
@@ -67,10 +76,10 @@ def _vals(result: dict, product: str) -> list[int]:
     return [int(row["v"]) for row in result[product]]
 
 
-@pytest.mark.parametrize("filename,lo", SOURCE_CASES)
-def test_distribution_invariants(filename: str, lo: int):
-    res = _run(filename)
-    src = list(range(lo, lo + 27))
+@pytest.mark.parametrize("case", SOURCE_CASES, ids=lambda case: case.descriptor.removesuffix(".xml"))
+def test_distribution_invariants(case: SourceMatrixCase):
+    res = _run(case.descriptor)
+    src = list(range(case.low, case.low + 27))
 
     # ordered: source order, verbatim
     assert _vals(res, "ordered") == src
@@ -83,18 +92,33 @@ def test_distribution_invariants(filename: str, lo: int):
     # cumulated: bell over the load order, with replacement
     cum = _vals(res, "cumulated")
     assert len(cum) == 6000
-    assert all(lo <= v <= lo + 26 for v in cum)  # with replacement, never leaves source range
+    assert all(case.low <= v <= case.low + 26 for v in cum)  # with replacement, never leaves source range
     counts = Counter(cum)
-    centre = lo + 13
-    assert counts[centre] > counts[lo] and counts[centre] > counts[lo + 26]  # middle favored
+    centre = case.low + 13
+    assert counts[centre] > counts[case.low] and counts[centre] > counts[case.low + 26]  # middle favored
     assert abs(sum(cum) / len(cum) - centre) < 1.0  # mean = middle of the load order
 
 
-@pytest.mark.parametrize("filename", [case[0] for case in SOURCE_CASES])
-def test_replays_identically_under_seed(filename: str):
-    a, b = _run(filename), _run(filename)
+@pytest.mark.parametrize("case", SOURCE_CASES, ids=lambda case: case.descriptor.removesuffix(".xml"))
+def test_replays_identically_under_seed(case: SourceMatrixCase):
+    a, b = _run(case.descriptor), _run(case.descriptor)
     for product in ("ordered", "random", "cumulated"):
         assert _vals(a, product) == _vals(b, product)
+
+
+def test_source_matrix_manifest_is_complete_and_uses_committed_descriptors():
+    assert {(case.consumer, case.source_kind, case.paged) for case in SOURCE_CASES} == {
+        ("variable", "csv", False),
+        ("variable", "csv", True),
+        ("variable", "json", False),
+        ("variable", "database", False),
+        ("variable", "memstore", False),
+        ("variable", "python-expression", False),
+        ("generate", "csv", False),
+        ("generate", "csv", True),
+    }
+    assert all((_TEST_DIR / case.descriptor).is_file() for case in SOURCE_CASES)
+    assert (_TEST_DIR / "nestedkey_source.xml").is_file()
 
 
 def _nested_vals(result: dict, product: str) -> list[int]:

@@ -250,7 +250,12 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             verified=False,
         )
 
-    acceptance = evaluate_acceptance(compiled.plan, compiled.spec, captured_run.captured)
+    acceptance = evaluate_acceptance(
+        compiled.plan,
+        compiled.spec,
+        captured_run.captured,
+        request.acceptance_requirements,
+    )
     remediations = max_count_remediations(
         compiled.plan,
         captured_run.captured,
