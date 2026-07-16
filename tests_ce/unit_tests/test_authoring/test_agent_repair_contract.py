@@ -23,7 +23,9 @@ from datamimic_ce.authoring.reference_projection import (
     authoring_reference_projection,
     list_authoring_reference_queries,
     projection_catalog_is_exhaustive,
+    source_product_repair_guidance,
 )
+from datamimic_ce.authoring.script_semantics import current_scope_reference
 from datamimic_ce.authoring.service import reference, scaffold
 from datamimic_ce.authoring.spec import (
     AuthoringSpecV1,
@@ -329,17 +331,37 @@ def test_unvalidated_field_guess_has_no_repair() -> None:
         (lambda spec: spec["products"][1].update({"fields": []}), "require at least one explicit field"),
     ],
 )
-def test_source_product_shape_errors_show_the_working_memstore_form(mutate, expected_message) -> None:
+def test_source_product_shape_errors_show_typed_memstore_guidance(mutate, expected_message) -> None:
     spec = _memstore_source_with_rejected_field("product")
     mutate(spec)
 
     result = scaffold(ScaffoldRequest(spec=spec))
 
     assert any(expected_message in issue.message for issue in result.issues)
-    assert all(
-        fragment in next(issue.message for issue in result.issues if expected_message in issue.message)
-        for fragment in ('"kind":"memstore"', '"id":"<store>"', '"product":"<producer>"', '"script":"this.<col>"')
-    )
+    message = next(issue.message for issue in result.issues if expected_message in issue.message)
+    assert message.endswith(source_product_repair_guidance(SourceIntentKind.MEMSTORE))
+    assert "required source-product fields: " + ", ".join(
+        authoring_reference_projection(
+            ProductReferenceQuery(kind=ProductIntentKind.SOURCE)
+        ).required_fields
+    ) in message
+    assert "memstore source required fields: " + ", ".join(
+        authoring_reference_projection(
+            SourceReferenceQuery(kind=SourceIntentKind.MEMSTORE)
+        ).required_fields
+    ) in message
+    assert 'script="this.<column>"' in message
+
+
+@pytest.mark.parametrize("source_kind", SourceIntentKind)
+def test_source_product_repair_guidance_uses_each_typed_source_variant(source_kind: SourceIntentKind) -> None:
+    guidance = source_product_repair_guidance(source_kind)
+    source = authoring_reference_projection(SourceReferenceQuery(kind=source_kind))
+    script = authoring_reference_projection(FieldReferenceQuery(kind=FieldIntentKind.SCRIPT))
+
+    assert f"{source_kind.value} source required fields: {', '.join(source.required_fields)}" in guidance
+    assert f"script field ({', '.join(script.required_fields)})" in guidance
+    assert f'script="{current_scope_reference("<column>")}"' in guidance
 
 
 def test_reference_catalog_is_schema_only_and_exhaustive() -> None:

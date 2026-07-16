@@ -5,6 +5,7 @@
 """Repair-oriented projection of canonical authoring-intent validation errors."""
 
 from collections.abc import Mapping, Sequence
+from contextlib import suppress
 from copy import deepcopy
 from dataclasses import dataclass
 from difflib import SequenceMatcher
@@ -22,12 +23,14 @@ from datamimic_ce.authoring.contracts import (
 from datamimic_ce.authoring.reference_projection import (
     authoring_variant_kinds,
     minimal_authoring_variant_shapes,
+    source_product_repair_guidance,
 )
 from datamimic_ce.authoring.spec import (
     INTENT_REPAIR_ALIASES_SCHEMA_KEY,
     AuthoringSpecV1,
     IntentModelPathSegment,
     IntentModelValidationIssueType,
+    SourceIntentKind,
 )
 
 
@@ -42,12 +45,6 @@ _ROOT_SCHEMA = AuthoringSpecV1.model_json_schema()
 _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 _MIN_REPLACEMENT_SIMILARITY = 0.72
 _MIN_REPLACEMENT_MARGIN = 0.10
-_SOURCE_PRODUCT_SHAPE = (
-    'Use source: {"kind":"memstore","id":"<store>","product":"<producer>"}, '
-    'fields: [{"kind":"script","name":"<col>","script":"this.<col>"}], and omit count.'
-)
-
-
 @dataclass(frozen=True)
 class _ValidationLocation:
     path: tuple[str | int, ...]
@@ -324,7 +321,7 @@ def _missing_discriminator_category(
 
 
 def _source_product_message(path: tuple[str | int, ...], raw: Mapping[str, Any]) -> str | None:
-    """Return an actionable source-product explanation for its three common shape errors."""
+    """Return typed repair guidance for common source-product shape errors."""
 
     if len(path) < 2 or path[0] != "products" or not isinstance(path[1], int):
         return None
@@ -334,12 +331,20 @@ def _source_product_message(path: tuple[str | int, ...], raw: Mapping[str, Any])
     product = products[path[1]]
     if not isinstance(product, Mapping) or product.get("kind") != "source":
         return None
+    raw_source = product.get("source")
+    source_kind: SourceIntentKind | None = None
+    if isinstance(raw_source, Mapping):
+        raw_kind = raw_source.get("kind")
+        if isinstance(raw_kind, str):
+            with suppress(ValueError):
+                source_kind = SourceIntentKind(raw_kind)
+    guidance = source_product_repair_guidance(source_kind)
     if path[-1] == "id" and len(path) >= 4 and path[-2] == "source":
-        return f"Missing required source.id. {_SOURCE_PRODUCT_SHAPE}"
+        return f"Missing required source.id. {guidance}"
     if path[-1] == "count":
-        return f"Source products derive their row count and do not accept count. {_SOURCE_PRODUCT_SHAPE}"
+        return f"Source products do not accept count. {guidance}"
     if len(path) == 2:
-        return f"Source products require at least one explicit field. {_SOURCE_PRODUCT_SHAPE}"
+        return f"Source products require at least one explicit field. {guidance}"
     return None
 
 

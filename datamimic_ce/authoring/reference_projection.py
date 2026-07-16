@@ -18,6 +18,7 @@ from datamimic_ce.authoring.contracts import (
     SourceReferenceQuery,
     TargetReferenceQuery,
 )
+from datamimic_ce.authoring.script_semantics import current_scope_reference
 from datamimic_ce.authoring.spec import (
     AllowedValuesExpectation,
     ConstantField,
@@ -170,6 +171,27 @@ def authoring_variant_kinds(category: AuthoringReferenceCategory) -> tuple[str, 
     )
 
 
+def source_product_repair_guidance(source_kind: SourceIntentKind | None) -> str:
+    """Render source-product guidance from canonical variant models."""
+
+    product = authoring_reference_projection(ProductReferenceQuery(kind=ProductIntentKind.SOURCE))
+    script_field = authoring_reference_projection(FieldReferenceQuery(kind=FieldIntentKind.SCRIPT))
+    fragments = [
+        "Source products derive their row count and require explicit fields",
+        f"required source-product fields: {', '.join(product.required_fields)}",
+    ]
+    if source_kind is not None:
+        source = authoring_reference_projection(SourceReferenceQuery(kind=source_kind))
+        fragments.append(f"{source_kind.value} source required fields: {', '.join(source.required_fields)}")
+    fragments.append(
+        "project each selected source column with a "
+        f"script field ({', '.join(script_field.required_fields)}), for example "
+        f'script="{current_scope_reference("<column>")}"'
+    )
+    fragments.append("use reference authoring for a typed variant schema")
+    return ". ".join(fragments) + "."
+
+
 def projection_catalog_is_exhaustive() -> bool:
     """Return whether every canonical variant has exactly one model owner."""
 
@@ -197,4 +219,5 @@ __all__ = [
     "list_authoring_reference_queries",
     "minimal_authoring_variant_shapes",
     "projection_catalog_is_exhaustive",
+    "source_product_repair_guidance",
 ]
