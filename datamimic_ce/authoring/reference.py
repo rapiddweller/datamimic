@@ -466,11 +466,23 @@ def compact_authoring_reference(query: AuthoringReferenceQuery | None = None) ->
     """Render one compact, enum-addressed projection from the Intent Model SPOT."""
 
     if query is None:
+        queries = list_authoring_reference_queries()
         return json.dumps(
             {
                 "topic": ReferenceTopic.AUTHORING,
-                "queries": [candidate.model_dump(mode="json") for candidate in list_authoring_reference_queries()],
-                "usage": "reference authoring --category <category> --kind <kind>",
+                "queries": [candidate.model_dump(mode="json") for candidate in queries],
+                "variants": [
+                    {
+                        **candidate.model_dump(mode="json"),
+                        "required_fields": authoring_reference_projection(candidate).required_fields,
+                        "allowed_fields": authoring_reference_projection(candidate).allowed_fields,
+                    }
+                    for candidate in queries
+                ],
+                "usage": (
+                    "Use variants for one-call discriminator and field discovery; "
+                    "use reference authoring --category <category> --kind <kind> for one full JSON schema."
+                ),
             },
             indent=2,
         )

@@ -511,6 +511,22 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         '<include uri="existing.properties"/>',
         '<include uri="missing.properties"/>',
     ),
+    _rule_definition(
+        "DM406",
+        RuleSeverity.WARNING,
+        "Memstore readback field does not copy its source",
+        "A same-named field in a memstore-backed source product regenerates a stored value instead of reading it.",
+        'Use a script field with script="this.<field>"; retain any foreign-key role on that field.',
+        "AuthoringSpecV1 memstore source readback contract.",
+        '<setup><memstore id="store"/><generate name="users" count="1" target="store">'
+        '<key name="id" generator="IncrementGenerator"/></generate>'
+        '<generate name="audit" source="store" type="users"><key name="id" script="this.id"/>'
+        "</generate></setup>",
+        '<setup><memstore id="store"/><generate name="users" count="1" target="store">'
+        '<key name="id" generator="IncrementGenerator"/></generate>'
+        '<generate name="audit" source="store" type="users"><key name="id" type="int" min="1" max="9"/>'
+        "</generate></setup>",
+    ),
 )
 
 _AUTHORING_RULE_DEFINITIONS_BY_ID = {definition.id: definition for definition in _AUTHORING_RULE_DEFINITIONS}

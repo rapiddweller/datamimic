@@ -313,6 +313,40 @@ def _discriminator_kinds(location: _ValidationLocation) -> tuple[str, ...]:
         schema = _resolve_schema(items)
 
 
+def _discriminator_variant_shapes(location: _ValidationLocation) -> tuple[str, ...]:
+    """Render minimal, schema-derived forms for one missing discriminator.
+
+    The output deliberately includes only the discriminator plus fields required
+    by each variant. It gives an agent an immediately actionable repair without
+    duplicating hand-maintained grammar examples beside the Pydantic SPOT.
+    """
+
+    if location.owner_schema is None:
+        return ()
+    schema = _resolve_schema(location.owner_schema)
+    while True:
+        discriminator = schema.get("discriminator")
+        if isinstance(discriminator, Mapping):
+            mapping = discriminator.get("mapping")
+            if not isinstance(mapping, Mapping):
+                return ()
+            shapes: list[str] = []
+            for kind, reference in mapping.items():
+                if not isinstance(kind, str) or not isinstance(reference, str):
+                    continue
+                branch = _resolve_schema({"$ref": reference})
+                required = branch.get("required")
+                fields = ["kind"]
+                if isinstance(required, Sequence) and not isinstance(required, str):
+                    fields.extend(field for field in required if isinstance(field, str) and field != "kind")
+                shapes.append(f"{kind}({', '.join(fields)})")
+            return tuple(shapes)
+        items = schema.get("items")
+        if not isinstance(items, Mapping):
+            return ()
+        schema = _resolve_schema(items)
+
+
 def _source_product_message(path: tuple[str | int, ...], raw: Mapping[str, Any]) -> str | None:
     """Return an actionable source-product explanation for its three common shape errors."""
 
@@ -361,7 +395,13 @@ def _build_intent_validation_issue(
     if issue_type is _PydanticIssueType.UNION_TAG_NOT_FOUND:
         kinds = _discriminator_kinds(location)
         if kinds:
-            message = f"Missing discriminator 'kind'. Valid kinds: {', '.join(kinds)}"
+            shapes = _discriminator_variant_shapes(location)
+            shape_hint = f" Minimal forms: {'; '.join(shapes)}." if shapes else ""
+            message = (
+                f"Missing discriminator 'kind'. Valid kinds: {', '.join(kinds)}. "
+                "Use `reference authoring` once to inspect each variant's required and allowed fields."
+                f"{shape_hint}"
+            )
     if code is IntentValidationIssueCode.UNKNOWN_FIELD and path:
         owner = f" for {model_name}" if model_name is not None else ""
         message = f"Unknown field '{path[-1]}'{owner}"

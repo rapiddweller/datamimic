@@ -144,6 +144,9 @@ def test_missing_discriminator_lists_the_live_union_vocabulary(path, mutate, exp
     issue = next(issue for issue in result.issues if issue.path == path)
     assert issue.code is IntentValidationIssueCode.INVALID_DISCRIMINATOR
     assert all(kind in issue.message for kind in expected_kinds)
+    assert "reference authoring" in issue.message
+    if path[0] == "expectations":
+        assert "range(kind, product, field, minimum, maximum)" in issue.message
 
 
 def test_nested_product_children_are_unsupported_intent() -> None:
@@ -297,6 +300,25 @@ def test_reference_catalog_is_schema_only_and_exhaustive() -> None:
         assert set(projection.required_fields) <= set(projection.allowed_fields)
         assert projection.json_schema["title"] == projection.model
         assert "fragment" not in projection.model_fields
+
+
+def test_compact_authoring_reference_includes_variant_field_summaries() -> None:
+    result = reference(ReferenceRequest(topic=ReferenceTopic.AUTHORING))
+
+    assert result.ok is True
+    assert result.content is not None
+    content = json.loads(result.content)
+    exact_count = next(
+        variant
+        for variant in content["variants"]
+        if variant == {
+            "category": "expectation",
+            "kind": "exact_count",
+            "required_fields": ["product", "count"],
+            "allowed_fields": ["kind", "product", "count"],
+        }
+    )
+    assert exact_count["kind"] == "exact_count"
 
 
 def test_source_reference_queries_cover_canonical_union() -> None:

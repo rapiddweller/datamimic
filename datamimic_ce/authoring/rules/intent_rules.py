@@ -5,7 +5,14 @@ from collections.abc import Iterable
 from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules.base import IntentLintContext, IntentRule
-from datamimic_ce.authoring.spec import AuthoringSpecV1, ForeignKeyRole, GeneratedProduct, ScriptField
+from datamimic_ce.authoring.spec import (
+    AuthoringSpecV1,
+    ForeignKeyRole,
+    GeneratedProduct,
+    MemstoreSource,
+    ScriptField,
+    SourceProduct,
+)
 
 
 class NestedForeignKeyMustCopyParentRule(IntentRule):
@@ -38,4 +45,41 @@ class NestedForeignKeyMustCopyParentRule(IntentRule):
                     )
 
 
-RULES: tuple[type[IntentRule], ...] = (NestedForeignKeyMustCopyParentRule,)
+class MemstoreReadbackFieldMustCopySourceRule(IntentRule):
+    definition = authoring_rule_definition("DM406")
+
+    def check(self, ctx: IntentLintContext, spec: AuthoringSpecV1) -> Iterable[Diagnostic]:
+        for product_index, product in enumerate(spec.products):
+            if not isinstance(product, SourceProduct) or not isinstance(product.source, MemstoreSource):
+                continue
+            producer_name = product.source.product
+            if producer_name is None:
+                continue
+            producer = next((candidate for candidate in spec.products if candidate.name == producer_name), None)
+            if producer is None:
+                continue
+            producer_field_names = {field.name for field in producer.fields}
+            for field_index, field in enumerate(product.fields):
+                if field.name not in producer_field_names:
+                    continue
+                if isinstance(field, ScriptField) and field.script == f"this.{field.name}":
+                    continue
+                yield ctx.diag(
+                    MemstoreReadbackFieldMustCopySourceRule,
+                    path=f"/products/{product_index}/fields/{field_index}",
+                    name=field.name,
+                    evidence=(
+                        f"{product.name}.{field.name} reads memstore '{product.source.id}' "
+                        f"from {product.source.product!r} with kind '{field.kind}'"
+                    ),
+                    fix_context=(
+                        f'Replace it with {{"kind":"script","name":"{field.name}",'
+                        f'"script":"this.{field.name}"}}.'
+                    ),
+                )
+
+
+RULES: tuple[type[IntentRule], ...] = (
+    NestedForeignKeyMustCopyParentRule,
+    MemstoreReadbackFieldMustCopySourceRule,
+)

@@ -31,6 +31,20 @@ async def test_exact_authoring_tool_surface_and_no_resources(anyio_backend: str)
 @pytest.mark.anyio
 async def test_reference_and_check_delegate_canonical_contracts(anyio_backend: str) -> None:
     async with Client(create_server()) as client:
+        authoring_reference = await client.call_tool(
+            "datamimic_reference",
+            {"request": {"topic": "authoring"}},
+        )
+        authoring_payload = json.loads(authoring_reference[0].text)
+        assert authoring_payload["ok"] is True
+        authoring_content = json.loads(authoring_payload["content"])
+        assert {
+            "category": "expectation",
+            "kind": "range",
+            "required_fields": ["product", "field", "minimum", "maximum"],
+            "allowed_fields": ["kind", "product", "field", "minimum", "maximum"],
+        } in authoring_content["variants"]
+
         reference = await client.call_tool(
             "datamimic_reference",
             {"request": {"topic": "element", "name": "generate"}},
