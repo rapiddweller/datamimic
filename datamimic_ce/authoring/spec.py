@@ -504,8 +504,9 @@ class TimeSeriesProduct(ProductIntent):
     series_count: PositiveStrictInt = Field(
         default=1,
         description=(
-            "Number of parallel temporal series. It multiplies rows in the window and does not create "
-            "a data field or choose values for any field."
+            "Number of parallel temporal series. It multiplies rows in the window and does not create an "
+            "implicit data field, dimension, or value domain. Model each business dimension named in the intent "
+            "as its own field and place that dimension's values on the same field."
         ),
     )
     window: TimeSeriesWindow

@@ -394,7 +394,11 @@ def test_time_series_projection_explains_series_and_field_domain_semantics() -> 
         FieldReferenceQuery(kind=FieldIntentKind.VALUES)
     ).json_schema
 
-    assert "does not create a data field" in product["properties"]["series_count"]["description"]
+    assert (
+        "does not create an implicit data field, dimension, or value domain"
+        in product["properties"]["series_count"]["description"]
+    )
+    assert "place that dimension's values on the same field" in product["properties"]["series_count"]["description"]
     assert "business-domain values" in values["properties"]["values"]["description"]
     assert "series_count" not in values["properties"]["values"]["description"]
 
