@@ -44,28 +44,90 @@ adapter.
 
 ## Authoring a new model
 
-1. Query the Intent Model before guessing. Run `datamimic reference authoring`
-   to list typed category/kind queries, then request only the fragment needed,
-   for example `datamimic reference authoring --category field --kind weighted`
-   or `datamimic reference authoring --category source --kind memstore`. For the
-   complete `model.dm.json` JSON Schema (`AuthoringSpecV1`), run
-   `datamimic reference scaffold`.
-2. Create one canonical `model.dm.json` with `version: "1"`. Do not hand-author
-   XML for a new model; XML is deterministic compiler output, not the Intent SPOT.
-3. Invoke `datamimic scaffold model.dm.json --format json`. Each attempt is one
-   transaction that compiles, lints, performs one bounded run, and evaluates
-   acceptance against that same capture. Request `--smoke-export` and
+Submit early, repair from structured errors. Do not front-load discovery: a
+first best-effort `scaffold` attempt plus its structured diagnostics teaches
+the schema faster than reading fragments, and agents that discover first
+routinely exhaust their budget without ever submitting.
+
+1. Start from this minimal valid document shape (`version: "1"` is literal):
+
+   ```json
+   {
+     "version": "1",
+     "seed": 7,
+     "products": [
+       {
+         "kind": "generated",
+         "name": "cities",
+         "count": 3,
+         "fields": [
+           {"kind": "values", "name": "region", "values": ["north", "south"]}
+         ]
+       }
+     ]
+   }
+   ```
+
+   Two rules prevent the most common rejections: the top level allows ONLY
+   `version`, `seed`, `products`, `expectations`; and product-level `kind`
+   (`generated`/`source`/`time_series`) is a different vocabulary from
+   field-level `kind` (`increment`, `values`, `weighted`, `int_range`,
+   `decimal_range`, `pattern`, `constant`, `script`, ...). In
+   `model.dm.json`, range fields take `minimum`/`maximum` — `min`/`max` is
+   XML-attribute vocabulary and is rejected here. Do not hand-author XML for
+   a new model; XML is deterministic compiler output, not the Intent SPOT.
+2. Invoke `datamimic scaffold model.dm.json --format json` with your best
+   attempt after at most one discovery call. Each attempt is one transaction
+   that compiles, lints, performs one bounded run, and evaluates acceptance
+   against that same capture. Request `--smoke-export` and
    `--deterministic-replay` only when those verification gates are required.
-4. On failure, repair from structured validation issue `path`, `allowed_fields`,
-   `allowed_fields` and optional typed `repair`, or from the rule diagnostic
-   and `fix_hint` at later stages. If `remediations` requests
-   `max_count`, retry with at least its `minimum_value`; this changes the bounded
-   verification limit, not `model.dm.json`. Use a narrower authoring reference
-   query if needed. Never repeat an identical failed call without changing its
-   input or requested verification parameter.
-5. Stop immediately when `verified=true`; do not call check/lint or dry-run again.
-   If real execution is requested, save the returned `xml` as a generated runtime
-   artifact and run `datamimic run path/to/datamimic.xml`.
+3. On failure, repair from structured validation issue `path`,
+   `allowed_fields`, and optional typed `repair`, or from the rule diagnostic
+   and `fix_hint` at later stages. If `remediations` requests `max_count`,
+   retry with at least its `minimum_value`; this changes the bounded
+   verification limit, not `model.dm.json`. Never resubmit an unchanged
+   document.
+4. Reach for discovery only for a specific unknown: `datamimic reference
+   authoring` lists typed category/kind queries; `--category <category>
+   --kind <kind>` returns one fragment's `required_fields`,
+   `allowed_fields`, and `json_schema` (field-role schemas such as
+   `ForeignKeyRole`/`IdentifierRole` live in every field fragment's
+   `json_schema.$defs`). For the complete `AuthoringSpecV1` JSON Schema, run
+   `datamimic reference scaffold`.
+5. Declare an expectation for every stated requirement. `verified=true`
+   certifies ONLY the expectations you declared plus derivable defaults — a
+   requirement you never encoded (a row count, a series count, a read-back)
+   passes verification silently. Encode counts as `exact_count` with a
+   `count` field (the derived-acceptance output spells it `exact_count`; the
+   explicit input schema requires `count`).
+6. Stop immediately when `verified=true`; do not call check/lint or dry-run
+   again. If real execution is requested, save the returned `xml` as a
+   generated runtime artifact and run `datamimic run path/to/datamimic.xml`.
+
+### Structural recipes (the three shapes that defeat most agents)
+
+- **Nested parent-child with a foreign key**: children are nested inside the
+  parent product's `children` array (each child needs `name` and `count`,
+  meaning count per parent). The child's FK field must carry the parent's
+  actual value — `{"kind": "script", "name": "customer_id", "script":
+  "parent.id", "roles": [{"kind": "foreign_key", "parent_product":
+  "customers", "parent_field": "id"}]}`. A randomly generated FK
+  (`int_range` over the parent id range) passes schema validation but fails
+  per-parent-count acceptance.
+- **Memstore pipeline (write, then read back)**: the producer writes via
+  `"targets": [{"kind": "memstore", "id": "store"}]`; the consumer is a
+  second product with `"kind": "source"` and `"source": {"kind": "memstore",
+  "id": "store", "product": "<producer>"}` plus explicit fields
+  (`{"kind": "script", "script": "this.<col>"}` per column). The
+  memstore-completeness gate additionally requires a role PAIR:
+  `{"kind": "identifier"}` on the producer's id field AND `{"kind":
+  "foreign_key", "parent_product": ..., "parent_field": "id"}` on the
+  consumer's id field — without both, `ok` stays true but `verified` stays
+  false.
+- **Time series**: `"kind": "time_series"` with `"window": {"start": ...,
+  "end": ..., "interval": "PT1H"}` (ISO-8601 strings) and `"series_count":
+  N` for N parallel series. Row count = window points × series_count;
+  declare it as an `exact_count` expectation so it is actually verified.
 
 ## Working with an existing raw XML descriptor
 
