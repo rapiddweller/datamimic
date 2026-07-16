@@ -31,7 +31,7 @@ class TestCLI:
         from datamimic_ce.constants.element_constants import EL_ITERATE
         from datamimic_ce.model.constraints import element_constraints, serialize_constraints
 
-        result = runner.invoke(app, ["capabilities"])
+        result = runner.invoke(app, ["capabilities", "--full"])
 
         assert result.exit_code == 0
         payload = json.loads(result.output)
