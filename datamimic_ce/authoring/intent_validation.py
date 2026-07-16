@@ -298,7 +298,7 @@ def _repair_context(
     return allowed_fields, model_name, repair
 
 
-def _discriminator_category(
+def _missing_discriminator_category(
     path: tuple[str | int, ...],
 ) -> AuthoringReferenceCategory | None:
     """Route a public intent path to its typed discriminated-union category."""
@@ -318,35 +318,6 @@ def _discriminator_category(
     if len(path) >= 2 and path[-2] == IntentModelPathSegment.FIELDS:
         return AuthoringReferenceCategory.FIELD
     return None
-
-
-def _discriminator_repair_message(
-    issue_type: _PydanticIssueType | None,
-    path: tuple[str | int, ...],
-) -> str | None:
-    """Render typed repair guidance for a missing or unsupported union kind."""
-
-    if issue_type not in {
-        _PydanticIssueType.UNION_TAG_INVALID,
-        _PydanticIssueType.UNION_TAG_NOT_FOUND,
-    }:
-        return None
-    category = _discriminator_category(path)
-    if category is None:
-        return None
-    shapes = minimal_authoring_variant_shapes(category)
-    kinds = authoring_variant_kinds(category)
-    shape_hint = f" Minimal forms: {'; '.join(shapes)}." if shapes else ""
-    problem = (
-        "Missing discriminator 'kind'"
-        if issue_type is _PydanticIssueType.UNION_TAG_NOT_FOUND
-        else "Invalid discriminator 'kind'"
-    )
-    return (
-        f"{problem}. Valid kinds: {', '.join(kinds)}. "
-        "Use reference authoring once to inspect each variant's required and allowed fields."
-        f"{shape_hint}"
-    )
 
 
 def _source_product_message(path: tuple[str | int, ...], raw: Mapping[str, Any]) -> str | None:
@@ -402,9 +373,17 @@ def _build_intent_validation_issue(
     if code is IntentValidationIssueCode.UNKNOWN_FIELD:
         allowed_fields, model_name, repair = _repair_context(raw, location)
     message = str(issue["msg"])
-    discriminator_message = _discriminator_repair_message(issue_type, path)
-    if discriminator_message is not None:
-        message = discriminator_message
+    if issue_type is _PydanticIssueType.UNION_TAG_NOT_FOUND:
+        category = _missing_discriminator_category(path)
+        if category is not None:
+            shapes = minimal_authoring_variant_shapes(category)
+            kinds = authoring_variant_kinds(category)
+            shape_hint = f" Minimal forms: {'; '.join(shapes)}." if shapes else ""
+            message = (
+                f"Missing discriminator 'kind'. Valid kinds: {', '.join(kinds)}. "
+                "Use `reference authoring` once to inspect each variant's required and allowed fields."
+                f"{shape_hint}"
+            )
     if code is IntentValidationIssueCode.UNKNOWN_FIELD and path:
         owner = f" for {model_name}" if model_name is not None else ""
         message = f"Unknown field '{path[-1]}'{owner}"

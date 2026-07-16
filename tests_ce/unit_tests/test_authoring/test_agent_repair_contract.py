@@ -152,31 +152,6 @@ def test_missing_discriminator_lists_the_live_union_vocabulary(path, mutate, exp
         assert "range(kind, product, field, minimum, maximum)" in issue.message
 
 
-def test_invalid_discriminator_uses_typed_minimal_forms() -> None:
-    result = scaffold(
-        ScaffoldRequest(
-            spec={
-                "version": "1",
-                "products": [
-                    {
-                        "kind": "generated",
-                        "name": "records",
-                        "count": 1,
-                        "fields": [{"kind": "reference", "name": "id", "sourceKey": "id"}],
-                    }
-                ],
-            }
-        )
-    )
-
-    issue = next(issue for issue in result.issues if issue.path == ("products", 0, "fields", 0))
-
-    assert issue.code is IntentValidationIssueCode.INVALID_DISCRIMINATOR
-    assert issue.message.startswith("Invalid discriminator 'kind'.")
-    assert "script(kind, name, script)" in issue.message
-    assert "reference authoring" in issue.message
-
-
 def _memstore_discriminator_spec() -> dict[str, object]:
     return {
         "version": "1",
