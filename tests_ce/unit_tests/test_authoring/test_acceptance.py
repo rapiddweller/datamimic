@@ -730,6 +730,15 @@ def test_memstore_without_typed_identity_join_is_unevaluable() -> None:
     payload = _spec().model_dump(mode="json")
     copy_product = payload["products"][1]
     copy_product["fields"][0]["roles"] = []
+    payload["expectations"].append(
+        {
+            "kind": "foreign_key",
+            "child_product": "customer_copy",
+            "child_field": "customer_id",
+            "parent_product": "customers",
+            "parent_field": "customer_id",
+        }
+    )
     spec = AuthoringSpecV1.model_validate(payload)
 
     report = evaluate_acceptance(compile_authoring_spec(spec).plan, spec, _capture())
@@ -737,6 +746,10 @@ def test_memstore_without_typed_identity_join_is_unevaluable() -> None:
     completeness = next(item for item in report.results if item.kind == "memstore_completeness")
     assert completeness.status is AcceptanceStatus.UNEVALUABLE
     assert "typed producer identifier" in completeness.message
+    assert '{"kind":"identifier"}' in completeness.message
+    assert '{"kind":"foreign_key","parent_product":"customers","parent_field":"customer_id"}' in completeness.message
+    assert "customers.customer_id" in completeness.message
+    assert "customer_copy.customer_id" in completeness.message
     assert completeness.required_consumer_foreign_key is not None
     assert completeness.required_consumer_foreign_key.parent_product == "customers"
     assert completeness.required_consumer_foreign_key.parent_field == "customer_id"
