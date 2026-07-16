@@ -57,6 +57,14 @@ def test_rule_severity_has_one_owner_and_catalog_is_immutable() -> None:
         AUTHORING_RULE_DEFINITIONS["DM999"] = authoring_rule_definitions()[0]  # type: ignore[index]
 
 
+def test_nested_foreign_key_rule_exposes_runtime_xml_for_review() -> None:
+    details = reference(ReferenceTopic.RULES, "DM404")
+
+    assert 'script="parent.id"' in details
+    assert 'type="int" min="1" max="4"' in details
+    assert '"kind":"script"' not in details
+
+
 def test_evaluator_metadata_is_read_directly_from_definition() -> None:
     rule = ALL_RULES[0]
     assert set(rule.__dict__) & {"id", "severity", "docs"} == set()

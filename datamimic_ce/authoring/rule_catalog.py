@@ -492,10 +492,14 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         RuleSeverity.WARNING,
         "Nested foreign key does not copy its parent",
         "A nested child foreign-key field is generated independently instead of carrying its enclosing parent key.",
-        'Use a script field that copies the parent key, for example script: "parent.<field>".',
+        'Use a nested <key> with script="parent.<field>" to copy the enclosing parent key.',
         "AuthoringSpecV1 nested relationship and foreign-key role contract.",
-        '{"kind":"script","name":"customer_id","script":"parent.id","roles":[{"kind":"foreign_key","parent_product":"customers","parent_field":"id"}]}',
-        '{"kind":"int_range","name":"customer_id","minimum":1,"maximum":4,"roles":[{"kind":"foreign_key","parent_product":"customers","parent_field":"id"}]}',
+        '<setup><generate name="customers" count="4"><key name="id" generator="IncrementGenerator"/>'
+        '<generate name="orders" count="2"><key name="customer_id" script="parent.id"/>'
+        "</generate></generate></setup>",
+        '<setup><generate name="customers" count="4"><key name="id" generator="IncrementGenerator"/>'
+        '<generate name="orders" count="2"><key name="customer_id" type="int" min="1" max="4"/>'
+        "</generate></generate></setup>",
     ),
     _rule_definition(
         "DM405",
