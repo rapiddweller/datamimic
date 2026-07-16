@@ -72,9 +72,10 @@ routinely exhaust their budget without ever submitting.
    `version`, `seed`, `products`, `expectations`; and product-level `kind`
    (`generated`/`source`/`time_series`) is a different vocabulary from
    field-level `kind` (`increment`, `values`, `weighted`, `int_range`,
-   `decimal_range`, `pattern`, `constant`, `script`, ...). Range fields take
-   `minimum`/`maximum`, never `min`/`max`. Do not hand-author XML for a new
-   model; XML is deterministic compiler output, not the Intent SPOT.
+   `decimal_range`, `pattern`, `constant`, `script`, ...). In
+   `model.dm.json`, range fields take `minimum`/`maximum` — `min`/`max` is
+   XML-attribute vocabulary and is rejected here. Do not hand-author XML for
+   a new model; XML is deterministic compiler output, not the Intent SPOT.
 2. Invoke `datamimic scaffold model.dm.json --format json` with your best
    attempt after at most one discovery call. Each attempt is one transaction
    that compiles, lints, performs one bounded run, and evaluates acceptance

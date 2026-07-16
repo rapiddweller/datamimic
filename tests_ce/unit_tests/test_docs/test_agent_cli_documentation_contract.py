@@ -42,6 +42,156 @@ def test_agents_md_points_to_scaffold_for_the_full_intent_schema() -> None:
     assert "datamimic reference scaffold" in agents_md
 
 
+def _scaffold_json(spec: dict) -> dict:
+    result = CliRunner().invoke(app, ["scaffold", "-", "--format", "json"], input=json.dumps(spec))
+    payload = json.loads(result.stdout)
+    assert isinstance(payload, dict)
+    return payload
+
+
+def test_agents_md_embedded_worked_example_scaffolds_verified() -> None:
+    """The minimal model.dm.json embedded in AGENTS.md is a live contract, not prose."""
+    agents_md = (_REPOSITORY_ROOT / "AGENTS.md").read_text(encoding="utf-8")
+    blocks = re.findall(r"```json\n(.*?)```", agents_md, re.DOTALL)
+    assert blocks, "AGENTS.md lost its embedded worked example"
+    spec = json.loads(blocks[0])
+
+    scaffold = _scaffold_json(spec)
+    assert scaffold["ok"] is True
+    assert scaffold["verified"] is True
+
+
+def test_agents_md_structural_recipes_scaffold_verified() -> None:
+    """The three structural recipes documented in AGENTS.md stay executable.
+
+    Nested parent-child FK via script parent.<field> + foreign_key role; memstore
+    pipeline with the identifier/foreign_key role pair; time_series with window
+    and series_count. If the engine changes any of these contracts, this gate
+    fails before the documentation silently rots.
+    """
+    nested_fk = {
+        "version": "1",
+        "seed": 7,
+        "products": [
+            {
+                "kind": "generated",
+                "name": "customers",
+                "count": 2,
+                "fields": [{"kind": "increment", "name": "id"}],
+                "children": [
+                    {
+                        "name": "orders",
+                        "count": 2,
+                        "fields": [
+                            {
+                                "kind": "script",
+                                "name": "customer_id",
+                                "script": "parent.id",
+                                "roles": [
+                                    {"kind": "foreign_key", "parent_product": "customers", "parent_field": "id"}
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ],
+        "expectations": [
+            {"kind": "per_parent_count", "parent_product": "customers", "child_product": "orders", "count": 2}
+        ],
+    }
+    memstore_pipeline = {
+        "version": "1",
+        "seed": 7,
+        "products": [
+            {
+                "kind": "generated",
+                "name": "users",
+                "count": 2,
+                "fields": [{"kind": "increment", "name": "id", "roles": [{"kind": "identifier"}]}],
+                "targets": [{"kind": "memstore", "id": "store"}],
+            },
+            {
+                "kind": "source",
+                "name": "user_audit",
+                "source": {"kind": "memstore", "id": "store", "product": "users"},
+                "fields": [
+                    {
+                        "kind": "script",
+                        "name": "id",
+                        "script": "this.id",
+                        "roles": [{"kind": "foreign_key", "parent_product": "users", "parent_field": "id"}],
+                    }
+                ],
+            },
+        ],
+    }
+    time_series = {
+        "version": "1",
+        "seed": 7,
+        "products": [
+            {
+                "kind": "time_series",
+                "name": "readings",
+                "series_count": 2,
+                "window": {"start": "2026-01-01T00:00:00", "end": "2026-01-01T03:00:00", "interval": "PT1H"},
+                "fields": [{"kind": "values", "name": "sensor", "values": ["temp", "humidity"]}],
+            }
+        ],
+        "expectations": [{"kind": "exact_count", "product": "readings", "count": 6}],
+    }
+
+    recipes = (("nested_fk", nested_fk), ("memstore_pipeline", memstore_pipeline), ("time_series", time_series))
+    for name, spec in recipes:
+        scaffold = _scaffold_json(spec)
+        assert scaffold["ok"] is True, f"{name}: {scaffold.get('issues')}{scaffold.get('diagnostics')}"
+        assert scaffold["verified"] is True, f"{name}: {scaffold.get('acceptance')}"
+
+
+def test_agents_md_random_fk_recipe_warning_holds() -> None:
+    """AGENTS.md warns a randomly generated FK passes schema validation but fails
+    per-parent-count acceptance. Gate the warning itself."""
+    random_fk = {
+        "version": "1",
+        "seed": 7,
+        "products": [
+            {
+                "kind": "generated",
+                "name": "customers",
+                "count": 4,
+                "fields": [{"kind": "increment", "name": "id"}],
+                "children": [
+                    {
+                        "name": "orders",
+                        "count": 2,
+                        "fields": [
+                            {
+                                "kind": "int_range",
+                                "name": "customer_id",
+                                "minimum": 1,
+                                "maximum": 4,
+                                "roles": [
+                                    {"kind": "foreign_key", "parent_product": "customers", "parent_field": "id"}
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ],
+        "expectations": [
+            {"kind": "per_parent_count", "parent_product": "customers", "child_product": "orders", "count": 2}
+        ],
+    }
+
+    scaffold = _scaffold_json(random_fk)
+    assert scaffold["ok"] is True, "the documented trap is a semantic failure, not a schema rejection"
+    assert scaffold["verified"] is False, (
+        "AGENTS.md claims a random FK fails per-parent-count acceptance; "
+        "if this now verifies, update the recipe section"
+    )
+
+
 def test_documentation_index_has_no_removed_authoring_archive() -> None:
     documentation_index = (_REPOSITORY_ROOT / "docs" / "README.md").read_text(encoding="utf-8")
 
