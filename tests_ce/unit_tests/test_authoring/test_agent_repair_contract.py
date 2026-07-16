@@ -268,6 +268,27 @@ def test_unvalidated_field_guess_has_no_repair() -> None:
     assert issue.repair is None
 
 
+@pytest.mark.parametrize(
+    ("mutate", "expected_message"),
+    [
+        (lambda spec: spec["products"][1]["source"].pop("id"), "Missing required source.id"),
+        (lambda spec: spec["products"][1].update({"count": 2}), "do not accept count"),
+        (lambda spec: spec["products"][1].update({"fields": []}), "require at least one explicit field"),
+    ],
+)
+def test_source_product_shape_errors_show_the_working_memstore_form(mutate, expected_message) -> None:
+    spec = _memstore_source_with_rejected_field("product")
+    mutate(spec)
+
+    result = scaffold(ScaffoldRequest(spec=spec))
+
+    assert any(expected_message in issue.message for issue in result.issues)
+    assert all(
+        fragment in next(issue.message for issue in result.issues if expected_message in issue.message)
+        for fragment in ('"kind":"memstore"', '"id":"<store>"', '"product":"<producer>"', '"script":"this.<col>"')
+    )
+
+
 def test_reference_catalog_is_schema_only_and_exhaustive() -> None:
     assert projection_catalog_is_exhaustive()
     for query in list_authoring_reference_queries():

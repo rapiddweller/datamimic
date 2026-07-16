@@ -36,6 +36,10 @@ _ROOT_SCHEMA = AuthoringSpecV1.model_json_schema()
 _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 _MIN_REPLACEMENT_SIMILARITY = 0.72
 _MIN_REPLACEMENT_MARGIN = 0.10
+_SOURCE_PRODUCT_SHAPE = (
+    'Use source: {"kind":"memstore","id":"<store>","product":"<producer>"}, '
+    'fields: [{"kind":"script","name":"<col>","script":"this.<col>"}], and omit count.'
+)
 
 
 @dataclass(frozen=True)
@@ -309,6 +313,26 @@ def _discriminator_kinds(location: _ValidationLocation) -> tuple[str, ...]:
         schema = _resolve_schema(items)
 
 
+def _source_product_message(path: tuple[str | int, ...], raw: Mapping[str, Any]) -> str | None:
+    """Return an actionable source-product explanation for its three common shape errors."""
+
+    if len(path) < 2 or path[0] != "products" or not isinstance(path[1], int):
+        return None
+    products = raw.get("products")
+    if not isinstance(products, Sequence) or isinstance(products, str) or not 0 <= path[1] < len(products):
+        return None
+    product = products[path[1]]
+    if not isinstance(product, Mapping) or product.get("kind") != "source":
+        return None
+    if path[-1] == "id" and len(path) >= 4 and path[-2] == "source":
+        return f"Missing required source.id. {_SOURCE_PRODUCT_SHAPE}"
+    if path[-1] == "count":
+        return f"Source products derive their row count and do not accept count. {_SOURCE_PRODUCT_SHAPE}"
+    if len(path) == 2:
+        return f"Source products require at least one explicit field. {_SOURCE_PRODUCT_SHAPE}"
+    return None
+
+
 def _build_intent_validation_issue(
     location: _ValidationLocation, issue: Mapping[str, Any], raw: Mapping[str, Any]
 ) -> IntentValidationIssue:
@@ -343,6 +367,9 @@ def _build_intent_validation_issue(
         message = f"Unknown field '{path[-1]}'{owner}"
         if repair is not None:
             message = f"{message}; did you mean '{repair.replacement_field}'?"
+    source_message = _source_product_message(path, raw)
+    if source_message is not None:
+        message = source_message
     return IntentValidationIssue(
         path=path,
         code=code,
