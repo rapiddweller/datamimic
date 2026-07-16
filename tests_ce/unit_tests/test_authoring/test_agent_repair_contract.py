@@ -11,6 +11,7 @@ from typer.testing import CliRunner
 
 from datamimic_ce.authoring.contracts import (
     AuthoringReferenceCategory,
+    FieldReferenceQuery,
     IntentValidationIssueCode,
     ProductReferenceQuery,
     ReferenceRequest,
@@ -333,6 +334,18 @@ def test_category_reference_lists_only_its_schema_owned_variants() -> None:
     assert content["variants"]
     assert {variant["category"] for variant in content["variants"]} == {"field"}
     assert {variant["kind"] for variant in content["variants"]} == set(FieldIntentKind)
+
+
+def test_time_series_projection_explains_series_and_field_domain_semantics() -> None:
+    product = authoring_reference_projection(
+        ProductReferenceQuery(kind=ProductIntentKind.TIME_SERIES)
+    ).json_schema
+    values = authoring_reference_projection(
+        FieldReferenceQuery(kind=FieldIntentKind.VALUES)
+    ).json_schema
+
+    assert "does not create a data field" in product["properties"]["series_count"]["description"]
+    assert "business-domain values" in values["properties"]["values"]["description"]
 
 
 def test_source_reference_queries_cover_canonical_union() -> None:

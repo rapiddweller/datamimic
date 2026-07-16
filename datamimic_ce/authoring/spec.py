@@ -232,7 +232,10 @@ class StringLengthField(FieldIntent):
 
 class ValuesField(FieldIntent):
     kind: Literal[FieldIntentKind.VALUES] = FieldIntentKind.VALUES
-    values: tuple[str, ...] = Field(min_length=1)
+    values: tuple[str, ...] = Field(
+        min_length=1,
+        description="The business-domain values emitted by this field; series_count never supplies field values.",
+    )
 
 
 class WeightedField(FieldIntent):
@@ -493,7 +496,13 @@ class TimeSeriesWindow(IntentModel):
 
 class TimeSeriesProduct(ProductIntent):
     kind: Literal[ProductIntentKind.TIME_SERIES] = ProductIntentKind.TIME_SERIES
-    series_count: PositiveStrictInt = 1
+    series_count: PositiveStrictInt = Field(
+        default=1,
+        description=(
+            "Number of parallel temporal series. It multiplies rows in the window and does not create "
+            "a data field or choose values for any field."
+        ),
+    )
     window: TimeSeriesWindow
 
     @model_validator(mode="after")
@@ -543,7 +552,10 @@ class AllowedValuesExpectation(IntentModel):
     kind: Literal[ExpectationIntentKind.ALLOWED_VALUES] = ExpectationIntentKind.ALLOWED_VALUES
     product: str = Field(min_length=1)
     field: str = Field(min_length=1)
-    values: tuple[str, ...] = Field(min_length=1)
+    values: tuple[str, ...] = Field(
+        min_length=1,
+        description="The expected business-domain values for the named field.",
+    )
 
 
 class RangeExpectation(IntentModel):
