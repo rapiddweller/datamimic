@@ -104,6 +104,87 @@ def test_random_nested_foreign_key_warns_before_acceptance() -> None:
     assert diagnostic.path == "/products/0/children/0/fields/0"
     assert 'script: "parent.id"' in diagnostic.fix_hint
     assert result.acceptance is not None
+    assert result.verified is False
+
+
+def test_nested_foreign_key_script_must_exactly_copy_its_immediate_parent_key() -> None:
+    spec = {
+        "version": "1",
+        "seed": 7,
+        "products": [
+            {
+                "kind": "generated",
+                "name": "customers",
+                "count": 2,
+                "fields": [{"kind": "increment", "name": "id"}],
+                "children": [
+                    {
+                        "name": "orders",
+                        "count": 1,
+                        "fields": [
+                            {
+                                "kind": "script",
+                                "name": "customer_id",
+                                "script": "parent.id + 1",
+                                "roles": [
+                                    {
+                                        "kind": "foreign_key",
+                                        "parent_product": "customers",
+                                        "parent_field": "id",
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ],
+    }
+
+    result = scaffold(ScaffoldRequest(spec=spec))
+
+    assert [item.rule for item in result.diagnostics if item.rule == "DM404"] == ["DM404"]
+    assert result.verified is False
+
+
+def test_nested_foreign_key_direct_parent_copy_has_no_diagnostic() -> None:
+    spec = {
+        "version": "1",
+        "seed": 7,
+        "products": [
+            {
+                "kind": "generated",
+                "name": "customers",
+                "count": 2,
+                "fields": [{"kind": "increment", "name": "id"}],
+                "children": [
+                    {
+                        "name": "orders",
+                        "count": 1,
+                        "fields": [
+                            {
+                                "kind": "script",
+                                "name": "customer_id",
+                                "script": "parent.id",
+                                "roles": [
+                                    {
+                                        "kind": "foreign_key",
+                                        "parent_product": "customers",
+                                        "parent_field": "id",
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ],
+    }
+
+    result = scaffold(ScaffoldRequest(spec=spec))
+
+    assert not [item for item in result.diagnostics if item.rule == "DM404"]
+    assert result.verified is True
 
 
 def test_memstore_readback_regeneration_warns_with_an_exact_copy_repair() -> None:

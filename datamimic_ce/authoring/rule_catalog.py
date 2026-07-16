@@ -503,6 +503,7 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         '<setup><generate name="customers" count="4"><key name="id" generator="IncrementGenerator"/>'
         '<generate name="orders" count="2"><key name="customer_id" type="int" min="1" max="4"/>'
         "</generate></generate></setup>",
+        blocks_verification=True,
     ),
     _rule_definition(
         "DM405",

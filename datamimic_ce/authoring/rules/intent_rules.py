@@ -7,7 +7,12 @@ from datamimic_ce.authoring.contracts import CompilePlan, MemstoreRelationshipPl
 from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules.base import IntentLintContext, IntentRule
-from datamimic_ce.authoring.script_semantics import current_scope_reference, references_current_scope_field
+from datamimic_ce.authoring.script_semantics import (
+    ScriptScope,
+    current_scope_reference,
+    is_exact_scope_field_reference,
+    references_current_scope_field,
+)
 from datamimic_ce.authoring.spec import (
     AuthoringSpecV1,
     ForeignKeyRole,
@@ -27,11 +32,20 @@ class NestedForeignKeyMustCopyParentRule(IntentRule):
                 continue
             for child_index, child in enumerate(product.children):
                 for field_index, field in enumerate(child.fields):
-                    foreign_key_roles = [role for role in field.roles if isinstance(role, ForeignKeyRole)]
-                    if not foreign_key_roles or isinstance(field, ScriptField):
+                    parent_key_roles = tuple(
+                        role
+                        for role in field.roles
+                        if isinstance(role, ForeignKeyRole) and role.parent_product == product.name
+                    )
+                    if not parent_key_roles:
+                        continue
+                    if isinstance(field, ScriptField) and all(
+                        is_exact_scope_field_reference(field.script, ScriptScope.PARENT, role.parent_field)
+                        for role in parent_key_roles
+                    ):
                         continue
                     parent_fields = ", ".join(
-                        f"{role.parent_product}.{role.parent_field}" for role in foreign_key_roles
+                        f"{role.parent_product}.{role.parent_field}" for role in parent_key_roles
                     )
                     yield ctx.diag(
                         NestedForeignKeyMustCopyParentRule,
@@ -42,7 +56,7 @@ class NestedForeignKeyMustCopyParentRule(IntentRule):
                             f"to {parent_fields}"
                         ),
                         fix_context=(
-                            f'Use script: "parent.{foreign_key_roles[0].parent_field}" '
+                            f'Use script: "parent.{parent_key_roles[0].parent_field}" '
                             f"for {child.name}.{field.name}."
                         ),
                     )

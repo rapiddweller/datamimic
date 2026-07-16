@@ -57,8 +57,9 @@ def test_rule_severity_has_one_owner_and_catalog_is_immutable() -> None:
         AUTHORING_RULE_DEFINITIONS["DM999"] = authoring_rule_definitions()[0]  # type: ignore[index]
 
 
-def test_verification_blocking_is_central_rule_metadata() -> None:
-    definition = AUTHORING_RULE_DEFINITIONS["DM406"]
+@pytest.mark.parametrize("rule_id", ("DM404", "DM406"))
+def test_verification_blocking_is_central_rule_metadata(rule_id: str) -> None:
+    definition = AUTHORING_RULE_DEFINITIONS[rule_id]
 
     assert definition.blocks_verification is True
     assert serialize_rule_definition(definition)["blocks_verification"] is True
