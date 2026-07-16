@@ -1,0 +1,7 @@
+<setup rngSeed="42">
+  <!-- count=12, pageSize=4 would spawn 3 workers normally. unique must
+       force single-process. -->
+  <generate name="gen" count="12" target="">
+    <key name="code" generator="IncrementGenerator()" unique="true"/>
+  </generate>
+</setup>

@@ -4,13 +4,15 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 import ast
-import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 from xml.sax.saxutils import unescape as stdlib_unescape
 
 import toml
+from lxml import etree
+
+from datamimic_ce.utils.secure_xml import parse_xml_source
 
 _SAFE_PARSE_XML_ENTITIES = {
     "&quot;": '"',  # Corrected: map &quot; to a single double quote character
@@ -47,8 +49,8 @@ class XMLValidator:
 
             # Parse XML
             try:
-                tree = ET.fromstring(xml_content)
-            except ET.ParseError as e:
+                tree = parse_xml_source(xml_content)
+            except (ValueError, etree.XMLSyntaxError) as e:
                 self.errors.append(f"XML parsing error: {str(e)}")
                 return False
 
@@ -77,7 +79,7 @@ class XMLValidator:
             self.errors.append(f"Validation error: {str(e)}")
             return False
 
-    def _validate_generate_element(self, element: ET.Element) -> None:
+    def _validate_generate_element(self, element: etree._Element) -> None:
         """
         Validate a generate element in the descriptor.
 

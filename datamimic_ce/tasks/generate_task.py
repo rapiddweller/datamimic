@@ -193,7 +193,12 @@ class GenerateTask(CommonSubTask):
         else:
             num_workers = 1
 
-        forced = resolve_single_process(stmt, num_workers, current_setup_context.is_seeded)
+        forced = resolve_single_process(
+            stmt,
+            num_workers,
+            current_setup_context.is_seeded,
+            current_setup_context.clients,
+        )
         return forced if forced is not None else num_workers
 
     def execute(
@@ -217,12 +222,17 @@ class GenerateTask(CommonSubTask):
                 is_ray_initialized = False  # WHY: make Ray optional, avoid hard dependency
                 _ray_mod = None  # local handle to ray module if imported
 
-                # Pre-execute sub-tasks before generating any data
-                self.pre_execute(context)
-
                 # Determine count of generate process
                 count = self._determine_count(context)
                 timer_result["records_count"] = count
+
+                # Resolve the actual execution plan before pre-executing generators. Stateful
+                # generators must reserve ranges for the worker count the scheduler will really use.
+                num_workers = self._determine_num_workers(context, self.statement)
+                self.statement.num_process = num_workers
+
+                # Pre-execute sub-tasks before generating any data
+                self.pre_execute(context)
 
                 # Count 0: no worker runs, no page is exported — but the product must still
                 # be registered (empty) with the lazy exporters, otherwise its key silently
@@ -238,9 +248,6 @@ class GenerateTask(CommonSubTask):
 
                 # Calculate page size for processing by page
                 page_size = self._calculate_default_page_size(count)
-
-                # Determine number of Ray workers for multiprocessing
-                num_workers = self._determine_num_workers(context, self.statement)
 
                 # Execute generate task by page in multiprocessing
                 if isinstance(context, SetupContext) and num_workers > 1:

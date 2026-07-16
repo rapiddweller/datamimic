@@ -137,7 +137,6 @@ class TestScaffoldParity:
             spec=SPEC_VALID_DRY_RUN,
             max_count=10,
             sample_rows=5,
-            response_format="concise",
         )
         result = scaffold(request)
 
@@ -159,7 +158,6 @@ class TestScaffoldParity:
             spec=SPEC_MALFORMED,
             max_count=10,
             sample_rows=5,
-            response_format="concise",
         )
         result = scaffold(request)
 
@@ -187,7 +185,6 @@ class TestScaffoldParity:
                 spec=SPEC_VALID_DRY_RUN,
                 max_count=10,
                 sample_rows=5,
-                response_format="concise",
             )
             service_result = scaffold(request)
             service_dict = service_result.model_dump(mode="json", exclude_none=True)
@@ -227,6 +224,38 @@ class TestScaffoldParity:
         cli_output = json.loads(result.stdout)
         assert cli_output["ok"] is True
         assert "xml" in cli_output
+
+    def test_cli_evaluates_transaction_scoped_acceptance_requirements(self):
+        runner = CliRunner()
+        with TemporaryDirectory() as tmpdir:
+            directory = Path(tmpdir)
+            spec_file = directory / "spec.json"
+            requirements_file = directory / "requirements.json"
+            spec_file.write_text(json.dumps(SPEC_VALID_NO_DRY_RUN))
+            requirements_file.write_text(
+                json.dumps(
+                    [{"kind": "exact_count", "product": "items", "count": 6}]
+                )
+            )
+
+            result = runner.invoke(
+                app,
+                [
+                    "scaffold",
+                    str(spec_file),
+                    "--acceptance-requirements",
+                    str(requirements_file),
+                    "--format",
+                    "json",
+                ],
+            )
+
+        assert result.exit_code == 1
+        payload = json.loads(result.stdout)
+        caller_result = next(item for item in payload["acceptance"]["results"] if item["source"] == "caller")
+        assert caller_result["kind"] == "exact_count"
+        assert caller_result["status"] == AcceptanceStatus.FAIL.value
+        assert payload["verified"] is False
 
     def test_v1_cli_mcp_service_parity(self):
         """All transports accept the same canonical model.dm.json contract."""
@@ -270,6 +299,22 @@ class TestScaffoldParity:
         assert json.loads(cli_result.stdout) == service_result
         assert service_result["stage"] == "acceptance"
         assert service_result["verified"] is True
+        assert service_result["derived_facts"]["memstores"] == [
+            {
+                "id": "mem",
+                "producer_product": "producer",
+                "consumer_products": ["reader"],
+                "has_consumer": True,
+            }
+        ]
+        assert service_result["derived_facts"]["foreign_keys"] == [
+            {
+                "child_product": "reader",
+                "child_field": "id",
+                "parent_product": "producer",
+                "parent_field": "id",
+            }
+        ]
         assert {product["name"]: product["count"] for product in service_result["products"]} == {
             "producer": 5,
             "reader": 5,

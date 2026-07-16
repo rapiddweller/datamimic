@@ -22,6 +22,7 @@ from datamimic_ce.authoring.contracts import (
     MAX_DRY_RUN_COUNT,
     AcceptanceSource,
     AcceptanceStatus,
+    AllowedValuesAcceptanceResult,
     AuthoringStage,
     CaptureCompletenessStatus,
     CaptureStatus,
@@ -34,7 +35,7 @@ from datamimic_ce.authoring.contracts import (
     UniqueAcceptanceResult,
 )
 from datamimic_ce.authoring.dryrun import CapturedProduct, CapturedProducts
-from datamimic_ce.authoring.spec import AuthoringSpecV1, RowConditionExpectation
+from datamimic_ce.authoring.spec import AllowedValuesExpectation, AuthoringSpecV1, RowConditionExpectation
 
 
 def _complete_product(name: str, rows: tuple[object, ...]) -> CapturedProduct:
@@ -267,6 +268,30 @@ def test_acceptance_verifies_counts_local_sequence_global_id_fk_and_memstore() -
     assert unique["global"].distinct_count in {8, 16}
     memstore = next(item for item in report.results if isinstance(item, MemstoreCompletenessAcceptanceResult))
     assert (memstore.producer_count, memstore.consumer_count) == (8, 8)
+
+
+def test_caller_acceptance_requirements_remain_separate_and_can_fail() -> None:
+    spec = _spec()
+    caller_requirement = AllowedValuesExpectation(
+        product="customers",
+        field="tier",
+        values=("gold",),
+    )
+
+    report = evaluate_acceptance(
+        compile_authoring_spec(spec).plan,
+        spec,
+        _capture(),
+        (caller_requirement, caller_requirement),
+    )
+
+    caller_results = [item for item in report.results if item.source is AcceptanceSource.CALLER]
+    assert len(caller_results) == 1
+    caller_result = caller_results[0]
+    assert isinstance(caller_result, AllowedValuesAcceptanceResult)
+    assert caller_result.status is AcceptanceStatus.FAIL
+    assert caller_result.unexpected_values == ["'A'", "'B'"]
+    assert not report.verified
 
 
 def test_per_parent_count_never_passes_from_matching_global_totals() -> None:
@@ -730,6 +755,15 @@ def test_memstore_without_typed_identity_join_is_unevaluable() -> None:
     payload = _spec().model_dump(mode="json")
     copy_product = payload["products"][1]
     copy_product["fields"][0]["roles"] = []
+    payload["expectations"].append(
+        {
+            "kind": "foreign_key",
+            "child_product": "customer_copy",
+            "child_field": "customer_id",
+            "parent_product": "customers",
+            "parent_field": "customer_id",
+        }
+    )
     spec = AuthoringSpecV1.model_validate(payload)
 
     report = evaluate_acceptance(compile_authoring_spec(spec).plan, spec, _capture())
@@ -737,6 +771,10 @@ def test_memstore_without_typed_identity_join_is_unevaluable() -> None:
     completeness = next(item for item in report.results if item.kind == "memstore_completeness")
     assert completeness.status is AcceptanceStatus.UNEVALUABLE
     assert "typed producer identifier" in completeness.message
+    assert '{"kind":"identifier"}' in completeness.message
+    assert '{"kind":"foreign_key","parent_product":"customers","parent_field":"customer_id"}' in completeness.message
+    assert "customers.customer_id" in completeness.message
+    assert "customer_copy.customer_id" in completeness.message
     assert completeness.required_consumer_foreign_key is not None
     assert completeness.required_consumer_foreign_key.parent_product == "customers"
     assert completeness.required_consumer_foreign_key.parent_field == "customer_id"
@@ -760,6 +798,25 @@ def test_count_cap_emits_one_typed_memstore_retry_remediation() -> None:
     assert remediation.parameter is ScaffoldParameter.MAX_COUNT
     assert remediation.minimum_value == 15
     assert remediation.affected_products == ("customers", "customer_readback")
+
+
+def test_scaffold_evaluates_caller_acceptance_requirements_without_persisting_them() -> None:
+    result = service_module.scaffold(
+        ScaffoldRequest(
+            spec=_memstore_service_spec(count=2, consumer_fk=True),
+            acceptance_requirements=[
+                {"kind": "exact_count", "product": "customers", "count": 3},
+            ],
+            max_count=2,
+            sample_rows=1,
+        )
+    )
+
+    assert result.acceptance is not None
+    caller_result = next(item for item in result.acceptance.results if item.source is AcceptanceSource.CALLER)
+    assert caller_result.kind == "exact_count"
+    assert caller_result.status is AcceptanceStatus.FAIL
+    assert result.verified is False
 
 
 def test_complete_memstore_capture_reports_missing_typed_consumer_role() -> None:

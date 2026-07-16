@@ -1,4 +1,4 @@
-<setup numProcess="2">
+<setup numProcess="1">
 
     <database id="sourceDB" system="mysql" />
 

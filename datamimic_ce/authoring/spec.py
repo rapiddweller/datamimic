@@ -15,7 +15,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
-from enum import StrEnum
 from typing import Annotated, Literal
 
 from pydantic import (
@@ -33,6 +32,7 @@ from pydantic import (
 from pydantic.json_schema import JsonDict, JsonValue
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
+from datamimic_ce._compat import StrEnum
 from datamimic_ce.constants.element_constants import EL_GENERATE
 from datamimic_ce.exporters.exporter_util import buffered_exporter_names
 from datamimic_ce.model.constraints import is_source_file
@@ -113,7 +113,12 @@ class IntentModelValidationIssueType(StrEnum):
 class IntentModelPathSegment(StrEnum):
     """Canonical field names used in model-owned validation locations."""
 
+    PRODUCTS = "products"
+    EXPECTATIONS = "expectations"
     CHILDREN = "children"
+    FIELDS = "fields"
+    SOURCE = "source"
+    TARGETS = "targets"
 
 
 INTENT_MODEL_VALIDATION_MESSAGES: dict[IntentModelValidationIssueType, str] = {
@@ -232,7 +237,10 @@ class StringLengthField(FieldIntent):
 
 class ValuesField(FieldIntent):
     kind: Literal[FieldIntentKind.VALUES] = FieldIntentKind.VALUES
-    values: tuple[str, ...] = Field(min_length=1)
+    values: tuple[str, ...] = Field(
+        min_length=1,
+        description="The business-domain values emitted by this field.",
+    )
 
 
 class WeightedField(FieldIntent):
@@ -493,7 +501,14 @@ class TimeSeriesWindow(IntentModel):
 
 class TimeSeriesProduct(ProductIntent):
     kind: Literal[ProductIntentKind.TIME_SERIES] = ProductIntentKind.TIME_SERIES
-    series_count: PositiveStrictInt = 1
+    series_count: PositiveStrictInt = Field(
+        default=1,
+        description=(
+            "Number of parallel temporal series. It multiplies rows in the window and does not create an "
+            "implicit data field, dimension, or value domain. Model each business dimension named in the intent "
+            "as its own field and place that dimension's values on the same field."
+        ),
+    )
     window: TimeSeriesWindow
 
     @model_validator(mode="after")
@@ -512,7 +527,9 @@ ProductIntentUnion = Annotated[
 class ExactCountExpectation(IntentModel):
     kind: Literal[ExpectationIntentKind.EXACT_COUNT] = ExpectationIntentKind.EXACT_COUNT
     product: str = Field(min_length=1)
-    count: NonNegativeStrictInt
+    count: NonNegativeStrictInt = Field(
+        json_schema_extra={INTENT_REPAIR_ALIASES_SCHEMA_KEY: ["exact_count"]},
+    )
 
 
 class PerParentCountExpectation(IntentModel):
@@ -541,7 +558,10 @@ class AllowedValuesExpectation(IntentModel):
     kind: Literal[ExpectationIntentKind.ALLOWED_VALUES] = ExpectationIntentKind.ALLOWED_VALUES
     product: str = Field(min_length=1)
     field: str = Field(min_length=1)
-    values: tuple[str, ...] = Field(min_length=1)
+    values: tuple[str, ...] = Field(
+        min_length=1,
+        description="The expected business-domain values for the named field.",
+    )
 
 
 class RangeExpectation(IntentModel):

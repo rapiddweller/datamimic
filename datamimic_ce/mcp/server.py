@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import secrets
 from typing import Protocol
 
+from anyio import to_thread
 from fastmcp import FastMCP
 from starlette.applications import Starlette
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -35,9 +37,10 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         authorization = request.headers.get("authorization")
-        bearer = authorization.removeprefix("Bearer ") if authorization else None
+        scheme, separator, credentials = authorization.partition(" ") if authorization else ("", "", "")
+        bearer = credentials if separator and scheme.casefold() == "bearer" else None
         token = bearer or request.headers.get("x-api-key")
-        if token != self.api_key:
+        if token is None or not secrets.compare_digest(token, self.api_key):
             return JSONResponse(status_code=HTTP_401_UNAUTHORIZED, content={"error": "invalid_api_key"})
         return await call_next(request)
 
@@ -47,19 +50,44 @@ def create_server() -> FastMCP:
 
     @server.tool("datamimic_check")
     async def datamimic_check(request: CheckRequest) -> LintResult:
-        return service.check(request)
+        """Lint one DATAMIMIC XML descriptor without executing it.
+
+        Provide exactly one inline xml document or server-local path. Repair every
+        error diagnostic before calling datamimic_run.
+        """
+
+        return await to_thread.run_sync(service.check, request)
 
     @server.tool("datamimic_run")
     async def datamimic_run(request: RunRequest) -> RunResult:
-        return service.run(request)
+        """Safely execute one bounded DATAMIMIC XML dry-run.
+
+        Counts are capped and write targets are neutralized unless the caller
+        explicitly enables side effects. Inspect captured samples and diagnostics.
+        """
+
+        return await to_thread.run_sync(service.run, request)
 
     @server.tool("datamimic_reference")
     async def datamimic_reference(request: ReferenceRequest) -> ReferenceResult:
-        return service.reference(request)
+        """Query canonical DATAMIMIC DSL and intent-model reference data.
+
+        Start with topic=overview or topic=authoring, then request one narrow
+        element, rule, category, or typed authoring variant.
+        """
+
+        return await to_thread.run_sync(service.reference, request)
 
     @server.tool("datamimic_scaffold")
     async def datamimic_scaffold(request: ScaffoldRequest) -> ScaffoldResult:
-        return service.scaffold(request)
+        """Compile and verify one intent model.
+
+        Use acceptance_requirements only for caller-owned, transaction-scoped
+        assertions that must be checked without mutating the submitted model.
+        Their result source is reported as caller.
+        """
+
+        return await to_thread.run_sync(service.scaffold, request)
 
     return server
 

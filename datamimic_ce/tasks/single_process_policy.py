@@ -12,15 +12,20 @@ worker logic) to make CE serialise it; ``resolve_single_process`` is the single 
 point used by the generate task.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
+from datamimic_ce.clients.client import Client
+from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.logger import logger
+from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.statement import Statement
 from datamimic_ce.statements.variable_statement import VariableStatement
+
+ClientMap = Mapping[str, Client]
 
 
 def _is_global_constraint(stmt: Statement) -> bool:
@@ -35,19 +40,44 @@ def _is_global_constraint(stmt: Statement) -> bool:
     return False
 
 
-def _uses_global_constraint(stmt: GenerateStatement, seeded: bool) -> bool:
+def _uses_global_constraint(stmt: GenerateStatement, seeded: bool, clients: ClientMap) -> bool:
     return _is_global_constraint(stmt) or any(_is_global_constraint(child) for child in stmt.sub_statements)
 
 
-def _has_delete_target(stmt: GenerateStatement, seeded: bool) -> bool:
+def _has_delete_target(stmt: GenerateStatement, seeded: bool, clients: ClientMap) -> bool:
     return any(".delete" in target for target in stmt.targets)
 
 
-def _seeded(stmt: GenerateStatement, seeded: bool) -> bool:
+def _seeded(stmt: GenerateStatement, seeded: bool, clients: ClientMap) -> bool:
     """Under <setup rngSeed> nearly all generation draws on a per-worker rng that restarts per worker,
     so the output depends on the core count. CE runs any seeded generate single-process to keep it
     reproducible regardless of machine; EE distributes seeded generation deterministically."""
     return seeded
+
+
+def _uses_mysql_sequence(stmt: GenerateStatement, seeded: bool, clients: ClientMap) -> bool:
+    mysql_sources = {
+        source_id
+        for source_id, client in clients.items()
+        if isinstance(client, RdbmsClient) and client.credential.dbms == "mysql"
+    }
+    if not mysql_sources:
+        return False
+
+    stack: list[Statement] = list(stmt.sub_statements)
+    while stack:
+        child = stack.pop()
+        if isinstance(child, KeyStatement):
+            generator = child.generator
+            if (
+                generator is not None
+                and generator.startswith("SequenceTableGenerator")
+                and child.database in mysql_sources
+            ):
+                return True
+        if isinstance(child, CompositeStatement):
+            stack.extend(child.sub_statements)
+    return False
 
 
 @dataclass(frozen=True)
@@ -55,13 +85,19 @@ class SingleProcessPolicy:
     """One feature CE serialises. ``ee_scalable`` adds the Enterprise upgrade hint to the log."""
 
     feature: str
-    applies: Callable[[GenerateStatement, bool], bool]
+    applies: Callable[[GenerateStatement, bool, ClientMap], bool]
     reason: str
     ee_scalable: bool
 
 
 # THE registry — the single place to maintain CE's single-process policies.
 POLICIES: tuple[SingleProcessPolicy, ...] = (
+    SingleProcessPolicy(
+        feature="mysql-sequence",
+        applies=_uses_mysql_sequence,
+        reason="MySQL SequenceTableGenerator has no atomic native sequence reservation",
+        ee_scalable=False,
+    ),
     SingleProcessPolicy(
         feature="unique/composite",
         applies=_uses_global_constraint,
@@ -85,12 +121,18 @@ POLICIES: tuple[SingleProcessPolicy, ...] = (
 _EE_HINT = " Multiprocess scaling of this is an Enterprise (EE) feature."
 
 
-def resolve_single_process(stmt: GenerateStatement, requested_workers: int, seeded: bool = False) -> int | None:
+def resolve_single_process(
+    stmt: GenerateStatement,
+    requested_workers: int,
+    seeded: bool = False,
+    clients: ClientMap | None = None,
+) -> int | None:
     """Return 1 if any single-process policy applies to ``stmt`` (logging once when it overrides
     a multiprocess request, with the EE recommendation where the feature is EE-scalable), else
     None so the caller keeps ``requested_workers``. ``seeded`` = a <setup rngSeed> is in effect."""
+    resolved_clients: ClientMap = clients or {}
     for policy in POLICIES:
-        if not policy.applies(stmt, seeded):
+        if not policy.applies(stmt, seeded, resolved_clients):
             continue
         if requested_workers > 1:
             hint = _EE_HINT if policy.ee_scalable else ""

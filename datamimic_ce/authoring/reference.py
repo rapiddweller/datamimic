@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from datamimic_ce.domains.domain_core.entity_registry import EntitySpec
 
-from datamimic_ce.authoring.contracts import ReferenceTopic
+from datamimic_ce.authoring.contracts import AuthoringReferenceCategory, ReferenceTopic
 from datamimic_ce.authoring.reference_projection import (
     AuthoringReferenceQuery,
     authoring_reference_projection,
@@ -462,19 +462,44 @@ def scaffold_reference() -> str:
     )
 
 
-def compact_authoring_reference(query: AuthoringReferenceQuery | None = None) -> str:
+def compact_authoring_reference(
+    query: AuthoringReferenceQuery | None = None,
+    category: AuthoringReferenceCategory | None = None,
+) -> str:
     """Render one compact, enum-addressed projection from the Intent Model SPOT."""
 
     if query is None:
+        queries = tuple(
+            candidate
+            for candidate in list_authoring_reference_queries()
+            if category is None or candidate.category is category
+        )
         return json.dumps(
             {
                 "topic": ReferenceTopic.AUTHORING,
-                "queries": [candidate.model_dump(mode="json") for candidate in list_authoring_reference_queries()],
-                "usage": "reference authoring --category <category> --kind <kind>",
+                "category": category,
+                "queries": [candidate.model_dump(mode="json") for candidate in queries],
+                "variants": [
+                    {
+                        **candidate.model_dump(mode="json"),
+                        "required_fields": authoring_reference_projection(candidate).required_fields,
+                        "allowed_fields": authoring_reference_projection(candidate).allowed_fields,
+                    }
+                    for candidate in queries
+                ],
+                "usage": (
+                    "Use this listing for one-call discriminator and field discovery; "
+                    "use reference authoring --category <category> --kind <kind> for one full JSON schema."
+                ),
             },
             indent=2,
         )
     return authoring_reference_projection(query).model_dump_json(indent=2)
+
+
+def _authoring_category_listing_usage() -> str:
+    categories = "|".join(category.value for category in AuthoringReferenceCategory)
+    return f"datamimic reference authoring [--category {categories}]"
 
 
 def capabilities_manifest() -> dict[str, Any]:
@@ -553,6 +578,8 @@ def capabilities_index() -> dict[str, Any]:
                 "entity_detail": "datamimic reference entities <name>",
                 "rule_detail": "datamimic reference rules <id>",
                 "authoring_spec_detail": "datamimic reference scaffold",
+                "authoring_variant_listing": _authoring_category_listing_usage(),
+                "authoring_variant_detail": "datamimic reference authoring --category <category> --kind <kind>",
                 "full_section": "datamimic capabilities --section <name>",
                 "full_manifest": "datamimic capabilities --full",
             },
@@ -620,8 +647,13 @@ def reference(
     topic: ReferenceTopic,
     name: str | None = None,
     *,
+    category: AuthoringReferenceCategory | None = None,
     query: AuthoringReferenceQuery | None = None,
 ) -> str:
+    if category is not None:
+        if topic is not ReferenceTopic.AUTHORING or query is not None:
+            raise ValueError("category listing is only valid for topic=authoring without a variant query")
+        return compact_authoring_reference(category=category)
     handler = _TOPIC_HANDLERS.get(topic)
     if handler is not None:
         return handler(name, query)  # type: ignore[operator]

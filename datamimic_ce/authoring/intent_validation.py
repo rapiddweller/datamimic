@@ -5,23 +5,32 @@
 """Repair-oriented projection of canonical authoring-intent validation errors."""
 
 from collections.abc import Mapping, Sequence
+from contextlib import suppress
 from copy import deepcopy
 from dataclasses import dataclass
 from difflib import SequenceMatcher
-from enum import StrEnum
 from typing import Any
 
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
+from datamimic_ce._compat import StrEnum
 from datamimic_ce.authoring.contracts import (
+    AuthoringReferenceCategory,
     IntentValidationIssue,
     IntentValidationIssueCode,
     ReplaceFieldRepair,
 )
+from datamimic_ce.authoring.reference_projection import (
+    authoring_variant_kinds,
+    minimal_authoring_variant_shapes,
+    source_product_repair_guidance,
+)
 from datamimic_ce.authoring.spec import (
     INTENT_REPAIR_ALIASES_SCHEMA_KEY,
     AuthoringSpecV1,
+    IntentModelPathSegment,
     IntentModelValidationIssueType,
+    SourceIntentKind,
 )
 
 
@@ -36,8 +45,6 @@ _ROOT_SCHEMA = AuthoringSpecV1.model_json_schema()
 _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 _MIN_REPLACEMENT_SIMILARITY = 0.72
 _MIN_REPLACEMENT_MARGIN = 0.10
-
-
 @dataclass(frozen=True)
 class _ValidationLocation:
     path: tuple[str | int, ...]
@@ -291,6 +298,56 @@ def _repair_context(
     return allowed_fields, model_name, repair
 
 
+def _missing_discriminator_category(
+    path: tuple[str | int, ...],
+) -> AuthoringReferenceCategory | None:
+    """Route a public intent path to its typed discriminated-union category."""
+
+    if not path:
+        return None
+    if path[0] == IntentModelPathSegment.EXPECTATIONS and len(path) == 2:
+        return AuthoringReferenceCategory.EXPECTATION
+    if path[0] != IntentModelPathSegment.PRODUCTS:
+        return None
+    if len(path) == 2:
+        return AuthoringReferenceCategory.PRODUCT
+    if path[-1] == IntentModelPathSegment.SOURCE:
+        return AuthoringReferenceCategory.SOURCE
+    if len(path) >= 2 and path[-2] == IntentModelPathSegment.TARGETS:
+        return AuthoringReferenceCategory.TARGET
+    if len(path) >= 2 and path[-2] == IntentModelPathSegment.FIELDS:
+        return AuthoringReferenceCategory.FIELD
+    return None
+
+
+def _source_product_message(path: tuple[str | int, ...], raw: Mapping[str, Any]) -> str | None:
+    """Return typed repair guidance for common source-product shape errors."""
+
+    if len(path) < 2 or path[0] != "products" or not isinstance(path[1], int):
+        return None
+    products = raw.get("products")
+    if not isinstance(products, Sequence) or isinstance(products, str) or not 0 <= path[1] < len(products):
+        return None
+    product = products[path[1]]
+    if not isinstance(product, Mapping) or product.get("kind") != "source":
+        return None
+    raw_source = product.get("source")
+    source_kind: SourceIntentKind | None = None
+    if isinstance(raw_source, Mapping):
+        raw_kind = raw_source.get("kind")
+        if isinstance(raw_kind, str):
+            with suppress(ValueError):
+                source_kind = SourceIntentKind(raw_kind)
+    guidance = source_product_repair_guidance(source_kind)
+    if path[-1] == "id" and len(path) >= 4 and path[-2] == "source":
+        return f"Missing required source.id. {guidance}"
+    if path[-1] == "count":
+        return f"Source products do not accept count. {guidance}"
+    if len(path) == 2:
+        return f"Source products require at least one explicit field. {guidance}"
+    return None
+
+
 def _build_intent_validation_issue(
     location: _ValidationLocation, issue: Mapping[str, Any], raw: Mapping[str, Any]
 ) -> IntentValidationIssue:
@@ -316,9 +373,25 @@ def _build_intent_validation_issue(
     if code is IntentValidationIssueCode.UNKNOWN_FIELD:
         allowed_fields, model_name, repair = _repair_context(raw, location)
     message = str(issue["msg"])
+    if issue_type is _PydanticIssueType.UNION_TAG_NOT_FOUND:
+        category = _missing_discriminator_category(path)
+        if category is not None:
+            shapes = minimal_authoring_variant_shapes(category)
+            kinds = authoring_variant_kinds(category)
+            shape_hint = f" Minimal forms: {'; '.join(shapes)}." if shapes else ""
+            message = (
+                f"Missing discriminator 'kind'. Valid kinds: {', '.join(kinds)}. "
+                "Use `reference authoring` once to inspect each variant's required and allowed fields."
+                f"{shape_hint}"
+            )
     if code is IntentValidationIssueCode.UNKNOWN_FIELD and path:
         owner = f" for {model_name}" if model_name is not None else ""
         message = f"Unknown field '{path[-1]}'{owner}"
+        if repair is not None:
+            message = f"{message}; did you mean '{repair.replacement_field}'?"
+    source_message = _source_product_message(path, raw)
+    if source_message is not None:
+        message = source_message
     return IntentValidationIssue(
         path=path,
         code=code,

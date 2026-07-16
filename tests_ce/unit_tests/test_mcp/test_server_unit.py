@@ -31,6 +31,28 @@ async def test_api_key_middleware_rejects_invalid_token(anyio_backend: str) -> N
     assert (await middleware.dispatch(request, call_next)).status_code == 401
 
 
+@pytest.mark.anyio
+@pytest.mark.parametrize("scheme", ["Bearer", "bearer", "BEARER"])
+async def test_api_key_middleware_accepts_case_insensitive_bearer_scheme(
+    anyio_backend: str, scheme: str
+) -> None:
+    middleware = APIKeyMiddleware(noop_app, "secret")
+    request = Request(
+        {
+            "type": "http",
+            "method": "GET",
+            "path": "/",
+            "headers": [(b"authorization", f"{scheme} secret".encode())],
+        },
+        receive,
+    )
+
+    async def call_next(_: Request) -> Response:
+        return Response("ok")
+
+    assert (await middleware.dispatch(request, call_next)).status_code == 200
+
+
 def test_build_sse_app_applies_optional_api_key_middleware() -> None:
     application = build_sse_app(create_server(), "secret")
     assert any(entry.cls is APIKeyMiddleware for entry in application.user_middleware)

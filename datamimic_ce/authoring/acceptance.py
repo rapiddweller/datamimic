@@ -15,9 +15,10 @@ never guessed from field names, sample rows, or global count arithmetic.
 from __future__ import annotations
 
 import ast
+import json
 import math
 import operator
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, replace
 from decimal import Decimal, InvalidOperation
 from typing import Literal, TypeAlias
@@ -58,6 +59,7 @@ from datamimic_ce.authoring.spec import (
     AllowedValuesExpectation,
     AuthoringSpecV1,
     ExactCountExpectation,
+    ExpectationIntent,
     ForeignKeyExpectation,
     PerParentCountExpectation,
     RangeExpectation,
@@ -188,9 +190,9 @@ def _derived_expectations(plan: CompilePlan) -> list[_Expectation]:
     return result
 
 
-def _explicit_expectations(spec: AuthoringSpecV1) -> list[_Expectation]:
+def _intent_expectations(expectations: Iterable[ExpectationIntent]) -> list[_Expectation]:
     result: list[_Expectation] = []
-    for expectation in spec.expectations:
+    for expectation in expectations:
         if isinstance(expectation, ExactCountExpectation):
             result.append(_Exact(expectation.product, expectation.count))
         elif isinstance(expectation, PerParentCountExpectation):
@@ -228,13 +230,22 @@ def _explicit_expectations(spec: AuthoringSpecV1) -> list[_Expectation]:
     return result
 
 
-def merge_expectations(plan: CompilePlan, spec: AuthoringSpecV1) -> tuple[_ExpectationEntry, ...]:
-    """Merge exact duplicates while retaining contradictory explicit assertions.
+def _explicit_expectations(spec: AuthoringSpecV1) -> list[_Expectation]:
+    return _intent_expectations(spec.expectations)
 
-    An explicit expectation identical to a derived invariant is represented once
-    with ``derived_and_explicit`` provenance.  Expectations with the same subject
-    but different expected values are both retained, so a contradiction cannot be
-    silently resolved in favour of either owner.
+
+def merge_expectations(
+    plan: CompilePlan,
+    spec: AuthoringSpecV1,
+    acceptance_requirements: Iterable[ExpectationIntent] = (),
+) -> tuple[_ExpectationEntry, ...]:
+    """Merge derived and model-owned assertions; retain caller requirements.
+
+    A model expectation identical to a derived invariant is represented once
+    with derived-and-explicit provenance. Contradictory model expectations
+    remain visible. Caller requirements always retain their own provenance so
+    a caller can distinguish its independent contract from model-declared
+    intent.
     """
 
     entries: list[_ExpectationEntry] = []
@@ -252,6 +263,12 @@ def merge_expectations(plan: CompilePlan, spec: AuthoringSpecV1) -> tuple[_Expec
                 entries[position],
                 source=AcceptanceSource.DERIVED_AND_EXPLICIT,
             )
+    caller_seen: set[_Expectation] = set()
+    for expectation in _intent_expectations(acceptance_requirements):
+        if expectation in caller_seen:
+            continue
+        caller_seen.add(expectation)
+        entries.append(_ExpectationEntry(expectation, AcceptanceSource.CALLER))
     return tuple(entries)
 
 
@@ -1099,6 +1116,7 @@ def _memstore_result(
     expectation: _MemstoreCompleteness,
     source: AcceptanceSource,
     plan: CompilePlan,
+    spec: AuthoringSpecV1,
     captured: CapturedProducts,
 ) -> MemstoreCompletenessAcceptanceResult:
     resolved_context = _resolve_memstore_context(expectation, source, plan, captured)
@@ -1107,7 +1125,7 @@ def _memstore_result(
     count_result = _memstore_count_result(resolved_context)
     if count_result is not None:
         return count_result
-    resolved_binding = _resolve_memstore_binding(resolved_context)
+    resolved_binding = _resolve_memstore_binding(resolved_context, spec)
     if isinstance(resolved_binding, MemstoreCompletenessAcceptanceResult):
         return resolved_binding
     resolved_values = _resolve_memstore_values(resolved_context, resolved_binding, captured)
@@ -1243,6 +1261,7 @@ def _memstore_count_result(
 
 def _resolve_memstore_binding(
     context: _MemstoreContext,
+    spec: AuthoringSpecV1,
 ) -> _MemstoreBinding | MemstoreCompletenessAcceptanceResult:
     candidates = [
         (field.name, role.parent_field)
@@ -1259,7 +1278,7 @@ def _resolve_memstore_binding(
             message=(
                 "memstore completeness requires exactly one explicit consumer FK role "
                 "targeting a typed producer identifier; "
-                f"found {len(candidates)}"
+                f"found {len(candidates)}. {_memstore_role_pair_hint(context, spec)}"
             ),
             producer_product=context.expectation.producer_product,
             consumer_product=context.expectation.consumer_product,
@@ -1272,6 +1291,52 @@ def _resolve_memstore_binding(
     return _MemstoreBinding(
         consumer_key_field=consumer_key_field,
         producer_key_field=producer_key_field,
+    )
+
+
+def _memstore_role_pair_hint(context: _MemstoreContext, spec: AuthoringSpecV1) -> str:
+    """Render concrete, evidence-backed role syntax for an incomplete read-back."""
+
+    role_pairs = {
+        (field.name, role.parent_field)
+        for field in context.consumer_plan.fields
+        for role in field.roles
+        if isinstance(role, ForeignKeyRolePlan) and role.parent_product == context.expectation.producer_product
+    }
+    role_pairs.update(
+        (expectation.child_field, expectation.parent_field)
+        for expectation in spec.expectations
+        if isinstance(expectation, ForeignKeyExpectation)
+        and expectation.child_product == context.expectation.consumer_product
+        and expectation.parent_product == context.expectation.producer_product
+    )
+
+    if len(role_pairs) != 1:
+        consumer_fields = ", ".join(field.name for field in context.consumer_plan.fields)
+        candidates = ", ".join(
+            f"{context.expectation.consumer_product}.{child_field} -> "
+            f"{context.expectation.producer_product}.{parent_field}"
+            for child_field, parent_field in sorted(role_pairs)
+        ) or "none"
+        return (
+            "Declare one producer identifier role and one matching consumer foreign-key role. "
+            f"Candidate edges: {candidates}. Consumer fields: {consumer_fields}."
+        )
+
+    consumer_field, producer_field = next(iter(role_pairs))
+
+    identifier_role = json.dumps({"kind": "identifier"}, separators=(",", ":"))
+    foreign_key_role = json.dumps(
+        {
+            "kind": "foreign_key",
+            "parent_product": context.expectation.producer_product,
+            "parent_field": producer_field,
+        },
+        separators=(",", ":"),
+    )
+    return (
+        f"Add {identifier_role} to {context.expectation.producer_product}.{producer_field}; "
+        f"add {foreign_key_role} to {context.expectation.consumer_product}.{consumer_field}."
     )
 
 
@@ -1495,6 +1560,7 @@ def _incomplete_result_without_evidence(
 def _evaluate_entry(
     entry: _ExpectationEntry,
     plan: CompilePlan,
+    spec: AuthoringSpecV1,
     captured: CapturedProducts,
 ) -> AcceptanceResult:
     expectation = entry.expectation
@@ -1520,7 +1586,7 @@ def _evaluate_entry(
     elif isinstance(expectation, _RowCondition):
         result = _row_condition_result(expectation, entry.source, captured)
     else:
-        result = _memstore_result(expectation, entry.source, plan, captured)
+        result = _memstore_result(expectation, entry.source, plan, spec, captured)
     return result.with_capture_completeness(completeness)
 
 
@@ -1528,10 +1594,14 @@ def evaluate_acceptance(
     plan: CompilePlan,
     spec: AuthoringSpecV1,
     captured: CapturedProducts,
+    acceptance_requirements: Iterable[ExpectationIntent] = (),
 ) -> AcceptanceReport:
     """Evaluate every mandatory expectation against all rows in one bounded capture."""
 
-    results = [_evaluate_entry(entry, plan, captured) for entry in merge_expectations(plan, spec)]
+    results = [
+        _evaluate_entry(entry, plan, spec, captured)
+        for entry in merge_expectations(plan, spec, acceptance_requirements)
+    ]
     passed = sum(result.status is AcceptanceStatus.PASS for result in results)
     failed = sum(result.status is AcceptanceStatus.FAIL for result in results)
     unevaluable = sum(result.status is AcceptanceStatus.UNEVALUABLE for result in results)

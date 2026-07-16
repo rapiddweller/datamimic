@@ -22,8 +22,8 @@ from datamimic_ce.authoring.rule_catalog import (
     authoring_rule_definitions,
     serialize_rule_definition,
 )
-from datamimic_ce.authoring.rules import ALL_RULES
-from datamimic_ce.authoring.rules.base import LintContext
+from datamimic_ce.authoring.rules import ALL_INTENT_RULES, ALL_RULES
+from datamimic_ce.authoring.rules.base import IntentLintContext, LintContext
 from datamimic_ce.authoring.schema import build_schema_index
 from datamimic_ce.cli import app
 from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
@@ -31,11 +31,12 @@ from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, N
 
 def test_every_evaluator_points_to_exactly_one_complete_catalog_definition() -> None:
     definitions = authoring_rule_definitions()
-    assert len(definitions) == len(ALL_RULES)
+    evaluators = (*ALL_RULES, *ALL_INTENT_RULES)
+    assert len(definitions) == len(evaluators)
     assert len({definition.id for definition in definitions}) == len(definitions)
-    assert {rule.definition for rule in ALL_RULES} == set(definitions)
+    assert {rule.definition for rule in evaluators} == set(definitions)
 
-    for rule in ALL_RULES:
+    for rule in evaluators:
         definition = rule.definition
         assert AUTHORING_RULE_DEFINITIONS[definition.id] is definition
         assert all(
@@ -54,6 +55,22 @@ def test_rule_severity_has_one_owner_and_catalog_is_immutable() -> None:
     assert Diagnostic.model_fields["severity"].annotation is RuleSeverity
     with pytest.raises(TypeError):
         AUTHORING_RULE_DEFINITIONS["DM999"] = authoring_rule_definitions()[0]  # type: ignore[index]
+
+
+@pytest.mark.parametrize("rule_id", ("DM404", "DM406"))
+def test_verification_blocking_is_central_rule_metadata(rule_id: str) -> None:
+    definition = AUTHORING_RULE_DEFINITIONS[rule_id]
+
+    assert definition.blocks_verification is True
+    assert serialize_rule_definition(definition)["blocks_verification"] is True
+
+
+def test_nested_foreign_key_rule_exposes_runtime_xml_for_review() -> None:
+    details = reference(ReferenceTopic.RULES, "DM404")
+
+    assert 'script="parent.id"' in details
+    assert 'type="int" min="1" max="4"' in details
+    assert '"kind":"script"' not in details
 
 
 def test_evaluator_metadata_is_read_directly_from_definition() -> None:
@@ -89,13 +106,18 @@ def test_evaluators_cannot_replace_catalog_message_or_fix_hint() -> None:
     parameters = inspect.signature(LintContext.diag).parameters
     assert "message" not in parameters
     assert "fix_hint" not in parameters
+    intent_parameters = inspect.signature(IntentLintContext.diag).parameters
+    assert "message" not in intent_parameters
+    assert "fix_hint" not in intent_parameters
 
     rules_dir = Path(__file__).parents[3] / "datamimic_ce" / "authoring" / "rules"
     violations: list[str] = []
-    allowed_keywords = {"evidence", "fix_context", "severity"}
     for path in sorted(rules_dir.glob("*.py")):
         if path.name in {"__init__.py", "base.py"}:
             continue
+        allowed_keywords = {"evidence", "fix_context", "severity"}
+        if path.name == "intent_rules.py":
+            allowed_keywords |= {"name", "path"}
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):

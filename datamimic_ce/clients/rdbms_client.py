@@ -7,11 +7,13 @@
 import re
 import sys
 from pathlib import Path
+from typing import Any, cast
 from urllib.parse import quote
 
 import oracledb
 import sqlalchemy
 from sqlalchemy import MetaData, func, inspect, select, text
+from sqlalchemy.engine import Dialect
 from sqlalchemy.pool import QueuePool
 
 from datamimic_ce.clients.database_client import DatabaseClient
@@ -524,6 +526,19 @@ class RdbmsClient(DatabaseClient):
             return schema, sequence_name
         return default_schema, sequence_name
 
+    @staticmethod
+    def _quoted_qualified_identifier(dialect: Dialect, *parts: str) -> str:
+        """Quote every identifier component with the active SQL dialect.
+
+        DDL cannot bind identifiers as values. Keeping the interpolation in this one
+        dialect-aware seam prevents sequence and table names from becoming executable SQL.
+        """
+        if not parts or any(not part for part in parts):
+            raise ValueError("SQL identifiers must be non-empty")
+        preparer = cast(Any, dialect).identifier_preparer
+        quote = preparer.quote_identifier
+        return ".".join(quote(part) for part in parts)
+
     def get_current_sequence_number(
         self, sequence_name: str, table_name: str | None = None, column_name: str | None = None
     ) -> int:
@@ -551,6 +566,7 @@ class RdbmsClient(DatabaseClient):
             try:
                 if dbms == "postgresql":
                     schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
+                    qualified_sequence = self._quoted_qualified_identifier(connection.dialect, schema, seq)
                     exists = connection.execute(
                         text(
                             "SELECT EXISTS (SELECT 1 FROM pg_sequences "
@@ -559,8 +575,11 @@ class RdbmsClient(DatabaseClient):
                         {"schema": schema, "seq_name": seq},
                     ).scalar()
                     if not exists:
-                        connection.execute(text(f"CREATE SEQUENCE IF NOT EXISTS {schema}.{seq}"))
-                    current_value = connection.execute(text(f"SELECT nextval('{schema}.{seq}')")).scalar()
+                        connection.execute(text(f"CREATE SEQUENCE IF NOT EXISTS {qualified_sequence}"))
+                    current_value = connection.execute(
+                        text("SELECT nextval(CAST(:sequence_name AS regclass))"),
+                        {"sequence_name": qualified_sequence},
+                    ).scalar()
                 elif dbms == "mysql":
                     current_value = self._advance_mysql_auto_increment(
                         connection, sequence_name, table_name, column_name, 1
@@ -604,9 +623,13 @@ class RdbmsClient(DatabaseClient):
             try:
                 if dbms == "postgresql":
                     schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
+                    qualified_sequence = self._quoted_qualified_identifier(connection.dialect, schema, seq)
                     connection.execute(
-                        text(f"SELECT setval('{schema}.{seq}', nextval('{schema}.{seq}') + :increment)"),
-                        {"increment": increment},
+                        text(
+                            "SELECT setval(CAST(:sequence_name AS regclass), "
+                            "nextval(CAST(:sequence_name AS regclass)) + :increment)"
+                        ),
+                        {"sequence_name": qualified_sequence, "increment": increment},
                     )
                 elif dbms == "mysql":
                     self._advance_mysql_auto_increment(connection, sequence_name, table_name, column_name, increment)
@@ -656,7 +679,10 @@ class RdbmsClient(DatabaseClient):
                 "table's own AUTO_INCREMENT column instead."
             )
         schema = self._credential.db_schema
-        table = f"{schema}.{table_name}" if schema else table_name
+        table = self._quoted_qualified_identifier(
+            connection.dialect,
+            *((schema, table_name) if schema else (table_name,)),
+        )
         lock_name = f"datamimic_seq_{schema}_{table_name}_{column_name}"[:64]
         acquired = connection.execute(text("SELECT GET_LOCK(:name, 30)"), {"name": lock_name}).scalar()
         if acquired != 1:

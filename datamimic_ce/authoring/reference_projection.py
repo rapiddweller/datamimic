@@ -5,11 +5,11 @@
 """Typed authoring discovery projected from the canonical intent models."""
 
 from collections.abc import Mapping
-from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, JsonValue, TypeAdapter
 
 from datamimic_ce.authoring.contracts import (
+    AuthoringReferenceCategory,
     AuthoringReferenceQuery,
     ExpectationReferenceQuery,
     FieldReferenceQuery,
@@ -17,6 +17,7 @@ from datamimic_ce.authoring.contracts import (
     SourceReferenceQuery,
     TargetReferenceQuery,
 )
+from datamimic_ce.authoring.script_semantics import current_scope_reference
 from datamimic_ce.authoring.spec import (
     AllowedValuesExpectation,
     ConstantField,
@@ -65,7 +66,6 @@ class AuthoringReferenceProjection(BaseModel):
 
 
 IntentModelType = type[BaseModel]
-_JSON_SCHEMA_ADAPTER: TypeAdapter[dict[str, JsonValue]] = TypeAdapter(dict[str, JsonValue])
 
 _PRODUCT_MODELS: Mapping[ProductIntentKind, IntentModelType] = {
     ProductIntentKind.GENERATED: GeneratedProduct,
@@ -129,7 +129,7 @@ def authoring_reference_projection(
         model=model_type.__name__,
         required_fields=tuple(name for name, field in fields.items() if field.is_required()),
         allowed_fields=tuple(fields),
-        json_schema=_JSON_SCHEMA_ADAPTER.validate_python(model_type.model_json_schema()),
+        json_schema=TypeAdapter(dict[str, JsonValue]).validate_python(model_type.model_json_schema()),
     )
 
 
@@ -145,29 +145,56 @@ def list_authoring_reference_queries() -> tuple[AuthoringReferenceQuery, ...]:
     )
 
 
-def projection_catalog_is_exhaustive() -> bool:
-    """Return whether every canonical variant has exactly one model owner."""
+def minimal_authoring_variant_shapes(category: AuthoringReferenceCategory) -> tuple[str, ...]:
+    """Render minimal forms from the typed variant-projection catalog.
 
-    mappings: tuple[tuple[set[StrEnum], set[StrEnum]], ...] = (
-        (set(_PRODUCT_MODELS), set(ProductIntentKind)),
-        (set(_SOURCE_MODELS), set(SourceIntentKind)),
-        (set(_FIELD_MODELS), set(FieldIntentKind)),
-        (set(_TARGET_MODELS), set(TargetIntentKind)),
-        (set(_EXPECTATION_MODELS), set(ExpectationIntentKind)),
+    This keeps validation feedback aligned with type-owned models instead of
+    walking Pydantic's serialized ``$defs``.
+    """
+
+    return tuple(
+        f"{query.kind.value}({', '.join(('kind', *authoring_reference_projection(query).required_fields))})"
+        for query in list_authoring_reference_queries()
+        if query.category is category
     )
-    model_types = (
-        *_PRODUCT_MODELS.values(),
-        *_SOURCE_MODELS.values(),
-        *_FIELD_MODELS.values(),
-        *_TARGET_MODELS.values(),
-        *_EXPECTATION_MODELS.values(),
+
+
+def authoring_variant_kinds(category: AuthoringReferenceCategory) -> tuple[str, ...]:
+    """Return the type-owned discriminator vocabulary for one reference category."""
+
+    return tuple(
+        query.kind.value
+        for query in list_authoring_reference_queries()
+        if query.category is category
     )
-    return all(actual == expected for actual, expected in mappings) and len(set(model_types)) == len(model_types)
+
+
+def source_product_repair_guidance(source_kind: SourceIntentKind | None) -> str:
+    """Render source-product guidance from canonical variant models."""
+
+    product = authoring_reference_projection(ProductReferenceQuery(kind=ProductIntentKind.SOURCE))
+    script_field = authoring_reference_projection(FieldReferenceQuery(kind=FieldIntentKind.SCRIPT))
+    fragments = [
+        "Source products derive their row count and require explicit fields",
+        f"required source-product fields: {', '.join(product.required_fields)}",
+    ]
+    if source_kind is not None:
+        source = authoring_reference_projection(SourceReferenceQuery(kind=source_kind))
+        fragments.append(f"{source_kind.value} source required fields: {', '.join(source.required_fields)}")
+    fragments.append(
+        "project each selected source column with a "
+        f"script field ({', '.join(script_field.required_fields)}), for example "
+        f'script="{current_scope_reference("<column>")}"'
+    )
+    fragments.append("use reference authoring for a typed variant schema")
+    return ". ".join(fragments) + "."
 
 
 __all__ = [
     "AuthoringReferenceProjection",
+    "authoring_variant_kinds",
     "authoring_reference_projection",
     "list_authoring_reference_queries",
-    "projection_catalog_is_exhaustive",
+    "minimal_authoring_variant_shapes",
+    "source_product_repair_guidance",
 ]

@@ -108,12 +108,35 @@ def test_source_capabilities_project_identically_to_manifest_and_reference() -> 
             assert file_format.value in prose
 
 
-def test_runtime_dispatchers_import_the_contextual_source_fact() -> None:
+def test_datasource_registry_is_the_runtime_source_boundary() -> None:
     from datamimic_ce.data_sources import data_source_registry
-    from datamimic_ce.tasks import key_variable_task, nested_key_task, task_util, variable_task
+    from datamimic_ce.tasks import nested_key_task, reference_task, task_util, variable_task
 
-    for module in (data_source_registry, key_variable_task, nested_key_task, task_util, variable_task):
-        assert "source_file_format_for" in inspect.getsource(module)
+    registry_source = inspect.getsource(data_source_registry)
+    assert "source_file_format_for" in registry_source
+    for routing_api in (
+        "load_generate_source",
+        "plan_variable_source",
+        "load_nested_key_source",
+        "load_reference_source",
+    ):
+        assert routing_api in registry_source
+
+    forbidden_task_details = (
+        "source_file_format_for",
+        "SourceFileFormat",
+        "FileUtil",
+        "RdbmsClient",
+        "MongoDBClient",
+        "SourceDistribution",
+        "get_distributed_data",
+        "get_unique_data",
+        "get_cyclic_data_list",
+    )
+    for module in (nested_key_task, reference_task, task_util, variable_task):
+        task_source = inspect.getsource(module)
+        for detail in forbidden_task_details:
+            assert detail not in task_source, f"{module.__name__} leaks datasource detail {detail}"
 
 
 def test_every_declared_file_capability_resolves_in_its_own_context() -> None:

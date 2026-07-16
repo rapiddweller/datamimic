@@ -4,11 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""lxml-based descriptor loading for the linter: line numbers + element paths.
-
-Hardened for untrusted inline XML (MCP input): no entity resolution, no network.
-The engine keeps its own stdlib ElementTree parse — this tree is only for diagnostics.
-"""
+"""Descriptor loading for diagnostics through the shared secure XML boundary."""
 
 from pathlib import Path
 
@@ -16,11 +12,9 @@ from lxml import etree
 
 from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rule_catalog import RuleSeverity
+from datamimic_ce.utils.secure_xml import DTDForbiddenError, parse_xml_file, parse_xml_source
 
 RULE_XML_LOAD = "DM001"
-
-_PARSER = etree.XMLParser(resolve_entities=False, no_network=True, recover=False)
-
 
 def element_path(element: etree._Element) -> str:
     """Stable address for diagnostics, e.g. '/setup/generate[2]/key[3]'."""
@@ -30,7 +24,9 @@ def element_path(element: etree._Element) -> str:
 def load_source(xml: str) -> tuple["etree._Element | None", Diagnostic | None]:
     """Parse inline descriptor XML. Returns (root, None) or (None, DM001 diagnostic)."""
     try:
-        root = etree.fromstring(xml.encode("utf-8"), parser=_PARSER)
+        root = parse_xml_source(xml)
+    except DTDForbiddenError as err:
+        return None, _unsafe_xml_diagnostic(err)
     except etree.XMLSyntaxError as err:
         return None, _syntax_diagnostic(err)
     return root, None
@@ -39,7 +35,7 @@ def load_source(xml: str) -> tuple["etree._Element | None", Diagnostic | None]:
 def load_file(path: Path) -> tuple["etree._Element | None", Diagnostic | None]:
     """Parse a descriptor file. Returns (root, None) or (None, DM001 diagnostic)."""
     try:
-        tree = etree.parse(str(path), parser=_PARSER)
+        root = parse_xml_file(path)
     except OSError as err:
         return None, Diagnostic(
             rule=RULE_XML_LOAD,
@@ -49,9 +45,22 @@ def load_file(path: Path) -> tuple["etree._Element | None", Diagnostic | None]:
             element="setup",
             path="/",
         )
+    except DTDForbiddenError as err:
+        return None, _unsafe_xml_diagnostic(err)
     except etree.XMLSyntaxError as err:
         return None, _syntax_diagnostic(err)
-    return tree.getroot(), None
+    return root, None
+
+
+def _unsafe_xml_diagnostic(err: DTDForbiddenError) -> Diagnostic:
+    return Diagnostic(
+        rule=RULE_XML_LOAD,
+        severity=RuleSeverity.ERROR,
+        message=f"Unsafe XML is not allowed: {err}",
+        fix_hint="Remove the DOCTYPE and use only the five predefined XML entities.",
+        element="setup",
+        path="/",
+    )
 
 
 def _syntax_diagnostic(err: etree.XMLSyntaxError) -> Diagnostic:

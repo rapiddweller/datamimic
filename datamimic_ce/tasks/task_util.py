@@ -3,13 +3,10 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
-import re
 import string
 from decimal import Decimal
 from typing import Any
 
-from datamimic_ce.clients.mongodb_client import MongoDBClient
-from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.constants.attribute_constants import (
     META_SELECTOR,
     META_TARGET_ENTITY,
@@ -23,9 +20,7 @@ from datamimic_ce.constants.data_type_constants import (
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
 )
-from datamimic_ce.constants.element_constants import EL_GENERATE
 from datamimic_ce.contexts.context import Context
-from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.converter.append_converter import AppendConverter
 from datamimic_ce.converter.converter import Converter
@@ -42,7 +37,6 @@ from datamimic_ce.converter.substring_converter import SubstringConverter
 from datamimic_ce.converter.timestamp2date_converter import Timestamp2DateConverter
 from datamimic_ce.converter.upper_case_converter import UpperCaseConverter
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.enums.converter_enums import ConverterEnum
 from datamimic_ce.enums.operation_enums import ExportOperation
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
@@ -51,7 +45,6 @@ from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
-from datamimic_ce.model.constraints import SourceFileFormat, source_file_format, source_file_format_for
 from datamimic_ce.statements.array_statement import ArrayStatement
 from datamimic_ce.statements.assert_statement import AssertStatement
 from datamimic_ce.statements.condition_statement import ConditionStatement
@@ -75,7 +68,6 @@ from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.state_machine_statement import StateMachineStatement
 from datamimic_ce.statements.statement import Statement
-from datamimic_ce.statements.statement_util import StatementUtil
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.statements.while_statement import WhileStatement
 from datamimic_ce.tasks.array_task import ArrayTask
@@ -89,18 +81,10 @@ from datamimic_ce.tasks.memstore_task import MemstoreTask
 from datamimic_ce.tasks.mongodb_task import MongoDBTask
 from datamimic_ce.tasks.reference_task import ReferenceTask
 from datamimic_ce.tasks.task import Task
-from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.object_util import ObjectUtil
 
 
 class TaskUtil:
-    @staticmethod
-    def _wgt_csv_has_header(file_path, separator: str) -> bool:
-        """Whether a '.wgt.csv' file's first row is a header: its weight column isn't numeric
-        (same sniff FileUtil.read_weight_csv itself uses to skip an optional header row)."""
-        raw_data = FileUtil._read_raw_csv(file_path, separator, "utf-8")
-        return bool(raw_data) and len(raw_data[0]) > 1 and not FileUtil._parses_as_float(raw_data[0][1])
-
     @staticmethod
     def get_task_by_statement(
         ctx: SetupContext,
@@ -193,56 +177,9 @@ class TaskUtil:
         then evaluate variables and functions
         e.g. '{1+3}' -> 4
         """
-        if isinstance(datas, dict):
-            dict_result = {}
-            for key, json_value in datas.items():
-                if isinstance(json_value, dict | list):
-                    value = TaskUtil.evaluate_file_script_template(ctx, json_value, prefix, suffix)
-                elif isinstance(json_value, str):
-                    value = TaskUtil._evaluate_script_value(ctx, json_value, prefix, suffix)
-                else:
-                    value = json_value
-                dict_result.update({key: value})
-            return dict_result
-        elif isinstance(datas, list):
-            list_result: list[Any] = []
-            for value in datas:
-                if isinstance(value, list):
-                    list_result.extend(TaskUtil.evaluate_file_script_template(ctx, value, prefix, suffix))
-                elif isinstance(value, dict):
-                    list_result.append(TaskUtil.evaluate_file_script_template(ctx, value, prefix, suffix))
-                elif isinstance(value, str):
-                    list_result.append(TaskUtil._evaluate_script_value(ctx, value, prefix, suffix))
-                else:
-                    list_result.append(value)
-            return list_result
-        elif isinstance(datas, str):
-            return TaskUtil._evaluate_script_value(ctx, datas, prefix, suffix)
-        else:
-            return datas
+        from datamimic_ce.services.source_script_evaluator import evaluate_source_template
 
-    @staticmethod
-    def _evaluate_script_value(ctx: Context, data: str, prefix: str, suffix: str):
-        """
-        Evaluate python expression in data
-        Python expression contain inside curly brackets
-        e.g. '{1+3}'
-        """
-        try:
-            if data is None or data.strip() == "":
-                return data
-
-            # Check if string is whole source script, e.g. {random_age(20,40)}
-            is_whole_source_script = data[0] == "{" and data[-1] == "}"
-            if is_whole_source_script:
-                match = re.search(r"^{(.*)}$", data)
-                return ctx.evaluate_python_expression(match.group(1)) if match is not None else None
-
-            return TaskUtil.evaluate_variable_concat_prefix_suffix(ctx, data, prefix, suffix)
-
-        except Exception as e:
-            # logger.error(f"Error evaluating script '{data}': {e}")
-            raise e
+        return evaluate_source_template(ctx, datas, prefix, suffix)
 
     @staticmethod
     def evaluate_condition_value(ctx: Context, element_name: str | None, value: str | None) -> bool:
@@ -308,182 +245,9 @@ class TaskUtil:
         :param suffix:
         :return:
         """
-        # Check if string contain dynamic variable syntax, e.g. '__my_name__ is __my_age__ years old'
-        # count group matching dynamic variable syntax
-        pattern = rf"{re.escape(prefix)}([^{re.escape(prefix)}]\S*?){re.escape(suffix)}"
-        matches = re.findall(pattern, expr)
-        var_match_count = len(matches)
+        from datamimic_ce.services.source_script_evaluator import interpolate_variables
 
-        if var_match_count == 0:
-            return expr
-
-        # Evaluate all dynamic variables (this return only string value), e.g. '{my_name} is {my_age} years old'
-        return re.sub(
-            pattern,
-            lambda matched_var: str(context.evaluate_python_expression(matched_var.group(1))),
-            expr,
-        )
-
-    @staticmethod
-    def gen_task_load_data_from_source_or_script(
-        context: SetupContext | GenIterContext,
-        stmt: GenerateStatement,
-        source_str: str | None,
-        separator: str,
-        source_scripted: bool,
-        load_start_idx: int | None,
-        load_end_idx: int | None,
-        load_pagination: DataSourcePagination | None,
-    ) -> tuple[list[dict], bool]:
-        """
-        Generate task to load data from source
-        """
-        build_from_source = True
-        source_data: dict | list = []
-
-        root_context = context.root
-
-        # get prefix and suffix
-        prefix = stmt.variable_prefix or root_context.default_variable_prefix
-        suffix = stmt.variable_suffix or root_context.default_variable_suffix
-
-        if source_str is None:
-            if stmt.script is None:
-                build_from_source = False
-            else:
-                # Evaluate script in source
-                source_data = context.evaluate_python_expression(stmt.script)
-        elif source_file_format(source_str) is SourceFileFormat.WEIGHTED_CSV and not TaskUtil._wgt_csv_has_header(
-            root_context.descriptor_dir / source_str, separator
-        ):
-            # A HEADERLESS ".wgt.csv" file (value|weight, no column names) has no coherent plain-CSV
-            # reading at all - the reader below would treat its first data row as a header,
-            # producing nonsense column names and one fewer row than the file has. A HEADERED
-            # ".wgt.csv" falls through to the plain ".csv" branch below instead: like ".wgt.ent.csv"
-            # (a normal headered CSV that merely has an extra "weight" column), reading it plainly is
-            # coherent, just unweighted. <key source="...wgt.csv"> already applies weights correctly
-            # either way (FileUtil.read_weight_csv auto-detects the header); <generate>-level
-            # weighted-entity sourcing is real work, not yet done - fail loudly instead of silently
-            # generating garbage, but only where there IS no coherent fallback.
-            raise ValueError(
-                f"<generate> '{stmt.full_name}': source '{source_str}' is a headerless weighted "
-                f"value|weight file - not supported at <generate>-level (only <key source=...> "
-                f"applies '.wgt.csv' weights today; add a header row to read it as a plain, "
-                f"unweighted CSV instead)"
-            )
-        # Load data from CSV
-        elif (source_format := source_file_format_for(EL_GENERATE, source_str)) is SourceFileFormat.CSV:
-            source_data = DataSourceRegistry.load_csv_file(
-                ctx=root_context,
-                file_path=root_context.descriptor_dir / source_str,
-                separator=separator,
-                cyclic=stmt.cyclic,
-                start_idx=load_start_idx,
-                end_idx=load_end_idx,
-                source_scripted=source_scripted,
-                prefix=prefix,
-                suffix=suffix,
-                offset=stmt.offset,
-            )
-        # Load data from JSON
-        elif source_format is SourceFileFormat.JSON:
-            source_data = DataSourceRegistry.load_json_file(
-                root_context.descriptor_dir / source_str,
-                stmt.cyclic,
-                load_start_idx,
-                load_end_idx,
-                offset=stmt.offset,
-            )
-            # if sourceScripted then evaluate python expression in json
-            if source_scripted:
-                try:
-                    source_data = TaskUtil.evaluate_file_script_template(
-                        ctx=root_context, datas=source_data, prefix=prefix, suffix=suffix
-                    )
-                except Exception as e:
-                    logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
-        # Load data from XLSX
-        elif source_format is SourceFileFormat.XLSX:
-            source_data = DataSourceRegistry.load_xlsx_file(
-                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx, offset=stmt.offset
-            )
-        # Load data from a fixed-width column file
-        elif source_format is SourceFileFormat.FIXED_WIDTH:
-            source_data = DataSourceRegistry.load_fixed_width_file(
-                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx, offset=stmt.offset
-            )
-        # Load one table from a dbunit dataset (checked BEFORE .xml - a .dbunit.xml also ends with .xml).
-        # sourceEntity/type selects the table (resolve_source_entity).
-        elif source_format is SourceFileFormat.DBUNIT_XML:
-            source_data = FileUtil.read_dbunit_to_dict_list(
-                root_context.descriptor_dir / source_str, StatementUtil.resolve_source_entity(stmt)
-            )
-            if stmt.offset:
-                source_data = source_data[stmt.offset :]
-        # Load data from XML
-        elif source_format is SourceFileFormat.XML:
-            source_data = DataSourceRegistry.load_xml_file(
-                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx, offset=stmt.offset
-            )
-            # if sourceScripted then evaluate python expression in json
-            if source_scripted:
-                source_data = TaskUtil.evaluate_file_script_template(
-                    ctx=context, datas=source_data, prefix=prefix, suffix=suffix
-                )
-        # Load data from in-memory memstore
-        elif root_context.memstore_manager.contain(source_str):
-            if stmt.offset:
-                raise ValueError(
-                    f"<generate> '{stmt.full_name}': offset= is only supported for file sources, "
-                    f"not memstore '{source_str}'"
-                )
-            source_data = root_context.memstore_manager.get_memstore(source_str).get_data_by_type(
-                StatementUtil.resolve_source_entity(stmt), load_pagination, stmt.cyclic
-            )
-        # Load data from client (MongoDB, RDBMS,...)
-        elif root_context.clients.get(source_str) is not None:
-            if stmt.offset:
-                raise ValueError(
-                    f"<generate> '{stmt.full_name}': offset= is only supported for file sources, "
-                    f"not database client '{source_str}' - use a selector with an SQL/Mongo skip instead"
-                )
-            client = root_context.clients.get(source_str)
-            # Load data from MongoDB
-            if isinstance(client, MongoDBClient):
-                if stmt.selector:
-                    selector = TaskUtil.evaluate_selector_script(root_context, stmt)
-                    source_data = client.get_by_page_with_query(query=selector, pagination=load_pagination)
-                elif (collection := StatementUtil.resolve_source_collection(stmt)) is not None:
-                    source_data = client.get_by_page_with_type(collection_name=collection, pagination=load_pagination)
-                else:
-                    raise ValueError(
-                        "MongoDB source requires at least attribute 'sourceEntity', 'type', 'selector' "
-                        "or 'iterationSelector'"
-                    )
-                # Init empty product for upsert MongoDB in case no record found by query
-                if (
-                    len(source_data) == 0
-                    and isinstance(stmt, GenerateStatement)
-                    and stmt.contain_mongodb_upsert(root_context)
-                ):
-                    source_data = [{}]
-            # Load data from RDBMS
-            elif isinstance(client, RdbmsClient):
-                if stmt.selector:
-                    selector = TaskUtil.evaluate_selector_script(root_context, stmt)
-                    source_data = client.get_by_page_with_query(original_query=selector, pagination=load_pagination)
-                else:
-                    source_data = client.get_by_page_with_type(
-                        table_name=StatementUtil.resolve_source_entity(stmt),
-                        pagination=load_pagination,
-                    )
-            else:
-                raise ValueError(f"Cannot load data from client: {type(client).__name__}")
-        else:
-            raise ValueError(f"cannot find data source {source_str} for iterate task")
-
-        return_source_data = source_data if isinstance(source_data, list) else [source_data]
-        return return_source_data, build_from_source
+        return interpolate_variables(context, expr, prefix, suffix)
 
     @staticmethod
     def export_product_by_page(

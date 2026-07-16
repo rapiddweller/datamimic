@@ -11,9 +11,10 @@ from datamimic_ce.product_storage.memstore_manager import MemstoreManager
 
 
 class DummyRootGenStmt:
-    def __init__(self, type_: str = "generate", count: int = 10):
+    def __init__(self, type_: str = "generate", count: int = 10, num_process: int | None = None):
         self.type = type_
         self.count = count
+        self.num_process = num_process
 
 
 class DummyStmt:
@@ -29,9 +30,15 @@ class DummyStmt:
         return self._root_gen
 
 
+class DummyCredential:
+    def __init__(self, dbms: str = "postgresql"):
+        self.dbms = dbms
+
+
 class DummyRdbmsClient:
-    def __init__(self):
+    def __init__(self, dbms: str = "postgresql"):
         self._seq = {}
+        self.credential = DummyCredential(dbms)
 
     def get_current_sequence_number(
         self, sequence_name: str, table_name: str | None = None, column_name: str | None = None
@@ -289,3 +296,20 @@ def test_sequence_table_generator_multi_process_partitions_non_overlapping():
     assert len(vals1) in {pagination.limit, pagination.limit + 1}
     # Ensure partitions do not overlap
     assert set(vals0).isdisjoint(set(vals1))
+
+
+def test_sequence_table_generator_rejects_mysql_multiprocessing(setup_context: SetupContext):
+    setup_context.num_process = 2
+    setup_context.clients["db1"] = DummyRdbmsClient(dbms="mysql")
+    stmt = DummyStmt(
+        name="id",
+        database="db1",
+        root_gen=DummyRootGenStmt(type_="orders", count=5),
+    )
+
+    with pytest.raises(ValueError, match="MySQL source is single-process only"):
+        GeneratorUtil(context=setup_context).create_generator(
+            "SequenceTableGenerator",
+            stmt=stmt,
+            key="mysql:sequence",
+        )

@@ -1,0 +1,7 @@
+<setup>
+  <generate name="gen" count="2" target="">
+    <!-- constant is not a finite pool for unique — must fail -->
+    <variable name="cat" constant="hello" unique="true"/>
+    <key name="code" script="cat"/>
+  </generate>
+</setup>

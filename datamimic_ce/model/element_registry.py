@@ -12,8 +12,8 @@ Runtime parser dispatch and authoring schema reflection are projections of this
 registry; neither keeps its own element table.
 
 Parser imports stay lazy because parser modules depend on models and
-``ParserUtil``. The public registration API is primarily useful for extensions
-and architecture tests; built-in definitions remain immutable.
+``ParserUtil``. Extensions register structure and constraints through one
+atomic API; built-in definitions remain immutable.
 """
 
 from __future__ import annotations
@@ -60,6 +60,7 @@ from datamimic_ce.constants.element_constants import (
 if TYPE_CHECKING:
     from xml.etree.ElementTree import Element
 
+    from datamimic_ce.model.constraints.types import Constraint
     from datamimic_ce.parsers.statement_parser import StatementParser
 
 
@@ -273,8 +274,8 @@ def registry_revision() -> int:
     return _registry_revision
 
 
-def register_element(definition: ElementDefinition) -> None:
-    """Register one extension definition for runtime and authoring consumers."""
+def _register_element_definition(definition: ElementDefinition) -> None:
+    """Register the structural half of an extension contract."""
     global _registry_revision
 
     occupied = set(_definitions()) | set(_alias_map())
@@ -287,8 +288,8 @@ def register_element(definition: ElementDefinition) -> None:
     _registry_revision += 1
 
 
-def unregister_element(tag: str) -> None:
-    """Remove an extension definition; built-in definitions cannot be removed."""
+def _unregister_element_definition(tag: str) -> None:
+    """Remove the structural half of an extension contract."""
     global _registry_revision
 
     canonical = canonical_tag(tag)
@@ -296,6 +297,58 @@ def unregister_element(tag: str) -> None:
         raise KeyError(f"extension element <{tag}> is not registered")
     del _extension_definitions[canonical]
     _registry_revision += 1
+
+
+def register_element_extension(
+    definition: ElementDefinition,
+    constraints: tuple[Constraint, ...] = (),
+) -> None:
+    """Atomically register structure and business rules for one extension element."""
+    from datamimic_ce.model.constraints.registry import (
+        _register_element_constraints,
+        _unregister_element_constraints,
+    )
+
+    _register_element_definition(definition)
+    registered_rule_tags: list[str] = []
+    try:
+        for tag in (definition.tag, *sorted(definition.aliases)):
+            _register_element_constraints(tag, constraints)
+            registered_rule_tags.append(tag)
+    except Exception:
+        for tag in reversed(registered_rule_tags):
+            _unregister_element_constraints(tag)
+        _unregister_element_definition(definition.tag)
+        raise
+
+
+def unregister_element_extension(tag: str) -> None:
+    """Atomically remove structure and business rules for one extension element."""
+    from datamimic_ce.model.constraints.registry import (
+        _register_element_constraints,
+        _unregister_element_constraints,
+        element_constraints,
+    )
+
+    definition = get_element_definition(tag)
+    canonical = canonical_tag(tag)
+    if definition is None or canonical not in _extension_definitions:
+        raise KeyError(f"extension element <{tag}> is not registered")
+
+    contracts = {
+        registered_tag: element_constraints(registered_tag)
+        for registered_tag in (definition.tag, *sorted(definition.aliases))
+    }
+    removed: list[str] = []
+    try:
+        for registered_tag in contracts:
+            _unregister_element_constraints(registered_tag)
+            removed.append(registered_tag)
+        _unregister_element_definition(canonical)
+    except Exception:
+        for registered_tag in removed:
+            _register_element_constraints(registered_tag, contracts[registered_tag])
+        raise
 
 
 def canonical_tag(tag: str) -> str:

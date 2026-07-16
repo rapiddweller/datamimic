@@ -7,12 +7,12 @@ enums define the transport choices at the boundary.
 from __future__ import annotations
 
 import os
-from enum import StrEnum
 from typing import Annotated
 
 import typer
 import uvicorn
 
+from datamimic_ce._compat import StrEnum
 from datamimic_ce.mcp.server import (
     build_sse_app,
     create_server,

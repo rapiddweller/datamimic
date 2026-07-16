@@ -100,21 +100,20 @@ EXIST_COUNT = RequiredOneOf(
 # Fact 3a: unique requires values or source (check_unique_constraints, part 1)
 UNIQUE_REQUIRES_POOL = Requires(
     ATTR_UNIQUE,
-    frozenset((ATTR_VALUES, ATTR_SOURCE)),
+    frozenset((ATTR_VALUES, ATTR_SOURCE, ATTR_GENERATOR)),
     when_true=True,
-    message="'unique' requires 'values' or 'source' (a finite pool)",
+    message="'unique' requires 'values', 'source' or 'generator' (a finite pool)",
 )
 
-# A <key source="...wgt.csv"> is a legacy weighted-source mode implemented by
-# KeyVariableTask with replacement; it deliberately rejects unique selection at
-# runtime.  Keep that business rule in the model contract so authoring/lint fails
-# before task construction.  Source-backed unique selection belongs to <variable>,
-# <generate>, <nestedKey>, and <reference>.
+# <key source="...wgt.csv"> is a legacy weighted-source mode with replacement;
+# source-backed unique belongs to <variable>/<generate>/<nestedKey>/<reference>.
+# <key generator="..."> with unique="true" uses task-level dedup (retry loop in
+# KeyVariableTask), not generator-owned uniqueness state.
 KEY_UNIQUE_REQUIRES_VALUES = Requires(
     ATTR_UNIQUE,
-    frozenset((ATTR_VALUES,)),
+    frozenset((ATTR_VALUES, ATTR_GENERATOR)),
     when_true=True,
-    message="'unique' on <key> requires 'values'; key source= is weighted with replacement",
+    message="'unique' on <key> requires 'values' or 'generator'; key source= is weighted with replacement",
 )
 
 # Fact 3b: unique forbids weights (check_unique_constraints, part 2)
@@ -143,7 +142,7 @@ UNIQUE_DISTRIBUTION_RANDOM = AllowedValuesWhen(
     ATTR_UNIQUE,
     when_true=True,
     message="'unique' only combines with distribution='random' (it implies distinct random order), "
-    "not '{actual_value}'",
+    "not '{actual_value}'",  # noqa: F541  # runtime .format() placeholder, not an f-string
 )
 
 # A <key> uses distribution= for NumberDistribution over a numeric range, not

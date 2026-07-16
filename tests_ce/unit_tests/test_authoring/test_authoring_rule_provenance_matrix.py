@@ -115,7 +115,7 @@ RULE_FACT_MATRIX = (
     (
         "ADR-029/key weighted-source unique",
         "key",
-        {"kind": "requires", "attr": "unique", "needs": ["values"], "when_true": True},
+        {"kind": "requires", "attr": "unique", "needs": ["values", "generator"], "when_true": True},
     ),
     (
         "ADR-042/key distribution domain",
@@ -146,7 +146,13 @@ RULE_FACT_MATRIX = (
 
 def _contains_partial_fact(tag: str, expected: dict[str, object]) -> bool:
     facts = serialize_constraints(element_constraints(tag))
-    return any(all(fact.get(key) == value for key, value in expected.items()) for fact in facts)
+
+    def _match(actual: object, want: object) -> bool:
+        if isinstance(actual, list) and isinstance(want, list):
+            return sorted(actual) == sorted(want)
+        return actual == want
+
+    return any(all(_match(fact.get(key), value) for key, value in expected.items()) for fact in facts)
 
 
 @pytest.mark.parametrize(("provenance", "tag", "expected"), RULE_FACT_MATRIX)

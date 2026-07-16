@@ -117,7 +117,6 @@ def test_check_service_cli_parity(tmp_path: Path) -> None:
     descriptor.write_text(_XML, encoding="utf-8")
     request = CheckRequest(
         path=str(descriptor),
-        response_format="detailed",
         max_diagnostics=17,
     )
 
@@ -137,7 +136,6 @@ def test_run_service_cli_parity(tmp_path: Path) -> None:
     descriptor.write_text(_XML, encoding="utf-8")
     request = RunRequest(
         path=str(descriptor),
-        response_format="detailed",
         max_count=2,
         sample_rows=1,
         timeout_seconds=7,
@@ -200,3 +198,32 @@ def test_canonical_authoring_bounds_reject_out_of_range_values(
 
     with pytest.raises(ValidationError):
         request_type(**kwargs)
+
+
+@pytest.mark.parametrize(
+    ("request_type", "kwargs"),
+    [
+        (CheckRequest, {"xml": "<setup/>", "max_diagnostics": "5"}),
+        (RunRequest, {"xml": "<setup/>", "max_count": "5"}),
+        (RunRequest, {"xml": "<setup/>", "allow_side_effects": "yes"}),
+        (RunRequest, {"xml": "<setup/>", "smoke_export": "false"}),
+        (ScaffoldRequest, {"spec": _SCAFFOLD_SPEC, "sample_rows": "5"}),
+    ],
+)
+def test_authoring_requests_reject_coercive_scalar_inputs(
+    request_type: type[CheckRequest] | type[RunRequest] | type[ScaffoldRequest],
+    kwargs: dict[str, object],
+) -> None:
+    with pytest.raises(ValidationError):
+        request_type.model_validate(kwargs)
+
+
+@pytest.mark.parametrize("request_type", [CheckRequest, RunRequest, ScaffoldRequest])
+def test_authoring_requests_reject_unknown_fields(
+    request_type: type[CheckRequest] | type[RunRequest] | type[ScaffoldRequest],
+) -> None:
+    kwargs: dict[str, object] = {"spec": _SCAFFOLD_SPEC} if request_type is ScaffoldRequest else {"xml": "<setup/>"}
+    kwargs["response_format"] = "detailed"
+
+    with pytest.raises(ValidationError, match="response_format"):
+        request_type.model_validate(kwargs)

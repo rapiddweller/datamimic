@@ -11,8 +11,9 @@ metadata. The runtime engine should not depend on them.
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from enum import StrEnum
 from types import MappingProxyType
+
+from datamimic_ce._compat import StrEnum
 
 
 class RuleSeverity(StrEnum):
@@ -41,6 +42,7 @@ class RuleDefinition:
     valid_example: str
     invalid_example: str
     advisory_severity: RuleSeverity | None = None
+    blocks_verification: bool = False
 
     def __post_init__(self) -> None:
         if len(self.id) != 5 or not self.id.startswith("DM") or not self.id[2:].isdigit():
@@ -76,6 +78,7 @@ def _rule_definition(
     valid_example: str,
     invalid_example: str,
     advisory_severity: RuleSeverity | None = None,
+    blocks_verification: bool = False,
 ) -> RuleDefinition:
     return RuleDefinition(
         id=rule_id,
@@ -87,6 +90,7 @@ def _rule_definition(
         valid_example=valid_example,
         invalid_example=invalid_example,
         advisory_severity=advisory_severity,
+        blocks_verification=blocks_verification,
     )
 
 
@@ -201,10 +205,12 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "DM204",
         RuleSeverity.ERROR,
         "Invalid unique combination",
-        "unique requires a finite pool and must follow the element's central distribution policy.",
-        "Use a supported finite pool and remove conflicting weights, cyclic or distribution attributes.",
+        "unique requires a finite pool (values, source, or generator) and must follow the element's "
+        "central distribution policy. Generator-backed unique uses task-level dedup — the generator "
+        "itself does not own uniqueness.",
+        "Use values, source or generator as a supported pool; remove conflicting weights, cyclic or distribution.",
         "Central unique/source compatibility facts and ADR-042.",
-        '<variable name="x" values="1,2" unique="true"/>',
+        '<key name="x" generator="EANGenerator()" unique="true"/>',
         '<variable name="x" values="1,2" unique="true" cyclic="true"/>',
     ),
     _rule_definition(
@@ -488,6 +494,21 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         '<setup><generate name="a" count="1"/><generate name="a" count="1"/></setup>',
     ),
     _rule_definition(
+        "DM404",
+        RuleSeverity.WARNING,
+        "Nested foreign key does not copy its parent",
+        "A nested child foreign-key field is generated independently instead of carrying its enclosing parent key.",
+        'Use a nested <key> with script="parent.<field>" to copy the enclosing parent key.',
+        "AuthoringSpecV1 nested relationship and foreign-key role contract.",
+        '<setup><generate name="customers" count="4"><key name="id" generator="IncrementGenerator"/>'
+        '<generate name="orders" count="2"><key name="customer_id" script="parent.id"/>'
+        "</generate></generate></setup>",
+        '<setup><generate name="customers" count="4"><key name="id" generator="IncrementGenerator"/>'
+        '<generate name="orders" count="2"><key name="customer_id" type="int" min="1" max="4"/>'
+        "</generate></generate></setup>",
+        blocks_verification=True,
+    ),
+    _rule_definition(
         "DM405",
         RuleSeverity.ERROR,
         "Missing include file",
@@ -496,6 +517,24 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "Include parser path-resolution contract.",
         '<include uri="existing.properties"/>',
         '<include uri="missing.properties"/>',
+    ),
+    _rule_definition(
+        "DM406",
+        RuleSeverity.WARNING,
+        "Memstore readback field does not copy its source",
+        "A same-named field in a memstore-backed source product regenerates a stored value instead of reading it.",
+        'Use a script field with script="this.<field>"; retain any foreign-key role on that field. '
+        "This readback-integrity rule must pass before verified=true.",
+        "AuthoringSpecV1 memstore source readback contract.",
+        '<setup><memstore id="store"/><generate name="users" count="1" target="store">'
+        '<key name="id" generator="IncrementGenerator"/></generate>'
+        '<generate name="audit" source="store" type="users"><key name="id" script="this.id"/>'
+        "</generate></setup>",
+        '<setup><memstore id="store"/><generate name="users" count="1" target="store">'
+        '<key name="id" generator="IncrementGenerator"/></generate>'
+        '<generate name="audit" source="store" type="users"><key name="id" type="int" min="1" max="9"/>'
+        "</generate></setup>",
+        blocks_verification=True,
     ),
 )
 
@@ -515,9 +554,9 @@ def authoring_rule_definition(rule_id: str) -> RuleDefinition:
     return AUTHORING_RULE_DEFINITIONS[rule_id]
 
 
-def serialize_rule_definition(definition: RuleDefinition) -> dict[str, str]:
+def serialize_rule_definition(definition: RuleDefinition) -> dict[str, str | bool]:
     """Project one catalog entry to CLI/MCP-friendly plain data."""
-    serialized = {
+    serialized: dict[str, str | bool] = {
         "id": definition.id,
         "severity": definition.severity.value,
         "title": definition.title,
@@ -530,4 +569,6 @@ def serialize_rule_definition(definition: RuleDefinition) -> dict[str, str]:
     }
     if definition.advisory_severity is not None:
         serialized["advisory_severity"] = definition.advisory_severity.value
+    if definition.blocks_verification:
+        serialized["blocks_verification"] = True
     return serialized

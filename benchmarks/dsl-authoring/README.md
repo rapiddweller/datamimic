@@ -15,6 +15,14 @@ agent authoring.
   threats-to-validity section. Supersedes the earlier compact-capabilities
   diagnostic on this branch (its essential findings are folded into the
   ladder paper's background section; full text remains in git history).
+- [`evaluations/2026-07-16-qwen3-coder-category-discovery.md`](evaluations/2026-07-16-qwen3-coder-category-discovery.md)
+  — append-only, seeded Qwen3-Coder rerun after a typed category-discovery
+  contract improvement. It retains the ladder's result-table format and
+  separates the valid 4/5 result from the historical comparison limitation.
+- [`evaluations/2026-07-16-qwen3-coder-semantic-readback-gate.md`](evaluations/2026-07-16-qwen3-coder-semantic-readback-gate.md)
+  — append-only, seeded Qwen3-Coder rerun after a generic memstore
+  readback-integrity verification gate. It preserves the valid 4/5 score while
+  making the T4 certificate semantically stricter.
 
 The records deliberately omit generated models, transcripts, provider request
 identifiers, and runtime outputs. Those artifacts belong in a system temporary

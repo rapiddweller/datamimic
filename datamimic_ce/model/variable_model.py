@@ -181,9 +181,10 @@ class VariableModel(BaseModel):
     )
     unique: bool | None = Field(
         None,
-        description="Emit each value at most once (distinct picks from 'values' or 'source', without "
-        "replacement). Requires 'values' or 'source', cannot combine with 'weights', and only combines "
-        "with the default random distribution.",
+        description="Emit each value at most once (distinct selection without replacement). "
+        "Requires 'values', 'source', or 'generator'; cannot combine with 'weights'; "
+        "only combines with the default random distribution. Generator-backed dedup is "
+        "task-level — the generator itself does not own uniqueness state.",
         examples=[True, False],
     )
     constant: str | None = Field(

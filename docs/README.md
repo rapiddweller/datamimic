@@ -16,11 +16,12 @@ This project documentation focuses specifically on:
 
 - [Agent guide](../AGENTS.md): repository instructions that teach a coding agent the DSL authoring loop.
 - [MCP Quickstart](mcp_quickstart.md): install and register the MCP server; the check/run/reference authoring tools.
+- [4.1.0 release notes](releases/4.1.0.md): new authoring contracts, compatibility changes, and migration steps.
 
 ### Getting started
 
 - [Installation and first steps](#getting-started): install the package and generate your first entities.
-- [Command line interface](api/cli.md): run, lint, validate, capabilities, init, demo.
+- [Command line interface](api/cli.md): run, lint, dry-run, scaffold, reference, capabilities, init, demo.
 
 ### Data domains
 

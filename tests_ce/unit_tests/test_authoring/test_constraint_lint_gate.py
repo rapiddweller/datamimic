@@ -37,10 +37,12 @@ from datamimic_ce.model.constraints import (
     Requires,
     RequiresWhenValue,
     ValidValues,
-    register_element_constraints,
-    unregister_element_constraints,
 )
-from datamimic_ce.model.element_registry import ElementDefinition, register_element, unregister_element
+from datamimic_ce.model.element_registry import (
+    ElementDefinition,
+    register_element_extension,
+    unregister_element_extension,
+)
 
 _TAG = "syntheticelement"
 
@@ -85,16 +87,12 @@ class _SyntheticModel(BaseModel):
 
 def _lint_synthetic(body_attrs: str) -> list[Diagnostic]:
     """Register structure and rules in their SPOTs, run rules, then restore."""
-    register_element(ElementDefinition(_TAG, _SyntheticModel, None))
+    register_element_extension(ElementDefinition(_TAG, _SyntheticModel, None), _SYNTHETIC_CONSTRAINTS)
     try:
-        register_element_constraints(_TAG, _SYNTHETIC_CONSTRAINTS)
-        try:
-            root = etree.fromstring(f'<setup rngSeed="1"><{_TAG} name="s" {body_attrs}/></setup>'.encode())
-            return [diag for diag in _run_rules(root, base_dir=None) if diag.element == _TAG]
-        finally:
-            unregister_element_constraints(_TAG)
+        root = etree.fromstring(f'<setup rngSeed="1"><{_TAG} name="s" {body_attrs}/></setup>'.encode())
+        return [diag for diag in _run_rules(root, base_dir=None) if diag.element == _TAG]
     finally:
-        unregister_element(_TAG)
+        unregister_element_extension(_TAG)
 
 
 def _rules_fired(body_attrs: str) -> set[str]:

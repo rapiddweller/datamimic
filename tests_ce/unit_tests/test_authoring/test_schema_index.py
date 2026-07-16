@@ -28,8 +28,8 @@ from datamimic_ce.model.element_registry import (
     ElementDefinition,
     get_model_class,
     list_element_tags,
-    register_element,
-    unregister_element,
+    register_element_extension,
+    unregister_element_extension,
 )
 from datamimic_ce.model.model_util import ModelUtil
 from datamimic_ce.parsers.parser_util import ParserUtil
@@ -131,7 +131,7 @@ def test_gate2_single_registration_reaches_parser_and_authoring() -> None:
         def parse(self, *args, **kwargs) -> Statement:  # pragma: no cover - dispatch is the contract here
             raise NotImplementedError
 
-    register_element(ElementDefinition(tag, SyntheticModel, SyntheticParser))
+    register_element_extension(ElementDefinition(tag, SyntheticModel, SyntheticParser))
     try:
         parser = ParserUtil._get_parser_by_element(ET.Element(tag), properties=None)
         schema = build_schema_index().get(tag)
@@ -141,7 +141,7 @@ def test_gate2_single_registration_reaches_parser_and_authoring() -> None:
         assert schema.model is SyntheticModel
         assert set(schema.attributes) == {"name"}
     finally:
-        unregister_element(tag)
+        unregister_element_extension(tag)
 
     assert build_schema_index().get(tag) is None
 

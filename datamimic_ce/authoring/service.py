@@ -35,12 +35,14 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldResult,
     ScaffoldVerificationEvidence,
 )
+from datamimic_ce.authoring.derived_facts import derive_facts
 from datamimic_ce.authoring.diagnostics import LintResult
 from datamimic_ce.authoring.dryrun import (
     dry_run,
     dry_run_source,
     dry_run_source_captured,
 )
+from datamimic_ce.authoring.intent_linter import intent_diagnostics_pass_verification, lint_intent
 from datamimic_ce.authoring.intent_validation import project_validation_issues
 from datamimic_ce.authoring.linter import lint_descriptor, lint_source
 from datamimic_ce.authoring.spec import AuthoringSpecV1
@@ -121,12 +123,13 @@ def reference(request: ReferenceRequest) -> ReferenceResult:
     from datamimic_ce.authoring.reference import reference as project_reference
 
     try:
-        content = project_reference(request.topic, request.name, query=request.query)
+        content = project_reference(request.topic, request.name, category=request.category, query=request.query)
     except ValueError as error:
         return ReferenceResult(
             ok=False,
             topic=request.topic,
             name=request.name,
+            category=request.category,
             query=request.query,
             error=str(error),
         )
@@ -134,6 +137,7 @@ def reference(request: ReferenceRequest) -> ReferenceResult:
         ok=True,
         topic=request.topic,
         name=request.name,
+        category=request.category,
         query=request.query,
         content=content,
     )
@@ -192,6 +196,9 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             ),
         )
     xml = compiled.xml
+    derived_facts = derive_facts(compiled.plan)
+    intent_diagnostics = lint_intent(compiled.spec, compiled.plan)
+    intent_verification_passed = intent_diagnostics_pass_verification(intent_diagnostics)
 
     captured_run = dry_run_source_captured(
         xml,
@@ -207,9 +214,10 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             stage=AuthoringStage.LINT,
             xml=xml,
             summary=failed_lint.summary() if failed_lint is not None else None,
-            diagnostics=dry_run_result.diagnostics,
+            diagnostics=[*intent_diagnostics, *dry_run_result.diagnostics],
             truncated=bool(failed_lint.truncated) if failed_lint is not None else False,
             compile_plan=compiled.plan,
+            derived_facts=derived_facts,
             verification=blocked_verification(
                 request.verification,
                 "Lint failed before verification could run",
@@ -233,15 +241,21 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             stage=AuthoringStage.DRY_RUN,
             xml=xml,
             summary=None,
-            diagnostics=dry_run_result.diagnostics,
+            diagnostics=[*intent_diagnostics, *dry_run_result.diagnostics],
             products=dry_run_result.products,
             truncated=False,
             compile_plan=compiled.plan,
+            derived_facts=derived_facts,
             verification=verification,
             verified=False,
         )
 
-    acceptance = evaluate_acceptance(compiled.plan, compiled.spec, captured_run.captured)
+    acceptance = evaluate_acceptance(
+        compiled.plan,
+        compiled.spec,
+        captured_run.captured,
+        request.acceptance_requirements,
+    )
     remediations = max_count_remediations(
         compiled.plan,
         captured_run.captured,
@@ -265,7 +279,7 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
     )
     verification_passed = verification.gates_passed
     replay_diagnostics = replay_run.result.diagnostics if replay_run is not None else []
-    diagnostics = [*dry_run_result.diagnostics, *replay_diagnostics]
+    diagnostics = [*intent_diagnostics, *dry_run_result.diagnostics, *replay_diagnostics]
     return ScaffoldResult(
         ok=verification_passed,
         stage=(AuthoringStage.ACCEPTANCE if verification_passed else AuthoringStage.VERIFICATION),
@@ -275,8 +289,9 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
         products=dry_run_result.products,
         truncated=False,
         compile_plan=compiled.plan,
+        derived_facts=derived_facts,
         acceptance=acceptance,
         remediations=remediations,
         verification=verification,
-        verified=acceptance.verified and verification_passed,
+        verified=acceptance.verified and verification_passed and intent_verification_passed,
     )

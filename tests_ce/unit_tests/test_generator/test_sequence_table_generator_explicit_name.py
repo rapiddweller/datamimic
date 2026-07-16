@@ -22,9 +22,10 @@ from datamimic_ce.product_storage.memstore_manager import MemstoreManager
 
 
 class DummyRootGenStmt:
-    def __init__(self, type_: str = "orders", count: int = 10):
+    def __init__(self, type_: str = "orders", count: int = 10, num_process: int | None = None):
         self.type = type_
         self.count = count
+        self.num_process = num_process
 
 
 class DummyStmt:

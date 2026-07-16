@@ -727,7 +727,8 @@ class TestModelUniqueConstraintContracts:
 
         constraints = KeyModel.model_json_schema()["constraints"]
         assert any(
-            fact["kind"] == "requires" and fact["attr"] == "unique" and fact["needs"] == ["values"]
+            fact["kind"] == "requires" and fact["attr"] == "unique"
+            and sorted(fact["needs"]) == sorted(["values", "generator"])
             for fact in constraints
         )
 

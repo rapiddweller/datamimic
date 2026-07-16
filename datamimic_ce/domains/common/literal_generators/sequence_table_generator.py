@@ -42,10 +42,10 @@ class SequenceTableGenerator(BaseLiteralGenerator):
       GET_LOCK-guarded read-AUTO_INCREMENT-then-ALTER-TABLE critical section
       (_advance_mysql_auto_increment). This is exactly the class of client-side range math EE
       opted out of, and it shows: reproduced as real duplicate-key collisions in ~2/3 of
-      isolated real-multiprocess runs of the uneven-ratio case (test_sequence_table_generator_
-      mysql_uneven_multiprocess, skipped - not a hypothetical, an observed failure rate). MySQL
-      sequence generation is single-process-only in CE, matching EE's judgment for this dialect;
-      prefer numProcess=1 for any MySQL-backed run.
+      isolated real-multiprocess runs of the uneven-ratio case (the regression now asserts that
+      test_sequence_table_generator_mysql_uneven_multiprocess is rejected before execution). MySQL
+      sequence generation is rejected when numProcess is greater than one in CE, matching EE's
+      judgment for this dialect.
     - MSSQL/Oracle: native-sequence support was prototyped and pulled (see
       get_current_sequence_number's docstring) - unsupported regardless of process count.
 
@@ -112,7 +112,13 @@ class SequenceTableGenerator(BaseLiteralGenerator):
 
         # Initialize sequence with process-safe range
         try:
-            total_processes = context.root.num_process or 1
+            total_processes = self._root_gen_stmt.num_process or context.root.num_process or 1
+            credential = getattr(rdbms_client, "credential", None)
+            if total_processes > 1 and getattr(credential, "dbms", None) == "mysql":
+                raise ValueError(
+                    "SequenceTableGenerator with a MySQL source is single-process only; "
+                    "set numProcess=1 because MySQL has no atomic native sequence reservation"
+                )
             self._process_id = context.root.process_id or 0
 
             total_count = int(root_gen_stmt.count)

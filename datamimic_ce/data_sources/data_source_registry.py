@@ -7,21 +7,28 @@
 import copy
 import itertools
 from collections.abc import Iterable, Iterator
+from dataclasses import dataclass
 from pathlib import Path
 from random import Random
-from typing import Any
+from typing import Any, Literal
 
 import xmltodict
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
+from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.clients.mongodb_client import MongoDBClient
+from datamimic_ce.clients.rdbms_client import RdbmsClient
+from datamimic_ce.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE_LIST
 from datamimic_ce.constants.element_constants import EL_GENERATE, EL_NESTED_KEY, EL_VARIABLE
+from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntityDataSource
 from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.logger import logger
-from datamimic_ce.model.constraints import SourceFileFormat, source_file_format_for
+from datamimic_ce.model.constraints import SourceFileFormat, source_file_format, source_file_format_for
+from datamimic_ce.services.source_script_evaluator import evaluate_source_template, interpolate_variables
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
@@ -34,7 +41,26 @@ from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.unique_sampling import unique_values
 
 
+@dataclass(frozen=True)
+class VariableSourcePlan:
+    """Task-facing result of one centrally routed variable source."""
+
+    kind: Literal["full_load", "iteration_selector", "iterator", "lazy", "storage", "weighted"]
+    data: Iterable[Any] | None = None
+    client: DatabaseClient | None = None
+    weighted_source: WeightedEntityDataSource | None = None
+    selector: str | None = None
+    prefix: str = ""
+    suffix: str = ""
+
+
 class DataSourceRegistry:
+    @staticmethod
+    def _weighted_csv_has_header(file_path: Path, separator: str) -> bool:
+        """Return whether a weighted CSV starts with a non-numeric header row."""
+        rows = FileUtil._read_raw_csv(file_path, separator, "utf-8")
+        return bool(rows) and len(rows[0]) > 1 and not FileUtil._parses_as_float(rows[0][1])
+
     @staticmethod
     def _get_source(key: str, csv_separator: str, source_format: SourceFileFormat) -> list[dict]:
         """
@@ -360,6 +386,42 @@ class DataSourceRegistry:
         return distinct[pagination.skip : end]
 
     @staticmethod
+    def _variable_data_plan(
+        context: SetupContext,
+        stmt: VariableStatement,
+        data: Iterable[Any] | None,
+        pagination: DataSourcePagination | None,
+        *,
+        force_full_pool: bool,
+    ) -> VariableSourcePlan:
+        """Shape a routed variable pool and expose only an execution mode to the task."""
+        if data is None:
+            return VariableSourcePlan(kind="storage" if force_full_pool else "iterator")
+
+        loads_all = stmt.distribution.loads_all or bool(stmt.unique)
+        if not loads_all:
+            return VariableSourcePlan(kind="storage" if force_full_pool else "iterator", data=data)
+
+        seed = context.root.stable_distribution_seed(stmt.full_name)
+        selected = (
+            DataSourceRegistry.get_unique_data(
+                data,
+                None if force_full_pool else pagination,
+                seed,
+                f"<variable> '{stmt.name}'",
+            )
+            if stmt.unique
+            else DataSourceRegistry.get_distributed_data(
+                data,
+                None if force_full_pool else pagination,
+                stmt.cyclic,
+                seed,
+                stmt.distribution,
+            )
+        )
+        return VariableSourcePlan(kind="storage" if force_full_pool else "full_load", data=selected)
+
+    @staticmethod
     def get_cumulated_data(data: Iterable, pagination: DataSourcePagination | None, seed: int) -> list:
         """``distribution="cumulated"`` row selection: sample row indices with a
         bell shape (mean = middle of the load order) WITH replacement.
@@ -426,14 +488,406 @@ class DataSourceRegistry:
 
         # if sourceScripted then evaluate python expression in csv
         if source_scripted:
-            from datamimic_ce.tasks.task_util import TaskUtil
-
-            evaluated_result = TaskUtil.evaluate_file_script_template(
-                ctx=ctx, datas=result, prefix=prefix, suffix=suffix
-            )
+            evaluated_result = evaluate_source_template(ctx, result, prefix, suffix)
             return evaluated_result if isinstance(evaluated_result, list) else [evaluated_result]
 
         return result
+
+    @staticmethod
+    def load_generate_source(
+        context: SetupContext | GenIterContext,
+        stmt: GenerateStatement,
+        source: str | None,
+        separator: str,
+        source_scripted: bool,
+        start_idx: int | None,
+        end_idx: int | None,
+        pagination: DataSourcePagination | None,
+    ) -> tuple[list[dict], bool]:
+        """Load one generate source; this is the sole generate routing and paging owner."""
+        build_from_source = True
+        source_data: dict | list = []
+        root = context.root
+        prefix = stmt.variable_prefix or root.default_variable_prefix
+        suffix = stmt.variable_suffix or root.default_variable_suffix
+
+        if source is None:
+            if stmt.script is None:
+                build_from_source = False
+            else:
+                source_data = context.evaluate_python_expression(stmt.script)
+        elif (
+            source_file_format(source) is SourceFileFormat.WEIGHTED_CSV
+            and not DataSourceRegistry._weighted_csv_has_header(root.descriptor_dir / source, separator)
+        ):
+            raise ValueError(
+                f"<generate> '{stmt.full_name}': source '{source}' is a headerless weighted "
+                "value|weight file - not supported at <generate>-level (only <key source=...> "
+                "applies '.wgt.csv' weights today; add a header row to read it as a plain, "
+                "unweighted CSV instead)"
+            )
+        elif (source_format := source_file_format_for(EL_GENERATE, source)) is SourceFileFormat.CSV:
+            source_data = DataSourceRegistry.load_csv_file(
+                ctx=root,
+                file_path=root.descriptor_dir / source,
+                separator=separator,
+                cyclic=stmt.cyclic,
+                start_idx=start_idx,
+                end_idx=end_idx,
+                source_scripted=source_scripted,
+                prefix=prefix,
+                suffix=suffix,
+                offset=stmt.offset,
+            )
+        elif source_format is SourceFileFormat.JSON:
+            source_data = DataSourceRegistry.load_json_file(
+                root.descriptor_dir / source, stmt.cyclic, start_idx, end_idx, offset=stmt.offset
+            )
+            if source_scripted:
+                try:
+                    source_data = evaluate_source_template(root, source_data, prefix, suffix)
+                except Exception as error:
+                    logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {error}")
+        elif source_format is SourceFileFormat.XLSX:
+            source_data = DataSourceRegistry.load_xlsx_file(
+                root.descriptor_dir / source, stmt.cyclic, start_idx, end_idx, offset=stmt.offset
+            )
+        elif source_format is SourceFileFormat.FIXED_WIDTH:
+            source_data = DataSourceRegistry.load_fixed_width_file(
+                root.descriptor_dir / source, stmt.cyclic, start_idx, end_idx, offset=stmt.offset
+            )
+        elif source_format is SourceFileFormat.DBUNIT_XML:
+            source_data = FileUtil.read_dbunit_to_dict_list(
+                root.descriptor_dir / source, StatementUtil.resolve_source_entity(stmt)
+            )
+            if stmt.offset:
+                source_data = source_data[stmt.offset :]
+        elif source_format is SourceFileFormat.XML:
+            source_data = DataSourceRegistry.load_xml_file(
+                root.descriptor_dir / source, stmt.cyclic, start_idx, end_idx, offset=stmt.offset
+            )
+            if source_scripted:
+                source_data = evaluate_source_template(context, source_data, prefix, suffix)
+        elif root.memstore_manager.contain(source):
+            if stmt.offset:
+                raise ValueError(
+                    f"<generate> '{stmt.full_name}': offset= is only supported for file sources, "
+                    f"not memstore '{source}'"
+                )
+            source_data = root.memstore_manager.get_memstore(source).get_data_by_type(
+                StatementUtil.resolve_source_entity(stmt), pagination, stmt.cyclic
+            )
+        elif root.clients.get(source) is not None:
+            if stmt.offset:
+                raise ValueError(
+                    f"<generate> '{stmt.full_name}': offset= is only supported for file sources, "
+                    f"not database client '{source}' - use a selector with an SQL/Mongo skip instead"
+                )
+            client = root.clients[source]
+            selector = interpolate_variables(root, stmt.selector or "", prefix, suffix)
+            if isinstance(client, MongoDBClient):
+                if stmt.selector:
+                    source_data = client.get_by_page_with_query(query=selector, pagination=pagination)
+                elif (collection := StatementUtil.resolve_source_collection(stmt)) is not None:
+                    source_data = client.get_by_page_with_type(collection_name=collection, pagination=pagination)
+                else:
+                    raise ValueError(
+                        "MongoDB source requires at least attribute 'sourceEntity', 'type', 'selector' "
+                        "or 'iterationSelector'"
+                    )
+                if not source_data and stmt.contain_mongodb_upsert(root):
+                    source_data = [{}]
+            elif isinstance(client, RdbmsClient):
+                if stmt.selector:
+                    source_data = client.get_by_page_with_query(original_query=selector, pagination=pagination)
+                else:
+                    source_data = client.get_by_page_with_type(
+                        table_name=StatementUtil.resolve_source_entity(stmt), pagination=pagination
+                    )
+            else:
+                raise ValueError(f"Cannot load data from client: {type(client).__name__}")
+        else:
+            raise ValueError(f"cannot find data source {source} for iterate task")
+
+        rows = source_data if isinstance(source_data, list) else [source_data]
+        return rows, build_from_source
+
+    @staticmethod
+    def plan_variable_source(
+        context: SetupContext,
+        stmt: VariableStatement,
+        pagination: DataSourcePagination | None,
+        *,
+        force_full_pool: bool,
+    ) -> VariableSourcePlan:
+        """Route and page a variable source without leaking source policy into its task."""
+        source = stmt.source
+        if source is None:
+            raise ValueError(f"<variable> '{stmt.name}' has no source to plan")
+
+        loads_all = stmt.distribution.loads_all or bool(stmt.unique)
+        source_format = source_file_format_for(EL_VARIABLE, source)
+        separator = stmt.separator or context.default_separator
+
+        if source_format is SourceFileFormat.WEIGHTED_ENTITY_CSV:
+            seeded = context.derive_seeded_rng()
+            return VariableSourcePlan(
+                kind="weighted",
+                weighted_source=WeightedEntityDataSource(
+                    file_path=context.root.descriptor_dir / source,
+                    separator=separator,
+                    rng=seeded if seeded is not None else Random(),
+                    weight_column_name=stmt.weight_column,
+                ),
+            )
+
+        if stmt.selector is not None or stmt.iteration_selector is not None:
+            selector = stmt.selector or stmt.iteration_selector
+            if selector is None:  # narrowed explicitly for static analysis
+                raise RuntimeError("variable selector plan reached an impossible empty selector")
+            prefix = stmt.variable_prefix or context.default_variable_prefix
+            suffix = stmt.variable_suffix or context.default_variable_suffix
+            client = context.get_client_by_id(source)
+            if not isinstance(client, DatabaseClient):
+                raise ValueError(
+                    f"<variable> '{stmt.name}': 'selector' only works with 'source' database (MongoDB, SQL)"
+                )
+            if stmt.iteration_selector is not None:
+                return VariableSourcePlan(
+                    kind="iteration_selector",
+                    client=client,
+                    selector=selector,
+                    prefix=prefix,
+                    suffix=suffix,
+                )
+
+            rendered_selector = interpolate_variables(context, selector, prefix, suffix)
+            if loads_all or force_full_pool or stmt.is_global_variable:
+                data = client.get_by_page_with_query(rendered_selector)
+            else:
+                length = context.data_source_len.get(DataSourceRegistry.data_source_cache_key(stmt))
+                if length is None:
+                    length = client.count_query_length(rendered_selector)
+                data = client.get_cyclic_data(rendered_selector, bool(stmt.cyclic), length, pagination)
+            return DataSourceRegistry._variable_data_plan(
+                context, stmt, data, pagination, force_full_pool=force_full_pool
+            )
+
+        if source_format is not None:
+            if source_format is SourceFileFormat.CSV:
+                data = FileUtil.read_csv_to_dict_list(context.root.descriptor_dir / source, separator)
+            elif source_format is SourceFileFormat.XLSX:
+                data = FileUtil.read_xlsx_to_dict_list(context.root.descriptor_dir / source)
+            elif source_format is SourceFileFormat.FIXED_WIDTH:
+                data = FileUtil.read_fixed_width_to_dict_list(context.root.descriptor_dir / source)
+            elif source_format is SourceFileFormat.JSON:
+                data = FileUtil.read_json_to_list(context.root.descriptor_dir / source)
+            else:
+                raise ValueError(f"Unsupported <variable> source format: {source_format.value}")
+            if not (loads_all or force_full_pool):
+                data = DataSourceRegistry.get_cyclic_data_iterator(data, pagination, stmt.cyclic)
+            return DataSourceRegistry._variable_data_plan(
+                context, stmt, data, pagination, force_full_pool=force_full_pool
+            )
+
+        client = context.get_client_by_id(source)
+        if client is not None:
+            if not isinstance(client, DatabaseClient):
+                raise ValueError(f"Cannot get data from source '{source}' of <variable> '{stmt.name}'")
+            product_type = StatementUtil.resolve_source_entity(stmt)
+            if product_type is None:
+                data = None
+            elif loads_all or force_full_pool:
+                data = client.get_by_page_with_type(product_type)
+            elif stmt.cyclic:
+                data = DataSourceRegistry.get_cyclic_data_list(
+                    client.get_by_page_with_type(product_type), pagination, cyclic=True
+                )
+            else:
+                data = client.get_by_page_with_type(product_type, pagination)
+            return DataSourceRegistry._variable_data_plan(
+                context, stmt, data, pagination, force_full_pool=force_full_pool
+            )
+
+        if context.memstore_manager.contain(source):
+            product_type = StatementUtil.resolve_source_entity(stmt)
+            memstore = context.memstore_manager.get_memstore(source)
+            data = (
+                memstore.get_all_data_by_type(product_type)
+                if loads_all or force_full_pool
+                else memstore.get_data_by_type(product_type, pagination, stmt.cyclic)
+            )
+            return DataSourceRegistry._variable_data_plan(
+                context, stmt, data, pagination, force_full_pool=force_full_pool
+            )
+
+        if force_full_pool:
+            raise ValueError(
+                f"<variable> '{stmt.name}': 'storage' is not supported for a "
+                "dynamic/script-evaluated source (no stable pool to materialize up front)"
+            )
+        return VariableSourcePlan(kind="lazy")
+
+    @staticmethod
+    def load_variable_iteration_selector(
+        context: Context,
+        client: DatabaseClient,
+        selector: str,
+        prefix: str,
+        suffix: str,
+    ) -> Iterable[Any]:
+        """Evaluate and execute one row-dependent variable selector."""
+        return client.get_by_page_with_query(interpolate_variables(context, selector, prefix, suffix))
+
+    @staticmethod
+    def load_variable_lazy_source(
+        context: Context,
+        stmt: VariableStatement,
+        pagination: DataSourcePagination | None,
+    ) -> Iterator[Any] | None:
+        """Evaluate a dynamic variable source and apply its paging/distribution contract."""
+        if stmt.source is None:
+            return None
+        data = context.evaluate_python_expression(stmt.source)
+        if stmt.distribution.loads_all or stmt.unique:
+            seed = context.root.stable_distribution_seed(stmt.full_name)
+            selected = (
+                DataSourceRegistry.get_unique_data(data, pagination, seed, f"<variable> '{stmt.name}'")
+                if stmt.unique
+                else DataSourceRegistry.get_distributed_data(data, pagination, stmt.cyclic, seed, stmt.distribution)
+            )
+            return iter(selected)
+        return DataSourceRegistry.get_cyclic_data_iterator(data, pagination, stmt.cyclic)
+
+    @staticmethod
+    def load_nested_key_source(context: Context, stmt: NestedKeyStatement) -> list[Any] | dict[str, Any]:
+        """Resolve and load the raw source owned by one nested key."""
+        source_expression = stmt.source
+        if source_expression is None:
+            raise ValueError(f"<nestedKey> '{stmt.name}' has no source to load")
+        source = (
+            context.evaluate_python_expression(source_expression[1:-1])
+            if source_expression.startswith("{") and source_expression.endswith("}")
+            else source_expression
+        )
+        if not isinstance(source, str):
+            raise ValueError(f"Source expression of <nestedKey> '{stmt.name}' must evaluate to a string")
+
+        source_format = source_file_format_for(EL_NESTED_KEY, source, stmt.type)
+        if stmt.type == DATA_TYPE_LIST:
+            if source_format is SourceFileFormat.CSV:
+                separator = stmt.separator or context.root.default_separator
+                return FileUtil.read_csv_to_dict_list(context.root.descriptor_dir / source, separator)
+            if source_format is SourceFileFormat.JSON:
+                return FileUtil.read_json_to_list(context.root.descriptor_dir / source)
+            if context.root.memstore_manager.contain(source):
+                return context.root.memstore_manager.get_memstore(source).get_data_by_type(
+                    StatementUtil.resolve_source_entity(stmt), None, stmt.cyclic
+                )
+            raise ValueError(f"Invalid source '{source}' of nestedkey '{stmt.name}'")
+
+        if stmt.type == DATA_TYPE_DICT:
+            if source_format is SourceFileFormat.JSON:
+                return FileUtil.read_json_to_dict(context.root.descriptor_dir / source)
+            raise ValueError(f"Source of nestedkey having type as 'dict' does not support format {source}")
+
+        if context.root.memstore_manager.contain(source):
+            return context.root.memstore_manager.get_memstore(source).get_data_by_type(
+                StatementUtil.resolve_source_entity(stmt), None, stmt.cyclic
+            )
+        raise ValueError(f"Cannot load data from source '{source_expression}' of <nestedKey> '{stmt.name}'")
+
+    @staticmethod
+    def finalize_nested_key_source(
+        context: Context,
+        stmt: NestedKeyStatement,
+        data: list[Any] | dict[str, Any],
+    ) -> list[Any] | dict[str, Any]:
+        """Apply nested-key source templating and distribution in one boundary owner."""
+        source_scripted = (
+            stmt.source_script if stmt.source_script is not None else bool(context.root.default_source_scripted)
+        )
+        result: list[Any] | dict[str, Any] = data
+        if source_scripted:
+            prefix = stmt.variable_prefix or context.root.default_variable_prefix
+            suffix = stmt.variable_suffix or context.root.default_variable_suffix
+            evaluated = evaluate_source_template(context, result, prefix, suffix)
+            if not isinstance(evaluated, list | dict):
+                raise ValueError(f"Source template of <nestedKey> '{stmt.name}' must evaluate to list or dict")
+            result = evaluated
+        if isinstance(result, list) and stmt.distribution.loads_all:
+            seed = context.root.get_distribution_seed()
+            result = DataSourceRegistry.get_distributed_data(result, None, stmt.cyclic, seed, stmt.distribution)
+        return result
+
+    @staticmethod
+    def window_nested_key_rows(data: list[Any], count: int | None, cyclic: bool | None) -> list[Any]:
+        """Return the nested-key execution window; paging and wrap policy stay in the registry."""
+        size = len(data) if count is None else count if cyclic else min(count, len(data))
+        return DataSourceRegistry.get_cyclic_data_list(
+            data=data,
+            pagination=DataSourcePagination(0, size),
+            cyclic=bool(cyclic),
+        )
+
+    @staticmethod
+    def reference_uses_shared_cycle(stmt: ReferenceStatement) -> bool:
+        """Whether an unpaged reference needs root-owned rotation across rebuilt tasks."""
+        if stmt.cyclic:
+            return True
+        return stmt.distribution is not None and SourceDistribution.coerce(stmt.distribution) is not (
+            SourceDistribution.RANDOM
+        )
+
+    @staticmethod
+    def load_reference_source(
+        context: Context,
+        stmt: ReferenceStatement,
+        pagination: DataSourcePagination | None,
+    ) -> list[dict[str, Any]]:
+        """Load, map and select reference rows behind one typed datasource boundary."""
+        client = context.root.clients.get(stmt.source)
+        if not isinstance(client, RdbmsClient | MongoDBClient):
+            raise ValueError(
+                f"<reference> '{stmt.name}': source '{stmt.source}' is not a "
+                "<database> or <mongodb> client (RDBMS and MongoDB are supported)"
+            )
+        rows = client.get_random_rows_by_columns(stmt.source_type, stmt.source_keys)
+        if not rows:
+            raise ValueError(f"No data found for reference {stmt.name}")
+        records = [dict(zip(stmt.targets, row, strict=True)) for row in rows]
+
+        seed = context.root.stable_distribution_seed(stmt.full_name)
+        if stmt.unique:
+            return DataSourceRegistry.get_unique_data(records, pagination, seed, f"<reference> '{stmt.name}'")
+
+        distribution = SourceDistribution.coerce(stmt.distribution)
+        if (stmt.distribution is not None and distribution is not SourceDistribution.RANDOM) or stmt.cyclic:
+            if distribution is SourceDistribution.ORDERED or (stmt.distribution is None and stmt.cyclic):
+                return DataSourceRegistry._ordered_reference_rows(records, stmt, pagination)
+            return DataSourceRegistry.get_distributed_data(records, pagination, stmt.cyclic, seed, distribution)
+
+        size = pagination.limit if pagination is not None else 1
+        return [context.rng.choice(records) for _ in range(size)]
+
+    @staticmethod
+    def _ordered_reference_rows(
+        records: list[dict[str, Any]],
+        stmt: ReferenceStatement,
+        pagination: DataSourcePagination | None,
+    ) -> list[dict[str, Any]]:
+        if pagination is None:
+            return records
+        start = pagination.skip
+        size = pagination.limit
+        if stmt.cyclic:
+            return [records[(start + index) % len(records)] for index in range(size)]
+        if start + size > len(records):
+            raise ValueError(
+                f"<reference> '{stmt.name}' distribution='ordered' needs {start + size} rows "
+                f'but the source has only {len(records)} (use cyclic="true" to wrap around)'
+            )
+        return records[start : start + size]
 
     @staticmethod
     def load_json_file(
