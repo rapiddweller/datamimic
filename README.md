@@ -76,7 +76,7 @@ When the calling environment already exposes DATAMIMIC MCP tools, they map to th
 canonical contracts and implementations: `reference` → `datamimic_reference`,
 `scaffold` → `datamimic_scaffold`, `lint` → `datamimic_check`, and `dry-run` →
 `datamimic_run`. Install the adapter with `pip install "datamimic-ce[mcp]"`;
-registration details belong in the [`MCP quickstart`](docs/mcp_quickstart.md),
+registration details belong in the [`MCP quickstart`](https://github.com/rapiddweller/datamimic/blob/development/docs/mcp_quickstart.md),
 not in the authoring workflow. The adapter intentionally exposes only the four
 canonical reference, scaffold, check, and bounded-run operations; domain generation
 remains a Python/CLI capability rather than a parallel MCP authoring path.

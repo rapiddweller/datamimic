@@ -16,7 +16,6 @@ This project documentation focuses specifically on:
 
 - [Agent guide](../AGENTS.md): repository instructions that teach a coding agent the DSL authoring loop.
 - [MCP Quickstart](mcp_quickstart.md): install and register the MCP server; the check/run/reference authoring tools.
-- [4.1.0 release notes](releases/4.1.0.md): new authoring contracts, compatibility changes, and migration steps.
 
 ### Getting started
 

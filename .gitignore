@@ -91,6 +91,16 @@ test_artifacts/
 CLAUDE.md
 .claude/
 .agent-scratch/
+GEMINI.md
+QODER.md
+.cursorrules
+.gemini/
+.kiro/
+.mcp.json
+.opencode.json
+.qoder/
+.windsurfrules
+.github/code-review-graph.instruction.md
 
 .code-review-graph/
 
