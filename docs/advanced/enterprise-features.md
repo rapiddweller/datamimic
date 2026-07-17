@@ -1,70 +1,61 @@
-# DATAMIMIC Enterprise Edition Features
+# DATAMIMIC Enterprise Platform
 
-The Enterprise Edition of DATAMIMIC offers advanced capabilities beyond the Community Edition, with a focus on enterprise integration, AI-powered generation, enhanced privacy features, and superior synthetic data quality.
+DATAMIMIC is the test data platform for regulated banking and insurance. It generates
+deterministic, reproducible, CI/CD-ready test data. The Enterprise Platform's template
+engine additionally produces SWIFT MT, EDIFACT, and HL7 messages for test and training
+environments, without production data ever leaving your environment.
 
-> **Note**: For comprehensive documentation on all DATAMIMIC features including detailed model descriptions, exporters, importers, platform UI, and more, please refer to our official online documentation at [https://docs.datamimic.io/](https://docs.datamimic.io/)
+The Community Edition provides the runnable execution core. The Enterprise Platform adds
+the governed workflow around it: source-informed model creation, human review, operational
+controls, and coordinated execution across systems.
 
-## AI-Powered Generation
+## Governed test-data operations
 
-### Advanced AI-Driven Synthesis
+### Reviewable model creation
 
-DATAMIMIC Enterprise Edition employs a sophisticated hybrid approach to synthetic data generation, combining the power of machine learning with domain-specific modeling:
+The Platform reads source data and models relational structure so that generated data can
+preserve the relationships required by the target system. PII-relevant fields are surfaced
+through risk scoring and recommendations. A user reviews, overrides, or explicitly defines
+the decision; the human decision is recorded rather than silently inferred.
 
-- **Intelligent Pattern Analysis**: Our system automatically analyzes your real data to detect distributions, correlations, and hidden patterns without compromising privacy
-- **Adaptive ML Generator Training**: We train specialized machine learning generators that capture the essence of your data's structure and relationships
-- **Cross-Source Data Harmonization**: Seamlessly combine data from multiple sources while maintaining statistical coherence and business logic
-- **Domain-Model Integration**: Generated data is refined through DATAMIMIC's powerful domain models, ensuring business validity and system compatibility
-- **Rule-Based Validation**: Apply customizable rule sets to guarantee that all synthetic data adheres to your target system's constraints and requirements
-- **Continuous Learning Pipeline**: Generators can be reused and retrained as your data evolves, creating a sustainable synthetic data ecosystem
+### Operational controls
 
-This revolutionary approach delivers synthetic data that is statistically accurate, structurally sound, and immediately usable in your enterprise environment—all while maintaining the highest standards of data privacy.
+The Platform adds role-based access, scheduling, audit-trail views, reusable templates, and
+multi-system execution workflows. Models remain human-readable engineering artifacts: they
+show what is generated or transformed at field level, while run records provide the
+operational evidence for what was executed.
 
-> For detailed information on AI model architecture and implementation, please see our [Advanced Model Definition](https://docs.datamimic.io/reference/model/data-definition-advanced/).
+## Deterministic rules and optional ML generation
 
-## Advanced Enterprise Integrations
+Rules-based generation is the default for test cases that need reproducibility, explicit
+business logic, and reviewable constraints. With the same engine version, model, and seed,
+the deterministic engine produces byte-identical output across machines and over time.
 
-### Streaming Support
+For distributional realism in analytics or training scenarios, the Platform also provides
+auto-regressive ML generation. This mode models learned distributions; it is not a
+byte-identical replacement for rules-based generation and does not make output anonymous by
+default.
 
-- **Kafka Integration**: Generate and stream synthetic data in real-time
-- **Stream Processing**: Transform and process streaming data
-- **Real-time Scenarios**: Simulate real-world data flows
+## De-identification with clear boundaries
 
-### Enterprise Formats
+Deterministic, linkable transformations are pseudonymization, not anonymization. The same
+input value can map consistently across topics, which preserves referential integrity but
+means the result remains personal data. An anonymization claim requires record-level handling
+of quasi-identifiers and a re-identification assessment.
 
-- **EDI Processing**: Support for Electronic Data Interchange formats
-- **Advanced XSD Handling**: Complex XML schema support
-- **Custom Format Adapters**: Extend to support proprietary formats
+The Platform supports risk-based PII recommendations with human confirmation and override.
+It does not rely on silent, fully automatic PII classification.
 
-### Advanced Connectors
+## Message templates for test and training
 
-- **Cloud Platforms**: AWS, Azure, GCP native connectors
-- **Legacy Systems**: Mainframe and legacy database compatibility
+The Enterprise Platform template engine provides SWIFT MT, EDIFACT, and HL7 message
+generation for test and training environments. These outputs are not network-validated and
+must not be transmitted on production SWIFTNet or EDI networks. ISO 20022 and other vertical
+dialects are implemented per customer engagement on the same template framework rather than
+being presented as a guaranteed stock catalogue.
 
-> For complete documentation on integrations, connectors and supported formats, see our [Platform Integration Guide](https://docs.datamimic.io/reference/model/data-definition-core/?h=object+sto#example-1-using-object-storage-for-data-generation).
+## Learn more
 
-## Enhanced Privacy Features
-
-### Advanced Anonymization
-
-- **Context-aware Masking**: Intelligent redaction based on data context
-- **Reversible Anonymization**: Ability to re-identify data when authorized
-- **Differential Privacy**: Mathematical privacy guarantees
-
-### Compliance Tools
-
-- **Audit Logging**: Track all data access and transformations
-- **Compliance Reporting**: Generate reports for regulatory requirements
-- **Policy Enforcement**: Automated enforcement of data governance policies
-
-## Getting Started with Enterprise Edition
-
-Ready to transform your data strategy with DATAMIMIC Enterprise Edition?
-
-- **Book a Free Strategy Call**: Let our experts analyze your specific data challenges and demonstrate how DATAMIMIC can solve them
-- **Request a Personalized Demo**: See DATAMIMIC in action with your own use cases and data scenarios
-- **Contact Our Team**: Reach out to our solution architects at [sales@rapiddweller.com](mailto:sales@rapiddweller.com)
-- **Explore Enterprise Solutions**: Visit [datamimic.io](https://datamimic.io) to discover our full suite of enterprise capabilities
-
-Take the first step toward enterprise-grade synthetic data generation today!
-
-> For complete documentation on the DATAMIMIC platform, including the web UI, advanced features, and enterprise capabilities, visit [https://docs.datamimic.io/](https://docs.datamimic.io/)
+- [DATAMIMIC documentation](https://docs.datamimic.io/)
+- [Enterprise Platform](https://datamimic.io)
+- [Contact the DATAMIMIC team](https://datamimic.io/contact)
