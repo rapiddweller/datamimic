@@ -60,6 +60,11 @@ mcp = [
     "uvicorn>=0.30",
 ]
 
+# Optional dependency group for JS execution (prototype - datamimic_ce/scripting/js_engine.py)
+js = [
+    "mini-racer>=0.12",
+]
+
 [tool.setuptools_scm]
 local_scheme = "dirty-tag"  # Includes a "dirty" tag in version if working directory is not clean
 
