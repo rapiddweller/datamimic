@@ -11,6 +11,8 @@ allow-list below):
 * ``datetime.today(...)``
 * ``time.time()``
 * ``datetime.fromtimestamp(x)`` without a tz — resolves in the host timezone
+* ``<datetime>.timestamp()`` — a naive value resolves in the host timezone;
+  ``to_epoch_utc()`` is the only sanctioned datetime -> epoch conversion
 
 The allow-list captures intentional exceptions:
 
@@ -77,6 +79,9 @@ def _collect_callsites(tree: ast.AST) -> list[tuple[int, str]]:
             and not any(kw.arg == "tz" for kw in node.keywords)
         ):
             hits.append((node.lineno, "datetime.fromtimestamp(...) without tz"))
+        # value.timestamp() -> host-local for naive values; use to_epoch_utc()
+        elif isinstance(func, ast.Attribute) and func.attr == "timestamp" and not node.args and not node.keywords:
+            hits.append((node.lineno, ".timestamp()"))
         # time.time()
         elif (
             isinstance(func, ast.Attribute)
