@@ -59,9 +59,8 @@ def _imports() -> list[tuple[str, str]]:
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if isinstance(node, ast.Import):
                 found += [(module, alias.name) for alias in node.names if alias.name.startswith("datamimic_ce.")]
-            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module is not None:
-                if node.module.startswith("datamimic_ce."):
-                    found += [(module, f"{node.module}:{alias.name}") for alias in node.names]
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and (node.module or "").startswith("datamimic_ce."):
+                found += [(module, f"{node.module}:{alias.name}") for alias in node.names]
     return found
 
 
