@@ -1,0 +1,101 @@
+{
+  "authoring -> interfaces": [
+    "datamimic_ce.authoring.dryrun -> datamimic_ce.datamimic:DataMimic"
+  ],
+  "dsl -> engine": [
+    "datamimic_ce.statements.generate_statement -> datamimic_ce.contexts.context:Context",
+    "datamimic_ce.statements.generate_statement -> datamimic_ce.contexts.setup_context:SetupContext",
+    "datamimic_ce.statements.nested_key_statement -> datamimic_ce.contexts.context:Context",
+    "datamimic_ce.statements.statement_util -> datamimic_ce.contexts.context:Context"
+  ],
+  "dsl -> io": [
+    "datamimic_ce.statements.database_statement -> datamimic_ce.connection_config.rdbms_connection_config:RdbmsConnectionConfig",
+    "datamimic_ce.statements.generate_statement -> datamimic_ce.clients.mongodb_client:MongoDBClient",
+    "datamimic_ce.statements.mongodb_statement -> datamimic_ce.clients.mongodb_client:MongoDBClient",
+    "datamimic_ce.statements.mongodb_statement -> datamimic_ce.connection_config.mongodb_connection_config:MongoDBConnectionConfig"
+  ],
+  "dsl -> domain": [
+    "datamimic_ce.statements.state_machine_statement -> datamimic_ce.domains.common.literal_generators.state_transition_generator:Rule"
+  ],
+  "domain -> dsl": [
+    "datamimic_ce.converter.hash_converter -> datamimic_ce.enums.converter_enums:SupportHash",
+    "datamimic_ce.converter.hash_converter -> datamimic_ce.enums.converter_enums:SupportOutputFormat",
+    "datamimic_ce.domains.common.literal_generators.data_faker_generator -> datamimic_ce.enums.faker_enums:UnsupportedMethod",
+    "datamimic_ce.domains.common.literal_generators.float_generator -> datamimic_ce.enums.distribution_enums:NumberDistribution",
+    "datamimic_ce.domains.common.literal_generators.generator_util -> datamimic_ce.enums.distribution_enums:NumberDistribution",
+    "datamimic_ce.domains.common.literal_generators.generator_util -> datamimic_ce.statements.statement:Statement",
+    "datamimic_ce.domains.common.literal_generators.integer_generator -> datamimic_ce.enums.distribution_enums:NumberDistribution",
+    "datamimic_ce.domains.common.literal_generators.sequence_table_generator -> datamimic_ce.enums.dbms_enums:Dbms",
+    "datamimic_ce.domains.common.literal_generators.sequence_table_generator -> datamimic_ce.statements.key_statement:KeyStatement",
+    "datamimic_ce.domains.common.literal_generators.sequence_table_generator -> datamimic_ce.statements.variable_statement:VariableStatement"
+  ],
+  "domain -> engine": [
+    "datamimic_ce.domains.common.literal_generators.generator_util -> datamimic_ce.contexts.context:Context",
+    "datamimic_ce.domains.common.literal_generators.generator_util -> datamimic_ce.contexts.setup_context:SetupContext",
+    "datamimic_ce.domains.common.literal_generators.sequence_table_generator -> datamimic_ce.contexts.context:Context"
+  ],
+  "domain -> io": [
+    "datamimic_ce.domains.common.literal_generators.generator_util -> datamimic_ce.data_sources.data_source_pagination:DataSourcePagination",
+    "datamimic_ce.domains.common.literal_generators.increment_generator -> datamimic_ce.data_sources.data_source_pagination:DataSourcePagination",
+    "datamimic_ce.domains.common.literal_generators.sequence_table_generator -> datamimic_ce.clients.rdbms_client:RdbmsClient",
+    "datamimic_ce.domains.common.literal_generators.sequence_table_generator -> datamimic_ce.data_sources.data_source_pagination:DataSourcePagination"
+  ],
+  "io -> engine": [
+    "datamimic_ce.data_sources.chunk_source_reader -> datamimic_ce.contexts.geniter_context:GenIterContext",
+    "datamimic_ce.data_sources.chunk_source_reader -> datamimic_ce.contexts.setup_context:SetupContext",
+    "datamimic_ce.data_sources.data_source_registry -> datamimic_ce.contexts.context:Context",
+    "datamimic_ce.data_sources.data_source_registry -> datamimic_ce.contexts.geniter_context:GenIterContext",
+    "datamimic_ce.data_sources.data_source_registry -> datamimic_ce.contexts.setup_context:SetupContext",
+    "datamimic_ce.data_sources.data_source_registry -> datamimic_ce.services.source_script_evaluator:evaluate_source_template",
+    "datamimic_ce.data_sources.data_source_registry -> datamimic_ce.services.source_script_evaluator:interpolate_variables",
+    "datamimic_ce.exporters.exporter_config -> datamimic_ce.contexts.setup_context:SetupContext",
+    "datamimic_ce.exporters.exporter_util -> datamimic_ce.contexts.setup_context:SetupContext"
+  ],
+  "io -> domain": [
+    "datamimic_ce.clients.mongodb_client -> datamimic_ce.domains.domain_core.base_entity:stringify_if_entity",
+    "datamimic_ce.clients.rdbms_client -> datamimic_ce.domains.domain_core.base_entity:stringify_if_entity"
+  ],
+  "foundation -> dsl": [
+    "datamimic_ce.utils.dict_util -> datamimic_ce.constants.convention_constants:NAME_SEPARATOR",
+    "datamimic_ce.utils.number_sequences -> datamimic_ce.enums.distribution_enums:NumberDistribution",
+    "datamimic_ce.utils.number_sequences -> datamimic_ce.enums.distribution_enums:POSITIONAL_NUMBER_SEQUENCES"
+  ],
+  "foundation -> engine": [
+    "datamimic_ce.utils.object_util -> datamimic_ce.contexts.context:Context"
+  ],
+  "foundation -> domain": [
+    "datamimic_ce.utils.object_util -> datamimic_ce.converter.custom_converter:CustomConverter"
+  ],
+  "dsl.model -> dsl.parsers": [
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.array_parser:ArrayParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.assert_parser:AssertParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.condition_parser:ConditionParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.database_parser:DatabaseParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.demographics_parser:DemographicsParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.echo_parser:EchoParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.element_parser:ElementParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.else_if_parser:ElseIfParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.else_parser:ElseParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.execute_parser:ExecuteParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.generate_parser:GenerateParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.generator_parser:GeneratorParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.if_parser:IfParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.include_parser:IncludeParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.item_parser:ItemParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.key_parser:KeyParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.list_parser:ListParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.memstore_parser:MemstoreParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.mongodb_parser:MongoDBParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.nested_key_parser:NestedKeyParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.reference_parser:ReferenceParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.state_machine_parser:StateMachineParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.statement_parser:StatementParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.variable_parser:VariableParser",
+    "datamimic_ce.model.element_registry -> datamimic_ce.parsers.while_parser:WhileParser"
+  ],
+  "engine.workers -> engine.tasks": [
+    "datamimic_ce.workers.generate_worker -> datamimic_ce.tasks.condition_task:ConditionTask",
+    "datamimic_ce.workers.generate_worker -> datamimic_ce.tasks.generate_task:GenerateTask",
+    "datamimic_ce.workers.generate_worker -> datamimic_ce.tasks.task_util:TaskUtil"
+  ]
+}

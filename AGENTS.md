@@ -250,7 +250,9 @@ registration details.
 - Architecture: `docs/architecture/architecture.md` shows the seven components and the
   run lifecycle; `architecture-contract.json` is the SPOT. `archkeel validate` (also in
   `make check` and CI) fails on a new edge between components, an import of a non-public
-  name from another component, or a third-party library outside its owners. Fix the code;
+  name from another component, or a third-party library outside its owners;
+  `tests_ce/architecture/test_architecture_debt_budget.py` fails on a new import over a
+  declared debt edge. Fix the code;
   change the contract only as a deliberate, reviewed architecture decision.
 - The authoring toolset (linter, reference, dry-run, scaffold)
   lives in `datamimic_ce/authoring/`; the MCP server in `datamimic_ce/mcp/`.

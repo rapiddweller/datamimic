@@ -32,7 +32,8 @@ flowchart LR
 | `demos` | bundled examples that use the product; not part of the product architecture | being imported by product components | `demos` |
 
 `foundation` holds only stable, low-semantic types and technical primitives that at least two
-components need, and knows nothing about DSL, engine, domain or IO. `demos` uses the product and
+components need, and knows nothing about DSL, engine, domain or IO. This describes the target;
+today's contents are not yet that pure (see Debt). `demos` uses the product and
 is not part of the product architecture.
 
 ## Dependencies
@@ -104,5 +105,23 @@ code, never by widening the contract.
 | `io → domain` | clients serialize with domain base_entity; target: a foundation helper. |
 | `io → engine` | DataSourceRegistry evaluates source scripts with contexts; target: an engine-provided port. |
 
-Every public list in the contract is today's cross-component surface, frozen: a new deep import
-fails; the lists shrink toward facades in separate changes.
+Debt cannot grow: `tests_ce/architecture/test_architecture_debt_budget.py` freezes the exact
+imports on each debt edge in `architecture_debt_budget.json`. A new import over a debt edge fails,
+and a removed one must be dropped from the budget, so it only shrinks.
+
+## Cross-component surface
+
+A component's `public` list in the contract is the **currently permitted cross-component surface,
+not its intended long-term public API**: it froze the names other components used when the
+contract was introduced. A new import of any other name fails. Listing a name there does not make
+it a supported API or a reason not to change it; the lists shrink toward small facades.
+
+| Component | Permitted surface today (names) | Target facade |
+|---|---:|---|
+| `interfaces` | 1 | to be defined, intentionally small |
+| `authoring` | 18 | to be defined, intentionally small |
+| `dsl` | 128 | to be defined, intentionally small |
+| `engine` | 7 | to be defined, intentionally small |
+| `io` | 21 | to be defined, intentionally small |
+| `domain` | 39 | to be defined, intentionally small |
+| `foundation` | 30 | to be defined, intentionally small |
