@@ -141,7 +141,10 @@ def _issue_code(
     issue_type: _PydanticIssueType | None,
     intent_issue_type: IntentModelValidationIssueType | None,
 ) -> IntentValidationIssueCode:
-    if intent_issue_type is IntentModelValidationIssueType.UNSUPPORTED_NESTED_PRODUCT_CHILDREN:
+    if intent_issue_type in (
+        IntentModelValidationIssueType.UNSUPPORTED_NESTED_PRODUCT_CHILDREN,
+        IntentModelValidationIssueType.UNSUPPORTED_DATABASE_PRODUCT,
+    ):
         return IntentValidationIssueCode.UNSUPPORTED_INTENT
     if issue_type is None:
         return IntentValidationIssueCode.CONSTRAINT_VIOLATION

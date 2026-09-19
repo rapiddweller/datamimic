@@ -19,6 +19,14 @@ artifact; generated XML is runtime output. Relationships stay consistent (child
 rows hold real parent keys), output reproduces with a seed, and bounded
 verification catches mistakes before data is written.
 
+Authoring scope (`AuthoringSpecV1`): products write to files (`file_export`)
+or in-memory stores (`memstore`), and a generated product nests one level of
+child products. Database/MongoDB sources or targets and deeper product nesting
+are reported as `unsupported_intent`; for those, use the raw XML path
+(`<database>`/`<mongodb>` clients, lint → dry-run → run, see "Working with an
+existing raw XML descriptor"). That path has no `verified` certificate, so
+check the written data yourself.
+
 ## Tool selection
 
 The project CLI is the baseline contract. In this checkout, invoke it as

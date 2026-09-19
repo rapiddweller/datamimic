@@ -232,6 +232,46 @@ def test_nested_product_children_are_unsupported_intent() -> None:
     assert issue.allowed_fields == ()
 
 
+
+_RECORDS = {"kind": "generated", "name": "records", "count": 1, "fields": [{"kind": "increment", "name": "id"}]}
+
+
+@pytest.mark.parametrize(
+    ("products", "path"),
+    [
+        ([{**_RECORDS, "targets": [{"kind": "database", "id": "db"}]}], ("products", 0, "targets", 0, "kind")),
+        ([{**_RECORDS, "targets": [{"kind": "mongodb", "id": "mongo"}]}], ("products", 0, "targets", 0, "kind")),
+        (
+            [
+                _RECORDS,
+                {
+                    "kind": "source",
+                    "name": "rows",
+                    "source": {"kind": "database", "id": "db"},
+                    "fields": [{"kind": "script", "name": "id", "script": "this.id"}],
+                },
+            ],
+            ("products", 1, "source", "kind"),
+        ),
+    ],
+    ids=["database_target", "mongodb_target", "database_source"],
+)
+def test_database_clients_are_unsupported_intent(products: list[dict[str, object]], path: tuple) -> None:
+    result = scaffold(ScaffoldRequest(spec={"version": "1", "products": products}))
+
+    issue = result.issues[0]
+    assert issue.path == path
+    assert issue.code is IntentValidationIssueCode.UNSUPPORTED_INTENT
+    assert "raw XML" in issue.message
+
+
+def test_misspelled_target_kind_stays_invalid_discriminator() -> None:
+    spec = {"version": "1", "products": [{**_RECORDS, "targets": [{"kind": "file-export", "format": "JSON"}]}]}
+
+    issue = scaffold(ScaffoldRequest(spec=spec)).issues[0]
+
+    assert issue.code is IntentValidationIssueCode.INVALID_DISCRIMINATOR
+
 def _memstore_source_with_rejected_field(field: str) -> dict[str, object]:
     return {
         "version": "1",
