@@ -1,0 +1,33 @@
+{
+  "version": "1",
+  "seed": 7,
+  "products": [
+    {
+      "kind": "generated",
+      "name": "payments",
+      "count": 25,
+      "targets": [
+        {"kind": "file_export", "format": "JSON"}
+      ],
+      "fields": [
+        {
+          "kind": "decimal_range",
+          "name": "amount",
+          "minimum": "1.00",
+          "maximum": "9.99",
+          "scale": 2
+        }
+      ]
+    }
+  ],
+  "expectations": [
+    {"kind": "exact_count", "product": "payments", "count": 25},
+    {
+      "kind": "range",
+      "product": "payments",
+      "field": "amount",
+      "minimum": "1.00",
+      "maximum": "9.99"
+    }
+  ]
+}

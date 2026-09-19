@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import (
     AfterValidator,
@@ -42,6 +42,7 @@ NonNegativeStrictInt = Annotated[StrictInt, Field(ge=0)]
 NonEmptyStrictStr = Annotated[StrictStr, Field(min_length=1)]
 INTENT_REPAIR_ALIASES_SCHEMA_KEY = "x-datamimic-repair-aliases"
 _ORDERED_BOUNDS_ERROR = "minimum must not exceed maximum"
+MAX_DECIMAL_SCALE: Final[int] = 15
 
 
 class FieldIntentKind(StrEnum):
@@ -224,6 +225,11 @@ class DecimalRangeField(FieldIntent):
     kind: Literal[FieldIntentKind.DECIMAL_RANGE] = FieldIntentKind.DECIMAL_RANGE
     minimum: Decimal
     maximum: Decimal
+    scale: NonNegativeStrictInt | None = Field(
+        default=None,
+        le=MAX_DECIMAL_SCALE,
+        description="Supported scale is 0 through 15 decimal places; runtime range generation uses FloatGenerator.",
+    )
 
     @model_validator(mode="after")
     def _ordered_bounds(self) -> DecimalRangeField:

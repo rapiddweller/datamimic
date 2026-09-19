@@ -158,6 +158,8 @@ def _range_field_element(
                 "max": _stringify_number(field.maximum),
             }
         )
+        if field.scale is not None:
+            attributes["granularity"] = format(Decimal(1).scaleb(-field.scale), "f")
     else:
         attributes.update(
             {

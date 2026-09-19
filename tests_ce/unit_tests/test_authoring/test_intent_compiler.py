@@ -82,6 +82,75 @@ def test_authoring_spec_json_round_trip_preserves_intent() -> None:
     assert AuthoringSpecV1.model_validate_json(spec.model_dump_json()) == spec
 
 
+@pytest.mark.parametrize("scale", [-1, 2.5, "2", 16])
+def test_decimal_range_scale_is_supported_strict_int(scale: object) -> None:
+    raw = {
+        "version": "1",
+        "products": [
+            {
+                "kind": "generated",
+                "name": "payments",
+                "count": 1,
+                "fields": [
+                    {
+                        "kind": "decimal_range",
+                        "name": "amount",
+                        "minimum": "1.00",
+                        "maximum": "9.99",
+                        "scale": scale,
+                    }
+                ],
+            }
+        ],
+    }
+    with pytest.raises(ValidationError):
+        AuthoringSpecV1.model_validate(raw)
+
+
+def test_decimal_range_scale_rejects_unknown_fields() -> None:
+    raw = {
+        "version": "1",
+        "products": [
+            {
+                "kind": "generated",
+                "name": "payments",
+                "count": 1,
+                "fields": [
+                    {
+                        "kind": "decimal_range",
+                        "name": "amount",
+                        "minimum": "1.00",
+                        "maximum": "9.99",
+                        "scale": 2,
+                        "precision": 2,
+                    }
+                ],
+            }
+        ],
+    }
+    with pytest.raises(ValidationError, match="precision"):
+        AuthoringSpecV1.model_validate(raw)
+
+
+def test_decimal_range_without_scale_keeps_runtime_default() -> None:
+    spec = AuthoringSpecV1.model_validate(
+        {
+            "version": "1",
+            "products": [
+                {
+                    "kind": "generated",
+                    "name": "payments",
+                    "count": 1,
+                    "fields": [
+                        {"kind": "decimal_range", "name": "amount", "minimum": "1", "maximum": "9"}
+                    ],
+                }
+            ],
+        }
+    )
+    assert "granularity" not in compile_authoring_spec(spec).xml
+
+
 def test_reference_and_capabilities_project_intent_spot() -> None:
     schema = authoring_spec_json_schema()
     assert capabilities_manifest()["authoring_spec"] == schema

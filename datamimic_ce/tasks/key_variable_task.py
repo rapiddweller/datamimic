@@ -433,7 +433,10 @@ class KeyVariableTask(Task):
             return float(value)
         elif data_type == DATA_TYPE_DECIMAL:
             # str() so a float value (e.g. 8.2) doesn't re-introduce binary float error
-            return Decimal(str(value))
+            decimal_value = Decimal(str(value))
+            if isinstance(self._statement, KeyStatement) and self._statement.granularity is not None:
+                return decimal_value.quantize(Decimal(self._statement.granularity))
+            return decimal_value
         elif data_type == DATA_TYPE_BINARY:
             if isinstance(value, bytes | bytearray):
                 return bytes(value)
