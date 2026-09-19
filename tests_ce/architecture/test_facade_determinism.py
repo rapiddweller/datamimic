@@ -45,8 +45,7 @@ def test_facade_byte_identical_across_runs(domain: str) -> None:
         "two runs with identical input produced different content hashes."
     )
     assert a["items"] == b["items"], (
-        f"Facade domain {domain!r}: content_hash matched but item payload "
-        "diverged — investigate canonicalisation."
+        f"Facade domain {domain!r}: content_hash matched but item payload diverged — investigate canonicalisation."
     )
 
 
@@ -57,8 +56,7 @@ def test_facade_different_seed_diverges(domain: str) -> None:
     b = generate_domain(_request(domain, seed="beta"))
 
     assert a["determinism_proof"]["content_hash"] != b["determinism_proof"]["content_hash"], (
-        f"Facade domain {domain!r} produces identical output for different seeds — "
-        "the RNG path is not wired through."
+        f"Facade domain {domain!r} produces identical output for different seeds — the RNG path is not wired through."
     )
 
 
@@ -67,9 +65,7 @@ def test_facade_provenance_hash_present(domain: str) -> None:
     """Every facade response must carry a content_hash for re-executable lineage."""
     response = generate_domain(_request(domain, count=1))
     proof = response.get("determinism_proof")
-    assert isinstance(proof, dict), (
-        f"Facade domain {domain!r}: response missing determinism_proof block."
-    )
+    assert isinstance(proof, dict), f"Facade domain {domain!r}: response missing determinism_proof block."
     assert isinstance(proof.get("content_hash"), str) and len(proof["content_hash"]) >= 32, (
         f"Facade domain {domain!r}: determinism_proof.content_hash missing or too short."
     )

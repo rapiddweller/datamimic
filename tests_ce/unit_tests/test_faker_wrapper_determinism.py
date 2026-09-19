@@ -83,8 +83,7 @@ def test_same_seed_produces_identical_output(name: str, factory: Callable) -> No
     run_a = _collect(factory, _SEED)
     run_b = _collect(factory, _SEED)
     assert run_a == run_b, (
-        f"{name}: expected identical output for seed={_SEED}, got divergence.\n"
-        f"run_a={run_a}\nrun_b={run_b}"
+        f"{name}: expected identical output for seed={_SEED}, got divergence.\nrun_a={run_a}\nrun_b={run_b}"
     )
 
 

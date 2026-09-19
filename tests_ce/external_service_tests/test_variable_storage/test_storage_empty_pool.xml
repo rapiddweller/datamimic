@@ -1,0 +1,18 @@
+<!-- empty pool: storage="value" -> None, storage="iterator" -> None (mirrors DATAMIMIC EE's
+     `if not self.data: return None` guard). -->
+<setup rngSeed="7">
+    <database id="dbPostgres" system="postgres" />
+    <execute uri="script/setup_postgresql.scr.sql" target="dbPostgres" />
+
+    <generate name="value_empty" count="3" target="">
+        <variable name="row" source="dbPostgres" storage="value"
+                  selector="SELECT row_id, text FROM simple.storage_pool WHERE row_id &gt; 1000" />
+        <key name="row_id" script="row.row_id if row is not None else None" />
+    </generate>
+
+    <generate name="iterator_empty" count="3" target="">
+        <variable name="row" source="dbPostgres" storage="iterator" cyclic="true"
+                  selector="SELECT row_id, text FROM simple.storage_pool WHERE row_id &gt; 1000" />
+        <key name="row_id" script="row.row_id" />
+    </generate>
+</setup>

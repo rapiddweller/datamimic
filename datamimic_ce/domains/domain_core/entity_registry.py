@@ -96,7 +96,7 @@ def _aliases_for(cls: type[BaseDomainService], entity_name: str) -> set[str]:
     module = cls.__module__
     names = {entity_name, service_name, f"{module}.{service_name}"}
     if module.startswith(_DOMAINS_PREFIX):
-        names.add(f"{module[len(_DOMAINS_PREFIX):]}.{service_name}")
+        names.add(f"{module[len(_DOMAINS_PREFIX) :]}.{service_name}")
     return {name for name in names if name}
 
 
@@ -118,7 +118,7 @@ def get_entity_spec(name: str) -> EntitySpec | None:
     if spec is not None:
         return spec
     if name.startswith(_DOMAINS_PREFIX):
-        spec = _ENTITY_REGISTRY.get(name[len(_DOMAINS_PREFIX):])
+        spec = _ENTITY_REGISTRY.get(name[len(_DOMAINS_PREFIX) :])
         if spec is not None:
             return spec
     if "." in name:

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from random import Random
-
 import pytest
 
 from datamimic_ce.domains.common.demographics.profile import (
@@ -39,15 +37,9 @@ def sample_profile() -> DemographicProfile:
         ),
     }
     condition_rates = {
-        "Hypertension": (
-            DemographicConditionRate("Hypertension", None, 0, 120, 0.25),
-        ),
-        "Type 2 Diabetes": (
-            DemographicConditionRate("Type 2 Diabetes", None, 0, 120, 0.2),
-        ),
-        "Seasonal Allergy": (
-            DemographicConditionRate("Seasonal Allergy", None, 0, 120, 0.1),
-        ),
+        "Hypertension": (DemographicConditionRate("Hypertension", None, 0, 120, 0.25),),
+        "Type 2 Diabetes": (DemographicConditionRate("Type 2 Diabetes", None, 0, 120, 0.2),),
+        "Seasonal Allergy": (DemographicConditionRate("Seasonal Allergy", None, 0, 120, 0.1),),
     }
     return DemographicProfile(
         profile_id=profile_id,
@@ -57,9 +49,7 @@ def sample_profile() -> DemographicProfile:
 
 
 def test_group_application_deterministic(sample_profile: DemographicProfile) -> None:
-    refs = profile_group_refs(
-        dataset="US", version="v1", profile_id="urban_adult", request_hash="demo"
-    )
+    refs = profile_group_refs(dataset="US", version="v1", profile_id="urban_adult", request_hash="demo")
     assert refs, "metadata lookup must return group references"
 
     sampler_a = DemographicSampler(sample_profile)
@@ -87,9 +77,7 @@ def test_group_application_deterministic(sample_profile: DemographicProfile) -> 
         assert sex_a[key] == pytest.approx(sex_b[key])
 
 
-def test_age_mask_applies_band_filter(
-    sample_profile: DemographicProfile, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_age_mask_applies_band_filter(sample_profile: DemographicProfile, monkeypatch: pytest.MonkeyPatch) -> None:
     path = dataset_path("groups", "age_band", "age_band_US.csv")
     file_hash = compute_provenance_hash([str(path)])
     original = load_group_table
@@ -119,10 +107,7 @@ def test_age_mask_applies_band_filter(
     assert descriptor[str(path)] == file_hash
 
 
-
-def test_condition_mask_scales_weights(
-    sample_profile: DemographicProfile, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_condition_mask_scales_weights(sample_profile: DemographicProfile, monkeypatch: pytest.MonkeyPatch) -> None:
     path = dataset_path(
         "groups",
         "condition_prevalence_tier",
@@ -155,9 +140,7 @@ def test_condition_mask_scales_weights(
 
 def test_additional_group_masks_exposed(sample_profile: DemographicProfile) -> None:
     sampler = DemographicSampler(sample_profile)
-    refs = profile_group_refs(
-        dataset="US", version="v1", profile_id="urban_adult", request_hash="mask"
-    )
+    refs = profile_group_refs(dataset="US", version="v1", profile_id="urban_adult", request_hash="mask")
     sampler.apply_profile_groups(refs, "US", "v1")
 
     expected_coverage, provenance = load_group_table("US", "v1", "coverage_line", "coverage_other")
@@ -165,9 +148,7 @@ def test_additional_group_masks_exposed(sample_profile: DemographicProfile) -> N
     assert sampler.group_mask("coverage_line") == expected_coverage
 
 
-def test_mask_bounds_enforced_strict_mode(
-    sample_profile: DemographicProfile, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_mask_bounds_enforced_strict_mode(sample_profile: DemographicProfile, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DATAMIMIC_STRICT_DATASET", "1")
 
     def fake_load(*_: object, **__: object) -> tuple[dict[tuple[int, int], float], tuple[str, str]]:
@@ -183,9 +164,7 @@ def test_mask_bounds_enforced_strict_mode(
         sampler.apply_profile_groups({"age_group_ref": "age_18_44"}, "US", "v1")
 
 
-def test_mask_bounds_fallback_non_strict(
-    sample_profile: DemographicProfile, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_mask_bounds_fallback_non_strict(sample_profile: DemographicProfile, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("DATAMIMIC_STRICT_DATASET", raising=False)
 
     def fake_load(*_: object, **__: object) -> tuple[dict[tuple[int, int], float], tuple[str, str]]:

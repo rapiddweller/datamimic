@@ -1,0 +1,12 @@
+ean_code,name,category_id,price,manufacturer,gender
+1,name1,cat1,0001,manu1,male
+2,name2,cat2,0002,manu2,female
+3,name3,cat3,0003,manu3,male
+4,name4,cat4,0004,manu4,male
+5,name5,cat5,0005,manu5,female
+6,name6,cat6,0006,manu6,unisex
+7,name7,cat7,0007,manu7,male
+8,name8,cat8,0008,manu8,male
+9,name9,cat9,0009,manu9,female
+10,name10,cat10,0010,manu10,male
+11,name11,cat11,0011,manu11,unisex

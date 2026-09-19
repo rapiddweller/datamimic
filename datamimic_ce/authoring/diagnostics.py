@@ -6,22 +6,16 @@
 
 """Diagnostic contract ("diagnostics v1") shared by the CLI and the MCP tools."""
 
-from enum import StrEnum
-
 from pydantic import BaseModel, Field
 
-
-class Severity(StrEnum):
-    ERROR = "error"  # the engine will (or would) refuse the descriptor
-    WARNING = "warning"  # runs, but almost certainly not what the author meant
-    HINT = "hint"  # best practice / surprising default worth knowing
+from datamimic_ce.authoring.rule_catalog import RuleSeverity
 
 
 class Diagnostic(BaseModel):
     """One finding, always actionable: what is wrong AND what to do differently."""
 
     rule: str  # e.g. "DM301"
-    severity: Severity
+    severity: RuleSeverity
     message: str
     fix_hint: str  # never empty — the agent's next edit
     element: str  # tag, e.g. "generate"
@@ -47,7 +41,7 @@ class LintResult(BaseModel):
             counts[diag.severity.value] = counts.get(diag.severity.value, 0) + 1
         kept = diagnostics if max_diagnostics is None else diagnostics[:max_diagnostics]
         return cls(
-            ok=counts.get(Severity.ERROR.value, 0) == 0,
+            ok=counts.get(RuleSeverity.ERROR.value, 0) == 0,
             file=file,
             counts=counts,
             diagnostics=kept,
@@ -57,7 +51,30 @@ class LintResult(BaseModel):
     def summary(self) -> str:
         parts = [
             f"{self.counts.get(sev.value, 0)} {sev.value}{'s' if self.counts.get(sev.value, 0) != 1 else ''}"
-            for sev in Severity
+            for sev in RuleSeverity
             if self.counts.get(sev.value, 0)
         ]
         return ", ".join(parts) if parts else "no findings"
+
+
+def _diagnostic_dicts(diagnostics: list[Diagnostic], detailed: bool) -> list[dict[str, object]]:
+    """Serialize diagnostics to dicts, optionally filtering to concise fields.
+
+    Args:
+        diagnostics: List of Diagnostic objects
+        detailed: If True, return full diagnostic dicts; if False, only concise fields
+
+    Returns:
+        List of diagnostic dicts (rule, severity, line, message, fix_hint when detailed=False)
+    """
+    concise_fields = ("rule", "severity", "line", "message", "fix_hint")
+    out: list[dict[str, object]] = []
+    for diag in diagnostics:
+        data: dict[str, object] = diag.model_dump()
+        msg = data.get("message", "")
+        if isinstance(msg, str):
+            data["message"] = msg[:300]  # truncate long messages
+        if not detailed:
+            data = {key: data[key] for key in concise_fields if key in data}
+        out.append(data)
+    return out

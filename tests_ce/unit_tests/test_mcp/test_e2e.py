@@ -1,142 +1,125 @@
-"""End-to-end tests exercising the FastMCP server."""
-
-from __future__ import annotations
+"""End-to-end contract tests for the reduced MCP authoring adapter."""
 
 import json
 import threading
-import time
-from collections.abc import Callable
 
-import anyio
 import pytest
 
-fastmcp_client = pytest.importorskip(
-    "fastmcp.client", reason="fastmcp extra required; install datamimic_ce[mcp]"
-)
-uvicorn = pytest.importorskip("uvicorn", reason="uvicorn required for SSE transport tests")
-
+fastmcp_client = pytest.importorskip("fastmcp.client")
 Client = fastmcp_client.Client
 
-from datamimic_ce.domains.determinism import canonical_json, hash_bytes
-from datamimic_ce.mcp.models import GenerateArgs
-from datamimic_ce.mcp.server import (
-    HTTP_MIDDLEWARE_ATTR,
-    build_sse_app,
-    create_server,
-)
+from datamimic_ce.mcp.server import create_server  # noqa: E402
+import datamimic_ce.mcp.server as mcp_server  # noqa: E402
+from datamimic_ce.authoring.diagnostics import LintResult  # noqa: E402
 
 
 @pytest.fixture
-def anyio_backend() -> str:  # pragma: no cover - fixture glue
+def anyio_backend() -> str:
     return "asyncio"
 
 
-async def _call_generate(client: Client, args: GenerateArgs) -> dict:
-    payload = args.model_dump(mode="python")
-    result = await client.call_tool("generate", {"args": payload})
-    assert result, "FastMCP generate tool returned no content"
-    text_payload = result[0].text
-    assert text_payload, "FastMCP generate tool returned empty text"
-    return dict(json.loads(text_payload))
-
-
 @pytest.mark.anyio
-async def test_generate_is_deterministic(anyio_backend) -> None:
-    server = create_server()
-    async with Client(server) as client:
-        args = GenerateArgs(domain="person", locale="en_US", seed=42)
-        first = await _call_generate(client, args)
-        second = await _call_generate(client, args)
-        assert canonical_json(first) == canonical_json(second)
-        assert hash_bytes(canonical_json(first)) == hash_bytes(canonical_json(second))
-
-
-@pytest.mark.anyio
-async def test_schema_resource_available(anyio_backend) -> None:
-    server = create_server()
-    async with Client(server) as client:
-        listing = await client.list_tools()
-        assert {tool.name for tool in listing} == {
-            "list_domains",
-            "generate",
+async def test_exact_authoring_tool_surface_and_no_resources(anyio_backend: str) -> None:
+    async with Client(create_server()) as client:
+        tools = await client.list_tools()
+        assert {tool.name for tool in tools} == {
             "datamimic_check",
             "datamimic_run",
             "datamimic_reference",
+            "datamimic_scaffold",
         }
-        resources = await client.read_resource("resource://datamimic/schemas/person/v1/request.json")
-        assert resources and "\"$schema\"" in resources[0].text
-        cheatsheet = await client.read_resource("resource://datamimic/dsl/cheatsheet")
-        assert cheatsheet and "<setup" in cheatsheet[0].text
-        recipe = await client.read_resource("resource://datamimic/dsl/recipes/csv-to-json-pipeline")
-        assert recipe and "<iterate" in recipe[0].text
+        assert await client.list_resources() == []
+        assert all(tool.description for tool in tools)
 
 
 @pytest.mark.anyio
-async def test_dsl_check_run_reference_loop(anyio_backend) -> None:
-    """The agent loop: reference -> check (broken -> fix hints) -> check (clean) -> run."""
-    server = create_server()
-    broken = "<setup><generate name='u' pagesize='5' target='ConsoleExporter'/></setup>"
-    fixed = (
-        '<setup rngSeed="1"><memstore id="mem"/>'
-        '<generate name="u" count="3" pageSize="100" target="mem">'
-        '<key name="id" generator="IncrementGenerator"/></generate></setup>'
-    )
-    async with Client(server) as client:
-        ref = await client.call_tool("datamimic_reference", {"args": {"topic": "element", "name": "generate"}})
-        assert "pageSize" in json.loads(ref[0].text)["content"]
+async def test_reference_and_check_delegate_canonical_contracts(anyio_backend: str) -> None:
+    async with Client(create_server()) as client:
+        authoring_reference = await client.call_tool(
+            "datamimic_reference",
+            {"request": {"topic": "authoring"}},
+        )
+        authoring_payload = json.loads(authoring_reference[0].text)
+        assert authoring_payload["ok"] is True
+        authoring_content = json.loads(authoring_payload["content"])
+        assert {
+            "category": "expectation",
+            "kind": "range",
+            "required_fields": ["product", "field", "minimum", "maximum"],
+            "allowed_fields": ["kind", "product", "field", "minimum", "maximum"],
+        } in authoring_content["variants"]
 
-        check = json.loads((await client.call_tool("datamimic_check", {"args": {"xml": broken}}))[0].text)
-        assert check["ok"] is False
-        rules = {diag["rule"] for diag in check["diagnostics"]}
-        assert "DM103" in rules  # pagesize -> did you mean pageSize
-        assert all(diag["fix_hint"] for diag in check["diagnostics"])
+        field_reference = await client.call_tool(
+            "datamimic_reference",
+            {"request": {"topic": "authoring", "category": "field"}},
+        )
+        field_payload = json.loads(field_reference[0].text)
+        assert field_payload["ok"] is True
+        field_content = json.loads(field_payload["content"])
+        assert {variant["category"] for variant in field_content["variants"]} == {"field"}
 
-        check2 = json.loads((await client.call_tool("datamimic_check", {"args": {"xml": fixed}}))[0].text)
-        assert check2["ok"] is True
+        reference = await client.call_tool(
+            "datamimic_reference",
+            {"request": {"topic": "element", "name": "generate"}},
+        )
+        reference_payload = json.loads(reference[0].text)
+        assert reference_payload["ok"] is True
+        assert "pageSize" in reference_payload["content"]
 
-        run = json.loads((await client.call_tool("datamimic_run", {"args": {"xml": fixed}}))[0].text)
-        assert run["ok"] is True and run["stage"] == "run"
-        product = run["products"][0]
-        assert product["count"] == 3 and product["sample"][0]["id"] == 1
+        checked = await client.call_tool(
+            "datamimic_check",
+            {"request": {"xml": "<setup/>"}},
+        )
+        check_payload = json.loads(checked[0].text)
+        assert check_payload["ok"] is True
 
 
 @pytest.mark.anyio
-async def test_sse_transport_roundtrip(anyio_backend, free_tcp_port_factory) -> None:
-    server = create_server()
-    middleware = getattr(server, HTTP_MIDDLEWARE_ATTR, None)
-    sse_app = build_sse_app(server, middleware)
+async def test_scaffold_evaluates_caller_owned_acceptance_requirements(anyio_backend: str) -> None:
+    async with Client(create_server()) as client:
+        result = await client.call_tool(
+            "datamimic_scaffold",
+            {
+                "request": {
+                    "spec": {
+                        "version": "1",
+                        "seed": 7,
+                        "products": [
+                            {
+                                "kind": "generated",
+                                "name": "records",
+                                "count": 1,
+                                "fields": [{"kind": "increment", "name": "id"}],
+                            }
+                        ],
+                    },
+                    "acceptance_requirements": [
+                        {"kind": "exact_count", "product": "records", "count": 2}
+                    ],
+                }
+            },
+        )
 
-    port = free_tcp_port_factory()
-    config = uvicorn.Config(
-        sse_app,
-        host="127.0.0.1",
-        port=port,
-        log_level="warning",
-        loop="asyncio",
-        lifespan="on",
-    )
-    uvicorn_server = uvicorn.Server(config)
-
-    thread = threading.Thread(target=uvicorn_server.run, daemon=True)
-    thread.start()
-
-    await _wait_for(lambda: uvicorn_server.started)
-
-    try:
-        async with Client(f"http://127.0.0.1:{port}/sse") as client:
-            args = GenerateArgs(domain="person", seed=99)
-            payload = await _call_generate(client, args)
-            assert payload["items"], "Expected generated items from SSE transport"
-    finally:
-        uvicorn_server.should_exit = True
-        uvicorn_server.force_exit = True
-        await anyio.to_thread.run_sync(thread.join, 5)
+    payload = json.loads(result[0].text)
+    caller_result = next(item for item in payload["acceptance"]["results"] if item["source"] == "caller")
+    assert caller_result["kind"] == "exact_count"
+    assert caller_result["status"] == "fail"
+    assert payload["verified"] is False
 
 
-async def _wait_for(condition: Callable[[], bool], timeout: float = 3.0) -> None:
-    deadline = time.monotonic() + timeout
-    while time.monotonic() < deadline:
-        if condition():
-            return
-        await anyio.sleep(0.05)
-    raise TimeoutError("Timed out waiting for condition")
+@pytest.mark.anyio
+async def test_blocking_service_work_is_offloaded_from_the_event_loop(
+    anyio_backend: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    event_loop_thread = threading.get_ident()
+    service_threads: list[int] = []
+
+    def blocking_check(_request: object) -> LintResult:
+        service_threads.append(threading.get_ident())
+        return LintResult(ok=True)
+
+    monkeypatch.setattr(mcp_server.service, "check", blocking_check)
+    async with Client(create_server()) as client:
+        await client.call_tool("datamimic_check", {"request": {"xml": "<setup/>"}})
+
+    assert service_threads and service_threads[0] != event_loop_thread

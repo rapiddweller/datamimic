@@ -53,9 +53,7 @@ class Order(BaseEntity):
         #  use shared PrefixedIdGenerator for prefixed ID without separator
         from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
 
-        return PrefixedIdGenerator(
-            "ORD", "[A-Z0-9]{8}", separator="", rng=self._order_generator.rng
-        ).generate()
+        return PrefixedIdGenerator("ORD", "[A-Z0-9]{8}", separator="", rng=self._order_generator.rng).generate()
 
     @property
     @property_cache
@@ -68,9 +66,7 @@ class Order(BaseEntity):
         #  use shared PrefixedIdGenerator for prefixed ID without separator
         from datamimic_ce.domains.common.literal_generators.prefixed_id_generator import PrefixedIdGenerator
 
-        return PrefixedIdGenerator(
-            "USER", "[A-Z0-9]{8}", separator="", rng=self._order_generator.rng
-        ).generate()
+        return PrefixedIdGenerator("USER", "[A-Z0-9]{8}", separator="", rng=self._order_generator.rng).generate()
 
     @property
     @property_cache

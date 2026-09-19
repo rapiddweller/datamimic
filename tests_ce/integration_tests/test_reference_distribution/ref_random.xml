@@ -1,0 +1,7 @@
+<setup rngSeed="11">
+    <database id="refdb" database="ref_dist_db" dbms="sqlite"/>
+    <execute uri="script/setup_items.scr.sql" target="refdb"/>
+    <generate name="events" count="12" target="">
+        <reference name="fk" source="refdb" sourceType="items" sourceKey="id" distribution="random"/>
+    </generate>
+</setup>

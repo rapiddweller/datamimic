@@ -1,7 +1,7 @@
-
-
 from datetime import datetime
+
 import pytest
+
 from datamimic_ce.domains.common.models.address import Address
 from datamimic_ce.domains.common.models.person import Person
 from datamimic_ce.domains.common.services.person_service import PersonService
@@ -9,6 +9,7 @@ from datamimic_ce.domains.common.services.person_service import PersonService
 
 class TestEntityPerson:
     _supported_datasets = []
+
     def _test_single_person(self, person: Person):
         assert isinstance(person, Person)
         assert isinstance(person.gender, str)
@@ -32,11 +33,11 @@ class TestEntityPerson:
         assert person.email is not None and person.email != ""
         assert person.phone is not None and person.phone != ""
         assert person.address is not None
-        assert person.birthdate is not None 
+        assert person.birthdate is not None
         assert person.academic_title is not None
         assert person.salutation is not None
         assert person.nobility_title is not None
-        
+
     def test_generate_single_person(self):
         person_service = PersonService()
         person = person_service.generate()

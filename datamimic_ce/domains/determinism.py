@@ -6,7 +6,7 @@ import random
 import uuid
 from collections.abc import Iterable
 from dataclasses import asdict, is_dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -79,8 +79,8 @@ def frozen_clock(iso_datetime: str) -> datetime:
     normalized = iso_datetime.replace("Z", "+00:00")
     dt = datetime.fromisoformat(normalized)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=UTC)
-    return dt.astimezone(UTC)
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 class RandomLike(random.Random):

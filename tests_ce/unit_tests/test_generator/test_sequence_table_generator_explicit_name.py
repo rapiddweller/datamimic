@@ -22,9 +22,10 @@ from datamimic_ce.product_storage.memstore_manager import MemstoreManager
 
 
 class DummyRootGenStmt:
-    def __init__(self, type_: str = "orders", count: int = 10):
+    def __init__(self, type_: str = "orders", count: int = 10, num_process: int | None = None):
         self.type = type_
         self.count = count
+        self.num_process = num_process
 
 
 class DummyStmt:
@@ -45,11 +46,15 @@ class RecordingRdbmsClient:
         self._seq = {}
         self.requested_names: list[str] = []
 
-    def get_current_sequence_number(self, sequence_name: str) -> int:
+    def get_current_sequence_number(
+        self, sequence_name: str, table_name: str | None = None, column_name: str | None = None
+    ) -> int:
         self.requested_names.append(sequence_name)
         return self._seq.get(sequence_name, 1000)
 
-    def increase_sequence_number(self, sequence_name: str, increment: int) -> None:
+    def increase_sequence_number(
+        self, sequence_name: str, increment: int, table_name: str | None = None, column_name: str | None = None
+    ) -> None:
         self.requested_names.append(sequence_name)
         self._seq[sequence_name] = self._seq.get(sequence_name, 1000) + increment
 
@@ -102,9 +107,7 @@ def test_empty_parens_behave_like_no_parens(setup_context: SetupContext):
 
 
 def test_explicit_sequence_name_reaches_client_verbatim(setup_context: SetupContext):
-    gen, client = _make(
-        setup_context, "SequenceTableGenerator(sequence='zsv.t_angebote_id_seq')", key="k3"
-    )
+    gen, client = _make(setup_context, "SequenceTableGenerator(sequence='zsv.t_angebote_id_seq')", key="k3")
     assert client.requested_names == ["zsv.t_angebote_id_seq"]
     # pre_execute (the increment side) must resolve to the same explicit name
     gen.pre_execute(setup_context)

@@ -1,0 +1,7 @@
+<setup rngSeed="13">
+    <!-- unique=true with weights on <variable> -> must fail at parse time.
+         The unique=true constraint forbids combining with weights. -->
+    <generate name="x" count="1" target="">
+        <variable name="grade" values="'A','B','C'" weights="0.1, 0.3, 0.6" unique="true"/>
+    </generate>
+</setup>

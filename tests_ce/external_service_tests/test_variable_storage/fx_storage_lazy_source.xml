@@ -1,0 +1,9 @@
+<!-- Error case: storage= on a dynamic/script-evaluated source (not a literal file/db/memstore
+     id) has no stable pool to materialize up front - VariableTask.__init__ raises. -->
+<setup>
+    <variable name="seed_list" script="[1, 2, 3, 4, 5]" />
+    <generate name="lazy_storage" count="3" target="">
+        <variable name="row" source="seed_list" storage="data" />
+        <key name="len" script="len(row)" />
+    </generate>
+</setup>

@@ -6,14 +6,19 @@
 
 from abc import ABC
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import ATTR_CONDITION
 from datamimic_ce.model.model_util import ModelUtil
 
 
 class BaseIfElseModel(BaseModel, ABC):
-    condition: str
+    condition: str = Field(
+        ...,
+        description="Boolean Python expression evaluated against the current record's fields/"
+        "variables; branch bodies run only when it is true.",
+        examples=["age >= 18", "status == 'active'"],
+    )
 
     @model_validator(mode="before")
     @classmethod

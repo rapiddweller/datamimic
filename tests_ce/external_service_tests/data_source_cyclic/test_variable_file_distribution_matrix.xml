@@ -1,0 +1,44 @@
+<!-- <variable source="....csv"> distribution x unique matrix - this source path
+     (FileUtil.read_csv_to_dict_list -> VariableTask._distributed_iter /
+     DataSourceRegistry.get_cyclic_data_iterator) had zero coverage for unique=/cumulated
+     before this; only <generate source="....csv" cyclic=...> (test_csv_cyclic_mp.xml) and
+     <variable> against db/mongo sources were matrix-tested. Same shared distribution/unique
+     machinery as those, exercised via a file source instead. Reuses the existing 11-row
+     products.ent.csv fixture data (ean_code 1..11). -->
+<setup rngSeed="7" defaultSeparator=",">
+    <!-- default distribution (random) is a shuffle (permutation, no replacement): count == pool -->
+    <generate name="var_file_random" count="11" target="">
+        <variable name="row" source="data/products.ent.csv"/>
+        <key name="ean_code" script="int(row.ean_code)"/>
+    </generate>
+
+    <!-- random + cyclic: count (25) > pool (11) wraps the shuffled order, forcing repeats -->
+    <generate name="var_file_cyclic_random" count="25" target="">
+        <variable name="row" source="data/products.ent.csv" cyclic="true"/>
+        <key name="ean_code" script="int(row.ean_code)"/>
+    </generate>
+
+    <!-- cumulated: bell-weighted with replacement over the full 11-row pool -->
+    <generate name="var_file_cumulated" count="11" target="">
+        <variable name="row" source="data/products.ent.csv" distribution="cumulated"/>
+        <key name="ean_code" script="int(row.ean_code)"/>
+    </generate>
+
+    <!-- unique: distinct rows, count == pool size, pool fully exhausted. ean_code is distinct
+         per row by construction in products.ent.csv, so this alone proves unique= is a
+         harmless no-op here, NOT that dedup collapses anything real - see
+         var_file_unique_dupes below for that proof. -->
+    <generate name="var_file_unique" count="11" target="">
+        <variable name="row" source="data/products.ent.csv" unique="true"/>
+        <key name="ean_code" script="int(row.ean_code)"/>
+    </generate>
+
+    <!-- unique against a source with REAL duplicate rows (categories_with_dupes.csv: 3 distinct
+         values, each repeated 3x) - a passing test here proves dedup genuinely collapses
+         repeats (3 distinct results), not just that it leaves an already-distinct pool alone.
+         A single-column CSV means the whole row IS the value, no projection needed. -->
+    <generate name="var_file_unique_dupes" count="3" target="">
+        <variable name="row" source="data/categories_with_dupes.csv" unique="true"/>
+        <key name="category" script="row.category"/>
+    </generate>
+</setup>

@@ -59,10 +59,7 @@ def _collect_callsites(tree: ast.AST) -> list[tuple[int, str]]:
             continue
         func = node.func
         # datetime.now() / datetime.utcnow() / datetime.today()
-        if (
-            isinstance(func, ast.Attribute)
-            and func.attr in FORBIDDEN_DATETIME_METHODS
-        ):
+        if isinstance(func, ast.Attribute) and func.attr in FORBIDDEN_DATETIME_METHODS:
             # The receiver must look like the datetime class. We accept any
             # form whose attribute chain ends in `.datetime` or that is a
             # bare `datetime` Name — covers `datetime.now()`,
@@ -95,10 +92,7 @@ def _production_modules() -> list[Path]:
     """Return every .py file under datamimic_ce/, sorted, excluding
     demos and any test/__pycache__ paths."""
     skip_segments = {"demos", "__pycache__"}
-    return sorted(
-        p for p in PROD_ROOT.rglob("*.py")
-        if not any(seg in p.parts for seg in skip_segments)
-    )
+    return sorted(p for p in PROD_ROOT.rglob("*.py") if not any(seg in p.parts for seg in skip_segments))
 
 
 @pytest.mark.parametrize("module_path", _production_modules(), ids=lambda p: str(p.relative_to(PROD_ROOT.parent)))

@@ -1,0 +1,6 @@
+<setup>
+  <generate name="gen" count="2" target="">
+    <variable name="cat" values="'x','y','z'" unique="true" cyclic="true"/>
+    <key name="code" script="cat"/>
+  </generate>
+</setup>

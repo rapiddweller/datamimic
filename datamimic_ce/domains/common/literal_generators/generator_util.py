@@ -309,8 +309,7 @@ class GeneratorUtil:
         call_node = module_node.body[0].value
         if call_node.args:
             raise ValueError(
-                f"SequenceTableGenerator does not accept positional arguments; "
-                f"use sequence='...' in '{generator_str}'"
+                f"SequenceTableGenerator does not accept positional arguments; use sequence='...' in '{generator_str}'"
             )
         parsed_sequence: str | None = None
         for kw in call_node.keywords:

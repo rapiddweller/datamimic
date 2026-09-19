@@ -178,7 +178,6 @@ class PersonGenerator(DatasetAwareDomainGenerator):
 
         if gender not in header_dict:
             raise ValueError(
-                f"Gender column {gender!r} not found in salutation_{self._dataset}.csv "
-                f"(columns: {sorted(header_dict)})"
+                f"Gender column {gender!r} not found in salutation_{self._dataset}.csv (columns: {sorted(header_dict)})"
             )
         return data[0][header_dict[gender]]

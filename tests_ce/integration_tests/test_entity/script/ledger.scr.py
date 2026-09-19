@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import datetime as _dt
 import hashlib
+from collections.abc import Iterable
 from dataclasses import dataclass
 from random import Random
-from typing import Iterable
 
 from datamimic_ce.domains.finance.models.bank_account import BankAccount
 
@@ -56,7 +56,7 @@ def _derive_seed(account: BankAccount, year: int, override_seed: int | None) -> 
         # Allow descriptors to override RNG when cross-ledger coordination is required.
         return override_seed
 
-    material = f"{account.account_number}|{account.iban}|{account.currency}|{year}".encode("utf-8")
+    material = f"{account.account_number}|{account.iban}|{account.currency}|{year}".encode()
     digest = hashlib.blake2b(material, digest_size=8).digest()
     return int.from_bytes(digest, "big", signed=False)
 
@@ -64,7 +64,7 @@ def _derive_seed(account: BankAccount, year: int, override_seed: int | None) -> 
 def _tx_id(account_number: str, sequence: int, occurred_at: _dt.datetime, amount: float) -> str:
     """Create a stable identifier for each transaction."""
 
-    material = f"{account_number}|{sequence}|{occurred_at.isoformat()}|{amount:.2f}".encode("utf-8")
+    material = f"{account_number}|{sequence}|{occurred_at.isoformat()}|{amount:.2f}".encode()
     return hashlib.blake2b(material, digest_size=16).hexdigest()
 
 

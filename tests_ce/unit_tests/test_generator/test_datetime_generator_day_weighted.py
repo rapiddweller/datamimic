@@ -1,7 +1,7 @@
 # DATAMIMIC
 
+
 import pytest
-from datetime import datetime
 
 from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 
@@ -73,4 +73,3 @@ def test_invalid_day_filters_raise():
             dom_weights=dom_weights,
             weekday_weights=weekday_weights,
         )
-

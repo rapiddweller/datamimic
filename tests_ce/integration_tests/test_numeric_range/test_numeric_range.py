@@ -4,8 +4,7 @@ from datamimic_ce.data_mimic_test import DataMimicTest
 
 
 def _run(filename: str = "numeric_range.xml"):
-    engine = DataMimicTest(test_dir=Path(__file__).resolve().parent, filename=filename,
-                           capture_test_result=True)
+    engine = DataMimicTest(test_dir=Path(__file__).resolve().parent, filename=filename, capture_test_result=True)
     engine.test_with_timer()
     return engine.capture_result()["product"]
 

@@ -26,4 +26,3 @@ class TestStatefulVariablePagination:
         assert result[0]["id"] == 1
         assert result[9999]["id"] == 10000
         assert result[10000]["id"] == 10001
-

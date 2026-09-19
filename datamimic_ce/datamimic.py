@@ -23,6 +23,7 @@ from datamimic_ce.logger import logger, setup_logger
 from datamimic_ce.parsers.descriptor_parser import DescriptorParser
 from datamimic_ce.tasks.setup_task import SetupTask
 from datamimic_ce.utils.logging_util import log_system_info
+from datamimic_ce.utils.process_util import bootstrap_process_title, set_main_process_title
 from datamimic_ce.utils.system_util import log_memory_info
 
 LOG_FILE = "datamimic.log"
@@ -43,11 +44,16 @@ class DataMimic:
         """
         Initialize DataMimic with descriptor_path.
         """
+        self._task_id = task_id or uuid.uuid4().hex
+        # Best effort only: process titles make concurrent CLI runs identifiable
+        # in macOS Activity Monitor and Linux process listings.
+        bootstrap_process_title()
+        set_main_process_title(self._task_id, descriptor_path.name)
+
         # Set up logger
         log_level = getattr(logging, args.log_level.upper(), logging.INFO) if args else logging.INFO
         setup_logger(logger_name=settings.DEFAULT_LOGGER, worker_name="MAIN", level=log_level)
 
-        self._task_id = task_id or uuid.uuid4().hex
         self._descriptor_path = descriptor_path
         self._platform_props = platform_props
         self._platform_configs = platform_configs

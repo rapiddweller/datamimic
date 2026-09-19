@@ -17,10 +17,11 @@ _COMPLEX = _DATA / "complex.dbunit.xml"
 
 # ---- happy path: real migrated dataset ----
 
+
 def test_reads_one_table_from_the_real_shop_dataset():
     cats = FileUtil.read_dbunit_to_dict_list(_SHOP, "db_category")
     assert len(cats) == 28
-    assert FileUtil.read_dbunit_to_dict_list(_SHOP, "db_user") .__len__() == 4
+    assert FileUtil.read_dbunit_to_dict_list(_SHOP, "db_user").__len__() == 4
     # attributes become columns
     assert cats[0]["id"] == "FOOD"
     assert cats[0]["name"] == "Food"
@@ -36,14 +37,15 @@ def test_columns_are_unified_absent_attribute_becomes_a_null_cell():
 
 # ---- edge cases ----
 
+
 def test_xml_special_chars_unicode_and_empty_string_are_preserved():
     accounts = FileUtil.read_dbunit_to_dict_list(_COMPLEX, "account")
-    assert accounts[0]["name"] == "A & B <Ltd>"        # entities decoded
+    assert accounts[0]["name"] == "A & B <Ltd>"  # entities decoded
     assert accounts[0]["note"] == 'quote:"x"'
-    assert accounts[1]["name"] == "Ünïcödé Ω"          # unicode
-    assert accounts[1]["note"] == ""                   # present empty string kept ""
-    assert accounts[2]["note"] is None                 # absent attribute -> NULL cell (distinct from "")
-    assert accounts[0]["zip"] == "01234"               # leading zero kept as string, not coerced
+    assert accounts[1]["name"] == "Ünïcödé Ω"  # unicode
+    assert accounts[1]["note"] == ""  # present empty string kept ""
+    assert accounts[2]["note"] is None  # absent attribute -> NULL cell (distinct from "")
+    assert accounts[0]["zip"] == "01234"  # leading zero kept as string, not coerced
 
 
 def test_a_dtd_reference_is_ignored_not_fetched():
@@ -52,6 +54,7 @@ def test_a_dtd_reference_is_ignored_not_fetched():
 
 
 # ---- error handling ----
+
 
 def test_unknown_table_lists_the_available_tables():
     with pytest.raises(ValueError, match=r"no rows for table 'nope'.*db_category|account"):

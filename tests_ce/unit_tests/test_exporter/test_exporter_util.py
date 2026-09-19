@@ -1,5 +1,3 @@
-
-
 import unittest
 
 from datamimic_ce.exporters.exporter_util import ExporterUtil

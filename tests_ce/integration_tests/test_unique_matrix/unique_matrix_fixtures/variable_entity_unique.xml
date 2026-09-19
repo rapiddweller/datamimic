@@ -1,0 +1,7 @@
+<setup>
+  <generate name="gen" count="2" target="">
+    <!-- entity is not a valid finite pool for unique — must fail -->
+    <variable name="cat" entity="Person" unique="true"/>
+    <key name="code" script="cat.given_name"/>
+  </generate>
+</setup>

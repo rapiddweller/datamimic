@@ -1,0 +1,7 @@
+<setup rngSeed="42">
+  <!-- entity-backed variable without unique: basic regression -->
+  <generate name="gen" count="3" target="">
+    <variable name="cat" entity="Person"/>
+    <key name="code" script="cat.given_name"/>
+  </generate>
+</setup>

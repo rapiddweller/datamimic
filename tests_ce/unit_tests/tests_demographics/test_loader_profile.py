@@ -14,9 +14,10 @@ from datamimic_ce.domains.common.demographics.loader import load_demographic_pro
 
 _test_dir = Path(__file__).resolve().parent
 
+
 @pytest.fixture()
 def profile_dir(tmp_path: Path) -> Path:
-    fixture_dir = Path(_test_dir/ "data")
+    fixture_dir = Path(_test_dir / "data")
     for name in ("age_pyramid.dmgrp.csv", "condition_rates.dmgrp.csv"):
         shutil.copy(fixture_dir / name, tmp_path / name)
     return tmp_path

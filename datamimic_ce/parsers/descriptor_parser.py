@@ -4,11 +4,13 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import cast
+from xml.etree.ElementTree import Element
 
 from datamimic_ce.parsers.setup_parser import SetupParser
 from datamimic_ce.statements.setup_statement import SetupStatement
+from datamimic_ce.utils.secure_xml import parse_xml_file
 
 
 class DescriptorParser:
@@ -28,11 +30,12 @@ class DescriptorParser:
         """
         try:
             # Parse entry point descriptor file
-            tree = ET.parse(descriptor_file_path)
-            root = tree.getroot()
+            root = parse_xml_file(descriptor_file_path)
 
             # Use SetupParser to parse root element "setup"
-            setup_parser = SetupParser(root, properties)
+            # Parser classes use the stdlib Element protocol in their legacy type
+            # annotations; lxml elements implement the same API at runtime.
+            setup_parser = SetupParser(cast(Element, root), properties)
             root_stmt = setup_parser.parse(descriptor_file_path.parent)
             return root_stmt
         except FileNotFoundError as e:

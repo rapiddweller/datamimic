@@ -121,8 +121,7 @@ class ClockAnchoredDomainGenerator(DatasetAwareDomainGenerator):
     ) -> None:
         super().__init__(dataset=dataset, rng=rng)
         self._reference_now: datetime = (
-            reference_now if reference_now is not None
-            else resolve_clock(deterministic=self._seeded)
+            reference_now if reference_now is not None else resolve_clock(deterministic=self._seeded)
         )
 
     @property

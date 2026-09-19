@@ -1,0 +1,7 @@
+<setup rngSeed="7">
+    <!-- None as a weighted value on <variable>: it is just one of the choices (weight 0.2). -->
+    <generate name="people" count="1000" target="">
+        <variable name="grade" values="'A','B',None" weights="0.5, 0.3, 0.2"/>
+        <key name="grade" script="grade"/>
+    </generate>
+</setup>

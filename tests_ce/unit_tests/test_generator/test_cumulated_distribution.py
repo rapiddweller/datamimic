@@ -64,7 +64,9 @@ class TestCumulatedInteger:
 class TestCumulatedFloat:
     def test_mean_is_midpoint_and_on_grid(self):
         # the dominant corpus case: price min=0.49 max=99.99 granularity=0.10
-        gen = FloatGenerator(min=0.49, max=99.99, granularity=0.10, distribution=NumberDistribution.CUMULATED, rng=random.Random(3))
+        gen = FloatGenerator(
+            min=0.49, max=99.99, granularity=0.10, distribution=NumberDistribution.CUMULATED, rng=random.Random(3)
+        )
         vals = [gen.generate() for _ in range(N)]
         assert abs(sum(vals) / N - 50.24) < 1.0  # midpoint of [0.49, 99.99]
         # every value lands on the granularity grid and stays in range

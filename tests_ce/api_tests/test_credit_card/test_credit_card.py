@@ -1,11 +1,14 @@
-import pytest
 import datetime
+
+import pytest
+
 from datamimic_ce.domains.finance.models.credit_card import CreditCard
 from datamimic_ce.domains.finance.services.credit_card_service import CreditCardService
 
 
 class TestCreditCard:
     _supported_datasets = ["US", "DE"]
+
     def _test_single_credit_card(self, credit_card: CreditCard):
         assert isinstance(credit_card, CreditCard)
         assert isinstance(credit_card.card_number, str)
@@ -37,7 +40,7 @@ class TestCreditCard:
         assert credit_card.is_active != ""
         assert credit_card.credit_limit is not None
         assert credit_card.bank_code != ""
-        assert credit_card.bic is not None 
+        assert credit_card.bic is not None
         assert credit_card.bin is not None
         assert credit_card.bin != ""
 

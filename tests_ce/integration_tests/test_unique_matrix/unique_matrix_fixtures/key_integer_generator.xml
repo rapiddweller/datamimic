@@ -1,0 +1,5 @@
+<setup>
+  <generate name="gen" count="5" target="">
+    <key name="code" generator="IntegerGenerator(min=1, max=20)" unique="true"/>
+  </generate>
+</setup>

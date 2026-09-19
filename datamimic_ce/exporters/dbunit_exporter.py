@@ -53,9 +53,7 @@ class DbUnitExporter(UnifiedBufferedExporter):
             records = [json.loads(line) for line in f if line.strip()]
         lines = ['<?xml version="1.0" encoding="UTF-8"?>', "<dataset>"]
         for record in records:
-            attrs = "".join(
-                f" {col}={quoteattr(str(value))}" for col, value in record.items() if value is not None
-            )
+            attrs = "".join(f" {col}={quoteattr(str(value))}" for col, value in record.items() if value is not None)
             lines.append(f"    <{self._table}{attrs}/>")
         lines.append("</dataset>")
         buffer_file.write_text("\n".join(lines) + "\n", encoding=self.encoding or "utf-8")

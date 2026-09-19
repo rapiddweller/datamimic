@@ -59,10 +59,7 @@ class TimeSeriesConfig:
         end_dt = cls._parse_datetime(end, "end")
         interval_td = cls._parse_duration(interval)
         if end_dt <= start_dt:
-            raise ValueError(
-                f"<generate end=...> must be after <generate start=...>; "
-                f"got start={start!r}, end={end!r}"
-            )
+            raise ValueError(f"<generate end=...> must be after <generate start=...>; got start={start!r}, end={end!r}")
         ticks = int((end_dt - start_dt).total_seconds() // interval_td.total_seconds())
         return cls(start=start_dt, interval=interval_td, ticks_per_series=ticks)
 

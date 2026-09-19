@@ -63,4 +63,3 @@ REGION_GROUPS: dict[str, tuple[str, ...]] = {
     "FRENCH": ("FR", "BE", "CH", "LU", "MC", "CA"),
     "IBERIA": ("ES", "PT", "AD"),
 }
-

@@ -1,0 +1,7 @@
+<!-- Error case: storage= on a global (setup-scope) variable - no per-row position to expose. -->
+<setup>
+    <database id="dbPostgres" system="postgres" />
+    <execute uri="script/setup_postgresql.scr.sql" target="dbPostgres" />
+    <variable name="pool" source="dbPostgres" storage="data"
+              selector="SELECT row_id, text FROM simple.storage_pool" />
+</setup>

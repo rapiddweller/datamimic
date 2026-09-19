@@ -9,7 +9,6 @@ from collections.abc import Iterator
 from random import Random
 from typing import Any, Final
 
-from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.constants.attribute_constants import (
     ATTR_CONSTANT,
     ATTR_ENTITY,
@@ -20,20 +19,18 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_VALUES,
 )
 from datamimic_ce.constants.element_constants import EL_VARIABLE
-from datamimic_ce.contexts.context import Context
+from datamimic_ce.contexts.context import Context, DotableDict
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
-from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntityDataSource
 from datamimic_ce.logger import logger
-from datamimic_ce.statements.statement_util import StatementUtil
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
 from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.tasks.task_util import TaskUtil
+from datamimic_ce.tasks.variable_iterator import VariableIterator
 from datamimic_ce.utils.domain_class_util import DomainClassUtil
-from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.string_util import StringUtil
 
 
@@ -53,6 +50,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
     _ITERATION_SELECTOR_MODE: Final = "iteration_selector"
     _FULL_LOAD_MODE: Final = "full_load"
     _LAZY_ITERATOR_MODE: Final = "lazy_iterator"
+    _STORAGE_MODE: Final = "storage"
 
     def __init__(
         self,
@@ -65,146 +63,69 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             statement.source_script if statement.source_script is not None else bool(ctx.default_source_scripted)
         )
         self._statement: VariableStatement = statement
-        descriptor_dir = ctx.root.descriptor_dir
-        seed: int
-        file_data: list[dict[str, Any]] | None = None
         self._full_load_iterator = None
-        # Only ORDERED paginates sequentially; RANDOM and CUMULATED load all rows.
-        # unique also needs the whole pool (dedupe + sample without replacement).
-        loads_all = self.statement.distribution.loads_all or bool(self.statement.unique)
-        if loads_all:
-            # Stable per-statement seed so random / cumulated / unique stay consistent across pages.
-            seed = ctx.root.stable_distribution_seed(self.statement.full_name)
+
+        # storage="value"/"data"/"iterator" exposes a materialized source pool instead of the
+        # default per-execute()-advancing scalar (see VariableIterator's docstring for the
+        # "iterator" contract). VariableModel already rejects storage combined with
+        # iterationSelector, a weighted-entity source, or no source= at all - the two remaining
+        # combinations that need runtime state to detect (not decidable from raw XML attributes
+        # alone) are checked here.
+        self._storage_mode = statement.storage
+        if self._storage_mode is not None:
+            if statement.is_global_variable:
+                raise ValueError(
+                    f"<variable> '{statement.name}': 'storage' is not supported on a global "
+                    "(setup-scope) variable - it has no per-row position to expose."
+                )
+            if self._source_script:
+                raise ValueError(
+                    f"<variable> '{statement.name}': 'storage' cannot be combined with sourceScripted "
+                    "(not meaningful for a list/proxy value)"
+                )
+            if statement.converter is not None:
+                raise ValueError(
+                    f"<variable> '{statement.name}': 'storage' cannot be combined with 'converter' "
+                    "(not meaningful for a list/proxy value)"
+                )
+        force_full_pool = self._storage_mode is not None
 
         # Try to init generation mode of VariableTask
         if statement.source is not None:
-            source_str = statement.source
-            separator = statement.separator or ctx.default_separator
-            # Load data from weighted entity file
-            if source_str.endswith(".wgt.ent.csv"):
-                seeded = ctx.derive_seeded_rng()
-                self._weighted_data_source = WeightedEntityDataSource(
-                    file_path=descriptor_dir / source_str,
-                    separator=separator,
-                    rng=seeded if seeded is not None else Random(),
-                    weight_column_name=statement.weight_column,
-                )
+            plan = DataSourceRegistry.plan_variable_source(
+                ctx,
+                statement,
+                pagination,
+                force_full_pool=force_full_pool,
+            )
+            if plan.kind == "weighted":
+                if plan.weighted_source is None:
+                    raise RuntimeError("weighted variable source plan has no data source")
+                self._weighted_data_source = plan.weighted_source
                 self._mode = self._WEIGHTED_ENTITY_MODE
-            # Create datasource if statement has property "selector" or "iterationSelector"
-            # (working with datasource database)
-            elif statement.selector is not None or statement.iteration_selector is not None:
-                # set selector and prefix, suffix
-                self._selector = statement.selector or statement.iteration_selector
-                self._prefix = statement.variable_prefix or ctx.default_variable_prefix
-                self._suffix = statement.variable_suffix or ctx.default_variable_suffix
-
-                # Get client (Database)
-                client = ctx.get_client_by_id(source_str)
-                if not isinstance(client, DatabaseClient):
-                    raise ValueError(
-                        f"<variable> '{self._statement.name}': 'selector' only works with 'source' database (MongoDB, "
-                        f"SQL)"
-                    )
-                # Handle iteration selector
-                if statement.iteration_selector is not None:
-                    self._client = client
-                    self._mode = self._ITERATION_SELECTOR_MODE
-                # Handle static selector
-                else:
-                    # Evaluate script selector
-                    if self._selector is None:
-                        raise ValueError("No selector value in statement: {self._statement.name}")
-                    selector = TaskUtil.evaluate_variable_concat_prefix_suffix(
-                        context=ctx,
-                        expr=self._selector,
-                        prefix=self._prefix,
-                        suffix=self._suffix,
-                    )
-                    # Select data from database and shuffle
-                    if loads_all:
-                        self._mode = self._FULL_LOAD_MODE
-                        selected_data = client.get_by_page_with_query(selector)
-                        self._full_load_iterator = self._distributed_iter(selected_data, pagination, seed)
-                    else:
-                        # global variable (setup variable, out of generate_stmt scope) don't need pagination and cyclic
-                        if self._statement.is_global_variable:
-                            file_data = client.get_by_page_with_query(selector)
-                        # Get data source with pagination
-                        else:
-                            len_data = ctx.data_source_len.get(DataSourceRegistry.data_source_cache_key(statement))
-                            if len_data is None:
-                                len_data = client.count_query_length(selector)
-                            file_data = client.get_cyclic_data(
-                                selector,
-                                statement.cyclic or False,
-                                len_data,
-                                pagination,
-                            )
-                        self._iterator = iter(file_data) if file_data is not None else None
-                        self._mode = self._ITERATOR_MODE
+            elif plan.kind == "iteration_selector":
+                if plan.client is None or plan.selector is None:
+                    raise RuntimeError("iteration-selector plan is incomplete")
+                self._client = plan.client
+                self._selector = plan.selector
+                self._prefix = plan.prefix
+                self._suffix = plan.suffix
+                self._mode = self._ITERATION_SELECTOR_MODE
+            elif plan.kind == "lazy":
+                self._iterator = None
+                self._mode = self._LAZY_ITERATOR_MODE
+            elif plan.kind == "storage":
+                self._data_list = list(plan.data) if plan.data is not None else []
+                if self._storage_mode == "data":
+                    self._data_list = [DotableDict(row) if isinstance(row, dict) else row for row in self._data_list]
+                self._storage_row_counter = 0
+                self._mode = self._STORAGE_MODE
+            elif plan.kind == "full_load":
+                self._full_load_iterator = iter(plan.data) if plan.data is not None else None
+                self._mode = self._FULL_LOAD_MODE
             else:
-                # Load data from csv or json file
-                if source_str.endswith(("csv", "json", "xlsx", "fcw")):
-                    if source_str.endswith("csv"):
-                        file_data = FileUtil.read_csv_to_dict_list(
-                            file_path=descriptor_dir / source_str, separator=separator
-                        )
-                    elif source_str.endswith("xlsx"):
-                        file_data = FileUtil.read_xlsx_to_dict_list(descriptor_dir / source_str)
-                    elif source_str.endswith("fcw"):
-                        file_data = FileUtil.read_fixed_width_to_dict_list(descriptor_dir / source_str)
-                    else:
-                        file_data = FileUtil.read_json_to_list(descriptor_dir / source_str)
-                    if loads_all:
-                        self._full_load_iterator = self._distributed_iter(file_data, pagination, seed)
-                        self._mode = self._FULL_LOAD_MODE
-                    else:
-                        self._iterator = DataSourceRegistry.get_cyclic_data_iterator(
-                            data=file_data,
-                            cyclic=statement.cyclic,
-                            pagination=pagination,
-                        )
-                        self._mode = self._ITERATOR_MODE
-                # Load data from source without selector
-                else:
-                    is_lazy_source = False
-                    # Get data from database
-                    if ctx.get_client_by_id(source_str):
-                        client = ctx.get_client_by_id(source_str)
-                        if not isinstance(client, DatabaseClient):
-                            raise ValueError(
-                                f"Cannot get data from source '{source_str}' of <variable> '{statement.name}'"
-                            ) from None
-
-                        # in case of dbms product_type reflects the table name (sourceEntity -> type -> name)
-                        product_type = StatementUtil.resolve_source_entity(statement)
-                        # TODO: check if pagination is needed
-                        file_data = client.get_by_page_with_type(product_type) if product_type is not None else None
-                    # Get data from memstore
-                    elif ctx.memstore_manager.contain(source_str):
-                        product_type = StatementUtil.resolve_source_entity(statement)
-                        memstore = ctx.memstore_manager.get_memstore(source_str)
-                        file_data = (
-                            memstore.get_all_data_by_type(product_type)
-                            if loads_all
-                            else memstore.get_data_by_type(product_type, pagination, statement.cyclic)
-                        )
-                    # Get data from script in lazy mode
-                    else:
-                        is_lazy_source = True
-
-                    if is_lazy_source:
-                        self._iterator = None
-                        self._mode = self._LAZY_ITERATOR_MODE
-                    else:
-                        if loads_all:
-                            self._full_load_iterator = (
-                                self._distributed_iter(file_data, pagination, seed) if file_data is not None else None
-                            )
-                            self._mode = self._FULL_LOAD_MODE
-                        else:
-                            self._iterator = iter(file_data) if file_data is not None else None
-                            self._mode = self._ITERATOR_MODE
+                self._iterator = iter(plan.data) if plan.data is not None else None
+                self._mode = self._ITERATOR_MODE
         elif statement.entity is not None:
             # Create entity builder
             locale = statement.locale or ctx.default_locale
@@ -254,7 +175,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         entity_class_name, kwargs = StringUtil.parse_constructor_string(entity_name)
         # Inject dataset if not explicitly provided in constructor
         kwargs.setdefault("dataset", dataset)
-        demographic_context = getattr(ctx.root, "demographic_context", None)
+        demographic_context = ctx.root.demographic_context
         # Build demographic config + rng from statement attributes when present
         demo_cfg = None
         if any(
@@ -312,19 +233,24 @@ class VariableTask(KeyVariableTask, CommonSubTask):
             kwargs["rng"] = rng_obj
         return entity_cls(**kwargs)
 
-    def _distributed_iter(self, data, pagination, seed):
-        """Iterator over loaded rows for the load-all selections: random shuffle /
-        cumulated bell / unique (distinct, no replacement). All page-window slicing lives
-        in the registry, so unique stays multiprocessing-safe. Consumed via ``_full_load_iterator``."""
-        if self._statement.unique:
-            return iter(
-                DataSourceRegistry.get_unique_data(data, pagination, seed, f"<variable> '{self._statement.name}'")
-            )
-        return iter(
-            DataSourceRegistry.get_distributed_data(
-                data, pagination, self._statement.cyclic, seed, self._statement.distribution
-            )
-        )
+    def _compute_storage_value(self):
+        """storage="data": the same materialized pool every generated row. storage="value": the
+        pool's first row, fixed, every generated row - a distinct behavior from the unset default
+        (which advances one row per execute() call), matching DATAMIMIC EE's contract exactly.
+        storage="iterator": a VariableIterator bound to this row's GLOBAL position
+        (self._pagination.skip is the page's true global row offset - see generate_worker.py's
+        per-page pagination construction - plus a per-task counter incremented once per
+        execute() call, which naturally resets every page since VariableTask is rebuilt fresh per
+        page). This gives correct SP==MP determinism for free: worker 2's page continues the
+        cyclic sequence exactly where worker 1's left off."""
+        if self._storage_mode == "data":
+            return self._data_list
+        if self._storage_mode == "value":
+            return self._data_list[0] if self._data_list else None
+        skip = self._pagination.skip if self._pagination is not None else 0
+        position = skip + self._storage_row_counter
+        self._storage_row_counter += 1
+        return VariableIterator(self._data_list, bool(self._statement.cyclic), position)
 
     def execute(self, ctx: Context) -> None:
         """
@@ -340,17 +266,15 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         elif self._mode == self._ITERATION_SELECTOR_MODE:
             if self._selector is None:
                 raise ValueError(f"No selector value in statement: {self._statement.name}")
-            selector = TaskUtil.evaluate_variable_concat_prefix_suffix(
-                context=ctx,
-                expr=self._selector,
-                prefix=self._prefix,
-                suffix=self._suffix,
+            value = DataSourceRegistry.load_variable_iteration_selector(
+                ctx, self._client, self._selector, self._prefix, self._suffix
             )
-            value = self._client.get_by_page_with_query(selector)
         elif self._mode == self._FULL_LOAD_MODE:
             if self._full_load_iterator is None:
                 raise StopIteration(f"No more rows to iterate for statement: {self._statement.name}")
             value = next(self._full_load_iterator)
+        elif self._mode == self._STORAGE_MODE:
+            value = self._compute_storage_value()
         elif self._mode == self._LAZY_ITERATOR_MODE:
             if isinstance(self._statement, VariableStatement):
                 loads_all = self._statement.distribution.loads_all
@@ -358,23 +282,15 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 loads_all = False
             if self._statement.source is None:
                 return None
-            file_data = ctx.evaluate_python_expression(self._statement.source)
+            source_iterator = DataSourceRegistry.load_variable_lazy_source(ctx, self._statement, self._pagination)
             if loads_all:
-                # Stable per-statement seed (like __init__ above) so a paginated script source stays
-                # consistent across pages for random / cumulated / unique.
-                self._full_load_iterator = self._distributed_iter(
-                    file_data, self._pagination, ctx.root.stable_distribution_seed(self._statement.full_name)
-                )
+                self._full_load_iterator = source_iterator
                 self._mode = self._FULL_LOAD_MODE
                 if self._full_load_iterator is None:
                     raise StopIteration("No more rows to iterate for statement: " + self._statement.name)
                 value = next(self._full_load_iterator)
             else:
-                self._iterator = DataSourceRegistry.get_cyclic_data_iterator(
-                    data=file_data,
-                    cyclic=self.statement.cyclic,
-                    pagination=self._pagination,
-                )
+                self._iterator = source_iterator
                 self._mode = self._ITERATOR_MODE
                 value = next(self._iterator) if self._iterator is not None else None
         else:

@@ -91,9 +91,7 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
         # Minimum age to join: 21. Years of service cannot exceed age-21 and cap at 30
         max_years = max(0, min(30, age - 21))
         years_of_service = self._rng.randint(0, max_years)
-        min_dt = (now - datetime.timedelta(days=(years_of_service + 1) * 365)).strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
+        min_dt = (now - datetime.timedelta(days=(years_of_service + 1) * 365)).strftime("%Y-%m-%d %H:%M:%S")
         max_dt = (now - datetime.timedelta(days=years_of_service * 365)).strftime("%Y-%m-%d %H:%M:%S")
         dt = DateTimeGenerator(min=min_dt, max=max_dt, random=True, rng=self._derive_rng()).generate()
         assert isinstance(dt, datetime.datetime)
@@ -165,8 +163,6 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
         file_path = dataset_path("public_sector", "police", f"departments_{self._dataset}.csv", start=Path(__file__))
         loaded_weights, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
         values = [row.get("department_id") for row in loaded_data]
-        val = pick_one_weighted_no_repeat(
-            self._rng, values, loaded_weights, last=getattr(self, "_last_unit", None)
-        )
+        val = pick_one_weighted_no_repeat(self._rng, values, loaded_weights, last=getattr(self, "_last_unit", None))
         self._last_unit = val
         return val

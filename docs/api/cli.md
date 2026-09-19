@@ -18,8 +18,7 @@ datamimic info                      # Show system and configuration details
 datamimic init <project-name>       # Initialize a new project
 datamimic run <descriptor.xml>      # Run a data generation descriptor
 datamimic lint <descriptor.xml>     # Lint a descriptor: schema, semantics, best practices
-datamimic validate <descriptor.xml>  # Validate XML descriptor (alias of lint)
-datamimic capabilities               # Print the DSL surface as JSON (elements, generators, entities, converters, targets)
+datamimic capabilities               # Print the DSL surface as JSON (compact index by default; --full for the complete manifest)
 ```
 
 ### Demo Management
@@ -124,34 +123,21 @@ datamimic lint my-descriptor.xml
 datamimic lint my-descriptor.xml --format json --max-diagnostics 50
 ```
 
-#### `validate` - Validate Descriptor (alias of `lint`)
-
-```bash
-datamimic validate <descriptor.xml>
-```
-
-`validate` is a thin alias for `lint` with fixed defaults
-(`--format text --fail-on error --max-diagnostics 200`). It runs the same
-schema/semantic/best-practice checks as `lint`; it does not read or validate
-`info.toml`.
-
-Example:
-
-```bash
-datamimic validate my-descriptor.xml
-```
-
 #### `capabilities` - Print the DSL Surface
 
 ```bash
-datamimic capabilities
+datamimic capabilities [--section <name>] [--full]
 ```
 
-Prints a machine-readable JSON manifest of the DSL surface (elements,
-aliases, generators, entities, converters, targets, distributions), derived live from the engine
-registries so it cannot drift from the code. Useful for agents without an MCP
-runtime; see the [MCP Quickstart](../mcp_quickstart.md) for the equivalent
-`datamimic_reference` MCP tool.
+Prints a compact annotated JSON index of the DSL surface by default
+(elements, aliases, generators, entities, converters, targets,
+distributions), derived live from the engine registries so it cannot drift.
+Use `--full` for the complete manifest (including `authoring_spec`) or
+`--section <name>` (comma-separated) for specific sections. The compact
+output carries `_meta.format_version: 1` for stable agent contracts.
+
+Useful for agents without an MCP runtime; see the [MCP Quickstart](../mcp_quickstart.md)
+for the equivalent `datamimic_reference` MCP tool.
 
 ### Demo Management
 
@@ -207,7 +193,7 @@ The CLI behavior can be customized using environment variables:
 Most commands use `0` for success and `1` for a general error (e.g. `run` on a
 missing descriptor, `init` on an invalid project name).
 
-`lint`/`validate` use a distinct, ESLint-style scheme:
+`lint` uses a distinct, ESLint-style scheme:
 
 - `0`: no diagnostic reached the `--fail-on` threshold
 - `1`: at least one diagnostic reached the `--fail-on` threshold
@@ -261,8 +247,8 @@ Common issues and solutions:
 # Initialize new project
 datamimic init customer-data
 
-# Create and validate descriptor
-datamimic validate customer-data/descriptor.xml
+# Create and lint descriptor
+datamimic lint customer-data/descriptor.xml
 
 # Generate data
 datamimic run customer-data/descriptor.xml

@@ -261,6 +261,14 @@ class GenerateWorker:
         loglevel = os.getenv("LOG_LEVEL", "INFO")
         setup_logger(logger_name=settings.DEFAULT_LOGGER, worker_name=f"WORK-{worker_id}", level=loglevel)
 
+        # worker_id is 1-indexed (mp_process: enumerate(chunks, 1)); SetupContext.process_id is
+        # 0-indexed (consumers like SequenceTableGenerator multiply it by a per-process share).
+        # This was never wired up before - every worker read process_id as None/0, so
+        # SequenceTableGenerator's per-process offset was always a no-op and the only thing
+        # separating workers' id ranges was the shared DB sequence's own atomic advance, which
+        # isn't a real guarantee once the per-process math is supposed to keep ranges apart.
+        context.root.process_id = worker_id - 1
+
         # Deserialize multiprocessing arguments
         context.root.namespace.update(dill.loads(context.root.namespace_functions))
         context.root.generators = dill.loads(context.root.generators)

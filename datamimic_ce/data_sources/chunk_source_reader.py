@@ -64,12 +64,10 @@ class ChunkSourceReader:
         every chunk selects from the same seeded global sequence, so the disjoint
         windows are complete and duplicate-free together (across pages AND workers).
         """
-        from datamimic_ce.tasks.task_util import TaskUtil
-
         stmt = self._stmt
 
         if not self._loads_all:
-            return TaskUtil.gen_task_load_data_from_source_or_script(
+            return DataSourceRegistry.load_generate_source(
                 self._context,
                 stmt,
                 stmt.source,
@@ -81,15 +79,13 @@ class ChunkSourceReader:
             )
 
         if self._chunk_order is None:
-            pool, self._build_from_source = TaskUtil.gen_task_load_data_from_source_or_script(
+            pool, self._build_from_source = DataSourceRegistry.load_generate_source(
                 self._context, stmt, stmt.source, self._separator, self._source_scripted, None, None, None
             )
             # Stable per-statement seed -> identical global sequence in every chunk/worker;
             # each chunk keeps only its own window of it.
             seed = self._context.root.stable_distribution_seed(stmt.full_name)
-            chunk_pagination = DataSourcePagination(
-                skip=self._chunk_start, limit=self._chunk_end - self._chunk_start
-            )
+            chunk_pagination = DataSourcePagination(skip=self._chunk_start, limit=self._chunk_end - self._chunk_start)
             if stmt.unique:
                 self._chunk_order = DataSourceRegistry.get_unique_data(
                     pool, chunk_pagination, seed, f"<generate> '{stmt.name}'"

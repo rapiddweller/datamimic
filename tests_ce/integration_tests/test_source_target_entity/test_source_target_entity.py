@@ -13,8 +13,9 @@ def _clean():
 
 
 def _rows(database: str, table: str) -> int:
-    cfg = RdbmsConnectionConfig(dbms="sqlite", database=database, host=None, port=None,
-                                user=None, password=None, db_schema=None)
+    cfg = RdbmsConnectionConfig(
+        dbms="sqlite", database=database, host=None, port=None, user=None, password=None, db_schema=None
+    )
     client = RdbmsClient(cfg, task_id="t")
     return len(client.get(f"SELECT n FROM {table}"))
 

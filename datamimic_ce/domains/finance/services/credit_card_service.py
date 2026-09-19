@@ -46,9 +46,7 @@ class CreditCardService(BaseDomainService[CreditCard]):
         rng: Random | None = None,
     ):
         super().__init__(
-            CreditCardGenerator(
-                dataset=dataset, demographic_config=demographic_config, rng=rng
-            ),
+            CreditCardGenerator(dataset=dataset, demographic_config=demographic_config, rng=rng),
             CreditCard,
         )
 

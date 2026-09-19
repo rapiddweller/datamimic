@@ -15,9 +15,11 @@ held generator object cannot be copied/pickled - a cursor survives the copy at t
 position it had."""
 
 import random
+from abc import ABC, abstractmethod
+from collections.abc import Callable, Iterator
 from decimal import Decimal
 
-from datamimic_ce.enums.distribution_enums import NumberDistribution
+from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
 
 
 def _grid_size(min_v: float, max_v: float, granularity: float) -> int:
@@ -26,7 +28,7 @@ def _grid_size(min_v: float, max_v: float, granularity: float) -> int:
     return int((Decimal(str(max_v)) - Decimal(str(min_v))) / Decimal(str(granularity))) + 1
 
 
-class _GridSequence:
+class _GridSequence(ABC, Iterator[int | float]):
     """Base: maps grid indices k -> values; subclasses advance a plain-int cursor."""
 
     def __init__(self, min_v: float, max_v: float, granularity: float, integral: bool):
@@ -40,8 +42,12 @@ class _GridSequence:
             return int(self._min) + k * int(self._granularity)
         return float(Decimal(str(self._min)) + k * Decimal(str(self._granularity)))
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[int | float]:
         return self
+
+    @abstractmethod
+    def __next__(self) -> int | float:
+        """Return the next value from the concrete grid traversal."""
 
 
 class _StepSequence(_GridSequence):
@@ -140,7 +146,7 @@ class _RandomWalkSequence(_GridSequence):
         return value
 
 
-class _RecurrenceSequence:
+class _RecurrenceSequence(Iterator[int]):
     """Recurrence VALUES within [min, max]: ends once the next value exceeds max; values below
     min are skipped so a min > 0 range still yields the in-range tail."""
 
@@ -155,7 +161,7 @@ class _RecurrenceSequence:
             self._pending = [1, 1, 1]
         self._is_fibonacci = distribution is NumberDistribution.FIBONACCI
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[int]:
         return self
 
     def __next__(self) -> int:
@@ -175,6 +181,31 @@ class _RecurrenceSequence:
                 return value
 
 
+def finite_number_sequence_capacity(
+    distribution: NumberDistribution,
+    min_v: float,
+    max_v: float,
+    granularity: float,
+) -> int | None:
+    """Return the exact output capacity of a finite positional sequence.
+
+    This lives beside the iterator implementations so authoring analysis does
+    not reproduce their exhaustion semantics. Non-finite distributions return
+    ``None``. Invalid ranges are left to the runtime model/generator validators.
+    """
+    if distribution not in POSITIONAL_NUMBER_SEQUENCES:
+        return None
+    if min_v > max_v or granularity <= 0:
+        return None
+    if distribution in (NumberDistribution.FIBONACCI, NumberDistribution.PADOVAN):
+        sequence = _RecurrenceSequence(distribution, min_v, max_v)
+        count = 0
+        for _ in sequence:
+            count += 1
+        return count
+    return _grid_size(min_v, max_v, granularity)
+
+
 def build_number_sequence(
     distribution: NumberDistribution,
     min_v: float,
@@ -182,14 +213,17 @@ def build_number_sequence(
     granularity: float,
     rng: random.Random,
     integral: bool,
-):
+) -> Iterator[int | float]:
     """Value iterator for a sequence-type NumberDistribution. Exhaustion raises StopIteration -
     the engine treats it like a source running dry (the row loop ends)."""
     if distribution in (NumberDistribution.FIBONACCI, NumberDistribution.PADOVAN):
         return _RecurrenceSequence(distribution, min_v, max_v)
     if distribution is NumberDistribution.RANDOM_WALK:
         return _RandomWalkSequence(min_v, max_v, granularity, integral, rng)
-    sequence_classes = {
+    sequence_classes: dict[
+        NumberDistribution,
+        Callable[[float, float, float, bool], _GridSequence],
+    ] = {
         NumberDistribution.STEP: _StepSequence,
         NumberDistribution.INCREMENT: _StepSequence,
         NumberDistribution.SHUFFLE: _ShuffleSequence,

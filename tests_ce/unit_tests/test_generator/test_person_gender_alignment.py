@@ -173,9 +173,7 @@ class _SentinelPersonGenerator:
         self.email_generator = self
         self.phone_generator = _SentinelGenerator("+49-30-123456")
         self.address_generator = _SentinelAddressGenerator()
-        self.birthdate_generator = _SentinelBirthdateGenerator(
-            convert_age=sample.age or 30
-        )
+        self.birthdate_generator = _SentinelBirthdateGenerator(convert_age=sample.age or 30)
         self.generated_birthdates: list[int] = []
 
     def generate_birthdate_for_age(self, age: int) -> datetime:
@@ -241,9 +239,11 @@ def test_person_relations_use_demographic_sample_and_cache() -> None:
     assert generator.birthdate_generator.convert_calls == 1
     assert person.birthdate.year == 2020 - sample.age
 
+
 # ---------------------------------------------------------------------------
 # Distribution / quota tests
 # ---------------------------------------------------------------------------
+
 
 def _sample_gender_distribution(
     dataset: str,
@@ -332,6 +332,3 @@ def test_person_distribution_matches_mixed_quotas(
     total = ratios["female"] + ratios["male"] + ratios["other"]
     # Sanity: probabilities should sum ~1.0
     assert 0.95 <= total <= 1.05
-
-
-    

@@ -10,11 +10,12 @@ from random import Random
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from datamimic_ce.domains.common.demographics.loader import load_demographic_profile
-from datamimic_ce.domains.common.demographics.sampler import DemographicSampler, DemographicSample
+from datamimic_ce.domains.common.demographics.sampler import DemographicSample, DemographicSampler
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.healthcare.generators.patient_generator import PatientGenerator
 
 _test_dir = Path(__file__).resolve().parent
+
 
 def _load_sampler(tmp_path: Path) -> DemographicSampler:
     fixture_dir = Path(_test_dir / "data")

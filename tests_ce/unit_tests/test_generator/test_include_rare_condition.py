@@ -7,8 +7,8 @@ Expected: 'fabry' appears ≥1 time across 1000 samples; no timeouts.
 import random
 
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
-from datamimic_ce.domains.healthcare.services.patient_service import PatientService
 from datamimic_ce.domains.healthcare.generators import patient_generator
+from datamimic_ce.domains.healthcare.services.patient_service import PatientService
 
 
 def test_including_rare_condition_appears_eventually(monkeypatch) -> None:
@@ -24,7 +24,4 @@ def test_including_rare_condition_appears_eventually(monkeypatch) -> None:
     service = PatientService(dataset="US", demographic_config=config, rng=rng)
 
     patients = [service.generate() for _ in range(1000)]
-    assert any(
-        any("fabry" in condition.lower() for condition in patient.conditions)
-        for patient in patients
-    )
+    assert any(any("fabry" in condition.lower() for condition in patient.conditions) for patient in patients)

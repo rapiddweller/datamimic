@@ -5,36 +5,37 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import re
+from collections.abc import Set as AbstractSet
 
 from pydantic import TypeAdapter, ValidationError
 
 from datamimic_ce.constants.attribute_constants import (
     ATTR_COUNT,
-    ATTR_CYCLIC,
-    ATTR_DATASET,
-    ATTR_DEFAULT_VALUE,
-    ATTR_DISTRIBUTION,
-    ATTR_ENTITY,
-    ATTR_GENERATOR,
     ATTR_IN_DATE_FORMAT,
-    ATTR_LOCALE,
+    ATTR_ITERATION_SELECTOR,
     ATTR_MAX_COUNT,
     ATTR_MIN_COUNT,
     ATTR_OUT_DATE_FORMAT,
-    ATTR_RNG_SEED,
-    ATTR_SCRIPT,
-    ATTR_SELECTOR,
-    ATTR_SEPARATOR,
     ATTR_SOURCE,
-    ATTR_SOURCE_SCRIPTED,
+    ATTR_STORAGE,
     ATTR_TYPE,
-    ATTR_UNIQUE,
-    ATTR_VALUES,
-    ATTR_WEIGHT_COLUMN,
-    ATTR_WEIGHTS,
 )
 from datamimic_ce.constants.data_type_constants import DATA_TYPE_STRING
-from datamimic_ce.enums.distribution_enums import SourceDistribution
+from datamimic_ce.model.constraints import (
+    AllOrNone,
+    AllowedValuesWhen,
+    Constraint,
+    Forbids,
+    ForbidsWhenValue,
+    MutuallyExclusive,
+    MutuallyExclusiveWhen,
+    RequiredOneOf,
+    Requires,
+    RequiresWhenValue,
+    ValidValues,
+    resolved_allowed,
+    resolved_values,
+)
 from datamimic_ce.utils.string_util import StringUtil
 
 # Parse XML bool attributes exactly like the pydantic bool fields do, so a "before"
@@ -49,6 +50,157 @@ def _attr_true(value: object) -> bool:
         return _BOOL_ADAPTER.validate_python(value)
     except ValidationError:
         return False
+
+
+def _constraint_gate_open(
+    values: dict,
+    attr: str,
+    when_true: bool,
+) -> bool:
+    return _attr_true(values.get(attr)) if when_true else attr in values
+
+
+def _required_one_of_error(values: dict, fact: RequiredOneOf) -> str | None:
+    if any(attr in values for attr in fact.attrs):
+        return None
+    attrs_str = ", ".join(sorted(fact.attrs))
+    return fact.message or f"must define one of: {attrs_str}"
+
+
+def _mutually_exclusive_error(values: dict, fact: MutuallyExclusive) -> str | None:
+    present = [attr for attr in fact.attrs if attr in values]
+    if len(present) <= 1:
+        return None
+    attrs_str = ", ".join(sorted(fact.attrs))
+    return fact.message or f"at most one of [{attrs_str}] may be present, but got: {present}"
+
+
+def _mutually_exclusive_when_error(
+    values: dict,
+    fact: MutuallyExclusiveWhen,
+) -> str | None:
+    if not _constraint_gate_open(values, fact.when_attr, fact.when_true):
+        return None
+    present = [attr for attr in fact.attrs if attr in values]
+    if len(present) <= 1:
+        return None
+    attrs_str = ", ".join(sorted(fact.attrs))
+    return fact.message or (
+        f"when '{fact.when_attr}' is present, at most one of [{attrs_str}] may be present, but got: {present}"
+    )
+
+
+def _requires_error(values: dict, fact: Requires) -> str | None:
+    if not _constraint_gate_open(values, fact.attr, fact.when_true):
+        return None
+    if any(need in values for need in fact.needs):
+        return None
+    needs_str = ", ".join(sorted(fact.needs))
+    return fact.message or (f"when '{fact.attr}' is present, at least one of [{needs_str}] must be present")
+
+
+def _requires_when_value_error(values: dict, fact: RequiresWhenValue) -> str | None:
+    if values.get(fact.when_attr) not in fact.when_values:
+        return None
+    if any(attr in values for attr in fact.unless):
+        return None
+    if any(need in values for need in fact.needs):
+        return None
+    needs_str = ", ".join(sorted(fact.needs))
+    values_str = ", ".join(sorted(fact.when_values))
+    return fact.message or (
+        f"when '{fact.when_attr}' is one of [{values_str}], at least one of [{needs_str}] must be present"
+    )
+
+
+def _all_or_none_error(values: dict, fact: AllOrNone) -> str | None:
+    present = [attr for attr in fact.attrs if attr in values]
+    if not present or len(present) == len(fact.attrs):
+        return None
+    attrs_str = ", ".join(sorted(fact.attrs))
+    return fact.message or f"either all of [{attrs_str}] must be present, or none"
+
+
+def _forbidden_attributes(values: dict, fact: Forbids) -> list[str]:
+    if fact.excludes_when_true:
+        return [attr for attr in fact.excludes if _attr_true(values.get(attr))]
+    return [attr for attr in fact.excludes if attr in values]
+
+
+def _forbids_error(values: dict, fact: Forbids) -> str | None:
+    if not _constraint_gate_open(values, fact.attr, fact.when_true):
+        return None
+    present = _forbidden_attributes(values, fact)
+    if not present:
+        return None
+    excludes_str = ", ".join(sorted(fact.excludes))
+    return fact.message or (
+        f"when '{fact.attr}' is present, none of [{excludes_str}] may be present, but got: {present}"
+    )
+
+
+def _forbids_when_value_error(values: dict, fact: ForbidsWhenValue) -> str | None:
+    if values.get(fact.when_attr) not in fact.when_values:
+        return None
+    present = [attr for attr in fact.excludes if attr in values]
+    if not present:
+        return None
+    excludes_str = ", ".join(sorted(fact.excludes))
+    values_str = ", ".join(sorted(fact.when_values))
+    return fact.message or (
+        f"when '{fact.when_attr}' is one of [{values_str}], none of [{excludes_str}] may be present, but got: {present}"
+    )
+
+
+def _valid_values_error(values: dict, fact: ValidValues) -> str | None:
+    if fact.attr not in values:
+        return None
+    attr_value = values[fact.attr]
+    valid_set = resolved_values(fact)
+    if attr_value in valid_set:
+        return None
+    valid_str = ", ".join(sorted(str(value) for value in valid_set))
+    return fact.message or (f"'{fact.attr}' value must be one of [{valid_str}], but got: '{attr_value}'")
+
+
+def _allowed_values_error(values: dict, fact: AllowedValuesWhen) -> str | None:
+    if not _constraint_gate_open(values, fact.when_attr, fact.when_true):
+        return None
+    if fact.attr not in values:
+        return None
+    attr_value = values[fact.attr]
+    allowed_set = resolved_allowed(fact)
+    if attr_value in allowed_set:
+        return None
+    allowed_str = ", ".join(sorted(str(value) for value in allowed_set))
+    return (
+        fact.message.replace("{actual_value}", str(attr_value))
+        if fact.message is not None
+        else f"when '{fact.when_attr}' is present, '{fact.attr}' value must be one of "
+        f"[{allowed_str}], but got: '{attr_value}'"
+    )
+
+
+def _constraint_error(values: dict, fact: Constraint) -> str | None:
+    if isinstance(fact, RequiredOneOf):
+        return _required_one_of_error(values, fact)
+    if isinstance(fact, MutuallyExclusive):
+        return _mutually_exclusive_error(values, fact)
+    if isinstance(fact, MutuallyExclusiveWhen):
+        return _mutually_exclusive_when_error(values, fact)
+    if isinstance(fact, Requires):
+        return _requires_error(values, fact)
+    if isinstance(fact, RequiresWhenValue):
+        return _requires_when_value_error(values, fact)
+    if isinstance(fact, AllOrNone):
+        return _all_or_none_error(values, fact)
+    if isinstance(fact, Forbids):
+        return _forbids_error(values, fact)
+    if isinstance(fact, ForbidsWhenValue):
+        return _forbids_when_value_error(values, fact)
+    if isinstance(fact, ValidValues):
+        return _valid_values_error(values, fact)
+    return _allowed_values_error(values, fact)
 
 
 class ModelUtil:
@@ -91,51 +243,91 @@ class ModelUtil:
 
     @staticmethod
     def check_exist_count(values: dict) -> dict:
+        """Check if 'count' is defined in case 'source' and 'script' are not defined.
+
+        Delegate to declared constraint: EXIST_COUNT.
         """
-        Check if 'count' is defined in case 'source' and 'script' are not defined
-        :param values:
-        :return:
-        """
-        if all(attr not in values for attr in [ATTR_SOURCE, ATTR_SCRIPT, ATTR_COUNT, ATTR_MIN_COUNT, ATTR_MAX_COUNT]):
-            raise ValueError(
-                f"Missing attribute '{ATTR_COUNT}' ('{ATTR_COUNT}' might be optional "
-                f"in case '{ATTR_SOURCE} and {ATTR_SCRIPT} are not defined')"
-            )
-        return values
+        from datamimic_ce.model.constraints import EXIST_COUNT
+
+        return ModelUtil.check_constraints(values, (EXIST_COUNT,))
 
     @staticmethod
     def check_weights_require_values(values: dict) -> dict:
-        """'weights' is the companion of 'values' — it is meaningless on its own."""
-        if ATTR_WEIGHTS in values and ATTR_VALUES not in values:
-            raise ValueError(f"'{ATTR_WEIGHTS}' is only allowed together with '{ATTR_VALUES}'")
-        return values
+        """'weights' is the companion of 'values' — it is meaningless on its own.
+
+        Delegate to declared constraint: WEIGHTS_REQUIRE_VALUES.
+        """
+        from datamimic_ce.model.constraints import WEIGHTS_REQUIRE_VALUES
+
+        return ModelUtil.check_constraints(values, (WEIGHTS_REQUIRE_VALUES,))
 
     @staticmethod
-    def check_unique_constraints(values: dict) -> dict:
-        """'unique' draws distinct values without replacement from a finite pool — an inline
-        'values' set or a 'source'. It implies distinct random order, so it only combines with
-        distribution='random' (the default) and is incompatible with 'weights' (no weighted
-        sampling without replacement), 'cyclic' and ordered/cumulated (no-repeat vs repeat/bell)."""
-        if not _attr_true(values.get(ATTR_UNIQUE)):
-            return values
-        if ATTR_VALUES not in values and ATTR_SOURCE not in values:
-            raise ValueError(f"'{ATTR_UNIQUE}' requires '{ATTR_VALUES}' or '{ATTR_SOURCE}' (a finite pool)")
-        if ATTR_WEIGHTS in values:
-            raise ValueError(f"'{ATTR_UNIQUE}' cannot be combined with '{ATTR_WEIGHTS}'")
-        if _attr_true(values.get(ATTR_CYCLIC)):
-            raise ValueError(f"'{ATTR_UNIQUE}' cannot be combined with '{ATTR_CYCLIC}' (no-repeat vs repeat)")
-        distribution = SourceDistribution.coerce(values.get(ATTR_DISTRIBUTION))
-        if distribution is not SourceDistribution.RANDOM:
-            raise ValueError(
-                f"'{ATTR_UNIQUE}' only combines with distribution='{SourceDistribution.RANDOM.value}' "
-                f"(it implies distinct random order), not '{distribution.value}'"
+    def check_unique_constraints(
+        values: dict,
+        constraints: tuple["Constraint", ...] | None = None,
+    ) -> dict:
+        """'unique' draws distinct values without replacement from a finite pool — inline
+        'values', a 'source', or a 'generator'. It implies distinct random order, so it only
+        combines with distribution='random' (the default) and is incompatible with 'weights'
+        (no weighted sampling without replacement), 'cyclic' and ordered/cumulated
+        (no-repeat vs repeat/bell). Generator-backed unique uses task-level dedup in
+        KeyVariableTask — the generator itself does not own uniqueness state.
+
+        Delegate entirely to the model's declared unique constraints. Source-backed
+        models default to the shared source-selection facts; <key> passes its numeric-
+        distribution-specific fact tuple explicitly.
+        """
+        from datamimic_ce.model.constraints import (
+            UNIQUE_DISTRIBUTION_RANDOM,
+            UNIQUE_FORBIDS_CYCLIC,
+            UNIQUE_FORBIDS_WEIGHTS,
+            UNIQUE_REQUIRES_POOL,
+        )
+
+        declared = (
+            (
+                UNIQUE_REQUIRES_POOL,
+                UNIQUE_FORBIDS_WEIGHTS,
+                UNIQUE_FORBIDS_CYCLIC,
+                UNIQUE_DISTRIBUTION_RANDOM,
             )
+            if constraints is None
+            else constraints
+        )
+        return ModelUtil.check_constraints(values, declared)
+
+    @staticmethod
+    def check_storage_constraints(values: dict) -> dict:
+        """'storage' (value/data/iterator) exposes a materialized source POOL - it only makes
+        sense on a source-backed <variable> (not entity=/constant=/values=/script=/pattern=/
+        string=/generator=, none of which produce a pool). It's also incompatible with
+        iterationSelector (per-row dynamic re-query, no stable pool to index into - matches the
+        existing precedent that iterationSelector already ignores cyclic=/unique= too) and with a
+        weighted-entity source (.wgt.ent.csv - a distribution-sampling source, not a pool to
+        expose verbatim)."""
+        if ATTR_STORAGE not in values:
+            return values
+        if ATTR_SOURCE not in values:
+            raise ValueError(f"'{ATTR_STORAGE}' requires '{ATTR_SOURCE}' (it exposes a loaded source pool)")
+        if values.get(ATTR_ITERATION_SELECTOR) is not None:
+            raise ValueError(
+                f"'{ATTR_STORAGE}' cannot be combined with '{ATTR_ITERATION_SELECTOR}' "
+                "(no stable pool to index into - a fresh query runs per row)"
+            )
+        source = values.get(ATTR_SOURCE)
+        if isinstance(source, str) and source.endswith(".wgt.ent.csv"):
+            raise ValueError(f"'{ATTR_STORAGE}' cannot be combined with a weighted-entity source ('{source}')")
         return values
 
     @staticmethod
     def check_min_max_count(values: dict, element_tag: str) -> dict:
         """count and minCount/maxCount are mutually exclusive; minCount must not exceed maxCount.
-        Shared by <generate> and <nestedKey>."""
+        Shared by <generate> and <nestedKey>.
+
+        Facts COUNT_XOR_MIN and COUNT_XOR_MAX are declared for schema, but this method keeps
+        the full imperative logic for the element_tag-parameterized message and min>max ordering
+        check (value-gated, per review R1).
+        """
         key_set = set(values.keys())
         if ATTR_COUNT in key_set:
             if ATTR_MIN_COUNT in key_set or ATTR_MAX_COUNT in key_set:
@@ -153,81 +345,35 @@ class ModelUtil:
         return values
 
     @staticmethod
-    def _check_valid_additional_attributes(
-        values: dict, main_attributes: tuple, additional_attributes: list[str]
-    ) -> dict:
-        """
-        Check if valid additional attributes are defined with main attribute
-        :param values:
-        :return:
-        """
-        key_set = set(values.keys())
-        if any(attr in key_set for attr in main_attributes):
-            return values
-        for key in additional_attributes:
-            if key in key_set:
-                raise ValueError(f"'{key}' is only allowed when one of '{main_attributes}' is defined")
-        return values
-
-    @staticmethod
     def check_valid_additional_source_attributes(values: dict) -> dict:
+        """Check if additional attributes (cyclic, selector,...) are defined with 'source'.
+
+        Delegate to declared constraints: SOURCE_COMPANIONS_WITH_CYCLIC.
         """
-        Check if additional attributes (cyclic, selector,...) are defined with 'source'
-        :param values:
-        :return:
-        """
-        return ModelUtil._check_valid_additional_attributes(
-            values=values,
-            main_attributes=tuple([ATTR_SOURCE]),
-            additional_attributes=[
-                ATTR_CYCLIC,
-                ATTR_SELECTOR,
-                ATTR_SEPARATOR,
-                ATTR_SOURCE_SCRIPTED,
-                ATTR_WEIGHT_COLUMN,
-            ],
-        )
+        from datamimic_ce.model.constraints import SOURCE_COMPANIONS_WITH_CYCLIC
+
+        return ModelUtil.check_constraints(values, SOURCE_COMPANIONS_WITH_CYCLIC)
 
     @staticmethod
     def check_valid_additional_source_attributes_without_cyclic(values: dict) -> dict:
+        """Check if additional attributes (selector, separator...) are defined with 'source',
+        except cyclic can define without 'source'.
+
+        Delegate to declared constraints: SOURCE_COMPANIONS_WITHOUT_CYCLIC.
         """
-        Check if additional attributes (selector, separator...) are defined with 'source',
-        except cyclic can define without 'source'
-        :param values:
-        :return:
-        """
-        return ModelUtil._check_valid_additional_attributes(
-            values=values,
-            main_attributes=tuple([ATTR_SOURCE]),
-            additional_attributes=[
-                ATTR_SELECTOR,
-                ATTR_SEPARATOR,
-                ATTR_SOURCE_SCRIPTED,
-                ATTR_WEIGHT_COLUMN,
-            ],
-        )
+        from datamimic_ce.model.constraints import SOURCE_COMPANIONS_WITHOUT_CYCLIC
+
+        return ModelUtil.check_constraints(values, SOURCE_COMPANIONS_WITHOUT_CYCLIC)
 
     @staticmethod
     def check_valid_additional_generator_entity_attributes(values: dict) -> dict:
+        """Check if additional attributes (locale, dataset,...) are defined with 'generator' or 'entity'.
+
+        Delegate to declared constraints: GENERATOR_ENTITY_ADDONS.
         """
-        Check if additional attributes (locale, dataset,...) are defined with 'generator'
-        :param values:
-        :return:
-        """
-        return ModelUtil._check_valid_additional_attributes(
-            values=values,
-            main_attributes=(ATTR_GENERATOR, ATTR_ENTITY),
-            additional_attributes=[
-                ATTR_DATASET,
-                ATTR_LOCALE,
-                # Demographic and RNG addons
-                "ageMin",
-                "ageMax",
-                "conditionsInclude",
-                "conditionsExclude",
-                ATTR_RNG_SEED,
-            ],
-        )
+        from datamimic_ce.model.constraints import GENERATOR_ENTITY_ADDONS
+
+        return ModelUtil.check_constraints(values, GENERATOR_ENTITY_ADDONS)
 
     @staticmethod
     def check_not_empty(value) -> str:
@@ -252,7 +398,7 @@ class ModelUtil:
         return value
 
     @staticmethod
-    def check_valid_data_value(value: str, valid_values: set[str]) -> str:
+    def check_valid_data_value(value: str, valid_values: AbstractSet[str]) -> str:
         """
         Check if data type is in valid set
         :param value:
@@ -333,23 +479,20 @@ class ModelUtil:
 
     @staticmethod
     def check_generation_mode_of_source(values: dict) -> dict:
-        """
-        Check if at most "selector" or "type" is used when using "source"
+        """Delegate the source-gated type/selector XOR to its central fact."""
+        from datamimic_ce.model.constraints import SOURCE_MODE_EXCLUSIVE
 
-        :param values:
-        :return:
-        """
-        key_set = set(values.keys())
-        if ATTR_SOURCE in key_set and ATTR_TYPE in key_set and ATTR_SELECTOR in key_set:
-            raise ValueError(f'Only one "{ATTR_TYPE}" or "{ATTR_SELECTOR}" can be defined in "{ATTR_SOURCE}"')
-        return values
+        return ModelUtil.check_constraints(values, (SOURCE_MODE_EXCLUSIVE,))
 
     @staticmethod
     def check_valid_default_value(values: dict) -> dict:
-        key_set = set(values.keys())
-        if ATTR_DEFAULT_VALUE in key_set and ATTR_SCRIPT not in key_set:
-            raise ValueError(f"Attribute '{ATTR_DEFAULT_VALUE}' must be defined along with '{ATTR_SCRIPT}'")
-        return values
+        """Default value requires script to be defined.
+
+        Delegate to declared constraint: DEFAULT_VALUE_REQUIRES_SCRIPT.
+        """
+        from datamimic_ce.model.constraints import DEFAULT_VALUE_REQUIRES_SCRIPT
+
+        return ModelUtil.check_constraints(values, (DEFAULT_VALUE_REQUIRES_SCRIPT,))
 
     @staticmethod
     def check_is_digit_or_script(value) -> str:
@@ -361,3 +504,33 @@ class ModelUtil:
         if not value.isdigit() and re.match(r"^\{.+\}$", value) is None:
             raise ValueError(f"must be string of digits or script, but get: '{value}'")
         return value
+
+    @staticmethod
+    def check_constraints(values: dict, constraints: tuple["Constraint", ...]) -> dict:
+        """Generic executor for declarative constraint facts.
+
+        Walks the constraints tuple; for each fact:
+        - SKIPS it if lint_only=True
+        - Enforces the fact's semantics, honoring when_true gates via _attr_true()
+        - Raises ValueError with the fact's message (if set), else a sensible default
+
+        Returns values unchanged on success (matching every existing ModelUtil check's contract).
+        Keys in values are raw XML attribute names — exactly what mode="before" validators receive.
+
+        Args:
+            values: Dict of attribute name -> value (raw XML attributes, not coerced)
+            constraints: Tuple of Constraint objects
+
+        Returns:
+            values (unchanged)
+
+        Raises:
+            ValueError: On constraint violation, with the fact's message or a generated default
+        """
+        for fact in constraints:
+            if fact.lint_only:
+                continue
+            error = _constraint_error(values, fact)
+            if error is not None:
+                raise ValueError(error)
+        return values

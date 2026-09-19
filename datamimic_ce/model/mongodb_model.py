@@ -5,19 +5,55 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from datamimic_ce.model.model_util import ModelUtil
 
 
 class MongoDBModel(BaseModel):
-    id: str
-    host: str
-    port: str
-    database: str
-    environment: str | None = None
-    user: str | None = None
-    password: str | None = None
+    id: str = Field(
+        ...,
+        description="Unique identifier for this MongoDB connection, referenced elsewhere via "
+        "source=/target= (e.g. <generate target='mongo.upsert'/>, <variable source='mongo'/>).",
+        examples=["mongo", "sourceMongo"],
+    )
+    host: str = Field(
+        ...,
+        description="Hostname or IP of the MongoDB server. When omitted, resolved from "
+        "conf/{environment}.env.properties using key '{system}.mongo.host'.",
+        examples=["localhost", "127.0.0.1"],
+    )
+    port: str = Field(
+        ...,
+        description="Port number of the MongoDB server, as a string of digits. When omitted, "
+        "resolved from conf/{environment}.env.properties using key '{system}.mongo.port'.",
+        examples=["27017"],
+    )
+    database: str = Field(
+        ...,
+        description="Database name to connect to. When omitted, resolved from "
+        "conf/{environment}.env.properties using key '{system}.mongo.database'.",
+        examples=["mydb"],
+    )
+    environment: str | None = Field(
+        None,
+        description="Selects which conf/{environment}.env.properties file supplies credentials "
+        "not given directly on this element. Defaults to 'local' when running in development, "
+        "otherwise 'environment'.",
+        examples=["local", "dev", "prod"],
+    )
+    user: str | None = Field(
+        None,
+        description="Username for the MongoDB connection. When omitted, resolved from "
+        "conf/{environment}.env.properties using key '{system}.mongo.user'.",
+        examples=["mongo_user"],
+    )
+    password: str | None = Field(
+        None,
+        description="Password for the MongoDB connection. When omitted, resolved from "
+        "conf/{environment}.env.properties using key '{system}.mongo.password'.",
+        examples=["secret"],
+    )
 
     model_config = ConfigDict(extra="allow")
 

@@ -1,4 +1,5 @@
 """Strict-mode regression tests for component resolution (rules 3-4)."""
+
 import pytest
 
 from datamimic_ce.domains.exceptions import DomainError

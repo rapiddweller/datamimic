@@ -20,13 +20,15 @@ def _stmt(source_entity=None, type_=None, name="stmt"):
 
 # ---- resolve_source_entity: name-fallback families (RDBMS/memstore/nestedKey) ----
 
+
 def test_resolve_source_entity_precedence():
-    assert StatementUtil.resolve_source_entity(_stmt("ent", "typ", "nm")) == "ent"   # sourceEntity wins
-    assert StatementUtil.resolve_source_entity(_stmt(None, "typ", "nm")) == "typ"    # -> type
-    assert StatementUtil.resolve_source_entity(_stmt(None, None, "nm")) == "nm"      # -> name
+    assert StatementUtil.resolve_source_entity(_stmt("ent", "typ", "nm")) == "ent"  # sourceEntity wins
+    assert StatementUtil.resolve_source_entity(_stmt(None, "typ", "nm")) == "typ"  # -> type
+    assert StatementUtil.resolve_source_entity(_stmt(None, None, "nm")) == "nm"  # -> name
 
 
 # ---- resolve_source_collection: explicit-only family (MongoDB), no name fallback ----
+
 
 def test_resolve_source_collection_precedence_and_no_name_fallback():
     assert StatementUtil.resolve_source_collection(_stmt("ent", "typ", "nm")) == "ent"
@@ -35,6 +37,7 @@ def test_resolve_source_collection_precedence_and_no_name_fallback():
 
 
 # ---- resolve_target_entity ----
+
 
 def test_resolve_target_entity_precedence_and_metadata():
     assert StatementUtil.resolve_target_entity("ent", "typ", "nm") == "ent"
@@ -46,6 +49,7 @@ def test_resolve_target_entity_precedence_and_metadata():
 
 
 # ---- MongoDB collection dispatch (no live server: empty data returns before connecting) ----
+
 
 def _client():
     cfg = MongoDBConnectionConfig(host="localhost", port=1, database="d", user=None, password=None)

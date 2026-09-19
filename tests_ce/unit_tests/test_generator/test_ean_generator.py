@@ -6,8 +6,6 @@
 
 import random
 
-import pytest
-
 from datamimic_ce.domains.common.literal_generators.ean_generator import EANGenerator
 
 
@@ -19,22 +17,16 @@ class TestEANGenerator:
         assert len(value) == 13
         assert value.isdigit()
 
-    def test_default_allows_repeats(self):
+    def test_generate_is_stateless(self):
+        """Generator produces values without tracking state.
+        Cross-row dedup belongs to the task layer (unique=\"true\")."""
         gen = EANGenerator(rng=random.Random(1))
-        # not asserting a collision (space is huge) - only that generate() never tracks state
-        for _ in range(50):
-            gen.generate()
-        assert gen._seen == set()
+        values = [gen.generate() for _ in range(50)]
+        assert len(values) == 50
+        # No _seen set — generator is stateless after unique was removed
+        assert not hasattr(gen, "_seen")
 
-    def test_unique_never_repeats(self):
-        gen = EANGenerator(unique=True, rng=random.Random(7))
-        values = [gen.generate() for _ in range(500)]
-        assert len(values) == len(set(values))
-
-    def test_unique_retries_then_fails_loudly(self):
-        gen = EANGenerator(unique=True, rng=random.Random(3))
-        # exhaust the space artificially: make the underlying generator constant
-        gen._gen.generate = lambda: "4000000000000"  # type: ignore[method-assign]
-        assert gen.generate() == "4000000000000"
-        with pytest.raises(ValueError, match="no fresh EAN"):
-            gen.generate()
+    def test_seeded_produces_reproducible_sequence(self):
+        a = EANGenerator(rng=random.Random(42))
+        b = EANGenerator(rng=random.Random(42))
+        assert [a.generate() for _ in range(5)] == [b.generate() for _ in range(5)]

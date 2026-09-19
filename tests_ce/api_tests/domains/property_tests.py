@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-from typing import Dict, List
-
 from datamimic_ce.domains.determinism import canonical_json
 from datamimic_ce.domains.facade import generate_domain
 
-SEEDS: List[str] = ["alpha", "beta", "gamma", "delta"]
-DOMAINS: List[str] = ["person", "address", "patient", "doctor"]
+SEEDS: list[str] = ["alpha", "beta", "gamma", "delta"]
+DOMAINS: list[str] = ["person", "address", "patient", "doctor"]
 
 
 def test_property_seed_repeatability() -> None:
     for domain in DOMAINS:
         for seed in SEEDS:
-            req: Dict[str, object] = {
+            req: dict[str, object] = {
                 "domain": domain,
                 "version": "v1",
                 "count": 2,

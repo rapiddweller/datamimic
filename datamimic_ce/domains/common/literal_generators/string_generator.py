@@ -33,6 +33,15 @@ def _exrex_using(rng: random.Random) -> Iterator[None]:
 
 
 class StringGenerator(BaseLiteralGenerator):
+    """Generate random strings with configurable length and character set.
+
+    The ``unique`` parameter controls **within-string** character uniqueness:
+    when True, each character appears at most once in the generated string.
+    This is unrelated to the DSL element attribute ``unique=\"true\"`` on
+    ``<key>``/``<variable>``, which controls cross-row deduplication at the
+    task layer.
+    """
+
     def __init__(
         self,
         min_len: int | None = None,
@@ -80,6 +89,7 @@ class StringGenerator(BaseLiteralGenerator):
         super().__init__(rng=rng)
 
     def generate(self) -> str:
+        """Generate a random string based on configured length and character set."""
         try:
             # regex
             if any(c in self._char_set for c in ".^$*+?{}[]|()"):

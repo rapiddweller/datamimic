@@ -61,9 +61,7 @@ class ProductService(BaseDomainService[Product]):
         rng: Random | None = None,
     ):
         super().__init__(
-            ProductGenerator(
-                dataset=dataset, min_price=min_price, max_price=max_price, rng=rng
-            ),
+            ProductGenerator(dataset=dataset, min_price=min_price, max_price=max_price, rng=rng),
             Product,
         )
 

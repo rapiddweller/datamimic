@@ -1,0 +1,7 @@
+<!-- Error case: storage= combined with sourceScripted - not meaningful for a list/proxy value. -->
+<setup defaultSeparator=",">
+    <generate name="scripted_storage" count="3" target="">
+        <variable name="row" source="data/products.ent.csv" storage="data" sourceScripted="true" />
+        <key name="len" script="len(row)" />
+    </generate>
+</setup>

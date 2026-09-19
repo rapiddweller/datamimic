@@ -7,6 +7,7 @@
 composite <reference>, and delete — so the policy/log is asserted in one place."""
 
 import logging
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -16,6 +17,7 @@ from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.single_process_policy import resolve_single_process
+from datamimic_ce.clients.rdbms_client import RdbmsClient
 
 
 def _gen(children=(), unique=False, targets=()) -> MagicMock:
@@ -30,6 +32,12 @@ def _child(spec, unique=False, is_composite=False) -> MagicMock:
     if spec is ReferenceStatement:
         c.is_composite = is_composite
     return c
+
+
+def _mysql_client() -> RdbmsClient:
+    client = object.__new__(RdbmsClient)
+    client._credential = SimpleNamespace(dbms="mysql")
+    return client
 
 
 @pytest.mark.parametrize(
@@ -60,6 +68,34 @@ def test_seeded_generate_forces_single_process():
 def test_unseeded_generate_keeps_requested_workers():
     # no rngSeed -> determinism is not requested -> keep multiprocess
     assert resolve_single_process(_gen(), requested_workers=4, seeded=False) is None
+
+
+def test_mysql_sequence_generator_forces_single_process() -> None:
+    key = _child(KeyStatement)
+    key.generator = "SequenceTableGenerator"
+    key.database = "mysql-db"
+    key.sub_statements = []
+
+    assert resolve_single_process(
+        _gen(children=[key]),
+        requested_workers=4,
+        clients={"mysql-db": _mysql_client()},
+    ) == 1
+
+
+def test_postgresql_sequence_generator_keeps_multiprocessing() -> None:
+    key = _child(KeyStatement)
+    key.generator = "SequenceTableGenerator(sequence='orders_id_seq')"
+    key.database = "pg-db"
+    key.sub_statements = []
+    client = object.__new__(RdbmsClient)
+    client._credential = SimpleNamespace(dbms="postgresql")
+
+    assert resolve_single_process(
+        _gen(children=[key]),
+        requested_workers=4,
+        clients={"pg-db": client},
+    ) is None
 
 
 def test_logs_once_on_override_with_ee_hint():

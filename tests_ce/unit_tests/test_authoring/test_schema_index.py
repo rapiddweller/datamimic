@@ -10,7 +10,7 @@ Gate 1 (drift killer): every model's hand-maintained check_valid_attributes
 allowlist must equal EXACTLY the XML names derived from model_fields — both
 directions. This is what caught the (now purged) GenerateModel.bucket drift.
 
-Gate 2: the linter's ELEMENT_MODEL_MAP must match the engine's parser dispatch.
+Gate 2: parser dispatch and authoring schema must derive from one element registry.
 
 Gate 3 (registry): rule ids unique, banded by module, and every rule ships a fix hint.
 """
@@ -22,10 +22,19 @@ import pytest
 from pydantic import BaseModel
 
 from datamimic_ce.authoring.rules import ALL_RULES, best_practice, cross_statement, schema_rules, semantic_rules
-from datamimic_ce.authoring.schema import ELEMENT_MODEL_MAP, build_schema_index
+from datamimic_ce.authoring.schema import build_schema_index
 from datamimic_ce.constants.element_constants import EL_COMMENT, EL_FIELD, EL_SETUP, EL_TRANSITION, EL_VALUE
+from datamimic_ce.model.element_registry import (
+    ElementDefinition,
+    get_model_class,
+    list_element_tags,
+    register_element_extension,
+    unregister_element_extension,
+)
 from datamimic_ce.model.model_util import ModelUtil
 from datamimic_ce.parsers.parser_util import ParserUtil
+from datamimic_ce.parsers.statement_parser import StatementParser
+from datamimic_ce.statements.statement import Statement
 
 # Models that intentionally have no check_valid_attributes guard:
 # database/mongodb take open credential attributes (extra="allow").
@@ -52,7 +61,7 @@ _PROBE_ATTEMPTS: tuple[dict[str, str], ...] = (
 
 @pytest.mark.parametrize(
     "tag,model",
-    [(tag, model) for tag, model in sorted(ELEMENT_MODEL_MAP.items()) if model is not None],
+    [(tag, get_model_class(tag)) for tag in list_element_tags() if get_model_class(tag) is not None],
     ids=lambda value: value if isinstance(value, str) else value.__name__,
 )
 def test_gate1_allowlist_matches_model_fields(tag: str, model: type[BaseModel], monkeypatch) -> None:
@@ -91,10 +100,10 @@ def test_gate2_dispatch_accepts_exactly_the_mapped_tags() -> None:
     # inside <state-machine>, <field> inside <reference>, <value> inside a literal
     # <array> — none is dispatched standalone.
     non_dispatchable = (EL_SETUP, EL_COMMENT, EL_TRANSITION, EL_FIELD, EL_VALUE)
-    dispatchable = {tag for tag in ELEMENT_MODEL_MAP if tag not in non_dispatchable}
+    dispatchable = {tag for tag in list_element_tags() if tag not in non_dispatchable}
     for tag in sorted(dispatchable):
         parser = ParserUtil._get_parser_by_element(ET.Element(tag), properties=None)
-        assert parser is not None, f"<{tag}> is in ELEMENT_MODEL_MAP but the engine cannot dispatch it"
+        assert parser is not None, f"<{tag}> is registered but the engine cannot dispatch it"
     for tag in (EL_TRANSITION, EL_FIELD, EL_VALUE, "definitely_not_an_element"):
         with pytest.raises(ValueError):
             ParserUtil._get_parser_by_element(ET.Element(tag), properties=None)
@@ -102,14 +111,65 @@ def test_gate2_dispatch_accepts_exactly_the_mapped_tags() -> None:
 
 def test_gate2_nesting_children_are_known_tags() -> None:
     index = build_schema_index()
-    known = set(ELEMENT_MODEL_MAP) | {EL_COMMENT}
+    known = set(list_element_tags()) | {EL_COMMENT}
     for tag, schema in index.elements.items():
         for child in schema.allowed_children or set():
             assert child in known, f"nesting table of <{tag}> references unknown <{child}>"
 
 
+def test_gate2_single_registration_reaches_parser_and_authoring() -> None:
+    """A new definition is registered once, then appears in both runtime and authoring."""
+    tag = "synthetic-registry-element"
+
+    class SyntheticModel(BaseModel):
+        name: str
+
+    class SyntheticParser(StatementParser):
+        def __init__(self, element: ET.Element, properties: dict | None):
+            super().__init__(element, properties, valid_element_tag=tag)
+
+        def parse(self, *args, **kwargs) -> Statement:  # pragma: no cover - dispatch is the contract here
+            raise NotImplementedError
+
+    register_element_extension(ElementDefinition(tag, SyntheticModel, SyntheticParser))
+    try:
+        parser = ParserUtil._get_parser_by_element(ET.Element(tag), properties=None)
+        schema = build_schema_index().get(tag)
+
+        assert isinstance(parser, SyntheticParser)
+        assert schema is not None
+        assert schema.model is SyntheticModel
+        assert set(schema.attributes) == {"name"}
+    finally:
+        unregister_element_extension(tag)
+
+    assert build_schema_index().get(tag) is None
+
+
+def test_gate4_reflection_dependent_fields_keep_their_descriptions() -> None:
+    """scaffold.py pulls start/end/interval's schema text straight from GenerateModel via
+    model_json_schema() reflection (SPOT — see authoring/schema.py's element_json_schema()).
+    A future edit that drops a Field(description=...) would silently blank that text out
+    without failing any other test; this guard catches it directly. Deliberately scoped to
+    the fields this reflection path actually depends on, not every CE model field — full
+    retrofit is separate, incremental follow-up work, not this gate's job."""
+    from datamimic_ce.model.generate_model import GenerateModel
+    from datamimic_ce.model.variable_model import VariableModel
+
+    generate_schema = GenerateModel.model_json_schema()["properties"]
+    for field_name in ("start", "end", "interval"):
+        prop = generate_schema[field_name]
+        assert prop.get("description"), f"GenerateModel.{field_name} lost its Field(description=...)"
+        assert prop.get("examples"), f"GenerateModel.{field_name} lost its Field(examples=...)"
+
+    variable_schema = VariableModel.model_json_schema()["properties"]
+    for field_name in ("source", "type"):
+        prop = variable_schema[field_name]
+        assert prop.get("description"), f"VariableModel.{field_name} lost its Field(description=...)"
+
+
 def test_gate3_rule_registry_is_consistent() -> None:
-    ids = [rule.id for rule in ALL_RULES]
+    ids = [rule.definition.id for rule in ALL_RULES]
     assert len(ids) == len(set(ids)), "duplicate rule ids"
     bands = {
         schema_rules: "DM1",
@@ -119,6 +179,7 @@ def test_gate3_rule_registry_is_consistent() -> None:
     }
     for module, prefix in bands.items():
         for rule in module.RULES:
-            assert rule.id.startswith(prefix), f"{rule.__name__} ({rule.id}) is in the wrong module band"
+            rule_id = rule.definition.id
+            assert rule_id.startswith(prefix), f"{rule.__name__} ({rule_id}) is in the wrong module band"
     for rule in ALL_RULES:
-        assert rule.severity is not None and rule.id.startswith("DM")
+        assert rule.definition.severity is not None and rule.definition.id.startswith("DM")

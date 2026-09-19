@@ -28,8 +28,7 @@ from datamimic_ce.data_mimic_test import DataMimicTest
 
 _TEST_DIR = Path(__file__).resolve().parent
 _FILE_ORDER = [str(i) for i in range(12)]
-_FILE_NAMES = ["Alice", "Bob", "Carol", "Dave", "Eve", "Frank",
-               "Grace", "Hank", "Ivy", "Jack", "Karen", "Leo"]
+_FILE_NAMES = ["Alice", "Bob", "Carol", "Dave", "Eve", "Frank", "Grace", "Hank", "Ivy", "Jack", "Karen", "Leo"]
 
 
 def _order(filename: str) -> list[str]:
@@ -48,6 +47,7 @@ def _run(filename: str) -> dict:
 # plain CSV (source.csv)
 # ---------------------------------------------------------------------------
 
+
 def test_seeded_random_read_replays_identically() -> None:
     """`<setup rngSeed>` makes a random source read reproducible — and still shuffled."""
     first = _order("random_seeded.xml")
@@ -65,6 +65,7 @@ def test_unseeded_random_read_is_non_deterministic() -> None:
 # ---------------------------------------------------------------------------
 # .ent.csv (entity CSV — data/people.ent.csv, columns id,name)
 # ---------------------------------------------------------------------------
+
 
 def test_ent_csv_seeded_replays_identically() -> None:
     """`<setup rngSeed>` on an .ent.csv source: two runs byte-identical and shuffled."""
@@ -87,6 +88,7 @@ def test_ent_csv_unseeded_is_non_deterministic() -> None:
 # .json (JSON array — data/people.json, keys id,name)
 # ---------------------------------------------------------------------------
 
+
 def test_json_seeded_replays_identically() -> None:
     """`<setup rngSeed>` on a .json source: two runs byte-identical and shuffled."""
     first = _order("json_seeded.xml")
@@ -104,6 +106,7 @@ def test_json_unseeded_is_non_deterministic() -> None:
 # ---------------------------------------------------------------------------
 # Cascading generate: outer <generate> + <nestedKey source=people.ent.csv>
 # ---------------------------------------------------------------------------
+
 
 def test_cascade_seeded_replays_identically() -> None:
     """`<setup rngSeed>` makes the full nested structure deterministic.

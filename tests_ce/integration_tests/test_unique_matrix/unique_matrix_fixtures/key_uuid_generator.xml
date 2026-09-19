@@ -1,0 +1,5 @@
+<setup>
+  <generate name="gen" count="5" target="">
+    <key name="code" generator="UUIDGenerator()" unique="true"/>
+  </generate>
+</setup>

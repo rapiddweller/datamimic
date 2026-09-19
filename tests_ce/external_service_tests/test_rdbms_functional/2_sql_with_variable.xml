@@ -13,7 +13,12 @@
             <key name="id" script="id + simple_user.id"/>
             <key name="tc_creation_src" constant="BEN"/>
             <key name="tc_creation" generator="DateTimeGenerator(random=True)"/>
-            <key name="tc_update_src" type="string"/>
+            <!-- minLength="1": Oracle treats an inserted '' VARCHAR2 as NULL (a
+                 well-known Oracle-specific quirk, not a DATAMIMIC bug) - an unconstrained
+                 type="string" occasionally rolls a 0-length string, which round-trips fine on
+                 Postgres/MySQL/MSSQL but reads back as None on Oracle, intermittently failing
+                 the in-memory-vs-read-back comparison in test_oracle_functional. -->
+            <key name="tc_update_src" type="string" minLength="1"/>
             <key name="tc_update" generator="DateTimeGenerator(random=True)"/>
             <key name="full_name" script="person.name"/>
             <key name="email" script="person.email"/>

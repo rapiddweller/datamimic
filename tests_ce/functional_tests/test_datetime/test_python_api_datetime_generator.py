@@ -36,4 +36,3 @@ def test_python_api_weekends_with_seed_deterministic():
     for dt in seq1:
         assert lo <= dt <= hi
         assert dt.weekday() in (5, 6)
-

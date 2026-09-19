@@ -11,17 +11,14 @@ attributes, enum values. No hand-copied schema knowledge."""
 import difflib
 from collections.abc import Iterable
 
-from datamimic_ce.authoring.diagnostics import Diagnostic, Severity
+from lxml import etree
+
+from datamimic_ce.authoring.diagnostics import Diagnostic
+from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules.base import LintContext, Rule
 from datamimic_ce.constants.data_type_constants import (
-    DATA_TYPE_BINARY,
-    DATA_TYPE_BOOL,
-    DATA_TYPE_DECIMAL,
     DATA_TYPE_DICT,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
     DATA_TYPE_LIST,
-    DATA_TYPE_STRING,
 )
 from datamimic_ce.constants.element_constants import (
     EL_COMMENT,
@@ -31,24 +28,39 @@ from datamimic_ce.constants.element_constants import (
     EL_SETUP,
     EL_VARIABLE,
 )
-from datamimic_ce.enums.distribution_enums import SourceDistribution
+from datamimic_ce.model.constraints import (
+    KEY_DISTRIBUTION_VALUES,
+    ValidValues,
+    resolved_values,
+)
 
-_DATA_TYPES = {
-    DATA_TYPE_STRING,
-    DATA_TYPE_INT,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_DECIMAL,
-    DATA_TYPE_BOOL,
-    DATA_TYPE_BINARY,
-    DATA_TYPE_LIST,
-    DATA_TYPE_DICT,
-}
-_DISTRIBUTIONS = {member.value for member in SourceDistribution}
+_DATE_TYPE_GUESSES = {"datetime", "date", "timestamp", "time"}
+
+
+def _key_id_data_types(ctx: LintContext) -> frozenset[str]:
+    """<key>/<id> valid scalar types, read from KeyModel's declared ValidValues(type=) fact
+    via the schema index (the registered source — no private model-constant import)."""
+    schema = ctx.schemas.get(EL_KEY)
+    if schema is not None:
+        for fact in schema.constraints:
+            if isinstance(fact, ValidValues) and fact.attr == "type":
+                return resolved_values(fact)
+    return frozenset()
+
+
+def _distribution_fact(ctx: LintContext, tag: str) -> ValidValues | None:
+    """Read a tag's distribution vocabulary from its central model contract."""
+    schema = ctx.schemas.get(tag)
+    if schema is None:
+        return None
+    return next(
+        (fact for fact in schema.constraints if isinstance(fact, ValidValues) and fact.attr == "distribution"),
+        None,
+    )
 
 
 class RootIsSetup(Rule):
-    id = "DM106"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM106")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         root_tag = str(ctx.root.tag)
@@ -56,14 +68,12 @@ class RootIsSetup(Rule):
             yield ctx.diag(
                 type(self),
                 ctx.root,
-                f"Root element must be <setup>, got <{root_tag}>.",
-                "Wrap the descriptor in <setup> ... </setup>.",
+                evidence=f"root is <{root_tag}>",
             )
 
 
 class UnknownElement(Rule):
-    id = "DM101"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM101")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         known = ctx.schemas.tags
@@ -72,16 +82,18 @@ class UnknownElement(Rule):
             if tag not in known:
                 suggestion = difflib.get_close_matches(tag, sorted(known), n=1)
                 hint = (
-                    f"Did you mean <{suggestion[0]}>?"
-                    if suggestion
-                    else f"Known elements: {', '.join(sorted(known))}."
+                    f"Did you mean <{suggestion[0]}>?" if suggestion else f"Known elements: {', '.join(sorted(known))}."
                 )
-                yield ctx.diag(type(self), element, f"Unknown element <{tag}>.", hint)
+                yield ctx.diag(
+                    type(self),
+                    element,
+                    evidence=f"element is <{tag}>",
+                    fix_context=hint,
+                )
 
 
 class InvalidChild(Rule):
-    id = "DM102"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM102")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter():
@@ -96,14 +108,13 @@ class InvalidChild(Rule):
                     yield ctx.diag(
                         type(self),
                         child,
-                        f"<{child.tag}> is not allowed inside <{tag}>.",
-                        f"<{tag}> accepts: {', '.join(sorted(schema.allowed_children))}.",
+                        evidence=f"<{child.tag}> appears inside <{tag}>",
+                        fix_context=f"<{tag}> accepts: {', '.join(sorted(schema.allowed_children))}.",
                     )
 
 
 class LeafHasChildren(Rule):
-    id = "DM107"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM107")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter():
@@ -116,14 +127,13 @@ class LeafHasChildren(Rule):
                     yield ctx.diag(
                         type(self),
                         child,
-                        f"<{tag}> does not accept any child elements (found <{child.tag}>).",
-                        f"Remove <{child.tag}> or move it to a container element.",
+                        evidence=f"<{tag}> contains <{child.tag}>",
+                        fix_context=f"Remove <{child.tag}> or move it to a container element.",
                     )
 
 
 class UnknownAttribute(Rule):
-    id = "DM103"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM103")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter():
@@ -141,12 +151,16 @@ class UnknownAttribute(Rule):
                         if suggestion
                         else f"Valid attributes: {', '.join(sorted(valid))}."
                     )
-                    yield ctx.diag(type(self), element, f"Unknown attribute '{attr_name}' on <{tag}>.", hint)
+                    yield ctx.diag(
+                        type(self),
+                        element,
+                        evidence=f"attribute '{attr_name}' appears on <{tag}>",
+                        fix_context=hint,
+                    )
 
 
 class MissingRequiredAttribute(Rule):
-    id = "DM104"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM104")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
         for element in ctx.iter():
@@ -161,48 +175,105 @@ class MissingRequiredAttribute(Rule):
                     yield ctx.diag(
                         type(self),
                         element,
-                        f"<{tag}> is missing the required attribute '{spec.name}'.",
-                        f'Add {spec.name}="..." to the <{tag}> element.',
+                        evidence=f"<{tag}> is missing '{spec.name}'",
+                        fix_context=f'Add {spec.name}="..." to <{tag}>.',
                     )
+
+
+def _check_distribution_element(
+    ctx: LintContext, element: etree._Element, tag: str, distribution: str
+) -> Iterable[Diagnostic]:
+    """Validate one element's distribution= value against the registered fact."""
+    distribution_fact = _distribution_fact(ctx, tag)
+    valid_distributions = (
+        resolved_values(distribution_fact) if distribution_fact is not None else frozenset()
+    )
+    if distribution_fact is None or distribution in valid_distributions:
+        return
+    if distribution_fact is KEY_DISTRIBUTION_VALUES:
+        hint = (
+            f"<{tag}>'s distribution shapes a numeric range (needs "
+            f'type="int"/"float"/"decimal" with min=/max=). Use one of: '
+            f"{', '.join(sorted(valid_distributions))}."
+        )
+    else:
+        hint = f"Use one of: {', '.join(sorted(valid_distributions))}."
+    yield ctx.diag(
+        InvalidAttributeValue,
+        element,
+        evidence=f"distribution='{distribution}' on <{tag}>",
+        fix_context=hint,
+    )
+
+
+def _check_type_element(
+    ctx: LintContext,
+    element: etree._Element,
+    tag: str,
+    key_id_data_types: frozenset[str],
+    nestedkey_variable_data_types: frozenset[str],
+) -> Iterable[Diagnostic]:
+    """Validate one element's type= value when the element enforces scalar types."""
+    # On <variable>/<nestedKey> WITH a source=, type= is not a scalar cast — it's the
+    # sourceEntity->type->name physical-entity fallback and can be any string.
+    reads_source = tag in (EL_VARIABLE, EL_NESTED_KEY) and element.get("source")
+    if tag not in (EL_KEY, EL_ID, EL_NESTED_KEY, EL_VARIABLE) or reads_source:
+        return
+    valid_types = key_id_data_types if tag in (EL_KEY, EL_ID) else nestedkey_variable_data_types
+    type_value = element.get("type")
+    if type_value is None or type_value in valid_types:
+        return
+    if type_value.lower() in _DATE_TYPE_GUESSES:
+        hint = (
+            "DATAMIMIC has no scalar date/time type. For a timestamp field use "
+            'generator="DateTimeGenerator" (or, inside a time-series <generate '
+            'start= end= interval=>, script="ts.now").'
+        )
+    else:
+        hint = f"Use one of: {', '.join(sorted(valid_types))}."
+    yield ctx.diag(
+        InvalidAttributeValue,
+        element,
+        evidence=f"type='{type_value}' on <{tag}>",
+        fix_context=hint,
+    )
+
+
+def _check_int_attributes(
+    ctx: LintContext, element: etree._Element, tag: str
+) -> Iterable[Diagnostic]:
+    """Validate that attributes annotated as int hold integer values."""
+    schema = ctx.schemas.get(tag)
+    if schema is None:
+        return
+    for attr, value in element.attrib.items():
+        spec = schema.attributes.get(str(attr))
+        value_str = str(value)
+        if spec is not None and "int" in spec.annotation and not value_str.lstrip("-").isdigit():
+            yield ctx.diag(
+                InvalidAttributeValue,
+                element,
+                evidence=f"attribute '{attr!s}' has non-integer value '{value_str}'",
+                fix_context=f"Set {attr!s} to a whole number.",
+            )
 
 
 class InvalidAttributeValue(Rule):
-    id = "DM105"
-    severity = Severity.ERROR
+    definition = authoring_rule_definition("DM105")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
+        key_id_data_types = _key_id_data_types(ctx)
+        # NestedKey/Variable: declare no type enforcement at parse today (per plan R5).
+        # Extend lint set to include structural markers (list/dict) in addition to scalar
+        # core. This is a lint-only extension; engine-side enforcement is out of scope.
+        nestedkey_variable_data_types = key_id_data_types | {DATA_TYPE_LIST, DATA_TYPE_DICT}
         for element in ctx.iter():
             tag = str(element.tag)
             distribution = element.get("distribution")
-            if distribution is not None and distribution not in _DISTRIBUTIONS:
-                yield ctx.diag(
-                    type(self),
-                    element,
-                    f"Invalid distribution '{distribution}'.",
-                    f"Use one of: {', '.join(sorted(_DISTRIBUTIONS))}.",
-                )
-            if tag in (EL_KEY, EL_ID, EL_NESTED_KEY, EL_VARIABLE):
-                type_value = element.get("type")
-                if type_value is not None and type_value not in _DATA_TYPES:
-                    yield ctx.diag(
-                        type(self),
-                        element,
-                        f"Invalid type '{type_value}' on <{tag}>.",
-                        f"Use one of: {', '.join(sorted(_DATA_TYPES))}.",
-                    )
-            schema = ctx.schemas.get(tag)
-            if schema is None:
-                continue
-            for attr, value in element.attrib.items():
-                spec = schema.attributes.get(str(attr))
-                value_str = str(value)
-                if spec is not None and "int" in spec.annotation and not value_str.lstrip("-").isdigit():
-                    yield ctx.diag(
-                        type(self),
-                        element,
-                        f"Attribute '{attr!s}' expects an integer, got '{value_str}'.",
-                        f"Set {attr!s} to a whole number.",
-                    )
+            if distribution is not None:
+                yield from _check_distribution_element(ctx, element, tag, distribution)
+            yield from _check_type_element(ctx, element, tag, key_id_data_types, nestedkey_variable_data_types)
+            yield from _check_int_attributes(ctx, element, tag)
 
 
 RULES: tuple[type[Rule], ...] = (

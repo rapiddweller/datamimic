@@ -9,7 +9,7 @@
 
 from pathlib import Path
 
-from datamimic_ce.authoring import lint_descriptor
+from datamimic_ce.authoring.linter import lint_descriptor
 
 
 def test_fcw_source_is_not_flagged_as_unknown(tmp_path: Path) -> None:

@@ -85,16 +85,14 @@ class TestRdbmsFunctional:
         cross_collection = result["cross_collection"]
         assert len(cross_collection) == 10
 
-    @pytest.mark.skip(reason="Need to reconfigure the oracle connection")
+    @pytest.mark.skipif(
+        settings.RUNTIME_ENVIRONMENT == "development",
+        reason="This test can only test with stage postgres credential",
+    )
     def test_oracle_functional(self):
-        try:
-            engine = DataMimicTest(test_dir=self._test_dir, filename="more_oracle_test.xml", capture_test_result=True)
-            engine.test_with_timer()
-            result = engine.capture_result()
-        except Exception as e:
-            raise e
-            # TODO: Create mock service for Oracle
-            # pytest.skip(f"Skipping test due to Oracle connection error: {e}")
+        engine = DataMimicTest(test_dir=self._test_dir, filename="more_oracle_test.xml", capture_test_result=True)
+        engine.test_with_timer()
+        result = engine.capture_result()
 
         # Verify the length of the result
         assert len(result) == 8, f"Expected result length 8, got {len(result)}"

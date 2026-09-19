@@ -22,6 +22,7 @@ from datamimic_ce.constants.data_type_constants import (
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
 )
+from datamimic_ce.constants.element_constants import EL_ELEMENT, EL_KEY, EL_VARIABLE
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
@@ -29,13 +30,15 @@ from datamimic_ce.data_sources.weighted_data_source import WeightedDataSource
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
 from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
+from datamimic_ce.model.constraints import SourceFileFormat, source_file_format_for
 from datamimic_ce.statements.element_statement import ElementStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.variable_statement import VariableStatement
+from datamimic_ce.tasks.task import Task
 from datamimic_ce.utils.unique_sampling import unique_value_iter
 
 
-class KeyVariableTask:
+class KeyVariableTask(Task):
     # Specify which mode Attribute and Variable Task will use
     _SCRIPT_MODE = "script"
     _CONSTANT_MODE = "constant"
@@ -54,7 +57,12 @@ class KeyVariableTask:
     ):
         from datamimic_ce.tasks.task_util import TaskUtil
 
-        self._element_tag = "key" if isinstance(statement, KeyStatement) else "variable"
+        if isinstance(statement, KeyStatement):
+            self._element_tag = EL_KEY
+        elif isinstance(statement, VariableStatement):
+            self._element_tag = EL_VARIABLE
+        else:
+            self._element_tag = EL_ELEMENT
         self._statement = statement
         self._generator: WeightedDataSource | None = None
         self._pagination = pagination
@@ -63,6 +71,10 @@ class KeyVariableTask:
         self._mode: str | None = None
         # Lazily-built distinct-value iterator for unique="true" (sampling without replacement).
         self._unique_iter: Iterator[Any] | None = None
+        # Dedup set for generator-backed unique="true": every generated value is
+        # tracked; duplicates trigger a bounded retry loop. Generator-owned uniqueness
+        # is a separate concern — this is cross-row dedup at the task level.
+        self._generator_seen: set[Any] | None = None
 
         self._simple_type_set = {
             DATA_TYPE_BINARY,
@@ -132,7 +144,7 @@ class KeyVariableTask:
                     f"'unique' is not supported on a <{self._element_tag}> 'source'; "
                     f"use a <variable source ... unique=\"true\"> or inline 'values'"
                 )
-            if not source.endswith("wgt.csv"):
+            if source_file_format_for(self._element_tag, source) is not SourceFileFormat.WEIGHTED_CSV:
                 raise ValueError(f"Data source of attribute '{self._statement.name}' must be type of: 'wgt.csv'")
             separator = self._statement.separator or ctx.default_separator
             seeded = ctx.derive_seeded_rng()
@@ -149,7 +161,10 @@ class KeyVariableTask:
             # generator and reuse create_generator's seeding + caching (instead of a generator="..." string)
             self._generator = GeneratorUtil(ctx).create_generator(
                 # see above: disambiguate same-named keys across <condition> branches
-                range_gen, self._statement, self._pagination, key=f"{self._statement.full_name}|{range_gen}"
+                range_gen,
+                self._statement,
+                self._pagination,
+                key=f"{self._statement.full_name}|{range_gen}",
             )
             self._mode = self._GENERATOR_MODE
         # IMPORTANT: always put this condition at the end
@@ -285,7 +300,12 @@ class KeyVariableTask:
                     self._pagination,
                     key=f"{self._statement.full_name}|{self._statement.generator}",
                 )
-            value = self._generator.generate() if self._generator is not None else None
+            if self._generator is None:
+                value = None
+            elif self._statement.unique:
+                value = self._next_unique_generator_value()
+            else:
+                value = self._generator.generate()
             # Convert numpy.bool_ to bool for being compatible with consumer (db,...)
             if isinstance(value, numpy.bool_):
                 value = bool(value)
@@ -344,6 +364,24 @@ class KeyVariableTask:
                 self._values, ctx.rng, f"<{self._element_tag}> '{self._statement.name}'"
             )
         return next(self._unique_iter)
+
+    def _next_unique_generator_value(self) -> Any:
+        """Call the generator repeatedly until a value not yet seen this task is produced.
+        Raises after a bounded number of retries."""
+        if self._generator is None:
+            raise RuntimeError("Generator is not initialised for unique dedup")
+        if self._generator_seen is None:
+            self._generator_seen = set()
+        max_retries = 100
+        for _ in range(max_retries):
+            value = self._generator.generate()
+            if value not in self._generator_seen:
+                self._generator_seen.add(value)
+                return value
+        raise ValueError(
+            f"<{self._element_tag}> '{self._statement.name}' unique=\"true\": "
+            f"generator produced only duplicates after {max_retries} retries"
+        )
 
     def _parse_weights(self, values):
         """Parse the 'weights' companion of 'values' into floats, validating the count.

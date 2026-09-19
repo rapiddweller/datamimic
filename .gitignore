@@ -90,3 +90,21 @@ test_artifacts/
 # Local AI assistant scratchpads (do not check in)
 CLAUDE.md
 .claude/
+.agent-scratch/
+GEMINI.md
+QODER.md
+.cursorrules
+.gemini/
+.kiro/
+.mcp.json
+.opencode.json
+.qoder/
+.windsurfrules
+.github/code-review-graph.instruction.md
+
+.code-review-graph/
+
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.truecourse/

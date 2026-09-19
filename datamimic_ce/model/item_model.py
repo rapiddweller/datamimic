@@ -5,14 +5,20 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from datamimic_ce.constants.attribute_constants import ATTR_CONDITION
 from datamimic_ce.model.model_util import ModelUtil
 
 
 class ItemModel(BaseModel):
-    condition: str | None = None
+    condition: str | None = Field(
+        None,
+        description="Python expression guarding whether this <item> (a single fixed-shape entry of a "
+        "<list>) is populated; when false, its keys are not generated and the list gets None in that "
+        "position instead (the item is not removed from the list).",
+        examples=["patient_id % 2 == 0"],
+    )
 
     @model_validator(mode="before")
     @classmethod

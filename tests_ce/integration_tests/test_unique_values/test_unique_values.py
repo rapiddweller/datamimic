@@ -86,3 +86,13 @@ def test_unique_with_weights_raises():
 def test_unique_without_values_raises():
     with pytest.raises(Exception, match="unique|values"):
         _run("unique_without_values.xml", gen="x")
+
+
+def test_ean_generator_unique_forwarding():
+    """Element-level unique="true" forwards to EANGenerator so all outputs are distinct."""
+    engine = DataMimicTest(test_dir=_TEST_DIR, filename="unique_ean_generator.xml", capture_test_result=True)
+    engine.test_with_timer()
+    rows = engine.capture_result()["products"]
+    assert len(rows) == 5
+    eans = [r["ean"] for r in rows]
+    assert len(set(eans)) == 5, f"unique must produce distinct EANs, got: {eans}"

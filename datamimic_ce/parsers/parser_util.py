@@ -14,42 +14,17 @@ from datamimic_ce.config import settings
 from datamimic_ce.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
 from datamimic_ce.constants.element_constants import (
     EL_ARRAY,
-    EL_ASSERT,
     EL_COMMENT,
     EL_CONDITION,
-    EL_DATABASE,
-    EL_DEMOGRAPHICS,
-    EL_ECHO,
-    EL_ELEMENT,
-    EL_ELSE,
-    EL_ELSE_IF,
-    EL_EXECUTE,
-    EL_FIELD,
     EL_GENERATE,
-    EL_GENERATOR,
-    EL_ID,
-    EL_IF,
-    EL_INCLUDE,
-    EL_ITEM,
-    EL_ITERATE,
-    EL_KEY,
-    EL_LIST,
-    EL_MEMSTORE,
-    EL_MONGODB,
     EL_NESTED_KEY,
-    EL_REFERENCE,
     EL_SETUP,
-    EL_STATE_MACHINE,
-    EL_TRANSITION,
-    EL_VALUE,
-    EL_VARIABLE,
     EL_WHILE,
 )
 from datamimic_ce.logger import logger
 from datamimic_ce.parsers.array_parser import ArrayParser
 from datamimic_ce.parsers.assert_parser import AssertParser
 from datamimic_ce.parsers.condition_parser import ConditionParser
-from datamimic_ce.parsers.database_parser import DatabaseParser
 from datamimic_ce.parsers.echo_parser import EchoParser
 from datamimic_ce.parsers.element_parser import ElementParser
 from datamimic_ce.parsers.else_if_parser import ElseIfParser
@@ -59,9 +34,7 @@ from datamimic_ce.parsers.generate_parser import GenerateParser
 from datamimic_ce.parsers.generator_parser import GeneratorParser
 from datamimic_ce.parsers.if_parser import IfParser
 from datamimic_ce.parsers.include_parser import IncludeParser
-from datamimic_ce.parsers.item_parser import ItemParser
 from datamimic_ce.parsers.key_parser import KeyParser
-from datamimic_ce.parsers.list_parser import ListParser
 from datamimic_ce.parsers.memstore_parser import MemstoreParser
 from datamimic_ce.parsers.nested_key_parser import NestedKeyParser
 from datamimic_ce.parsers.reference_parser import ReferenceParser
@@ -102,69 +75,9 @@ class ParserUtil:
     def get_valid_sub_elements_set_by_tag(ele_tag: str) -> set | None:
         # return None mean that element can have all kind of sub element,
         # check StatementParser._validate_sub_elements for detail
-        valid_sub_element_dict = {
-            EL_SETUP: {
-                EL_MONGODB,
-                EL_GENERATE,
-                EL_ITERATE,
-                EL_DATABASE,
-                EL_INCLUDE,
-                EL_MEMSTORE,
-                EL_EXECUTE,
-                EL_ECHO,
-                EL_VARIABLE,
-                EL_GENERATOR,
-                EL_DEMOGRAPHICS,
-                EL_STATE_MACHINE,
-                EL_ASSERT,
-            },
-            EL_STATE_MACHINE: {EL_TRANSITION},
-            EL_REFERENCE: {EL_FIELD},
-            EL_NESTED_KEY: {
-                EL_KEY,
-                EL_ID,
-                EL_VARIABLE,
-                EL_NESTED_KEY,
-                EL_EXECUTE,
-                EL_LIST,
-                EL_ECHO,
-                EL_ELEMENT,
-                EL_ARRAY,
-                EL_CONDITION,
-                EL_WHILE,
-                EL_ASSERT,
-            },
-            EL_CONDITION: {EL_IF, EL_ELSE_IF, EL_ELSE},
-            EL_GENERATE: {
-                EL_GENERATE,
-                EL_ITERATE,
-                EL_KEY,
-                EL_ID,
-                EL_VARIABLE,
-                EL_REFERENCE,
-                EL_NESTED_KEY,
-                EL_LIST,
-                EL_ARRAY,
-                EL_ECHO,
-                EL_CONDITION,
-                EL_WHILE,
-                EL_INCLUDE,
-                EL_ASSERT,
-            },
-            EL_INCLUDE: {EL_SETUP},
-            EL_ITEM: {EL_KEY, EL_ID, EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ELEMENT},
-            EL_KEY: {EL_ELEMENT},
-            EL_LIST: {EL_ITEM},
-            # <value> only valid inside type="literal" arrays; ArrayParser enforces that, not this
-            # generic tag-set (which only says "the tag is structurally allowed here").
-            EL_ARRAY: {EL_VALUE},
-            EL_IF: None,
-            EL_ELSE_IF: None,
-            EL_ELSE: None,
-            EL_WHILE: None,
-        }
+        from datamimic_ce.model.element_registry import get_valid_children
 
-        return valid_sub_element_dict.get(ele_tag, set())
+        return get_valid_children(ele_tag)
 
     @staticmethod
     def _get_parser_by_element(element: Element, properties: dict):
@@ -174,65 +87,12 @@ class ParserUtil:
         :param properties:
         :return:
         """
-        tag = element.tag
-        if tag == EL_MONGODB:
-            from datamimic_ce.parsers.mongodb_parser import MongoDBParser
+        from datamimic_ce.model.element_registry import get_parser_class
 
-            return MongoDBParser(element, properties)
-        elif tag in (EL_GENERATE, EL_ITERATE):
-            from datamimic_ce.parsers.generate_parser import GenerateParser
-
-            return GenerateParser(element, properties)
-        elif tag in (EL_KEY, EL_ID):
-            from datamimic_ce.parsers.key_parser import KeyParser
-
-            return KeyParser(element, properties)
-        elif tag == EL_DATABASE:
-            return DatabaseParser(element, properties)
-        elif tag == EL_VARIABLE:
-            return VariableParser(element, properties)
-        elif tag == EL_NESTED_KEY:
-            return NestedKeyParser(element, properties)
-        elif tag == EL_INCLUDE:
-            return IncludeParser(element, properties)
-        elif tag == EL_MEMSTORE:
-            return MemstoreParser(element, properties)
-        elif tag == EL_EXECUTE:
-            return ExecuteParser(element, properties)
-        elif tag == EL_REFERENCE:
-            return ReferenceParser(element, properties)
-        elif tag == EL_LIST:
-            return ListParser(element, properties)
-        elif tag == EL_ITEM:
-            return ItemParser(element, properties)
-        elif tag == EL_IF:
-            return IfParser(element, properties)
-        elif tag == EL_CONDITION:
-            return ConditionParser(element, properties)
-        elif tag == EL_WHILE:
-            return WhileParser(element, properties)
-        elif tag == EL_ASSERT:
-            return AssertParser(element, properties)
-        elif tag == EL_ELSE_IF:
-            return ElseIfParser(element, properties)
-        elif tag == EL_ELSE:
-            return ElseParser(element, properties)
-        elif tag == EL_ARRAY:
-            return ArrayParser(element, properties)
-        elif tag == EL_ECHO:
-            return EchoParser(element, properties)
-        elif tag == EL_ELEMENT:
-            return ElementParser(element, properties)
-        elif tag == EL_GENERATOR:
-            return GeneratorParser(element, properties)
-        elif tag == EL_DEMOGRAPHICS:
-            from datamimic_ce.parsers.demographics_parser import DemographicsParser
-
-            return DemographicsParser(element, properties)
-        elif tag == EL_STATE_MACHINE:
-            return StateMachineParser(element, properties)
-        else:
-            raise ValueError(f"Cannot get parser for element <{tag}>")
+        parser_class = get_parser_class(element.tag)
+        if parser_class is None:
+            raise ValueError(f"Cannot get parser for element <{element.tag}>")
+        return parser_class(element, properties)
 
     @staticmethod
     def parse_sub_elements(

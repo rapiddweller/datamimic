@@ -1,0 +1,5 @@
+<setup>
+  <generate name="gen" count="2" target="">
+    <key name="code" values="'A','B','C'" unique="true" distribution="cumulated"/>
+  </generate>
+</setup>

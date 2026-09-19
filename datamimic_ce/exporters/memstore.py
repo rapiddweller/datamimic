@@ -89,6 +89,4 @@ class Memstore(Exporter):
         the id comparison are string-coerced: `client`'s column is DB-typed (e.g. int), memstore
         rows sourced from CSV carry strings for the same logical id."""
         existing = {str(row[0]) for row in client.get_random_rows_by_columns(ref_type, [id_col])}
-        self._storage[product_type] = [
-            r for r in self._storage.get(product_type, []) if str(r.get(id_col)) in existing
-        ]
+        self._storage[product_type] = [r for r in self._storage.get(product_type, []) if str(r.get(id_col)) in existing]

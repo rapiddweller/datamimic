@@ -1,4 +1,5 @@
 """Guardrail to ensure locale data stays under domain_data (rule 1)."""
+
 from pathlib import Path
 
 import datamimic_ce.domains.locales as locales_module

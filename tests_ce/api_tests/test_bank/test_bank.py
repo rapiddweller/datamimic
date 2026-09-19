@@ -1,10 +1,12 @@
 import pytest
+
 from datamimic_ce.domains.finance.models.bank import Bank
 from datamimic_ce.domains.finance.services.bank_service import BankService
 
 
 class TestBank:
     _supported_datasets = ["US", "DE"]
+
     def _test_single_bank(self, bank: Bank):
         assert isinstance(bank, Bank)
         assert isinstance(bank.name, str)
@@ -22,7 +24,7 @@ class TestBank:
         # assert bank.routing_number != ""
         assert bank.bank_code is not None
         assert bank.bank_code != ""
-        assert bank.bic is not None 
+        assert bank.bic is not None
         assert bank.bin is not None
         assert bank.bin != ""
 
@@ -58,7 +60,7 @@ class TestBank:
         assert bank2 is not None
         assert bank1.name != bank2.name
         assert bank1.swift_code != bank2.swift_code
-        assert bank1.routing_number != bank2.routing_number 
+        assert bank1.routing_number != bank2.routing_number
         assert bank1.bank_code != bank2.bank_code
         assert bank1.bic != bank2.bic
         assert bank1.bin != bank2.bin

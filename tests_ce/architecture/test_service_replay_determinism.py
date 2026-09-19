@@ -159,9 +159,7 @@ def test_service_replay_byte_identical_under_seeded_rng(service_cls: type) -> No
             for key in sorted(set(out_a) | set(out_b)):
                 if out_a.get(key) != out_b.get(key):
                     diffs.append((key, out_a.get(key), out_b.get(key)))
-            divergence = "\n".join(
-                f"  {key}: a={a_val!r}  ≠  b={b_val!r}" for key, a_val, b_val in diffs[:10]
-            )
+            divergence = "\n".join(f"  {key}: a={a_val!r}  ≠  b={b_val!r}" for key, a_val, b_val in diffs[:10])
         else:
             divergence = f"  a={serialised_a[:200]}\n  b={serialised_b[:200]}"
         pytest.fail(
@@ -181,8 +179,7 @@ def test_service_replay_diverges_under_different_seeds(service_cls: type) -> Non
     out_b = _normalise(b.generate())
 
     assert out_a != out_b, (
-        f"{service_cls.__name__} produced identical output under different seeds — "
-        f"its RNG path is not wired through."
+        f"{service_cls.__name__} produced identical output under different seeds — its RNG path is not wired through."
     )
 
 

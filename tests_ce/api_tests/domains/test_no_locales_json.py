@@ -1,4 +1,5 @@
 """Ensure no locale JSON datasets sneak into the codebase."""
+
 from __future__ import annotations
 
 from pathlib import Path

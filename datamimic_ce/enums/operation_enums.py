@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from enum import StrEnum
+from datamimic_ce._compat import StrEnum
 
 
 class ExportOperation(StrEnum):

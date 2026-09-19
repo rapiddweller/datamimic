@@ -62,6 +62,12 @@ _BUFFERED_EXPORTERS: dict[str, _BufferedExporterFactory] = {
 }
 
 
+def buffered_exporter_names() -> frozenset[str]:
+    """Public read-only projection of registered buffered file-export targets."""
+
+    return frozenset(_BUFFERED_EXPORTERS)
+
+
 def custom_serializer(obj: Any) -> Any:
     """
     Custom serializer for JSON dump that supports a wide range of types.

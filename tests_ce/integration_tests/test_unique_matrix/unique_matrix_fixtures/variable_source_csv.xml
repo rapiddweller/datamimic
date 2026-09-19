@@ -1,0 +1,6 @@
+<setup>
+  <generate name="gen" count="3" target="">
+    <variable name="cat" source="unique_source.csv" unique="true"/>
+    <key name="code" script="cat.code"/>
+  </generate>
+</setup>

@@ -1,0 +1,3 @@
+<setup rngSeed="1">
+    <generate name="orders" count="5" source="orders.csv" selector="active=true" target="ConsoleExporter"/>
+</setup>

@@ -1,0 +1,8 @@
+<setup rngSeed="1">
+  <!-- IntegerGenerator(min=1,max=3) with unique and count=3: random draws
+       from {1,2,3}, unique dedup ensures all 3 are distinct. This exercises
+       the retry path when a collision occurs naturally. -->
+  <generate name="gen" count="3" target="">
+    <key name="code" generator="IntegerGenerator(min=1, max=3)" unique="true"/>
+  </generate>
+</setup>

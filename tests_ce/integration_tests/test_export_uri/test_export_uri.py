@@ -21,7 +21,9 @@ def test_exporturi_puts_the_file_under_that_prefix():
     try:
         _run("csv_uri.xml")
         under_prefix = list((_DIR / "output" / "reports" / "2026").glob("rows*.csv"))
-        assert under_prefix, f"no rows.csv under output/reports/2026 (tree: {[str(p.relative_to(_DIR)) for p in (_DIR/'output').rglob('*.csv')]})"
+        assert under_prefix, (
+            f"no rows.csv under output/reports/2026 (tree: {[str(p.relative_to(_DIR)) for p in (_DIR / 'output').rglob('*.csv')]})"
+        )
     finally:
         _clean()
 
@@ -37,10 +39,13 @@ def test_without_exporturi_the_default_task_id_dir_is_unchanged():
         _clean()
 
 
-@pytest.mark.parametrize("f,msg", [
-    ("uri_traversal.xml", r"path|traversal|\.\."),
-    ("uri_scheme.xml", r"scheme|://"),
-])
+@pytest.mark.parametrize(
+    "f,msg",
+    [
+        ("uri_traversal.xml", r"path|traversal|\.\."),
+        ("uri_scheme.xml", r"scheme|://"),
+    ],
+)
 def test_invalid_exporturi_is_rejected(f, msg):
     with pytest.raises(Exception, match=msg):
         _run(f)

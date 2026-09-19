@@ -12,7 +12,7 @@ from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContex
 
 
 class TestXMLExporter(unittest.TestCase):
-    def setUp(self, encoding='utf-8', root_element='list', item_element='item'):
+    def setUp(self, encoding="utf-8", root_element="list", item_element="item"):
         """Set up for each test."""
         self.setup_context = MockSetupContext(task_id=f"test_task_{uuid.uuid4().hex}", descriptor_dir="test_dir")
         self.tmp_dir = tempfile.TemporaryDirectory()
@@ -20,13 +20,14 @@ class TestXMLExporter(unittest.TestCase):
         self.setup_context.descriptor_dir = self.tmp_dir_path
         self.setup_context.properties = {}
 
-        self.exporter = make_exporter(XMLExporter, 
+        self.exporter = make_exporter(
+            XMLExporter,
             setup_context=self.setup_context,
             product_name="test_product",
             chunk_size=1000,
             root_element=root_element,
             item_element=item_element,
-            encoding=encoding
+            encoding=encoding,
         )
 
     def tearDown(self):
@@ -120,8 +121,8 @@ class TestXMLExporter(unittest.TestCase):
         """Test exporting data containing special characters."""
         # Test data
         special_data = [
-            {"id": "1", "title": 'Title with <tag>', "year": 2020},
-            {"id": "2", "title": 'Title with & ampersand', "year": 2021},
+            {"id": "1", "title": "Title with <tag>", "year": 2020},
+            {"id": "2", "title": "Title with & ampersand", "year": 2021},
             {"id": "3", "title": 'Title with "quotes"', "year": 2022},
             {"id": "4", "title": "Title with 'apostrophe'", "year": 2023},
         ]
@@ -169,5 +170,5 @@ class TestXMLExporter(unittest.TestCase):
         self.assertEqual(len(xml_files), 0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

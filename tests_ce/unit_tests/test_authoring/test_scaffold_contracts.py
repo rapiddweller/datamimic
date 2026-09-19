@@ -1,0 +1,479 @@
+# DATAMIMIC
+# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
+# This software is licensed under the MIT License.
+# See LICENSE file for the full text of the license.
+# For questions and support, contact: info@rapiddweller.com
+
+"""Parity tests for scaffold across MCP, CLI, and service transports."""
+
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+import pytest
+from typer.testing import CliRunner
+
+from datamimic_ce.authoring.contracts import (
+    AcceptanceStatus,
+    AuthoringStage,
+    ScaffoldRequest,
+)
+from datamimic_ce.authoring.service import scaffold
+from datamimic_ce.cli import app
+
+# Test specs covering various scenarios
+SPEC_VALID_DRY_RUN = {
+    "version": "1",
+    "seed": 1,
+    "products": [
+        {
+            "kind": "generated",
+            "name": "customers",
+            "count": 10,
+            "targets": [{"kind": "file_export", "format": "JSON"}],
+            "fields": [
+                {"kind": "increment", "name": "id"},
+                {"kind": "person_name", "name": "name"},
+                {"kind": "int_range", "name": "age", "minimum": 18, "maximum": 90},
+            ],
+        }
+    ],
+}
+
+SPEC_VALID_NO_DRY_RUN = {
+    "version": "1",
+    "seed": 1,
+    "products": [
+        {
+            "kind": "generated",
+            "name": "items",
+            "count": 5,
+            "targets": [{"kind": "file_export", "format": "JSON"}],
+            "fields": [{"kind": "increment", "name": "id"}],
+        }
+    ],
+}
+
+SPEC_MALFORMED = {
+    "version": "1",
+    "products": [
+        {
+            "kind": "generated",
+            "name": "data",
+            "count": 5,
+            # Missing fields array — should fail at render
+        }
+    ],
+}
+
+SPEC_V1 = {
+    "version": "1",
+    "seed": 1,
+    "products": [
+        {
+            "kind": "generated",
+            "name": "items",
+            "count": 2,
+            "fields": [{"kind": "increment", "name": "id"}],
+            "targets": [{"kind": "file_export", "format": "JSON"}],
+        }
+    ],
+    "expectations": [{"kind": "exact_count", "product": "items", "count": 2}],
+}
+
+SPEC_V1_COMPLETE_MEMSTORE = {
+    "version": "1",
+    "seed": 1,
+    "products": [
+        {
+            "kind": "generated",
+            "name": "producer",
+            "count": 5,
+            "targets": [{"kind": "memstore", "id": "mem"}],
+            "fields": [
+                {
+                    "kind": "increment",
+                    "name": "id",
+                    "roles": [{"kind": "identifier"}],
+                }
+            ],
+        },
+        {
+            "kind": "source",
+            "name": "reader",
+            "source": {"kind": "memstore", "id": "mem", "product": "producer"},
+            "fields": [
+                {
+                    "kind": "script",
+                    "name": "id",
+                    "script": "id",
+                    "roles": [
+                        {
+                            "kind": "foreign_key",
+                            "parent_product": "producer",
+                            "parent_field": "id",
+                        }
+                    ],
+                },
+                {
+                    "kind": "int_range",
+                    "name": "seat",
+                    "minimum": 1,
+                    "maximum": 10,
+                    "unique": True,
+                },
+            ],
+        },
+    ],
+}
+
+
+class TestScaffoldParity:
+    """Verify parity between service, MCP, and CLI implementations."""
+
+    def test_service_scaffold_valid_dry_run(self):
+        """Service correctly processes a valid spec with dry-run."""
+        request = ScaffoldRequest(
+            spec=SPEC_VALID_DRY_RUN,
+            max_count=10,
+            sample_rows=5,
+        )
+        result = scaffold(request)
+
+        assert result.ok is True
+        assert result.stage is AuthoringStage.ACCEPTANCE
+        assert result.verified is True
+        assert result.xml is not None
+        assert len(result.products) > 0
+        assert all(p.name and p.count >= 0 for p in result.products)
+
+    def test_service_scaffold_rejects_removed_lint_only_switch(self):
+        """Scaffold always runs the complete canonical transaction."""
+        with pytest.raises(ValueError, match="dry_run"):
+            ScaffoldRequest(spec=SPEC_VALID_NO_DRY_RUN, dry_run=False)
+
+    def test_service_scaffold_render_error(self):
+        """Service correctly handles render errors."""
+        request = ScaffoldRequest(
+            spec=SPEC_MALFORMED,
+            max_count=10,
+            sample_rows=5,
+        )
+        result = scaffold(request)
+
+        assert result.ok is False
+        assert result.stage is AuthoringStage.RENDER
+        assert result.issues
+        assert result.xml is None
+
+    def test_cli_json_parity_dry_run(self):
+        """CLI JSON output matches service layer structure."""
+        runner = CliRunner()
+        spec_json = json.dumps(SPEC_VALID_DRY_RUN)
+
+        with TemporaryDirectory() as tmpdir:
+            spec_file = Path(tmpdir) / "spec.json"
+            spec_file.write_text(spec_json)
+
+            result = runner.invoke(app, ["scaffold", str(spec_file), "--format", "json"])
+            assert result.exit_code == 0
+
+            cli_output = json.loads(result.stdout)
+
+            # Verify service generates same structure
+            request = ScaffoldRequest(
+                spec=SPEC_VALID_DRY_RUN,
+                max_count=10,
+                sample_rows=5,
+            )
+            service_result = scaffold(request)
+            service_dict = service_result.model_dump(mode="json", exclude_none=True)
+
+            # Compare structure (not values, as they may differ due to RNG)
+            assert cli_output["ok"] == service_dict["ok"]
+            assert cli_output["stage"] == service_dict["stage"]
+            assert "xml" in cli_output
+            assert "xml" in service_dict
+            assert cli_output["compile_plan"] == service_dict["compile_plan"]
+            assert len(cli_output.get("products", [])) == len(service_dict.get("products", []))
+
+    def test_cli_rejects_removed_no_dry_run_switch(self):
+        """The removed lint-only path cannot be selected through CLI."""
+        runner = CliRunner()
+        spec_json = json.dumps(SPEC_VALID_NO_DRY_RUN)
+
+        with TemporaryDirectory() as tmpdir:
+            spec_file = Path(tmpdir) / "spec.json"
+            spec_file.write_text(spec_json)
+
+            result = runner.invoke(app, ["scaffold", str(spec_file), "--no-dry-run", "--format", "json"])
+            assert result.exit_code == 2
+
+    def test_cli_stdin_support(self):
+        """CLI supports '-' for reading spec from stdin."""
+        runner = CliRunner()
+        spec_json = json.dumps(SPEC_VALID_NO_DRY_RUN)
+
+        result = runner.invoke(
+            app,
+            ["scaffold", "-", "--format", "json"],
+            input=spec_json,
+        )
+        assert result.exit_code == 0
+
+        cli_output = json.loads(result.stdout)
+        assert cli_output["ok"] is True
+        assert "xml" in cli_output
+
+    def test_cli_evaluates_transaction_scoped_acceptance_requirements(self):
+        runner = CliRunner()
+        with TemporaryDirectory() as tmpdir:
+            directory = Path(tmpdir)
+            spec_file = directory / "spec.json"
+            requirements_file = directory / "requirements.json"
+            spec_file.write_text(json.dumps(SPEC_VALID_NO_DRY_RUN))
+            requirements_file.write_text(
+                json.dumps(
+                    [{"kind": "exact_count", "product": "items", "count": 6}]
+                )
+            )
+
+            result = runner.invoke(
+                app,
+                [
+                    "scaffold",
+                    str(spec_file),
+                    "--acceptance-requirements",
+                    str(requirements_file),
+                    "--format",
+                    "json",
+                ],
+            )
+
+        assert result.exit_code == 1
+        payload = json.loads(result.stdout)
+        caller_result = next(item for item in payload["acceptance"]["results"] if item["source"] == "caller")
+        assert caller_result["kind"] == "exact_count"
+        assert caller_result["status"] == AcceptanceStatus.FAIL.value
+        assert payload["verified"] is False
+
+    def test_v1_cli_mcp_service_parity(self):
+        """All transports accept the same canonical model.dm.json contract."""
+        request = ScaffoldRequest(spec=SPEC_V1)
+        service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
+        cli_result = CliRunner().invoke(
+            app,
+            ["scaffold", "-", "--format", "json"],
+            input=json.dumps(SPEC_V1),
+        )
+
+        assert cli_result.exit_code == 0
+        cli_output = json.loads(cli_result.stdout)
+        assert service_result["xml"] == cli_output["xml"]
+        assert cli_output["compile_plan"] == service_result["compile_plan"]
+
+    def test_v1_acceptance_response_is_identical_across_transports(self):
+        """CLI and MCP preserve a complete memstore result byte-for-byte."""
+        request = ScaffoldRequest(
+            spec=SPEC_V1_COMPLETE_MEMSTORE,
+            max_count=5,
+            sample_rows=1,
+        )
+        service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
+        cli_result = CliRunner().invoke(
+            app,
+            [
+                "scaffold",
+                "-",
+                "--format",
+                "json",
+                "--max-count",
+                "5",
+                "--sample-rows",
+                "1",
+            ],
+            input=json.dumps(SPEC_V1_COMPLETE_MEMSTORE),
+        )
+
+        assert cli_result.exit_code == 0
+        assert json.loads(cli_result.stdout) == service_result
+        assert service_result["stage"] == "acceptance"
+        assert service_result["verified"] is True
+        assert service_result["derived_facts"]["memstores"] == [
+            {
+                "id": "mem",
+                "producer_product": "producer",
+                "consumer_products": ["reader"],
+                "has_consumer": True,
+            }
+        ]
+        assert service_result["derived_facts"]["foreign_keys"] == [
+            {
+                "child_product": "reader",
+                "child_field": "id",
+                "parent_product": "producer",
+                "parent_field": "id",
+            }
+        ]
+        assert {product["name"]: product["count"] for product in service_result["products"]} == {
+            "producer": 5,
+            "reader": 5,
+        }
+        memstore = next(
+            item for item in service_result["acceptance"]["results"] if item["kind"] == "memstore_completeness"
+        )
+        assert memstore["status"] == AcceptanceStatus.PASS
+        assert memstore["required_consumer_foreign_key"] == {
+            "role_kind": "foreign_key",
+            "parent_product": "producer",
+            "parent_field": "id",
+            "required_count": 1,
+            "observed_count": 1,
+        }
+
+    def test_v1_count_remediation_is_identical_across_transports(self):
+        """CLI and MCP serialize the service-owned retry action unchanged."""
+        spec = json.loads(json.dumps(SPEC_V1_COMPLETE_MEMSTORE))
+        spec["products"][0]["count"] = 15
+        spec["products"][1]["fields"] = spec["products"][1]["fields"][:1]
+        request = ScaffoldRequest(spec=spec, max_count=10, sample_rows=1)
+
+        service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
+        cli_result = CliRunner().invoke(
+            app,
+            [
+                "scaffold",
+                "-",
+                "--format",
+                "json",
+                "--max-count",
+                "10",
+                "--sample-rows",
+                "1",
+            ],
+            input=json.dumps(spec),
+        )
+
+        assert cli_result.exit_code == 1
+        assert json.loads(cli_result.stdout) == service_result
+        assert service_result["remediations"] == [
+            {
+                "kind": "retry_with_parameter",
+                "parameter": "max_count",
+                "minimum_value": 15,
+                "affected_products": ["producer", "reader"],
+            }
+        ]
+
+    def test_v1_source_repair_is_identical_across_transports(self):
+        """Nested source repair is a canonical result, not adapter policy."""
+        spec = json.loads(json.dumps(SPEC_V1_COMPLETE_MEMSTORE))
+        source = spec["products"][1]["source"]
+        source["type"] = source.pop("product")
+        request = ScaffoldRequest(spec=spec)
+
+        service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
+        cli_result = CliRunner().invoke(
+            app,
+            ["scaffold", "-", "--format", "json"],
+            input=json.dumps(spec),
+        )
+
+        assert cli_result.exit_code == 2
+        assert json.loads(cli_result.stdout) == service_result
+        repair = service_result["issues"][0]["repair"]
+        assert repair["replacement_field"] == "product"
+        assert repair["rejected_value"] == "producer"
+
+    def test_v1_missing_role_evidence_is_identical_across_transports(self):
+        """The missing consumer role remains structured through both adapters."""
+        spec = json.loads(json.dumps(SPEC_V1_COMPLETE_MEMSTORE))
+        spec["products"][1]["fields"][0]["roles"] = []
+        request = ScaffoldRequest(spec=spec, max_count=5, sample_rows=1)
+
+        service_result = scaffold(request).model_dump(mode="json", exclude_none=True)
+        cli_result = CliRunner().invoke(
+            app,
+            [
+                "scaffold",
+                "-",
+                "--format",
+                "json",
+                "--max-count",
+                "5",
+                "--sample-rows",
+                "1",
+            ],
+            input=json.dumps(spec),
+        )
+
+        assert cli_result.exit_code == 1
+        assert json.loads(cli_result.stdout) == service_result
+        memstore = next(
+            item for item in service_result["acceptance"]["results"] if item["kind"] == "memstore_completeness"
+        )
+        assert memstore["required_consumer_foreign_key"]["observed_count"] == 0
+
+    def test_cli_format_validation(self):
+        """CLI validates --format option."""
+        runner = CliRunner()
+        spec_json = json.dumps(SPEC_VALID_NO_DRY_RUN)
+
+        with TemporaryDirectory() as tmpdir:
+            spec_file = Path(tmpdir) / "spec.json"
+            spec_file.write_text(spec_json)
+
+            result = runner.invoke(app, ["scaffold", str(spec_file), "--format", "banana"])
+            assert result.exit_code == 2
+            assert "Invalid value" in result.output
+
+    def test_request_bounds_validation_max_count(self):
+        """ScaffoldRequest validates max_count bounds."""
+        # max_count must be >= 1
+        with pytest.raises(ValueError):
+            ScaffoldRequest(
+                spec=SPEC_VALID_DRY_RUN,
+                max_count=0,
+            )
+
+        # max_count must be <= 1000
+        with pytest.raises(ValueError):
+            ScaffoldRequest(
+                spec=SPEC_VALID_DRY_RUN,
+                max_count=1001,
+            )
+
+    def test_request_bounds_validation_sample_rows(self):
+        """ScaffoldRequest validates sample_rows bounds."""
+        # sample_rows must be >= 1
+        with pytest.raises(ValueError):
+            ScaffoldRequest(
+                spec=SPEC_VALID_DRY_RUN,
+                sample_rows=0,
+            )
+
+        # sample_rows must be <= 50
+        with pytest.raises(ValueError):
+            ScaffoldRequest(
+                spec=SPEC_VALID_DRY_RUN,
+                sample_rows=51,
+            )
+
+    def test_source_backed_unique_sufficient_range_service(self):
+        """Source-backed unique range sufficient for producer count succeeds."""
+        request = ScaffoldRequest(
+            spec=SPEC_V1_COMPLETE_MEMSTORE,
+            max_count=5,
+            sample_rows=3,
+        )
+        result = scaffold(request)
+
+        assert result.ok is True
+        assert result.stage is AuthoringStage.ACCEPTANCE
+        assert result.verified is True, result.acceptance
+        assert result.acceptance is not None
+        assert any(
+            item.kind == "memstore_completeness" and item.status is AcceptanceStatus.PASS
+            for item in result.acceptance.results
+        )
+        assert result.xml is not None

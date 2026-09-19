@@ -1,0 +1,5 @@
+<setup>
+  <generate name="gen" count="2" target="">
+    <key name="code" values="'A','B','C'" weights="0.5,0.3,0.2" unique="true"/>
+  </generate>
+</setup>

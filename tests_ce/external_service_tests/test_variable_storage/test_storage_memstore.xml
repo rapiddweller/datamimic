@@ -1,0 +1,12 @@
+<!-- Spot-check: <variable source=memstore storage=...> reaches the same storage logic. -->
+<setup rngSeed="7">
+    <memstore id="mem" />
+    <generate name="pool_seed" target="mem" count="15">
+        <key name="row_id" generator="IncrementGenerator" />
+    </generate>
+
+    <generate name="iterator_cyclic_mem" count="20" pageSize="5" target="">
+        <variable name="row" source="mem" type="pool_seed" storage="iterator" cyclic="true" distribution="ordered" />
+        <key name="row_id" script="row.row_id" />
+    </generate>
+</setup>

@@ -1,0 +1,6 @@
+<setup>
+  <generate name="gen" count="2" target="">
+    <!-- script passes "must have a source" but violates "unique requires values/generator" -->
+    <key name="code" script="42" unique="true"/>
+  </generate>
+</setup>

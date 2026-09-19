@@ -16,6 +16,7 @@ from datamimic_ce.domains.common.demographics.sampler import DemographicSampler
 
 _test_dir = Path(__file__).resolve().parent
 
+
 @pytest.fixture()
 def sampler(tmp_path: Path) -> DemographicSampler:
     fixture_dir = Path(_test_dir / "data")
