@@ -4,7 +4,6 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import re
 import sys
 from pathlib import Path
 from typing import Any, cast
@@ -16,11 +15,13 @@ from sqlalchemy import MetaData, func, inspect, select, text
 from sqlalchemy.engine import Dialect
 from sqlalchemy.pool import QueuePool
 
+from datamimic_ce.clients import sql_dialect
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.config import settings
 from datamimic_ce.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.domains.domain_core.base_entity import stringify_if_entity
+from datamimic_ce.enums.dbms_enums import Dbms
 from datamimic_ce.logger import logger
 
 # SQLAlchemy create_engine kwargs DATAMIMIC forwards (pooling/behavior). Anything else in the
@@ -55,12 +56,16 @@ _CONNECTION_IDENTITY = {
     "none_as_null_col",
 }
 
+# <execute> scripts are raw SQL: no bind parameters (":new" in a trigger) and no DBAPI percent formatting ("g % 3")
+_RAW_SCRIPT = {"no_parameters": True}
+
 
 class RdbmsClient(DatabaseClient):
     def __init__(self, credential: RdbmsConnectionConfig, task_id: str | None = None):
         self._credential = credential
         self._engine = None
         self._task_id = task_id
+        self._columns_by_selector: dict[str, list[str]] = {}
 
         # Keep only real SQLAlchemy create_engine kwargs. The connection config allows extra keys
         # (env files carry connection identity like dbms/host plus vendor knobs such as legacy
@@ -130,7 +135,7 @@ class RdbmsClient(DatabaseClient):
 
         # Match the DBMS type and create the appropriate SQLAlchemy engine
         match dbms:
-            case "sqlite":
+            case Dbms.SQLITE:
                 environment = settings.RUNTIME_ENVIRONMENT
                 if environment in {"development", "production"}:
                     if not self._task_id:
@@ -147,7 +152,7 @@ class RdbmsClient(DatabaseClient):
                     db_path = Path(f"{db}.sqlite")
                 self._engine = create_sqlite_engine(db_path)
 
-            case "mssql":
+            case Dbms.MSSQL:
                 # ODBC Driver 17 (pyodbc) is the default; opt into the pure-Python pymssql/FreeTDS
                 # driver with driver="pymssql" on the <database> credential - no proprietary MS
                 # ODBC package to install, avoids the exact driver-install friction that pushed
@@ -164,11 +169,11 @@ class RdbmsClient(DatabaseClient):
                         f"{db}?driver=ODBC+Driver+17+for+SQL+Server",
                     )
 
-            case "oracle":
+            case Dbms.ORACLE:
                 # Set OracleDB version and import the necessary module
                 oracledb.version = "8.3.0"
                 sys.modules["cx_Oracle"] = oracledb
-                self._engine = create_sqlalchemy_engine("oracle", user, password, host, port, f"?service_name={db}")
+                self._engine = create_sqlalchemy_engine(dbms, user, password, host, port, f"?service_name={db}")
 
             case _:
                 # For other DBMS types, use a generic method to get the driver and create the engine
@@ -237,41 +242,8 @@ class RdbmsClient(DatabaseClient):
         with self._create_engine().connect() as connection:
             transaction = connection.begin()
             try:
-                # Split the SQL commands into individual commands since SQLite can execute sql statements one by one
-                if self._credential.dbms in ("sqlite", "mysql"):
-                    commands = query.split(";")
-                    for command in commands:
-                        if command.strip():
-                            executable_query = sqlalchemy.text(command)
-                            connection.execute(executable_query)
-                elif self._credential.dbms == "oracle":
-                    script = re.sub(r"--.*", "", query)  # Remove comments
-                    edited_query_list = []  # keep query order
-                    while script:
-                        script = script.strip()
-                        # check PL/SQL block index vs statement index
-                        matches = re.search(r"(DECLARE|BEGIN|;)", script.upper())
-                        if matches is not None:
-                            matched_string = matches.group()
-                            if matched_string in ("DECLARE", "BEGIN"):
-                                # split PL/SQL block
-                                blocks = script.split("END;", 1)
-                                edited_query_list.append(f"{blocks[0]}END;")
-                                script = blocks[1] if len(blocks) >= 2 else ""
-                            else:
-                                # split statement
-                                blocks = script.split(";", 1)
-                                edited_query_list.append(f"{blocks[0]}")
-                                script = blocks[1] if len(blocks) >= 2 else ""
-                        else:
-                            break
-                    for command in edited_query_list:
-                        if command.strip():
-                            executable_query = sqlalchemy.text(command)
-                            connection.execute(executable_query)
-                else:
-                    executable_query = sqlalchemy.text(query)
-                    connection.execute(executable_query)
+                for command in sql_dialect.split_script(query, self._credential.dbms):
+                    connection.exec_driver_sql(command, execution_options=_RAW_SCRIPT)
                 # Commit the changes to the database
                 transaction.commit()
             except Exception as err:
@@ -300,52 +272,42 @@ class RdbmsClient(DatabaseClient):
         :param query:
         :return:
         """
-        if self._credential.dbms == "oracle":
-            count_query = f"SELECT COUNT(*) FROM ({query}) original_query"
-        else:
-            count_query = f"SELECT COUNT(*) FROM ({query}) AS original_query"
+        count_query = sql_dialect.count_query(query, self._credential.dbms)
         query_res = self.get(count_query)
         return query_res[0][0]
 
     @staticmethod
-    def _get_driver_for_dbms(dbms: str):
+    def _get_driver_for_dbms(dbms: Dbms):
         """
         Get driver for specific DBMS
         :param dbms:
         :return:
         """
-        if dbms == "postgresql":
+        if dbms is Dbms.POSTGRESQL:
             driver = "psycopg2"
-        elif dbms == "mysql":
+        elif dbms is Dbms.MYSQL:
             driver = "mysqlconnector"
-        elif dbms == "mssql":
+        elif dbms is Dbms.MSSQL:
             driver = "pyodbc"
         else:
-            raise ValueError(
-                f"DBMS '{dbms}' is not supported. Current supported DBMS: sqlite, postgresql, mysql, mssql"
-            )
+            raise ValueError(f"DBMS '{dbms}' has no generic SQLAlchemy driver")
         return f"{dbms}+{driver}"
 
     def get_by_page_with_type(self, table_name: str, pagination: DataSourcePagination | None = None):
-        """
-        Get rows from database by pagination
-        """
+        """Rows of a table, ordered by its primary key, else by every column. For a stable snapshot that
+        order keeps OFFSET pages disjoint across pages and workers, and keeps full reads that are sliced
+        or shuffled per worker (random/cumulated/unique) identical in every worker."""
         engine = self._create_engine()
 
         with engine.connect() as conn:
             actual_table_name = self._get_actual_table_name(table_name)
             table = self._get_metadata(engine).tables[actual_table_name]
 
+            query = select(table).order_by(*(table.primary_key.columns or table.c))
             if pagination is None:
                 logger.info(f"page is None, get all data from table {actual_table_name}")
-                query = select(table)
-            elif self._credential.dbms in ("mssql", "oracle"):
-                # both need an explicit ORDER BY for a stable OFFSET/FETCH - get_by_page_with_query
-                # already treats them symmetrically for the same reason.
-                ordering_column = table.primary_key.columns.values() if table.primary_key else [next(iter(table.c))]
-                query = select(table).order_by(*ordering_column).offset(pagination.skip).limit(pagination.limit)
             else:
-                query = select(table).offset(pagination.skip).limit(pagination.limit)
+                query = query.offset(pagination.skip).limit(pagination.limit)
 
             result = conn.execute(query).fetchall()
             return [dict(row._mapping) for row in result]
@@ -367,27 +329,25 @@ class RdbmsClient(DatabaseClient):
             # Use _mapping attribute for SQLAlchemy 2.0 Row objects
             return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
 
-        if self._credential.dbms == "mssql":
-            # mssql OFFSET require ORDER BY -> hard code ORDER BY the first column
-            pagination_query = (
-                f"SELECT * FROM ({original_query}) AS original_query "
-                f"ORDER BY 1 OFFSET {pagination.skip} ROWS FETCH NEXT {pagination.limit} ROWS ONLY"
-            )
-            result = self.get(pagination_query)
-        elif self._credential.dbms == "oracle":
-            pagination_query = (
-                f"SELECT * FROM ({original_query}) original_query "
-                f"ORDER BY 1 OFFSET {pagination.skip} ROWS FETCH FIRST {pagination.limit} ROWS ONLY"
-            )
-            result = self.get(pagination_query)
-        else:
-            pagination_query = (
-                f"SELECT * FROM ({original_query}) AS original_query LIMIT {pagination.limit} OFFSET {pagination.skip}"
-            )
-            result = self.get(pagination_query)
+        page = sql_dialect.selector_page(
+            original_query,
+            self._credential.dbms,
+            pagination.skip,
+            pagination.limit,
+            self._selector_columns(original_query),
+        )
+        result = self.get(page.sql)[page.rows]
 
         # Handle both SQLAlchemy 1.x and 2.x Row objects
         return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
+
+    def _selector_columns(self, query: str) -> list[str]:
+        """Output column names of a selector, probed once per selector rather than once per page."""
+        if query not in self._columns_by_selector:
+            probe = text(sql_dialect.column_probe_query(query, self._credential.dbms))
+            with self._create_engine().connect() as connection:
+                self._columns_by_selector[query] = list(connection.execute(probe).keys())
+        return self._columns_by_selector[query]
 
     def get_random_rows_by_columns(self, table_name: str, column_names: list[str]) -> list[tuple]:
         """Fetch the given columns for a <reference> in a stable order, preserving row-tuple
@@ -564,7 +524,7 @@ class RdbmsClient(DatabaseClient):
         with self._create_engine().connect() as connection:
             transaction = connection.begin()
             try:
-                if dbms == "postgresql":
+                if dbms is Dbms.POSTGRESQL:
                     schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
                     qualified_sequence = self._quoted_qualified_identifier(connection.dialect, schema, seq)
                     exists = connection.execute(
@@ -580,7 +540,7 @@ class RdbmsClient(DatabaseClient):
                         text("SELECT nextval(CAST(:sequence_name AS regclass))"),
                         {"sequence_name": qualified_sequence},
                     ).scalar()
-                elif dbms == "mysql":
+                elif dbms is Dbms.MYSQL:
                     current_value = self._advance_mysql_auto_increment(
                         connection, sequence_name, table_name, column_name, 1
                     )
@@ -621,7 +581,7 @@ class RdbmsClient(DatabaseClient):
         with self._create_engine().connect() as connection:
             transaction = connection.begin()
             try:
-                if dbms == "postgresql":
+                if dbms is Dbms.POSTGRESQL:
                     schema, seq = self._split_sequence_schema(sequence_name, self._credential.db_schema or "public")
                     qualified_sequence = self._quoted_qualified_identifier(connection.dialect, schema, seq)
                     connection.execute(
@@ -631,7 +591,7 @@ class RdbmsClient(DatabaseClient):
                         ),
                         {"sequence_name": qualified_sequence, "increment": increment},
                     )
-                elif dbms == "mysql":
+                elif dbms is Dbms.MYSQL:
                     self._advance_mysql_auto_increment(connection, sequence_name, table_name, column_name, increment)
                 else:
                     # See get_current_sequence_number - mssql/oracle native-sequence support

@@ -8,6 +8,7 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from datamimic_ce.constants.attribute_constants import ATTR_SCHEMA
+from datamimic_ce.enums.dbms_enums import Dbms
 from datamimic_ce.model.model_util import ModelUtil
 
 
@@ -36,10 +37,10 @@ class DatabaseModel(BaseModel):
         "conf/{environment}.env.properties using key '{system}.db.database'.",
         examples=["mydb"],
     )
-    dbms: str = Field(
+    dbms: Dbms = Field(
         ...,
         description="Database management system driving connection/dialect handling.",
-        examples=["postgresql", "mysql", "mssql", "oracle"],
+        examples=[dbms.value for dbms in Dbms],
     )
     environment: str | None = Field(
         None,

@@ -6,9 +6,11 @@
 
 import sys
 
+from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.enums.dbms_enums import Dbms
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.variable_statement import VariableStatement
 
@@ -113,8 +115,8 @@ class SequenceTableGenerator(BaseLiteralGenerator):
         # Initialize sequence with process-safe range
         try:
             total_processes = self._root_gen_stmt.num_process or context.root.num_process or 1
-            credential = getattr(rdbms_client, "credential", None)
-            if total_processes > 1 and getattr(credential, "dbms", None) == "mysql":
+            uses_mysql = isinstance(rdbms_client, RdbmsClient) and rdbms_client.credential.dbms is Dbms.MYSQL
+            if total_processes > 1 and uses_mysql:
                 raise ValueError(
                     "SequenceTableGenerator with a MySQL source is single-process only; "
                     "set numProcess=1 because MySQL has no atomic native sequence reservation"

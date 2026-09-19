@@ -12,12 +12,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from datamimic_ce.clients.rdbms_client import RdbmsClient
+from datamimic_ce.enums.dbms_enums import Dbms
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.single_process_policy import resolve_single_process
-from datamimic_ce.clients.rdbms_client import RdbmsClient
 
 
 def _gen(children=(), unique=False, targets=()) -> MagicMock:
@@ -36,7 +37,7 @@ def _child(spec, unique=False, is_composite=False) -> MagicMock:
 
 def _mysql_client() -> RdbmsClient:
     client = object.__new__(RdbmsClient)
-    client._credential = SimpleNamespace(dbms="mysql")
+    client._credential = SimpleNamespace(dbms=Dbms.MYSQL)
     return client
 
 
@@ -89,7 +90,7 @@ def test_postgresql_sequence_generator_keeps_multiprocessing() -> None:
     key.database = "pg-db"
     key.sub_statements = []
     client = object.__new__(RdbmsClient)
-    client._credential = SimpleNamespace(dbms="postgresql")
+    client._credential = SimpleNamespace(dbms=Dbms.POSTGRESQL)
 
     assert resolve_single_process(
         _gen(children=[key]),

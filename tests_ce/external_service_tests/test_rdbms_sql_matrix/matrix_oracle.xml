@@ -1,0 +1,6 @@
+<setup>
+    <database id="sourceDB" system="oracle" />
+    <execute uri="script/setup_oracle.scr.sql" target="sourceDB" />
+    <include uri="conf/oracle.properties" />
+    <include uri="matrix_cases.xml" />
+</setup>

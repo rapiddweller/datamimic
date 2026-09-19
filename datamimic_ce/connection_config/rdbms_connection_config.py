@@ -8,6 +8,7 @@
 from pydantic import BaseModel, ConfigDict
 
 from datamimic_ce.connection_config.connection_config_base import ConnectionConfig
+from datamimic_ce.enums.dbms_enums import Dbms
 
 
 class RdbmsConnectionConfig(ConnectionConfig, BaseModel):
@@ -15,7 +16,7 @@ class RdbmsConnectionConfig(ConnectionConfig, BaseModel):
     Database's connection configuration used for connecting to database server
     """
 
-    dbms: str
+    dbms: Dbms
     host: str | None
     port: int | None
     user: str | None
@@ -29,9 +30,6 @@ class RdbmsConnectionConfig(ConnectionConfig, BaseModel):
         return BaseModel.model_dump(self)
 
     def check_connection_config(self):
-        if not self.dbms:
-            raise ValueError("DBMS is required")
-
         if not self.host:
             raise ValueError("Host is required")
 
