@@ -75,11 +75,13 @@ the same way, because `random`/`cumulated`/`unique` shuffle them per worker with
   different values as equal, e.g. case-insensitive, can still tie)
 - `selector=` with its own top-level `ORDER BY`: that order stays first and verbatim, so it remains the
   source order; every output column it does not already sort by follows as a tie-breaker
-  (`ORDER BY grp` pages as `ORDER BY grp, 2`)
+  (`ORDER BY grp` pages as `ORDER BY grp, 2`). A qualified term covers only the projection of that
+  column (`ORDER BY a.id` covers `a.id AS a_id`, not `b.id AS b_id`)
 - any other `selector=`: every output column (`ORDER BY 1, 2, ..., n`), because an arbitrary query has
   no known key
-- a `selector=` with its own row limit (`LIMIT`/`TOP`/`FETCH`/`OFFSET`) is a bounded result, not a source
-  to page, and fails with an error: remove the limit and set `count=` on the `<generate>`
+- a `selector=` with its own row limit (`LIMIT`/`TOP`/`FETCH`/`OFFSET`) is a bounded result: the order terms
+  above go before that limit, so the subset is deterministic, and the bounded query is read whole and
+  sliced per page in its own order. Every page re-executes it (cost: pages x the selector's own limit)
 
 Selectors are read with `sqlglot` in the connection's dialect (`datamimic_ce/clients/sql_dialect.py`).
 

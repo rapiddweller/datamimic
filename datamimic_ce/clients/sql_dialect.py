@@ -172,22 +172,42 @@ def _has_own_row_limit(parsed: exp.Query) -> bool:
 
 
 def _tie_breaker_positions(order: exp.Order, parsed: exp.Query, columns: list[str]) -> list[int]:
-    """Output positions (1-based) the ORDER BY does not already sort by. A term references a position as
-    a positional literal, as an output column name, or as the source column of an aliased projection."""
-    names_by_position = [{column.casefold()} for column in columns]
-    for position, projection in enumerate(parsed.selects):
-        aliased_column = isinstance(projection, exp.Alias) and isinstance(projection.this, exp.Column)
-        if aliased_column and position < len(names_by_position):
-            names_by_position[position].add(projection.this.name.casefold())
+    """Output positions (1-based) the ORDER BY does not already sort by. A term references a position as a
+    positional literal, or as a column that position projects. With an explicit projection list that match
+    is on the projected expression, qualifier included (``ORDER BY a.id`` covers ``a.id AS a_id``, not
+    ``b.id AS b_id``); behind ``*`` only the output name is known, so only an unambiguous name counts."""
+    projections = parsed.selects
+    explicit = len(projections) == len(columns) and not any(_is_star(projection) for projection in projections)
     referenced: set[int] = set()
     for term in order.expressions:
-        key = term.this
-        if isinstance(key, exp.Literal) and key.is_int:
-            referenced.add(int(key.name))
-        elif isinstance(key, exp.Column):
-            name = key.name.casefold()
-            referenced.update(index + 1 for index, names in enumerate(names_by_position) if name in names)
+        referenced |= _referenced_positions(term.this, projections if explicit else None, columns)
     return [position for position in range(1, len(columns) + 1) if position not in referenced]
+
+
+def _is_star(projection: exp.Expr) -> bool:
+    return isinstance(projection, exp.Star) or (isinstance(projection, exp.Column) and projection.is_star)
+
+
+def _referenced_positions(key: exp.Expr, projections: list[exp.Expr] | None, columns: list[str]) -> set[int]:
+    if isinstance(key, exp.Literal) and key.is_int:
+        return {int(key.name)}
+    if not isinstance(key, exp.Column):
+        return set()
+    if projections is None:
+        by_name = {index + 1 for index, column in enumerate(columns) if column.casefold() == key.name.casefold()}
+        return by_name if len(by_name) == 1 else set()
+    return {index + 1 for index, projection in enumerate(projections) if _projects_column(projection, key)}
+
+
+def _projects_column(projection: exp.Expr, key: exp.Column) -> bool:
+    """The projection outputs the ordered column: an unqualified term by the output name, or the same source
+    column, where a missing qualifier on either side matches any table."""
+    if not key.table and projection.alias_or_name.casefold() == key.name.casefold():
+        return True
+    source = projection.this if isinstance(projection, exp.Alias) else projection
+    if not isinstance(source, exp.Column) or source.name.casefold() != key.name.casefold():
+        return False
+    return not key.table or not source.table or source.table.casefold() == key.table.casefold()
 
 
 def _order_by(positions: Iterable[int]) -> str:

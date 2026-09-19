@@ -59,6 +59,7 @@ _CONNECTION_IDENTITY = {
 # <execute> scripts are raw SQL: no bind parameters (":new" in a trigger) and no DBAPI percent formatting ("g % 3")
 _RAW_SCRIPT = {"no_parameters": True}
 
+
 class RdbmsClient(DatabaseClient):
     def __init__(self, credential: RdbmsConnectionConfig, task_id: str | None = None):
         self._credential = credential

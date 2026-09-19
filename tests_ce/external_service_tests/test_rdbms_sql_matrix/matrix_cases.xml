@@ -30,6 +30,9 @@
               selector="SELECT grp, id FROM matrix_rows ORDER BY grp" pageSize="3" numProcess="2" target="" />
     <generate name="selector_alias_order" source="sourceDB" distribution="ordered"
               selector="SELECT grp AS g, id FROM matrix_rows ORDER BY grp DESC" pageSize="5" target="" />
+    <generate name="selector_qualified_order" source="sourceDB" distribution="ordered"
+              selector="SELECT a.id AS a_id, b.id AS b_id FROM matrix_rows a JOIN matrix_rows b ON a.grp = b.grp ORDER BY a.id"
+              pageSize="5" target="" />
     <generate name="selector_star_order" source="sourceDB" distribution="ordered"
               selector="SELECT * FROM matrix_rows r ORDER BY r.grp" pageSize="5" target="" />
     <generate name="selector_union_order" source="sourceDB" distribution="ordered"

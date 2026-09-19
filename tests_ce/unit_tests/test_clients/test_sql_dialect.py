@@ -48,6 +48,25 @@ _DB_PAGED = slice(None)
         ),
         (
             Dbms.MSSQL,
+            "SELECT a.id AS a_id, b.id AS b_id FROM t a JOIN t b ON a.grp = b.grp ORDER BY a.id",
+            "SELECT a.id AS a_id, b.id AS b_id FROM t a JOIN t b ON a.grp = b.grp ORDER BY a.id, 2 "
+            "OFFSET 10 ROWS FETCH NEXT 5 ROWS ONLY",
+            _DB_PAGED,
+        ),
+        (
+            Dbms.POSTGRESQL,
+            "SELECT a.id AS a_id, b.id AS b_id FROM t a JOIN t b ON a.grp = b.grp ORDER BY b_id",
+            "SELECT a.id AS a_id, b.id AS b_id FROM t a JOIN t b ON a.grp = b.grp ORDER BY b_id, 1 LIMIT 5 OFFSET 10",
+            _DB_PAGED,
+        ),
+        (
+            Dbms.MSSQL,
+            "SELECT id AS i, grp FROM t ORDER BY t.id",
+            "SELECT id AS i, grp FROM t ORDER BY t.id, 2 OFFSET 10 ROWS FETCH NEXT 5 ROWS ONLY",
+            _DB_PAGED,
+        ),
+        (
+            Dbms.MSSQL,
             "SELECT * FROM t ORDER BY t.grp",
             "SELECT * FROM t ORDER BY t.grp, 2 OFFSET 10 ROWS FETCH NEXT 5 ROWS ONLY",
             _DB_PAGED,

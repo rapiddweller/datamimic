@@ -55,6 +55,9 @@ def test_rdbms_sql_matrix(engine: str) -> None:
 
     assert all(row["rn"] == row["id"] for row in result["selector_window"])
     assert _grp_id(result["selector_alias_order"], grp_key="g") == _BY_GRP_DESC_ID
+    # a.id repeats once per same-grp b row (4x), so pages of 5 split a.id groups: b.id must break those ties
+    same_grp_pairs = sorted((a_id, b_id) for grp, a_id in _BY_GRP_ID for other, b_id in _BY_GRP_ID if grp == other)
+    assert [(row["a_id"], row["b_id"]) for row in result["selector_qualified_order"]] == same_grp_pairs
     assert [row["id"] for row in result["variable_selector_cyclic"]] == [*range(12, 0, -1), 12, 11, 10]
     assert [(row["id"], row["note"]) for row in result["script_rows"]] == [
         (1, "a;b"),
