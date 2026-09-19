@@ -84,7 +84,7 @@ class DataSourceRegistry:
                 raise ValueError(f"JSON file '{key}' must contain a list of objects or a dictionary")
         elif source_format is SourceFileFormat.XML:
             return FileContentStorage.load_file_with_custom_func(
-                key, lambda: xmltodict.parse(open(key).read(), attr_prefix="@", cdata_key="#text")
+                key, lambda: xmltodict.parse(Path(key).read_bytes(), attr_prefix="@", cdata_key="#text")
             )
         else:
             raise ValueError(f"Data source '{key}' is not supported is not handled by DataSourceRegistry")

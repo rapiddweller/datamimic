@@ -1,9 +1,10 @@
 <setup defaultSeparator=",">
     <!-- ONE generate -> EVERY registered buffered exporter. The matrix test reads each
-         format back; a new registry entry without a matrix reader fails the gate. -->
+         format back; a new registry entry without a matrix reader fails the gate.
+         Non-ASCII names (ü, €) verify every exporter writes text in its declared encoding. -->
     <generate name="matrix_rows" count="10" exportUri="matrix_out"
               target="CSV,JSON,XML,XLSX,TXT,DbUnit,FixedWidth(columns='id[8],name[20]')">
         <key name="id" generator="IncrementGenerator"/>
-        <key name="name" script="'row_' + str(id)"/>
+        <key name="name" script="'Müller-€-' + str(id)"/>
     </generate>
 </setup>

@@ -457,7 +457,7 @@ class FileUtil:
 
         # Create the descriptor file with the specified content
         descriptor_path = project_dir / "datamimic.xml"
-        descriptor_path.write_text(initial_descriptor_content)
+        descriptor_path.write_text(initial_descriptor_content, encoding="utf-8")
 
         # Create a default README.md
         readme_content = f"""
@@ -488,4 +488,4 @@ The project is initialized with a sample descriptor that generates user data wit
 2. Place any required input files in the `data/` directory
 3. Run the project using: `datamimic run datamimic.xml`
         """
-        (project_dir / "README.md").write_text(readme_content)
+        (project_dir / "README.md").write_text(readme_content, encoding="utf-8")
