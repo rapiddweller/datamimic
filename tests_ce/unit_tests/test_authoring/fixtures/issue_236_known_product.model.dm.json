@@ -1,0 +1,13 @@
+{
+  "version": "1",
+  "products": [
+    {
+      "kind": "generated",
+      "name": "known",
+      "count": 1,
+      "fields": [
+        {"kind": "increment", "name": "id"}
+      ]
+    }
+  ]
+}

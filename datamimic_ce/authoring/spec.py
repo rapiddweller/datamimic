@@ -32,7 +32,7 @@ from pydantic import (
 from pydantic.json_schema import JsonDict, JsonValue
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
-from datamimic_ce._compat import StrEnum
+from datamimic_ce._compat import StrEnum, assert_never
 from datamimic_ce.constants.element_constants import EL_DATABASE, EL_GENERATE, EL_MONGODB
 from datamimic_ce.exporters.exporter_util import buffered_exporter_names
 from datamimic_ce.model.constraints import is_source_file
@@ -734,10 +734,12 @@ def _expectation_product_references(expectation: ExpectationIntent) -> tuple[tup
         )
     if isinstance(expectation, UniqueExpectation | AllowedValuesExpectation | RangeExpectation):
         return (("product", expectation.product),)
-    return (
-        ("child_product", expectation.child_product),
-        ("parent_product", expectation.parent_product),
-    )
+    if isinstance(expectation, ForeignKeyExpectation):
+        return (
+            ("child_product", expectation.child_product),
+            ("parent_product", expectation.parent_product),
+        )
+    assert_never(expectation)
 
 
 def _unknown_product_errors(
