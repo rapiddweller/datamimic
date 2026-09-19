@@ -140,10 +140,10 @@ jobs:
           . .venv/bin/activate
           uv run ruff check datamimic_ce
         shell: bash
-      - name: Check architecture contract
+      - name: Architecture gates
         run: |
           . .venv/bin/activate
-          archkeel validate
+          uv run pytest tests_ce/architecture -p no:cacheprovider
         shell: bash
 
   build:

@@ -1,8 +1,14 @@
 # datamimic_ce architecture
 
 Seven product components and their allowed directions. [`architecture-contract.json`](../../architecture-contract.json)
-is the SPOT; `archkeel validate` fails on any new edge between components, any import of a
-non-public name across components, and any third-party library outside its declared owners.
+is the **target** architecture (SPOT), not a description of today's code. `archkeel report`
+measures the code against it and is red where the code still contradicts it. Success means:
+the target stays stable and the known violations only decrease.
+
+`pytest tests_ce/architecture` (in `make check` and CI) freezes the known violations in
+`tests_ce/architecture/architecture_debt_budget.json`. Any new violation fails: a new edge
+between components, an import of a non-public name across components, or a third-party
+library outside its declared owners. A resolved violation must be dropped from the budget.
 
 ## Lifecycle of a run
 
@@ -39,8 +45,8 @@ is not part of the product architecture.
 ## Dependencies
 
 Target direction: `interfaces → authoring → dsl`, `authoring → engine`, `interfaces → engine`,
-`engine → dsl / domain / io`, everyone → `foundation`. The graph below is the observed state that
-`archkeel validate` compares with the code; it includes the debt edges.
+`engine → dsl / domain / io`, everyone → `foundation`. The graph below is the **observed** state,
+including the debt edges the target forbids.
 
 <!-- archkeel-component-graph -->
 ```mermaid
@@ -87,8 +93,8 @@ graph TD
 
 ### Debt
 
-Existing edges against the target, accepted so the gate stays green; each is removed by moving
-code, never by widening the contract.
+Observed edges the target forbids. They are not in the contract; their imports are frozen in the
+debt budget. Each is removed by moving code, never by widening the contract or the budget.
 
 | Edge | Cause and target |
 |---|---|
@@ -105,9 +111,8 @@ code, never by widening the contract.
 | `io → domain` | clients serialize with domain base_entity; target: a foundation helper. |
 | `io → engine` | DataSourceRegistry evaluates source scripts with contexts; target: an engine-provided port. |
 
-Debt cannot grow: `tests_ce/architecture/test_architecture_debt_budget.py` freezes the exact
-imports on each debt edge in `architecture_debt_budget.json`. A new import over a debt edge fails,
-and a removed one must be dropped from the budget, so it only shrinks.
+Debt cannot grow: the budget holds each known violation by rule, source module and imported
+symbol, so an unrelated edit does not move it and a new import over a debt edge fails.
 
 ## Cross-component surface
 

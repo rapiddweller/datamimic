@@ -14,7 +14,7 @@ help:
 	@echo "  typecheck         Run mypy against $(PACKAGE)"
 	@echo "  lint              Run ruff and pylint against $(PACKAGE)"
 	@echo "  format            Auto-format code with ruff"
-	@echo "  architecture      Check the architecture contract (archkeel) and write its report"
+	@echo "  architecture      Run the architecture gates and write the archkeel report"
 	@echo "  check             Run lint, typecheck, and tests"
 	@echo "  clean             Remove caches and build artifacts"
 
@@ -50,7 +50,7 @@ format:
 	ruff check --fix $(PACKAGE)
 
 architecture:
-	archkeel validate
+	pytest -q tests_ce/architecture
 	archkeel report
 
 check: lint typecheck architecture test

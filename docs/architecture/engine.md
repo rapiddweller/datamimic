@@ -25,4 +25,6 @@ graph TD
 
 ## Debt
 
+Observed edges the target forbids; frozen in the debt budget, not allowed by the contract.
+
 - `workers → tasks`: workers call back into tasks, a cycle with tasks -> workers; target: workers receive what they run and never import tasks.

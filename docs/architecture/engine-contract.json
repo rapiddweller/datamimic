@@ -55,10 +55,6 @@
         {
           "component": "contexts",
           "rationale": "Workers run pages inside generation contexts."
-        },
-        {
-          "component": "tasks",
-          "rationale": "Debt: workers call back into tasks, a cycle with tasks -> workers; target: workers receive what they run and never import tasks."
         }
       ]
     },

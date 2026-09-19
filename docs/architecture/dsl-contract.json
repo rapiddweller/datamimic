@@ -23,10 +23,6 @@
         {
           "component": "enums",
           "rationale": "Models type closed vocabularies with the DSL enums."
-        },
-        {
-          "component": "parsers",
-          "rationale": "Debt: models reach parser implementations, a cycle with parsers -> model; target: models own identity and child rules and never import parsers (EE DEP-MODEL-NO-PARSERS)."
         }
       ],
       "public": [

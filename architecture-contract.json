@@ -88,10 +88,6 @@
           "rationale": "Authoring uses shared primitives."
         },
         {
-          "component": "interfaces",
-          "rationale": "Debt: authoring.dryrun starts a run through the DataMimic interface; target: call the engine directly."
-        },
-        {
           "component": "io",
           "rationale": "Authoring projects the available source and exporter kinds."
         }
@@ -140,20 +136,8 @@
       ],
       "requires": [
         {
-          "component": "domain",
-          "rationale": "Debt: state_machine_statement builds a generator; target: the engine builds it."
-        },
-        {
-          "component": "engine",
-          "rationale": "Debt: statements import contexts; target: the DSL does not know execution."
-        },
-        {
           "component": "foundation",
           "rationale": "The DSL uses shared primitives."
-        },
-        {
-          "component": "io",
-          "rationale": "Debt: statements import MongoDB client and connection configs; target: the DSL does not know connections."
         }
       ],
       "public": [
@@ -360,16 +344,8 @@
       ],
       "requires": [
         {
-          "component": "domain",
-          "rationale": "Debt: clients serialize with domain base_entity; target: a foundation helper."
-        },
-        {
           "component": "dsl",
           "rationale": "Under review: existing coupling; adapters should not need to know the DSL, the engine should translate DSL configuration for them. Level 2 decides."
-        },
-        {
-          "component": "engine",
-          "rationale": "Debt: DataSourceRegistry evaluates source scripts with contexts; target: an engine-provided port."
         },
         {
           "component": "foundation",
@@ -422,20 +398,8 @@
       ],
       "requires": [
         {
-          "component": "dsl",
-          "rationale": "Debt: generator_util resolves generators per statement and literal generators read DSL enums; target: generator_util moves to engine, shared enums move to their owner or foundation one by one."
-        },
-        {
-          "component": "engine",
-          "rationale": "Debt: generator_util reads contexts; target: generator_util moves to engine."
-        },
-        {
           "component": "foundation",
           "rationale": "Generators use determinism SPOTs and primitives."
-        },
-        {
-          "component": "io",
-          "rationale": "Debt: DataSourcePagination and SequenceTableGenerator's database access; target: decide per type (value type or io semantics)."
         }
       ],
       "public": [
@@ -502,20 +466,7 @@
       "provenance": [
         "docs/architecture/architecture.md"
       ],
-      "requires": [
-        {
-          "component": "domain",
-          "rationale": "Debt: utils.object_util references converters; target: move to engine."
-        },
-        {
-          "component": "dsl",
-          "rationale": "Debt: utils read DSL constants and enums; target: foundation imports nothing."
-        },
-        {
-          "component": "engine",
-          "rationale": "Debt: utils.object_util builds converters with contexts; target: move to engine."
-        }
-      ],
+      "requires": [],
       "public": [
         "datamimic_ce._compat:StrEnum",
         "datamimic_ce._compat:assert_never",

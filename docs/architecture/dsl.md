@@ -26,4 +26,6 @@ graph TD
 
 ## Debt
 
+Observed edges the target forbids; frozen in the debt budget, not allowed by the contract.
+
 - `model → parsers`: models reach parser implementations, a cycle with parsers -> model; target: models own identity and child rules and never import parsers (EE DEP-MODEL-NO-PARSERS).
