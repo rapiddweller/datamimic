@@ -6,10 +6,19 @@
 
 """Dry-run: capped, capture-only execution with the safety gates."""
 
+import json
 from pathlib import Path
 
-from datamimic_ce.authoring.contracts import AuthoringStage
-from datamimic_ce.authoring.dryrun import dry_run_source
+from datamimic_ce.authoring.contracts import (
+    AuthoringStage,
+    ScaffoldRequest,
+    ScaffoldVerification,
+    VerificationGateStatus,
+)
+from datamimic_ce.authoring.dryrun import _smoke_export, dry_run_source
+from datamimic_ce.authoring.service import compile_document, scaffold
+from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
+from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 
 _PIPELINE = """<setup rngSeed="1">
     <memstore id="mem"/>
@@ -19,6 +28,7 @@ _PIPELINE = """<setup rngSeed="1">
     </generate>
     <generate name="from_mem" source="mem" type="users" distribution="ordered" target="JSON"/>
 </setup>"""
+_FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def test_dry_run_caps_counts_strips_targets_keeps_memstore(tmp_path: Path, monkeypatch) -> None:
@@ -140,6 +150,41 @@ def test_smoke_export_catches_unserializable_value_plain_dry_run_does_not(tmp_pa
     assert diag.name == "batches|blobs"  # names the offending (nested) product
     assert "JSON" in diag.fix_hint
     assert not list(tmp_path.iterdir())  # even the failing run leaves nothing behind
+
+
+def test_smoke_export_compares_buffered_exporter_row_count(tmp_path: Path, monkeypatch) -> None:
+    model = json.loads((_FIXTURES / "issue_227_smoke_rows.model.dm.json").read_text(encoding="utf-8"))
+    xml = (_FIXTURES / "issue_227_smoke_rows.xml").read_text(encoding="utf-8").strip()
+    assert compile_document(model).xml == xml
+    request = ScaffoldRequest(
+        spec=model,
+        verification=ScaffoldVerification(smoke_export=True),
+    )
+    positive = scaffold(request)
+    assert positive.xml == xml
+    assert positive.verified
+    assert positive.verification.smoke_export.status is VerificationGateStatus.PASSED
+
+    original_consume = UnifiedBufferedExporter.consume
+
+    def short_write(
+        self: UnifiedBufferedExporter,
+        product: tuple[object, ...],
+        stmt_full_name: str,
+        exporter_state_manager: ExporterStateManager,
+    ) -> int:
+        return original_consume(self, product, stmt_full_name, exporter_state_manager) - 1
+
+    monkeypatch.setattr(UnifiedBufferedExporter, "consume", short_write)
+    monkeypatch.chdir(tmp_path)
+    diagnostics, capture = _smoke_export(
+        {"items": [{"id": 1}, {"id": 2}, {"id": 3}]},
+        {"items": ("items", [("JSON", {})])},
+    )
+
+    assert capture.failed_exporters == 1
+    assert any("acknowledged 2 of 3" in diagnostic.message for diagnostic in diagnostics)
+    assert not list(tmp_path.iterdir())
 
 
 def test_dm002_runtime_errors_carry_actionable_hints() -> None:

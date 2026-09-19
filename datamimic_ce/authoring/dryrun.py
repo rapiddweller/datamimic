@@ -651,7 +651,28 @@ def _smoke_export(
                         export_uri=None,
                     )
                     exporter = _BUFFERED_EXPORTERS[exporter_name](config, dict(params))
-                    exporter.consume((basename, rows), full_name, ExporterStateManager(worker_id=1))
+                    acknowledged_rows = exporter.consume(
+                        (basename, rows), full_name, ExporterStateManager(worker_id=1)
+                    )
+                    if acknowledged_rows != len(rows):
+                        failed_exporters += 1
+                        diagnostics.append(
+                            Diagnostic(
+                                rule=RULE_RUNTIME_ERROR,
+                                severity=RuleSeverity.ERROR,
+                                message=(
+                                    f"{exporter_name} smoke export acknowledged {acknowledged_rows} of "
+                                    f"{len(rows)} captured rows for '{full_name}'"
+                                ),
+                                fix_hint=(
+                                    f"The {exporter_name} exporter did not acknowledge every captured row. "
+                                    "Check its write path before using this target."
+                                ),
+                                element="generate",
+                                path="/setup",
+                                name=full_name,
+                            )
+                        )
                     exporter.finalize_chunks(1)
                 except Exception as err:
                     failed_exporters += 1
