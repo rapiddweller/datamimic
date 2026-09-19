@@ -1,6 +1,0 @@
-<setup>
-    <!-- A non-UTF-8 exporter encoding must be declared in the written XML, or parsers read it as UTF-8. -->
-    <generate name="people" count="2" target="XML(encoding='cp1252'),DbUnit(encoding='cp1252')">
-        <key name="name" constant="Müller"/>
-    </generate>
-</setup>

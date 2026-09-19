@@ -1,0 +1,25 @@
+<setup defaultSeparator=",">
+    <!-- Write non-ASCII rows in every exportable format, then read each file back as a source.
+         Weighted CSV variants are not exportable, so they come from committed fixtures. -->
+    <generate name="src_rows" count="3" exportUri="source_out"
+              target="CSV,JSON,XML,XLSX,DbUnit,FixedWidth(columns='id[4],name[16]')">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" script="'Müller-€-' + str(id)"/>
+    </generate>
+
+    <generate name="from_csv" source="output/source_out/src_rows.csv" distribution="ordered" target=""/>
+    <generate name="from_json" source="output/source_out/src_rows.json" distribution="ordered" target=""/>
+    <generate name="from_xml" source="output/source_out/src_rows.xml" distribution="ordered" target=""/>
+    <generate name="from_xlsx" source="output/source_out/src_rows.xlsx" distribution="ordered" target=""/>
+    <generate name="from_dbunit" source="output/source_out/src_rows.dbunit.xml" sourceEntity="src_rows"
+              distribution="ordered" target=""/>
+    <generate name="from_fcw" source="output/source_out/src_rows.fcw" distribution="ordered" target=""/>
+
+    <generate name="from_wgt_csv" count="20" target="">
+        <key name="name" source="data/names.wgt.csv"/>
+    </generate>
+    <generate name="from_wgt_ent_csv" count="20" target="">
+        <variable name="city" source="data/cities.wgt.ent.csv"/>
+        <key name="name" script="city.name"/>
+    </generate>
+</setup>
