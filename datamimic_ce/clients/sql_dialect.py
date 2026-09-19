@@ -33,7 +33,6 @@ class DialectRules:
     pages_with_offset_fetch: bool
     accepts_as_before_subquery_alias: bool
     accepts_order_by_in_derived_table: bool
-    has_plsql_blocks: bool
 
 
 DIALECT_RULES: dict[Dbms, DialectRules] = {
@@ -43,7 +42,6 @@ DIALECT_RULES: dict[Dbms, DialectRules] = {
         pages_with_offset_fetch=False,
         accepts_as_before_subquery_alias=True,
         accepts_order_by_in_derived_table=True,
-        has_plsql_blocks=False,
     ),
     Dbms.POSTGRESQL: DialectRules(
         sqlglot_dialect=Dialects.POSTGRES,
@@ -51,7 +49,6 @@ DIALECT_RULES: dict[Dbms, DialectRules] = {
         pages_with_offset_fetch=False,
         accepts_as_before_subquery_alias=True,
         accepts_order_by_in_derived_table=True,
-        has_plsql_blocks=False,
     ),
     Dbms.MYSQL: DialectRules(
         sqlglot_dialect=Dialects.MYSQL,
@@ -59,7 +56,6 @@ DIALECT_RULES: dict[Dbms, DialectRules] = {
         pages_with_offset_fetch=False,
         accepts_as_before_subquery_alias=True,
         accepts_order_by_in_derived_table=True,
-        has_plsql_blocks=False,
     ),
     Dbms.MSSQL: DialectRules(
         sqlglot_dialect=Dialects.TSQL,
@@ -67,7 +63,6 @@ DIALECT_RULES: dict[Dbms, DialectRules] = {
         pages_with_offset_fetch=True,
         accepts_as_before_subquery_alias=True,
         accepts_order_by_in_derived_table=False,
-        has_plsql_blocks=False,
     ),
     Dbms.ORACLE: DialectRules(
         sqlglot_dialect=Dialects.ORACLE,
@@ -75,15 +70,14 @@ DIALECT_RULES: dict[Dbms, DialectRules] = {
         pages_with_offset_fetch=True,
         accepts_as_before_subquery_alias=False,
         accepts_order_by_in_derived_table=True,
-        has_plsql_blocks=True,
     ),
 }
 
 ROW_LIMIT_TOKENS = frozenset({TokenType.LIMIT, TokenType.OFFSET, TokenType.FETCH})
 
 # The oracle tokenizer yields DECLARE, IF and LOOP as plain identifiers, so they compare by token text.
-PLSQL_DECLARE_KEYWORD = "DECLARE"
-PLSQL_END_SUFFIXES_WITHOUT_BLOCK = frozenset({"IF", "LOOP"})
+DECLARE_KEYWORD = "DECLARE"
+END_SUFFIXES_WITHOUT_BLOCK = frozenset({"IF", "LOOP"})
 
 
 def count_query(query: str, dbms: Dbms) -> str:
@@ -127,16 +121,20 @@ def selector_page(query: str, dbms: Dbms, skip: int, limit: int, columns: list[s
 
 def split_script(script: str, dbms: Dbms) -> list[str]:
     """Statements of an <execute> SQL script, cut at the tokenizer's statement-ending semicolons (never
-    one inside a literal or comment). Oracle PL/SQL blocks (DECLARE/BEGIN ... END;) stay whole with their
-    closing semicolon; other statements drop it. Batch-capable systems get the script unchanged."""
+    one inside a literal or comment). Oracle PL/SQL blocks and SQLite/MySQL compound CREATE bodies stay
+    whole with their closing semicolon; other statements drop it. MySQL scripts must omit DELIMITER
+    directives because they are mysql-client syntax, not SQL sent to the server. Batch-capable systems get
+    the script unchanged."""
     rules = DIALECT_RULES[dbms]
     if not rules.executes_one_statement_per_call:
         return [script]
     tokens = sqlglot.tokenize(script, read=rules.sqlglot_dialect)
+    if dbms is Dbms.MYSQL and any(_is_mysql_delimiter_directive(script, token) for token in tokens):
+        raise ValueError("MySQL DELIMITER directives are mysql-client syntax; omit them from <execute> scripts")
     statements: list[str] = []
     start = 0
     while start < len(tokens):
-        block_end = _plsql_block_end(tokens, start) if rules.has_plsql_blocks else None
+        block_end = _compound_statement_end(tokens, start, dbms)
         if block_end is not None:
             statements.append(script[tokens[start].start : tokens[block_end].end + 1])
             start = block_end + 1
@@ -146,6 +144,38 @@ def split_script(script: str, dbms: Dbms) -> list[str]:
             statements.append(script[tokens[start].start : tokens[end - 1].end + 1])
         start = end + 1
     return statements
+
+
+def _compound_statement_end(tokens: list[Token], start: int, dbms: Dbms) -> int | None:
+    if dbms is Dbms.ORACLE:
+        return _compound_block_end(tokens, start)
+    if dbms not in (Dbms.SQLITE, Dbms.MYSQL) or not _is_compound_create(tokens, start, dbms):
+        return None
+    return _compound_block_end(tokens, start)
+
+
+def _is_compound_create(tokens: list[Token], start: int, dbms: Dbms) -> bool:
+    if start >= len(tokens) or tokens[start].token_type is not TokenType.CREATE:
+        return False
+    end = _next_semicolon(tokens, start)
+    object_types = {TokenType.TRIGGER}
+    if dbms is Dbms.MYSQL:
+        object_types.update({TokenType.PROCEDURE, TokenType.FUNCTION})
+    for token in tokens[start + 1 : end]:
+        if token.token_type is TokenType.TABLE:
+            return False
+        if token.token_type in object_types or (
+            dbms is Dbms.MYSQL and token.token_type is TokenType.VAR and token.text.upper() == "EVENT"
+        ):
+            return True
+    return False
+
+
+def _is_mysql_delimiter_directive(script: str, token: Token) -> bool:
+    if token.token_type is not TokenType.VAR or token.text.upper() != "DELIMITER":
+        return False
+    line_start = script.rfind("\n", 0, token.start) + 1
+    return not script[line_start : token.start].strip()
 
 
 def _parse_selector(query: str, dbms: Dbms) -> exp.Query | None:
@@ -287,20 +317,20 @@ def _next_semicolon(tokens: list[Token], start: int) -> int:
     return index
 
 
-def _opens_plsql_block(tokens: list[Token], start: int) -> bool:
+def _opens_compound_block(tokens: list[Token], start: int) -> bool:
     """DECLARE or BEGIN before the statement's first semicolon: an anonymous block, or e.g.
     CREATE TRIGGER ... BEGIN ... END;"""
     return any(
-        token.token_type is TokenType.BEGIN or token.text.upper() == PLSQL_DECLARE_KEYWORD
+        token.token_type is TokenType.BEGIN or token.text.upper() == DECLARE_KEYWORD
         for token in tokens[start : _next_semicolon(tokens, start)]
     )
 
 
-def _plsql_block_end(tokens: list[Token], start: int) -> int | None:
-    """Index of the semicolon closing the PL/SQL block that starts at ``start``, or None for a plain
+def _compound_block_end(tokens: list[Token], start: int) -> int | None:
+    """Index of the semicolon closing a compound block that starts at ``start``, or None for a plain
     statement. BEGIN and CASE open a nesting level, END closes one; END IF / END LOOP close none, and
     END CASE is one END."""
-    if not _opens_plsql_block(tokens, start):
+    if not _opens_compound_block(tokens, start):
         return None
     open_levels = 0
     closed = False
@@ -314,9 +344,9 @@ def _plsql_block_end(tokens: list[Token], start: int) -> int | None:
             open_levels += 1
         elif token.token_type is TokenType.END:
             names_its_block = following is not None and (
-                following.text.upper() in PLSQL_END_SUFFIXES_WITHOUT_BLOCK or following.token_type is TokenType.CASE
+                following.text.upper() in END_SUFFIXES_WITHOUT_BLOCK or following.token_type is TokenType.CASE
             )
-            if following is None or following.text.upper() not in PLSQL_END_SUFFIXES_WITHOUT_BLOCK:
+            if following is None or following.text.upper() not in END_SUFFIXES_WITHOUT_BLOCK:
                 open_levels -= 1
                 closed = open_levels == 0
             if names_its_block:
