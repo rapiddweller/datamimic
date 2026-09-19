@@ -202,6 +202,21 @@ def test_split_script_keeps_mysql_compound_create_body_whole(statement: str) -> 
     ]
 
 
+@pytest.mark.parametrize(
+    "loop_body",
+    [
+        "WHILE NEW.id < 2 DO SET NEW.id = NEW.id + 1; END WHILE;",
+        "REPEAT SET NEW.id = NEW.id + 1; UNTIL NEW.id >= 2 END REPEAT;",
+    ],
+)
+def test_split_script_keeps_mysql_trigger_loops_inside_outer_begin(loop_body: str) -> None:
+    statement = f"CREATE TRIGGER t BEFORE INSERT ON x FOR EACH ROW BEGIN {loop_body} END;"
+    assert split_script(f"{statement} INSERT INTO x VALUES (1);", Dbms.MYSQL) == [
+        statement,
+        "INSERT INTO x VALUES (1)",
+    ]
+
+
 def test_split_script_rejects_mysql_client_delimiter_directive() -> None:
     assert split_script("SELECT 'DELIMITER';", Dbms.MYSQL) == ["SELECT 'DELIMITER'"]
     assert split_script("SELECT delimiter FROM t;", Dbms.MYSQL) == ["SELECT delimiter FROM t"]

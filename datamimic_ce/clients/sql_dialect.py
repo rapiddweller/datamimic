@@ -75,9 +75,9 @@ DIALECT_RULES: dict[Dbms, DialectRules] = {
 
 ROW_LIMIT_TOKENS = frozenset({TokenType.LIMIT, TokenType.OFFSET, TokenType.FETCH})
 
-# The oracle tokenizer yields DECLARE, IF and LOOP as plain identifiers, so they compare by token text.
+# These block keywords have no dedicated sqlglot token types, so they compare by token text.
 DECLARE_KEYWORD = "DECLARE"
-END_SUFFIXES_WITHOUT_BLOCK = frozenset({"IF", "LOOP"})
+END_SUFFIXES_WITHOUT_BLOCK = frozenset({"IF", "LOOP", "REPEAT", "WHILE"})
 
 
 def count_query(query: str, dbms: Dbms) -> str:
