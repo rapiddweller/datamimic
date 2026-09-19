@@ -83,9 +83,16 @@ class DataSourceRegistry:
             else:
                 raise ValueError(f"JSON file '{key}' must contain a list of objects or a dictionary")
         elif source_format is SourceFileFormat.XML:
-            return FileContentStorage.load_file_with_custom_func(
+            document = FileContentStorage.load_file_with_custom_func(
                 key, lambda: xmltodict.parse(Path(key).read_bytes(), attr_prefix="@", cdata_key="#text")
             )
+            # <list><item>...</item></list> is a row list; any other document is one row
+            if not (document.get("list") and document["list"].get("item")):
+                return [document]
+            items = document["list"]["item"]
+            if isinstance(items, dict):
+                return [items]
+            return items if isinstance(items, list) else []
         else:
             raise ValueError(f"Data source '{key}' is not supported is not handled by DataSourceRegistry")
 
@@ -965,22 +972,7 @@ class DataSourceRegistry:
         """
         cyclic = cyclic if cyclic is not None else False
         # Read the XML data from a file
-        file_data = DataSourceRegistry._get_source(str(file_path), ",", SourceFileFormat.XML)
-        # Handle the case where data might be None
-        if file_data is None:
-            return []
-
-        # Extract items from list structure if present
-        if isinstance(file_data, dict) and file_data.get("list") and file_data.get("list", {}).get("item"):
-            items = file_data["list"]["item"]
-        else:
-            items = file_data
-
-        # Convert single item to list if needed
-        if isinstance(items, dict):
-            items = [items]
-        elif not isinstance(items, list):
-            items = []
+        items = DataSourceRegistry._get_source(str(file_path), ",", SourceFileFormat.XML)
 
         # Apply pagination if needed
         pagination = (
