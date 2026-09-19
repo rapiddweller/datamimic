@@ -154,7 +154,7 @@ CE and EE are **not the same engine with a feature flag**. They share the DSL an
 | Capability | Community Edition (CE) | Enterprise Platform (EE) |
 |---|---|---|
 | Deterministic data generation | ✅ | ✅ |
-| Deterministic seeding in the DSL | ✅ entities + seed-aware standalone literal `<key generator>`s (4.0.0; cryptographic generators excluded by design) | ✅ same, plus sandboxed script expressions and stdlib `random` calls |
+| Deterministic seeding in the DSL (`<setup rngSeed>`) | ✅ entities, generators and script expressions | ✅ same, identical across distributed workers |
 | **Pseudonymization — seeded** *(can support GDPR Art. 4(5) / Art. 25 / Art. 32 controls)* | ✅ manual model | ✅ automated via DataWorkbench |
 | **Pseudonymization — non-seeded (privacy-maximized)** | ✅ manual model | ✅ automated via DataWorkbench |
 | Python API + XML pipelines | ✅ | ✅ |
@@ -260,20 +260,14 @@ Developers and data engineers who need deterministic synthetic data generation o
 
 Most test data tools produce random output. That breaks regression tests, audit trails, and cross-team reproducibility.
 
-**DATAMIMIC's determinism contract (CE):**
+**How it works in CE:**
 
-CE is deterministic by design and reproducible under defined conditions. Cross-machine byte-identical reproducibility is a stronger engineering target that is currently developed and verified more deeply in the Enterprise core.
+- Set `<setup rngSeed="N">` and the same model produces the same data on every run: every generator, entity and script expression, including `random`, `uuid`, `fake` and the current date and time (fixed at `2025-01-01 12:00`). Without a seed, every run is different.
+- `distribution="ordered"` reads a source in file order; `distribution="random"` shuffles it, reproducibly with a seed.
+- The Python facade `generate_domain(...)` returns `determinism_proof.content_hash`: the same hash means the same data.
+- Reproducible on the same Python, dependencies and machine. Every generator and script path is replayed in two separate processes on each CI run ([`test_determinism_seed_scenarios`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/integration_tests/test_determinism_seed_scenarios)).
 
-- **Same engine version + same model + same seed + same runtime = same output.** "Same runtime" means the same Python and dependency versions, operating system, timezone and platform encoding. Holds for the `generate_domain` facade, registered domain services, and seed-aware literal generators. Replay is verified per service on every CI run (same host, same runtime) via [`tests_ce/architecture/test_service_replay_determinism.py`](https://github.com/rapiddweller/datamimic/blob/development/tests_ce/architecture/test_service_replay_determinism.py).
-- **DSL-level seeding:** with `<setup rngSeed="N">` the same model produces the same data on every run (same Python, same machine): every generator, entity and script expression, including `random`, `uuid`, `fake` and the current date and time, which is fixed at `2025-01-01 12:00`. `<variable rngSeed="…">` overrides the seed for one block; without a seed every run is random. Proven by running every generator and script path in two separate processes: [`tests_ce/integration_tests/test_determinism_seed_scenarios`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/integration_tests/test_determinism_seed_scenarios).
-- **Verification scope:** epoch/timestamp conversions currently use the host's local timezone, and seeded output is not yet verified across operating systems, CPU architectures, Python versions or dependency versions.
-- **Source reads:** `distribution="ordered"` reads a data source in stable file order; `distribution="random"` shuffles but replays identically when `<setup rngSeed>` is set (without a seed the shuffle is non-deterministic by design, for privacy-maximized one-time deliveries). Deterministic shuffling across distributed / multi-process execution is EE.
-- **Content hash on facade output.** `generate_domain(...)` returns `determinism_proof.content_hash`, a SHA-256 of the generated items: the same hash means the same data. It covers that one response and is returned to the caller, not stored.
-- **UUIDv5 entity identifiers** = stable across runs and machines.
-- **Single wall-clock SPOT** (`now_utc_naive()`); raw `datetime.now()` is forbidden in production code and the clock-drift architecture gate fails CI on any reintroduction.
-- **RNG/clock runtime SPOTs** in `datamimic_ce/domains/domain_core/runtime/`: `spawn_rng` (reproducible child-RNG derivation), `now_utc_naive`, and `resolve_clock`. The same contract vocabulary the Enterprise Platform enforces end-to-end.
-
-**The Enterprise Platform (EE) goes further:** beyond the CE contract, EE makes the whole execution environment deterministic — a configurable/frozen wall-clock (not just CE's fixed anchor), and script-expression randomness keyed per row, so sandboxed script expressions replay identically across distributed workers, as does any stdlib `random` call.
+**EE** adds a configurable clock and keeps seeded output identical across distributed workers and multi-system runs.
 
 ```python
 from datamimic_ce.domains.facade import generate_domain
@@ -314,10 +308,8 @@ assert card_a.bic == card_b.bic and card_a.card_number == card_b.card_number
 | **Architecture gates in CI** | ✅ facade replay + service replay (every service) + clock drift | ✅ 5+ gates (RNG ownership, clock drift, DSL eval, seeded-mode propagation, dataset SPOT) |
 | **Custom XML pipelines** (seeded via `<setup rngSeed>`) | ✅ reproducible on the same runtime (single-process) | ✅ byte-identical, distributed |
 | **Multi-system coordinated execution** (Oracle + MongoDB + Kafka in one run) | — | ✅ byte-identical end-to-end |
-| **Seeded vs unseeded pseudonymization** (deterministic clock anchor vs CSPRNG live-clock) | — | ✅ |
+| **Seeded vs unseeded pseudonymization** | ✅ manual model | ✅ automated |
 | **Threat-led / TLPT-grade audit evidence** (full contract enforcement, per-stage execution logging) | — | ✅ |
-
-CE delivers deterministic, CI-tested replay for the synthetic-data generation surface (facade, services, seed-aware generators) and, as of 4.0.0, for seeded XML descriptors executed single-process — verified under the runtime conditions CE tests, not yet across operating systems, CPU architectures, Python or dependency versions. The Enterprise Platform extends the same contract to distributed and multi-system execution with referential integrity and the seeded/unseeded pseudonymization modes, and adds the five drift-gates that lock the contract end-to-end for regulated deployments.
 
 ---
 
@@ -398,15 +390,13 @@ DATAMIMIC supports two pseudonymization modes with different privacy postures:
 In CE, PII fields are identified and modeled manually in the XML pipeline:
 
 ```xml
-<setup defaultSeparator=",">
+<setup defaultSeparator="," rngSeed="42">
   <generate name="customers" source="customer_export.csv" target="CSV" distribution="ordered">
-    <!-- distribution="ordered" reads the source in a stable order — required so the
-         Nth source row maps to the same seeded synthetic value on every run. The
-         default ("random") shuffles non-deterministically and would break it.
-         rngSeed on the <variable> makes the synthetic values reproducible; drop
-         rngSeed for the privacy-maximized (non-deterministic) mode. -->
-    <variable name="p"   entity="Person"      dataset="DE" rngSeed="42" />
-    <variable name="acc" entity="BankAccount" dataset="DE" rngSeed="42" />
+    <!-- rngSeed makes every run produce the same pseudonyms; remove it for a new
+         mapping per run. distribution="ordered" keeps source row N mapped to the
+         same pseudonym. -->
+    <variable name="p"   entity="Person"      dataset="DE" />
+    <variable name="acc" entity="BankAccount" dataset="DE" />
 
     <key name="first_name" script="p.given_name" />
     <key name="last_name"  script="p.family_name" />
@@ -436,18 +426,18 @@ datamimic run ./pseudonymize-customers/datamimic.xml
 
 `source` is a controlled export or staging input — never a live production connection.
 
-With `rngSeed` set: same source record → same pseudonymized output on every run. Stable for regression testing.
+With `rngSeed`: the same source record gives the same pseudonym on every run, for regression testing.
 
-Without `rngSeed`: non-deterministic output — no reversible mapping exists at the field level. Stronger privacy posture for one-time delivery scenarios.
+Without `rngSeed`: a new mapping on every run, for one-time deliveries.
 
 > **In the Enterprise Platform (EE):** the DataWorkbench PII scanner automatically scans source schemas, assigns probability scores to each field, and flags candidates above a configurable threshold. Flagged fields are wired into the pseudonymization model automatically — no manual field mapping required.
 
 
 
 ```xml
-<setup>
+<setup rngSeed="42">
   <generate name="patients" count="1000" target="CSV">
-    <variable name="patient" entity="Patient" dataset="US" ageMin="60" ageMax="80" rngSeed="42" />
+    <variable name="patient" entity="Patient" dataset="US" ageMin="60" ageMax="80" />
     <key name="full_name"   script="patient.full_name" />
     <key name="age"         script="patient.age" />
     <array name="conditions" script="patient.conditions" />
