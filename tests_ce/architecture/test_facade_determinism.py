@@ -78,8 +78,10 @@ def test_facade_provenance_hash_present(domain: str) -> None:
     assert isinstance(proof.get("content_hash"), str) and len(proof["content_hash"]) >= 32, (
         f"Facade domain {domain!r}: determinism_proof.content_hash missing or too short."
     )
+    assert proof["engine_version"] != "unknown"
     assert proof["engine_version"] == get_datamimic_lib_version()
     assert proof["python_version"] == platform.python_version()
+    assert proof["faker_version"] != "unknown"
     assert proof["faker_version"] == get_datamimic_lib_version("faker")
 
 
