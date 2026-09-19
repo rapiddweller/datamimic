@@ -41,12 +41,15 @@
     },
     "determinism_proof": {
       "type": "object",
-      "required": ["algorithm", "seed_canonical", "content_hash"],
+      "required": ["algorithm", "seed_canonical", "content_hash", "engine_version", "python_version", "faker_version"],
       "additionalProperties": false,
       "properties": {
         "algorithm": {"type": "string", "enum": ["uuid5+sha256"]},
         "seed_canonical": {"type": "string"},
-        "content_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        "content_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "engine_version": {"type": "string", "minLength": 1},
+        "python_version": {"type": "string", "minLength": 1},
+        "faker_version": {"type": "string", "minLength": 1}
       }
     }
   }
