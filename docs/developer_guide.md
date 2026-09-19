@@ -64,6 +64,20 @@ values, weights = load_weighted_values_try_dataset(
 )
 ```
 
+### Database Source Paging (TL;DR)
+
+Paged reads from an RDBMS source (`pageSize`, `numProcess`) use `OFFSET`/`LIMIT`, which is only
+stable under a unique total order. CE therefore always orders by a key (issue #228):
+
+- table source (`type=`): the primary key (all its columns), or every column when the table has none
+- `selector=`: every output column (`ORDER BY 1, 2, ..., n`), because an arbitrary query has no known key
+
+Pages are disjoint across pages and workers, so no shard manifest is needed and multiprocess reads
+stay safe. Keyset paging with shard leases for very large sources is an Enterprise feature.
+Limitation: a keyless table or selector that returns a column type the database cannot sort
+(PostgreSQL `json`, Oracle `CLOB`, SQL Server `text`/`ntext`/`image`/`xml`) fails. Add a primary key,
+or select or cast those columns.
+
 ### Domain Core Components
 
 The core components define the base interfaces and abstract classes:
