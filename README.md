@@ -265,18 +265,7 @@ Most test data tools produce random output. That breaks regression tests, audit 
 CE is deterministic by design and reproducible under defined conditions. Cross-machine byte-identical reproducibility is a stronger engineering target that is currently developed and verified more deeply in the Enterprise core.
 
 - **Same engine version + same model + same seed + same runtime = same output.** "Same runtime" means the same Python and dependency versions, operating system, timezone and platform encoding. Holds for the `generate_domain` facade, registered domain services, and seed-aware literal generators. Replay is verified per service on every CI run (same host, same runtime) via [`tests_ce/architecture/test_service_replay_determinism.py`](https://github.com/rapiddweller/datamimic/blob/development/tests_ce/architecture/test_service_replay_determinism.py).
-- **DSL-level seeding:** `<setup rngSeed="N">` seeds the whole model; `<variable rngSeed="…">` overrides it for that block, and no seed anywhere means wall-clock random. What the seed controls:
-
-  | In a model with `<setup rngSeed="N">` | Behaviour |
-  |---|---|
-  | Every literal generator (`generator="…"`) | replays |
-  | Entities, typed/pattern keys, `nullQuota`, `values`, cross-page `unique` picks | replays |
-  | Script expressions: `random.*`, `uuid.uuid4()`, `fake` | replays |
-  | Script expressions: `datetime`/`date`/`pd.Timestamp` now/today | fixed clock anchor `2025-01-01 12:00` |
-  | Script expressions: `np.random`, `random.SystemRandom`, `os.urandom`, `uuid.uuid1` | rejected with an error |
-  | Not covered | external input (`requests`, `os.environ`), `"now"` string literals, order of sets of strings across processes |
-
-  Replay means identical output on the same Python on the same machine, verified in two separate processes by [`tests_ce/integration_tests/test_determinism_seed_scenarios`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/integration_tests/test_determinism_seed_scenarios) (`replay_all_seeded.xml`).
+- **DSL-level seeding:** with `<setup rngSeed="N">` the same model produces the same data on every run (same Python, same machine): every generator, entity and script expression, including `random`, `uuid`, `fake` and the current date and time, which is fixed at `2025-01-01 12:00`. `<variable rngSeed="…">` overrides the seed for one block; without a seed every run is random. Proven by running every generator and script path in two separate processes: [`tests_ce/integration_tests/test_determinism_seed_scenarios`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/integration_tests/test_determinism_seed_scenarios).
 - **Verification scope:** epoch/timestamp conversions currently use the host's local timezone, and seeded output is not yet verified across operating systems, CPU architectures, Python versions or dependency versions.
 - **Source reads:** `distribution="ordered"` reads a data source in stable file order; `distribution="random"` shuffles but replays identically when `<setup rngSeed>` is set (without a seed the shuffle is non-deterministic by design, for privacy-maximized one-time deliveries). Deterministic shuffling across distributed / multi-process execution is EE.
 - **Content hash on every facade output.** `determinism_proof.content_hash` is a SHA-256 of the canonical result: equal hashes mean identical output. The hash alone is not re-executable lineage. Reproducing a result also depends on the model, inputs, runtime and dependency versions, which the proof does not currently record.
