@@ -1,0 +1,58 @@
+<setup rngSeed="42">
+    <!-- Every registered literal generator (except SequenceTableGenerator: needs a database) and every
+         random / clock path of the script globals. test_every_seeded_path_replays_across_processes runs
+         it in two separate Python processes and expects identical output. -->
+    <generate name="literal" count="5" target="">
+        <key name="g_AcademicTitleGenerator" generator="AcademicTitleGenerator"/>
+        <key name="g_BinaryGenerator" generator="BinaryGenerator"/>
+        <key name="g_BirthdateGenerator" generator="BirthdateGenerator"/>
+        <key name="g_BooleanGenerator" generator="BooleanGenerator"/>
+        <key name="g_CNPJGenerator" generator="CNPJGenerator"/>
+        <key name="g_CPFGenerator" generator="CPFGenerator"/>
+        <key name="g_ColorGenerator" generator="ColorGenerator"/>
+        <key name="g_CompanyNameGenerator" generator="CompanyNameGenerator"/>
+        <key name="g_DataFakerGenerator" generator="DataFakerGenerator(method='name')"/>
+        <key name="g_DateTimeGenerator_random" generator="DateTimeGenerator(min='2000-01-01 00:00:00', max='2020-12-31 23:59:59', random=True)"/>
+        <key name="g_DateTimeGenerator_current" generator="DateTimeGenerator"/>
+        <key name="g_DepartmentNameGenerator" generator="DepartmentNameGenerator"/>
+        <key name="g_DomainGenerator" generator="DomainGenerator"/>
+        <key name="g_EANGenerator" generator="EANGenerator"/>
+        <key name="g_EmailAddressGenerator" generator="EmailAddressGenerator"/>
+        <key name="g_FamilyNameGenerator" generator="FamilyNameGenerator"/>
+        <key name="g_FloatGenerator" generator="FloatGenerator"/>
+        <key name="g_GenderGenerator" generator="GenderGenerator"/>
+        <key name="g_GivenNameGenerator" generator="GivenNameGenerator"/>
+        <key name="g_GlobalIncrementGenerator" generator="GlobalIncrementGenerator"/>
+        <key name="g_HashGenerator" generator="HashGenerator"/>
+        <key name="g_IncrementGenerator" generator="IncrementGenerator"/>
+        <key name="g_IntegerGenerator" generator="IntegerGenerator"/>
+        <key name="g_NobilityTitleGenerator" generator="NobilityTitleGenerator"/>
+        <key name="g_PasswordGenerator" generator="PasswordGenerator"/>
+        <key name="g_PhoneNumberGenerator" generator="PhoneNumberGenerator"/>
+        <key name="g_PrefixedIdGenerator" generator="PrefixedIdGenerator(prefix='C', body_pattern='[0-9]{6}')"/>
+        <key name="g_SSNGenerator" generator="SSNGenerator"/>
+        <key name="g_SectorGenerator" generator="SectorGenerator"/>
+        <key name="g_StateTransitionGenerator" generator="StateTransitionGenerator(transitions='A->B:1, A->C:1, B->A:1, C->A:1')"/>
+        <key name="g_StreetNameGenerator" generator="StreetNameGenerator"/>
+        <key name="g_StringGenerator" generator="StringGenerator"/>
+        <key name="g_TokenGenerator" generator="TokenGenerator"/>
+        <key name="g_UUIDGenerator" generator="UUIDGenerator"/>
+        <key name="g_UrlGenerator" generator="UrlGenerator"/>
+    </generate>
+    <generate name="script" count="5" target="">
+        <key name="random_randint" script="random.randint(1, 10**9)"/>
+        <key name="random_random" script="random.random()"/>
+        <key name="random_choice" script="random.choice(['a', 'b', 'c', 'd', 'e', 'f', 'g'])"/>
+        <key name="random_sample" script="str(random.sample(range(100), 3))"/>
+        <key name="random_gauss" script="random.gauss(0, 1)"/>
+        <key name="random_Random_unseeded" script="random.Random().random()"/>
+        <key name="uuid_uuid4" script="str(uuid.uuid4())"/>
+        <key name="fake_name" script="fake.name()"/>
+        <key name="fake_address" script="fake.address()"/>
+        <key name="datetime_now" script="datetime.datetime.now().isoformat()"/>
+        <key name="datetime_utcnow" script="datetime.datetime.utcnow().isoformat()"/>
+        <key name="datetime_today" script="datetime.datetime.today().isoformat()"/>
+        <key name="date_today" script="datetime.date.today().isoformat()"/>
+        <key name="pd_Timestamp_now" script="pd.Timestamp.now().isoformat()"/>
+    </generate>
+</setup>

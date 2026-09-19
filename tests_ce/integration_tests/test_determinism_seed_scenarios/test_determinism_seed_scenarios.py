@@ -20,7 +20,8 @@ The three models differ only in their seed wiring:
 3. ``no_seed.xml``                 — no seed anywhere               -> two runs differ.
 
 Hand-written models: ``dsl_constructs_seeded.xml`` (non-entity DSL constructs) and
-``script_globals_seeded.xml`` / ``script_globals_unseeded.xml`` (stdlib names inside script expressions).
+``script_globals_seeded.xml`` / ``script_globals_unseeded.xml`` (stdlib names inside script expressions),
+``replay_all_seeded.xml`` (every literal generator and script random/clock path, replayed across processes).
 
 Regenerate the committed models after adding/removing an entity::
 
@@ -29,11 +30,17 @@ Regenerate the committed models after adding/removing an entity::
 
 from __future__ import annotations
 
+import json
+import os
+import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
 from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
 from tests_ce.integration_tests.dsl_model_builder import build_all_entities_seeded_xml
 
 _TEST_DIR = Path(__file__).resolve().parent
@@ -131,6 +138,48 @@ def test_unseeded_script_globals_stay_random() -> None:
     second = _run(_TEST_DIR, "script_globals_unseeded.xml")["script_globals"]
     assert [row["uuid_value"] for row in first] != [row["uuid_value"] for row in second]
     assert [row["rand_int"] for row in first] != [row["rand_int"] for row in second]
+
+
+_REPO_ROOT = _TEST_DIR.parents[2]
+_RUN_IN_FRESH_PROCESS = """
+import json, sys
+from pathlib import Path
+from datamimic_ce.data_mimic_test import DataMimicTest
+engine = DataMimicTest(test_dir=Path(sys.argv[1]), filename=sys.argv[2], capture_test_result=True)
+engine.test_with_timer()
+print("RESULT" + json.dumps(engine.capture_result(), default=str, sort_keys=True))
+"""
+
+
+def _run_in_fresh_process(filename: str) -> dict:
+    completed = subprocess.run(
+        [sys.executable, "-c", _RUN_IN_FRESH_PROCESS, str(_TEST_DIR), filename],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=True,
+        cwd=_REPO_ROOT,
+        env={**os.environ, "PYTHONPATH": str(_REPO_ROOT)},
+    )
+    result_line = next(line for line in completed.stdout.splitlines() if line.startswith("RESULT"))
+    return json.loads(result_line.removeprefix("RESULT"))
+
+
+def test_replay_model_covers_every_literal_generator() -> None:
+    model = (_TEST_DIR / "replay_all_seeded.xml").read_text(encoding="utf-8")
+    used = set(re.findall(r'generator="([A-Za-z]+Generator)', model))
+    assert set(generator_namespace()) - {"SequenceTableGenerator"} == used
+
+
+def test_every_seeded_path_replays_across_processes() -> None:
+    """Same Python, same machine, two separate processes: every literal generator and every random /
+    clock path of the script globals produces identical output under <setup rngSeed>."""
+    first = _run_in_fresh_process("replay_all_seeded.xml")
+    second = _run_in_fresh_process("replay_all_seeded.xml")
+    assert first["literal"] and first["script"]
+    for product in ("literal", "script"):
+        for field in first[product][0]:
+            assert [row[field] for row in first[product]] == [row[field] for row in second[product]], field
 
 
 if __name__ == "__main__":

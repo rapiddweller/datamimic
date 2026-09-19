@@ -265,8 +265,18 @@ Most test data tools produce random output. That breaks regression tests, audit 
 CE is deterministic by design and reproducible under defined conditions. Cross-machine byte-identical reproducibility is a stronger engineering target that is currently developed and verified more deeply in the Enterprise core.
 
 - **Same engine version + same model + same seed + same runtime = same output.** "Same runtime" means the same Python and dependency versions, operating system, timezone and platform encoding. Holds for the `generate_domain` facade, registered domain services, and seed-aware literal generators. Replay is verified per service on every CI run (same host, same runtime) via [`tests_ce/architecture/test_service_replay_determinism.py`](https://github.com/rapiddweller/datamimic/blob/development/tests_ce/architecture/test_service_replay_determinism.py).
-- **DSL-level seeding:** `<setup rngSeed="N">` makes the model deterministic within the policy below — every seed-less `<variable entity="…">` derives a reproducible child RNG from it, and `<variable rngSeed="…">` overrides it for that block (no seed anywhere → wall-clock random). Verified by [`tests_ce/integration_tests/test_determinism_seed_scenarios`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/integration_tests/test_determinism_seed_scenarios). As of 4.0.0 the same seed also reaches standalone literal generators (`<key generator="…">`), typed/pattern keys, `DateTimeGenerator`, and cross-page `unique` picks. In script expressions the seed controls `random.*` (also `random.Random()` without a seed), `uuid.uuid4()` and `fake`; `datetime.datetime.now/utcnow/today`, `datetime.date.today` and `pd.Timestamp.now/utcnow/today` return the fixed clock anchor, and `random.seed()` is ignored. Entropy the seed cannot replay is rejected with an error: `random.SystemRandom`, `np.random`, `os.urandom`, `uuid.uuid1`. Outside the contract: external input (`requests`, `os.environ`), `"now"` string literals such as `pd.to_datetime("now")`, and set-of-string iteration order across processes. Policy: `datamimic_ce/contexts/expression_globals.py`, gated by `tests_ce/unit_tests/test_contexts/test_expression_globals.py`.
-- **Cryptographic generators:** `PasswordGenerator`, `TokenGenerator` and `HashGenerator` intentionally use system entropy and do not replay under a seed.
+- **DSL-level seeding:** `<setup rngSeed="N">` seeds the whole model; `<variable rngSeed="…">` overrides it for that block, and no seed anywhere means wall-clock random. What the seed controls:
+
+  | In a model with `<setup rngSeed="N">` | Behaviour |
+  |---|---|
+  | Every literal generator (`generator="…"`) | replays |
+  | Entities, typed/pattern keys, `nullQuota`, `values`, cross-page `unique` picks | replays |
+  | Script expressions: `random.*`, `uuid.uuid4()`, `fake` | replays |
+  | Script expressions: `datetime`/`date`/`pd.Timestamp` now/today | fixed clock anchor `2025-01-01 12:00` |
+  | Script expressions: `np.random`, `random.SystemRandom`, `os.urandom`, `uuid.uuid1` | rejected with an error |
+  | Not covered | external input (`requests`, `os.environ`), `"now"` string literals, order of sets of strings across processes |
+
+  Replay means identical output on the same Python on the same machine, verified in two separate processes by [`tests_ce/integration_tests/test_determinism_seed_scenarios`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/integration_tests/test_determinism_seed_scenarios) (`replay_all_seeded.xml`).
 - **Verification scope:** epoch/timestamp conversions currently use the host's local timezone, and seeded output is not yet verified across operating systems, CPU architectures, Python versions or dependency versions.
 - **Source reads:** `distribution="ordered"` reads a data source in stable file order; `distribution="random"` shuffles but replays identically when `<setup rngSeed>` is set (without a seed the shuffle is non-deterministic by design, for privacy-maximized one-time deliveries). Deterministic shuffling across distributed / multi-process execution is EE.
 - **Content hash on every facade output.** `determinism_proof.content_hash` is a SHA-256 of the canonical result: equal hashes mean identical output. The hash alone is not re-executable lineage. Reproducing a result also depends on the model, inputs, runtime and dependency versions, which the proof does not currently record.
@@ -310,7 +320,7 @@ assert card_a.bic == card_b.bic and card_a.card_number == card_b.card_number
 |---|---|---|
 | **Facade** (`generate_domain` registered domains) | ✅ replay-identical, CI-gated (same runtime) | ✅ byte-identical |
 | **Domain services** (direct use with seeded `rng=...`) | ✅ replay-identical, CI-gated (same runtime) | ✅ byte-identical |
-| **Literal generators** (seed-aware) | ✅ replay-identical (same runtime); Password / Token / Hash non-deterministic by design | ✅ byte-identical |
+| **Literal generators** | ✅ replay-identical (same runtime) | ✅ byte-identical |
 | **RNG / clock runtime SPOTs** | ✅ `spawn_rng`, `now_utc_naive`, `resolve_clock` | ✅ same contract, enforced end-to-end |
 | **Architecture gates in CI** | ✅ facade replay + service replay (every service) + clock drift | ✅ 5+ gates (RNG ownership, clock drift, DSL eval, seeded-mode propagation, dataset SPOT) |
 | **Custom XML pipelines** (seeded via `<setup rngSeed>`) | ✅ reproducible on the same runtime (single-process) | ✅ byte-identical, distributed |
