@@ -1,0 +1,147 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "COMP-ENGINE-TASKS",
+      "label": "tasks",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.tasks"
+      ],
+      "responsibilities": [
+        "setup, generate, variable and key tasks; single-process policy"
+      ],
+      "forbidden_responsibilities": [],
+      "provenance": [
+        "docs/architecture/engine.md"
+      ],
+      "requires": [
+        {
+          "component": "contexts",
+          "rationale": "Tasks run inside setup and generation contexts."
+        },
+        {
+          "component": "product_storage",
+          "rationale": "Tasks write to memstores."
+        },
+        {
+          "component": "services",
+          "rationale": "Tasks evaluate source scripts."
+        },
+        {
+          "component": "workers",
+          "rationale": "The generate task hands pages to workers."
+        }
+      ],
+      "public": [
+        "datamimic_ce.tasks.setup_task:SetupTask"
+      ]
+    },
+    {
+      "id": "COMP-ENGINE-WORKERS",
+      "label": "workers",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.workers"
+      ],
+      "responsibilities": [
+        "page-wise generation workers (multiprocessing and Ray)"
+      ],
+      "forbidden_responsibilities": [],
+      "provenance": [
+        "docs/architecture/engine.md"
+      ],
+      "requires": [
+        {
+          "component": "contexts",
+          "rationale": "Workers run pages inside generation contexts."
+        },
+        {
+          "component": "tasks",
+          "rationale": "Debt: workers call back into tasks, a cycle with tasks -> workers; target: workers receive what they run and never import tasks."
+        }
+      ]
+    },
+    {
+      "id": "COMP-ENGINE-CONTEXTS",
+      "label": "contexts",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.contexts"
+      ],
+      "responsibilities": [
+        "setup and generation contexts; script-expression namespace"
+      ],
+      "forbidden_responsibilities": [],
+      "provenance": [
+        "docs/architecture/engine.md"
+      ],
+      "requires": [
+        {
+          "component": "product_storage",
+          "rationale": "The setup context owns the memstore manager."
+        }
+      ],
+      "public": [
+        "datamimic_ce.contexts.context:Context",
+        "datamimic_ce.contexts.geniter_context:GenIterContext",
+        "datamimic_ce.contexts.setup_context:SetupContext"
+      ]
+    },
+    {
+      "id": "COMP-ENGINE-SERVICES",
+      "label": "services",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.services"
+      ],
+      "responsibilities": [
+        "source-script evaluation"
+      ],
+      "forbidden_responsibilities": [],
+      "provenance": [
+        "docs/architecture/engine.md"
+      ],
+      "requires": [
+        {
+          "component": "contexts",
+          "rationale": "Source-script evaluation reads the context."
+        }
+      ],
+      "public": [
+        "datamimic_ce.services.source_script_evaluator:evaluate_source_template",
+        "datamimic_ce.services.source_script_evaluator:interpolate_variables"
+      ]
+    },
+    {
+      "id": "COMP-ENGINE-PRODUCT-STORAGE",
+      "label": "product_storage",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.product_storage"
+      ],
+      "responsibilities": [
+        "memstore and product storage"
+      ],
+      "forbidden_responsibilities": [],
+      "provenance": [
+        "docs/architecture/engine.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.product_storage.memstore_manager:MemstoreManager"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "ENGINE-REQUIRES-COMPLETE",
+      "kind": "complete_requires",
+      "rationale": "Inside engine, an edge nobody declared is an accident; absence forbids.",
+      "provenance": [
+        "docs/architecture/engine.md"
+      ],
+      "decided_by": "architect"
+    }
+  ]
+}

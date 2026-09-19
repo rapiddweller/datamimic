@@ -247,6 +247,11 @@ registration details.
   local Postgres/Mongo (credentials: `local.env.properties` at the repo root).
 - Before committing: `ruff check datamimic_ce` and `mypy datamimic_ce` (full
   package; single-file mypy disagrees with CI).
+- Architecture: `docs/architecture/architecture.md` shows the seven components and the
+  run lifecycle; `architecture-contract.json` is the SPOT. `archkeel validate` (also in
+  `make check` and CI) fails on a new edge between components, an import of a non-public
+  name from another component, or a third-party library outside its owners. Fix the code;
+  change the contract only as a deliberate, reviewed architecture decision.
 - The authoring toolset (linter, reference, dry-run, scaffold)
   lives in `datamimic_ce/authoring/`; the MCP server in `datamimic_ce/mcp/`.
 - Commit messages carry no AI or tool attribution lines.

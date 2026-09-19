@@ -1,4 +1,4 @@
-.PHONY: help install test test-unit test-integration test-functional coverage typecheck lint format check clean
+.PHONY: help install test test-unit test-integration test-functional coverage typecheck lint format architecture check clean
 
 PACKAGE := datamimic_ce
 TESTS := tests_ce
@@ -14,6 +14,7 @@ help:
 	@echo "  typecheck         Run mypy against $(PACKAGE)"
 	@echo "  lint              Run ruff and pylint against $(PACKAGE)"
 	@echo "  format            Auto-format code with ruff"
+	@echo "  architecture      Check the architecture contract (archkeel) and write its report"
 	@echo "  check             Run lint, typecheck, and tests"
 	@echo "  clean             Remove caches and build artifacts"
 
@@ -48,7 +49,11 @@ format:
 	ruff format $(PACKAGE)
 	ruff check --fix $(PACKAGE)
 
-check: lint typecheck test
+architecture:
+	archkeel validate
+	archkeel report
+
+check: lint typecheck architecture test
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache htmlcov .coverage coverage.xml

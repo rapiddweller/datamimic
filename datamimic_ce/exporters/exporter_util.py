@@ -68,6 +68,11 @@ def buffered_exporter_names() -> frozenset[str]:
     return frozenset(_BUFFERED_EXPORTERS)
 
 
+def create_buffered_exporter(name: str, config: ExporterConfig, params: dict) -> UnifiedBufferedExporter:
+    """Build the registered buffered file exporter ``name`` (see ``buffered_exporter_names``)."""
+    return _BUFFERED_EXPORTERS[name](config, params)
+
+
 def custom_serializer(obj: Any) -> Any:
     """
     Custom serializer for JSON dump that supports a wide range of types.
@@ -333,7 +338,7 @@ class ExporterUtil:
                 encoding=exporter_params_dict.get("encoding"),
                 export_uri=export_uri,
             )
-            return _BUFFERED_EXPORTERS[name](config, exporter_params_dict)
+            return create_buffered_exporter(name, config, exporter_params_dict)
 
         if name == EXPORTER_CONSOLE_EXPORTER:
             return ConsoleExporter()

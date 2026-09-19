@@ -1,0 +1,1046 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "COMP-INTERFACES",
+      "label": "interfaces",
+      "role": "interface",
+      "packages": [
+        "datamimic_ce.cli",
+        "datamimic_ce.cli_authoring",
+        "datamimic_ce.cli_presenter",
+        "datamimic_ce.cli_runtime",
+        "datamimic_ce.mcp",
+        "datamimic_ce.datamimic",
+        "datamimic_ce.data_mimic_test",
+        "datamimic_ce.factory"
+      ],
+      "responsibilities": [
+        "CLI, MCP server and Python API (datamimic, data_mimic_test)",
+        "factory is the composition root that wires a run"
+      ],
+      "forbidden_responsibilities": [
+        "business logic",
+        "being imported by other components"
+      ],
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "requires": [
+        {
+          "component": "authoring",
+          "rationale": "Interfaces expose the authoring use cases."
+        },
+        {
+          "component": "dsl",
+          "rationale": "Interfaces read descriptors into the DSL."
+        },
+        {
+          "component": "engine",
+          "rationale": "Interfaces start runs; factory composes the engine."
+        },
+        {
+          "component": "foundation",
+          "rationale": "Interfaces use settings, logging and primitives."
+        },
+        {
+          "component": "io",
+          "rationale": "The composition root wires connections for a run."
+        }
+      ],
+      "public": [
+        "datamimic_ce.datamimic:DataMimic"
+      ]
+    },
+    {
+      "id": "COMP-AUTHORING",
+      "label": "authoring",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.authoring"
+      ],
+      "responsibilities": [
+        "model.dm.json intent to XML",
+        "lint rules and rule catalog",
+        "bounded dry-run and acceptance verification"
+      ],
+      "forbidden_responsibilities": [
+        "importing interfaces"
+      ],
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "requires": [
+        {
+          "component": "domain",
+          "rationale": "Authoring projects the available domain entities."
+        },
+        {
+          "component": "dsl",
+          "rationale": "Authoring compiles intent into the DSL and checks it against its models."
+        },
+        {
+          "component": "engine",
+          "rationale": "Authoring runs bounded dry-runs as part of its verification use case."
+        },
+        {
+          "component": "foundation",
+          "rationale": "Authoring uses shared primitives."
+        },
+        {
+          "component": "interfaces",
+          "rationale": "Debt: authoring.dryrun starts a run through the DataMimic interface; target: call the engine directly."
+        },
+        {
+          "component": "io",
+          "rationale": "Authoring projects the available source and exporter kinds."
+        }
+      ],
+      "public": [
+        "datamimic_ce.authoring.contracts:AUTHORING_REFERENCE_QUERY_ADAPTER",
+        "datamimic_ce.authoring.contracts:AuthoringReferenceCategory",
+        "datamimic_ce.authoring.contracts:AuthoringStage",
+        "datamimic_ce.authoring.contracts:CapabilitiesRequest",
+        "datamimic_ce.authoring.contracts:CheckRequest",
+        "datamimic_ce.authoring.contracts:ReferenceRequest",
+        "datamimic_ce.authoring.contracts:ReferenceResult",
+        "datamimic_ce.authoring.contracts:ReferenceTopic",
+        "datamimic_ce.authoring.contracts:RunRequest",
+        "datamimic_ce.authoring.contracts:RunResult",
+        "datamimic_ce.authoring.contracts:ScaffoldRequest",
+        "datamimic_ce.authoring.contracts:ScaffoldResult",
+        "datamimic_ce.authoring.contracts:ScaffoldVerification",
+        "datamimic_ce.authoring.contracts:UnknownCapabilitySection",
+        "datamimic_ce.authoring.diagnostics:LintResult",
+        "datamimic_ce.authoring.rule_catalog:RuleSeverity",
+        "datamimic_ce.authoring.service",
+        "datamimic_ce.authoring.spec:ExpectationIntent"
+      ]
+    },
+    {
+      "id": "COMP-DSL",
+      "label": "dsl",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.model",
+        "datamimic_ce.parsers",
+        "datamimic_ce.statements",
+        "datamimic_ce.constants",
+        "datamimic_ce.enums"
+      ],
+      "responsibilities": [
+        "the DSL: XML parsing, element models, statements"
+      ],
+      "forbidden_responsibilities": [
+        "execution",
+        "knowledge of contexts or connections"
+      ],
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "requires": [
+        {
+          "component": "domain",
+          "rationale": "Debt: state_machine_statement builds a generator; target: the engine builds it."
+        },
+        {
+          "component": "engine",
+          "rationale": "Debt: statements import contexts; target: the DSL does not know execution."
+        },
+        {
+          "component": "foundation",
+          "rationale": "The DSL uses shared primitives."
+        },
+        {
+          "component": "io",
+          "rationale": "Debt: statements import MongoDB client and connection configs; target: the DSL does not know connections."
+        }
+      ],
+      "public": [
+        "datamimic_ce.constants.attribute_constants:ATTR_CONSTANT",
+        "datamimic_ce.constants.attribute_constants:ATTR_DISTRIBUTION",
+        "datamimic_ce.constants.attribute_constants:ATTR_ENTITY",
+        "datamimic_ce.constants.attribute_constants:ATTR_GENERATOR",
+        "datamimic_ce.constants.attribute_constants:ATTR_SCRIPT",
+        "datamimic_ce.constants.attribute_constants:ATTR_SOURCE",
+        "datamimic_ce.constants.attribute_constants:ATTR_TYPE",
+        "datamimic_ce.constants.attribute_constants:ATTR_UNIQUE",
+        "datamimic_ce.constants.attribute_constants:ATTR_VALUES",
+        "datamimic_ce.constants.attribute_constants:META_SELECTOR",
+        "datamimic_ce.constants.attribute_constants:META_TARGET_ENTITY",
+        "datamimic_ce.constants.attribute_constants:META_TYPE",
+        "datamimic_ce.constants.convention_constants:NAME_SEPARATOR",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_BINARY",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_BOOL",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_DECIMAL",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_DICT",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_FLOAT",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_INT",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_LIST",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_LITERAL",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_STRING",
+        "datamimic_ce.constants.element_constants:EL_COMMENT",
+        "datamimic_ce.constants.element_constants:EL_CONDITION",
+        "datamimic_ce.constants.element_constants:EL_DATABASE",
+        "datamimic_ce.constants.element_constants:EL_ELEMENT",
+        "datamimic_ce.constants.element_constants:EL_ELSE",
+        "datamimic_ce.constants.element_constants:EL_ELSE_IF",
+        "datamimic_ce.constants.element_constants:EL_GENERATE",
+        "datamimic_ce.constants.element_constants:EL_ID",
+        "datamimic_ce.constants.element_constants:EL_IF",
+        "datamimic_ce.constants.element_constants:EL_INCLUDE",
+        "datamimic_ce.constants.element_constants:EL_ITERATE",
+        "datamimic_ce.constants.element_constants:EL_KEY",
+        "datamimic_ce.constants.element_constants:EL_MEMSTORE",
+        "datamimic_ce.constants.element_constants:EL_MONGODB",
+        "datamimic_ce.constants.element_constants:EL_NESTED_KEY",
+        "datamimic_ce.constants.element_constants:EL_REFERENCE",
+        "datamimic_ce.constants.element_constants:EL_SETUP",
+        "datamimic_ce.constants.element_constants:EL_VARIABLE",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_CONSOLE_EXPORTER",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_CSV",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_DBUNIT",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_FIXED_WIDTH",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_JSON",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_LOG_EXPORTER",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_TEST_RESULT_EXPORTER",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_TXT",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_XLSX",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_XML",
+        "datamimic_ce.enums.converter_enums:ConverterEnum",
+        "datamimic_ce.enums.converter_enums:SupportHash",
+        "datamimic_ce.enums.converter_enums:SupportOutputFormat",
+        "datamimic_ce.enums.dbms_enums:Dbms",
+        "datamimic_ce.enums.distribution_enums:NumberDistribution",
+        "datamimic_ce.enums.distribution_enums:POSITIONAL_NUMBER_SEQUENCES",
+        "datamimic_ce.enums.distribution_enums:SourceDistribution",
+        "datamimic_ce.enums.faker_enums:UnsupportedMethod",
+        "datamimic_ce.enums.operation_enums:ExportOperation",
+        "datamimic_ce.model.constraints:AllOrNone",
+        "datamimic_ce.model.constraints:AllowedValuesWhen",
+        "datamimic_ce.model.constraints:COUNT_XOR_MAX",
+        "datamimic_ce.model.constraints:COUNT_XOR_MIN",
+        "datamimic_ce.model.constraints:Constraint",
+        "datamimic_ce.model.constraints:DynamicSourceKind",
+        "datamimic_ce.model.constraints:EXIST_COUNT",
+        "datamimic_ce.model.constraints:Forbids",
+        "datamimic_ce.model.constraints:ForbidsWhenValue",
+        "datamimic_ce.model.constraints:KEY_DISTRIBUTION_VALUES",
+        "datamimic_ce.model.constraints:MutuallyExclusive",
+        "datamimic_ce.model.constraints:MutuallyExclusiveWhen",
+        "datamimic_ce.model.constraints:RequiredOneOf",
+        "datamimic_ce.model.constraints:Requires",
+        "datamimic_ce.model.constraints:RequiresWhenValue",
+        "datamimic_ce.model.constraints:SOURCE_DISTRIBUTION_VALUES",
+        "datamimic_ce.model.constraints:SourceFileFormat",
+        "datamimic_ce.model.constraints:ValidValues",
+        "datamimic_ce.model.constraints:WEIGHTS_REQUIRE_VALUES",
+        "datamimic_ce.model.constraints:element_constraints",
+        "datamimic_ce.model.constraints:is_source_file",
+        "datamimic_ce.model.constraints:resolved_allowed",
+        "datamimic_ce.model.constraints:resolved_values",
+        "datamimic_ce.model.constraints:rule_registry_revision",
+        "datamimic_ce.model.constraints:serialize_constraints",
+        "datamimic_ce.model.constraints:serialize_source_capability",
+        "datamimic_ce.model.constraints:source_allows_client",
+        "datamimic_ce.model.constraints:source_allows_memstore",
+        "datamimic_ce.model.constraints:source_capabilities",
+        "datamimic_ce.model.constraints:source_dynamic_kind",
+        "datamimic_ce.model.constraints:source_file_format",
+        "datamimic_ce.model.constraints:source_file_format_for",
+        "datamimic_ce.model.constraints:supported_source_file_formats",
+        "datamimic_ce.model.element_registry:canonical_tag",
+        "datamimic_ce.model.element_registry:element_aliases",
+        "datamimic_ce.model.element_registry:get_model_class",
+        "datamimic_ce.model.element_registry:get_valid_children",
+        "datamimic_ce.model.element_registry:list_element_tags",
+        "datamimic_ce.model.element_registry:registry_revision",
+        "datamimic_ce.model.model_util:ModelUtil",
+        "datamimic_ce.parsers.descriptor_parser:DescriptorParser",
+        "datamimic_ce.statements.array_statement:ArrayStatement",
+        "datamimic_ce.statements.assert_statement:AssertStatement",
+        "datamimic_ce.statements.composite_statement:CompositeStatement",
+        "datamimic_ce.statements.condition_statement:ConditionStatement",
+        "datamimic_ce.statements.database_statement:DatabaseStatement",
+        "datamimic_ce.statements.demographics_statement:DemographicsStatement",
+        "datamimic_ce.statements.echo_statement:EchoStatement",
+        "datamimic_ce.statements.element_statement:ElementStatement",
+        "datamimic_ce.statements.else_if_statement:ElseIfStatement",
+        "datamimic_ce.statements.else_statement:ElseStatement",
+        "datamimic_ce.statements.execute_statement:ExecuteStatement",
+        "datamimic_ce.statements.generate_statement:GenerateStatement",
+        "datamimic_ce.statements.generator_statement:GeneratorStatement",
+        "datamimic_ce.statements.if_statement:IfStatement",
+        "datamimic_ce.statements.include_statement:IncludeStatement",
+        "datamimic_ce.statements.item_statement:ItemStatement",
+        "datamimic_ce.statements.key_statement:KeyStatement",
+        "datamimic_ce.statements.list_statement:ListStatement",
+        "datamimic_ce.statements.memstore_statement:MemstoreStatement",
+        "datamimic_ce.statements.mongodb_statement:MongoDBStatement",
+        "datamimic_ce.statements.nested_key_statement:NestedKeyStatement",
+        "datamimic_ce.statements.reference_statement:ReferenceStatement",
+        "datamimic_ce.statements.setup_statement:SetupStatement",
+        "datamimic_ce.statements.state_machine_statement:StateMachineStatement",
+        "datamimic_ce.statements.statement:Statement",
+        "datamimic_ce.statements.statement_util:StatementUtil",
+        "datamimic_ce.statements.variable_statement:VariableStatement",
+        "datamimic_ce.statements.while_statement:WhileStatement"
+      ],
+      "inside": "docs/architecture/dsl-contract.json"
+    },
+    {
+      "id": "COMP-ENGINE",
+      "label": "engine",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.tasks",
+        "datamimic_ce.workers",
+        "datamimic_ce.contexts",
+        "datamimic_ce.services",
+        "datamimic_ce.product_storage"
+      ],
+      "responsibilities": [
+        "run lifecycle: setup, tasks, workers",
+        "script-expression evaluation"
+      ],
+      "forbidden_responsibilities": [
+        "generator logic",
+        "database details"
+      ],
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "requires": [
+        {
+          "component": "domain",
+          "rationale": "The engine drives generators and converters."
+        },
+        {
+          "component": "dsl",
+          "rationale": "The engine executes DSL statements."
+        },
+        {
+          "component": "foundation",
+          "rationale": "The engine uses settings, logging, determinism and primitives."
+        },
+        {
+          "component": "io",
+          "rationale": "The engine reads sources and writes exports through io."
+        }
+      ],
+      "public": [
+        "datamimic_ce.contexts.context:Context",
+        "datamimic_ce.contexts.geniter_context:GenIterContext",
+        "datamimic_ce.contexts.setup_context:SetupContext",
+        "datamimic_ce.product_storage.memstore_manager:MemstoreManager",
+        "datamimic_ce.services.source_script_evaluator:evaluate_source_template",
+        "datamimic_ce.services.source_script_evaluator:interpolate_variables",
+        "datamimic_ce.tasks.setup_task:SetupTask"
+      ],
+      "inside": "docs/architecture/engine-contract.json"
+    },
+    {
+      "id": "COMP-IO",
+      "label": "io",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.data_sources",
+        "datamimic_ce.exporters",
+        "datamimic_ce.clients",
+        "datamimic_ce.connection_config"
+      ],
+      "responsibilities": [
+        "adapters to external systems: sources, exporters, clients, connection configuration"
+      ],
+      "forbidden_responsibilities": [
+        "driving the run lifecycle"
+      ],
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "requires": [
+        {
+          "component": "domain",
+          "rationale": "Debt: clients serialize with domain base_entity; target: a foundation helper."
+        },
+        {
+          "component": "dsl",
+          "rationale": "Under review: existing coupling; adapters should not need to know the DSL, the engine should translate DSL configuration for them. Level 2 decides."
+        },
+        {
+          "component": "engine",
+          "rationale": "Debt: DataSourceRegistry evaluates source scripts with contexts; target: an engine-provided port."
+        },
+        {
+          "component": "foundation",
+          "rationale": "Adapters use settings, logging and primitives."
+        }
+      ],
+      "public": [
+        "datamimic_ce.clients.client:Client",
+        "datamimic_ce.clients.database_client:Client",
+        "datamimic_ce.clients.database_client:DatabaseClient",
+        "datamimic_ce.clients.mongodb_client:MongoDBClient",
+        "datamimic_ce.clients.rdbms_client:RdbmsClient",
+        "datamimic_ce.connection_config.mongodb_connection_config:MongoDBConnectionConfig",
+        "datamimic_ce.connection_config.rdbms_connection_config:RdbmsConnectionConfig",
+        "datamimic_ce.data_sources.chunk_source_reader:ChunkSourceReader",
+        "datamimic_ce.data_sources.data_source_pagination:DataSourcePagination",
+        "datamimic_ce.data_sources.data_source_registry:DataSourceRegistry",
+        "datamimic_ce.data_sources.weighted_data_source:WeightedDataSource",
+        "datamimic_ce.exporters.exporter_config:ExporterConfig",
+        "datamimic_ce.exporters.exporter_state_manager:ExporterStateManager",
+        "datamimic_ce.exporters.exporter_util:ExporterUtil",
+        "datamimic_ce.exporters.exporter_util:buffered_exporter_names",
+        "datamimic_ce.exporters.exporter_util:create_buffered_exporter",
+        "datamimic_ce.exporters.memstore:Memstore",
+        "datamimic_ce.exporters.mongodb_exporter:MongoDBExporter",
+        "datamimic_ce.exporters.test_result_exporter:TestResultExporter",
+        "datamimic_ce.exporters.unified_buffered_exporter:UnifiedBufferedExporter",
+        "datamimic_ce.exporters.xml_exporter:XMLExporter"
+      ]
+    },
+    {
+      "id": "COMP-DOMAIN",
+      "label": "domain",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.domains",
+        "datamimic_ce.converter"
+      ],
+      "responsibilities": [
+        "pure data generation and value conversion"
+      ],
+      "forbidden_responsibilities": [
+        "workers",
+        "contexts",
+        "connections",
+        "statements"
+      ],
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "requires": [
+        {
+          "component": "dsl",
+          "rationale": "Debt: generator_util resolves generators per statement and literal generators read DSL enums; target: generator_util moves to engine, shared enums move to their owner or foundation one by one."
+        },
+        {
+          "component": "engine",
+          "rationale": "Debt: generator_util reads contexts; target: generator_util moves to engine."
+        },
+        {
+          "component": "foundation",
+          "rationale": "Generators use determinism SPOTs and primitives."
+        },
+        {
+          "component": "io",
+          "rationale": "Debt: DataSourcePagination and SequenceTableGenerator's database access; target: decide per type (value type or io semantics)."
+        }
+      ],
+      "public": [
+        "datamimic_ce.converter.append_converter:AppendConverter",
+        "datamimic_ce.converter.converter:Converter",
+        "datamimic_ce.converter.custom_converter:CustomConverter",
+        "datamimic_ce.converter.cut_length_converter:CutLengthConverter",
+        "datamimic_ce.converter.date2timestamp_converter:Date2TimestampConverter",
+        "datamimic_ce.converter.date_format_converter:DateFormatConverter",
+        "datamimic_ce.converter.hash_converter:HashConverter",
+        "datamimic_ce.converter.java_hash_converter:JavaHashConverter",
+        "datamimic_ce.converter.lower_case_converter:LowerCaseConverter",
+        "datamimic_ce.converter.mask_converter:MaskConverter",
+        "datamimic_ce.converter.middle_mask_converter:MiddleMaskConverter",
+        "datamimic_ce.converter.remove_none_or_empty_element_converter:RemoveNoneOrEmptyElementConverter",
+        "datamimic_ce.converter.substring_converter:SubstringConverter",
+        "datamimic_ce.converter.timestamp2date_converter:Timestamp2DateConverter",
+        "datamimic_ce.converter.upper_case_converter:UpperCaseConverter",
+        "datamimic_ce.domains.common.demographics.loader:load_demographic_profile",
+        "datamimic_ce.domains.common.demographics.profile:DemographicProfileId",
+        "datamimic_ce.domains.common.demographics.sampler:DemographicSampler",
+        "datamimic_ce.domains.common.literal_generators.generator_util:GeneratorUtil",
+        "datamimic_ce.domains.common.literal_generators.sequence_table_generator:SequenceTableGenerator",
+        "datamimic_ce.domains.common.literal_generators.state_transition_generator:Rule",
+        "datamimic_ce.domains.common.literal_generators.state_transition_generator:StateMachineDef",
+        "datamimic_ce.domains.common.literal_generators.string_generator:StringGenerator",
+        "datamimic_ce.domains.common.models.demographic_config:DemographicConfig",
+        "datamimic_ce.domains.domain_core.base_entity:stringify_if_entity",
+        "datamimic_ce.domains.domain_core.base_literal_generator:BaseLiteralGenerator",
+        "datamimic_ce.domains.domain_core.entity_registry:EntitySpec",
+        "datamimic_ce.domains.domain_core.entity_registry:get_entity_service_class",
+        "datamimic_ce.domains.domain_core.entity_registry:list_entity_specs",
+        "datamimic_ce.domains.domain_core.runtime.clock:resolve_clock",
+        "datamimic_ce.domains.domain_core.runtime:RunSeed",
+        "datamimic_ce.domains.domain_core.runtime:derive_child_seed",
+        "datamimic_ce.domains.domain_core.runtime:from_epoch_utc",
+        "datamimic_ce.domains.domain_core.runtime:spawn_rng",
+        "datamimic_ce.domains.domain_core.runtime:to_epoch_utc",
+        "datamimic_ce.domains.finance.generators.transaction_generator:TransactionGenerator",
+        "datamimic_ce.domains.finance.models.transaction:Transaction",
+        "datamimic_ce.domains.healthcare.services.patient_service:PatientService",
+        "datamimic_ce.domains.utils.rng_uuid:uuid4_from_random"
+      ]
+    },
+    {
+      "id": "COMP-FOUNDATION",
+      "label": "foundation",
+      "role": "foundation",
+      "packages": [
+        "datamimic_ce.utils",
+        "datamimic_ce.logger",
+        "datamimic_ce.config",
+        "datamimic_ce._compat"
+      ],
+      "responsibilities": [
+        "stable, low-semantic types and technical primitives needed by at least two components",
+        "determinism SPOTs: rng, clock, RunSeed",
+        "logger and process settings"
+      ],
+      "forbidden_responsibilities": [
+        "importing any other component",
+        "knowledge of DSL, engine, domain or IO"
+      ],
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "requires": [
+        {
+          "component": "domain",
+          "rationale": "Debt: utils.object_util references converters; target: move to engine."
+        },
+        {
+          "component": "dsl",
+          "rationale": "Debt: utils read DSL constants and enums; target: foundation imports nothing."
+        },
+        {
+          "component": "engine",
+          "rationale": "Debt: utils.object_util builds converters with contexts; target: move to engine."
+        }
+      ],
+      "public": [
+        "datamimic_ce._compat:StrEnum",
+        "datamimic_ce._compat:assert_never",
+        "datamimic_ce.config:settings",
+        "datamimic_ce.logger:logger",
+        "datamimic_ce.logger:setup_logger",
+        "datamimic_ce.utils.demo_util:demo_autocomplete",
+        "datamimic_ce.utils.demo_util:handle_demo",
+        "datamimic_ce.utils.dict_util:dict_nested_update",
+        "datamimic_ce.utils.distribution_sampling:cumulated_index",
+        "datamimic_ce.utils.domain_class_util:DomainClassUtil",
+        "datamimic_ce.utils.file_content_storage:FileContentStorage",
+        "datamimic_ce.utils.file_util:FileUtil",
+        "datamimic_ce.utils.logging_util:gen_timer",
+        "datamimic_ce.utils.logging_util:log_system_info",
+        "datamimic_ce.utils.luhn_util:luhn_check_digit",
+        "datamimic_ce.utils.number_sequences:build_number_sequence",
+        "datamimic_ce.utils.number_sequences:finite_number_sequence_capacity",
+        "datamimic_ce.utils.object_util:ObjectUtil",
+        "datamimic_ce.utils.process_util:bootstrap_process_title",
+        "datamimic_ce.utils.process_util:set_generate_worker_process_title",
+        "datamimic_ce.utils.process_util:set_main_process_title",
+        "datamimic_ce.utils.secure_xml:DTDForbiddenError",
+        "datamimic_ce.utils.secure_xml:parse_xml_file",
+        "datamimic_ce.utils.secure_xml:parse_xml_source",
+        "datamimic_ce.utils.string_util:StringUtil",
+        "datamimic_ce.utils.system_util:log_memory_info",
+        "datamimic_ce.utils.timeseries:TimeSeriesConfig",
+        "datamimic_ce.utils.unique_sampling:unique_value_iter",
+        "datamimic_ce.utils.unique_sampling:unique_values",
+        "datamimic_ce.utils.version_util:get_datamimic_lib_version"
+      ]
+    },
+    {
+      "id": "COMP-DEMOS",
+      "label": "demos",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.demos"
+      ],
+      "responsibilities": [
+        "bundled examples that use the product; not part of the product architecture"
+      ],
+      "forbidden_responsibilities": [
+        "being imported by product components"
+      ],
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "requires": [
+        {
+          "component": "domain",
+          "rationale": "Examples use the product."
+        },
+        {
+          "component": "engine",
+          "rationale": "Examples use the product."
+        },
+        {
+          "component": "foundation",
+          "rationale": "Examples use the product."
+        },
+        {
+          "component": "io",
+          "rationale": "Examples use the product."
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "ASSIGNMENT-COMPLETE",
+      "kind": "complete_assignment",
+      "source": "datamimic_ce",
+      "rationale": "A module without exactly one owning component escapes every boundary rule.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "REQUIRES-COMPLETE",
+      "kind": "complete_requires",
+      "rationale": "Responsibilities define the allowed imports: an edge nobody declared is an accident, so every new component edge is a visible contract change.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "INTERFACE-BOUNDARY",
+      "kind": "interface_boundary",
+      "include_type_checking": true,
+      "rationale": "Components meet only through their declared public names; the lists freeze today's surface and shrink toward facades.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "EXTERNAL-COMPLETE",
+      "kind": "complete_external_scope",
+      "source": "datamimic_ce",
+      "rationale": "Every third-party library has declared owners, so a heavy dependency in the wrong layer is a visible contract change.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-ANYIO",
+      "kind": "external_dependency_scope",
+      "dependency": "anyio",
+      "allowed_sources": [
+        "datamimic_ce.mcp"
+      ],
+      "rationale": "Optional MCP adapter runtime.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-BSON",
+      "kind": "external_dependency_scope",
+      "dependency": "bson",
+      "allowed_sources": [
+        "datamimic_ce.clients",
+        "datamimic_ce.exporters"
+      ],
+      "rationale": "MongoDB value types belong to MongoDB clients and exporters.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-DILL",
+      "kind": "external_dependency_scope",
+      "dependency": "dill",
+      "allowed_sources": [
+        "datamimic_ce.tasks",
+        "datamimic_ce.workers"
+      ],
+      "rationale": "Worker payload serialization is owned by tasks and workers.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-DOTENV",
+      "kind": "external_dependency_scope",
+      "dependency": "dotenv",
+      "allowed_sources": [
+        "datamimic_ce"
+      ],
+      "rationale": "Environment files loaded by the package root.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-EXREX",
+      "kind": "external_dependency_scope",
+      "dependency": "exrex",
+      "allowed_sources": [
+        "datamimic_ce.domains"
+      ],
+      "rationale": "Regex-pattern value generation.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-FAKER",
+      "kind": "external_dependency_scope",
+      "dependency": "faker",
+      "allowed_sources": [
+        "datamimic_ce.contexts",
+        "datamimic_ce.demos",
+        "datamimic_ce.domains"
+      ],
+      "rationale": "Fake-value backend for domains and the script namespace.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-FASTMCP",
+      "kind": "external_dependency_scope",
+      "dependency": "fastmcp",
+      "allowed_sources": [
+        "datamimic_ce.mcp"
+      ],
+      "rationale": "Optional MCP adapter.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-ISODATE",
+      "kind": "external_dependency_scope",
+      "dependency": "isodate",
+      "allowed_sources": [
+        "datamimic_ce.utils"
+      ],
+      "rationale": "ISO 8601 durations.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-JSONSCHEMA",
+      "kind": "external_dependency_scope",
+      "dependency": "jsonschema",
+      "allowed_sources": [
+        "datamimic_ce.domains"
+      ],
+      "rationale": "Facade request/response schema validation.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-LXML",
+      "kind": "external_dependency_scope",
+      "dependency": "lxml",
+      "allowed_sources": [
+        "datamimic_ce.authoring",
+        "datamimic_ce.exporters",
+        "datamimic_ce.utils"
+      ],
+      "rationale": "XML parsing and writing.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-NUMPY",
+      "kind": "external_dependency_scope",
+      "dependency": "numpy",
+      "allowed_sources": [
+        "datamimic_ce.contexts",
+        "datamimic_ce.demos",
+        "datamimic_ce.exporters",
+        "datamimic_ce.tasks",
+        "datamimic_ce.utils"
+      ],
+      "rationale": "Numeric helpers for exporters, tasks and the script namespace.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-OPENPYXL",
+      "kind": "external_dependency_scope",
+      "dependency": "openpyxl",
+      "allowed_sources": [
+        "datamimic_ce.exporters",
+        "datamimic_ce.utils"
+      ],
+      "rationale": "XLSX source reading and export.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-ORACLEDB",
+      "kind": "external_dependency_scope",
+      "dependency": "oracledb",
+      "allowed_sources": [
+        "datamimic_ce.clients"
+      ],
+      "rationale": "Oracle transport belongs to clients.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-PANDAS",
+      "kind": "external_dependency_scope",
+      "dependency": "pandas",
+      "allowed_sources": [
+        "datamimic_ce.contexts",
+        "datamimic_ce.demos",
+        "datamimic_ce.exporters",
+        "datamimic_ce.utils"
+      ],
+      "rationale": "Tabular helpers for exporters and the script namespace.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-PSUTIL",
+      "kind": "external_dependency_scope",
+      "dependency": "psutil",
+      "allowed_sources": [
+        "datamimic_ce.utils"
+      ],
+      "rationale": "Process resource inspection.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-PYDANTIC",
+      "kind": "external_dependency_scope",
+      "dependency": "pydantic",
+      "allowed_sources": [
+        "datamimic_ce.authoring",
+        "datamimic_ce.cli_authoring",
+        "datamimic_ce.cli_runtime",
+        "datamimic_ce.connection_config",
+        "datamimic_ce.model",
+        "datamimic_ce.parsers"
+      ],
+      "rationale": "Typed models for the DSL, configuration and authoring contracts.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-PYDANTIC-CORE",
+      "kind": "external_dependency_scope",
+      "dependency": "pydantic_core",
+      "allowed_sources": [
+        "datamimic_ce.authoring"
+      ],
+      "rationale": "Authoring validation errors.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-PYDANTIC-SETTINGS",
+      "kind": "external_dependency_scope",
+      "dependency": "pydantic_settings",
+      "allowed_sources": [
+        "datamimic_ce.config"
+      ],
+      "rationale": "Environment settings.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-PYMONGO",
+      "kind": "external_dependency_scope",
+      "dependency": "pymongo",
+      "allowed_sources": [
+        "datamimic_ce.clients"
+      ],
+      "rationale": "MongoDB transport belongs to clients.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-RAY",
+      "kind": "external_dependency_scope",
+      "dependency": "ray",
+      "allowed_sources": [
+        "datamimic_ce.tasks",
+        "datamimic_ce.workers"
+      ],
+      "rationale": "Distributed execution is owned by tasks and workers.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-REQUESTS",
+      "kind": "external_dependency_scope",
+      "dependency": "requests",
+      "allowed_sources": [
+        "datamimic_ce.contexts"
+      ],
+      "rationale": "HTTP access from the script namespace.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-RICH",
+      "kind": "external_dependency_scope",
+      "dependency": "rich",
+      "allowed_sources": [
+        "datamimic_ce.cli_presenter"
+      ],
+      "rationale": "Terminal presentation belongs to the CLI presenter.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-SETPROCTITLE",
+      "kind": "external_dependency_scope",
+      "dependency": "setproctitle",
+      "allowed_sources": [
+        "datamimic_ce.utils"
+      ],
+      "rationale": "Process titles.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-SQLALCHEMY",
+      "kind": "external_dependency_scope",
+      "dependency": "sqlalchemy",
+      "allowed_sources": [
+        "datamimic_ce.clients",
+        "datamimic_ce.data_sources"
+      ],
+      "rationale": "Relational access belongs to clients and the data-source boundary.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-SQLGLOT",
+      "kind": "external_dependency_scope",
+      "dependency": "sqlglot",
+      "allowed_sources": [
+        "datamimic_ce.clients"
+      ],
+      "rationale": "SQL text handling has one owner: clients.sql_dialect.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-STARLETTE",
+      "kind": "external_dependency_scope",
+      "dependency": "starlette",
+      "allowed_sources": [
+        "datamimic_ce.mcp"
+      ],
+      "rationale": "Optional MCP adapter transport.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-TOML",
+      "kind": "external_dependency_scope",
+      "dependency": "toml",
+      "allowed_sources": [
+        "datamimic_ce.cli_runtime",
+        "datamimic_ce.utils"
+      ],
+      "rationale": "Project configuration files.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-TYPER",
+      "kind": "external_dependency_scope",
+      "dependency": "typer",
+      "allowed_sources": [
+        "datamimic_ce.cli",
+        "datamimic_ce.cli_authoring",
+        "datamimic_ce.cli_presenter",
+        "datamimic_ce.mcp",
+        "datamimic_ce.utils"
+      ],
+      "rationale": "The command-line surface.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-UVICORN",
+      "kind": "external_dependency_scope",
+      "dependency": "uvicorn",
+      "allowed_sources": [
+        "datamimic_ce.mcp"
+      ],
+      "rationale": "Optional MCP adapter server.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    },
+    {
+      "id": "EXT-XMLTODICT",
+      "kind": "external_dependency_scope",
+      "dependency": "xmltodict",
+      "allowed_sources": [
+        "datamimic_ce.data_sources",
+        "datamimic_ce.exporters"
+      ],
+      "rationale": "XML source reading and export.",
+      "provenance": [
+        "docs/architecture/architecture.md"
+      ],
+      "decided_by": "agent"
+    }
+  ]
+}

@@ -448,7 +448,7 @@ def _parse_buffered_targets(targets: set[str]) -> list[_FileTarget]:
     """The subset of raw target strings that are buffered FILE exporters, parsed to
     (name, params). Membership in the exporter registry is the dispatch — memstores,
     clients, Console/Log never appear there, so they can never be smoked."""
-    from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS, ExporterUtil
+    from datamimic_ce.exporters.exporter_util import ExporterUtil, buffered_exporter_names
 
     parsed: list[_FileTarget] = []
     for raw in sorted(targets):
@@ -457,7 +457,7 @@ def _parse_buffered_targets(targets: set[str]) -> list[_FileTarget]:
         except ValueError:
             continue  # malformed target string — the engine's own path reports it
         for entry in entries:
-            if entry["function_name"] in _BUFFERED_EXPORTERS:
+            if entry["function_name"] in buffered_exporter_names():
                 parsed.append((entry["function_name"], entry.get("params") or {}))
     return parsed
 
@@ -625,7 +625,7 @@ def _smoke_export(
     from datamimic_ce.constants.convention_constants import NAME_SEPARATOR
     from datamimic_ce.exporters.exporter_config import ExporterConfig
     from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
-    from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
+    from datamimic_ce.exporters.exporter_util import create_buffered_exporter
 
     diagnostics: list[Diagnostic] = []
     applicable_exporters = sum(len(file_targets) for _basename, file_targets in stripped.values())
@@ -650,7 +650,7 @@ def _smoke_export(
                         encoding=None,
                         export_uri=None,
                     )
-                    exporter = _BUFFERED_EXPORTERS[exporter_name](config, dict(params))
+                    exporter = create_buffered_exporter(exporter_name, config, dict(params))
                     exporter.consume((basename, rows), full_name, ExporterStateManager(worker_id=1))
                     exporter.finalize_chunks(1)
                 except Exception as err:

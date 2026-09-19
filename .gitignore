@@ -108,3 +108,6 @@ QODER.md
 .ruff_cache/
 .pytest_cache/
 .truecourse/
+
+# archkeel report output
+/test-artifacts/

@@ -140,6 +140,11 @@ jobs:
           . .venv/bin/activate
           uv run ruff check datamimic_ce
         shell: bash
+      - name: Check architecture contract
+        run: |
+          . .venv/bin/activate
+          archkeel validate
+        shell: bash
 
   build:
     name: Build

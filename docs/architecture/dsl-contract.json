@@ -1,0 +1,273 @@
+{
+  "schema_version": "2.1.0",
+  "components": [
+    {
+      "id": "COMP-DSL-MODEL",
+      "label": "model",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.model"
+      ],
+      "responsibilities": [
+        "Pydantic element models, constraints and the element registry"
+      ],
+      "forbidden_responsibilities": [],
+      "provenance": [
+        "docs/architecture/dsl.md"
+      ],
+      "requires": [
+        {
+          "component": "constants",
+          "rationale": "Models are keyed by the DSL element and attribute names."
+        },
+        {
+          "component": "enums",
+          "rationale": "Models type closed vocabularies with the DSL enums."
+        },
+        {
+          "component": "parsers",
+          "rationale": "Debt: models reach parser implementations, a cycle with parsers -> model; target: models own identity and child rules and never import parsers (EE DEP-MODEL-NO-PARSERS)."
+        }
+      ],
+      "public": [
+        "datamimic_ce.model.constraints:AllOrNone",
+        "datamimic_ce.model.constraints:AllowedValuesWhen",
+        "datamimic_ce.model.constraints:COUNT_XOR_MAX",
+        "datamimic_ce.model.constraints:COUNT_XOR_MIN",
+        "datamimic_ce.model.constraints:Constraint",
+        "datamimic_ce.model.constraints:DynamicSourceKind",
+        "datamimic_ce.model.constraints:EXIST_COUNT",
+        "datamimic_ce.model.constraints:Forbids",
+        "datamimic_ce.model.constraints:ForbidsWhenValue",
+        "datamimic_ce.model.constraints:KEY_DISTRIBUTION_VALUES",
+        "datamimic_ce.model.constraints:MutuallyExclusive",
+        "datamimic_ce.model.constraints:MutuallyExclusiveWhen",
+        "datamimic_ce.model.constraints:RequiredOneOf",
+        "datamimic_ce.model.constraints:Requires",
+        "datamimic_ce.model.constraints:RequiresWhenValue",
+        "datamimic_ce.model.constraints:SOURCE_DISTRIBUTION_VALUES",
+        "datamimic_ce.model.constraints:SourceFileFormat",
+        "datamimic_ce.model.constraints:ValidValues",
+        "datamimic_ce.model.constraints:WEIGHTS_REQUIRE_VALUES",
+        "datamimic_ce.model.constraints:element_constraints",
+        "datamimic_ce.model.constraints:is_source_file",
+        "datamimic_ce.model.constraints:resolved_allowed",
+        "datamimic_ce.model.constraints:resolved_values",
+        "datamimic_ce.model.constraints:rule_registry_revision",
+        "datamimic_ce.model.constraints:serialize_constraints",
+        "datamimic_ce.model.constraints:serialize_source_capability",
+        "datamimic_ce.model.constraints:source_allows_client",
+        "datamimic_ce.model.constraints:source_allows_memstore",
+        "datamimic_ce.model.constraints:source_capabilities",
+        "datamimic_ce.model.constraints:source_dynamic_kind",
+        "datamimic_ce.model.constraints:source_file_format",
+        "datamimic_ce.model.constraints:source_file_format_for",
+        "datamimic_ce.model.constraints:supported_source_file_formats",
+        "datamimic_ce.model.element_registry:canonical_tag",
+        "datamimic_ce.model.element_registry:element_aliases",
+        "datamimic_ce.model.element_registry:get_model_class",
+        "datamimic_ce.model.element_registry:get_valid_children",
+        "datamimic_ce.model.element_registry:list_element_tags",
+        "datamimic_ce.model.element_registry:registry_revision",
+        "datamimic_ce.model.model_util:ModelUtil"
+      ]
+    },
+    {
+      "id": "COMP-DSL-PARSERS",
+      "label": "parsers",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.parsers"
+      ],
+      "responsibilities": [
+        "XML parsing into statements"
+      ],
+      "forbidden_responsibilities": [],
+      "provenance": [
+        "docs/architecture/dsl.md"
+      ],
+      "requires": [
+        {
+          "component": "constants",
+          "rationale": "Parsers dispatch on the DSL element names."
+        },
+        {
+          "component": "model",
+          "rationale": "Parsers validate XML through the element models."
+        },
+        {
+          "component": "statements",
+          "rationale": "Parsers create statements."
+        }
+      ],
+      "public": [
+        "datamimic_ce.parsers.descriptor_parser:DescriptorParser"
+      ]
+    },
+    {
+      "id": "COMP-DSL-STATEMENTS",
+      "label": "statements",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.statements"
+      ],
+      "responsibilities": [
+        "runtime statement objects"
+      ],
+      "forbidden_responsibilities": [],
+      "provenance": [
+        "docs/architecture/dsl.md"
+      ],
+      "requires": [
+        {
+          "component": "constants",
+          "rationale": "Statements read DSL attribute names."
+        },
+        {
+          "component": "enums",
+          "rationale": "Statements carry DSL value vocabularies."
+        },
+        {
+          "component": "model",
+          "rationale": "Statements are built from validated element models."
+        }
+      ],
+      "public": [
+        "datamimic_ce.statements.array_statement:ArrayStatement",
+        "datamimic_ce.statements.assert_statement:AssertStatement",
+        "datamimic_ce.statements.composite_statement:CompositeStatement",
+        "datamimic_ce.statements.condition_statement:ConditionStatement",
+        "datamimic_ce.statements.database_statement:DatabaseStatement",
+        "datamimic_ce.statements.demographics_statement:DemographicsStatement",
+        "datamimic_ce.statements.echo_statement:EchoStatement",
+        "datamimic_ce.statements.element_statement:ElementStatement",
+        "datamimic_ce.statements.else_if_statement:ElseIfStatement",
+        "datamimic_ce.statements.else_statement:ElseStatement",
+        "datamimic_ce.statements.execute_statement:ExecuteStatement",
+        "datamimic_ce.statements.generate_statement:GenerateStatement",
+        "datamimic_ce.statements.generator_statement:GeneratorStatement",
+        "datamimic_ce.statements.if_statement:IfStatement",
+        "datamimic_ce.statements.include_statement:IncludeStatement",
+        "datamimic_ce.statements.item_statement:ItemStatement",
+        "datamimic_ce.statements.key_statement:KeyStatement",
+        "datamimic_ce.statements.list_statement:ListStatement",
+        "datamimic_ce.statements.memstore_statement:MemstoreStatement",
+        "datamimic_ce.statements.mongodb_statement:MongoDBStatement",
+        "datamimic_ce.statements.nested_key_statement:NestedKeyStatement",
+        "datamimic_ce.statements.reference_statement:ReferenceStatement",
+        "datamimic_ce.statements.setup_statement:SetupStatement",
+        "datamimic_ce.statements.state_machine_statement:StateMachineStatement",
+        "datamimic_ce.statements.statement:Statement",
+        "datamimic_ce.statements.statement_util:StatementUtil",
+        "datamimic_ce.statements.variable_statement:VariableStatement",
+        "datamimic_ce.statements.while_statement:WhileStatement"
+      ]
+    },
+    {
+      "id": "COMP-DSL-CONSTANTS",
+      "label": "constants",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.constants"
+      ],
+      "responsibilities": [
+        "DSL element and attribute names"
+      ],
+      "forbidden_responsibilities": [],
+      "provenance": [
+        "docs/architecture/dsl.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.constants.attribute_constants:ATTR_CONSTANT",
+        "datamimic_ce.constants.attribute_constants:ATTR_DISTRIBUTION",
+        "datamimic_ce.constants.attribute_constants:ATTR_ENTITY",
+        "datamimic_ce.constants.attribute_constants:ATTR_GENERATOR",
+        "datamimic_ce.constants.attribute_constants:ATTR_SCRIPT",
+        "datamimic_ce.constants.attribute_constants:ATTR_SOURCE",
+        "datamimic_ce.constants.attribute_constants:ATTR_TYPE",
+        "datamimic_ce.constants.attribute_constants:ATTR_UNIQUE",
+        "datamimic_ce.constants.attribute_constants:ATTR_VALUES",
+        "datamimic_ce.constants.attribute_constants:META_SELECTOR",
+        "datamimic_ce.constants.attribute_constants:META_TARGET_ENTITY",
+        "datamimic_ce.constants.attribute_constants:META_TYPE",
+        "datamimic_ce.constants.convention_constants:NAME_SEPARATOR",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_BINARY",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_BOOL",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_DECIMAL",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_DICT",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_FLOAT",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_INT",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_LIST",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_LITERAL",
+        "datamimic_ce.constants.data_type_constants:DATA_TYPE_STRING",
+        "datamimic_ce.constants.element_constants:EL_COMMENT",
+        "datamimic_ce.constants.element_constants:EL_CONDITION",
+        "datamimic_ce.constants.element_constants:EL_DATABASE",
+        "datamimic_ce.constants.element_constants:EL_ELEMENT",
+        "datamimic_ce.constants.element_constants:EL_ELSE",
+        "datamimic_ce.constants.element_constants:EL_ELSE_IF",
+        "datamimic_ce.constants.element_constants:EL_GENERATE",
+        "datamimic_ce.constants.element_constants:EL_ID",
+        "datamimic_ce.constants.element_constants:EL_IF",
+        "datamimic_ce.constants.element_constants:EL_INCLUDE",
+        "datamimic_ce.constants.element_constants:EL_ITERATE",
+        "datamimic_ce.constants.element_constants:EL_KEY",
+        "datamimic_ce.constants.element_constants:EL_MEMSTORE",
+        "datamimic_ce.constants.element_constants:EL_MONGODB",
+        "datamimic_ce.constants.element_constants:EL_NESTED_KEY",
+        "datamimic_ce.constants.element_constants:EL_REFERENCE",
+        "datamimic_ce.constants.element_constants:EL_SETUP",
+        "datamimic_ce.constants.element_constants:EL_VARIABLE",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_CONSOLE_EXPORTER",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_CSV",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_DBUNIT",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_FIXED_WIDTH",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_JSON",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_LOG_EXPORTER",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_TEST_RESULT_EXPORTER",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_TXT",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_XLSX",
+        "datamimic_ce.constants.exporter_constants:EXPORTER_XML"
+      ]
+    },
+    {
+      "id": "COMP-DSL-ENUMS",
+      "label": "enums",
+      "role": "component",
+      "packages": [
+        "datamimic_ce.enums"
+      ],
+      "responsibilities": [
+        "DSL value vocabularies"
+      ],
+      "forbidden_responsibilities": [],
+      "provenance": [
+        "docs/architecture/dsl.md"
+      ],
+      "requires": [],
+      "public": [
+        "datamimic_ce.enums.converter_enums:ConverterEnum",
+        "datamimic_ce.enums.converter_enums:SupportHash",
+        "datamimic_ce.enums.converter_enums:SupportOutputFormat",
+        "datamimic_ce.enums.dbms_enums:Dbms",
+        "datamimic_ce.enums.distribution_enums:NumberDistribution",
+        "datamimic_ce.enums.distribution_enums:POSITIONAL_NUMBER_SEQUENCES",
+        "datamimic_ce.enums.distribution_enums:SourceDistribution",
+        "datamimic_ce.enums.faker_enums:UnsupportedMethod",
+        "datamimic_ce.enums.operation_enums:ExportOperation"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "DSL-REQUIRES-COMPLETE",
+      "kind": "complete_requires",
+      "rationale": "Inside dsl, an edge nobody declared is an accident; absence forbids.",
+      "provenance": [
+        "docs/architecture/dsl.md"
+      ],
+      "decided_by": "architect"
+    }
+  ]
+}
