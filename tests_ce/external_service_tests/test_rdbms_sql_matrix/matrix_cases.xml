@@ -1,0 +1,57 @@
+<!-- RDBMS SQL matrix (#228): every case runs unchanged on each engine (matrix_<engine>.xml);
+     only the bounded selectors differ in syntax (conf/<engine>.properties).
+     The setup scripts insert matrix_rows out of (grp, id) order and grp is not unique, so a read without
+     a deterministic order returns physical or tie order and test_rdbms_sql_matrix.py fails. -->
+<setup>
+    <!-- table source: primary key, else every column -->
+    <generate name="table_keyless" source="sourceDB" distribution="ordered" type="matrix_rows" pageSize="5" target="" />
+    <generate name="table_pk" source="sourceDB" distribution="ordered" type="matrix_rows_pk" pageSize="5" target="" />
+    <generate name="table_composite_pk" source="sourceDB" distribution="ordered" type="matrix_rows_cpk"
+              pageSize="5" target="" />
+    <generate name="table_keyless_mp" source="sourceDB" distribution="ordered" type="matrix_rows" pageSize="3"
+              numProcess="2" target="" />
+    <!-- default distribution: every worker shuffles the full unpaged read, so it must arrive in one order -->
+    <generate name="table_random_mp" source="sourceDB" type="matrix_rows" pageSize="3" numProcess="2" target="" />
+
+    <!-- selector without an own ORDER BY: every output column -->
+    <generate name="selector_unordered" source="sourceDB" distribution="ordered"
+              selector="SELECT grp, id FROM matrix_rows" pageSize="5" target="" />
+    <generate name="selector_unordered_mp" source="sourceDB" distribution="ordered"
+              selector="SELECT grp, id FROM matrix_rows" pageSize="3" numProcess="2" target="" />
+    <generate name="selector_window" source="sourceDB" distribution="ordered"
+              selector="SELECT grp, id, ROW_NUMBER() OVER (ORDER BY id) AS rn FROM matrix_rows" pageSize="5" target="" />
+
+    <!-- selector with an own ORDER BY: it stays the source order, remaining columns break its ties -->
+    <generate name="selector_unique_order" source="sourceDB" distribution="ordered"
+              selector="SELECT grp, id FROM matrix_rows ORDER BY id DESC" pageSize="5" target="" />
+    <generate name="selector_tied_order" source="sourceDB" distribution="ordered"
+              selector="SELECT grp, id FROM matrix_rows ORDER BY grp" pageSize="5" target="" />
+    <generate name="selector_tied_order_mp" source="sourceDB" distribution="ordered"
+              selector="SELECT grp, id FROM matrix_rows ORDER BY grp" pageSize="3" numProcess="2" target="" />
+    <generate name="selector_alias_order" source="sourceDB" distribution="ordered"
+              selector="SELECT grp AS g, id FROM matrix_rows ORDER BY grp DESC" pageSize="5" target="" />
+    <generate name="selector_star_order" source="sourceDB" distribution="ordered"
+              selector="SELECT * FROM matrix_rows r ORDER BY r.grp" pageSize="5" target="" />
+    <generate name="selector_union_order" source="sourceDB" distribution="ordered"
+              selector="SELECT grp, id FROM matrix_rows WHERE grp = 1 UNION ALL SELECT grp, id FROM matrix_rows WHERE grp = 3 ORDER BY grp DESC"
+              pageSize="3" target="" />
+    <generate name="selector_terminated" source="sourceDB" distribution="ordered"
+              selector="SELECT grp, id FROM matrix_rows ORDER BY id; -- trailing comment" pageSize="5" target="" />
+
+    <!-- selector with an own row limit: a bounded result, deterministic inside its limit, paged in its own order -->
+    <generate name="selector_bounded_ordered" source="sourceDB" distribution="ordered"
+              selector="{bounded_ordered_selector}" pageSize="3" target="" />
+    <generate name="selector_bounded_unordered" source="sourceDB" distribution="ordered"
+              selector="{bounded_unordered_selector}" pageSize="3" target="" />
+
+    <!-- variable selector: counted (count query) and paged, wrapping cyclically -->
+    <generate name="variable_selector_cyclic" count="15" target="">
+        <variable name="row" source="sourceDB" selector="SELECT grp, id FROM matrix_rows ORDER BY id DESC"
+                  distribution="ordered" cyclic="True" />
+        <key name="id" script="row.id" />
+    </generate>
+
+    <!-- <execute> scripts: semicolons, comment markers, percent and colon inside literals; comments; PL/SQL blocks -->
+    <generate name="script_rows" source="sourceDB" distribution="ordered"
+              selector="SELECT id, note FROM matrix_script ORDER BY id" target="" />
+</setup>

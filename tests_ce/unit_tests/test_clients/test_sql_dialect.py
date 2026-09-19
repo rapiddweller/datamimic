@@ -7,7 +7,7 @@
 """sql_dialect: a page keeps the selector's own ORDER BY first and breaks its ties with the remaining
 output columns (#228); scripts split only at statement-ending semicolons. Pure SQL text handling without
 a database, so a Python test; paging and script execution against real databases are covered by the DSL
-models in tests_ce/external_service_tests/test_rdbms_paging_order."""
+models in tests_ce/external_service_tests/test_rdbms_sql_matrix."""
 
 import pytest
 

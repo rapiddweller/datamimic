@@ -1,0 +1,6 @@
+<setup>
+    <database id="sourceDB" system="sqlite" />
+    <execute uri="script/setup_sqlite.scr.sql" target="sourceDB" />
+    <include uri="conf/sqlite.properties" />
+    <include uri="matrix_cases.xml" />
+</setup>

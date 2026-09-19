@@ -56,6 +56,8 @@ _CONNECTION_IDENTITY = {
     "none_as_null_col",
 }
 
+# <execute> scripts are raw SQL: no bind parameters (":new" in a trigger) and no DBAPI percent formatting ("g % 3")
+_RAW_SCRIPT = {"no_parameters": True}
 
 class RdbmsClient(DatabaseClient):
     def __init__(self, credential: RdbmsConnectionConfig, task_id: str | None = None):
@@ -240,7 +242,7 @@ class RdbmsClient(DatabaseClient):
             transaction = connection.begin()
             try:
                 for command in sql_dialect.split_script(query, self._credential.dbms):
-                    connection.execute(sqlalchemy.text(command))
+                    connection.exec_driver_sql(command, execution_options=_RAW_SCRIPT)
                 # Commit the changes to the database
                 transaction.commit()
             except Exception as err:

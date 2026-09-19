@@ -1,0 +1,5 @@
+<!-- dbms is a closed set (Dbms enum): an unsupported system fails when the descriptor is read, not mid-run -->
+<setup>
+    <database id="sourceDB" dbms="db2" host="localhost" port="50000" database="sample" user="u" password="p" />
+    <generate name="never" source="sourceDB" type="matrix_rows" target="" />
+</setup>

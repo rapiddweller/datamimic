@@ -151,7 +151,7 @@ def split_script(script: str, dbms: Dbms) -> list[str]:
 def _parse_selector(query: str, dbms: Dbms) -> exp.Query | None:
     """The selector as a query AST; None when it is not a parseable query."""
     try:
-        parsed = sqlglot.parse_one(query, read=DIALECT_RULES[dbms].sqlglot_dialect)
+        parsed = sqlglot.parse_one(_statement_text(query, dbms), read=DIALECT_RULES[dbms].sqlglot_dialect)
     except sqlglot.errors.ParseError as error:
         logger.warning(f"Cannot parse selector, paging it in canonical column order: {error}")
         return None
@@ -246,16 +246,18 @@ def _paging_clause(dbms: Dbms, skip: int, limit: int) -> str:
 
 
 def _derived_table(query: str, dbms: Dbms) -> str:
-    """``(<query>) [AS] original_query``, valid as a derived table in the dialect. SQL Server accepts an
+    """``(<statement>) [AS] original_query``, valid as a derived table in the dialect: without the selector's
+    trailing semicolon or comment, which would end or swallow the enclosing query. SQL Server accepts an
     ORDER BY there only together with OFFSET/TOP, so an ordered selector without a row limit gets
     OFFSET 0 ROWS."""
     rules = DIALECT_RULES[dbms]
+    statement = _statement_text(query, dbms)
     if not rules.accepts_order_by_in_derived_table:
         parsed = _parse_selector(query, dbms)
         if parsed is not None and _top_level_order(parsed) is not None and not _has_own_row_limit(parsed):
-            query = f"{_statement_text(query, dbms)} OFFSET 0 ROWS"
+            statement = f"{statement} OFFSET 0 ROWS"
     alias = "AS original_query" if rules.accepts_as_before_subquery_alias else "original_query"
-    return f"({query}) {alias}"
+    return f"({statement}) {alias}"
 
 
 def _next_semicolon(tokens: list[Token], start: int) -> int:
