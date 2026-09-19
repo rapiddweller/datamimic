@@ -37,8 +37,15 @@ class TestSeparator:
         assert all(len(product) == 3 for product in result["people2"])
 
     def test_part(self):
+        """Both separators parse the same rows. Unseeded nested keys shuffle independently per statement,
+        so the full list is compared as a set and the count-limited list as a subset of it."""
         engine = DataMimicTest(test_dir=self._test_dir, filename="test_part_csv.xml", capture_test_result=True)
         engine.test_with_timer()
 
         result = engine.capture_result()
-        assert result["people1"] == result["people2"]
+        people1, people2 = result["people1"][0], result["people2"][0]
+        by_name = sorted(people1["peopleCsv"], key=lambda person: person["name"])
+        assert by_name == sorted(people2["peopleCsv"], key=lambda person: person["name"])
+        for short in (people1["shortPeopleCsv"], people2["shortPeopleCsv"]):
+            assert len(short) == 2
+            assert all(person in by_name for person in short)

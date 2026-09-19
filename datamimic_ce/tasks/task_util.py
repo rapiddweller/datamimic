@@ -224,7 +224,9 @@ class TaskUtil:
                             ConverterEnum.CutLength.value: CutLengthConverter,
                             ConverterEnum.Substring.value: SubstringConverter,
                             ConverterEnum.Append.value: AppendConverter,
-                            ConverterEnum.Hash.value: functools.partial(HashConverter, key=context.root.hash_key),
+                            ConverterEnum.Hash.value: functools.partial(
+                                HashConverter, key=context.root.run_seed.key_for("hash-converter")
+                            ),
                             ConverterEnum.JavaHash.value: JavaHashConverter,
                             ConverterEnum.Timestamp2Date.value: Timestamp2DateConverter,
                             ConverterEnum.Date2Timestamp.value: Date2TimestampConverter,
