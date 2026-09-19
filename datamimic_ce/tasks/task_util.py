@@ -3,6 +3,7 @@
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
+import functools
 import string
 from decimal import Decimal
 from typing import Any
@@ -223,7 +224,7 @@ class TaskUtil:
                             ConverterEnum.CutLength.value: CutLengthConverter,
                             ConverterEnum.Substring.value: SubstringConverter,
                             ConverterEnum.Append.value: AppendConverter,
-                            ConverterEnum.Hash.value: HashConverter,
+                            ConverterEnum.Hash.value: functools.partial(HashConverter, key=context.root.hash_key),
                             ConverterEnum.JavaHash.value: JavaHashConverter,
                             ConverterEnum.Timestamp2Date.value: Timestamp2DateConverter,
                             ConverterEnum.Date2Timestamp.value: Date2TimestampConverter,

@@ -5,7 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
+import hashlib
 import random
+import secrets
 import uuid
 from pathlib import Path
 from random import Random
@@ -57,6 +59,7 @@ class SetupContext(Context):
         report_logging: bool = True,
         demographic_context: DemographicContext | None = None,
         seed: int | None = None,
+        hash_key: bytes | None = None,
     ):
         # SetupContext is always its root_context
         super().__init__(self)
@@ -104,6 +107,7 @@ class SetupContext(Context):
         # their own seed derive a reproducible child RNG from this; None => unseeded.
         self._root_seed = seed
         self._root_rng: Random | None = Random(seed) if seed is not None else None
+        self._hash_key = hash_key if hash_key is not None else self._new_hash_key(seed)
         # Cached call-time rng — populated lazily on first ``.rng`` access.
         self._call_rng: Any = None
         self._seeded_faker: Faker | None = None
@@ -115,6 +119,18 @@ class SetupContext(Context):
         unseeded (wall-clock random).
         """
         return spawn_rng(self._root_rng) if self._root_rng is not None else None
+
+    @staticmethod
+    def _new_hash_key(seed: int | None) -> bytes:
+        """The Hash converter's HMAC key: <setup rngSeed> is the key, else a random key per run."""
+        if seed is None:
+            return secrets.token_bytes(32)
+        return hashlib.sha256(f"datamimic:hash-converter:{seed}".encode()).digest()
+
+    @property
+    def hash_key(self) -> bytes:
+        """One per run, handed to worker copies, so a value hashes to the same token across the whole run."""
+        return self._hash_key
 
     @property
     def is_seeded(self) -> bool:
@@ -178,6 +194,7 @@ class SetupContext(Context):
             current_seed=self._current_seed,
             demographic_context=copy.deepcopy(self._demographic_context, memo),
             seed=self._root_seed,
+            hash_key=self._hash_key,
         )
 
     def _deepcopy_clients(self, memo):
