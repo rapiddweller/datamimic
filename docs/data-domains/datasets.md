@@ -43,7 +43,7 @@ Error handling and logging
 - Fallback warnings must log once per dataset code. The centralized logger in `dataset_path` already ensures this.
 
 Supported datasets discovery (recommendation)
-- When a service needs to declare supported datasets, compute the intersection of required dataset file sets using `datamimic_ce.utils.supported_datasets.compute_supported_datasets(...)` instead of ad-hoc scans.
+- When a service needs to declare supported datasets, compute the intersection of required dataset file sets using `datamimic_ce.domains.utils.supported_datasets.compute_supported_datasets(...)` instead of ad-hoc scans.
 
 Examples
 - Country list: `dataset_path("common", f"country_{self._dataset}.csv", start=Path(__file__))`

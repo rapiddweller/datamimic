@@ -14,6 +14,8 @@ from datamimic_ce.config import settings
 from datamimic_ce.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
 from datamimic_ce.constants.element_constants import (
     EL_ARRAY,
+    EL_ASSERT,
+    EL_COMMENT,
     EL_CONDITION,
     EL_DATABASE,
     EL_DEMOGRAPHICS,
@@ -22,11 +24,14 @@ from datamimic_ce.constants.element_constants import (
     EL_ELSE,
     EL_ELSE_IF,
     EL_EXECUTE,
+    EL_FIELD,
     EL_GENERATE,
     EL_GENERATOR,
+    EL_ID,
     EL_IF,
     EL_INCLUDE,
     EL_ITEM,
+    EL_ITERATE,
     EL_KEY,
     EL_LIST,
     EL_MEMSTORE,
@@ -34,10 +39,15 @@ from datamimic_ce.constants.element_constants import (
     EL_NESTED_KEY,
     EL_REFERENCE,
     EL_SETUP,
+    EL_STATE_MACHINE,
+    EL_TRANSITION,
+    EL_VALUE,
     EL_VARIABLE,
+    EL_WHILE,
 )
 from datamimic_ce.logger import logger
 from datamimic_ce.parsers.array_parser import ArrayParser
+from datamimic_ce.parsers.assert_parser import AssertParser
 from datamimic_ce.parsers.condition_parser import ConditionParser
 from datamimic_ce.parsers.database_parser import DatabaseParser
 from datamimic_ce.parsers.echo_parser import EchoParser
@@ -55,7 +65,9 @@ from datamimic_ce.parsers.list_parser import ListParser
 from datamimic_ce.parsers.memstore_parser import MemstoreParser
 from datamimic_ce.parsers.nested_key_parser import NestedKeyParser
 from datamimic_ce.parsers.reference_parser import ReferenceParser
+from datamimic_ce.parsers.state_machine_parser import StateMachineParser
 from datamimic_ce.parsers.variable_parser import VariableParser
+from datamimic_ce.parsers.while_parser import WhileParser
 from datamimic_ce.statements.array_statement import ArrayStatement
 from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.condition_statement import ConditionStatement
@@ -64,6 +76,7 @@ from datamimic_ce.statements.include_statement import IncludeStatement
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.setup_statement import SetupStatement
 from datamimic_ce.statements.statement import Statement
+from datamimic_ce.statements.while_statement import WhileStatement
 from datamimic_ce.utils.file_util import FileUtil
 
 
@@ -80,6 +93,8 @@ class ParserUtil:
             return EL_NESTED_KEY
         elif isinstance(stmt, GenerateStatement):
             return EL_GENERATE
+        elif isinstance(stmt, WhileStatement):
+            return EL_WHILE
         else:
             raise ValueError(f"Cannot get element tag for statement {stmt.__class__.__name__}")
 
@@ -91,6 +106,7 @@ class ParserUtil:
             EL_SETUP: {
                 EL_MONGODB,
                 EL_GENERATE,
+                EL_ITERATE,
                 EL_DATABASE,
                 EL_INCLUDE,
                 EL_MEMSTORE,
@@ -99,9 +115,14 @@ class ParserUtil:
                 EL_VARIABLE,
                 EL_GENERATOR,
                 EL_DEMOGRAPHICS,
+                EL_STATE_MACHINE,
+                EL_ASSERT,
             },
+            EL_STATE_MACHINE: {EL_TRANSITION},
+            EL_REFERENCE: {EL_FIELD},
             EL_NESTED_KEY: {
                 EL_KEY,
+                EL_ID,
                 EL_VARIABLE,
                 EL_NESTED_KEY,
                 EL_EXECUTE,
@@ -110,11 +131,15 @@ class ParserUtil:
                 EL_ELEMENT,
                 EL_ARRAY,
                 EL_CONDITION,
+                EL_WHILE,
+                EL_ASSERT,
             },
             EL_CONDITION: {EL_IF, EL_ELSE_IF, EL_ELSE},
             EL_GENERATE: {
                 EL_GENERATE,
+                EL_ITERATE,
                 EL_KEY,
+                EL_ID,
                 EL_VARIABLE,
                 EL_REFERENCE,
                 EL_NESTED_KEY,
@@ -122,15 +147,21 @@ class ParserUtil:
                 EL_ARRAY,
                 EL_ECHO,
                 EL_CONDITION,
+                EL_WHILE,
                 EL_INCLUDE,
+                EL_ASSERT,
             },
             EL_INCLUDE: {EL_SETUP},
-            EL_ITEM: {EL_KEY, EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ELEMENT},
+            EL_ITEM: {EL_KEY, EL_ID, EL_NESTED_KEY, EL_LIST, EL_ARRAY, EL_ELEMENT},
             EL_KEY: {EL_ELEMENT},
             EL_LIST: {EL_ITEM},
+            # <value> only valid inside type="literal" arrays; ArrayParser enforces that, not this
+            # generic tag-set (which only says "the tag is structurally allowed here").
+            EL_ARRAY: {EL_VALUE},
             EL_IF: None,
             EL_ELSE_IF: None,
             EL_ELSE: None,
+            EL_WHILE: None,
         }
 
         return valid_sub_element_dict.get(ele_tag, set())
@@ -148,11 +179,11 @@ class ParserUtil:
             from datamimic_ce.parsers.mongodb_parser import MongoDBParser
 
             return MongoDBParser(element, properties)
-        elif tag == EL_GENERATE:
+        elif tag in (EL_GENERATE, EL_ITERATE):
             from datamimic_ce.parsers.generate_parser import GenerateParser
 
             return GenerateParser(element, properties)
-        elif tag == EL_KEY:
+        elif tag in (EL_KEY, EL_ID):
             from datamimic_ce.parsers.key_parser import KeyParser
 
             return KeyParser(element, properties)
@@ -178,6 +209,10 @@ class ParserUtil:
             return IfParser(element, properties)
         elif tag == EL_CONDITION:
             return ConditionParser(element, properties)
+        elif tag == EL_WHILE:
+            return WhileParser(element, properties)
+        elif tag == EL_ASSERT:
+            return AssertParser(element, properties)
         elif tag == EL_ELSE_IF:
             return ElseIfParser(element, properties)
         elif tag == EL_ELSE:
@@ -194,6 +229,8 @@ class ParserUtil:
             from datamimic_ce.parsers.demographics_parser import DemographicsParser
 
             return DemographicsParser(element, properties)
+        elif tag == EL_STATE_MACHINE:
+            return StateMachineParser(element, properties)
         else:
             raise ValueError(f"Cannot get parser for element <{tag}>")
 
@@ -218,6 +255,9 @@ class ParserUtil:
         copied_props = copy.deepcopy(properties) if properties else {}
 
         for child_ele in element:
+            # <comment> is a documentation-only element (legacy DSL compatibility): ignored, produces no statement.
+            if child_ele.tag == EL_COMMENT:
+                continue
             parser = ParserUtil._get_parser_by_element(child_ele, copied_props)
             # TODO: add more child-element-able parsers such as
             #  attribute, reference, part,... (i.e. elements which have attribute 'name')
@@ -235,15 +275,20 @@ class ParserUtil:
                     MemstoreParser
                     | ExecuteParser
                     | IncludeParser
-                    | ReferenceParser
                     | ArrayParser
                     | EchoParser
-                    | GeneratorParser,
+                    | GeneratorParser
+                    | StateMachineParser
+                    | AssertParser,
                 ):
                     stmt = parser.parse()
+                elif isinstance(parser, ReferenceParser):
+                    # Pass the parent so the reference's full_name is a unique path (e.g.
+                    # "orders|slot"), not a bare name that collides across <generate>s.
+                    stmt = parser.parse(parent_stmt=parent_stmt)
                 elif isinstance(parser, KeyParser):
                     stmt = parser.parse(descriptor_dir=descriptor_dir, parent_stmt=parent_stmt)
-                elif isinstance(parser, ConditionParser):
+                elif isinstance(parser, ConditionParser | WhileParser):
                     stmt = parser.parse(
                         descriptor_dir=descriptor_dir, parent_stmt=cast(CompositeStatement, parent_stmt)
                     )

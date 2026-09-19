@@ -7,6 +7,7 @@
 import csv
 import json
 import shutil
+import zipfile
 from pathlib import Path
 
 import numpy as np
@@ -17,6 +18,40 @@ from datamimic_ce.utils.file_content_storage import FileContentStorage
 
 
 class FileUtil:
+    @staticmethod
+    def read_dbunit_to_dict_list(path: Path, table: str) -> list[dict[str, str | None]]:
+        """Read one table from a dbunit flat-XML dataset.
+
+        Flat XML: every child of <dataset> is a row, the element name is the table, its attributes are
+        the columns. A dataset holds many tables, so `table` selects one. Rows of one table may carry
+        different columns ("ragged") - an absent attribute is a NULL, a present empty string is "". The
+        result unifies the columns across the table (column sensing, like DbUnit >= 2.3): every row
+        carries every column, an absent one filled with None. This gives faithful table semantics (a
+        NULL cell, not a missing key) and lets a batch RDBMS insert see a uniform column set.
+
+        Security: a value with XML character entities is decoded. ElementTree does NOT fetch external
+        DTDs, but it DOES expand internal entities - dbunit files are trusted local fixtures, not
+        untrusted input; do not point this at attacker-controlled XML.
+        """
+        import xml.etree.ElementTree as ET  # noqa: N817
+
+        try:
+            root = ET.parse(str(path)).getroot()
+        except ET.ParseError as e:
+            raise ValueError(f"dbunit dataset '{path}' is not well-formed XML: {e}") from e
+        # dbunit's root is <dataset>; anything else is not a dataset
+        if root.tag != "dataset":
+            raise ValueError(f"dbunit dataset '{path}' must have a <dataset> root, got <{root.tag}>")
+        raw = [child.attrib for child in root if child.tag == table]
+        if not raw:
+            available = sorted({child.tag for child in root})
+            raise ValueError(f"dbunit dataset '{path}' has no rows for table '{table}'; available: {available}")
+        # column sensing: union of columns in first-appearance order, absent -> None
+        columns: dict[str, None] = {}
+        for attrib in raw:
+            columns.update(dict.fromkeys(attrib))
+        return [{col: attrib.get(col) for col in columns} for attrib in raw]
+
     @staticmethod
     def parse_properties(path: Path, encoding="utf-8") -> dict[str, str]:
         """
@@ -67,18 +102,126 @@ class FileUtil:
         Read data from csv and parse into list of dict
         """
         raw_data = FileUtil._read_raw_csv(file_path, separator, encoding)
-        header = raw_data[0]
+        if not raw_data:
+            return []  # an empty CSV is an empty source, not a crash
+        # Column names never carry meaningful surrounding whitespace; a padded/aligned CSV
+        # (e.g. migrated legacy entity CSVs: "ean_code     ,name    ,...") would otherwise produce
+        # keys like "name    " that a script's field access ("this.name") cannot resolve.
+        header = [col.strip() if isinstance(col, str) else col for col in raw_data[0]]
         processed_data = [dict(zip(header, row, strict=False)) for row in raw_data[1:]]
         return processed_data
 
     @staticmethod
+    def read_xlsx_to_dict_list(file_path: Path, sheet_name: str | None = None) -> list[dict]:
+        """Read the first row of an .xlsx sheet as the header and each following row as a dict.
+
+        Robust to real-world sheets: an empty sheet/file yields []; blank header cells are not turned
+        into ``None``-keyed columns; a row shorter than the header pads missing cells with ``None`` and
+        cells past the last header column are ignored. A file that is not a valid .xlsx raises a clear
+        ValueError rather than a bare BadZipFile.
+        """
+        from openpyxl import load_workbook
+        from openpyxl.utils.exceptions import InvalidFileException
+
+        try:
+            workbook = load_workbook(file_path, read_only=True, data_only=True)
+        except (InvalidFileException, zipfile.BadZipFile, KeyError) as e:
+            raise ValueError(f"Invalid XLSX file '{file_path}': {e}") from e
+
+        try:
+            sheet = workbook[sheet_name] if sheet_name else workbook.active
+        except KeyError as e:
+            raise ValueError(f"XLSX file '{file_path}' has no sheet named '{sheet_name}'") from e
+        if sheet is None:
+            return []  # no sheet -> empty source
+
+        rows = sheet.iter_rows(values_only=True)
+        header = next(rows, None)
+        if header is None:
+            return []  # empty sheet is an empty source, not a crash
+        # Real columns = non-blank header cells, keyed by their column position (skip blank headers so
+        # openpyxl's rectangular row padding never produces a None-keyed column).
+        columns = [(idx, str(name)) for idx, name in enumerate(header) if name is not None]
+        return [{name: (row[idx] if idx < len(row) else None) for idx, name in columns} for row in rows]
+
+    @staticmethod
+    def _parses_as_float(value: str) -> bool:
+        try:
+            float(value)
+            return True
+        except (TypeError, ValueError):
+            return False
+
+    @staticmethod
+    def parse_fixed_width_spec(spec: str) -> list[tuple[str, int, bool, str]]:
+        """Parse a fixed-width column spec (legacy-DSL grammar): ``name[width]`` (left-aligned,
+        space-padded) or ``name[width r pad]`` (right-aligned, e.g. ``price[8r0]`` = width 8,
+        zero-padded). Returns ``(name, width, right_aligned, pad_char)`` per column, in order.
+        """
+        import re
+
+        fields = []
+        for token in spec.split(","):
+            token = token.strip()
+            match = re.fullmatch(r"(\w+)\[(\d+)(r)?(.)?\]", token)
+            if not match:
+                raise ValueError(f"Invalid fixed-width column spec token: '{token}' in '{spec}'")
+            name, width, right_flag, pad = match.groups()
+            right_aligned = right_flag is not None
+            pad_char = pad if pad is not None else ("0" if right_aligned else " ")
+            fields.append((name, int(width), right_aligned, pad_char))
+        return fields
+
+    @staticmethod
+    def read_fixed_width_to_dict_list(file_path: Path, spec: str | None = None) -> list[dict]:
+        """Read a fixed-width-column file into a list of dicts.
+
+        Self-describing by default (``spec=None``): the file's first line must be
+        ``# name[13],name2[30],...`` (the column spec as a comment) so the reader needs only the
+        path - the same convention ``FixedWidthExporter`` writes. Pass ``spec`` explicitly to read
+        a file that doesn't carry that header line.
+        """
+        lines = FileContentStorage.load_file_with_custom_func(
+            str(file_path), lambda: file_path.read_text(encoding="utf-8").splitlines()
+        )
+        if not lines:
+            return []  # an empty file is an empty source, not a crash
+
+        if spec is not None:
+            fields = FileUtil.parse_fixed_width_spec(spec)
+            data_lines = lines
+        else:
+            header = lines[0]
+            if not header.startswith("#"):
+                raise ValueError(
+                    f"Fixed-width file '{file_path}' has no '# name[width],...' spec header on its "
+                    f"first line - pass spec= explicitly to read a file without one"
+                )
+            fields = FileUtil.parse_fixed_width_spec(header[1:])
+            data_lines = lines[1:]
+
+        result = []
+        for line in data_lines:
+            row = {}
+            offset = 0
+            for name, width, right_aligned, pad_char in fields:
+                raw = line[offset : offset + width]
+                row[name] = raw.lstrip(pad_char) if right_aligned else raw.strip()
+                offset += width
+            result.append(row)
+        return result
+
+    @staticmethod
     def read_weight_csv(file_path: Path, separator: str = ",", encoding="utf-8") -> DataFrame:
         """
-        Read none_header, 2_columns, weight csv
-        then return as DataFrame
+        Read a 2-column value|weight csv, header optional. Auto-detected: if the first row's
+        weight column doesn't parse as a number, it's a header row and gets skipped.
         """
         # Load file content from cache or file
         raw_data = FileUtil._read_raw_csv(file_path, separator, encoding)
+
+        if raw_data and len(raw_data[0]) > 1 and not FileUtil._parses_as_float(raw_data[0][1]):
+            raw_data = raw_data[1:]
 
         # Convert data to DataFrame, select only 2 columns (data and weight)
         df = pd.DataFrame(raw_data, columns=[0, 1])

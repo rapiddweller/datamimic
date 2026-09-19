@@ -1,0 +1,5 @@
+<setup>
+    <generate name="g" count="not_a_number_or_script" target="">
+        <key name="i" constant="x"/>
+    </generate>
+</setup>

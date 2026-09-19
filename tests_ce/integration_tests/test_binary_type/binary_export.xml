@@ -1,0 +1,15 @@
+<setup rngSeed="42">
+    <!-- one binary field through every file exporter + a real sqlite BLOB write-then-read-back -->
+    <database id="db" database="binary_type_db" dbms="sqlite"/>
+    <execute type="sql" target="db">
+        DROP TABLE IF EXISTS blobs;
+        CREATE TABLE blobs (id INTEGER PRIMARY KEY, payload BLOB NOT NULL);
+    </execute>
+    <generate name="blobs" count="5" target="db,CSV,XLSX,JSON">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="payload" type="binary" minLength="6" maxLength="6"/>
+    </generate>
+    <generate name="back" source="db" selector="SELECT id, payload FROM blobs ORDER BY id" distribution="ordered" target="">
+        <key name="len_back" script="len(payload)"/>
+    </generate>
+</setup>

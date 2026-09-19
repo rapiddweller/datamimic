@@ -1,0 +1,11 @@
+<setup>
+    <memstore id="mem"/>
+
+    <!-- 3 pages (pageSize 10): the memstore consumes the merged pages at the END of the
+         run - exercises the production (non-test-mode) accumulation path -->
+    <generate name="mem_src" count="25" pageSize="10" target="mem">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+
+    <generate name="mem_out" source="mem" type="mem_src" exportUri="memstore_prod_out" target="JSON"/>
+</setup>

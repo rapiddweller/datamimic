@@ -1,4 +1,0 @@
-<setup multiprocessing="{multiprocessing}">
-    <database id="sourceDB" system="mssql" environment="environment"/>
-    <generate name="time_measure" source="sourceDB" type="time_measure" target=""/>
-</setup>

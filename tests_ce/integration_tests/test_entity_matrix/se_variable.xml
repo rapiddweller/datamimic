@@ -1,0 +1,8 @@
+<setup>
+    <database id="db" dbms="sqlite" database="matrix_var"/>
+    <execute target="db" type="sql">DROP TABLE IF EXISTS people; CREATE TABLE people (n INTEGER); INSERT INTO people VALUES (5),(6),(7)</execute>
+    <generate name="out" count="3" target="">
+        <variable name="p" source="db" sourceEntity="people" cyclic="true"/>
+        <key name="n" script="p.n"/>
+    </generate>
+</setup>

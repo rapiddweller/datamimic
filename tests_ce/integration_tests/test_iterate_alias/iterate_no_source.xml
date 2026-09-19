@@ -1,0 +1,7 @@
+<setup rngSeed="7">
+    <!-- Sourceless <iterate> is a contradiction (nothing to iterate) -> rejected at parse.
+         Synthetic generation must use <generate>. -->
+    <iterate name="bad" count="5" target="">
+        <key name="v" type="int" generator="IncrementGenerator"/>
+    </iterate>
+</setup>

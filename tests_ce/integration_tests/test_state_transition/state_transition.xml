@@ -1,0 +1,8 @@
+<setup>
+    <!-- Weighted state machine: order lifecycle. Each row emits the next state of a
+         walk; terminals (cancelled/delivered) restart the walk at the start (open). -->
+    <generate name="orders" count="300" target="">
+        <key name="status"
+             generator="StateTransitionGenerator('open->paid, paid->shipped:0.9, paid->cancelled:0.1, shipped->delivered')"/>
+    </generate>
+</setup>

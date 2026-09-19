@@ -1,0 +1,6 @@
+<setup>
+    <!-- maxLength smaller than the magic header + trailer: impossible, must raise -->
+    <generate name="g" count="1" target="">
+        <key name="bad" type="binary" mimeType="application/pdf" minLength="2" maxLength="4"/>
+    </generate>
+</setup>

@@ -1,0 +1,5 @@
+<setup multiprocessing="True" numProcess="2">
+    <generate name="rows" count="10" target="ConsoleExporter">
+        <key name="v" type="int" min="1" max="10" distribution="step"/>
+    </generate>
+</setup>

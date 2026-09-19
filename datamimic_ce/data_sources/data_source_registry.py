@@ -9,6 +9,7 @@ import itertools
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 from random import Random
+from typing import Any
 
 import xmltodict
 from sqlalchemy.exc import OperationalError, ProgrammingError
@@ -17,12 +18,18 @@ from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
+from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.statements.statement import Statement
+from datamimic_ce.statements.statement_util import StatementUtil
+from datamimic_ce.statements.variable_statement import VariableStatement
+from datamimic_ce.utils.distribution_sampling import cumulated_index
 from datamimic_ce.utils.file_content_storage import FileContentStorage
 from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.utils.unique_sampling import unique_values
 
 
 class DataSourceRegistry:
@@ -35,6 +42,10 @@ class DataSourceRegistry:
         # Load source data from file
         if key.endswith(".csv"):
             return FileUtil.read_csv_to_dict_list(Path(key), csv_separator)
+        elif key.endswith(".xlsx"):
+            return FileUtil.read_xlsx_to_dict_list(Path(key))
+        elif key.endswith(".fcw"):
+            return FileUtil.read_fixed_width_to_dict_list(Path(key))
         elif key.endswith(".json"):
             json_data = FileUtil.read_json(Path(key))
             if isinstance(json_data, list):
@@ -51,6 +62,17 @@ class DataSourceRegistry:
             raise ValueError(f"Data source '{key}' is not supported is not handled by DataSourceRegistry")
 
     @staticmethod
+    def data_source_cache_key(stmt: Statement) -> tuple[str | None, str | None]:
+        """Cache key for a statement's data-source length. Statements may SHARE a name (e.g. three
+        <iterate name='db_product'> feeding one table from different sources), so the key must
+        include the source - keyed by name alone, the second statement inherits the first one's
+        length and silently truncates its rows. A tuple key on real statement types, no string
+        concatenation, no duck-typing."""
+        if isinstance(stmt, GenerateStatement | VariableStatement | NestedKeyStatement):
+            return (stmt.full_name, stmt.source)
+        return (stmt.full_name, None)
+
+    @staticmethod
     def set_data_source_length(ctx: SetupContext | GenIterContext, stmt: Statement) -> None:
         """
         Calculate length of data source then save into context
@@ -63,7 +85,7 @@ class DataSourceRegistry:
             return
 
         root_ctx = ctx.root
-        source_id: str | None = stmt.full_name
+        source_id: tuple[str | None, str | None] = DataSourceRegistry.data_source_cache_key(stmt)
         ds_len: int = 0
 
         # Check if data source length is already set
@@ -97,8 +119,15 @@ class DataSourceRegistry:
             # 2: Get source info from ctx client (e.g. checking if it is SQL, MongoDB or CSV source)
 
             # Check if source is data source file or database collection/table
+            # dbunit dataset: one table's row count (checked before the generic .xml branch below).
+            if source_str.endswith(".dbunit.xml"):
+                ds_len = len(
+                    FileUtil.read_dbunit_to_dict_list(
+                        root_ctx.descriptor_dir / source_str, StatementUtil.resolve_source_entity(stmt)
+                    )
+                )
             # 2.1: Check if datasource is csv file
-            if source_str.endswith(".csv") or source_str.endswith(".json") or source_str.endswith(".xml"):
+            elif source_str.endswith((".csv", ".json", ".xml", ".xlsx", ".fcw")):
                 ds_len = len(
                     DataSourceRegistry._get_source(
                         str(root_ctx.descriptor_dir / source_str),
@@ -107,7 +136,9 @@ class DataSourceRegistry:
                 )
             # 2.4: Check if datasource is memstore
             elif root_ctx.memstore_manager.contain(source_str) and hasattr(stmt, "type"):
-                ds_len = root_ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(stmt.type or stmt.name)
+                ds_len = root_ctx.memstore_manager.get_memstore(source_str).get_data_len_by_type(
+                    StatementUtil.resolve_source_entity(stmt)
+                )
             elif root_ctx.get_client_by_id(source_str) is not None:
                 client = root_ctx.get_client_by_id(source_str)
                 if client is None:
@@ -146,8 +177,8 @@ class DataSourceRegistry:
                                 f"with iterationSelector '{stmt.iteration_selector}'"
                             )
                             return
-                    elif hasattr(stmt, "type") and stmt.type is not None:
-                        ds_len = client.count_table_length(table_name=str(stmt.type) or str(stmt.name))
+                    elif hasattr(stmt, "type") and (stmt.source_entity is not None or stmt.type is not None):
+                        ds_len = client.count_table_length(table_name=StatementUtil.resolve_source_entity(stmt))
 
                 elif isinstance(client, MongoDBClient) and hasattr(stmt, "selector") and hasattr(stmt, "type"):
                     if stmt.selector is not None:
@@ -155,9 +186,9 @@ class DataSourceRegistry:
                             ds_len = client.count_query_length(stmt.selector)
                         except ValueError:
                             return
-                    elif stmt.type is not None:
+                    elif (collection := StatementUtil.resolve_source_collection(stmt)) is not None:
                         try:
-                            ds_len = client.count(collection_name=stmt.type)
+                            ds_len = client.count(collection_name=collection)
                         except ValueError:
                             return
                     elif hasattr(stmt, "iteration_selector") and stmt.iteration_selector is not None:
@@ -179,14 +210,23 @@ class DataSourceRegistry:
                 logger.warning(f"Data source '{source_str}' is not supported for length calculation")
                 return
 
-        # 3: Set length of data source
+        # 3: Set length of data source. offset= shrinks the available window - the count
+        # default and the count-above-source warning must both see the post-offset size.
+        if isinstance(stmt, GenerateStatement) and stmt.offset:
+            ds_len = max(0, ds_len - stmt.offset)
         root_ctx.data_source_len[source_id] = ds_len
 
     @staticmethod
-    def get_cyclic_data_list(data: Iterable, pagination: DataSourcePagination | None, cyclic: bool = False) -> list:
+    def get_cyclic_data_list(
+        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool = False, offset: int = 0
+    ) -> list:
         """
-        Get cyclic data from iterable data source
+        Get cyclic data from iterable data source. ``offset`` drops the first N rows BEFORE any
+        windowing, so page windows and a cyclic wrap both operate strictly on the post-offset
+        region (a wrap must never re-include skipped rows).
         """
+        if offset:
+            data = list(data)[offset:]
         if pagination is None:
             start_idx = 0
             end_idx = len(list(data))
@@ -269,6 +309,68 @@ class DataSourceRegistry:
         return res[start_idx_cap : start_idx_cap + end_idx - start_idx]
 
     @staticmethod
+    def get_distributed_data(
+        data: Iterable,
+        pagination: DataSourcePagination | None,
+        cyclic: bool | None,
+        seed: int,
+        distribution: SourceDistribution,
+    ) -> list:
+        """Reorder loaded rows for a non-ORDERED distribution: RANDOM shuffles (permutation),
+        CUMULATED selects with a bell-weighted index (with replacement). Single dispatch shared
+        by <variable>, <generate> and <nestedKey>."""
+        if distribution == SourceDistribution.CUMULATED:
+            return DataSourceRegistry.get_cumulated_data(data, pagination, seed)  # cyclic n/a: never runs out
+        return DataSourceRegistry.get_shuffled_data_with_cyclic(data, pagination, cyclic, seed)
+
+    @staticmethod
+    def get_unique_data(
+        data: Iterable[Any], pagination: DataSourcePagination | None, seed: int, label: str
+    ) -> list[Any]:
+        """Select distinct rows without replacement: dedupe + shuffle, then return the page
+        window. Sibling of get_cumulated_data; the unique counterpart of the random/cumulated
+        selection. All pages share ``seed`` (stable per statement) -> one global deduped order ->
+        each takes a disjoint window -> unique holds across pages. Strict: raises rather than
+        silently under-generate when the window exceeds the distinct pool."""
+        distinct = unique_values(data, Random(seed))
+        if pagination is None:
+            return distinct
+        end = pagination.skip + pagination.limit
+        if end > len(distinct):
+            raise ValueError(
+                f"Cannot generate {end} unique values for {label}: only {len(distinct)} distinct available"
+            )
+        return distinct[pagination.skip : end]
+
+    @staticmethod
+    def get_cumulated_data(data: Iterable, pagination: DataSourcePagination | None, seed: int) -> list:
+        """``distribution="cumulated"`` row selection: sample row indices with a
+        bell shape (mean = middle of the load order) WITH replacement.
+
+        Sibling of ``get_shuffled_data_with_cyclic`` (shuffle = permutation, no replacement).
+        No ``cyclic`` parameter — with-replacement sampling never runs out, so wrap-around is
+        meaningless.
+        """
+        rows = list(data)
+        source_len = len(rows)
+        if source_len == 0:
+            return []
+
+        if pagination is None:
+            start_idx, end_idx = 0, source_len
+        else:
+            start_idx = pagination.skip
+            end_idx = pagination.skip + pagination.limit
+        span = end_idx - start_idx
+
+        # One seeded RNG drives a single continuous draw sequence, so paginated batches
+        # stay consistent (page 2 continues page 1). O(start_idx + span) draws;
+        # fine for typical skips, revisit only if huge offsets show up.
+        rng = Random(seed)
+        picks = [rows[cumulated_index(rng, source_len - 1)] for _ in range(start_idx + span)]
+        return picks[start_idx:]
+
+    @staticmethod
     def load_csv_file(
         ctx: SetupContext,
         file_path: Path,
@@ -279,6 +381,7 @@ class DataSourceRegistry:
         source_scripted: bool,
         prefix: str,
         suffix: str,
+        offset: int = 0,
     ) -> list[dict]:
         """
         Load CSV content from file with skip and limit.
@@ -289,6 +392,7 @@ class DataSourceRegistry:
         :param cyclic: Whether to cycle through data.
         :param start_idx: Starting index.
         :param end_idx: Ending index.
+        :param offset: Rows to drop from the start of the file before windowing.
         :return: List of dictionaries representing CSV rows.
         """
         cyclic = cyclic if cyclic is not None else False
@@ -299,7 +403,9 @@ class DataSourceRegistry:
             if (start_idx is not None and end_idx is not None)
             else None
         )
-        result = DataSourceRegistry.get_cyclic_data_list(data=file_data, cyclic=cyclic, pagination=pagination)
+        result = DataSourceRegistry.get_cyclic_data_list(
+            data=file_data, cyclic=cyclic, pagination=pagination, offset=offset
+        )
 
         # if sourceScripted then evaluate python expression in csv
         if source_scripted:
@@ -313,7 +419,9 @@ class DataSourceRegistry:
         return result
 
     @staticmethod
-    def load_json_file(file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None) -> list[dict]:
+    def load_json_file(
+        file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None, offset: int = 0
+    ) -> list[dict]:
         """
         Load JSON content from file using skip and limit.
 
@@ -321,6 +429,7 @@ class DataSourceRegistry:
         :param cyclic: Whether to cycle through data.
         :param start_idx: Starting index.
         :param end_idx: Ending index.
+        :param offset: Rows to drop from the start of the file before windowing.
         :return: List of dictionaries representing JSON objects.
         """
         cyclic = cyclic if cyclic is not None else False
@@ -335,10 +444,44 @@ class DataSourceRegistry:
             if (start_idx is not None and end_idx is not None)
             else None
         )
-        return DataSourceRegistry.get_cyclic_data_list(data=file_data, cyclic=cyclic, pagination=pagination)
+        return DataSourceRegistry.get_cyclic_data_list(
+            data=file_data, cyclic=cyclic, pagination=pagination, offset=offset
+        )
 
     @staticmethod
-    def load_xml_file(file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None) -> list[dict]:
+    def load_xlsx_file(
+        file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None, offset: int = 0
+    ) -> list[dict]:
+        """Load an .xlsx sheet (first row = header) as a paginated, optionally cyclic list of dicts."""
+        file_data = DataSourceRegistry._get_source(str(file_path))
+        pagination = (
+            DataSourcePagination(start_idx, end_idx - start_idx)
+            if (start_idx is not None and end_idx is not None)
+            else None
+        )
+        return DataSourceRegistry.get_cyclic_data_list(
+            data=file_data, cyclic=cyclic if cyclic is not None else False, pagination=pagination, offset=offset
+        )
+
+    @staticmethod
+    def load_fixed_width_file(
+        file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None, offset: int = 0
+    ) -> list[dict]:
+        """Load a self-describing .fcw file as a paginated, optionally cyclic list of dicts."""
+        file_data = DataSourceRegistry._get_source(str(file_path))
+        pagination = (
+            DataSourcePagination(start_idx, end_idx - start_idx)
+            if (start_idx is not None and end_idx is not None)
+            else None
+        )
+        return DataSourceRegistry.get_cyclic_data_list(
+            data=file_data, cyclic=cyclic if cyclic is not None else False, pagination=pagination, offset=offset
+        )
+
+    @staticmethod
+    def load_xml_file(
+        file_path: Path, cyclic: bool | None, start_idx: int | None, end_idx: int | None, offset: int = 0
+    ) -> list[dict]:
         """
         Load XML content from file using skip and limit.
 
@@ -346,6 +489,7 @@ class DataSourceRegistry:
         :param cyclic: Whether to cycle through data.
         :param start_idx: Starting index.
         :param end_idx: Ending index.
+        :param offset: Rows to drop from the start of the file before windowing.
         :return: List of dictionaries representing XML items.
         """
         cyclic = cyclic if cyclic is not None else False
@@ -373,7 +517,7 @@ class DataSourceRegistry:
             if (start_idx is not None and end_idx is not None)
             else None
         )
-        return DataSourceRegistry.get_cyclic_data_list(data=items, cyclic=cyclic, pagination=pagination)
+        return DataSourceRegistry.get_cyclic_data_list(data=items, cyclic=cyclic, pagination=pagination, offset=offset)
 
     @staticmethod
     def load_xml_file_with_operation(

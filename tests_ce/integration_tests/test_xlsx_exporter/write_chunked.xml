@@ -1,0 +1,7 @@
+<setup>
+    <!-- Larger volume with chunking: 250 rows, pageSize forces multiple chunk files; all rows must survive. -->
+    <generate name="big" count="250" pageSize="100" target="XLSX">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="sq" script="id * id"/>
+    </generate>
+</setup>

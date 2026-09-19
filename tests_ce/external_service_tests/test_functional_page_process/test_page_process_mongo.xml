@@ -19,5 +19,9 @@
             </item>
         </list>
     </generate>
-    <generate name="motorbike" type="motorcycles" source="mongodb"/>
+    <!-- multi-page ordered read across 2 workers: chunks 2x50, pages of 30 -> disjoint windows -->
+    <generate name="motorbike" type="motorcycles" source="mongodb" pageSize="30"/>
+    <!-- random over pages + workers: ONE stable global shuffle, each page a disjoint window -->
+    <generate name="motorbike_random" type="motorcycles" source="mongodb" distribution="random"
+              count="100" pageSize="30"/>
 </setup>

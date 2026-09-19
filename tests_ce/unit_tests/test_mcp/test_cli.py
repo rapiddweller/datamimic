@@ -52,7 +52,7 @@ def test_cli_transport_stdio_invokes_server_run(monkeypatch) -> None:
 
     monkeypatch.setattr(cli_mod.uvicorn, "run", _fake_uvicorn_run)
 
-    result = runner.invoke(cli_mod.app, ["--transport", "stdio"])
+    result = runner.invoke(cli_mod.app, ["serve", "--transport", "stdio"])
 
     assert result.exit_code == 0, result.output
     assert fake.runs == ["stdio"]
@@ -99,6 +99,7 @@ def test_cli_transport_sse_invokes_uvicorn_with_params(monkeypatch) -> None:
     result = runner.invoke(
         cli_mod.app,
         [
+            "serve",
             "--transport",
             "sse",
             "--host",

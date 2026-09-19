@@ -22,17 +22,28 @@ class DepartmentNameGenerator(BaseLiteralGenerator):
             "Manufacturing",
             "Logistics",
             "Legal",
+            "Engineering",
+            "Finance",
+            "Customer Support",
+            "Operations",
+            "Research and Development",
         ]
         sp_locale = ("de", "en")
         if locale == "de":
             self._department_data = [
-                "Accounting",
+                "Buchhaltung",
                 "Human Resources",
                 "Vertrieb",
                 "Marketing",
                 "IT",
+                "Fertigung",
                 "Logistik",
                 "Recht",
+                "Entwicklung",
+                "Finanzen",
+                "Kundensupport",
+                "Betrieb",
+                "Forschung und Entwicklung",
             ]
         elif locale not in sp_locale:
             logger.info(f"Department name does not support locale '{locale}'. Change to department_en data")

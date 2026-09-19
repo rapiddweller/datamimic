@@ -1,0 +1,12 @@
+<setup rngSeed="7">
+    <!-- USE CASE: security-adjacent schemas hold fixed-length key material (IVs, keys, salts).
+         Exact lengths matter: an AES-128 IV is 16 bytes, a SHA-256 HMAC key 32 bytes - never "about". -->
+    <generate name="secrets" count="6" target="">
+        <key name="iv" type="binary" minLength="16" maxLength="16"/>
+        <key name="hmac_key" type="binary" minLength="32" maxLength="32"/>
+        <key name="salt" type="binary" minLength="8" maxLength="8"/>
+        <key name="iv_b64" script="base64.b64encode(iv).decode('ascii')"/>
+        <assert condition="len(iv) == 16 and len(hmac_key) == 32 and len(salt) == 8"
+                message="key material must have exact lengths"/>
+    </generate>
+</setup>

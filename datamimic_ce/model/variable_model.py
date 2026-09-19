@@ -28,13 +28,16 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_SELECTOR,
     ATTR_SEPARATOR,
     ATTR_SOURCE,
+    ATTR_SOURCE_ENTITY,
     ATTR_SOURCE_SCRIPTED,
     ATTR_STRING,
     ATTR_TYPE,
+    ATTR_UNIQUE,
     ATTR_VALUES,
     ATTR_VARIABLE_PREFIX,
     ATTR_VARIABLE_SUFFIX,
     ATTR_WEIGHT_COLUMN,
+    ATTR_WEIGHTS,
 )
 from datamimic_ce.model.model_util import ModelUtil
 
@@ -43,6 +46,8 @@ class VariableModel(BaseModel):
     name: str
     type: str | None = None
     source: str | None = None
+    # Explicit physical entity to read (sourceEntity -> type -> name). See resolve_source_entity.
+    source_entity: str | None = Field(None, alias=ATTR_SOURCE_ENTITY)
     selector: str | None = None
     separator: str | None = None
     cyclic: bool | None = None
@@ -57,6 +62,8 @@ class VariableModel(BaseModel):
     out_date_format: str | None = Field(None, alias=ATTR_OUT_DATE_FORMAT)
     converter: str | None = None
     values: str | None = None
+    weights: str | None = None
+    unique: bool | None = None
     constant: str | None = None
     iteration_selector: str | None = Field(None, alias=ATTR_ITERATION_SELECTOR)
     default_value: str | None = Field(None, alias=ATTR_DEFAULT_VALUE)
@@ -82,6 +89,7 @@ class VariableModel(BaseModel):
                 ATTR_NAME,
                 ATTR_TYPE,
                 ATTR_SOURCE,
+                ATTR_SOURCE_ENTITY,
                 ATTR_SELECTOR,
                 ATTR_SOURCE_SCRIPTED,
                 ATTR_SEPARATOR,
@@ -97,6 +105,8 @@ class VariableModel(BaseModel):
                 ATTR_CONVERTER,
                 ATTR_CONSTANT,
                 ATTR_VALUES,
+                ATTR_WEIGHTS,
+                ATTR_UNIQUE,
                 ATTR_ITERATION_SELECTOR,
                 ATTR_DEFAULT_VALUE,
                 ATTR_PATTERN,
@@ -113,6 +123,16 @@ class VariableModel(BaseModel):
                 ATTR_RNG_SEED,
             },
         )
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_weights_require_values(cls, values: dict):
+        return ModelUtil.check_weights_require_values(values)
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_unique_constraints(cls, values: dict):
+        return ModelUtil.check_unique_constraints(values)
 
     @model_validator(mode="before")
     @classmethod
@@ -218,10 +238,5 @@ class VariableModel(BaseModel):
         """
         return ModelUtil.check_valid_pattern(value)
 
-    @field_validator("distribution")
-    @classmethod
-    def validate_distribution(cls, value):
-        """
-        Validate attribute "distribution"
-        """
-        return ModelUtil.check_valid_distribution(value)
+    # NOTE: no distribution validator here — <variable> accepts random/ordered/cumulated,
+    # which VariableStatement enforces via SourceDistribution.coerce at construction.

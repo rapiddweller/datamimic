@@ -1,0 +1,3 @@
+<setup>
+    <generate name="rows" source="data/products.import.fcw" count="2" target="JSON"/>
+</setup>

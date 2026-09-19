@@ -126,12 +126,15 @@ class TestGenerateTask:
         statement.multiprocessing = True
         statement.page_size = 10000
         statement.cyclic = True
+        statement.offset = 0
         statement.bucket = "test_bucket"
         statement.container = "test_container"
         statement.variable_prefix = "test_prefix"
         statement.variable_suffix = "test_suffix"
         statement.distribution = "uniform"
         statement.converter = "json"
+        statement.min_count = None
+        statement.max_count = None
         statement._count = 1000
         statement._source_uri = "mongodb://localhost:27017"
         statement._separator = ","

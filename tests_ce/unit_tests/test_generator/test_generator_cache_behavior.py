@@ -4,10 +4,10 @@ from pathlib import Path
 import pytest
 
 from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 
 
 class DummyRootGenStmt:
@@ -93,12 +93,37 @@ def test_sequence_table_generator_uses_cache_key(setup_context: SetupContext):
     root_gen = DummyRootGenStmt(type_="gen", count=5)
     stmt = DummyStmt(name="id", parent=None, database="db1", root_gen=root_gen)
 
-    g1 = util.create_generator("SequenceTableGenerator", stmt=stmt, key="seq:orders:id")
-    g2 = util.create_generator("SequenceTableGenerator", stmt=stmt, key="seq:orders:id")
+    # Pagination is what makes the instance generation-ready; only such instances are cached
+    # (an unpaginated one, as built by GenerateTask.pre_execute, must NOT poison the cache).
+    pagination = DataSourcePagination(skip=0, limit=5)
+    g1 = util.create_generator("SequenceTableGenerator", stmt=stmt, key="seq:orders:id", pagination=pagination)
+    g2 = util.create_generator("SequenceTableGenerator", stmt=stmt, key="seq:orders:id", pagination=pagination)
 
     assert g1 is g2
     assert "seq:orders:id" in setup_context.generators
     assert "SequenceTableGenerator" not in setup_context.generators
+
+
+def test_sequence_table_generator_unpaginated_instance_is_not_cached(setup_context: SetupContext):
+    """GenerateTask.pre_execute builds sub-tasks with pagination=None; caching that instance under
+    the generation cache key made every single-process page StopIterate on its first record
+    (0 rows generated). The pre-execute instance must stay out of the cache."""
+    setup_context.clients["db1"] = DummyRdbmsClient()
+    util = GeneratorUtil(context=setup_context)
+
+    root_gen = DummyRootGenStmt(type_="gen", count=5)
+    stmt = DummyStmt(name="id", parent=None, database="db1", root_gen=root_gen)
+
+    unpaginated = util.create_generator("SequenceTableGenerator", stmt=stmt, key="seq:t:id")
+    assert "seq:t:id" not in setup_context.generators
+
+    paginated = util.create_generator(
+        "SequenceTableGenerator", stmt=stmt, key="seq:t:id", pagination=DataSourcePagination(skip=0, limit=5)
+    )
+    assert paginated is not unpaginated
+    assert setup_context.generators["seq:t:id"] is paginated
+    # The generation-path instance actually generates (the poisoned one raised StopIteration)
+    assert isinstance(paginated.generate(), int)
 
 
 def test_datetime_generator_ast_path_uses_cache_key(setup_context: SetupContext):

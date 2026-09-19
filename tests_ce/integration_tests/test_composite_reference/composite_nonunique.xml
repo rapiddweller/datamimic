@@ -1,0 +1,11 @@
+<setup rngSeed="42">
+    <database id="refdb" database="ref_nu_db" dbms="sqlite"/>
+    <execute uri="script/setup_slots.scr.sql" target="refdb"/>
+    <!-- non-unique: with replacement -> count may exceed distinct combos, tuples may repeat. -->
+    <generate name="x" count="20" target="">
+        <reference name="slot" source="refdb" sourceType="slots">
+            <field target="aisle" sourceKey="aisle"/>
+            <field target="bin"   sourceKey="bin"/>
+        </reference>
+    </generate>
+</setup>

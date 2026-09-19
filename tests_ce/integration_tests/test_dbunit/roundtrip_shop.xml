@@ -1,0 +1,3 @@
+<setup>
+    <generate name="db_category" source="data/shop.dbunit.xml" sourceEntity="db_category" distribution="ordered" targetEntity="db_category" target="DbUnit"/>
+</setup>

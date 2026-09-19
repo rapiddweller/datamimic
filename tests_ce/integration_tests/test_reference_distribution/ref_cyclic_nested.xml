@@ -1,0 +1,13 @@
+<setup rngSeed="11">
+    <database id="refdb" database="ref_dist_db" dbms="sqlite"/>
+    <execute uri="script/setup_items.scr.sql" target="refdb"/>
+    <!-- reference nested in a condition gets no page window (pagination=None):
+         rotation must still advance instead of pinning to the first row -->
+    <generate name="events" count="6" target="">
+        <condition>
+            <if condition="True">
+                <reference name="fk" source="refdb" sourceType="items" sourceKey="id" cyclic="true"/>
+            </if>
+        </condition>
+    </generate>
+</setup>

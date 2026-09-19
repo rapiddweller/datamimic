@@ -1,0 +1,21 @@
+<setup rngSeed="3">
+    <database id="db" database="nested_insert_db" dbms="sqlite"/>
+    <execute type="python" uri="script/setup_insert.py"/>
+    <!-- Same proof as insert_order.xml, but the nested <generate> sits inside <condition><if>:
+         TaskUtil._export_nested_products_by_page must walk through the composite wrapper to find
+         it, not just direct GenerateStatement sub_statements. -->
+    <generate name="users" count="8" pageSize="4" targetEntity="users" target="db">
+        <key name="id" generator="IncrementGenerator"/>
+        <condition>
+            <if condition="True">
+                <generate name="orders" count="2" targetEntity="orders" target="db">
+                    <key name="seq" generator="IncrementGenerator"/>
+                    <key name="user_id" script="parent.id"/>
+                    <key name="id" script="this.user_id * 10 + this.seq"/>
+                </generate>
+            </if>
+        </condition>
+    </generate>
+    <generate name="check_users" source="db" selector="SELECT id FROM users ORDER BY id" distribution="ordered" target=""/>
+    <generate name="check_orders" source="db" selector="SELECT id, user_id FROM orders ORDER BY id" distribution="ordered" target=""/>
+</setup>

@@ -29,6 +29,12 @@ class Statement(ABC):  # noqa: B024
         return self._name
 
     @property
+    def source_entity(self) -> str | None:
+        """Explicit physical entity to read; None unless a subclass (generate/iterate, variable)
+        carries a sourceEntity. Lets StatementUtil.resolve_source_entity work on any statement."""
+        return None
+
+    @property
     def full_name(self) -> str | None:
         return self._full_name
 

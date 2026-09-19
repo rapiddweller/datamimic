@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+from decimal import Decimal
 from pathlib import Path
 
 from bson import ObjectId
@@ -210,3 +211,22 @@ class TestMongoDbFunction:
             assert "_id" in m
             assert isinstance(m["_id"], ObjectId)
         assert all(a["user_id"] == b for a, b in zip(mongo_selector_ordered, range_list, strict=False))
+
+    def test_mongodb_decimal_roundtrip(self):
+        """type="decimal" round-trips through mongo as Decimal128 and stays arithmetic-safe, and the
+        selector parser accepts bareword projection keys and an unquoted aggregate $group/$project."""
+        engine = DataMimicTest(test_dir=self._test_dir, filename="test_mongodb_decimal.xml", capture_test_result=True)
+        engine.test_with_timer()
+
+        result = engine.capture_result()
+
+        check_items = result["check_items"]
+        assert len(check_items) == 5
+        for row in check_items:
+            assert isinstance(row["price"], Decimal)
+            assert isinstance(row["total"], Decimal)
+            assert row["total"] == row["price"] * row["qty"]
+
+        grand_total = result["check_total_agg"][0]["grand_total"]
+        assert isinstance(grand_total, Decimal)
+        assert grand_total == sum((row["price"] for row in check_items), Decimal("0"))

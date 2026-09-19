@@ -1,0 +1,12 @@
+<setup>
+    <database id="db" database="sql_crud_nopk_db" dbms="sqlite"/>
+    <execute type="sql" target="db">
+        DROP TABLE IF EXISTS logs;
+        CREATE TABLE logs (msg TEXT);
+        INSERT INTO logs VALUES ('x');
+    </execute>
+    <!-- no primary key: update must fail loudly, never silently insert -->
+    <generate name="logs" source="db" selector="SELECT msg FROM logs" target="db.update">
+        <key name="msg" constant="rewritten"/>
+    </generate>
+</setup>

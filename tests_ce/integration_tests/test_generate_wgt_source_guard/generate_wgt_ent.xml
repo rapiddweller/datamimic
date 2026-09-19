@@ -1,0 +1,3 @@
+<setup>
+    <generate name="rows" source="data/products.wgt.ent.csv" separator="," count="5" target="JSON"/>
+</setup>

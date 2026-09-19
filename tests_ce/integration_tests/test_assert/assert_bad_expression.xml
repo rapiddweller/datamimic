@@ -1,0 +1,7 @@
+<setup>
+    <!-- typo'd field name: the failure must name the assert condition, not a bare NameError -->
+    <generate name="g" count="1" target="">
+        <key name="idx" constant="1"/>
+        <assert condition="ixd == 1"/>
+    </generate>
+</setup>

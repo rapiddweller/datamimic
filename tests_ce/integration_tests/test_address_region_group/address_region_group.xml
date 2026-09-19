@@ -1,0 +1,15 @@
+<setup rngSeed="11" multiprocessing="False">
+    <generate name="europe_rows" count="40" target="JSON">
+        <variable name="addr" entity="Address" dataset="europe"/>
+        <key name="country_code" script="addr.country_code"/>
+        <key name="city_country_code" script="addr.city_data['country_code']"/>
+        <key name="street" script="addr.street"/>
+        <key name="phone" script="addr.phone"/>
+    </generate>
+
+    <!-- Single-country dataset must be completely unaffected (regression). -->
+    <generate name="de_rows" count="5" target="JSON">
+        <variable name="addr" entity="Address" dataset="DE"/>
+        <key name="country_code" script="addr.country_code"/>
+    </generate>
+</setup>

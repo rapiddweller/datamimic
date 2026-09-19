@@ -1,0 +1,8 @@
+<setup rngSeed="1">
+    <generate name="orders" count="5" target="ConsoleExporter">
+        <key name="id" generator="IncrementGenerator"/>
+        <nestedKey name="items" count="3">
+            <key name="sku" pattern="[A-Z]{3}"/>
+        </nestedKey>
+    </generate>
+</setup>

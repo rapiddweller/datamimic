@@ -26,9 +26,13 @@ class EchoTask(CommonSubTask):
         if re.search(r"{.*?}", _value):
             # if _value contain ' or " then add escaped character before it
             escaped_text = _value.replace("'", "\\'").replace('"', '\\"')
-            # evaluate echo value before logging
-            evaluated_value = ctx.evaluate_python_expression(f"f'{escaped_text}'")
-            logger.debug(f"Echo - {evaluated_value}")
+            try:
+                # evaluate echo value before logging
+                evaluated_value = ctx.evaluate_python_expression(f"f'{escaped_text}'")
+                logger.debug(f"Echo - {evaluated_value}")
+            except Exception as err:
+                # An <echo> is diagnostic output - a broken placeholder must never kill the run.
+                logger.warning(f"Echo - {_value} (placeholder not evaluated: {err})")
         else:
             logger.debug(f"Echo - {_value}")
 

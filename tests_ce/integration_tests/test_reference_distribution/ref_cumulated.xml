@@ -1,0 +1,8 @@
+<setup rngSeed="11">
+    <database id="refdb" database="ref_dist_db" dbms="sqlite"/>
+    <execute uri="script/setup_items.scr.sql" target="refdb"/>
+    <!-- cumulated: bell-weighted selection with replacement (middle of the order favored) -->
+    <generate name="events" count="40" target="">
+        <reference name="fk" source="refdb" sourceType="items" sourceKey="id" distribution="cumulated"/>
+    </generate>
+</setup>

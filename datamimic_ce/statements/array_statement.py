@@ -10,11 +10,12 @@ from datamimic_ce.statements.statement import Statement
 
 
 class ArrayStatement(Statement):
-    def __init__(self, model: ArrayModel):
+    def __init__(self, model: ArrayModel, literal_values: list[str] | None = None):
         super().__init__(model.name, None)
         self._count = model.count
         self._type = model.type
         self._script = model.script
+        self._literal_values = list(literal_values or [])
 
     @property
     def type(self) -> str | None:
@@ -27,3 +28,7 @@ class ArrayStatement(Statement):
     @property
     def script(self) -> str | None:
         return self._script
+
+    @property
+    def literal_values(self) -> list[str]:
+        return self._literal_values

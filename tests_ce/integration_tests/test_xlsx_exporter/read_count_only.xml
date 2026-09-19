@@ -1,0 +1,4 @@
+<setup>
+    <!-- Empty / header-only sources: no rows to read, no per-row script needed. -->
+    <generate name="rows" source="fixture.xlsx" target=""/>
+</setup>

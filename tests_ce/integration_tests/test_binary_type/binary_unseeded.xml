@@ -1,0 +1,5 @@
+<setup>
+    <generate name="g" count="8" target="">
+        <key name="b" type="binary" minLength="8" maxLength="8"/>
+    </generate>
+</setup>

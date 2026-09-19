@@ -1,0 +1,6 @@
+<setup rngSeed="5">
+    <!-- this slice scopes unique to finite 'values' -> unique without values must fail. -->
+    <generate name="x" count="2" target="">
+        <key name="code" generator="IncrementGenerator()" unique="true"/>
+    </generate>
+</setup>

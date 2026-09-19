@@ -1,0 +1,42 @@
+<setup defaultDataset="US" defaultLocale="en_US">
+    <generate name="outer" count="1" target="JSON">
+        <variable name="tag" entity="Person"/>
+        <nestedKey name="inner" type="list" count="2">
+            <variable name="person" entity="Person"/>
+            <!-- BARE sibling variable in a nested scope must resolve (like a top-level generate) -->
+            <key name="salutation" script="person.salutation"/>
+            <!-- BARE access to an ANCESTOR scope variable must also resolve -->
+            <key name="outer_tag_family" script="tag.familyName"/>
+            <!-- QUALIFIED nested path via the wrapped scope must still resolve -->
+            <key name="qualified" script="inner.person.givenName"/>
+        </nestedKey>
+    </generate>
+
+    <!-- A scope's own bare variable must NOT shadow a same-named ancestor variable for a scope
+         that does not declare it itself: bare resolution stays "outermost wins" unless the
+         evaluating scope has its own declaration (this. semantics), so a name collision between
+         scopes at different depths can't silently flip which value a bare reference resolves to. -->
+    <generate name="collision" count="1" target="JSON">
+        <variable name="v" constant="outer_val"/>
+        <nestedKey name="mid" type="list" count="1">
+            <variable name="v" constant="mid_val"/>
+            <nestedKey name="leaf" type="list" count="1">
+                <key name="bare_v" script="v"/>
+            </nestedKey>
+        </nestedKey>
+    </generate>
+
+    <!-- Real fixture this exact collision broke: tests_ce/functional_tests/test_sqlite (id +
+         simple_user.id) declares its OWN "id" both in the outer scope and in a directly nested one,
+         combining the ancestor's bare id with the nested scope's own id via its qualified name. The
+         nested scope's own bare variable must fill gaps, never override a name the ancestor already
+         provides bare - otherwise every row silently collapses onto the same id. -->
+    <generate name="self_vs_ancestor" count="1" target="JSON">
+        <variable name="id" constant="outer_id"/>
+        <nestedKey name="child" type="list" count="1">
+            <variable name="id" constant="child_id"/>
+            <key name="bare_id" script="id"/>
+            <key name="qualified_id" script="child.id"/>
+        </nestedKey>
+    </generate>
+</setup>

@@ -1,0 +1,8 @@
+<setup>
+    <!-- per-row loop: reset n=0, increment until n reaches 3 -->
+    <generate name="g" count="3" target="">
+        <key name="n" script="0"/>
+        <while condition="n &lt; 3"><key name="n" script="n + 1"/></while>
+        <key name="final" script="n"/>
+    </generate>
+</setup>

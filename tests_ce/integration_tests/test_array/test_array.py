@@ -30,3 +30,42 @@ class TestArray:
     def test_array_script(self, test_dir: Path) -> None:
         test_engine = DataMimicTest(test_dir=test_dir, filename="test_array_script.xml")
         test_engine.test_with_timer()
+
+    def test_array_literal(self, test_dir: Path) -> None:
+        """type='literal' with <value constant=...> children preserves values exactly - no
+        random generation, no script evaluation (EE parity, docs/specs/model/elements/08-array.md)."""
+        test_engine = DataMimicTest(test_dir=test_dir, filename="test_array_literal.xml", capture_test_result=True)
+        test_engine.test_with_timer()
+        result = test_engine.capture_result()
+        assert result["data"][0]["status_codes"] == ["001", "002", "099"]
+
+    def test_array_literal_conflicting_attrs(self, test_dir: Path) -> None:
+        """'count'/'script' must not be defined together with type='literal'."""
+        test_engine = DataMimicTest(test_dir=test_dir, filename="test_array_literal_conflicting_attrs.xml")
+        with pytest.raises(ValueError):
+            test_engine.test_with_timer()
+
+    def test_array_literal_with_script_conflicting_attrs(self, test_dir: Path) -> None:
+        """'script' must not be defined together with type='literal' either."""
+        test_engine = DataMimicTest(test_dir=test_dir, filename="test_array_literal_with_script.xml")
+        with pytest.raises(ValueError):
+            test_engine.test_with_timer()
+
+    def test_array_non_literal_with_children(self, test_dir: Path) -> None:
+        """<value> children are only valid for type='literal'; a typed/scripted array with
+        children is rejected."""
+        test_engine = DataMimicTest(test_dir=test_dir, filename="test_array_non_literal_with_children.xml")
+        with pytest.raises(ValueError, match="sub-elements are only valid"):
+            test_engine.test_with_timer()
+
+    def test_array_literal_invalid_value_child(self, test_dir: Path) -> None:
+        """A <value> child missing its mandatory 'constant' attribute fails parsing."""
+        test_engine = DataMimicTest(test_dir=test_dir, filename="test_array_literal_invalid_value_child.xml")
+        with pytest.raises(ValueError):
+            test_engine.test_with_timer()
+
+    def test_array_literal_empty(self, test_dir: Path) -> None:
+        """A literal array must have at least one <value> child."""
+        test_engine = DataMimicTest(test_dir=test_dir, filename="test_array_literal_empty.xml")
+        with pytest.raises(ValueError, match="must have at least one"):
+            test_engine.test_with_timer()

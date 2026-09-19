@@ -1,0 +1,4 @@
+<setup rngSeed="9">
+    <!-- <generate source unique>: distinct rows from the source, no replacement. -->
+    <generate name="people" source="codes.csv" unique="true" count="5" target=""/>
+</setup>

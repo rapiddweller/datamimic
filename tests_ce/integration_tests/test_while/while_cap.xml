@@ -1,0 +1,5 @@
+<setup>
+    <generate name="g" count="1" target="">
+        <while condition="True" maxIterations="5"><key name="x" script="1"/></while>
+    </generate>
+</setup>

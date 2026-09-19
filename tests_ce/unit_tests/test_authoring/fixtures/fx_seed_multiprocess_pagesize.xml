@@ -1,0 +1,3 @@
+<setup rngSeed="1" numProcess="4">
+    <generate name="a" count="1000" pageSize="10" target="ConsoleExporter"><key name="x" constant="1"/></generate>
+</setup>

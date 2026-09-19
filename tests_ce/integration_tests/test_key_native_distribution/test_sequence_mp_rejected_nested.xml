@@ -1,0 +1,7 @@
+<setup multiprocessing="True" numProcess="2">
+    <generate name="orders" count="10" target="ConsoleExporter">
+        <nestedKey name="item">
+            <key name="v" type="int" min="1" max="10" distribution="step"/>
+        </nestedKey>
+    </generate>
+</setup>

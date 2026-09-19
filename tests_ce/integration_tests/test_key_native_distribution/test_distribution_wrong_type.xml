@@ -1,0 +1,5 @@
+<setup>
+    <generate name="rows" count="3" target="ConsoleExporter">
+        <key name="s" type="string" minLength="3" maxLength="8" distribution="cumulated"/>
+    </generate>
+</setup>

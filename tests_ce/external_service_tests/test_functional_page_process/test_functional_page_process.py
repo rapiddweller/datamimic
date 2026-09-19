@@ -25,6 +25,11 @@ class TestFunctionalPageProcess:
         assert len(motorcycles) == 100
         assert motorcycles[10]["id"] == 11
 
+        # multi-page ordered read (2 workers, pageSize 30): complete, no duplicates
+        assert sorted(m["id"] for m in result["motorbike"]) == list(range(1, 101))
+        # random read: disjoint windows of one global shuffle -> a permutation, not a sample
+        assert sorted(m["id"] for m in result["motorbike_random"]) == list(range(1, 101))
+
     def test_page_process_postgres(self):
         engine = DataMimicTest(
             test_dir=self._test_dir, filename="test_page_process_postgres.xml", capture_test_result=True

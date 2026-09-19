@@ -1,0 +1,10 @@
+<setup>
+    <generate name="accounts" count="1" target="">
+        <key name="balance" script="1000.0"/>
+        <key name="years" script="0"/>
+        <while condition="balance &lt; 2000">
+            <key name="balance" script="balance * 1.1"/>
+            <key name="years" script="years + 1"/>
+        </while>
+    </generate>
+</setup>

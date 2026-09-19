@@ -8,6 +8,8 @@ from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.constants.convention_constants import NAME_SEPARATOR
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.enums.distribution_enums import SourceDistribution
+from datamimic_ce.enums.operation_enums import ExportOperation
 from datamimic_ce.logger import logger
 from datamimic_ce.model.generate_model import GenerateModel
 from datamimic_ce.statements.composite_statement import CompositeStatement
@@ -21,24 +23,27 @@ class GenerateStatement(CompositeStatement):
         name = model.name
         super().__init__(name, parent_stmt)
         self._count = model.count
+        self._min_count = model.min_count
+        self._max_count = model.max_count
         self._source = model.source
         self._cyclic = model.cyclic
+        self._offset = model.offset
+        self._unique = model.unique
         self._source_script = model.source_scripted
         self._type = model.type
+        self._source_entity = model.source_entity
+        self._target_entity = model.target_entity
         self._selector = model.selector
         self._separator = model.separator
         self._targets: set[str] = StatementUtil.parse_consumer(model.target)
         self._page_size = model.page_size
-        self._source_uri = model.source_uri
-        self._container = model.container
-        self._storage_id = model.storage_id or "default-datamimic-minio"
         self._mp = model.multiprocessing
         self._export_uri = model.export_uri
-        self._distribution = model.distribution
+        # Real type at the boundary (absent = RANDOM). <generate> accepts random/ordered/cumulated.
+        self._distribution = SourceDistribution.coerce(model.distribution)
         self._variable_prefix = model.variable_prefix
         self._variable_suffix = model.variable_suffix
         self._converter = model.converter
-        self._bucket = model.bucket
         self._num_process = model.num_process
         self._script = model.script
         self._mp_platform = model.mp_platform
@@ -66,6 +71,18 @@ class GenerateStatement(CompositeStatement):
     def count(self, value):
         self._count = value
 
+    @property
+    def unique(self) -> bool | None:
+        return self._unique
+
+    @property
+    def min_count(self) -> int | None:
+        return self._min_count
+
+    @property
+    def max_count(self) -> int | None:
+        return self._max_count
+
     def get_int_count(self, ctx: Context):
         """
         Get count as int value of GenerateStatement
@@ -84,12 +101,25 @@ class GenerateStatement(CompositeStatement):
         return self._cyclic
 
     @property
+    def offset(self) -> int:
+        """Rows to skip at the start of the source; 0 when not set."""
+        return self._offset or 0
+
+    @property
     def source_script(self) -> bool | None:
         return self._source_script
 
     @property
     def type(self) -> str | None:
         return self._type
+
+    @property
+    def source_entity(self) -> str | None:
+        return self._source_entity
+
+    @property
+    def target_entity(self) -> str | None:
+        return self._target_entity
 
     @property
     def selector(self) -> str | None:
@@ -112,18 +142,6 @@ class GenerateStatement(CompositeStatement):
         return self._page_size
 
     @property
-    def source_uri(self) -> str | None:
-        return self._source_uri
-
-    @property
-    def container(self) -> str | None:
-        return self._container
-
-    @property
-    def storage_id(self) -> str | None:
-        return self._storage_id
-
-    @property
     def multiprocessing(self) -> bool | None:
         return self._mp
 
@@ -132,7 +150,7 @@ class GenerateStatement(CompositeStatement):
         return self._export_uri
 
     @property
-    def distribution(self) -> str | None:
+    def distribution(self) -> SourceDistribution:
         return self._distribution
 
     @property
@@ -148,12 +166,12 @@ class GenerateStatement(CompositeStatement):
         return self._converter
 
     @property
-    def bucket(self) -> str | None:
-        return self._bucket
-
-    @property
     def num_process(self) -> int | None:
         return self._num_process
+
+    @num_process.setter
+    def num_process(self, value: int | None) -> None:
+        self._num_process = value
 
     @property
     def script(self) -> str | None:
@@ -196,8 +214,10 @@ class GenerateStatement(CompositeStatement):
         """
         for consumer_str in self._targets:
             if "." in consumer_str:
-                consumer, operation = consumer_str.split(".")
-                if operation == "upsert" and isinstance(setup_context.get_client_by_id(consumer), MongoDBClient):
+                consumer, operation = consumer_str.split(".", 1)
+                if operation == ExportOperation.UPSERT.value and isinstance(
+                    setup_context.get_client_by_id(consumer), MongoDBClient
+                ):
                     return True
         return False
 

@@ -1,0 +1,17 @@
+<setup rngSeed="99">
+    <!-- Same machine as complex_machine.xml but a different rngSeed, to prove the seed
+         actually drives the walk (different seed -> different sequence). -->
+    <state-machine id="claim" start="received">
+        <transition from="received" to="review"/>
+        <transition from="review"   to="approved" weight="0.5"/>
+        <transition from="review"   to="rejected" weight="0.3"/>
+        <transition from="review"   to="review"   weight="0.2"/>
+        <transition from="approved" to="paid"/>
+        <transition from="paid"     to="closed"/>
+        <transition from="rejected" to="closed"/>
+    </state-machine>
+
+    <generate name="claims" count="600" target="">
+        <key name="status" generator="claim"/>
+    </generate>
+</setup>

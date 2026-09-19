@@ -1,0 +1,7 @@
+<setup>
+    <!-- inline python: a flat statement mutates the shared namespace -->
+    <execute type="python">shared_total = 21 * 2</execute>
+    <generate name="g" count="2" target="">
+        <key name="v" script="shared_total"/>
+    </generate>
+</setup>

@@ -1,0 +1,8 @@
+<setup rngSeed="7">
+    <!-- Per-record assertion: every generated record must satisfy the condition -->
+    <generate name="g" count="20" target="">
+        <variable name="p" entity="Person(min_age=18, max_age=65)"/>
+        <key name="age" script="p.age"/>
+        <assert condition="18 &lt;= age &lt;= 65" message="age outside the configured range"/>
+    </generate>
+</setup>

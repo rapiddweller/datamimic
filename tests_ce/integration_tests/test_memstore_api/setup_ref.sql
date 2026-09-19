@@ -1,0 +1,2 @@
+CREATE TABLE ref (id INTEGER);
+INSERT INTO ref (id) VALUES (1), (3);

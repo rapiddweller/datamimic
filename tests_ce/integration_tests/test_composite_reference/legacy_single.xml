@@ -1,0 +1,8 @@
+<setup rngSeed="42">
+    <database id="refdb" database="ref_legacy_db" dbms="sqlite"/>
+    <execute uri="script/setup_slots.scr.sql" target="refdb"/>
+    <!-- legacy single-field form (sourceKey, no <field>) still works. -->
+    <generate name="x" count="3" target="">
+        <reference name="aisle" source="refdb" sourceType="slots" sourceKey="aisle" unique="true"/>
+    </generate>
+</setup>

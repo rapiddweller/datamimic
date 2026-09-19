@@ -1,0 +1,9 @@
+<setup>
+    <database id="db" dbms="sqlite" database="stringify_rdbms.sqlite"/>
+    <execute uri="setup_rdbms.sql" target="db"/>
+    <generate name="t" count="1" target="db">
+        <variable name="person" entity="Person"/>
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" script="person"/>
+    </generate>
+</setup>

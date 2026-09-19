@@ -1,0 +1,4 @@
+<setup><generate name="g" count="10" numProcess="1" target="">
+    <key name="given" generator="GivenNameGenerator()"/>
+    <key name="email" generator="EmailAddressGenerator()"/>
+</generate></setup>

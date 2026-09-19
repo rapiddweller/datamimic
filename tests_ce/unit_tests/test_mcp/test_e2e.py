@@ -56,9 +56,48 @@ async def test_schema_resource_available(anyio_backend) -> None:
     server = create_server()
     async with Client(server) as client:
         listing = await client.list_tools()
-        assert {tool.name for tool in listing} == {"list_domains", "generate"}
+        assert {tool.name for tool in listing} == {
+            "list_domains",
+            "generate",
+            "datamimic_check",
+            "datamimic_run",
+            "datamimic_reference",
+        }
         resources = await client.read_resource("resource://datamimic/schemas/person/v1/request.json")
         assert resources and "\"$schema\"" in resources[0].text
+        cheatsheet = await client.read_resource("resource://datamimic/dsl/cheatsheet")
+        assert cheatsheet and "<setup" in cheatsheet[0].text
+        recipe = await client.read_resource("resource://datamimic/dsl/recipes/csv-to-json-pipeline")
+        assert recipe and "<iterate" in recipe[0].text
+
+
+@pytest.mark.anyio
+async def test_dsl_check_run_reference_loop(anyio_backend) -> None:
+    """The agent loop: reference -> check (broken -> fix hints) -> check (clean) -> run."""
+    server = create_server()
+    broken = "<setup><generate name='u' pagesize='5' target='ConsoleExporter'/></setup>"
+    fixed = (
+        '<setup rngSeed="1"><memstore id="mem"/>'
+        '<generate name="u" count="3" pageSize="100" target="mem">'
+        '<key name="id" generator="IncrementGenerator"/></generate></setup>'
+    )
+    async with Client(server) as client:
+        ref = await client.call_tool("datamimic_reference", {"args": {"topic": "element", "name": "generate"}})
+        assert "pageSize" in json.loads(ref[0].text)["content"]
+
+        check = json.loads((await client.call_tool("datamimic_check", {"args": {"xml": broken}}))[0].text)
+        assert check["ok"] is False
+        rules = {diag["rule"] for diag in check["diagnostics"]}
+        assert "DM103" in rules  # pagesize -> did you mean pageSize
+        assert all(diag["fix_hint"] for diag in check["diagnostics"])
+
+        check2 = json.loads((await client.call_tool("datamimic_check", {"args": {"xml": fixed}}))[0].text)
+        assert check2["ok"] is True
+
+        run = json.loads((await client.call_tool("datamimic_run", {"args": {"xml": fixed}}))[0].text)
+        assert run["ok"] is True and run["stage"] == "run"
+        product = run["products"][0]
+        assert product["count"] == 3 and product["sample"][0]["id"] == 1
 
 
 @pytest.mark.anyio

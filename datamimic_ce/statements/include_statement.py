@@ -19,6 +19,10 @@ class IncludeStatement(Statement):
         return self._uri
 
     def early_execute(self, descriptor_dir):
+        # A dynamic uri ({var}/... f-string) cannot be resolved at parse time - defer it to the
+        # IncludeTask, which resolves it against the runtime context (dynamic include).
+        if "{" in self._uri:
+            return {}
         # Case 1: Check if uri is a properties file
         if self._uri.endswith(".properties"):
             # Import properties into context

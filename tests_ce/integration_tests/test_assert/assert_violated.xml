@@ -1,0 +1,7 @@
+<setup rngSeed="7">
+    <!-- The third record (idx 2) violates the assertion: the run must fail with the message -->
+    <generate name="g" count="10" target="">
+        <key name="idx" generator="IncrementGenerator"/>
+        <assert condition="idx != 3" message="idx 3 is forbidden"/>
+    </generate>
+</setup>

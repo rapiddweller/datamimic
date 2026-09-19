@@ -1,0 +1,3 @@
+<setup multiprocessing="True" numProcess="2" defaultSeparator=",">
+    <iterate name="rows" source="data/rows.csv" offset="1" count="4" distribution="ordered" target="ConsoleExporter"/>
+</setup>

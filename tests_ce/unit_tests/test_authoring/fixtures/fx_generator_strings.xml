@@ -1,0 +1,6 @@
+<setup rngSeed="1">
+    <generate name="a" count="1" target="ConsoleExporter">
+        <key name="n" generator="IntegerGenerator(min=1, max=9)"/>
+        <key name="s" generator="StringGenerator(max_len=20)"/>
+    </generate>
+</setup>

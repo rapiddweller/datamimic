@@ -1,0 +1,24 @@
+{
+  "note": "Controller-graded Haiku 4.5 agent track. h0/h1 scores and rule ids are from the independent grader (same lint -> dry-run -> intent pipeline as bench.py); h1 'iterations' are the agent's self-reported lint/fix rounds and are marked as such because the agent transcript, not a harness, drove the loop.",
+  "date": "2026-07-04",
+  "model": "claude-haiku-4.5",
+  "conditions": {
+    "h0_bare": {
+      "weighted_country": {"score": 0, "rule_ids": ["DM103", "DM104", "DM104", "DM105"]},
+      "nested_reviews": {"score": 0, "rule_ids": ["DM103", "DM104", "DM101", "DM101"]},
+      "reproducible_orders": {"score": 0, "rule_ids": ["DM103", "DM103", "DM104", "DM101"]},
+      "memstore_pipeline": {"score": 0, "rule_ids": ["DM103", "DM104", "DM104", "DM105"]},
+      "timeseries": {"score": 0, "rule_ids": ["DM103", "DM104", "DM101", "DM101"]},
+      "branch_fk": {"score": 0, "rule_ids": ["DM103", "DM104", "DM101", "DM101"]}
+    },
+    "h1_tool_loop": {
+      "weighted_country": {"score": 2, "iterations_self_reported": 2},
+      "nested_reviews": {"score": 2, "iterations_self_reported": 1},
+      "reproducible_orders": {"score": 2, "iterations_self_reported": 1},
+      "memstore_pipeline": {"score": 2, "iterations_self_reported": 2},
+      "timeseries": {"score": 2, "iterations_self_reported": 1},
+      "branch_fk": {"score": 2, "iterations_self_reported": 1, "adjudication": "nested <nestedKey> shape with correct parent join; flat-only grader under-scored to 1, manually adjudicated to 2; harness intent check accepts both shapes since the same day"}
+    }
+  },
+  "totals": {"h0_bare": {"runs": 0, "intent_correct": 0}, "h1_tool_loop": {"runs": 6, "intent_correct": 6}}
+}

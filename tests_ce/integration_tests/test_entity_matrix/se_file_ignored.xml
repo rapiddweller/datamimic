@@ -1,0 +1,3 @@
+<setup>
+    <iterate name="rows" source="rows.csv" sourceEntity="whatever" target=""/>
+</setup>

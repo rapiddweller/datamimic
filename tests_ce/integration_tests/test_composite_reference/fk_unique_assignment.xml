@@ -1,0 +1,10 @@
+<setup rngSeed="42">
+    <database id="refdb" database="fk_uassign_db" dbms="sqlite"/>
+    <execute uri="script/setup_slots.scr.sql" target="refdb"/>
+    <generate name="assignments" count="5" target="">
+        <reference name="rc" source="refdb" sourceType="region_codes" unique="true">
+            <field target="region" sourceKey="region"/>
+            <field target="code"   sourceKey="code"/>
+        </reference>
+    </generate>
+</setup>

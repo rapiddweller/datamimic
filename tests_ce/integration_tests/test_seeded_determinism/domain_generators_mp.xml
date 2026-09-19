@@ -1,0 +1,5 @@
+<setup rngSeed="7"><generate name="g" count="6" numProcess="4" target="">
+    <key name="given" generator="GivenNameGenerator()"/>
+    <key name="email" generator="EmailAddressGenerator()"/>
+    <key name="phone" generator="PhoneNumberGenerator()"/>
+</generate></setup>

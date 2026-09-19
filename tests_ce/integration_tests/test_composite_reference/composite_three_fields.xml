@@ -1,0 +1,11 @@
+<setup rngSeed="42">
+    <database id="refdb" database="ref_three_db" dbms="sqlite"/>
+    <execute uri="script/setup_slots.scr.sql" target="refdb"/>
+    <generate name="rows" count="4" target="">
+        <reference name="part" source="refdb" sourceType="parts" unique="true">
+            <field target="region" sourceKey="region"/>
+            <field target="yr"     sourceKey="year"/>
+            <field target="price"  sourceKey="price"/>
+        </reference>
+    </generate>
+</setup>

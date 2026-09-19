@@ -1,0 +1,7 @@
+<setup>
+    <variable name="threshold" script="41"/>
+    <assert condition="threshold == 42" message="setup invariant broken"/>
+    <generate name="g" count="3" target="">
+        <key name="v" script="threshold"/>
+    </generate>
+</setup>

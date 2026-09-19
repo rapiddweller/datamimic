@@ -1,0 +1,19 @@
+<setup rngSeed="3">
+    <!-- Phase 2: reuses the db file phase 1 (delete_order_phase1.xml) populated - NOT re-running
+         script/setup_delete.py here, since that would DROP the tables and lose phase 1's rows. -->
+    <database id="db" database="nested_delete_db" dbms="sqlite"/>
+    <!-- Same deterministic id scheme as phase 1, now on target="db.delete": del_users' OWN target
+         is a delete, so TaskUtil.export_product_by_page exports del_orders (children) BEFORE
+         del_users' own rows - a user row would otherwise still have orders pointing at it when
+         deleted, and the BEFORE DELETE trigger (fk_users_children) would abort the run. -->
+    <generate name="del_users" count="8" pageSize="4" targetEntity="users" target="db.delete">
+        <key name="id" generator="IncrementGenerator"/>
+        <generate name="del_orders" count="2" targetEntity="orders" target="db.delete">
+            <key name="seq" generator="IncrementGenerator"/>
+            <key name="user_id" script="parent.id"/>
+            <key name="id" script="this.user_id * 10 + this.seq"/>
+        </generate>
+    </generate>
+    <generate name="check_users_after" source="db" selector="SELECT id FROM users" target=""/>
+    <generate name="check_orders_after" source="db" selector="SELECT id FROM orders" target=""/>
+</setup>

@@ -1,0 +1,5 @@
+<setup>
+    <generate name="g" count="1" target="">
+        <key name="v" script="123" converter="Substring(1)"/>
+    </generate>
+</setup>

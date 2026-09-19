@@ -1,0 +1,6 @@
+<setup rngSeed="5">
+    <!-- duplicate input values: unique must still yield DISTINCT output (dedupe). -->
+    <generate name="people" count="3" target="">
+        <key name="code" values="'A','A','B','C','C'" unique="true"/>
+    </generate>
+</setup>

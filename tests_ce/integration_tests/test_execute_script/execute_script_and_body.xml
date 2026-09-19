@@ -1,0 +1,5 @@
+<setup>
+    <database id="db" database="exec_script_dup2_db" dbms="sqlite"/>
+    <variable name="ddl" constant="SELECT 1"/>
+    <execute type="sql" target="db" script="ddl">SELECT 2</execute>
+</setup>

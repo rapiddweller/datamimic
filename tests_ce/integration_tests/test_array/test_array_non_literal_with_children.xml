@@ -1,0 +1,7 @@
+<setup>
+    <generate name="data" target="ConsoleExporter" count="1">
+        <array name="x" type="int" count="3">
+            <value constant="1"/>
+        </array>
+    </generate>
+</setup>

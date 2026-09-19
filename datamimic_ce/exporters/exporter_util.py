@@ -9,6 +9,7 @@ import base64
 import json
 import re
 import uuid
+from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
@@ -19,25 +20,46 @@ from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_CSV,
+    EXPORTER_DBUNIT,
+    EXPORTER_FIXED_WIDTH,
     EXPORTER_JSON,
-    EXPORTER_JSON_SINGLE,
     EXPORTER_LOG_EXPORTER,
     EXPORTER_TEST_RESULT_EXPORTER,
     EXPORTER_TXT,
+    EXPORTER_XLSX,
     EXPORTER_XML,
 )
 from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.enums.operation_enums import ExportOperation
 from datamimic_ce.exporters.console_exporter import ConsoleExporter
 from datamimic_ce.exporters.csv_exporter import CSVExporter
 from datamimic_ce.exporters.database_exporter import DatabaseExporter
+from datamimic_ce.exporters.dbunit_exporter import DbUnitExporter
 from datamimic_ce.exporters.exporter import Exporter
+from datamimic_ce.exporters.exporter_config import ExporterConfig
+from datamimic_ce.exporters.fixed_width_exporter import FixedWidthExporter
 from datamimic_ce.exporters.json_exporter import JsonExporter
 from datamimic_ce.exporters.log_exporter import LogExporter
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.exporters.txt_exporter import TXTExporter
+from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
+from datamimic_ce.exporters.xlsx_exporter import XLSXExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.generate_statement import GenerateStatement
+
+# Registry of buffered file exporters: target name -> class. Every concrete exporter takes the uniform
+# (ExporterConfig, params) constructor; adding one is a single entry here, not a new factory branch.
+_BufferedExporterFactory = Callable[[ExporterConfig, dict], UnifiedBufferedExporter]
+_BUFFERED_EXPORTERS: dict[str, _BufferedExporterFactory] = {
+    EXPORTER_CSV: CSVExporter,
+    EXPORTER_JSON: JsonExporter,
+    EXPORTER_XML: XMLExporter,
+    EXPORTER_XLSX: XLSXExporter,
+    EXPORTER_TXT: TXTExporter,
+    EXPORTER_DBUNIT: DbUnitExporter,
+    EXPORTER_FIXED_WIDTH: FixedWidthExporter,
+}
 
 
 def custom_serializer(obj: Any) -> Any:
@@ -130,7 +152,7 @@ class ExporterUtil:
         setup_context: SetupContext,
         stmt: GenerateStatement,
         targets: list[str],
-    ) -> tuple[list[tuple[Exporter, str]], list[Exporter]]:
+    ) -> tuple[list[tuple[Exporter, ExportOperation]], list[Exporter]]:
         """
         Create list of consumers with and without operation from consumer string
 
@@ -157,7 +179,15 @@ class ExporterUtil:
             params = target.get("params") or {}
             # Handle consumer with operation
             if "." in exporter_name:
-                consumer_name, operation = exporter_name.split(".", 1)
+                consumer_name, operation_raw = exporter_name.split(".", 1)
+                try:
+                    operation = ExportOperation(operation_raw)
+                except ValueError:
+                    valid = ", ".join(op.value for op in ExportOperation)
+                    raise ValueError(
+                        f"Unknown client operation '{operation_raw}' in target '{exporter_name}'. "
+                        f"Valid operations: {valid}; a plain client id inserts."
+                    ) from None
                 client = setup_context.get_client_by_id(consumer_name)
                 consumer = ExporterUtil.create_exporter_from_client(client, consumer_name)
                 consumers_with_operation.append((consumer, operation))
@@ -274,49 +304,35 @@ class ExporterUtil:
         :param exporter_params_dict:
         :return:
         """
-        product_name = gen_stmt.name
+        # targetEntity names the physical output entity (file basename here; table/collection in the
+        # store exporters) - one explicit override, honoured across every target family. type_=None:
+        # a file basename never routed by 'type', so behaviour is unchanged without targetEntity.
+        from datamimic_ce.statements.statement_util import StatementUtil
+
+        product_name = StatementUtil.resolve_target_entity(gen_stmt.target_entity, None, gen_stmt.name)
+        # exportUri (validated at parse time) is the output-directory prefix for file exporters.
+        export_uri = gen_stmt.export_uri
 
         if name is None or name == "":
             return None
 
-        chunk_size = exporter_params_dict.get("chunk_size")
-        use_ndjson = exporter_params_dict.get("use_ndjson")
-        fieldnames = exporter_params_dict.get("fieldnames")
-        delimiter = exporter_params_dict.get("delimiter")
-        quotechar = exporter_params_dict.get("quotechar")
-        quoting = exporter_params_dict.get("quoting")
-        line_terminator = exporter_params_dict.get("line_terminator")
-        root_element = exporter_params_dict.get("root_element")
-        item_element = exporter_params_dict.get("item_element")
-        encoding = exporter_params_dict.get("encoding")
-        if fieldnames is not None and isinstance(fieldnames, str):
-            try:
-                fieldnames = ast.literal_eval(fieldnames)
-            except Exception as e:
-                raise ValueError(f"Error parsing fieldnames {fieldnames}: {e}") from e
+        # A buffered file exporter: build the shared config once and let the class pull its own
+        # format-specific options from params. Adding a common setting touches only ExporterConfig;
+        # adding an exporter touches only _BUFFERED_EXPORTERS.
+        if name in _BUFFERED_EXPORTERS:
+            config = ExporterConfig(
+                setup_context=setup_context,
+                product_name=product_name,
+                chunk_size=exporter_params_dict.get("chunk_size"),
+                encoding=exporter_params_dict.get("encoding"),
+                export_uri=export_uri,
+            )
+            return _BUFFERED_EXPORTERS[name](config, exporter_params_dict)
 
-        elif name == EXPORTER_CONSOLE_EXPORTER:
+        if name == EXPORTER_CONSOLE_EXPORTER:
             return ConsoleExporter()
         elif name == EXPORTER_LOG_EXPORTER:
             return LogExporter()
-        elif name == EXPORTER_JSON:
-            return JsonExporter(setup_context, product_name, chunk_size, use_ndjson, encoding)
-        elif name == EXPORTER_CSV:
-            return CSVExporter(
-                setup_context,
-                product_name,
-                chunk_size,
-                fieldnames,
-                delimiter,
-                quotechar,
-                quoting,
-                line_terminator,
-                encoding,
-            )
-        elif name == EXPORTER_XML:
-            return XMLExporter(setup_context, product_name, chunk_size, root_element, item_element, encoding)
-        elif name == EXPORTER_TXT:
-            return TXTExporter(setup_context, product_name, chunk_size, delimiter, line_terminator, encoding)
         elif name == EXPORTER_TEST_RESULT_EXPORTER:
             return setup_context.test_result_exporter
         elif name in setup_context.clients:
@@ -329,8 +345,7 @@ class ExporterUtil:
         else:
             raise ValueError(
                 f"Target not found: {name}, please check the target name again. "
-                f"Expected: {EXPORTER_JSON}, {EXPORTER_CSV}, {EXPORTER_XML}, "
-                f"{EXPORTER_TXT}, {EXPORTER_TEST_RESULT_EXPORTER}, {EXPORTER_JSON_SINGLE}, "
+                f"Expected: {', '.join(_BUFFERED_EXPORTERS)}, {EXPORTER_TEST_RESULT_EXPORTER}, "
                 f"{EXPORTER_CONSOLE_EXPORTER}, {EXPORTER_LOG_EXPORTER}, "
                 f"or client {list(setup_context.clients.keys())} "
                 f"or memstore {setup_context.memstore_manager.get_memstores_list()}"

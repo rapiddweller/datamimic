@@ -1,0 +1,3 @@
+<setup>
+    <generate name="g" count="1" targetEntity="../escape" target="CSV"><key name="x" constant="1"/></generate>
+</setup>

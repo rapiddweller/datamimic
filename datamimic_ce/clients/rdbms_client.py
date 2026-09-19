@@ -18,7 +18,40 @@ from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.config import settings
 from datamimic_ce.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.domains.domain_core.base_entity import stringify_if_entity
 from datamimic_ce.logger import logger
+
+# SQLAlchemy create_engine kwargs DATAMIMIC forwards (pooling/behavior). Anything else in the
+# connection config is either connection identity (see _CONNECTION_IDENTITY, used to build the URL)
+# or a vendor knob that create_engine would reject.
+_ENGINE_KWARGS = {
+    "echo",
+    "echo_pool",
+    "pool_size",
+    "max_overflow",
+    "pool_timeout",
+    "pool_recycle",
+    "pool_pre_ping",
+    "connect_args",
+    "isolation_level",
+    "execution_options",
+    "encoding",
+    "future",
+}
+# Connection identity used to build the URL (not passed as an engine kwarg) - dropping these is expected.
+_CONNECTION_IDENTITY = {
+    "dbms",
+    "database",
+    "host",
+    "port",
+    "user",
+    "password",
+    "db_schema",
+    "id",
+    "environment",
+    "system",
+    "none_as_null_col",
+}
 
 
 class RdbmsClient(DatabaseClient):
@@ -27,23 +60,14 @@ class RdbmsClient(DatabaseClient):
         self._engine = None
         self._task_id = task_id
 
-        # Prepare sqlalchemy engine kwargs, also remove datamimic-specific kwargs
-        self._engine_kwargs = credential.get_connection_config()
-        # Remove datamimic-specific kwargs
-        not_engine_kwargs = [
-            "dbms",
-            "database",
-            "host",
-            "port",
-            "user",
-            "password",
-            "db_schema",
-            "id",
-            "environment",
-            "system",
-            "none_as_null_col",
-        ]
-        self._engine_kwargs = {k: v for k, v in self._engine_kwargs.items() if k not in not_engine_kwargs}
+        # Keep only real SQLAlchemy create_engine kwargs. The connection config allows extra keys
+        # (env files carry connection identity like dbms/host plus vendor knobs such as legacy
+        # clean/catalog/quoteTableNames); anything not a create_engine parameter would raise, so allowlist.
+        all_config = credential.get_connection_config()
+        self._engine_kwargs = {k: v for k, v in all_config.items() if k in _ENGINE_KWARGS}
+        dropped = set(all_config) - set(self._engine_kwargs) - _CONNECTION_IDENTITY
+        if dropped:
+            logger.debug(f"Ignored non-engine connection keys: {', '.join(sorted(dropped))}")
         # Set default values for some kwargs
         self._engine_kwargs["echo"] = self._engine_kwargs.get("echo", False)
         self._engine_kwargs["pool_size"] = self._engine_kwargs.get("pool_size", 20)
@@ -166,8 +190,11 @@ class RdbmsClient(DatabaseClient):
         :param data_list: List of dictionaries representing rows to be processed.
         :return: The transformed data list.
         """
-        # Get the list of columns where None values should be converted to NULL
-        none_as_null_col = [col.strip() for col in getattr(self._credential, "none_as_null_col", "").split(",")]
+        # Get the list of columns where None values should be converted to NULL.
+        # Filter empties: "".split(",") is [""] and would inject a bogus ''-keyed column into every row.
+        none_as_null_col = [
+            col.strip() for col in getattr(self._credential, "none_as_null_col", "").split(",") if col.strip()
+        ]
         # Convert None values to SQLAlchemy NULL
         if len(none_as_null_col) > 0:
             for idx, data_dict in enumerate(data_list):
@@ -352,46 +379,23 @@ class RdbmsClient(DatabaseClient):
         # Handle both SQLAlchemy 1.x and 2.x Row objects
         return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
 
-    def get_random_rows_by_column(
-        self,
-        table_name: str,
-        column_name: str,
-        pagination: DataSourcePagination | None,
-        unique: bool,
-    ) -> list:
-        """
-        Get column data for reference
-        :param count:
-        :param table_name:
-        :param column_name:
-        :return:
-        """
+    def get_random_rows_by_columns(self, table_name: str, column_names: list[str]) -> list[tuple]:
+        """Fetch the given columns for a <reference> in a stable order, preserving row-tuple
+        integrity. The reference task does the distinct/with-replacement sampling deterministically
+        via DataSourceRegistry.get_unique_data / ctx.rng (so the full column set is returned, not a
+        pre-limited slice)."""
         engine = self._create_engine()
 
         with engine.connect() as conn:
             actual_table_name = self._get_actual_table_name(table_name)
             table = self._get_metadata(engine).tables[actual_table_name]
-
-            # Get number of random rows from table
-            if self._credential.dbms == "mssql":
-                order_func = func.newid()
-            elif self._credential.dbms == "oracle":
-                order_func = func.dbms_random.value()
-            else:
-                order_func = func.random()
-
-            if pagination and hasattr(pagination, "skip") and hasattr(pagination, "limit"):
-                query = (
-                    select(table.c[column_name]).offset(pagination.skip).limit(pagination.limit)
-                    if unique
-                    else select(table.c[column_name]).order_by(order_func)
-                )
-            else:
-                query = select(table.c[column_name])
-
-            random_rows = conn.execute(query).fetchall()
-
-            return [row[0] for row in random_rows]
+            columns = [table.c[name] for name in column_names]
+            # ORDER BY the selected columns (NOT random): a stable input order so the seeded
+            # shuffle in get_unique_data is reproducible run-to-run. ORDER BY random() would
+            # destroy that reproducibility.
+            # fetch-all + sort suits reference/lookup tables; a huge source would want
+            # SELECT DISTINCT or DB-side sampling — an EE-scale concern, not CE's reference path.
+            return [tuple(row) for row in conn.execute(select(*columns).order_by(*columns)).fetchall()]
 
     def insert(self, table_name: str, data_list: list):
         """
@@ -410,12 +414,82 @@ class RdbmsClient(DatabaseClient):
             return
 
         data_list = self._apply_global_json_config(data_list)
+        # A whole entity bound into a scalar column (the legacy toString() idiom, e.g.
+        # <key script="person"> into a varchar field) has no driver-level binding otherwise -
+        # confirmed this raises hard today (sqlite3.ProgrammingError: type not supported), so
+        # this only turns a crash into a correct write, never changes behavior for what works now.
+        data_list = [{k: stringify_if_entity(v) for k, v in row.items()} for row in data_list]
 
         with engine.begin() as connection:
             try:
                 connection.execute(table.insert(), data_list)
             except Exception as err:
                 raise RuntimeError(f"Error when writing data to RDBMS: {err}") from err
+
+    def _table_and_pk(self, engine, table_name: str):
+        """Reflected table + its primary-key column names. update/upsert/delete key on the PK;
+        a table without one is a configuration error (never silently fall back to insert)."""
+        table = self._get_metadata(engine).tables[self._get_actual_table_name(table_name)]
+        pk = [c.name for c in table.primary_key.columns]
+        if not pk:
+            raise ValueError(
+                f"Table '{table_name}' has no primary key - update/upsert/delete need one to match rows"
+            )
+        return table, pk
+
+    @staticmethod
+    def _pk_clause(table, row: dict, pk: list[str], table_name: str, operation: str):
+        missing = [k for k in pk if k not in row]
+        if missing:
+            raise ValueError(f"{operation} on '{table_name}' requires primary-key value(s) {missing} in each record")
+        return [table.c[k] == row[k] for k in pk]
+
+    def update(self, table_name: str, data_list: list) -> int:
+        """UPDATE each record by primary key; returns the number of matched rows.
+        Row-by-row statements: test-data volumes, not a bulk path."""
+        if not data_list:
+            return 0
+        engine = self._create_engine()
+        table, pk = self._table_and_pk(engine, table_name)
+        matched = 0
+        with engine.begin() as connection:
+            for row in self._apply_global_json_config(data_list):
+                values = {k: v for k, v in row.items() if k not in pk}
+                if not values:
+                    raise ValueError(f"update on '{table_name}' has no non-key columns to set")
+                clause = self._pk_clause(table, row, pk, table_name, "update")
+                matched += connection.execute(table.update().where(*clause).values(**values)).rowcount
+        return matched
+
+    def upsert(self, table_name: str, data_list: list) -> None:
+        """UPDATE by primary key, INSERT the rows that matched nothing."""
+        if not data_list:
+            return
+        engine = self._create_engine()
+        table, pk = self._table_and_pk(engine, table_name)
+        with engine.begin() as connection:
+            for row in self._apply_global_json_config(data_list):
+                clause = self._pk_clause(table, row, pk, table_name, "upsert")
+                values = {k: v for k, v in row.items() if k not in pk}
+                if values:
+                    exists = connection.execute(table.update().where(*clause).values(**values)).rowcount > 0
+                else:  # all-PK row: nothing to update, just ensure presence
+                    exists = connection.execute(select(table.c[pk[0]]).where(*clause)).first() is not None
+                if not exists:
+                    connection.execute(table.insert(), [row])
+
+    def delete(self, table_name: str, data_list: list) -> int:
+        """DELETE each record by primary key; returns the number of deleted rows."""
+        if not data_list:
+            return 0
+        engine = self._create_engine()
+        table, pk = self._table_and_pk(engine, table_name)
+        deleted = 0
+        with engine.begin() as connection:
+            for row in self._apply_global_json_config(data_list):
+                clause = self._pk_clause(table, row, pk, table_name, "delete")
+                deleted += connection.execute(table.delete().where(*clause)).rowcount
+        return deleted
 
     def _get_actual_table_name(self, table_name: str) -> str:
         """
@@ -444,8 +518,13 @@ class RdbmsClient(DatabaseClient):
         with self._create_engine().connect() as connection:
             transaction = connection.begin()
             try:
-                # Check if sequence exists in the specified schema
+                # Check if sequence exists in the specified schema. A dotted name
+                # ('zsv.t_angebote_id_seq', explicit sequence= from the DSL) carries its own
+                # schema - splitting here keeps every query below two-part; blindly prepending
+                # the credential schema would build malformed public.zsv.t_angebote_id_seq.
                 schema = self._credential.db_schema or "public"
+                if "." in sequence_name:
+                    schema, sequence_name = sequence_name.split(".", 1)
                 check_query = text(
                     "SELECT EXISTS (SELECT 1 FROM pg_sequences WHERE schemaname = :schema AND sequencename = :seq_name)"
                 )
@@ -477,6 +556,8 @@ class RdbmsClient(DatabaseClient):
             transaction = connection.begin()
             try:
                 schema = self._credential.db_schema or "public"
+                if "." in sequence_name:  # dotted name carries its own schema (see get_current_sequence_number)
+                    schema, sequence_name = sequence_name.split(".", 1)
                 # Use a transaction to ensure atomicity
                 query = text(
                     f"SELECT setval('{schema}.{sequence_name}', nextval('{schema}.{sequence_name}') + :increment)"

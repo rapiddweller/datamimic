@@ -1,0 +1,12 @@
+<setup>
+    <execute type="python">
+# multi-line block: define a reusable derived-field helper in the shared namespace
+def net_from_gross(gross, rate):
+    tax = gross * rate
+    return round(gross - tax, 2)
+</execute>
+    <generate name="g" count="2" target="">
+        <key name="gross" script="100"/>
+        <key name="net" script="net_from_gross(gross, 0.19)"/>
+    </generate>
+</setup>

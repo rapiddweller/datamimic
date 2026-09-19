@@ -24,7 +24,7 @@ DATAMIMIC is built on three main architectural components:
 
 ### Dataset Loading (TL;DR)
 
-Follow the dataset standard in `docs/standards/datasets.md` for all file access:
+Follow the dataset standard in `docs/data-domains/datasets.md` for all file access:
 
 - Always resolve files via `dataset_path(...)` or the lightweight loaders in `datamimic_ce.utils.dataset_loader`.
 - Pass base filenames to loaders; the helper appends `_{CC}.csv` using the generator’s normalized dataset.
@@ -147,28 +147,27 @@ DATAMIMIC includes specialized models for various industry domains:
 - **Patient** - Complete patient profile with medical history
 - **Doctor** - Medical professional with specialty and credentials
 - **Hospital** - Medical facility with departments and services
-- **MedicalRecord** - Patient medical history and documentation
+- **MedicalProcedure** - Medical procedures with codes and costs
+- **MedicalDevice** - Medical devices with type and status
 
 ### Finance Domain
 
 - **BankAccount** - Account details including type and balance
 - **Transaction** - Financial transactions with metadata
-- **Loan** - Loan products with terms and interest rates
-- **Investment** - Investment vehicles and portfolios
+- **CreditCard** - Card details linked to bank and holder
+- **Bank** - Bank identity with codes and routing data
 
 ### Insurance Domain
 
-- **Policy** - Insurance policies across different lines
-- **Claim** - Insurance claims with status and history
-- **Insured** - Policy holder details
-- **RiskProfile** - Risk assessment and scoring
+- **InsurancePolicy** - Insurance policies with holder, product, and coverages
+- **InsuranceCompany** - Insurance company identity
+- **InsuranceProduct** - Insurance product types with coverages
+- **InsuranceCoverage** - Coverage details with limits
 
 ### E-commerce Domain
 
 - **Product** - Product catalog items with attributes
-- **Order** - Customer orders with line items
-- **Customer** - E-commerce customer profiles
-- **Review** - Product reviews and ratings
+- **Order** - Customer orders with product lists, amounts, and addresses
 
 ## Weighted Distributions
 

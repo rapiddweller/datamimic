@@ -6,13 +6,22 @@
 
 import ast
 from abc import abstractmethod
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from datetime import datetime, timedelta
+from decimal import Decimal
 from random import Random
+from typing import Any
 
 import numpy
 
-from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
+from datamimic_ce.constants.data_type_constants import (
+    DATA_TYPE_BINARY,
+    DATA_TYPE_BOOL,
+    DATA_TYPE_DECIMAL,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_INT,
+    DATA_TYPE_STRING,
+)
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
@@ -23,6 +32,7 @@ from datamimic_ce.domains.common.literal_generators.string_generator import Stri
 from datamimic_ce.statements.element_statement import ElementStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.variable_statement import VariableStatement
+from datamimic_ce.utils.unique_sampling import unique_value_iter
 
 
 class KeyVariableTask:
@@ -51,11 +61,15 @@ class KeyVariableTask:
         self._converter_list = TaskUtil.create_converter_list(ctx, statement.converter)
 
         self._mode: str | None = None
+        # Lazily-built distinct-value iterator for unique="true" (sampling without replacement).
+        self._unique_iter: Iterator[Any] | None = None
 
         self._simple_type_set = {
+            DATA_TYPE_BINARY,
             DATA_TYPE_STRING,
             DATA_TYPE_INT,
             DATA_TYPE_FLOAT,
+            DATA_TYPE_DECIMAL,
             DATA_TYPE_BOOL,
             "NoneType",
         }
@@ -89,19 +103,21 @@ class KeyVariableTask:
                     f"'values' element of <{self._element_tag}> '{self._statement.name}' "
                     f"is invalid: {self._statement.values}"
                 ) from None
+            self._weights = self._parse_weights(self._values)
             self._mode = self._VALUES_MODE
         elif self._statement.generator is not None:
-            # NOTE: a literal <key generator="..."> is created without an injected
-            # seed, so it is NOT bound to <setup rngSeed>. Deterministic DSL-level
-            # seeding of literal key generators is an Enterprise (EE) feature; CE
-            # determinism covers entity generation (<setup rngSeed> / <variable rngSeed>).
+            # A literal <key generator="..."> is bound to <setup rngSeed> inside create_generator
+            # (a seeded rng is injected), so it replays deterministically; the single-process policy
+            # keeps that reproducible across machines. Without a seed it stays wall-clock random.
             # Try to init generator with or without args.
             try:
                 self._generator = GeneratorUtil(ctx).create_generator(
                     self._statement.generator,
                     self._statement,
                     self._pagination,
-                    key=self._statement.full_name,
+                    # full_name alone collides when same-named keys sit in different <condition>
+                    # branches with different generators - include the generator expression.
+                    key=f"{self._statement.full_name}|{self._statement.generator}",
                 )
                 self._mode = self._GENERATOR_MODE
             # If init generator failed while creating task, try to lazy-init in the first task execution
@@ -109,6 +125,13 @@ class KeyVariableTask:
                 self._mode = self._LAZY_GENERATOR_MODE
         elif self._statement.source is not None:
             source = self._statement.source
+            if self._statement.unique:
+                # <key source> is a weighted csv (with replacement); unique source pools
+                # are a <variable source unique> feature.
+                raise ValueError(
+                    f"'unique' is not supported on a <{self._element_tag}> 'source'; "
+                    f"use a <variable source ... unique=\"true\"> or inline 'values'"
+                )
             if not source.endswith("wgt.csv"):
                 raise ValueError(f"Data source of attribute '{self._statement.name}' must be type of: 'wgt.csv'")
             separator = self._statement.separator or ctx.default_separator
@@ -121,12 +144,56 @@ class KeyVariableTask:
             self._mode = self._GENERATOR_MODE
         elif self._statement.pattern is not None:
             self._mode = self._PATTERN_MODE
+        elif (range_gen := self._range_generator()) is not None:
+            # native min/max[/granularity] or minLength/maxLength on a typed <key> -> synthesize the literal
+            # generator and reuse create_generator's seeding + caching (instead of a generator="..." string)
+            self._generator = GeneratorUtil(ctx).create_generator(
+                # see above: disambiguate same-named keys across <condition> branches
+                range_gen, self._statement, self._pagination, key=f"{self._statement.full_name}|{range_gen}"
+            )
+            self._mode = self._GENERATOR_MODE
         # IMPORTANT: always put this condition at the end
         # because this mode should only be active after checking all other ones
         elif self._statement.type is not None:
             self._mode = self._RANDOM_MODE
         else:
             raise ValueError(f"Cannot init generation mode for element '{self.statement.name}'")
+
+    def _range_generator(self) -> str | None:
+        """Native range attributes on a typed <key> -> the matching literal generator string, so a field reads
+        as ``<key type="int" min="1" max="9"/>`` or ``<key type="string" minLength="5" maxLength="10"/>``
+        instead of a generator="...(...)" string. None when it does not apply (not a KeyStatement, no range
+        attrs, or an unsupported type)."""
+        stmt = self._statement
+        if not isinstance(stmt, KeyStatement):
+            return None
+        if stmt.type == DATA_TYPE_STRING and (stmt.min_length is not None or stmt.max_length is not None):
+            lens = (("min_len", stmt.min_length), ("max_len", stmt.max_length))
+            return f"StringGenerator({', '.join(f'{k}={v}' for k, v in lens if v is not None)})"
+        if stmt.type == DATA_TYPE_BINARY:
+            # bare type="binary" also routes here (default 1..16 bytes), so it gets seeding + caching
+            args = [
+                f"{k}={v}" for k, v in (("min_len", stmt.min_length), ("max_len", stmt.max_length)) if v is not None
+            ]
+            if stmt.mime_type is not None:
+                args.append(f"mime_type='{stmt.mime_type}'")
+            return f"BinaryGenerator({', '.join(args)})"
+        if stmt.min is None and stmt.max is None:
+            return None
+        if stmt.type == DATA_TYPE_INT:
+            cls = "IntegerGenerator"
+        elif stmt.type in (DATA_TYPE_FLOAT, DATA_TYPE_DECIMAL):
+            cls = "FloatGenerator"
+        else:
+            return None
+        args = [f"{k}={v}" for k, v in (("min", stmt.min), ("max", stmt.max)) if v is not None]
+        if cls == "FloatGenerator" and stmt.granularity is not None:
+            args.append(f"granularity={stmt.granularity}")
+        if stmt.distribution is not None:
+            # value validated against NumberDistribution at parse time (key_model); lookup by
+            # VALUE - member names differ from values for randomWalk/bitreverse
+            args.append(f"distribution=NumberDistribution('{stmt.distribution}')")
+        return f"{cls}({', '.join(args)})"
 
     @abstractmethod
     def execute(self, ctx: Context) -> None:
@@ -180,8 +247,16 @@ class KeyVariableTask:
                 suffix=self._suffix,
             )
         elif self._mode == self._VALUES_MODE:
-            # Return None if self._values is None
-            value = None if self._values is None else ctx.rng.choice(self._values)
+            # None if no values; unique = distinct per row (no replacement); weighted pick
+            # when 'weights' given; otherwise a uniform random pick.
+            if self._values is None:
+                value = None
+            elif self._statement.unique:
+                value = self._next_unique_value(ctx)
+            elif self._weights:
+                value = ctx.rng.choices(self._values, weights=self._weights, k=1)[0]
+            else:
+                value = ctx.rng.choice(self._values)
         elif self._mode == self._LAZY_GENERATOR_MODE:
             # Try to init generator again in first task execution
             self._generator = (
@@ -189,7 +264,7 @@ class KeyVariableTask:
                     self._statement.generator,
                     self.statement,
                     self._pagination,
-                    key=self._statement.full_name,
+                    key=f"{self._statement.full_name}|{self._statement.generator}",
                 )
                 if self._statement.generator is not None
                 else None
@@ -208,7 +283,7 @@ class KeyVariableTask:
                     self._statement.generator,
                     self.statement,
                     self._pagination,
-                    key=self._statement.full_name,
+                    key=f"{self._statement.full_name}|{self._statement.generator}",
                 )
             value = self._generator.generate() if self._generator is not None else None
             # Convert numpy.bool_ to bool for being compatible with consumer (db,...)
@@ -261,6 +336,36 @@ class KeyVariableTask:
 
         return value
 
+    def _next_unique_value(self, ctx: Context) -> Any:
+        """Emit a distinct value per call (sampling 'values' without replacement,
+        seeded via ctx.rng). Shared with <variable source unique> via unique_value_iter."""
+        if self._unique_iter is None:
+            self._unique_iter = unique_value_iter(
+                self._values, ctx.rng, f"<{self._element_tag}> '{self._statement.name}'"
+            )
+        return next(self._unique_iter)
+
+    def _parse_weights(self, values):
+        """Parse the 'weights' companion of 'values' into floats, validating the count.
+        Returns None when no weights are given (uniform pick)."""
+        if self._statement.weights is None:
+            return None
+        try:
+            parsed = ast.literal_eval(self._statement.weights)
+            if not isinstance(parsed, Iterable):
+                parsed = (parsed,)
+            weights = [float(w) for w in parsed]
+        except (SyntaxError, ValueError, TypeError):
+            raise ValueError(
+                f"'weights' of <{self._element_tag}> '{self._statement.name}' is invalid: {self._statement.weights}"
+            ) from None
+        if values is not None and len(weights) != len(values):
+            raise ValueError(
+                f"'weights' ({len(weights)}) must match 'values' ({len(values)}) length "
+                f"for <{self._element_tag}> '{self._statement.name}'"
+            )
+        return weights
+
     def _convert_to_type(self, data_type: str, value):
         """
         Convert generated value to defined "type"
@@ -287,6 +392,18 @@ class KeyVariableTask:
             return int(value)
         elif data_type == DATA_TYPE_FLOAT:
             return float(value)
+        elif data_type == DATA_TYPE_DECIMAL:
+            # str() so a float value (e.g. 8.2) doesn't re-introduce binary float error
+            return Decimal(str(value))
+        elif data_type == DATA_TYPE_BINARY:
+            if isinstance(value, bytes | bytearray):
+                return bytes(value)
+            if isinstance(value, str):
+                return value.encode("utf-8")  # cast-to-type, like int()/str() for the other types
+            raise ValueError(
+                f"<{self._element_tag}> '{self._statement.name}' type='binary' cannot convert "
+                f"value of type '{type(value).__name__}' - expected bytes or str"
+            )
         elif data_type == DATA_TYPE_BOOL:
             if value == "" or value is None:
                 return None

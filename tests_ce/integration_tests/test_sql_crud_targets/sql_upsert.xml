@@ -1,0 +1,17 @@
+<setup>
+    <database id="db" database="sql_crud_upsert_db" dbms="sqlite"/>
+    <execute type="sql" target="db">
+        DROP TABLE IF EXISTS customers;
+        CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT, tier TEXT);
+        INSERT INTO customers VALUES (1, 'a', 'bronze');
+        INSERT INTO customers VALUES (2, 'b', 'bronze');
+        INSERT INTO customers VALUES (3, 'c', 'silver');
+    </execute>
+    <!-- ids 1..5: 1-3 exist (updated), 4-5 do not (inserted) -->
+    <generate name="customers" count="5" target="db.upsert">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" script="'n' + str(id)"/>
+        <key name="tier" constant="upserted"/>
+    </generate>
+    <generate name="check" source="db" selector="SELECT id, name, tier FROM customers ORDER BY id" distribution="ordered" target=""/>
+</setup>

@@ -49,6 +49,10 @@ class SetupStatement(CompositeStatement):
     def num_process(self) -> int | None:
         return self._num_process
 
+    @num_process.setter
+    def num_process(self, value: int | None) -> None:
+        self._num_process = value
+
     @property
     def default_line_separator(self) -> str | None:
         return self._default_line_separator

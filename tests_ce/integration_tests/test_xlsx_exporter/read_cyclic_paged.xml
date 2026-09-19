@@ -1,0 +1,9 @@
+<setup>
+    <!-- Ordered + cyclic read spanning multiple pages: count > source length, so the source must
+         wrap around, and page boundaries must not disturb the wrap. -->
+    <generate name="rows" source="people_fixture_large.xlsx" distribution="ordered" cyclic="true" count="26"
+              pageSize="7" target="">
+        <key name="who" script="name"/>
+        <key name="idx" script="score"/>
+    </generate>
+</setup>

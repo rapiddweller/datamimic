@@ -1,0 +1,7 @@
+<setup rngSeed="9">
+    <!-- source has duplicate values (A,A,C,C); unique dedupes -> 3 distinct (A,B,C). -->
+    <generate name="people" count="3" target="">
+        <variable name="row" source="codes_dup.csv" unique="true"/>
+        <key name="code" script="row.code"/>
+    </generate>
+</setup>

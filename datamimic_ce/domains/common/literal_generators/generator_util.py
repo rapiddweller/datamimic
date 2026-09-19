@@ -5,15 +5,38 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import ast
+import functools
+import inspect
+import random
 import uuid
 
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.domains.common.literal_generators.increment_generator import IncrementGenerator
+from datamimic_ce.domains.common.literal_generators.state_transition_generator import (
+    StateMachineDef,
+    StateTransitionGenerator,
+)
+from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
+from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
+from datamimic_ce.enums.distribution_enums import NumberDistribution
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.statement import Statement
+
+
+@functools.cache  # a class's __init__ signature is static
+def _is_rng_generator(obj: type) -> bool:
+    """A generator class that owns a *seedable* rng: an rng-driven literal/domain generator whose __init__
+    takes an ``rng`` kwarg. Increment/sequence generators subclass the base but override __init__ without
+    ``rng`` (they don't draw on it), so they are excluded — passing rng to them would raise."""
+    return issubclass(obj, BaseLiteralGenerator | BaseDomainGenerator) and "rng" in inspect.signature(obj).parameters
+
+
+def _bind_rng(obj: object, rng: random.Random) -> object:
+    """Construct-time seeding: wrap an rng-driven generator class so it is built with the seeded rng."""
+    return functools.partial(obj, rng=rng) if isinstance(obj, type) and _is_rng_generator(obj) else obj
 
 
 class GeneratorUtil:
@@ -73,6 +96,20 @@ class GeneratorUtil:
             else:
                 class_name = generator_str.strip()
 
+            # A <state-machine id="..."> registers a definition under its id; each
+            # generator="<id>" reference builds its own stateful walk from it. Seed the
+            # walk from <setup rngSeed> so the named state machine replays deterministically
+            # (derive_seeded_rng returns None without rngSeed -> wall-clock random).
+            machine_def = self._context.root.generators.get(class_name)
+            if isinstance(machine_def, StateMachineDef):
+                generator = StateTransitionGenerator(
+                    machine_def.rules,
+                    start=machine_def.start,
+                    rng=self._context.root.derive_seeded_rng(),
+                )
+                self._context.root.generators[cache_key] = generator  # per-field reuse across rows
+                return generator
+
             # Get generator class
             cls = self._class_dict.get(class_name)
             if cls is None:
@@ -100,11 +137,19 @@ class GeneratorUtil:
                 return result
 
             if class_name == "SequenceTableGenerator":
-                result = cls(context=self._context, stmt=stmt)
+                # Optional explicit sequence name: SequenceTableGenerator(sequence='zsv.t_angebote_id_seq')
+                # (explicitly named native DB sequences, migration parity). ast-parsed like DateTimeGenerator below, but
+                # keyword-only and single-kwarg - anything else raises, args are never silently dropped.
+                parsed_sequence = GeneratorUtil._parse_sequence_kwarg(generator_str)
+                result = cls(context=self._context, stmt=stmt, sequence=parsed_sequence)
                 if pagination:
                     result.add_pagination(pagination=pagination)
-                # Use unified cache key (may differ from generator_str when a key is provided)
-                self._context.root.generators[cache_key] = result
+                    # Cache only generation-ready (paginated) instances. GenerateTask.pre_execute
+                    # builds its sub-tasks with pagination=None; caching that instance under the
+                    # same full_name|generator cache key the paginated page-tasks use later made
+                    # every single-process run hit _current=None -> StopIteration on the first
+                    # record -> 0 rows (only the numProcess=2 path had coverage, masking this).
+                    self._context.root.generators[cache_key] = result
                 return result
 
             # --- DateTimeGenerator special parsing ---
@@ -164,6 +209,11 @@ class GeneratorUtil:
                                 logger.warning(
                                     f"Positional args are not processed for DateTimeGenerator string: {generator_str}"
                                 )
+                            # Seed at construction under <setup rngSeed> (this branch bypasses the eval-path
+                            # rng binding below), unless the DSL already pinned seed=/rng= explicitly.
+                            dt_rng = self._context.root.derive_seeded_rng()
+                            if dt_rng is not None and not {"rng", "seed"} & parsed_constructor_args.keys():
+                                parsed_constructor_args["rng"] = dt_rng
                             result = cls(**parsed_constructor_args)
                             # Use unified cache key for consistency with global cache
                             self._context.root.generators[cache_key] = result
@@ -177,15 +227,26 @@ class GeneratorUtil:
                     ) from e_dt_parse
             # --- End DateTimeGenerator special parsing ---
 
+            # Seed at CONSTRUCTION under <setup rngSeed>: an rng-driven generator (literal OR domain) must
+            # receive the seeded rng in __init__ so a COMPOSITE domain generator threads it to the children
+            # it builds there (post-construction rebinding cannot reach already-built children). Without a
+            # seed, derive_seeded_rng() returns None and generators keep their own wall-clock rng.
+            seeded_rng = self._context.root.derive_seeded_rng()
+
             # Fallback: evaluate_python_expression for other generators with params
             if "(" in generator_str:
                 # A shallow copy is sufficient here and avoids recursion issues
                 # with certain generator classes like ``SequenceTableGenerator``.
                 local_ns = self._class_dict.copy()
-                # Instanz-Namespaces getrennt halten, um Typkonflikte zu vermeiden
-                local_ns_inst = {"context": self._context, "self": self}
+                # Instanz-Namespaces getrennt halten, um Typkonflikte zu vermeiden.
+                # NumberDistribution so the DSL can pass the real enum type, not a magic string,
+                # e.g. IntegerGenerator(min=1, max=27, distribution=NumberDistribution.CUMULATED).
+                local_ns_inst = {"context": self._context, "self": self, "NumberDistribution": NumberDistribution}
+                namespace = {**local_ns, **local_ns_inst}
+                if seeded_rng is not None:
+                    namespace = {name: _bind_rng(obj, seeded_rng) for name, obj in namespace.items()}
                 try:
-                    result = self._context.evaluate_python_expression(generator_str, {**local_ns, **local_ns_inst})
+                    result = self._context.evaluate_python_expression(generator_str, namespace)
                 except (ValueError, SyntaxError, NameError, TypeError) as e_eval:
                     logger.error(
                         f"Error evaluating generator string '{generator_str}' with evaluate_python_expression: {e_eval}"
@@ -194,10 +255,11 @@ class GeneratorUtil:
                         f"Cannot create generator '{class_name}' from string '{generator_str}' using evaluate: {e_eval}"
                     ) from e_eval
             else:
+                seed_kw = {"rng": seeded_rng} if seeded_rng is not None and _is_rng_generator(cls) else {}
                 if class_name in ["EmailAddressGenerator", "FamilyNameGenerator", "GivenNameGenerator"]:
-                    result = cls(dataset=self._context.root.default_dataset)
+                    result = cls(dataset=self._context.root.default_dataset, **seed_kw)
                 else:
-                    result = cls()
+                    result = cls(**seed_kw)
             if isinstance(result, IncrementGenerator):
                 if hasattr(result, "add_pagination") and callable(result.add_pagination):
                     result.add_pagination(pagination=pagination)
@@ -220,6 +282,47 @@ class GeneratorUtil:
                 raise ValueError(f"Cannot create generator '{current_class_name}'{element_name_str}: {e}") from e
             else:
                 raise
+
+    @staticmethod
+    def _parse_sequence_kwarg(generator_str: str) -> str | None:
+        """Extract the optional sequence='...' kwarg from a SequenceTableGenerator generator
+        string. Bare "SequenceTableGenerator" and empty "SequenceTableGenerator()" return None
+        (convention-derived name). Positional args, unknown kwargs, non-string values, and
+        malformed syntax all raise ValueError - this generator's args used to be silently
+        discarded, which is exactly the failure mode this replaces."""
+        if "(" not in generator_str:
+            return None
+        try:
+            module_node = ast.parse(generator_str)
+        except SyntaxError as e_syn:
+            raise ValueError(
+                f"Error parsing parameters for SequenceTableGenerator from '{generator_str}': {e_syn}"
+            ) from e_syn
+        if not (
+            module_node.body
+            and isinstance(module_node.body[0], ast.Expr)
+            and isinstance(module_node.body[0].value, ast.Call)
+            and isinstance(module_node.body[0].value.func, ast.Name)
+            and module_node.body[0].value.func.id == "SequenceTableGenerator"
+        ):
+            raise ValueError(f"Cannot parse SequenceTableGenerator arguments from '{generator_str}'")
+        call_node = module_node.body[0].value
+        if call_node.args:
+            raise ValueError(
+                f"SequenceTableGenerator does not accept positional arguments; "
+                f"use sequence='...' in '{generator_str}'"
+            )
+        parsed_sequence: str | None = None
+        for kw in call_node.keywords:
+            if kw.arg != "sequence":
+                raise ValueError(
+                    f"Unsupported keyword argument '{kw.arg}' for SequenceTableGenerator in "
+                    f"'{generator_str}'; only 'sequence' is supported"
+                )
+            if not isinstance(kw.value, ast.Constant) or not isinstance(kw.value.value, str):
+                raise ValueError(f"'sequence' must be a string literal in '{generator_str}'")
+            parsed_sequence = kw.value.value
+        return parsed_sequence
 
     @staticmethod
     def is_valid_uuid(input_string: str) -> bool:

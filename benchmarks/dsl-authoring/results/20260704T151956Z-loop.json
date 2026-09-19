@@ -1,0 +1,349 @@
+{
+  "generated_at": "2026-07-04T15:19:56.425931+00:00",
+  "condition": "loop",
+  "initial_variant": "P2_cheatsheet",
+  "max_iterations": 3,
+  "models": [
+    "qwen2.5:7b",
+    "gemma4:31b"
+  ],
+  "tasks": [
+    "weighted_country",
+    "nested_reviews",
+    "reproducible_orders",
+    "memstore_pipeline",
+    "timeseries",
+    "branch_fk"
+  ],
+  "cells": [
+    {
+      "model": "qwen2.5:7b",
+      "variant": "loop",
+      "task": "weighted_country",
+      "score": 0,
+      "rule_ids": [
+        "DM002"
+      ],
+      "detail": "dry-run failed or produced 0 rows",
+      "iterations": 3,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM103"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 2258
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM103"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 2447
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 2291
+        }
+      ],
+      "latency_ms": 6996
+    },
+    {
+      "model": "qwen2.5:7b",
+      "variant": "loop",
+      "task": "nested_reviews",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 2,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM104"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 4150
+        },
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 2624
+        }
+      ],
+      "latency_ms": 6774
+    },
+    {
+      "model": "qwen2.5:7b",
+      "variant": "loop",
+      "task": "reproducible_orders",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 1,
+      "iteration_details": [
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 3647
+        }
+      ],
+      "latency_ms": 3647
+    },
+    {
+      "model": "qwen2.5:7b",
+      "variant": "loop",
+      "task": "memstore_pipeline",
+      "score": 0,
+      "rule_ids": [
+        "DM401",
+        "DM402"
+      ],
+      "detail": "lint: 2 errors, 1 warning",
+      "iterations": 3,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM401",
+            "DM402"
+          ],
+          "detail": "lint: 2 errors, 1 warning",
+          "latency_ms": 3825
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM401",
+            "DM402"
+          ],
+          "detail": "lint: 2 errors, 1 warning",
+          "latency_ms": 2362
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM401",
+            "DM402"
+          ],
+          "detail": "lint: 2 errors, 1 warning",
+          "latency_ms": 4963
+        }
+      ],
+      "latency_ms": 11150
+    },
+    {
+      "model": "qwen2.5:7b",
+      "variant": "loop",
+      "task": "timeseries",
+      "score": 0,
+      "rule_ids": [
+        "DM002"
+      ],
+      "detail": "dry-run failed or produced 0 rows",
+      "iterations": 3,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 4252
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM314"
+          ],
+          "detail": "lint: 1 error",
+          "latency_ms": 2785
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 2730
+        }
+      ],
+      "latency_ms": 9767
+    },
+    {
+      "model": "qwen2.5:7b",
+      "variant": "loop",
+      "task": "branch_fk",
+      "score": 0,
+      "rule_ids": [
+        "DM002"
+      ],
+      "detail": "dry-run failed or produced 0 rows",
+      "iterations": 3,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM212",
+            "DM402"
+          ],
+          "detail": "lint: 2 errors, 1 warning",
+          "latency_ms": 4709
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 3197
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 3250
+        }
+      ],
+      "latency_ms": 11156
+    },
+    {
+      "model": "gemma4:31b",
+      "variant": "loop",
+      "task": "weighted_country",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 1,
+      "iteration_details": [
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 21113
+        }
+      ],
+      "latency_ms": 21113
+    },
+    {
+      "model": "gemma4:31b",
+      "variant": "loop",
+      "task": "nested_reviews",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 1,
+      "iteration_details": [
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 19333
+        }
+      ],
+      "latency_ms": 19333
+    },
+    {
+      "model": "gemma4:31b",
+      "variant": "loop",
+      "task": "reproducible_orders",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 1,
+      "iteration_details": [
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 16412
+        }
+      ],
+      "latency_ms": 16412
+    },
+    {
+      "model": "gemma4:31b",
+      "variant": "loop",
+      "task": "memstore_pipeline",
+      "score": 0,
+      "rule_ids": [
+        "DM002"
+      ],
+      "detail": "dry-run failed or produced 0 rows",
+      "iterations": 3,
+      "iteration_details": [
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 21540
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 13909
+        },
+        {
+          "score": 0,
+          "rule_ids": [
+            "DM002"
+          ],
+          "detail": "dry-run failed or produced 0 rows",
+          "latency_ms": 14040
+        }
+      ],
+      "latency_ms": 49489
+    },
+    {
+      "model": "gemma4:31b",
+      "variant": "loop",
+      "task": "timeseries",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 1,
+      "iteration_details": [
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 22706
+        }
+      ],
+      "latency_ms": 22706
+    },
+    {
+      "model": "gemma4:31b",
+      "variant": "loop",
+      "task": "branch_fk",
+      "score": 2,
+      "rule_ids": [],
+      "detail": "intent check passed",
+      "iterations": 1,
+      "iteration_details": [
+        {
+          "score": 2,
+          "rule_ids": [],
+          "detail": "intent check passed",
+          "latency_ms": 21871
+        }
+      ],
+      "latency_ms": 21871
+    }
+  ]
+}

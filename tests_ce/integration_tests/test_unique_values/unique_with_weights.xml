@@ -1,0 +1,6 @@
+<setup rngSeed="5">
+    <!-- unique + weights are conflicting intents -> must fail at parse. -->
+    <generate name="x" count="2" target="">
+        <key name="code" values="'A','B','C'" weights="1,2,3" unique="true"/>
+    </generate>
+</setup>

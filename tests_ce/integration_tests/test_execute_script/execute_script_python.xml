@@ -1,0 +1,9 @@
+<setup>
+    <!-- a python snippet assembled via string interpolation, then executed: names land in the namespace -->
+    <variable name="the_answer" script="6 * 7"/>
+    <variable name="snippet" string="answer = __the_answer__"/>
+    <execute type="python" script="snippet"/>
+    <generate name="g" count="2" target="">
+        <key name="v" script="answer"/>
+    </generate>
+</setup>

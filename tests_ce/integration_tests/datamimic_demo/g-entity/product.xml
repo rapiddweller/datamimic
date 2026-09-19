@@ -1,8 +1,0 @@
-<setup>
-
-	<echo>Running EANGenerator</echo>
-	<generate name="EAN" count="50" target="ConsoleExporter">
-		<key name="value" generator="EANGenerator"/>
-	</generate>
-
-</setup>

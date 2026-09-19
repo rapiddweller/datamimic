@@ -81,6 +81,22 @@ class TestDatamimicGeneratorFunctional:
         assert any(count_digits_after_decimal(element.get("granularity_param")) == 2 for element in float_generator)
         assert any(count_digits_after_decimal(element.get("full_param")) == 4 for element in float_generator)
 
+    def test_cumulated_distribution(self):
+        # L1: the migration-facing artifact (generator string carries distribution='cumulated')
+        # parses and runs end-to-end and stays in range. Shape is proven deterministically in
+        # tests_ce/unit_tests/test_generator/test_cumulated_distribution.py (this DSL path is not
+        # rngSeed-bound, so no seeded shape claim is made here).
+        engine = DataMimicTest(
+            test_dir=self._test_dir, filename="cumulated_distribution_test.xml", capture_test_result=True
+        )
+        engine.test_with_timer()
+        result = engine.capture_result()
+        rows = result["cumulated_generator"]
+        assert len(rows) == 200
+        for e in rows:
+            assert 1 <= e.get("number_of_items") <= 27
+            assert 0.49 <= e.get("price") <= 99.99
+
     def test_name_generator(self):
         engine = DataMimicTest(test_dir=self._test_dir, filename="name_generator_test.xml", capture_test_result=True)
         engine.test_with_timer()

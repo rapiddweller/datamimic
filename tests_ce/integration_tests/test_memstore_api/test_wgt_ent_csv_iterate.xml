@@ -1,0 +1,4 @@
+<setup>
+    <memstore id="mem"/>
+    <iterate name="test_file" source="data/test_file.wgt.ent.csv" separator="|" target="mem,ConsoleExporter"/>
+</setup>

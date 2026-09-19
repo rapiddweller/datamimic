@@ -1,0 +1,5 @@
+<setup>
+    <database id="db" dbms="sqlite" database="dbunit_read_db"/>
+    <execute target="db" type="sql">DROP TABLE IF EXISTS db_category; CREATE TABLE db_category (id TEXT, name TEXT, parent_id TEXT)</execute>
+    <iterate name="db_category" source="data/shop.dbunit.xml" sourceEntity="db_category" distribution="ordered" target="db"/>
+</setup>

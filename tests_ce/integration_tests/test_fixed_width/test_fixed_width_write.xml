@@ -1,0 +1,6 @@
+<setup>
+    <generate name="written" count="3" target="FixedWidth(columns='id[8r0],name[10]')" exportUri="output">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" values="'Ann','Bo','Cy'"/>
+    </generate>
+</setup>

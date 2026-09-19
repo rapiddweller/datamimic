@@ -1,0 +1,66 @@
+<!-- <reference> against a MongoDB collection: pull real foreign keys from documents.
+     Semantics mirror the RDBMS reference exactly (same task, same seeded selection):
+     default picks with replacement, ordered+cyclic wraps the stable key order,
+     unique draws distinct keys. MongoDB's own $sample stage is not seedable, so the
+     client fetches the key fields in a stable server-side sort and the seeded
+     engine RNG does the sampling. -->
+<setup rngSeed="7">
+    <memstore id="mem"/>
+    <mongodb id="mongodb"/>
+
+    <!-- reset the source collection -->
+    <generate name="cleanup" source="mongodb"
+              selector="find: 'ref_mongo_customers', filter: {}" target="mongodb.delete"/>
+
+    <!-- seed 12 customers with known keys: crosses the single/double-digit boundary, so the cyclic
+         check below only passes under a numeric sort (a lexicographic sort puts 10/11/12 before 2). -->
+    <generate name="ref_mongo_customers" target="mongodb" count="12">
+        <key name="customer_id" generator="IncrementGenerator"/>
+        <key name="tier" values="'retail','business'"/>
+    </generate>
+
+    <!-- default: pick with replacement, seeded -->
+    <generate name="orders_random" count="30" target="mem">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <reference name="customer_id" source="mongodb" sourceType="ref_mongo_customers"
+                   sourceKey="customer_id"/>
+    </generate>
+    <generate name="check_random" distribution="ordered" type="orders_random" source="mem" target=""/>
+
+    <!-- ordered + cyclic: wrap the stable key order -->
+    <generate name="orders_cyclic" count="15" target="mem">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <reference name="customer_id" source="mongodb" sourceType="ref_mongo_customers"
+                   sourceKey="customer_id" cyclic="true"/>
+    </generate>
+    <generate name="check_cyclic" distribution="ordered" type="orders_cyclic" source="mem" target=""/>
+
+    <!-- unique: distinct keys, pool covers the count -->
+    <generate name="orders_unique" count="12" target="mem">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <reference name="customer_id" source="mongodb" sourceType="ref_mongo_customers"
+                   sourceKey="customer_id" unique="true"/>
+    </generate>
+    <generate name="check_unique" distribution="ordered" type="orders_unique" source="mem" target=""/>
+
+    <!-- nested reference: sourceKey descends into an embedded sub-document (a converted <part>).
+         address_id = customer_id * 10 + seq makes every nested id globally unique and deterministic
+         without depending on IncrementGenerator's reset behavior across nestedKey iterations. -->
+    <generate name="cleanup_nested" source="mongodb"
+              selector="find: 'ref_mongo_customers_nested', filter: {}" target="mongodb.delete"/>
+
+    <generate name="ref_mongo_customers_nested" target="mongodb" count="3">
+        <key name="customer_id" generator="IncrementGenerator"/>
+        <nestedKey name="addresses" type="list" count="2">
+            <key name="seq" generator="IncrementGenerator"/>
+            <key name="address_id" script="parent.customer_id * 10 + this.seq"/>
+        </nestedKey>
+    </generate>
+
+    <generate name="orders_nested" count="6" target="mem">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <reference name="address_id" source="mongodb" sourceType="ref_mongo_customers_nested"
+                   sourceKey="addresses.address_id" cyclic="true"/>
+    </generate>
+    <generate name="check_nested" distribution="ordered" type="orders_nested" source="mem" target=""/>
+</setup>

@@ -56,6 +56,12 @@
               selector="find: '__collection_head_____collection_name___test', filter: {'user_name': '__find_bob__'}"
               target="ConsoleExporter"/>
 
+    <!-- zero-match query: no generated user is named 'Nobody' -> count 0 -> empty product, not a missing key -->
+    <generate name="nobody_data"
+              source="mongodb"
+              selector="find: '__collection_head_____collection_name___test', filter: {'user_name': 'Nobody'}"
+              target="ConsoleExporter"/>
+
     <!-- clear mongo test database -->
     <generate name="clear" source="mongodb" selector="find: 'mongo_suffix_prefix_test', filter: {}" target="mongodb.delete"/>
 </setup>

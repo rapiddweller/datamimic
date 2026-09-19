@@ -1,0 +1,6 @@
+<setup>
+    <generate name="gen" count="3" targetEntity="products" target="DbUnit">
+        <key name="sku" constant="ABC"/>
+        <key name="price" constant="99"/>
+    </generate>
+</setup>

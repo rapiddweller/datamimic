@@ -1,0 +1,3 @@
+<setup>
+    <generate name="rows" count="2" target="JSON" exportUri="out/json"><key name="n" constant="1"/></generate>
+</setup>

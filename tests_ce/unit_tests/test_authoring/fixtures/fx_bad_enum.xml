@@ -1,0 +1,4 @@
+<setup rngSeed="1">
+    <generate name="a" count="1" distribution="sorted" source="d.csv" target="ConsoleExporter"/>
+    <generate name="b" count="1" target="ConsoleExporter"><key name="x" type="integer"/></generate>
+</setup>

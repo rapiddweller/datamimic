@@ -1,0 +1,10 @@
+<setup rngSeed="42">
+    <database id="refdb" database="ref_exh_db" dbms="sqlite"/>
+    <execute uri="script/setup_slots.scr.sql" target="refdb"/>
+    <generate name="x" count="8" target="">
+        <reference name="slot" source="refdb" sourceType="slots" unique="true">
+            <field target="aisle" sourceKey="aisle"/>
+            <field target="bin"   sourceKey="bin"/>
+        </reference>
+    </generate>
+</setup>

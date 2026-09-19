@@ -1,0 +1,3 @@
+<setup>
+    <generate name="gen" count="3" targetEntity="routed" target="CSV"><key name="n" constant="1"/></generate>
+</setup>

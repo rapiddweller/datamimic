@@ -61,6 +61,9 @@ class SetupContext(Context):
         self._descriptor_dir = descriptor_dir
         self._clients = {} if clients is None else clients
         self._data_source_len = {} if data_source_len is None else data_source_len
+        # Per-statement distribution seed, computed once and reused across a statement's pages so
+        # paginated sub-task selection (random / cumulated / unique) stays globally consistent.
+        self._distribution_seed_cache: dict[str | None, int] = {}
         self._properties = {} if properties is None else properties
         self._memstore_manager = memstore_manager
         self._namespace = {} if namespace is None else namespace
@@ -109,6 +112,11 @@ class SetupContext(Context):
         unseeded (wall-clock random).
         """
         return spawn_rng(self._root_rng) if self._root_rng is not None else None
+
+    @property
+    def is_seeded(self) -> bool:
+        """True when a model-wide <setup rngSeed> was given (determinism is expected)."""
+        return self._root_rng is not None
 
     @property
     def rng(self) -> Any:
@@ -280,6 +288,7 @@ class SetupContext(Context):
     def data_source_len(self):
         return self._data_source_len
 
+
     @property
     def properties(self):
         return self._properties
@@ -437,6 +446,12 @@ class SetupContext(Context):
         :return:
         """
         self._clients[client_id] = client
+        # Also bind by id into the script namespace (migration parity: <execute>/<variable script=>
+        # can reference a declared <database>/<mongodb> id directly, e.g. `db.something()`) - both
+        # eval_namespace (copies self._namespace wholesale) and evaluate_python_expression's scope
+        # building read from this same dict, so this covers both script-evaluation paths regardless
+        # of statement order.
+        self._namespace[client_id] = client
 
     def get_client_by_id(self, client_id: str):
         """
@@ -445,6 +460,16 @@ class SetupContext(Context):
         :return:
         """
         return self._clients.get(client_id)
+
+    def stable_distribution_seed(self, key: str | None) -> int:
+        """A distribution seed that stays constant across a statement's pages (cached by ``key``,
+        the statement full_name — a unique path per statement, so distinct statements never collide).
+        A sub-task is rebuilt per page, so calling get_distribution_seed() directly would draw a
+        different seed each page and break paginated random / cumulated / unique selection.
+        Computed once via get_distribution_seed()."""
+        if key not in self._distribution_seed_cache:
+            self._distribution_seed_cache[key] = self.get_distribution_seed()
+        return self._distribution_seed_cache[key]
 
     def get_distribution_seed(self) -> int:
         """Seed for source shuffling (``distribution="random"``).
@@ -459,14 +484,17 @@ class SetupContext(Context):
         # Unseeded run: return a new seed on each call
         if self._current_seed is not None:
             self._current_seed += 1
-        # If init seed is not set, calculate seed from task_id
+        # If init seed is not set, calculate seed from task_id.
+        # Full 2**63 space (matches derive_child_seed): a small modulus (was % 1000)
+        # makes two unseeded runs collide at 1/modulus — seen as flaky
+        # "unseeded must differ" determinism tests in CI.
         else:
             try:
                 # Try to convert UUID task into int seed
-                self._current_seed = uuid.UUID(self._task_id).int % 1000
+                self._current_seed = uuid.UUID(self._task_id).int % (2**63)
             except ValueError as err:
                 # If task_id is not a valid UUID, hash the string
                 logger.warning(f"Invalid task_id '{self._task_id}': {err}")
-                self._current_seed = hash(self._task_id) % 1000
+                self._current_seed = hash(self._task_id) % (2**63)
 
         return self._current_seed

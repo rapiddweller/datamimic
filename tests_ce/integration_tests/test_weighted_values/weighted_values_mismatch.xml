@@ -1,0 +1,6 @@
+<setup rngSeed="13">
+    <!-- 3 values but 2 weights -> must fail loudly. -->
+    <generate name="x" count="1" target="">
+        <key name="grade" values="'A','B','C'" weights="0.1, 0.3"/>
+    </generate>
+</setup>

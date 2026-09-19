@@ -1,0 +1,8 @@
+<setup rngSeed="21">
+    <generate name="g" count="8" target="">
+        <key name="default_bin" type="binary"/>
+        <key name="exact8" type="binary" minLength="8" maxLength="8"/>
+        <key name="ranged" type="binary" minLength="4" maxLength="10"/>
+        <key name="hexlen" script="len(exact8)"/>
+    </generate>
+</setup>

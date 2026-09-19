@@ -5,11 +5,24 @@
 # For questions and support, contact: info@rapiddweller.com
 import re
 import string
+from decimal import Decimal
 from typing import Any
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.constants.data_type_constants import DATA_TYPE_BOOL, DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING
+from datamimic_ce.constants.attribute_constants import (
+    META_SELECTOR,
+    META_TARGET_ENTITY,
+    META_TYPE,
+)
+from datamimic_ce.constants.data_type_constants import (
+    DATA_TYPE_BINARY,
+    DATA_TYPE_BOOL,
+    DATA_TYPE_DECIMAL,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_INT,
+    DATA_TYPE_STRING,
+)
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
@@ -24,20 +37,21 @@ from datamimic_ce.converter.lower_case_converter import LowerCaseConverter
 from datamimic_ce.converter.mask_converter import MaskConverter
 from datamimic_ce.converter.middle_mask_converter import MiddleMaskConverter
 from datamimic_ce.converter.remove_none_or_empty_element_converter import RemoveNoneOrEmptyElementConverter
+from datamimic_ce.converter.substring_converter import SubstringConverter
 from datamimic_ce.converter.timestamp2date_converter import Timestamp2DateConverter
 from datamimic_ce.converter.upper_case_converter import UpperCaseConverter
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.enums.converter_enums import ConverterEnum
-from datamimic_ce.exporters.csv_exporter import CSVExporter
+from datamimic_ce.enums.operation_enums import ExportOperation
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
-from datamimic_ce.exporters.json_exporter import JsonExporter
 from datamimic_ce.exporters.memstore import Memstore
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
-from datamimic_ce.exporters.txt_exporter import TXTExporter
+from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.array_statement import ArrayStatement
+from datamimic_ce.statements.assert_statement import AssertStatement
 from datamimic_ce.statements.condition_statement import ConditionStatement
 from datamimic_ce.statements.database_statement import DatabaseStatement
 from datamimic_ce.statements.demographics_statement import DemographicsStatement
@@ -57,9 +71,13 @@ from datamimic_ce.statements.memstore_statement import MemstoreStatement
 from datamimic_ce.statements.mongodb_statement import MongoDBStatement
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement
+from datamimic_ce.statements.state_machine_statement import StateMachineStatement
 from datamimic_ce.statements.statement import Statement
+from datamimic_ce.statements.statement_util import StatementUtil
 from datamimic_ce.statements.variable_statement import VariableStatement
+from datamimic_ce.statements.while_statement import WhileStatement
 from datamimic_ce.tasks.array_task import ArrayTask
+from datamimic_ce.tasks.assert_task import AssertTask
 from datamimic_ce.tasks.database_task import DatabaseTask
 from datamimic_ce.tasks.echo_task import EchoTask
 from datamimic_ce.tasks.element_task import ElementTask
@@ -69,10 +87,18 @@ from datamimic_ce.tasks.memstore_task import MemstoreTask
 from datamimic_ce.tasks.mongodb_task import MongoDBTask
 from datamimic_ce.tasks.reference_task import ReferenceTask
 from datamimic_ce.tasks.task import Task
+from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.object_util import ObjectUtil
 
 
 class TaskUtil:
+    @staticmethod
+    def _wgt_csv_has_header(file_path, separator: str) -> bool:
+        """Whether a '.wgt.csv' file's first row is a header: its weight column isn't numeric
+        (same sniff FileUtil.read_weight_csv itself uses to skip an optional header row)."""
+        raw_data = FileUtil._read_raw_csv(file_path, separator, "utf-8")
+        return bool(raw_data) and len(raw_data[0]) > 1 and not FileUtil._parses_as_float(raw_data[0][1])
+
     @staticmethod
     def get_task_by_statement(
         ctx: SetupContext,
@@ -127,6 +153,10 @@ class TaskUtil:
             from datamimic_ce.tasks.condition_task import ConditionTask
 
             return ConditionTask(stmt)
+        elif isinstance(stmt, WhileStatement):
+            from datamimic_ce.tasks.while_task import WhileTask
+
+            return WhileTask(stmt)
         elif isinstance(stmt, DemographicsStatement):
             from datamimic_ce.tasks.demographics_task import DemographicsTask
 
@@ -141,10 +171,16 @@ class TaskUtil:
             return ElseTask(stmt)
         elif isinstance(stmt, EchoStatement):
             return EchoTask(stmt)
+        elif isinstance(stmt, AssertStatement):
+            return AssertTask(stmt)
         elif isinstance(stmt, ElementStatement):
             return ElementTask(ctx, stmt)  # type: ignore[return-value]
         elif isinstance(stmt, GeneratorStatement):
             return GeneratorTask(stmt)
+        elif isinstance(stmt, StateMachineStatement):
+            from datamimic_ce.tasks.state_machine_task import StateMachineTask
+
+            return StateMachineTask(stmt)
         else:
             raise ValueError(f"Cannot created task for statement {stmt.__class__.__name__}")
 
@@ -246,6 +282,7 @@ class TaskUtil:
                             ConverterEnum.Mask.value: MaskConverter,
                             ConverterEnum.MiddleMask.value: MiddleMaskConverter,
                             ConverterEnum.CutLength.value: CutLengthConverter,
+                            ConverterEnum.Substring.value: SubstringConverter,
                             ConverterEnum.Append.value: AppendConverter,
                             ConverterEnum.Hash.value: HashConverter,
                             ConverterEnum.JavaHash.value: JavaHashConverter,
@@ -314,6 +351,24 @@ class TaskUtil:
             else:
                 # Evaluate script in source
                 source_data = context.evaluate_python_expression(stmt.script)
+        elif source_str.endswith(".wgt.csv") and not TaskUtil._wgt_csv_has_header(
+            root_context.descriptor_dir / source_str, separator
+        ):
+            # A HEADERLESS ".wgt.csv" file (value|weight, no column names) has no coherent plain-CSV
+            # reading at all - the reader below would treat its first data row as a header,
+            # producing nonsense column names and one fewer row than the file has. A HEADERED
+            # ".wgt.csv" falls through to the plain ".csv" branch below instead: like ".wgt.ent.csv"
+            # (a normal headered CSV that merely has an extra "weight" column), reading it plainly is
+            # coherent, just unweighted. <key source="...wgt.csv"> already applies weights correctly
+            # either way (FileUtil.read_weight_csv auto-detects the header); <generate>-level
+            # weighted-entity sourcing is real work, not yet done - fail loudly instead of silently
+            # generating garbage, but only where there IS no coherent fallback.
+            raise ValueError(
+                f"<generate> '{stmt.full_name}': source '{source_str}' is a headerless weighted "
+                f"value|weight file - not supported at <generate>-level (only <key source=...> "
+                f"applies '.wgt.csv' weights today; add a header row to read it as a plain, "
+                f"unweighted CSV instead)"
+            )
         # Load data from CSV
         elif source_str.endswith(".csv"):
             source_data = DataSourceRegistry.load_csv_file(
@@ -326,6 +381,7 @@ class TaskUtil:
                 source_scripted=source_scripted,
                 prefix=prefix,
                 suffix=suffix,
+                offset=stmt.offset,
             )
         # Load data from JSON
         elif source_str.endswith(".json"):
@@ -334,6 +390,7 @@ class TaskUtil:
                 stmt.cyclic,
                 load_start_idx,
                 load_end_idx,
+                offset=stmt.offset,
             )
             # if sourceScripted then evaluate python expression in json
             if source_scripted:
@@ -343,10 +400,28 @@ class TaskUtil:
                     )
                 except Exception as e:
                     logger.debug(f"Failed to pre-evaluate source script for {stmt.full_name}: {e}")
+        # Load data from XLSX
+        elif source_str.endswith(".xlsx"):
+            source_data = DataSourceRegistry.load_xlsx_file(
+                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx, offset=stmt.offset
+            )
+        # Load data from a fixed-width column file
+        elif source_str.endswith(".fcw"):
+            source_data = DataSourceRegistry.load_fixed_width_file(
+                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx, offset=stmt.offset
+            )
+        # Load one table from a dbunit dataset (checked BEFORE .xml - a .dbunit.xml also ends with .xml).
+        # sourceEntity/type selects the table (resolve_source_entity).
+        elif source_str.endswith(".dbunit.xml"):
+            source_data = FileUtil.read_dbunit_to_dict_list(
+                root_context.descriptor_dir / source_str, StatementUtil.resolve_source_entity(stmt)
+            )
+            if stmt.offset:
+                source_data = source_data[stmt.offset :]
         # Load data from XML
         elif source_str.endswith(".xml"):
             source_data = DataSourceRegistry.load_xml_file(
-                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx
+                root_context.descriptor_dir / source_str, stmt.cyclic, load_start_idx, load_end_idx, offset=stmt.offset
             )
             # if sourceScripted then evaluate python expression in json
             if source_scripted:
@@ -355,22 +430,33 @@ class TaskUtil:
                 )
         # Load data from in-memory memstore
         elif root_context.memstore_manager.contain(source_str):
+            if stmt.offset:
+                raise ValueError(
+                    f"<generate> '{stmt.full_name}': offset= is only supported for file sources, "
+                    f"not memstore '{source_str}'"
+                )
             source_data = root_context.memstore_manager.get_memstore(source_str).get_data_by_type(
-                stmt.type or stmt.name, load_pagination, stmt.cyclic
+                StatementUtil.resolve_source_entity(stmt), load_pagination, stmt.cyclic
             )
         # Load data from client (MongoDB, RDBMS,...)
         elif root_context.clients.get(source_str) is not None:
+            if stmt.offset:
+                raise ValueError(
+                    f"<generate> '{stmt.full_name}': offset= is only supported for file sources, "
+                    f"not database client '{source_str}' - use a selector with an SQL/Mongo skip instead"
+                )
             client = root_context.clients.get(source_str)
             # Load data from MongoDB
             if isinstance(client, MongoDBClient):
                 if stmt.selector:
                     selector = TaskUtil.evaluate_selector_script(root_context, stmt)
                     source_data = client.get_by_page_with_query(query=selector, pagination=load_pagination)
-                elif stmt.type:
-                    source_data = client.get_by_page_with_type(collection_name=stmt.type, pagination=load_pagination)
+                elif (collection := StatementUtil.resolve_source_collection(stmt)) is not None:
+                    source_data = client.get_by_page_with_type(collection_name=collection, pagination=load_pagination)
                 else:
                     raise ValueError(
-                        "MongoDB source requires at least attribute 'type', 'selector' or 'iterationSelector'"
+                        "MongoDB source requires at least attribute 'sourceEntity', 'type', 'selector' "
+                        "or 'iterationSelector'"
                     )
                 # Init empty product for upsert MongoDB in case no record found by query
                 if (
@@ -386,7 +472,7 @@ class TaskUtil:
                     source_data = client.get_by_page_with_query(original_query=selector, pagination=load_pagination)
                 else:
                     source_data = client.get_by_page_with_type(
-                        table_name=stmt.type or stmt.name,
+                        table_name=StatementUtil.resolve_source_entity(stmt),
                         pagination=load_pagination,
                     )
             else:
@@ -418,12 +504,17 @@ class TaskUtil:
 
         # Wrap product key and value into a tuple
         # for iterate database may have key, value, and other statement attribute info
-        if getattr(stmt, "selector", False):
-            json_product = (stmt.name, json_result, {"selector": stmt.selector})
-        elif getattr(stmt, "type", False):
-            json_product = (stmt.name, json_result, {"type": stmt.type})
-        else:
-            json_product = (stmt.name, json_result)  # type: ignore[assignment]
+        # Carry every routing hint that is set (not mutually exclusive): targetEntity/type name the
+        # write collection/table, selector carries the query. A Mongo upsert needs BOTH the collection
+        # (targetEntity) AND the filter (selector), so they must not shadow each other.
+        metadata: dict = {}
+        if stmt.target_entity:
+            metadata[META_TARGET_ENTITY] = stmt.target_entity
+        if stmt.selector:
+            metadata[META_SELECTOR] = stmt.selector
+        if stmt.type:
+            metadata[META_TYPE] = stmt.type
+        json_product = (stmt.name, json_result, metadata) if metadata else (stmt.name, json_result)
 
         # Create a unique cache key incorporating task_id and statement details
         exporters_cache_key = stmt.full_name
@@ -432,14 +523,38 @@ class TaskUtil:
         exporters = root_context.task_exporters[exporters_cache_key]
         exporters["page_count"] += 1
 
+        # A nested <generate> defers its page export to here (generate_worker skips it for
+        # GenIterContext): this statement's own rows and its children's are ordered relative to
+        # each other so neither direction of the FK constraint is violated:
+        # - insert/update/upsert (any operation but delete): own rows first, then children -
+        #   a child row's FK to the not-yet-existing parent would otherwise fail.
+        # - delete: children FIRST, then own rows - a child row's FK to this (still existing)
+        #   parent would otherwise block the parent's deletion.
+        # Each recursion level re-checks its OWN targets, so a cascade of nested deletes becomes
+        # deepest-first automatically. The operation itself comes from the same parsed
+        # (exporter, operation) pairs the engine already built via ExporterUtil.parse_function_string
+        # (see create_exporter_list) - not a re-parse of the raw target string.
+        own_targets_delete = any(
+            operation is ExportOperation.DELETE for _, operation in exporters["with_operation"]
+        )
+
+        if own_targets_delete:
+            for sub_stmt in stmt.sub_statements:
+                TaskUtil._export_nested_products_by_page(root_context, sub_stmt, xml_result, exporter_state_manager)
+
         # Use cached exporters
-        # Run exporters with operations first
+        # Run exporters with operations first. Operations are ExportOperation members (parsed
+        # once at the target boundary); dispatch is explicit per member — no getattr on a string.
         for exporter, operation in exporters["with_operation"]:
-            if isinstance(exporter, MongoDBExporter) and operation == "upsert":
+            if isinstance(exporter, MongoDBExporter) and operation is ExportOperation.UPSERT:
                 json_product = exporter.upsert(product=json_product)
-            elif hasattr(exporter, operation):
-                getattr(exporter, operation)(json_product)
-            else:
+            elif operation is ExportOperation.UPDATE:
+                exporter.update(json_product)
+            elif operation is ExportOperation.UPSERT:
+                exporter.upsert(json_product)
+            elif operation is ExportOperation.DELETE:
+                exporter.delete(json_product)
+            else:  # unreachable while ExportOperation has exactly these members
                 raise ValueError(f"Exporter does not support operation: {exporter}.{operation}")
 
         TaskUtil.exporter_without_operation(
@@ -449,6 +564,29 @@ class TaskUtil:
             exporters["without_operation"],
             exporter_state_manager,
         )
+
+        if not own_targets_delete:
+            for sub_stmt in stmt.sub_statements:
+                TaskUtil._export_nested_products_by_page(root_context, sub_stmt, xml_result, exporter_state_manager)
+
+    @staticmethod
+    def _export_nested_products_by_page(
+        root_context: SetupContext,
+        sub_stmt,
+        xml_result: dict,
+        exporter_state_manager: ExporterStateManager,
+    ) -> None:
+        """Export a nested generate's page products (own rows already handled by the caller, either
+        before or after this call - see export_product_by_page); walk through composite statements
+        (condition/if) so a generate inside them is not missed."""
+        from datamimic_ce.statements.composite_statement import CompositeStatement
+
+        if isinstance(sub_stmt, GenerateStatement):
+            if xml_result.get(sub_stmt.full_name):
+                TaskUtil.export_product_by_page(root_context, sub_stmt, xml_result, exporter_state_manager)
+        elif isinstance(sub_stmt, CompositeStatement):  # condition/if/else wrappers
+            for child in sub_stmt.sub_statements:
+                TaskUtil._export_nested_products_by_page(root_context, child, xml_result, exporter_state_manager)
 
     @staticmethod
     def exporter_without_operation(
@@ -468,7 +606,9 @@ class TaskUtil:
                     exporter.consume(
                         (json_product[0], xml_result[stmt.full_name]), stmt.full_name, exporter_state_manager
                     )
-                elif isinstance(exporter, JsonExporter | TXTExporter | CSVExporter):
+                elif isinstance(exporter, UnifiedBufferedExporter):
+                    # every buffered exporter (JSON/CSV/TXT/XLSX/DbUnit/...) shares this consume
+                    # signature; dispatch on the base class so new ones work without editing this list.
                     exporter.consume(json_product, stmt.full_name, exporter_state_manager)
                 else:
                     exporter.consume(json_product)
@@ -514,19 +654,11 @@ class TaskUtil:
         return res
 
     @staticmethod
-    def is_source_ml_model(stmt: GenerateStatement):
-        """
-        check if source is model train by ml-train or not
-        """
-        # Always False in CE cause this is an EE feature
-        return False
-
-    @staticmethod
     def generate_random_value_based_on_type(
         data_type: str | None,
         *,
         rng: Any,
-    ) -> str | int | bool | float:
+    ) -> str | int | bool | float | Decimal:
         # ``rng`` is required: callers inject the GenIterContext's rng so
         # seeded runs propagate fully.
         if data_type == DATA_TYPE_STRING:
@@ -537,7 +669,12 @@ class TaskUtil:
             return rng.randint(0, 100)
         elif data_type == DATA_TYPE_FLOAT:
             return rng.uniform(0, 100)
+        elif data_type == DATA_TYPE_DECIMAL:
+            # fixed 2dp default for bare type="decimal"; use a DecimalGenerator for other scales
+            return Decimal(str(round(rng.uniform(0, 100), 2)))
         elif data_type == DATA_TYPE_BOOL:
             return rng.choice((True, False))
+        elif data_type == DATA_TYPE_BINARY:
+            return rng.randbytes(rng.randint(1, 16))  # same default range as BinaryGenerator
         else:
             raise ValueError(f"Cannot generate random value for data type {data_type}")

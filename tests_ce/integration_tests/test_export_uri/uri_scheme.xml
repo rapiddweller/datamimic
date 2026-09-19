@@ -1,0 +1,3 @@
+<setup>
+    <generate name="rows" count="1" target="CSV" exportUri="s3://bucket"><key name="n" constant="1"/></generate>
+</setup>

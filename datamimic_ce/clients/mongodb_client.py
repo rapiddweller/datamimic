@@ -7,18 +7,73 @@
 import json
 import re
 from collections.abc import Mapping
+from decimal import Decimal
 from typing import Any, cast
 
+from bson.decimal128 import Decimal128
 from pymongo import MongoClient, UpdateOne
 
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.connection_config.mongodb_connection_config import MongoDBConnectionConfig
+from datamimic_ce.constants.attribute_constants import META_SELECTOR, META_TARGET_ENTITY, META_TYPE
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.domains.domain_core.base_entity import stringify_if_entity
 
 
 class MongoDBClient(DatabaseClient):
     def __init__(self, credential: MongoDBConnectionConfig):
         self._credential = credential
+
+    @staticmethod
+    def _to_bson(value: Any) -> Any:
+        """Recursively convert types BSON cannot encode. ``decimal.Decimal`` -> ``bson.Decimal128``
+        (MongoDB's native 128-bit decimal): lossless, unlike a float cast. Applied on every write so a
+        DATAMIMIC ``type="decimal"`` field round-trips through mongo."""
+        if isinstance(value, Decimal):
+            return Decimal128(value)
+        value = stringify_if_entity(value)  # whole entity bound to a field -> str(entity.to_dict())
+        if isinstance(value, Mapping):
+            return {k: MongoDBClient._to_bson(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [MongoDBClient._to_bson(v) for v in value]
+        return value
+
+    @staticmethod
+    def _from_bson(value: Any) -> Any:
+        """Inverse of ``_to_bson``: ``bson.Decimal128`` -> ``decimal.Decimal`` on read, so a script that
+        does arithmetic on a stored decimal (``product.price * qty``) gets a Python Decimal, not a
+        Decimal128 (which has no numeric operators)."""
+        if isinstance(value, Decimal128):
+            return value.to_decimal()
+        if isinstance(value, Mapping):
+            return {k: MongoDBClient._from_bson(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [MongoDBClient._from_bson(v) for v in value]
+        return value
+
+    @staticmethod
+    def _values_at_path(value: Any, parts: list[str]):
+        """All values reachable by descending a dotted field path; lists along the way unwind
+        (one value per nested element). How a <reference> resolves an entity nested inside a
+        collection document (a converted legacy <part> element)."""
+        if isinstance(value, list):
+            for item in value:
+                yield from MongoDBClient._values_at_path(item, parts)
+        elif not parts:
+            yield value
+        elif isinstance(value, Mapping) and parts[0] in value:
+            yield from MongoDBClient._values_at_path(value[parts[0]], parts[1:])
+
+    @staticmethod
+    def _shell_to_json(query: str) -> str:
+        """A MongoDB-shell-style selector -> a JSON string ``json.loads`` accepts. Legacy migrated mongo
+        selectors use shell syntax: single-quoted or BAREWORD object keys ($-operators, ``_id``,
+        projection fields) and a trailing ``cursor: {}``. Wrap first so the leading key has a
+        preceding ``{``; promote single quotes so quoted keys/strings are protected; then quote every
+        remaining unquoted bareword key. A value like ``"$total_price"`` is preceded by ``:`` (not
+        ``{``/``,``) and already quoted, so it is left untouched."""
+        s = "{" + query.replace("'", '"') + "}"
+        return re.sub(r'([{,]\s*)([$A-Za-z_][\w$]*)\s*:', r'\1"\2":', s)
 
     def _create_connection(self) -> MongoClient:
         ars = {
@@ -56,7 +111,7 @@ class MongoDBClient(DatabaseClient):
                     collection = db[collection_name]
                 else:
                     raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
-                return list(collection.find(find_filter, find_projection))
+                return self._from_bson(list(collection.find(find_filter, find_projection)))
             elif query_type == "aggregate":
                 query_result = self._query_aggregate_handler(query=query, connection=conn)
                 return query_result
@@ -109,7 +164,47 @@ class MongoDBClient(DatabaseClient):
                 collection = db[collection_name]
             else:
                 raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
-            return list(collection.find({}))
+            return self._from_bson(list(collection.find({})))
+
+    def get_random_rows_by_columns(self, collection_name: str, column_names: list[str]) -> list[tuple]:
+        """Fetch the given fields for a <reference> in a stable order, preserving row-tuple
+        integrity (same contract as RdbmsClient.get_random_rows_by_columns). Sorted server-side
+        on the selected fields (BSON total order): MongoDB's own $sample stage is NOT seedable
+        and may repeat documents, so the reference task does the deterministic sampling itself
+        via the seeded engine RNG over this stable order. A field missing on a document maps to
+        None, like an SQL NULL."""
+        if collection_name is None or collection_name.isspace():
+            raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
+        # A dotted sourceKey descends into nested documents (lists unwind): a reference to an entity
+        # nested INSIDE a collection document. Unwinding several independent paths has no meaningful
+        # row pairing, so a dotted path only combines with a single sourceKey.
+        dotted = any("." in name for name in column_names)
+        if dotted and len(column_names) > 1:
+            raise ValueError("A dotted (nested) reference path only supports a single sourceKey")
+        with self._create_connection() as conn:
+            collection = conn[self._credential.database][collection_name]
+            projection = {name.split(".", 1)[0]: 1 for name in column_names}
+            if "_id" not in projection:
+                projection["_id"] = 0
+            docs = list(collection.find({}, projection))
+        docs = self._from_bson(docs)
+        if not dotted:
+            rows = [tuple(doc.get(name) for name in column_names) for doc in docs]
+        else:
+            parts = column_names[0].split(".")
+            rows = [(value,) for doc in docs for value in self._values_at_path(doc, parts)]
+        # Stable order so the reference task's seeded sampling is reproducible run-to-run.
+        # Numbers sort numerically (not lexicographically: "10" must stay after "2"), everything
+        # else falls back to its string form; None sorts last, like an SQL NULL.
+        return sorted(rows, key=lambda row: tuple(self._sort_key(v) for v in row))
+
+    @staticmethod
+    def _sort_key(value: Any) -> tuple:
+        if value is None:
+            return (2, "")
+        if isinstance(value, int | float | Decimal):
+            return (0, float(value))
+        return (1, str(value))
 
     def count(self, collection_name: str) -> int:
         """
@@ -176,7 +271,7 @@ class MongoDBClient(DatabaseClient):
         if not isinstance(aggregate_pipeline, list):
             raise ValueError("Syntax error: pipeline must be a list")
         # execute and return result
-        return list(collection.aggregate(aggregate_pipeline))
+        return self._from_bson(list(collection.aggregate(aggregate_pipeline)))
 
     def count_table_length(self, table_name: str):
         pass
@@ -192,9 +287,12 @@ class MongoDBClient(DatabaseClient):
         with self._create_connection() as conn:
             db = conn[self._credential.database]
             collection = db[collection_name]
+            data = [self._to_bson(d) for d in data]
             inserted_ids = collection.insert_many(data).inserted_ids
             # Retrieve all the inserted data
-            return list(collection.find({"_id": {"$in": inserted_ids}})) if is_update else None
+            if not is_update:
+                return None
+            return self._from_bson(list(collection.find({"_id": {"$in": inserted_ids}})))
 
     def update(self, query: dict, data: list) -> int:
         """
@@ -203,23 +301,25 @@ class MongoDBClient(DatabaseClient):
         :param data:
         :return: The number of documents matched for an update.
         """
-        if "selector" in query:
-            value = query.get("selector")
+        if META_TARGET_ENTITY in query:
+            collection_name = query.get(META_TARGET_ENTITY)
+        elif META_SELECTOR in query:
+            value = query.get(META_SELECTOR)
             if value is None or value.isspace():
                 raise ValueError("Syntax error: selector is not found")
             find_query = self._decompose_find_query(value)
             collection_name = find_query.get("find")
-        elif "type" in query:
-            collection_name = query.get("type")
+        elif META_TYPE in query:
+            collection_name = query.get(META_TYPE)
         else:
-            raise ValueError("'type' or 'selector' statement's attribute is missing")
+            raise ValueError("'targetEntity', 'type' or 'selector' statement's attribute is missing")
         if data:
             if collection_name is None or collection_name.isspace():
                 raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
             with self._create_connection() as conn:
                 db = conn[self._credential.database]
                 collection = db[collection_name]
-                operation = [UpdateOne({"_id": d["_id"]}, {"$set": d}) for d in data]
+                operation = [UpdateOne({"_id": d["_id"]}, {"$set": self._to_bson(d)}) for d in data]
                 result = collection.bulk_write(operation)
                 return result.matched_count
         else:
@@ -233,22 +333,22 @@ class MongoDBClient(DatabaseClient):
         :param updated_data:
         :return: merged data
         """
-        if "selector" in selector_dict:
-            selector_value = selector_dict.get("selector")
+        # targetEntity/type name the collection; the selector (if any) still provides the match filter.
+        collection_name = selector_dict.get(META_TARGET_ENTITY) or selector_dict.get(META_TYPE)
+        filter_query: dict = {}
+        if META_SELECTOR in selector_dict:
+            selector_value = selector_dict.get(META_SELECTOR)
             if selector_value is None or selector_value.isspace():
                 raise ValueError("Syntax error: selector is not found")
             find_query = self._decompose_find_query(selector_value)
-            collection_name = find_query.get("find")
+            collection_name = collection_name or find_query.get("find")
             filter_query = find_query["filter"]
-        # TODO: handle upsert for mongodb having no attribute selector
-        # elif "type" in selector_dict:
-        #     collection_name = selector_dict.get("type")
-        else:
-            raise ValueError("'type' or 'selector' statement's attribute is missing")
+        elif collection_name is None:
+            raise ValueError("'targetEntity', 'type' or 'selector' statement's attribute is missing")
         # query = self._decompose_find_query(selector)
 
         # Merge updated_data and filter query
-        updated_data = [{**filter_query, **data} for data in updated_data]
+        updated_data = [self._to_bson({**filter_query, **data}) for data in updated_data]
 
         if collection_name is None or collection_name.isspace():
             raise ValueError(f"Syntax error: collection name '{collection_name}' not found")
@@ -265,7 +365,9 @@ class MongoDBClient(DatabaseClient):
                     update = {"$set": doc}
                     collection.update_one(filter, update, upsert=True)
                 # Return updated data
-                return list(collection.find({"_id": {"$in": [doc["_id"] for doc in updated_data]}}))
+                return self._from_bson(
+                    list(collection.find({"_id": {"$in": [doc["_id"] for doc in updated_data]}}))
+                )
 
     def _decompose_find_query(self, query: str) -> dict:
         """
@@ -274,12 +376,8 @@ class MongoDBClient(DatabaseClient):
         :return: dict-keys: find, filter, projection
         """
         self._validate_query_command(query)
-        # change mongodb query into JSON string
-        input_query = query.replace("'", '"')
-        input_query = re.sub(r"\s*find\s*:", r'"find":', input_query)
-        input_query = re.sub(r"\s*filter\s*:", r'"filter":', input_query)
-        input_query = re.sub(r"\s*projection\s*:", r'"projection":', input_query)
-        input_query = f"{{{input_query}}}"
+        # change mongodb-shell query into a JSON string (bareword keys, $-operators, projection fields)
+        input_query = self._shell_to_json(query)
         # check and return query as dict
         try:
             result = json.loads(input_query)
@@ -299,11 +397,8 @@ class MongoDBClient(DatabaseClient):
         :return: dict-keys:  name, pipeline
         """
         self._validate_query_command(query)
-        # change mongodb query into JSON string
-        input_query = query.replace("'", '"')
-        input_query = re.sub(r"(?<!\")\s*aggregate\s*:(?!\")", r'"aggregate":', input_query)
-        input_query = re.sub(r"(?<!\")\s*pipeline\s*:(?!\")", r'"pipeline":', input_query)
-        input_query = f"{{{input_query}}}"
+        # change mongodb-shell query into a JSON string (bareword $-operators, _id, trailing cursor:{})
+        input_query = self._shell_to_json(query)
         # check and return query as dict
         try:
             result = json.loads(input_query)
@@ -317,6 +412,36 @@ class MongoDBClient(DatabaseClient):
             raise ValueError(f"Wrong mongodb selector syntax: {query}, error: {err}") from err
 
     @staticmethod
+    def _top_level_keys(query: str) -> list[str]:
+        """Depth-0 keys of a mongo shell-style selector, in order of appearance. A single
+        quote/brace/bracket-aware pass, not a regex guessing at quote style: a key is bareword,
+        single-, or double-quoted, uniformly; a value's own colons/commas/braces (inside a quoted
+        string, or nested one level down in a filter/pipeline) never leak into the top level, so a
+        field literally named 'find' inside a nested value is never mistaken for the command key."""
+        keys: list[str] = []
+        depth = 0
+        quote_char: str | None = None
+        segment_start = 0
+        for i, c in enumerate(query):
+            if quote_char:
+                if c == quote_char:
+                    quote_char = None
+            elif c in "'\"":
+                quote_char = c
+            elif c in "{[":
+                depth += 1
+            elif c in "}]":
+                depth -= 1
+            elif depth == 0 and c == ":":
+                raw_key = query[segment_start:i].strip().lstrip(",").strip()
+                if len(raw_key) >= 2 and raw_key[0] == raw_key[-1] and raw_key[0] in "'\"":
+                    raw_key = raw_key[1:-1]
+                keys.append(raw_key)
+            elif depth == 0 and c == ",":
+                segment_start = i
+        return keys
+
+    @staticmethod
     def _validate_query_command(query: str):
         """
         validate query string
@@ -324,33 +449,25 @@ class MongoDBClient(DatabaseClient):
         'aggregate' query have elements: 'aggregate', 'pipeline'
         :param query:
         """
-        # validate find
         query = query.strip()
-        find_match = re.findall(r"find\s*:", query)
-        aggregate_match = re.findall(r"aggregate\s*:", query)
-        if find_match and aggregate_match:
+        keys = MongoDBClient._top_level_keys(query)
+        find_count = keys.count("find")
+        aggregate_count = keys.count("aggregate")
+        if find_count and aggregate_count:
             raise ValueError("Error syntax, only one query type allow but found both 'find' and 'aggregate'")
-        if find_match:
-            find_count = len(find_match) if find_match else 0
+        if find_count:
             if find_count > 1:
                 raise ValueError(f"Error syntax, only 1 'find' allow but found {find_count}")
-            # validate filter
-            filter_match = re.findall(r"filter\s*:", query)
-            filter_count = len(filter_match) if filter_match else 0
+            filter_count = keys.count("filter")
             if filter_count > 1:
                 raise ValueError(f"Error syntax, only 1 'filter' allow but found {filter_count}")
-            # validate projection
-            projection_match = re.findall(r"projection\s*:", query)
-            projection_count = len(projection_match) if projection_match else 0
+            projection_count = keys.count("projection")
             if projection_count > 1:
                 raise ValueError(f"Error syntax, only 1 'projection' allow but found {projection_count}")
-        elif aggregate_match:
-            aggregate_count = len(aggregate_match) if aggregate_match else 0
+        elif aggregate_count:
             if aggregate_count > 1:
                 raise ValueError(f"Error syntax, only 1 'aggregate' allow but found {aggregate_count}")
-            # validate pipeline
-            pipeline_match = re.findall(r"pipeline\s*:", query)
-            pipeline_count = len(pipeline_match) if pipeline_match else 0
+            pipeline_count = keys.count("pipeline")
             if pipeline_count > 1:
                 raise ValueError(f"Error syntax, only 1 'pipeline' allow but found {pipeline_count}")
 
@@ -361,13 +478,11 @@ class MongoDBClient(DatabaseClient):
         Currently only support 'find' and 'aggregate'
         :param query:
         """
-        find_pattern = r"^\s*find\s*:"
-        aggregate_pattern = r"^\s*aggregate\s*:"
-        is_find = re.match(find_pattern, query) is not None
-        is_aggregate = re.match(aggregate_pattern, query) is not None
-        if is_find:
+        keys = MongoDBClient._top_level_keys(query)
+        first_key = keys[0] if keys else None
+        if first_key == "find":
             return "find"
-        elif is_aggregate:
+        elif first_key == "aggregate":
             return "aggregate"
         else:
             raise ValueError(
@@ -380,16 +495,18 @@ class MongoDBClient(DatabaseClient):
         :param query:
         :param data:
         """
-        if "selector" in query:
-            selector_value = query.get("selector")
+        if META_TARGET_ENTITY in query:
+            collection_name = query.get(META_TARGET_ENTITY)
+        elif META_SELECTOR in query:
+            selector_value = query.get(META_SELECTOR)
             if selector_value is None or selector_value.isspace():
                 raise ValueError("Syntax error: selector is not found")
             find_query = self._decompose_find_query(selector_value)
             collection_name = find_query.get("find")
-        elif "type" in query:
-            collection_name = query.get("type")
+        elif META_TYPE in query:
+            collection_name = query.get(META_TYPE)
         else:
-            raise ValueError("'type' or 'selector' statement's attribute is missing")
+            raise ValueError("'targetEntity', 'type' or 'selector' statement's attribute is missing")
 
         if collection_name is None or collection_name.isspace():
             raise ValueError(f"Syntax error: collection name '{collection_name}' not found")

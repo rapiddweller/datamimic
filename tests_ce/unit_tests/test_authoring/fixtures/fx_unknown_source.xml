@@ -1,0 +1,3 @@
+<setup rngSeed="1">
+    <iterate name="o" source="mongo" type="orders" distribution="ordered" target="ConsoleExporter"/>
+</setup>

@@ -1,0 +1,20 @@
+<setup>
+    <!-- setup: a reusable Luhn validator (multi-line block) in the shared namespace -->
+    <execute type="python">
+def luhn_ok(number):
+    digits = [int(c) for c in str(number)]
+    checksum = 0
+    for i, d in enumerate(reversed(digits)):
+        if i % 2 == 1:
+            d = d * 2
+            if d > 9:
+                d = d - 9
+        checksum = checksum + d
+    return checksum % 10 == 0
+</execute>
+    <generate name="cards" source="luhn_bases.csv" distribution="ordered" count="6" target="">
+        <!-- search: start from the source value and step up (+1) to the next Luhn-valid PAN -->
+        <key name="pan" script="int(base)"/>
+        <while condition="not luhn_ok(pan)"><key name="pan" script="pan + 1"/></while>
+    </generate>
+</setup>

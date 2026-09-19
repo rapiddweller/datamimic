@@ -1,0 +1,15 @@
+<setup>
+    <database id="db" database="sql_crud_update_db" dbms="sqlite"/>
+    <execute type="sql" target="db">
+        DROP TABLE IF EXISTS customers;
+        CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT, tier TEXT);
+        INSERT INTO customers VALUES (1, 'a', 'bronze');
+        INSERT INTO customers VALUES (2, 'b', 'bronze');
+        INSERT INTO customers VALUES (3, 'c', 'silver');
+    </execute>
+    <!-- read every row, change its tier, write back via UPDATE (row count must stay 3) -->
+    <generate name="customers" source="db" selector="SELECT id, name, tier FROM customers" target="db.update">
+        <key name="tier" constant="gold"/>
+    </generate>
+    <generate name="check" source="db" selector="SELECT id, name, tier FROM customers ORDER BY id" distribution="ordered" target=""/>
+</setup>

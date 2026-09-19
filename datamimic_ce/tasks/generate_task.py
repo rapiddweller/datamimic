@@ -23,6 +23,8 @@ from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.statements.statement import Statement
+from datamimic_ce.statements.statement_util import StatementUtil
+from datamimic_ce.tasks.single_process_policy import resolve_single_process
 from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.logging_util import gen_timer
@@ -61,8 +63,14 @@ class GenerateTask(CommonSubTask):
             series_count = self._statement.get_int_count(context) or 1
             return series_count * ts_config.ticks_per_series
 
-        # Get count from statement
-        count = self._statement.get_int_count(context)
+        # Get count from statement: explicit count, or a random value within the
+        # minCount/maxCount range (seed-bound via context.rng). Same resolution as <nestedKey>.
+        count = StatementUtil.resolve_count(
+            self._statement.get_int_count(context),
+            self._statement.min_count,
+            self._statement.max_count,
+            context.rng,
+        )
 
         # Set length of data source if count is not defined explicitly in statement
         if count is None:
@@ -82,14 +90,40 @@ class GenerateTask(CommonSubTask):
                         "Using selector without count only supports DatabaseClient (MongoDB, Relational Database)"
                     )
             else:
-                count = root_context.data_source_len[self.statement.full_name]
+                count = root_context.data_source_len[DataSourceRegistry.data_source_cache_key(self.statement)]
 
         # Check if there is a special consumer (e.g., mongodb_upsert)
         if count == 0 and self.statement.contain_mongodb_upsert(root_context):
             # Upsert one collection when no record found by query
             count = 1
 
+        self._warn_count_above_source(context, count)
+
         return count
+
+    def _warn_count_above_source(self, context: SetupContext | GenIterContext, count: int) -> None:
+        """An explicit digit count above the source length caps SILENTLY at the source
+        size when cyclic is off — warn so the underrun is visible before anyone counts
+        output rows. Top-level statements only (executed once => warned once); cumulated
+        samples with replacement and never runs out."""
+        from datamimic_ce.enums.distribution_enums import SourceDistribution
+
+        stmt = self._statement
+        if (
+            not isinstance(context, SetupContext)
+            or stmt.source is None
+            or not (isinstance(stmt.count, str) and stmt.count.isdigit())
+            or stmt.cyclic
+            or stmt.distribution == SourceDistribution.CUMULATED
+        ):
+            return
+        ds_len = context.root.data_source_len.get(DataSourceRegistry.data_source_cache_key(stmt))
+        if ds_len is not None and count > ds_len:
+            logger.warning(
+                f"<generate> '{stmt.name}': count={count} exceeds the {ds_len} rows available from "
+                f"source '{stmt.source}' and cyclic is off — only {ds_len} rows will be generated. "
+                f'Set cyclic="True" to wrap the source, or drop count=.'
+            )
 
     def _calculate_default_page_size(self, entity_count: int) -> int:
         """
@@ -141,20 +175,11 @@ class GenerateTask(CommonSubTask):
 
     @staticmethod
     def _determine_num_workers(context: GenIterContext | SetupContext, stmt: GenerateStatement) -> int:
-        """
-        Determine number of Ray workers for multiprocessing. Default to 1 if not specified.
-        Do not apply multiprocessing (return 1) if:
-        - There is a delete operation.
-        - Statement is inner gen_stmt.
-        """
+        """Number of Ray workers. 1 for inner gen_stmt; otherwise the requested count unless a
+        single-process policy (unique/composite/delete — see single_process_policy) overrides it."""
         # Do not apply multiprocessing for inner gen_stmt
         if isinstance(context, GenIterContext):
             return 1
-
-        # If there is a delete operation, do not apply multiprocessing
-        for exporter_str in stmt.targets:
-            if ".delete" in exporter_str:
-                return 1
 
         # Get number of workers from statement, setup context, or default to 1
         current_setup_context = context
@@ -168,7 +193,8 @@ class GenerateTask(CommonSubTask):
         else:
             num_workers = 1
 
-        return num_workers
+        forced = resolve_single_process(stmt, num_workers, current_setup_context.is_seeded)
+        return forced if forced is not None else num_workers
 
     def execute(
         self,
@@ -198,9 +224,17 @@ class GenerateTask(CommonSubTask):
                 count = self._determine_count(context)
                 timer_result["records_count"] = count
 
-                # Early return if count is 0
+                # Count 0: no worker runs, no page is exported — but the product must still
+                # be registered (empty) with the lazy exporters, otherwise its key silently
+                # vanishes from test capture and memstore reads. No data crosses processes.
+                # (export_memstore tolerates missing nested keys itself.)
                 if count == 0:
-                    return {self.statement.full_name: []}
+                    empty_result: dict[str, list] = {self.statement.full_name: []}
+                    if isinstance(context, SetupContext):
+                        if context.test_mode:
+                            context.root.test_result_exporter.consume((self.statement.full_name, []))
+                        self.export_memstore(context, self.statement, empty_result)
+                    return empty_result
 
                 # Calculate page size for processing by page
                 page_size = self._calculate_default_page_size(count)
@@ -210,6 +244,7 @@ class GenerateTask(CommonSubTask):
 
                 # Execute generate task by page in multiprocessing
                 if isinstance(context, SetupContext) and num_workers > 1:
+                    self._reject_positional_sequences_under_mp()
                     # Serialize context for Ray multiprocessing
                     copied_context = copy.deepcopy(context)
                     ns_funcs = {k: v for k, v in copied_context.root.namespace.items() if callable(v)}
@@ -322,14 +357,31 @@ class GenerateTask(CommonSubTask):
     def export_memstore(setup_context: SetupContext, current_stmt: GenerateStatement, merged_result: dict[str, list]):
         for current_exporter_str in current_stmt.targets:
             if setup_context.memstore_manager.contain(current_exporter_str):
+                # targetEntity -> type -> name keys the memstore, symmetric with the sourceEntity read.
+                entity = StatementUtil.resolve_target_entity(
+                    current_stmt.target_entity, current_stmt.type, current_stmt.name
+                )
+                # A nested generate that never executed (condition never fired, outer count 0)
+                # leaves no product: consume empty so downstream memstore reads see the
+                # entity with 0 rows instead of a missing key.
                 setup_context.memstore_manager.get_memstore(current_exporter_str).consume(
-                    (current_stmt.name, merged_result[current_stmt.full_name])
+                    (entity, merged_result.get(current_stmt.full_name, []))
                 )
                 # Export to memstore only once
                 break
-        for sub_stmt in current_stmt.sub_statements:
+        GenerateTask._export_memstore_children(setup_context, current_stmt, merged_result)
+
+    @staticmethod
+    def _export_memstore_children(
+        setup_context: SetupContext, stmt: CompositeStatement, merged_result: dict[str, list]
+    ):
+        """Descend to nested <generate>s, passing THROUGH composite wrappers such as
+        <condition>/<if> — a memstore target inside a condition must still be consumed."""
+        for sub_stmt in stmt.sub_statements:
             if isinstance(sub_stmt, GenerateStatement):
                 GenerateTask.export_memstore(setup_context, sub_stmt, merged_result)
+            elif isinstance(sub_stmt, CompositeStatement):
+                GenerateTask._export_memstore_children(setup_context, sub_stmt, merged_result)
 
     @staticmethod
     def finalize_temp_files_chunks(context: SetupContext, stmt: GenerateStatement):
@@ -362,13 +414,39 @@ class GenerateTask(CommonSubTask):
         for exporter in exporters_list:
             if hasattr(exporter, "save_exported_result"):
                 exporter.save_exported_result()
-            if hasattr(exporter, "upload_to_storage"):
-                exporter.upload_to_storage(stmt.bucket)
 
         # Export artifact files of sub-gen_stmts
         for sub_stmt in stmt.sub_statements:
             if isinstance(sub_stmt, GenerateStatement):
                 GenerateTask.export_artifact_files(context, sub_stmt)
+
+    def _reject_positional_sequences_under_mp(self) -> None:
+        """A positional number sequence (step/shuffle/wedge/...) is a stateful iterator that
+        restarts in every worker process - two workers would emit the SAME values, silently
+        duplicating what the sequence guarantees to be unique. Fail loudly instead; drop
+        numProcess/multiprocessing (or the sequence) to proceed."""
+        from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES
+        from datamimic_ce.statements.composite_statement import CompositeStatement
+        from datamimic_ce.statements.key_statement import KeyStatement
+
+        # The ENTIRE subtree runs inside the workers, so scan it fully - a sequence key nested
+        # in an inner <generate>/<nestedKey> duplicates just the same as a top-level one.
+        stack: list = list(self.statement.sub_statements)
+        while stack:
+            sub_stmt = stack.pop()
+            if isinstance(sub_stmt, CompositeStatement):
+                stack.extend(sub_stmt.sub_statements)
+            if (
+                isinstance(sub_stmt, KeyStatement)
+                and sub_stmt.distribution is not None
+                and sub_stmt.distribution in POSITIONAL_NUMBER_SEQUENCES
+            ):
+                raise ValueError(
+                    f"<generate> '{self.statement.full_name}': distribution=\"{sub_stmt.distribution}\" on "
+                    f"key '{sub_stmt.name}' is a positional sequence and cannot run with multiprocessing - "
+                    f"each worker would restart it and emit duplicate values. Run single-process "
+                    f"(drop numProcess/multiprocessing) or use a per-row distribution."
+                )
 
     def pre_execute(self, context: Context):
         """

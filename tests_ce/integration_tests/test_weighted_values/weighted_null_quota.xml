@@ -1,0 +1,6 @@
+<setup rngSeed="7">
+    <!-- weights + nullQuota compose: ~25% null (outer gate), the rest a weighted pick. -->
+    <generate name="people" count="1000" target="">
+        <key name="grade" values="'A','B','C'" weights="0.1, 0.3, 0.6" nullQuota="0.25"/>
+    </generate>
+</setup>

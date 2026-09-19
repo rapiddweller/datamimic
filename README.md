@@ -5,13 +5,15 @@
 > CE is fully usable standalone for deterministic synthetic data generation and PII-aware pseudonymization. The Enterprise Platform adds governed workflows, PII scanning, role-based access, audit logging, scheduling, multi-system execution, and the full operational layer that regulated enterprises require.
 >
 > 👉 **Enterprise Platform:** [datamimic.io](https://datamimic.io) &nbsp;|&nbsp; 📘 **Docs:** [docs.datamimic.io](https://docs.datamimic.io) &nbsp;|&nbsp; 📅 **Book a strategy call:** [datamimic.io/contact](https://datamimic.io/contact)
+>
+> 🤖 **AI agent?** Start at [`AGENTS.md`](AGENTS.md): register the MCP server, then author descriptors with the `datamimic_reference` → `datamimic_check` (lint) → `datamimic_run` (dry-run) loop. Verified end-to-end examples live in [`examples/showcase/`](examples/showcase/).
 
 ---
 
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen.svg)](https://github.com/rapiddweller/datamimic/actions)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=coverage)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=rapiddweller_datamimic&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=rapiddweller_datamimic)
-[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![MCP Ready](https://img.shields.io/badge/MCP-ready-8A2BE2.svg)](docs/mcp_quickstart.md)
 
@@ -27,9 +29,10 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 
 - **Generate** fully synthetic, deterministic datasets — model-driven, no source data required
 - **Pseudonymize** staging/QA exports — deterministic (seeded) or privacy-maximized (non-seeded) field transformation; PII fields identified and modeled manually in the XML pipeline
-- **Execute** single-system pipelines against PostgreSQL · MySQL · Oracle · MS SQL · SQLite · MongoDB · CSV · JSON · XML
+- **Execute** single-system pipelines against PostgreSQL · MySQL · Oracle · MS SQL · SQLite · MongoDB · CSV · JSON · XML · XLSX · DbUnit · fixed-width (`.fcw`)
+- **Model behavior** — weighted state machines, composite multi-field references, control flow (`<while>`, `<assert>`), and a scriptable memstore for staged aggregation
 - **Emit provenance** — append-only execution logs and per-output content hash for audit re-execution
-- **Serve agents** — bundled MCP server exposing `generate` as a deterministic tool for AI/LLM tooling
+- **Serve agents** — bundled MCP server with the full authoring loop (`datamimic_reference` DSL lookup, `datamimic_check` lint with fix hints, `datamimic_run` safe dry-run) plus the deterministic `generate` tool
 
 **The Enterprise Platform adds:**
 
@@ -44,6 +47,157 @@ The Enterprise Platform adds the governed workflows, scanners, dashboards, and e
 
 ---
 
+## AI agents: author, validate, and run data models (MCP)
+
+DATAMIMIC CE ships a Model Context Protocol (MCP) server that Claude Code, Cursor, and any MCP-compatible agent can call. The working loop: look up the DSL with `datamimic_reference`, author a descriptor, lint it with `datamimic_check` (every finding has a rule id and a fix hint), dry-run it with `datamimic_run` (capped counts, sample rows, optional `smoke_export`), then run for real with `datamimic run`. [`AGENTS.md`](AGENTS.md) routes agents working in a checkout of this repo; [`examples/showcase/`](examples/showcase/) holds four verified end-to-end examples to start from.
+
+```bash
+pip install "datamimic_ce[mcp]"
+```
+
+### Register with your coding agent (stdio)
+
+**Claude Code** — one command:
+
+```bash
+claude mcp add datamimic -- datamimic-mcp serve --transport stdio
+```
+
+**Cursor / Claude Desktop / any `mcp.json` client** — add to the config (`.cursor/mcp.json`, or the project-level `.mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "datamimic": {
+      "command": "datamimic-mcp",
+      "args": ["serve", "--transport", "stdio"]
+    }
+  }
+}
+```
+
+**VS Code** (`.vscode/mcp.json`) uses the same `command`/`args` under a `servers` key. For a networked/shared server instead of stdio, run `datamimic-mcp serve --transport sse` (honours `DATAMIMIC_MCP_HOST` / `PORT` / `API_KEY`).
+
+The server ships the **DSL authoring toolset (AI linter)**: `datamimic_reference` (cheatsheet, element schemas, recipes), `datamimic_check` (aggregated diagnostics — every finding has a rule id and a fix hint) and `datamimic_run` (safe dry-run with capped counts, neutralized targets and sample rows). Agents draft a descriptor, lint it, dry-run it and iterate until green — the resulting XML is a reviewable, deterministic artifact instead of a black-box generation. Without MCP, the `datamimic capabilities` CLI prints the same DSL surface as JSON, generated from the engine registries.
+
+📘 Full guide: [`docs/mcp_quickstart.md`](docs/mcp_quickstart.md)
+
+### Prompts to paste into your agent
+
+The configuration above wires the MCP server into your tool. The three prompts below are different: paste them as-is into the chat of an agent that already has file and shell access (Claude Code, Cursor, Copilot, Gemini CLI). The agent then does the install, authoring, and verification itself.
+
+**1. Set up DATAMIMIC**
+
+```text
+Install DATAMIMIC CE and register its MCP server with this tool.
+
+1. Run: pip install "datamimic_ce[mcp]"
+2. Register the MCP server. If this tool supports `claude mcp add`, run:
+   claude mcp add datamimic -- datamimic-mcp serve --transport stdio
+   Otherwise add the stdio equivalent to this tool's MCP config file (for
+   example .cursor/mcp.json or .vscode/mcp.json):
+   {
+     "mcpServers": {
+       "datamimic": {
+         "command": "datamimic-mcp",
+         "args": ["serve", "--transport", "stdio"]
+       }
+     }
+   }
+3. Verify the MCP server: call the datamimic_reference tool with
+   topic=overview and show me the first few lines of the result.
+4. Verify the CLI: run `datamimic version` and show me the output.
+
+Report both verification results before doing anything else.
+```
+
+**2. Generate test data**
+
+```text
+Generate a test dataset of 100 customers using DATAMIMIC.
+
+Requirements:
+- 100 records, one Person each, with an incrementing integer id.
+- Realistic name and email, generated from the Person entity, not
+  hand-rolled faker calls.
+- Age between 18 and 90.
+- A "segment" field with at least two values, unevenly weighted (mostly
+  "retail", some "business").
+- Write the output as JSON.
+
+Steps:
+1. If you are working inside a checkout of the datamimic repository, read
+   AGENTS.md first. It explains the DSL authoring loop.
+2. Author a DATAMIMIC XML descriptor for this dataset.
+3. Validate it with the datamimic_check MCP tool (or `datamimic lint <path>`
+   if MCP is not available). Fix every finding before moving on.
+4. Dry-run it with the datamimic_run MCP tool and inspect the sample rows
+   it returns. Confirm ages are in range and the segment split looks
+   weighted, not uniform.
+5. Run it for real: `datamimic run <path-to-descriptor>`.
+6. Tell me where the JSON output landed and show me one sample record.
+```
+
+**3. Seed a relational dataset**
+
+```text
+Seed a relational dataset with referential integrity: customers, accounts,
+transactions.
+
+Follow the pattern in examples/showcase/01-banking-core in the datamimic
+repository: customers get an incrementing id; each customer gets 1-3
+accounts that carry the real customer id as a foreign key; each account
+gets several transactions that carry both the account id and, two hops up,
+the owning customer id.
+
+Requirements:
+- Set rngSeed on <setup> so the dataset is reproducible.
+- Every account_id referenced by a transaction must exist in the accounts
+  output.
+- Every customer_id referenced by an account, and by a transaction, must
+  exist in the customers output.
+
+Steps:
+1. Read examples/showcase/01-banking-core/datamimic.xml and its README as
+   the reference pattern.
+2. Author your own descriptor for the customers/accounts/transactions
+   shape above.
+3. Validate with datamimic_check (or `datamimic lint`), then dry-run with
+   datamimic_run and inspect the sample rows.
+4. Run for real with `datamimic run`.
+5. Before declaring this done, load the generated JSON files and confirm
+   every foreign key resolves: every account's customer_id exists in
+   customers, every transaction's account_id exists in accounts. Show me
+   the check you ran and its result.
+```
+
+### Deterministic domain generation (JSON facade)
+
+Descriptor authoring is the primary workflow; the `generate` tool is a secondary interface that returns structured JSON payloads for a domain without a descriptor.
+
+Agents can call `generate` with a domain, seed, count, and locale and receive deterministic, provenance-hashed output — making DATAMIMIC the natural test data runtime for agent-driven workflows.
+
+```python
+import anyio, json
+from fastmcp.client import Client
+from datamimic_ce.mcp.models import GenerateArgs
+from datamimic_ce.mcp.server import create_server
+
+async def main():
+    args = GenerateArgs(domain="person", locale="en_US", seed=42, count=2)
+    payload = args.model_dump(mode="python")
+    async with Client(create_server()) as c:
+        a = await c.call_tool("generate", {"args": payload})
+        b = await c.call_tool("generate", {"args": payload})
+        # Determinism proof: identical hashes across calls
+        assert (json.loads(a[0].text)["determinism_proof"]["content_hash"]
+             == json.loads(b[0].text)["determinism_proof"]["content_hash"])
+
+anyio.run(main)
+```
+
+---
+
 ## CE vs Enterprise Platform
 
 CE and EE are **not the same engine with a feature flag**. They share the DSL and determinism contract, but EE is an independently optimised execution engine built for enterprise-scale throughput and operational control.
@@ -53,7 +207,7 @@ CE and EE are **not the same engine with a feature flag**. They share the DSL an
 | Capability | Community Edition (CE) | Enterprise Platform (EE) |
 |---|---|---|
 | Deterministic data generation | ✅ | ✅ |
-| Deterministic seeding in the DSL | ✅ entities (`<setup rngSeed>`, `<variable rngSeed>`) | ✅ entities + standalone literal `<key generator>` |
+| Deterministic seeding in the DSL | ✅ entities + standalone literal `<key generator>` (4.0.0) | ✅ same, plus sandboxed script expressions and stdlib `random` calls |
 | **Pseudonymization — seeded** *(GDPR Art. 4(5); supports Art. 25 / Art. 32)* | ✅ manual model | ✅ automated via DataWorkbench |
 | **Pseudonymization — non-seeded (privacy-maximized)** | ✅ manual model | ✅ automated via DataWorkbench |
 | Python API + XML pipelines | ✅ | ✅ |
@@ -161,15 +315,15 @@ Most test data tools produce random output. That breaks regression tests, audit 
 
 **DATAMIMIC's determinism contract (CE):**
 
-- **Same seed + same model = byte-identical output**, every run, every machine. Holds at three layers: the `generate_domain` facade, every domain service called directly, and every literal generator that accepts an `rng=` argument. Verified per-service on every CI run via [`tests_ce/architecture/test_service_replay_determinism.py`](tests_ce/architecture/test_service_replay_determinism.py).
-- **DSL-level seeding (entities):** `<setup rngSeed="N">` makes the whole model deterministic — every seed-less `<variable entity="…">` derives a reproducible child RNG from it, and `<variable rngSeed="…">` overrides it for that block (no seed anywhere → wall-clock random). Verified by [`tests_ce/integration_tests/test_determinism_seed_scenarios`](tests_ce/integration_tests/test_determinism_seed_scenarios). Deterministic DSL-level seeding of standalone literal generators (`<key generator="…">`) is an **Enterprise (EE) feature**; in CE such generators are seeded only when used directly from Python with `rng=`.
+- **Same engine version + same model + same seed = byte-identical output**, every run, every machine. Holds at three layers: the `generate_domain` facade, every domain service called directly, and every literal generator that accepts an `rng=` argument. Verified per-service on every CI run via [`tests_ce/architecture/test_service_replay_determinism.py`](tests_ce/architecture/test_service_replay_determinism.py).
+- **DSL-level seeding:** `<setup rngSeed="N">` makes the whole model deterministic — every seed-less `<variable entity="…">` derives a reproducible child RNG from it, and `<variable rngSeed="…">` overrides it for that block (no seed anywhere → wall-clock random). Verified by [`tests_ce/integration_tests/test_determinism_seed_scenarios`](tests_ce/integration_tests/test_determinism_seed_scenarios). As of 4.0.0 the same seed also reaches standalone literal generators (`<key generator="…">`), typed/pattern keys, `DateTimeGenerator`, and cross-page `unique` picks — machine-independently.
 - **Source reads:** `distribution="ordered"` reads a data source in stable file order; `distribution="random"` shuffles but replays identically when `<setup rngSeed>` is set (without a seed the shuffle is non-deterministic by design, for privacy-maximized one-time deliveries). Deterministic shuffling across distributed / multi-process execution is EE.
 - **Provenance hash on every facade output** = re-executable lineage. Same input → same `determinism_proof.content_hash`, always.
 - **UUIDv5 entity identifiers** = stable across runs and machines.
 - **Single wall-clock SPOT** (`now_utc_naive()`); raw `datetime.now()` is forbidden in production code and the clock-drift architecture gate fails CI on any reintroduction.
 - **RNG/clock runtime SPOTs** in `datamimic_ce/domains/domain_core/runtime/`: `spawn_rng` (reproducible child-RNG derivation), `now_utc_naive`, and `resolve_clock`. The same contract vocabulary the Enterprise Platform enforces end-to-end.
 
-**The Enterprise Platform (EE) goes further:** beyond the CE contract, EE makes the whole execution environment deterministic — a configurable/frozen wall-clock (not just CE's fixed anchor), DSL-level seeding of literal `<key generator>` generators, and deterministic `SAFE_GLOBALS` plus the Python `random` functions, so sandboxed script expressions and any stdlib `random` call replay identically as well.
+**The Enterprise Platform (EE) goes further:** beyond the CE contract, EE makes the whole execution environment deterministic — a configurable/frozen wall-clock (not just CE's fixed anchor), and deterministic `SAFE_GLOBALS` plus the Python `random` functions, so sandboxed script expressions and any stdlib `random` call replay identically as well.
 
 ```python
 from datamimic_ce.domains.facade import generate_domain
@@ -208,12 +362,12 @@ assert card_a.bic == card_b.bic and card_a.card_number == card_b.card_number
 | **Literal generators** (with seeded `rng=...`) | ✅ byte-identical | ✅ byte-identical |
 | **RNG / clock runtime SPOTs** | ✅ `spawn_rng`, `now_utc_naive`, `resolve_clock` | ✅ same contract, enforced end-to-end |
 | **Architecture gates in CI** | ✅ facade replay + service replay (every service) + clock drift | ✅ 5+ gates (RNG ownership, clock drift, DSL eval, seeded-mode propagation, dataset SPOT) |
-| **Custom XML pipelines** | ⚠️ best-effort | ✅ byte-identical |
+| **Custom XML pipelines** (seeded via `<setup rngSeed>`) | ✅ byte-identical, machine-independent (single-process) | ✅ byte-identical, distributed |
 | **Multi-system coordinated execution** (Oracle + MongoDB + Kafka in one run) | — | ✅ byte-identical end-to-end |
 | **Seeded vs unseeded pseudonymization** (deterministic clock anchor vs CSPRNG live-clock) | — | ✅ |
 | **Threat-led / TLPT-grade audit evidence** (full contract enforcement, per-stage execution logging) | — | ✅ |
 
-CE delivers contract-enforced determinism for the synthetic-data generation surface (facade, services, generators). The Enterprise Platform extends the same contract across the full pipeline — custom XML descriptors, multi-system writes with referential integrity, the seeded/unseeded pseudonymization modes — and adds the five drift-gates that lock the contract end-to-end for regulated deployments.
+CE delivers contract-enforced determinism for the synthetic-data generation surface (facade, services, generators) and, as of 4.0.0, for seeded XML descriptors — byte-identical across machines, executed single-process. The Enterprise Platform extends the same contract to distributed and multi-system execution with referential integrity and the seeded/unseeded pseudonymization modes, and adds the five drift-gates that lock the contract end-to-end for regulated deployments.
 
 ---
 
@@ -292,8 +446,8 @@ DATAMIMIC supports two pseudonymization modes with different privacy postures:
 In CE, PII fields are identified and modeled manually in the XML pipeline:
 
 ```xml
-<setup>
-  <generate name="customers" source="customer_export" target="customer_test" distribution="ordered">
+<setup defaultSeparator=",">
+  <generate name="customers" source="customer_export.csv" target="CSV" distribution="ordered">
     <!-- distribution="ordered" reads the source in a stable order — required so the
          Nth source row maps to the same seeded synthetic value on every run. The
          default ("random") shuffles non-deterministically and would break it.
@@ -319,7 +473,7 @@ hash the original instead of replacing it, or partially mask it:
 <key name="iban"  script="acc.iban" converter="MiddleMask(8, 4)" />
 ```
 
-Available converters: `Mask`, `MiddleMask(start, end)`, `CutLength(n)`,
+Available converters (13): `Mask`, `MiddleMask(start, end)`, `CutLength(n)`, `Substring(start, end)`, `JavaHash`, `RemoveNoneOrEmptyElement`,
 `Hash(type, format[, salt])`, `DateFormat(fmt)`, `Append`, `UpperCase`,
 `LowerCase`, `Date2Timestamp`, `Timestamp2Date`.
 
@@ -366,23 +520,23 @@ Output column names — including whether to even emit a timestamp or series-id 
 
 ```xml
 <setup>
-  <!-- Stock ticks: three symbols, 5-min interval, 30-min window -->
+  <!-- Stock ticks: three symbols, 5-min interval, 30-min window (writes ticks.csv) -->
   <generate name="ticks" count="3"
             start="2026-01-01T09:30:00+00:00"
             end="2026-01-01T10:00:00+00:00"
             interval="PT5M"
-            target="ticks.csv">
+            target="CSV">
     <key name="timestamp" script="ts.now.isoformat()"/>
     <key name="symbol"    script="['AAPL','MSFT','GOOG'][ts.series]"/>
     <key name="price"     script="100 + ts.step * 0.25"/>
   </generate>
 
-  <!-- Sensor with diurnal seasonality, single series (count defaults to 1) -->
+  <!-- Sensor with diurnal seasonality, single series (count defaults to 1; writes readings.csv) -->
   <generate name="readings"
             start="2026-01-01T00:00:00+00:00"
             end="2026-01-08T00:00:00+00:00"
             interval="PT1H"
-            target="readings.csv">
+            target="CSV">
     <key name="timestamp" script="ts.now.isoformat()"/>
     <key name="value"     script="20 - 10 * math.cos(ts.now.hour * math.pi / 12)"/>
   </generate>
@@ -401,44 +555,6 @@ Composes with the existing `<variable>` mechanism for multi-source merges (e.g. 
 
 ---
 
-## MCP Server — AI Agent Integration
-
-DATAMIMIC CE ships with a Model Context Protocol (MCP) server, making it directly callable from AI agents, Claude, Cursor, and any MCP-compatible runtime.
-
-```bash
-pip install datamimic-ce[mcp]
-
-export DATAMIMIC_MCP_HOST=127.0.0.1
-export DATAMIMIC_MCP_PORT=8765
-export DATAMIMIC_MCP_API_KEY=your-key
-datamimic-mcp
-```
-
-Agents can call `generate` with a domain, seed, count, and locale and receive deterministic, provenance-hashed output — making DATAMIMIC the natural test data runtime for agent-driven workflows.
-
-```python
-import anyio, json
-from fastmcp.client import Client
-from datamimic_ce.mcp.models import GenerateArgs
-from datamimic_ce.mcp.server import create_server
-
-async def main():
-    args = GenerateArgs(domain="person", locale="en_US", seed=42, count=2)
-    payload = args.model_dump(mode="python")
-    async with Client(create_server()) as c:
-        a = await c.call_tool("generate", {"args": payload})
-        b = await c.call_tool("generate", {"args": payload})
-        # Determinism proof: identical hashes across calls
-        assert (json.loads(a[0].text)["determinism_proof"]["content_hash"]
-             == json.loads(b[0].text)["determinism_proof"]["content_hash"])
-
-anyio.run(main)
-```
-
-📘 Full guide: [`docs/mcp_quickstart.md`](docs/mcp_quickstart.md)
-
----
-
 ## Where CE fits on its own
 
 Most teams adopt CE for one of three reasons. EE is not required for any of them.
@@ -453,7 +569,7 @@ response = generate_domain({
     "seed": "ci-pipeline-42", "locale": "en_US",
     "clock": "2026-01-01T00:00:00Z",
 })
-# Same input → same output, every machine, every run.
+# Same engine version + same model + same seed → same output, every machine, every run.
 ```
 
 **2. Deterministic data backend for AI agents and LLM tooling.** The bundled MCP server (`pip install datamimic-ce[mcp]`) exposes `generate` as an MCP tool. Agents call it with seed, locale, count; outputs ship with a `determinism_proof.content_hash` so the same call can be re-executed and verified later — useful for agent regression tests and for any workflow where the data the agent saw needs to be reconstructable.
@@ -535,6 +651,9 @@ EE adds Kafka, EDIFACT, SWIFT MT, HL7 v2.x, and HL7 FHIR as additional targets �
 | SQLite | ✅ | ✅ | Lightweight CI/CD fixtures |
 | MongoDB | ✅ | ✅ | EE adds nested document generation |
 | CSV / JSON / XML | ✅ | ✅ | Flat file pipelines |
+| XLSX | ✅ | ✅ | Spreadsheet read + write (first row = header) |
+| DbUnit XML | ✅ | ✅ | `.dbunit.xml` dataset read + write |
+| Fixed-width (`.fcw`) | ✅ | ✅ | Self-describing column files, read + write |
 | Apache Kafka | — | ✅ | Real-time streaming, payment scenarios |
 | HL7 v2.x | — | ✅ | Test/training output via template engine |
 | HL7 FHIR | — | ✅ | Test/training output via template engine |
@@ -551,7 +670,8 @@ EE adds Kafka, EDIFACT, SWIFT MT, HL7 v2.x, and HL7 FHIR as additional targets �
 | **Insurance** | InsuranceCompany, InsuranceProduct, InsurancePolicy, InsuranceCoverage |
 | **E-commerce** | Order, Product |
 | **Public sector** | AdministrationOffice, EducationalInstitution, PoliceOfficer |
-| **Demographics** | Person (DE / US / VN locale packs), Address |
+| **Demographics** | Person (DE / US / VN locale packs), Address, City, Country |
+| **Common** | Company |
 
 All services are versioned and seeded; each generation emits a provenance hash suitable as evidence in audit reviews. Domain services can be used directly via constructor injection, or driven through the higher-level `generate_domain({...})` facade for seed/locale/clock/count parameterisation (currently supports `person`, `address`, `patient`, `doctor` at `v1`).
 
@@ -561,17 +681,19 @@ All services are versioned and seeded; each generation emits a provenance hash s
 
 ```bash
 # Initialize a new project
-datamimic init ./my-scenario
+datamimic init my-scenario
 
-# Validate an XML descriptor without executing it
-datamimic validate ./my-scenario/datamimic.xml
+# Lint a descriptor: schema, semantics, best practices — every finding carries
+# a rule id (DMxxx) and a fix hint. `validate` is an alias. Exit codes 0/1/2.
+datamimic lint my-scenario/datamimic.xml
+datamimic lint my-scenario/datamimic.xml --format json   # diagnostics v1, CI-friendly
 
 # Run a scenario
-datamimic run ./my-scenario/datamimic.xml
+datamimic run my-scenario/datamimic.xml
 
 # Demos
 datamimic demo list
-datamimic demo create healthcare-example
+datamimic demo create demo-healthcare
 datamimic demo create --all --target ./my_demos
 
 # System and version info

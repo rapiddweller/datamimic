@@ -1,7 +1,5 @@
 import json
 import math
-import multiprocessing
-import os
 import tempfile
 import unittest
 import uuid
@@ -9,7 +7,7 @@ from pathlib import Path
 
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.json_exporter import JsonExporter
-from tests_ce.unit_tests.test_exporter.exporter_test_util import generate_mock_data, MockSetupContext
+from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContext, generate_mock_data, make_exporter
 
 
 class TestJsonExporter(unittest.TestCase):
@@ -24,7 +22,7 @@ class TestJsonExporter(unittest.TestCase):
         )
         self.encoding = encoding
 
-        self.exporter = JsonExporter(
+        self.exporter = make_exporter(JsonExporter, 
             setup_context=self.setup_context,
             product_name="test_product",
             use_ndjson=use_ndjson,
@@ -201,7 +199,8 @@ class TestJsonExporter(unittest.TestCase):
     def test_invalid_chunk_size(self):
         """Test initializing exporter with invalid chunk size (zero or negative). Expecting ValueError."""
         with self.assertRaises(ValueError) as context_zero:
-            JsonExporter(
+            make_exporter(
+                JsonExporter,
                 setup_context=self.setup_context,
                 product_name="test_product",
                 use_ndjson=False,
@@ -211,7 +210,8 @@ class TestJsonExporter(unittest.TestCase):
         self.assertIn("Chunk size must be a positive integer", str(context_zero.exception))
 
         with self.assertRaises(ValueError) as context_negative:
-            JsonExporter(
+            make_exporter(
+                JsonExporter,
                 setup_context=self.setup_context,
                 product_name="test_product",
                 use_ndjson=False,
@@ -277,7 +277,7 @@ class TestJsonExporter(unittest.TestCase):
             self.exporter.consume(product, stmt_full_name, exporter_state_manager)
             self.exporter.finalize_chunks(worker_id)
             assert True
-        except Exception as e:
+        except Exception:
             assert False
 
     def test_unlimited_chunk_size(self):

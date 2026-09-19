@@ -1,0 +1,11 @@
+<setup rngSeed="7" defaultSeparator=",">
+    <!-- <iterate> nested inside <generate>: proves the alias is a valid child of
+         generate and iterates the source in nested position (source column v is
+         carried through automatically; ordered -> first `count` rows each time). -->
+    <generate name="outer" count="3" target="">
+        <key name="id" type="int" generator="IncrementGenerator"/>
+        <iterate name="children" source="rows.csv" distribution="ordered" count="2">
+            <key name="tag" constant="x"/>
+        </iterate>
+    </generate>
+</setup>

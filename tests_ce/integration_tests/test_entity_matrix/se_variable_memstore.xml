@@ -1,0 +1,8 @@
+<setup>
+    <memstore id="mem"/>
+    <generate name="seed" count="3" targetEntity="people" target="mem"><key name="n" constant="1"/></generate>
+    <generate name="out" count="3" target="">
+        <variable name="p" source="mem" sourceEntity="people" cyclic="true"/>
+        <key name="n" script="p.n"/>
+    </generate>
+</setup>

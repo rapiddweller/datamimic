@@ -33,7 +33,9 @@ def setup_logger(logger_name: str, worker_name: str, level=logging.INFO):
 
     # Avoid adding duplicate stream handlers
     if not any(isinstance(handler, logging.StreamHandler) for handler in current_logger.handlers):
-        stream_handler = logging.StreamHandler(sys.stdout)
+        # stderr, not stdout: logs must never interleave with data on stdout —
+        # a stdio MCP transport owns stdout for JSON-RPC frames
+        stream_handler = logging.StreamHandler(sys.stderr)
         stream_handler.setFormatter(formatter)
         current_logger.setLevel(level)
         current_logger.addHandler(stream_handler)

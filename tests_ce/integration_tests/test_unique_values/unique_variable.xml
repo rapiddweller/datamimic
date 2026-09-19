@@ -1,0 +1,7 @@
+<setup rngSeed="5">
+    <!-- unique is supported on <variable> too (shared task), not just <key>. -->
+    <generate name="people" count="3" target="">
+        <variable name="cat" values="'x','y','z'" unique="true"/>
+        <key name="code" script="cat"/>
+    </generate>
+</setup>

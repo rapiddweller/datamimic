@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dataset SYSTEM "ignored.dtd">
+<dataset>
+    <!-- edge cases: XML special chars, unicode, empty string, ragged (NULL = absent attr), numeric-looking -->
+    <account id="1" name="A &amp; B &lt;Ltd&gt;" note="quote:&quot;x&quot;" zip="01234"/>
+    <account id="2" name="Ünïcödé Ω" note="" zip="99999"/>
+    <account id="3" name="no-note-here"/>
+    <tag id="10" label="first"/>
+    <tag id="11" label="second"/>
+</dataset>

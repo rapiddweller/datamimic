@@ -13,6 +13,8 @@ class TestResultExporter(Exporter):
     Capture GenIterTask result for testing
     """
 
+    __test__ = False  # name starts with "Test" — tell pytest this is not a test class
+
     def __init__(self):
         self._storage = {}
 

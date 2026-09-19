@@ -8,8 +8,6 @@
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import (
-    ATTR_BUCKET,
-    ATTR_CONTAINER,
     ATTR_CONVERTER,
     ATTR_COUNT,
     ATTR_CYCLIC,
@@ -17,24 +15,29 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_END,
     ATTR_EXPORT_URI,
     ATTR_INTERVAL,
+    ATTR_MAX_COUNT,
+    ATTR_MIN_COUNT,
     ATTR_MP_PLATFORM,
     ATTR_MULTIPROCESSING,
     ATTR_NAME,
     ATTR_NUM_PROCESS,
+    ATTR_OFFSET,
     ATTR_PAGE_SIZE,
     ATTR_SCRIPT,
     ATTR_SELECTOR,
     ATTR_SEPARATOR,
     ATTR_SOURCE,
+    ATTR_SOURCE_ENTITY,
     ATTR_SOURCE_SCRIPTED,
-    ATTR_SOURCE_URI,
     ATTR_START,
-    ATTR_STORAGE_ID,
     ATTR_TARGET,
+    ATTR_TARGET_ENTITY,
     ATTR_TYPE,
+    ATTR_UNIQUE,
     ATTR_VARIABLE_PREFIX,
     ATTR_VARIABLE_SUFFIX,
 )
+from datamimic_ce.constants.element_constants import EL_GENERATE
 from datamimic_ce.model.model_util import ModelUtil
 
 _TIMESERIES_ATTRS: frozenset[str] = frozenset({ATTR_START, ATTR_END, ATTR_INTERVAL})
@@ -43,24 +46,30 @@ _TIMESERIES_ATTRS: frozenset[str] = frozenset({ATTR_START, ATTR_END, ATTR_INTERV
 class GenerateModel(BaseModel):
     name: str
     count: str | None = None
+    min_count: int | None = Field(None, alias=ATTR_MIN_COUNT)
+    max_count: int | None = Field(None, alias=ATTR_MAX_COUNT)
     source: str | None = None
     cyclic: bool | None = None
+    # Skip the first N source rows before any windowing (migration parity). File sources only;
+    # count default, cyclic wrap and page windows all operate on the post-offset region.
+    offset: int | None = Field(None, ge=0)
+    unique: bool | None = None
     type: str | None = None
     selector: str | None = None
     separator: str | None = None
     source_scripted: bool | None = Field(None, alias=ATTR_SOURCE_SCRIPTED)
     target: str | None = None
+    # Explicit physical entity to read/write (table/collection). Precedence: sourceEntity/targetEntity
+    # -> type -> name; absent -> existing behaviour. See StatementUtil.resolve_source/target_entity.
+    source_entity: str | None = Field(None, alias=ATTR_SOURCE_ENTITY)
+    target_entity: str | None = Field(None, alias=ATTR_TARGET_ENTITY)
     page_size: int | None = Field(None, alias=ATTR_PAGE_SIZE)
-    source_uri: str | None = Field(None, alias=ATTR_SOURCE_URI)
-    container: str | None = None
-    storage_id: str | None = Field(None, alias=ATTR_STORAGE_ID)
     multiprocessing: bool | None = None
     export_uri: str | None = Field(None, alias=ATTR_EXPORT_URI)
     distribution: str | None = None
     variable_prefix: str | None = Field(None, alias=ATTR_VARIABLE_PREFIX)
     variable_suffix: str | None = Field(None, alias=ATTR_VARIABLE_SUFFIX)
     converter: str | None = None
-    bucket: str | None = Field(None, alias=ATTR_BUCKET)
     num_process: int | None = Field(None, alias=ATTR_NUM_PROCESS)
     script: str | None = Field(None, alias=ATTR_SCRIPT)
     mp_platform: str | None = Field(None, alias=ATTR_MP_PLATFORM)
@@ -77,17 +86,20 @@ class GenerateModel(BaseModel):
             valid_attributes={
                 ATTR_TARGET,
                 ATTR_COUNT,
+                ATTR_MIN_COUNT,
+                ATTR_MAX_COUNT,
                 ATTR_CYCLIC,
+                ATTR_OFFSET,
+                ATTR_UNIQUE,
                 ATTR_NAME,
                 ATTR_SELECTOR,
                 ATTR_SEPARATOR,
                 ATTR_SOURCE,
+                ATTR_SOURCE_ENTITY,
+                ATTR_TARGET_ENTITY,
                 ATTR_SOURCE_SCRIPTED,
                 ATTR_TYPE,
                 ATTR_PAGE_SIZE,
-                ATTR_SOURCE_URI,
-                ATTR_CONTAINER,
-                ATTR_STORAGE_ID,
                 ATTR_MULTIPROCESSING,
                 ATTR_EXPORT_URI,
                 ATTR_DISTRIBUTION,
@@ -102,6 +114,40 @@ class GenerateModel(BaseModel):
                 ATTR_INTERVAL,
             },
         )
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_unique_constraints(cls, values: dict):
+        return ModelUtil.check_unique_constraints(values)
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_offset_requires_source(cls, values: dict):
+        if ATTR_OFFSET in values and ATTR_SOURCE not in values:
+            raise ValueError("'offset' requires a 'source' - it skips the first N source rows")
+        return values
+
+    @field_validator("source_entity", "target_entity")
+    @classmethod
+    def _entity_not_blank(cls, value: str | None) -> str | None:
+        """A physical entity name must be meaningful: strip it, and reject blank (a real user error -
+        an empty sourceEntity/targetEntity means the user forgot the value, not "use the default")."""
+        if value is None:
+            return None
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("sourceEntity/targetEntity must not be blank")
+        # targetEntity becomes a file basename for file exporters; path separators would escape the
+        # output directory. An entity is a single table/collection/basename, never a path.
+        if "/" in stripped or "\\" in stripped or ".." in stripped:
+            raise ValueError(f"sourceEntity/targetEntity must be a plain entity name, not a path: '{stripped}'")
+        return stripped
+
+    @field_validator("export_uri")
+    @classmethod
+    def _normalize_export_uri(cls, value: str | None) -> str | None:
+        """exportUri is a safe local output-directory prefix (see ModelUtil.normalize_export_uri)."""
+        return ModelUtil.normalize_export_uri(value)
 
     @model_validator(mode="before")
     @classmethod
@@ -121,6 +167,11 @@ class GenerateModel(BaseModel):
         if _TIMESERIES_ATTRS & values.keys():
             return values
         return ModelUtil.check_exist_count(values=values)
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_min_max_count(cls, values: dict):
+        return ModelUtil.check_min_max_count(values, EL_GENERATE)
 
     @model_validator(mode="before")
     @classmethod
@@ -147,10 +198,5 @@ class GenerateModel(BaseModel):
     def validate_count(cls, value):
         return ModelUtil.check_is_digit_or_script(value=value)
 
-    @field_validator("distribution")
-    @classmethod
-    def validate_distribution(cls, value):
-        """
-        Validate attribute "distribution"
-        """
-        return ModelUtil.check_valid_distribution(value)
+    # NOTE: no distribution validator — GenerateStatement validates via
+    # SourceDistribution.coerce (random/ordered/cumulated) at construction.

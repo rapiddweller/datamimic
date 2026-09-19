@@ -1,0 +1,6 @@
+<setup rngSeed="11">
+    <!-- nullQuota gates BEFORE the unique pick: some rows None, the rest still distinct. -->
+    <generate name="people" count="4" target="">
+        <key name="code" values="'A','B','C','D','E','F'" unique="true" nullQuota="0.3"/>
+    </generate>
+</setup>

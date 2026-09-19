@@ -1,0 +1,8 @@
+<setup rngSeed="11">
+    <database id="refdb" database="ref_dist_db" dbms="sqlite"/>
+    <execute uri="script/setup_items.scr.sql" target="refdb"/>
+    <!-- ordered without cyclic outruns the 4-row pool: must raise, never under-generate -->
+    <generate name="events" count="9" target="">
+        <reference name="fk" source="refdb" sourceType="items" sourceKey="id" distribution="ordered"/>
+    </generate>
+</setup>

@@ -1,0 +1,46 @@
+<!-- DSL power features in one runnable, seeded pipeline:
+       * count="{...}"          — a computed count, not a literal digit (#174)
+       * type="binary"          — MIME-sniffable BLOBs, seeded => reproducible (#170)
+       * converter="Substring"  — python-slice tail-extract, the classic last-4
+                                  anonymization; negative index counts from the end (#172)
+       * <assert>               — declarative per-record invariants that fail the run (#163)
+       * targetEntity/sourceEntity — name the written/read entity explicitly (#177)
+       * exportUri              — output-directory prefix for every file target (#179)
+       * multi-target CSV,JSON,XLSX,DbUnit — one write, five formats (#169, #178)
+     Seeded (rngSeed): re-running produces the identical dataset, byte for byte. -->
+<setup rngSeed="42">
+    <memstore id="mem"/>
+
+    <!-- count is a computed expression, not a literal: any python in {...} evaluates.
+         targetEntity renames the written entity to "roster" (the output files and the
+         memstore key are named after it, not after the generate's name). -->
+    <generate name="employees" count="{4 * 25}" targetEntity="roster"
+              target="mem,CSV,JSON,XLSX,DbUnit" exportUri="output">
+        <key name="employee_id" generator="IncrementGenerator"/>
+        <variable name="p" entity="Person" dataset="US" locale="en"/>
+        <key name="full_name" script="p.name"/>
+        <key name="email" script="p.email"/>
+
+        <!-- a payment card, then the last four digits only: Substring(-4) is a python
+             slice from the end. Field-level pseudonymization the auditor can read. -->
+        <key name="card_number" pattern="4[0-9]{15}"/>
+        <key name="card_last4" script="card_number" converter="Substring(-4)"/>
+
+        <!-- an ID-badge photo as a real BLOB. mimeType prefixes a PNG magic-number
+             header so the bytes are MIME-sniffable; seeded => identical every run.
+             DBs store the bytes natively; file targets render the byte repr. -->
+        <key name="badge_png" type="binary" mimeType="image/png" minLength="64" maxLength="256"/>
+
+        <!-- invariants checked per record; a false condition fails the whole run -->
+        <assert condition="employee_id &gt;= 1" message="employee_id must be positive"/>
+        <assert condition="card_number[-4:] == card_last4" message="tail-extract must match the source"/>
+    </generate>
+
+    <!-- second pass: read the roster back by its explicit sourceEntity name,
+         ordered = stable file/insertion order, and derive a directory view from the
+         real generated rows (their keys resolve as bare names here). -->
+    <generate name="directory" source="mem" sourceEntity="roster"
+              distribution="ordered" target="JSON" exportUri="output">
+        <key name="listing" script="full_name + ' &lt;' + email + '&gt;'"/>
+    </generate>
+</setup>

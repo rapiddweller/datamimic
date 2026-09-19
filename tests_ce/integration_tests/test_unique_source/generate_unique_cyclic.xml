@@ -1,0 +1,4 @@
+<setup rngSeed="9">
+    <!-- unique + cyclic on <generate> is contradictory -> validation error. -->
+    <generate name="people" source="codes.csv" unique="true" cyclic="true" count="3" target=""/>
+</setup>

@@ -1,0 +1,1 @@
+<setup><generate name="g" source="rows12.csv" distribution="random" count="12" numProcess="1" target=""/></setup>

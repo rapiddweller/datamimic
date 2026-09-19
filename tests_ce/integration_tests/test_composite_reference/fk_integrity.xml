@@ -1,0 +1,12 @@
+<setup rngSeed="42">
+    <database id="refdb" database="fk_integ_db" dbms="sqlite"/>
+    <execute uri="script/setup_slots.scr.sql" target="refdb"/>
+    <!-- 30 children referencing a SPARSE parent. Every (region, code) must be a real parent
+         row — never an invented cross like ('EU','U1'). -->
+    <generate name="orders" count="30" target="">
+        <reference name="rc" source="refdb" sourceType="region_codes">
+            <field target="region" sourceKey="region"/>
+            <field target="code"   sourceKey="code"/>
+        </reference>
+    </generate>
+</setup>

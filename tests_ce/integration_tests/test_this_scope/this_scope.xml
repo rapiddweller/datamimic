@@ -1,0 +1,10 @@
+<setup rngSeed="5">
+    <!-- `this` addresses the current content scope: this.field == field, incl. earlier sibling keys -->
+    <generate name="g" count="4" target="">
+        <key name="base" generator="IncrementGenerator"/>
+        <key name="via_bare" script="base * 10"/>
+        <key name="via_this" script="this.base * 10"/>
+        <variable name="v" script="7"/>
+        <key name="var_via_this" script="this.v"/>
+    </generate>
+</setup>

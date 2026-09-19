@@ -1,0 +1,7 @@
+<setup>
+    <generate name="people" count="5" target="XLSX">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" values="'Ann','Bob','Cy'"/>
+        <key name="score" type="int" min="1" max="9"/>
+    </generate>
+</setup>

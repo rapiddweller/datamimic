@@ -10,6 +10,7 @@ from datamimic_ce.statements.statement import Statement
 
 class MemstoreStatement(Statement):
     def __init__(self, model: MemstoreModel):
+        super().__init__(name=model.id, parent_stmt=None)  # setup-level; honor the base contract (name = its id)
         self._id = model.id
 
     @property

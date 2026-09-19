@@ -19,3 +19,12 @@ class TestMemStoreIntegration:
             filename="test_in_memory_memstore.xml",
         )
         test_engine.test_with_timer()
+
+    def test_memstore_target_inside_condition(self):
+        """The end-of-run memstore export must pass through <condition>/<if> wrappers."""
+        test_engine = DataMimicTest(
+            test_dir=self._test_dir, filename="test_condition_memstore.xml", capture_test_result=True
+        )
+        test_engine.test_with_timer()
+        result = test_engine.capture_result()
+        assert sorted(r["val"] for r in result["from_mem"]) == [2, 4, 6, 8, 10]

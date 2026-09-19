@@ -1,0 +1,4 @@
+<setup rngSeed="1">
+    <generate name="a" count="1" source="d.csv" type="t" selector="s" target="ConsoleExporter"/>
+    <generate name="b" count="1" cyclic="True" selector="q" target="ConsoleExporter"><key name="x" constant="1"/></generate>
+</setup>

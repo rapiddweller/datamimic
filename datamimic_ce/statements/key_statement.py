@@ -23,7 +23,16 @@ class KeyStatement(CompositeStatement):
         self._source = model.source
         self._separator = model.separator
         self._type = model.type
+        self._min = model.min
+        self._max = model.max
+        self._granularity = model.granularity
+        self._distribution = model.distribution
+        self._min_length = model.min_length
+        self._mime_type = model.mime_type
+        self._max_length = model.max_length
         self._values = model.values
+        self._weights = model.weights
+        self._unique = model.unique
         self._default_value = model.default_value
         self._null_quota = model.null_quota
         self._pattern = model.pattern
@@ -41,8 +50,44 @@ class KeyStatement(CompositeStatement):
         return self._type
 
     @property
+    def min(self) -> str | None:
+        return self._min
+
+    @property
+    def max(self) -> str | None:
+        return self._max
+
+    @property
+    def granularity(self) -> str | None:
+        return self._granularity
+
+    @property
+    def distribution(self) -> str | None:
+        return self._distribution
+
+    @property
+    def min_length(self) -> str | None:
+        return self._min_length
+
+    @property
+    def mime_type(self) -> str | None:
+        return self._mime_type
+
+    @property
+    def max_length(self) -> str | None:
+        return self._max_length
+
+    @property
     def values(self):
         return self._values
+
+    @property
+    def weights(self):
+        return self._weights
+
+    @property
+    def unique(self):
+        return self._unique
 
     @property
     def script(self):

@@ -1,0 +1,5 @@
+<setup>
+    <generate name="rows" count="3" target="ConsoleExporter">
+        <key name="v" type="int" min="1" max="9" distribution="gaussian"/>
+    </generate>
+</setup>

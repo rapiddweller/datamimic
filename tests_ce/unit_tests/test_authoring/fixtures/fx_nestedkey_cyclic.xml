@@ -1,0 +1,5 @@
+<setup rngSeed="1">
+    <generate name="a" count="1" target="ConsoleExporter">
+        <nestedKey name="tags" cyclic="True"><key name="t" constant="1"/></nestedKey>
+    </generate>
+</setup>

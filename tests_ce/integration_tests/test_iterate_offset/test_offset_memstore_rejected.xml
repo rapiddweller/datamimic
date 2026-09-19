@@ -1,0 +1,7 @@
+<setup>
+    <memstore id="mem"/>
+    <generate name="t" count="3" target="mem">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+    <iterate name="rows" source="mem" type="t" offset="1" target="ConsoleExporter"/>
+</setup>

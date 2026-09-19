@@ -52,6 +52,7 @@ def _spawn_cli_sse(port: int, env: dict[str, str] | None = None) -> subprocess.P
         sys.executable,
         "-m",
         "datamimic_ce.mcp.cli",
+        "serve",
         "--transport",
         "sse",
         "--host",

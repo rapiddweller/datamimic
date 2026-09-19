@@ -1,0 +1,9 @@
+<setup rngSeed="7">
+    <!-- Larger read: cyclic wrap over a small source to a bigger count, transforming mixed-type columns. -->
+    <generate name="rows" source="fixture.xlsx" cyclic="true" count="10" target="">
+        <key name="id_plus" script="i + 1000"/>
+        <key name="price_2" script="round(f * 2, 2)"/>
+        <key name="upper" script="s.upper()"/>
+        <key name="has_note" script="n is not None"/>
+    </generate>
+</setup>

@@ -1,0 +1,11 @@
+<setup rngSeed="42">
+    <database id="refdb" database="ref_composite_db" dbms="sqlite"/>
+    <execute uri="script/setup_slots.scr.sql" target="refdb"/>
+    <!-- composite reference: each row gets a DISTINCT (aisle, bin) tuple from the source. -->
+    <generate name="events" count="6" target="">
+        <reference name="slot" source="refdb" sourceType="slots" unique="true">
+            <field target="aisle" sourceKey="aisle"/>
+            <field target="bin" sourceKey="bin"/>
+        </reference>
+    </generate>
+</setup>

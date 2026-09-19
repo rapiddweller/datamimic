@@ -1,0 +1,8 @@
+<setup>
+    <!-- Setup-level assertion: checked once against the setup context -->
+    <variable name="threshold" script="42"/>
+    <assert condition="threshold == 42"/>
+    <generate name="g" count="3" target="">
+        <key name="v" script="threshold"/>
+    </generate>
+</setup>

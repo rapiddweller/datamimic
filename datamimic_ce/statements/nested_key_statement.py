@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.contexts.context import Context
+from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.model.nested_key_model import NestedKeyModel
 from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.statement import Statement
@@ -19,6 +20,7 @@ class NestedKeyStatement(CompositeStatement):
         self._type = model.type
         self._count = model.count
         self._source = model.source
+        self._source_entity = model.source_entity
         self._source_script = model.source_script
         self._cyclic = model.cyclic
         self._separator = model.separator
@@ -27,7 +29,8 @@ class NestedKeyStatement(CompositeStatement):
         self._min_count = model.min_count
         self._max_count = model.max_count
         self._default_value = model.default_value
-        self._distribution = model.distribution
+        # Real type at the boundary (absent = RANDOM); domain logic never sees None.
+        self._distribution = SourceDistribution.coerce(model.distribution)
         self._converter = model.converter
         self._variable_prefix = model.variable_prefix
         self._variable_suffix = model.variable_suffix
@@ -52,6 +55,10 @@ class NestedKeyStatement(CompositeStatement):
     @property
     def source(self):
         return self._source
+
+    @property
+    def source_entity(self) -> str | None:
+        return self._source_entity
 
     @property
     def source_script(self):
@@ -86,7 +93,7 @@ class NestedKeyStatement(CompositeStatement):
         return self._default_value
 
     @property
-    def distribution(self):
+    def distribution(self) -> SourceDistribution:
         return self._distribution
 
     @property

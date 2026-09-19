@@ -109,9 +109,9 @@ async def main():
 anyio.run(main)
 ```
 
-The `determinism_proof.content_hash` field and the canonical JSON comparisons will match across identical requests, ensuring byte-identical payloads for the same seed lineage.
+The `determinism_proof.content_hash` field and the canonical JSON comparisons will match across identical requests, ensuring byte-identical payloads for the same seed on the same DATAMIMIC version.
 
-### Payments domain example
+### Address domain example
 
 ```python
 args = GenerateArgs(domain="address", locale="de_DE", seed=7, count=1)
@@ -133,3 +133,45 @@ Running the snippet twice with the same seed yields identical addresses. Switchi
 - `make typecheck`, `make lint`, and `make coverage` – convenience targets for the strict quality gates (mypy `--strict`, pylint ≥ 9.0, coverage ≥ 90%).
 
 Happy generating!
+
+## DSL authoring tools (AI linter)
+
+Three tools turn any MCP-capable agent (Claude Code, Cursor, Copilot) into a
+DATAMIMIC DSL author with a verify loop:
+
+| Tool | Purpose |
+|---|---|
+| `datamimic_reference` | DSL knowledge: `topic=overview` (cheatsheet, start here), `element` (+`name=generate`), `generators`, `entities` (+`name=Person` for its fields), `context` (this/parent/root script scope), `timeseries` (start/end/interval + ts.now/step/series), `targets`, `distributions`, `converters` (masking/formatting), `recipes`, `recipe` (+`name=<id>`) |
+| `datamimic_check` | Lint a descriptor (`xml=` inline or `path=`): aggregated diagnostics, each with a rule id (`DMxxx`), severity and a `fix_hint`. Iterate until `ok=true`. |
+| `datamimic_run` | Safe dry-run: lint gate first, counts capped (`max_count`), file/DB targets neutralized (memstores kept), returns per-product `sample` rows. `allow_side_effects=true` opts out. `smoke_export=true` additionally test-writes the captured rows through each stripped file exporter in a temp dir (no artifacts left behind) to catch export-time serialization crashes before a real run. |
+
+Resources: `resource://datamimic/dsl/cheatsheet` and
+`resource://datamimic/dsl/recipes/{id}`.
+
+The agent loop: `reference` → draft → `check` → fix (hints tell you what to
+change) → `run` → inspect samples → ship. The same linter runs in CI via
+`datamimic lint <file> --format json` (exit codes: 0 clean, 1 findings, 2 error).
+
+### Register with agents (stdio)
+
+Claude Code:
+
+```bash
+claude mcp add datamimic -- datamimic-mcp serve --transport stdio
+```
+
+`.mcp.json` (Claude Code project scope) / `.cursor/mcp.json` (Cursor) /
+`.vscode/mcp.json` (VS Code):
+
+```json
+{
+  "mcpServers": {
+    "datamimic": {
+      "command": "datamimic-mcp",
+      "args": ["serve", "--transport", "stdio"]
+    }
+  }
+}
+```
+
+With `uvx` (no install): `"command": "uvx", "args": ["--from", "datamimic-ce[mcp]", "datamimic-mcp", "serve", "--transport", "stdio"]`.

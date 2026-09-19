@@ -1,0 +1,13 @@
+<setup defaultDataset="US" defaultLocale="en_US">
+    <!-- A middle scope's variable must stay invisible by bare name to a DEEPER scope that does not
+         declare it itself - only this./parent./root. reach an ancestor. A leaf script that typos a
+         bare name matching an unrelated ancestor's variable must fail loud, not silently resolve. -->
+    <generate name="a" count="1" target="JSON">
+        <nestedKey name="b" type="list" count="1">
+            <variable name="mid" constant="mid_val"/>
+            <nestedKey name="c" type="list" count="1">
+                <key name="bare_mid_from_c" script="mid"/>
+            </nestedKey>
+        </nestedKey>
+    </generate>
+</setup>

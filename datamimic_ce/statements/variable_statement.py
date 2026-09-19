@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.model.variable_model import VariableModel
 from datamimic_ce.statements.statement import Statement
 
@@ -34,13 +35,17 @@ class VariableStatement(Statement):
         self._selector = model.selector
         self._separator = model.separator
         self._type = model.type
+        self._source_entity = model.source_entity
         self._values = model.values
+        self._weights = model.weights
+        self._unique = model.unique
         self._weight_column = model.weight_column
         self._iteration_selector = model.iteration_selector
         self._default_value = model.default_value
         self._is_global_variable = is_global_var
         self._pattern = model.pattern
-        self._distribution = model.distribution
+        # Real type at the boundary (absent = RANDOM); domain logic never sees None.
+        self._distribution = SourceDistribution.coerce(model.distribution)
         self._variable_prefix = model.variable_prefix
         self._variable_suffix = model.variable_suffix
         self._string = model.string
@@ -66,6 +71,10 @@ class VariableStatement(Statement):
     @property
     def type(self) -> str | None:
         return self._type
+
+    @property
+    def source_entity(self) -> str | None:
+        return self._source_entity
 
     @property
     def cyclic(self) -> bool | None:
@@ -124,6 +133,14 @@ class VariableStatement(Statement):
         return self._values
 
     @property
+    def weights(self):
+        return self._weights
+
+    @property
+    def unique(self):
+        return self._unique
+
+    @property
     def iteration_selector(self) -> str | None:
         return self._iteration_selector
 
@@ -140,7 +157,7 @@ class VariableStatement(Statement):
         return self._pattern
 
     @property
-    def distribution(self) -> str | None:
+    def distribution(self) -> SourceDistribution:
         return self._distribution
 
     @property
