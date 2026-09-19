@@ -47,6 +47,12 @@ _DB_PAGED = slice(None)
             _DB_PAGED,
         ),
         (
+            Dbms.MSSQL,
+            "SELECT * FROM t ORDER BY t.grp",
+            "SELECT * FROM t ORDER BY t.grp, 2 OFFSET 10 ROWS FETCH NEXT 5 ROWS ONLY",
+            _DB_PAGED,
+        ),
+        (
             Dbms.POSTGRESQL,
             "SELECT grp, id FROM t ORDER BY LOWER(grp)",
             "SELECT grp, id FROM t ORDER BY LOWER(grp), 1, 2 LIMIT 5 OFFSET 10",

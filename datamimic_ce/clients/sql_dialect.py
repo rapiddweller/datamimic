@@ -110,8 +110,9 @@ def selector_page(query: str, dbms: Dbms, skip: int, limit: int, columns: list[s
     every output column it does not already sort by follows as a positional tie-breaker (SQL Server
     rejects a column listed twice). Without an own ORDER BY, all output columns order it. The terms go
     before the selector's own row limit (LIMIT/TOP/FETCH/OFFSET), which makes that bounded subset
-    deterministic too; a bounded selector is then read whole and paged here, because re-sorting it
-    outside would lose its order. Any other selector is paged by the database. An unparseable selector
+    deterministic too; a bounded selector is then read whole for every page and sliced here, because
+    re-sorting it outside would lose its order (cost: pages x the selector's own limit). Any other
+    selector is paged by the database. An unparseable selector
     is wrapped and ordered by all output columns.
     """
     parsed = _parse_selector(query, dbms)
