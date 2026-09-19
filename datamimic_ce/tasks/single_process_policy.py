@@ -17,6 +17,7 @@ from dataclasses import dataclass
 
 from datamimic_ce.clients.client import Client
 from datamimic_ce.clients.rdbms_client import RdbmsClient
+from datamimic_ce.enums.dbms_enums import Dbms
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.composite_statement import CompositeStatement
 from datamimic_ce.statements.generate_statement import GenerateStatement
@@ -59,7 +60,7 @@ def _uses_mysql_sequence(stmt: GenerateStatement, seeded: bool, clients: ClientM
     mysql_sources = {
         source_id
         for source_id, client in clients.items()
-        if isinstance(client, RdbmsClient) and client.credential.dbms == "mysql"
+        if isinstance(client, RdbmsClient) and client.credential.dbms is Dbms.MYSQL
     }
     if not mysql_sources:
         return False

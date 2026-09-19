@@ -1,5 +1,5 @@
 # DATAMIMIC
-# Copyright (c) 2023-2025 Rapiddweller Asia Co., Ltd.
+# Copyright (c) 2023-2026 Rapiddweller Asia Co., Ltd.
 # This software is licensed under the MIT License.
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
@@ -36,3 +36,5 @@ def test_paged_reads_follow_a_unique_order(filename: str) -> None:
     assert rows("by_selector") == _ROWS_BY_ALL_COLUMNS
     assert sorted(rows("by_type_mp")) == _ROWS_BY_ALL_COLUMNS
     assert sorted(rows("by_selector_mp")) == _ROWS_BY_ALL_COLUMNS
+    assert [row_id for _, row_id in rows("by_selector_desc")] == list(range(12, 0, -1))
+    assert sorted(rows("by_type_random_mp")) == _ROWS_BY_ALL_COLUMNS

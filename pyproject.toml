@@ -35,6 +35,7 @@ dependencies = [
     "python-dotenv==1.0.1", # from dotenv import load_dotenv
     "requests==2.32.3", # import requests - Used for making HTTP requests
     "sqlalchemy==2.0.37", # from sqlalchemy import create_engine
+    "sqlglot>=26.0.0", # import sqlglot - reads a selector's own ORDER BY / row limit for RDBMS paging
     "xmltodict==0.14.2", # import xmltodict - Used for parsing XML data to Python dictionaries
     "pandas==2.2.3", # import pandas as pd - Used for data manipulation
     "toml>=0.10.2", # import toml

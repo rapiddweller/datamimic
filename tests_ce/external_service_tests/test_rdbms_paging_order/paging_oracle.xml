@@ -16,4 +16,9 @@
     <generate name="by_type_mp" source="sourceDB" distribution="ordered" type="page_rows" pageSize="3" numProcess="2" target="" />
     <generate name="by_selector_mp" source="sourceDB" distribution="ordered" selector="SELECT grp, id FROM page_rows"
               pageSize="3" numProcess="2" target="" />
+    <!-- the selector's own ORDER BY is its source order and must survive paging -->
+    <generate name="by_selector_desc" source="sourceDB" distribution="ordered"
+              selector="SELECT grp, id FROM page_rows ORDER BY id DESC" pageSize="5" target="" />
+    <!-- default distribution: every worker shuffles the full unpaged read, so it must arrive in one order -->
+    <generate name="by_type_random_mp" source="sourceDB" type="page_rows" pageSize="3" numProcess="2" target="" />
 </setup>

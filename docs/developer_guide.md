@@ -67,13 +67,21 @@ values, weights = load_weighted_values_try_dataset(
 ### Database Source Paging (TL;DR)
 
 Paged reads from an RDBMS source (`pageSize`, `numProcess`) use `OFFSET`/`LIMIT`, which is only
-stable under a unique total order. CE therefore always orders by a key (issue #228):
+stable under a deterministic order. CE therefore orders every paged read (issue #228). Unpaged full reads of a table source are ordered
+the same way, because `random`/`cumulated`/`unique` shuffle them per worker with one shared seed:
 
-- table source (`type=`): the primary key (all its columns), or every column when the table has none
-- `selector=`: every output column (`ORDER BY 1, 2, ..., n`), because an arbitrary query has no known key
+- table source (`type=`): the primary key (all its columns), a unique order; without a primary key,
+  every column, a canonical order (identical rows are interchangeable; collations that compare
+  different values as equal, e.g. case-insensitive, can still tie)
+- `selector=` with its own top-level `ORDER BY` (and no own `LIMIT`/`TOP`/`FETCH`): that order is the
+  source order and is kept; make it unique if pages must be stable
+- any other `selector=`: every output column (`ORDER BY 1, 2, ..., n`), because an arbitrary query has
+  no known key. The selector is read with `sqlglot` in the connection's dialect
 
-Pages are disjoint across pages and workers, so no shard manifest is needed and multiprocess reads
-stay safe. Keyset paging with shard leases for very large sources is an Enterprise feature.
+For a stable source snapshot, pages are disjoint across pages and workers, so no shard manifest is
+needed. Each page is its own query: rows inserted or deleted while a run pages through the source
+can still shift offsets (see `ChunkSourceReader`). Keyset paging with shard leases for very large
+sources is an Enterprise feature.
 Limitation: a keyless table or selector that returns a column type the database cannot sort
 (PostgreSQL `json`, Oracle `CLOB`, SQL Server `text`/`ntext`/`image`/`xml`) fails. Add a primary key,
 or select or cast those columns.
