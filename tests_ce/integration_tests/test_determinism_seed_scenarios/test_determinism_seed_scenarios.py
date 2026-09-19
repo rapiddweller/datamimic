@@ -121,6 +121,7 @@ def test_seeded_script_globals_replay_identically() -> None:
     assert first == second
     assert {row["now"] for row in first} == {"2025-01-01T12:00:00"}
     assert {row["today"] for row in first} == {"2025-01-01"}
+    assert {row["pd_now"] for row in first} == {"2025-01-01T12:00:00"}
     assert len({row["uuid_value"] for row in first}) == len(first)
     assert {(row["built_year"], row["now_type"], row["uuid_int"]) for row in first} == {(2020, "datetime", 5)}
 

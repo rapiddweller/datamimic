@@ -86,7 +86,7 @@ class Context(ABC):
         if "root" not in data_dict:
             data_dict["root"] = DotableDict(dict(content_tree))
 
-        eval_globals = expression_globals(self.rng, self.root.is_seeded)
+        eval_globals = expression_globals(self)
         try:
             result = eval(expr, eval_globals, data_dict)
 

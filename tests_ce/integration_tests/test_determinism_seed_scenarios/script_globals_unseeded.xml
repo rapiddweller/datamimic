@@ -1,4 +1,4 @@
-<setup multiprocessing="0">
+<setup>
     <!-- Unseeded twin of script_globals_seeded.xml: the same names stay genuinely random. -->
     <!-- datetime.date.today() is left out: without a seed it fails under the empty builtins (existing gap). -->
     <generate name="script_globals" count="5" target="">
