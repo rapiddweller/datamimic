@@ -51,11 +51,6 @@ ALLOWLIST: set[str] = {
     # GenIterContext.rng returns the random module when no seed is set
     # so call-time callers can use a single API without branching on None.
     "datamimic_ce/contexts/geniter_context.py",
-    # PasswordGenerator deliberately uses secrets.choice for the character
-    # picks; the final random.shuffle is the same intent (unpredictable
-    # output regardless of <setup rngSeed>). Determinism is explicitly
-    # not a contract for this generator.
-    "datamimic_ce/domains/common/literal_generators/password_generator.py",
 }
 
 # Callables on the ``random`` module that consume / mutate global RNG state.

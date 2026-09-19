@@ -265,16 +265,15 @@ Most test data tools produce random output. That breaks regression tests, audit 
 CE is deterministic by design and reproducible under defined conditions. Cross-machine byte-identical reproducibility is a stronger engineering target that is currently developed and verified more deeply in the Enterprise core.
 
 - **Same engine version + same model + same seed + same runtime = same output.** "Same runtime" means the same Python and dependency versions, operating system, timezone and platform encoding. Holds for the `generate_domain` facade, registered domain services, and seed-aware literal generators. Replay is verified per service on every CI run (same host, same runtime) via [`tests_ce/architecture/test_service_replay_determinism.py`](https://github.com/rapiddweller/datamimic/blob/development/tests_ce/architecture/test_service_replay_determinism.py).
-- **DSL-level seeding:** `<setup rngSeed="N">` makes the whole model deterministic — every seed-less `<variable entity="…">` derives a reproducible child RNG from it, and `<variable rngSeed="…">` overrides it for that block (no seed anywhere → wall-clock random). Verified by [`tests_ce/integration_tests/test_determinism_seed_scenarios`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/integration_tests/test_determinism_seed_scenarios). As of 4.0.0 the same seed also reaches standalone literal generators (`<key generator="…">`), typed/pattern keys, `DateTimeGenerator`, and cross-page `unique` picks.
-- **Cryptographic generators:** `PasswordGenerator`, `TokenGenerator` and `HashGenerator` intentionally use system entropy and do not replay under a seed.
+- **DSL-level seeding:** with `<setup rngSeed="N">` the same model produces the same data on every run (same Python, same machine): every generator, entity and script expression, including `random`, `uuid`, `fake` and the current date and time, which is fixed at `2025-01-01 12:00`. `<variable rngSeed="…">` overrides the seed for one block; without a seed every run is random. Proven by running every generator and script path in two separate processes: [`tests_ce/integration_tests/test_determinism_seed_scenarios`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/integration_tests/test_determinism_seed_scenarios).
 - **Verification scope:** epoch/timestamp conversions currently use the host's local timezone, and seeded output is not yet verified across operating systems, CPU architectures, Python versions or dependency versions.
 - **Source reads:** `distribution="ordered"` reads a data source in stable file order; `distribution="random"` shuffles but replays identically when `<setup rngSeed>` is set (without a seed the shuffle is non-deterministic by design, for privacy-maximized one-time deliveries). Deterministic shuffling across distributed / multi-process execution is EE.
-- **Content hash on every facade output.** `determinism_proof.content_hash` is a SHA-256 of the canonical result: equal hashes mean identical output. The hash alone is not re-executable lineage. Reproducing a result also depends on the model, inputs, runtime and dependency versions, which the proof does not currently record.
+- **Content hash on facade output.** `generate_domain(...)` returns `determinism_proof.content_hash`, a SHA-256 of the generated items: the same hash means the same data. It covers that one response and is returned to the caller, not stored.
 - **UUIDv5 entity identifiers** = stable across runs and machines.
 - **Single wall-clock SPOT** (`now_utc_naive()`); raw `datetime.now()` is forbidden in production code and the clock-drift architecture gate fails CI on any reintroduction.
 - **RNG/clock runtime SPOTs** in `datamimic_ce/domains/domain_core/runtime/`: `spawn_rng` (reproducible child-RNG derivation), `now_utc_naive`, and `resolve_clock`. The same contract vocabulary the Enterprise Platform enforces end-to-end.
 
-**The Enterprise Platform (EE) goes further:** beyond the CE contract, EE makes the whole execution environment deterministic — a configurable/frozen wall-clock (not just CE's fixed anchor), and deterministic `SAFE_GLOBALS` plus the Python `random` functions, so sandboxed script expressions and any stdlib `random` call replay identically as well.
+**The Enterprise Platform (EE) goes further:** beyond the CE contract, EE makes the whole execution environment deterministic — a configurable/frozen wall-clock (not just CE's fixed anchor), and script-expression randomness keyed per row, so sandboxed script expressions replay identically across distributed workers, as does any stdlib `random` call.
 
 ```python
 from datamimic_ce.domains.facade import generate_domain
@@ -310,7 +309,7 @@ assert card_a.bic == card_b.bic and card_a.card_number == card_b.card_number
 |---|---|---|
 | **Facade** (`generate_domain` registered domains) | ✅ replay-identical, CI-gated (same runtime) | ✅ byte-identical |
 | **Domain services** (direct use with seeded `rng=...`) | ✅ replay-identical, CI-gated (same runtime) | ✅ byte-identical |
-| **Literal generators** (seed-aware) | ✅ replay-identical (same runtime); Password / Token / Hash non-deterministic by design | ✅ byte-identical |
+| **Literal generators** | ✅ replay-identical (same runtime) | ✅ byte-identical |
 | **RNG / clock runtime SPOTs** | ✅ `spawn_rng`, `now_utc_naive`, `resolve_clock` | ✅ same contract, enforced end-to-end |
 | **Architecture gates in CI** | ✅ facade replay + service replay (every service) + clock drift | ✅ 5+ gates (RNG ownership, clock drift, DSL eval, seeded-mode propagation, dataset SPOT) |
 | **Custom XML pipelines** (seeded via `<setup rngSeed>`) | ✅ reproducible on the same runtime (single-process) | ✅ byte-identical, distributed |
@@ -525,7 +524,7 @@ response = generate_domain({
 # Same engine version + model + seed + runtime → same output, every run.
 ```
 
-**2. Deterministic data backend for AI agents and LLM tooling.** The CLI and Python API are the baseline surfaces for seeded, verifiable generation. The optional MCP adapter (`pip install "datamimic-ce[mcp]"`) exposes the canonical reference, scaffold, check, and bounded-run authoring operations. Generated domain-facade outputs include a `determinism_proof.content_hash`, so Python/CLI callers can re-execute on the same engine and runtime and check whether the data is identical — useful for agent regression tests and any workflow where the data an agent saw must be reconstructable.
+**2. Deterministic data backend for AI agents and LLM tooling.** The CLI and Python API are the baseline surfaces for seeded, verifiable generation. The optional MCP adapter (`pip install "datamimic-ce[mcp]"`) exposes the canonical reference, scaffold, check, and bounded-run authoring operations. Domain-facade outputs include a `determinism_proof.content_hash`, so Python callers can re-execute on the same engine and runtime and check whether the data is identical — useful for agent regression tests and any workflow where the data an agent saw must be reconstructable.
 
 **3. Pseudonymization of staging and QA exports.** Manual model in CE (XML pipeline), no scanner license required. Seeded mode for stable regression test data; non-seeded mode for one-time deliveries with maximized privacy posture. See the [Pseudonymization section above](#pseudonymization--ce-manual-model).
 

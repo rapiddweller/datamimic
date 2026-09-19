@@ -11,6 +11,8 @@ from pathlib import Path
 from random import Random
 from typing import Any
 
+from faker import Faker
+
 from datamimic_ce.clients.database_client import Client
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.demographic_context import DemographicContext
@@ -104,6 +106,7 @@ class SetupContext(Context):
         self._root_rng: Random | None = Random(seed) if seed is not None else None
         # Cached call-time rng — populated lazily on first ``.rng`` access.
         self._call_rng: Any = None
+        self._seeded_faker: Faker | None = None
 
     def derive_seeded_rng(self) -> Random | None:
         """Fork a reproducible child RNG from the model-wide root seed.
@@ -126,6 +129,14 @@ class SetupContext(Context):
             derived = self.derive_seeded_rng()
             self._call_rng = derived if derived is not None else random
         return self._call_rng
+
+    @property
+    def seeded_faker(self) -> Faker:
+        """The Faker behind ``fake`` in this run's seeded script expressions; one per run keeps runs
+        sharing a Python process from reseeding each other's instance."""
+        if self._seeded_faker is None:
+            self._seeded_faker = Faker()
+        return self._seeded_faker
 
     def __deepcopy__(self, memo):
         """
