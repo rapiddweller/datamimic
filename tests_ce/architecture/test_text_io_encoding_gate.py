@@ -6,15 +6,17 @@ Windows, UTF-8 on Linux/macOS). Such calls make every supported source
 and target format (CSV, JSON, XML, TXT, FCW, properties, scripts, ...)
 read or write different bytes per platform.
 
-Forbidden without an explicit ``encoding=`` argument:
+Forbidden without an explicit, non-``None`` ``encoding=`` argument:
 
 * ``open(path)`` / ``open(path, "r"|"w"|"a"|...)``
 * ``path.open(...)`` in text mode
 * ``path.read_text()`` / ``path.write_text(data)``
-* ``subprocess.run/Popen/check_output(..., text=True)``
+* ``subprocess.run/Popen/...(..., text=True)``, also when imported via
+  ``from subprocess import run``
 
-Binary mode (``"rb"``, ``"wb"``, ...) is exempt: bytes carry their own
-encoding (e.g. the XML prolog). Encoding values come from the existing
+Binary mode (``"rb"``, ``"wb"``, ...) is exempt: it bypasses Python's
+platform text encoding, and format-specific parsers (e.g. the XML prolog)
+handle encoding where applicable. Encoding values come from the existing
 SPOTs: the exporter's ``self.encoding`` or ``SetupContext.default_encoding``.
 """
 
@@ -42,14 +44,41 @@ def _mode(node: ast.Call, positional_index: int) -> str | None:
     return "r"
 
 
-def _has_kw(node: ast.Call, name: str) -> bool:
-    return any(kw.arg == name for kw in node.keywords)
+def _has_explicit_encoding(node: ast.Call) -> bool:
+    """``encoding=None`` falls back to the platform default, so it does not count."""
+    return any(
+        kw.arg == "encoding" and not (isinstance(kw.value, ast.Constant) and kw.value.value is None)
+        for kw in node.keywords
+    )
+
+
+def _subprocess_names(tree: ast.AST) -> set[str]:
+    """Names bound by ``from subprocess import run, Popen as P``."""
+    return {
+        alias.asname or alias.name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom) and node.module == "subprocess"
+        for alias in node.names
+        if alias.name in SUBPROCESS_FUNCS
+    }
+
+
+def _is_subprocess_call(func: ast.expr, imported: set[str]) -> bool:
+    if isinstance(func, ast.Name):
+        return func.id in imported
+    return (
+        isinstance(func, ast.Attribute)
+        and func.attr in SUBPROCESS_FUNCS
+        and isinstance(func.value, ast.Name)
+        and func.value.id == "subprocess"
+    )
 
 
 def _collect_callsites(tree: ast.AST) -> list[tuple[int, str]]:
     hits: list[tuple[int, str]] = []
+    imported_subprocess = _subprocess_names(tree)
     for node in ast.walk(tree):
-        if not isinstance(node, ast.Call) or _has_kw(node, "encoding"):
+        if not isinstance(node, ast.Call) or _has_explicit_encoding(node):
             continue
         func = node.func
         if isinstance(func, ast.Name) and func.id == "open":
@@ -66,14 +95,10 @@ def _collect_callsites(tree: ast.AST) -> list[tuple[int, str]]:
                 hits.append((node.lineno, ".open(...)"))
         elif isinstance(func, ast.Attribute) and func.attr in TEXT_IO_METHODS:
             hits.append((node.lineno, f".{func.attr}(...)"))
-        elif (
-            isinstance(func, ast.Attribute)
-            and func.attr in SUBPROCESS_FUNCS
-            and isinstance(func.value, ast.Name)
-            and func.value.id == "subprocess"
-            and any(kw.arg in {"text", "universal_newlines"} for kw in node.keywords)
+        elif _is_subprocess_call(func, imported_subprocess) and any(
+            kw.arg in {"text", "universal_newlines"} for kw in node.keywords
         ):
-            hits.append((node.lineno, f"subprocess.{func.attr}(..., text=True)"))
+            hits.append((node.lineno, "subprocess call with text=True"))
     return hits
 
 
