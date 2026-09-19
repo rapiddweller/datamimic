@@ -28,6 +28,7 @@ class SetupStatement(CompositeStatement):
         self._default_variable_prefix = model.default_variable_prefix
         self._default_variable_suffix = model.default_variable_suffix
         self._rng_seed = model.rng_seed
+        self._pseudonymization_key = model.pseudonymization_key
 
     @property
     def use_mp(self) -> bool | None:
@@ -76,3 +77,7 @@ class SetupStatement(CompositeStatement):
     @property
     def rng_seed(self) -> int | None:
         return self._rng_seed
+
+    @property
+    def pseudonymization_key(self) -> str | None:
+        return self._pseudonymization_key

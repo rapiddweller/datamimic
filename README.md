@@ -416,6 +416,15 @@ gives the same token in every run; without it each run gets a new random key:
 <key name="iban"  script="acc.iban" converter="MiddleMask(8, 4)" />
 ```
 
+For a stable external secret, reference a property instead of putting the key in the descriptor:
+
+```xml
+<setup pseudonymizationKey="{secrets.pseudonymization_key}">
+```
+
+The resolved property must contain at least 32 UTF-8 bytes. Keep it in the secret store and rotate it to
+intentionally change every `Hash` token; it affects pseudonymization only, not generator or distribution seeds.
+
 Available converters (13): `Mask`, `MiddleMask(start, end)`, `CutLength(n)`, `Substring(start, end)`, `JavaHash`, `RemoveNoneOrEmptyElement`,
 `Hash(type, format[, salt])`, `DateFormat(fmt)`, `Append`, `UpperCase`,
 `LowerCase`, `Date2Timestamp`, `Timestamp2Date`.

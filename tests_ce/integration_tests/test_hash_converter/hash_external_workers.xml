@@ -1,0 +1,6 @@
+<setup pseudonymizationKey="{secrets.pseudonymization_key}">
+    <generate name="hashed" count="10" target="" numProcess="2">
+        <key name="value" constant="max.mustermann@example.com"/>
+        <key name="token" script="value" converter="Hash('sha256','hex')"/>
+    </generate>
+</setup>

@@ -54,6 +54,15 @@ from datamimic_ce.utils.file_util import FileUtil
 
 
 class ParserUtil:
+    _PROPERTY_REFERENCE = re.compile(r"^\{[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_]+)*\}$")
+
+    @staticmethod
+    def property_reference(value: object) -> str | None:
+        if type(value) is not str:
+            return None
+        match = ParserUtil._PROPERTY_REFERENCE.fullmatch(value)
+        return match.group(0)[1:-1] if match is not None else None
+
     @staticmethod
     def get_element_tag_by_statement(stmt: Statement) -> str:
         if isinstance(stmt, ArrayStatement):
@@ -184,8 +193,8 @@ class ParserUtil:
 
         # Look up element's attributes defined as variable then evaluate them
         for key, value in attributes.items():
-            if type(value) is str and re.match(r"^\{[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z0-9_]+)*\}$", value) is not None:
-                prop_key = value[1:-1]
+            prop_key = ParserUtil.property_reference(value)
+            if prop_key is not None:
 
                 if "." not in prop_key:
                     # single-level prop_key

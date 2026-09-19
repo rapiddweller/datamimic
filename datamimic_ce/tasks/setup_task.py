@@ -61,7 +61,10 @@ class SetupTask:
             default_line_separator=self._setup_stmt.default_line_separator,
             default_source_scripted=self._setup_stmt.default_source_scripted,
             report_logging=self._setup_stmt.report_logging in (True, None),  # default value is True
-            run_seed=RunSeed.create(self._setup_stmt.rng_seed),
+            run_seed=RunSeed.create(
+                self._setup_stmt.rng_seed,
+                pseudonymization_key=self._setup_stmt.pseudonymization_key,
+            ),
         )
 
         for stmt in self._setup_stmt.sub_statements:

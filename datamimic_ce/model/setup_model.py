@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from datamimic_ce.constants.attribute_constants import (
     ATTR_DEFAULT_DATASET,
@@ -17,6 +17,7 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_DEFAULT_VARIABLE_SUFFIX,
     ATTR_MULTIPROCESSING,
     ATTR_NUM_PROCESS,
+    ATTR_PSEUDONYMIZATION_KEY,
     ATTR_REPORT_LOGGING,
     ATTR_RNG_SEED,
 )
@@ -95,6 +96,21 @@ class SetupModel(BaseModel):
         "reproducible. Omitting it means every run differs.",
         examples=[1, 12345],
     )
+    pseudonymization_key: str | None = Field(
+        None,
+        alias=ATTR_PSEUDONYMIZATION_KEY,
+        description=(
+            "External key reference used only by Hash pseudonymization. The XML value must reference a property; "
+            "the resolved key must contain at least 32 UTF-8 bytes."
+        ),
+    )
+
+    @field_validator("pseudonymization_key")
+    @classmethod
+    def _validate_pseudonymization_key(cls, value: str | None) -> str | None:
+        if value is not None and len(value.encode("utf-8")) < 32:
+            raise ValueError("pseudonymization key must contain at least 32 UTF-8 bytes")
+        return value
 
     @model_validator(mode="before")
     @classmethod
@@ -113,5 +129,6 @@ class SetupModel(BaseModel):
                 ATTR_DEFAULT_VARIABLE_SUFFIX,
                 ATTR_REPORT_LOGGING,
                 ATTR_RNG_SEED,
+                ATTR_PSEUDONYMIZATION_KEY,
             },
         )

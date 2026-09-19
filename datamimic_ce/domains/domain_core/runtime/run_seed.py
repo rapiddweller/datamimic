@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import secrets
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -21,10 +21,17 @@ class RunSeed:
 
     value: int | None
     run_entropy: bytes
+    external_pseudonymization_key: bytes | None = field(default=None, repr=False)
 
     @classmethod
-    def create(cls, value: int | None) -> RunSeed:
-        return cls(value=value, run_entropy=secrets.token_bytes(32))
+    def create(cls, value: int | None, pseudonymization_key: str | None = None) -> RunSeed:
+        return cls(
+            value=value,
+            run_entropy=secrets.token_bytes(32),
+            external_pseudonymization_key=(
+                pseudonymization_key.encode("utf-8") if pseudonymization_key is not None else None
+            ),
+        )
 
     @property
     def seeded(self) -> bool:
@@ -34,6 +41,10 @@ class RunSeed:
         """A 32-byte key for ``purpose``: replays with the seed, random per run without one."""
         material = str(self.value).encode() if self.value is not None else self.run_entropy
         return hashlib.sha256(purpose.encode() + b"|" + material).digest()
+
+    def pseudonymization_key(self) -> bytes:
+        """Return the external key or the existing per-run fallback for Hash."""
+        return self.external_pseudonymization_key or self.key_for("hash-converter")
 
     def int_for(self, purpose: str) -> int:
         """A non-negative 63-bit int for ``purpose``, keyed like :meth:`key_for`."""

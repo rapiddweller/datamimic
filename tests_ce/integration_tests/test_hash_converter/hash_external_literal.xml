@@ -1,0 +1,6 @@
+<setup pseudonymizationKey="not-a-property-reference-that-must-fail">
+    <generate name="hashed" count="1" target="">
+        <key name="value" constant="max.mustermann@example.com"/>
+        <key name="token" script="value" converter="Hash('sha256','hex')"/>
+    </generate>
+</setup>

@@ -7,6 +7,7 @@
 from pathlib import Path
 from xml.etree.ElementTree import Element
 
+from datamimic_ce.constants.attribute_constants import ATTR_PSEUDONYMIZATION_KEY
 from datamimic_ce.constants.element_constants import EL_SETUP
 from datamimic_ce.model.setup_model import SetupModel
 from datamimic_ce.parsers.parser_util import ParserUtil
@@ -33,6 +34,16 @@ class SetupParser(StatementParser):
         """
         # Parse sub elements
 
+        raw_key = self._element.get(ATTR_PSEUDONYMIZATION_KEY)
+        if raw_key is not None:
+            property_name = ParserUtil.property_reference(raw_key)
+            if property_name is None:
+                raise ValueError(f"{ATTR_PSEUDONYMIZATION_KEY} must reference a property")
+            resolved = ParserUtil.retrieve_element_attributes(
+                {ATTR_PSEUDONYMIZATION_KEY: raw_key}, self._properties
+            )[ATTR_PSEUDONYMIZATION_KEY]
+            if resolved == raw_key:
+                raise ValueError(f"{ATTR_PSEUDONYMIZATION_KEY} property '{property_name}' is missing")
         setup_stmt = SetupStatement(self.validate_attributes(SetupModel))
         sub_stmt_list = ParserUtil.parse_sub_elements(
             descriptor_dir,
