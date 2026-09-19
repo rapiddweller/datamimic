@@ -23,7 +23,18 @@ def test_encoder_handles_engine_value_types() -> None:
         "payload": b"\x01\x02",
     }
     out = json.loads(json.dumps(row, cls=DateTimeEncoder))
-    assert out["balance"] == 228956.4
+    assert out["balance"] == "228956.4"
     assert out["opened"] == "2025-03-01"
     assert out["booked_at"] == "2025-03-01T09:30:00"
     assert out["payload"]  # base64 text
+
+
+def test_encoder_preserves_decimal_text_and_native_json_numbers() -> None:
+    row = {"edge": Decimal("0.100000000000000005"), "count": 7, "ratio": 0.25}
+
+    out = json.loads(json.dumps(row, cls=DateTimeEncoder))
+
+    assert out == {"edge": "0.100000000000000005", "count": 7, "ratio": 0.25}
+    assert type(out["edge"]) is str
+    assert type(out["count"]) is int
+    assert type(out["ratio"]) is float

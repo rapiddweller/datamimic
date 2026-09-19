@@ -1,0 +1,6 @@
+<setup rngSeed="7">
+    <generate name="decimal_rows" count="1" target="JSON" exportUri="out">
+        <key name="amount" type="decimal" min="0.1" max="0.1"/>
+        <key name="sequence" type="int" min="7" max="7"/>
+    </generate>
+</setup>
