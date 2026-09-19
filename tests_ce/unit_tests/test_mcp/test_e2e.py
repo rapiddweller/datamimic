@@ -46,7 +46,7 @@ async def test_reference_and_check_delegate_canonical_contracts(anyio_backend: s
             "category": "expectation",
             "kind": "range",
             "required_fields": ["product", "field", "minimum", "maximum"],
-            "allowed_fields": ["kind", "product", "field", "minimum", "maximum"],
+            "allowed_fields": ["kind", "product", "list_field", "field", "minimum", "maximum"],
         } in authoring_content["variants"]
 
         field_reference = await client.call_tool(
