@@ -73,7 +73,7 @@ class ExecuteTask(SetupSubTask):
             ["bash", "-c", code],
             cwd=ctx.root.descriptor_dir,
             capture_output=True,
-            text=True,
+            encoding=ctx.root.default_encoding,
             check=False,
         )
         if result.returncode != 0:

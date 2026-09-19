@@ -434,7 +434,7 @@ class SetupContext(Context):
         self._report_logging = value
 
     @property
-    def default_encoding(self):
+    def default_encoding(self) -> str:
         return self._default_encoding
 
     def add_client(self, client_id: str, client: Client):

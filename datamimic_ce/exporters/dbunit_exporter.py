@@ -56,4 +56,4 @@ class DbUnitExporter(UnifiedBufferedExporter):
             attrs = "".join(f" {col}={quoteattr(str(value))}" for col, value in record.items() if value is not None)
             lines.append(f"    <{self._table}{attrs}/>")
         lines.append("</dataset>")
-        buffer_file.write_text("\n".join(lines) + "\n", encoding=self.encoding or "utf-8")
+        buffer_file.write_text("\n".join(lines) + "\n", encoding=self.encoding)
