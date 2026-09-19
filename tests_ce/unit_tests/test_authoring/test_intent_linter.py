@@ -316,3 +316,61 @@ def test_memstore_readback_rule_allows_consumer_only_derived_fields() -> None:
 
     assert result.verified is True
     assert not [item for item in result.diagnostics if item.rule == "DM406"]
+
+
+def _delivery_spec(*, parent_targets: list[dict[str, object]], child_targets: list[dict[str, object]]) -> dict:
+    return {
+        "version": "1",
+        "seed": 7,
+        "products": [
+            {
+                "kind": "generated",
+                "name": "customers",
+                "count": 2,
+                "targets": parent_targets,
+                "fields": [{"kind": "increment", "name": "id", "roles": [{"kind": "identifier"}]}],
+                "children": [
+                    {
+                        "kind": "generated",
+                        "name": "accounts",
+                        "count": 2,
+                        "targets": child_targets,
+                        "fields": [
+                            {
+                                "kind": "script",
+                                "name": "customer_id",
+                                "script": "parent.id",
+                                "roles": [{"kind": "foreign_key", "parent_product": "customers", "parent_field": "id"}],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ],
+    }
+
+
+_JSON = [{"kind": "file_export", "format": "JSON"}]
+
+
+def test_undelivered_child_of_an_exporting_parent_blocks_verification() -> None:
+    result = scaffold(ScaffoldRequest(spec=_delivery_spec(parent_targets=_JSON, child_targets=[])))
+
+    diagnostics = [item for item in result.diagnostics if item.rule == "DM407"]
+    assert [(item.name, item.path) for item in diagnostics] == [("accounts", "/products/0/children/0")]
+    assert result.acceptance is not None and result.acceptance.verified is True
+    assert result.verified is False
+
+
+def test_every_product_with_a_target_verifies() -> None:
+    result = scaffold(ScaffoldRequest(spec=_delivery_spec(parent_targets=_JSON, child_targets=_JSON)))
+
+    assert not [item for item in result.diagnostics if item.rule == "DM407"]
+    assert result.verified is True
+
+
+def test_spec_without_file_export_is_an_in_memory_model() -> None:
+    result = scaffold(ScaffoldRequest(spec=_delivery_spec(parent_targets=[], child_targets=[])))
+
+    assert not [item for item in result.diagnostics if item.rule == "DM407"]
+    assert result.verified is True
