@@ -236,7 +236,7 @@ jobs:
           datamimic --help
 
   facade_determinism_matrix:
-    name: Facade golden determinism on ${{ matrix.os }} (${{ matrix.timezone }})
+    name: Facade golden determinism on ${{ matrix.os }} Python ${{ matrix.python-version }} (${{ matrix.timezone }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -244,27 +244,40 @@ jobs:
         include:
           - os: ubuntu-22.04
             timezone: Etc/UTC
+            python-version: '3.11'
+          - os: ubuntu-22.04
+            timezone: Etc/UTC
+            python-version: '3.10'
+          - os: ubuntu-22.04
+            timezone: Etc/UTC
+            python-version: '3.12'
+          - os: ubuntu-22.04
+            timezone: Etc/UTC
+            python-version: '3.13'
           - os: ubuntu-22.04
             timezone: America/Los_Angeles
+            python-version: '3.11'
           - os: windows-latest
             timezone: UTC
+            python-version: '3.11'
           - os: windows-latest
             timezone: Pacific Standard Time
+            python-version: '3.11'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Set Up Python 3.11
+      - name: Set Up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: ${{ matrix.python-version }}
           architecture: x64
 
       - name: Install uv Package Manager
         uses: astral-sh/setup-uv@v8.1.0
 
       - name: Install dependencies
-        run: uv sync --python 3.11
+        run: uv sync --python ${{ matrix.python-version }}
 
       - name: Set host timezone (Unix)
         if: runner.os != 'Windows'
