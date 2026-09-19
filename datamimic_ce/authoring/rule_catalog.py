@@ -555,6 +555,19 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "</generate></generate></setup>",
         blocks_verification=True,
     ),
+    _rule_definition(
+        "DM408",
+        RuleSeverity.WARNING,
+        "Memstore target has no consumer",
+        "A product writes to a memstore that no source product reads, so the write is unobservable in the "
+        "authoring model.",
+        "Add a source product that reads the memstore, or remove the unused memstore target.",
+        "DerivedMemstoreFact.has_consumer from the validated compile plan.",
+        '{"kind":"generated","name":"users","targets":[{"kind":"memstore","id":"store"}]}',
+        '{"kind":"generated","name":"users","targets":[{"kind":"memstore","id":"store"}],'
+        '"fields":[{"kind":"increment","name":"id"}]}',
+        blocks_verification=True,
+    ),
 )
 
 _AUTHORING_RULE_DEFINITIONS_BY_ID = {definition.id: definition for definition in _AUTHORING_RULE_DEFINITIONS}

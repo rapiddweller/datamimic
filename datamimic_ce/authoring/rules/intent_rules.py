@@ -4,6 +4,7 @@ import json
 from collections.abc import Iterable
 
 from datamimic_ce.authoring.contracts import CompilePlan, MemstoreRelationshipPlan
+from datamimic_ce.authoring.derived_facts import derive_facts
 from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules.base import IntentLintContext, IntentRule
@@ -19,6 +20,7 @@ from datamimic_ce.authoring.spec import (
     ForeignKeyRole,
     GeneratedProduct,
     MemstoreSource,
+    MemstoreTarget,
     ProductIntent,
     ScriptField,
     SourceProduct,
@@ -139,8 +141,37 @@ class ProductMustHaveDeliveryTargetRule(IntentRule):
             )
 
 
+class MemstoreTargetMustHaveConsumerRule(IntentRule):
+    definition = authoring_rule_definition("DM408")
+
+    def check(self, ctx: IntentLintContext, spec: AuthoringSpecV1, plan: CompilePlan) -> Iterable[Diagnostic]:
+        facts = {(fact.producer_product, fact.id): fact for fact in derive_facts(plan).memstores}
+        products: list[tuple[str, ProductIntent]] = []
+        for product_index, root_product in enumerate(spec.products):
+            products.append((f"/products/{product_index}", root_product))
+            if isinstance(root_product, GeneratedProduct):
+                products += [
+                    (f"/products/{product_index}/children/{child_index}", child)
+                    for child_index, child in enumerate(root_product.children)
+                ]
+        for product_path, entry in products:
+            for target_index, target in enumerate(entry.targets):
+                if not isinstance(target, MemstoreTarget):
+                    continue
+                fact = facts[(entry.name, target.id)]
+                if fact.has_consumer:
+                    continue
+                yield ctx.diag(
+                    MemstoreTargetMustHaveConsumerRule,
+                    path=f"{product_path}/targets/{target_index}",
+                    name=target.id,
+                    evidence=f"{entry.name} writes memstore '{target.id}', but no product reads it",
+                )
+
+
 RULES: tuple[type[IntentRule], ...] = (
     NestedForeignKeyMustCopyParentRule,
     MemstoreReadbackFieldMustCopySourceRule,
     ProductMustHaveDeliveryTargetRule,
+    MemstoreTargetMustHaveConsumerRule,
 )
