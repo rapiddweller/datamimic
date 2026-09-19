@@ -619,6 +619,7 @@ ProductIntentUnion = Annotated[
 class ExactCountExpectation(IntentModel):
     kind: Literal[ExpectationIntentKind.EXACT_COUNT] = ExpectationIntentKind.EXACT_COUNT
     product: str = Field(min_length=1)
+    list_field: str | None = Field(default=None, min_length=1)
     count: NonNegativeStrictInt = Field(
         json_schema_extra={INTENT_REPAIR_ALIASES_SCHEMA_KEY: ["exact_count"]},
     )
@@ -634,6 +635,7 @@ class PerParentCountExpectation(IntentModel):
 class UniqueExpectation(IntentModel):
     kind: Literal[ExpectationIntentKind.UNIQUE] = ExpectationIntentKind.UNIQUE
     product: str = Field(min_length=1)
+    list_field: str | None = Field(default=None, min_length=1)
     field: str = Field(min_length=1)
     scope: Literal["global", "per_parent"] = "global"
 
@@ -649,6 +651,7 @@ class ForeignKeyExpectation(IntentModel):
 class AllowedValuesExpectation(IntentModel):
     kind: Literal[ExpectationIntentKind.ALLOWED_VALUES] = ExpectationIntentKind.ALLOWED_VALUES
     product: str = Field(min_length=1)
+    list_field: str | None = Field(default=None, min_length=1)
     field: str = Field(min_length=1)
     values: tuple[str, ...] = Field(
         min_length=1,
@@ -659,6 +662,7 @@ class AllowedValuesExpectation(IntentModel):
 class RangeExpectation(IntentModel):
     kind: Literal[ExpectationIntentKind.RANGE] = ExpectationIntentKind.RANGE
     product: str = Field(min_length=1)
+    list_field: str | None = Field(default=None, min_length=1)
     field: str = Field(min_length=1)
     minimum: Decimal
     maximum: Decimal
@@ -693,6 +697,7 @@ class _IntentGraphIndex:
     def __init__(self, products: tuple[ProductIntentUnion, ...]) -> None:
         self.products = _intent_products(products)
         self.fields = _intent_fields(self.products)
+        self.nested_fields = _intent_nested_fields(self.products)
         self.nested_edges = _intent_nested_edges(products)
 
     def require_product(self, name: str, context: str) -> None:
@@ -703,6 +708,18 @@ class _IntentGraphIndex:
         self.require_product(product, context)
         if field not in self.fields[product]:
             raise ValueError(f"{context} references unknown field '{field}' on product '{product}'")
+
+    def require_nested_list(self, product: str, list_field: str, context: str) -> None:
+        self.require_product(product, context)
+        if list_field not in self.nested_fields[product]:
+            raise ValueError(f"{context} references unknown nested_list field '{product}.{list_field}'")
+
+    def require_nested_inner_field(self, product: str, list_field: str, field: str, context: str) -> None:
+        self.require_nested_list(product, list_field, context)
+        if field not in {item.name for item in self.nested_fields[product][list_field].fields}:
+            raise ValueError(
+                f"{context} references unknown field '{field}' in nested_list '{product}.{list_field}'"
+            )
 
 
 def _intent_products(
@@ -726,6 +743,15 @@ def _intent_fields(
     products: dict[str, ProductIntent | NestedGeneratedProduct],
 ) -> dict[str, set[str]]:
     return {name: {field.name for field in product.fields} for name, product in products.items()}
+
+
+def _intent_nested_fields(
+    products: dict[str, ProductIntent | NestedGeneratedProduct],
+) -> dict[str, dict[str, NestedListField]]:
+    return {
+        name: {field.name: field for field in product.fields if isinstance(field, NestedListField)}
+        for name, product in products.items()
+    }
 
 
 def _intent_nested_edges(
@@ -832,6 +858,8 @@ def _validate_expectation(
     context = f"{expectation.kind} expectation"
     if isinstance(expectation, ExactCountExpectation | RowConditionExpectation):
         index.require_product(expectation.product, context)
+        if isinstance(expectation, ExactCountExpectation) and expectation.list_field is not None:
+            index.require_nested_list(expectation.product, expectation.list_field, context)
     elif isinstance(expectation, PerParentCountExpectation):
         index.require_product(expectation.parent_product, context)
         index.require_product(expectation.child_product, context)
@@ -841,7 +869,15 @@ def _validate_expectation(
                 f"'{expectation.parent_product}' and '{expectation.child_product}'"
             )
     elif isinstance(expectation, UniqueExpectation | AllowedValuesExpectation | RangeExpectation):
-        index.require_field(expectation.product, expectation.field, context)
+        if expectation.list_field is None:
+            index.require_field(expectation.product, expectation.field, context)
+        else:
+            index.require_nested_inner_field(
+                expectation.product,
+                expectation.list_field,
+                expectation.field,
+                context,
+            )
     else:
         index.require_field(expectation.child_product, expectation.child_field, context)
         index.require_field(expectation.parent_product, expectation.parent_field, context)

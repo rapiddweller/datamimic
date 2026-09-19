@@ -460,7 +460,7 @@ def test_compact_authoring_reference_includes_variant_field_summaries() -> None:
             "category": "expectation",
             "kind": "exact_count",
             "required_fields": ["product", "count"],
-            "allowed_fields": ["kind", "product", "count"],
+            "allowed_fields": ["kind", "product", "list_field", "count"],
         }
     )
     assert exact_count["kind"] == "exact_count"

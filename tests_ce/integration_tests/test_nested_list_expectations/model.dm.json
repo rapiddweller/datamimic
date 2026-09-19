@@ -1,0 +1,77 @@
+{
+  "version": "1",
+  "seed": 11,
+  "products": [
+    {
+      "kind": "generated",
+      "name": "orders",
+      "count": 2,
+      "fields": [
+        {
+          "kind": "increment",
+          "name": "order_id"
+        },
+        {
+          "kind": "nested_list",
+          "name": "items",
+          "minimum_count": 2,
+          "maximum_count": 2,
+          "fields": [
+            {
+              "kind": "increment",
+              "name": "line_no"
+            },
+            {
+              "kind": "int_range",
+              "name": "amount",
+              "minimum": 10,
+              "maximum": 20
+            },
+            {
+              "kind": "values",
+              "name": "status",
+              "values": ["open", "closed"]
+            }
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "kind": "file_export",
+          "format": "JSON",
+          "export_uri": "out"
+        }
+      ]
+    }
+  ],
+  "expectations": [
+    {
+      "kind": "exact_count",
+      "product": "orders",
+      "list_field": "items",
+      "count": 4
+    },
+    {
+      "kind": "unique",
+      "product": "orders",
+      "list_field": "items",
+      "field": "line_no",
+      "scope": "per_parent"
+    },
+    {
+      "kind": "range",
+      "product": "orders",
+      "list_field": "items",
+      "field": "amount",
+      "minimum": 10,
+      "maximum": 20
+    },
+    {
+      "kind": "allowed_values",
+      "product": "orders",
+      "list_field": "items",
+      "field": "status",
+      "values": ["open", "closed"]
+    }
+  ]
+}

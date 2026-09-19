@@ -1276,6 +1276,7 @@ class ExactCountAcceptanceResult(AcceptanceResultBase):
     product: str
     expected_count: int
     observed_count: int | None
+    list_field: str | None = None
 
 
 class PerParentCountAcceptanceResult(AcceptanceResultBase):
@@ -1296,6 +1297,7 @@ class UniqueAcceptanceResult(AcceptanceResultBase):
     observed_count: int | None
     distinct_count: int | None
     duplicate_values: list[str] = Field(default_factory=list)
+    list_field: str | None = None
 
 
 class ForeignKeyAcceptanceResult(AcceptanceResultBase):
@@ -1315,6 +1317,7 @@ class AllowedValuesAcceptanceResult(AcceptanceResultBase):
     allowed_values: list[str]
     observed_count: int | None
     unexpected_values: list[str] = Field(default_factory=list)
+    list_field: str | None = None
 
 
 class RangeAcceptanceResult(AcceptanceResultBase):
@@ -1326,6 +1329,7 @@ class RangeAcceptanceResult(AcceptanceResultBase):
     observed_minimum: str | None = None
     observed_maximum: str | None = None
     violating_rows: list[int] = Field(default_factory=list)
+    list_field: str | None = None
 
 
 class RowConditionAcceptanceResult(AcceptanceResultBase):

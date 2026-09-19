@@ -74,6 +74,7 @@ _BOOLEAN_OPERANDS_ERROR = "boolean operators require boolean operands"
 class _Exact:
     product: str
     count: int
+    list_field: str | None = None
 
 
 @dataclass(frozen=True)
@@ -88,6 +89,7 @@ class _Unique:
     product: str
     field: str
     scope: Literal["global", "per_parent"]
+    list_field: str | None = None
 
 
 @dataclass(frozen=True)
@@ -103,6 +105,7 @@ class _AllowedValues:
     product: str
     field: str
     values: tuple[str, ...]
+    list_field: str | None = None
 
 
 @dataclass(frozen=True)
@@ -111,6 +114,7 @@ class _Range:
     field: str
     minimum: Decimal
     maximum: Decimal
+    list_field: str | None = None
 
 
 @dataclass(frozen=True)
@@ -194,7 +198,7 @@ def _intent_expectations(expectations: Iterable[ExpectationIntent]) -> list[_Exp
     result: list[_Expectation] = []
     for expectation in expectations:
         if isinstance(expectation, ExactCountExpectation):
-            result.append(_Exact(expectation.product, expectation.count))
+            result.append(_Exact(expectation.product, expectation.count, expectation.list_field))
         elif isinstance(expectation, PerParentCountExpectation):
             result.append(
                 _PerParent(
@@ -204,7 +208,7 @@ def _intent_expectations(expectations: Iterable[ExpectationIntent]) -> list[_Exp
                 )
             )
         elif isinstance(expectation, UniqueExpectation):
-            result.append(_Unique(expectation.product, expectation.field, expectation.scope))
+            result.append(_Unique(expectation.product, expectation.field, expectation.scope, expectation.list_field))
         elif isinstance(expectation, ForeignKeyExpectation):
             result.append(
                 _ForeignKey(
@@ -215,7 +219,9 @@ def _intent_expectations(expectations: Iterable[ExpectationIntent]) -> list[_Exp
                 )
             )
         elif isinstance(expectation, AllowedValuesExpectation):
-            result.append(_AllowedValues(expectation.product, expectation.field, expectation.values))
+            result.append(
+                _AllowedValues(expectation.product, expectation.field, expectation.values, expectation.list_field)
+            )
         elif isinstance(expectation, RangeExpectation):
             result.append(
                 _Range(
@@ -223,6 +229,7 @@ def _intent_expectations(expectations: Iterable[ExpectationIntent]) -> list[_Exp
                     expectation.field,
                     expectation.minimum,
                     expectation.maximum,
+                    expectation.list_field,
                 )
             )
         elif isinstance(expectation, RowConditionExpectation):
@@ -285,6 +292,45 @@ def _rows(
             return None, f"captured row {index} of '{product}' is not an object"
         rows.append(row)
     return tuple(rows), None
+
+
+@dataclass(frozen=True)
+class _RowSelection:
+    rows: tuple[Mapping[str, object], ...]
+    per_root: tuple[tuple[Mapping[str, object], ...], ...]
+
+
+def _select_rows(
+    captured: CapturedProducts,
+    product: str,
+    list_field: str | None,
+) -> tuple[_RowSelection | None, str | None]:
+    rows, error = _rows(captured, product)
+    if rows is None:
+        return None, error
+    if list_field is None:
+        return _RowSelection(rows=rows, per_root=(rows,)), None
+
+    nested_rows: list[Mapping[str, object]] = []
+    per_root: list[tuple[Mapping[str, object], ...]] = []
+    for root_index, row in enumerate(rows):
+        if list_field not in row:
+            return None, f"nested_list field '{product}.{list_field}' is missing in captured row {root_index}"
+        value = row[list_field]
+        if not isinstance(value, list):
+            return None, f"nested_list field '{product}.{list_field}' is not a list in captured row {root_index}"
+        selected: list[Mapping[str, object]] = []
+        for item_index, item in enumerate(value):
+            if not isinstance(item, Mapping):
+                return None, (
+                    f"nested_list field '{product}.{list_field}' item {item_index} "
+                    f"in captured row {root_index} is not an object"
+                )
+            selected.append(item)
+        root_rows = tuple(selected)
+        per_root.append(root_rows)
+        nested_rows.extend(root_rows)
+    return _RowSelection(rows=tuple(nested_rows), per_root=tuple(per_root)), None
 
 
 def _values(
@@ -446,17 +492,18 @@ def _exact_result(
     source: AcceptanceSource,
     captured: CapturedProducts,
 ) -> ExactCountAcceptanceResult:
-    product = captured.get(expectation.product)
-    observed = len(product.rows) if product is not None else None
-    if product is None:
+    selected, error = _select_rows(captured, expectation.product, expectation.list_field)
+    if selected is None:
         return ExactCountAcceptanceResult(
             status=AcceptanceStatus.UNEVALUABLE,
             source=source,
-            message=f"captured product '{expectation.product}' is missing",
+            message=str(error),
             product=expectation.product,
             expected_count=expectation.count,
             observed_count=None,
+            list_field=expectation.list_field,
         )
+    observed = len(selected.rows)
     passed = observed == expectation.count
     return ExactCountAcceptanceResult(
         status=AcceptanceStatus.PASS if passed else AcceptanceStatus.FAIL,
@@ -469,6 +516,7 @@ def _exact_result(
         product=expectation.product,
         expected_count=expectation.count,
         observed_count=observed,
+        list_field=expectation.list_field,
     )
 
 
@@ -519,8 +567,8 @@ def _unique_result(
     plan: CompilePlan,
     captured: CapturedProducts,
 ) -> UniqueAcceptanceResult:
-    rows, error = _rows(captured, expectation.product)
-    if rows is None:
+    selected, error = _select_rows(captured, expectation.product, expectation.list_field)
+    if selected is None:
         return UniqueAcceptanceResult(
             status=AcceptanceStatus.UNEVALUABLE,
             source=source,
@@ -530,8 +578,9 @@ def _unique_result(
             scope=expectation.scope,
             observed_count=None,
             distinct_count=None,
+            list_field=expectation.list_field,
         )
-    values, error = _values(rows, product=expectation.product, field=expectation.field)
+    values, error = _values(selected.rows, product=expectation.product, field=expectation.field)
     if values is None:
         return UniqueAcceptanceResult(
             status=AcceptanceStatus.UNEVALUABLE,
@@ -540,15 +589,16 @@ def _unique_result(
             product=expectation.product,
             field=expectation.field,
             scope=expectation.scope,
-            observed_count=len(rows),
+            observed_count=len(selected.rows),
             distinct_count=None,
+            list_field=expectation.list_field,
         )
     if expectation.scope == "global":
         duplicates, distinct_count = _global_unique_evidence(values)
     else:
-        duplicates, distinct_count, scope_error = _per_parent_unique_evidence(expectation, plan, captured)
+        duplicates, distinct_count, scope_error = _per_parent_unique_evidence(expectation, plan, captured, selected)
         if scope_error is not None:
-            return _unevaluable_unique_result(expectation, source, len(rows), scope_error)
+            return _unevaluable_unique_result(expectation, source, len(selected.rows), scope_error)
     passed = not duplicates
     return UniqueAcceptanceResult(
         status=AcceptanceStatus.PASS if passed else AcceptanceStatus.FAIL,
@@ -557,9 +607,10 @@ def _unique_result(
         product=expectation.product,
         field=expectation.field,
         scope=expectation.scope,
-        observed_count=len(rows),
+        observed_count=len(selected.rows),
         distinct_count=distinct_count,
         duplicate_values=duplicates[:20],
+        list_field=expectation.list_field,
     )
 
 
@@ -571,7 +622,22 @@ def _per_parent_unique_evidence(
     expectation: _Unique,
     plan: CompilePlan,
     captured: CapturedProducts,
+    selected: _RowSelection,
 ) -> tuple[list[str], int, str | None]:
+    if expectation.list_field is not None:
+        nested_duplicates: list[str] = []
+        nested_distinct_count = 0
+        for root_index, group_rows in enumerate(selected.per_root):
+            group_values, error = _values(
+                group_rows,
+                product=expectation.product,
+                field=expectation.field,
+            )
+            if group_values is None:
+                return [], 0, str(error)
+            nested_duplicates.extend(f"root_row={root_index}:{value}" for value in _duplicates(group_values))
+            nested_distinct_count += len({_display(value) for value in group_values})
+        return nested_duplicates, nested_distinct_count, None
     product_plan = next(
         (item for item in plan.products if item.name == expectation.product),
         None,
@@ -589,9 +655,9 @@ def _per_parent_unique_evidence(
     groups, _child_field, _parent_field = grouped
     duplicates: list[str] = []
     distinct_count = 0
-    for parent, group_rows in sorted(groups.items()):
+    for parent, parent_rows in sorted(groups.items()):
         group_values, error = _values(
-            tuple(group_rows),
+            tuple(parent_rows),
             product=expectation.product,
             field=expectation.field,
         )
@@ -617,6 +683,7 @@ def _unevaluable_unique_result(
         scope=expectation.scope,
         observed_count=observed_count,
         distinct_count=None,
+        list_field=expectation.list_field,
     )
 
 
@@ -697,20 +764,16 @@ def _allowed_values_result(
     source: AcceptanceSource,
     captured: CapturedProducts,
 ) -> AllowedValuesAcceptanceResult:
-    rows, error = _rows(captured, expectation.product)
-    values = (
-        None
-        if rows is None
-        else _values(
-            rows,
-            product=expectation.product,
-            field=expectation.field,
-        )[0]
-    )
-    if rows is None or values is None:
-        if rows is not None:
+    selected, error = _select_rows(captured, expectation.product, expectation.list_field)
+    values = None if selected is None else _values(
+        selected.rows,
+        product=expectation.product,
+        field=expectation.field,
+    )[0]
+    if selected is None or values is None:
+        if selected is not None:
             _ignored, error = _values(
-                rows,
+                selected.rows,
                 product=expectation.product,
                 field=expectation.field,
             )
@@ -721,7 +784,8 @@ def _allowed_values_result(
             product=expectation.product,
             field=expectation.field,
             allowed_values=list(expectation.values),
-            observed_count=None if rows is None else len(rows),
+            observed_count=None if selected is None else len(selected.rows),
+            list_field=expectation.list_field,
         )
     allowed = set(expectation.values)
     unexpected = sorted({repr(value) for value in values if not isinstance(value, str) or value not in allowed})
@@ -734,6 +798,7 @@ def _allowed_values_result(
         allowed_values=list(expectation.values),
         observed_count=len(values),
         unexpected_values=unexpected[:20],
+        list_field=expectation.list_field,
     )
 
 
@@ -742,20 +807,16 @@ def _range_result(
     source: AcceptanceSource,
     captured: CapturedProducts,
 ) -> RangeAcceptanceResult:
-    rows, error = _rows(captured, expectation.product)
-    values = (
-        None
-        if rows is None
-        else _values(
-            rows,
-            product=expectation.product,
-            field=expectation.field,
-        )[0]
-    )
-    if rows is None or values is None:
-        if rows is not None:
+    selected, error = _select_rows(captured, expectation.product, expectation.list_field)
+    values = None if selected is None else _values(
+        selected.rows,
+        product=expectation.product,
+        field=expectation.field,
+    )[0]
+    if selected is None or values is None:
+        if selected is not None:
             _ignored, error = _values(
-                rows,
+                selected.rows,
                 product=expectation.product,
                 field=expectation.field,
             )
@@ -767,6 +828,7 @@ def _range_result(
             field=expectation.field,
             expected_minimum=str(expectation.minimum),
             expected_maximum=str(expectation.maximum),
+            list_field=expectation.list_field,
         )
     decimals: list[Decimal] = []
     try:
@@ -784,6 +846,7 @@ def _range_result(
             field=expectation.field,
             expected_minimum=str(expectation.minimum),
             expected_maximum=str(expectation.maximum),
+            list_field=expectation.list_field,
         )
     violations = [
         index for index, value in enumerate(decimals) if value < expectation.minimum or value > expectation.maximum
@@ -799,6 +862,7 @@ def _range_result(
         observed_minimum=str(min(decimals)) if decimals else None,
         observed_maximum=str(max(decimals)) if decimals else None,
         violating_rows=violations[:20],
+        list_field=expectation.list_field,
     )
 
 
@@ -1463,11 +1527,9 @@ def _incomplete_result(
     return result.with_capture_completeness(evidence)
 
 
-def _captured_count(captured: CapturedProducts, product: str) -> int | None:
-    capture = captured.get(product)
-    if capture is None:
-        return None
-    return len(capture.rows)
+def _captured_count(captured: CapturedProducts, product: str, list_field: str | None = None) -> int | None:
+    selected, _error = _select_rows(captured, product, list_field)
+    return None if selected is None else len(selected.rows)
 
 
 def _incomplete_result_without_evidence(
@@ -1483,7 +1545,8 @@ def _incomplete_result_without_evidence(
             message=message,
             product=expectation.product,
             expected_count=expectation.count,
-            observed_count=_captured_count(captured, expectation.product),
+            observed_count=_captured_count(captured, expectation.product, expectation.list_field),
+            list_field=expectation.list_field,
         )
     if isinstance(expectation, _PerParent):
         return PerParentCountAcceptanceResult(
@@ -1502,8 +1565,9 @@ def _incomplete_result_without_evidence(
             product=expectation.product,
             field=expectation.field,
             scope=expectation.scope,
-            observed_count=_captured_count(captured, expectation.product),
+            observed_count=_captured_count(captured, expectation.product, expectation.list_field),
             distinct_count=None,
+            list_field=expectation.list_field,
         )
     if isinstance(expectation, _ForeignKey):
         return ForeignKeyAcceptanceResult(
@@ -1524,7 +1588,8 @@ def _incomplete_result_without_evidence(
             product=expectation.product,
             field=expectation.field,
             allowed_values=list(expectation.values),
-            observed_count=_captured_count(captured, expectation.product),
+            observed_count=_captured_count(captured, expectation.product, expectation.list_field),
+            list_field=expectation.list_field,
         )
     if isinstance(expectation, _Range):
         return RangeAcceptanceResult(
@@ -1535,6 +1600,7 @@ def _incomplete_result_without_evidence(
             field=expectation.field,
             expected_minimum=str(expectation.minimum),
             expected_maximum=str(expectation.maximum),
+            list_field=expectation.list_field,
         )
     if isinstance(expectation, _RowCondition):
         return RowConditionAcceptanceResult(

@@ -1,0 +1,29 @@
+{
+  "version": "1",
+  "products": [
+    {
+      "kind": "generated",
+      "name": "orders",
+      "count": 1,
+      "fields": [
+        {
+          "kind": "nested_list",
+          "name": "items",
+          "minimum_count": 1,
+          "maximum_count": 1,
+          "fields": [{"kind": "increment", "name": "line_no"}]
+        }
+      ]
+    }
+  ],
+  "expectations": [
+    {
+      "kind": "range",
+      "product": "orders",
+      "list_field": "items",
+      "field": "missing_amount",
+      "minimum": 1,
+      "maximum": 2
+    }
+  ]
+}
