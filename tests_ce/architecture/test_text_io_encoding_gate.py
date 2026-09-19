@@ -96,7 +96,10 @@ def _collect_callsites(tree: ast.AST) -> list[tuple[int, str]]:
         elif isinstance(func, ast.Attribute) and func.attr in TEXT_IO_METHODS:
             hits.append((node.lineno, f".{func.attr}(...)"))
         elif _is_subprocess_call(func, imported_subprocess) and any(
-            kw.arg in {"text", "universal_newlines"} for kw in node.keywords
+            # text=False / universal_newlines=False means bytes, so only a (possibly) true value is text I/O
+            kw.arg in {"text", "universal_newlines"}
+            and not (isinstance(kw.value, ast.Constant) and kw.value.value is False)
+            for kw in node.keywords
         ):
             hits.append((node.lineno, "subprocess call with text=True"))
     return hits
