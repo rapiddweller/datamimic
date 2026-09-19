@@ -257,7 +257,7 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           . .venv/bin/activate
-          uv run pytest tests_ce/unit_tests/ --cov --cov-report=xml
+          uv run pytest tests_ce/unit_tests/ tests_ce/architecture/test_facade_determinism.py --cov --cov-report=xml
         shell: bash
       - name: Upload coverage report
         uses: actions/upload-artifact@v6
