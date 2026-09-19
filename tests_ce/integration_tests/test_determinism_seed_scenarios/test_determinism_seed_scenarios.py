@@ -19,6 +19,9 @@ The three models differ only in their seed wiring:
    (the variable seed overrides the setup root; a seed-less variable follows it).
 3. ``no_seed.xml``                 — no seed anywhere               -> two runs differ.
 
+Hand-written models: ``dsl_constructs_seeded.xml`` (non-entity DSL constructs) and
+``script_globals_seeded.xml`` / ``script_globals_unseeded.xml`` (stdlib names inside script expressions).
+
 Regenerate the committed models after adding/removing an entity::
 
     python tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py
@@ -108,6 +111,25 @@ def test_dsl_constructs_replay_identically() -> None:
     second = _run(_TEST_DIR, "dsl_constructs_seeded.xml")
     assert first, "expected dsl_constructs_seeded.xml to produce entity blocks"
     assert first == second
+
+
+def test_seeded_script_globals_replay_identically() -> None:
+    """random / uuid.uuid4 / datetime now+today / fake inside script expressions replay under
+    <setup rngSeed>; the clock is the deterministic anchor; pass-through members keep working."""
+    first = _run(_TEST_DIR, "script_globals_seeded.xml")["script_globals"]
+    second = _run(_TEST_DIR, "script_globals_seeded.xml")["script_globals"]
+    assert first == second
+    assert {row["now"] for row in first} == {"2025-01-01T12:00:00"}
+    assert {row["today"] for row in first} == {"2025-01-01"}
+    assert len({row["uuid_value"] for row in first}) == len(first)
+    assert {(row["built_year"], row["now_type"], row["uuid_int"]) for row in first} == {(2020, "datetime", 5)}
+
+
+def test_unseeded_script_globals_stay_random() -> None:
+    first = _run(_TEST_DIR, "script_globals_unseeded.xml")["script_globals"]
+    second = _run(_TEST_DIR, "script_globals_unseeded.xml")["script_globals"]
+    assert [row["uuid_value"] for row in first] != [row["uuid_value"] for row in second]
+    assert [row["rand_int"] for row in first] != [row["rand_int"] for row in second]
 
 
 if __name__ == "__main__":

@@ -1,0 +1,16 @@
+<setup multiprocessing="0">
+    <!-- Unseeded twin of script_globals_seeded.xml: the same names stay genuinely random. -->
+    <!-- datetime.date.today() is left out: without a seed it fails under the empty builtins (existing gap). -->
+    <generate name="script_globals" count="5" target="">
+        <key name="rand_int" script="random.randint(1, 10**9)"/>
+        <key name="rand_choice" script="random.choice(['a', 'b', 'c', 'd', 'e', 'f'])"/>
+        <key name="uuid_value" script="str(uuid.uuid4())"/>
+        <key name="now" script="datetime.datetime.now().isoformat()"/>
+        <key name="name" script="fake.name()"/>
+        <key name="generated" generator="IntegerGenerator(min=1, max=1000000000)"/>
+        <!-- pass-through: constructors and non-stochastic members keep working -->
+        <key name="built_year" script="datetime.datetime(2020, 1, 2).year"/>
+        <key name="now_type" script="type(datetime.datetime.now()).__name__"/>
+        <key name="uuid_int" script="uuid.UUID(int=5).int"/>
+    </generate>
+</setup>
