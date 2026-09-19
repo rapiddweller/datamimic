@@ -417,8 +417,9 @@ In CE, PII fields are identified and modeled manually in the XML pipeline:
 </setup>
 ```
 
-Built-in converters can additionally transform a key's value — e.g. irreversibly
-hash the original instead of replacing it, or partially mask it:
+Built-in converters can additionally transform a key's value — e.g. replace the original
+with a keyed hash, or partially mask it. `Hash` uses `<setup rngSeed>` as its key, so the same value
+gives the same token in every run; without it each run gets a new random key:
 
 ```xml
 <key name="email" script="p.email" converter="Hash('sha256','hex')" />

@@ -1,0 +1,9 @@
+<setup rngSeed="43">
+    <!-- A different rngSeed is a different key: every token changes. -->
+    <generate name="hashed" count="10" target="">
+        <key name="email" constant="max.mustermann@example.com"/>
+        <key name="token" script="email" converter="Hash('sha256','hex')"/>
+        <key name="token_again" script="email" converter="Hash('sha256','hex')"/>
+        <key name="token_base64" script="email" converter="Hash('sha256','base64')"/>
+    </generate>
+</setup>

@@ -5,13 +5,19 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+from collections.abc import Callable
+from typing import Any
+
 from datamimic_ce.contexts.context import Context
+from datamimic_ce.converter.custom_converter import CustomConverter
 from datamimic_ce.utils.string_util import StringUtil
 
 
 class ObjectUtil:
     @staticmethod
-    def create_instance_from_constructor_str(context: Context, constructor_str: str, class_dict: dict[str, type]):
+    def create_instance_from_constructor_str(
+        context: Context, constructor_str: str, class_dict: dict[str, Callable[..., Any]]
+    ):
         """
         Create instance from constructor string
         :param context:
@@ -32,7 +38,7 @@ class ObjectUtil:
             # Try to init instance
             return context.evaluate_python_expression(constructor_str, class_dict)
         # Handle simple instance init (without constructor in attribute value)
-        if cls.__base__ is not None and "CustomConverter" in cls.__base__.__name__:  # Check if class is CustomConverter
+        if isinstance(cls, type) and issubclass(cls, CustomConverter):
             return cls(context)
         else:
             return cls()
