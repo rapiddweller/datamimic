@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -66,7 +67,11 @@ class TestDateTime:
         with pytest.raises(ValueError):
             test_engine.test_with_timer()
 
-    def test_datetime_epoch(self) -> None:
+    @pytest.mark.parametrize("host_tz", ["UTC", "Asia/Tokyo"])
+    def test_datetime_epoch(self, host_tz: str, monkeypatch: pytest.MonkeyPatch) -> None:
+        # Epoch conversion must not depend on the host timezone (POSIX-only tzset; CI is Linux).
+        monkeypatch.setenv("TZ", host_tz)
+        time.tzset()
         test_engine = DataMimicTest(
             test_dir=self._test_dir, filename="functional_test_date_epoch.xml", capture_test_result=True
         )
@@ -78,6 +83,8 @@ class TestDateTime:
         assert date_time_test[0]["epoch_milli_output1"] == "1612174084000"
         assert date_time_test[0]["epoch_output2"] == "1612174084"
         assert date_time_test[0]["epoch_milli_output2"] == "1612174084000"
+        assert date_time_test[0]["time_out"] == "10:08:04"
+        assert date_time_test[0]["epoch_output"] == 1612181284
 
     def test_datetime_precision(self) -> None:
         # Initialize the test engine

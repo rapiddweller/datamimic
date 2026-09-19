@@ -7,6 +7,7 @@
 from datetime import datetime
 
 from datamimic_ce.converter.converter import Converter
+from datamimic_ce.domains.domain_core.runtime import from_epoch_utc
 
 
 class Timestamp2DateConverter(Converter):
@@ -21,4 +22,4 @@ class Timestamp2DateConverter(Converter):
                 f"but got value {value} with invalid datatype {type(value)}"
             )
 
-        return datetime.fromtimestamp(value)
+        return from_epoch_utc(value)
