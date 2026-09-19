@@ -336,16 +336,13 @@ class RdbmsClient(DatabaseClient):
             actual_table_name = self._get_actual_table_name(table_name)
             table = self._get_metadata(engine).tables[actual_table_name]
 
+            # Unique total order (primary key, else every column): OFFSET pages stay disjoint across
+            # pages and workers, and full reads sliced/shuffled downstream stay reproducible.
+            query = select(table).order_by(*(table.primary_key.columns or table.c))
             if pagination is None:
                 logger.info(f"page is None, get all data from table {actual_table_name}")
-                query = select(table)
-            elif self._credential.dbms in ("mssql", "oracle"):
-                # both need an explicit ORDER BY for a stable OFFSET/FETCH - get_by_page_with_query
-                # already treats them symmetrically for the same reason.
-                ordering_column = table.primary_key.columns.values() if table.primary_key else [next(iter(table.c))]
-                query = select(table).order_by(*ordering_column).offset(pagination.skip).limit(pagination.limit)
             else:
-                query = select(table).offset(pagination.skip).limit(pagination.limit)
+                query = query.offset(pagination.skip).limit(pagination.limit)
 
             result = conn.execute(query).fetchall()
             return [dict(row._mapping) for row in result]
@@ -367,24 +364,25 @@ class RdbmsClient(DatabaseClient):
             # Use _mapping attribute for SQLAlchemy 2.0 Row objects
             return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
 
+        # Oracle rejects AS before a subquery alias
+        alias = "original_query" if self._credential.dbms == "oracle" else "AS original_query"
+        wrapped_query = f"SELECT * FROM ({original_query}) {alias}"
+        # An arbitrary query has no known key, so order by every output column: a unique total
+        # order (identical rows are interchangeable) keeps OFFSET pages disjoint and reproducible.
+        with self._create_engine().connect() as connection:
+            column_count = len(connection.execute(text(f"{wrapped_query} WHERE 1 = 0")).keys())
+        order_by = "ORDER BY " + ", ".join(str(position) for position in range(1, column_count + 1))
         if self._credential.dbms == "mssql":
-            # mssql OFFSET require ORDER BY -> hard code ORDER BY the first column
             pagination_query = (
-                f"SELECT * FROM ({original_query}) AS original_query "
-                f"ORDER BY 1 OFFSET {pagination.skip} ROWS FETCH NEXT {pagination.limit} ROWS ONLY"
+                f"{wrapped_query} {order_by} OFFSET {pagination.skip} ROWS FETCH NEXT {pagination.limit} ROWS ONLY"
             )
-            result = self.get(pagination_query)
         elif self._credential.dbms == "oracle":
             pagination_query = (
-                f"SELECT * FROM ({original_query}) original_query "
-                f"ORDER BY 1 OFFSET {pagination.skip} ROWS FETCH FIRST {pagination.limit} ROWS ONLY"
+                f"{wrapped_query} {order_by} OFFSET {pagination.skip} ROWS FETCH FIRST {pagination.limit} ROWS ONLY"
             )
-            result = self.get(pagination_query)
         else:
-            pagination_query = (
-                f"SELECT * FROM ({original_query}) AS original_query LIMIT {pagination.limit} OFFSET {pagination.skip}"
-            )
-            result = self.get(pagination_query)
+            pagination_query = f"{wrapped_query} {order_by} LIMIT {pagination.limit} OFFSET {pagination.skip}"
+        result = self.get(pagination_query)
 
         # Handle both SQLAlchemy 1.x and 2.x Row objects
         return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
