@@ -40,7 +40,7 @@ class ExecuteTask(SetupSubTask):
         """Inline code, the content of the uri script file, or - with script= - the evaluated
         expression itself (its value IS the code, e.g. a <variable string=\"...__var__...\"> DDL)."""
         if self._statement.uri:
-            return (ctx.root.descriptor_dir / self._statement.uri).read_text()
+            return (ctx.root.descriptor_dir / self._statement.uri).read_text(encoding="utf-8")
         if self._statement.script is not None:
             value = ctx.evaluate_python_expression(self._statement.script)
             if not isinstance(value, str):

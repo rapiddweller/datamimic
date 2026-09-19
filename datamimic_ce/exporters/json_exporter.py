@@ -43,7 +43,7 @@ class JsonExporter(UnifiedBufferedExporter):
         try:
             buffer_file = self._get_buffer_file(worker_id, chunk_idx)
             # Open buffer file in append mode
-            with buffer_file.open("a+") as file:
+            with buffer_file.open("a+", encoding="utf-8") as file:
                 # Handle chunk size == 1
                 if self.chunk_size == 1:
                     # Write in JSON format
