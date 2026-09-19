@@ -235,6 +235,55 @@ jobs:
           python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.cli"
           datamimic --help
 
+  facade_determinism_matrix:
+    name: Facade golden determinism on ${{ matrix.os }} (${{ matrix.timezone }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            timezone: Etc/UTC
+          - os: ubuntu-22.04
+            timezone: America/Los_Angeles
+          - os: windows-latest
+            timezone: UTC
+          - os: windows-latest
+            timezone: Pacific Standard Time
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set Up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          architecture: x64
+
+      - name: Install uv Package Manager
+        uses: astral-sh/setup-uv@v8.1.0
+
+      - name: Install dependencies
+        run: uv sync --python 3.11
+
+      - name: Set host timezone (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          sudo ln -snf "/usr/share/zoneinfo/${{ matrix.timezone }}" /etc/localtime
+          echo "${{ matrix.timezone }}" | sudo tee /etc/timezone >/dev/null
+          date
+
+      - name: Set host timezone (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          tzutil /s "${{ matrix.timezone }}"
+          tzutil /g
+
+      - name: Run facade golden hash proof
+        run: uv run pytest tests_ce/architecture/test_facade_determinism.py -q
+
   unit_test:
     runs-on: ubuntu-22.04
     needs: install_dependencies
