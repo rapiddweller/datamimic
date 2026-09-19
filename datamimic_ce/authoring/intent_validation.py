@@ -141,6 +141,8 @@ def _issue_code(
     issue_type: _PydanticIssueType | None,
     intent_issue_type: IntentModelValidationIssueType | None,
 ) -> IntentValidationIssueCode:
+    if intent_issue_type is IntentModelValidationIssueType.UNKNOWN_PRODUCT_REFERENCE:
+        return IntentValidationIssueCode.INVALID_VALUE
     if intent_issue_type in (
         IntentModelValidationIssueType.UNSUPPORTED_NESTED_PRODUCT_CHILDREN,
         IntentModelValidationIssueType.UNSUPPORTED_DATABASE_PRODUCT,

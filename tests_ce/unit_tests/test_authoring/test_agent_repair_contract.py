@@ -61,6 +61,40 @@ def test_unknown_field_reports_exact_owner_without_synthetic_example() -> None:
     assert issue.repair is None
 
 
+@pytest.mark.parametrize("source", ["expectations", "acceptance_requirements"])
+def test_unknown_product_is_rejected_at_the_reference_path(source: str) -> None:
+    spec = {
+        "version": "1",
+        "products": [
+            {
+                "kind": "generated",
+                "name": "known",
+                "count": 1,
+                "fields": [{"kind": "increment", "name": "id"}],
+            }
+        ],
+    }
+    payload = {"kind": "exact_count", "product": "ghost", "count": 1}
+    if source == "expectations":
+        spec[source] = [payload]
+        request = ScaffoldRequest(spec=spec)
+        expected_path = (source, 0, "product")
+    else:
+        request = ScaffoldRequest(spec=spec, acceptance_requirements=[payload])
+        expected_path = (source, 0, "product")
+
+    result = scaffold(request)
+
+    assert result.acceptance is None
+    assert result.diagnostics == []
+    assert result.remediations == []
+    assert len(result.issues) == 1
+    issue = result.issues[0]
+    assert issue.path == expected_path
+    assert issue.code is IntentValidationIssueCode.INVALID_VALUE
+    assert "Known products: known" in issue.message
+
+
 def test_expectation_paths_hide_union_implementation_labels() -> None:
     result = scaffold(
         ScaffoldRequest(

@@ -45,7 +45,7 @@ from datamimic_ce.authoring.dryrun import (
 from datamimic_ce.authoring.intent_linter import intent_diagnostics_pass_verification, lint_intent
 from datamimic_ce.authoring.intent_validation import project_validation_issues
 from datamimic_ce.authoring.linter import lint_descriptor, lint_source
-from datamimic_ce.authoring.spec import AuthoringSpecV1
+from datamimic_ce.authoring.spec import AuthoringSpecV1, validate_expectation_products
 from datamimic_ce.authoring.verification import (
     blocked_replay,
     blocked_verification,
@@ -193,6 +193,30 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             verification=blocked_verification(
                 request.verification,
                 "Intent compilation failed before verification could run",
+            ),
+        )
+    try:
+        validate_expectation_products(
+            request.acceptance_requirements,
+            compiled.spec.products,
+            ("acceptance_requirements",),
+        )
+    except ValidationError as error:
+        raw_requirements = {
+            "acceptance_requirements": [
+                expectation.model_dump(mode="json") for expectation in request.acceptance_requirements
+            ]
+        }
+        return ScaffoldResult(
+            ok=False,
+            stage=AuthoringStage.RENDER,
+            xml=None,
+            issues=list(project_validation_issues(error, raw_requirements)),
+            summary=None,
+            truncated=False,
+            verification=blocked_verification(
+                request.verification,
+                "Caller acceptance validation failed before verification could run",
             ),
         )
     xml = compiled.xml

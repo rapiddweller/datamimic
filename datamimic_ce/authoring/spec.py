@@ -107,6 +107,7 @@ class FieldRoleKind(StrEnum):
 class IntentModelValidationIssueType(StrEnum):
     """Stable custom validation signals owned by the Intent Model."""
 
+    UNKNOWN_PRODUCT_REFERENCE = "unknown_product_reference"
     UNSUPPORTED_NESTED_PRODUCT_CHILDREN = "unsupported_nested_product_children"
     UNSUPPORTED_DATABASE_PRODUCT = "unsupported_database_product"
 
@@ -723,6 +724,49 @@ def _validate_unique_expectations(expectations: tuple[ExpectationIntent, ...]) -
         raise ValueError(f"explicit expectations must be unique; duplicates: {kinds}")
 
 
+def _unknown_product_errors(
+    expectations: tuple[ExpectationIntent, ...],
+    index: _IntentGraphIndex,
+    path_prefix: tuple[str, ...],
+) -> list[InitErrorDetails]:
+    known = ", ".join(sorted(index.products))
+    errors: list[InitErrorDetails] = []
+    for position, expectation in enumerate(expectations):
+        references: tuple[tuple[str, str], ...]
+        if isinstance(expectation, ExactCountExpectation | RowConditionExpectation):
+            references = (("product", expectation.product),)
+        elif isinstance(expectation, PerParentCountExpectation):
+            references = (
+                ("parent_product", expectation.parent_product),
+                ("child_product", expectation.child_product),
+            )
+        elif isinstance(expectation, UniqueExpectation | AllowedValuesExpectation | RangeExpectation):
+            references = (("product", expectation.product),)
+        else:
+            references = (
+                ("child_product", expectation.child_product),
+                ("parent_product", expectation.parent_product),
+            )
+        for field, product in references:
+            if product in index.products:
+                continue
+            message = (
+                f"{expectation.kind} expectation references unknown product '{product}'. "
+                f"Known products: {known}"
+            )
+            errors.append(
+                InitErrorDetails(
+                    type=PydanticCustomError(
+                        IntentModelValidationIssueType.UNKNOWN_PRODUCT_REFERENCE,
+                        message,
+                    ),
+                    loc=(*path_prefix, position, field),
+                    input=product,
+                )
+            )
+    return errors
+
+
 def _validate_expectation(
     expectation: ExpectationIntent,
     index: _IntentGraphIndex,
@@ -750,8 +794,23 @@ def _validate_expectations(
     index: _IntentGraphIndex,
 ) -> None:
     _validate_unique_expectations(expectations)
+    errors = _unknown_product_errors(expectations, index, (IntentModelPathSegment.EXPECTATIONS,))
+    if errors:
+        raise ValidationError.from_exception_data(AuthoringSpecV1.__name__, errors)
     for expectation in expectations:
         _validate_expectation(expectation, index)
+
+
+def validate_expectation_products(
+    expectations: tuple[ExpectationIntent, ...],
+    products: tuple[ProductIntentUnion, ...],
+    path_prefix: tuple[str, ...],
+) -> None:
+    """Reject expectation references before runtime capture can make them unevaluable."""
+
+    errors = _unknown_product_errors(expectations, _IntentGraphIndex(products), path_prefix)
+    if errors:
+        raise ValidationError.from_exception_data("ExpectationProducts", errors)
 
 
 class AuthoringSpecV1(IntentModel):
@@ -813,4 +872,5 @@ __all__ = [
     "SourceIntentKind",
     "TargetIntentKind",
     "authoring_spec_json_schema",
+    "validate_expectation_products",
 ]
