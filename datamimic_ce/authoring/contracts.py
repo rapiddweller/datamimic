@@ -352,6 +352,7 @@ class IntentValidationIssue(BaseModel):
     code: IntentValidationIssueCode
     message: str = Field(min_length=1)
     allowed_fields: tuple[str, ...] = ()
+    allowed_values: tuple[NonEmptyStrictStr, ...] = ()
     repair: ReplaceFieldRepair | None = None
 
     def summary(self) -> str:

@@ -373,10 +373,19 @@ def _build_intent_validation_issue(
             issue_type = None
     code = _issue_code(issue_type, intent_issue_type)
     allowed_fields: tuple[str, ...] = ()
+    allowed_values: tuple[str, ...] = ()
     model_name: str | None = None
     repair: ReplaceFieldRepair | None = None
     if code is IntentValidationIssueCode.UNKNOWN_FIELD:
         allowed_fields, model_name, repair = _repair_context(raw, location)
+    if intent_issue_type is IntentModelValidationIssueType.UNKNOWN_PRODUCT_REFERENCE:
+        context = issue.get("ctx")
+        if isinstance(context, Mapping):
+            known_products = context.get("known_products")
+            if isinstance(known_products, Sequence) and not isinstance(known_products, str):
+                allowed_values = tuple(
+                    product for product in known_products if isinstance(product, str) and product
+                )
     message = str(issue["msg"])
     if issue_type is _PydanticIssueType.UNION_TAG_NOT_FOUND:
         category = _missing_discriminator_category(path)
@@ -402,6 +411,7 @@ def _build_intent_validation_issue(
         code=code,
         message=message,
         allowed_fields=allowed_fields,
+        allowed_values=allowed_values,
         repair=repair,
     )
 

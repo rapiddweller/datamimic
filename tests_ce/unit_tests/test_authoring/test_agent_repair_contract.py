@@ -93,6 +93,7 @@ def test_unknown_product_is_rejected_at_the_reference_path(source: str) -> None:
     assert issue.path == expected_path
     assert issue.code is IntentValidationIssueCode.INVALID_VALUE
     assert "Known products: known" in issue.message
+    assert issue.allowed_values == ("known",)
 
 
 def test_expectation_paths_hide_union_implementation_labels() -> None:

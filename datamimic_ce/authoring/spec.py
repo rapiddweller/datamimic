@@ -724,30 +724,32 @@ def _validate_unique_expectations(expectations: tuple[ExpectationIntent, ...]) -
         raise ValueError(f"explicit expectations must be unique; duplicates: {kinds}")
 
 
+def _expectation_product_references(expectation: ExpectationIntent) -> tuple[tuple[str, str], ...]:
+    if isinstance(expectation, ExactCountExpectation | RowConditionExpectation):
+        return (("product", expectation.product),)
+    if isinstance(expectation, PerParentCountExpectation):
+        return (
+            ("parent_product", expectation.parent_product),
+            ("child_product", expectation.child_product),
+        )
+    if isinstance(expectation, UniqueExpectation | AllowedValuesExpectation | RangeExpectation):
+        return (("product", expectation.product),)
+    return (
+        ("child_product", expectation.child_product),
+        ("parent_product", expectation.parent_product),
+    )
+
+
 def _unknown_product_errors(
     expectations: tuple[ExpectationIntent, ...],
     index: _IntentGraphIndex,
     path_prefix: tuple[str, ...],
 ) -> list[InitErrorDetails]:
     known = ", ".join(sorted(index.products))
+    known_products = tuple(sorted(index.products))
     errors: list[InitErrorDetails] = []
     for position, expectation in enumerate(expectations):
-        references: tuple[tuple[str, str], ...]
-        if isinstance(expectation, ExactCountExpectation | RowConditionExpectation):
-            references = (("product", expectation.product),)
-        elif isinstance(expectation, PerParentCountExpectation):
-            references = (
-                ("parent_product", expectation.parent_product),
-                ("child_product", expectation.child_product),
-            )
-        elif isinstance(expectation, UniqueExpectation | AllowedValuesExpectation | RangeExpectation):
-            references = (("product", expectation.product),)
-        else:
-            references = (
-                ("child_product", expectation.child_product),
-                ("parent_product", expectation.parent_product),
-            )
-        for field, product in references:
+        for field, product in _expectation_product_references(expectation):
             if product in index.products:
                 continue
             message = (
@@ -759,6 +761,7 @@ def _unknown_product_errors(
                     type=PydanticCustomError(
                         IntentModelValidationIssueType.UNKNOWN_PRODUCT_REFERENCE,
                         message,
+                        {"known_products": known_products},
                     ),
                     loc=(*path_prefix, position, field),
                     input=product,
