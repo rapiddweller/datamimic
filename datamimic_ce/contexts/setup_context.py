@@ -6,10 +6,12 @@
 
 import copy
 import random
-import uuid
+import secrets
 from pathlib import Path
 from random import Random
 from typing import Any
+
+from faker import Faker
 
 from datamimic_ce.clients.database_client import Client
 from datamimic_ce.contexts.context import Context
@@ -17,7 +19,7 @@ from datamimic_ce.contexts.demographic_context import DemographicContext
 from datamimic_ce.converter.converter import Converter
 from datamimic_ce.converter.custom_converter import CustomConverter
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.domains.domain_core.runtime import derive_child_seed, spawn_rng
+from datamimic_ce.domains.domain_core.runtime import RunSeed, derive_child_seed, spawn_rng
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
@@ -44,7 +46,6 @@ class SetupContext(Context):
         default_variable_prefix: str,
         default_variable_suffix: str,
         default_line_separator: str | None,
-        current_seed: int | None = None,
         clients: dict | None = None,
         data_source_len: dict | None = None,
         properties: dict | None = None,
@@ -54,7 +55,7 @@ class SetupContext(Context):
         default_source_scripted: bool | None = None,
         report_logging: bool = True,
         demographic_context: DemographicContext | None = None,
-        seed: int | None = None,
+        run_seed: RunSeed | None = None,
     ):
         # SetupContext is always its root_context
         super().__init__(self)
@@ -95,15 +96,14 @@ class SetupContext(Context):
         # IMPORTANT: do not set default bool value to default_source_scripted for config propagation
         self._default_source_scripted = default_source_scripted
         self._report_logging = report_logging
-        self._current_seed = current_seed
         self._task_exporters: dict[str, dict[str, Any]] = {}
         self._demographic_context = demographic_context
-        # Model-wide determinism root (<setup rngSeed="...">). Variables/keys without
-        # their own seed derive a reproducible child RNG from this; None => unseeded.
-        self._root_seed = seed
-        self._root_rng: Random | None = Random(seed) if seed is not None else None
+        self._run_seed = run_seed if run_seed is not None else RunSeed.create(None)
+        # Generator stream root: variables/keys without their own seed fork a reproducible child RNG from it.
+        self._root_rng: Random | None = Random(self._run_seed.value) if self._run_seed.seeded else None
         # Cached call-time rng — populated lazily on first ``.rng`` access.
         self._call_rng: Any = None
+        self._seeded_faker: Faker | None = None
 
     def derive_seeded_rng(self) -> Random | None:
         """Fork a reproducible child RNG from the model-wide root seed.
@@ -114,9 +114,13 @@ class SetupContext(Context):
         return spawn_rng(self._root_rng) if self._root_rng is not None else None
 
     @property
+    def run_seed(self) -> RunSeed:
+        return self._run_seed
+
+    @property
     def is_seeded(self) -> bool:
         """True when a model-wide <setup rngSeed> was given (determinism is expected)."""
-        return self._root_rng is not None
+        return self._run_seed.seeded
 
     @property
     def rng(self) -> Any:
@@ -126,6 +130,14 @@ class SetupContext(Context):
             derived = self.derive_seeded_rng()
             self._call_rng = derived if derived is not None else random
         return self._call_rng
+
+    @property
+    def seeded_faker(self) -> Faker:
+        """The Faker behind ``fake`` in this run's seeded script expressions; one per run keeps runs
+        sharing a Python process from reseeding each other's instance."""
+        if self._seeded_faker is None:
+            self._seeded_faker = Faker()
+        return self._seeded_faker
 
     def __deepcopy__(self, memo):
         """
@@ -164,9 +176,8 @@ class SetupContext(Context):
             default_line_separator=copy.deepcopy(self._default_line_separator, memo),
             default_source_scripted=self._default_source_scripted,
             report_logging=copy.deepcopy(self._report_logging),
-            current_seed=self._current_seed,
             demographic_context=copy.deepcopy(self._demographic_context, memo),
-            seed=self._root_seed,
+            run_seed=self._run_seed,
         )
 
     def _deepcopy_clients(self, memo):
@@ -434,7 +445,7 @@ class SetupContext(Context):
         self._report_logging = value
 
     @property
-    def default_encoding(self):
+    def default_encoding(self) -> str:
         return self._default_encoding
 
     def add_client(self, client_id: str, client: Client):
@@ -461,39 +472,19 @@ class SetupContext(Context):
         return self._clients.get(client_id)
 
     def stable_distribution_seed(self, key: str | None) -> int:
-        """A distribution seed that stays constant across a statement's pages (cached by ``key``,
-        the statement full_name — a unique path per statement, so distinct statements never collide).
-        A sub-task is rebuilt per page, so calling get_distribution_seed() directly would draw a
-        different seed each page and break paginated random / cumulated / unique selection.
-        Computed once via get_distribution_seed()."""
+        """A distribution seed that stays constant across a statement's pages and workers (``key`` is the
+        statement full_name, unique per statement). A sub-task is rebuilt per page, so a fresh seed per call
+        would break paginated random / cumulated / unique selection. Seeded runs draw it once from the root
+        stream and cache it; unseeded runs key it from the run seed."""
+        if not self._run_seed.seeded:
+            return self._run_seed.int_for(f"distribution|{key}")
         if key not in self._distribution_seed_cache:
             self._distribution_seed_cache[key] = self.get_distribution_seed()
         return self._distribution_seed_cache[key]
 
     def get_distribution_seed(self) -> int:
-        """Seed for source shuffling (``distribution="random"``).
-
-        Deterministic when the model sets ``<setup rngSeed>`` — derived from the
-        run's root RNG, so a seeded random read replays identically. Without a
-        setup seed it returns a fresh per-run seed from the task id
-        (non-deterministic, the privacy-maximized default).
-        """
-        if self._root_rng is not None:
-            return derive_child_seed(self._root_rng)
-        # Unseeded run: return a new seed on each call
-        if self._current_seed is not None:
-            self._current_seed += 1
-        # If init seed is not set, calculate seed from task_id.
-        # Full 2**63 space (matches derive_child_seed): a small modulus (was % 1000)
-        # makes two unseeded runs collide at 1/modulus — seen as flaky
-        # "unseeded must differ" determinism tests in CI.
-        else:
-            try:
-                # Try to convert UUID task into int seed
-                self._current_seed = uuid.UUID(self._task_id).int % (2**63)
-            except ValueError as err:
-                # If task_id is not a valid UUID, hash the string
-                logger.warning(f"Invalid task_id '{self._task_id}': {err}")
-                self._current_seed = hash(self._task_id) % (2**63)
-
-        return self._current_seed
+        """A fresh seed for source shuffling (``distribution="random"``): drawn from the root stream when
+        seeded, so a seeded read replays; random otherwise (the privacy-maximized default)."""
+        if self._root_rng is None:
+            return secrets.randbits(63)
+        return derive_child_seed(self._root_rng)

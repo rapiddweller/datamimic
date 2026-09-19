@@ -1,0 +1,6 @@
+<setup>
+    <database id="sourceDB" system="mysql" />
+    <execute uri="script/setup_mysql.scr.sql" target="sourceDB" />
+    <include uri="conf/mysql.properties" />
+    <include uri="matrix_cases.xml" />
+</setup>

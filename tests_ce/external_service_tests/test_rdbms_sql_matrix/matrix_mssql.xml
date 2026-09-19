@@ -1,0 +1,6 @@
+<setup>
+    <database id="sourceDB" system="mssql" driver="pymssql" />
+    <execute uri="script/setup_mssql.scr.sql" target="sourceDB" />
+    <include uri="conf/mssql.properties" />
+    <include uri="matrix_cases.xml" />
+</setup>

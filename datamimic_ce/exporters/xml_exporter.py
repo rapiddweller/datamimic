@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+import codecs
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -76,7 +77,7 @@ class XMLExporter(UnifiedBufferedExporter):
                 # If buffer does not exist or is empty, start with the root element
                 if not buffer_file.exists() or buffer_file.stat().st_size == 0:
                     with buffer_file.open("w", encoding=self.encoding) as xmlfile:
-                        xmlfile.write(f"<{self.root_element}>\n")
+                        xmlfile.write(f"{self._declaration()}<{self.root_element}>\n")
                 logger.debug(f"Created root element in buffer file: {buffer_file}")
 
                 # Append items to the root element
@@ -157,10 +158,16 @@ class XMLExporter(UnifiedBufferedExporter):
                 item_content = xml_content[start_index + len(start_tag) : end_index]
                 try:
                     with buffer_file.open("w", encoding=self.encoding) as xmlfile:
-                        xmlfile.write(item_content)
+                        xmlfile.write(self._declaration() + item_content)
                 except Exception as e:
                     logger.error(f"Error finalizing buffer file: {e}")
                     raise ExporterError(f"Error finalizing buffer file: {e}") from e
+
+    def _declaration(self) -> str:
+        # XML without a declaration is read as UTF-8, so only a non-UTF-8 encoding must be declared.
+        if codecs.lookup(self.encoding).name == "utf-8":
+            return ""
+        return f'<?xml version="1.0" encoding="{self.encoding}"?>\n'
 
     def _reset_state(self):
         """Resets the exporter state for reuse."""

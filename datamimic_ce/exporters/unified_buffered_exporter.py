@@ -45,7 +45,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         setup_context = config.setup_context
         self._exporter_type = exporter_type
         self.product_name = config.product_name  # Name of the product being exported
-        self._encoding = config.encoding or setup_context.default_encoding or "utf-8"
+        self._encoding = config.encoding or setup_context.default_encoding
         self._mp = setup_context.use_mp  # Multiprocessing flag
         self._task_id = setup_context.task_id  # Task ID for tracking
         self._descriptor_dir = setup_context.descriptor_dir  # Directory for storing temp files

@@ -75,7 +75,6 @@ def setup_context() -> SetupContext:
         default_variable_prefix="${",
         default_variable_suffix="}",
         default_line_separator="\n",
-        current_seed=123,
         clients={},
         data_source_len={},
         properties={},

@@ -15,9 +15,11 @@ from datamimic_ce.authoring.script_semantics import (
 )
 from datamimic_ce.authoring.spec import (
     AuthoringSpecV1,
+    FileExportTarget,
     ForeignKeyRole,
     GeneratedProduct,
     MemstoreSource,
+    ProductIntent,
     ScriptField,
     SourceProduct,
 )
@@ -109,7 +111,36 @@ class MemstoreReadbackFieldMustCopySourceRule(IntentRule):
                 )
 
 
+class ProductMustHaveDeliveryTargetRule(IntentRule):
+    definition = authoring_rule_definition("DM407")
+
+    def check(self, ctx: IntentLintContext, spec: AuthoringSpecV1, _plan: CompilePlan) -> Iterable[Diagnostic]:
+        # nested_list rows serialize inside their product, so only products (root and child) are checked
+        products: list[tuple[str, ProductIntent]] = []
+        for product_index, product in enumerate(spec.products):
+            products.append((f"/products/{product_index}", product))
+            if isinstance(product, GeneratedProduct):
+                products += [
+                    (f"/products/{product_index}/children/{child_index}", child)
+                    for child_index, child in enumerate(product.children)
+                ]
+        # No file_export anywhere = in-memory model: verified certifies the bounded run only
+        if not any(isinstance(target, FileExportTarget) for _path, entry in products for target in entry.targets):
+            return
+        for path, entry in products:
+            if entry.targets:
+                continue
+            yield ctx.diag(
+                ProductMustHaveDeliveryTargetRule,
+                path=path,
+                name=entry.name,
+                evidence=f"the spec exports files, but {entry.name} declares no targets; its rows are never written",
+                fix_context=f'Add e.g. {{"kind":"file_export","format":"JSON"}} to {entry.name}.targets.',
+            )
+
+
 RULES: tuple[type[IntentRule], ...] = (
     NestedForeignKeyMustCopyParentRule,
     MemstoreReadbackFieldMustCopySourceRule,
+    ProductMustHaveDeliveryTargetRule,
 )

@@ -6,81 +6,16 @@
 
 from __future__ import annotations  # Enable forward declarations
 
-import calendar
-import collections
 import copy
-import datetime
-import functools
-import itertools
-import json
-import math
-import os
-import random
 import re
-import statistics
 import types
-import uuid
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
-import numpy as np
-import pandas as pd
-import requests
-from faker import Faker
+from datamimic_ce.contexts.expression_globals import NON_VALUE_TYPES, expression_globals
 
 if TYPE_CHECKING:
     from datamimic_ce.contexts.setup_context import SetupContext
-
-# Create a safe evaluation environment
-SAFE_GLOBALS = {
-    "math": math,
-    "random": random,
-    "datetime": datetime,
-    "uuid": uuid,
-    "json": json,
-    "os": os,
-    "pd": pd,
-    "np": np,
-    "re": re,
-    "calendar": calendar,
-    "itertools": itertools,
-    "functools": functools,
-    "collections": collections,
-    "statistics": statistics,
-    "requests": requests,
-    "fake": Faker(),
-    "len": len,
-    "range": range,
-    "int": int,
-    "float": float,
-    "str": str,
-    "bool": bool,
-    "list": list,
-    "dict": dict,
-    "set": set,
-    "tuple": tuple,
-    "sum": sum,
-    "abs": abs,
-    "max": max,
-    "min": min,
-    "round": round,
-    "sorted": sorted,
-    "map": map,
-    "filter": filter,
-    "reduce": functools.reduce,
-    "all": all,
-    "any": any,
-    "bin": bin,
-    "hex": hex,
-    "oct": oct,
-    "type": type,
-    "hashlib": __import__("hashlib"),
-    "base64": __import__("base64"),  # pair a binary payload with its b64/hex form in the DSL
-    # Empty dict (not None) still blocks every builtin, but an unresolvable name now raises a
-    # proper NameError carrying the identifier instead of TypeError('NoneType' not subscriptable)
-    # — evaluate_python_expression turns that into an error saying WHICH name is missing.
-    "__builtins__": {},
-}
 
 # The number-one authoring trap: bare record-local names only resolve at the top level.
 # Appended to undefined-name errors so the failure itself teaches the scope rule.
@@ -88,11 +23,6 @@ _SCOPE_GUIDANCE = (
     "a same-scope sibling resolves bare (or via this.) - check the name; "
     "an ANCESTOR scope's name needs parent./root., it does not resolve bare"
 )
-
-# List of special functions that define in SAFE_GLOBALS
-SPECIAL_FUNCTION = {
-    Faker,
-}
 
 
 class Context(ABC):
@@ -156,9 +86,9 @@ class Context(ABC):
         if "root" not in data_dict:
             data_dict["root"] = DotableDict(dict(content_tree))
 
-        # Evaluate expression
+        eval_globals = expression_globals(self)
         try:
-            result = eval(expr, SAFE_GLOBALS, data_dict)
+            result = eval(expr, eval_globals, data_dict)
 
             if isinstance(result, DotableDict):
                 return result.to_dict()
@@ -167,7 +97,7 @@ class Context(ABC):
             # check result is not function, class or module
             elif callable(result) or isinstance(result, types.ModuleType):
                 raise ValueError(f"'{expr}' is an callable function, not a valid type (string, integer, float,...)")
-            elif type(result) in SPECIAL_FUNCTION:
+            elif type(result) in NON_VALUE_TYPES:
                 raise ValueError(
                     f"'{expr}' is {type(result).__name__} function, not a valid type (string, integer, float,...)"
                 )
@@ -217,7 +147,7 @@ class Context(ABC):
 
                 updated_data_dict = recursion_data_dict(data_dict)
                 try:
-                    result = eval(expr, SAFE_GLOBALS, updated_data_dict)
+                    result = eval(expr, eval_globals, updated_data_dict)
                     if isinstance(result, DotableDict):
                         return result.to_dict()
                     elif isinstance(result, list):
@@ -227,7 +157,7 @@ class Context(ABC):
                         raise ValueError(
                             f"'{expr}' is an callable function, not a valid type (string, integer, float,...)"
                         )
-                    elif type(result) in SPECIAL_FUNCTION:
+                    elif type(result) in NON_VALUE_TYPES:
                         raise ValueError(
                             f"'{expr}' is {type(result).__name__} "
                             f"function, not a valid type (string, integer, float,...)"

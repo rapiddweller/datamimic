@@ -5,13 +5,12 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import random
-import secrets
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 
 
 class PasswordGenerator(BaseLiteralGenerator):
-    """Generate secure passwords with configurable complexity."""
+    """Generate passwords with configurable complexity."""
 
     def __init__(
         self,
@@ -19,6 +18,7 @@ class PasswordGenerator(BaseLiteralGenerator):
         include_special: bool = True,
         include_numbers: bool = True,
         include_uppercase: bool = True,
+        rng: random.Random | None = None,
     ):
         """
         Initialize PasswordGenerator.
@@ -28,7 +28,9 @@ class PasswordGenerator(BaseLiteralGenerator):
             include_special (bool): Include special characters
             include_numbers (bool): Include numbers
             include_uppercase (bool): Include uppercase letters
+            rng: random generator; <setup rngSeed> passes a seeded one
         """
+        super().__init__(rng=rng)
         self._length = max(8, length)  # Minimum length of 8
         self._include_special = include_special
         self._include_numbers = include_numbers
@@ -60,12 +62,12 @@ class PasswordGenerator(BaseLiteralGenerator):
         # Ensure at least one character from each enabled set
         password = []
         for char_set in char_sets:
-            password.append(secrets.choice(char_set))
+            password.append(self.rng.choice(char_set))
 
         # Fill the rest randomly
         all_chars = "".join(char_sets)
-        password.extend(secrets.choice(all_chars) for _ in range(self._length - len(password)))
+        password.extend(self.rng.choice(all_chars) for _ in range(self._length - len(password)))
 
         # Shuffle the password
-        random.shuffle(password)
+        self.rng.shuffle(password)
         return "".join(password)

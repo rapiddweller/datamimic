@@ -536,6 +536,25 @@ _AUTHORING_RULE_DEFINITIONS: tuple[RuleDefinition, ...] = (
         "</generate></setup>",
         blocks_verification=True,
     ),
+    _rule_definition(
+        "DM407",
+        RuleSeverity.WARNING,
+        "Product has no delivery target",
+        "Fires when the spec declares at least one file_export target and a product (root or nested child) "
+        "declares none: that product is captured for verification, but the runtime writes its rows nowhere, "
+        "and a nested child generate is not embedded in its parent's export. A spec without any file_export "
+        "is an in-memory model and is not checked.",
+        "Add a file_export or memstore target to the product, or model the rows as a nested_list field of the "
+        "parent. This delivery rule must pass before verified=true.",
+        "AuthoringSpecV1 product targets and runtime export contract.",
+        '<setup><generate name="customers" count="4" target="JSON"><key name="id" generator="IncrementGenerator"/>'
+        '<generate name="accounts" count="2" target="JSON"><key name="customer_id" script="parent.id"/>'
+        "</generate></generate></setup>",
+        '<setup><generate name="customers" count="4" target="JSON"><key name="id" generator="IncrementGenerator"/>'
+        '<generate name="accounts" count="2"><key name="customer_id" script="parent.id"/>'
+        "</generate></generate></setup>",
+        blocks_verification=True,
+    ),
 )
 
 _AUTHORING_RULE_DEFINITIONS_BY_ID = {definition.id: definition for definition in _AUTHORING_RULE_DEFINITIONS}

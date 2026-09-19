@@ -64,6 +64,35 @@ values, weights = load_weighted_values_try_dataset(
 )
 ```
 
+### Database Source Paging (TL;DR)
+
+Paged reads from an RDBMS source (`pageSize`, `numProcess`) use `OFFSET`/`LIMIT`, which is only
+stable under a deterministic order. CE therefore orders every paged read (issue #228). Unpaged full reads of a table source are ordered
+the same way, because `random`/`cumulated`/`unique` shuffle them per worker with one shared seed:
+
+- table source (`type=`): the primary key (all its columns), a unique order; without a primary key,
+  every column, a canonical order (identical rows are interchangeable; collations that compare
+  different values as equal, e.g. case-insensitive, can still tie)
+- `selector=` with its own top-level `ORDER BY`: that order stays first and verbatim, so it remains the
+  source order; every output column it does not already sort by follows as a tie-breaker
+  (`ORDER BY grp` pages as `ORDER BY grp, 2`). A qualified term covers only the projection of that
+  column (`ORDER BY a.id` covers `a.id AS a_id`, not `b.id AS b_id`)
+- any other `selector=`: every output column (`ORDER BY 1, 2, ..., n`), because an arbitrary query has
+  no known key
+- a `selector=` with its own row limit (`LIMIT`/`TOP`/`FETCH`/`OFFSET`) is a bounded result: the order terms
+  above go before that limit, so the subset is deterministic, and the bounded query is read whole and
+  sliced per page in its own order. Every page re-executes it (cost: pages x the selector's own limit)
+
+Selectors are read with `sqlglot` in the connection's dialect (`datamimic_ce/clients/sql_dialect.py`).
+
+For a stable source snapshot, pages are disjoint across pages and workers, so no shard manifest is
+needed. Each page is its own query: rows inserted or deleted while a run pages through the source
+can still shift offsets (see `ChunkSourceReader`). Keyset paging with shard leases for very large
+sources is an Enterprise feature.
+Limitation: a keyless table or selector that returns a column type the database cannot sort
+(PostgreSQL `json`, Oracle `CLOB`, SQL Server `text`/`ntext`/`image`/`xml`) fails. Add a primary key,
+or select or cast those columns.
+
 ### Domain Core Components
 
 The core components define the base interfaces and abstract classes:

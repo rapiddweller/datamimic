@@ -3,9 +3,11 @@ from pathlib import Path
 
 import pytest
 
+from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
+from datamimic_ce.enums.dbms_enums import Dbms
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
 
@@ -31,14 +33,16 @@ class DummyStmt:
 
 
 class DummyCredential:
-    def __init__(self, dbms: str = "postgresql"):
+    def __init__(self, dbms: Dbms = Dbms.POSTGRESQL):
         self.dbms = dbms
 
 
-class DummyRdbmsClient:
-    def __init__(self, dbms: str = "postgresql"):
-        self._seq = {}
-        self.credential = DummyCredential(dbms)
+class DummyRdbmsClient(RdbmsClient):
+    """An RdbmsClient with in-memory sequences instead of a database."""
+
+    def __init__(self, dbms: Dbms = Dbms.POSTGRESQL):
+        self._seq: dict[str, int] = {}
+        self._credential = DummyCredential(dbms)
 
     def get_current_sequence_number(
         self, sequence_name: str, table_name: str | None = None, column_name: str | None = None
@@ -67,7 +71,6 @@ def setup_context() -> SetupContext:
         default_variable_prefix="${",
         default_variable_suffix="}",
         default_line_separator="\n",
-        current_seed=123,
         clients={},
         data_source_len={},
         properties={},
@@ -238,7 +241,6 @@ def test_sequence_table_generator_multi_process_partitions_non_overlapping():
             default_variable_prefix="${",
             default_variable_suffix="}",
             default_line_separator="\n",
-            current_seed=123,
             clients={},
             data_source_len={},
             properties={},
@@ -300,7 +302,7 @@ def test_sequence_table_generator_multi_process_partitions_non_overlapping():
 
 def test_sequence_table_generator_rejects_mysql_multiprocessing(setup_context: SetupContext):
     setup_context.num_process = 2
-    setup_context.clients["db1"] = DummyRdbmsClient(dbms="mysql")
+    setup_context.clients["db1"] = DummyRdbmsClient(dbms=Dbms.MYSQL)
     stmt = DummyStmt(
         name="id",
         database="db1",

@@ -110,3 +110,28 @@ def test_nonfile_source_still_uses_memstore_classification(
     root.memstore_manager.get_memstore.assert_called_once_with("upstream_rows")
     memstore.get_data_len_by_type.assert_called_once_with("rows")
     generic.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("xml", "rows"),
+    [
+        ("<list><item><id>1</id></item><item><id>2</id></item></list>", [{"id": "1"}, {"id": "2"}]),
+        ("<list><item><id>1</id></item></list>", [{"id": "1"}]),
+        ("<other><a>1</a></other>", [{"other": {"a": "1"}}]),
+        ("<list>hello</list>", [{"list": "hello"}]),
+    ],
+    ids=["many_items", "single_item", "other_document", "text_only_list"],
+)
+def test_xml_source_rows_are_normalised_once(tmp_path: Path, xml: str, rows: list[dict]) -> None:
+    path = tmp_path / "source.xml"
+    path.write_text(xml, encoding="utf-8")
+
+    assert DataSourceRegistry._get_source(str(path), ",", SourceFileFormat.XML) == rows
+
+
+def test_text_only_xml_item_is_rejected_instead_of_dropped(tmp_path: Path) -> None:
+    path = tmp_path / "source.xml"
+    path.write_text("<list><item>Hello</item></list>", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="text-only <item>"):
+        DataSourceRegistry._get_source(str(path), ",", SourceFileFormat.XML)

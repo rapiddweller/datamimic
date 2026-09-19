@@ -5,6 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 from copy import copy
 
+import pytest
+from pydantic import ValidationError
+
 from datamimic_ce.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.model.database_model import DatabaseModel
 
@@ -42,16 +45,10 @@ class TestRdbmsConnectionConfig:
             except ValueError:
                 assert False
 
-    def test_check_connection_config_no_dbms(self):
-        rdbms_model = copy(self.database_model)
-        rdbms_model.dbms = ""
-        for _ in range(100):
-            rdbms_config = RdbmsConnectionConfig(**rdbms_model.model_dump())
-            try:
-                rdbms_config.check_connection_config()
-                assert False
-            except ValueError as error:
-                assert str(error) == "DBMS is required"
+    @pytest.mark.parametrize("dbms", ["", "postgres", "db2"])
+    def test_unsupported_dbms_is_rejected_when_the_config_is_built(self, dbms):
+        with pytest.raises(ValidationError, match="dbms"):
+            RdbmsConnectionConfig(**{**self.database_model.model_dump(), "dbms": dbms})
 
     def test_check_connection_config_no_host(self):
         rdbms_model = copy(self.database_model)

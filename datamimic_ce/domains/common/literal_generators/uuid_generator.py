@@ -4,9 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-import uuid
-
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.utils.rng_uuid import uuid4_from_random
 
 
 class UUIDGenerator(BaseLiteralGenerator):
@@ -18,4 +17,4 @@ class UUIDGenerator(BaseLiteralGenerator):
         """
         Returns: a uuidv4 as string
         """
-        return str(uuid.uuid4())
+        return uuid4_from_random(self.rng)

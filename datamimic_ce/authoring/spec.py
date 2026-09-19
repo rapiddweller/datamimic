@@ -33,7 +33,7 @@ from pydantic.json_schema import JsonDict, JsonValue
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
 from datamimic_ce._compat import StrEnum
-from datamimic_ce.constants.element_constants import EL_GENERATE
+from datamimic_ce.constants.element_constants import EL_DATABASE, EL_GENERATE, EL_MONGODB
 from datamimic_ce.exporters.exporter_util import buffered_exporter_names
 from datamimic_ce.model.constraints import is_source_file
 
@@ -108,6 +108,7 @@ class IntentModelValidationIssueType(StrEnum):
     """Stable custom validation signals owned by the Intent Model."""
 
     UNSUPPORTED_NESTED_PRODUCT_CHILDREN = "unsupported_nested_product_children"
+    UNSUPPORTED_DATABASE_PRODUCT = "unsupported_database_product"
 
 
 class IntentModelPathSegment(StrEnum):
@@ -125,7 +126,14 @@ INTENT_MODEL_VALIDATION_MESSAGES: dict[IntentModelValidationIssueType, str] = {
     IntentModelValidationIssueType.UNSUPPORTED_NESTED_PRODUCT_CHILDREN: (
         "Nested product relationships cannot define child products in AuthoringSpecV1"
     ),
+    IntentModelValidationIssueType.UNSUPPORTED_DATABASE_PRODUCT: (
+        "Database and MongoDB sources/targets are not supported by AuthoringSpecV1; the engine supports them "
+        "through raw XML <database>/<mongodb> clients (lint -> dry-run -> run)"
+    ),
 }
+
+# Engine client elements that authoring V1 does not model: a known capability, not a typo
+_UNSUPPORTED_CLIENT_KINDS = frozenset({EL_DATABASE, EL_MONGODB})
 
 
 LeafFieldKind = Literal[
@@ -410,6 +418,36 @@ class ProductIntent(IntentModel):
     name: str = Field(min_length=1)
     fields: tuple[FieldIntentUnion, ...] = ()
     targets: tuple[TargetIntent, ...] = ()
+
+    @model_validator(mode="before")
+    @classmethod
+    def _reject_database_clients(cls, value: object) -> object:
+        if not isinstance(value, Mapping):
+            return value
+        targets = value.get(IntentModelPathSegment.TARGETS)
+        source = value.get(IntentModelPathSegment.SOURCE)
+        locations: list[tuple[tuple[str | int, ...], object]] = []
+        if isinstance(targets, list):
+            locations += [
+                ((IntentModelPathSegment.TARGETS, index, "kind"), target.get("kind"))
+                for index, target in enumerate(targets)
+                if isinstance(target, Mapping)
+            ]
+        if isinstance(source, Mapping):
+            locations.append(((IntentModelPathSegment.SOURCE, "kind"), source.get("kind")))
+        issue_type = IntentModelValidationIssueType.UNSUPPORTED_DATABASE_PRODUCT
+        errors = [
+            InitErrorDetails(
+                type=PydanticCustomError(issue_type, INTENT_MODEL_VALIDATION_MESSAGES[issue_type]),
+                loc=loc,
+                input=kind,
+            )
+            for loc, kind in locations
+            if kind in _UNSUPPORTED_CLIENT_KINDS
+        ]
+        if errors:
+            raise ValidationError.from_exception_data(cls.__name__, errors)
+        return value
 
     @model_validator(mode="after")
     def _target_export_uri_is_unambiguous(self) -> ProductIntent:

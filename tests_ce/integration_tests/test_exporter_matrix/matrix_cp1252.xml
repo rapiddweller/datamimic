@@ -1,0 +1,9 @@
+<setup defaultSeparator=",">
+    <!-- Same matrix with a non-UTF-8 exporter encoding: each file must be written in cp1252,
+         and self-describing formats (XML, DbUnit) must declare it. -->
+    <generate name="matrix_rows" count="10" exportUri="matrix_out"
+              target="CSV(encoding='cp1252'),JSON(encoding='cp1252'),XML(encoding='cp1252'),XLSX(encoding='cp1252'),TXT(encoding='cp1252'),DbUnit(encoding='cp1252'),FixedWidth(columns='id[8],name[20]',encoding='cp1252')">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="name" script="'Müller-€-' + str(id)"/>
+    </generate>
+</setup>
