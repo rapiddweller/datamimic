@@ -6,14 +6,16 @@
 
 """The one place CE reads or writes dialect-specific SQL text.
 
-Reading SQL (a selector's own ORDER BY / row limit, statement boundaries in a script) goes through
+Reading SQL (a selector's own ORDER BY terms / row limit, statement boundaries in a script) goes through
 sqlglot in the connection's dialect, never through regex or string splitting. Swapping how SQL is
 parsed or rendered means changing this module only; RdbmsClient keeps the database I/O.
 """
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 
 import sqlglot
+from sqlglot import exp
 from sqlglot.dialects import Dialects
 from sqlglot.tokens import Token, TokenType
 
@@ -77,34 +79,11 @@ DIALECT_RULES: dict[Dbms, DialectRules] = {
     ),
 }
 
+ROW_LIMIT_TOKENS = frozenset({TokenType.LIMIT, TokenType.OFFSET, TokenType.FETCH})
+
 # The oracle tokenizer yields DECLARE, IF and LOOP as plain identifiers, so they compare by token text.
 PLSQL_DECLARE_KEYWORD = "DECLARE"
 PLSQL_END_SUFFIXES_WITHOUT_BLOCK = frozenset({"IF", "LOOP"})
-
-
-@dataclass(frozen=True)
-class SelectorShape:
-    owns_order: bool
-    owns_row_limit: bool
-
-    @property
-    def keeps_own_order(self) -> bool:
-        """Its own top-level ORDER BY is the source order; with a row limit it is a subset paged canonically."""
-        return self.owns_order and not self.owns_row_limit
-
-
-def selector_shape(query: str, dbms: Dbms) -> SelectorShape:
-    """Top-level ORDER BY and row limit (LIMIT/TOP/FETCH/OFFSET) of a selector. One inside a subquery,
-    window function, literal or comment does not count. An unparseable selector reports neither."""
-    try:
-        parsed = sqlglot.parse_one(query, read=DIALECT_RULES[dbms].sqlglot_dialect)
-    except sqlglot.errors.ParseError as error:
-        logger.warning(f"Cannot parse selector, paging it in canonical column order: {error}")
-        return SelectorShape(owns_order=False, owns_row_limit=False)
-    return SelectorShape(
-        owns_order=parsed.args.get("order") is not None,
-        owns_row_limit=parsed.args.get("limit") is not None or parsed.args.get("offset") is not None,
-    )
 
 
 def count_query(query: str, dbms: Dbms) -> str:
@@ -116,18 +95,33 @@ def column_probe_query(query: str, dbms: Dbms) -> str:
     return f"SELECT * FROM {_derived_table(query, dbms)} WHERE 1 = 0"
 
 
-def paged_selector_query(query: str, dbms: Dbms, skip: int, limit: int, column_count: int | None) -> str:
-    """One OFFSET page of a selector.
+@dataclass(frozen=True)
+class SelectorPage:
+    """How to read one page of a selector: run ``sql``, then keep ``rows`` of its result."""
 
-    ``column_count=None`` pages the selector in place, in its own order (``SelectorShape.keeps_own_order``):
-    wrapped in a derived table, the database may drop that order. Otherwise the page is ordered by every
-    output column, a canonical order, because an arbitrary query has no known key.
+    sql: str
+    rows: slice
+
+
+def selector_page(query: str, dbms: Dbms, skip: int, limit: int, columns: list[str]) -> SelectorPage:
+    """One page of a selector in a deterministic order (#228).
+
+    The selector's own top-level ORDER BY stays first and verbatim, so it remains the source order;
+    every output column it does not already sort by follows as a positional tie-breaker (SQL Server
+    rejects a column listed twice). Without an own ORDER BY, all output columns order it. The terms go
+    before the selector's own row limit (LIMIT/TOP/FETCH/OFFSET), which makes that bounded subset
+    deterministic too; a bounded selector is then read whole and paged here, because re-sorting it
+    outside would lose its order. Any other selector is paged by the database. An unparseable selector
+    is wrapped and ordered by all output columns.
     """
-    paging = _paging_clause(dbms, skip, limit)
-    if column_count is None:
-        return f"{_without_terminator(query)} {paging}"
-    order_by = "ORDER BY " + ", ".join(str(position) for position in range(1, column_count + 1))
-    return f"SELECT * FROM {_derived_table(query, dbms)} {order_by} {paging}"
+    parsed = _parse_selector(query, dbms)
+    if parsed is None:
+        wrapped = f"SELECT * FROM {_derived_table(query, dbms)} {_order_by(range(1, len(columns) + 1))}"
+        return SelectorPage(f"{wrapped} {_paging_clause(dbms, skip, limit)}", slice(None))
+    ordered = _with_deterministic_order(query, dbms, parsed, columns)
+    if _has_own_row_limit(parsed):
+        return SelectorPage(ordered, slice(skip, skip + limit))
+    return SelectorPage(f"{ordered} {_paging_clause(dbms, skip, limit)}", slice(None))
 
 
 def split_script(script: str, dbms: Dbms) -> list[str]:
@@ -153,8 +147,95 @@ def split_script(script: str, dbms: Dbms) -> list[str]:
     return statements
 
 
-def _without_terminator(query: str) -> str:
-    return query.rstrip().rstrip(";")
+def _parse_selector(query: str, dbms: Dbms) -> exp.Query | None:
+    """The selector as a query AST; None when it is not a parseable query."""
+    try:
+        parsed = sqlglot.parse_one(query, read=DIALECT_RULES[dbms].sqlglot_dialect)
+    except sqlglot.errors.ParseError as error:
+        logger.warning(f"Cannot parse selector, paging it in canonical column order: {error}")
+        return None
+    return parsed if isinstance(parsed, exp.Query) else None
+
+
+def _top_level_order(parsed: exp.Query) -> exp.Order | None:
+    """The ORDER BY of the whole statement. The T-SQL parser attaches a union's ORDER BY to its last branch."""
+    order = parsed.args.get("order")
+    if order is None and isinstance(parsed, exp.SetOperation):
+        order = parsed.expression.args.get("order")
+    return order
+
+
+def _has_own_row_limit(parsed: exp.Query) -> bool:
+    candidates = [parsed, parsed.expression] if isinstance(parsed, exp.SetOperation) else [parsed]
+    return any(node.args.get("limit") is not None or node.args.get("offset") is not None for node in candidates)
+
+
+def _tie_breaker_positions(order: exp.Order, parsed: exp.Query, columns: list[str]) -> list[int]:
+    """Output positions (1-based) the ORDER BY does not already sort by. A term references a position as
+    a positional literal, as an output column name, or as the source column of an aliased projection."""
+    names_by_position = [{column.casefold()} for column in columns]
+    for position, projection in enumerate(parsed.selects):
+        aliased_column = isinstance(projection, exp.Alias) and isinstance(projection.this, exp.Column)
+        if aliased_column and position < len(names_by_position):
+            names_by_position[position].add(projection.this.name.casefold())
+    referenced: set[int] = set()
+    for term in order.expressions:
+        key = term.this
+        if isinstance(key, exp.Literal) and key.is_int:
+            referenced.add(int(key.name))
+        elif isinstance(key, exp.Column):
+            name = key.name.casefold()
+            referenced.update(index + 1 for index, names in enumerate(names_by_position) if name in names)
+    return [position for position in range(1, len(columns) + 1) if position not in referenced]
+
+
+def _order_by(positions: Iterable[int]) -> str:
+    return "ORDER BY " + ", ".join(map(str, positions))
+
+
+def _with_deterministic_order(query: str, dbms: Dbms, parsed: exp.Query, columns: list[str]) -> str:
+    """The selector with order terms inserted where its top-level ORDER BY clause ends, i.e. before its
+    own row limit or at its last token. Everything else of the user's text stays as written."""
+    order = _top_level_order(parsed)
+    if order is None:
+        terms = f" {_order_by(range(1, len(columns) + 1))}"
+    else:
+        tie_breakers = _tie_breaker_positions(order, parsed, columns)
+        if not tie_breakers:
+            return _statement_text(query, dbms)
+        terms = ", " + ", ".join(map(str, tie_breakers))
+    insert_at, end = _order_terms_position(query, dbms)
+    return f"{query[:insert_at].rstrip()}{terms} {query[insert_at:end]}".rstrip()
+
+
+def _order_terms_position(query: str, dbms: Dbms) -> tuple[int, int]:
+    """(text index where extra ORDER BY terms go, text index just past the statement's last token).
+    Extra terms go before the first top-level LIMIT/OFFSET/FETCH after the top-level ORDER BY, else at
+    the end; trailing semicolons and comments are dropped because appended clauses would land in them."""
+    tokens = sqlglot.tokenize(query, read=DIALECT_RULES[dbms].sqlglot_dialect)
+    statement_end = max((token.end + 1 for token in tokens if token.token_type is not TokenType.SEMICOLON), default=0)
+    depth = 0
+    after_order_by = 0
+    row_limit_start: int | None = None
+    for token in tokens:
+        if token.token_type is TokenType.L_PAREN:
+            depth += 1
+        elif token.token_type is TokenType.R_PAREN:
+            depth -= 1
+        elif depth == 0 and token.token_type is TokenType.ORDER_BY:
+            after_order_by, row_limit_start = token.start, None
+        elif (
+            depth == 0
+            and token.token_type in ROW_LIMIT_TOKENS
+            and row_limit_start is None
+            and token.start > after_order_by
+        ):
+            row_limit_start = token.start
+    return (row_limit_start if row_limit_start is not None else statement_end), statement_end
+
+
+def _statement_text(query: str, dbms: Dbms) -> str:
+    return query[: _order_terms_position(query, dbms)[1]]
 
 
 def _paging_clause(dbms: Dbms, skip: int, limit: int) -> str:
@@ -165,10 +246,13 @@ def _paging_clause(dbms: Dbms, skip: int, limit: int) -> str:
 
 def _derived_table(query: str, dbms: Dbms) -> str:
     """``(<query>) [AS] original_query``, valid as a derived table in the dialect. SQL Server accepts an
-    ORDER BY there only together with OFFSET/TOP, so a selector that keeps its own order gets OFFSET 0 ROWS."""
+    ORDER BY there only together with OFFSET/TOP, so an ordered selector without a row limit gets
+    OFFSET 0 ROWS."""
     rules = DIALECT_RULES[dbms]
-    if not rules.accepts_order_by_in_derived_table and selector_shape(query, dbms).keeps_own_order:
-        query = f"{_without_terminator(query)} OFFSET 0 ROWS"
+    if not rules.accepts_order_by_in_derived_table:
+        parsed = _parse_selector(query, dbms)
+        if parsed is not None and _top_level_order(parsed) is not None and not _has_own_row_limit(parsed):
+            query = f"{_statement_text(query, dbms)} OFFSET 0 ROWS"
     alias = "AS original_query" if rules.accepts_as_before_subquery_alias else "original_query"
     return f"({query}) {alias}"
 

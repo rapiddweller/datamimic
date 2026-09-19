@@ -21,4 +21,12 @@
               selector="SELECT grp, id FROM functional.page_rows ORDER BY id DESC" pageSize="5" target="" />
     <!-- default distribution: every worker shuffles the full unpaged read, so it must arrive in one order -->
     <generate name="by_type_random_mp" source="sourceDB" type="page_rows" pageSize="3" numProcess="2" target="" />
+    <!-- own ORDER BY on a non-unique column: ties must still page deterministically -->
+    <generate name="by_selector_grp" source="sourceDB" distribution="ordered"
+              selector="SELECT grp, id FROM functional.page_rows ORDER BY grp" pageSize="5" target="" />
+    <generate name="by_selector_grp_mp" source="sourceDB" distribution="ordered"
+              selector="SELECT grp, id FROM functional.page_rows ORDER BY grp" pageSize="3" numProcess="2" target="" />
+    <!-- own row limit: a bounded result, ordered deterministically inside its limit and paged in its own order -->
+    <generate name="by_selector_bounded" source="sourceDB" distribution="ordered"
+              selector="SELECT grp, id FROM functional.page_rows ORDER BY grp DESC LIMIT 7" pageSize="3" target="" />
 </setup>

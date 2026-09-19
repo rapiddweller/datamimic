@@ -35,7 +35,7 @@ dependencies = [
     "python-dotenv==1.0.1", # from dotenv import load_dotenv
     "requests==2.32.3", # import requests - Used for making HTTP requests
     "sqlalchemy==2.0.37", # from sqlalchemy import create_engine
-    "sqlglot>=26.0.0", # import sqlglot - reads a selector's own ORDER BY / row limit for RDBMS paging
+    "sqlglot>=30.18.0,<31.0.0", # import sqlglot - reads selectors and splits scripts (datamimic_ce/clients/sql_dialect.py); AST/token API pinned to the tested major
     "xmltodict==0.14.2", # import xmltodict - Used for parsing XML data to Python dictionaries
     "pandas==2.2.3", # import pandas as pd - Used for data manipulation
     "toml>=0.10.2", # import toml

@@ -62,7 +62,7 @@ class RdbmsClient(DatabaseClient):
         self._credential = credential
         self._engine = None
         self._task_id = task_id
-        self._column_count_by_selector: dict[str, int] = {}
+        self._columns_by_selector: dict[str, list[str]] = {}
 
         # Keep only real SQLAlchemy create_engine kwargs. The connection config allows extra keys
         # (env files carry connection identity like dbms/host plus vendor knobs such as legacy
@@ -326,24 +326,25 @@ class RdbmsClient(DatabaseClient):
             # Use _mapping attribute for SQLAlchemy 2.0 Row objects
             return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
 
-        dbms = self._credential.dbms
-        keeps_own_order = sql_dialect.selector_shape(original_query, dbms).keeps_own_order
-        column_count = None if keeps_own_order else self._selector_column_count(original_query)
-        pagination_query = sql_dialect.paged_selector_query(
-            original_query, dbms, pagination.skip, pagination.limit, column_count
+        page = sql_dialect.selector_page(
+            original_query,
+            self._credential.dbms,
+            pagination.skip,
+            pagination.limit,
+            self._selector_columns(original_query),
         )
-        result = self.get(pagination_query)
+        result = self.get(page.sql)[page.rows]
 
         # Handle both SQLAlchemy 1.x and 2.x Row objects
         return [dict(row._mapping) if hasattr(row, "_mapping") else dict(row) for row in result]
 
-    def _selector_column_count(self, query: str) -> int:
-        """Output column count of a selector, probed once per selector rather than once per page."""
-        if query not in self._column_count_by_selector:
+    def _selector_columns(self, query: str) -> list[str]:
+        """Output column names of a selector, probed once per selector rather than once per page."""
+        if query not in self._columns_by_selector:
             probe = text(sql_dialect.column_probe_query(query, self._credential.dbms))
             with self._create_engine().connect() as connection:
-                self._column_count_by_selector[query] = len(connection.execute(probe).keys())
-        return self._column_count_by_selector[query]
+                self._columns_by_selector[query] = list(connection.execute(probe).keys())
+        return self._columns_by_selector[query]
 
     def get_random_rows_by_columns(self, table_name: str, column_names: list[str]) -> list[tuple]:
         """Fetch the given columns for a <reference> in a stable order, preserving row-tuple

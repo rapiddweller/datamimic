@@ -4,33 +4,109 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""sql_dialect: a top-level ORDER BY is the selector's own source order (#228); scripts split only at
-statement-ending semicolons. Pure SQL text handling without a database, so a Python test; paging and
-script execution against real databases are covered by the DSL models in
-tests_ce/external_service_tests/test_rdbms_paging_order."""
+"""sql_dialect: a page keeps the selector's own ORDER BY first and breaks its ties with the remaining
+output columns (#228); scripts split only at statement-ending semicolons. Pure SQL text handling without
+a database, so a Python test; paging and script execution against real databases are covered by the DSL
+models in tests_ce/external_service_tests/test_rdbms_paging_order."""
 
 import pytest
 
-from datamimic_ce.clients.sql_dialect import SelectorShape, selector_shape, split_script
+from datamimic_ce.clients.sql_dialect import SelectorPage, selector_page, split_script
 from datamimic_ce.enums.dbms_enums import Dbms
+
+_COLUMNS = ["grp", "id"]
+_DB_PAGED = slice(None)
 
 
 @pytest.mark.parametrize(
-    ("dbms", "query", "shape"),
+    ("dbms", "query", "sql", "rows"),
     [
-        (Dbms.POSTGRESQL, "SELECT id FROM t ORDER BY id DESC", (True, False)),
-        (Dbms.POSTGRESQL, "SELECT a, ROW_NUMBER() OVER (ORDER BY a) AS rn FROM t", (False, False)),
-        (Dbms.POSTGRESQL, "SELECT * FROM (SELECT a FROM t ORDER BY a LIMIT 3) AS x", (False, False)),
-        (Dbms.POSTGRESQL, "SELECT 'order by' AS s FROM t -- order by s", (False, False)),
-        (Dbms.POSTGRESQL, "SELECT a FROM t UNION SELECT a FROM u ORDER BY a", (True, False)),
-        (Dbms.MYSQL, "SELECT a FROM t ORDER BY a LIMIT 10", (True, True)),
-        (Dbms.MSSQL, "SELECT TOP 5 a FROM t ORDER BY a", (True, True)),
-        (Dbms.ORACLE, "SELECT a FROM t ORDER BY a FETCH FIRST 3 ROWS ONLY", (True, True)),
-        (Dbms.POSTGRESQL, "SELEC nonsense ((", (False, False)),
+        (Dbms.POSTGRESQL, "SELECT grp, id FROM t", "SELECT grp, id FROM t ORDER BY 1, 2 LIMIT 5 OFFSET 10", _DB_PAGED),
+        (
+            Dbms.POSTGRESQL,
+            "SELECT grp, id FROM t ORDER BY grp",
+            "SELECT grp, id FROM t ORDER BY grp, 2 LIMIT 5 OFFSET 10",
+            _DB_PAGED,
+        ),
+        (
+            Dbms.MSSQL,
+            "SELECT grp, id FROM t ORDER BY id DESC;",
+            "SELECT grp, id FROM t ORDER BY id DESC, 1 OFFSET 10 ROWS FETCH NEXT 5 ROWS ONLY",
+            _DB_PAGED,
+        ),
+        (
+            Dbms.ORACLE,
+            "SELECT grp, id FROM t ORDER BY 2, 1 -- all columns",
+            "SELECT grp, id FROM t ORDER BY 2, 1 OFFSET 10 ROWS FETCH NEXT 5 ROWS ONLY",
+            _DB_PAGED,
+        ),
+        (
+            Dbms.MSSQL,
+            "SELECT g AS grp, id FROM t ORDER BY g",
+            "SELECT g AS grp, id FROM t ORDER BY g, 2 OFFSET 10 ROWS FETCH NEXT 5 ROWS ONLY",
+            _DB_PAGED,
+        ),
+        (
+            Dbms.POSTGRESQL,
+            "SELECT grp, id FROM t ORDER BY LOWER(grp)",
+            "SELECT grp, id FROM t ORDER BY LOWER(grp), 1, 2 LIMIT 5 OFFSET 10",
+            _DB_PAGED,
+        ),
+        (
+            Dbms.POSTGRESQL,
+            "SELECT grp, ROW_NUMBER() OVER (ORDER BY grp) AS id FROM t",
+            "SELECT grp, ROW_NUMBER() OVER (ORDER BY grp) AS id FROM t ORDER BY 1, 2 LIMIT 5 OFFSET 10",
+            _DB_PAGED,
+        ),
+        (
+            Dbms.POSTGRESQL,
+            "SELECT * FROM (SELECT grp, id FROM t ORDER BY id LIMIT 3) AS s",
+            "SELECT * FROM (SELECT grp, id FROM t ORDER BY id LIMIT 3) AS s ORDER BY 1, 2 LIMIT 5 OFFSET 10",
+            _DB_PAGED,
+        ),
+        (
+            Dbms.MSSQL,
+            "SELECT grp, id FROM t UNION SELECT grp, id FROM u ORDER BY grp",
+            "SELECT grp, id FROM t UNION SELECT grp, id FROM u ORDER BY grp, 2 OFFSET 10 ROWS FETCH NEXT 5 ROWS ONLY",
+            _DB_PAGED,
+        ),
+        (
+            Dbms.POSTGRESQL,
+            "SELECT grp, id FROM t ORDER BY grp DESC LIMIT 7",
+            "SELECT grp, id FROM t ORDER BY grp DESC, 2 LIMIT 7",
+            slice(10, 15),
+        ),
+        (
+            Dbms.POSTGRESQL,
+            "SELECT grp, id FROM t OFFSET 5 LIMIT 10",
+            "SELECT grp, id FROM t ORDER BY 1, 2 OFFSET 5 LIMIT 10",
+            slice(10, 15),
+        ),
+        (Dbms.MYSQL, "SELECT grp, id FROM t LIMIT 7", "SELECT grp, id FROM t ORDER BY 1, 2 LIMIT 7", slice(10, 15)),
+        (
+            Dbms.MSSQL,
+            "SELECT TOP 7 grp, id FROM t ORDER BY grp",
+            "SELECT TOP 7 grp, id FROM t ORDER BY grp, 2",
+            slice(10, 15),
+        ),
+        (
+            Dbms.ORACLE,
+            "SELECT grp, id FROM t ORDER BY grp FETCH FIRST 7 ROWS ONLY",
+            "SELECT grp, id FROM t ORDER BY grp, 2 FETCH FIRST 7 ROWS ONLY",
+            slice(10, 15),
+        ),
+        (
+            Dbms.POSTGRESQL,
+            "SELEC nonsense ((",
+            "SELECT * FROM (SELEC nonsense (() AS original_query ORDER BY 1, 2 LIMIT 5 OFFSET 10",
+            _DB_PAGED,
+        ),
     ],
 )
-def test_selector_shape(dbms: Dbms, query: str, shape: tuple[bool, bool]) -> None:
-    assert selector_shape(query, dbms) == SelectorShape(*shape)
+def test_selector_page_keeps_own_order_first_and_breaks_ties(dbms: Dbms, query: str, sql: str, rows: slice) -> None:
+    """A selector with its own row limit is a bounded result: ordered deterministically inside its limit,
+    read whole and paged in Python, so its own order survives."""
+    assert selector_page(query, dbms, 10, 5, _COLUMNS) == SelectorPage(sql, rows)
 
 
 _ORACLE_SCRIPT = """-- drop; if present

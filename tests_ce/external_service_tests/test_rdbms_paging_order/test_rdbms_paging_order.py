@@ -38,3 +38,6 @@ def test_paged_reads_follow_a_unique_order(filename: str) -> None:
     assert sorted(rows("by_selector_mp")) == _ROWS_BY_ALL_COLUMNS
     assert [row_id for _, row_id in rows("by_selector_desc")] == list(range(12, 0, -1))
     assert sorted(rows("by_type_random_mp")) == _ROWS_BY_ALL_COLUMNS
+    assert rows("by_selector_grp") == _ROWS_BY_ALL_COLUMNS
+    assert sorted(rows("by_selector_grp_mp")) == _ROWS_BY_ALL_COLUMNS
+    assert rows("by_selector_bounded") == [(3, 1), (3, 4), (3, 7), (3, 10), (2, 3), (2, 6), (2, 9)]
