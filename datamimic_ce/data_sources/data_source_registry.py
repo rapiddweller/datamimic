@@ -87,12 +87,16 @@ class DataSourceRegistry:
                 key, lambda: xmltodict.parse(Path(key).read_bytes(), attr_prefix="@", cdata_key="#text")
             )
             # <list><item>...</item></list> is a row list; any other document is one row
-            if not (document.get("list") and document["list"].get("item")):
+            root = document.get("list")
+            if not isinstance(root, dict) or root.get("item") is None:
                 return [document]
-            items = document["list"]["item"]
-            if isinstance(items, dict):
-                return [items]
-            return items if isinstance(items, list) else []
+            items = root["item"] if isinstance(root["item"], list) else [root["item"]]
+            if not all(isinstance(item, dict) for item in items):
+                raise ValueError(
+                    f"XML source '{key}': every <list><item> must contain child elements to form a row, "
+                    f"got a text-only <item>"
+                )
+            return items
         else:
             raise ValueError(f"Data source '{key}' is not supported is not handled by DataSourceRegistry")
 
