@@ -138,7 +138,10 @@ and show the acceptance evidence.
 Raw XML remains supported for existing descriptors (lint → dry-run → run;
 see AGENTS.md). For new models it is a last resort: only when a scaffold
 issue explicitly classifies the requirement as `unsupported_intent` should
-an agent hand-author XML, preserving that evidence.
+an agent hand-author XML, preserving that evidence. Authoring V1 covers file
+and in-memory (memstore) targets with one level of nested child products;
+database/MongoDB sources or targets and deeper nesting are `unsupported_intent`
+and go through the raw XML path, which has no `verified` certificate.
 
 ---
 
