@@ -29,6 +29,16 @@ def now_utc_naive() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
+def from_epoch_utc(seconds: float) -> datetime:
+    """Epoch seconds -> naive UTC datetime, independent of the host timezone."""
+    return datetime.fromtimestamp(seconds, timezone.utc).replace(tzinfo=None)
+
+
+def to_epoch_utc(value: datetime) -> float:
+    """Datetime -> epoch seconds; naive values are UTC (CE convention), not host-local."""
+    return (value if value.tzinfo else value.replace(tzinfo=timezone.utc)).timestamp()
+
+
 def resolve_clock(*, deterministic: bool) -> datetime:
     """Return the deterministic anchor if ``deterministic`` else live UTC."""
     return DETERMINISTIC_ANCHOR if deterministic else now_utc_naive()

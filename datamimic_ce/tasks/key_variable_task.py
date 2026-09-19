@@ -30,6 +30,7 @@ from datamimic_ce.data_sources.weighted_data_source import WeightedDataSource
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
 from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
+from datamimic_ce.domains.domain_core.runtime import from_epoch_utc, to_epoch_utc
 from datamimic_ce.model.constraints import SourceFileFormat, source_file_format_for
 from datamimic_ce.statements.element_statement import ElementStatement
 from datamimic_ce.statements.key_statement import KeyStatement
@@ -475,17 +476,17 @@ class KeyVariableTask(Task):
             try:
                 epoch_time = int(value)
                 if len(value) == 10:  # Seconds
-                    return datetime.fromtimestamp(epoch_time)
+                    return from_epoch_utc(epoch_time)
                 elif len(value) == 13:  # Milliseconds
-                    return datetime.fromtimestamp(epoch_time / 1000.0)
+                    return from_epoch_utc(epoch_time / 1000.0)
                 elif len(value) == 16:  # Microseconds
                     seconds = epoch_time // 1000000
                     microseconds = epoch_time % 1000000
-                    return datetime.fromtimestamp(seconds) + timedelta(microseconds=microseconds)
+                    return from_epoch_utc(seconds) + timedelta(microseconds=microseconds)
                 elif len(value) == 19:  # Nanoseconds
                     seconds = epoch_time // 1000000000
                     nanoseconds = epoch_time % 1000000000
-                    return datetime.fromtimestamp(seconds) + timedelta(microseconds=nanoseconds / 1000)
+                    return from_epoch_utc(seconds) + timedelta(microseconds=nanoseconds / 1000)
                 else:
                     raise ValueError(
                         f"Epoch value '{value}' is not in a valid range (must be 10, 13, 16, or 19 digits)."
@@ -526,13 +527,13 @@ class KeyVariableTask(Task):
 
         # Handle epoch time conversion
         if out_date_format == "epoch":
-            return str(int(value.timestamp()))
+            return str(int(to_epoch_utc(value)))
         elif out_date_format == "epoch_millis":
-            return str(int(value.timestamp() * 1000))
+            return str(int(to_epoch_utc(value) * 1000))
         elif out_date_format == "epoch_micros":
-            return str(int(value.timestamp() * 1000000))
+            return str(int(to_epoch_utc(value) * 1000000))
         elif out_date_format == "epoch_nanos":
-            return str(int(value.timestamp() * 1000000000))
+            return str(int(to_epoch_utc(value) * 1000000000))
         elif fractional_second_match:
             # Extract the number of fractional digits from the format
             digits = int(fractional_second_match.group(1))
@@ -548,7 +549,7 @@ class KeyVariableTask(Task):
                 fractional_seconds = fractional_seconds[:digits]
             else:
                 # For nanoseconds (7-9 digits), append extra nanoseconds
-                nanoseconds = int(value.timestamp() * 1e9) % 1000000000  # Get the full nanoseconds part
+                nanoseconds = int(to_epoch_utc(value) * 1e9) % 1000000000  # Get the full nanoseconds part
                 fractional_seconds = f"{nanoseconds:09d}"[:digits]  # Use the first 'digits' digits from nanoseconds
 
             # Replace the full microsecond/nanosecond part with the truncated/extended version

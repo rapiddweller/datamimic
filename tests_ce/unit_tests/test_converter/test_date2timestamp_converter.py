@@ -17,7 +17,7 @@ class TestDate2TimestampConverter:
         converter = Date2TimestampConverter()
         value = datetime(2023, 10, 1, 12, 0, 0)
         result = converter.convert(value)
-        assert result == int(value.timestamp())
+        assert result == 1696161600  # naive datetimes are UTC
 
     def test_convert_invalid_type(self):
         converter = Date2TimestampConverter()
