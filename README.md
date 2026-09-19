@@ -267,6 +267,8 @@ Most test data tools produce random output. That breaks regression tests, audit 
 - The Python facade `generate_domain(...)` returns `determinism_proof.content_hash`: the same hash means the same data.
 - Reproducible on the same Python, dependencies and machine. Every generator and script path is replayed in two separate processes on each CI run ([`test_determinism_seed_scenarios`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/integration_tests/test_determinism_seed_scenarios)).
 
+The CE facade guarantee is scoped to the Python/dependency profile being tested. Its proof records the engine, Python and Faker versions alongside the content hash. CI currently runs the same committed facade goldens on x64 Ubuntu for Python 3.10 through 3.13, plus host-timezone cells, using the current `uv` resolution. Other Python versions accepted by the package metadata (`requires-python >=3.10`) are outside this determinism matrix. This repository does not commit `uv.lock`, so plain unlocked installs and future dependency resolutions are outside a permanently locked byte-identical guarantee and need their own golden baseline.
+
 **EE** adds a configurable clock and keeps seeded output identical across distributed workers and multi-system runs.
 
 ```python
