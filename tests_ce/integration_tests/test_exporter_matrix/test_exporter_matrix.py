@@ -186,15 +186,7 @@ def test_source_matrix_covers_every_source_format():
 
 
 @pytest.mark.parametrize("source_format", list(_SOURCE_CASES), ids=lambda f: f.name)
-def test_every_source_format_reads_non_ascii(source_format: SourceFileFormat, source_matrix_result, request):
-    if source_format is SourceFileFormat.XML:
-        request.applymarker(
-            pytest.mark.xfail(
-                strict=True,
-                reason="count derived from an XML source is 1: the length scan measures the parsed "
-                "document, not its <item> list",
-            )
-        )
+def test_every_source_format_reads_non_ascii(source_format: SourceFileFormat, source_matrix_result):
     product = _SOURCE_CASES[source_format]
     names = {row["name"] for row in source_matrix_result[product]}
     assert names == _SOURCE_EXPECTED.get(product, {f"Müller-€-{i}" for i in range(1, 4)}), product
