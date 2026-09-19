@@ -160,7 +160,10 @@ routinely exhaust their budget without ever submitting.
   "parent.id", "roles": [{"kind": "foreign_key", "parent_product":
   "customers", "parent_field": "id"}]}`. A randomly generated FK
   (`int_range` over the parent id range) passes schema validation but fails
-  per-parent-count acceptance.
+  per-parent-count acceptance. A child product is exported separately, not
+  embedded in the parent's file: when the model exports files, give every
+  child its own `targets` (otherwise DM407 blocks `verified`); rows that must
+  live inside the parent record belong in a `nested_list` field instead.
 - **Memstore pipeline (write, then read back)**: the producer writes via
   `"targets": [{"kind": "memstore", "id": "store"}]`; the consumer is a
   second product with `"kind": "source"` and `"source": {"kind": "memstore",
