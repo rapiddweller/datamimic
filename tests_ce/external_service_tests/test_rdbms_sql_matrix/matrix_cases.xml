@@ -53,6 +53,11 @@
                   distribution="ordered" cyclic="True" />
         <key name="id" script="row.id" />
     </generate>
+    <generate name="variable_selector_cyclic_unordered_mp" count="30" pageSize="15" numProcess="2" target="">
+        <variable name="row" source="sourceDB" selector="SELECT grp, id FROM matrix_rows"
+                  distribution="ordered" cyclic="True" />
+        <key name="id" script="row.id" />
+    </generate>
 
     <!-- <execute> scripts: semicolons, comment markers, percent and colon inside literals; comments; PL/SQL blocks -->
     <generate name="script_rows" source="sourceDB" distribution="ordered"

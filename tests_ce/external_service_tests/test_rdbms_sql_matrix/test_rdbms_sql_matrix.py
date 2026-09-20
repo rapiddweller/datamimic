@@ -59,6 +59,15 @@ def test_rdbms_sql_matrix(engine: str) -> None:
     same_grp_pairs = sorted((a_id, b_id) for grp, a_id in _BY_GRP_ID for other, b_id in _BY_GRP_ID if grp == other)
     assert [(row["a_id"], row["b_id"]) for row in result["selector_qualified_order"]] == same_grp_pairs
     assert [row["id"] for row in result["variable_selector_cyclic"]] == [*range(12, 0, -1), 12, 11, 10]
+    expected_cyclic_ids = [row[1] for row in _BY_GRP_ID]
+    expected_cyclic_ids *= 2
+    expected_cyclic_ids += [2, 5, 8, 11, 3, 6]
+    cyclic_ids = [row["id"] for row in result["variable_selector_cyclic_unordered_mp"]]
+    assert cyclic_ids == expected_cyclic_ids
+    repeat_engine = DataMimicTest(test_dir=_TEST_DIR, filename=f"matrix_{engine}.xml", capture_test_result=True)
+    repeat_engine.test_with_timer()
+    repeat_result = repeat_engine.capture_result()
+    assert [row["id"] for row in repeat_result["variable_selector_cyclic_unordered_mp"]] == cyclic_ids
     assert [(row["id"], row["note"]) for row in result["script_rows"]] == [
         (1, "a;b"),
         (2, "x -- y"),
