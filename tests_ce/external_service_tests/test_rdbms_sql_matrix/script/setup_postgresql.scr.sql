@@ -1,8 +1,8 @@
-DROP FUNCTION IF EXISTS matrix_script_note_trigger();
 DROP TABLE IF EXISTS matrix_rows;
 DROP TABLE IF EXISTS matrix_rows_pk;
 DROP TABLE IF EXISTS matrix_rows_cpk;
 DROP TABLE IF EXISTS matrix_script;
+DROP FUNCTION IF EXISTS matrix_script_note_trigger();
 
 -- rows inserted out of (grp, id) order: a read without a deterministic order returns physical order
 CREATE TABLE matrix_rows (grp INT, id INT);
