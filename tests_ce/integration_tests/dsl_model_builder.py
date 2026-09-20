@@ -132,12 +132,18 @@ def _entity_keys(spec: EntitySpec) -> list[tuple[str, str]]:
         raise ValueError(f"Entity '{spec.entity}' exposes no scalar field to seed the determinism model with.")
 
     sample = spec.service_cls(rng=Random(SEED)).generate()
+    field_specs = {field.name: field for field in spec.attributes}
     nested: list[tuple[str, str]] = []
     for field, value in sample.to_dict().items():
         if not isinstance(value, dict | list):
             continue
-        prop: object = sample.field_cache.get(field, value)
-        candidate = _nested_path(field, prop)
+        field_spec = field_specs[field]
+        if field_spec.children and isinstance(value, dict):
+            subfield = _first(_scalar_subkeys(value))
+            candidate = (f"{field}_{subfield}", f"e.{field}.{subfield}") if subfield else None
+        else:
+            prop: object = sample.field_cache.get(field, value)
+            candidate = _nested_path(field, prop)
         if candidate is not None:
             nested.append(candidate)
 
