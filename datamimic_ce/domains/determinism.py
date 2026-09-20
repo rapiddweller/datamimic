@@ -9,13 +9,13 @@ from collections.abc import Iterable
 from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
 
 from datamimic_ce.utils.version_util import get_datamimic_lib_version
 
 
 class DeterminismProof(TypedDict):
-    algorithm: str
+    algorithm: Literal["uuid5+sha256"]
     seed_canonical: str
     content_hash: str
     engine_version: str
