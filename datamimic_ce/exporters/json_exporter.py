@@ -15,7 +15,7 @@ from datamimic_ce.logger import logger
 class DateTimeEncoder(json.JSONEncoder):
     """Custom JSON encoder for engine value types the stdlib encoder rejects."""
 
-    def default(self, o):
+    def default(self, o: object) -> str:
         if isinstance(o, datetime | date):  # datetime is a date subclass; both isoformat
             return o.isoformat()
         elif isinstance(o, Decimal | ObjectId):
