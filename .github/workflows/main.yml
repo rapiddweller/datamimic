@@ -751,7 +751,7 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04
-    needs: [e2e_test, mypy, ruff, python_310_smoke]
+    needs: [e2e_test, facade_determinism_matrix, mypy, ruff, python_310_smoke]
     environment:
       name: pypi
       url: https://pypi.org/p/datamimic-ce
