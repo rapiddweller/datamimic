@@ -20,6 +20,7 @@ from pydantic import ValidationError
 from datamimic_ce.authoring.acceptance import evaluate_acceptance
 from datamimic_ce.authoring.compiler import CompileError, compile_authoring_spec
 from datamimic_ce.authoring.contracts import (
+    AllowedValuesRemediation,
     AuthoringStage,
     CapabilitiesRequest,
     CapabilitiesResult,
@@ -31,6 +32,7 @@ from datamimic_ce.authoring.contracts import (
     ReferenceResult,
     RunRequest,
     RunResult,
+    ScaffoldRemediation,
     ScaffoldRequest,
     ScaffoldResult,
     ScaffoldVerificationEvidence,
@@ -45,7 +47,7 @@ from datamimic_ce.authoring.dryrun import (
 from datamimic_ce.authoring.intent_linter import intent_diagnostics_pass_verification, lint_intent
 from datamimic_ce.authoring.intent_validation import project_validation_issues
 from datamimic_ce.authoring.linter import lint_descriptor, lint_source
-from datamimic_ce.authoring.spec import AuthoringSpecV1
+from datamimic_ce.authoring.spec import AuthoringSpecV1, validate_expectation_products
 from datamimic_ce.authoring.verification import (
     blocked_replay,
     blocked_verification,
@@ -75,6 +77,16 @@ class AuthoringDocumentError(ValueError):
     ) -> None:
         super().__init__("; ".join(issue.summary() for issue in issues))
         self.issues = issues
+
+
+def _validation_remediations(
+    issues: tuple[IntentValidationIssue, ...],
+) -> list[ScaffoldRemediation]:
+    return [
+        AllowedValuesRemediation(path=issue.path, allowed_values=issue.allowed_values)
+        for issue in issues
+        if issue.allowed_values
+    ]
 
 
 def compile_document(spec: dict[str, Any]) -> CompiledDocument:
@@ -188,11 +200,38 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
             stage=AuthoringStage.RENDER,
             xml=None,
             issues=list(error.issues),
+            remediations=_validation_remediations(error.issues),
             summary=None,
             truncated=False,
             verification=blocked_verification(
                 request.verification,
                 "Intent compilation failed before verification could run",
+            ),
+        )
+    try:
+        validate_expectation_products(
+            request.acceptance_requirements,
+            compiled.spec.products,
+            ("acceptance_requirements",),
+        )
+    except ValidationError as error:
+        raw_requirements = {
+            "acceptance_requirements": [
+                expectation.model_dump(mode="json") for expectation in request.acceptance_requirements
+            ]
+        }
+        issues = project_validation_issues(error, raw_requirements)
+        return ScaffoldResult(
+            ok=False,
+            stage=AuthoringStage.RENDER,
+            xml=None,
+            issues=list(issues),
+            remediations=_validation_remediations(issues),
+            summary=None,
+            truncated=False,
+            verification=blocked_verification(
+                request.verification,
+                "Caller acceptance validation failed before verification could run",
             ),
         )
     xml = compiled.xml
@@ -256,10 +295,9 @@ def scaffold(request: ScaffoldRequest) -> ScaffoldResult:
         captured_run.captured,
         request.acceptance_requirements,
     )
-    remediations = max_count_remediations(
-        compiled.plan,
-        captured_run.captured,
-    )
+    remediations: list[ScaffoldRemediation] = [
+        *max_count_remediations(compiled.plan, captured_run.captured)
+    ]
     replay_run = None
     if not request.verification.deterministic_replay:
         replay_result = replay_not_requested()

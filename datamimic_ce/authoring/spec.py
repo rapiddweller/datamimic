@@ -32,7 +32,7 @@ from pydantic import (
 from pydantic.json_schema import JsonDict, JsonValue
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
-from datamimic_ce._compat import StrEnum
+from datamimic_ce._compat import StrEnum, assert_never
 from datamimic_ce.constants.element_constants import EL_DATABASE, EL_GENERATE, EL_MONGODB
 from datamimic_ce.exporters.exporter_util import buffered_exporter_names
 from datamimic_ce.model.constraints import is_source_file
@@ -107,6 +107,7 @@ class FieldRoleKind(StrEnum):
 class IntentModelValidationIssueType(StrEnum):
     """Stable custom validation signals owned by the Intent Model."""
 
+    UNKNOWN_PRODUCT_REFERENCE = "unknown_product_reference"
     UNSUPPORTED_NESTED_PRODUCT_CHILDREN = "unsupported_nested_product_children"
     UNSUPPORTED_DATABASE_PRODUCT = "unsupported_database_product"
 
@@ -723,6 +724,54 @@ def _validate_unique_expectations(expectations: tuple[ExpectationIntent, ...]) -
         raise ValueError(f"explicit expectations must be unique; duplicates: {kinds}")
 
 
+def _expectation_product_references(expectation: ExpectationIntent) -> tuple[tuple[str, str], ...]:
+    if isinstance(expectation, ExactCountExpectation | RowConditionExpectation):
+        return (("product", expectation.product),)
+    if isinstance(expectation, PerParentCountExpectation):
+        return (
+            ("parent_product", expectation.parent_product),
+            ("child_product", expectation.child_product),
+        )
+    if isinstance(expectation, UniqueExpectation | AllowedValuesExpectation | RangeExpectation):
+        return (("product", expectation.product),)
+    if isinstance(expectation, ForeignKeyExpectation):
+        return (
+            ("child_product", expectation.child_product),
+            ("parent_product", expectation.parent_product),
+        )
+    assert_never(expectation)
+
+
+def _unknown_product_errors(
+    expectations: tuple[ExpectationIntent, ...],
+    index: _IntentGraphIndex,
+    path_prefix: tuple[str, ...],
+) -> list[InitErrorDetails]:
+    known = ", ".join(sorted(index.products))
+    known_products = tuple(sorted(index.products))
+    errors: list[InitErrorDetails] = []
+    for position, expectation in enumerate(expectations):
+        for field, product in _expectation_product_references(expectation):
+            if product in index.products:
+                continue
+            message = (
+                f"{expectation.kind} expectation references unknown product '{product}'. "
+                f"Known products: {known}"
+            )
+            errors.append(
+                InitErrorDetails(
+                    type=PydanticCustomError(
+                        IntentModelValidationIssueType.UNKNOWN_PRODUCT_REFERENCE,
+                        message,
+                        {"known_products": known_products},
+                    ),
+                    loc=(*path_prefix, position, field),
+                    input=product,
+                )
+            )
+    return errors
+
+
 def _validate_expectation(
     expectation: ExpectationIntent,
     index: _IntentGraphIndex,
@@ -750,8 +799,23 @@ def _validate_expectations(
     index: _IntentGraphIndex,
 ) -> None:
     _validate_unique_expectations(expectations)
+    errors = _unknown_product_errors(expectations, index, (IntentModelPathSegment.EXPECTATIONS,))
+    if errors:
+        raise ValidationError.from_exception_data(AuthoringSpecV1.__name__, errors)
     for expectation in expectations:
         _validate_expectation(expectation, index)
+
+
+def validate_expectation_products(
+    expectations: tuple[ExpectationIntent, ...],
+    products: tuple[ProductIntentUnion, ...],
+    path_prefix: tuple[str, ...],
+) -> None:
+    """Reject expectation references before runtime capture can make them unevaluable."""
+
+    errors = _unknown_product_errors(expectations, _IntentGraphIndex(products), path_prefix)
+    if errors:
+        raise ValidationError.from_exception_data("ExpectationProducts", errors)
 
 
 class AuthoringSpecV1(IntentModel):
@@ -813,4 +877,5 @@ __all__ = [
     "SourceIntentKind",
     "TargetIntentKind",
     "authoring_spec_json_schema",
+    "validate_expectation_products",
 ]

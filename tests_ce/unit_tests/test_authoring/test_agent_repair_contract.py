@@ -5,6 +5,7 @@
 """Repair-oriented canonical intent errors and schema-only discovery."""
 
 import json
+from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
@@ -35,6 +36,8 @@ from datamimic_ce.authoring.spec import (
 )
 from datamimic_ce.cli import app
 
+_FIXTURES = Path(__file__).parent / "fixtures"
+
 
 def test_unknown_field_reports_exact_owner_without_synthetic_example() -> None:
     result = scaffold(
@@ -59,6 +62,34 @@ def test_unknown_field_reports_exact_owner_without_synthetic_example() -> None:
     assert issue.code is IntentValidationIssueCode.UNKNOWN_FIELD
     assert "fields" in issue.allowed_fields
     assert issue.repair is None
+
+
+@pytest.mark.parametrize("source", ["expectations", "acceptance_requirements"])
+def test_unknown_product_is_rejected_at_the_reference_path(source: str) -> None:
+    spec = json.loads((_FIXTURES / "issue_236_known_product.model.dm.json").read_text(encoding="utf-8"))
+    payload = json.loads((_FIXTURES / "issue_236_caller_requirements.json").read_text(encoding="utf-8"))[0]
+    if source == "expectations":
+        spec[source] = [payload]
+        request = ScaffoldRequest(spec=spec)
+        expected_path = (source, 0, "product")
+    else:
+        request = ScaffoldRequest(spec=spec, acceptance_requirements=[payload])
+        expected_path = (source, 0, "product")
+
+    result = scaffold(request)
+
+    assert result.acceptance is None
+    assert result.diagnostics == []
+    assert len(result.remediations) == 1
+    remediation = result.remediations[0]
+    assert remediation.path == expected_path
+    assert remediation.allowed_values == ("known",)
+    assert len(result.issues) == 1
+    issue = result.issues[0]
+    assert issue.path == expected_path
+    assert issue.code is IntentValidationIssueCode.INVALID_VALUE
+    assert "Known products: known" in issue.message
+    assert issue.allowed_values == ("known",)
 
 
 def test_expectation_paths_hide_union_implementation_labels() -> None:

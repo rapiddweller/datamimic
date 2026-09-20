@@ -352,6 +352,7 @@ class IntentValidationIssue(BaseModel):
     code: IntentValidationIssueCode
     message: str = Field(min_length=1)
     allowed_fields: tuple[str, ...] = ()
+    allowed_values: tuple[NonEmptyStrictStr, ...] = ()
     repair: ReplaceFieldRepair | None = None
 
     def summary(self) -> str:
@@ -1411,6 +1412,7 @@ class ScaffoldRemediationKind(StrEnum):
     """Stable discriminator vocabulary for scaffold-level remediation."""
 
     RETRY_WITH_PARAMETER = "retry_with_parameter"
+    ALLOWED_VALUES = "allowed_values"
 
 
 class RetryWithParameterRemediation(BaseModel):
@@ -1422,6 +1424,22 @@ class RetryWithParameterRemediation(BaseModel):
     parameter: Literal[ScaffoldParameter.MAX_COUNT] = ScaffoldParameter.MAX_COUNT
     minimum_value: PositiveStrictInt = Field(le=MAX_DRY_RUN_COUNT)
     affected_products: tuple[NonEmptyStrictStr, ...] = Field(min_length=1)
+
+
+class AllowedValuesRemediation(BaseModel):
+    """Machine-actionable guidance for a rejected value at an exact path."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    kind: Literal[ScaffoldRemediationKind.ALLOWED_VALUES] = ScaffoldRemediationKind.ALLOWED_VALUES
+    path: tuple[str | int, ...] = Field(min_length=1)
+    allowed_values: tuple[NonEmptyStrictStr, ...] = Field(min_length=1)
+
+
+ScaffoldRemediation = Annotated[
+    RetryWithParameterRemediation | AllowedValuesRemediation,
+    Field(discriminator="kind"),
+]
 
 
 class ScaffoldResult(BaseModel):
@@ -1453,7 +1471,7 @@ class ScaffoldResult(BaseModel):
     compile_plan: CompilePlan | None = None
     derived_facts: DerivedFacts | None = None
     acceptance: AcceptanceReport | None = None
-    remediations: list[RetryWithParameterRemediation] = Field(default_factory=list)
+    remediations: list[ScaffoldRemediation] = Field(default_factory=list)
     verification: ScaffoldVerificationEvidence = Field(default_factory=ScaffoldVerificationEvidence)
     verified: bool = False
 
