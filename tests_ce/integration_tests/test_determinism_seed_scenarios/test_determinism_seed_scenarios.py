@@ -53,6 +53,13 @@ SCENARIOS = {
     "seed_setup_and_generator.xml": {"setup_seed": 42, "variable_seed": 99},
     "no_seed.xml": {"setup_seed": None, "variable_seed": None},
 }
+REJECTED_SEEDED_MODELS = {
+    "seeded_reject_random_system_random.xml": "random.SystemRandom",
+    "seeded_reject_numpy_random.xml": "np.random",
+    "seeded_reject_os_urandom.xml": "os.urandom",
+    "seeded_reject_os_getrandom.xml": "os.getrandom",
+    "seeded_reject_uuid_uuid1.xml": "uuid.uuid1",
+}
 
 
 def _run(test_dir: Path, filename: str) -> dict:
@@ -142,6 +149,12 @@ def test_unseeded_script_globals_stay_random() -> None:
     assert [row["rand_int"] for row in first] != [row["rand_int"] for row in second]
 
 
+@pytest.mark.parametrize(("filename", "source"), REJECTED_SEEDED_MODELS.items())
+def test_seeded_rejected_entropy_sources_fail_from_committed_models(filename: str, source: str) -> None:
+    with pytest.raises(ValueError, match=rf"'{re.escape(source)}' draws entropy that <setup rngSeed> cannot replay"):
+        _run(_TEST_DIR, filename)
+
+
 _REPO_ROOT = _TEST_DIR.parents[2]
 _RUN_IN_FRESH_PROCESS = """
 import json, sys
@@ -154,12 +167,12 @@ print("RESULT" + result)
 """
 
 
-def canonical_result_bytes(result: dict) -> bytes:
+def canonical_result_bytes(result: object) -> bytes:
     serialized = json.dumps(result, default=str, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
     return serialized.encode("utf-8")
 
 
-def _run_in_fresh_process(filename: str) -> dict:
+def _run_in_fresh_process(filename: str) -> dict[str, object]:
     completed = subprocess.run(
         [sys.executable, "-c", _RUN_IN_FRESH_PROCESS, str(_TEST_DIR), filename],
         capture_output=True,
@@ -175,7 +188,15 @@ def _run_in_fresh_process(filename: str) -> dict:
         },
     )
     result_line = next(line for line in completed.stdout.splitlines() if line.startswith("RESULT"))
-    return json.loads(result_line.removeprefix("RESULT"))
+    parsed: object = json.loads(result_line.removeprefix("RESULT"))
+    if not isinstance(parsed, dict):
+        raise ValueError("fresh process result must be a JSON object")
+    result: dict[str, object] = {}
+    for key, value in parsed.items():
+        if not isinstance(key, str):
+            raise ValueError("fresh process result keys must be strings")
+        result[key] = value
+    return result
 
 
 def test_replay_model_covers_every_literal_generator() -> None:

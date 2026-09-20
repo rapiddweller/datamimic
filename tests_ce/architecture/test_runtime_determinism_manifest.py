@@ -22,10 +22,13 @@ def _manifest() -> RuntimeDeterminismManifest:
         "literal_replay_hash": EXPECTED_LITERAL_REPLAY_HASH,
         "coverage": {
             "Facade API": "4/4",
-            "Entities": "23/23",
-            "Literal generators": "34/35 (SequenceTableGenerator excluded: DB-only)",
-            "Dynamic seeded Safe Globals": "16 paths (random, uuid, fake, datetime, pd)",
-            "UTF-8 probe": "1 (non-ASCII canonical bytes)",
+            "Entities": "23/23 (selected attributes)",
+            "Literal generators": (
+                "34/35 (SequenceTableGenerator covered by external-service DSL tests; "
+                "excluded from this byte hash: DB state)"
+            ),
+            "Dynamic seeded Safe Globals": "16 representative paths (datetime, fake, pd, random, uuid)",
+            "UTF-8 probe": "1 (canonical UTF-8 probe)",
         },
         "utf8_probe_hash": UTF8_PROBE_HASH,
     }

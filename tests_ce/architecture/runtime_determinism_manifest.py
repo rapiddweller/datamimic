@@ -20,7 +20,7 @@ EXPECTED_FACADE_CONTENT_HASHES: dict[str, str] = {
 EXPECTED_ENTITY_REPLAY_HASH = "749dc011672c1287823ae6fff20a8cc0bf42031faf114bd70d9abd6142b8af89"
 EXPECTED_LITERAL_REPLAY_HASH = "b83a03232e6bbee270fa7a2a8fd48a80e6def81cff75f9e14f09cda7102cf650"
 UTF8_PROBE_HASH = "346c09d6dbf788249cbd8cf5bae13bf2d4f34dd83e6aa689c190b996cf82d2a7"
-COVERAGE_ORDER = ("Facade API", "Entities", "Literal generators", "Dynamic seeded Safe Globals", "UTF-8 probe")
+
 
 class RuntimeDeterminismManifest(TypedDict):
     facade_hashes: dict[str, str]
@@ -28,16 +28,6 @@ class RuntimeDeterminismManifest(TypedDict):
     literal_replay_hash: str
     coverage: dict[str, str]
     utf8_probe_hash: str
-
-def _request(domain: str) -> dict[str, object]:
-    return {
-        "domain": domain,
-        "version": "v1",
-        "count": 3,
-        "seed": "ci-determinism-gate",
-        "locale": "en_US",
-        "clock": "2026-01-01T00:00:00Z",
-    }
 
 
 def build_actual_manifest() -> RuntimeDeterminismManifest:
@@ -51,7 +41,16 @@ def build_actual_manifest() -> RuntimeDeterminismManifest:
 
     hashes: dict[str, str] = {}
     for domain in sorted({key[0] for key in REGISTRY}):
-        response = generate_domain(_request(domain))
+        response = generate_domain(
+            {
+                "domain": domain,
+                "version": "v1",
+                "count": 3,
+                "seed": "ci-determinism-gate",
+                "locale": "en_US",
+                "clock": "2026-01-01T00:00:00Z",
+            }
+        )
         proof = response.get("determinism_proof")
         if not isinstance(proof, dict):
             raise ValueError(f"Facade domain {domain!r} returned no determinism proof")
@@ -76,17 +75,15 @@ def build_actual_manifest() -> RuntimeDeterminismManifest:
             for family in re.findall(r"\b(random|uuid|fake|datetime|pd)\b", key.get("script", ""))
         }
     )
-    facade_domains = {key[0] for key in REGISTRY}
-    supported_literal_generators = literal_generators - {"SequenceTableGenerator"}
     coverage = {
-        "Facade API": f"{len(EXPECTED_FACADE_CONTENT_HASHES)}/{len(facade_domains)}",
-        "Entities": f"{len(entity_root.findall('generate'))}/{len(list_entity_specs())}",
+        "Facade API": f"{len(hashes)}/{len(EXPECTED_FACADE_CONTENT_HASHES)}",
+        "Entities": f"{len(entity_root.findall('generate'))}/{len(list_entity_specs())} (selected attributes)",
         "Literal generators": (
-            f"{len(supported_literal_generators)}/{len(generator_namespace())} "
-            "(SequenceTableGenerator excluded: DB-only)"
+            f"{len(literal_generators)}/{len(generator_namespace())} "
+            "(SequenceTableGenerator covered by external-service DSL tests; excluded from this byte hash: DB state)"
         ),
-        "Dynamic seeded Safe Globals": f"{len(script_paths)} paths ({', '.join(dynamic_families)})",
-        "UTF-8 probe": "1 (non-ASCII canonical bytes)",
+        "Dynamic seeded Safe Globals": f"{len(script_paths)} representative paths ({', '.join(dynamic_families)})",
+        "UTF-8 probe": "1 (canonical UTF-8 probe)",
     }
     probe = hash_bytes(canonical_json({"probe": "Grüße 世界 — UTF-8"}))
     return {
@@ -100,7 +97,7 @@ def build_actual_manifest() -> RuntimeDeterminismManifest:
 
 def write_manifest(path: Path) -> None:
     path.write_text(
-        json.dumps(build_actual_manifest(), sort_keys=True, ensure_ascii=False) + "\n",
+        json.dumps(build_actual_manifest(), ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
 
@@ -171,7 +168,7 @@ def _write_summary(
         return
     status = "PASS" if not errors else "FAIL"
     coverage_rows = (
-        [f"| {name} | {next(iter(manifests.values()))['coverage'][name]} |" for name in COVERAGE_ORDER]
+        [f"| {name} | {value} |" for name, value in next(iter(manifests.values()))["coverage"].items()]
         if manifests
         else ["| unavailable | |"]
     )
@@ -244,8 +241,8 @@ def _compare_command(root: Path, expected_count: int) -> int:
     print("Coverage:")
     if manifests:
         coverage = next(iter(manifests.values()))["coverage"]
-        for name in COVERAGE_ORDER:
-            print(f"- {name}: {coverage[name]}")
+        for name, value in coverage.items():
+            print(f"- {name}: {value}")
     print("Hashes:")
     for label, manifest in manifests.items():
         facade_hashes = ",".join(manifest["facade_hashes"].values())

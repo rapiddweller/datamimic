@@ -314,7 +314,8 @@ jobs:
         run: >-
           uv run pytest
           tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py::test_replay_model_covers_every_literal_generator
-          tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py::test_every_seeded_path_replays_across_processes -q
+          tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py::test_every_seeded_path_replays_across_processes
+          tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py::test_seeded_rejected_entropy_sources_fail_from_committed_models -q
 
       - name: Write actual seeded runtime determinism manifest
         run: uv run python -m tests_ce.architecture.runtime_determinism_manifest generate --output runtime-determinism-manifest.json
@@ -372,7 +373,7 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           . .venv/bin/activate
-          uv run pytest tests_ce/unit_tests/ tests_ce/architecture/test_facade_determinism.py --cov --cov-report=xml
+          uv run pytest tests_ce/unit_tests/ tests_ce/architecture/test_facade_determinism.py tests_ce/architecture/test_runtime_determinism_manifest.py --cov --cov-report=xml
         shell: bash
       - name: Upload coverage report
         uses: actions/upload-artifact@v6
