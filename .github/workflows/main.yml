@@ -301,10 +301,16 @@ jobs:
           tzutil /s "${{ matrix.timezone }}"
           tzutil /g
 
-      - name: Run facade golden hash proof
+      - name: Run facade API determinism proof
         run: uv run pytest tests_ce/architecture/test_facade_determinism.py -q
 
-      - name: Run committed seeded DSL replay proof
+      - name: Run committed seeded entity replay proof
+        run: >-
+          uv run pytest
+          'tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py::test_committed_model_is_in_sync_with_builder[seed_in_setup.xml]'
+          tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py::test_setup_seed_makes_the_full_model_deterministic -q
+
+      - name: Run committed seeded literal and Safe Global replay proof
         run: >-
           uv run pytest
           tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py::test_replay_model_covers_every_literal_generator

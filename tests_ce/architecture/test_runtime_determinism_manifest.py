@@ -5,8 +5,9 @@ from pathlib import Path
 import pytest
 
 from tests_ce.architecture.runtime_determinism_manifest import (
-    EXPECTED_CONTENT_HASHES,
-    EXPECTED_DSL_REPLAY_HASH,
+    EXPECTED_ENTITY_REPLAY_HASH,
+    EXPECTED_FACADE_CONTENT_HASHES,
+    EXPECTED_LITERAL_REPLAY_HASH,
     UTF8_PROBE_HASH,
     RuntimeDeterminismManifest,
     _compare_command,
@@ -16,8 +17,16 @@ from tests_ce.architecture.runtime_determinism_manifest import (
 
 def _manifest() -> RuntimeDeterminismManifest:
     return {
-        "facade_hashes": dict(EXPECTED_CONTENT_HASHES),
-        "dsl_replay_hash": EXPECTED_DSL_REPLAY_HASH,
+        "facade_hashes": dict(EXPECTED_FACADE_CONTENT_HASHES),
+        "entity_replay_hash": EXPECTED_ENTITY_REPLAY_HASH,
+        "literal_replay_hash": EXPECTED_LITERAL_REPLAY_HASH,
+        "coverage": {
+            "Facade API": "4/4",
+            "Entities": "23/23",
+            "Literal generators": "34/35 (SequenceTableGenerator excluded: DB-only)",
+            "Dynamic seeded Safe Globals": "16 paths (random, uuid, fake, datetime, pd)",
+            "UTF-8 probe": "1 (non-ASCII canonical bytes)",
+        },
         "utf8_probe_hash": UTF8_PROBE_HASH,
     }
 
@@ -34,12 +43,20 @@ def test_different_manifest_fails_cross_job_comparison() -> None:
     assert "person: actual hash does not match committed golden" not in errors
 
 
-def test_different_dsl_replay_hash_fails_cross_job_comparison() -> None:
+def test_different_literal_replay_hash_fails_cross_job_comparison() -> None:
     changed = _manifest()
-    changed["dsl_replay_hash"] = "different"
+    changed["literal_replay_hash"] = "different"
     errors = compare_manifests({"ubuntu-py311": _manifest(), "windows-py311": changed})
     assert "windows-py311: actual hashes differ from ubuntu-py311" in errors
-    assert "DSL replay hash does not match the committed golden" not in errors
+    assert "replay_all_seeded.xml hash does not match the committed golden" not in errors
+
+
+def test_different_entity_replay_hash_fails_cross_job_comparison() -> None:
+    changed = _manifest()
+    changed["entity_replay_hash"] = "different"
+    errors = compare_manifests({"ubuntu-py311": _manifest(), "windows-py311": changed})
+    assert "windows-py311: actual hashes differ from ubuntu-py311" in errors
+    assert "seed_in_setup.xml hash does not match the committed golden" not in errors
 
 
 def test_missing_manifest_count_writes_failure_summary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

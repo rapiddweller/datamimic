@@ -21,7 +21,7 @@ import pytest
 
 from datamimic_ce.domains.facade import REGISTRY, generate_domain
 from datamimic_ce.utils.version_util import get_datamimic_lib_version
-from tests_ce.architecture.runtime_determinism_manifest import EXPECTED_CONTENT_HASHES
+from tests_ce.architecture.runtime_determinism_manifest import EXPECTED_FACADE_CONTENT_HASHES
 
 REGISTERED_DOMAINS: list[str] = sorted({key[0] for key in REGISTRY})
 
@@ -78,11 +78,11 @@ def test_facade_provenance_hash_present(domain: str) -> None:
     assert proof["faker_version"] == get_datamimic_lib_version("faker")
 
 
-@pytest.mark.parametrize("domain", sorted(EXPECTED_CONTENT_HASHES))
+@pytest.mark.parametrize("domain", sorted(EXPECTED_FACADE_CONTENT_HASHES))
 def test_facade_content_hash_matches_golden(domain: str) -> None:
     response = generate_domain(_request(domain))
-    assert response["determinism_proof"]["content_hash"] == EXPECTED_CONTENT_HASHES[domain]
+    assert response["determinism_proof"]["content_hash"] == EXPECTED_FACADE_CONTENT_HASHES[domain]
 
 
 def test_facade_goldens_cover_every_registered_domain() -> None:
-    assert set(EXPECTED_CONTENT_HASHES) == set(REGISTERED_DOMAINS)
+    assert set(EXPECTED_FACADE_CONTENT_HASHES) == set(REGISTERED_DOMAINS)

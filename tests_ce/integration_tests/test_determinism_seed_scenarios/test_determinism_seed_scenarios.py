@@ -193,8 +193,8 @@ def test_every_seeded_path_replays_across_processes() -> None:
     assert canonical_result_bytes(first) == canonical_result_bytes(second)
 
 
-def replay_all_seeded_hash() -> str:
-    return hashlib.sha256(canonical_result_bytes(_run_in_fresh_process("replay_all_seeded.xml"))).hexdigest()
+def seeded_model_hash(filename: str) -> str:
+    return hashlib.sha256(canonical_result_bytes(_run_in_fresh_process(filename))).hexdigest()
 
 
 if __name__ == "__main__":
