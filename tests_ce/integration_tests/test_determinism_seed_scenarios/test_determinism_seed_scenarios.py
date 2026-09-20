@@ -21,7 +21,8 @@ The three models differ only in their seed wiring:
 
 Hand-written models: ``dsl_constructs_seeded.xml`` (non-entity DSL constructs) and
 ``script_globals_seeded.xml`` / ``script_globals_unseeded.xml`` (stdlib names inside script expressions),
-``replay_all_seeded.xml`` (every literal generator and script random/clock path, replayed across processes).
+``replay_all_seeded.xml`` (every literal generator except the DB-backed sequence table, plus supported
+dynamic script globals, replayed across processes).
 
 Regenerate the committed models after adding/removing an entity::
 
@@ -30,6 +31,7 @@ Regenerate the committed models after adding/removing an entity::
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -147,8 +149,14 @@ from pathlib import Path
 from datamimic_ce.data_mimic_test import DataMimicTest
 engine = DataMimicTest(test_dir=Path(sys.argv[1]), filename=sys.argv[2], capture_test_result=True)
 engine.test_with_timer()
-print("RESULT" + json.dumps(engine.capture_result(), default=str, sort_keys=True))
+result = json.dumps(engine.capture_result(), default=str, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+print("RESULT" + result)
 """
+
+
+def canonical_result_bytes(result: dict) -> bytes:
+    serialized = json.dumps(result, default=str, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+    return serialized.encode("utf-8")
 
 
 def _run_in_fresh_process(filename: str) -> dict:
@@ -159,7 +167,12 @@ def _run_in_fresh_process(filename: str) -> dict:
         encoding="utf-8",
         check=True,
         cwd=_REPO_ROOT,
-        env={**os.environ, "PYTHONPATH": str(_REPO_ROOT)},
+        env={
+            **os.environ,
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONPATH": str(_REPO_ROOT),
+            "PYTHONUTF8": "1",
+        },
     )
     result_line = next(line for line in completed.stdout.splitlines() if line.startswith("RESULT"))
     return json.loads(result_line.removeprefix("RESULT"))
@@ -172,14 +185,16 @@ def test_replay_model_covers_every_literal_generator() -> None:
 
 
 def test_every_seeded_path_replays_across_processes() -> None:
-    """Same Python, same machine, two separate processes: every literal generator and every random /
-    clock path of the script globals produces identical output under <setup rngSeed>."""
+    """Two separate processes replay every literal generator and supported dynamic script globals
+    identically under <setup rngSeed>."""
     first = _run_in_fresh_process("replay_all_seeded.xml")
     second = _run_in_fresh_process("replay_all_seeded.xml")
     assert first["literal"] and first["script"]
-    for product in ("literal", "script"):
-        for field in first[product][0]:
-            assert [row[field] for row in first[product]] == [row[field] for row in second[product]], field
+    assert canonical_result_bytes(first) == canonical_result_bytes(second)
+
+
+def replay_all_seeded_hash() -> str:
+    return hashlib.sha256(canonical_result_bytes(_run_in_fresh_process("replay_all_seeded.xml"))).hexdigest()
 
 
 if __name__ == "__main__":

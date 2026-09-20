@@ -235,8 +235,8 @@ jobs:
           python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.cli"
           datamimic --help
 
-  facade_determinism_matrix:
-    name: Facade golden determinism on ${{ matrix.os }} Python ${{ matrix.python-version }} (${{ matrix.timezone }})
+  runtime_determinism_matrix:
+    name: Seeded runtime determinism on ${{ matrix.os }} Python ${{ matrix.python-version }} (${{ matrix.timezone }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -304,21 +304,27 @@ jobs:
       - name: Run facade golden hash proof
         run: uv run pytest tests_ce/architecture/test_facade_determinism.py -q
 
-      - name: Write actual facade hash manifest
-        run: uv run python -m tests_ce.architecture.facade_hash_manifest generate --output facade-hash-manifest.json
+      - name: Run committed seeded DSL replay proof
+        run: >-
+          uv run pytest
+          tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py::test_replay_model_covers_every_literal_generator
+          tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py::test_every_seeded_path_replays_across_processes -q
 
-      - name: Upload actual facade hash manifest
+      - name: Write actual seeded runtime determinism manifest
+        run: uv run python -m tests_ce.architecture.runtime_determinism_manifest generate --output runtime-determinism-manifest.json
+
+      - name: Upload actual seeded runtime determinism manifest
         uses: actions/upload-artifact@v6
         with:
-          name: facade-hashes-${{ matrix.cell }}
-          path: facade-hash-manifest.json
+          name: seeded-runtime-hashes-${{ matrix.cell }}
+          path: runtime-determinism-manifest.json
           if-no-files-found: error
           retention-days: 1
 
-  facade_determinism_fan_in:
-    name: Compare facade golden hashes across matrix cells
+  runtime_determinism_fan_in:
+    name: Compare seeded runtime determinism hashes across matrix cells
     runs-on: ubuntu-22.04
-    needs: facade_determinism_matrix
+    needs: runtime_determinism_matrix
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -328,15 +334,15 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Download actual facade hash manifests
+      - name: Download actual seeded runtime determinism manifests
         uses: actions/download-artifact@v7
         with:
-          pattern: facade-hashes-*
-          path: facade-manifests
+          pattern: seeded-runtime-hashes-*
+          path: runtime-manifests
           merge-multiple: false
 
       - name: Compare actual hashes across jobs and with committed goldens
-        run: python -m tests_ce.architecture.facade_hash_manifest compare --root facade-manifests --expected-count 7
+        run: python -m tests_ce.architecture.runtime_determinism_manifest compare --root runtime-manifests --expected-count 7
 
   unit_test:
     runs-on: ubuntu-22.04
@@ -792,7 +798,7 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04
-    needs: [e2e_test, facade_determinism_fan_in, mypy, ruff, python_310_smoke]
+    needs: [e2e_test, runtime_determinism_fan_in, mypy, ruff, python_310_smoke]
     environment:
       name: pypi
       url: https://pypi.org/p/datamimic-ce

@@ -4,17 +4,22 @@ from pathlib import Path
 
 import pytest
 
-from tests_ce.architecture.facade_hash_manifest import (
+from tests_ce.architecture.runtime_determinism_manifest import (
     EXPECTED_CONTENT_HASHES,
+    EXPECTED_DSL_REPLAY_HASH,
     UTF8_PROBE_HASH,
-    FacadeHashManifest,
+    RuntimeDeterminismManifest,
     _compare_command,
     compare_manifests,
 )
 
 
-def _manifest() -> FacadeHashManifest:
-    return {"facade_hashes": dict(EXPECTED_CONTENT_HASHES), "utf8_probe_hash": UTF8_PROBE_HASH}
+def _manifest() -> RuntimeDeterminismManifest:
+    return {
+        "facade_hashes": dict(EXPECTED_CONTENT_HASHES),
+        "dsl_replay_hash": EXPECTED_DSL_REPLAY_HASH,
+        "utf8_probe_hash": UTF8_PROBE_HASH,
+    }
 
 
 def test_identical_manifests_pass_cross_job_comparison() -> None:
@@ -27,6 +32,14 @@ def test_different_manifest_fails_cross_job_comparison() -> None:
     errors = compare_manifests({"ubuntu-py311": _manifest(), "windows-py311": changed})
     assert "windows-py311: actual hashes differ from ubuntu-py311" in errors
     assert "person: actual hash does not match committed golden" not in errors
+
+
+def test_different_dsl_replay_hash_fails_cross_job_comparison() -> None:
+    changed = _manifest()
+    changed["dsl_replay_hash"] = "different"
+    errors = compare_manifests({"ubuntu-py311": _manifest(), "windows-py311": changed})
+    assert "windows-py311: actual hashes differ from ubuntu-py311" in errors
+    assert "DSL replay hash does not match the committed golden" not in errors
 
 
 def test_missing_manifest_count_writes_failure_summary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

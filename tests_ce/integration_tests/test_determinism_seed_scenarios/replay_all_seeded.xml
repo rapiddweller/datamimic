@@ -1,7 +1,7 @@
 <setup rngSeed="42">
     <!-- Every registered literal generator (except SequenceTableGenerator: needs a database) and every
-         random / clock path of the script globals. test_every_seeded_path_replays_across_processes runs
-         it in two separate Python processes and expects identical output. -->
+         supported dynamic Safe Global with representative random / clock calls. The replay test runs
+         this in separate Python processes and expects identical output. -->
     <generate name="literal" count="5" target="">
         <key name="g_AcademicTitleGenerator" generator="AcademicTitleGenerator"/>
         <key name="g_BinaryGenerator" generator="BinaryGenerator"/>
@@ -54,5 +54,7 @@
         <key name="datetime_today" script="datetime.datetime.today().isoformat()"/>
         <key name="date_today" script="datetime.date.today().isoformat()"/>
         <key name="pd_Timestamp_now" script="pd.Timestamp.now().isoformat()"/>
+        <key name="pd_Timestamp_utcnow" script="pd.Timestamp.utcnow().isoformat()"/>
+        <key name="pd_Timestamp_today" script="pd.Timestamp.today().isoformat()"/>
     </generate>
 </setup>
