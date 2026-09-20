@@ -132,7 +132,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
         return data, extra
 
-    def consume(self, product: tuple, stmt_full_name: str, exporter_state_manager: ExporterStateManager) -> int:
+    def consume(self, product: tuple, stmt_full_name: str, exporter_state_manager: ExporterStateManager) -> None:
         """
         Store data into buffer files.
         """
@@ -152,8 +152,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
         total_data = len(data)
 
         # Load state from storage
-        initial_global_counter = state_storage.global_counter
-        global_counter = initial_global_counter
+        global_counter = state_storage.global_counter
         current_counter = state_storage.current_counter
         logger.debug(
             f"Storing {total_data} records for PID {exporter_state_manager.worker_id}, initial count {current_counter}"
@@ -180,11 +179,15 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
         # Save state to storage
         exporter_state_manager.save_state(exporter_state_key, global_counter, current_counter)
-        return global_counter - initial_global_counter
 
     @abstractmethod
     def get_file_extension(self) -> str:
         """Return file extension for data content."""
+        pass
+
+    @abstractmethod
+    def count_buffered_rows(self, worker_id: int) -> int:
+        """Count rows present in finalized buffer files for smoke verification."""
         pass
 
     @abstractmethod

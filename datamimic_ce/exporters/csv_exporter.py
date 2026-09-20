@@ -83,6 +83,13 @@ class CSVExporter(UnifiedBufferedExporter):
         """Returns the MIME type for the data content."""
         return "text/csv"
 
+    def count_buffered_rows(self, worker_id: int) -> int:
+        count = 0
+        for buffer_file in self._get_buffer_tmp_dir(worker_id).glob("*.csv"):
+            with buffer_file.open(newline="", encoding=self.encoding) as csvfile:
+                count += sum(1 for _ in csv.DictReader(csvfile, delimiter=self.delimiter))
+        return count
+
     def _finalize_buffer_file(self, buffer_file: Path) -> None:
         # No finalization needed for CSV files
         pass

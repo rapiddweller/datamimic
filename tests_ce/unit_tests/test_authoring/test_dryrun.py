@@ -15,10 +15,9 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldVerification,
     VerificationGateStatus,
 )
-from datamimic_ce.authoring.dryrun import _smoke_export, dry_run_source
+from datamimic_ce.authoring.dryrun import _smoke_export, dry_run_source, dry_run_source_captured
 from datamimic_ce.authoring.service import compile_document, scaffold
-from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
-from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
+from datamimic_ce.exporters.json_exporter import JsonExporter
 
 _PIPELINE = """<setup rngSeed="1">
     <memstore id="mem"/>
@@ -29,6 +28,7 @@ _PIPELINE = """<setup rngSeed="1">
     <generate name="from_mem" source="mem" type="users" distribution="ordered" target="JSON"/>
 </setup>"""
 _FIXTURES = Path(__file__).parent / "fixtures"
+_SMOKE_EXPORT_MATRIX = _FIXTURES / "issue_227_smoke_export_matrix.xml"
 
 
 def test_dry_run_caps_counts_strips_targets_keeps_memstore(tmp_path: Path, monkeypatch) -> None:
@@ -108,22 +108,13 @@ def test_dm004_flags_zero_row_output() -> None:
 
 
 def test_smoke_export_passes_and_leaves_no_files(tmp_path: Path, monkeypatch) -> None:
-    # decimal + date + nested data through every stripped file exporter — the past
-    # Decimal/JSON crash class must be caught here, and nothing may hit the disk.
     monkeypatch.chdir(tmp_path)
-    xml = """<setup rngSeed="1">
-        <generate name="orders" count="4" target="CSV,JSON,XML">
-            <key name="order_id" generator="IncrementGenerator"/>
-            <key name="amount" type="decimal" min="1" max="500"/>
-            <key name="booked_on" script="datetime.date(2026, 1, 2)"/>
-            <nestedKey name="lines" type="list" minCount="1" maxCount="2">
-                <key name="sku" pattern="[A-Z]{3}-[0-9]{2}"/>
-            </nestedKey>
-        </generate>
-    </setup>"""
-    result = dry_run_source(xml, smoke_export=True)
-    assert result.ok, [(d.rule, d.message) for d in result.diagnostics]
-    assert result.products[0].count == 4
+    run = dry_run_source_captured(_SMOKE_EXPORT_MATRIX.read_text(encoding="utf-8"), smoke_export=True)
+    assert run.result.ok, [(d.rule, d.message) for d in run.result.diagnostics]
+    assert {product.name: product.count for product in run.result.products} == {"audit": 2, "items": 4}
+    assert run.smoke_export.applicable_exporters == 9
+    assert run.smoke_export.attempted_exporters == 9
+    assert run.smoke_export.failed_exporters == 0
     assert not list(tmp_path.iterdir())  # smoke writes never leave the temp dir
 
 
@@ -158,32 +149,40 @@ def test_smoke_export_compares_buffered_exporter_row_count(tmp_path: Path, monke
     assert compile_document(model).xml == xml
     request = ScaffoldRequest(
         spec=model,
+        max_count=10,
+        sample_rows=5,
         verification=ScaffoldVerification(smoke_export=True),
     )
     positive = scaffold(request)
     assert positive.xml == xml
     assert positive.verified
     assert positive.verification.smoke_export.status is VerificationGateStatus.PASSED
+    assert positive.verification.smoke_export.reason == "Every applicable file exporter wrote all captured rows"
 
-    original_consume = UnifiedBufferedExporter.consume
+    original_write = JsonExporter._write_data_to_buffer
+
+    run = dry_run_source_captured(xml, smoke_export=False)
+    assert run.result.ok, [(d.rule, d.message) for d in run.result.diagnostics]
+    captured = {product.name: list(product.rows) for product in run.captured.products}
+    assert len(captured["items"]) == 3
 
     def short_write(
-        self: UnifiedBufferedExporter,
-        product: tuple[object, ...],
-        stmt_full_name: str,
-        exporter_state_manager: ExporterStateManager,
-    ) -> int:
-        return original_consume(self, product, stmt_full_name, exporter_state_manager) - 1
+        self: JsonExporter,
+        data: list[dict],
+        worker_id: int,
+        chunk_idx: int,
+    ) -> None:
+        original_write(self, data[:-1], worker_id, chunk_idx)
 
-    monkeypatch.setattr(UnifiedBufferedExporter, "consume", short_write)
+    monkeypatch.setattr(JsonExporter, "_write_data_to_buffer", short_write)
     monkeypatch.chdir(tmp_path)
     diagnostics, capture = _smoke_export(
-        {"items": [{"id": 1}, {"id": 2}, {"id": 3}]},
+        captured,
         {"items": ("items", [("JSON", {})])},
     )
 
     assert capture.failed_exporters == 1
-    assert any("acknowledged 2 of 3" in diagnostic.message for diagnostic in diagnostics)
+    assert any("wrote 2 of 3" in diagnostic.message for diagnostic in diagnostics)
     assert not list(tmp_path.iterdir())
 
 

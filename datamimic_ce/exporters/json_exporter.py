@@ -125,6 +125,22 @@ class JsonExporter(UnifiedBufferedExporter):
         """Returns the content type based on the format."""
         return "application/x-ndjson" if self.use_ndjson else "application/json"
 
+    def count_buffered_rows(self, worker_id: int) -> int:
+        count = 0
+        for buffer_file in self._get_buffer_tmp_dir(worker_id).glob(f"*.{self.get_file_extension()}"):
+            with buffer_file.open(encoding=self.encoding) as file:
+                if self.use_ndjson:
+                    count += sum(1 for line in file if line.strip())
+                    continue
+                payload = json.load(file)
+                if isinstance(payload, list):
+                    count += len(payload)
+                elif isinstance(payload, dict):
+                    count += 1
+                else:
+                    raise ValueError(f"Unexpected JSON export root type: {type(payload).__name__}")
+        return count
+
     def _reset_state(self):
         """Resets the exporter state for reuse."""
 

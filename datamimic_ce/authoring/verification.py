@@ -160,10 +160,10 @@ def smoke_export_evidence(
         reason = "One or more applicable file exporters failed"
     elif capture.attempted_exporters != capture.applicable_exporters:
         status = VerificationGateStatus.FAILED
-        reason = "Not every applicable file exporter received captured rows"
+        reason = "Not every applicable file exporter wrote the captured rows"
     else:
         status = VerificationGateStatus.PASSED
-        reason = "Every applicable file exporter accepted the captured rows"
+        reason = "Every applicable file exporter wrote all captured rows"
     return SmokeExportEvidence(
         status=status,
         applicable_exporters=capture.applicable_exporters,

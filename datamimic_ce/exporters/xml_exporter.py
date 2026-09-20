@@ -163,6 +163,13 @@ class XMLExporter(UnifiedBufferedExporter):
                     logger.error(f"Error finalizing buffer file: {e}")
                     raise ExporterError(f"Error finalizing buffer file: {e}") from e
 
+    def count_buffered_rows(self, worker_id: int) -> int:
+        count = 0
+        for buffer_file in self._get_buffer_tmp_dir(worker_id).glob("*.xml"):
+            root = etree.parse(str(buffer_file)).getroot()
+            count += len(root) if root.tag == self.root_element else 1
+        return count
+
     def _declaration(self) -> str:
         # XML without a declaration is read as UTF-8, so only a non-UTF-8 encoding must be declared.
         if codecs.lookup(self.encoding).name == "utf-8":

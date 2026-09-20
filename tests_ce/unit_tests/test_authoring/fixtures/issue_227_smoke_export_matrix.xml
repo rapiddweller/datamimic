@@ -1,0 +1,16 @@
+<setup rngSeed="7">
+    <generate name="items" count="4"
+              target="CSV,JSON,XML,XLSX,TXT,DbUnit,FixedWidth(columns='label[10],id[8r0]')">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="label" constant="# note"/>
+        <key name="amount" type="decimal" min="1" max="500"/>
+        <key name="booked_on" script="datetime.date(2026, 1, 2)"/>
+        <nestedKey name="lines" type="list" minCount="1" maxCount="2">
+            <key name="sku" pattern="[A-Z]{3}-[0-9]{2}"/>
+        </nestedKey>
+    </generate>
+    <generate name="audit" count="2" target="JSON,CSV">
+        <key name="id" generator="IncrementGenerator"/>
+        <key name="label" constant="audit"/>
+    </generate>
+</setup>
