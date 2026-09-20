@@ -1,0 +1,8 @@
+<setup rngSeed="7">
+    <generate name="decimal_edges" count="1" target="JSON(use_ndjson=True, chunk_size=2)" exportUri="out">
+        <key name="high_precision" type="decimal" constant="0.100000000000000005"/>
+        <key name="trailing_zero" type="decimal" constant="-123.4500"/>
+        <key name="zero" type="decimal" constant="0.00"/>
+        <key name="count" type="int" constant="7"/>
+    </generate>
+</setup>

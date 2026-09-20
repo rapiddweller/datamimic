@@ -1,0 +1,46 @@
+{
+  "version": "1",
+  "seed": 7,
+  "products": [
+    {
+      "kind": "generated",
+      "name": "decimal_rows",
+      "count": 1,
+      "fields": [
+        {
+          "kind": "decimal_range",
+          "name": "amount",
+          "minimum": "0.1",
+          "maximum": "0.1"
+        },
+        {
+          "kind": "int_range",
+          "name": "sequence",
+          "minimum": 7,
+          "maximum": 7
+        }
+      ],
+      "targets": [
+        {
+          "kind": "file_export",
+          "format": "JSON",
+          "export_uri": "out"
+        }
+      ]
+    }
+  ],
+  "expectations": [
+    {
+      "kind": "exact_count",
+      "product": "decimal_rows",
+      "count": 1
+    },
+    {
+      "kind": "range",
+      "product": "decimal_rows",
+      "field": "amount",
+      "minimum": "0.1",
+      "maximum": "0.1"
+    }
+  ]
+}

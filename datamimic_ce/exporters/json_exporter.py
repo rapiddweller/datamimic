@@ -15,12 +15,10 @@ from datamimic_ce.logger import logger
 class DateTimeEncoder(json.JSONEncoder):
     """Custom JSON encoder for engine value types the stdlib encoder rejects."""
 
-    def default(self, o):
+    def default(self, o: object) -> str:
         if isinstance(o, datetime | date):  # datetime is a date subclass; both isoformat
             return o.isoformat()
-        elif isinstance(o, Decimal):  # <key type="decimal"> is a first-class DSL type
-            return float(o)
-        elif isinstance(o, ObjectId):
+        elif isinstance(o, Decimal | ObjectId):
             return str(o)
         elif isinstance(o, bytes | bytearray):
             return base64.b64encode(o).decode("ascii")  # binary field -> base64 text
