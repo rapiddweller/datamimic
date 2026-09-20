@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from datamimic_ce.authoring.contracts import ScaffoldRequest
+from datamimic_ce.authoring.contracts import AcceptanceStatus, ScaffoldRequest
 from datamimic_ce.authoring.service import scaffold
 
 _TEST_DIR = Path(__file__).resolve().parent
@@ -56,3 +56,38 @@ def test_bad_nested_list_subjects_fail_at_spec_validation() -> None:
         assert result.ok is False
         assert result.issues
         assert expected in result.issues[0].message
+
+
+def test_nested_list_expectations_fail_on_bad_rows() -> None:
+    model = json.loads(_MODEL.read_text(encoding="utf-8"))
+    model["expectations"] = [
+        {"kind": "exact_count", "product": "orders", "list_field": "items", "count": 3},
+        {
+            "kind": "unique",
+            "product": "orders",
+            "list_field": "items",
+            "field": "line_no",
+            "scope": "global",
+        },
+        {
+            "kind": "range",
+            "product": "orders",
+            "list_field": "items",
+            "field": "amount",
+            "minimum": 100,
+            "maximum": 200,
+        },
+        {
+            "kind": "allowed_values",
+            "product": "orders",
+            "list_field": "items",
+            "field": "status",
+            "values": ["pending"],
+        },
+    ]
+
+    result = scaffold(ScaffoldRequest(spec=model))
+
+    failed = {item.kind for item in result.acceptance.results if item.status is AcceptanceStatus.FAIL}
+    assert failed == {"exact_count", "unique", "range", "allowed_values"}
+    assert result.verified is False
