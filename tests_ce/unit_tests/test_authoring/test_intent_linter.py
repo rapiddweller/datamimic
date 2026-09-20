@@ -1,8 +1,43 @@
 """Intent-level authoring diagnostics remain actionable through scaffold."""
 
+import json
+from pathlib import Path
+
 from datamimic_ce.authoring.contracts import ScaffoldRequest
 from datamimic_ce.authoring.rule_catalog import RuleSeverity
 from datamimic_ce.authoring.service import scaffold
+
+_FIXTURES = Path(__file__).resolve().parent / "fixtures"
+
+
+def _model_fixture(name: str) -> dict[str, object]:
+    return json.loads((_FIXTURES / name).read_text(encoding="utf-8"))
+
+
+def test_memstore_target_without_consumer_blocks_verified_with_exact_diagnostic() -> None:
+    result = scaffold(ScaffoldRequest(spec=_model_fixture("fx_memstore_target_without_consumer.model.dm.json")))
+
+    diagnostics = [item for item in result.diagnostics if item.rule == "DM408"]
+    assert len(diagnostics) == 1
+    diagnostic = diagnostics[0]
+    assert diagnostic.severity is RuleSeverity.WARNING
+    assert diagnostic.path == "/products/0/targets/0"
+    assert diagnostic.name == "store"
+    assert diagnostic.message == (
+        "A product writes to a memstore that no source product reads, so the write is unobservable in the "
+        "authoring model. Evidence: users writes memstore 'store', but no product reads it"
+    )
+    assert diagnostic.fix_hint == "Add a source product that reads the memstore, or remove the unused memstore target."
+    assert result.ok is True
+    assert result.acceptance is not None and result.acceptance.verified is True
+    assert result.verified is False
+
+
+def test_memstore_target_with_consumer_does_not_block_verified() -> None:
+    result = scaffold(ScaffoldRequest(spec=_model_fixture("fx_memstore_target_with_consumer.model.dm.json")))
+
+    assert not [item for item in result.diagnostics if item.rule == "DM408"]
+    assert result.verified is True
 
 
 def _memstore_readback_spec(*, copy_source: bool) -> dict[str, object]:

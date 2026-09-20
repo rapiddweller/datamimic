@@ -1,0 +1,13 @@
+{
+  "version": "1",
+  "seed": 7,
+  "products": [
+    {
+      "kind": "generated",
+      "name": "users",
+      "count": 2,
+      "targets": [{"kind": "memstore", "id": "store"}],
+      "fields": [{"kind": "increment", "name": "id"}]
+    }
+  ]
+}

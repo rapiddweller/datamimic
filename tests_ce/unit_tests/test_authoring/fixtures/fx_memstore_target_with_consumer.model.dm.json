@@ -1,0 +1,30 @@
+{
+  "version": "1",
+  "seed": 7,
+  "products": [
+    {
+      "kind": "generated",
+      "name": "users",
+      "count": 2,
+      "targets": [{"kind": "memstore", "id": "store"}],
+      "fields": [
+        {"kind": "increment", "name": "id", "roles": [{"kind": "identifier"}]},
+        {"kind": "values", "name": "region", "values": ["eu", "us"]}
+      ]
+    },
+    {
+      "kind": "source",
+      "name": "user_audit",
+      "source": {"kind": "memstore", "id": "store", "product": "users"},
+      "fields": [
+        {
+          "kind": "script",
+          "name": "id",
+          "script": "this.id",
+          "roles": [{"kind": "foreign_key", "parent_product": "users", "parent_field": "id"}]
+        },
+        {"kind": "script", "name": "region", "script": "this.region"}
+      ]
+    }
+  ]
+}
