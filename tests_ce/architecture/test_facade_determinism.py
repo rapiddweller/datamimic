@@ -21,14 +21,9 @@ import pytest
 
 from datamimic_ce.domains.facade import REGISTRY, generate_domain
 from datamimic_ce.utils.version_util import get_datamimic_lib_version
+from tests_ce.architecture.facade_hash_manifest import EXPECTED_CONTENT_HASHES
 
 REGISTERED_DOMAINS: list[str] = sorted({key[0] for key in REGISTRY})
-EXPECTED_CONTENT_HASHES: dict[str, str] = {
-    "address": "7d13e7a58d4a6258035436350ec7ecd043325ac46c5edbe039fa2797d4e169a0",
-    "doctor": "2edec694c402cbc4f467858ea169a0888f5728ed2b7ce623632ee621e142c6a7",
-    "patient": "906a07ea1c4d93ea52b2ba64139d2340e2d416c4b00a16e6448b61132bb93f89",
-    "person": "e8365620df54a91427b02035004bf5315c637bde7e1df0706e1c641c857bd9d4",
-}
 
 
 def _request(domain: str, *, seed: str = "ci-determinism-gate", count: int = 3) -> dict:
