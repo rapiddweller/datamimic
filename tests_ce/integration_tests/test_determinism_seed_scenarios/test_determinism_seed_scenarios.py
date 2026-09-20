@@ -38,6 +38,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
@@ -47,8 +48,14 @@ from tests_ce.integration_tests.dsl_model_builder import build_all_entities_seed
 
 _TEST_DIR = Path(__file__).resolve().parent
 
+
+class SeedScenario(TypedDict):
+    setup_seed: int | None
+    variable_seed: int | None
+
+
 # Committed model -> the builder seeding that must reproduce it.
-SCENARIOS = {
+SCENARIOS: dict[str, SeedScenario] = {
     "seed_in_setup.xml": {"setup_seed": 42, "variable_seed": None},
     "seed_setup_and_generator.xml": {"setup_seed": 42, "variable_seed": 99},
     "no_seed.xml": {"setup_seed": None, "variable_seed": None},

@@ -272,6 +272,7 @@ class Doctor(BaseEntity):
         return self.person_data.phone
 
     @property
+    @property_cache
     def address(self) -> Address:
         """Get the doctor's address.
 
