@@ -1,3 +1,4 @@
+DROP TRIGGER IF EXISTS matrix_script_note;
 DROP TABLE IF EXISTS matrix_rows;
 DROP TABLE IF EXISTS matrix_rows_pk;
 DROP TABLE IF EXISTS matrix_rows_cpk;
@@ -20,4 +21,10 @@ INSERT INTO matrix_script (id, note) VALUES (2, 'x -- y');
 INSERT INTO matrix_script (id, note) VALUES (3, 'p /* q */ r');
 INSERT INTO matrix_script (id, note) VALUES (6, '100% :done');
 INSERT INTO matrix_script (id, note) VALUES (4, 'plsql');
-INSERT INTO matrix_script (id, note) VALUES (5, 'trigger');
+
+CREATE TRIGGER matrix_script_note AFTER INSERT ON matrix_script
+BEGIN
+    UPDATE matrix_script SET note = 'trigger' WHERE id = NEW.id AND note IS NULL;
+END;
+
+INSERT INTO matrix_script (id, note) VALUES (5, NULL);

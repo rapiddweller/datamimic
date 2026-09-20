@@ -165,6 +165,73 @@ def test_split_script_ignores_semicolons_in_literals_and_comments(dbms: Dbms) ->
     assert split_script(script, dbms) == ["CREATE TABLE t (v TEXT)", "INSERT INTO t VALUES ('x;y')"]
 
 
+def test_split_script_keeps_sqlite_trigger_body_whole() -> None:
+    script = "CREATE TRIGGER t AFTER INSERT ON x BEGIN UPDATE y SET n = n + 1; END; INSERT INTO x VALUES (1);"
+    assert split_script(script, Dbms.SQLITE) == [
+        "CREATE TRIGGER t AFTER INSERT ON x BEGIN UPDATE y SET n = n + 1; END;",
+        "INSERT INTO x VALUES (1)",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("script", "statements"),
+    [
+        ("BEGIN; CREATE TABLE t (id INT);", ["BEGIN", "CREATE TABLE t (id INT)"]),
+        ("BEGIN TRANSACTION; CREATE TABLE t (id INT);", ["BEGIN TRANSACTION", "CREATE TABLE t (id INT)"]),
+    ],
+)
+def test_split_script_does_not_treat_sqlite_transactions_as_compound_blocks(
+    script: str, statements: list[str]
+) -> None:
+    assert split_script(script, Dbms.SQLITE) == statements
+
+
+@pytest.mark.parametrize(
+    "statement",
+    [
+        "CREATE TRIGGER t BEFORE INSERT ON x FOR EACH ROW BEGIN SET @a = 1; SET @b = 2; END;",
+        "CREATE PROCEDURE p() BEGIN SELECT 1; SELECT 2; END;",
+        "CREATE FUNCTION f() RETURNS INT BEGIN RETURN 1; END;",
+        "CREATE EVENT e ON SCHEDULE EVERY 1 DAY DO BEGIN INSERT INTO t VALUES (1); END;",
+    ],
+)
+def test_split_script_keeps_mysql_compound_create_body_whole(statement: str) -> None:
+    assert split_script(f"{statement} INSERT INTO t VALUES (3);", Dbms.MYSQL) == [
+        statement,
+        "INSERT INTO t VALUES (3)",
+    ]
+
+
+@pytest.mark.parametrize(
+    "loop_body",
+    [
+        "WHILE NEW.id < 2 DO SET NEW.id = NEW.id + 1; END WHILE;",
+        "REPEAT SET NEW.id = NEW.id + 1; UNTIL NEW.id >= 2 END REPEAT;",
+    ],
+)
+def test_split_script_keeps_mysql_trigger_loops_inside_outer_begin(loop_body: str) -> None:
+    statement = f"CREATE TRIGGER t BEFORE INSERT ON x FOR EACH ROW BEGIN {loop_body} END;"
+    assert split_script(f"{statement} INSERT INTO x VALUES (1);", Dbms.MYSQL) == [
+        statement,
+        "INSERT INTO x VALUES (1)",
+    ]
+
+
+def test_split_script_rejects_mysql_client_delimiter_directive() -> None:
+    assert split_script("SELECT 'DELIMITER';", Dbms.MYSQL) == ["SELECT 'DELIMITER'"]
+    assert split_script("SELECT delimiter FROM t;", Dbms.MYSQL) == ["SELECT delimiter FROM t"]
+    with pytest.raises(ValueError, match="DELIMITER directives"):
+        split_script("DELIMITER //\nCREATE PROCEDURE p() BEGIN SELECT 1; END//", Dbms.MYSQL)
+
+
+def test_split_script_does_not_treat_plain_create_table_identifiers_as_compound() -> None:
+    script = "CREATE TABLE t (trigger TEXT, begin TEXT); INSERT INTO t VALUES ('x', 'y');"
+    assert split_script(script, Dbms.SQLITE) == [
+        "CREATE TABLE t (trigger TEXT, begin TEXT)",
+        "INSERT INTO t VALUES ('x', 'y')",
+    ]
+
+
 @pytest.mark.parametrize("dbms", [Dbms.POSTGRESQL, Dbms.MSSQL])
 def test_split_script_passes_batches_through(dbms: Dbms) -> None:
     script = "CREATE TABLE t (v INT); INSERT INTO t VALUES (1);"

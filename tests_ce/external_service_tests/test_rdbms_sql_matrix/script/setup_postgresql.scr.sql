@@ -1,3 +1,4 @@
+DROP FUNCTION IF EXISTS matrix_script_note_trigger();
 DROP TABLE IF EXISTS matrix_rows;
 DROP TABLE IF EXISTS matrix_rows_pk;
 DROP TABLE IF EXISTS matrix_rows_cpk;
@@ -20,4 +21,20 @@ INSERT INTO matrix_script (id, note) VALUES (2, 'x -- y');
 INSERT INTO matrix_script (id, note) VALUES (3, 'p /* q */ r');
 INSERT INTO matrix_script (id, note) VALUES (6, '100% :done');
 INSERT INTO matrix_script (id, note) VALUES (4, 'plsql');
-INSERT INTO matrix_script (id, note) VALUES (5, 'trigger');
+
+CREATE OR REPLACE FUNCTION matrix_script_note_trigger()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $function$
+BEGIN
+    IF NEW.note IS NULL THEN
+        NEW.note := 'trigger';
+    END IF;
+    RETURN NEW;
+END;
+$function$;
+
+CREATE TRIGGER matrix_script_note BEFORE INSERT ON matrix_script
+FOR EACH ROW EXECUTE FUNCTION matrix_script_note_trigger();
+
+INSERT INTO matrix_script (id, note) VALUES (5, NULL);

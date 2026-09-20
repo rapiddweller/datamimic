@@ -1,5 +1,7 @@
 USE master
 
+IF OBJECT_ID(N'matrix_script_note', N'TR') IS NOT NULL
+    DROP TRIGGER matrix_script_note;
 DROP TABLE IF EXISTS matrix_rows;
 DROP TABLE IF EXISTS matrix_rows_pk;
 DROP TABLE IF EXISTS matrix_rows_cpk;
@@ -22,4 +24,13 @@ INSERT INTO matrix_script (id, note) VALUES (2, 'x -- y');
 INSERT INTO matrix_script (id, note) VALUES (3, 'p /* q */ r');
 INSERT INTO matrix_script (id, note) VALUES (6, '100% :done');
 INSERT INTO matrix_script (id, note) VALUES (4, 'plsql');
-INSERT INTO matrix_script (id, note) VALUES (5, 'trigger');
+
+EXEC(N'CREATE TRIGGER matrix_script_note ON matrix_script AFTER INSERT AS
+BEGIN
+    UPDATE target SET note = ''trigger''
+    FROM matrix_script AS target
+    INNER JOIN inserted AS row_data ON target.id = row_data.id
+    WHERE row_data.note IS NULL;
+END');
+
+INSERT INTO matrix_script (id, note) VALUES (5, NULL);
