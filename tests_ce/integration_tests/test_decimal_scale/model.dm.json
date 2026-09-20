@@ -13,8 +13,8 @@
         {
           "kind": "decimal_range",
           "name": "amount",
-          "minimum": "1.00",
-          "maximum": "9.99",
+          "minimum": "1.001",
+          "maximum": "1.019",
           "scale": 2
         }
       ]

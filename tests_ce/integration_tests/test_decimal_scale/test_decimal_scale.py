@@ -46,6 +46,6 @@ def test_decimal_scale_compiles_to_runtime_grid_and_replays() -> None:
     for row in first:
         amount = row["amount"]
         assert isinstance(amount, Decimal)
-        assert Decimal("1.00") <= amount <= Decimal("9.99")
+        assert Decimal("1.001") <= amount <= Decimal("1.019")
         assert amount == amount.quantize(Decimal("0.01"))
         assert amount.as_tuple().exponent == -2

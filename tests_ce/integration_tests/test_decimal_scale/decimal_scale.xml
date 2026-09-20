@@ -1,5 +1,5 @@
 <setup rngSeed="7">
     <generate name="payments" count="25" target="JSON">
-        <key name="amount" type="decimal" min="1.00" max="9.99" granularity="0.01"/>
+        <key name="amount" type="decimal" min="1.01" max="1.01" granularity="0.01"/>
     </generate>
 </setup>

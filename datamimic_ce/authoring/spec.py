@@ -14,7 +14,7 @@ the compiler's responsibility.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import Decimal
+from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
 from typing import Annotated, Final, Literal
 
 from pydantic import (
@@ -235,7 +235,19 @@ class DecimalRangeField(FieldIntent):
     def _ordered_bounds(self) -> DecimalRangeField:
         if self.minimum > self.maximum:
             raise ValueError(_ORDERED_BOUNDS_ERROR)
+        minimum, maximum = self.runtime_bounds()
+        if minimum > maximum:
+            raise ValueError("range contains no value at the requested scale")
         return self
+
+    def runtime_bounds(self) -> tuple[Decimal, Decimal]:
+        if self.scale is None:
+            return self.minimum, self.maximum
+        quantum = Decimal(1).scaleb(-self.scale)
+        return (
+            self.minimum.quantize(quantum, rounding=ROUND_CEILING),
+            self.maximum.quantize(quantum, rounding=ROUND_FLOOR),
+        )
 
 
 class StringLengthField(FieldIntent):

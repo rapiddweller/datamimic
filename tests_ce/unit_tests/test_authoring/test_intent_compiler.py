@@ -132,6 +132,30 @@ def test_decimal_range_scale_rejects_unknown_fields() -> None:
         AuthoringSpecV1.model_validate(raw)
 
 
+def test_decimal_range_scale_rejects_ranges_without_a_grid_value() -> None:
+    raw = {
+        "version": "1",
+        "products": [
+            {
+                "kind": "generated",
+                "name": "payments",
+                "count": 1,
+                "fields": [
+                    {
+                        "kind": "decimal_range",
+                        "name": "amount",
+                        "minimum": "1.001",
+                        "maximum": "1.009",
+                        "scale": 2,
+                    }
+                ],
+            }
+        ],
+    }
+    with pytest.raises(ValidationError, match="no value at the requested scale"):
+        AuthoringSpecV1.model_validate(raw)
+
+
 def test_decimal_range_without_scale_keeps_runtime_default() -> None:
     spec = AuthoringSpecV1.model_validate(
         {
