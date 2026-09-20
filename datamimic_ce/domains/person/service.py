@@ -7,6 +7,7 @@ from typing import Any
 from ..determinism import (
     canonical_json,
     derive_seed,
+    determinism_proof,
     frozen_clock,
     hash_bytes,
     mix_seed,
@@ -133,9 +134,5 @@ def generate(req: PersonRequest, *, profile_seed: int | None = None) -> dict[str
         "version": req.version,
         "request_hash": req.request_hash,
         "items": items,
-        "determinism_proof": {
-            "algorithm": "uuid5+sha256",
-            "seed_canonical": str(derived_seed),
-            "content_hash": items_hash,
-        },
+        "determinism_proof": determinism_proof(derived_seed, items_hash),
     }

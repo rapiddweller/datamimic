@@ -21,7 +21,10 @@ from __future__ import annotations
 
 import re
 from datetime import date, datetime
+from typing import TypeGuard
 
+from datamimic_ce.domains.domain_core.attribute_catalog import FieldSpec
+from datamimic_ce.domains.domain_core.base_entity import BaseEntity
 from datamimic_ce.domains.domain_core.entity_registry import EntitySpec, list_entity_specs
 
 SEED = 42
@@ -34,12 +37,12 @@ def _is_scalar(value: object) -> bool:
     return value is not None and isinstance(value, _SCALAR_TYPES)
 
 
-def _is_entity_obj(value: object) -> bool:
+def _is_entity_obj(value: object) -> TypeGuard[BaseEntity]:
     """A nested model/record exposed as an object (reached via ``.attr``)."""
-    return not isinstance(value, dict) and hasattr(value, "to_dict")
+    return isinstance(value, BaseEntity)
 
 
-def _scalar_leaf_fields(spec: EntitySpec) -> list:
+def _scalar_leaf_fields(spec: EntitySpec) -> list[FieldSpec]:
     """Leaf (non-grouped) fields with a scalar python type, in declared order."""
     return [
         f
@@ -48,7 +51,7 @@ def _scalar_leaf_fields(spec: EntitySpec) -> list:
     ]
 
 
-def _scalar_subkeys(obj: object) -> list[str]:
+def _scalar_subkeys(obj: BaseEntity | dict[str, object]) -> list[str]:
     """Names of scalar leaves of a nested record (entity object or plain dict)."""
     mapping = obj.to_dict() if _is_entity_obj(obj) else obj
     return [k for k, v in mapping.items() if _is_scalar(v)]
@@ -129,12 +132,18 @@ def _entity_keys(spec: EntitySpec) -> list[tuple[str, str]]:
         raise ValueError(f"Entity '{spec.entity}' exposes no scalar field to seed the determinism model with.")
 
     sample = spec.service_cls(rng=Random(SEED)).generate()
+    field_specs = {field.name: field for field in spec.attributes}
     nested: list[tuple[str, str]] = []
     for field, value in sample.to_dict().items():
         if not isinstance(value, dict | list):
             continue
-        prop = getattr(sample, field, value)  # scripts reach the property, not the serialised value
-        candidate = _nested_path(field, prop)
+        field_spec = field_specs[field]
+        if field_spec.children and isinstance(value, dict):
+            subfield = _first(_scalar_subkeys(value))
+            candidate = (f"{field}_{subfield}", f"e.{field}.{subfield}") if subfield else None
+        else:
+            prop: object = sample.field_cache.get(field, value)
+            candidate = _nested_path(field, prop)
         if candidate is not None:
             nested.append(candidate)
 

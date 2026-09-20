@@ -21,7 +21,8 @@ The three models differ only in their seed wiring:
 
 Hand-written models: ``dsl_constructs_seeded.xml`` (non-entity DSL constructs) and
 ``script_globals_seeded.xml`` / ``script_globals_unseeded.xml`` (stdlib names inside script expressions),
-``replay_all_seeded.xml`` (every literal generator and script random/clock path, replayed across processes).
+``replay_all_seeded.xml`` (every literal generator except the DB-backed sequence table, plus supported
+dynamic script globals, replayed across processes).
 
 Regenerate the committed models after adding/removing an entity::
 
@@ -30,12 +31,14 @@ Regenerate the committed models after adding/removing an entity::
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
@@ -45,11 +48,24 @@ from tests_ce.integration_tests.dsl_model_builder import build_all_entities_seed
 
 _TEST_DIR = Path(__file__).resolve().parent
 
+
+class SeedScenario(TypedDict):
+    setup_seed: int | None
+    variable_seed: int | None
+
+
 # Committed model -> the builder seeding that must reproduce it.
-SCENARIOS = {
+SCENARIOS: dict[str, SeedScenario] = {
     "seed_in_setup.xml": {"setup_seed": 42, "variable_seed": None},
     "seed_setup_and_generator.xml": {"setup_seed": 42, "variable_seed": 99},
     "no_seed.xml": {"setup_seed": None, "variable_seed": None},
+}
+REJECTED_SEEDED_MODELS = {
+    "seeded_reject_random_system_random.xml": "random.SystemRandom",
+    "seeded_reject_numpy_random.xml": "np.random",
+    "seeded_reject_os_urandom.xml": "os.urandom",
+    "seeded_reject_os_getrandom.xml": "os.getrandom",
+    "seeded_reject_uuid_uuid1.xml": "uuid.uuid1",
 }
 
 
@@ -140,6 +156,12 @@ def test_unseeded_script_globals_stay_random() -> None:
     assert [row["rand_int"] for row in first] != [row["rand_int"] for row in second]
 
 
+@pytest.mark.parametrize(("filename", "source"), REJECTED_SEEDED_MODELS.items())
+def test_seeded_rejected_entropy_sources_fail_from_committed_models(filename: str, source: str) -> None:
+    with pytest.raises(ValueError, match=rf"'{re.escape(source)}' draws entropy that <setup rngSeed> cannot replay"):
+        _run(_TEST_DIR, filename)
+
+
 _REPO_ROOT = _TEST_DIR.parents[2]
 _RUN_IN_FRESH_PROCESS = """
 import json, sys
@@ -147,11 +169,17 @@ from pathlib import Path
 from datamimic_ce.data_mimic_test import DataMimicTest
 engine = DataMimicTest(test_dir=Path(sys.argv[1]), filename=sys.argv[2], capture_test_result=True)
 engine.test_with_timer()
-print("RESULT" + json.dumps(engine.capture_result(), default=str, sort_keys=True))
+result = json.dumps(engine.capture_result(), default=str, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+print("RESULT" + result)
 """
 
 
-def _run_in_fresh_process(filename: str) -> dict:
+def canonical_result_bytes(result: object) -> bytes:
+    serialized = json.dumps(result, default=str, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+    return serialized.encode("utf-8")
+
+
+def _run_in_fresh_process(filename: str) -> dict[str, object]:
     completed = subprocess.run(
         [sys.executable, "-c", _RUN_IN_FRESH_PROCESS, str(_TEST_DIR), filename],
         capture_output=True,
@@ -159,10 +187,23 @@ def _run_in_fresh_process(filename: str) -> dict:
         encoding="utf-8",
         check=True,
         cwd=_REPO_ROOT,
-        env={**os.environ, "PYTHONPATH": str(_REPO_ROOT)},
+        env={
+            **os.environ,
+            "PYTHONIOENCODING": "utf-8",
+            "PYTHONPATH": str(_REPO_ROOT),
+            "PYTHONUTF8": "1",
+        },
     )
     result_line = next(line for line in completed.stdout.splitlines() if line.startswith("RESULT"))
-    return json.loads(result_line.removeprefix("RESULT"))
+    parsed: object = json.loads(result_line.removeprefix("RESULT"))
+    if not isinstance(parsed, dict):
+        raise ValueError("fresh process result must be a JSON object")
+    result: dict[str, object] = {}
+    for key, value in parsed.items():
+        if not isinstance(key, str):
+            raise ValueError("fresh process result keys must be strings")
+        result[key] = value
+    return result
 
 
 def test_replay_model_covers_every_literal_generator() -> None:
@@ -172,14 +213,16 @@ def test_replay_model_covers_every_literal_generator() -> None:
 
 
 def test_every_seeded_path_replays_across_processes() -> None:
-    """Same Python, same machine, two separate processes: every literal generator and every random /
-    clock path of the script globals produces identical output under <setup rngSeed>."""
+    """Two separate processes replay every literal generator and supported dynamic script globals
+    identically under <setup rngSeed>."""
     first = _run_in_fresh_process("replay_all_seeded.xml")
     second = _run_in_fresh_process("replay_all_seeded.xml")
     assert first["literal"] and first["script"]
-    for product in ("literal", "script"):
-        for field in first[product][0]:
-            assert [row[field] for row in first[product]] == [row[field] for row in second[product]], field
+    assert canonical_result_bytes(first) == canonical_result_bytes(second)
+
+
+def seeded_model_hash(filename: str) -> str:
+    return hashlib.sha256(canonical_result_bytes(_run_in_fresh_process(filename))).hexdigest()
 
 
 if __name__ == "__main__":

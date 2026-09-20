@@ -2,13 +2,25 @@ from __future__ import annotations
 
 import hashlib
 import json
+import platform
 import random
 import uuid
 from collections.abc import Iterable
 from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, TypedDict
+
+from datamimic_ce.utils.version_util import get_datamimic_lib_version
+
+
+class DeterminismProof(TypedDict):
+    algorithm: Literal["uuid5+sha256"]
+    seed_canonical: str
+    content_hash: str
+    engine_version: str
+    python_version: str
+    faker_version: str
 
 
 def canonicalize(obj: Any) -> Any:
@@ -31,6 +43,17 @@ def canonical_json(obj: Any) -> bytes:
 
 def hash_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def determinism_proof(seed: int, content_hash: str) -> DeterminismProof:
+    return {
+        "algorithm": "uuid5+sha256",
+        "seed_canonical": str(seed),
+        "content_hash": content_hash,
+        "engine_version": get_datamimic_lib_version() or "unknown",
+        "python_version": platform.python_version(),
+        "faker_version": get_datamimic_lib_version("faker") or "unknown",
+    }
 
 
 def stable_uuid(namespace: str, *parts: Any) -> str:

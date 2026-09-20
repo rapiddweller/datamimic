@@ -265,7 +265,9 @@ Most test data tools produce random output. That breaks regression tests, audit 
 - Set `<setup rngSeed="N">` and the same model produces the same data on every run: every generator, entity and script expression, including `random`, `uuid`, `fake` and the current date and time (fixed at `2025-01-01 12:00`). Without a seed, every run is different.
 - `distribution="ordered"` reads a source in file order; `distribution="random"` shuffles it, reproducibly with a seed.
 - The Python facade `generate_domain(...)` returns `determinism_proof.content_hash`: the same hash means the same data.
-- Reproducible on the same Python, dependencies and machine. Every generator and script path is replayed in two separate processes on each CI run ([`test_determinism_seed_scenarios`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/integration_tests/test_determinism_seed_scenarios)).
+- The committed replay model covers every registered literal generator except the database-backed `SequenceTableGenerator`, plus the supported dynamic script-global families. It is replayed in two separate processes on each CI run ([`test_determinism_seed_scenarios`](https://github.com/rapiddweller/datamimic/tree/development/tests_ce/integration_tests/test_determinism_seed_scenarios)).
+
+The CE seeded-runtime guarantee is scoped to the tested Python/dependency profile. CI runs the committed facade and DSL proofs on x64 Ubuntu and Windows for Python 3.10 through 3.13, plus host-timezone cells, and compares the actual canonical UTF-8 hashes across all matrix cells. Other Python versions accepted by the package metadata (`requires-python >=3.10`) are outside this determinism matrix. This repository does not commit `uv.lock`, so plain unlocked installs and future dependency resolutions are outside a permanently locked byte-identical guarantee and need their own golden baseline.
 
 **EE** adds a configurable clock and keeps seeded output identical across distributed workers and multi-system runs.
 

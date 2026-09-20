@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from ..determinism import canonical_json, derive_seed, hash_bytes, mix_seed, stable_uuid, with_rng
+from ..determinism import canonical_json, derive_seed, determinism_proof, hash_bytes, mix_seed, stable_uuid, with_rng
 from ..exceptions import DomainError
 from ..locales import SUPPORTED_DATASET_CODES, load_locale
 
@@ -120,9 +120,5 @@ def generate(req: AddressRequest) -> dict[str, Any]:
         "version": req.version,
         "request_hash": req.request_hash,
         "items": items,
-        "determinism_proof": {
-            "algorithm": "uuid5+sha256",
-            "seed_canonical": str(derived_seed),
-            "content_hash": items_hash,
-        },
+        "determinism_proof": determinism_proof(derived_seed, items_hash),
     }

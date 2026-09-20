@@ -1,0 +1,5 @@
+<setup rngSeed="42">
+    <generate name="rejected" count="1" target="">
+        <key name="value" script="os.urandom(8)"/>
+    </generate>
+</setup>

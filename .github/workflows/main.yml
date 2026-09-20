@@ -235,6 +235,122 @@ jobs:
           python -c "import datamimic_ce; import datamimic_ce.authoring.contracts; import datamimic_ce.cli"
           datamimic --help
 
+  runtime_determinism_matrix:
+    name: Seeded runtime determinism on ${{ matrix.os }} Python ${{ matrix.python-version }} (${{ matrix.timezone }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            timezone: Etc/UTC
+            python-version: '3.11'
+            cell: ubuntu-py311-utc
+          - os: ubuntu-22.04
+            timezone: Etc/UTC
+            python-version: '3.10'
+            cell: ubuntu-py310-utc
+          - os: ubuntu-22.04
+            timezone: Etc/UTC
+            python-version: '3.12'
+            cell: ubuntu-py312-utc
+          - os: ubuntu-22.04
+            timezone: Etc/UTC
+            python-version: '3.13'
+            cell: ubuntu-py313-utc
+          - os: ubuntu-22.04
+            timezone: America/Los_Angeles
+            python-version: '3.11'
+            cell: ubuntu-py311-los-angeles
+          - os: windows-latest
+            timezone: UTC
+            python-version: '3.11'
+            cell: windows-py311-utc
+          - os: windows-latest
+            timezone: Pacific Standard Time
+            python-version: '3.11'
+            cell: windows-py311-pacific
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set Up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+
+      - name: Install uv Package Manager
+        uses: astral-sh/setup-uv@v8.1.0
+
+      - name: Install dependencies
+        run: uv sync --python ${{ matrix.python-version }}
+
+      - name: Set host timezone (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          sudo ln -snf "/usr/share/zoneinfo/${{ matrix.timezone }}" /etc/localtime
+          echo "${{ matrix.timezone }}" | sudo tee /etc/timezone >/dev/null
+          date
+
+      - name: Set host timezone (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          tzutil /s "${{ matrix.timezone }}"
+          tzutil /g
+
+      - name: Run facade API determinism proof
+        run: uv run pytest tests_ce/architecture/test_facade_determinism.py -q
+
+      - name: Run committed seeded entity replay proof
+        run: >-
+          uv run pytest
+          'tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py::test_committed_model_is_in_sync_with_builder[seed_in_setup.xml]'
+          tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py::test_setup_seed_makes_the_full_model_deterministic -q
+
+      - name: Run committed seeded literal and Safe Global replay proof
+        run: >-
+          uv run pytest
+          tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py::test_replay_model_covers_every_literal_generator
+          tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py::test_every_seeded_path_replays_across_processes
+          tests_ce/integration_tests/test_determinism_seed_scenarios/test_determinism_seed_scenarios.py::test_seeded_rejected_entropy_sources_fail_from_committed_models -q
+
+      - name: Write actual seeded runtime determinism manifest
+        run: uv run python -m tests_ce.architecture.runtime_determinism_manifest generate --output runtime-determinism-manifest.json
+
+      - name: Upload actual seeded runtime determinism manifest
+        uses: actions/upload-artifact@v6
+        with:
+          name: seeded-runtime-hashes-${{ matrix.cell }}
+          path: runtime-determinism-manifest.json
+          if-no-files-found: error
+          retention-days: 1
+
+  runtime_determinism_fan_in:
+    name: Compare seeded runtime determinism hashes across matrix cells
+    runs-on: ubuntu-22.04
+    needs: runtime_determinism_matrix
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set Up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Download actual seeded runtime determinism manifests
+        uses: actions/download-artifact@v7
+        with:
+          pattern: seeded-runtime-hashes-*
+          path: runtime-manifests
+          merge-multiple: false
+
+      - name: Compare actual hashes across jobs and with committed goldens
+        run: python -m tests_ce.architecture.runtime_determinism_manifest compare --root runtime-manifests --expected-count 7
+
   unit_test:
     runs-on: ubuntu-22.04
     needs: install_dependencies
@@ -257,7 +373,7 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           . .venv/bin/activate
-          uv run pytest tests_ce/unit_tests/ --cov --cov-report=xml
+          uv run pytest tests_ce/unit_tests/ tests_ce/architecture/test_facade_determinism.py tests_ce/architecture/test_runtime_determinism_manifest.py --cov --cov-report=xml
         shell: bash
       - name: Upload coverage report
         uses: actions/upload-artifact@v6
@@ -689,7 +805,7 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-22.04
-    needs: [e2e_test, mypy, ruff, python_310_smoke]
+    needs: [e2e_test, runtime_determinism_fan_in, mypy, ruff, python_310_smoke]
     environment:
       name: pypi
       url: https://pypi.org/p/datamimic-ce
