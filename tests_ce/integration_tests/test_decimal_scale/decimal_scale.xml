@@ -1,5 +1,8 @@
 <setup rngSeed="7">
     <generate name="payments" count="25" target="JSON">
-        <key name="amount" type="decimal" min="1.01" max="1.01" granularity="0.01"/>
+        <key name="amount" type="decimal" min="1.01" max="9.01" granularity="0.01"/>
+        <key name="whole_amount" type="decimal" min="3" max="4" granularity="1"/>
+        <key name="fine_amount" type="decimal" min="1E-15" max="9E-15" granularity="0.000000000000001"/>
+        <key name="large_amount" type="decimal" min="1000000000000000.000000000000000" max="1000000000000009.000000000000000" granularity="0.000000000000001"/>
     </generate>
 </setup>

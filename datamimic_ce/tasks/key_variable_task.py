@@ -8,7 +8,7 @@ import ast
 from abc import abstractmethod
 from collections.abc import Iterable, Iterator
 from datetime import datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, localcontext
 from random import Random
 from typing import Any
 
@@ -435,7 +435,18 @@ class KeyVariableTask(Task):
             # str() so a float value (e.g. 8.2) doesn't re-introduce binary float error
             decimal_value = Decimal(str(value))
             if isinstance(self._statement, KeyStatement) and self._statement.granularity is not None:
-                return decimal_value.quantize(Decimal(self._statement.granularity))
+                granularity = Decimal(self._statement.granularity)
+                exponent = granularity.as_tuple().exponent
+                if not isinstance(exponent, int):
+                    return decimal_value.quantize(granularity)
+                precision = max(
+                    len(decimal_value.as_tuple().digits),
+                    len(granularity.as_tuple().digits),
+                    decimal_value.adjusted() + abs(exponent) + 1,
+                )
+                with localcontext() as context:
+                    context.prec = precision
+                    return decimal_value.quantize(granularity)
             return decimal_value
         elif data_type == DATA_TYPE_BINARY:
             if isinstance(value, bytes | bytearray):

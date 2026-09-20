@@ -14,7 +14,7 @@ the compiler's responsibility.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
+from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal, localcontext
 from typing import Annotated, Final, Literal
 
 from pydantic import (
@@ -244,10 +244,18 @@ class DecimalRangeField(FieldIntent):
         if self.scale is None:
             return self.minimum, self.maximum
         quantum = Decimal(1).scaleb(-self.scale)
-        return (
-            self.minimum.quantize(quantum, rounding=ROUND_CEILING),
-            self.maximum.quantize(quantum, rounding=ROUND_FLOOR),
+        precision = max(
+            len(self.minimum.as_tuple().digits),
+            len(self.maximum.as_tuple().digits),
+            self.minimum.adjusted() + self.scale + 1,
+            self.maximum.adjusted() + self.scale + 1,
         )
+        with localcontext() as context:
+            context.prec = precision
+            return (
+                self.minimum.quantize(quantum, rounding=ROUND_CEILING),
+                self.maximum.quantize(quantum, rounding=ROUND_FLOOR),
+            )
 
 
 class StringLengthField(FieldIntent):

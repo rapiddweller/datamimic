@@ -14,8 +14,29 @@
           "kind": "decimal_range",
           "name": "amount",
           "minimum": "1.001",
-          "maximum": "1.019",
+          "maximum": "9.019",
           "scale": 2
+        },
+        {
+          "kind": "decimal_range",
+          "name": "whole_amount",
+          "minimum": "2.1",
+          "maximum": "4.9",
+          "scale": 0
+        },
+        {
+          "kind": "decimal_range",
+          "name": "fine_amount",
+          "minimum": "0.000000000000001",
+          "maximum": "0.000000000000009",
+          "scale": 15
+        },
+        {
+          "kind": "decimal_range",
+          "name": "large_amount",
+          "minimum": "1000000000000000",
+          "maximum": "1000000000000009",
+          "scale": 15
         }
       ]
     }
@@ -26,8 +47,29 @@
       "kind": "range",
       "product": "payments",
       "field": "amount",
-      "minimum": "1.00",
-      "maximum": "9.99"
+      "minimum": "1.001",
+      "maximum": "9.019"
+    },
+    {
+      "kind": "range",
+      "product": "payments",
+      "field": "whole_amount",
+      "minimum": "2.1",
+      "maximum": "4.9"
+    },
+    {
+      "kind": "range",
+      "product": "payments",
+      "field": "fine_amount",
+      "minimum": "0.000000000000001",
+      "maximum": "0.000000000000009"
+    },
+    {
+      "kind": "range",
+      "product": "payments",
+      "field": "large_amount",
+      "minimum": "1000000000000000",
+      "maximum": "1000000000000009"
     }
   ]
 }
