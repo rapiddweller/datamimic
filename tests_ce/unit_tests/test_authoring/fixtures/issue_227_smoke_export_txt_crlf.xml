@@ -1,0 +1,5 @@
+<setup rngSeed="1">
+    <generate name="rows" count="3" target="TXT(line_terminator='\r\n')">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+</setup>

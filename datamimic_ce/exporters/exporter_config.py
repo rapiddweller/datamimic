@@ -23,3 +23,4 @@ class ExporterConfig:
     chunk_size: int | None
     encoding: str | None
     export_uri: str | None = None
+    track_serialized_rows: bool = False

@@ -34,6 +34,8 @@ class TXTExporter(UnifiedBufferedExporter):
         self.line_terminator = (
             params.get("line_terminator") or setup_context.default_line_separator or os.linesep or "\n"
         )
+        self._track_serialized_rows = config.track_serialized_rows
+        self._serialized_records_by_buffer: dict[Path, list[str]] = {}
         super().__init__("txt", config)
         logger.info(
             f"TXTExporter initialized with chunk size {config.chunk_size}, separator '{self.separator}', "
@@ -52,12 +54,15 @@ class TXTExporter(UnifiedBufferedExporter):
         """Writes data to the current buffer file in TXT format."""
         try:
             buffer_file = self._get_buffer_file(worker_id, chunk_idx)
-            with buffer_file.open("a", encoding=self.encoding) as txtfile:
+            serialized_records: list[str] = []
+            with buffer_file.open("a", encoding=self.encoding, newline="") as txtfile:
                 for record in data:
-                    # Format each record as "name: item"
-                    # Assuming 'record' is a dict; convert it to a string representation
-                    data_string = f"{self.product_name}: {record}{self.line_terminator}"
-                    txtfile.write(data_string)
+                    serialized = f"{self.product_name}: {record}{self.line_terminator}"
+                    txtfile.write(serialized)
+                    if self._track_serialized_rows:
+                        serialized_records.append(serialized)
+            if self._track_serialized_rows:
+                self._serialized_records_by_buffer.setdefault(buffer_file, []).extend(serialized_records)
             logger.debug(f"Wrote {len(data)} records to buffer file: {buffer_file}")
         except Exception as e:
             logger.error(f"Error writing data to buffer: {e}")
@@ -69,7 +74,17 @@ class TXTExporter(UnifiedBufferedExporter):
         pass
 
     def count_buffered_rows(self, worker_id: int) -> int:
-        return sum(
-            buffer_file.read_text(encoding=self.encoding).count(self.line_terminator)
-            for buffer_file in self._get_buffer_tmp_dir(worker_id).glob("*.txt")
-        )
+        if not self._track_serialized_rows:
+            raise ValueError("TXT artifact verification requires serialized-row tracking")
+        count = 0
+        for buffer_file in self._get_buffer_tmp_dir(worker_id).glob("*.txt"):
+            with buffer_file.open("r", encoding=self.encoding, newline="") as txtfile:
+                actual_content = txtfile.read()
+            expected_records = self._serialized_records_by_buffer.get(buffer_file)
+            if expected_records is None:
+                raise ValueError(f"TXT exporter has no serialized record state for {buffer_file}")
+            expected_content = "".join(expected_records)
+            if actual_content != expected_content:
+                raise ValueError(f"TXT export artifact differs from serialized records for {buffer_file}")
+            count += len(expected_records)
+        return count

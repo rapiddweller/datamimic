@@ -172,11 +172,11 @@ class TestXMLExporter(unittest.TestCase):
     def test_count_buffered_rows_distinguishes_flattened_record_from_empty_wrapper(self):
         buffer_file = self.exporter._get_buffer_file(1, 0)
         buffer_file.write_text(
-            "<list>\n<item><list>value</list></item>\n</list>",
+            "<list>\n<item><list><item>a</item><item>b</item></list></item>\n</list>",
             encoding="utf-8",
         )
         self.exporter._finalize_buffer_file(buffer_file)
-        self.assertEqual(buffer_file.read_text(encoding="utf-8"), "<list>value</list>")
+        self.assertEqual(buffer_file.read_text(encoding="utf-8"), "<list><item>a</item><item>b</item></list>")
         self.assertEqual(self.exporter.count_buffered_rows(1), 1)
 
         empty_exporter = make_exporter(

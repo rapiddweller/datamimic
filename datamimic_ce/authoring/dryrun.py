@@ -649,6 +649,7 @@ def _smoke_export(
                         chunk_size=None,
                         encoding=None,
                         export_uri=None,
+                        track_serialized_rows=True,
                     )
                     exporter = _BUFFERED_EXPORTERS[exporter_name](config, dict(params))
                     exporter.consume((basename, rows), full_name, ExporterStateManager(worker_id=1))

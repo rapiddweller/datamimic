@@ -145,33 +145,30 @@ class XMLExporter(UnifiedBufferedExporter):
         # remove <list> and <item>, leave only inside data
         if is_single_item:
             try:
-                with buffer_file.open("r", encoding=self.encoding) as xmlfile:
-                    xml_content = xmlfile.read()
+                parser = etree.XMLParser(resolve_entities=False, no_network=True)
+                tree = etree.parse(str(buffer_file), parser)
+                root = tree.getroot()
+                item = next(child for child in root if child.tag == self.item_element)
+                item_content = etree.tostring(item[0], encoding="unicode")
             except Exception as e:
                 logger.error(f"Error finalizing buffer file: {e}")
                 raise ExporterError(f"Error finalizing buffer file: {e}") from e
-            start_tag = "<item>"
-            end_tag = "</item>"
-            start_index = xml_content.find(start_tag)
-            end_index = xml_content.find(end_tag)
-            if start_index != -1 and end_index != -1:
-                # Extract content between <item> and </item>
-                item_content = xml_content[start_index + len(start_tag) : end_index]
-                try:
-                    with buffer_file.open("w", encoding=self.encoding) as xmlfile:
-                        xmlfile.write(self._declaration() + item_content)
-                    self._flattened_buffer_files.add(buffer_file)
-                except Exception as e:
-                    logger.error(f"Error finalizing buffer file: {e}")
-                    raise ExporterError(f"Error finalizing buffer file: {e}") from e
+            try:
+                with buffer_file.open("w", encoding=self.encoding) as xmlfile:
+                    xmlfile.write(self._declaration() + item_content)
+                self._flattened_buffer_files.add(buffer_file)
+            except Exception as e:
+                logger.error(f"Error finalizing buffer file: {e}")
+                raise ExporterError(f"Error finalizing buffer file: {e}") from e
 
     def count_buffered_rows(self, worker_id: int) -> int:
         count = 0
         for buffer_file in self._get_buffer_tmp_dir(worker_id).glob("*.xml"):
+            parser = etree.XMLParser(resolve_entities=False, no_network=True)
+            root = etree.parse(str(buffer_file), parser).getroot()
             if buffer_file in self._flattened_buffer_files:
                 count += 1
                 continue
-            root = etree.parse(str(buffer_file)).getroot()
             count += sum(1 for child in root if child.tag == self.item_element)
         return count
 
@@ -187,13 +184,13 @@ class XMLExporter(UnifiedBufferedExporter):
         logger.debug("XMLExporter state has been reset.")
 
     def _is_single_item(self, buffer_file: Path) -> bool:
-        """Check if the root element contains exactly one 'item' with one child."""
+        """Check if the root contains one configured item with one child."""
         try:
-            parser = etree.XMLParser(resolve_entities=False, no_network=True, recover=True)
+            parser = etree.XMLParser(resolve_entities=False, no_network=True)
             tree = etree.parse(buffer_file, parser)
             root = tree.getroot()
 
-            items = [child for child in root if child.tag == "item"]
+            items = [child for child in root if child.tag == self.item_element]
             is_single_item = len(items) == 1 and len(items[0]) == 1
             return is_single_item
         except etree.ParseError as e:

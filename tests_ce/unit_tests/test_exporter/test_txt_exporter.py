@@ -78,6 +78,13 @@ class TestTXTExporter(unittest.TestCase):
             expected_line = f"test_product: {record}"
             self.assertEqual(out, expected_line)
 
+    def test_normal_export_does_not_retain_serialized_rows(self):
+        data = generate_mock_data(3)
+        self.exporter.consume(("test_product", data), "test_product", ExporterStateManager(1))
+
+        self.assertFalse(self.exporter._track_serialized_rows)
+        self.assertEqual(self.exporter._serialized_records_by_buffer, {})
+
     def test_export_with_different_line_terminators(self):
         """Test exporting data with different line terminator settings."""
         terminators = ["@@@@@@", "&&&&&", "YYYYYY", "!@##$%$^%^%^", "--__--"]

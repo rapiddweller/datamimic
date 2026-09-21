@@ -144,6 +144,8 @@ def test_smoke_export_passes_and_leaves_no_files(tmp_path: Path, monkeypatch) ->
         ("issue_227_smoke_export_xml_single_record.xml", 1),
         ("issue_227_smoke_export_xml_flattened_items.xml", 1),
         ("issue_227_smoke_export_txt_terminator.xml", 3),
+        ("issue_227_smoke_export_txt_crlf.xml", 3),
+        ("issue_227_smoke_export_txt_separator_value.xml", 3),
         ("issue_227_smoke_export_csv_quotechar.xml", 3),
     ],
 )
