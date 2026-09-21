@@ -765,18 +765,14 @@ def _allowed_values_result(
     captured: CapturedProducts,
 ) -> AllowedValuesAcceptanceResult:
     selected, error = _select_rows(captured, expectation.product, expectation.list_field)
-    values = None if selected is None else _values(
-        selected.rows,
-        product=expectation.product,
-        field=expectation.field,
-    )[0]
+    values: list[object] | None = None
+    if selected is not None:
+        values, error = _values(
+            selected.rows,
+            product=expectation.product,
+            field=expectation.field,
+        )
     if selected is None or values is None:
-        if selected is not None:
-            _ignored, error = _values(
-                selected.rows,
-                product=expectation.product,
-                field=expectation.field,
-            )
         return AllowedValuesAcceptanceResult(
             status=AcceptanceStatus.UNEVALUABLE,
             source=source,
@@ -808,18 +804,14 @@ def _range_result(
     captured: CapturedProducts,
 ) -> RangeAcceptanceResult:
     selected, error = _select_rows(captured, expectation.product, expectation.list_field)
-    values = None if selected is None else _values(
-        selected.rows,
-        product=expectation.product,
-        field=expectation.field,
-    )[0]
+    values: list[object] | None = None
+    if selected is not None:
+        values, error = _values(
+            selected.rows,
+            product=expectation.product,
+            field=expectation.field,
+        )
     if selected is None or values is None:
-        if selected is not None:
-            _ignored, error = _values(
-                selected.rows,
-                product=expectation.product,
-                field=expectation.field,
-            )
         return RangeAcceptanceResult(
             status=AcceptanceStatus.UNEVALUABLE,
             source=source,
