@@ -87,7 +87,15 @@ class CSVExporter(UnifiedBufferedExporter):
         count = 0
         for buffer_file in self._get_buffer_tmp_dir(worker_id).glob("*.csv"):
             with buffer_file.open(newline="", encoding=self.encoding) as csvfile:
-                count += sum(1 for _ in csv.DictReader(csvfile, delimiter=self.delimiter))
+                count += sum(
+                    1
+                    for _ in csv.DictReader(
+                        csvfile,
+                        delimiter=self.delimiter,
+                        quotechar=self.quotechar,
+                        quoting=self.quoting,
+                    )
+                )
         return count
 
     def _finalize_buffer_file(self, buffer_file: Path) -> None:

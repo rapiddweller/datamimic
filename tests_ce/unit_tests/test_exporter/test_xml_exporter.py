@@ -169,6 +169,29 @@ class TestXMLExporter(unittest.TestCase):
         xml_files = [f for f in list(self.tmp_dir_path.rglob("*")) if f.is_file()]
         self.assertEqual(len(xml_files), 0)
 
+    def test_count_buffered_rows_distinguishes_flattened_record_from_empty_wrapper(self):
+        buffer_file = self.exporter._get_buffer_file(1, 0)
+        buffer_file.write_text(
+            "<list>\n<item><list>value</list></item>\n</list>",
+            encoding="utf-8",
+        )
+        self.exporter._finalize_buffer_file(buffer_file)
+        self.assertEqual(buffer_file.read_text(encoding="utf-8"), "<list>value</list>")
+        self.assertEqual(self.exporter.count_buffered_rows(1), 1)
+
+        empty_exporter = make_exporter(
+            XMLExporter,
+            setup_context=self.setup_context,
+            product_name="empty",
+            chunk_size=1000,
+            root_element="list",
+            item_element="item",
+            encoding="utf-8",
+        )
+        empty_file = empty_exporter._get_buffer_file(1, 0)
+        empty_file.write_text("<list>\n</list>", encoding="utf-8")
+        self.assertEqual(empty_exporter.count_buffered_rows(1), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

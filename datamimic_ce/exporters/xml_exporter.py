@@ -34,6 +34,7 @@ class XMLExporter(UnifiedBufferedExporter):
         """Initialize the XMLExporter. root_element/item_element default to 'list'/'item'."""
         self.root_element = params.get("root_element") or "list"
         self.item_element = params.get("item_element") or "item"
+        self._flattened_buffer_files: set[Path] = set()
         super().__init__("xml", config)
         logger.info(
             f"XMLExporter initialized with chunk size {config.chunk_size}, root element '{self.root_element}', "
@@ -159,6 +160,7 @@ class XMLExporter(UnifiedBufferedExporter):
                 try:
                     with buffer_file.open("w", encoding=self.encoding) as xmlfile:
                         xmlfile.write(self._declaration() + item_content)
+                    self._flattened_buffer_files.add(buffer_file)
                 except Exception as e:
                     logger.error(f"Error finalizing buffer file: {e}")
                     raise ExporterError(f"Error finalizing buffer file: {e}") from e
@@ -166,8 +168,11 @@ class XMLExporter(UnifiedBufferedExporter):
     def count_buffered_rows(self, worker_id: int) -> int:
         count = 0
         for buffer_file in self._get_buffer_tmp_dir(worker_id).glob("*.xml"):
+            if buffer_file in self._flattened_buffer_files:
+                count += 1
+                continue
             root = etree.parse(str(buffer_file)).getroot()
-            count += len(root) if root.tag == self.root_element else 1
+            count += sum(1 for child in root if child.tag == self.item_element)
         return count
 
     def _declaration(self) -> str:
@@ -178,7 +183,7 @@ class XMLExporter(UnifiedBufferedExporter):
 
     def _reset_state(self):
         """Resets the exporter state for reuse."""
-        super()._reset_state()
+        self._flattened_buffer_files.clear()
         logger.debug("XMLExporter state has been reset.")
 
     def _is_single_item(self, buffer_file: Path) -> bool:

@@ -10,6 +10,8 @@ import json
 from multiprocessing.connection import Connection
 from pathlib import Path
 
+import pytest
+
 import datamimic_ce.authoring.dryrun as dryrun_module
 from datamimic_ce.authoring.contracts import (
     AuthoringStage,
@@ -134,6 +136,28 @@ def test_smoke_export_passes_and_leaves_no_files(tmp_path: Path, monkeypatch) ->
     assert run.smoke_export.attempted_exporters == 9
     assert run.smoke_export.failed_exporters == 0
     assert not list(tmp_path.iterdir())  # smoke writes never leave the temp dir
+
+
+@pytest.mark.parametrize(
+    ("fixture", "expected_rows"),
+    [
+        ("issue_227_smoke_export_xml_single_record.xml", 1),
+        ("issue_227_smoke_export_xml_flattened_items.xml", 1),
+        ("issue_227_smoke_export_txt_terminator.xml", 3),
+        ("issue_227_smoke_export_csv_quotechar.xml", 3),
+    ],
+)
+def test_smoke_export_reads_configured_final_artifact_dialects(
+    tmp_path: Path,
+    monkeypatch,
+    fixture: str,
+    expected_rows: int,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = dry_run_source((_FIXTURES / fixture).read_text(encoding="utf-8"), smoke_export=True)
+    assert result.ok, [(diagnostic.rule, diagnostic.message) for diagnostic in result.diagnostics]
+    assert result.products[0].count == expected_rows
+    assert not list(tmp_path.iterdir())
 
 
 def test_smoke_export_catches_unserializable_value_plain_dry_run_does_not(tmp_path: Path, monkeypatch) -> None:

@@ -70,6 +70,6 @@ class TXTExporter(UnifiedBufferedExporter):
 
     def count_buffered_rows(self, worker_id: int) -> int:
         return sum(
-            sum(1 for line in buffer_file.read_text(encoding=self.encoding).splitlines() if line)
+            buffer_file.read_text(encoding=self.encoding).count(self.line_terminator)
             for buffer_file in self._get_buffer_tmp_dir(worker_id).glob("*.txt")
         )
