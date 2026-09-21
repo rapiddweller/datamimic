@@ -64,6 +64,6 @@ class FixedWidthExporter(UnifiedBufferedExporter):
 
     def count_buffered_rows(self, worker_id: int) -> int:
         return sum(
-            len(FileUtil.read_fixed_width_to_dict_list(buffer_file))
+            len(FileUtil.read_fixed_width_to_dict_list(buffer_file, encoding=self.encoding))
             for buffer_file in self._get_buffer_tmp_dir(worker_id).glob("*.fcw")
         )

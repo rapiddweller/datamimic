@@ -129,7 +129,7 @@ class JsonExporter(UnifiedBufferedExporter):
         count = 0
         for buffer_file in self._get_buffer_tmp_dir(worker_id).glob(f"*.{self.get_file_extension()}"):
             with buffer_file.open(encoding=self.encoding) as file:
-                if self.use_ndjson:
+                if self.chunk_size != 1 and self.use_ndjson:
                     count += sum(1 for line in file if line.strip())
                     continue
                 payload = json.load(file)
