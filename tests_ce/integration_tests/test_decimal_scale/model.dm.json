@@ -1,0 +1,61 @@
+{
+  "version": "1",
+  "seed": 7,
+  "products": [
+    {
+      "kind": "generated",
+      "name": "payments",
+      "count": 25,
+      "targets": [
+        {"kind": "file_export", "format": "JSON", "export_uri": "out"}
+      ],
+      "fields": [
+        {
+          "kind": "decimal_range",
+          "name": "amount",
+          "minimum": "1.001",
+          "maximum": "9.019",
+          "scale": 2
+        },
+        {
+          "kind": "decimal_range",
+          "name": "whole_amount",
+          "minimum": "2.1",
+          "maximum": "4.9",
+          "scale": 0
+        },
+        {
+          "kind": "decimal_range",
+          "name": "fine_amount",
+          "minimum": "0.000000000000001",
+          "maximum": "0.000000000000009",
+          "scale": 15
+        }
+      ]
+    }
+  ],
+  "expectations": [
+    {"kind": "exact_count", "product": "payments", "count": 25},
+    {
+      "kind": "range",
+      "product": "payments",
+      "field": "amount",
+      "minimum": "1.001",
+      "maximum": "9.019"
+    },
+    {
+      "kind": "range",
+      "product": "payments",
+      "field": "whole_amount",
+      "minimum": "2.1",
+      "maximum": "4.9"
+    },
+    {
+      "kind": "range",
+      "product": "payments",
+      "field": "fine_amount",
+      "minimum": "0.000000000000001",
+      "maximum": "0.000000000000009"
+    }
+  ]
+}

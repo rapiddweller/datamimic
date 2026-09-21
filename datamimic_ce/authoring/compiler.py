@@ -151,13 +151,16 @@ def _range_field_element(
         if field.unique:
             attributes["distribution"] = "shuffle"
     elif isinstance(field, DecimalRangeField):
+        minimum, maximum = field.runtime_bounds()
         attributes.update(
             {
                 "type": "decimal",
-                "min": _stringify_number(field.minimum),
-                "max": _stringify_number(field.maximum),
+                "min": _stringify_number(minimum),
+                "max": _stringify_number(maximum),
             }
         )
+        if field.scale is not None:
+            attributes["granularity"] = format(Decimal(1).scaleb(-field.scale), "f")
     else:
         attributes.update(
             {

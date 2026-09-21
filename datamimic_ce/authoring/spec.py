@@ -14,8 +14,9 @@ the compiler's responsibility.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import Decimal
-from typing import Annotated, Literal
+from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal, InvalidOperation, localcontext
+from math import isfinite
+from typing import Annotated, Final, Literal
 
 from pydantic import (
     AfterValidator,
@@ -42,6 +43,8 @@ NonNegativeStrictInt = Annotated[StrictInt, Field(ge=0)]
 NonEmptyStrictStr = Annotated[StrictStr, Field(min_length=1)]
 INTENT_REPAIR_ALIASES_SCHEMA_KEY = "x-datamimic-repair-aliases"
 _ORDERED_BOUNDS_ERROR = "minimum must not exceed maximum"
+_DECIMAL_FLOAT_ROUNDTRIP_ERROR = "range is not representable by runtime FloatGenerator"
+MAX_DECIMAL_SCALE: Final[int] = 15
 
 
 class FieldIntentKind(StrEnum):
@@ -224,12 +227,62 @@ class DecimalRangeField(FieldIntent):
     kind: Literal[FieldIntentKind.DECIMAL_RANGE] = FieldIntentKind.DECIMAL_RANGE
     minimum: Decimal
     maximum: Decimal
+    scale: NonNegativeStrictInt | None = Field(
+        default=None,
+        le=MAX_DECIMAL_SCALE,
+        description="Supported scale is 0 through 15 decimal places; runtime range generation uses FloatGenerator.",
+    )
 
     @model_validator(mode="after")
     def _ordered_bounds(self) -> DecimalRangeField:
         if self.minimum > self.maximum:
             raise ValueError(_ORDERED_BOUNDS_ERROR)
+        try:
+            minimum, maximum = self.runtime_bounds()
+        except (InvalidOperation, OverflowError, ValueError) as error:
+            raise ValueError(_DECIMAL_FLOAT_ROUNDTRIP_ERROR) from error
+        if minimum > maximum:
+            raise ValueError("range contains no value at the requested scale")
+        if self.scale is not None:
+            quantum = Decimal(1).scaleb(-self.scale)
+            try:
+                runtime_minimum_float = float(minimum)
+                runtime_maximum_float = float(maximum)
+                runtime_quantum_float = float(quantum)
+                runtime_minimum = Decimal(str(runtime_minimum_float))
+                runtime_maximum = Decimal(str(runtime_maximum_float))
+                runtime_quantum = Decimal(str(runtime_quantum_float))
+            except (InvalidOperation, OverflowError, ValueError) as error:
+                raise ValueError(_DECIMAL_FLOAT_ROUNDTRIP_ERROR) from error
+            if (
+                not isfinite(runtime_minimum_float)
+                or not isfinite(runtime_maximum_float)
+                or not isfinite(runtime_quantum_float)
+                or not isfinite(runtime_maximum_float - runtime_minimum_float)
+                or runtime_quantum != quantum
+                or runtime_minimum > runtime_maximum
+                or runtime_minimum < self.minimum
+                or runtime_maximum > self.maximum
+            ):
+                raise ValueError(_DECIMAL_FLOAT_ROUNDTRIP_ERROR)
         return self
+
+    def runtime_bounds(self) -> tuple[Decimal, Decimal]:
+        if self.scale is None:
+            return self.minimum, self.maximum
+        quantum = Decimal(1).scaleb(-self.scale)
+        precision = max(
+            len(self.minimum.as_tuple().digits),
+            len(self.maximum.as_tuple().digits),
+            self.minimum.adjusted() + self.scale + 1,
+            self.maximum.adjusted() + self.scale + 1,
+        )
+        with localcontext() as context:
+            context.prec = precision
+            return (
+                self.minimum.quantize(quantum, rounding=ROUND_CEILING),
+                self.maximum.quantize(quantum, rounding=ROUND_FLOOR),
+            )
 
 
 class StringLengthField(FieldIntent):

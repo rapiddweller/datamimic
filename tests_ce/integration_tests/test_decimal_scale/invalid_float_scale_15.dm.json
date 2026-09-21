@@ -1,0 +1,19 @@
+{
+  "version": "1",
+  "products": [
+    {
+      "kind": "generated",
+      "name": "payments",
+      "count": 1,
+      "fields": [
+        {
+          "kind": "decimal_range",
+          "name": "amount",
+          "minimum": "9.999999999999999",
+          "maximum": "9.999999999999999",
+          "scale": 15
+        }
+      ]
+    }
+  ]
+}
