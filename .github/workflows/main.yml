@@ -836,23 +836,12 @@ jobs:
       id-token: write # IMPORTANT: mandatory for trusted publishing https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
       contents: read
     steps:
-      - name: Download All Build Artifacts
+      - name: Download Build Artifact
         uses: actions/download-artifact@v7
         with:
+          name: artifact
           path: dist
 
-      - name: Move *.whl and *.tar.gz to dist directory
-        run: |
-          mv dist/artifact/*.whl dist
-          mv dist/artifact/*.tar.gz dist
-          rm -rf dist/artifact
-          rm -rf dist/setup
-          rm -rf dist/coverage-functional
-          rm -rf dist/coverage-integration
-          rm -rf dist/coverage-unit
-          rm -rf dist/coverage-external-service
-          rm -rf dist/coverage-factory
-          rm -rf dist/coverage-api
       - name: List Contents of dist Directory
         run: ls -R dist
 
