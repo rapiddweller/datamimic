@@ -1,0 +1,8 @@
+[
+  {
+    "kind": "exact_count",
+    "product": "orders",
+    "list_field": "missing_items",
+    "count": 0
+  }
+]

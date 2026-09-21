@@ -1,0 +1,42 @@
+{
+  "version": "1",
+  "seed": 11,
+  "products": [
+    {
+      "kind": "generated",
+      "name": "orders",
+      "count": 1,
+      "fields": [
+        {
+          "kind": "increment",
+          "name": "order_id"
+        },
+        {
+          "kind": "nested_list",
+          "name": "items",
+          "minimum_count": 0,
+          "maximum_count": 0,
+          "fields": [
+            {
+              "kind": "increment",
+              "name": "line_no"
+            },
+            {
+              "kind": "int_range",
+              "name": "amount",
+              "minimum": 10,
+              "maximum": 20
+            }
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "kind": "file_export",
+          "format": "JSON",
+          "export_uri": "out"
+        }
+      ]
+    }
+  ]
+}

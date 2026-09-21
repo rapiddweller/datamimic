@@ -186,6 +186,10 @@ routinely exhaust their budget without ever submitting.
   "end": ..., "interval": "PT1H"}` (ISO-8601 strings) and `"series_count":
   N` for N parallel series. Row count = window points × series_count;
   declare it as an `exact_count` expectation so it is actually verified.
+- **Nested-list expectations**: set `"list_field"` on `exact_count`, `unique`,
+  `range`, or `allowed_values`; exact counts flatten that list, while the other
+  checks address its named inner `field`. `unique` with `scope: "per_parent"`
+  means within each root row.
 
 ## Working with an existing raw XML descriptor
 

@@ -1,0 +1,10 @@
+<setup rngSeed="11">
+    <generate name="orders" count="2" target="JSON" exportUri="out">
+        <key name="order_id" generator="IncrementGenerator"/>
+        <nestedKey name="items" type="list" minCount="2" maxCount="2">
+            <key name="line_no" generator="IncrementGenerator"/>
+            <key name="amount" type="int" min="10" max="20"/>
+            <key name="status" values="('open', 'closed')"/>
+        </nestedKey>
+    </generate>
+</setup>

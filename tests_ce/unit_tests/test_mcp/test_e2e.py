@@ -8,9 +8,9 @@ import pytest
 fastmcp_client = pytest.importorskip("fastmcp.client")
 Client = fastmcp_client.Client
 
-from datamimic_ce.mcp.server import create_server  # noqa: E402
 import datamimic_ce.mcp.server as mcp_server  # noqa: E402
 from datamimic_ce.authoring.diagnostics import LintResult  # noqa: E402
+from datamimic_ce.mcp.server import create_server  # noqa: E402
 
 
 @pytest.fixture
@@ -46,7 +46,7 @@ async def test_reference_and_check_delegate_canonical_contracts(anyio_backend: s
             "category": "expectation",
             "kind": "range",
             "required_fields": ["product", "field", "minimum", "maximum"],
-            "allowed_fields": ["kind", "product", "field", "minimum", "maximum"],
+            "allowed_fields": ["kind", "product", "list_field", "field", "minimum", "maximum"],
         } in authoring_content["variants"]
 
         field_reference = await client.call_tool(
