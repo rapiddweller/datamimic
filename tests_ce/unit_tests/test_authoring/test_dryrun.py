@@ -173,6 +173,40 @@ def test_smoke_export_honors_target_encoding(tmp_path: Path, monkeypatch) -> Non
     assert not list(tmp_path.iterdir())
 
 
+def test_issue_256_fixed_width_smoke_export_reads_rows_with_target_encoding(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = dry_run_source_captured(
+        (_FIXTURES / "issue_256_fixed_width_latin1.xml").read_text(encoding="utf-8"),
+        smoke_export=True,
+    )
+
+    assert result.result.ok, [(d.rule, d.message) for d in result.result.diagnostics]
+    assert result.result.stage is AuthoringStage.RUN
+    assert {product.name: product.count for product in result.result.products} == {"rows": 3}
+    assert result.smoke_export.applicable_exporters == 1
+    assert result.smoke_export.attempted_exporters == 1
+    assert result.smoke_export.failed_exporters == 0
+    assert not list(tmp_path.iterdir())
+
+
+def test_issue_256_ndjson_chunk_one_smoke_export_counts_each_row_once(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = dry_run_source_captured(
+        (_FIXTURES / "issue_256_json_ndjson_chunk_one.xml").read_text(encoding="utf-8"),
+        smoke_export=True,
+    )
+
+    assert result.result.ok, [(d.rule, d.message) for d in result.result.diagnostics]
+    assert result.result.stage is AuthoringStage.RUN
+    assert {product.name: product.count for product in result.result.products} == {"rows": 3}
+    assert result.smoke_export.applicable_exporters == 1
+    assert result.smoke_export.attempted_exporters == 1
+    assert result.smoke_export.failed_exporters == 0
+    assert not list(tmp_path.iterdir())
+
+
 def test_smoke_export_catches_unserializable_value_plain_dry_run_does_not(tmp_path: Path, monkeypatch) -> None:
     # THE asymmetry that motivates the feature: a value only the export layer rejects.
     # The bad product is NESTED on purpose — nested products must be smoked too

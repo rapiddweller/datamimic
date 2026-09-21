@@ -1,0 +1,5 @@
+<setup rngSeed="1">
+    <generate name="rows" count="3" target="FixedWidth(columns='name[10]', encoding='latin-1')">
+        <key name="name" constant="Müller"/>
+    </generate>
+</setup>
