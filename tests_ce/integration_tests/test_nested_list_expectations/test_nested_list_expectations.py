@@ -7,9 +7,11 @@ import sys
 from pathlib import Path
 
 from datamimic_ce.authoring.contracts import (
+    AcceptanceSource,
     AcceptanceStatus,
     AllowedValuesAcceptanceResult,
     ExactCountAcceptanceResult,
+    IntentValidationIssueCode,
     RangeAcceptanceResult,
     ScaffoldRequest,
     ScaffoldResult,
@@ -22,6 +24,10 @@ _REPO_ROOT = _TEST_DIR.parents[2]
 _MODEL = _TEST_DIR / "model.dm.json"
 _XML = _TEST_DIR / "datamimic.xml"
 _ACCEPTANCE_FAILURE = _TEST_DIR / "acceptance-fail.dm.json"
+_EMPTY_MODEL = _TEST_DIR / "empty-nested-list.dm.json"
+_CALLER_VALID = _TEST_DIR / "caller-valid-empty.json"
+_CALLER_INVALID_INNER = _TEST_DIR / "caller-invalid-inner-field.json"
+_CALLER_INVALID_LIST = _TEST_DIR / "caller-invalid-list-field.json"
 
 
 def _run_cli(*args: str, expect_success: bool = True) -> ScaffoldResult:
@@ -97,3 +103,54 @@ def test_nested_list_expectations_fail_on_bad_rows() -> None:
         AllowedValuesAcceptanceResult,
     }
     assert result.acceptance.failed == 4
+
+
+def test_caller_nested_list_expectation_accepts_empty_list() -> None:
+    result = _run_cli(
+        "scaffold",
+        str(_EMPTY_MODEL),
+        "--acceptance-requirements",
+        str(_CALLER_VALID),
+        "--format",
+        "json",
+        "--smoke-export",
+    )
+
+    assert result.verified is True
+    assert result.acceptance is not None
+    caller = next(item for item in result.acceptance.results if item.source is AcceptanceSource.CALLER)
+    assert isinstance(caller, ExactCountAcceptanceResult)
+    assert caller.list_field == "items"
+    assert caller.observed_count == 0
+    assert caller.status is AcceptanceStatus.PASS
+
+
+def test_caller_nested_list_references_fail_with_structured_paths() -> None:
+    for requirements, expected_path, expected_message in (
+        (
+            _CALLER_INVALID_INNER,
+            ("acceptance_requirements", 0, "field"),
+            "unknown field 'missing_amount' in nested_list 'orders.items'",
+        ),
+        (
+            _CALLER_INVALID_LIST,
+            ("acceptance_requirements", 0, "list_field"),
+            "unknown nested_list field 'orders.missing_items'",
+        ),
+    ):
+        result = _run_cli(
+            "scaffold",
+            str(_EMPTY_MODEL),
+            "--acceptance-requirements",
+            str(requirements),
+            "--format",
+            "json",
+            expect_success=False,
+        )
+
+        assert result.ok is False
+        assert len(result.issues) == 1
+        issue = result.issues[0]
+        assert issue.path == expected_path
+        assert issue.code is IntentValidationIssueCode.CONSTRAINT_VIOLATION
+        assert expected_message in issue.message

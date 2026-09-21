@@ -883,16 +883,59 @@ def _validate_expectation(
         index.require_field(expectation.parent_product, expectation.parent_field, context)
 
 
+def _expectation_error_field(
+    expectation: ExpectationIntent,
+    index: _IntentGraphIndex,
+) -> str:
+    if isinstance(expectation, ExactCountExpectation):
+        return "list_field" if expectation.list_field is not None else "product"
+    if isinstance(expectation, UniqueExpectation | AllowedValuesExpectation | RangeExpectation):
+        if expectation.list_field is None:
+            return "field"
+        nested_fields = index.nested_fields.get(expectation.product, {})
+        return "list_field" if expectation.list_field not in nested_fields else "field"
+    if isinstance(expectation, PerParentCountExpectation):
+        return "child_product"
+    if isinstance(expectation, ForeignKeyExpectation):
+        child_fields = index.fields.get(expectation.child_product, set())
+        return "child_field" if expectation.child_field not in child_fields else "parent_field"
+    return "product"
+
+
+def _validate_expectation_references(
+    expectations: tuple[ExpectationIntent, ...],
+    index: _IntentGraphIndex,
+    path_prefix: tuple[str, ...],
+    title: str,
+) -> None:
+    errors = _unknown_product_errors(expectations, index, path_prefix)
+    if not errors:
+        for position, expectation in enumerate(expectations):
+            try:
+                _validate_expectation(expectation, index)
+            except ValueError as error:
+                errors.append(
+                    InitErrorDetails(
+                        type=PydanticCustomError("value_error", str(error)),
+                        loc=(*path_prefix, position, _expectation_error_field(expectation, index)),
+                        input=expectation,
+                    )
+                )
+    if errors:
+        raise ValidationError.from_exception_data(title, errors)
+
+
 def _validate_expectations(
     expectations: tuple[ExpectationIntent, ...],
     index: _IntentGraphIndex,
 ) -> None:
     _validate_unique_expectations(expectations)
-    errors = _unknown_product_errors(expectations, index, (IntentModelPathSegment.EXPECTATIONS,))
-    if errors:
-        raise ValidationError.from_exception_data(AuthoringSpecV1.__name__, errors)
-    for expectation in expectations:
-        _validate_expectation(expectation, index)
+    _validate_expectation_references(
+        expectations,
+        index,
+        (IntentModelPathSegment.EXPECTATIONS,),
+        AuthoringSpecV1.__name__,
+    )
 
 
 def validate_expectation_products(
@@ -902,9 +945,12 @@ def validate_expectation_products(
 ) -> None:
     """Reject expectation references before runtime capture can make them unevaluable."""
 
-    errors = _unknown_product_errors(expectations, _IntentGraphIndex(products), path_prefix)
-    if errors:
-        raise ValidationError.from_exception_data("ExpectationProducts", errors)
+    _validate_expectation_references(
+        expectations,
+        _IntentGraphIndex(products),
+        path_prefix,
+        "ExpectationProducts",
+    )
 
 
 class AuthoringSpecV1(IntentModel):

@@ -1,0 +1,10 @@
+[
+  {
+    "kind": "range",
+    "product": "orders",
+    "list_field": "items",
+    "field": "missing_amount",
+    "minimum": 0,
+    "maximum": 1
+  }
+]
