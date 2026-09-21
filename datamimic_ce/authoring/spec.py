@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal, InvalidOperation, localcontext
+from math import isfinite
 from typing import Annotated, Final, Literal
 
 from pydantic import (
@@ -245,15 +246,19 @@ class DecimalRangeField(FieldIntent):
         if self.scale is not None:
             quantum = Decimal(1).scaleb(-self.scale)
             try:
-                runtime_minimum = Decimal(str(float(minimum)))
-                runtime_maximum = Decimal(str(float(maximum)))
-                runtime_quantum = Decimal(str(float(quantum)))
+                runtime_minimum_float = float(minimum)
+                runtime_maximum_float = float(maximum)
+                runtime_quantum_float = float(quantum)
+                runtime_minimum = Decimal(str(runtime_minimum_float))
+                runtime_maximum = Decimal(str(runtime_maximum_float))
+                runtime_quantum = Decimal(str(runtime_quantum_float))
             except (InvalidOperation, OverflowError, ValueError) as error:
                 raise ValueError(_DECIMAL_FLOAT_ROUNDTRIP_ERROR) from error
             if (
-                not runtime_minimum.is_finite()
-                or not runtime_maximum.is_finite()
-                or not runtime_quantum.is_finite()
+                not isfinite(runtime_minimum_float)
+                or not isfinite(runtime_maximum_float)
+                or not isfinite(runtime_quantum_float)
+                or not isfinite(runtime_maximum_float - runtime_minimum_float)
                 or runtime_quantum != quantum
                 or runtime_minimum > runtime_maximum
                 or runtime_minimum < self.minimum

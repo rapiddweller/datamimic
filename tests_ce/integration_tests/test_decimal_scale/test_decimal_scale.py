@@ -145,6 +145,7 @@ def test_float_generator_repros_leave_the_declared_decimal_range(
         ("invalid_float_scale_15.dm.json", ("products", 0, "fields", 0)),
         ("invalid_float_scale_2.dm.json", ("products", 0, "fields", 0)),
         ("invalid_float_huge.dm.json", ("products", 0, "fields", 0)),
+        ("invalid_float_span.dm.json", ("products", 0, "fields", 0)),
     ],
 )
 def test_invalid_decimal_scale_intent_descriptors_fail_at_model_boundary(
