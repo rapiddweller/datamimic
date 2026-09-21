@@ -155,7 +155,7 @@ CE and EE are **not the same engine with a feature flag**. They share the DSL, w
 |---|---|---|
 | Deterministic data generation | ✅ | ✅ |
 | Deterministic seeding in the DSL (`<setup rngSeed>`) | ✅ entities, generators and script expressions | Separate engine; not covered by the CE test matrix |
-| **Pseudonymization — seeded** *(can support GDPR Art. 4(5) / Art. 25 / Art. 32 controls)* | ✅ manual model | ✅ scanner-assisted, user-confirmed model |
+| **Pseudonymization — seeded** | ✅ manual model | ✅ scanner-assisted, user-confirmed model |
 | **Pseudonymization — non-seeded** | ✅ manual model | ✅ scanner-assisted, user-confirmed model |
 | Python API + XML pipelines | ✅ | ✅ |
 | Domain models: Finance, Healthcare, Demographics | ✅ | ✅ |
@@ -188,7 +188,7 @@ CE and EE are **not the same engine with a feature flag**. They share the DSL, w
 | CI/CD pipeline integration (Tosca, Jenkins, GitLab) | ✅ |
 | Multi-system execution: Oracle, MongoDB, Kafka | ✅ |
 | **Template engine: schema-aware editors for EDIFACT, SWIFT MT, HL7 v2.x, and HL7 FHIR — customer-uploadable specs, further industry formats built per engagement on the same framework** | ✅ |
-| Audit-evidence artefacts for GDPR Art. 30 records, PCI DSS 4.0 Req. 6.5.5 (test data) reviews, and — for US Covered Entities / Business Associates — HIPAA §164.312 evidence packs | ✅ |
+| Audit-evidence artefacts for GDPR Art. 30 records, PCI DSS 4.0.1 Req. 6.5.5 (test data) reviews, and HIPAA Security Rule reviews | ✅ |
 | On-premise deployment + air-gapped environments | ✅ |
 | LSP-powered IDE tooling for DSL authoring | ✅ |
 
@@ -202,7 +202,7 @@ The EE core supports three runtime configuration profiles, selectable per execut
 
 | Profile | Optimises for | Typical use case |
 |---|---|---|
-| **Performance** | Maximum throughput via Rust fastpath, optimised multi-process execution, and Ray-based distribution | Bulk generation at billion-record volumes to PostgreSQL, Oracle, Kafka |
+| **Performance** | Maximum throughput via Rust fastpath, optimised multi-process execution, and Ray-based distribution | Bulk generation for PostgreSQL, Oracle, and Kafka, designed for billion-record workloads |
 | **Balanced** | Throughput + full audit logging | Standard enterprise pipeline runs with compliance requirements |
 | **Flexibility** | Deep nested evaluation, extended condition and ruleset processing | Complex domain models with ML engine combinations, multi-level referential structures |
 
@@ -236,7 +236,7 @@ The EE template engine generates industry-standard financial messages from DATAM
 
 Customers can extend the spec catalogue between releases by downloading, adjusting, and uploading their own spec files directly.
 
-Generated messages are deterministic and traceable to their source model, and syntactically valid against the registered spec. They are intended for **test and training environments only** — they are not network-validated and must not be transmitted on production SWIFTNet or EDI networks. See the [SWIFT CSP note](#supported-systems) below.
+Generated messages are traceable to their source model and syntactically valid against the registered spec. They are intended for **test and training environments only** — they are not network-validated and must not be transmitted on production SWIFTNet or EDI networks. See the [SWIFT CSP note](#supported-systems) below.
 
 ---
 
@@ -323,7 +323,7 @@ CE gate.
 
 | | Faker / Random generators | DATAMIMIC CE | DATAMIMIC EE |
 |---|---|---|---|
-| Reproducible output | ❌ | ✅ | ✅ |
+| Reproducible output | ❌ | ✅ | separate engine; outside CE evidence |
 | Domain-aware relationships | ❌ | ✅ | ✅ |
 | Business logic constraints | ❌ | ✅ | ✅ |
 | Per-output provenance hash | ❌ | ✅ | ✅ |
@@ -384,14 +384,12 @@ print(account.account_number, account.balance)
 
 DATAMIMIC supports two pseudonymization modes with different repeatability properties:
 
-| Mode | How | Legal classification | Use case |
+| Mode | How | Compliance note | Use case |
 |---|---|---|---|
-| **Seeded** (`rngSeed` set) | Deterministic on the tested profiles | Can support GDPR-related pseudonymisation controls; outcome depends on the complete dataset and safeguards | Regression testing, stable CI/CD pipelines |
+| **Seeded** (`rngSeed` set) | Deterministic on the tested profiles | May form part of a pseudonymisation approach. Whether the result qualifies as pseudonymised under GDPR Art. 4(5) depends on whether attribution requires additional information that is kept separately and protected. | Regression testing, stable CI/CD pipelines |
 | **Non-seeded** (no `rngSeed`) | Not replay-stable | — | One-time data delivery |
 
-> **Note on GDPR:** Pseudonymization does not by itself satisfy GDPR. It can support GDPR-related controls, but the actual risk depends on the full dataset, what can be linked to it, and who has access to it (including the seed).
->
-> **Note on GDPR anonymization:** Full anonymization status under GDPR depends on complete field coverage across all quasi-identifiers and a re-identification risk assessment on the complete record — not on individual field transformation alone. DATAMIMIC does not make anonymization claims on behalf of the customer.
+> **Note on GDPR:** Pseudonymisation does not make data anonymous or establish GDPR compliance. Under Recital 26, anonymity depends on whether a person remains identifiable considering means reasonably likely to be used.
 
 In CE, PII fields are identified and modeled manually in the XML pipeline:
 
@@ -431,7 +429,7 @@ Available converters (13): `Mask`, `MiddleMask(start, end)`, `CutLength(n)`, `Su
 datamimic run ./pseudonymize-customers/datamimic.xml
 ```
 
-`source` is a controlled export or staging input — never a live production connection.
+Use a controlled export or staging input. Do not point this workflow at a live production source.
 
 With `rngSeed`: the same descriptor, seed, and ordered source rows reproduce the same replacement sequence; this is not a subject-keyed mapping across reordered exports.
 
@@ -530,25 +528,25 @@ response = generate_domain({
 
 ## Where DATAMIMIC fits in your compliance program
 
-DATAMIMIC produces evidence and reproducible artifacts that support compliance work. It does not replace your DPO, your CISO, or your auditor. The following are pointers for where DATAMIMIC outputs commonly slot into established programs:
+DATAMIMIC provides test-data and execution evidence that can support compliance work. It does not replace your DPO, your CISO, or your auditor. The following are pointers for where DATAMIMIC outputs commonly slot into established programs:
 
-> Both editions produce reproducible artefacts. CE covers single-system fixtures and provenance evidence; multi-system audit evidence with role-based dashboards is EE.
+> CE's reproducible, rule-based artefacts are within the tested boundary above. EE adds multi-system audit evidence and role-based dashboards; the CE matrix does not verify EE execution.
 
 | Regulation / standard | Where DATAMIMIC contributes |
 |---|---|
-| **DORA (Reg. 2022/2554)** — Art. 24 (testing of ICT tools, systems and processes; non-TLPT scope) | Reproducible test datasets for non-TLPT resilience tests; deterministic data fixtures for ICT testing programmes |
-| **ISO/IEC 27701:2019** — A.7.2.8 (records related to processing PII) and A.7.4.5 (PII minimisation) | Synthetic data in lieu of PII in non-production environments; documented model definitions as supporting evidence |
-| **HIPAA Security Rule** — §164.312 technical safeguards *(US Covered Entities / Business Associates only)* | Synthetic Patient/MedicalDevice/MedicalProcedure data for dev and test environments without ePHI exposure |
-| **GDPR** — Art. 4(5) pseudonymization definition; Art. 25 privacy by design; Art. 32 security of processing | Model-based pseudonymization can support related controls; outcome depends on the complete dataset and safeguards |
-| **PCI DSS 4.0.1** — Req. 6.5.5 (live PANs not used in test/development except where the environment is part of the CDE and protected by applicable PCI DSS requirements) | Synthetic card-number/PAN generation can reduce live PAN use in pre-production |
+| **DORA (Reg. 2022/2554)** — Arts. 24–25, digital operational resilience testing | Reproducible test data can support scenario-based, compatibility, performance, and end-to-end testing |
+| **ISO/IEC 27701:2025** — Privacy Information Management System (PIMS) | Synthetic data can reduce PII use in non-production; model and execution evidence can support privacy-management processes |
+| **HIPAA Security Rule** — 45 CFR Part 164, Subpart C *(US Covered Entity / Business Associate scope)* | Synthetic healthcare data can reduce the need to copy ePHI into dev/test; safeguards still apply where ePHI exists |
+| **GDPR** — Arts. 4(5), 25, 32 | May contribute to a pseudonymisation approach and related privacy-by-design and security measures; whether requirements are met depends on the dataset, additional information, and safeguards |
+| **PCI DSS 4.0.1** — Req. 6.5.5 (live PANs not used in pre-production except where the environment is part of the CDE and protected by applicable PCI DSS requirements) | Synthetic card-number test data can reduce the need to use live PANs in pre-production |
 
-> These pointers do not constitute legal advice or a compliance attestation. Consult your DPO, CISO, or qualified counsel for formal compliance determinations. Full anonymization status under GDPR depends on re-identification risk across the complete dataset — see the [pseudonymization disclaimer above](#pseudonymization--ce-manual-model).
+> These mappings show where DATAMIMIC can contribute; they are not attestations and do not establish that a dataset or processing activity satisfies the reference.
 
 ---
 
 ## Architecture
 
-CE and EE share the DATAMIMIC DSL. The execution layer is separate: CE is a Python execution engine using multiprocessing (with optional Ray for distribution); EE is an independently-optimised execution engine with a Rust fastpath, ML/auto-regressive generation, keyset and manifest building from live schemas, and optimised distributed execution at billion-record scale.
+CE and EE share the DATAMIMIC DSL. The execution layer is separate: CE is a Python execution engine using multiprocessing (with optional Ray for distribution); EE is an independently-optimised execution engine with a Rust fastpath, ML/auto-regressive generation, keyset and manifest building from live schemas, and execution designed for billion-record workloads.
 
 ```
 ╔══════════════════════════════════════════════════════════════════╗
@@ -567,7 +565,7 @@ CE and EE share the DATAMIMIC DSL. The execution layer is separate: CE is a Pyth
 ║  │  Rust fastpath for performance-critical paths            │    ║
 ║  │  ML / auto-regressive engine for complex distributions   │    ║
 ║  │  Keyset and manifest building from live DB schemas       │    ║
-║  │  Optimised distributed execution at billion-record scale │    ║
+║  │  Execution designed for billion-record workloads         │    ║
 ║  │  Runtime profiles: Performance · Balanced · Flexibility  │    ║
 ║  │  Deep nested evaluation · Conditions · Rulesets          │    ║
 ║  │  Structured error catalog · Per-stage execution logging  │    ║
