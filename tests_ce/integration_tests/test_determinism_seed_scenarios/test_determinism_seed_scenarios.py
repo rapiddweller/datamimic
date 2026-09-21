@@ -149,6 +149,13 @@ def test_seeded_script_globals_replay_identically() -> None:
     assert {(row["built_year"], row["now_type"], row["uuid_int"]) for row in first} == {(2020, "datetime", 5)}
 
 
+def test_replay_model_covers_float_rounding_boundaries() -> None:
+    rows = _run(_TEST_DIR, "replay_all_seeded.xml")["literal"]
+    assert [row["g_FloatGenerator_below_midpoint"] for row in rows] == [0.2] * 5
+    assert [row["g_FloatGenerator_at_midpoint"] for row in rows] == [0.2] * 5
+    assert [row["g_FloatGenerator_above_midpoint"] for row in rows] == [0.3] * 5
+
+
 def test_unseeded_script_globals_stay_random() -> None:
     first = _run(_TEST_DIR, "script_globals_unseeded.xml")["script_globals"]
     second = _run(_TEST_DIR, "script_globals_unseeded.xml")["script_globals"]

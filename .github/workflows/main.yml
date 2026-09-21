@@ -236,8 +236,10 @@ jobs:
           datamimic --help
 
   runtime_determinism_matrix:
-    name: Seeded runtime determinism on ${{ matrix.os }} Python ${{ matrix.python-version }} (${{ matrix.timezone }})
+    name: Seeded runtime determinism on ${{ matrix.os }} Python ${{ matrix.python-version }} (${{ matrix.timezone }}, ${{ matrix.resolution }})
     runs-on: ${{ matrix.os }}
+    env:
+      UV_RESOLUTION: ${{ matrix.resolution }}
     strategy:
       fail-fast: false
       matrix:
@@ -246,30 +248,42 @@ jobs:
             timezone: Etc/UTC
             python-version: '3.11'
             cell: ubuntu-py311-utc
+            resolution: highest
           - os: ubuntu-22.04
             timezone: Etc/UTC
             python-version: '3.10'
             cell: ubuntu-py310-utc
+            resolution: highest
           - os: ubuntu-22.04
             timezone: Etc/UTC
             python-version: '3.12'
             cell: ubuntu-py312-utc
+            resolution: highest
           - os: ubuntu-22.04
             timezone: Etc/UTC
             python-version: '3.13'
             cell: ubuntu-py313-utc
+            resolution: highest
           - os: ubuntu-22.04
             timezone: America/Los_Angeles
             python-version: '3.11'
             cell: ubuntu-py311-los-angeles
+            resolution: highest
           - os: windows-latest
             timezone: UTC
             python-version: '3.11'
             cell: windows-py311-utc
+            resolution: highest
           - os: windows-latest
             timezone: Pacific Standard Time
             python-version: '3.11'
             cell: windows-py311-pacific
+            resolution: highest
+          - os: ubuntu-22.04
+            timezone: Etc/UTC
+            python-version: '3.11'
+            cell: ubuntu-py311-utc-lowest-direct
+            resolution: lowest-direct
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -284,7 +298,7 @@ jobs:
         uses: astral-sh/setup-uv@v8.1.0
 
       - name: Install dependencies
-        run: uv sync --python ${{ matrix.python-version }}
+        run: uv sync --python ${{ matrix.python-version }} --resolution ${{ matrix.resolution }}
 
       - name: Set host timezone (Unix)
         if: runner.os != 'Windows'
@@ -320,11 +334,20 @@ jobs:
       - name: Write actual seeded runtime determinism manifest
         run: uv run python -m tests_ce.architecture.runtime_determinism_manifest generate --output runtime-determinism-manifest.json
 
+      - name: Record exact runtime versions
+        shell: bash
+        run: |
+          uv run python -VV | tee runtime-environment.txt
+          uv --version | tee -a runtime-environment.txt
+          uv pip freeze | tee -a runtime-environment.txt
+
       - name: Upload actual seeded runtime determinism manifest
         uses: actions/upload-artifact@v6
         with:
           name: seeded-runtime-hashes-${{ matrix.cell }}
-          path: runtime-determinism-manifest.json
+          path: |
+            runtime-determinism-manifest.json
+            runtime-environment.txt
           if-no-files-found: error
           retention-days: 1
 
@@ -349,7 +372,7 @@ jobs:
           merge-multiple: false
 
       - name: Compare actual hashes across jobs and with committed goldens
-        run: python -m tests_ce.architecture.runtime_determinism_manifest compare --root runtime-manifests --expected-count 7
+        run: python -m tests_ce.architecture.runtime_determinism_manifest compare --root runtime-manifests --expected-count 8
 
   unit_test:
     runs-on: ubuntu-22.04
