@@ -14,7 +14,7 @@ the compiler's responsibility.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal, localcontext
+from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal, InvalidOperation, localcontext
 from typing import Annotated, Final, Literal
 
 from pydantic import (
@@ -42,6 +42,7 @@ NonNegativeStrictInt = Annotated[StrictInt, Field(ge=0)]
 NonEmptyStrictStr = Annotated[StrictStr, Field(min_length=1)]
 INTENT_REPAIR_ALIASES_SCHEMA_KEY = "x-datamimic-repair-aliases"
 _ORDERED_BOUNDS_ERROR = "minimum must not exceed maximum"
+_DECIMAL_FLOAT_ROUNDTRIP_ERROR = "range is not representable by runtime FloatGenerator"
 MAX_DECIMAL_SCALE: Final[int] = 15
 
 
@@ -235,9 +236,30 @@ class DecimalRangeField(FieldIntent):
     def _ordered_bounds(self) -> DecimalRangeField:
         if self.minimum > self.maximum:
             raise ValueError(_ORDERED_BOUNDS_ERROR)
-        minimum, maximum = self.runtime_bounds()
+        try:
+            minimum, maximum = self.runtime_bounds()
+        except (InvalidOperation, OverflowError, ValueError) as error:
+            raise ValueError(_DECIMAL_FLOAT_ROUNDTRIP_ERROR) from error
         if minimum > maximum:
             raise ValueError("range contains no value at the requested scale")
+        if self.scale is not None:
+            quantum = Decimal(1).scaleb(-self.scale)
+            try:
+                runtime_minimum = Decimal(str(float(minimum)))
+                runtime_maximum = Decimal(str(float(maximum)))
+                runtime_quantum = Decimal(str(float(quantum)))
+            except (InvalidOperation, OverflowError, ValueError) as error:
+                raise ValueError(_DECIMAL_FLOAT_ROUNDTRIP_ERROR) from error
+            if (
+                not runtime_minimum.is_finite()
+                or not runtime_maximum.is_finite()
+                or not runtime_quantum.is_finite()
+                or runtime_quantum != quantum
+                or runtime_minimum > runtime_maximum
+                or runtime_minimum < self.minimum
+                or runtime_maximum > self.maximum
+            ):
+                raise ValueError(_DECIMAL_FLOAT_ROUNDTRIP_ERROR)
         return self
 
     def runtime_bounds(self) -> tuple[Decimal, Decimal]:

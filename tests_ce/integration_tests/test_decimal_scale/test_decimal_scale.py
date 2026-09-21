@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 import json
+import os
+import random
+import subprocess
+import sys
 import tempfile
 from decimal import Decimal
 from pathlib import Path
@@ -16,8 +20,10 @@ from datamimic_ce.authoring.contracts import (
 )
 from datamimic_ce.authoring.service import compile_document, scaffold
 from datamimic_ce.data_mimic_test import DataMimicTest
+from datamimic_ce.domains.common.literal_generators.float_generator import FloatGenerator
 
 _TEST_DIR = Path(__file__).resolve().parent
+_REPO_ROOT = _TEST_DIR.parents[2]
 
 
 def _run() -> list[dict[str, object]]:
@@ -31,7 +37,21 @@ def _run() -> list[dict[str, object]]:
         return engine.capture_result()["payments"]
 
 
-def test_decimal_scale_compiles_to_runtime_grid_and_replays() -> None:
+def _run_json_export(tmp_path: Path) -> list[dict[str, object]]:
+    descriptor = tmp_path / "decimal_scale.xml"
+    descriptor.write_text((_TEST_DIR / "decimal_scale.xml").read_text(encoding="utf-8"), encoding="utf-8")
+    subprocess.run(
+        [sys.executable, "-m", "datamimic_ce.cli", "run", str(descriptor)],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+        text=True,
+        env=os.environ | {"PYTHONPATH": str(_REPO_ROOT)},
+    )
+    return json.loads((tmp_path / "output" / "out" / "payments.json").read_text(encoding="utf-8"))
+
+
+def test_decimal_scale_compiles_to_runtime_grid_and_replays(tmp_path: Path) -> None:
     model = json.loads((_TEST_DIR / "model.dm.json").read_text(encoding="utf-8"))
     compiled = compile_document(model)
     expected_xml = (_TEST_DIR / "decimal_scale.xml").read_text(encoding="utf-8").strip()
@@ -41,11 +61,12 @@ def test_decimal_scale_compiles_to_runtime_grid_and_replays() -> None:
         ScaffoldRequest(
             spec=model,
             max_count=25,
-            verification=ScaffoldVerification(deterministic_replay=True),
+            verification=ScaffoldVerification(smoke_export=True, deterministic_replay=True),
         )
     )
     assert scaffolded.xml == expected_xml
     assert scaffolded.verified
+    assert scaffolded.verification.smoke_export.status is VerificationGateStatus.PASSED
     assert scaffolded.verification.deterministic_replay.status is VerificationGateStatus.PASSED
 
     first = _run()
@@ -70,10 +91,50 @@ def test_decimal_scale_compiles_to_runtime_grid_and_replays() -> None:
         assert fine_amount == fine_amount.quantize(Decimal("0.000000000000001"))
         assert fine_amount.as_tuple().exponent == -15
 
-        large_amount = row["large_amount"]
-        assert isinstance(large_amount, Decimal)
-        assert Decimal("1000000000000000") <= large_amount <= Decimal("1000000000000009")
-        assert large_amount.as_tuple().exponent == -15
+    exported = _run_json_export(tmp_path)
+    assert len(exported) == 25
+    for row in exported:
+        amount_text = row["amount"]
+        assert type(amount_text) is str
+        amount = Decimal(amount_text)
+        assert Decimal("1.001") <= amount <= Decimal("9.019")
+        assert amount.as_tuple().exponent == -2
+
+        whole_amount_text = row["whole_amount"]
+        assert type(whole_amount_text) is str
+        whole_amount = Decimal(whole_amount_text)
+        assert Decimal("2.1") <= whole_amount <= Decimal("4.9")
+        assert whole_amount.as_tuple().exponent == 0
+
+        fine_amount_text = row["fine_amount"]
+        assert type(fine_amount_text) is str
+        fine_amount = Decimal(fine_amount_text)
+        assert Decimal("0.000000000000001") <= fine_amount <= Decimal("0.000000000000009")
+        assert fine_amount.as_tuple().exponent == -15
+
+
+@pytest.mark.parametrize(
+    ("minimum", "maximum", "granularity", "expected"),
+    [
+        ("9.999999999999999", "9.999999999999999", "0.000000000000001", "9.999999999999998"),
+        ("1000000000000000.01", "1000000000000000.01", "0.01", "1000000000000000"),
+    ],
+)
+def test_float_generator_repros_leave_the_declared_decimal_range(
+    minimum: str,
+    maximum: str,
+    granularity: str,
+    expected: str,
+) -> None:
+    generator = FloatGenerator(
+        min=float(Decimal(minimum)),
+        max=float(Decimal(maximum)),
+        granularity=float(Decimal(granularity)),
+        rng=random.Random(7),
+    )
+    actual = Decimal(str(generator.generate()))
+    assert actual == Decimal(expected)
+    assert not Decimal(minimum) <= actual <= Decimal(maximum)
 
 
 @pytest.mark.parametrize(
@@ -81,6 +142,9 @@ def test_decimal_scale_compiles_to_runtime_grid_and_replays() -> None:
     [
         ("invalid_scale.dm.json", ("products", 0, "fields", 0, "scale")),
         ("invalid_grid.dm.json", ("products", 0, "fields", 0)),
+        ("invalid_float_scale_15.dm.json", ("products", 0, "fields", 0)),
+        ("invalid_float_scale_2.dm.json", ("products", 0, "fields", 0)),
+        ("invalid_float_huge.dm.json", ("products", 0, "fields", 0)),
     ],
 )
 def test_invalid_decimal_scale_intent_descriptors_fail_at_model_boundary(

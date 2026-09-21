@@ -7,7 +7,7 @@
       "name": "payments",
       "count": 25,
       "targets": [
-        {"kind": "file_export", "format": "JSON"}
+        {"kind": "file_export", "format": "JSON", "export_uri": "out"}
       ],
       "fields": [
         {
@@ -29,13 +29,6 @@
           "name": "fine_amount",
           "minimum": "0.000000000000001",
           "maximum": "0.000000000000009",
-          "scale": 15
-        },
-        {
-          "kind": "decimal_range",
-          "name": "large_amount",
-          "minimum": "1000000000000000",
-          "maximum": "1000000000000009",
           "scale": 15
         }
       ]
@@ -63,13 +56,6 @@
       "field": "fine_amount",
       "minimum": "0.000000000000001",
       "maximum": "0.000000000000009"
-    },
-    {
-      "kind": "range",
-      "product": "payments",
-      "field": "large_amount",
-      "minimum": "1000000000000000",
-      "maximum": "1000000000000009"
     }
   ]
 }
