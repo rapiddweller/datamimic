@@ -1,0 +1,5 @@
+<setup rngSeed="1">
+    <generate name="rows" count="3" target="CSV(quotechar='|')">
+        <key name="value" constant="first&#10;second"/>
+    </generate>
+</setup>

@@ -6,10 +6,22 @@
 
 """Dry-run: capped, capture-only execution with the safety gates."""
 
+import json
+from multiprocessing.connection import Connection
 from pathlib import Path
 
-from datamimic_ce.authoring.contracts import AuthoringStage
-from datamimic_ce.authoring.dryrun import dry_run_source
+import pytest
+
+import datamimic_ce.authoring.dryrun as dryrun_module
+from datamimic_ce.authoring.contracts import (
+    AuthoringStage,
+    ScaffoldRequest,
+    ScaffoldVerification,
+    VerificationGateStatus,
+)
+from datamimic_ce.authoring.dryrun import dry_run_source, dry_run_source_captured
+from datamimic_ce.authoring.service import compile_document, scaffold
+from datamimic_ce.exporters.json_exporter import JsonExporter
 
 _PIPELINE = """<setup rngSeed="1">
     <memstore id="mem"/>
@@ -19,6 +31,24 @@ _PIPELINE = """<setup rngSeed="1">
     </generate>
     <generate name="from_mem" source="mem" type="users" distribution="ordered" target="JSON"/>
 </setup>"""
+_FIXTURES = Path(__file__).parent / "fixtures"
+_SMOKE_EXPORT_MATRIX = _FIXTURES / "issue_227_smoke_export_matrix.xml"
+_JSON_WRITE = JsonExporter._write_data_to_buffer
+
+
+def _short_write_json(self: JsonExporter, data: list[dict], worker_id: int, chunk_idx: int) -> None:
+    _JSON_WRITE(self, data[:-1], worker_id, chunk_idx)
+
+
+def _short_write_worker(
+    path: Path,
+    max_count: int,
+    allow_side_effects: bool,
+    smoke_export: bool,
+    send_connection: Connection,
+) -> None:
+    JsonExporter._write_data_to_buffer = _short_write_json
+    dryrun_module._engine_process_worker(path, max_count, allow_side_effects, smoke_export, send_connection)
 
 
 def test_dry_run_caps_counts_strips_targets_keeps_memstore(tmp_path: Path, monkeypatch) -> None:
@@ -98,23 +128,83 @@ def test_dm004_flags_zero_row_output() -> None:
 
 
 def test_smoke_export_passes_and_leaves_no_files(tmp_path: Path, monkeypatch) -> None:
-    # decimal + date + nested data through every stripped file exporter — the past
-    # Decimal/JSON crash class must be caught here, and nothing may hit the disk.
     monkeypatch.chdir(tmp_path)
-    xml = """<setup rngSeed="1">
-        <generate name="orders" count="4" target="CSV,JSON,XML">
-            <key name="order_id" generator="IncrementGenerator"/>
-            <key name="amount" type="decimal" min="1" max="500"/>
-            <key name="booked_on" script="datetime.date(2026, 1, 2)"/>
-            <nestedKey name="lines" type="list" minCount="1" maxCount="2">
-                <key name="sku" pattern="[A-Z]{3}-[0-9]{2}"/>
-            </nestedKey>
-        </generate>
-    </setup>"""
-    result = dry_run_source(xml, smoke_export=True)
-    assert result.ok, [(d.rule, d.message) for d in result.diagnostics]
-    assert result.products[0].count == 4
+    run = dry_run_source_captured(_SMOKE_EXPORT_MATRIX.read_text(encoding="utf-8"), smoke_export=True)
+    assert run.result.ok, [(d.rule, d.message) for d in run.result.diagnostics]
+    assert {product.name: product.count for product in run.result.products} == {"audit": 2, "items": 4}
+    assert run.smoke_export.applicable_exporters == 9
+    assert run.smoke_export.attempted_exporters == 9
+    assert run.smoke_export.failed_exporters == 0
     assert not list(tmp_path.iterdir())  # smoke writes never leave the temp dir
+
+
+@pytest.mark.parametrize(
+    ("fixture", "expected_rows"),
+    [
+        ("issue_227_smoke_export_xml_single_record.xml", 1),
+        ("issue_227_smoke_export_xml_flattened_items.xml", 1),
+        ("issue_227_smoke_export_txt_terminator.xml", 3),
+        ("issue_227_smoke_export_txt_crlf.xml", 3),
+        ("issue_227_smoke_export_txt_separator_value.xml", 3),
+        ("issue_227_smoke_export_csv_quotechar.xml", 3),
+    ],
+)
+def test_smoke_export_reads_configured_final_artifact_dialects(
+    tmp_path: Path,
+    monkeypatch,
+    fixture: str,
+    expected_rows: int,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = dry_run_source((_FIXTURES / fixture).read_text(encoding="utf-8"), smoke_export=True)
+    assert result.ok, [(diagnostic.rule, diagnostic.message) for diagnostic in result.diagnostics]
+    assert result.products[0].count == expected_rows
+    assert not list(tmp_path.iterdir())
+
+
+def test_smoke_export_honors_target_encoding(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = dry_run_source(
+        (_FIXTURES / "issue_227_smoke_export_ascii_encoding.xml").read_text(encoding="utf-8"),
+        smoke_export=True,
+    )
+    assert not result.ok
+    assert any(diagnostic.rule == "DM002" for diagnostic in result.diagnostics)
+    assert not list(tmp_path.iterdir())
+
+
+def test_issue_256_fixed_width_smoke_export_reads_rows_with_target_encoding(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = dry_run_source_captured(
+        (_FIXTURES / "issue_256_fixed_width_latin1.xml").read_text(encoding="utf-8"),
+        smoke_export=True,
+    )
+
+    assert result.result.ok, [(d.rule, d.message) for d in result.result.diagnostics]
+    assert result.result.stage is AuthoringStage.RUN
+    assert {product.name: product.count for product in result.result.products} == {"rows": 3}
+    assert result.smoke_export.applicable_exporters == 1
+    assert result.smoke_export.attempted_exporters == 1
+    assert result.smoke_export.failed_exporters == 0
+    assert not list(tmp_path.iterdir())
+
+
+def test_issue_256_ndjson_chunk_one_smoke_export_counts_each_row_once(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = dry_run_source_captured(
+        (_FIXTURES / "issue_256_json_ndjson_chunk_one.xml").read_text(encoding="utf-8"),
+        smoke_export=True,
+    )
+
+    assert result.result.ok, [(d.rule, d.message) for d in result.result.diagnostics]
+    assert result.result.stage is AuthoringStage.RUN
+    assert {product.name: product.count for product in result.result.products} == {"rows": 3}
+    assert result.smoke_export.applicable_exporters == 1
+    assert result.smoke_export.attempted_exporters == 1
+    assert result.smoke_export.failed_exporters == 0
+    assert not list(tmp_path.iterdir())
 
 
 def test_smoke_export_catches_unserializable_value_plain_dry_run_does_not(tmp_path: Path, monkeypatch) -> None:
@@ -140,6 +230,36 @@ def test_smoke_export_catches_unserializable_value_plain_dry_run_does_not(tmp_pa
     assert diag.name == "batches|blobs"  # names the offending (nested) product
     assert "JSON" in diag.fix_hint
     assert not list(tmp_path.iterdir())  # even the failing run leaves nothing behind
+
+
+def test_smoke_export_compares_buffered_exporter_row_count(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    model = json.loads((_FIXTURES / "issue_227_smoke_rows.model.dm.json").read_text(encoding="utf-8"))
+    xml = (_FIXTURES / "issue_227_smoke_rows.xml").read_text(encoding="utf-8").strip()
+    assert compile_document(model).xml == xml
+    request = ScaffoldRequest(
+        spec=model,
+        max_count=10,
+        sample_rows=5,
+        verification=ScaffoldVerification(smoke_export=True),
+    )
+    positive = scaffold(request)
+    assert positive.xml == xml
+    assert positive.verified
+    assert positive.verification.smoke_export.status is VerificationGateStatus.PASSED
+    assert positive.verification.smoke_export.reason == "Every applicable file exporter wrote all captured rows"
+
+    monkeypatch.setattr(dryrun_module, "_engine_process_worker", _short_write_worker)
+    monkeypatch.setattr(JsonExporter, "_write_data_to_buffer", _short_write_json)
+    negative = scaffold(request)
+
+    assert not negative.ok
+    assert not negative.verified
+    assert negative.verification.smoke_export.status is VerificationGateStatus.FAILED
+    assert negative.verification.smoke_export.failed_exporters == 1
+    diagnostic = next(d for d in negative.diagnostics if d.rule == "DM002")
+    assert "wrote 2 of 3 captured rows" in diagnostic.message
+    assert not list(tmp_path.iterdir())
 
 
 def test_dm002_runtime_errors_carry_actionable_hints() -> None:

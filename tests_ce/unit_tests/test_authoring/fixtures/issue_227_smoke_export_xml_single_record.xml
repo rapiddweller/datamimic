@@ -1,0 +1,5 @@
+<setup rngSeed="1">
+    <generate name="x" count="1" target="XML">
+        <key name="list" constant="value"/>
+    </generate>
+</setup>

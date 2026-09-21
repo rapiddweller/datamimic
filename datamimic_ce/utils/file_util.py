@@ -173,7 +173,9 @@ class FileUtil:
         return fields
 
     @staticmethod
-    def read_fixed_width_to_dict_list(file_path: Path, spec: str | None = None) -> list[dict]:
+    def read_fixed_width_to_dict_list(
+        file_path: Path, spec: str | None = None, encoding: str = "utf-8"
+    ) -> list[dict[str, str]]:
         """Read a fixed-width-column file into a list of dicts.
 
         Self-describing by default (``spec=None``): the file's first line must be
@@ -182,7 +184,7 @@ class FileUtil:
         a file that doesn't carry that header line.
         """
         lines = FileContentStorage.load_file_with_custom_func(
-            str(file_path), lambda: file_path.read_text(encoding="utf-8").splitlines()
+            str(file_path), lambda: file_path.read_text(encoding=encoding).splitlines()
         )
         if not lines:
             return []  # an empty file is an empty source, not a crash
@@ -200,9 +202,9 @@ class FileUtil:
             fields = FileUtil.parse_fixed_width_spec(header[1:])
             data_lines = lines[1:]
 
-        result = []
+        result: list[dict[str, str]] = []
         for line in data_lines:
-            row = {}
+            row: dict[str, str] = {}
             offset = 0
             for name, width, right_aligned, pad_char in fields:
                 raw = line[offset : offset + width]

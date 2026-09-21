@@ -132,7 +132,7 @@ class UnifiedBufferedExporter(Exporter, ABC):
 
         return data, extra
 
-    def consume(self, product: tuple, stmt_full_name: str, exporter_state_manager: ExporterStateManager):
+    def consume(self, product: tuple, stmt_full_name: str, exporter_state_manager: ExporterStateManager) -> None:
         """
         Store data into buffer files.
         """
@@ -183,6 +183,11 @@ class UnifiedBufferedExporter(Exporter, ABC):
     @abstractmethod
     def get_file_extension(self) -> str:
         """Return file extension for data content."""
+        pass
+
+    @abstractmethod
+    def count_buffered_rows(self, worker_id: int) -> int:
+        """Count rows present in finalized buffer files for smoke verification."""
         pass
 
     @abstractmethod

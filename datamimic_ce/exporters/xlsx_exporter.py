@@ -83,3 +83,17 @@ class XLSXExporter(UnifiedBufferedExporter):
                 sheet.append([self._cell(record.get(col)) for col in header])
         workbook.save(buffer_file)
         logger.debug(f"Wrote {len(records)} rows to XLSX file: {buffer_file}")
+
+    def count_buffered_rows(self, worker_id: int) -> int:
+        from openpyxl import load_workbook
+
+        count = 0
+        for buffer_file in self._get_buffer_tmp_dir(worker_id).glob("*.xlsx"):
+            workbook = load_workbook(buffer_file, read_only=True, data_only=True)
+            try:
+                rows = workbook[self.sheet_name].iter_rows(values_only=True)
+                next(rows, None)
+                count += sum(1 for _ in rows)
+            finally:
+                workbook.close()
+        return count

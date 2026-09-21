@@ -6,6 +6,8 @@ import uuid
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+from lxml import etree
+
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.xml_exporter import XMLExporter  # Adjust the import path as necessary
 from tests_ce.unit_tests.test_exporter.exporter_test_util import MockSetupContext, generate_mock_data, make_exporter
@@ -168,6 +170,45 @@ class TestXMLExporter(unittest.TestCase):
         # Should not write any files
         xml_files = [f for f in list(self.tmp_dir_path.rglob("*")) if f.is_file()]
         self.assertEqual(len(xml_files), 0)
+
+    def test_count_buffered_rows_distinguishes_flattened_record_from_empty_wrapper(self):
+        buffer_file = self.exporter._get_buffer_file(1, 0)
+        buffer_file.write_text(
+            "<list>\n<item><list><item>a</item><item>b</item></list></item>\n</list>",
+            encoding="utf-8",
+        )
+        self.exporter._finalize_buffer_file(buffer_file)
+        self.assertEqual(buffer_file.read_text(encoding="utf-8"), "<list><item>a</item><item>b</item></list>")
+        self.assertEqual(self.exporter.count_buffered_rows(1), 1)
+
+        empty_exporter = make_exporter(
+            XMLExporter,
+            setup_context=self.setup_context,
+            product_name="empty",
+            chunk_size=1000,
+            root_element="list",
+            item_element="item",
+            encoding="utf-8",
+        )
+        empty_file = empty_exporter._get_buffer_file(1, 0)
+        empty_file.write_text("<list>\n</list>", encoding="utf-8")
+        self.assertEqual(empty_exporter.count_buffered_rows(1), 0)
+
+    def test_finalize_accepts_legacy_colon_tags_but_strict_count_rejects_them(self):
+        buffer_file = self.exporter._get_buffer_file(1, 0)
+        buffer_file.write_text(
+            "<list>\n<item><gc:CodeList><SimpleCodeList/></gc:CodeList></item>\n</list>",
+            encoding="utf-8",
+        )
+
+        self.exporter._finalize_buffer_file(buffer_file)
+
+        self.assertEqual(
+            buffer_file.read_text(encoding="utf-8"),
+            "<gc:CodeList><SimpleCodeList/></gc:CodeList>",
+        )
+        with self.assertRaises(etree.XMLSyntaxError):
+            self.exporter.count_buffered_rows(1)
 
 
 if __name__ == "__main__":

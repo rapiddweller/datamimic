@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import Any
 from xml.sax.saxutils import quoteattr
 
+from lxml import etree
+
 from datamimic_ce.exporters.exporter_config import ExporterConfig
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.logger import logger
@@ -57,3 +59,9 @@ class DbUnitExporter(UnifiedBufferedExporter):
             lines.append(f"    <{self._table}{attrs}/>")
         lines.append("</dataset>")
         buffer_file.write_text("\n".join(lines) + "\n", encoding=self.encoding)
+
+    def count_buffered_rows(self, worker_id: int) -> int:
+        return sum(
+            len(etree.parse(str(buffer_file)).getroot())
+            for buffer_file in self._get_buffer_tmp_dir(worker_id).glob("*.dbunit.xml")
+        )

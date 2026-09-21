@@ -1,0 +1,5 @@
+<setup rngSeed="1">
+    <generate name="rows" count="3" target="JSON(use_ndjson=True, chunk_size=1)">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+</setup>

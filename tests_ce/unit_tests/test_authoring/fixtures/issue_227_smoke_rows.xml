@@ -1,0 +1,5 @@
+<setup rngSeed="7">
+    <generate name="items" count="3" target="JSON">
+        <key name="id" generator="IncrementGenerator"/>
+    </generate>
+</setup>

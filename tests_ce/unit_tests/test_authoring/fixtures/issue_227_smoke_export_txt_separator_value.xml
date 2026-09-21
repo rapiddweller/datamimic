@@ -1,0 +1,5 @@
+<setup rngSeed="1">
+    <generate name="rows" count="3" target="TXT(line_terminator=';')">
+        <key name="value" constant="hello;world"/>
+    </generate>
+</setup>

@@ -1,0 +1,17 @@
+{
+  "version": "1",
+  "seed": 7,
+  "products": [
+    {
+      "kind": "generated",
+      "name": "items",
+      "count": 3,
+      "fields": [
+        {"kind": "increment", "name": "id"}
+      ],
+      "targets": [
+        {"kind": "file_export", "format": "JSON"}
+      ]
+    }
+  ]
+}
