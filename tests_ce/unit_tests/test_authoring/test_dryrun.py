@@ -162,6 +162,17 @@ def test_smoke_export_reads_configured_final_artifact_dialects(
     assert not list(tmp_path.iterdir())
 
 
+def test_smoke_export_honors_target_encoding(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = dry_run_source(
+        (_FIXTURES / "issue_227_smoke_export_ascii_encoding.xml").read_text(encoding="utf-8"),
+        smoke_export=True,
+    )
+    assert not result.ok
+    assert any(diagnostic.rule == "DM002" for diagnostic in result.diagnostics)
+    assert not list(tmp_path.iterdir())
+
+
 def test_smoke_export_catches_unserializable_value_plain_dry_run_does_not(tmp_path: Path, monkeypatch) -> None:
     # THE asymmetry that motivates the feature: a value only the export layer rejects.
     # The bad product is NESTED on purpose — nested products must be smoked too
