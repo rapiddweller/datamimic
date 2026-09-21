@@ -55,6 +55,7 @@ from datamimic_ce.authoring.contracts import (
 from datamimic_ce.authoring.diagnostics import Diagnostic, LintResult
 from datamimic_ce.authoring.linter import lint_descriptor, lint_source
 from datamimic_ce.authoring.rule_catalog import RuleSeverity
+from datamimic_ce.contexts.setup_context import SetupContext
 
 RULE_RUNTIME_ERROR = "DM002"
 RULE_SIDE_EFFECT_REFUSAL = "DM003"
@@ -590,11 +591,10 @@ def neutralize_for_dry_run(
         _neutralize(stmt)
 
 
-def _smoke_setup_context(tmp_dir: Path):
+def _smoke_setup_context(tmp_dir: Path) -> SetupContext:
     """Minimal engine context for smoke writes: every value an exporter reads from it
     is a default; descriptor_dir points at the throwaway tmp dir so buffer files can
     never land next to the real descriptor."""
-    from datamimic_ce.contexts.setup_context import SetupContext
     from datamimic_ce.exporters.test_result_exporter import TestResultExporter
     from datamimic_ce.product_storage.memstore_manager import MemstoreManager
 
@@ -615,6 +615,71 @@ def _smoke_setup_context(tmp_dir: Path):
     )
 
 
+def _smoke_exporter(
+    smoke_ctx: SetupContext,
+    basename: str,
+    full_name: str,
+    rows: list[dict[str, object]],
+    exporter_name: str,
+    params: dict[str, object],
+) -> Diagnostic | None:
+    from datamimic_ce.exporters.exporter_config import ExporterConfig
+    from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
+    from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
+
+    try:
+        chunk_size = params.get("chunk_size")
+        if chunk_size is not None and not isinstance(chunk_size, int):
+            raise TypeError("chunk_size target option must be an integer")
+        encoding = params.get("encoding")
+        if encoding is not None and not isinstance(encoding, str):
+            raise TypeError("encoding target option must be a string")
+        config = ExporterConfig(
+            setup_context=smoke_ctx,
+            product_name=basename,
+            chunk_size=chunk_size,
+            encoding=encoding,
+            export_uri=None,
+            track_serialized_rows=True,
+        )
+        exporter = _BUFFERED_EXPORTERS[exporter_name](config, dict(params))
+        exporter.consume((basename, rows), full_name, ExporterStateManager(worker_id=1))
+        exporter.finalize_chunks(1)
+        written_rows = exporter.count_buffered_rows(1)
+        if written_rows == len(rows):
+            return None
+        return Diagnostic(
+            rule=RULE_RUNTIME_ERROR,
+            severity=RuleSeverity.ERROR,
+            message=(
+                f"{exporter_name} smoke export wrote {written_rows} of "
+                f"{len(rows)} captured rows for '{full_name}'"
+            ),
+            fix_hint=(
+                f"The {exporter_name} exporter did not write every captured row. "
+                "Check its write path before using this target."
+            ),
+            element="generate",
+            path="/setup",
+            name=full_name,
+        )
+    except Exception as err:
+        return Diagnostic(
+            rule=RULE_RUNTIME_ERROR,
+            severity=RuleSeverity.ERROR,
+            message=f"{exporter_name} smoke export failed for '{full_name}': {err}",
+            fix_hint=(
+                f"A generated value cannot be written by the {exporter_name} exporter "
+                "(the error names the offending type). Cast the field in the DSL "
+                f'(e.g. type="string" or script="str(...)"), or drop {exporter_name} '
+                "from target=."
+            ),
+            element="generate",
+            path="/setup",
+            name=full_name,
+        )
+
+
 def _smoke_export(
     captured: dict[str, list[object]],
     stripped: _StrippedTargets,
@@ -622,11 +687,6 @@ def _smoke_export(
     """Replay the captured rows through each stripped file exporter inside a temp dir
     (write + finalize — the two phases where serialization crashes live). The tempdir
     context manager guarantees zero artifacts. Failures become DM002 diagnostics."""
-    from datamimic_ce.constants.convention_constants import NAME_SEPARATOR
-    from datamimic_ce.exporters.exporter_config import ExporterConfig
-    from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
-    from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
-
     diagnostics: list[Diagnostic] = []
     applicable_exporters = sum(len(file_targets) for _basename, file_targets in stripped.values())
     attempted_exporters = 0
@@ -634,70 +694,15 @@ def _smoke_export(
     with tempfile.TemporaryDirectory(prefix="datamimic_smoke_") as tmp:
         smoke_ctx = _smoke_setup_context(Path(tmp))
         for full_name, (basename, file_targets) in sorted(stripped.items()):
-            # TestResultExporter stores nested products under the full_name MINUS its
-            # first segment ("customers|accounts" -> "accounts") — mirror that here.
-            capture_key = full_name.split(NAME_SEPARATOR, 1)[-1] if NAME_SEPARATOR in full_name else full_name
-            rows = [row for row in captured.get(capture_key, []) if isinstance(row, dict)]
+            rows = [row for row in captured.get(_capture_name(full_name), []) if isinstance(row, dict)]
             if not rows:
                 continue
             for exporter_name, params in file_targets:
                 attempted_exporters += 1
-                try:
-                    chunk_size = params.get("chunk_size")
-                    if chunk_size is not None and not isinstance(chunk_size, int):
-                        raise TypeError("chunk_size target option must be an integer")
-                    encoding = params.get("encoding")
-                    if encoding is not None and not isinstance(encoding, str):
-                        raise TypeError("encoding target option must be a string")
-                    config = ExporterConfig(
-                        setup_context=smoke_ctx,
-                        product_name=basename,
-                        chunk_size=chunk_size,
-                        encoding=encoding,
-                        export_uri=None,
-                        track_serialized_rows=True,
-                    )
-                    exporter = _BUFFERED_EXPORTERS[exporter_name](config, dict(params))
-                    exporter.consume((basename, rows), full_name, ExporterStateManager(worker_id=1))
-                    exporter.finalize_chunks(1)
-                    written_rows = exporter.count_buffered_rows(1)
-                    if written_rows != len(rows):
-                        failed_exporters += 1
-                        diagnostics.append(
-                            Diagnostic(
-                                rule=RULE_RUNTIME_ERROR,
-                                severity=RuleSeverity.ERROR,
-                                message=(
-                                    f"{exporter_name} smoke export wrote {written_rows} of "
-                                    f"{len(rows)} captured rows for '{full_name}'"
-                                ),
-                                fix_hint=(
-                                    f"The {exporter_name} exporter did not write every captured row. "
-                                    "Check its write path before using this target."
-                                ),
-                                element="generate",
-                                path="/setup",
-                                name=full_name,
-                            )
-                        )
-                except Exception as err:
+                diagnostic = _smoke_exporter(smoke_ctx, basename, full_name, rows, exporter_name, params)
+                if diagnostic is not None:
                     failed_exporters += 1
-                    diagnostics.append(
-                        Diagnostic(
-                            rule=RULE_RUNTIME_ERROR,
-                            severity=RuleSeverity.ERROR,
-                            message=f"{exporter_name} smoke export failed for '{full_name}': {err}",
-                            fix_hint=(
-                                f"A generated value cannot be written by the {exporter_name} exporter "
-                                "(the error names the offending type). Cast the field in the DSL "
-                                f'(e.g. type="string" or script="str(...)"), or drop {exporter_name} '
-                                "from target=."
-                            ),
-                            element="generate",
-                            path="/setup",
-                            name=full_name,
-                        )
-                    )
+                    diagnostics.append(diagnostic)
     return diagnostics, SmokeExportCapture(
         requested=True,
         applicable_exporters=applicable_exporters,
