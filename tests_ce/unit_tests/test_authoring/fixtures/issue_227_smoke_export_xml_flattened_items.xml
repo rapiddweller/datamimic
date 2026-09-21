@@ -1,7 +1,5 @@
 <setup rngSeed="1">
     <generate name="x" count="1" target="XML">
-        <nestedKey name="list" type="list" minCount="2" maxCount="2">
-            <key name="item" constant="value"/>
-        </nestedKey>
+        <nestedKey name="list" script="{'item': ['a', 'b']}" defaultValue="{}"/>
     </generate>
 </setup>
