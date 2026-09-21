@@ -18,7 +18,7 @@ EXPECTED_FACADE_CONTENT_HASHES: dict[str, str] = {
     "person": "e8365620df54a91427b02035004bf5315c637bde7e1df0706e1c641c857bd9d4",
 }
 EXPECTED_ENTITY_REPLAY_HASH = "749dc011672c1287823ae6fff20a8cc0bf42031faf114bd70d9abd6142b8af89"
-EXPECTED_LITERAL_REPLAY_HASH = "b83a03232e6bbee270fa7a2a8fd48a80e6def81cff75f9e14f09cda7102cf650"
+EXPECTED_LITERAL_REPLAY_HASH = "08a79c02067e4e3d8f93a7434c6196ff5ef0da5b2bf811ca7174f65ed8557185"
 UTF8_PROBE_HASH = "346c09d6dbf788249cbd8cf5bae13bf2d4f34dd83e6aa689c190b996cf82d2a7"
 
 
@@ -72,7 +72,7 @@ def build_actual_manifest() -> RuntimeDeterminismManifest:
         {
             family
             for key in script_paths
-            for family in re.findall(r"\b(random|uuid|fake|datetime|pd)\b", key.get("script", ""))
+            for family in re.findall(r"\b(random|uuid|fake|datetime|pd|math|np)\b", key.get("script", ""))
         }
     )
     coverage = {

@@ -20,6 +20,9 @@
         <key name="g_EmailAddressGenerator" generator="EmailAddressGenerator"/>
         <key name="g_FamilyNameGenerator" generator="FamilyNameGenerator"/>
         <key name="g_FloatGenerator" generator="FloatGenerator"/>
+        <key name="g_FloatGenerator_below_midpoint" generator="FloatGenerator(min=0.24999999999999997, max=0.24999999999999997, granularity=0.1)"/>
+        <key name="g_FloatGenerator_at_midpoint" generator="FloatGenerator(min=0.25, max=0.25, granularity=0.1)"/>
+        <key name="g_FloatGenerator_above_midpoint" generator="FloatGenerator(min=0.25000000000000006, max=0.25000000000000006, granularity=0.1)"/>
         <key name="g_GenderGenerator" generator="GenderGenerator"/>
         <key name="g_GivenNameGenerator" generator="GivenNameGenerator"/>
         <key name="g_GlobalIncrementGenerator" generator="GlobalIncrementGenerator"/>
@@ -38,14 +41,22 @@
         <key name="g_TokenGenerator" generator="TokenGenerator"/>
         <key name="g_UUIDGenerator" generator="UUIDGenerator"/>
         <key name="g_UrlGenerator" generator="UrlGenerator"/>
+        <key name="weighted_values" values="'A','B','C'" weights="0.1,0.3,0.6"/>
+        <key name="unique_values" values="'A','B','C','D','E'" unique="true"/>
+        <key name="shuffle_int" type="int" min="1" max="5" distribution="shuffle"/>
     </generate>
     <generate name="script" count="5" target="">
         <key name="random_randint" script="random.randint(1, 10**9)"/>
         <key name="random_random" script="random.random()"/>
         <key name="random_choice" script="random.choice(['a', 'b', 'c', 'd', 'e', 'f', 'g'])"/>
         <key name="random_sample" script="str(random.sample(range(100), 3))"/>
+        <key name="random_sample_sequence" script="str(random.sample(['a','b','c','d','e'], 3))"/>
         <key name="random_gauss" script="random.gauss(0, 1)"/>
+        <key name="random_normalvariate" script="random.normalvariate(0, 1)"/>
+        <key name="random_lognormvariate" script="random.lognormvariate(0, 1)"/>
+        <key name="random_expovariate" script="random.expovariate(1)"/>
         <key name="random_Random_unseeded" script="random.Random().random()"/>
+        <key name="random_Random_randrange" script="random.Random().randrange(1, 10**9)"/>
         <key name="uuid_uuid4" script="str(uuid.uuid4())"/>
         <key name="fake_name" script="fake.name()"/>
         <key name="fake_address" script="fake.address()"/>
@@ -56,5 +67,11 @@
         <key name="pd_Timestamp_now" script="pd.Timestamp.now().isoformat()"/>
         <key name="pd_Timestamp_utcnow" script="pd.Timestamp.utcnow().isoformat()"/>
         <key name="pd_Timestamp_today" script="pd.Timestamp.today().isoformat()"/>
+        <key name="math_sin" script="math.sin(0.7)"/>
+        <key name="math_exp" script="math.exp(0.7)"/>
+        <key name="math_log" script="math.log(0.7)"/>
+        <key name="np_sin" script="np.sin(0.7)"/>
+        <key name="np_exp" script="np.exp(0.7)"/>
+        <key name="np_log" script="np.log(0.7)"/>
     </generate>
 </setup>
