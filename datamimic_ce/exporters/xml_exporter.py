@@ -145,7 +145,7 @@ class XMLExporter(UnifiedBufferedExporter):
         # remove <list> and <item>, leave only inside data
         if is_single_item:
             try:
-                parser = etree.XMLParser(resolve_entities=False, no_network=True)
+                parser = etree.XMLParser(resolve_entities=False, no_network=True, recover=True)
                 tree = etree.parse(str(buffer_file), parser)
                 root = tree.getroot()
                 item = next(child for child in root if child.tag == self.item_element)
@@ -186,7 +186,7 @@ class XMLExporter(UnifiedBufferedExporter):
     def _is_single_item(self, buffer_file: Path) -> bool:
         """Check if the root contains one configured item with one child."""
         try:
-            parser = etree.XMLParser(resolve_entities=False, no_network=True)
+            parser = etree.XMLParser(resolve_entities=False, no_network=True, recover=True)
             tree = etree.parse(buffer_file, parser)
             root = tree.getroot()
 
