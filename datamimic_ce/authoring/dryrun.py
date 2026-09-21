@@ -643,11 +643,17 @@ def _smoke_export(
             for exporter_name, params in file_targets:
                 attempted_exporters += 1
                 try:
+                    chunk_size = params.get("chunk_size")
+                    if chunk_size is not None and not isinstance(chunk_size, int):
+                        raise TypeError("chunk_size target option must be an integer")
+                    encoding = params.get("encoding")
+                    if encoding is not None and not isinstance(encoding, str):
+                        raise TypeError("encoding target option must be a string")
                     config = ExporterConfig(
                         setup_context=smoke_ctx,
                         product_name=basename,
-                        chunk_size=None,
-                        encoding=None,
+                        chunk_size=chunk_size,
+                        encoding=encoding,
                         export_uri=None,
                         track_serialized_rows=True,
                     )
