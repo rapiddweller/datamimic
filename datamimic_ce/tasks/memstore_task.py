@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.contexts.context import Context
-from datamimic_ce.statements.memstore_statement import MemstoreStatement
+from datamimic_ce.engine.dsl.statements.memstore_statement import MemstoreStatement
 from datamimic_ce.tasks.task import SetupSubTask
 
 

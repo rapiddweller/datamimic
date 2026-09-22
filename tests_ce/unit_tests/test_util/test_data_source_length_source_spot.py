@@ -13,10 +13,10 @@ import pytest
 
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.runtime.sources.router import set_data_source_length
-from datamimic_ce.model.constraints import SourceFileFormat, source_capabilities
-from datamimic_ce.statements.generate_statement import GenerateStatement
-from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
-from datamimic_ce.statements.variable_statement import VariableStatement
+from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat, source_capabilities
+from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+from datamimic_ce.engine.dsl.statements.nested_key_statement import NestedKeyStatement
+from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
 from datamimic_ce.utils.file_util import FileUtil
 
 

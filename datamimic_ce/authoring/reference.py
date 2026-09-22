@@ -30,12 +30,12 @@ from datamimic_ce.authoring.rule_catalog import (
     serialize_rule_definition,
 )
 from datamimic_ce.authoring.schema import ElementSchema, build_schema_index
-from datamimic_ce.constants.exporter_constants import (
+from datamimic_ce.engine.dsl.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_LOG_EXPORTER,
     EXPORTER_TEST_RESULT_EXPORTER,
 )
-from datamimic_ce.model.constraints import (
+from datamimic_ce.engine.dsl.model.constraints import (
     KEY_DISTRIBUTION_VALUES,
     SOURCE_DISTRIBUTION_VALUES,
     AllOrNone,
@@ -54,7 +54,7 @@ from datamimic_ce.model.constraints import (
     serialize_source_capability,
     source_capabilities,
 )
-from datamimic_ce.model.element_registry import canonical_tag, element_aliases
+from datamimic_ce.engine.dsl.model.element_registry import canonical_tag, element_aliases
 
 _GENERATOR_PACKAGE = "datamimic_ce.domains.common.literal_generators"
 
@@ -360,7 +360,7 @@ def timeseries_reference() -> str:
 
 
 def distributions_reference() -> str:
-    from datamimic_ce.enums.distribution_enums import (
+    from datamimic_ce.engine.dsl.enums.distribution_enums import (
         POSITIONAL_NUMBER_SEQUENCES,
     )
 
@@ -405,7 +405,7 @@ def distributions_reference() -> str:
 
 
 def converters_reference() -> str:
-    from datamimic_ce.enums.converter_enums import ConverterEnum
+    from datamimic_ce.engine.dsl.enums.converter_enums import ConverterEnum
 
     names = ", ".join(sorted(member.value for member in ConverterEnum))
     return (
@@ -507,8 +507,8 @@ def capabilities_manifest() -> dict[str, Any]:
     from importlib.metadata import PackageNotFoundError, version
 
     from datamimic_ce.authoring.spec import authoring_spec_json_schema
-    from datamimic_ce.enums.converter_enums import ConverterEnum
-    from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES
+    from datamimic_ce.engine.dsl.enums.converter_enums import ConverterEnum
+    from datamimic_ce.engine.dsl.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES
     from datamimic_ce.exporters.exporter_util import buffered_exporter_names
 
     try:

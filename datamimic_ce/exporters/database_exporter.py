@@ -47,7 +47,7 @@ class DatabaseExporter(Exporter):
     @staticmethod
     def _table_name(name: str, rest: list) -> str:
         # targetEntity -> type -> name (see StatementUtil.resolve_target_entity).
-        from datamimic_ce.statements.statement_util import StatementUtil
+        from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
 
         return StatementUtil.resolve_target_entity_from_metadata(
             name, rest[0] if rest and isinstance(rest[0], dict) else None

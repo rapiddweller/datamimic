@@ -6,10 +6,10 @@
 
 
 from datamimic_ce.contexts.geniter_context import GenIterContext
-from datamimic_ce.statements.condition_statement import ConditionStatement
-from datamimic_ce.statements.else_if_statement import ElseIfStatement
-from datamimic_ce.statements.else_statement import ElseStatement
-from datamimic_ce.statements.if_statement import IfStatement
+from datamimic_ce.engine.dsl.statements.condition_statement import ConditionStatement
+from datamimic_ce.engine.dsl.statements.else_if_statement import ElseIfStatement
+from datamimic_ce.engine.dsl.statements.else_statement import ElseStatement
+from datamimic_ce.engine.dsl.statements.if_statement import IfStatement
 from datamimic_ce.tasks.task import GenSubTask
 
 

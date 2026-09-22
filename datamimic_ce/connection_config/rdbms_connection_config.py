@@ -8,7 +8,7 @@
 from pydantic import BaseModel, ConfigDict
 
 from datamimic_ce.connection_config.connection_config_base import ConnectionConfig
-from datamimic_ce.enums.dbms_enums import Dbms
+from datamimic_ce.engine.dsl.enums.dbms_enums import Dbms
 
 
 class RdbmsConnectionConfig(ConnectionConfig, BaseModel):

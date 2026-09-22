@@ -28,8 +28,8 @@ class TestCLI:
         assert "Log Level" in result.output
 
     def test_capabilities_projects_central_alias_rules(self):
-        from datamimic_ce.constants.element_constants import EL_ITERATE
-        from datamimic_ce.model.constraints import element_constraints, serialize_constraints
+        from datamimic_ce.engine.dsl.constants.element_constants import EL_ITERATE
+        from datamimic_ce.engine.dsl.model.constraints import element_constraints, serialize_constraints
 
         result = runner.invoke(app, ["capabilities", "--full"])
 

@@ -9,7 +9,7 @@
 import pytest
 from pydantic import ValidationError
 
-from datamimic_ce.model.nested_key_model import NestedKeyModel
+from datamimic_ce.engine.dsl.model.nested_key_model import NestedKeyModel
 
 
 class TestNestedKeyModelSourceEntity:

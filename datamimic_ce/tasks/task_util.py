@@ -8,19 +8,6 @@ import string
 from decimal import Decimal
 from typing import Any
 
-from datamimic_ce.constants.attribute_constants import (
-    META_SELECTOR,
-    META_TARGET_ENTITY,
-    META_TYPE,
-)
-from datamimic_ce.constants.data_type_constants import (
-    DATA_TYPE_BINARY,
-    DATA_TYPE_BOOL,
-    DATA_TYPE_DECIMAL,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
-    DATA_TYPE_STRING,
-)
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.converter.append_converter import AppendConverter
@@ -37,40 +24,53 @@ from datamimic_ce.converter.remove_none_or_empty_element_converter import Remove
 from datamimic_ce.converter.substring_converter import SubstringConverter
 from datamimic_ce.converter.timestamp2date_converter import Timestamp2DateConverter
 from datamimic_ce.converter.upper_case_converter import UpperCaseConverter
+from datamimic_ce.engine.dsl.constants.attribute_constants import (
+    META_SELECTOR,
+    META_TARGET_ENTITY,
+    META_TYPE,
+)
+from datamimic_ce.engine.dsl.constants.data_type_constants import (
+    DATA_TYPE_BINARY,
+    DATA_TYPE_BOOL,
+    DATA_TYPE_DECIMAL,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_INT,
+    DATA_TYPE_STRING,
+)
+from datamimic_ce.engine.dsl.enums.converter_enums import ConverterEnum
+from datamimic_ce.engine.dsl.enums.operation_enums import ExportOperation
+from datamimic_ce.engine.dsl.statements.array_statement import ArrayStatement
+from datamimic_ce.engine.dsl.statements.assert_statement import AssertStatement
+from datamimic_ce.engine.dsl.statements.condition_statement import ConditionStatement
+from datamimic_ce.engine.dsl.statements.database_statement import DatabaseStatement
+from datamimic_ce.engine.dsl.statements.demographics_statement import DemographicsStatement
+from datamimic_ce.engine.dsl.statements.echo_statement import EchoStatement
+from datamimic_ce.engine.dsl.statements.element_statement import ElementStatement
+from datamimic_ce.engine.dsl.statements.else_if_statement import ElseIfStatement
+from datamimic_ce.engine.dsl.statements.else_statement import ElseStatement
+from datamimic_ce.engine.dsl.statements.execute_statement import ExecuteStatement
+from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+from datamimic_ce.engine.dsl.statements.generator_statement import GeneratorStatement
+from datamimic_ce.engine.dsl.statements.if_statement import IfStatement
+from datamimic_ce.engine.dsl.statements.include_statement import IncludeStatement
+from datamimic_ce.engine.dsl.statements.item_statement import ItemStatement
+from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
+from datamimic_ce.engine.dsl.statements.list_statement import ListStatement
+from datamimic_ce.engine.dsl.statements.memstore_statement import MemstoreStatement
+from datamimic_ce.engine.dsl.statements.mongodb_statement import MongoDBStatement
+from datamimic_ce.engine.dsl.statements.nested_key_statement import NestedKeyStatement
+from datamimic_ce.engine.dsl.statements.reference_statement import ReferenceStatement
+from datamimic_ce.engine.dsl.statements.state_machine_statement import StateMachineStatement
+from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
+from datamimic_ce.engine.dsl.statements.while_statement import WhileStatement
 from datamimic_ce.engine.io.api import DataSourcePagination
-from datamimic_ce.enums.converter_enums import ConverterEnum
-from datamimic_ce.enums.operation_enums import ExportOperation
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.memstore import Memstore
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
-from datamimic_ce.statements.array_statement import ArrayStatement
-from datamimic_ce.statements.assert_statement import AssertStatement
-from datamimic_ce.statements.condition_statement import ConditionStatement
-from datamimic_ce.statements.database_statement import DatabaseStatement
-from datamimic_ce.statements.demographics_statement import DemographicsStatement
-from datamimic_ce.statements.echo_statement import EchoStatement
-from datamimic_ce.statements.element_statement import ElementStatement
-from datamimic_ce.statements.else_if_statement import ElseIfStatement
-from datamimic_ce.statements.else_statement import ElseStatement
-from datamimic_ce.statements.execute_statement import ExecuteStatement
-from datamimic_ce.statements.generate_statement import GenerateStatement
-from datamimic_ce.statements.generator_statement import GeneratorStatement
-from datamimic_ce.statements.if_statement import IfStatement
-from datamimic_ce.statements.include_statement import IncludeStatement
-from datamimic_ce.statements.item_statement import ItemStatement
-from datamimic_ce.statements.key_statement import KeyStatement
-from datamimic_ce.statements.list_statement import ListStatement
-from datamimic_ce.statements.memstore_statement import MemstoreStatement
-from datamimic_ce.statements.mongodb_statement import MongoDBStatement
-from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
-from datamimic_ce.statements.reference_statement import ReferenceStatement
-from datamimic_ce.statements.state_machine_statement import StateMachineStatement
-from datamimic_ce.statements.statement import Statement
-from datamimic_ce.statements.variable_statement import VariableStatement
-from datamimic_ce.statements.while_statement import WhileStatement
 from datamimic_ce.tasks.array_task import ArrayTask
 from datamimic_ce.tasks.assert_task import AssertTask
 from datamimic_ce.tasks.database_task import DatabaseTask
@@ -346,7 +346,7 @@ class TaskUtil:
         """Export a nested generate's page products (own rows already handled by the caller, either
         before or after this call - see export_product_by_page); walk through composite statements
         (condition/if) so a generate inside them is not missed."""
-        from datamimic_ce.statements.composite_statement import CompositeStatement
+        from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
 
         if isinstance(sub_stmt, GenerateStatement):
             if xml_result.get(sub_stmt.full_name):

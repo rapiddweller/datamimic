@@ -21,9 +21,9 @@ from datamimic_ce.domains.common.literal_generators.state_transition_generator i
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
-from datamimic_ce.enums.distribution_enums import NumberDistribution
+from datamimic_ce.engine.dsl.enums.distribution_enums import NumberDistribution
+from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.logger import logger
-from datamimic_ce.statements.statement import Statement
 
 
 @functools.cache  # a class's __init__ signature is static

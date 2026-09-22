@@ -17,7 +17,7 @@ Tests cover:
 import pytest
 from pydantic import BaseModel, ConfigDict
 
-from datamimic_ce.model.constraints import (
+from datamimic_ce.engine.dsl.model.constraints import (
     AllOrNone,
     AllowedValuesWhen,
     Forbids,
@@ -30,7 +30,7 @@ from datamimic_ce.model.constraints import (
     ValidValues,
     constraints_schema_extra,
 )
-from datamimic_ce.model.model_util import ModelUtil
+from datamimic_ce.engine.dsl.model.model_util import ModelUtil
 
 
 class TestRequiredOneOf:
@@ -707,7 +707,7 @@ class TestConstraintsSchemaExtra:
 
 class TestModelUniqueConstraintContracts:
     def test_key_forbids_any_explicit_numeric_distribution_with_unique(self) -> None:
-        from datamimic_ce.model.key_model import KeyModel
+        from datamimic_ce.engine.dsl.model.key_model import KeyModel
 
         with pytest.raises(ValueError, match="unique.*cannot be combined.*distribution"):
             KeyModel(name="id", values="1,2", unique=True, distribution="shuffle")
@@ -720,7 +720,7 @@ class TestModelUniqueConstraintContracts:
         assert not any(fact["kind"] == "allowed_values_when" and fact["when_attr"] == "unique" for fact in constraints)
 
     def test_key_unique_rejects_weighted_source_during_model_validation(self) -> None:
-        from datamimic_ce.model.key_model import KeyModel
+        from datamimic_ce.engine.dsl.model.key_model import KeyModel
 
         with pytest.raises(ValueError, match="unique.*key.*requires.*values"):
             KeyModel(name="segment", source="segments.wgt.csv", unique=True)
@@ -733,7 +733,7 @@ class TestModelUniqueConstraintContracts:
         )
 
     def test_reference_declares_and_enforces_source_unique_constraints(self) -> None:
-        from datamimic_ce.model.reference_model import ReferenceModel
+        from datamimic_ce.engine.dsl.model.reference_model import ReferenceModel
 
         constraints = ReferenceModel.model_json_schema()["constraints"]
         assert any(

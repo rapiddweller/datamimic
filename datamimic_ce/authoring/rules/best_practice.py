@@ -18,8 +18,8 @@ from lxml import etree
 from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules.base import LintContext, Rule
-from datamimic_ce.constants.data_type_constants import DATA_TYPE_DECIMAL, DATA_TYPE_FLOAT, DATA_TYPE_INT
-from datamimic_ce.constants.element_constants import (
+from datamimic_ce.engine.dsl.constants.data_type_constants import DATA_TYPE_DECIMAL, DATA_TYPE_FLOAT, DATA_TYPE_INT
+from datamimic_ce.engine.dsl.constants.element_constants import (
     EL_CONDITION,
     EL_ELSE,
     EL_ELSE_IF,
@@ -32,7 +32,7 @@ from datamimic_ce.constants.element_constants import (
     EL_REFERENCE,
     EL_VARIABLE,
 )
-from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
+from datamimic_ce.engine.dsl.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
 from datamimic_ce.utils.number_sequences import finite_number_sequence_capacity
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
@@ -357,7 +357,7 @@ class CountWithSourceCapsSilently(Rule):
     definition = authoring_rule_definition("DM316")
 
     def check(self, ctx: LintContext) -> Iterable[Diagnostic]:
-        from datamimic_ce.enums.distribution_enums import SourceDistribution
+        from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
 
         for element in ctx.iter(*_GENERATES):
             count = element.get("count")

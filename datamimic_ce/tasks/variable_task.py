@@ -9,7 +9,10 @@ from collections.abc import Iterator
 from random import Random
 from typing import Any, Final
 
-from datamimic_ce.constants.attribute_constants import (
+from datamimic_ce.contexts.context import Context, DotableDict
+from datamimic_ce.contexts.geniter_context import GenIterContext
+from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.engine.dsl.constants.attribute_constants import (
     ATTR_CONSTANT,
     ATTR_ENTITY,
     ATTR_GENERATOR,
@@ -18,10 +21,8 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_TYPE,
     ATTR_VALUES,
 )
-from datamimic_ce.constants.element_constants import EL_VARIABLE
-from datamimic_ce.contexts.context import Context, DotableDict
-from datamimic_ce.contexts.geniter_context import GenIterContext
-from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.engine.dsl.constants.element_constants import EL_VARIABLE
+from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.sources.variable import (
     VariableSourcePlanKind,
@@ -30,7 +31,6 @@ from datamimic_ce.engine.runtime.sources.variable import (
     plan_variable_source,
 )
 from datamimic_ce.logger import logger
-from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
 from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.tasks.task_util import TaskUtil

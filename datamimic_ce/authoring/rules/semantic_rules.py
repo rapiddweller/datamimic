@@ -25,13 +25,13 @@ from pydantic import TypeAdapter, ValidationError
 
 from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rules.base import LintContext, Rule
-from datamimic_ce.constants.attribute_constants import (
+from datamimic_ce.engine.dsl.constants.attribute_constants import (
     ATTR_DISTRIBUTION,
     ATTR_SOURCE,
     ATTR_TYPE,
     ATTR_UNIQUE,
 )
-from datamimic_ce.constants.element_constants import (
+from datamimic_ce.engine.dsl.constants.element_constants import (
     EL_DATABASE,
     EL_GENERATE,
     EL_ITERATE,
@@ -39,7 +39,7 @@ from datamimic_ce.constants.element_constants import (
     EL_NESTED_KEY,
     EL_VARIABLE,
 )
-from datamimic_ce.model.constraints import (
+from datamimic_ce.engine.dsl.model.constraints import (
     COUNT_XOR_MAX,
     COUNT_XOR_MIN,
     EXIST_COUNT,
@@ -58,7 +58,7 @@ from datamimic_ce.model.constraints import (
     resolved_allowed,
     resolved_values,
 )
-from datamimic_ce.model.model_util import ModelUtil
+from datamimic_ce.engine.dsl.model.model_util import ModelUtil
 from datamimic_ce.authoring.rule_catalog import RuleSeverity, authoring_rule_definition
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)

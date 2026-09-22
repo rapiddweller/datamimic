@@ -12,9 +12,9 @@ from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.exporters.exporter_util import ExporterUtil
 from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
-from datamimic_ce.statements.generate_statement import GenerateStatement
-from datamimic_ce.statements.key_statement import KeyStatement
-from datamimic_ce.statements.setup_statement import SetupStatement
+from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
+from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
 from datamimic_ce.tasks.generate_task import GenerateTask
 from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.dict_util import dict_nested_update

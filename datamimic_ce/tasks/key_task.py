@@ -4,7 +4,11 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.constants.attribute_constants import (
+from datamimic_ce.contexts.context import Context
+from datamimic_ce.contexts.geniter_context import GenIterContext
+from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
+from datamimic_ce.engine.dsl.constants.attribute_constants import (
     ATTR_CONSTANT,
     ATTR_GENERATOR,
     ATTR_SCRIPT,
@@ -12,13 +16,9 @@ from datamimic_ce.constants.attribute_constants import (
     ATTR_TYPE,
     ATTR_VALUES,
 )
-from datamimic_ce.constants.element_constants import EL_KEY
-from datamimic_ce.contexts.context import Context
-from datamimic_ce.contexts.geniter_context import GenIterContext
-from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
+from datamimic_ce.engine.dsl.constants.element_constants import EL_KEY
+from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
 from datamimic_ce.engine.io.api import DataSourcePagination
-from datamimic_ce.statements.key_statement import KeyStatement
 from datamimic_ce.tasks.element_task import ElementTask
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
 from datamimic_ce.tasks.task import GenSubTask

@@ -7,8 +7,8 @@ import copy
 
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.parsers.descriptor_parser import DescriptorParser
-from datamimic_ce.statements.include_statement import IncludeStatement
+from datamimic_ce.engine.dsl.parsers.descriptor_parser import DescriptorParser
+from datamimic_ce.engine.dsl.statements.include_statement import IncludeStatement
 from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.file_util import FileUtil

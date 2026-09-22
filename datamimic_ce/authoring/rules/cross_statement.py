@@ -16,7 +16,7 @@ from lxml import etree
 from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules.base import LintContext, Rule
-from datamimic_ce.constants.element_constants import (
+from datamimic_ce.engine.dsl.constants.element_constants import (
     EL_DATABASE,
     EL_ELEMENT,
     EL_GENERATE,
@@ -30,14 +30,13 @@ from datamimic_ce.constants.element_constants import (
     EL_REFERENCE,
     EL_VARIABLE,
 )
-from datamimic_ce.constants.exporter_constants import (
+from datamimic_ce.engine.dsl.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_LOG_EXPORTER,
     EXPORTER_TEST_RESULT_EXPORTER,
 )
-from datamimic_ce.enums.operation_enums import ExportOperation
-from datamimic_ce.exporters.exporter_util import ExporterUtil, buffered_exporter_names
-from datamimic_ce.model.constraints import (
+from datamimic_ce.engine.dsl.enums.operation_enums import ExportOperation
+from datamimic_ce.engine.dsl.model.constraints import (
     DynamicSourceKind,
     SourceFileFormat,
     source_allows_client,
@@ -47,6 +46,7 @@ from datamimic_ce.model.constraints import (
     source_file_format_for,
     supported_source_file_formats,
 )
+from datamimic_ce.exporters.exporter_util import ExporterUtil, buffered_exporter_names
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
 _SOURCE_READERS = (*_GENERATES, EL_VARIABLE, EL_NESTED_KEY, EL_KEY, EL_ID, EL_ELEMENT, EL_REFERENCE)

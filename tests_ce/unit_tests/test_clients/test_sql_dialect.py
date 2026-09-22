@@ -12,7 +12,7 @@ models in tests_ce/external_service_tests/test_rdbms_sql_matrix."""
 import pytest
 
 from datamimic_ce.clients.sql_dialect import SelectorPage, selector_page, split_script
-from datamimic_ce.enums.dbms_enums import Dbms
+from datamimic_ce.engine.dsl.enums.dbms_enums import Dbms
 
 _COLUMNS = ["grp", "id"]
 _DB_PAGED = slice(None)

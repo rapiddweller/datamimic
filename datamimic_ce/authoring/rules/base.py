@@ -18,7 +18,7 @@ from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rule_catalog import RuleDefinition, RuleSeverity
 from datamimic_ce.authoring.schema import SchemaIndex
 from datamimic_ce.authoring.xml_loader import element_path
-from datamimic_ce.constants.element_constants import EL_COMMENT
+from datamimic_ce.engine.dsl.constants.element_constants import EL_COMMENT
 
 if TYPE_CHECKING:
     from datamimic_ce.authoring.contracts import CompilePlan

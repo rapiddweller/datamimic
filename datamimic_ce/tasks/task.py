@@ -9,7 +9,7 @@ from typing import Any
 
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.statement import Statement
 
 
 class Task(ABC):

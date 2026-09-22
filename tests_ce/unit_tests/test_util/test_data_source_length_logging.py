@@ -17,7 +17,7 @@ from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.runtime.sources.router import set_data_source_length
-from datamimic_ce.statements.variable_statement import VariableStatement
+from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
 
 
 def _ctx_and_stmt_for_db_source(count_error: Exception) -> tuple[Mock, VariableStatement]:

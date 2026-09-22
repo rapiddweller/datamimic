@@ -14,7 +14,13 @@ from typing import Any
 
 import numpy
 
-from datamimic_ce.constants.data_type_constants import (
+from datamimic_ce.contexts.context import Context
+from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
+from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
+from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
+from datamimic_ce.domains.domain_core.runtime import from_epoch_utc, to_epoch_utc
+from datamimic_ce.engine.dsl.constants.data_type_constants import (
     DATA_TYPE_BINARY,
     DATA_TYPE_BOOL,
     DATA_TYPE_DECIMAL,
@@ -22,18 +28,12 @@ from datamimic_ce.constants.data_type_constants import (
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
 )
-from datamimic_ce.constants.element_constants import EL_ELEMENT, EL_KEY, EL_VARIABLE
-from datamimic_ce.contexts.context import Context
-from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
-from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
-from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
-from datamimic_ce.domains.domain_core.runtime import from_epoch_utc, to_epoch_utc
+from datamimic_ce.engine.dsl.constants.element_constants import EL_ELEMENT, EL_KEY, EL_VARIABLE
+from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat, source_file_format_for
+from datamimic_ce.engine.dsl.statements.element_statement import ElementStatement
+from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
+from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
 from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource
-from datamimic_ce.model.constraints import SourceFileFormat, source_file_format_for
-from datamimic_ce.statements.element_statement import ElementStatement
-from datamimic_ce.statements.key_statement import KeyStatement
-from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.task import Task
 from datamimic_ce.utils.unique_sampling import unique_value_iter
 

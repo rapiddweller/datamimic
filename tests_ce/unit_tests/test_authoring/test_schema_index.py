@@ -23,18 +23,18 @@ from pydantic import BaseModel
 
 from datamimic_ce.authoring.rules import ALL_RULES, best_practice, cross_statement, schema_rules, semantic_rules
 from datamimic_ce.authoring.schema import build_schema_index
-from datamimic_ce.constants.element_constants import EL_COMMENT, EL_FIELD, EL_SETUP, EL_TRANSITION, EL_VALUE
-from datamimic_ce.model.element_registry import (
+from datamimic_ce.engine.dsl.constants.element_constants import EL_COMMENT, EL_FIELD, EL_SETUP, EL_TRANSITION, EL_VALUE
+from datamimic_ce.engine.dsl.model.element_registry import (
     ElementDefinition,
     get_model_class,
     list_element_tags,
     register_element_extension,
     unregister_element_extension,
 )
-from datamimic_ce.model.model_util import ModelUtil
-from datamimic_ce.parsers.parser_util import ParserUtil
-from datamimic_ce.parsers.statement_parser import StatementParser
-from datamimic_ce.statements.statement import Statement
+from datamimic_ce.engine.dsl.model.model_util import ModelUtil
+from datamimic_ce.engine.dsl.parsers.parser_util import ParserUtil
+from datamimic_ce.engine.dsl.parsers.statement_parser import StatementParser
+from datamimic_ce.engine.dsl.statements.statement import Statement
 
 # Models that intentionally have no check_valid_attributes guard:
 # database/mongodb take open credential attributes (extra="allow").
@@ -153,8 +153,8 @@ def test_gate4_reflection_dependent_fields_keep_their_descriptions() -> None:
     without failing any other test; this guard catches it directly. Deliberately scoped to
     the fields this reflection path actually depends on, not every CE model field — full
     retrofit is separate, incremental follow-up work, not this gate's job."""
-    from datamimic_ce.model.generate_model import GenerateModel
-    from datamimic_ce.model.variable_model import VariableModel
+    from datamimic_ce.engine.dsl.model.generate_model import GenerateModel
+    from datamimic_ce.engine.dsl.model.variable_model import VariableModel
 
     generate_schema = GenerateModel.model_json_schema()["properties"]
     for field_name in ("start", "end", "interval"):

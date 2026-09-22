@@ -138,12 +138,7 @@
       "label": "dsl",
       "role": "contract",
       "packages": [
-        "datamimic_ce.engine.dsl",
-        "datamimic_ce.constants",
-        "datamimic_ce.enums",
-        "datamimic_ce.model",
-        "datamimic_ce.parsers",
-        "datamimic_ce.statements"
+        "datamimic_ce.engine.dsl"
       ],
       "namespace": "datamimic_ce.engine.dsl",
       "responsibilities": [

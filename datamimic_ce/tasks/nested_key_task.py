@@ -6,10 +6,12 @@
 
 import copy
 
-from datamimic_ce.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE_LIST
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.engine.dsl.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE_LIST
+from datamimic_ce.engine.dsl.statements.nested_key_statement import NestedKeyStatement
+from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.sources.router import (
     finalize_nested_key_source,
@@ -17,8 +19,6 @@ from datamimic_ce.engine.runtime.sources.router import (
     window_nested_key_rows,
 )
 from datamimic_ce.logger import logger
-from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
-from datamimic_ce.statements.statement_util import StatementUtil
 from datamimic_ce.tasks.element_task import ElementTask
 from datamimic_ce.tasks.task import GenSubTask
 from datamimic_ce.tasks.task_util import TaskUtil

@@ -17,7 +17,8 @@ from typing import Any
 from datamimic_ce.clients.client import Client
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.constants.exporter_constants import (
+from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.engine.dsl.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_CSV,
     EXPORTER_DBUNIT,
@@ -29,8 +30,8 @@ from datamimic_ce.constants.exporter_constants import (
     EXPORTER_XLSX,
     EXPORTER_XML,
 )
-from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.enums.operation_enums import ExportOperation
+from datamimic_ce.engine.dsl.enums.operation_enums import ExportOperation
+from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
 from datamimic_ce.exporters.console_exporter import ConsoleExporter
 from datamimic_ce.exporters.csv_exporter import CSVExporter
 from datamimic_ce.exporters.database_exporter import DatabaseExporter
@@ -46,7 +47,6 @@ from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExpo
 from datamimic_ce.exporters.xlsx_exporter import XLSXExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.logger import logger
-from datamimic_ce.statements.generate_statement import GenerateStatement
 
 # Registry of buffered file exporters: target name -> class. Every concrete exporter takes the uniform
 # (ExporterConfig, params) constructor; adding one is a single entry here, not a new factory branch.
@@ -313,7 +313,7 @@ class ExporterUtil:
         # targetEntity names the physical output entity (file basename here; table/collection in the
         # store exporters) - one explicit override, honoured across every target family. type_=None:
         # a file basename never routed by 'type', so behaviour is unchanged without targetEntity.
-        from datamimic_ce.statements.statement_util import StatementUtil
+        from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
 
         product_name = StatementUtil.resolve_target_entity(gen_stmt.target_entity, None, gen_stmt.name)
         # exportUri (validated at parse time) is the output-directory prefix for file exporters.

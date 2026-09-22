@@ -42,13 +42,13 @@ class TestSourceDistributionCoerce:
     """coerce is the validation boundary for <variable> (no model validator there)."""
 
     def test_absent_is_random(self):
-        from datamimic_ce.enums.distribution_enums import SourceDistribution
+        from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
 
         assert SourceDistribution.coerce(None) is SourceDistribution.RANDOM
         assert SourceDistribution.coerce("cumulated") is SourceDistribution.CUMULATED
 
     def test_unknown_raises(self):
-        from datamimic_ce.enums.distribution_enums import SourceDistribution
+        from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
 
         with pytest.raises(ValueError):
             SourceDistribution.coerce("garbage")

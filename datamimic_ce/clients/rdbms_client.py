@@ -21,7 +21,7 @@ from datamimic_ce.config import settings
 from datamimic_ce.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.domains.domain_core.base_entity import stringify_if_entity
-from datamimic_ce.enums.dbms_enums import Dbms
+from datamimic_ce.engine.dsl.enums.dbms_enums import Dbms
 from datamimic_ce.logger import logger
 
 # SQLAlchemy create_engine kwargs DATAMIMIC forwards (pooling/behavior). Anything else in the

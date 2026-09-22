@@ -6,7 +6,7 @@
 
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.domains.common.literal_generators.state_transition_generator import StateMachineDef
-from datamimic_ce.statements.state_machine_statement import StateMachineStatement
+from datamimic_ce.engine.dsl.statements.state_machine_statement import StateMachineStatement
 from datamimic_ce.tasks.task import SetupSubTask
 
 

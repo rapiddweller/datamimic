@@ -9,8 +9,8 @@ import textwrap
 
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.dsl.statements.execute_statement import ExecuteStatement
 from datamimic_ce.logger import logger
-from datamimic_ce.statements.execute_statement import ExecuteStatement
 from datamimic_ce.tasks.task import SetupSubTask
 
 # One-time nudge: shell execution is a deliberate escape hatch for side effects, not data generation.

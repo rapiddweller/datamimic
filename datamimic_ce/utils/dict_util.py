@@ -6,7 +6,7 @@
 
 import copy
 
-from datamimic_ce.constants.convention_constants import NAME_SEPARATOR
+from datamimic_ce.engine.dsl.constants.convention_constants import NAME_SEPARATOR
 
 
 def dict_nested_update(dictionary, key_path, value):

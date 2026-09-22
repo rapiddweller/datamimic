@@ -11,14 +11,14 @@ import dill  # type: ignore[import-untyped]
 from datamimic_ce.config import settings
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
+from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.sources.chunk_source_reader import ChunkSourceReader
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.exporter_util import ExporterUtil
 from datamimic_ce.logger import logger, setup_logger
-from datamimic_ce.statements.composite_statement import CompositeStatement
-from datamimic_ce.statements.generate_statement import GenerateStatement
-from datamimic_ce.statements.statement import Statement
 from datamimic_ce.tasks.generate_task import GenerateTask
 from datamimic_ce.tasks.task_util import TaskUtil
 from datamimic_ce.utils.logging_util import gen_timer

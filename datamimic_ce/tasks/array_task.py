@@ -7,15 +7,15 @@
 
 from decimal import Decimal
 
-from datamimic_ce.constants.data_type_constants import (
+from datamimic_ce.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.dsl.constants.data_type_constants import (
     DATA_TYPE_BOOL,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
     DATA_TYPE_LITERAL,
     DATA_TYPE_STRING,
 )
-from datamimic_ce.contexts.geniter_context import GenIterContext
-from datamimic_ce.statements.array_statement import ArrayStatement
+from datamimic_ce.engine.dsl.statements.array_statement import ArrayStatement
 from datamimic_ce.tasks.task import GenSubTask
 
 

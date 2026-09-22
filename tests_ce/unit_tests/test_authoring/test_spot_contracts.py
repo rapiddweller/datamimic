@@ -14,9 +14,9 @@ from pydantic import BaseModel
 
 from datamimic_ce.authoring.reference import capabilities_manifest, element_reference
 from datamimic_ce.authoring.schema import build_schema_index, element_json_schema
-from datamimic_ce.constants.element_constants import EL_GENERATE, EL_ITERATE
-from datamimic_ce.enums.distribution_enums import NumberDistribution, SourceDistribution
-from datamimic_ce.model.constraints import (
+from datamimic_ce.engine.dsl.constants.element_constants import EL_GENERATE, EL_ITERATE
+from datamimic_ce.engine.dsl.enums.distribution_enums import NumberDistribution, SourceDistribution
+from datamimic_ce.engine.dsl.model.constraints import (
     KEY_DISTRIBUTION_VALUES,
     SOURCE_DISTRIBUTION_VALUES,
     Constraint,
@@ -26,7 +26,7 @@ from datamimic_ce.model.constraints import (
     resolved_values,
     serialize_constraints,
 )
-from datamimic_ce.model.element_registry import (
+from datamimic_ce.engine.dsl.model.element_registry import (
     ElementDefinition,
     canonical_tag,
     get_element_definition,
@@ -143,7 +143,7 @@ def test_extension_rules_are_registered_once_and_project_without_model_copies() 
 
 
 def test_extension_registration_rolls_back_structure_and_rules_atomically(monkeypatch: pytest.MonkeyPatch) -> None:
-    from datamimic_ce.model.constraints import registry as rule_registry
+    from datamimic_ce.engine.dsl.model.constraints import registry as rule_registry
 
     tag = "synthetic-atomic-extension"
     alias = "synthetic-atomic-alias"

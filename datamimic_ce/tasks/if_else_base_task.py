@@ -7,9 +7,9 @@
 from abc import ABC
 
 from datamimic_ce.contexts.geniter_context import GenIterContext
-from datamimic_ce.statements.else_if_statement import ElseIfStatement
-from datamimic_ce.statements.else_statement import ElseStatement
-from datamimic_ce.statements.if_statement import IfStatement
+from datamimic_ce.engine.dsl.statements.else_if_statement import ElseIfStatement
+from datamimic_ce.engine.dsl.statements.else_statement import ElseStatement
+from datamimic_ce.engine.dsl.statements.if_statement import IfStatement
 from datamimic_ce.tasks.condition_task import ConditionTask
 from datamimic_ce.tasks.task import CommonSubTask, GenSubTask
 from datamimic_ce.tasks.task_util import TaskUtil

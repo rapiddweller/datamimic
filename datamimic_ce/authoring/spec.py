@@ -34,9 +34,9 @@ from pydantic.json_schema import JsonDict, JsonValue
 from pydantic_core import InitErrorDetails, PydanticCustomError
 
 from datamimic_ce._compat import StrEnum, assert_never
-from datamimic_ce.constants.element_constants import EL_DATABASE, EL_GENERATE, EL_MONGODB
+from datamimic_ce.engine.dsl.constants.element_constants import EL_DATABASE, EL_GENERATE, EL_MONGODB
+from datamimic_ce.engine.dsl.model.constraints import is_source_file
 from datamimic_ce.exporters.exporter_util import buffered_exporter_names
-from datamimic_ce.model.constraints import is_source_file
 
 PositiveStrictInt = Annotated[StrictInt, Field(gt=0)]
 NonNegativeStrictInt = Annotated[StrictInt, Field(ge=0)]

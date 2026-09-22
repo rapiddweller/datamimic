@@ -12,10 +12,10 @@ from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
-from datamimic_ce.model.generator_model import GeneratorModel
+from datamimic_ce.engine.dsl.model.generator_model import GeneratorModel
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
-from datamimic_ce.statements.generator_statement import GeneratorStatement
-from datamimic_ce.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.generator_statement import GeneratorStatement
+from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.tasks.generator_task import GeneratorTask
 
 

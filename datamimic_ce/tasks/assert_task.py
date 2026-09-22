@@ -6,7 +6,7 @@
 
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
-from datamimic_ce.statements.assert_statement import AssertStatement
+from datamimic_ce.engine.dsl.statements.assert_statement import AssertStatement
 from datamimic_ce.tasks.task import CommonSubTask
 
 

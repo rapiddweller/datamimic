@@ -5,8 +5,8 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.engine.dsl.statements.mongodb_statement import MongoDBStatement
 from datamimic_ce.engine.io.api import MongoDBClient
-from datamimic_ce.statements.mongodb_statement import MongoDBStatement
 from datamimic_ce.tasks.task import SetupSubTask
 
 

@@ -9,7 +9,7 @@ from collections.abc import Iterator
 from decimal import Decimal
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.enums.distribution_enums import NumberDistribution
+from datamimic_ce.engine.dsl.enums.distribution_enums import NumberDistribution
 from datamimic_ce.utils.distribution_sampling import cumulated_index
 from datamimic_ce.utils.number_sequences import build_number_sequence
 

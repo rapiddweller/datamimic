@@ -10,9 +10,9 @@ from typing import Any
 
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.dsl.statements.reference_statement import ReferenceStatement
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.runtime.sources.router import load_reference_source, reference_uses_shared_cycle
-from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.tasks.task import GenSubTask
 
 

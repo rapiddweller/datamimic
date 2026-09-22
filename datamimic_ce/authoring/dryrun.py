@@ -263,8 +263,8 @@ def _run_error(rule: str, message: str, fix_hint: str, lint: LintResult, *, elem
 
 
 def _memstore_ids(root_stmt: object) -> set[str]:
-    from datamimic_ce.statements.memstore_statement import MemstoreStatement
-    from datamimic_ce.statements.setup_statement import SetupStatement
+    from datamimic_ce.engine.dsl.statements.memstore_statement import MemstoreStatement
+    from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
 
     assert isinstance(root_stmt, SetupStatement)
     return {stmt.id for stmt in root_stmt.sub_statements if isinstance(stmt, MemstoreStatement)}
@@ -273,9 +273,9 @@ def _memstore_ids(root_stmt: object) -> set[str]:
 def _generate_statements(root_stmt: object) -> tuple[object, ...]:
     """Collect generate statements without assuming their lexical or execution order."""
 
-    from datamimic_ce.statements.composite_statement import CompositeStatement
-    from datamimic_ce.statements.generate_statement import GenerateStatement
-    from datamimic_ce.statements.setup_statement import SetupStatement
+    from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
+    from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+    from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
 
     assert isinstance(root_stmt, SetupStatement)
     statements: list[object] = []
@@ -296,8 +296,8 @@ def _memstore_producers(
     root_stmt: object,
     memstore_ids: set[str],
 ) -> tuple[_MemstoreProducer, ...]:
-    from datamimic_ce.statements.generate_statement import GenerateStatement
-    from datamimic_ce.statements.statement_util import StatementUtil
+    from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+    from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
 
     producers: list[_MemstoreProducer] = []
     for statement in _generate_statements(root_stmt):
@@ -325,10 +325,10 @@ def _memstore_source_binding(
     memstore_ids: set[str],
     producers: tuple[_MemstoreProducer, ...],
 ) -> _MemstoreSourceBinding | None:
-    from datamimic_ce.constants.element_constants import EL_GENERATE
-    from datamimic_ce.model.constraints import source_file_format_for
-    from datamimic_ce.statements.generate_statement import GenerateStatement
-    from datamimic_ce.statements.statement_util import StatementUtil
+    from datamimic_ce.engine.dsl.constants.element_constants import EL_GENERATE
+    from datamimic_ce.engine.dsl.model.constraints import source_file_format_for
+    from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+    from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
 
     if not isinstance(stmt, GenerateStatement) or stmt.source not in memstore_ids:
         return None
@@ -353,8 +353,8 @@ def _memstore_source_binding(
 
 
 def _contains_execute(root_stmt: object) -> bool:
-    from datamimic_ce.statements.composite_statement import CompositeStatement
-    from datamimic_ce.statements.execute_statement import ExecuteStatement
+    from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
+    from datamimic_ce.engine.dsl.statements.execute_statement import ExecuteStatement
 
     def _walk(stmt: object) -> bool:
         if isinstance(stmt, ExecuteStatement):
@@ -375,7 +375,7 @@ _StrippedTargets = dict[str, tuple[str, list[_FileTarget]]]
 def _capture_name(full_name: str) -> str:
     """Use the exact nested-product key used by ``TestResultExporter``."""
 
-    from datamimic_ce.constants.convention_constants import NAME_SEPARATOR
+    from datamimic_ce.engine.dsl.constants.convention_constants import NAME_SEPARATOR
 
     if NAME_SEPARATOR in full_name:
         return full_name.split(NAME_SEPARATOR, 1)[-1]
@@ -383,8 +383,8 @@ def _capture_name(full_name: str) -> str:
 
 
 def _parent_capture_name(stmt: object) -> str | None:
-    from datamimic_ce.statements.generate_statement import GenerateStatement
-    from datamimic_ce.statements.statement import Statement
+    from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+    from datamimic_ce.engine.dsl.statements.statement import Statement
 
     if not isinstance(stmt, Statement):
         return None
@@ -402,10 +402,10 @@ def _source_row_count(
 ) -> int | None:
     """Return a file source's statically observable remaining rows, if supported."""
 
-    from datamimic_ce.constants.element_constants import EL_GENERATE
+    from datamimic_ce.engine.dsl.constants.element_constants import EL_GENERATE
+    from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat, source_file_format_for
+    from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
     from datamimic_ce.engine.io.api import DataSourceRegistry
-    from datamimic_ce.model.constraints import SourceFileFormat, source_file_format_for
-    from datamimic_ce.statements.generate_statement import GenerateStatement
 
     if not isinstance(stmt, GenerateStatement) or descriptor_dir is None or stmt.source is None:
         return None
@@ -426,7 +426,7 @@ def _source_row_count(
 
 
 def _range_upper_bound(stmt: object) -> int | None:
-    from datamimic_ce.statements.generate_statement import GenerateStatement
+    from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
 
     if not isinstance(stmt, GenerateStatement):
         return None
@@ -475,10 +475,10 @@ def neutralize_for_dry_run(
     """Statement transformer: cap counts, keep only memstore targets, force 1 process.
     When a collector dict is given, the FILE targets removed from each product are
     recorded so smoke_export can replay the captured rows through them afterwards."""
-    from datamimic_ce.statements.composite_statement import CompositeStatement
-    from datamimic_ce.statements.generate_statement import GenerateStatement
-    from datamimic_ce.statements.setup_statement import SetupStatement
-    from datamimic_ce.statements.statement_util import StatementUtil
+    from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
+    from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+    from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
+    from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
 
     assert isinstance(root_stmt, SetupStatement)
     memstores = _memstore_ids(root_stmt)
@@ -509,7 +509,7 @@ def neutralize_for_dry_run(
                 memstore_ids=memstores,
                 producers=memstore_producers,
             )
-            from datamimic_ce.enums.distribution_enums import SourceDistribution
+            from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
 
             source_exhaustible = (
                 source_rows is not None and not stmt.cyclic and stmt.distribution is not SourceDistribution.CUMULATED
@@ -1301,7 +1301,7 @@ def _execute_captured(
     lint: LintResult,
     smoke_export: bool = False,
 ) -> CapturedRun:
-    from datamimic_ce.parsers.descriptor_parser import DescriptorParser
+    from datamimic_ce.engine.dsl.parsers.descriptor_parser import DescriptorParser
 
     # Refusal gate: <execute> runs arbitrary SQL/scripts — never silently in a dry-run.
     # The parse can raise (e.g. lint suppressed a credential error) — map it to DM002,

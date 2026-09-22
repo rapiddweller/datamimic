@@ -1,4 +1,4 @@
-from datamimic_ce.constants.exporter_constants import (
+from datamimic_ce.engine.dsl.constants.exporter_constants import (
     EXPORTER_CSV,
     EXPORTER_DBUNIT,
     EXPORTER_FIXED_WIDTH,

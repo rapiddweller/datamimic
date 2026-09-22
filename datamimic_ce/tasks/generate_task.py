@@ -15,15 +15,15 @@ from datamimic_ce.config import settings
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
+from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
+from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
 from datamimic_ce.engine.io.api import DatabaseClient
 from datamimic_ce.engine.runtime.sources.router import data_source_cache_key, set_data_source_length
 from datamimic_ce.exporters.exporter_util import ExporterUtil
 from datamimic_ce.logger import logger
-from datamimic_ce.statements.composite_statement import CompositeStatement
-from datamimic_ce.statements.generate_statement import GenerateStatement
-from datamimic_ce.statements.key_statement import KeyStatement
-from datamimic_ce.statements.statement import Statement
-from datamimic_ce.statements.statement_util import StatementUtil
 from datamimic_ce.tasks.single_process_policy import resolve_single_process
 from datamimic_ce.tasks.task import CommonSubTask
 from datamimic_ce.tasks.task_util import TaskUtil
@@ -106,7 +106,7 @@ class GenerateTask(CommonSubTask):
         size when cyclic is off — warn so the underrun is visible before anyone counts
         output rows. Top-level statements only (executed once => warned once); cumulated
         samples with replacement and never runs out."""
-        from datamimic_ce.enums.distribution_enums import SourceDistribution
+        from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
 
         stmt = self._statement
         if (
@@ -432,9 +432,9 @@ class GenerateTask(CommonSubTask):
         restarts in every worker process - two workers would emit the SAME values, silently
         duplicating what the sequence guarantees to be unique. Fail loudly instead; drop
         numProcess/multiprocessing (or the sequence) to proceed."""
-        from datamimic_ce.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES
-        from datamimic_ce.statements.composite_statement import CompositeStatement
-        from datamimic_ce.statements.key_statement import KeyStatement
+        from datamimic_ce.engine.dsl.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES
+        from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
+        from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
 
         # The ENTIRE subtree runs inside the workers, so scan it fully - a sequence key nested
         # in an inner <generate>/<nestedKey> duplicates just the same as a top-level one.

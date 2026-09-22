@@ -6,7 +6,7 @@
 
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.statements.list_statement import ListStatement
+from datamimic_ce.engine.dsl.statements.list_statement import ListStatement
 from datamimic_ce.tasks.task import GenSubTask
 from datamimic_ce.tasks.task_util import TaskUtil
 

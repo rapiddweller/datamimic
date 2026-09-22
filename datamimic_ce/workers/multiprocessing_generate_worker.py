@@ -7,7 +7,7 @@ import multiprocessing
 
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.statements.generate_statement import GenerateStatement
+from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
 from datamimic_ce.workers.generate_worker import GenerateWorker
 
 

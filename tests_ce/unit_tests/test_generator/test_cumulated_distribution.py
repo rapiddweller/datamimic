@@ -17,7 +17,7 @@ from decimal import Decimal
 
 from datamimic_ce.domains.common.literal_generators.float_generator import FloatGenerator
 from datamimic_ce.domains.common.literal_generators.integer_generator import IntegerGenerator
-from datamimic_ce.enums.distribution_enums import NumberDistribution
+from datamimic_ce.engine.dsl.enums.distribution_enums import NumberDistribution
 
 N = 20000
 

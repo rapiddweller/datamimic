@@ -11,7 +11,7 @@ import pytest
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.connection_config.mongodb_connection_config import MongoDBConnectionConfig
-from datamimic_ce.statements.statement_util import StatementUtil
+from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
 
 
 def _stmt(source_entity=None, type_=None, name="stmt"):

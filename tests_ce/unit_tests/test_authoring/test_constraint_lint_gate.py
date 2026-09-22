@@ -25,7 +25,7 @@ from pydantic import BaseModel
 from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.linter import _run_rules, lint_source
 from datamimic_ce.authoring.schema import build_schema_index
-from datamimic_ce.model.constraints import (
+from datamimic_ce.engine.dsl.model.constraints import (
     AllOrNone,
     AllowedValuesWhen,
     Constraint,
@@ -38,7 +38,7 @@ from datamimic_ce.model.constraints import (
     RequiresWhenValue,
     ValidValues,
 )
-from datamimic_ce.model.element_registry import (
+from datamimic_ce.engine.dsl.model.element_registry import (
     ElementDefinition,
     register_element_extension,
     unregister_element_extension,

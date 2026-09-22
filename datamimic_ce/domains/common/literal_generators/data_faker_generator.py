@@ -10,7 +10,7 @@ from typing import Any
 from faker import Faker
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.enums.faker_enums import UnsupportedMethod
+from datamimic_ce.engine.dsl.enums.faker_enums import UnsupportedMethod
 
 
 class DataFakerGenerator(BaseLiteralGenerator):

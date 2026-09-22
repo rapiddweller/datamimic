@@ -18,9 +18,9 @@ from datamimic_ce.authoring.reference import (
 )
 from datamimic_ce.authoring.schema import build_schema_index
 from datamimic_ce.authoring.spec import authoring_spec_json_schema
-from datamimic_ce.enums.converter_enums import ConverterEnum
+from datamimic_ce.engine.dsl.enums.converter_enums import ConverterEnum
 from datamimic_ce.exporters.exporter_util import buffered_exporter_names
-from datamimic_ce.model.element_registry import list_element_tags
+from datamimic_ce.engine.dsl.model.element_registry import list_element_tags
 
 
 def test_overview_is_owned_prose_over_live_topics() -> None:

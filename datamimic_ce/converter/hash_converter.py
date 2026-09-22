@@ -9,7 +9,7 @@ from base64 import b64encode
 from typing import Any
 
 from datamimic_ce.converter.converter import Converter
-from datamimic_ce.enums.converter_enums import SupportHash, SupportOutputFormat
+from datamimic_ce.engine.dsl.enums.converter_enums import SupportHash, SupportOutputFormat
 
 
 class HashConverter(Converter):
