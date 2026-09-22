@@ -252,9 +252,10 @@
           "rationale": "IO accepts typed DSL-owned source and target descriptions."
         }
       ],
-      "public": [],
+      "public": [
+        "datamimic_ce.engine.io.api"
+      ],
       "planned": [
-        "datamimic_ce.engine.io.api",
         "datamimic_ce.engine.io.contracts"
       ],
       "decided_by": "architect"

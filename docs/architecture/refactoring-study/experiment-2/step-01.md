@@ -20,7 +20,7 @@ No wrapper or compatibility import remains. The path was internal.
 
 ## Architecture delta
 
-- violations: 1,471 → 1,468;
+- violations after the Amendment-02 measurement correction: 1,308 → 1,305;
 - runtime placement violations: 68 → 66;
 - root-layout violations: 24 → 23;
 - all measurement budgets unchanged;

@@ -15,8 +15,7 @@ point used by the generate task.
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
-from datamimic_ce.clients.client import Client
-from datamimic_ce.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.api import Client, RdbmsClient
 from datamimic_ce.enums.dbms_enums import Dbms
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.composite_statement import CompositeStatement

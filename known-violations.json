@@ -1,9 +1,9 @@
 {
   "budgets": {
     "calls_unresolved": 1363,
-    "cycle_edges": 243,
+    "cycle_edges": 219,
     "private_crossings": 2,
-    "typing_positions": 496,
+    "typing_positions": 495,
     "untyped_private_accesses": 4
   },
   "schema_version": "1.2.0",
@@ -1424,16 +1424,6 @@
         "COMP-IO"
       ],
       "subjects": [
-        "datamimic_ce.data_sources.chunk_source_reader",
-        "datamimic_ce.engine.io"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-IO"
-      ],
-      "subjects": [
         "datamimic_ce.data_sources.data_source_pagination",
         "datamimic_ce.engine.io"
       ]
@@ -2441,15 +2431,6 @@
         "DYNAMIC-EXECUTION-OWNERS"
       ],
       "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.set_data_source_length"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "DYNAMIC-EXECUTION-OWNERS"
-      ],
-      "subjects": [
         "datamimic_ce.domains.domain_core.entity_registry._iter_service_modules"
       ]
     },
@@ -2574,22 +2555,6 @@
       "subjects": [
         "datamimic_ce.authoring.dryrun",
         "datamimic_ce.contexts.setup_context.SetupContext"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.authoring.dryrun",
-          "target": "datamimic_ce.data_sources.data_source_registry"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.dryrun",
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry"
       ]
     },
     {
@@ -5124,38 +5089,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.tasks.single_process_policy",
-          "target": "datamimic_ce.clients.client"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.clients.client.Client",
-        "datamimic_ce.tasks.single_process_policy"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.contexts.setup_context",
-          "target": "datamimic_ce.clients.database_client"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.clients.database_client.Client",
-        "datamimic_ce.contexts.setup_context"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr",
           "target": "datamimic_ce.clients.database_client"
         }
@@ -5166,22 +5099,6 @@
       "subjects": [
         "datamimic_ce.clients.database_client.DatabaseClient",
         "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.tasks.generate_task",
-          "target": "datamimic_ce.clients.database_client"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.clients.database_client.DatabaseClient",
-        "datamimic_ce.tasks.generate_task"
       ]
     },
     {
@@ -5284,22 +5201,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.tasks.mongodb_task",
-          "target": "datamimic_ce.clients.mongodb_client"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.clients.mongodb_client.MongoDBClient",
-        "datamimic_ce.tasks.mongodb_task"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.clients.rdbms_client",
           "target": "datamimic_ce.config"
         }
@@ -5364,22 +5265,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.contexts.setup_context",
-          "target": "datamimic_ce.clients.rdbms_client"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.clients.rdbms_client.RdbmsClient",
-        "datamimic_ce.contexts.setup_context"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.domains.common.literal_generators.sequence_table_generator",
           "target": "datamimic_ce.clients.rdbms_client"
         }
@@ -5390,38 +5275,6 @@
       "subjects": [
         "datamimic_ce.clients.rdbms_client.RdbmsClient",
         "datamimic_ce.domains.common.literal_generators.sequence_table_generator"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.tasks.database_task",
-          "target": "datamimic_ce.clients.rdbms_client"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.clients.rdbms_client.RdbmsClient",
-        "datamimic_ce.tasks.database_task"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.tasks.single_process_policy",
-          "target": "datamimic_ce.clients.rdbms_client"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.clients.rdbms_client.RdbmsClient",
-        "datamimic_ce.tasks.single_process_policy"
       ]
     },
     {
@@ -6052,7 +5905,7 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.data_sources.data_source_registry",
+          "source": "datamimic_ce.engine.runtime.sources.router",
           "target": "datamimic_ce.constants.data_type_constants"
         }
       ],
@@ -6061,7 +5914,7 @@
       ],
       "subjects": [
         "datamimic_ce.constants.data_type_constants.DATA_TYPE_DICT",
-        "datamimic_ce.data_sources.data_source_registry"
+        "datamimic_ce.engine.runtime.sources.router"
       ]
     },
     {
@@ -6180,7 +6033,7 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.data_sources.data_source_registry",
+          "source": "datamimic_ce.engine.runtime.sources.router",
           "target": "datamimic_ce.constants.data_type_constants"
         }
       ],
@@ -6189,7 +6042,7 @@
       ],
       "subjects": [
         "datamimic_ce.constants.data_type_constants.DATA_TYPE_LIST",
-        "datamimic_ce.data_sources.data_source_registry"
+        "datamimic_ce.engine.runtime.sources.router"
       ]
     },
     {
@@ -6308,7 +6161,7 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.data_sources.data_source_registry",
+          "source": "datamimic_ce.engine.runtime.sources.router",
           "target": "datamimic_ce.constants.element_constants"
         }
       ],
@@ -6317,7 +6170,7 @@
       ],
       "subjects": [
         "datamimic_ce.constants.element_constants.EL_GENERATE",
-        "datamimic_ce.data_sources.data_source_registry"
+        "datamimic_ce.engine.runtime.sources.router"
       ]
     },
     {
@@ -6356,7 +6209,7 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.data_sources.data_source_registry",
+          "source": "datamimic_ce.engine.runtime.sources.router",
           "target": "datamimic_ce.constants.element_constants"
         }
       ],
@@ -6365,14 +6218,14 @@
       ],
       "subjects": [
         "datamimic_ce.constants.element_constants.EL_NESTED_KEY",
-        "datamimic_ce.data_sources.data_source_registry"
+        "datamimic_ce.engine.runtime.sources.router"
       ]
     },
     {
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.data_sources.data_source_registry",
+          "source": "datamimic_ce.engine.runtime.sources.router",
           "target": "datamimic_ce.constants.element_constants"
         }
       ],
@@ -6381,7 +6234,23 @@
       ],
       "subjects": [
         "datamimic_ce.constants.element_constants.EL_VARIABLE",
-        "datamimic_ce.data_sources.data_source_registry"
+        "datamimic_ce.engine.runtime.sources.router"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.variable",
+          "target": "datamimic_ce.constants.element_constants"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.constants.element_constants.EL_VARIABLE",
+        "datamimic_ce.engine.runtime.sources.variable"
       ]
     },
     {
@@ -6580,22 +6449,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.contexts.context"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.contexts.context.Context",
-        "datamimic_ce.data_sources.data_source_registry"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr",
           "target": "datamimic_ce.contexts.context"
         }
@@ -6788,38 +6641,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.data_sources.chunk_source_reader",
-          "target": "datamimic_ce.contexts.geniter_context"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.contexts.geniter_context.GenIterContext",
-        "datamimic_ce.data_sources.chunk_source_reader"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.contexts.geniter_context"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.contexts.geniter_context.GenIterContext",
-        "datamimic_ce.data_sources.data_source_registry"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.contexts.setup_context",
           "target": "datamimic_ce.converter.converter"
         }
@@ -6942,38 +6763,6 @@
       "subjects": [
         "datamimic_ce.contexts.setup_context",
         "datamimic_ce.statements.setup_statement.SetupStatement"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.chunk_source_reader",
-          "target": "datamimic_ce.contexts.setup_context"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.contexts.setup_context.SetupContext",
-        "datamimic_ce.data_sources.chunk_source_reader"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.contexts.setup_context"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.contexts.setup_context.SetupContext",
-        "datamimic_ce.data_sources.data_source_registry"
       ]
     },
     {
@@ -7396,38 +7185,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.data_sources.chunk_source_reader",
-          "target": "datamimic_ce.statements.generate_statement"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.chunk_source_reader",
-        "datamimic_ce.statements.generate_statement.GenerateStatement"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.workers.generate_worker",
-          "target": "datamimic_ce.data_sources.chunk_source_reader"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.chunk_source_reader.ChunkSourceReader",
-        "datamimic_ce.workers.generate_worker"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.domains.common.literal_generators.generator_util",
           "target": "datamimic_ce.data_sources.data_source_pagination"
         }
@@ -7476,166 +7233,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.tasks.element_task",
-          "target": "datamimic_ce.data_sources.data_source_pagination"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_pagination.DataSourcePagination",
-        "datamimic_ce.tasks.element_task"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.tasks.key_task",
-          "target": "datamimic_ce.data_sources.data_source_pagination"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_pagination.DataSourcePagination",
-        "datamimic_ce.tasks.key_task"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.tasks.key_variable_task",
-          "target": "datamimic_ce.data_sources.data_source_pagination"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_pagination.DataSourcePagination",
-        "datamimic_ce.tasks.key_variable_task"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.tasks.nested_key_task",
-          "target": "datamimic_ce.data_sources.data_source_pagination"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_pagination.DataSourcePagination",
-        "datamimic_ce.tasks.nested_key_task"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.tasks.reference_task",
-          "target": "datamimic_ce.data_sources.data_source_pagination"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_pagination.DataSourcePagination",
-        "datamimic_ce.tasks.reference_task"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.tasks.task_util",
-          "target": "datamimic_ce.data_sources.data_source_pagination"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_pagination.DataSourcePagination",
-        "datamimic_ce.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.tasks.variable_task",
-          "target": "datamimic_ce.data_sources.data_source_pagination"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_pagination.DataSourcePagination",
-        "datamimic_ce.tasks.variable_task"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.workers.generate_worker",
-          "target": "datamimic_ce.data_sources.data_source_pagination"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_pagination.DataSourcePagination",
-        "datamimic_ce.workers.generate_worker"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.engine.runtime.evaluation"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry",
-        "datamimic_ce.engine.runtime.evaluation.evaluate_source_template"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.engine.runtime.evaluation"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry",
-        "datamimic_ce.engine.runtime.evaluation.interpolate_variables"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.data_sources.data_source_registry",
           "target": "datamimic_ce.enums.distribution_enums"
         }
@@ -7678,134 +7275,6 @@
       "subjects": [
         "datamimic_ce.data_sources.data_source_registry",
         "datamimic_ce.model.constraints.SourceFileFormat"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.model.constraints"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry",
-        "datamimic_ce.model.constraints.source_file_format"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.model.constraints"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry",
-        "datamimic_ce.model.constraints.source_file_format_for"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.statements.generate_statement"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry",
-        "datamimic_ce.statements.generate_statement.GenerateStatement"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.statements.nested_key_statement"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry",
-        "datamimic_ce.statements.nested_key_statement.NestedKeyStatement"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.statements.reference_statement"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry",
-        "datamimic_ce.statements.reference_statement.ReferenceStatement"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.statements.statement"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry",
-        "datamimic_ce.statements.statement.Statement"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.statements.statement_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry",
-        "datamimic_ce.statements.statement_util.StatementUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.statements.variable_statement"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry",
-        "datamimic_ce.statements.variable_statement.VariableStatement"
       ]
     },
     {
@@ -7876,70 +7345,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.tasks.generate_task",
-          "target": "datamimic_ce.data_sources.data_source_registry"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry",
-        "datamimic_ce.tasks.generate_task"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.tasks.nested_key_task",
-          "target": "datamimic_ce.data_sources.data_source_registry"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry",
-        "datamimic_ce.tasks.nested_key_task"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.tasks.reference_task",
-          "target": "datamimic_ce.data_sources.data_source_registry"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry",
-        "datamimic_ce.tasks.reference_task"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.tasks.variable_task",
-          "target": "datamimic_ce.data_sources.data_source_registry"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry",
-        "datamimic_ce.tasks.variable_task"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.data_sources.weighted_data_source",
           "target": "datamimic_ce.utils.file_util"
         }
@@ -7950,22 +7355,6 @@
       "subjects": [
         "datamimic_ce.data_sources.weighted_data_source",
         "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.tasks.key_variable_task",
-          "target": "datamimic_ce.data_sources.weighted_data_source"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.weighted_data_source.WeightedDataSource",
-        "datamimic_ce.tasks.key_variable_task"
       ]
     },
     {
@@ -9342,6 +8731,246 @@
       "subjects": [
         "datamimic_ce.domains.utils.dataset_path",
         "datamimic_ce.logger.logger"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.chunk_source_reader",
+          "target": "datamimic_ce.statements.generate_statement"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.chunk_source_reader",
+        "datamimic_ce.statements.generate_statement.GenerateStatement"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.router",
+          "target": "datamimic_ce.enums.distribution_enums"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router",
+        "datamimic_ce.enums.distribution_enums.SourceDistribution"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.router",
+          "target": "datamimic_ce.model.constraints"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router",
+        "datamimic_ce.model.constraints.SourceFileFormat"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.router",
+          "target": "datamimic_ce.model.constraints"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router",
+        "datamimic_ce.model.constraints.source_file_format"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.router",
+          "target": "datamimic_ce.model.constraints"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router",
+        "datamimic_ce.model.constraints.source_file_format_for"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.router",
+          "target": "datamimic_ce.statements.generate_statement"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router",
+        "datamimic_ce.statements.generate_statement.GenerateStatement"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.router",
+          "target": "datamimic_ce.statements.nested_key_statement"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router",
+        "datamimic_ce.statements.nested_key_statement.NestedKeyStatement"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.router",
+          "target": "datamimic_ce.statements.reference_statement"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router",
+        "datamimic_ce.statements.reference_statement.ReferenceStatement"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.router",
+          "target": "datamimic_ce.statements.statement"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router",
+        "datamimic_ce.statements.statement.Statement"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.router",
+          "target": "datamimic_ce.statements.statement_util"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router",
+        "datamimic_ce.statements.statement_util.StatementUtil"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.router",
+          "target": "datamimic_ce.statements.variable_statement"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router",
+        "datamimic_ce.statements.variable_statement.VariableStatement"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.variable",
+          "target": "datamimic_ce.model.constraints"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.variable",
+        "datamimic_ce.model.constraints.SourceFileFormat"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.variable",
+          "target": "datamimic_ce.model.constraints"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.variable",
+        "datamimic_ce.model.constraints.source_file_format_for"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.variable",
+          "target": "datamimic_ce.statements.statement_util"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.variable",
+        "datamimic_ce.statements.statement_util.StatementUtil"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.variable",
+          "target": "datamimic_ce.statements.variable_statement"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.variable",
+        "datamimic_ce.statements.variable_statement.VariableStatement"
       ]
     },
     {
@@ -12016,60 +11645,6 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry._ordered_reference_rows:records"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry._ordered_reference_rows:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry._variable_data_plan:data"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.finalize_nested_key_source.result"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.finalize_nested_key_source:data"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.finalize_nested_key_source:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.get_unique_data:data"
       ]
     },
@@ -12080,69 +11655,6 @@
       ],
       "subjects": [
         "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.get_unique_data:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.load_nested_key_source:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.load_reference_source:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.load_variable_iteration_selector:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.load_variable_lazy_source:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.window_nested_key_rows:data"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.window_nested_key_rows:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.VariableSourcePlan.data"
       ]
     },
     {
@@ -13375,6 +12887,123 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
+        "datamimic_ce.engine.runtime.sources.router._ordered_reference_rows:records"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router._ordered_reference_rows:return"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router.finalize_nested_key_source.result"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router.finalize_nested_key_source:data"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router.finalize_nested_key_source:return"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router.load_nested_key_source:return"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router.load_reference_source:return"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router.window_nested_key_rows:data"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.router.window_nested_key_rows:return"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.variable.VariableSourcePlan.data"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.variable._variable_data_plan:data"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.variable.load_variable_iteration_selector:return"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.sources.variable.load_variable_lazy_source:return"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
         "datamimic_ce.exporters.database_exporter.DatabaseExporter.consume:product"
       ]
     },
@@ -14317,22 +13946,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.contexts.context"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.contexts.context",
-        "datamimic_ce.data_sources.data_source_registry"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.domains.common.literal_generators.generator_util",
           "target": "datamimic_ce.contexts.context"
         }
@@ -14407,70 +14020,6 @@
       "subjects": [
         "datamimic_ce.contexts.context",
         "datamimic_ce.statements.statement_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.chunk_source_reader",
-          "target": "datamimic_ce.contexts.geniter_context"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.contexts.geniter_context",
-        "datamimic_ce.data_sources.chunk_source_reader"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.contexts.geniter_context"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.contexts.geniter_context",
-        "datamimic_ce.data_sources.data_source_registry"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.chunk_source_reader",
-          "target": "datamimic_ce.contexts.setup_context"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.contexts.setup_context",
-        "datamimic_ce.data_sources.chunk_source_reader"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.contexts.setup_context"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.contexts.setup_context",
-        "datamimic_ce.data_sources.data_source_registry"
       ]
     },
     {
@@ -14599,22 +14148,6 @@
       "subjects": [
         "datamimic_ce.data_sources.data_source_pagination",
         "datamimic_ce.domains.common.literal_generators.sequence_table_generator"
-      ]
-    },
-    {
-      "count": 2,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.engine.runtime.evaluation"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry",
-        "datamimic_ce.engine.runtime.evaluation"
       ]
     },
     {

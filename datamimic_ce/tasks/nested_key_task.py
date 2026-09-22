@@ -10,8 +10,12 @@ from datamimic_ce.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.engine.runtime.sources.router import (
+    finalize_nested_key_source,
+    load_nested_key_source,
+    window_nested_key_rows,
+)
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.statement_util import StatementUtil
@@ -210,12 +214,12 @@ class NestedKeyTask(GenSubTask):
         if not isinstance(parent_context, GenIterContext):
             raise ValueError(f"<nestedKey> '{self._statement.name}' requires a generation context")
 
-        raw = DataSourceRegistry.load_nested_key_source(parent_context, self._statement)
+        raw = load_nested_key_source(parent_context, self._statement)
         if isinstance(raw, list):
             result: list | dict = self._modify_nestedkey_data_list(parent_context, raw)
         else:
             result = self._modify_nestedkey_data_dict(parent_context, raw)
-        return DataSourceRegistry.finalize_nested_key_source(parent_context, self._statement, result)
+        return finalize_nested_key_source(parent_context, self._statement, result)
 
     def _modify_nestedkey_data_dict(self, parent_context: GenIterContext, value: dict) -> dict:
         """
@@ -240,7 +244,7 @@ class NestedKeyTask(GenSubTask):
         """
         result = []
         count = self._determine_nestedkey_length(context=parent_context)
-        iterate_value = DataSourceRegistry.window_nested_key_rows(value, count, self._statement.cyclic)
+        iterate_value = window_nested_key_rows(value, count, self._statement.cyclic)
         nestedkey_len = len(iterate_value)
 
         # Modify port data

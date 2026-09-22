@@ -11,12 +11,12 @@ from typing import Protocol
 
 import dill  # type: ignore
 
-from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.config import settings
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.engine.io.api import DatabaseClient
+from datamimic_ce.engine.runtime.sources.router import data_source_cache_key, set_data_source_length
 from datamimic_ce.exporters.exporter_util import ExporterUtil
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.composite_statement import CompositeStatement
@@ -90,7 +90,7 @@ class GenerateTask(CommonSubTask):
                         "Using selector without count only supports DatabaseClient (MongoDB, Relational Database)"
                     )
             else:
-                count = root_context.data_source_len[DataSourceRegistry.data_source_cache_key(self.statement)]
+                count = root_context.data_source_len[data_source_cache_key(self.statement)]
 
         # Check if there is a special consumer (e.g., mongodb_upsert)
         if count == 0 and self.statement.contain_mongodb_upsert(root_context):
@@ -117,7 +117,7 @@ class GenerateTask(CommonSubTask):
             or stmt.distribution == SourceDistribution.CUMULATED
         ):
             return
-        ds_len = context.root.data_source_len.get(DataSourceRegistry.data_source_cache_key(stmt))
+        ds_len = context.root.data_source_len.get(data_source_cache_key(stmt))
         if ds_len is not None and count > ds_len:
             logger.warning(
                 f"<generate> '{stmt.name}': count={count} exceeds the {ds_len} rows available from "
@@ -167,7 +167,7 @@ class GenerateTask(CommonSubTask):
         :return: None
         """
         # 1. Scan statement
-        DataSourceRegistry.set_data_source_length(ctx, statement)
+        set_data_source_length(ctx, statement)
         # 2. Scan sub-statement
         if isinstance(statement, CompositeStatement):
             for child_stmt in statement.sub_statements:

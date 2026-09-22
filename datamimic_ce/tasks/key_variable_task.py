@@ -25,12 +25,11 @@ from datamimic_ce.constants.data_type_constants import (
 from datamimic_ce.constants.element_constants import EL_ELEMENT, EL_KEY, EL_VARIABLE
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.weighted_data_source import WeightedDataSource
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
 from datamimic_ce.domains.common.literal_generators.sequence_table_generator import SequenceTableGenerator
 from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.domain_core.runtime import from_epoch_utc, to_epoch_utc
+from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource
 from datamimic_ce.model.constraints import SourceFileFormat, source_file_format_for
 from datamimic_ce.statements.element_statement import ElementStatement
 from datamimic_ce.statements.key_statement import KeyStatement

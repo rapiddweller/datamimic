@@ -37,7 +37,7 @@ from datamimic_ce.converter.remove_none_or_empty_element_converter import Remove
 from datamimic_ce.converter.substring_converter import SubstringConverter
 from datamimic_ce.converter.timestamp2date_converter import Timestamp2DateConverter
 from datamimic_ce.converter.upper_case_converter import UpperCaseConverter
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.enums.converter_enums import ConverterEnum
 from datamimic_ce.enums.operation_enums import ExportOperation
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager

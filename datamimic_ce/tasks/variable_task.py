@@ -22,8 +22,13 @@ from datamimic_ce.constants.element_constants import EL_VARIABLE
 from datamimic_ce.contexts.context import Context, DotableDict
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.engine.runtime.sources.variable import (
+    VariableSourcePlanKind,
+    load_variable_iteration_selector,
+    load_variable_lazy_source,
+    plan_variable_source,
+)
 from datamimic_ce.logger import logger
 from datamimic_ce.statements.variable_statement import VariableStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
@@ -92,18 +97,18 @@ class VariableTask(KeyVariableTask, CommonSubTask):
 
         # Try to init generation mode of VariableTask
         if statement.source is not None:
-            plan = DataSourceRegistry.plan_variable_source(
+            plan = plan_variable_source(
                 ctx,
                 statement,
                 pagination,
                 force_full_pool=force_full_pool,
             )
-            if plan.kind == "weighted":
+            if plan.kind is VariableSourcePlanKind.WEIGHTED:
                 if plan.weighted_source is None:
                     raise RuntimeError("weighted variable source plan has no data source")
                 self._weighted_data_source = plan.weighted_source
                 self._mode = self._WEIGHTED_ENTITY_MODE
-            elif plan.kind == "iteration_selector":
+            elif plan.kind is VariableSourcePlanKind.ITERATION_SELECTOR:
                 if plan.client is None or plan.selector is None:
                     raise RuntimeError("iteration-selector plan is incomplete")
                 self._client = plan.client
@@ -111,16 +116,16 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 self._prefix = plan.prefix
                 self._suffix = plan.suffix
                 self._mode = self._ITERATION_SELECTOR_MODE
-            elif plan.kind == "lazy":
+            elif plan.kind is VariableSourcePlanKind.LAZY:
                 self._iterator = None
                 self._mode = self._LAZY_ITERATOR_MODE
-            elif plan.kind == "storage":
+            elif plan.kind is VariableSourcePlanKind.STORAGE:
                 self._data_list = list(plan.data) if plan.data is not None else []
                 if self._storage_mode == "data":
                     self._data_list = [DotableDict(row) if isinstance(row, dict) else row for row in self._data_list]
                 self._storage_row_counter = 0
                 self._mode = self._STORAGE_MODE
-            elif plan.kind == "full_load":
+            elif plan.kind is VariableSourcePlanKind.FULL_LOAD:
                 self._full_load_iterator = iter(plan.data) if plan.data is not None else None
                 self._mode = self._FULL_LOAD_MODE
             else:
@@ -266,9 +271,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         elif self._mode == self._ITERATION_SELECTOR_MODE:
             if self._selector is None:
                 raise ValueError(f"No selector value in statement: {self._statement.name}")
-            value = DataSourceRegistry.load_variable_iteration_selector(
-                ctx, self._client, self._selector, self._prefix, self._suffix
-            )
+            value = load_variable_iteration_selector(ctx, self._client, self._selector, self._prefix, self._suffix)
         elif self._mode == self._FULL_LOAD_MODE:
             if self._full_load_iterator is None:
                 raise StopIteration(f"No more rows to iterate for statement: {self._statement.name}")
@@ -282,7 +285,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
                 loads_all = False
             if self._statement.source is None:
                 return None
-            source_iterator = DataSourceRegistry.load_variable_lazy_source(ctx, self._statement, self._pagination)
+            source_iterator = load_variable_lazy_source(ctx, self._statement, self._pagination)
             if loads_all:
                 self._full_load_iterator = source_iterator
                 self._mode = self._FULL_LOAD_MODE

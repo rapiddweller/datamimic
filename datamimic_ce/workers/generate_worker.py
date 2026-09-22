@@ -11,8 +11,8 @@ import dill  # type: ignore[import-untyped]
 from datamimic_ce.config import settings
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.data_sources.chunk_source_reader import ChunkSourceReader
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.engine.runtime.sources.chunk_source_reader import ChunkSourceReader
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.exporters.exporter_util import ExporterUtil
 from datamimic_ce.logger import logger, setup_logger

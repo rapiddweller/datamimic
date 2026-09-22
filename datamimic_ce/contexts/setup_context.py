@@ -13,13 +13,13 @@ from typing import Any
 
 from faker import Faker
 
-from datamimic_ce.clients.database_client import Client
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.demographic_context import DemographicContext
 from datamimic_ce.converter.converter import Converter
 from datamimic_ce.converter.custom_converter import CustomConverter
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.domain_core.runtime import RunSeed, derive_child_seed, spawn_rng
+from datamimic_ce.engine.io.api import Client
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.logger import logger
 from datamimic_ce.product_storage.memstore_manager import MemstoreManager
@@ -146,7 +146,7 @@ class SetupContext(Context):
         :return:
         """
         # Close RDBMS engine
-        from datamimic_ce.clients.rdbms_client import RdbmsClient
+        from datamimic_ce.engine.io.api import RdbmsClient
 
         for _key, value in self._clients.items():
             if isinstance(value, RdbmsClient) and value.engine is not None:

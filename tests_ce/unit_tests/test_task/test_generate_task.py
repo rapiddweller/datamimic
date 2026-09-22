@@ -283,9 +283,7 @@ class TestGenerateTask:
 
     def test_scan_data_source(self, generate_task, mock_context):
         """Test _scan_data_source method."""
-        with patch(
-            "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.set_data_source_length"
-        ) as mock_set_data_source_length:
+        with patch("datamimic_ce.tasks.generate_task.set_data_source_length") as mock_set_data_source_length:
             GenerateTask._scan_data_source(mock_context, generate_task.statement)
 
             mock_set_data_source_length.assert_called_once_with(mock_context, generate_task.statement)
@@ -344,9 +342,6 @@ class TestGenerateTask:
 
         # Create a mock SetupContext with spec
         mock_context.use_mp = use_mp
-
-        # Mock exporter util
-        exporter_util = MagicMock()
 
         if has_mongodb_delete:
             # Create a mock MongoDBExporter with spec

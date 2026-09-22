@@ -34,6 +34,10 @@ Largest rule groups:
 - `ROOT-LAYOUT`: 24
 - `NO-COMPONENT-CYCLES`: 1 component-cycle finding
 
+Amendment 02 later proved that `string_literal_compare` measured ordinary data comparisons, not
+closed-vocabulary dispatch. Removing that invalid proxy corrected the effective Step-0 total from
+1,471 to 1,308 without changing code or permitting string dispatch.
+
 ## Behavior evidence
 
 - `tests_ce/architecture` plus all `tests_ce/unit_tests/test_authoring`:

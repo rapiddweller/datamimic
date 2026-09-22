@@ -10,8 +10,8 @@ from typing import Any
 
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.engine.runtime.sources.router import load_reference_source, reference_uses_shared_cycle
 from datamimic_ce.statements.reference_statement import ReferenceStatement
 from datamimic_ce.tasks.task import GenSubTask
 
@@ -30,7 +30,7 @@ class ReferenceTask(GenSubTask):
     def execute(self, ctx: Context):
         """Generate a (composite) reference record from an RDBMS or MongoDB data source."""
         if self._iterator is None:
-            if self._pagination is None and DataSourceRegistry.reference_uses_shared_cycle(self._statement):
+            if self._pagination is None and reference_uses_shared_cycle(self._statement):
                 # Without a page window the task may be rebuilt per record (nested in
                 # <condition>/<while>), so the rotation lives in the root context — an endless
                 # cycle over the selected order — instead of dying with the task instance.
@@ -54,4 +54,4 @@ class ReferenceTask(GenSubTask):
         return record[self._statement.targets[0]] if not self._statement.is_composite else record
 
     def _init_iterator(self, ctx: Context) -> Iterator[dict[str, Any]]:
-        return iter(DataSourceRegistry.load_reference_source(ctx, self._statement, self._pagination))
+        return iter(load_reference_source(ctx, self._statement, self._pagination))

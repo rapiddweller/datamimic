@@ -403,7 +403,7 @@ def _source_row_count(
     """Return a file source's statically observable remaining rows, if supported."""
 
     from datamimic_ce.constants.element_constants import EL_GENERATE
-    from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+    from datamimic_ce.engine.io.api import DataSourceRegistry
     from datamimic_ce.model.constraints import SourceFileFormat, source_file_format_for
     from datamimic_ce.statements.generate_statement import GenerateStatement
 
@@ -652,8 +652,7 @@ def _smoke_exporter(
             rule=RULE_RUNTIME_ERROR,
             severity=RuleSeverity.ERROR,
             message=(
-                f"{exporter_name} smoke export wrote {written_rows} of "
-                f"{len(rows)} captured rows for '{full_name}'"
+                f"{exporter_name} smoke export wrote {written_rows} of {len(rows)} captured rows for '{full_name}'"
             ),
             fix_hint=(
                 f"The {exporter_name} exporter did not write every captured row. "

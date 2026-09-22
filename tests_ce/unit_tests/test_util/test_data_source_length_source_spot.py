@@ -12,6 +12,7 @@ from unittest.mock import Mock
 import pytest
 
 from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.engine.runtime.sources.router import set_data_source_length
 from datamimic_ce.model.constraints import SourceFileFormat, source_capabilities
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
@@ -78,7 +79,7 @@ def test_length_classification_uses_every_central_file_suffix(
     monkeypatch.setattr(DataSourceRegistry, "_get_source", generic)
     monkeypatch.setattr(FileUtil, "read_dbunit_to_dict_list", dbunit)
 
-    DataSourceRegistry.set_data_source_length(context, statement)
+    set_data_source_length(context, statement)
     cache_key = ("consumer", f"rows{file_format.value}")
 
     if file_format is SourceFileFormat.DBUNIT_XML:
@@ -104,7 +105,7 @@ def test_nonfile_source_still_uses_memstore_classification(
     generic = Mock(return_value=[])
     monkeypatch.setattr(DataSourceRegistry, "_get_source", generic)
 
-    DataSourceRegistry.set_data_source_length(context, statement)
+    set_data_source_length(context, statement)
 
     assert root.data_source_len[("consumer", "upstream_rows")] == 5
     root.memstore_manager.get_memstore.assert_called_once_with("upstream_rows")

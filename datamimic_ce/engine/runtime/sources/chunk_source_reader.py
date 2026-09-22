@@ -6,8 +6,9 @@
 
 from typing import TYPE_CHECKING
 
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.engine.io.api import DataSourcePagination, DataSourceRegistry
+
+from .router import load_generate_source
 
 if TYPE_CHECKING:
     from datamimic_ce.contexts.geniter_context import GenIterContext
@@ -67,7 +68,7 @@ class ChunkSourceReader:
         stmt = self._stmt
 
         if not self._loads_all:
-            return DataSourceRegistry.load_generate_source(
+            return load_generate_source(
                 self._context,
                 stmt,
                 stmt.source,
@@ -79,7 +80,7 @@ class ChunkSourceReader:
             )
 
         if self._chunk_order is None:
-            pool, self._build_from_source = DataSourceRegistry.load_generate_source(
+            pool, self._build_from_source = load_generate_source(
                 self._context, stmt, stmt.source, self._separator, self._source_scripted, None, None, None
             )
             # Stable per-statement seed -> identical global sequence in every chunk/worker;

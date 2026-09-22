@@ -16,7 +16,7 @@ from datamimic_ce.constants.element_constants import EL_ELEMENT
 from datamimic_ce.contexts.context import Context
 from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.statements.element_statement import ElementStatement
 from datamimic_ce.tasks.key_variable_task import KeyVariableTask
 
