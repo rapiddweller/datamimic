@@ -23,9 +23,10 @@ from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchored
 from datamimic_ce.domains.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted_no_repeat,
+    read_headered_csv,
+    read_weighted_values,
 )
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 
 T = TypeVar("T")  # Define a type variable for generic typing
 
@@ -138,23 +139,23 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
     def load_hours_datasets(self):
         start = Path(__file__)
         wd_path = dataset_path("public_sector", "administration", f"weekdays_{self._dataset}.csv", start=start)
-        weekdays, wd_w = FileUtil.read_wgt_file(wd_path)
+        weekdays, wd_w = read_weighted_values(wd_path)
         open_path = dataset_path("public_sector", "administration", f"open_times_{self._dataset}.csv", start=start)
-        opens, open_w = FileUtil.read_wgt_file(open_path)
+        opens, open_w = read_weighted_values(open_path)
         close_path = dataset_path("public_sector", "administration", f"close_times_{self._dataset}.csv", start=start)
-        closes, close_w = FileUtil.read_wgt_file(close_path)
+        closes, close_w = read_weighted_values(close_path)
         ext_close_path = dataset_path(
             "public_sector", "administration", f"extended_close_times_{self._dataset}.csv", start=start
         )
-        ext_closes, ext_close_w = FileUtil.read_wgt_file(ext_close_path)
+        ext_closes, ext_close_w = read_weighted_values(ext_close_path)
         sat_open_path = dataset_path(
             "public_sector", "administration", f"saturday_open_times_{self._dataset}.csv", start=start
         )
-        sat_opens, sat_open_w = FileUtil.read_wgt_file(sat_open_path)
+        sat_opens, sat_open_w = read_weighted_values(sat_open_path)
         sat_close_path = dataset_path(
             "public_sector", "administration", f"saturday_close_times_{self._dataset}.csv", start=start
         )
-        sat_closes, sat_close_w = FileUtil.read_wgt_file(sat_close_path)
+        sat_closes, sat_close_w = read_weighted_values(sat_close_path)
         return (
             weekdays,
             wd_w,
@@ -206,7 +207,7 @@ class AdministrationOfficeGenerator(ClockAnchoredDomainGenerator):
     # Helper: services from agencies dataset
     def pick_services(self, *, start: Path) -> list[str]:
         # Agencies file is headered; pick by weight and return names
-        header, rows = FileUtil.read_csv_to_dict_of_tuples_with_header(
+        header, rows = read_headered_csv(
             dataset_path("public_sector", "administration", f"agencies_{self._dataset}.csv", start=start),
             ",",
         )

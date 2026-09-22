@@ -19,8 +19,8 @@ from pathlib import Path
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
+from datamimic_ce.domains.utils.dataset_loader import read_cached_headered_csv, read_csv_rows
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileContentStorage, FileUtil
 
 
 class TransactionGenerator(ClockAnchoredDomainGenerator):
@@ -47,9 +47,9 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
             rng=self._derive_rng(),
         )
         # Cache structures: map key -> (header_dict, rows)
-        self._transaction_data: dict[str, tuple[dict[str, int], list[tuple[object, ...]]]] = {}
-        self._currency_data: dict[str, tuple[dict[str, int], list[tuple[object, ...]]]] = {}
-        self._amount_data: dict[str, tuple[dict[str, int], list[tuple[object, ...]]]] = {}
+        self._transaction_data: dict[str, tuple[dict[str, int], list[tuple[str, ...]]]] = {}
+        self._currency_data: dict[str, tuple[dict[str, int], list[tuple[str, ...]]]] = {}
+        self._amount_data: dict[str, tuple[dict[str, int], list[tuple[str, ...]]]] = {}
 
     #  Centralize date sampling to keep model pure and determinism consistent
     def generate_transaction_date(self) -> dt.datetime:
@@ -89,7 +89,7 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
 
     def _load_data_file(
         self, file_name: str, subdirectory: str = "transaction"
-    ) -> tuple[dict[str, int], list[tuple[object, ...]]]:
+    ) -> tuple[dict[str, int], list[tuple[str, ...]]]:
         """Load data from a CSV file.
 
         Args:
@@ -101,14 +101,11 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
         """
         file_path = self._get_base_path(subdirectory) / file_name
 
-        return FileContentStorage.load_file_with_custom_func(
-            cache_key=str(file_path),
-            read_func=lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=","),
-        )
+        return read_cached_headered_csv(file_path, cache_key=str(file_path))
 
     def _weighted_choice(
-        self, data: list[tuple[object, ...]], header_dict: dict[str, int], weight_key: str = "weight"
-    ) -> tuple[object, ...]:
+        self, data: list[tuple[str, ...]], header_dict: dict[str, int], weight_key: str = "weight"
+    ) -> tuple[str, ...]:
         """Select a random item based on weights.
 
         Args:
@@ -221,10 +218,8 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
             if "cities" not in self._transaction_data:
                 # Use existing datasets under common/city with semicolon delimiter
                 from datamimic_ce.domains.utils.dataset_path import dataset_path
-                from datamimic_ce.engine.io.api import FileUtil
-
                 file_path = dataset_path("common", "city", f"city_{self._dataset}.csv", start=Path(__file__))
-                rows = FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=";")
+                rows = read_csv_rows(file_path, delimiter=";")
                 # Drop header if present
                 if rows and rows[0] and rows[0][0] == "state.id":
                     rows = rows[1:]
@@ -268,16 +263,13 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
             currencies_path = dataset_path("ecommerce", f"currencies_{self.dataset}.csv", start=Path(__file__))
             # Convert the weighted data into the expected format (header_dict, data)
             header_dict = {"code": 0, "name": 1, "weight": 2, "symbol": 3}  # Define the header structure
-            from typing import cast
-
             with currencies_path.open("r", newline="", encoding="utf-8") as csvfile:
                 import csv
 
                 csvreader = csv.reader(csvfile, delimiter=",")
                 next(csvreader)  # Skip header row
                 data = [tuple(row) for row in csvreader]  # Keep all columns to maintain structure
-            data_typed = cast(list[tuple[object, ...]], data)
-            self._currency_data["currencies"] = (header_dict, data_typed)
+            self._currency_data["currencies"] = (header_dict, data)
 
         # Get currency mapping for the current dataset
         mapping_header, mapping_data = self._currency_data["currency_mapping"]

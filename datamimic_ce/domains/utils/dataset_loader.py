@@ -3,9 +3,22 @@ from __future__ import annotations
 import random
 from collections.abc import Sequence
 from pathlib import Path
+from typing import TypeAlias
+
+from pandas import DataFrame
 
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
+from datamimic_ce.engine.io.dataset_api import FileContentStorage, FileUtil
+
+CsvRow: TypeAlias = tuple[str, ...]
+CsvRecord: TypeAlias = dict[str, str]
+CsvHeader: TypeAlias = dict[str, int]
+CsvRecords: TypeAlias = list[CsvRecord]
+HeaderedCsv: TypeAlias = tuple[CsvHeader, list[CsvRow]]
+WeightedValues: TypeAlias = tuple[list[str], list[float]]
+WeightedRecords: TypeAlias = tuple[list[float], CsvRecords]
+JsonObject: TypeAlias = dict[str, object]
+JsonData: TypeAlias = list[JsonObject] | JsonObject
 
 """
 Lightweight helpers to load weighted datasets and pick values consistently.
@@ -106,3 +119,46 @@ def load_weighted_values_try_dataset(
     suffixed = f"{stem}_{normalized}{suffix}"
     ds_path = dataset_path(*base_parts, suffixed, start=start)
     return FileUtil.read_wgt_file(ds_path)
+
+
+def read_csv_records(file_path: Path, separator: str = ",") -> CsvRecords:
+    return FileUtil.read_csv_to_dict_list(file_path, separator)
+
+
+def read_headered_csv(file_path: Path, delimiter: str = ",") -> HeaderedCsv:
+    header, rows = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter)
+    return header, rows
+
+
+def read_csv_rows(file_path: Path, delimiter: str = ",") -> list[CsvRow]:
+    return FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter)
+
+
+def read_weighted_values(file_path: Path, delimiter: str = ",") -> WeightedValues:
+    return FileUtil.read_wgt_file(file_path, delimiter)
+
+
+def read_multi_column_weighted_values(
+    file_path: Path, weight_col_index: int = 1, delimiter: str = ","
+) -> tuple[list[CsvRow], list[float]]:
+    return FileUtil.read_mutil_column_wgt_file(file_path, weight_col_index, delimiter)
+
+
+def read_weighted_records(file_path: Path, weight_column: str, delimiter: str = ",") -> WeightedRecords:
+    weights, records = FileUtil.read_csv_having_weight_column(file_path, weight_column, delimiter)
+    return weights, records
+
+
+def read_weighted_dataframe(file_path: Path, separator: str = ",") -> DataFrame:
+    return FileUtil.read_weight_csv(file_path, separator)
+
+
+def read_json_data(file_path: Path) -> JsonData:
+    return FileUtil.read_json(file_path)
+
+
+def read_cached_headered_csv(file_path: Path, cache_key: str) -> HeaderedCsv:
+    return FileContentStorage.load_file_with_custom_func(
+        cache_key,
+        lambda: FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=","),
+    )

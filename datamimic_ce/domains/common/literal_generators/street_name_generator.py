@@ -9,8 +9,8 @@ from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import normalize_dataset
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.utils.dataset_loader import read_weighted_values
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 
 
 class StreetNameGenerator(BaseLiteralGenerator):
@@ -25,7 +25,7 @@ class StreetNameGenerator(BaseLiteralGenerator):
         file_path = dataset_path("common", "street", f"street_{street_code}.csv", start=Path(__file__))
 
         # Load file data
-        self._values, self._wgt = FileUtil.read_wgt_file(file_path)
+        self._values, self._wgt = read_weighted_values(file_path)
         super().__init__(rng=rng)
 
     def generate(self) -> str:

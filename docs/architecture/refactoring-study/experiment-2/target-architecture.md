@@ -15,6 +15,8 @@ the starting distance; success requires the baseline to become empty.
   own no engine behavior.
 - `_compat.py` stays because Python 3.10 is supported. It contains compatibility primitives only.
 - there is no `services`, `utils`, `foundation`, or other miscellaneous target component.
+- `domains` reads packaged datasets only through `engine.io.dataset_api`; database IO remains
+  forbidden there.
 
 ## Target package root
 
@@ -47,6 +49,7 @@ graph TD
     authoring --> python_compat
     authoring --> runtime
     domains --> dsl
+    domains --> io
     dsl --> python_compat
     interfaces --> authoring
     interfaces --> domains

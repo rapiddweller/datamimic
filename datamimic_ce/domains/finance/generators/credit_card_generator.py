@@ -17,8 +17,8 @@ from datamimic_ce.domains.common.generators.person_generator import PersonGenera
 from datamimic_ce.domains.common.literal_generators.datetime_generator import DateTimeGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
+from datamimic_ce.domains.utils.dataset_loader import read_csv_rows
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 
 
 class CreditCardGenerator(DatasetAwareDomainGenerator):
@@ -66,7 +66,7 @@ class CreditCardGenerator(DatasetAwareDomainGenerator):
     def _load_card_types(self) -> list[tuple]:
         if self._card_types_cache is None:
             file_path = dataset_path("finance", "credit_card", f"card_types_{self._dataset}.csv", start=Path(__file__))
-            self._card_types_cache = FileUtil.read_csv_to_list_of_tuples_without_header(file_path)[1:]
+            self._card_types_cache = read_csv_rows(file_path)[1:]
         return self._card_types_cache
 
     def get_card_specs(self) -> dict:

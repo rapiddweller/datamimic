@@ -23,8 +23,8 @@ from datamimic_ce.domains.common.literal_generators.nobility_title_generator imp
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.utils.dataset_loader import read_headered_csv
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 
 
 class PersonGenerator(DatasetAwareDomainGenerator):
@@ -174,7 +174,7 @@ class PersonGenerator(DatasetAwareDomainGenerator):
         """
 
         salutation_file_path = dataset_path("common", "person", f"salutation_{self._dataset}.csv", start=Path(__file__))
-        header_dict, data = FileUtil.read_csv_to_dict_of_tuples_with_header(salutation_file_path, delimiter=",")
+        header_dict, data = read_headered_csv(salutation_file_path, delimiter=",")
 
         if gender not in header_dict:
             raise ValueError(

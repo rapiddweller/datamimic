@@ -8,8 +8,8 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.utils.dataset_loader import read_weighted_values
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 
 
 class NobilityTitleGenerator(DatasetAwareDomainGenerator):
@@ -35,8 +35,8 @@ class NobilityTitleGenerator(DatasetAwareDomainGenerator):
             "common", "person", f"nobTitle_female_{self._dataset}.csv", start=Path(__file__)
         )
 
-        self._male_values, self._male_weights = FileUtil.read_wgt_file(file_path=male_file_path)
-        self._female_values, self._female_weights = FileUtil.read_wgt_file(file_path=female_file_path)
+        self._male_values, self._male_weights = read_weighted_values(file_path=male_file_path)
+        self._female_values, self._female_weights = read_weighted_values(file_path=female_file_path)
 
     def generate(self) -> str:
         """

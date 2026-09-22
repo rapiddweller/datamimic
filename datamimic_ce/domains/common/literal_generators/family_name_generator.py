@@ -8,8 +8,8 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.utils.dataset_loader import read_multi_column_weighted_values
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 
 
 class FamilyNameGenerator(DatasetAwareDomainGenerator):
@@ -22,7 +22,7 @@ class FamilyNameGenerator(DatasetAwareDomainGenerator):
 
         try:
             file_path = dataset_path("common", "person", f"familyName_{self._dataset}.csv", start=Path(__file__))
-            values, wgt = FileUtil.read_mutil_column_wgt_file(file_path)
+            values, wgt = read_multi_column_weighted_values(file_path)
             first_column = [row[0] for row in values]
             self._loaded_data = first_column, wgt
         except Exception as err:

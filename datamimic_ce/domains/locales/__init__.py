@@ -7,7 +7,7 @@ from functools import cache
 from pathlib import Path
 from typing import Any
 
-from datamimic_ce.engine.io.api import FileUtil
+from datamimic_ce.domains.utils.dataset_loader import read_csv_records, read_weighted_values
 
 from ..common.locale_registry import (
     dataset_code_for_locale,
@@ -127,7 +127,7 @@ def _read_column_values(path: Path, *, column_index: int, column_name: str | Non
 
 def _read_weighted_values(path: Path) -> list[str]:
     try:
-        values, _ = FileUtil.read_wgt_file(path)
+        values, _ = read_weighted_values(path)
     except FileNotFoundError:
         if is_strict_dataset_mode():
             raise
@@ -138,7 +138,7 @@ def _read_weighted_values(path: Path) -> list[str]:
 def _read_dict_column(path: Path, column: str) -> list[str]:
     delim = _detect_delimiter(path)
     try:
-        records = FileUtil.read_csv_to_dict_list(path, delim)
+        records = read_csv_records(path, delim)
     except FileNotFoundError:
         if is_strict_dataset_mode():
             raise

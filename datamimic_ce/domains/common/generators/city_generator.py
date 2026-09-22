@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Any
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.utils.dataset_loader import read_csv_rows, read_headered_csv
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 
 
 class CityGenerator(DatasetAwareDomainGenerator):
@@ -46,7 +46,7 @@ class CityGenerator(DatasetAwareDomainGenerator):
             #  use unified dataset path resolver and normalize error type for unsupported datasets
             try:
                 file_path = dataset_path("common", "city", f"city_{self._dataset}.csv", start=Path(__file__))
-                self._city_data = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=";")
+                self._city_data = read_headered_csv(file_path, delimiter=";")
             except FileNotFoundError as e:
                 raise ValueError(f"Unsupported dataset for city data: {self._dataset}") from e
         return self._city_data
@@ -60,7 +60,7 @@ class CityGenerator(DatasetAwareDomainGenerator):
         if self._country_name is None:
             try:
                 file_path = dataset_path("common", f"country_{self._dataset}.csv", start=Path(__file__))
-                country_df = FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=",")
+                country_df = read_csv_rows(file_path, delimiter=",")
                 country_name_dict = {row[0]: row[4] for row in country_df}
                 self._country_name = country_name_dict.get(self._dataset) or country_name_dict.get("US")
                 if not self._country_name:

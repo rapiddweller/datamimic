@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Any
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.utils.dataset_loader import read_csv_rows
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 from datamimic_ce.engine.runtime.logging import logger
 
 
@@ -40,7 +40,7 @@ class CountryGenerator(DatasetAwareDomainGenerator):
 
         try:
             # Load country data
-            country_data = FileUtil.read_csv_to_list_of_tuples_without_header(country_file_path, delimiter=",")
+            country_data = read_csv_rows(country_file_path, delimiter=",")
             country_data_dict = {country[0]: country for country in country_data}
             return country_data_dict
         except Exception as e:

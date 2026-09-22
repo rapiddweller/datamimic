@@ -10,8 +10,8 @@ from pathlib import Path
 
 from datamimic_ce.domains.common.literal_generators.company_name_generator import CompanyNameGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.utils.dataset_loader import read_weighted_values
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 
 
 class DomainGenerator(DatasetAwareDomainGenerator):
@@ -22,8 +22,8 @@ class DomainGenerator(DatasetAwareDomainGenerator):
         tld_path = dataset_path("common", "net", f"tld_{self._dataset}.csv", start=Path(__file__))
 
         # Load file data
-        self._web_dataset = FileUtil.read_wgt_file(web_path)
-        self._tld_dataset = FileUtil.read_wgt_file(tld_path)
+        self._web_dataset = read_weighted_values(web_path)
+        self._tld_dataset = read_weighted_values(tld_path)
 
         self._company_name: str | None = None
         # Share the deterministic RNG so seeded email/domain combos remain reproducible end-to-end.

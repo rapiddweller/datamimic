@@ -232,7 +232,8 @@
         }
       ],
       "public": [
-        "datamimic_ce.engine.io.api"
+        "datamimic_ce.engine.io.api",
+        "datamimic_ce.engine.io.dataset_api"
       ],
       "planned": [
         "datamimic_ce.engine.io.contracts"
@@ -262,6 +263,13 @@
         {
           "component": "dsl",
           "rationale": "Domain generators implement DSL-owned generator contracts."
+        },
+        {
+          "component": "io",
+          "through": [
+            "datamimic_ce.engine.io.dataset_api"
+          ],
+          "rationale": "Domain-owned packaged datasets use the narrow file-dataset IO surface."
         }
       ],
       "public": [],

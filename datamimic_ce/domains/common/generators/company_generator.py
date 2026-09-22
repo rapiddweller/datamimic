@@ -14,9 +14,8 @@ from datamimic_ce.domains.common.literal_generators.email_address_generator impo
 from datamimic_ce.domains.common.literal_generators.phone_number_generator import PhoneNumberGenerator
 from datamimic_ce.domains.common.literal_generators.sector_generator import SectorGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
-from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
+from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat, read_weighted_values
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 
 
 class CompanyGenerator(DatasetAwareDomainGenerator):
@@ -92,7 +91,7 @@ class CompanyGenerator(DatasetAwareDomainGenerator):
             The legal form.
         """
         file_path = dataset_path("common", "organization", f"legalForm_{self._legal_dataset}.csv", start=Path(__file__))
-        legal_values, legal_wgt = FileUtil.read_wgt_file(file_path)
+        legal_values, legal_wgt = read_weighted_values(file_path)
         choice = pick_one_weighted_no_repeat(self._rng, legal_values, legal_wgt, last=self._last_legal_form)
         self._last_legal_form = choice
         return choice

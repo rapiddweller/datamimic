@@ -21,9 +21,10 @@ from datamimic_ce.domains.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
     pick_one_weighted_no_repeat,
+    read_weighted_dataframe,
+    read_weighted_values,
 )
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 
 
 class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
@@ -94,14 +95,14 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
 
     def generate_device_type(self) -> str:
         file_path = dataset_path("healthcare", "medical", f"device_types_{self._dataset}.csv", start=Path(__file__))
-        loaded_data = FileUtil.read_weight_csv(file_path)
+        loaded_data = read_weighted_dataframe(file_path)
         values: list[str] = [str(v) for v in loaded_data[0].tolist() if v is not None]
         weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
         return self._rng.choices(values, weights=weights, k=1)[0]
 
     def generate_manufacturer(self) -> str:
         file_path = dataset_path("healthcare", "medical", f"manufacturers_{self._dataset}.csv", start=Path(__file__))
-        loaded_data = FileUtil.read_weight_csv(file_path)
+        loaded_data = read_weighted_dataframe(file_path)
         values: list[str] = [str(v) for v in loaded_data[0].tolist() if v is not None]
         weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
         choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_manufacturer)
@@ -110,14 +111,14 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
 
     def generate_device_status(self) -> str:
         file_path = dataset_path("healthcare", "medical", f"device_statuses_{self._dataset}.csv", start=Path(__file__))
-        loaded_data = FileUtil.read_weight_csv(file_path)
+        loaded_data = read_weighted_dataframe(file_path)
         values: list[str] = [str(v) for v in loaded_data[0].tolist() if v is not None]
         weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
         return self._rng.choices(values, weights=weights, k=1)[0]
 
     def generate_location(self) -> str:
         file_path = dataset_path("healthcare", "medical", f"locations_{self._dataset}.csv", start=Path(__file__))
-        loaded_data = FileUtil.read_weight_csv(file_path)
+        loaded_data = read_weighted_dataframe(file_path)
         values: list[str] = [str(v) for v in loaded_data[0].tolist() if v is not None]
         weights: list[float] = [float(w) for w in loaded_data[1].tolist()]
         return self._rng.choices(values, weights=weights, k=1)[0]
@@ -197,13 +198,13 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         """
         from pathlib import Path
 
+        from datamimic_ce.domains.utils.dataset_loader import read_weighted_values
         from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.engine.io.api import FileUtil
 
         dtype = device_type.lower()
         # Base purposes
         base_path = dataset_path("healthcare", "medical", f"usage_purposes_{self._dataset}.csv", start=Path(__file__))
-        base_vals, base_w = FileUtil.read_wgt_file(base_path)
+        base_vals, base_w = read_weighted_values(base_path)
         # Device-specific purposes (optional)
         specific_vals: list[str] = []
         specific_w: list[float] = []
@@ -220,7 +221,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
                 start=Path(__file__),
             )
             try:
-                specific_vals, specific_w = FileUtil.read_wgt_file(spec_path)
+                specific_vals, specific_w = read_weighted_values(spec_path)
             except FileNotFoundError:
                 specific_vals, specific_w = [], []  #  device-specific overrides are optional per dataset
         values = base_vals + specific_vals
@@ -235,11 +236,11 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         """
         from pathlib import Path
 
+        from datamimic_ce.domains.utils.dataset_loader import read_weighted_values
         from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.engine.io.api import FileUtil
 
         path = dataset_path("healthcare", "medical", f"usage_notes_{self._dataset}.csv", start=Path(__file__))
-        values, weights = FileUtil.read_wgt_file(path)
+        values, weights = read_weighted_values(path)
 
         # 20% chance of no notes
         if self._rng.random() < 0.2:
@@ -309,7 +310,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
             A string representing a maintenance type.
         """
         path = dataset_path("healthcare", "medical", f"maintenance_types_{self._dataset}.csv", start=Path(__file__))
-        values, w = FileUtil.read_wgt_file(path)
+        values, w = read_weighted_values(path)
         return self._rng.choices(values, weights=w, k=1)[0]
 
     def _generate_parts_replaced(self) -> list[str]:
@@ -319,7 +320,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
             A list of strings representing parts replaced.
         """
         path = dataset_path("healthcare", "medical", f"maintenance_parts_{self._dataset}.csv", start=Path(__file__))
-        values, _ = FileUtil.read_wgt_file(path)
+        values, _ = read_weighted_values(path)
 
         # 40% chance of no parts replaced
         if self._rng.random() < 0.4:
@@ -359,7 +360,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         """
         #  remove hardcoded values; source from dataset for localization and consistency
         path = dataset_path("healthcare", "medical", f"maintenance_results_{self._dataset}.csv", start=Path(__file__))
-        values, w = FileUtil.read_wgt_file(path)
+        values, w = read_weighted_values(path)
         return self._rng.choices(values, weights=w, k=1)[0]
 
     def _generate_maintenance_notes(self) -> str:
@@ -370,7 +371,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         """
         #  remove hardcoded values; source from dataset for localization and consistency
         path = dataset_path("healthcare", "medical", f"maintenance_notes_{self._dataset}.csv", start=Path(__file__))
-        values, w = FileUtil.read_wgt_file(path)
+        values, w = read_weighted_values(path)
 
         # 10% chance of no notes
         if self._rng.random() < 0.1:

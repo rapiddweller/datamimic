@@ -91,12 +91,12 @@ class ProductGenerator(DatasetAwareDomainGenerator):
             "currencies",
             "product_benefits",
         }:
+            from datamimic_ce.domains.utils.dataset_loader import read_headered_csv
             from datamimic_ce.domains.utils.dataset_path import dataset_path
-            from datamimic_ce.engine.io.api import FileUtil
 
             file_name = f"{data_type.lower()}_{self._dataset}.csv"
             file_path = dataset_path("ecommerce", file_name, start=Path(__file__))
-            header_dict, loaded_data = FileUtil.read_csv_to_dict_of_tuples_with_header(file_path, delimiter=",")
+            header_dict, loaded_data = read_headered_csv(file_path, delimiter=",")
             w_idx = header_dict.get("weight")
             if w_idx is not None:
                 chosen = self._rng.choices(loaded_data, weights=[float(row[w_idx]) for row in loaded_data], k=1)[0]
@@ -157,9 +157,9 @@ class ProductGenerator(DatasetAwareDomainGenerator):
 
     @staticmethod
     def _load_product_json(file_name):
-        #  Keep JSON helper for non-weighted structured data; paths resolved via dataset_path in FileUtil
+        # Keep JSON helper for non-weighted structured data.
+        from datamimic_ce.domains.utils.dataset_loader import read_json_data
         from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.engine.io.api import FileUtil
 
         file_path = dataset_path("ecommerce", "product", f"{file_name}.json", start=Path(__file__))
-        return FileUtil.read_json(file_path)
+        return read_json_data(file_path)

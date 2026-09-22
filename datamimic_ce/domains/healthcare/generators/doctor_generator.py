@@ -25,9 +25,12 @@ from pathlib import Path
 from datamimic_ce.domains.common.generators.person_generator import PersonGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.healthcare.generators.hospital_generator import HospitalGenerator
-from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
+from datamimic_ce.domains.utils.dataset_loader import (
+    pick_one_weighted_no_repeat,
+    read_weighted_records,
+    read_weighted_values,
+)
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 
 
 class DoctorGenerator(ClockAnchoredDomainGenerator):
@@ -75,7 +78,7 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
             A medical specialty.
         """
         file_path = dataset_path("healthcare", "medical", f"specialties_{self._dataset}.csv", start=Path(__file__))
-        wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
+        wgt, loaded_data = read_weighted_records(file_path, "weight")
         values = [item["specialty"] for item in loaded_data]
         weights = [float(w) for w in wgt]
         choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_specialty)
@@ -91,17 +94,17 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
         #  prefer dataset-specific medical_schools; gracefully fallback to institutions datasets
         try:
             path = dataset_path("healthcare", "medical", f"medical_schools_{self._dataset}.csv", start=Path(__file__))
-            values, w = FileUtil.read_wgt_file(path)
+            values, w = read_weighted_values(path)
         except FileNotFoundError:
             try:
                 inst_path = dataset_path(
                     "healthcare", "medical", f"institutions_{self._dataset}.csv", start=Path(__file__)
                 )
-                values, w = FileUtil.read_wgt_file(inst_path)
+                values, w = read_weighted_values(inst_path)
             except FileNotFoundError:
                 # final fallback: US institutions if present
                 inst_us = dataset_path("healthcare", "medical", "institutions_US.csv", start=Path(__file__))
-                values, w = FileUtil.read_wgt_file(inst_us)
+                values, w = read_weighted_values(inst_us)
         weights = [float(wi) for wi in w]
         choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_med_school)
         self._last_med_school = choice
@@ -114,7 +117,7 @@ class DoctorGenerator(ClockAnchoredDomainGenerator):
             A list of certifications.
         """
         file_path = dataset_path("healthcare", "medical", f"certifications_{self._dataset}.csv", start=Path(__file__))
-        wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
+        wgt, loaded_data = read_weighted_records(file_path, "weight")
         # choose 1-3 certifications
         k = self._rng.randint(1, 3)
         # simple weighted picks without replacement

@@ -9,8 +9,8 @@ from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_domain_generator import normalize_dataset
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.utils.dataset_loader import read_csv_rows
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 from datamimic_ce.engine.runtime.logging import logger
 
 
@@ -29,11 +29,11 @@ class SectorGenerator(BaseLiteralGenerator):
 
         try:
             # Use the file content storage to cache the data
-            self._sector_data_load = FileUtil.read_csv_to_list_of_tuples_without_header(file_path)
+            self._sector_data_load = read_csv_rows(file_path)
         except FileNotFoundError as e:
             logger.warning(f"Sector data does not exist for country code '{country_code}', using 'US' as fallback: {e}")
             file_path = dataset_path("common", "organization", "sector_US.csv", start=Path(__file__))
-            self._sector_data_load = FileUtil.read_csv_to_list_of_tuples_without_header(file_path)
+            self._sector_data_load = read_csv_rows(file_path)
         super().__init__(rng=rng)
 
     def generate(self) -> str:

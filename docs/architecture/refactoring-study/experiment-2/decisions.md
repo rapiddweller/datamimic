@@ -33,3 +33,12 @@ they are public.
 
 **Decision:** keep `domains` as a first-class public component. Moving it under `engine` would add a
 large compatibility layer without making its ownership clearer.
+
+## D6 — domain datasets use a narrow IO facet
+
+**FACT:** 29 domain modules load packaged CSV or JSON datasets. Parsing and caching those files is
+IO behavior; the dataset contents and selection logic belong to `domains`.
+
+**Decision:** allow `domains` to depend on `io` only through `engine.io.dataset_api`, which exposes
+file loading and caching but no database client. Keep domain-specific paths, fallback, weighting,
+and selection in `domains`. Do not add a shared foundation or duplicate the parsers.

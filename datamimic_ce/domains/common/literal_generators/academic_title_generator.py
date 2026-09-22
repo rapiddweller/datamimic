@@ -8,8 +8,8 @@ import random
 from pathlib import Path
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
+from datamimic_ce.domains.utils.dataset_loader import read_weighted_values
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 from datamimic_ce.engine.runtime.logging import logger
 
 
@@ -55,7 +55,7 @@ class AcademicTitleGenerator(BaseLiteralGenerator):
 
     @staticmethod
     def _load_academy_csv(file_path: Path):
-        values, weights = FileUtil.read_wgt_file(file_path=file_path)
+        values, weights = read_weighted_values(file_path=file_path)
 
         # normalize weights
         total_weight = sum(weights) if weights else 0.0

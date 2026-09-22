@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from pathlib import Path
 
-from datamimic_ce.engine.io.api import FileUtil
+from datamimic_ce.domains.utils.dataset_loader import read_csv_records
 from datamimic_ce.engine.runtime.logging import logger
 
 from .profile import (
@@ -54,7 +54,7 @@ def load_demographic_profile(directory: Path, dataset: str, version: str) -> Dem
 
 
 def _load_age_bands(file_path: Path, dataset: str, version: str) -> dict[SexKey, tuple[DemographicAgeBand, ...]]:
-    rows = FileUtil.read_csv_to_dict_list(file_path, separator=",")
+    rows = read_csv_records(file_path, separator=",")
     grouped: defaultdict[SexKey, list[DemographicAgeBand]] = defaultdict(list)
     for idx, row in enumerate(rows, start=2):
         _ensure_dataset_version(row, dataset, version, file_path, idx)
@@ -101,7 +101,7 @@ def _load_age_bands(file_path: Path, dataset: str, version: str) -> dict[SexKey,
 def _load_condition_rates(
     file_path: Path, dataset: str, version: str
 ) -> dict[str, tuple[DemographicConditionRate, ...]]:
-    rows = FileUtil.read_csv_to_dict_list(file_path, separator=",")
+    rows = read_csv_records(file_path, separator=",")
     grouped: defaultdict[str, list[DemographicConditionRate]] = defaultdict(list)
     for idx, row in enumerate(rows, start=2):
         _ensure_dataset_version(row, dataset, version, file_path, idx)

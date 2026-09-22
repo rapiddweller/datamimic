@@ -19,9 +19,9 @@ from datamimic_ce.domains.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted,
     pick_one_weighted_no_repeat,
+    read_weighted_records,
 )
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 
 
 class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
@@ -105,8 +105,8 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
         """
         #  use dataset_loader helpers for weighted picking
         file_path = dataset_path("public_sector", "police", f"ranks_{self._dataset}.csv", start=Path(__file__))
-        loaded_weights, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
-        values = [row.get("rank") for row in loaded_data]
+        loaded_weights, loaded_data = read_weighted_records(file_path, "weight")
+        values = [row["rank"] for row in loaded_data]
         return self._rng.choices(values, weights=loaded_weights, k=1)[0]
 
     def get_department(self) -> str:
@@ -116,8 +116,8 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
             A random department.
         """
         file_path = dataset_path("public_sector", "police", f"departments_{self._dataset}.csv", start=Path(__file__))
-        loaded_weights, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
-        values = [row.get("department_id") for row in loaded_data]
+        loaded_weights, loaded_data = read_weighted_records(file_path, "weight")
+        values = [row["department_id"] for row in loaded_data]
 
         val = pick_one_weighted_no_repeat(
             self._rng, values, loaded_weights, last=getattr(self, "_last_department", None)
@@ -161,8 +161,8 @@ class PoliceOfficerGenerator(ClockAnchoredDomainGenerator):
     def pick_unit(self) -> str:
         #  Reuse departments dataset until a dedicated units dataset exists
         file_path = dataset_path("public_sector", "police", f"departments_{self._dataset}.csv", start=Path(__file__))
-        loaded_weights, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
-        values = [row.get("department_id") for row in loaded_data]
+        loaded_weights, loaded_data = read_weighted_records(file_path, "weight")
+        values = [row["department_id"] for row in loaded_data]
         val = pick_one_weighted_no_repeat(self._rng, values, loaded_weights, last=getattr(self, "_last_unit", None))
         self._last_unit = val
         return val

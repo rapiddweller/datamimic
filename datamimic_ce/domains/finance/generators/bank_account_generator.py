@@ -11,9 +11,8 @@ from pathlib import Path
 from datamimic_ce.domains.common.literal_generators.data_faker_generator import DataFakerGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
-from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
+from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat, read_csv_rows
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 
 
 class BankAccountGenerator(ClockAnchoredDomainGenerator):
@@ -77,7 +76,7 @@ class BankAccountGenerator(ClockAnchoredDomainGenerator):
 
     def get_bank_account_types(self) -> str:
         file_path = dataset_path("finance", f"account_types_{self.dataset}.csv", start=Path(__file__))
-        account_types_data = FileUtil.read_csv_to_list_of_tuples_without_header(file_path)[1:]
+        account_types_data = read_csv_rows(file_path)[1:]
         values = [row[0] for row in account_types_data]
         weights = [float(item[1]) for item in account_types_data]
         choice = pick_one_weighted_no_repeat(self._rng, values, weights, last=self._last_account_type)
@@ -86,7 +85,7 @@ class BankAccountGenerator(ClockAnchoredDomainGenerator):
 
     def get_currency(self) -> str:
         file_path = dataset_path("ecommerce", f"currencies_{self.dataset}.csv", start=Path(__file__))
-        raw_rows = FileUtil.read_csv_to_list_of_tuples_without_header(file_path)
+        raw_rows = read_csv_rows(file_path)
         if len(raw_rows) <= 1:
             raise ValueError(f"{file_path} has no data rows")
         header = raw_rows[0]

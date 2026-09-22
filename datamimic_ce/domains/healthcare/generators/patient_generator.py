@@ -24,9 +24,11 @@ from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareD
 from datamimic_ce.domains.utils.dataset_loader import (
     load_weighted_values_try_dataset,
     pick_one_weighted_no_repeat,
+    read_weighted_dataframe,
+    read_weighted_records,
+    read_weighted_values,
 )
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 
 _CONDITION_DATA_DIR = dataset_path("healthcare", "medical", start=Path(__file__))
 # Directory for emergency relationships CSVs; test may monkeypatch this.
@@ -169,7 +171,7 @@ class PatientGenerator(DatasetAwareDomainGenerator):
         file_path = dataset_path(
             "healthcare", "medical", f"insurance_providers_{self._dataset}.csv", start=Path(__file__)
         )
-        loaded_data = FileUtil.read_weight_csv(file_path)
+        loaded_data = read_weighted_dataframe(file_path)
         # Reuse the injected RNG to keep sampling reproducible under tests.
         return self._rng.choices(loaded_data[0], weights=loaded_data[1], k=1)[0]  # type: ignore
 
@@ -185,7 +187,7 @@ class PatientGenerator(DatasetAwareDomainGenerator):
             return []
 
         file_path = dataset_path("healthcare", "medical", f"allergies_{self._dataset}.csv", start=Path(__file__))
-        wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
+        wgt, loaded_data = read_weighted_records(file_path, "weight")
 
         # Sample allergies with consistent randomness for downstream assertions.
         random_choices = self._rng.choices(loaded_data, weights=wgt, k=num_allergies)
@@ -209,7 +211,7 @@ class PatientGenerator(DatasetAwareDomainGenerator):
             return []
 
         file_path = dataset_path("healthcare", "medical", f"medications_{self._dataset}.csv", start=Path(__file__))
-        wgt, loaded_data = FileUtil.read_csv_having_weight_column(file_path, "weight")
+        wgt, loaded_data = read_weighted_records(file_path, "weight")
 
         # Align medication sampling with the shared RNG for deterministic seeds.
         random_choices = self._rng.choices(loaded_data, weights=wgt, k=num_medications)
@@ -367,7 +369,7 @@ def _load_emergency_relationships(dataset: str) -> tuple[list[str], list[float]]
 
     # Use dataset_path so US fallback and single-warning logging is applied consistently
     path = dataset_path("healthcare", "medical", f"emergency_relationships_{dataset}.csv", start=Path(__file__))
-    values, weights = FileUtil.read_wgt_file(file_path=path)
+    values, weights = read_weighted_values(file_path=path)
 
     cache[dataset] = (values, weights)
     return values, weights

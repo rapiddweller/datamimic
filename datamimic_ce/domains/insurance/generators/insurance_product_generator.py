@@ -40,13 +40,12 @@ class InsuranceProductGenerator(DatasetAwareDomainGenerator):
         # values are expected to be serialized dict-like fields or codes; we prefer SPOT returning a record
         # To maintain prior contract, we assume CSV columns: type,code,description,weight
         # Re-read as dicts via loader pattern:
-        # pick an index and then map columns by a parallel headered read.
-        # Simple approach: pick an index then map columns by parallel read using file_util.
+        # Pick an index, then map columns from the headered rows.
+        from datamimic_ce.domains.utils.dataset_loader import read_weighted_records
         from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.engine.io.api import FileUtil
 
         file_path = dataset_path("insurance", f"products_{self._dataset}.csv", start=Path(__file__))
-        _, rows = FileUtil.read_csv_having_weight_column(file_path, "weight")
+        _, rows = read_weighted_records(file_path, "weight")
         from typing import cast
 
         rows_dicts = cast(list[dict[str, object]], rows)

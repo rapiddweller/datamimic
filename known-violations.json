@@ -3,7 +3,7 @@
     "calls_unresolved": 1340,
     "cycle_edges": 177,
     "private_crossings": 2,
-    "typing_positions": 462,
+    "typing_positions": 461,
     "untyped_private_accesses": 4
   },
   "schema_version": "1.2.0",
@@ -8928,15 +8928,6 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.domains.finance.generators.transaction_generator.TransactionGenerator.get_currency"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.domains.finance.models.bank.Bank.to_dict:return"
       ]
     },
@@ -10579,22 +10570,6 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.common.demographics.loader",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.demographics.loader",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.demographics.loader",
           "target": "datamimic_ce.engine.runtime.logging"
         }
       ],
@@ -10604,54 +10579,6 @@
       "subjects": [
         "datamimic_ce.domains.common.demographics.loader",
         "datamimic_ce.engine.runtime.logging"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.generators.city_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.generators.city_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.generators.company_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.generators.company_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.generators.country_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.generators.country_generator",
-        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -10668,38 +10595,6 @@
       "subjects": [
         "datamimic_ce.domains.common.generators.country_generator",
         "datamimic_ce.engine.runtime.logging"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.generators.person_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.generators.person_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.academic_title_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.academic_title_generator",
-        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -10732,38 +10627,6 @@
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.department_name_generator",
         "datamimic_ce.engine.runtime.logging"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.domain_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.domain_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.family_name_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.family_name_generator",
-        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -10834,22 +10697,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.domains.common.literal_generators.given_name_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.given_name_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.domains.common.literal_generators.increment_generator",
           "target": "datamimic_ce.engine.io.data_sources.data_source_pagination"
         }
@@ -10860,38 +10707,6 @@
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.increment_generator",
         "datamimic_ce.engine.io.data_sources.data_source_pagination"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.nobility_title_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.nobility_title_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.sector_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.sector_generator",
-        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -10978,22 +10793,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.domains.common.literal_generators.street_name_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.street_name_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.engine.io.clients.mongodb_client",
           "target": "datamimic_ce.domains.domain_core.base_entity"
         }
@@ -11020,278 +10819,6 @@
       "subjects": [
         "datamimic_ce.domains.domain_core.base_entity",
         "datamimic_ce.engine.io.clients.rdbms_client"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.ecommerce.generators.order_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.ecommerce.generators.order_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 2,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.ecommerce.generators.product_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.ecommerce.generators.product_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.finance.generators.bank_account_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.finance.generators.bank_account_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.finance.generators.bank_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.finance.generators.bank_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.finance.generators.credit_card_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.finance.generators.credit_card_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 3,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.finance.generators.transaction_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.finance.generators.transaction_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.healthcare.generators.doctor_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.generators.doctor_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 3,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.healthcare.generators.medical_device_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.generators.medical_device_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.healthcare.generators.medical_procedure_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.generators.medical_procedure_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.healthcare.generators.patient_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.generators.patient_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.insurance.generators.insurance_company_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.insurance.generators.insurance_company_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.insurance.generators.insurance_coverage_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.insurance.generators.insurance_coverage_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.insurance.generators.insurance_product_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.insurance.generators.insurance_product_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.locales",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.locales",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.public_sector.generators.administration_office_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.public_sector.generators.administration_office_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.public_sector.generators.police_officer_generator",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.public_sector.generators.police_officer_generator",
-        "datamimic_ce.engine.io.api"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.utils.dataset_loader",
-          "target": "datamimic_ce.engine.io.api"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.utils.dataset_loader",
-        "datamimic_ce.engine.io.api"
       ]
     },
     {

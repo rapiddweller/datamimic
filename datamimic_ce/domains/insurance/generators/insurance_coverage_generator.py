@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Any
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
+from datamimic_ce.domains.utils.dataset_loader import read_weighted_records
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.io.api import FileUtil
 
 
 class InsuranceCoverageGenerator(DatasetAwareDomainGenerator):
@@ -30,7 +30,7 @@ class InsuranceCoverageGenerator(DatasetAwareDomainGenerator):
     def get_random_coverage(self) -> dict[str, Any]:
         #  centralize dataset path building for maintainability
         file_path = dataset_path("insurance", f"coverages_{self._dataset}.csv", start=Path(__file__))
-        weights, rows = FileUtil.read_csv_having_weight_column(file_path, "weight")
+        weights, rows = read_weighted_records(file_path, "weight")
         # Avoid immediate repetition by code and by product_code if possible
         pool = rows
         pool_w = weights
