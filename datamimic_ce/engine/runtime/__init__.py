@@ -1,0 +1,1 @@
+"""Descriptor execution boundary."""

@@ -1,0 +1,35 @@
+# Experiment 2 decision log
+
+## D1 — `services` is deleted
+
+**FACT:** `datamimic_ce/services` contains only `source_script_evaluator.py`.
+
+**Decision:** move template evaluation to `engine.runtime.evaluation`; do not create a replacement
+service layer.
+
+## D2 — Authoring projects owner facts
+
+**FACT:** the element registry, Pydantic models, constraints, generators, exporters, and domain
+registries already own the executable facts.
+
+**Decision:** Authoring owns intent and projection. It does not maintain a second DSL or capability
+catalog. Bounded execution crosses `engine.runtime.api` only.
+
+## D3 — types are local
+
+**Decision:** each component owns its contracts. There is no shared `types`, `models`, `common`, or
+`foundation` package. Cross-component signatures expose types from the owning component's
+`contracts.py`.
+
+## D4 — public APIs are per component
+
+**Decision:** architecture components expose `api.py` and `contracts.py`; ordinary subpackages do
+not get ceremonial facades. External Python compatibility paths remain where documentation proves
+they are public.
+
+## D5 — `domains` remains top-level
+
+**FACT:** README and developer documentation import domain services and models directly.
+
+**Decision:** keep `domains` as a first-class public component. Moving it under `engine` would add a
+large compatibility layer without making its ownership clearer.
