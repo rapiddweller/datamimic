@@ -7,7 +7,7 @@
 import random
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.logging import logger
 
 
 class DepartmentNameGenerator(BaseLiteralGenerator):

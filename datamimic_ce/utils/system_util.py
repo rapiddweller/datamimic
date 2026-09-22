@@ -7,7 +7,7 @@
 
 import psutil
 
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.logging import logger
 
 
 def format_memory_size(size_in_mb: float) -> str:

@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from datamimic_ce.contexts.context import Context
+from datamimic_ce.engine.runtime.contexts.context import Context
 
 
 def interpolate_variables(context: Context, expression: str, prefix: str, suffix: str) -> str:

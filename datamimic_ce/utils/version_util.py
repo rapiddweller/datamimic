@@ -7,7 +7,7 @@
 import importlib.metadata
 from importlib.resources import files
 
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.logging import logger
 
 
 def get_datamimic_lib_version(lib_name: str = "datamimic-ce") -> str | None:

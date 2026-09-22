@@ -17,11 +17,11 @@ from datamimic_ce.factory.factory_config import FactoryConfig
 # Avoid deduplication of logs in Ray, MUST be set before importing ray
 os.environ["RAY_DEDUP_LOGS"] = "0"
 
-from datamimic_ce.config import settings
 from datamimic_ce.engine.dsl.parsers.descriptor_parser import DescriptorParser
+from datamimic_ce.engine.runtime.config import settings
+from datamimic_ce.engine.runtime.logging import logger, setup_logger
+from datamimic_ce.engine.runtime.tasks.setup_task import SetupTask
 from datamimic_ce.exporters.test_result_exporter import TestResultExporter
-from datamimic_ce.logger import logger, setup_logger
-from datamimic_ce.tasks.setup_task import SetupTask
 from datamimic_ce.utils.logging_util import log_system_info
 from datamimic_ce.utils.process_util import bootstrap_process_title, set_main_process_title
 from datamimic_ce.utils.system_util import log_memory_info

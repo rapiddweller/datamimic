@@ -10,8 +10,6 @@ import inspect
 import random
 import uuid
 
-from datamimic_ce.contexts.context import Context
-from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.domains.common.literal_generators.increment_generator import IncrementGenerator
 from datamimic_ce.domains.common.literal_generators.state_transition_generator import (
@@ -23,7 +21,9 @@ from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralG
 from datamimic_ce.domains.domain_core.generator_registry import generator_namespace
 from datamimic_ce.engine.dsl.enums.distribution_enums import NumberDistribution
 from datamimic_ce.engine.dsl.statements.statement import Statement
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.logging import logger
 
 
 @functools.cache  # a class's __init__ signature is static

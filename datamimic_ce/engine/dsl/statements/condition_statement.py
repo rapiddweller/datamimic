@@ -11,7 +11,7 @@ from datamimic_ce.engine.dsl.statements.else_if_statement import ElseIfStatement
 from datamimic_ce.engine.dsl.statements.else_statement import ElseStatement
 from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
 from datamimic_ce.engine.dsl.statements.if_statement import IfStatement
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.logging import logger
 
 
 class ConditionStatement(CompositeStatement):

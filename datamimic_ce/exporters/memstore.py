@@ -5,8 +5,8 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.exporters.exporter import Exporter
-from datamimic_ce.logger import logger
 
 
 class Memstore(Exporter):

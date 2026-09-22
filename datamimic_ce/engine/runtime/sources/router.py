@@ -2,9 +2,6 @@
 
 from typing import Any
 
-from datamimic_ce.contexts.context import Context
-from datamimic_ce.contexts.geniter_context import GenIterContext
-from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.engine.dsl.constants.data_type_constants import DATA_TYPE_DICT, DATA_TYPE_LIST
 from datamimic_ce.engine.dsl.constants.element_constants import EL_GENERATE, EL_NESTED_KEY, EL_VARIABLE
 from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
@@ -16,8 +13,11 @@ from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
 from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
 from datamimic_ce.engine.io.api import DataSourcePagination, DataSourceRegistry, MongoDBClient, RdbmsClient
+from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.evaluation import evaluate_source_template, interpolate_variables
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.utils.file_util import FileUtil
 
 

@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Any, cast
 from xml.etree.ElementTree import Element
 
-from datamimic_ce.config import settings
 from datamimic_ce.engine.dsl.constants.attribute_constants import ATTR_ENVIRONMENT, ATTR_ID, ATTR_SYSTEM
 from datamimic_ce.engine.dsl.constants.element_constants import (
     EL_ARRAY,
@@ -49,7 +48,8 @@ from datamimic_ce.engine.dsl.statements.nested_key_statement import NestedKeySta
 from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.while_statement import WhileStatement
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.config import settings
+from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.utils.file_util import FileUtil
 
 

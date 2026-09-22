@@ -172,13 +172,7 @@
       "role": "component",
       "packages": [
         "datamimic_ce.engine.runtime",
-        "datamimic_ce.config",
-        "datamimic_ce.contexts",
-        "datamimic_ce.logger",
-        "datamimic_ce.product_storage",
-        "datamimic_ce.tasks",
-        "datamimic_ce.utils",
-        "datamimic_ce.workers"
+        "datamimic_ce.utils"
       ],
       "namespace": "datamimic_ce.engine.runtime",
       "responsibilities": [

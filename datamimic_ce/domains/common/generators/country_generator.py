@@ -11,7 +11,7 @@ from typing import Any
 
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.utils.file_util import FileUtil
 
 

@@ -20,7 +20,7 @@ from sqlglot.dialects import Dialects
 from sqlglot.tokens import Token, TokenType
 
 from datamimic_ce.engine.dsl.enums.dbms_enums import Dbms
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.logging import logger
 
 
 @dataclass(frozen=True)

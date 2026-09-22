@@ -12,8 +12,8 @@ import pytest
 
 # WHY: Remove Ray-specific env var since Ray is optional and not used in tests.
 # WHY: Ray is optional now. Remove hard dependency from tests.
-from datamimic_ce.config import settings
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.config import settings
+from datamimic_ce.engine.runtime.logging import logger
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 

@@ -4,10 +4,10 @@ import time
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.exporters.exporter import Exporter
 from datamimic_ce.exporters.exporter_config import ExporterConfig
 from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
-from datamimic_ce.logger import logger
 
 
 class ExporterError(Exception):

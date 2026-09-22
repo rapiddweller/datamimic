@@ -5,8 +5,6 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.clients.mongodb_client import MongoDBClient
-from datamimic_ce.contexts.context import Context
-from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.engine.dsl.constants.convention_constants import NAME_SEPARATOR
 from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.dsl.enums.operation_enums import ExportOperation
@@ -14,7 +12,9 @@ from datamimic_ce.engine.dsl.model.generate_model import GenerateModel
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.utils.timeseries import TimeSeriesConfig
 
 

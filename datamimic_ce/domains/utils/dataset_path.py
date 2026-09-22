@@ -4,7 +4,7 @@ import os
 import re
 from pathlib import Path
 
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.logging import logger
 
 """
 Centralized helpers for locating domain datasets.

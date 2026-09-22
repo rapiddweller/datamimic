@@ -6,7 +6,7 @@
 
 from dataclasses import dataclass
 
-from datamimic_ce.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 
 
 @dataclass(frozen=True)

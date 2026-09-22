@@ -1,0 +1,7 @@
+{
+  "after_digest": "8c98bcba740d3e73286779ef0c47557b8eff723b4ba4775cfee030579ad91976",
+  "before_digest": "3e143fa42046cf751d647b1f437a2f17dc4b7fd1bc9a4f65aed5d6892f112c7f",
+  "decided_by": "experiment orchestrator",
+  "rationale": "Step 4 moved the run lifecycle, contexts, logging, in-memory storage, tasks, and workers into the already-declared datamimic_ce.engine.runtime namespace. Removing the six deleted legacy paths synchronizes ownership with the target and grants no dependency or behavior permission.",
+  "schema_version": "1.0.0"
+}

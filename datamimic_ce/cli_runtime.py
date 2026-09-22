@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from datamimic_ce import cli_presenter
 from datamimic_ce.cli_presenter import DemoInformation, DemoSummary, SystemInformation
 from datamimic_ce.datamimic import DataMimic
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.utils.demo_util import handle_demo
 from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.string_util import StringUtil

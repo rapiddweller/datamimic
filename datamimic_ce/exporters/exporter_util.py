@@ -17,7 +17,6 @@ from typing import Any
 from datamimic_ce.clients.client import Client
 from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.engine.dsl.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_CSV,
@@ -32,6 +31,8 @@ from datamimic_ce.engine.dsl.constants.exporter_constants import (
 )
 from datamimic_ce.engine.dsl.enums.operation_enums import ExportOperation
 from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.exporters.console_exporter import ConsoleExporter
 from datamimic_ce.exporters.csv_exporter import CSVExporter
 from datamimic_ce.exporters.database_exporter import DatabaseExporter
@@ -46,7 +47,6 @@ from datamimic_ce.exporters.txt_exporter import TXTExporter
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.exporters.xlsx_exporter import XLSXExporter
 from datamimic_ce.exporters.xml_exporter import XMLExporter
-from datamimic_ce.logger import logger
 
 # Registry of buffered file exporters: target name -> class. Every concrete exporter takes the uniform
 # (ExporterConfig, params) constructor; adding one is a single entry here, not a new factory branch.

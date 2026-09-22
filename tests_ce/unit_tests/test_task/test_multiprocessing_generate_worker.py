@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
-from datamimic_ce.workers.generate_worker import GenerateWorker
-from datamimic_ce.workers.multiprocessing_generate_worker import MultiprocessingGenerateWorker
+from datamimic_ce.engine.runtime.workers.generate_worker import GenerateWorker
+from datamimic_ce.engine.runtime.workers.multiprocessing_generate_worker import MultiprocessingGenerateWorker
 
 
 def test_mp_wrapper_sets_title_before_generating(monkeypatch) -> None:

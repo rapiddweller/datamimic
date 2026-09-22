@@ -7,7 +7,7 @@
 from collections.abc import Callable
 from typing import Any, ClassVar
 
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.logging import logger
 
 
 class FileContentStorage:

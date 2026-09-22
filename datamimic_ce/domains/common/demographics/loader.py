@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from pathlib import Path
 
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.utils.file_util import FileUtil
 
 from .profile import (

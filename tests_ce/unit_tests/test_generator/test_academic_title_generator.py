@@ -59,7 +59,7 @@ class TestAcademicTitleGenerator:
 
     def test_invalid_dataset(self, caplog):
         from datamimic_ce.domains.utils.dataset_path import reset_dataset_fallback_log
-        from datamimic_ce.logger import logger as dm_logger
+        from datamimic_ce.engine.runtime.logging import logger as dm_logger
 
         # The US-fallback is logged once per process per dataset code, and a prior
         # full-engine run leaves the DATAMIMIC logger with propagate=False (so

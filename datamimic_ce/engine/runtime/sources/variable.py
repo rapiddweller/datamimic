@@ -6,8 +6,6 @@ from enum import Enum
 from random import Random
 from typing import Any
 
-from datamimic_ce.contexts.context import Context
-from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.engine.dsl.constants.element_constants import EL_VARIABLE
 from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat, source_file_format_for
 from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
@@ -18,6 +16,8 @@ from datamimic_ce.engine.io.api import (
     DataSourceRegistry,
     WeightedEntityDataSource,
 )
+from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.evaluation import interpolate_variables
 from datamimic_ce.utils.file_util import FileUtil
 

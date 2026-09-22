@@ -4,12 +4,12 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.contexts.context import Context
 from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.dsl.model.nested_key_model import NestedKeyModel
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
+from datamimic_ce.engine.runtime.contexts.context import Context
 
 
 class NestedKeyStatement(CompositeStatement):

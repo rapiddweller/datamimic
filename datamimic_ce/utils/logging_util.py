@@ -11,7 +11,7 @@ import time
 from contextlib import contextmanager
 from typing import Literal
 
-from datamimic_ce.logger import logger
+from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.utils.version_util import get_datamimic_lib_version
 
 

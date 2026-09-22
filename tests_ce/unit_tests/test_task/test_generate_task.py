@@ -7,16 +7,16 @@ import pytest
 
 from datamimic_ce.clients.database_client import DatabaseClient
 from datamimic_ce.clients.mongodb_client import MongoDBClient
-from datamimic_ce.contexts.geniter_context import GenIterContext
-from datamimic_ce.contexts.setup_context import SetupContext
-from datamimic_ce.exporters.exporter_util import ExporterUtil
-from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
-from datamimic_ce.product_storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
 from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
 from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
-from datamimic_ce.tasks.generate_task import GenerateTask
-from datamimic_ce.tasks.task_util import TaskUtil
+from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
+from datamimic_ce.engine.runtime.tasks.generate_task import GenerateTask
+from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
+from datamimic_ce.exporters.exporter_util import ExporterUtil
+from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.utils.dict_util import dict_nested_update
 
 
@@ -283,7 +283,9 @@ class TestGenerateTask:
 
     def test_scan_data_source(self, generate_task, mock_context):
         """Test _scan_data_source method."""
-        with patch("datamimic_ce.tasks.generate_task.set_data_source_length") as mock_set_data_source_length:
+        with patch(
+            "datamimic_ce.engine.runtime.tasks.generate_task.set_data_source_length"
+        ) as mock_set_data_source_length:
             GenerateTask._scan_data_source(mock_context, generate_task.statement)
 
             mock_set_data_source_length.assert_called_once_with(mock_context, generate_task.statement)
@@ -307,7 +309,9 @@ class TestGenerateTask:
 
     def test_pre_execute(self, generate_task, mock_context, mock_statement):
         """Test pre_execute method."""
-        with patch("datamimic_ce.tasks.task_util.TaskUtil.get_task_by_statement") as mock_get_task_by_statement:
+        with patch(
+            "datamimic_ce.engine.runtime.tasks.task_util.TaskUtil.get_task_by_statement"
+        ) as mock_get_task_by_statement:
             # Setup
             key_statement = MagicMock(spec=KeyStatement)
             mock_statement.sub_statements = [key_statement]
@@ -371,7 +375,7 @@ class TestGenerateTask:
     @pytest.mark.skip("Need rework with ray")
     def test_sp_generate(self, generate_task, mock_context, mock_statement):
         """Test _sp_generate method."""
-        with patch("datamimic_ce.tasks.generate_task._geniter_single_process_generate") as mock_gen:
+        with patch("datamimic_ce.engine.runtime.tasks.generate_task._geniter_single_process_generate") as mock_gen:
             mock_gen.return_value = {mock_statement.full_name: [{"field1": "value1"}]}
             result = generate_task._sp_generate(mock_context, 0, 10)
             assert result == {mock_statement.full_name: [{"field1": "value1"}]}

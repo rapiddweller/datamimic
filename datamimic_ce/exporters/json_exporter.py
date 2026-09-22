@@ -7,9 +7,9 @@ from pathlib import Path
 
 from bson import ObjectId
 
+from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.exporters.exporter_config import ExporterConfig
 from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
-from datamimic_ce.logger import logger
 
 
 class DateTimeEncoder(json.JSONEncoder):
