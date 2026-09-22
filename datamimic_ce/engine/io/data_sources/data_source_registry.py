@@ -14,10 +14,10 @@ from typing import Any
 import xmltodict
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
-from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.utils.distribution_sampling import cumulated_index
 from datamimic_ce.utils.file_content_storage import FileContentStorage

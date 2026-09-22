@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 from datamimic_ce.engine.dsl.constants.attribute_constants import META_SELECTOR, META_TARGET_ENTITY, META_TYPE
-from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
+from datamimic_ce.engine.io.exporters.mongodb_exporter import MongoDBExporter
 
 
 class TestMongoCrudRouting:

@@ -3,7 +3,7 @@
 import pytest
 from sqlalchemy.dialects import mysql, postgresql
 
-from datamimic_ce.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 
 
 @pytest.mark.parametrize(

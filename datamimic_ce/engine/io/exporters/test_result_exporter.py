@@ -5,7 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
-from datamimic_ce.exporters.exporter import Exporter
+from datamimic_ce.engine.io.exporters.exporter import Exporter
 
 
 class TestResultExporter(Exporter):

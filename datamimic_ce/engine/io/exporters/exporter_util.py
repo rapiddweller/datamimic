@@ -14,9 +14,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from datamimic_ce.clients.client import Client
-from datamimic_ce.clients.mongodb_client import MongoDBClient
-from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.dsl.constants.exporter_constants import (
     EXPORTER_CONSOLE_EXPORTER,
     EXPORTER_CSV,
@@ -31,22 +28,25 @@ from datamimic_ce.engine.dsl.constants.exporter_constants import (
 )
 from datamimic_ce.engine.dsl.enums.operation_enums import ExportOperation
 from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
+from datamimic_ce.engine.io.clients.client import Client
+from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.exporters.console_exporter import ConsoleExporter
+from datamimic_ce.engine.io.exporters.csv_exporter import CSVExporter
+from datamimic_ce.engine.io.exporters.database_exporter import DatabaseExporter
+from datamimic_ce.engine.io.exporters.dbunit_exporter import DbUnitExporter
+from datamimic_ce.engine.io.exporters.exporter import Exporter
+from datamimic_ce.engine.io.exporters.exporter_config import ExporterConfig
+from datamimic_ce.engine.io.exporters.fixed_width_exporter import FixedWidthExporter
+from datamimic_ce.engine.io.exporters.json_exporter import JsonExporter
+from datamimic_ce.engine.io.exporters.log_exporter import LogExporter
+from datamimic_ce.engine.io.exporters.mongodb_exporter import MongoDBExporter
+from datamimic_ce.engine.io.exporters.txt_exporter import TXTExporter
+from datamimic_ce.engine.io.exporters.unified_buffered_exporter import UnifiedBufferedExporter
+from datamimic_ce.engine.io.exporters.xlsx_exporter import XLSXExporter
+from datamimic_ce.engine.io.exporters.xml_exporter import XMLExporter
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.exporters.console_exporter import ConsoleExporter
-from datamimic_ce.exporters.csv_exporter import CSVExporter
-from datamimic_ce.exporters.database_exporter import DatabaseExporter
-from datamimic_ce.exporters.dbunit_exporter import DbUnitExporter
-from datamimic_ce.exporters.exporter import Exporter
-from datamimic_ce.exporters.exporter_config import ExporterConfig
-from datamimic_ce.exporters.fixed_width_exporter import FixedWidthExporter
-from datamimic_ce.exporters.json_exporter import JsonExporter
-from datamimic_ce.exporters.log_exporter import LogExporter
-from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
-from datamimic_ce.exporters.txt_exporter import TXTExporter
-from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
-from datamimic_ce.exporters.xlsx_exporter import XLSXExporter
-from datamimic_ce.exporters.xml_exporter import XMLExporter
 
 # Registry of buffered file exporters: target name -> class. Every concrete exporter takes the uniform
 # (ExporterConfig, params) constructor; adding one is a single entry here, not a new factory branch.

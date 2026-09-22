@@ -20,7 +20,7 @@ except ImportError:
     ObjectId = None
 
 # Import the custom_serializer function from the module
-from datamimic_ce.exporters.exporter_util import custom_serializer
+from datamimic_ce.engine.io.exporters.exporter_util import custom_serializer
 
 
 class DummyAsPy:

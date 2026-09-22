@@ -217,11 +217,7 @@
       "label": "io",
       "role": "component",
       "packages": [
-        "datamimic_ce.engine.io",
-        "datamimic_ce.clients",
-        "datamimic_ce.connection_config",
-        "datamimic_ce.data_sources",
-        "datamimic_ce.exporters"
+        "datamimic_ce.engine.io"
       ],
       "namespace": "datamimic_ce.engine.io",
       "responsibilities": [

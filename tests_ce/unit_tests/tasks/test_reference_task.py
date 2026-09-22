@@ -9,9 +9,9 @@ import unittest
 from random import Random
 from unittest.mock import MagicMock, patch
 
-from datamimic_ce.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.dsl.statements.reference_statement import ReferenceStatement
 from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.tasks.reference_task import ReferenceTask
 

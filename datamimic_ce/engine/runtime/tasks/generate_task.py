@@ -17,6 +17,7 @@ from datamimic_ce.engine.dsl.statements.key_statement import KeyStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
 from datamimic_ce.engine.io.api import DatabaseClient
+from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil
 from datamimic_ce.engine.runtime.config import settings
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
@@ -26,7 +27,6 @@ from datamimic_ce.engine.runtime.sources.router import data_source_cache_key, se
 from datamimic_ce.engine.runtime.tasks.single_process_policy import resolve_single_process
 from datamimic_ce.engine.runtime.tasks.task import CommonSubTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
-from datamimic_ce.exporters.exporter_util import ExporterUtil
 from datamimic_ce.utils.logging_util import gen_timer
 
 

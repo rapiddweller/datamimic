@@ -10,7 +10,7 @@ yet (that's the separate execute-namespace-binding fix) - unit-tested directly a
 
 import pytest
 
-from datamimic_ce.exporters.memstore import Memstore
+from datamimic_ce.engine.io.exporters.memstore import Memstore
 
 
 class _FakeClient:

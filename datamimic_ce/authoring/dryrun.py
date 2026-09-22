@@ -449,7 +449,7 @@ def _parse_buffered_targets(targets: set[str]) -> list[_FileTarget]:
     """The subset of raw target strings that are buffered FILE exporters, parsed to
     (name, params). Membership in the exporter registry is the dispatch — memstores,
     clients, Console/Log never appear there, so they can never be smoked."""
-    from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS, ExporterUtil
+    from datamimic_ce.engine.io.exporters.exporter_util import _BUFFERED_EXPORTERS, ExporterUtil
 
     parsed: list[_FileTarget] = []
     for raw in sorted(targets):
@@ -595,8 +595,8 @@ def _smoke_setup_context(tmp_dir: Path) -> SetupContext:
     """Minimal engine context for smoke writes: every value an exporter reads from it
     is a default; descriptor_dir points at the throwaway tmp dir so buffer files can
     never land next to the real descriptor."""
+    from datamimic_ce.engine.io.exporters.test_result_exporter import TestResultExporter
     from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
-    from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 
     return SetupContext(
         memstore_manager=MemstoreManager(),
@@ -623,9 +623,9 @@ def _smoke_exporter(
     exporter_name: str,
     params: dict[str, object],
 ) -> Diagnostic | None:
-    from datamimic_ce.exporters.exporter_config import ExporterConfig
-    from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
-    from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
+    from datamimic_ce.engine.io.exporters.exporter_config import ExporterConfig
+    from datamimic_ce.engine.io.exporters.exporter_state_manager import ExporterStateManager
+    from datamimic_ce.engine.io.exporters.exporter_util import _BUFFERED_EXPORTERS
 
     try:
         chunk_size = params.get("chunk_size")

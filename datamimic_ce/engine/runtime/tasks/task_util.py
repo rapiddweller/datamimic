@@ -63,6 +63,11 @@ from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
 from datamimic_ce.engine.dsl.statements.while_statement import WhileStatement
 from datamimic_ce.engine.io.api import DataSourcePagination
+from datamimic_ce.engine.io.exporters.exporter_state_manager import ExporterStateManager
+from datamimic_ce.engine.io.exporters.memstore import Memstore
+from datamimic_ce.engine.io.exporters.mongodb_exporter import MongoDBExporter
+from datamimic_ce.engine.io.exporters.unified_buffered_exporter import UnifiedBufferedExporter
+from datamimic_ce.engine.io.exporters.xml_exporter import XMLExporter
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.logging import logger
@@ -77,11 +82,6 @@ from datamimic_ce.engine.runtime.tasks.memstore_task import MemstoreTask
 from datamimic_ce.engine.runtime.tasks.mongodb_task import MongoDBTask
 from datamimic_ce.engine.runtime.tasks.reference_task import ReferenceTask
 from datamimic_ce.engine.runtime.tasks.task import Task
-from datamimic_ce.exporters.exporter_state_manager import ExporterStateManager
-from datamimic_ce.exporters.memstore import Memstore
-from datamimic_ce.exporters.mongodb_exporter import MongoDBExporter
-from datamimic_ce.exporters.unified_buffered_exporter import UnifiedBufferedExporter
-from datamimic_ce.exporters.xml_exporter import XMLExporter
 from datamimic_ce.utils.object_util import ObjectUtil
 
 

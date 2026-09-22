@@ -5,9 +5,9 @@
 # For questions and support, contact: info@rapiddweller.com
 import copy
 
-from datamimic_ce.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.dsl.constants.attribute_constants import META_SELECTOR, META_TARGET_ENTITY
-from datamimic_ce.exporters.exporter import Exporter
+from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
+from datamimic_ce.engine.io.exporters.exporter import Exporter
 
 
 class MongoDBExporter(Exporter):

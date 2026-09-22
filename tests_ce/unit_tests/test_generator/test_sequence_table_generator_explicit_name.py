@@ -16,9 +16,9 @@ from pathlib import Path
 import pytest
 
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
+from datamimic_ce.engine.io.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
-from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 
 
 class DummyRootGenStmt:

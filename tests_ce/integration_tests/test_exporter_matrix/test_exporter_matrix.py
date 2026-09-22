@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 
+from datamimic_ce.data_mimic_test import DataMimicTest
 from datamimic_ce.engine.dsl.constants.exporter_constants import (
     EXPORTER_CSV,
     EXPORTER_DBUNIT,
@@ -31,9 +32,8 @@ from datamimic_ce.engine.dsl.constants.exporter_constants import (
     EXPORTER_XLSX,
     EXPORTER_XML,
 )
-from datamimic_ce.data_mimic_test import DataMimicTest
-from datamimic_ce.exporters.exporter_util import _BUFFERED_EXPORTERS
 from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat
+from datamimic_ce.engine.io.exporters.exporter_util import _BUFFERED_EXPORTERS
 from datamimic_ce.utils.file_util import FileUtil
 
 _DIR = Path(__file__).resolve().parent

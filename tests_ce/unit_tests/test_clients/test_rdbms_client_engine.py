@@ -11,8 +11,8 @@ string/URL gets built for which credential."""
 
 from unittest.mock import MagicMock, patch
 
-from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.connection_config.rdbms_connection_config import RdbmsConnectionConfig
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 
 
 def _credential(**extra) -> RdbmsConnectionConfig:
@@ -31,7 +31,9 @@ def _credential(**extra) -> RdbmsConnectionConfig:
 class TestRdbmsClientMssqlEngineSelection:
     def test_default_uses_pyodbc(self):
         client = RdbmsClient(credential=_credential())
-        with patch("datamimic_ce.clients.rdbms_client.sqlalchemy.create_engine", return_value=MagicMock()) as mock_ce:
+        with patch(
+            "datamimic_ce.engine.io.clients.rdbms_client.sqlalchemy.create_engine", return_value=MagicMock()
+        ) as mock_ce:
             client._create_engine()
         url = mock_ce.call_args[0][0]
         assert url.startswith("mssql+pyodbc://")
@@ -39,7 +41,9 @@ class TestRdbmsClientMssqlEngineSelection:
 
     def test_driver_pymssql_opts_into_pure_python_driver(self):
         client = RdbmsClient(credential=_credential(driver="pymssql"))
-        with patch("datamimic_ce.clients.rdbms_client.sqlalchemy.create_engine", return_value=MagicMock()) as mock_ce:
+        with patch(
+            "datamimic_ce.engine.io.clients.rdbms_client.sqlalchemy.create_engine", return_value=MagicMock()
+        ) as mock_ce:
             client._create_engine()
         url = mock_ce.call_args[0][0]
         assert url.startswith("mssql+pymssql://")
@@ -48,7 +52,9 @@ class TestRdbmsClientMssqlEngineSelection:
         """Only the literal 'pymssql' opts in - any other/typo'd value falls back to the
         documented default rather than silently misrouting."""
         client = RdbmsClient(credential=_credential(driver="freetds"))
-        with patch("datamimic_ce.clients.rdbms_client.sqlalchemy.create_engine", return_value=MagicMock()) as mock_ce:
+        with patch(
+            "datamimic_ce.engine.io.clients.rdbms_client.sqlalchemy.create_engine", return_value=MagicMock()
+        ) as mock_ce:
             client._create_engine()
         url = mock_ce.call_args[0][0]
         assert url.startswith("mssql+pyodbc://")

@@ -4,9 +4,9 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.dsl.model.database_model import DatabaseModel
 from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 
 
 class DatabaseStatement(Statement):

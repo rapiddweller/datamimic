@@ -33,7 +33,7 @@ def comparable(record: dict[str, Any]) -> dict[str, Any]:
 def shape_compatible(before: Any, after: Any) -> bool:
     if before == after:
         return True
-    if before == "unknown" or after == "unknown":
+    if before == "unknown" or after == "unknown" or before == "null" or after == "null":
         return True
     before_type = before.get("type") if isinstance(before, dict) else None
     after_type = after.get("type") if isinstance(after, dict) else None

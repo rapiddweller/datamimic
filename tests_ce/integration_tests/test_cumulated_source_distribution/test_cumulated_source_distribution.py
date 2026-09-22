@@ -22,8 +22,8 @@ class TestGetCumulatedDataPagination:
     page 1), so seeded multi-page reads equal a single contiguous read."""
 
     def test_pages_are_contiguous(self):
-        from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-        from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+        from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
+        from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 
         data = list(range(27))
         whole = DataSourceRegistry.get_cumulated_data(data, DataSourcePagination(0, 100), seed=7)
@@ -32,8 +32,8 @@ class TestGetCumulatedDataPagination:
         assert page1 + page2 == whole
 
     def test_empty_source(self):
-        from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-        from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+        from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
+        from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 
         assert DataSourceRegistry.get_cumulated_data([], DataSourcePagination(0, 10), seed=1) == []
 

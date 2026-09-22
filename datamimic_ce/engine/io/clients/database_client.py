@@ -6,8 +6,8 @@
 
 from abc import abstractmethod
 
-from datamimic_ce.clients.client import Client
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.io.clients.client import Client
+from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
 
 
 class DatabaseClient(Client):
@@ -39,7 +39,7 @@ class DatabaseClient(Client):
             cyclic and (pagination.limit > data_len or pagination.skip + pagination.limit > data_len)
         ):
             data = self.get_by_page_with_query(query, DataSourcePagination(skip=0, limit=data_len))
-            from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+            from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 
             return DataSourceRegistry.get_cyclic_data_list(data=data, cyclic=cyclic, pagination=pagination)
         else:

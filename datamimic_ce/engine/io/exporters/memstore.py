@@ -4,9 +4,9 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.io.exporters.exporter import Exporter
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.exporters.exporter import Exporter
 
 
 class Memstore(Exporter):
@@ -36,7 +36,7 @@ class Memstore(Exporter):
         :return:
         """
         try:
-            from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+            from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 
             return DataSourceRegistry.get_cyclic_data_list(
                 data=self._storage[product_type], cyclic=cyclic, pagination=pagination

@@ -4,10 +4,10 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.clients.mongodb_client import MongoDBClient
-from datamimic_ce.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 from datamimic_ce.engine.dsl.model.mongodb_model import MongoDBModel
 from datamimic_ce.engine.dsl.statements.statement import Statement
+from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
+from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
 
 
 class MongoDBStatement(Statement):

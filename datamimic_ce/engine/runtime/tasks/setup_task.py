@@ -9,10 +9,10 @@ from pathlib import Path
 
 from datamimic_ce.domains.domain_core.runtime import RunSeed
 from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
+from datamimic_ce.engine.io.exporters.test_result_exporter import TestResultExporter
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
-from datamimic_ce.exporters.test_result_exporter import TestResultExporter
 
 
 class SetupTask:

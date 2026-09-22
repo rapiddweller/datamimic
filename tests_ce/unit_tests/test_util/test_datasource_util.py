@@ -8,8 +8,8 @@
 import random
 from pathlib import Path
 
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
-from datamimic_ce.data_sources.data_source_registry import DataSourceRegistry
+from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 
 
 class TestDataSourceUtil:

@@ -6,8 +6,8 @@
 
 from typing import Any
 
-from datamimic_ce.clients.rdbms_client import RdbmsClient
-from datamimic_ce.exporters.exporter import Exporter
+from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
+from datamimic_ce.engine.io.exporters.exporter import Exporter
 
 
 class DatabaseExporter(Exporter):

@@ -15,12 +15,12 @@ from sqlalchemy import MetaData, func, inspect, select, text
 from sqlalchemy.engine import Dialect
 from sqlalchemy.pool import QueuePool
 
-from datamimic_ce.clients import sql_dialect
-from datamimic_ce.clients.database_client import DatabaseClient
-from datamimic_ce.connection_config.rdbms_connection_config import RdbmsConnectionConfig
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.domains.domain_core.base_entity import stringify_if_entity
 from datamimic_ce.engine.dsl.enums.dbms_enums import Dbms
+from datamimic_ce.engine.io.clients import sql_dialect
+from datamimic_ce.engine.io.clients.database_client import DatabaseClient
+from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
+from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.engine.runtime.config import settings
 from datamimic_ce.engine.runtime.logging import logger
 

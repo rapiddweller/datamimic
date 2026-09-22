@@ -13,11 +13,11 @@ from typing import Any, cast
 from bson.decimal128 import Decimal128
 from pymongo import MongoClient, UpdateOne
 
-from datamimic_ce.clients.database_client import DatabaseClient
-from datamimic_ce.connection_config.mongodb_connection_config import MongoDBConnectionConfig
-from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.domains.domain_core.base_entity import stringify_if_entity
 from datamimic_ce.engine.dsl.constants.attribute_constants import META_SELECTOR, META_TARGET_ENTITY, META_TYPE
+from datamimic_ce.engine.io.clients.database_client import DatabaseClient
+from datamimic_ce.engine.io.connection_config.mongodb_connection_config import MongoDBConnectionConfig
+from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
 
 
 class MongoDBClient(DatabaseClient):
