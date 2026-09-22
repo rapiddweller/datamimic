@@ -87,4 +87,4 @@ The generator validates:
 
 ## Demo Snippets
 
-See `datamimic_ce/demos/demo-datetime/1_datetime_generator.xml` for ready-to-run examples using the DSL sugar and weights.
+See `datamimic_ce/resources/demos/demo-datetime/1_datetime_generator.xml` for ready-to-run examples using the DSL sugar and weights.

@@ -6,7 +6,7 @@
 
 from datetime import datetime
 
-from datamimic_ce.converter.converter import Converter
+from datamimic_ce.domains.converters.converter import Converter
 
 
 class DateFormatConverter(Converter):

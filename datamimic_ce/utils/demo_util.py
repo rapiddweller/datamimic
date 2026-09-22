@@ -43,7 +43,7 @@ def handle_demo(demo_name, demo_path, overwrite, target_directory):
 
 def demo_autocomplete(incomplete: str):
     """Autocomplete function for demo names."""
-    demo_dir = files("datamimic_ce").joinpath("demos")
+    demo_dir = files("datamimic_ce.resources").joinpath("demos")
     for demo in demo_dir.iterdir():
         if demo.is_dir() and demo.name.startswith(incomplete):
             yield demo.name

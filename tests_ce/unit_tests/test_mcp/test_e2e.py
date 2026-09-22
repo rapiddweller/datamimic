@@ -8,9 +8,9 @@ import pytest
 fastmcp_client = pytest.importorskip("fastmcp.client")
 Client = fastmcp_client.Client
 
-import datamimic_ce.mcp.server as mcp_server  # noqa: E402
+import datamimic_ce.interfaces.mcp.server as mcp_server  # noqa: E402
 from datamimic_ce.authoring.diagnostics import LintResult  # noqa: E402
-from datamimic_ce.mcp.server import create_server  # noqa: E402
+from datamimic_ce.interfaces.mcp.server import create_server  # noqa: E402
 
 
 @pytest.fixture

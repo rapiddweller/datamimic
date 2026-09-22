@@ -7,7 +7,7 @@
 import copy
 from typing import Any
 
-from datamimic_ce.converter.converter import Converter
+from datamimic_ce.domains.converters.converter import Converter
 
 
 class RemoveNoneOrEmptyElementConverter(Converter):

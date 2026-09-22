@@ -5,12 +5,12 @@ from typing import Annotated
 
 import typer
 
-from datamimic_ce import cli_authoring, cli_runtime
 from datamimic_ce.authoring.contracts import (
     AuthoringReferenceCategory,
     ReferenceTopic,
 )
-from datamimic_ce.cli_presenter import CliOutputFormat
+from datamimic_ce.interfaces import cli_authoring, cli_runtime
+from datamimic_ce.interfaces.cli_presenter import CliOutputFormat
 from datamimic_ce.utils.demo_util import demo_autocomplete
 
 app = typer.Typer(help="DATAMIMIC Command Line Interface.", rich_markup_mode="markdown")

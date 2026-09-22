@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class TestDemos:
     _test_dir = Path(__file__).resolve().parent
     _project_root = Path.cwd()
-    _demos_dir = _project_root / "datamimic_ce" / "demos"
+    _demos_dir = _project_root / "datamimic_ce" / "resources" / "demos"
 
     def setup_method(self):
         """Setup method run before each test."""

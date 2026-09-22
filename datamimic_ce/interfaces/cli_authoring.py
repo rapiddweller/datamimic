@@ -9,7 +9,6 @@ from pathlib import Path
 import typer
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
-from datamimic_ce import cli_presenter
 from datamimic_ce.authoring import service
 from datamimic_ce.authoring.contracts import (
     AUTHORING_REFERENCE_QUERY_ADAPTER,
@@ -22,7 +21,8 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldVerification,
 )
 from datamimic_ce.authoring.spec import ExpectationIntent
-from datamimic_ce.cli_presenter import CliOutputFormat, FailureThreshold
+from datamimic_ce.interfaces import cli_presenter
+from datamimic_ce.interfaces.cli_presenter import CliOutputFormat, FailureThreshold
 
 JSON_OBJECT_ADAPTER = TypeAdapter(dict[str, JsonValue])
 ACCEPTANCE_REQUIREMENTS_ADAPTER = TypeAdapter(tuple[ExpectationIntent, ...])

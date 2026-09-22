@@ -8,7 +8,7 @@
 from collections.abc import Callable
 from typing import Any
 
-from datamimic_ce.converter.custom_converter import CustomConverter
+from datamimic_ce.domains.converters.custom_converter import CustomConverter
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.utils.string_util import StringUtil
 

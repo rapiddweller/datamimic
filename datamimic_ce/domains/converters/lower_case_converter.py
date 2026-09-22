@@ -6,18 +6,18 @@
 
 from typing import Any
 
-from datamimic_ce.converter.converter import Converter
+from datamimic_ce.domains.converters.converter import Converter
 
 
-class UpperCaseConverter(Converter):
+class LowerCaseConverter(Converter):
     """
-    Convert string data to upper case
+    Convert string data to lower case
     """
 
     def convert(self, value: Any) -> str:
         if not isinstance(value, str):
             raise ValueError(
-                f"Converter UpperCase expect datatype 'string', "
-                f"but got value {value} with invalid datatype {type(value)}"
+                f"Converter LowerCase expect datatype 'string', but got value {value} "
+                f"with invalid datatype {type(value)}"
             )
-        return value.upper()
+        return value.lower()

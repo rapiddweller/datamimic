@@ -9,7 +9,7 @@ from datetime import datetime
 
 import pytest
 
-from datamimic_ce.converter.date2timestamp_converter import Date2TimestampConverter
+from datamimic_ce.domains.converters.date2timestamp_converter import Date2TimestampConverter
 
 
 class TestDate2TimestampConverter:

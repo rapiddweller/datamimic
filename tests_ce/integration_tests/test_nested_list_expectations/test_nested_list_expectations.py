@@ -32,7 +32,7 @@ _CALLER_INVALID_LIST = _TEST_DIR / "caller-invalid-list-field.json"
 
 def _run_cli(*args: str, expect_success: bool = True) -> ScaffoldResult:
     result = subprocess.run(
-        [sys.executable, "-m", "datamimic_ce.cli", *args],
+        [sys.executable, "-m", "datamimic_ce.interfaces.cli", *args],
         cwd=_REPO_ROOT,
         check=False,
         capture_output=True,

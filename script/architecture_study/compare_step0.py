@@ -7,9 +7,29 @@ import json
 from pathlib import Path
 from typing import Any
 
+LEGACY_DEMO_PREFIX = "datamimic_ce/demos/"
+TARGET_DEMO_PREFIX = "datamimic_ce/resources/demos/"
+
 
 def load(path: str) -> dict[str, Any]:
     return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def canonical_path(path: str) -> str:
+    if path.startswith(TARGET_DEMO_PREFIX):
+        return LEGACY_DEMO_PREFIX + path.removeprefix(TARGET_DEMO_PREFIX)
+    return path
+
+
+def inventory_by_path(records: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    return {
+        canonical_path(item["path"]): {**item, "path": canonical_path(item["path"])}
+        for item in records
+    }
+
+
+def descriptors_by_path(records: dict[str, Any]) -> dict[str, Any]:
+    return {canonical_path(path): record for path, record in records.items()}
 
 
 def comparable(record: dict[str, Any]) -> dict[str, Any]:
@@ -103,12 +123,13 @@ def main() -> None:
     for field in ("inventory_count", "category_counts_overlapping"):
         if before.get(field) != after.get(field):
             changed.append((f"inventory.{field}", before.get(field), after.get(field)))
-    before_inventory = {item["path"]: item for item in before["inventory"]}
-    after_inventory = {item["path"]: item for item in after["inventory"]}
+    before_inventory = inventory_by_path(before["inventory"])
+    after_inventory = inventory_by_path(after["inventory"])
     for path in sorted(before_inventory.keys() | after_inventory.keys()):
         if before_inventory.get(path) != after_inventory.get(path):
             changed.append((f"inventory.{path}", before_inventory.get(path), after_inventory.get(path)))
-    before_descriptors, after_descriptors = before["descriptors"], after["descriptors"]
+    before_descriptors = descriptors_by_path(before["descriptors"])
+    after_descriptors = descriptors_by_path(after["descriptors"])
     for path in sorted(before_descriptors.keys() | after_descriptors.keys()):
         old, new = before_descriptors.get(path), after_descriptors.get(path)
         if old is None or new is None or not equivalent(old, new):

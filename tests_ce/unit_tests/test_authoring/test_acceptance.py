@@ -1050,8 +1050,8 @@ def test_acceptance_has_no_xml_or_transport_dependency() -> None:
     }
 
     assert not any(module.endswith("xml") or ".xml" in module for module in imported_modules)
-    assert "datamimic_ce.cli" not in imported_modules
-    assert not any(module.startswith("datamimic_ce.mcp") for module in imported_modules)
+    assert "datamimic_ce.interfaces.cli" not in imported_modules
+    assert not any(module.startswith("datamimic_ce.interfaces.mcp") for module in imported_modules)
     assert "eval(" not in source
 
 

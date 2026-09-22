@@ -292,7 +292,21 @@ def dynamic_count_evidence(path: Path, root: ET.Element) -> list[str]:
 
 
 def inventory() -> list[dict[str, Any]]:
-    paths = sorted([*REPO.glob("datamimic_ce/demos/**/*.xml"), *REPO.glob("tests_ce/**/*.xml")])
+    tracked = subprocess.run(
+        [
+            "git",
+            "ls-files",
+            "--",
+            "datamimic_ce/demos/**/*.xml",
+            "datamimic_ce/resources/demos/**/*.xml",
+            "tests_ce/**/*.xml",
+        ],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.splitlines()
+    paths = [REPO / path for path in tracked]
     records: list[dict[str, Any]] = []
     for path in paths:
         relative = path.relative_to(REPO).as_posix()
@@ -457,9 +471,9 @@ def run_descriptor(record: dict[str, Any]) -> tuple[str, dict[str, Any]]:
 def projections() -> dict[str, Any]:
     env = {**os.environ, "PYTHONPATH": str(REPO)}
     commands = {
-        "capabilities": [sys.executable, "-m", "datamimic_ce.cli", "capabilities", "--full"],
-        "reference_authoring": [sys.executable, "-m", "datamimic_ce.cli", "reference", "authoring"],
-        "reference_scaffold": [sys.executable, "-m", "datamimic_ce.cli", "reference", "scaffold"],
+        "capabilities": [sys.executable, "-m", "datamimic_ce.interfaces.cli", "capabilities", "--full"],
+        "reference_authoring": [sys.executable, "-m", "datamimic_ce.interfaces.cli", "reference", "authoring"],
+        "reference_scaffold": [sys.executable, "-m", "datamimic_ce.interfaces.cli", "reference", "scaffold"],
     }
     captured: dict[str, Any] = {}
     for name, command in commands.items():

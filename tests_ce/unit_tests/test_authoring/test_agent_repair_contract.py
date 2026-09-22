@@ -34,7 +34,7 @@ from datamimic_ce.authoring.spec import (
     ProductIntentKind,
     SourceIntentKind,
 )
-from datamimic_ce.cli import app
+from datamimic_ce.interfaces.cli import app
 
 _FIXTURES = Path(__file__).parent / "fixtures"
 

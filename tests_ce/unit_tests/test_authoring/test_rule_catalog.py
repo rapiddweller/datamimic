@@ -25,8 +25,8 @@ from datamimic_ce.authoring.rule_catalog import (
 from datamimic_ce.authoring.rules import ALL_INTENT_RULES, ALL_RULES
 from datamimic_ce.authoring.rules.base import IntentLintContext, LintContext
 from datamimic_ce.authoring.schema import build_schema_index
-from datamimic_ce.cli import app
 from datamimic_ce.engine.dsl.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
+from datamimic_ce.interfaces.cli import app
 
 
 def test_every_evaluator_points_to_exactly_one_complete_catalog_definition() -> None:

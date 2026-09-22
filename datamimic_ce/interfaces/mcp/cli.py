@@ -13,7 +13,7 @@ import typer
 import uvicorn
 
 from datamimic_ce._compat import StrEnum
-from datamimic_ce.mcp.server import (
+from datamimic_ce.interfaces.mcp.server import (
     build_sse_app,
     create_server,
 )

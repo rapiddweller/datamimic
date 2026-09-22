@@ -417,7 +417,7 @@ def converters_reference() -> str:
         "- Substring(start[, end]) uses Python slice semantics; negative indexes count from "
         'the end: converter="Substring(-4)" keeps the last 4 chars (the classic anonymization '
         'tail-extract), "Substring(5, 8)" a window, "Substring(2)" from index 2 to the end.\n'
-        "- Custom: subclass datamimic_ce.converter.converter.Converter in a .py file, load it "
+        "- Custom: subclass datamimic_ce.domains.converters.converter.Converter in a .py file, load it "
         'with <execute uri="script/my_converters.scr.py"/>, then converter="MyConverter()" '
         "(same mechanism for custom generators)."
     )

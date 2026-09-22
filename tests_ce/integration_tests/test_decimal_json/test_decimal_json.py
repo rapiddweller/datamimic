@@ -17,7 +17,7 @@ _EDGE_XML = _TEST_DIR / "edge_cases.xml"
 
 def _run_cli(*args: str, cwd: Path) -> ScaffoldResult:
     result = subprocess.run(
-        [sys.executable, "-m", "datamimic_ce.cli", *args],
+        [sys.executable, "-m", "datamimic_ce.interfaces.cli", *args],
         cwd=cwd,
         check=True,
         capture_output=True,
@@ -31,7 +31,7 @@ def _run_descriptor(xml: Path, tmp_path: Path, output_name: str) -> Path:
     descriptor = tmp_path / xml.name
     descriptor.write_text(xml.read_text(encoding="utf-8"), encoding="utf-8")
     subprocess.run(
-        [sys.executable, "-m", "datamimic_ce.cli", "run", str(descriptor)],
+        [sys.executable, "-m", "datamimic_ce.interfaces.cli", "run", str(descriptor)],
         cwd=tmp_path,
         check=True,
         capture_output=True,

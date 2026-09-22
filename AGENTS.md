@@ -252,7 +252,7 @@ registration details.
 - Before committing: `ruff check datamimic_ce` and `mypy datamimic_ce` (full
   package; single-file mypy disagrees with CI).
 - The authoring toolset (linter, reference, dry-run, scaffold)
-  lives in `datamimic_ce/authoring/`; the MCP server in `datamimic_ce/mcp/`.
+  lives in `datamimic_ce/authoring/`; the MCP server in `datamimic_ce/interfaces/mcp/`.
 - Commit messages carry no AI or tool attribution lines.
 
 ## Pointers

@@ -7,7 +7,7 @@
 
 import pytest
 
-from datamimic_ce.converter.java_hash_converter import JavaHashConverter
+from datamimic_ce.domains.converters.java_hash_converter import JavaHashConverter
 
 
 @pytest.mark.parametrize(

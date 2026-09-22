@@ -1,7 +1,7 @@
 from functools import lru_cache
 
-from datamimic_ce.converter.converter import Converter
-from datamimic_ce.converter.custom_converter import CustomConverter
+from datamimic_ce.domains.converters.converter import Converter
+from datamimic_ce.domains.converters.custom_converter import CustomConverter
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 

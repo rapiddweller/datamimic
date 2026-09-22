@@ -41,7 +41,7 @@ def _run_json_export(tmp_path: Path) -> list[dict[str, object]]:
     descriptor = tmp_path / "decimal_scale.xml"
     descriptor.write_text((_TEST_DIR / "decimal_scale.xml").read_text(encoding="utf-8"), encoding="utf-8")
     subprocess.run(
-        [sys.executable, "-m", "datamimic_ce.cli", "run", str(descriptor)],
+        [sys.executable, "-m", "datamimic_ce.interfaces.cli", "run", str(descriptor)],
         cwd=tmp_path,
         check=True,
         capture_output=True,

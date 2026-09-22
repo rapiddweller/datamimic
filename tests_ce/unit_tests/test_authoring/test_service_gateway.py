@@ -29,7 +29,7 @@ from datamimic_ce.authoring.dryrun import (
     CapturedRun,
 )
 from datamimic_ce.authoring.service import check, run
-from datamimic_ce.cli import app
+from datamimic_ce.interfaces.cli import app
 
 _XML = """<setup rngSeed="1">
     <generate name="items" count="3" target="">

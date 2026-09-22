@@ -29,7 +29,7 @@ from datamimic_ce.authoring.dryrun import (
 )
 from datamimic_ce.authoring.rule_catalog import RuleSeverity
 from datamimic_ce.authoring.service import scaffold
-from datamimic_ce.cli import app
+from datamimic_ce.interfaces.cli import app
 
 
 def _spec(*, seed: int | None = 7, count: int = 2) -> dict[str, object]:

@@ -19,7 +19,7 @@ from datamimic_ce.authoring.contracts import (
     ScaffoldRequest,
 )
 from datamimic_ce.authoring.service import scaffold
-from datamimic_ce.cli import app
+from datamimic_ce.interfaces.cli import app
 
 # Test specs covering various scenarios
 SPEC_VALID_DRY_RUN = {

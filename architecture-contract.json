@@ -7,12 +7,7 @@
       "label": "interfaces",
       "role": "interface",
       "packages": [
-        "datamimic_ce.interfaces",
-        "datamimic_ce.cli",
-        "datamimic_ce.cli_authoring",
-        "datamimic_ce.cli_presenter",
-        "datamimic_ce.cli_runtime",
-        "datamimic_ce.mcp"
+        "datamimic_ce.interfaces"
       ],
       "namespace": "datamimic_ce.interfaces",
       "responsibilities": [
@@ -250,8 +245,7 @@
       "label": "domains",
       "role": "component",
       "packages": [
-        "datamimic_ce.domains",
-        "datamimic_ce.converter"
+        "datamimic_ce.domains"
       ],
       "namespace": "datamimic_ce.domains",
       "responsibilities": [
@@ -282,8 +276,7 @@
       "label": "resources",
       "role": "projection",
       "packages": [
-        "datamimic_ce.resources",
-        "datamimic_ce.demos"
+        "datamimic_ce.resources"
       ],
       "namespace": "datamimic_ce.resources",
       "responsibilities": [

@@ -292,7 +292,7 @@ def test_compiler_has_no_transport_execution_or_file_io_dependencies() -> None:
             imported.update(alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom) and node.module is not None:
             imported.add(node.module)
-    forbidden = ("datamimic_ce.cli", "datamimic_ce.mcp", "authoring.dryrun", "authoring.linter")
+    forbidden = ("datamimic_ce.interfaces.cli", "datamimic_ce.interfaces.mcp", "authoring.dryrun", "authoring.linter")
     assert not any(any(token in module for token in forbidden) for module in imported)
     assert "open(" not in inspect.getsource(compiler_module)
 

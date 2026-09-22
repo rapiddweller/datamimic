@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from typer.testing import CliRunner
 
-from datamimic_ce.cli import app
+from datamimic_ce.interfaces.cli import app
 
 runner = CliRunner()
 

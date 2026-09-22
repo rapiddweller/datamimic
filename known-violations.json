@@ -1,333 +1,13 @@
 {
   "budgets": {
     "calls_unresolved": 1363,
-    "cycle_edges": 184,
+    "cycle_edges": 181,
     "private_crossings": 2,
     "typing_positions": 495,
     "untyped_private_accesses": 4
   },
   "schema_version": "1.2.0",
   "violations": [
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.append_converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.custom_converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.cut_length_converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.date2timestamp_converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.date_format_converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.hash_converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.java_hash_converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.lower_case_converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.mask_converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.middle_mask_converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.remove_none_or_empty_element_converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.substring_converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.timestamp2date_converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-DOMAINS"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.upper_case_converter",
-        "datamimic_ce.domains"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-INTERFACES"
-      ],
-      "subjects": [
-        "datamimic_ce.cli",
-        "datamimic_ce.interfaces"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-INTERFACES"
-      ],
-      "subjects": [
-        "datamimic_ce.cli_authoring",
-        "datamimic_ce.interfaces"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-INTERFACES"
-      ],
-      "subjects": [
-        "datamimic_ce.cli_presenter",
-        "datamimic_ce.interfaces"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-INTERFACES"
-      ],
-      "subjects": [
-        "datamimic_ce.cli_runtime",
-        "datamimic_ce.interfaces"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-INTERFACES"
-      ],
-      "subjects": [
-        "datamimic_ce.interfaces",
-        "datamimic_ce.mcp"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-INTERFACES"
-      ],
-      "subjects": [
-        "datamimic_ce.interfaces",
-        "datamimic_ce.mcp.cli"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-INTERFACES"
-      ],
-      "subjects": [
-        "datamimic_ce.interfaces",
-        "datamimic_ce.mcp.server"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RESOURCES"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.__init___",
-        "datamimic_ce.resources"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RESOURCES"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-clinical-trial.script.clinical_trial.scr",
-        "datamimic_ce.resources"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RESOURCES"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-custom-components.script.converter.scr",
-        "datamimic_ce.resources"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RESOURCES"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-custom-components.script.generator.scr",
-        "datamimic_ce.resources"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RESOURCES"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-custom-components.script.generator_glob.scr",
-        "datamimic_ce.resources"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RESOURCES"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-datetime.script.py_script.scr",
-        "datamimic_ce.resources"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RESOURCES"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr",
-        "datamimic_ce.resources"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RESOURCES"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-finance.script.ledger.scr",
-        "datamimic_ce.resources"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RESOURCES"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-py-scripting.script.lib.scr",
-        "datamimic_ce.resources"
-      ]
-    },
     {
       "count": 1,
       "rules": [
@@ -611,7 +291,7 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.cli_presenter",
+          "source": "datamimic_ce.interfaces.cli_presenter",
           "target": "datamimic_ce.authoring.diagnostics"
         }
       ],
@@ -620,14 +300,14 @@
       ],
       "subjects": [
         "datamimic_ce.authoring.diagnostics.LintResult",
-        "datamimic_ce.cli_presenter"
+        "datamimic_ce.interfaces.cli_presenter"
       ]
     },
     {
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.mcp.server",
+          "source": "datamimic_ce.interfaces.mcp.server",
           "target": "datamimic_ce.authoring.diagnostics"
         }
       ],
@@ -636,7 +316,7 @@
       ],
       "subjects": [
         "datamimic_ce.authoring.diagnostics.LintResult",
-        "datamimic_ce.mcp.server"
+        "datamimic_ce.interfaces.mcp.server"
       ]
     },
     {
@@ -1427,7 +1107,7 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.cli_presenter",
+          "source": "datamimic_ce.interfaces.cli_presenter",
           "target": "datamimic_ce.authoring.rule_catalog"
         }
       ],
@@ -1436,7 +1116,7 @@
       ],
       "subjects": [
         "datamimic_ce.authoring.rule_catalog.RuleSeverity",
-        "datamimic_ce.cli_presenter"
+        "datamimic_ce.interfaces.cli_presenter"
       ]
     },
     {
@@ -2931,7 +2611,7 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.cli_authoring",
+          "source": "datamimic_ce.interfaces.cli_authoring",
           "target": "datamimic_ce.authoring.service"
         }
       ],
@@ -2940,14 +2620,14 @@
       ],
       "subjects": [
         "datamimic_ce.authoring.service",
-        "datamimic_ce.cli_authoring"
+        "datamimic_ce.interfaces.cli_authoring"
       ]
     },
     {
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.mcp.server",
+          "source": "datamimic_ce.interfaces.mcp.server",
           "target": "datamimic_ce.authoring.service"
         }
       ],
@@ -2956,7 +2636,7 @@
       ],
       "subjects": [
         "datamimic_ce.authoring.service",
-        "datamimic_ce.mcp.server"
+        "datamimic_ce.interfaces.mcp.server"
       ]
     },
     {
@@ -3043,7 +2723,7 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.cli_authoring",
+          "source": "datamimic_ce.interfaces.cli_authoring",
           "target": "datamimic_ce.authoring.spec"
         }
       ],
@@ -3052,7 +2732,7 @@
       ],
       "subjects": [
         "datamimic_ce.authoring.spec.ExpectationIntent",
-        "datamimic_ce.cli_authoring"
+        "datamimic_ce.interfaces.cli_authoring"
       ]
     },
     {
@@ -3101,470 +2781,6 @@
       "subjects": [
         "datamimic_ce.authoring.xml_loader",
         "datamimic_ce.utils.secure_xml.parse_xml_source"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.cli",
-          "target": "datamimic_ce.utils.demo_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.cli",
-        "datamimic_ce.utils.demo_util.demo_autocomplete"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.cli_runtime",
-          "target": "datamimic_ce.datamimic"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.cli_runtime",
-        "datamimic_ce.datamimic.DataMimic"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.cli_runtime",
-          "target": "datamimic_ce.engine.runtime.logging"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.cli_runtime",
-        "datamimic_ce.engine.runtime.logging.logger"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.cli_runtime",
-          "target": "datamimic_ce.utils.demo_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.cli_runtime",
-        "datamimic_ce.utils.demo_util.handle_demo"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.cli_runtime",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.cli_runtime",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.cli_runtime",
-          "target": "datamimic_ce.utils.string_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.cli_runtime",
-        "datamimic_ce.utils.string_util.StringUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.cli_runtime",
-          "target": "datamimic_ce.utils.version_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.cli_runtime",
-        "datamimic_ce.utils.version_util.get_datamimic_lib_version"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.tasks.task_util",
-          "target": "datamimic_ce.converter.append_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.append_converter.AppendConverter",
-        "datamimic_ce.engine.runtime.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.demos.demo-custom-components.script.converter.scr",
-          "target": "datamimic_ce.converter.converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.converter.Converter",
-        "datamimic_ce.demos.demo-custom-components.script.converter.scr"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr",
-          "target": "datamimic_ce.converter.converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.converter.Converter",
-        "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.contexts.setup_context",
-          "target": "datamimic_ce.converter.converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.converter.Converter",
-        "datamimic_ce.engine.runtime.contexts.setup_context"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.tasks.task_util",
-          "target": "datamimic_ce.converter.converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.converter.Converter",
-        "datamimic_ce.engine.runtime.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr",
-          "target": "datamimic_ce.converter.custom_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.custom_converter.CustomConverter",
-        "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.contexts.setup_context",
-          "target": "datamimic_ce.converter.custom_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.custom_converter.CustomConverter",
-        "datamimic_ce.engine.runtime.contexts.setup_context"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.utils.object_util",
-          "target": "datamimic_ce.converter.custom_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.custom_converter.CustomConverter",
-        "datamimic_ce.utils.object_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.tasks.task_util",
-          "target": "datamimic_ce.converter.cut_length_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.cut_length_converter.CutLengthConverter",
-        "datamimic_ce.engine.runtime.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.tasks.task_util",
-          "target": "datamimic_ce.converter.date2timestamp_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.date2timestamp_converter.Date2TimestampConverter",
-        "datamimic_ce.engine.runtime.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.tasks.task_util",
-          "target": "datamimic_ce.converter.date_format_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.date_format_converter.DateFormatConverter",
-        "datamimic_ce.engine.runtime.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.converter.hash_converter",
-          "target": "datamimic_ce.engine.dsl.enums.converter_enums"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.hash_converter",
-        "datamimic_ce.engine.dsl.enums.converter_enums.SupportHash"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.converter.hash_converter",
-          "target": "datamimic_ce.engine.dsl.enums.converter_enums"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.hash_converter",
-        "datamimic_ce.engine.dsl.enums.converter_enums.SupportOutputFormat"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.tasks.task_util",
-          "target": "datamimic_ce.converter.hash_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.hash_converter.HashConverter",
-        "datamimic_ce.engine.runtime.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.tasks.task_util",
-          "target": "datamimic_ce.converter.java_hash_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.java_hash_converter.JavaHashConverter",
-        "datamimic_ce.engine.runtime.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.tasks.task_util",
-          "target": "datamimic_ce.converter.lower_case_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.lower_case_converter.LowerCaseConverter",
-        "datamimic_ce.engine.runtime.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.tasks.task_util",
-          "target": "datamimic_ce.converter.mask_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.mask_converter.MaskConverter",
-        "datamimic_ce.engine.runtime.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.tasks.task_util",
-          "target": "datamimic_ce.converter.middle_mask_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.middle_mask_converter.MiddleMaskConverter",
-        "datamimic_ce.engine.runtime.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.tasks.task_util",
-          "target": "datamimic_ce.converter.remove_none_or_empty_element_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.remove_none_or_empty_element_converter.RemoveNoneOrEmptyElementConverter",
-        "datamimic_ce.engine.runtime.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.tasks.task_util",
-          "target": "datamimic_ce.converter.substring_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.substring_converter.SubstringConverter",
-        "datamimic_ce.engine.runtime.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.tasks.task_util",
-          "target": "datamimic_ce.converter.timestamp2date_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.timestamp2date_converter.Timestamp2DateConverter",
-        "datamimic_ce.engine.runtime.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.runtime.tasks.task_util",
-          "target": "datamimic_ce.converter.upper_case_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.upper_case_converter.UpperCaseConverter",
-        "datamimic_ce.engine.runtime.tasks.task_util"
       ]
     },
     {
@@ -3779,160 +2995,16 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.demos.demo-clinical-trial.script.clinical_trial.scr",
-          "target": "datamimic_ce.domains.common.models.demographic_config"
+          "source": "datamimic_ce.interfaces.cli_runtime",
+          "target": "datamimic_ce.datamimic"
         }
       ],
       "rules": [
         "INTERFACES-ONLY"
       ],
       "subjects": [
-        "datamimic_ce.demos.demo-clinical-trial.script.clinical_trial.scr",
-        "datamimic_ce.domains.common.models.demographic_config.DemographicConfig"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.demos.demo-clinical-trial.script.clinical_trial.scr",
-          "target": "datamimic_ce.domains.healthcare.services.patient_service"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-clinical-trial.script.clinical_trial.scr",
-        "datamimic_ce.domains.healthcare.services.patient_service.PatientService"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.demos.demo-custom-components.script.generator.scr",
-          "target": "datamimic_ce.domains.domain_core.base_literal_generator"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-custom-components.script.generator.scr",
-        "datamimic_ce.domains.domain_core.base_literal_generator.BaseLiteralGenerator"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.demos.demo-custom-components.script.generator_glob.scr",
-          "target": "datamimic_ce.domains.domain_core.base_literal_generator"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-custom-components.script.generator_glob.scr",
-        "datamimic_ce.domains.domain_core.base_literal_generator.BaseLiteralGenerator"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr",
-          "target": "datamimic_ce.engine.io.clients.database_client"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr",
-        "datamimic_ce.engine.io.clients.database_client.DatabaseClient"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr",
-          "target": "datamimic_ce.engine.runtime.contexts.context"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr",
-        "datamimic_ce.engine.runtime.contexts.context.Context"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr",
-          "target": "datamimic_ce.engine.runtime.contexts.setup_context"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr",
-        "datamimic_ce.engine.runtime.contexts.setup_context.SetupContext"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr",
-          "target": "datamimic_ce.engine.runtime.logging"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr",
-        "datamimic_ce.engine.runtime.logging.logger"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.demos.demo-finance.script.ledger.scr",
-          "target": "datamimic_ce.domains.finance.generators.transaction_generator"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-finance.script.ledger.scr",
-        "datamimic_ce.domains.finance.generators.transaction_generator.TransactionGenerator"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.demos.demo-finance.script.ledger.scr",
-          "target": "datamimic_ce.domains.finance.models.transaction"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-finance.script.ledger.scr",
-        "datamimic_ce.domains.finance.models.transaction.Transaction"
+        "datamimic_ce.datamimic.DataMimic",
+        "datamimic_ce.interfaces.cli_runtime"
       ]
     },
     {
@@ -4755,6 +3827,374 @@
       "count": 1,
       "roles": [
         {
+          "source": "datamimic_ce.resources.demos.demo-clinical-trial.script.clinical_trial.scr",
+          "target": "datamimic_ce.domains.common.models.demographic_config"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.common.models.demographic_config.DemographicConfig",
+        "datamimic_ce.resources.demos.demo-clinical-trial.script.clinical_trial.scr"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.tasks.task_util",
+          "target": "datamimic_ce.domains.converters.append_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.append_converter.AppendConverter",
+        "datamimic_ce.engine.runtime.tasks.task_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.contexts.setup_context",
+          "target": "datamimic_ce.domains.converters.converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.converter.Converter",
+        "datamimic_ce.engine.runtime.contexts.setup_context"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.tasks.task_util",
+          "target": "datamimic_ce.domains.converters.converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.converter.Converter",
+        "datamimic_ce.engine.runtime.tasks.task_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.resources.demos.demo-custom-components.script.converter.scr",
+          "target": "datamimic_ce.domains.converters.converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.converter.Converter",
+        "datamimic_ce.resources.demos.demo-custom-components.script.converter.scr"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr",
+          "target": "datamimic_ce.domains.converters.converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.converter.Converter",
+        "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.contexts.setup_context",
+          "target": "datamimic_ce.domains.converters.custom_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.custom_converter.CustomConverter",
+        "datamimic_ce.engine.runtime.contexts.setup_context"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr",
+          "target": "datamimic_ce.domains.converters.custom_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.custom_converter.CustomConverter",
+        "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.utils.object_util",
+          "target": "datamimic_ce.domains.converters.custom_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.custom_converter.CustomConverter",
+        "datamimic_ce.utils.object_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.tasks.task_util",
+          "target": "datamimic_ce.domains.converters.cut_length_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.cut_length_converter.CutLengthConverter",
+        "datamimic_ce.engine.runtime.tasks.task_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.tasks.task_util",
+          "target": "datamimic_ce.domains.converters.date2timestamp_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.date2timestamp_converter.Date2TimestampConverter",
+        "datamimic_ce.engine.runtime.tasks.task_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.tasks.task_util",
+          "target": "datamimic_ce.domains.converters.date_format_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.date_format_converter.DateFormatConverter",
+        "datamimic_ce.engine.runtime.tasks.task_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.domains.converters.hash_converter",
+          "target": "datamimic_ce.engine.dsl.enums.converter_enums"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.hash_converter",
+        "datamimic_ce.engine.dsl.enums.converter_enums.SupportHash"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.domains.converters.hash_converter",
+          "target": "datamimic_ce.engine.dsl.enums.converter_enums"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.hash_converter",
+        "datamimic_ce.engine.dsl.enums.converter_enums.SupportOutputFormat"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.tasks.task_util",
+          "target": "datamimic_ce.domains.converters.hash_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.hash_converter.HashConverter",
+        "datamimic_ce.engine.runtime.tasks.task_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.tasks.task_util",
+          "target": "datamimic_ce.domains.converters.java_hash_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.java_hash_converter.JavaHashConverter",
+        "datamimic_ce.engine.runtime.tasks.task_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.tasks.task_util",
+          "target": "datamimic_ce.domains.converters.lower_case_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.lower_case_converter.LowerCaseConverter",
+        "datamimic_ce.engine.runtime.tasks.task_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.tasks.task_util",
+          "target": "datamimic_ce.domains.converters.mask_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.mask_converter.MaskConverter",
+        "datamimic_ce.engine.runtime.tasks.task_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.tasks.task_util",
+          "target": "datamimic_ce.domains.converters.middle_mask_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.middle_mask_converter.MiddleMaskConverter",
+        "datamimic_ce.engine.runtime.tasks.task_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.tasks.task_util",
+          "target": "datamimic_ce.domains.converters.remove_none_or_empty_element_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.remove_none_or_empty_element_converter.RemoveNoneOrEmptyElementConverter",
+        "datamimic_ce.engine.runtime.tasks.task_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.tasks.task_util",
+          "target": "datamimic_ce.domains.converters.substring_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.substring_converter.SubstringConverter",
+        "datamimic_ce.engine.runtime.tasks.task_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.tasks.task_util",
+          "target": "datamimic_ce.domains.converters.timestamp2date_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.timestamp2date_converter.Timestamp2DateConverter",
+        "datamimic_ce.engine.runtime.tasks.task_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.tasks.task_util",
+          "target": "datamimic_ce.domains.converters.upper_case_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.upper_case_converter.UpperCaseConverter",
+        "datamimic_ce.engine.runtime.tasks.task_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
           "source": "datamimic_ce.domains.determinism",
           "target": "datamimic_ce.utils.version_util"
         }
@@ -4813,6 +4253,38 @@
       "subjects": [
         "datamimic_ce.domains.domain_core.base_literal_generator.BaseLiteralGenerator",
         "datamimic_ce.engine.runtime.contexts.setup_context"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.resources.demos.demo-custom-components.script.generator.scr",
+          "target": "datamimic_ce.domains.domain_core.base_literal_generator"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.domain_core.base_literal_generator.BaseLiteralGenerator",
+        "datamimic_ce.resources.demos.demo-custom-components.script.generator.scr"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.resources.demos.demo-custom-components.script.generator_glob.scr",
+          "target": "datamimic_ce.domains.domain_core.base_literal_generator"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.domain_core.base_literal_generator.BaseLiteralGenerator",
+        "datamimic_ce.resources.demos.demo-custom-components.script.generator_glob.scr"
       ]
     },
     {
@@ -5091,6 +4563,22 @@
       "count": 1,
       "roles": [
         {
+          "source": "datamimic_ce.resources.demos.demo-finance.script.ledger.scr",
+          "target": "datamimic_ce.domains.finance.generators.transaction_generator"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.finance.generators.transaction_generator.TransactionGenerator",
+        "datamimic_ce.resources.demos.demo-finance.script.ledger.scr"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
           "source": "datamimic_ce.domains.finance.models.credit_card",
           "target": "datamimic_ce.utils.luhn_util"
         }
@@ -5101,6 +4589,22 @@
       "subjects": [
         "datamimic_ce.domains.finance.models.credit_card",
         "datamimic_ce.utils.luhn_util.luhn_check_digit"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.resources.demos.demo-finance.script.ledger.scr",
+          "target": "datamimic_ce.domains.finance.models.transaction"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.finance.models.transaction.Transaction",
+        "datamimic_ce.resources.demos.demo-finance.script.ledger.scr"
       ]
     },
     {
@@ -5165,6 +4669,22 @@
       "subjects": [
         "datamimic_ce.domains.healthcare.generators.patient_generator",
         "datamimic_ce.utils.file_util.FileUtil"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.resources.demos.demo-clinical-trial.script.clinical_trial.scr",
+          "target": "datamimic_ce.domains.healthcare.services.patient_service"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.healthcare.services.patient_service.PatientService",
+        "datamimic_ce.resources.demos.demo-clinical-trial.script.clinical_trial.scr"
       ]
     },
     {
@@ -8499,6 +8019,22 @@
       "count": 1,
       "roles": [
         {
+          "source": "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr",
+          "target": "datamimic_ce.engine.io.clients.database_client"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.io.clients.database_client.DatabaseClient",
+        "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
           "source": "datamimic_ce.engine.io.clients.rdbms_client",
           "target": "datamimic_ce.engine.runtime.config"
         }
@@ -9057,6 +8593,150 @@
     },
     {
       "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr",
+          "target": "datamimic_ce.engine.runtime.contexts.context"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.contexts.context.Context",
+        "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr",
+          "target": "datamimic_ce.engine.runtime.contexts.setup_context"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.contexts.setup_context.SetupContext",
+        "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.interfaces.cli_runtime",
+          "target": "datamimic_ce.engine.runtime.logging"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.logging.logger",
+        "datamimic_ce.interfaces.cli_runtime"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr",
+          "target": "datamimic_ce.engine.runtime.logging"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.logging.logger",
+        "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.interfaces.cli",
+          "target": "datamimic_ce.utils.demo_util"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.interfaces.cli",
+        "datamimic_ce.utils.demo_util.demo_autocomplete"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.interfaces.cli_runtime",
+          "target": "datamimic_ce.utils.demo_util"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.interfaces.cli_runtime",
+        "datamimic_ce.utils.demo_util.handle_demo"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.interfaces.cli_runtime",
+          "target": "datamimic_ce.utils.file_util"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.interfaces.cli_runtime",
+        "datamimic_ce.utils.file_util.FileUtil"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.interfaces.cli_runtime",
+          "target": "datamimic_ce.utils.string_util"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.interfaces.cli_runtime",
+        "datamimic_ce.utils.string_util.StringUtil"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.interfaces.cli_runtime",
+          "target": "datamimic_ce.utils.version_util"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.interfaces.cli_runtime",
+        "datamimic_ce.utils.version_util.get_datamimic_lib_version"
+      ]
+    },
+    {
+      "count": 1,
       "rules": [
         "NO-COMPONENT-CYCLES"
       ],
@@ -9334,187 +9014,7 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.converter.append_converter.AppendConverter.convert:value"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.converter.Converter.convert:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.custom_converter.CustomConverter.__init__:ctx"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.custom_converter.CustomConverter.convert:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.cut_length_converter.CutLengthConverter.convert:value"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.hash_converter.HashConverter.convert:value"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.lower_case_converter.LowerCaseConverter.convert:value"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.mask_converter.MaskConverter.convert:value"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.middle_mask_converter.MiddleMaskConverter.convert:value"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.remove_none_or_empty_element_converter.RemoveNoneOrEmptyElementConverter._convert_dict:data"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.remove_none_or_empty_element_converter.RemoveNoneOrEmptyElementConverter._convert_dict:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.remove_none_or_empty_element_converter.RemoveNoneOrEmptyElementConverter._convert_list:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.remove_none_or_empty_element_converter.RemoveNoneOrEmptyElementConverter._convert_list:values"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.remove_none_or_empty_element_converter.RemoveNoneOrEmptyElementConverter.convert:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.remove_none_or_empty_element_converter.RemoveNoneOrEmptyElementConverter.convert:value"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.substring_converter.SubstringConverter.convert:value"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.converter.upper_case_converter.UpperCaseConverter.convert:value"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.datamimic.DataMimic.__init__"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-finance.script.ledger.scr.generate_transactions_for_account.rows"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.demos.demo-finance.script.ledger.scr.generate_transactions_for_account:return"
       ]
     },
     {
@@ -9920,6 +9420,159 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.profile_components.resolve_component_profile:return"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.append_converter.AppendConverter.convert:value"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.converter.Converter.convert:return"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.custom_converter.CustomConverter.__init__:ctx"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.custom_converter.CustomConverter.convert:return"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.cut_length_converter.CutLengthConverter.convert:value"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.hash_converter.HashConverter.convert:value"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.lower_case_converter.LowerCaseConverter.convert:value"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.mask_converter.MaskConverter.convert:value"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.middle_mask_converter.MiddleMaskConverter.convert:value"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.remove_none_or_empty_element_converter.RemoveNoneOrEmptyElementConverter._convert_dict:data"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.remove_none_or_empty_element_converter.RemoveNoneOrEmptyElementConverter._convert_dict:return"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.remove_none_or_empty_element_converter.RemoveNoneOrEmptyElementConverter._convert_list:return"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.remove_none_or_empty_element_converter.RemoveNoneOrEmptyElementConverter._convert_list:values"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.remove_none_or_empty_element_converter.RemoveNoneOrEmptyElementConverter.convert:return"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.remove_none_or_empty_element_converter.RemoveNoneOrEmptyElementConverter.convert:value"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.substring_converter.SubstringConverter.convert:value"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.upper_case_converter.UpperCaseConverter.convert:value"
       ]
     },
     {
@@ -11669,6 +11322,33 @@
       ]
     },
     {
+      "count": 2,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.resources.demos.demo-finance.script.ledger.scr.generate_transactions_for_account.rows"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.resources.demos.demo-finance.script.ledger.scr.generate_transactions_for_account:return"
+      ]
+    },
+    {
       "count": 4,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
@@ -11868,22 +11548,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.cli_runtime",
-          "target": "datamimic_ce.datamimic"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.cli_runtime",
-        "datamimic_ce.datamimic"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.data_mimic_test",
           "target": "datamimic_ce.engine.runtime.logging"
         }
@@ -12006,6 +11670,22 @@
       "subjects": [
         "datamimic_ce.datamimic",
         "datamimic_ce.engine.runtime.tasks.setup_task"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.interfaces.cli_runtime",
+          "target": "datamimic_ce.datamimic"
+        }
+      ],
+      "rules": [
+        "REQUIRES-COMPLETE"
+      ],
+      "subjects": [
+        "datamimic_ce.datamimic",
+        "datamimic_ce.interfaces.cli_runtime"
       ]
     },
     {
@@ -13558,69 +13238,6 @@
       "subjects": [
         "datamimic_ce.engine.io.exporters.xml_exporter",
         "datamimic_ce.engine.runtime.logging"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "ROOT-LAYOUT"
-      ],
-      "subjects": [
-        "datamimic_ce.cli"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "ROOT-LAYOUT"
-      ],
-      "subjects": [
-        "datamimic_ce.cli_authoring"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "ROOT-LAYOUT"
-      ],
-      "subjects": [
-        "datamimic_ce.cli_presenter"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "ROOT-LAYOUT"
-      ],
-      "subjects": [
-        "datamimic_ce.cli_runtime"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "ROOT-LAYOUT"
-      ],
-      "subjects": [
-        "datamimic_ce.converter"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "ROOT-LAYOUT"
-      ],
-      "subjects": [
-        "datamimic_ce.demos"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "ROOT-LAYOUT"
-      ],
-      "subjects": [
-        "datamimic_ce.mcp"
       ]
     },
     {

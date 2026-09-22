@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.converter.converter import Converter
+from datamimic_ce.domains.converters.converter import Converter
 
 
 class JavaHashConverter(Converter):

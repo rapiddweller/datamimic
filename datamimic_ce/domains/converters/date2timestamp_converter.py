@@ -6,7 +6,7 @@
 
 from datetime import datetime
 
-from datamimic_ce.converter.converter import Converter
+from datamimic_ce.domains.converters.converter import Converter
 from datamimic_ce.domains.domain_core.runtime import to_epoch_utc
 
 

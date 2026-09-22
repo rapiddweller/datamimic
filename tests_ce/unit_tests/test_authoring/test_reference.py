@@ -162,7 +162,7 @@ def test_capabilities_cli_compact_is_valid_json() -> None:
     """The compact output is parseable, versioned, and omits authoring_spec."""
     from typer.testing import CliRunner
 
-    from datamimic_ce.cli import app
+    from datamimic_ce.interfaces.cli import app
 
     result = CliRunner().invoke(app, ["capabilities"])
     assert result.exit_code == 0
@@ -176,7 +176,7 @@ def test_capabilities_cli_compact_is_valid_json() -> None:
 def test_capabilities_cli_section_error_is_machine_readable() -> None:
     from typer.testing import CliRunner
 
-    from datamimic_ce.cli import app
+    from datamimic_ce.interfaces.cli import app
 
     result = CliRunner().invoke(app, ["capabilities", "--section", "bogus"])
     assert result.exit_code == 1
@@ -189,7 +189,7 @@ def test_capabilities_cli_section_error_is_machine_readable() -> None:
 def test_capabilities_cli_section_and_full_are_mutually_exclusive() -> None:
     from typer.testing import CliRunner
 
-    from datamimic_ce.cli import app
+    from datamimic_ce.interfaces.cli import app
 
     result = CliRunner().invoke(app, ["capabilities", "--section", "x", "--full"])
     assert result.exit_code == 1
@@ -201,7 +201,7 @@ def test_capabilities_cli_section_and_full_are_mutually_exclusive() -> None:
 def test_capabilities_cli_section_mode_returns_keyed_dict() -> None:
     from typer.testing import CliRunner
 
-    from datamimic_ce.cli import app
+    from datamimic_ce.interfaces.cli import app
 
     result = CliRunner().invoke(app, ["capabilities", "--section", "rules"])
     assert result.exit_code == 0
@@ -219,7 +219,7 @@ def test_capabilities_cli_section_mode_returns_keyed_dict() -> None:
 def test_capabilities_cli_full_mode_is_unwrapped_manifest() -> None:
     from typer.testing import CliRunner
 
-    from datamimic_ce.cli import app
+    from datamimic_ce.interfaces.cli import app
 
     result = CliRunner().invoke(app, ["capabilities", "--full"])
     assert result.exit_code == 0

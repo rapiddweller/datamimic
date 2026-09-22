@@ -11,10 +11,10 @@ from pathlib import Path
 import toml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from datamimic_ce import cli_presenter
-from datamimic_ce.cli_presenter import DemoInformation, DemoSummary, SystemInformation
 from datamimic_ce.datamimic import DataMimic
 from datamimic_ce.engine.runtime.logging import logger
+from datamimic_ce.interfaces import cli_presenter
+from datamimic_ce.interfaces.cli_presenter import DemoInformation, DemoSummary, SystemInformation
 from datamimic_ce.utils.demo_util import handle_demo
 from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.string_util import StringUtil
@@ -61,7 +61,7 @@ def initialize_project(project_name: str, target_directory: Path | None, force: 
 
 
 def show_demo_information(demo_name: str) -> None:
-    demo_dir = Path(str(files("datamimic_ce").joinpath("demos"))) / demo_name
+    demo_dir = Path(str(files("datamimic_ce.resources").joinpath("demos"))) / demo_name
     metadata_path = demo_dir / "info.toml"
     if not metadata_path.is_file():
         cli_presenter.fail(f"Demo '{demo_name}' not found", code=1)
@@ -81,7 +81,7 @@ def show_demo_information(demo_name: str) -> None:
 
 
 def list_demos() -> None:
-    demos_path = Path(str(files("datamimic_ce").joinpath("demos")))
+    demos_path = Path(str(files("datamimic_ce.resources").joinpath("demos")))
     summaries: list[DemoSummary] = []
     for demo_dir in sorted(demos_path.iterdir()):
         metadata_path = demo_dir / "info.toml"
@@ -97,7 +97,7 @@ def create_demo(
     overwrite: bool,
     all_demos: bool,
 ) -> None:
-    demos_path = Path(str(files("datamimic_ce").joinpath("demos")))
+    demos_path = Path(str(files("datamimic_ce.resources").joinpath("demos")))
     if all_demos:
         if target_directory is None:
             cli_presenter.fail("Target directory is required with --all", code=1)

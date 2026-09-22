@@ -2,7 +2,7 @@
 
 The `DateTimeGenerator` produces datetime values for your keys/variables. It supports fixed values, uniform or weighted random sampling, strict min/max bounds, deterministic seeding, and user‑friendly DSL sugar.
 
-See ready‑to‑run demos: datamimic_ce/demos/demo-datetime/1_datetime_generator.xml
+See ready‑to‑run demos: datamimic_ce/resources/demos/demo-datetime/1_datetime_generator.xml
 
 ## Modes
 
@@ -93,7 +93,7 @@ Month/weekday/DOM sugar:
   </generate>
 </setup>
 
-See also: datamimic_ce/demos/demo-datetime/1_datetime_generator.xml
+See also: datamimic_ce/resources/demos/demo-datetime/1_datetime_generator.xml
 
 Weighted sampling with month/hour/minute/second weights:
 
@@ -147,5 +147,5 @@ To convert formats in XML, use `inDateFormat` and `outDateFormat` on the `<key>`
 
 ## Demos & Tests
 
-- Demo XML: datamimic_ce/demos/demo-datetime/1_datetime_generator.xml
+- Demo XML: datamimic_ce/resources/demos/demo-datetime/1_datetime_generator.xml
 - Functional tests: tests_ce/functional_tests/test_datetime/test_datetime.py
