@@ -12,13 +12,13 @@ import toml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from datamimic_ce.datamimic import DataMimic
+from datamimic_ce.domains.determinism import get_datamimic_lib_version
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.interfaces import cli_presenter
 from datamimic_ce.interfaces.cli_presenter import DemoInformation, DemoSummary, SystemInformation
-from datamimic_ce.utils.demo_util import handle_demo
+from datamimic_ce.interfaces.demo import handle_demo
 from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.string_util import StringUtil
-from datamimic_ce.utils.version_util import get_datamimic_lib_version
 
 
 class DemoMetadata(BaseModel):

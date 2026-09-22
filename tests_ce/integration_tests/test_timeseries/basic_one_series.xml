@@ -3,7 +3,7 @@
          24 ticks at 1h intervals over one day. Pure functions of ts.now/ts.step
          are deterministic by construction.
          Note: output column is named "timestamp" because a key named "ts"
-         would shadow the namespace (see datamimic_ce/utils/timeseries.py). -->
+         would shadow the namespace (see datamimic_ce/engine/dsl/timeseries.py). -->
     <generate name="rows"
               start="2026-01-01T00:00:00+00:00"
               end="2026-01-02T00:00:00+00:00"

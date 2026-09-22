@@ -10,8 +10,8 @@ from typing import Any
 
 from datamimic_ce.domains.domain_core.runtime import spawn_rng
 from datamimic_ce.engine.runtime.contexts.context import Context
+from datamimic_ce.engine.runtime.contexts.records import dict_nested_update
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
-from datamimic_ce.utils.dict_util import dict_nested_update
 
 
 class GenIterContext(Context):

@@ -11,11 +11,11 @@ from datamimic_ce.engine.dsl.model.generate_model import GenerateModel
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
+from datamimic_ce.engine.dsl.timeseries import TimeSeriesConfig
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.utils.timeseries import TimeSeriesConfig
 
 
 class GenerateStatement(CompositeStatement):

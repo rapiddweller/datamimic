@@ -22,12 +22,11 @@ from datamimic_ce.engine.runtime.config import settings
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
-from datamimic_ce.engine.runtime.logging import logger
+from datamimic_ce.engine.runtime.logging import gen_timer, logger
 from datamimic_ce.engine.runtime.sources.router import data_source_cache_key, set_data_source_length
 from datamimic_ce.engine.runtime.tasks.single_process_policy import resolve_single_process
 from datamimic_ce.engine.runtime.tasks.task import CommonSubTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
-from datamimic_ce.utils.logging_util import gen_timer
 
 
 class GenerateTask(CommonSubTask):

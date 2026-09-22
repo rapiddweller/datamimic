@@ -83,7 +83,7 @@ from datamimic_ce.authoring.spec import (
     ValuesField,
     WeightedField,
 )
-from datamimic_ce.utils.timeseries import TimeSeriesConfig
+from datamimic_ce.engine.dsl.timeseries import TimeSeriesConfig
 
 
 class CompileError(ValueError):

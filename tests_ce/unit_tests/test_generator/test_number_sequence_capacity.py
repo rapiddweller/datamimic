@@ -11,8 +11,11 @@ import random
 
 import pytest
 
+from datamimic_ce.domains.common.literal_generators.number_sequences import (
+    build_number_sequence,
+    finite_number_sequence_capacity,
+)
 from datamimic_ce.engine.dsl.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
-from datamimic_ce.utils.number_sequences import build_number_sequence, finite_number_sequence_capacity
 
 
 @pytest.mark.parametrize("distribution", sorted(POSITIONAL_NUMBER_SEQUENCES, key=lambda item: item.value))

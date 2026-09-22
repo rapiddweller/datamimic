@@ -6,8 +6,8 @@ import pytest
 
 from datamimic_ce.authoring.xml_loader import RULE_XML_LOAD, load_source
 from datamimic_ce.engine.dsl.parsers.descriptor_parser import DescriptorParser
+from datamimic_ce.engine.dsl.xml import DTDForbiddenError, parse_xml_file, parse_xml_source
 from datamimic_ce.utils.file_util import FileUtil
-from datamimic_ce.utils.secure_xml import DTDForbiddenError, parse_xml_file, parse_xml_source
 
 _ATTRIBUTE_ENTITY = '<!DOCTYPE setup [<!ENTITY secret "expanded">]><setup value="&secret;"/>'
 

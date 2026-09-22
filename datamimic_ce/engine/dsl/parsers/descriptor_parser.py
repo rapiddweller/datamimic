@@ -10,7 +10,7 @@ from xml.etree.ElementTree import Element
 
 from datamimic_ce.engine.dsl.parsers.setup_parser import SetupParser
 from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
-from datamimic_ce.utils.secure_xml import parse_xml_file
+from datamimic_ce.engine.dsl.xml import parse_xml_file
 
 
 class DescriptorParser:

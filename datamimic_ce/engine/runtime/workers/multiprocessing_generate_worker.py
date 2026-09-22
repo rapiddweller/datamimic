@@ -61,7 +61,7 @@ class MultiprocessingGenerateWorker(GenerateWorker):
         # Unpack arguments
         context, stmt, worker_id, chunk_start, chunk_end, page_size = args
 
-        from datamimic_ce.utils.process_util import set_generate_worker_process_title
+        from datamimic_ce.engine.runtime.process import set_generate_worker_process_title
 
         set_generate_worker_process_title(
             worker_id=worker_id,

@@ -11,7 +11,7 @@ from datamimic_ce.authoring.contracts import (
 )
 from datamimic_ce.interfaces import cli_authoring, cli_runtime
 from datamimic_ce.interfaces.cli_presenter import CliOutputFormat
-from datamimic_ce.utils.demo_util import demo_autocomplete
+from datamimic_ce.interfaces.demo import demo_autocomplete
 
 app = typer.Typer(help="DATAMIMIC Command Line Interface.", rich_markup_mode="markdown")
 demo_app = typer.Typer(help="Manage packaged demos.")

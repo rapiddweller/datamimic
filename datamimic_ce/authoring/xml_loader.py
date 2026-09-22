@@ -12,7 +12,7 @@ from lxml import etree
 
 from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rule_catalog import RuleSeverity
-from datamimic_ce.utils.secure_xml import DTDForbiddenError, parse_xml_file, parse_xml_source
+from datamimic_ce.engine.dsl.xml import DTDForbiddenError, parse_xml_file, parse_xml_source
 
 RULE_XML_LOAD = "DM001"
 

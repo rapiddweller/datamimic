@@ -13,11 +13,11 @@ from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil
 from datamimic_ce.engine.io.exporters.mongodb_exporter import MongoDBExporter
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
+from datamimic_ce.engine.runtime.contexts.records import dict_nested_update
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.storage.memstore_manager import MemstoreManager
 from datamimic_ce.engine.runtime.tasks.generate_task import GenerateTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
-from datamimic_ce.utils.dict_util import dict_nested_update
 
 
 class TestGenerateTask:

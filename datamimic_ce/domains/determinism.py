@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.metadata
 import json
 import platform
 import random
@@ -11,7 +12,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal, TypedDict
 
-from datamimic_ce.utils.version_util import get_datamimic_lib_version
+
+def get_datamimic_lib_version(lib_name: str = "datamimic-ce") -> str | None:
+    """Get DATAMIMIC library version."""
+    try:
+        return importlib.metadata.version(lib_name)
+    except importlib.metadata.PackageNotFoundError:
+        return "unknown"
 
 
 class DeterminismProof(TypedDict):

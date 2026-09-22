@@ -17,11 +17,10 @@ from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil
 from datamimic_ce.engine.runtime.config import settings
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
-from datamimic_ce.engine.runtime.logging import logger, setup_logger
+from datamimic_ce.engine.runtime.logging import gen_timer, logger, setup_logger
 from datamimic_ce.engine.runtime.sources.chunk_source_reader import ChunkSourceReader
 from datamimic_ce.engine.runtime.tasks.generate_task import GenerateTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
-from datamimic_ce.utils.logging_util import gen_timer
 
 
 class GenerateWorker:

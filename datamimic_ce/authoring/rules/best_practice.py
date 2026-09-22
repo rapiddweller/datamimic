@@ -18,6 +18,7 @@ from lxml import etree
 from datamimic_ce.authoring.diagnostics import Diagnostic
 from datamimic_ce.authoring.rule_catalog import authoring_rule_definition
 from datamimic_ce.authoring.rules.base import LintContext, Rule
+from datamimic_ce.domains.common.literal_generators.number_sequences import finite_number_sequence_capacity
 from datamimic_ce.engine.dsl.constants.data_type_constants import DATA_TYPE_DECIMAL, DATA_TYPE_FLOAT, DATA_TYPE_INT
 from datamimic_ce.engine.dsl.constants.element_constants import (
     EL_CONDITION,
@@ -33,7 +34,6 @@ from datamimic_ce.engine.dsl.constants.element_constants import (
     EL_VARIABLE,
 )
 from datamimic_ce.engine.dsl.enums.distribution_enums import POSITIONAL_NUMBER_SEQUENCES, NumberDistribution
-from datamimic_ce.utils.number_sequences import finite_number_sequence_capacity
 
 _GENERATES = (EL_GENERATE, EL_ITERATE)
 _SOURCE_READERS = (*_GENERATES, EL_VARIABLE, EL_NESTED_KEY, EL_REFERENCE)
