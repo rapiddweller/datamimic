@@ -11,7 +11,7 @@ No wrapper or compatibility import remains. The path was internal.
 
 ## Verification
 
-- source-script functional, integration, and nested-part tests: `10 passed`;
+- authoritative serial source-script functional, integration, and nested-part tests: `10 passed`;
 - changed-file Ruff: pass;
 - `git diff --check`: pass;
 - full-package mypy reached all 457 files and stopped on two pre-existing missing optional `ray`
