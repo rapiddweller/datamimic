@@ -7,6 +7,7 @@
 import ast
 import base64
 import json
+import logging
 import re
 import uuid
 from collections.abc import Callable
@@ -46,7 +47,8 @@ from datamimic_ce.engine.io.exporters.unified_buffered_exporter import UnifiedBu
 from datamimic_ce.engine.io.exporters.xlsx_exporter import XLSXExporter
 from datamimic_ce.engine.io.exporters.xml_exporter import XMLExporter
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 # Registry of buffered file exporters: target name -> class. Every concrete exporter takes the uniform
 # (ExporterConfig, params) constructor; adding one is a single entry here, not a new factory branch.

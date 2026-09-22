@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import logging
 import random
 from pathlib import Path
 
@@ -11,7 +12,8 @@ from datamimic_ce.domains.domain_core.base_domain_generator import normalize_dat
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.utils.dataset_loader import read_csv_rows
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class SectorGenerator(BaseLiteralGenerator):

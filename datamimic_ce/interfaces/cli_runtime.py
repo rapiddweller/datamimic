@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import platform
 from importlib.resources import files
@@ -14,11 +15,12 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from datamimic_ce.datamimic import DataMimic
 from datamimic_ce.domains.determinism import get_datamimic_lib_version
 from datamimic_ce.engine.io.api import FileUtil
-from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.interfaces import cli_presenter
 from datamimic_ce.interfaces.cli_presenter import DemoInformation, DemoSummary, SystemInformation
 from datamimic_ce.interfaces.demo import handle_demo
 from datamimic_ce.interfaces.project import create_project_structure, validate_project_name
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class DemoMetadata(BaseModel):

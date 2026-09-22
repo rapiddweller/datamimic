@@ -13,12 +13,14 @@
 #  disclose such Confidential Information and shall use it only in accordance
 #  with the terms of the license agreement you entered into with Rapiddweller Asia Co., Ltd.
 #
+import logging
 import os
 from pathlib import Path
 
 from datamimic_ce.engine.io.exporters.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.unified_buffered_exporter import UnifiedBufferedExporter
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class TXTExporter(UnifiedBufferedExporter):

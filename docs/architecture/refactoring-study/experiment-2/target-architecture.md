@@ -91,7 +91,6 @@ graph TD
     interfaces --> io
     interfaces --> python_api
     interfaces --> python_compat
-    interfaces --> runtime
     io --> domains
     io --> dsl
     io --> runtime

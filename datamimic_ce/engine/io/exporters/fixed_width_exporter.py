@@ -4,12 +4,14 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import logging
 from pathlib import Path
 
 from datamimic_ce.engine.io.exporters.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.unified_buffered_exporter import UnifiedBufferedExporter
 from datamimic_ce.engine.io.files import FileUtil
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class FixedWidthExporter(UnifiedBufferedExporter):

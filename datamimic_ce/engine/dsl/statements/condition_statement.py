@@ -5,13 +5,16 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+import logging
+
 from datamimic_ce.engine.dsl.constants.convention_constants import NAME_SEPARATOR
 from datamimic_ce.engine.dsl.statements.composite_statement import CompositeStatement
 from datamimic_ce.engine.dsl.statements.else_if_statement import ElseIfStatement
 from datamimic_ce.engine.dsl.statements.else_statement import ElseStatement
 from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
 from datamimic_ce.engine.dsl.statements.if_statement import IfStatement
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class ConditionStatement(CompositeStatement):

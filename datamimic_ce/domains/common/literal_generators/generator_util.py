@@ -7,6 +7,7 @@
 import ast
 import functools
 import inspect
+import logging
 import random
 import uuid
 
@@ -23,7 +24,8 @@ from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 @functools.cache  # a class's __init__ signature is static

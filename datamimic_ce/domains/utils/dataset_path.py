@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import logging
 import os
 import re
 from pathlib import Path
 
-from datamimic_ce.engine.runtime.logging import logger
+logger = logging.getLogger("DATAMIMIC")
 
 """
 Centralized helpers for locating domain datasets.

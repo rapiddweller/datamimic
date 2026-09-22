@@ -1,0 +1,7 @@
+{
+  "after_digest": "9e8355a411cdd8ab8b85966b1c81036da655ded862cbc04583a216d9c43acdbb",
+  "before_digest": "9e8355a411cdd8ab8b85966b1c81036da655ded862cbc04583a216d9c43acdbb",
+  "decided_by": "experiment orchestrator",
+  "rationale": "Step 8B removed cross-component imports of the runtime logger. The contract is unchanged; the calls_unresolved reset records ArchKeel 0.6.0 losing the concrete stdlib Logger receiver type rather than accepting dynamic production code.",
+  "schema_version": "1.0.0"
+}

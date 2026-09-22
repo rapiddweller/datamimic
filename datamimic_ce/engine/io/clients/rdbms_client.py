@@ -4,6 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import logging
 import sys
 from pathlib import Path
 from typing import Any, cast
@@ -22,7 +23,8 @@ from datamimic_ce.engine.io.clients.database_client import DatabaseClient
 from datamimic_ce.engine.io.connection_config.rdbms_connection_config import RdbmsConnectionConfig
 from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.engine.runtime.config import settings
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 # SQLAlchemy create_engine kwargs DATAMIMIC forwards (pooling/behavior). Anything else in the
 # connection config is either connection identity (see _CONNECTION_IDENTITY, used to build the URL)

@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 import os
 from datetime import date, datetime
 from decimal import Decimal
@@ -9,7 +10,8 @@ from bson import ObjectId
 
 from datamimic_ce.engine.io.exporters.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.unified_buffered_exporter import UnifiedBufferedExporter
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class DateTimeEncoder(json.JSONEncoder):

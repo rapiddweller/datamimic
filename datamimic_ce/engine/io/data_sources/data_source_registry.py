@@ -6,6 +6,7 @@
 
 import copy
 import itertools
+import logging
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 
@@ -17,7 +18,8 @@ from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.engine.io.file_cache import FileContentStorage
 from datamimic_ce.engine.io.files import FileUtil
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class DataSourceRegistry:

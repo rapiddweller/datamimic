@@ -6,12 +6,14 @@
 import ast
 import base64
 import csv
+import logging
 import os
 from pathlib import Path
 
 from datamimic_ce.engine.io.exporters.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.unified_buffered_exporter import UnifiedBufferedExporter
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class CSVExporter(UnifiedBufferedExporter):

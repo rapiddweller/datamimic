@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import copy
+import logging
 import re
 from pathlib import Path
 from typing import Any, cast
@@ -50,7 +51,8 @@ from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.while_statement import WhileStatement
 from datamimic_ce.engine.io.api import FileUtil
 from datamimic_ce.engine.runtime.config import settings
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class ParserUtil:

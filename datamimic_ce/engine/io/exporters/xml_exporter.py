@@ -6,6 +6,7 @@
 
 
 import codecs
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -15,7 +16,8 @@ from lxml import etree
 
 from datamimic_ce.engine.io.exporters.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.unified_buffered_exporter import UnifiedBufferedExporter
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class ExporterError(Exception):

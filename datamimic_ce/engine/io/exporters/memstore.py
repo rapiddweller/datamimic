@@ -4,9 +4,12 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import logging
+
 from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.engine.io.exporters.exporter import Exporter
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class Memstore(Exporter):

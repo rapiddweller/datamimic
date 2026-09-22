@@ -42,3 +42,12 @@ IO behavior; the dataset contents and selection logic belong to `domains`.
 **Decision:** allow `domains` to depend on `io` only through `engine.io.dataset_api`, which exposes
 file loading and caching but no database client. Keep domain-specific paths, fallback, weighting,
 and selection in `domains`. Do not add a shared foundation or duplicate the parsers.
+
+## D7 — logging uses the standard library directly
+
+**FACT:** all affected modules use the same named `logging.Logger` object. ArchKeel 0.6.0 resolves
+methods on the former imported module variable but not on `logging.getLogger(...)` bindings.
+
+**Decision:** remove the cross-component runtime logger dependency and use
+`logging.getLogger("DATAMIMIC")` directly. Accept the resulting call-resolution measurement reset
+as an analyzer limitation; do not rewrite ordinary logger calls as unidiomatic class-method calls.

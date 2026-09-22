@@ -1,3 +1,4 @@
+import logging
 import pathlib
 import shutil
 import time
@@ -7,7 +8,8 @@ from pathlib import Path
 from datamimic_ce.engine.io.exporters.exporter import Exporter
 from datamimic_ce.engine.io.exporters.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.exporter_state_manager import ExporterStateManager
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class ExporterError(Exception):

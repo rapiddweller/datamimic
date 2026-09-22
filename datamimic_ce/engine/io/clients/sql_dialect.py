@@ -11,6 +11,7 @@ sqlglot in the connection's dialect, never through regex or string splitting. Sw
 parsed or rendered means changing this module only; RdbmsClient keeps the database I/O.
 """
 
+import logging
 from collections.abc import Iterable
 from dataclasses import dataclass
 
@@ -20,7 +21,8 @@ from sqlglot.dialects import Dialects
 from sqlglot.tokens import Token, TokenType
 
 from datamimic_ce.engine.dsl.enums.dbms_enums import Dbms
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 @dataclass(frozen=True)

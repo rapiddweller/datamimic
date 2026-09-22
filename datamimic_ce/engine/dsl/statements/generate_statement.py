@@ -4,6 +4,8 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
+import logging
+
 from datamimic_ce.engine.dsl.constants.convention_constants import NAME_SEPARATOR
 from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.dsl.enums.operation_enums import ExportOperation
@@ -15,7 +17,8 @@ from datamimic_ce.engine.dsl.timeseries import TimeSeriesConfig
 from datamimic_ce.engine.io.clients.mongodb_client import MongoDBClient
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
-from datamimic_ce.engine.runtime.logging import logger
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class GenerateStatement(CompositeStatement):

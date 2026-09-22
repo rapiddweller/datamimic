@@ -17,8 +17,6 @@ class Settings(BaseSettings):
 
     SC_PAGE_SIZE: int = 1000
 
-    DEFAULT_LOGGER: str = "DATAMIMIC"
-
     LIB_EDITION: str = "CE"
 
     RAY_DEBUG: bool = False

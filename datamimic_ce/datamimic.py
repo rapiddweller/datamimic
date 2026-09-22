@@ -19,12 +19,12 @@ os.environ["RAY_DEDUP_LOGS"] = "0"
 
 from datamimic_ce.engine.dsl.parsers.descriptor_parser import DescriptorParser
 from datamimic_ce.engine.io.exporters.test_result_exporter import TestResultExporter
-from datamimic_ce.engine.runtime.config import settings
-from datamimic_ce.engine.runtime.logging import log_memory_info, log_system_info, logger, setup_logger
+from datamimic_ce.engine.runtime.logging import log_memory_info, log_system_info, setup_logger
 from datamimic_ce.engine.runtime.process import bootstrap_process_title, set_main_process_title
 from datamimic_ce.engine.runtime.tasks.setup_task import SetupTask
 
 LOG_FILE = "datamimic.log"
+logger = logging.getLogger("DATAMIMIC")
 
 
 class DataMimic:
@@ -50,7 +50,7 @@ class DataMimic:
 
         # Set up logger
         log_level = getattr(logging, args.log_level.upper(), logging.INFO) if args else logging.INFO
-        setup_logger(logger_name=settings.DEFAULT_LOGGER, worker_name="MAIN", level=log_level)
+        setup_logger(logger_name="DATAMIMIC", worker_name="MAIN", level=log_level)
 
         self._descriptor_path = descriptor_path
         self._platform_props = platform_props

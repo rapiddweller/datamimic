@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from collections.abc import Iterable
 from pathlib import Path
 
 from datamimic_ce.domains.utils.dataset_loader import read_csv_records
-from datamimic_ce.engine.runtime.logging import logger
 
 from .profile import (
     DemographicAgeBand,
@@ -17,6 +17,8 @@ from .profile import (
     SexKey,
     normalize_sex,
 )
+
+logger = logging.getLogger("DATAMIMIC")
 
 _REQUIRED_FILES = {
     "age_pyramid.dmgrp.csv",

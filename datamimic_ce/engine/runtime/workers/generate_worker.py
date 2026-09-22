@@ -14,7 +14,6 @@ from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.io.api import DataSourcePagination
 from datamimic_ce.engine.io.exporters.exporter_state_manager import ExporterStateManager
 from datamimic_ce.engine.io.exporters.exporter_util import ExporterUtil
-from datamimic_ce.engine.runtime.config import settings
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.logging import gen_timer, logger, setup_logger
@@ -258,7 +257,7 @@ class GenerateWorker:
         Preprocess function for multiprocessing worker. Deserialize namespace functions and generators.
         """
         loglevel = os.getenv("LOG_LEVEL", "INFO")
-        setup_logger(logger_name=settings.DEFAULT_LOGGER, worker_name=f"WORK-{worker_id}", level=loglevel)
+        setup_logger(logger_name="DATAMIMIC", worker_name=f"WORK-{worker_id}", level=loglevel)
 
         # worker_id is 1-indexed (mp_process: enumerate(chunks, 1)); SetupContext.process_id is
         # 0-indexed (consumers like SequenceTableGenerator multiply it by a per-process share).

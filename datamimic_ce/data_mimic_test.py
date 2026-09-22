@@ -5,13 +5,15 @@
 # For questions and support, contact: info@rapiddweller.com
 
 
+import logging
 import time
 import uuid
 from pathlib import Path
 
 from datamimic_ce.datamimic import DataMimic
-from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.factory.factory_config import FactoryConfig
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class DataMimicTest:

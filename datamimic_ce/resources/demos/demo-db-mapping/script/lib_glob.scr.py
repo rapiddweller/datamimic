@@ -1,9 +1,12 @@
+import logging
 from functools import lru_cache
 
 from datamimic_ce.domains.converters.converter import Converter
 from datamimic_ce.domains.converters.custom_converter import CustomConverter
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+
+logger = logging.getLogger("DATAMIMIC")
 
 
 class CustomBusinessMappingConverter(CustomConverter):
@@ -27,8 +30,6 @@ class CustomBusinessMappingConverter(CustomConverter):
                 raise ValueError(f"Client with id 'mapping' is not a DatabaseClient, but a {type(client)}")
             elif isinstance(client, DatabaseClient):
                 self.__class__._database_client = client
-                from datamimic_ce.engine.runtime.logging import logger
-
                 logger.debug(f"The table has {client.count_table_length('business_mapping')} rows")
                 self.__class__._initialized = True
 
