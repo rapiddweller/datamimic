@@ -431,9 +431,6 @@
         "cast",
         "delattr",
         "dunder_dict",
-        "dynamic_import",
-        "eval",
-        "exec",
         "getattr",
         "hasattr",
         "setattr",
@@ -441,11 +438,26 @@
         "type_ignore",
         "vars"
       ],
+      "rationale": "Public behavior uses explicit typed dispatch without untyped or reflective escape hatches.",
+      "provenance": [
+        "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
+      ],
+      "decided_by": "architect"
+    },
+    {
+      "id": "DYNAMIC-EXECUTION-OWNERS",
+      "kind": "forbidden_construct",
+      "source": "datamimic_ce",
+      "constructs": [
+        "dynamic_import",
+        "eval",
+        "exec"
+      ],
       "allowed_sources": [
         "datamimic_ce.engine.runtime.evaluation",
         "datamimic_ce.engine.runtime.plugins"
       ],
-      "rationale": "Public behavior uses explicit typed dispatch; dynamic execution is isolated in its runtime owners.",
+      "rationale": "Dynamic execution is isolated in its two explicit runtime owners.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
       ],

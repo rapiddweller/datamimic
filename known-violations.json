@@ -2429,6 +2429,78 @@
       ]
     },
     {
+      "count": 2,
+      "rules": [
+        "DYNAMIC-EXECUTION-OWNERS"
+      ],
+      "subjects": [
+        "datamimic_ce.authoring.reference._generator_info"
+      ]
+    },
+    {
+      "count": 2,
+      "rules": [
+        "DYNAMIC-EXECUTION-OWNERS"
+      ],
+      "subjects": [
+        "datamimic_ce.contexts.context.Context.evaluate_python_expression"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "DYNAMIC-EXECUTION-OWNERS"
+      ],
+      "subjects": [
+        "datamimic_ce.contexts.setup_context.SetupContext.eval_namespace"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "DYNAMIC-EXECUTION-OWNERS"
+      ],
+      "subjects": [
+        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.set_data_source_length"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "DYNAMIC-EXECUTION-OWNERS"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.domain_core.entity_registry._iter_service_modules"
+      ]
+    },
+    {
+      "count": 2,
+      "rules": [
+        "DYNAMIC-EXECUTION-OWNERS"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.domain_core.generator_registry._iter_literal_generator_modules"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "DYNAMIC-EXECUTION-OWNERS"
+      ],
+      "subjects": [
+        "datamimic_ce.utils.domain_class_util.DomainClassUtil.create_instance"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "DYNAMIC-EXECUTION-OWNERS"
+      ],
+      "subjects": [
+        "datamimic_ce.utils.domain_class_util.DomainClassUtil.get_class"
+      ]
+    },
+    {
       "count": 1,
       "roles": [
         {
@@ -11473,7 +11545,7 @@
       ]
     },
     {
-      "count": 3,
+      "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
       ],
@@ -11824,15 +11896,6 @@
       ]
     },
     {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.contexts.context.Context.evaluate_python_expression"
-      ]
-    },
-    {
       "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
@@ -11983,15 +12046,6 @@
       ],
       "subjects": [
         "datamimic_ce.contexts.setup_context.SetupContext.__init__.self._task_exporters"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.contexts.setup_context.SetupContext.eval_namespace"
       ]
     },
     {
@@ -12289,15 +12343,6 @@
       ],
       "subjects": [
         "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.load_variable_lazy_source:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry.DataSourceRegistry.set_data_source_length"
       ]
     },
     {
@@ -13075,7 +13120,7 @@
       ]
     },
     {
-      "count": 2,
+      "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
       ],
@@ -13084,7 +13129,7 @@
       ]
     },
     {
-      "count": 3,
+      "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
       ],
@@ -14641,7 +14686,7 @@
       ]
     },
     {
-      "count": 2,
+      "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
       ],
@@ -14659,7 +14704,7 @@
       ]
     },
     {
-      "count": 2,
+      "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
       ],

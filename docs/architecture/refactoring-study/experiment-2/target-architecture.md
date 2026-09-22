@@ -107,8 +107,8 @@ graph TD
 - every component edge is explicit and the graph is acyclic;
 - cross-component imports use `api.py` or `contracts.py`;
 - public boundary signatures use declared, component-owned types;
-- `Any`, reflective dispatch, string-literal dispatch, and dynamic execution are forbidden except
-  for the two explicit runtime owners;
+- `Any`, reflective dispatch, and string-literal dispatch are forbidden everywhere;
+- dynamic execution is allowed only in the two explicit runtime owners;
 - the root allow-list is exact.
 
 ## Evidence at freeze

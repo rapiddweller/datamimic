@@ -70,3 +70,7 @@ accepted architecture debt.
 Layout violations on an empty legacy `__init__.py` also lack the non-empty excerpt ArchKeel later
 requires for its own trace. The freeze adds ownership-only docstrings to the affected files so the
 same violations become traceable and baselineable.
+
+Target progress may remove a legacy package from a component's ownership list or promote a built
+API from `planned` to `public`; these are synchronized contract facts, not target changes. A target
+permission or restriction changes only through an amendment.
