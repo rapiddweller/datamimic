@@ -24,7 +24,7 @@ from datamimic_ce.domains.common.literal_generators.phone_number_generator impor
 from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 
 class PersonGenerator(DatasetAwareDomainGenerator):

@@ -12,13 +12,12 @@ from datamimic_ce.engine.dsl.statements.reference_statement import ReferenceStat
 from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.statement_util import StatementUtil
 from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
-from datamimic_ce.engine.io.api import DataSourcePagination, DataSourceRegistry, MongoDBClient, RdbmsClient
+from datamimic_ce.engine.io.api import DataSourcePagination, DataSourceRegistry, FileUtil, MongoDBClient, RdbmsClient
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.evaluation import evaluate_source_template, interpolate_variables
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.utils.file_util import FileUtil
 
 
 def data_source_cache_key(stmt: Statement) -> tuple[str | None, str | None]:

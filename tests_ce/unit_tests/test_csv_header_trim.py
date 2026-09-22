@@ -4,7 +4,7 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 
 def test_csv_header_whitespace_is_stripped(tmp_path):

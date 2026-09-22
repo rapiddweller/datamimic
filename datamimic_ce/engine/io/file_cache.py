@@ -7,8 +7,6 @@
 from collections.abc import Callable
 from typing import Any, ClassVar
 
-from datamimic_ce.engine.runtime.logging import logger
-
 
 class FileContentStorage:
     """
@@ -40,8 +38,6 @@ class FileContentStorage:
         # Try to load from storage
         if cache_key in cls._file_data_cache:
             return cls._file_data_cache[cache_key]
-
-        logger.debug(f"CACHE MISS: File content storage cache miss, load file for {cache_key}")
 
         # Read file using custom function
         res = read_func()

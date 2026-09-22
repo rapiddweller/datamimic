@@ -20,8 +20,7 @@ from datamimic_ce.domains.common.literal_generators.data_faker_generator import 
 from datamimic_ce.domains.common.literal_generators.string_generator import StringGenerator
 from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchoredDomainGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_content_storage import FileContentStorage
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileContentStorage, FileUtil
 
 
 class TransactionGenerator(ClockAnchoredDomainGenerator):
@@ -222,7 +221,7 @@ class TransactionGenerator(ClockAnchoredDomainGenerator):
             if "cities" not in self._transaction_data:
                 # Use existing datasets under common/city with semicolon delimiter
                 from datamimic_ce.domains.utils.dataset_path import dataset_path
-                from datamimic_ce.utils.file_util import FileUtil
+                from datamimic_ce.engine.io.api import FileUtil
 
                 file_path = dataset_path("common", "city", f"city_{self._dataset}.csv", start=Path(__file__))
                 rows = FileUtil.read_csv_to_list_of_tuples_without_header(file_path, delimiter=";")

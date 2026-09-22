@@ -48,9 +48,9 @@ from datamimic_ce.engine.dsl.statements.nested_key_statement import NestedKeySta
 from datamimic_ce.engine.dsl.statements.setup_statement import SetupStatement
 from datamimic_ce.engine.dsl.statements.statement import Statement
 from datamimic_ce.engine.dsl.statements.while_statement import WhileStatement
+from datamimic_ce.engine.io.api import FileUtil
 from datamimic_ce.engine.runtime.config import settings
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.utils.file_util import FileUtil
 
 
 class ParserUtil:

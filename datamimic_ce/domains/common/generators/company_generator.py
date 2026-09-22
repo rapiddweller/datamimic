@@ -16,7 +16,7 @@ from datamimic_ce.domains.common.literal_generators.sector_generator import Sect
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 
 class CompanyGenerator(DatasetAwareDomainGenerator):

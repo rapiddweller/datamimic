@@ -48,7 +48,7 @@ Headered weighted CSV (with `weight` column):
 
 ```python
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 path = dataset_path("ecommerce", f"product_categories_{self._dataset}.csv", start=Path(__file__))
 header, rows = FileUtil.read_csv_to_dict_of_tuples_with_header(path, ",")

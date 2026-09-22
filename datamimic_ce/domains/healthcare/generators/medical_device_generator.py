@@ -23,7 +23,7 @@ from datamimic_ce.domains.utils.dataset_loader import (
     pick_one_weighted_no_repeat,
 )
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 
 class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
@@ -198,7 +198,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         from pathlib import Path
 
         from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.utils.file_util import FileUtil
+        from datamimic_ce.engine.io.api import FileUtil
 
         dtype = device_type.lower()
         # Base purposes
@@ -236,7 +236,7 @@ class MedicalDeviceGenerator(ClockAnchoredDomainGenerator):
         from pathlib import Path
 
         from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.utils.file_util import FileUtil
+        from datamimic_ce.engine.io.api import FileUtil
 
         path = dataset_path("healthcare", "medical", f"usage_notes_{self._dataset}.csv", start=Path(__file__))
         values, weights = FileUtil.read_wgt_file(path)

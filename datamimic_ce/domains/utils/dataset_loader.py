@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 """
 Lightweight helpers to load weighted datasets and pick values consistently.

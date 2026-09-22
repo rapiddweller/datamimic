@@ -13,7 +13,7 @@ from datamimic_ce.domains.domain_core.base_domain_generator import ClockAnchored
 from datamimic_ce.domains.finance.generators.bank_generator import BankGenerator
 from datamimic_ce.domains.utils.dataset_loader import pick_one_weighted_no_repeat
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 
 class BankAccountGenerator(ClockAnchoredDomainGenerator):

@@ -6,8 +6,8 @@ from collections import defaultdict
 from collections.abc import Iterable
 from pathlib import Path
 
+from datamimic_ce.engine.io.api import FileUtil
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.utils.file_util import FileUtil
 
 from .profile import (
     DemographicAgeBand,

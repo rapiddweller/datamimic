@@ -8,8 +8,8 @@ from pathlib import Path
 
 from datamimic_ce.engine.io.exporters.exporter_config import ExporterConfig
 from datamimic_ce.engine.io.exporters.unified_buffered_exporter import UnifiedBufferedExporter
+from datamimic_ce.engine.io.files import FileUtil
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.utils.file_util import FileUtil
 
 
 class FixedWidthExporter(UnifiedBufferedExporter):

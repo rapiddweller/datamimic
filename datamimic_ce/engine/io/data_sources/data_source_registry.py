@@ -18,10 +18,10 @@ from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
+from datamimic_ce.engine.io.file_cache import FileContentStorage
+from datamimic_ce.engine.io.files import FileUtil
 from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.utils.distribution_sampling import cumulated_index
-from datamimic_ce.utils.file_content_storage import FileContentStorage
-from datamimic_ce.utils.file_util import FileUtil
 from datamimic_ce.utils.unique_sampling import unique_values
 
 

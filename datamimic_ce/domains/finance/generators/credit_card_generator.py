@@ -18,7 +18,7 @@ from datamimic_ce.domains.common.literal_generators.datetime_generator import Da
 from datamimic_ce.domains.domain_core.base_domain_generator import DatasetAwareDomainGenerator
 from datamimic_ce.domains.finance.generators.bank_account_generator import BankAccountGenerator
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 
 class CreditCardGenerator(DatasetAwareDomainGenerator):

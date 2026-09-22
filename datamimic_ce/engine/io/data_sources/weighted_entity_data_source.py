@@ -7,7 +7,7 @@
 from pathlib import Path
 from random import Random
 
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.files import FileUtil
 
 
 class WeightedEntityDataSource:

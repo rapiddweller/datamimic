@@ -92,7 +92,7 @@ class ProductGenerator(DatasetAwareDomainGenerator):
             "product_benefits",
         }:
             from datamimic_ce.domains.utils.dataset_path import dataset_path
-            from datamimic_ce.utils.file_util import FileUtil
+            from datamimic_ce.engine.io.api import FileUtil
 
             file_name = f"{data_type.lower()}_{self._dataset}.csv"
             file_path = dataset_path("ecommerce", file_name, start=Path(__file__))
@@ -159,7 +159,7 @@ class ProductGenerator(DatasetAwareDomainGenerator):
     def _load_product_json(file_name):
         #  Keep JSON helper for non-weighted structured data; paths resolved via dataset_path in FileUtil
         from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.utils.file_util import FileUtil
+        from datamimic_ce.engine.io.api import FileUtil
 
         file_path = dataset_path("ecommerce", "product", f"{file_name}.json", start=Path(__file__))
         return FileUtil.read_json(file_path)

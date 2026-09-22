@@ -11,7 +11,7 @@ from datamimic_ce.domains.utils.dataset_loader import (
     pick_weighted_from_headered_csv,
 )
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 
 class OrderGenerator(ClockAnchoredDomainGenerator):

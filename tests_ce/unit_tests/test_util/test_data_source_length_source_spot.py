@@ -17,7 +17,7 @@ from datamimic_ce.engine.dsl.statements.nested_key_statement import NestedKeySta
 from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatement
 from datamimic_ce.engine.io.data_sources.data_source_registry import DataSourceRegistry
 from datamimic_ce.engine.runtime.sources.router import set_data_source_length
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 
 def _context() -> tuple[Mock, Mock]:

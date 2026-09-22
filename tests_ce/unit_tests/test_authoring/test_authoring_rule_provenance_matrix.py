@@ -41,7 +41,7 @@ from datamimic_ce.engine.dsl.enums.distribution_enums import NumberDistribution,
 from datamimic_ce.engine.dsl.model.constraints import element_constraints, serialize_constraints
 from datamimic_ce.engine.dsl.model.generate_model import GenerateModel
 from datamimic_ce.engine.dsl.model.nested_key_model import NestedKeyModel
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 CE_SOURCE_DISTRIBUTIONS = frozenset({"random", "ordered", "cumulated"})
 EE_ONLY_SOURCE_DISTRIBUTIONS = frozenset({"round_robin", "reservoir", "weighted", "stratified"})

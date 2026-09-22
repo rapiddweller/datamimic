@@ -10,7 +10,7 @@ from pathlib import Path
 
 from datamimic_ce.data_mimic_test import DataMimicTest
 from datamimic_ce.domains.common.literal_generators.generator_util import GeneratorUtil
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 
 def count_digits_after_decimal(number):

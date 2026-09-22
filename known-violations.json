@@ -45,26 +45,6 @@
       ],
       "subjects": [
         "datamimic_ce.engine.runtime",
-        "datamimic_ce.utils.file_content_storage"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RUNTIME"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.runtime",
-        "datamimic_ce.utils.file_util"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RUNTIME"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.runtime",
         "datamimic_ce.utils.object_util"
       ]
     },
@@ -2907,22 +2887,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.domains.common.demographics.loader",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.demographics.loader",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.engine.runtime.tasks.demographics_task",
           "target": "datamimic_ce.domains.common.demographics.loader"
         }
@@ -2987,38 +2951,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.domains.common.generators.city_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.generators.city_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.generators.company_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.generators.company_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.domains.common.generators.country_generator",
           "target": "datamimic_ce.engine.runtime.logging"
         }
@@ -3035,38 +2967,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.domains.common.generators.country_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.generators.country_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.generators.person_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.generators.person_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.domains.common.literal_generators.academic_title_generator",
           "target": "datamimic_ce.engine.runtime.logging"
         }
@@ -3077,22 +2977,6 @@
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.academic_title_generator",
         "datamimic_ce.engine.runtime.logging.logger"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.academic_title_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.academic_title_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
       ]
     },
     {
@@ -3125,38 +3009,6 @@
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.department_name_generator",
         "datamimic_ce.engine.runtime.logging.logger"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.domain_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.domain_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.family_name_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.family_name_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
       ]
     },
     {
@@ -3339,22 +3191,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.domains.common.literal_generators.given_name_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.given_name_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.domains.common.literal_generators.increment_generator",
           "target": "datamimic_ce.engine.io.data_sources.data_source_pagination"
         }
@@ -3403,22 +3239,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.domains.common.literal_generators.nobility_title_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.nobility_title_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.domains.common.literal_generators.number_sequences",
           "target": "datamimic_ce.engine.dsl.enums.distribution_enums"
         }
@@ -3461,22 +3281,6 @@
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.sector_generator",
         "datamimic_ce.engine.runtime.logging.logger"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.sector_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.sector_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
       ]
     },
     {
@@ -3621,22 +3425,6 @@
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.state_transition_generator.StateMachineDef",
         "datamimic_ce.engine.runtime.tasks.state_machine_task"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.street_name_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.street_name_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
       ]
     },
     {
@@ -4347,118 +4135,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.domains.ecommerce.generators.order_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.ecommerce.generators.order_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 2,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.ecommerce.generators.product_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.ecommerce.generators.product_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.finance.generators.bank_account_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.finance.generators.bank_account_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.finance.generators.bank_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.finance.generators.bank_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.finance.generators.credit_card_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.finance.generators.credit_card_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.finance.generators.transaction_generator",
-          "target": "datamimic_ce.utils.file_content_storage"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.finance.generators.transaction_generator",
-        "datamimic_ce.utils.file_content_storage.FileContentStorage"
-      ]
-    },
-    {
-      "count": 2,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.finance.generators.transaction_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.finance.generators.transaction_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.resources.demos.demo-finance.script.ledger.scr",
           "target": "datamimic_ce.domains.finance.generators.transaction_generator"
         }
@@ -4491,70 +4167,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.domains.healthcare.generators.doctor_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.generators.doctor_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 3,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.healthcare.generators.medical_device_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.generators.medical_device_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.healthcare.generators.medical_procedure_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.generators.medical_procedure_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.healthcare.generators.patient_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.generators.patient_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.resources.demos.demo-clinical-trial.script.clinical_trial.scr",
           "target": "datamimic_ce.domains.healthcare.services.patient_service"
         }
@@ -4565,118 +4177,6 @@
       "subjects": [
         "datamimic_ce.domains.healthcare.services.patient_service.PatientService",
         "datamimic_ce.resources.demos.demo-clinical-trial.script.clinical_trial.scr"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.insurance.generators.insurance_company_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.insurance.generators.insurance_company_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.insurance.generators.insurance_coverage_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.insurance.generators.insurance_coverage_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.insurance.generators.insurance_product_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.insurance.generators.insurance_product_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.locales",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.locales",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.public_sector.generators.administration_office_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.public_sector.generators.administration_office_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.public_sector.generators.police_officer_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.public_sector.generators.police_officer_generator",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.utils.dataset_loader",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.utils.dataset_loader",
-        "datamimic_ce.utils.file_util.FileUtil"
       ]
     },
     {
@@ -6187,22 +5687,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.engine.dsl.parsers.parser_util",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.dsl.parsers.parser_util",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.engine.runtime.tasks.array_task",
           "target": "datamimic_ce.engine.dsl.statements.array_statement"
         }
@@ -6997,22 +6481,6 @@
       "subjects": [
         "datamimic_ce.engine.dsl.statements.if_statement.IfStatement",
         "datamimic_ce.engine.runtime.tasks.task_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.dsl.statements.include_statement",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.dsl.statements.include_statement",
-        "datamimic_ce.utils.file_util.FileUtil"
       ]
     },
     {
@@ -7835,7 +7303,7 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.utils.file_util",
+          "source": "datamimic_ce.engine.io.files",
           "target": "datamimic_ce.engine.dsl.xml"
         }
       ],
@@ -7844,14 +7312,14 @@
       ],
       "subjects": [
         "datamimic_ce.engine.dsl.xml.DTDForbiddenError",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.files"
       ]
     },
     {
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.utils.file_util",
+          "source": "datamimic_ce.engine.io.files",
           "target": "datamimic_ce.engine.dsl.xml"
         }
       ],
@@ -7860,7 +7328,7 @@
       ],
       "subjects": [
         "datamimic_ce.engine.dsl.xml.parse_xml_file",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.files"
       ]
     },
     {
@@ -7964,38 +7432,6 @@
       "roles": [
         {
           "source": "datamimic_ce.engine.io.data_sources.data_source_registry",
-          "target": "datamimic_ce.utils.file_content_storage"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.data_sources.data_source_registry",
-        "datamimic_ce.utils.file_content_storage.FileContentStorage"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.data_sources.data_source_registry",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.data_sources.data_source_registry",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.data_sources.data_source_registry",
           "target": "datamimic_ce.utils.unique_sampling"
         }
       ],
@@ -8005,38 +7441,6 @@
       "subjects": [
         "datamimic_ce.engine.io.data_sources.data_source_registry",
         "datamimic_ce.utils.unique_sampling.unique_values"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.data_sources.weighted_data_source",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.data_sources.weighted_data_source",
-        "datamimic_ce.utils.file_util.FileUtil"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.data_sources.weighted_entity_data_source",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.data_sources.weighted_entity_data_source",
-        "datamimic_ce.utils.file_util.FileUtil"
       ]
     },
     {
@@ -8197,22 +7601,6 @@
       "subjects": [
         "datamimic_ce.engine.io.exporters.fixed_width_exporter",
         "datamimic_ce.engine.runtime.logging.logger"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.exporters.fixed_width_exporter",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.exporters.fixed_width_exporter",
-        "datamimic_ce.utils.file_util.FileUtil"
       ]
     },
     {
@@ -8501,22 +7889,6 @@
       "subjects": [
         "datamimic_ce.engine.runtime.logging.logger",
         "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.interfaces.cli_runtime",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.interfaces.cli_runtime",
-        "datamimic_ce.utils.file_util.FileUtil"
       ]
     },
     {
@@ -10560,6 +9932,15 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
+        "datamimic_ce.engine.io.file_cache.FileContentStorage._file_data_cache"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
         "datamimic_ce.engine.runtime.contexts.context.Context.rng:return"
       ]
     },
@@ -11239,15 +10620,6 @@
       ]
     },
     {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.file_content_storage.FileContentStorage._file_data_cache"
-      ]
-    },
-    {
       "count": 2,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
@@ -11491,7 +10863,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.common.demographics.loader",
-          "target": "datamimic_ce.engine.runtime.logging"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -11499,7 +10871,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.demographics.loader",
-        "datamimic_ce.engine.runtime.logging"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -11507,7 +10879,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.common.demographics.loader",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.runtime.logging"
         }
       ],
       "rules": [
@@ -11515,7 +10887,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.demographics.loader",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.runtime.logging"
       ]
     },
     {
@@ -11523,7 +10895,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.common.generators.city_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -11531,7 +10903,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.generators.city_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -11539,7 +10911,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.common.generators.company_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -11547,7 +10919,23 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.generators.company_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.domains.common.generators.country_generator",
+          "target": "datamimic_ce.engine.io.api"
+        }
+      ],
+      "rules": [
+        "REQUIRES-COMPLETE"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.common.generators.country_generator",
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -11564,22 +10952,6 @@
       "subjects": [
         "datamimic_ce.domains.common.generators.country_generator",
         "datamimic_ce.engine.runtime.logging"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.generators.country_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.generators.country_generator",
-        "datamimic_ce.utils.file_util"
       ]
     },
     {
@@ -11587,7 +10959,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.common.generators.person_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -11595,7 +10967,23 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.generators.person_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.domains.common.literal_generators.academic_title_generator",
+          "target": "datamimic_ce.engine.io.api"
+        }
+      ],
+      "rules": [
+        "REQUIRES-COMPLETE"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.common.literal_generators.academic_title_generator",
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -11612,22 +11000,6 @@
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.academic_title_generator",
         "datamimic_ce.engine.runtime.logging"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.academic_title_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.academic_title_generator",
-        "datamimic_ce.utils.file_util"
       ]
     },
     {
@@ -11651,7 +11023,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.common.literal_generators.domain_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -11659,7 +11031,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.domain_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -11667,7 +11039,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.common.literal_generators.family_name_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -11675,7 +11047,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.family_name_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -11763,7 +11135,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.common.literal_generators.given_name_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -11771,7 +11143,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.given_name_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -11811,7 +11183,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.common.literal_generators.nobility_title_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -11819,7 +11191,23 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.nobility_title_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.domains.common.literal_generators.sector_generator",
+          "target": "datamimic_ce.engine.io.api"
+        }
+      ],
+      "rules": [
+        "REQUIRES-COMPLETE"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.common.literal_generators.sector_generator",
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -11836,22 +11224,6 @@
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.sector_generator",
         "datamimic_ce.engine.runtime.logging"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.sector_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.sector_generator",
-        "datamimic_ce.utils.file_util"
       ]
     },
     {
@@ -11923,7 +11295,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.common.literal_generators.street_name_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -11931,7 +11303,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.street_name_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -11971,7 +11343,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.ecommerce.generators.order_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -11979,7 +11351,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.ecommerce.generators.order_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -11987,7 +11359,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.ecommerce.generators.product_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -11995,7 +11367,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.ecommerce.generators.product_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12003,7 +11375,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.finance.generators.bank_account_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12011,7 +11383,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.finance.generators.bank_account_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12019,7 +11391,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.finance.generators.bank_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12027,7 +11399,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.finance.generators.bank_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12035,7 +11407,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.finance.generators.credit_card_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12043,15 +11415,15 @@
       ],
       "subjects": [
         "datamimic_ce.domains.finance.generators.credit_card_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
-      "count": 1,
+      "count": 3,
       "roles": [
         {
           "source": "datamimic_ce.domains.finance.generators.transaction_generator",
-          "target": "datamimic_ce.utils.file_content_storage"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12059,23 +11431,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.finance.generators.transaction_generator",
-        "datamimic_ce.utils.file_content_storage"
-      ]
-    },
-    {
-      "count": 2,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.finance.generators.transaction_generator",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.finance.generators.transaction_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12083,7 +11439,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.healthcare.generators.doctor_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12091,7 +11447,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.healthcare.generators.doctor_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12099,7 +11455,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.healthcare.generators.medical_device_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12107,7 +11463,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.healthcare.generators.medical_device_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12115,7 +11471,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.healthcare.generators.medical_procedure_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12123,7 +11479,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.healthcare.generators.medical_procedure_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12131,7 +11487,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.healthcare.generators.patient_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12139,7 +11495,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.healthcare.generators.patient_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12147,7 +11503,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.insurance.generators.insurance_company_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12155,7 +11511,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.insurance.generators.insurance_company_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12163,7 +11519,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.insurance.generators.insurance_coverage_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12171,7 +11527,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.insurance.generators.insurance_coverage_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12179,7 +11535,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.insurance.generators.insurance_product_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12187,7 +11543,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.insurance.generators.insurance_product_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12195,7 +11551,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.locales",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12203,7 +11559,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.locales",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12211,7 +11567,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.public_sector.generators.administration_office_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12219,7 +11575,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.public_sector.generators.administration_office_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12227,7 +11583,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.public_sector.generators.police_officer_generator",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12235,7 +11591,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.public_sector.generators.police_officer_generator",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12243,7 +11599,7 @@
       "roles": [
         {
           "source": "datamimic_ce.domains.utils.dataset_loader",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12251,7 +11607,7 @@
       ],
       "subjects": [
         "datamimic_ce.domains.utils.dataset_loader",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12291,6 +11647,22 @@
       "roles": [
         {
           "source": "datamimic_ce.engine.dsl.parsers.parser_util",
+          "target": "datamimic_ce.engine.io.api"
+        }
+      ],
+      "rules": [
+        "REQUIRES-COMPLETE"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.dsl.parsers.parser_util",
+        "datamimic_ce.engine.io.api"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.dsl.parsers.parser_util",
           "target": "datamimic_ce.engine.runtime.config"
         }
       ],
@@ -12316,22 +11688,6 @@
       "subjects": [
         "datamimic_ce.engine.dsl.parsers.parser_util",
         "datamimic_ce.engine.runtime.logging"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.dsl.parsers.parser_util",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.dsl.parsers.parser_util",
-        "datamimic_ce.utils.file_util"
       ]
     },
     {
@@ -12435,7 +11791,7 @@
       "roles": [
         {
           "source": "datamimic_ce.engine.dsl.statements.include_statement",
-          "target": "datamimic_ce.utils.file_util"
+          "target": "datamimic_ce.engine.io.api"
         }
       ],
       "rules": [
@@ -12443,7 +11799,7 @@
       ],
       "subjects": [
         "datamimic_ce.engine.dsl.statements.include_statement",
-        "datamimic_ce.utils.file_util"
+        "datamimic_ce.engine.io.api"
       ]
     },
     {
@@ -12508,6 +11864,22 @@
       "subjects": [
         "datamimic_ce.engine.dsl.statements.statement_util",
         "datamimic_ce.engine.runtime.contexts.context"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.interfaces.cli_runtime",
+          "target": "datamimic_ce.engine.io.api"
+        }
+      ],
+      "rules": [
+        "REQUIRES-COMPLETE"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.io.api",
+        "datamimic_ce.interfaces.cli_runtime"
       ]
     },
     {
@@ -12595,38 +11967,6 @@
       "roles": [
         {
           "source": "datamimic_ce.engine.io.data_sources.data_source_registry",
-          "target": "datamimic_ce.utils.file_content_storage"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.data_sources.data_source_registry",
-        "datamimic_ce.utils.file_content_storage"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.data_sources.data_source_registry",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.data_sources.data_source_registry",
-        "datamimic_ce.utils.file_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.data_sources.data_source_registry",
           "target": "datamimic_ce.utils.unique_sampling"
         }
       ],
@@ -12636,38 +11976,6 @@
       "subjects": [
         "datamimic_ce.engine.io.data_sources.data_source_registry",
         "datamimic_ce.utils.unique_sampling"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.data_sources.weighted_data_source",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.data_sources.weighted_data_source",
-        "datamimic_ce.utils.file_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.data_sources.weighted_entity_data_source",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.data_sources.weighted_entity_data_source",
-        "datamimic_ce.utils.file_util"
       ]
     },
     {
@@ -12764,22 +12072,6 @@
       "subjects": [
         "datamimic_ce.engine.io.exporters.fixed_width_exporter",
         "datamimic_ce.engine.runtime.logging"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.exporters.fixed_width_exporter",
-          "target": "datamimic_ce.utils.file_util"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.exporters.fixed_width_exporter",
-        "datamimic_ce.utils.file_util"
       ]
     },
     {

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 _DATA = Path(__file__).resolve().parent / "data"
 _SHOP = _DATA / "shop.dbunit.xml"

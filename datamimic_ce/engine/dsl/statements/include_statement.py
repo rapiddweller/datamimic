@@ -6,7 +6,7 @@
 
 from datamimic_ce.engine.dsl.model.include_model import IncludeModel
 from datamimic_ce.engine.dsl.statements.statement import Statement
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 
 class IncludeStatement(Statement):

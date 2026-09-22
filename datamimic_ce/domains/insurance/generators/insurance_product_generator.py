@@ -43,7 +43,7 @@ class InsuranceProductGenerator(DatasetAwareDomainGenerator):
         # pick an index and then map columns by a parallel headered read.
         # Simple approach: pick an index then map columns by parallel read using file_util.
         from datamimic_ce.domains.utils.dataset_path import dataset_path
-        from datamimic_ce.utils.file_util import FileUtil
+        from datamimic_ce.engine.io.api import FileUtil
 
         file_path = dataset_path("insurance", f"products_{self._dataset}.csv", start=Path(__file__))
         _, rows = FileUtil.read_csv_having_weight_column(file_path, "weight")

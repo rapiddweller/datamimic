@@ -8,7 +8,7 @@ from pathlib import Path
 from random import Random
 from typing import Any
 
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.files import FileUtil
 
 
 class WeightedDataSource:

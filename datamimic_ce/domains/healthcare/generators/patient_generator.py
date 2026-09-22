@@ -26,7 +26,7 @@ from datamimic_ce.domains.utils.dataset_loader import (
     pick_one_weighted_no_repeat,
 )
 from datamimic_ce.domains.utils.dataset_path import dataset_path
-from datamimic_ce.utils.file_util import FileUtil
+from datamimic_ce.engine.io.api import FileUtil
 
 _CONDITION_DATA_DIR = dataset_path("healthcare", "medical", start=Path(__file__))
 # Directory for emergency relationships CSVs; test may monkeypatch this.
