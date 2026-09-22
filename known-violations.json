@@ -1,73 +1,13 @@
 {
   "budgets": {
-    "calls_unresolved": 1345,
-    "cycle_edges": 181,
+    "calls_unresolved": 1340,
+    "cycle_edges": 177,
     "private_crossings": 2,
-    "typing_positions": 482,
+    "typing_positions": 462,
     "untyped_private_accesses": 4
   },
   "schema_version": "1.2.0",
   "violations": [
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RUNTIME"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.runtime",
-        "datamimic_ce.utils"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RUNTIME"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.runtime",
-        "datamimic_ce.utils.distribution_sampling"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RUNTIME"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.runtime",
-        "datamimic_ce.utils.domain_class_util"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RUNTIME"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.runtime",
-        "datamimic_ce.utils.object_util"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RUNTIME"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.runtime",
-        "datamimic_ce.utils.string_util"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RUNTIME"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.runtime",
-        "datamimic_ce.utils.unique_sampling"
-      ]
-    },
     {
       "count": 2,
       "rules": [
@@ -111,24 +51,6 @@
       ],
       "subjects": [
         "datamimic_ce.engine.runtime.contexts.setup_context.SetupContext.eval_namespace"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "DYNAMIC-EXECUTION-OWNERS"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.domain_class_util.DomainClassUtil.create_instance"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "DYNAMIC-EXECUTION-OWNERS"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.domain_class_util.DomainClassUtil.get_class"
       ]
     },
     {
@@ -3031,22 +2953,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.domains.common.literal_generators.float_generator",
-          "target": "datamimic_ce.utils.distribution_sampling"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.float_generator",
-        "datamimic_ce.utils.distribution_sampling.cumulated_index"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.domains.common.literal_generators.generator_util",
           "target": "datamimic_ce.engine.dsl.enums.distribution_enums"
         }
@@ -3217,22 +3123,6 @@
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.integer_generator",
         "datamimic_ce.engine.dsl.enums.distribution_enums.NumberDistribution"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.integer_generator",
-          "target": "datamimic_ce.utils.distribution_sampling"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.integer_generator",
-        "datamimic_ce.utils.distribution_sampling.cumulated_index"
       ]
     },
     {
@@ -3511,6 +3401,22 @@
       "count": 1,
       "roles": [
         {
+          "source": "datamimic_ce.engine.runtime.sources.selection",
+          "target": "datamimic_ce.domains.common.sampling"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.common.sampling.cumulated_index",
+        "datamimic_ce.engine.runtime.sources.selection"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
           "source": "datamimic_ce.engine.runtime.tasks.task_util",
           "target": "datamimic_ce.domains.converters.append_converter"
         }
@@ -3607,6 +3513,22 @@
       "count": 1,
       "roles": [
         {
+          "source": "datamimic_ce.engine.runtime.tasks.task_util",
+          "target": "datamimic_ce.domains.converters.custom_converter"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.domains.converters.custom_converter.CustomConverter",
+        "datamimic_ce.engine.runtime.tasks.task_util"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
           "source": "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr",
           "target": "datamimic_ce.domains.converters.custom_converter"
         }
@@ -3617,22 +3539,6 @@
       "subjects": [
         "datamimic_ce.domains.converters.custom_converter.CustomConverter",
         "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.utils.object_util",
-          "target": "datamimic_ce.domains.converters.custom_converter"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.converters.custom_converter.CustomConverter",
-        "datamimic_ce.utils.object_util"
       ]
     },
     {
@@ -5415,22 +5321,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.engine.io.data_sources.data_source_registry",
-          "target": "datamimic_ce.engine.dsl.enums.distribution_enums"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.dsl.enums.distribution_enums.SourceDistribution",
-        "datamimic_ce.engine.io.data_sources.data_source_registry"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.engine.runtime.sources.router",
           "target": "datamimic_ce.engine.dsl.enums.distribution_enums"
         }
@@ -5441,6 +5331,22 @@
       "subjects": [
         "datamimic_ce.engine.dsl.enums.distribution_enums.SourceDistribution",
         "datamimic_ce.engine.runtime.sources.router"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.engine.runtime.sources.selection",
+          "target": "datamimic_ce.engine.dsl.enums.distribution_enums"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.dsl.enums.distribution_enums.SourceDistribution",
+        "datamimic_ce.engine.runtime.sources.selection"
       ]
     },
     {
@@ -5617,22 +5523,6 @@
       "subjects": [
         "datamimic_ce.engine.dsl.model.constraints.source_file_format_for",
         "datamimic_ce.engine.runtime.tasks.key_variable_task"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.dsl.model.model_util",
-          "target": "datamimic_ce.utils.string_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.dsl.model.model_util",
-        "datamimic_ce.utils.string_util.StringUtil"
       ]
     },
     {
@@ -7415,38 +7305,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.engine.io.data_sources.data_source_registry",
-          "target": "datamimic_ce.utils.distribution_sampling"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.data_sources.data_source_registry",
-        "datamimic_ce.utils.distribution_sampling.cumulated_index"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.data_sources.data_source_registry",
-          "target": "datamimic_ce.utils.unique_sampling"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.data_sources.data_source_registry",
-        "datamimic_ce.utils.unique_sampling.unique_values"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.engine.io.exporters.csv_exporter",
           "target": "datamimic_ce.engine.runtime.logging"
         }
@@ -7889,22 +7747,6 @@
       "subjects": [
         "datamimic_ce.engine.runtime.logging.logger",
         "datamimic_ce.resources.demos.demo-db-mapping.script.lib_glob.scr"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.interfaces.cli_runtime",
-          "target": "datamimic_ce.utils.string_util"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.interfaces.cli_runtime",
-        "datamimic_ce.utils.string_util.StringUtil"
       ]
     },
     {
@@ -9779,24 +9621,6 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.engine.io.data_sources.data_source_registry.DataSourceRegistry.get_unique_data:data"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.data_sources.data_source_registry.DataSourceRegistry.get_unique_data:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.engine.io.data_sources.weighted_data_source.WeightedDataSource.generate:return"
       ]
     },
@@ -10440,6 +10264,24 @@
       ]
     },
     {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.tasks.task_util._create_converter_from_constructor_str:class_dict"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.tasks.task_util._create_converter_from_constructor_str:return"
+      ]
+    },
+    {
       "count": 2,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
@@ -10503,6 +10345,24 @@
       ]
     },
     {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.tasks.variable_task._parse_constructor_string.parameters"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.tasks.variable_task._parse_constructor_string:return"
+      ]
+    },
+    {
       "count": 2,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
@@ -10536,150 +10396,6 @@
       ],
       "subjects": [
         "datamimic_ce.resources.demos.demo-finance.script.ledger.scr.generate_transactions_for_account:return"
-      ]
-    },
-    {
-      "count": 4,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.domain_class_util"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.domain_class_util.DomainClassUtil.create_dynamic_class:attributes"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.domain_class_util.DomainClassUtil.create_instance"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.domain_class_util.DomainClassUtil.create_instance:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.domain_class_util.DomainClassUtil.get_class"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.domain_class_util.DomainClassUtil.get_class_by_attribute"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.domain_class_util.DomainClassUtil.get_class_by_attribute:attribute_value"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.domain_class_util.DomainClassUtil.get_registered_classes"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.domain_class_util.DomainClassUtil.register_class_factory"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.object_util.ObjectUtil.check_valid_property_field"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.object_util.ObjectUtil.create_instance_from_constructor_str:class_dict"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.string_util.StringUtil.parse_constructor_string:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.unique_sampling.unique_value_iter:pool"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.unique_sampling.unique_value_iter:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.unique_sampling.unique_values:pool"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.unique_sampling.unique_values:return"
       ]
     },
     {
@@ -11054,22 +10770,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.domains.common.literal_generators.float_generator",
-          "target": "datamimic_ce.utils.distribution_sampling"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.float_generator",
-        "datamimic_ce.utils.distribution_sampling"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.domains.common.literal_generators.generator_util",
           "target": "datamimic_ce.engine.io.data_sources.data_source_pagination"
         }
@@ -11160,22 +10860,6 @@
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.increment_generator",
         "datamimic_ce.engine.io.data_sources.data_source_pagination"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.domains.common.literal_generators.integer_generator",
-          "target": "datamimic_ce.utils.distribution_sampling"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.integer_generator",
-        "datamimic_ce.utils.distribution_sampling"
       ]
     },
     {
@@ -11630,22 +11314,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.engine.dsl.model.model_util",
-          "target": "datamimic_ce.utils.string_util"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.dsl.model.model_util",
-        "datamimic_ce.utils.string_util"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.engine.dsl.parsers.parser_util",
           "target": "datamimic_ce.engine.io.api"
         }
@@ -11950,38 +11618,6 @@
       "count": 1,
       "roles": [
         {
-          "source": "datamimic_ce.engine.io.data_sources.data_source_registry",
-          "target": "datamimic_ce.utils.distribution_sampling"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.data_sources.data_source_registry",
-        "datamimic_ce.utils.distribution_sampling"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.engine.io.data_sources.data_source_registry",
-          "target": "datamimic_ce.utils.unique_sampling"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.io.data_sources.data_source_registry",
-        "datamimic_ce.utils.unique_sampling"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
           "source": "datamimic_ce.engine.io.exporters.csv_exporter",
           "target": "datamimic_ce.engine.runtime.logging"
         }
@@ -12184,15 +11820,6 @@
       "subjects": [
         "datamimic_ce.engine.io.exporters.xml_exporter",
         "datamimic_ce.engine.runtime.logging"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "ROOT-LAYOUT"
-      ],
-      "subjects": [
-        "datamimic_ce.utils"
       ]
     }
   ]

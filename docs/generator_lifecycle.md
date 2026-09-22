@@ -37,7 +37,7 @@ throughout the framework.
 ## RNG Injection and Dataset I/O (SOC)
 
 - Inject a `random.Random` into generators (e.g., `__init__(..., rng: random.Random | None = None)`) and use `self._rng` for all randomness. Do not use module‑level `random` in shared code.
-- Keep dataset I/O in generators; models must be pure (no file reads, no logging). Resolve paths via `datamimic_ce.utils.dataset_path.dataset_path` or the lightweight loaders.
+- Keep dataset I/O in generators; models must be pure (no file reads, no logging). Resolve paths via `datamimic_ce.domains.utils.dataset_path.dataset_path` or the lightweight loaders.
 - When services need to advertise supported datasets, compute them via `compute_supported_datasets([...], start=Path(__file__))`.
 
 ## Seeding Patterns for Reproducibility

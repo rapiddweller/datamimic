@@ -5,11 +5,13 @@
 # For questions and support, contact: info@rapiddweller.com
 import functools
 import string
+from collections.abc import Callable
 from decimal import Decimal
 from typing import Any
 
 from datamimic_ce.domains.converters.append_converter import AppendConverter
 from datamimic_ce.domains.converters.converter import Converter
+from datamimic_ce.domains.converters.custom_converter import CustomConverter
 from datamimic_ce.domains.converters.cut_length_converter import CutLengthConverter
 from datamimic_ce.domains.converters.date2timestamp_converter import Date2TimestampConverter
 from datamimic_ce.domains.converters.date_format_converter import DateFormatConverter
@@ -82,7 +84,23 @@ from datamimic_ce.engine.runtime.tasks.memstore_task import MemstoreTask
 from datamimic_ce.engine.runtime.tasks.mongodb_task import MongoDBTask
 from datamimic_ce.engine.runtime.tasks.reference_task import ReferenceTask
 from datamimic_ce.engine.runtime.tasks.task import Task
-from datamimic_ce.utils.object_util import ObjectUtil
+
+
+def _create_converter_from_constructor_str(
+    context: Context, constructor_str: str, class_dict: dict[str, Callable[..., Any]]
+) -> Any:
+    class_name = constructor_str.partition("(")[0]
+    converter_class = class_dict.get(class_name)
+    if converter_class is None:
+        converter_class = context.root.get_dynamic_class(class_name)
+        if converter_class is None:
+            raise ValueError(f"Cannot find converter '{class_name}'")
+
+    if class_name != constructor_str:
+        return context.evaluate_python_expression(constructor_str, class_dict)
+    if isinstance(converter_class, type) and issubclass(converter_class, CustomConverter):
+        return converter_class(context)
+    return converter_class()
 
 
 class TaskUtil:
@@ -212,7 +230,7 @@ class TaskUtil:
             if converter_str is None or converter_str == ""
             else list(
                 map(
-                    lambda ele: ObjectUtil.create_instance_from_constructor_str(
+                    lambda ele: _create_converter_from_constructor_str(
                         context=context,
                         constructor_str=ele.strip(),
                         class_dict={

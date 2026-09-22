@@ -20,6 +20,7 @@ from datamimic_ce.engine.io.api import (
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.evaluation import interpolate_variables
+from datamimic_ce.engine.runtime.sources.selection import get_distributed_data, get_unique_data
 
 from .router import data_source_cache_key
 
@@ -69,14 +70,14 @@ def _variable_data_plan(
 
     seed = context.root.stable_distribution_seed(stmt.full_name)
     selected = (
-        DataSourceRegistry.get_unique_data(
+        get_unique_data(
             data,
             None if force_full_pool else pagination,
             seed,
             f"<variable> '{stmt.name}'",
         )
         if stmt.unique
-        else DataSourceRegistry.get_distributed_data(
+        else get_distributed_data(
             data,
             None if force_full_pool else pagination,
             stmt.cyclic,
@@ -219,9 +220,9 @@ def load_variable_lazy_source(
     if stmt.distribution.loads_all or stmt.unique:
         seed = context.root.stable_distribution_seed(stmt.full_name)
         selected = (
-            DataSourceRegistry.get_unique_data(data, pagination, seed, f"<variable> '{stmt.name}'")
+            get_unique_data(data, pagination, seed, f"<variable> '{stmt.name}'")
             if stmt.unique
-            else DataSourceRegistry.get_distributed_data(data, pagination, stmt.cyclic, seed, stmt.distribution)
+            else get_distributed_data(data, pagination, stmt.cyclic, seed, stmt.distribution)
         )
         return iter(selected)
     return DataSourceRegistry.get_cyclic_data_iterator(data, pagination, stmt.cyclic)

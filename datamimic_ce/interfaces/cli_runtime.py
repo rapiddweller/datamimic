@@ -18,8 +18,7 @@ from datamimic_ce.engine.runtime.logging import logger
 from datamimic_ce.interfaces import cli_presenter
 from datamimic_ce.interfaces.cli_presenter import DemoInformation, DemoSummary, SystemInformation
 from datamimic_ce.interfaces.demo import handle_demo
-from datamimic_ce.interfaces.project import create_project_structure
-from datamimic_ce.utils.string_util import StringUtil
+from datamimic_ce.interfaces.project import create_project_structure, validate_project_name
 
 
 class DemoMetadata(BaseModel):
@@ -49,7 +48,7 @@ def show_system_information() -> None:
 
 
 def initialize_project(project_name: str, target_directory: Path | None, force: bool) -> None:
-    if not StringUtil.validate_project_name(project_name):
+    if not validate_project_name(project_name):
         cli_presenter.fail("Project name can only contain letters, numbers, underscores, and dashes", code=1)
     project_dir = (target_directory or Path.cwd()) / project_name
     if project_dir.exists() and not force:

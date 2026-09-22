@@ -8,25 +8,20 @@ import copy
 import itertools
 from collections.abc import Iterable, Iterator
 from pathlib import Path
-from random import Random
-from typing import Any
 
 import xmltodict
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
-from datamimic_ce.engine.dsl.enums.distribution_enums import SourceDistribution
 from datamimic_ce.engine.dsl.model.constraints import SourceFileFormat
 from datamimic_ce.engine.io.clients.rdbms_client import RdbmsClient
 from datamimic_ce.engine.io.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.engine.io.file_cache import FileContentStorage
 from datamimic_ce.engine.io.files import FileUtil
 from datamimic_ce.engine.runtime.logging import logger
-from datamimic_ce.utils.distribution_sampling import cumulated_index
-from datamimic_ce.utils.unique_sampling import unique_values
 
 
 class DataSourceRegistry:
-    """File loaders and pure paging/ordering read requests, all scalar signatures.
+    """File loaders and source paging, with scalar signatures.
 
     Owns no statement/context knowledge: routing a statement's ``source=`` to one of
     these calls is the runtime's job (``engine.runtime.sources.router``).
@@ -131,116 +126,6 @@ class DataSourceRegistry:
             return itertools.cycle(list(itertools.islice(iterator, start_idx, end_idx))[: end_idx - start_idx])
         else:
             return itertools.islice(data, start_idx, end_idx)
-
-    @staticmethod
-    def get_shuffled_data_with_cyclic(
-        data: Iterable, pagination: DataSourcePagination | None, cyclic: bool | None, seed: int
-    ) -> list:
-        """
-        Get shuffled data from iterable data source
-        """
-        source_len = len(list(data))
-        # If source is empty, return empty list
-        if source_len == 0:
-            return []
-
-        # If pagination is None, get all data
-        if pagination is None:
-            start_idx = 0
-            end_idx = len(list(data))
-        # If pagination is not None, get data based on pagination
-        else:
-            start_idx = pagination.skip
-            end_idx = pagination.skip + pagination.limit
-
-        # If not cyclic, return data limited by datasource len
-        if not cyclic:
-            end_idx = min(end_idx, source_len)
-
-        # Update seed for each new random batch of datasource
-        current_seed = seed + int(start_idx / source_len)
-        current_idx = start_idx
-
-        res: list = []
-        # Check if amount of returned data is enough
-        # Extend data until len of result is larger than page len and higher than end_idx
-        while len(res) <= end_idx - start_idx or len(res) < (start_idx % source_len) + end_idx - start_idx:
-            # Get shuffled data from datasource (local RNG; no global side-effect)
-            shuffle_rng = Random(current_seed)
-            shuffle_data = list(data)
-            shuffle_rng.shuffle(shuffle_data)
-
-            # Append shuffled data to result
-            res.extend(shuffle_data)
-
-            # Update current index and seed
-            current_idx += source_len
-            current_seed += 1
-
-        start_idx_cap = start_idx % source_len
-        return res[start_idx_cap : start_idx_cap + end_idx - start_idx]
-
-    @staticmethod
-    def get_distributed_data(
-        data: Iterable,
-        pagination: DataSourcePagination | None,
-        cyclic: bool | None,
-        seed: int,
-        distribution: SourceDistribution,
-    ) -> list:
-        """Reorder loaded rows for a non-ORDERED distribution: RANDOM shuffles (permutation),
-        CUMULATED selects with a bell-weighted index (with replacement). Single dispatch shared
-        by <variable>, <generate> and <nestedKey>."""
-        if distribution == SourceDistribution.CUMULATED:
-            return DataSourceRegistry.get_cumulated_data(data, pagination, seed)  # cyclic n/a: never runs out
-        return DataSourceRegistry.get_shuffled_data_with_cyclic(data, pagination, cyclic, seed)
-
-    @staticmethod
-    def get_unique_data(
-        data: Iterable[Any], pagination: DataSourcePagination | None, seed: int, label: str
-    ) -> list[Any]:
-        """Select distinct rows without replacement: dedupe + shuffle, then return the page
-        window. Sibling of get_cumulated_data; the unique counterpart of the random/cumulated
-        selection. All pages share ``seed`` (stable per statement) -> one global deduped order ->
-        each takes a disjoint window -> unique holds across pages. Strict: raises rather than
-        silently under-generate when the window exceeds the distinct pool."""
-        distinct = unique_values(data, Random(seed))
-        if pagination is None:
-            return distinct
-        end = pagination.skip + pagination.limit
-        if end > len(distinct):
-            raise ValueError(
-                f"Cannot generate {end} unique values for {label}: only {len(distinct)} distinct available"
-            )
-        return distinct[pagination.skip : end]
-
-    @staticmethod
-    def get_cumulated_data(data: Iterable, pagination: DataSourcePagination | None, seed: int) -> list:
-        """``distribution="cumulated"`` row selection: sample row indices with a
-        bell shape (mean = middle of the load order) WITH replacement.
-
-        Sibling of ``get_shuffled_data_with_cyclic`` (shuffle = permutation, no replacement).
-        No ``cyclic`` parameter — with-replacement sampling never runs out, so wrap-around is
-        meaningless.
-        """
-        rows = list(data)
-        source_len = len(rows)
-        if source_len == 0:
-            return []
-
-        if pagination is None:
-            start_idx, end_idx = 0, source_len
-        else:
-            start_idx = pagination.skip
-            end_idx = pagination.skip + pagination.limit
-        span = end_idx - start_idx
-
-        # One seeded RNG drives a single continuous draw sequence, so paginated batches
-        # stay consistent (page 2 continues page 1). O(start_idx + span) draws;
-        # fine for typical skips, revisit only if huge offsets show up.
-        rng = Random(seed)
-        picks = [rows[cumulated_index(rng, source_len - 1)] for _ in range(start_idx + span)]
-        return picks[start_idx:]
 
     @staticmethod
     def load_csv_file(

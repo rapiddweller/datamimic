@@ -7,7 +7,7 @@ Non‑negotiable rules
 - File naming: every localized file uses suffix `_CC.csv` (`CC` = ISO 3166‑1 alpha‑2, upper-case). No unsuffixed fallbacks in code.
 - Fallback: when a dataset-suffixed file is missing and strict mode is OFF, fall back to `_US` once per dataset code with a single warning log. When strict mode is ON, raise a `FileNotFoundError`.
 - Strict mode: controlled by env `DATAMIMIC_STRICT_DATASET`. Any truthy value other than `0/false/False` enables strict mode.
-- Paths: construct all dataset paths via `dataset_path(...)` from `datamimic_ce.utils.dataset_path`. Do not reimplement `Path(__file__).parents[...]`.
+- Paths: construct all dataset paths via `dataset_path(...)` from `datamimic_ce.domains.utils.dataset_path`. Do not reimplement `Path(__file__).parents[...]`.
 - Weights: for wgt-like CSVs without headers, last column is treated as the weight (non-numeric weights default to `1.0`). For headered CSVs, the weight column must be named `weight`.
 - Determinism: pass an injected `random.Random` where practical; do not use module-level RNGs in shared code. There is no global seed environment variable; reproducibility is achieved by passing a seeded `random.Random` into generators (and services that accept `rng`).
 

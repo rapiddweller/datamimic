@@ -34,8 +34,8 @@ from datamimic_ce.engine.dsl.statements.variable_statement import VariableStatem
 from datamimic_ce.engine.io.api import DataSourcePagination, WeightedDataSource
 from datamimic_ce.engine.runtime.contexts.context import Context
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
+from datamimic_ce.engine.runtime.sources.selection import unique_value_iter
 from datamimic_ce.engine.runtime.tasks.task import Task
-from datamimic_ce.utils.unique_sampling import unique_value_iter
 
 
 class KeyVariableTask(Task):

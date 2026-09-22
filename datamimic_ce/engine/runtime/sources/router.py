@@ -18,6 +18,7 @@ from datamimic_ce.engine.runtime.contexts.geniter_context import GenIterContext
 from datamimic_ce.engine.runtime.contexts.setup_context import SetupContext
 from datamimic_ce.engine.runtime.evaluation import evaluate_source_template, interpolate_variables
 from datamimic_ce.engine.runtime.logging import logger
+from datamimic_ce.engine.runtime.sources.selection import get_distributed_data, get_unique_data
 
 
 def data_source_cache_key(stmt: Statement) -> tuple[str | None, str | None]:
@@ -359,7 +360,7 @@ def finalize_nested_key_source(
         result = evaluated
     if isinstance(result, list) and stmt.distribution.loads_all:
         seed = context.root.get_distribution_seed()
-        result = DataSourceRegistry.get_distributed_data(result, None, stmt.cyclic, seed, stmt.distribution)
+        result = get_distributed_data(result, None, stmt.cyclic, seed, stmt.distribution)
     return result
 
 
@@ -391,13 +392,13 @@ def load_reference_source(
 
     seed = context.root.stable_distribution_seed(stmt.full_name)
     if stmt.unique:
-        return DataSourceRegistry.get_unique_data(records, pagination, seed, f"<reference> '{stmt.name}'")
+        return get_unique_data(records, pagination, seed, f"<reference> '{stmt.name}'")
 
     distribution = SourceDistribution.coerce(stmt.distribution)
     if (stmt.distribution is not None and distribution is not SourceDistribution.RANDOM) or stmt.cyclic:
         if distribution is SourceDistribution.ORDERED or (stmt.distribution is None and stmt.cyclic):
             return _ordered_reference_rows(records, stmt, pagination)
-        return DataSourceRegistry.get_distributed_data(records, pagination, stmt.cyclic, seed, distribution)
+        return get_distributed_data(records, pagination, stmt.cyclic, seed, distribution)
 
     size = pagination.limit if pagination is not None else 1
     return [context.rng.choice(records) for _ in range(size)]

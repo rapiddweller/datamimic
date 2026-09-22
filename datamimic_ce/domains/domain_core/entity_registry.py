@@ -121,9 +121,7 @@ def get_entity_spec(name: str) -> EntitySpec | None:
         spec = _ENTITY_REGISTRY.get(name[len(_DOMAINS_PREFIX) :])
         if spec is not None:
             return spec
-    if "." in name:
-        spec = _ENTITY_REGISTRY.get(name.split(".")[-1])
-    return spec
+    return None
 
 
 def get_entity_service_class(name: str) -> type[BaseDomainService] | None:

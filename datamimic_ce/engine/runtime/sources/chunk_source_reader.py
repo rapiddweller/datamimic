@@ -6,9 +6,10 @@
 
 from typing import TYPE_CHECKING
 
-from datamimic_ce.engine.io.api import DataSourcePagination, DataSourceRegistry
+from datamimic_ce.engine.io.api import DataSourcePagination
 
 from .router import load_generate_source
+from .selection import get_distributed_data, get_unique_data
 
 if TYPE_CHECKING:
     from datamimic_ce.engine.dsl.statements.generate_statement import GenerateStatement
@@ -88,13 +89,9 @@ class ChunkSourceReader:
             seed = self._context.root.stable_distribution_seed(stmt.full_name)
             chunk_pagination = DataSourcePagination(skip=self._chunk_start, limit=self._chunk_end - self._chunk_start)
             if stmt.unique:
-                self._chunk_order = DataSourceRegistry.get_unique_data(
-                    pool, chunk_pagination, seed, f"<generate> '{stmt.name}'"
-                )
+                self._chunk_order = get_unique_data(pool, chunk_pagination, seed, f"<generate> '{stmt.name}'")
             else:
-                self._chunk_order = DataSourceRegistry.get_distributed_data(
-                    pool, chunk_pagination, stmt.cyclic, seed, stmt.distribution
-                )
+                self._chunk_order = get_distributed_data(pool, chunk_pagination, stmt.cyclic, seed, stmt.distribution)
             # pool goes out of scope here — retained memory is chunk-sized
 
         return (

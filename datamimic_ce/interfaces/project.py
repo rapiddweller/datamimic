@@ -1,6 +1,12 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
+
+
+def validate_project_name(name: str) -> bool:
+    """Return whether a project name contains only letters, digits, dashes, and underscores."""
+    return bool(re.match(r"^[a-zA-Z0-9_-]+$", name))
 
 
 def create_project_structure(project_dir: Path) -> None:

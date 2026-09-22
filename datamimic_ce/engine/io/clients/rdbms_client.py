@@ -352,7 +352,7 @@ class RdbmsClient(DatabaseClient):
     def get_random_rows_by_columns(self, table_name: str, column_names: list[str]) -> list[tuple]:
         """Fetch the given columns for a <reference> in a stable order, preserving row-tuple
         integrity. The reference task does the distinct/with-replacement sampling deterministically
-        via DataSourceRegistry.get_unique_data / ctx.rng (so the full column set is returned, not a
+        via runtime source selection / ctx.rng (so the full column set is returned, not a
         pre-limited slice)."""
         engine = self._create_engine()
 
@@ -361,7 +361,7 @@ class RdbmsClient(DatabaseClient):
             table = self._get_metadata(engine).tables[actual_table_name]
             columns = [table.c[name] for name in column_names]
             # ORDER BY the selected columns (NOT random): a stable input order so the seeded
-            # shuffle in get_unique_data is reproducible run-to-run. ORDER BY random() would
+            # shuffle is reproducible run-to-run. ORDER BY random() would
             # destroy that reproducibility.
             # fetch-all + sort suits reference/lookup tables; a huge source would want
             # SELECT DISTINCT or DB-side sampling — an EE-scale concern, not CE's reference path.

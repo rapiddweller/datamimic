@@ -166,8 +166,7 @@
       "label": "runtime",
       "role": "component",
       "packages": [
-        "datamimic_ce.engine.runtime",
-        "datamimic_ce.utils"
+        "datamimic_ce.engine.runtime"
       ],
       "namespace": "datamimic_ce.engine.runtime",
       "responsibilities": [

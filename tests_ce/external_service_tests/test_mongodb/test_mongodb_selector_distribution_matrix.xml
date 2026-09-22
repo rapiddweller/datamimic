@@ -1,5 +1,5 @@
 <!-- <variable selector=...> distribution x unique matrix against MongoDB - the selector= entry
-     point (client.get_by_page_with_query / DataSourceRegistry.get_unique_data/get_distributed_data
+     point (client.get_by_page_with_query / runtime source selection
      via VariableTask._distributed_iter) had zero coverage for these cells; only the type=
      entry point (test_mongodb_variable_matrix.xml) was matrix-tested before this. Same shared
      distribution/unique machinery, exercised through selector= instead of type=. -->

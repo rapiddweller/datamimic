@@ -36,7 +36,6 @@ from datamimic_ce.engine.dsl.model.constraints import (
     resolved_allowed,
     resolved_values,
 )
-from datamimic_ce.utils.string_util import StringUtil
 
 # Parse XML bool attributes exactly like the pydantic bool fields do, so a "before"
 # cross-field check can never disagree with the coerced value (e.g. unique="yes").
@@ -417,7 +416,7 @@ class ModelUtil:
         :param valid_values:
         :return:
         """
-        converter_name = StringUtil.get_class_name_from_constructor_string(value)
+        converter_name = value.partition("(")[0]
         if converter_name not in valid_values:
             raise ValueError(f"must be one of following values {valid_values}, get unexpected value: '{value}'")
         return value

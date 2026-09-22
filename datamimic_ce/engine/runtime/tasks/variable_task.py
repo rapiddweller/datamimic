@@ -5,6 +5,7 @@
 # For questions and support, contact: info@rapiddweller.com
 
 import inspect
+from ast import literal_eval
 from collections.abc import Iterator
 from random import Random
 from typing import Any, Final
@@ -35,8 +36,29 @@ from datamimic_ce.engine.runtime.tasks.key_variable_task import KeyVariableTask
 from datamimic_ce.engine.runtime.tasks.task import CommonSubTask
 from datamimic_ce.engine.runtime.tasks.task_util import TaskUtil
 from datamimic_ce.engine.runtime.tasks.variable_iterator import VariableIterator
-from datamimic_ce.utils.domain_class_util import DomainClassUtil
-from datamimic_ce.utils.string_util import StringUtil
+
+
+def _parse_constructor_string(constructor_string: str) -> tuple[str, dict[str, Any]]:
+    constructor_string = constructor_string.strip()
+    opening = constructor_string.find("(")
+    closing = constructor_string.rfind(")")
+
+    if opening == -1:
+        return constructor_string, {}
+
+    entity_name = constructor_string[:opening].strip()
+    parameters_string = constructor_string[opening + 1 : closing].strip() if closing != -1 else ""
+    parameters: dict[str, Any] = {}
+    for parameter in parameters_string.split(","):
+        if "=" in parameter:
+            key_value = parameter.split("=")
+            if len(key_value) == 2:
+                key, value = key_value
+                try:
+                    parameters[key.strip()] = literal_eval(value.strip())
+                except (ValueError, SyntaxError):
+                    parameters[key.strip()] = value.strip()
+    return entity_name, parameters
 
 
 def _constructor_params(cls: type) -> frozenset[str]:
@@ -177,7 +199,7 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         from datamimic_ce.domains.common.models.demographic_config import DemographicConfig
         from datamimic_ce.domains.domain_core.runtime import spawn_rng
 
-        entity_class_name, kwargs = StringUtil.parse_constructor_string(entity_name)
+        entity_class_name, kwargs = _parse_constructor_string(entity_name)
         # Inject dataset if not explicitly provided in constructor
         kwargs.setdefault("dataset", dataset)
         demographic_context = ctx.root.demographic_context
@@ -216,15 +238,11 @@ class VariableTask(KeyVariableTask, CommonSubTask):
         demographic_sampler = demographic_context.sampler if demographic_context is not None else None
         # Build from the last parsed VariableTask (self is not accessible in staticmethod); use closure via locals()
 
-        # Resolve the service class by name through the entity registry
-        # (auto-discovered). Fall back to an explicit dotted module path such
-        # as "common.models.Company" for callers that bypass the registry.
+        # Resolve service classes and their aliases through the entity registry.
         from datamimic_ce.domains.domain_core.entity_registry import get_entity_service_class
 
         entity_cls = get_entity_service_class(entity_class_name)
         if entity_cls is None:
-            if "." in entity_class_name:
-                return DomainClassUtil.create_instance(f"datamimic_ce.domains.{entity_class_name}", **kwargs)
             raise ValueError(f"Entity '{entity_name}' is not supported in the domain architecture.")
 
         # Only inject the optional demographic/rng knobs the constructor accepts —

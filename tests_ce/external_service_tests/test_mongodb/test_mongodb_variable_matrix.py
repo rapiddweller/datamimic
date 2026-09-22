@@ -91,7 +91,7 @@ def _run_selector() -> dict:
 
 def test_selector_random_is_a_permutation():
     """<variable selector=...> (not type=): default distribution="random" is a shuffle
-    (permutation, no replacement) - same DataSourceRegistry.get_distributed_data dispatch as
+    (permutation, no replacement) - same runtime source-selection dispatch as
     type=, exercised through the selector= entry point (client.get_by_page_with_query), which
     had zero matrix coverage before this."""
     result = _run_selector()

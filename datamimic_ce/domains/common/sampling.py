@@ -4,8 +4,9 @@
 # See LICENSE file for the full text of the license.
 # For questions and support, contact: info@rapiddweller.com
 
-"""
-Compatibility module for backward compatibility with old import paths.
+import random
 
-This module provides backward compatibility with old import paths.
-"""
+
+def cumulated_index(rng: random.Random, span: int) -> int:
+    """Return an index selected with a symmetric bell-shaped distribution."""
+    return (sum(rng.randint(0, span) for _ in range(5)) + 2) // 5
