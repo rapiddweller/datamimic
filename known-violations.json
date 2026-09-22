@@ -11314,33 +11314,6 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.authoring.acceptance._unique_result"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.contracts.CapabilitiesRequest._validate"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.contracts.DerivedProductFact._series_count_belongs_to_time_series"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.authoring.contracts.ProductResult.sample"
       ]
     },
@@ -11450,15 +11423,6 @@
       ],
       "subjects": [
         "datamimic_ce.authoring.intent_validation._selected_union_schema:schema"
-      ]
-    },
-    {
-      "count": 5,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.intent_validation._source_product_message"
       ]
     },
     {
@@ -11593,97 +11557,7 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.authoring.rules.best_practice.NonOrderedLoadsWholeSource.check"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.rules.best_practice.UpsertCoercesZeroCount.check"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.rules.best_practice._is_true"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.rules.best_practice._literal_scope_factor"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.rules.schema_rules._distribution_fact"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.rules.schema_rules._key_id_data_types"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.rules.semantic_rules.NestedKeyCyclicNeedsCount.check"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.rules.semantic_rules.NestedKeyNeedsType.check"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.schema._build_schema_index"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.authoring.schema.element_json_schema:return"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.authoring.service.capabilities"
       ]
     },
     {
@@ -11693,33 +11567,6 @@
       ],
       "subjects": [
         "datamimic_ce.authoring.service.compile_document:spec"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.cli_authoring.lint_descriptor"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.cli_authoring.scaffold_model"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.clients.mongodb_client.MongoDBClient._check_query_type"
       ]
     },
     {
@@ -11768,15 +11615,6 @@
       ]
     },
     {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.clients.mongodb_client.MongoDBClient._top_level_keys"
-      ]
-    },
-    {
       "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
@@ -11786,30 +11624,12 @@
       ]
     },
     {
-      "count": 3,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.clients.mongodb_client.MongoDBClient.count_query_length"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.clients.mongodb_client.MongoDBClient.get"
-      ]
-    },
-    {
       "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.clients.mongodb_client.MongoDBClient.get_by_page_with_query"
+        "datamimic_ce.clients.mongodb_client.MongoDBClient.count_query_length"
       ]
     },
     {
@@ -11822,7 +11642,7 @@
       ]
     },
     {
-      "count": 3,
+      "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
       ],
@@ -11846,33 +11666,6 @@
       ],
       "subjects": [
         "datamimic_ce.clients.rdbms_client.RdbmsClient.get_by_page_with_query"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.clients.sql_dialect._is_compound_create"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.clients.sql_dialect._is_mysql_delimiter_directive"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.clients.sql_dialect._opens_compound_block"
       ]
     },
     {
@@ -12385,15 +12178,6 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.demos.demo-db-mapping.script.lib_glob.scr.CustomBusinessMappingConverter.create_sql_query"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.demos.demo-finance.script.ledger.scr.generate_transactions_for_account.rows"
       ]
     },
@@ -12413,15 +12197,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.address.service.AddressRequest.constraints"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.address.service._format_postal_code"
       ]
     },
     {
@@ -12476,15 +12251,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.demographics.sampler.DemographicSampler._apply_gender_mask:mask"
-      ]
-    },
-    {
-      "count": 3,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.demographics.sampler.DemographicSampler.apply_profile_groups"
       ]
     },
     {
@@ -12596,15 +12362,6 @@
       ]
     },
     {
-      "count": 4,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.demographics.sampler.load_group_table"
-      ]
-    },
-    {
       "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
@@ -12641,16 +12398,7 @@
       ]
     },
     {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.color_generators.ColorGenerator.generate"
-      ]
-    },
-    {
-      "count": 2,
+      "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
       ],
@@ -12677,30 +12425,12 @@
       ]
     },
     {
-      "count": 5,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.datetime_generator.DateTimeGenerator.__init__"
-      ]
-    },
-    {
       "count": 2,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.domains.common.literal_generators.datetime_generator.DateTimeGenerator.__init__._normalize_dom"
-      ]
-    },
-    {
-      "count": 5,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.datetime_generator.DateTimeGenerator.__init__._normalize_months"
+        "datamimic_ce.domains.common.literal_generators.datetime_generator.DateTimeGenerator.__init__"
       ]
     },
     {
@@ -12731,16 +12461,7 @@
       ]
     },
     {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.department_name_generator.DepartmentNameGenerator.__init__"
-      ]
-    },
-    {
-      "count": 4,
+      "count": 2,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
       ],
@@ -12758,39 +12479,12 @@
       ]
     },
     {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.generator_util.GeneratorUtil._parse_sequence_kwarg"
-      ]
-    },
-    {
-      "count": 11,
+      "count": 5,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.generator_util.GeneratorUtil.create_generator"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.given_name_generator.GivenNameGenerator.__init__"
-      ]
-    },
-    {
-      "count": 4,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.given_name_generator.GivenNameGenerator.generate_with_gender"
       ]
     },
     {
@@ -12800,24 +12494,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.literal_generators.hash_generator.HashGenerator.generate"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.nobility_title_generator.NobilityTitleGenerator.generate"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.nobility_title_generator.NobilityTitleGenerator.generate_with_gender"
       ]
     },
     {
@@ -12853,24 +12529,6 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.domains.common.literal_generators.token_generator.TokenGenerator.__init__"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.literal_generators.token_generator.TokenGenerator.generate"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.domains.common.models.address.Address.city_data:return"
       ]
     },
@@ -12890,15 +12548,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.models.city.City.city_data:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.models.city.City.population"
       ]
     },
     {
@@ -12935,15 +12584,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.common.models.person.Person.to_dict:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.common.profile_components.resolve_component_profile"
       ]
     },
     {
@@ -13123,25 +12763,7 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.domains.ecommerce.generators.product_generator.ProductGenerator.get_product_data_by_data_type"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.domains.ecommerce.models.order.Order.to_dict:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.ecommerce.models.product.Product.tags"
       ]
     },
     {
@@ -13196,15 +12818,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.facade._apply_profile_payload:return"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.facade._build_request"
       ]
     },
     {
@@ -13307,7 +12920,7 @@
       ]
     },
     {
-      "count": 3,
+      "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
       ],
@@ -13322,24 +12935,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.finance.generators.transaction_generator.TransactionGenerator.get_currency"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.finance.generators.transaction_generator.TransactionGenerator.get_description_template"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.finance.generators.transaction_generator.TransactionGenerator.get_location"
       ]
     },
     {
@@ -13379,33 +12974,6 @@
       ]
     },
     {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.generators.hospital_generator.HospitalGenerator.generate_accreditation"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.generators.hospital_generator.HospitalGenerator.generate_departments"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.generators.hospital_generator.HospitalGenerator.generate_services"
-      ]
-    },
-    {
       "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
@@ -13430,33 +12998,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.healthcare.models.doctor.Doctor.to_dict:return"
-      ]
-    },
-    {
-      "count": 3,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.models.hospital.Hospital.bed_count"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.models.hospital.Hospital.emergency_services"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.models.hospital.Hospital.teaching_status"
       ]
     },
     {
@@ -13493,15 +13034,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.healthcare.models.medical_procedure.MedicalProcedure.to_dict:return"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.healthcare.models.patient.Patient.height_cm"
       ]
     },
     {
@@ -13690,15 +13222,6 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.domains.locales.load_locale"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.domains.patient.service.PatientRequest.constraints"
       ]
     },
@@ -13780,24 +13303,6 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.domains.public_sector.models.administration_office.AdministrationOffice.hours_of_operation"
-      ]
-    },
-    {
-      "count": 3,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.public_sector.models.administration_office.AdministrationOffice.jurisdiction"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.domains.public_sector.models.administration_office.AdministrationOffice.to_dict:return"
       ]
     },
@@ -13835,24 +13340,6 @@
       ],
       "subjects": [
         "datamimic_ce.domains.schema_registry.validate_payload:payload"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.utils.dataset_path.dataset_path"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.domains.utils.dataset_path.is_strict_dataset_mode"
       ]
     },
     {
@@ -13906,33 +13393,6 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.exporters.exporter_util.ExporterUtil.check_path_format"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.exporters.exporter_util.ExporterUtil.get_exporter_by_name"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.exporters.exporter_util.ExporterUtil.parse_function_string"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.exporters.exporter_util.custom_serializer"
       ]
     },
@@ -13952,15 +13412,6 @@
       ],
       "subjects": [
         "datamimic_ce.exporters.exporter_util.custom_serializer:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.exporters.json_exporter.JsonExporter._write_data_to_buffer"
       ]
     },
     {
@@ -13997,15 +13448,6 @@
       ],
       "subjects": [
         "datamimic_ce.exporters.xlsx_exporter.XLSXExporter._write_data_to_buffer:data"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.exporters.xml_exporter.XMLExporter._declaration"
       ]
     },
     {
@@ -14051,24 +13493,6 @@
       ],
       "subjects": [
         "datamimic_ce.exporters.xml_exporter.XMLExporter._write_data_to_buffer:data"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.logger.setup_logger"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.mcp.server.APIKeyMiddleware.dispatch"
       ]
     },
     {
@@ -14194,52 +13618,7 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.model.model_util.ModelUtil.check_not_empty"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.model.model_util.ModelUtil.check_valid_in_out_date_format"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.model.model_util.ModelUtil.check_valid_pattern"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.parsers.descriptor_parser.DescriptorParser.parse"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.parsers.generate_parser.GenerateParser._check_no_reserved_ts_variable"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.parsers.if_else_base_parser.IfElseBaseParser.parse"
       ]
     },
     {
@@ -14266,15 +13645,6 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.parsers.parser_util.ParserUtil.fulfill_credentials"
-      ]
-    },
-    {
-      "count": 3,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.parsers.parser_util.ParserUtil.parse_sub_elements"
       ]
     },
@@ -14293,25 +13663,7 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
-        "datamimic_ce.parsers.statement_parser.StatementParser.validate_attributes"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
         "datamimic_ce.parsers.while_parser.WhileParser.parse.composite_stmt"
-      ]
-    },
-    {
-      "count": 3,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.tasks.execute_task.ExecuteTask.execute"
       ]
     },
     {
@@ -14321,15 +13673,6 @@
       ],
       "subjects": [
         "datamimic_ce.tasks.generate_task"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.tasks.generate_task.GenerateTask.execute"
       ]
     },
     {
@@ -14405,42 +13748,6 @@
       ]
     },
     {
-      "count": 4,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.tasks.key_variable_task.KeyVariableTask._convert_datetime_to_string"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.tasks.key_variable_task.KeyVariableTask._convert_string_to_datetime"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.tasks.key_variable_task.KeyVariableTask._convert_to_type"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.tasks.key_variable_task.KeyVariableTask._generate_value"
-      ]
-    },
-    {
       "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
@@ -14456,15 +13763,6 @@
       ],
       "subjects": [
         "datamimic_ce.tasks.key_variable_task.KeyVariableTask._next_unique_value:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.tasks.key_variable_task.KeyVariableTask._range_generator"
       ]
     },
     {
@@ -14519,15 +13817,6 @@
       ],
       "subjects": [
         "datamimic_ce.tasks.task.SetupSubTask.execute:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.tasks.task_util.TaskUtil.create_converter_list"
       ]
     },
     {
@@ -14603,48 +13892,12 @@
       ]
     },
     {
-      "count": 6,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.tasks.variable_task.VariableTask.__init__"
-      ]
-    },
-    {
-      "count": 2,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.tasks.variable_task.VariableTask._compute_storage_value"
-      ]
-    },
-    {
       "count": 1,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
         "datamimic_ce.tasks.variable_task.VariableTask._iterator"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.tasks.variable_task.VariableTask.execute"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.demo_util.handle_demo"
       ]
     },
     {
@@ -14738,33 +13991,6 @@
       ]
     },
     {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.file_util.FileUtil.read_dbunit_to_dict_list"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.logging_util.gen_timer"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.logging_util.log_system_info"
-      ]
-    },
-    {
       "count": 2,
       "rules": [
         "NO-MAGIC-CONTROL-FLOW"
@@ -14780,15 +14006,6 @@
       ],
       "subjects": [
         "datamimic_ce.utils.object_util.ObjectUtil.create_instance_from_constructor_str:class_dict"
-      ]
-    },
-    {
-      "count": 3,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.secure_xml._doctype_has_internal_subset"
       ]
     },
     {
@@ -14843,15 +14060,6 @@
       ],
       "subjects": [
         "datamimic_ce.utils.unique_sampling.unique_values:return"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.utils.xml_util.XMLValidator.validate_descriptor"
       ]
     },
     {

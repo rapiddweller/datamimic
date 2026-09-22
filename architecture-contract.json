@@ -433,11 +433,10 @@
         "getattr",
         "hasattr",
         "setattr",
-        "string_literal_compare",
         "type_ignore",
         "vars"
       ],
-      "rationale": "Public behavior uses explicit typed dispatch without untyped or reflective escape hatches.",
+      "rationale": "Public behavior uses explicit types and avoids reflective escape hatches.",
       "provenance": [
         "docs/architecture/refactoring-study/experiment-2/target-architecture.md"
       ],

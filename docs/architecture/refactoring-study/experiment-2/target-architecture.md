@@ -107,7 +107,9 @@ graph TD
 - every component edge is explicit and the graph is acyclic;
 - cross-component imports use `api.py` or `contracts.py`;
 - public boundary signatures use declared, component-owned types;
-- `Any`, reflective dispatch, and string-literal dispatch are forbidden everywhere;
+- `Any`, reflective dispatch, and unchecked type escapes are forbidden everywhere;
+- closed-vocabulary routing uses enums, verified by focused tests because ArchKeel 0.6.0 cannot
+  distinguish dispatch from ordinary string-value comparisons;
 - dynamic execution is allowed only in the two explicit runtime owners;
 - the root allow-list is exact.
 
