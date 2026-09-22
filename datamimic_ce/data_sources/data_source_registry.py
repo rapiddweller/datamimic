@@ -25,10 +25,10 @@ from datamimic_ce.contexts.geniter_context import GenIterContext
 from datamimic_ce.contexts.setup_context import SetupContext
 from datamimic_ce.data_sources.data_source_pagination import DataSourcePagination
 from datamimic_ce.data_sources.weighted_entity_data_source import WeightedEntityDataSource
+from datamimic_ce.engine.runtime.evaluation import evaluate_source_template, interpolate_variables
 from datamimic_ce.enums.distribution_enums import SourceDistribution
 from datamimic_ce.logger import logger
 from datamimic_ce.model.constraints import SourceFileFormat, source_file_format, source_file_format_for
-from datamimic_ce.services.source_script_evaluator import evaluate_source_template, interpolate_variables
 from datamimic_ce.statements.generate_statement import GenerateStatement
 from datamimic_ce.statements.nested_key_statement import NestedKeyStatement
 from datamimic_ce.statements.reference_statement import ReferenceStatement

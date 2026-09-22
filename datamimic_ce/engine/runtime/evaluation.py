@@ -1,4 +1,4 @@
-"""Evaluate source-file templates without coupling data sources to task helpers."""
+"""Evaluate expressions embedded in source values."""
 
 from __future__ import annotations
 
@@ -21,13 +21,7 @@ def interpolate_variables(context: Context, expression: str, prefix: str, suffix
 
 
 def evaluate_source_template(context: Context, data: Any, prefix: str, suffix: str) -> Any:
-    """Recursively evaluate expressions embedded in source values.
-
-    ``data`` and the return value are ``Any`` because source files contain
-    arbitrary JSON-like values (dicts, lists, scalars) sourced from outside
-    the generator pipeline — there is no narrower type we can enforce at this
-    boundary.
-    """
+    """Recursively evaluate expressions embedded in source values."""
     if isinstance(data, dict):
         return {
             key: evaluate_source_template(context, value, prefix, suffix)

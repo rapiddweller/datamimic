@@ -178,7 +178,7 @@ class TaskUtil:
         then evaluate variables and functions
         e.g. '{1+3}' -> 4
         """
-        from datamimic_ce.services.source_script_evaluator import evaluate_source_template
+        from datamimic_ce.engine.runtime.evaluation import evaluate_source_template
 
         return evaluate_source_template(ctx, datas, prefix, suffix)
 
@@ -248,7 +248,7 @@ class TaskUtil:
         :param suffix:
         :return:
         """
-        from datamimic_ce.services.source_script_evaluator import interpolate_variables
+        from datamimic_ce.engine.runtime.evaluation import interpolate_variables
 
         return interpolate_variables(context, expr, prefix, suffix)
 

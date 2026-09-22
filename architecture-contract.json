@@ -181,7 +181,6 @@
         "datamimic_ce.contexts",
         "datamimic_ce.logger",
         "datamimic_ce.product_storage",
-        "datamimic_ce.services",
         "datamimic_ce.tasks",
         "datamimic_ce.utils",
         "datamimic_ce.workers"

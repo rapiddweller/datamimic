@@ -1855,26 +1855,6 @@
       ],
       "subjects": [
         "datamimic_ce.engine.runtime",
-        "datamimic_ce.services"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RUNTIME"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.runtime",
-        "datamimic_ce.services.source_script_evaluator"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "COMP-RUNTIME"
-      ],
-      "subjects": [
-        "datamimic_ce.engine.runtime",
         "datamimic_ce.tasks"
       ]
     },
@@ -7625,6 +7605,38 @@
       "roles": [
         {
           "source": "datamimic_ce.data_sources.data_source_registry",
+          "target": "datamimic_ce.engine.runtime.evaluation"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.data_sources.data_source_registry",
+        "datamimic_ce.engine.runtime.evaluation.evaluate_source_template"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.data_sources.data_source_registry",
+          "target": "datamimic_ce.engine.runtime.evaluation"
+        }
+      ],
+      "rules": [
+        "INTERFACES-ONLY"
+      ],
+      "subjects": [
+        "datamimic_ce.data_sources.data_source_registry",
+        "datamimic_ce.engine.runtime.evaluation.interpolate_variables"
+      ]
+    },
+    {
+      "count": 1,
+      "roles": [
+        {
+          "source": "datamimic_ce.data_sources.data_source_registry",
           "target": "datamimic_ce.enums.distribution_enums"
         }
       ],
@@ -7698,38 +7710,6 @@
       "subjects": [
         "datamimic_ce.data_sources.data_source_registry",
         "datamimic_ce.model.constraints.source_file_format_for"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.services.source_script_evaluator"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry",
-        "datamimic_ce.services.source_script_evaluator.evaluate_source_template"
-      ]
-    },
-    {
-      "count": 1,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.services.source_script_evaluator"
-        }
-      ],
-      "rules": [
-        "INTERFACES-ONLY"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry",
-        "datamimic_ce.services.source_script_evaluator.interpolate_variables"
       ]
     },
     {
@@ -13881,6 +13861,33 @@
         "NO-MAGIC-CONTROL-FLOW"
       ],
       "subjects": [
+        "datamimic_ce.engine.runtime.evaluation.evaluate_source_template.result"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.evaluation.evaluate_source_template:data"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
+        "datamimic_ce.engine.runtime.evaluation.evaluate_source_template:return"
+      ]
+    },
+    {
+      "count": 1,
+      "rules": [
+        "NO-MAGIC-CONTROL-FLOW"
+      ],
+      "subjects": [
         "datamimic_ce.exporters.database_exporter.DatabaseExporter.consume:product"
       ]
     },
@@ -14296,33 +14303,6 @@
       ],
       "subjects": [
         "datamimic_ce.parsers.while_parser.WhileParser.parse.composite_stmt"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.services.source_script_evaluator.evaluate_source_template.result"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.services.source_script_evaluator.evaluate_source_template:data"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "NO-MAGIC-CONTROL-FLOW"
-      ],
-      "subjects": [
-        "datamimic_ce.services.source_script_evaluator.evaluate_source_template:return"
       ]
     },
     {
@@ -15414,6 +15394,22 @@
       ]
     },
     {
+      "count": 2,
+      "roles": [
+        {
+          "source": "datamimic_ce.data_sources.data_source_registry",
+          "target": "datamimic_ce.engine.runtime.evaluation"
+        }
+      ],
+      "rules": [
+        "REQUIRES-COMPLETE"
+      ],
+      "subjects": [
+        "datamimic_ce.data_sources.data_source_registry",
+        "datamimic_ce.engine.runtime.evaluation"
+      ]
+    },
+    {
       "count": 1,
       "roles": [
         {
@@ -15427,22 +15423,6 @@
       "subjects": [
         "datamimic_ce.data_sources.data_source_registry",
         "datamimic_ce.logger"
-      ]
-    },
-    {
-      "count": 2,
-      "roles": [
-        {
-          "source": "datamimic_ce.data_sources.data_source_registry",
-          "target": "datamimic_ce.services.source_script_evaluator"
-        }
-      ],
-      "rules": [
-        "REQUIRES-COMPLETE"
-      ],
-      "subjects": [
-        "datamimic_ce.data_sources.data_source_registry",
-        "datamimic_ce.services.source_script_evaluator"
       ]
     },
     {
@@ -16878,15 +16858,6 @@
       ],
       "subjects": [
         "datamimic_ce.product_storage"
-      ]
-    },
-    {
-      "count": 1,
-      "rules": [
-        "ROOT-LAYOUT"
-      ],
-      "subjects": [
-        "datamimic_ce.services"
       ]
     },
     {
