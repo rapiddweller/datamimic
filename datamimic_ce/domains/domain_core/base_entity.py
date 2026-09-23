@@ -6,7 +6,7 @@
 
 
 from abc import abstractmethod
-from typing import Any
+from functools import cache
 
 from datamimic_ce.domains.domain_core.base_domain_generator import BaseDomainGenerator
 from datamimic_ce.engine.dsl.contracts import EntityValue
@@ -22,24 +22,21 @@ class BaseEntity(EntityValue):
 
     def __init__(self, generator: BaseDomainGenerator | None = None):
         # Cache for generated values
-        self._field_cache: dict[str, Any] = {}
+        self._field_cache: dict[str, object] = {}
         # self._generator = generator
 
     @property
-    def field_cache(self):
+    def field_cache(self) -> dict[str, object]:
         return self._field_cache
 
     @classmethod
+    @cache
     def _canonical_fields(cls) -> dict[str, str]:
         """Map each public field, normalized (lowercased, separators removed), to its real name. Cached per
         class. Lets ``givenName``/``given_name``/``GIVEN_NAME`` all resolve to the canonical ``given_name``."""
-        cache = cls.__dict__.get("_canonical_fields_cache")
-        if cache is None:
-            cache = {a.replace("_", "").lower(): a for a in dir(cls) if not a.startswith("_")}
-            cls._canonical_fields_cache = cache  # type: ignore[attr-defined]
-        return cache
+        return {a.replace("_", "").lower(): a for a in dir(cls) if not a.startswith("_")}
 
-    def __getattr__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> object:
         # Only runs when normal lookup misses: resolve a non-canonical field name (e.g. a legacy descriptor's camelCase
         # ``person.givenName``) to the entity's real snake_case field. Zero cost on the canonical path.
         if name.startswith("_"):
@@ -52,6 +49,6 @@ class BaseEntity(EntityValue):
         raise AttributeError(f"'{type(self).__name__}' entity has no field '{name}'. Available: {avail}")
 
     @abstractmethod
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Convert the entity to a dictionary."""
         raise NotImplementedError("Subclasses must implement this method.")

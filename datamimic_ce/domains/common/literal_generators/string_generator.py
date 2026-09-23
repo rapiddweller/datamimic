@@ -10,7 +10,7 @@ import string
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-import exrex  # type: ignore
+import exrex
 
 from datamimic_ce.domains.domain_core.base_literal_generator import BaseLiteralGenerator
 from datamimic_ce.domains.utils.random_source import RandomSource
