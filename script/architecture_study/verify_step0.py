@@ -245,8 +245,20 @@ def test_fixture_evidence(path: Path, root: ET.Element) -> list[str]:
     for filename in missing:
         for source in sorted(path.parent.glob("*.py")):
             lines = source.read_text(encoding="utf-8", errors="replace").splitlines()
-            reference_line = next((index for index, line in enumerate(lines) if filename in line), None)
-            save_line = next((index for index, line in enumerate(lines) if ".save(" in line), None)
+            reference_line = None
+            save_line = None
+            assigned_paths: dict[str, int] = {}
+            for index, line in enumerate(lines):
+                assignment = re.search(r"\b([A-Za-z_]\w*)\s*=.*[\"']" + re.escape(filename) + r"[\"']", line)
+                if assignment:
+                    assigned_paths[assignment.group(1)] = index
+                if ".save(" not in line:
+                    continue
+                argument = re.search(r"\.save\(\s*([A-Za-z_]\w*)\s*\)?", line)
+                if filename in line or (argument and argument.group(1) in assigned_paths):
+                    save_line = index
+                    reference_line = assigned_paths.get(argument.group(1), index) if argument else index
+                    break
             if reference_line is not None and save_line is not None and "Workbook" in "\n".join(lines):
                 evidence.append(
                     f"{source.relative_to(REPO)}:{reference_line + 1} names {filename}; "
